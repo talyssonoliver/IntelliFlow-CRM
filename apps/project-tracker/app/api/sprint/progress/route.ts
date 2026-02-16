@@ -70,7 +70,15 @@ function saveFallback(sprintNumber: number, data: any): void {
 // Load sprint tasks from CSV
 function loadSprintTasks(sprintNumber: number): TaskProgress[] {
   const projectRoot = getProjectRoot();
-  const csvPath = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+  const csvPath = join(
+    projectRoot,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    '_global',
+    'Sprint_plan.csv'
+  );
   const tasks: TaskProgress[] = [];
 
   try {
@@ -80,7 +88,10 @@ function loadSprintTasks(sprintNumber: number): TaskProgress[] {
 
       for (const row of results.data as RawCSVRow[]) {
         const targetSprint = parseInt(String(row['Target Sprint'] ?? ''));
-        if (targetSprint === sprintNumber || (row['Target Sprint'] === 'Continuous' && sprintNumber === 0)) {
+        if (
+          targetSprint === sprintNumber ||
+          (row['Target Sprint'] === 'Continuous' && sprintNumber === 0)
+        ) {
           tasks.push({
             taskId: row['Task ID'] || '',
             description: row['Description'] || '',
@@ -100,7 +111,14 @@ function loadSprintTasks(sprintNumber: number): TaskProgress[] {
 // Load phase progress from phase summary files
 function loadPhaseProgress(sprintNumber: number): PhaseProgress[] {
   const projectRoot = getProjectRoot();
-  const sprintDir = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', `sprint-${sprintNumber}`);
+  const sprintDir = join(
+    projectRoot,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    `sprint-${sprintNumber}`
+  );
   const phases: PhaseProgress[] = [];
 
   try {
@@ -118,9 +136,10 @@ function loadPhaseProgress(sprintNumber: number): PhaseProgress[] {
               total: summary.total_tasks || 0,
               completed: summary.completed_tasks || 0,
               inProgress: summary.in_progress_tasks || 0,
-              percentage: summary.total_tasks > 0
-                ? Math.round((summary.completed_tasks / summary.total_tasks) * 100)
-                : 0,
+              percentage:
+                summary.total_tasks > 0
+                  ? Math.round((summary.completed_tasks / summary.total_tasks) * 100)
+                  : 0,
             });
           }
         }
@@ -134,7 +153,9 @@ function loadPhaseProgress(sprintNumber: number): PhaseProgress[] {
 }
 
 // Load attestation data for completion timestamps
-function loadAttestations(_sprintNumber: number): Map<string, { timestamp: string; verdict: string }> {
+function loadAttestations(
+  _sprintNumber: number
+): Map<string, { timestamp: string; verdict: string }> {
   const projectRoot = getProjectRoot();
   const attestationsDir = join(projectRoot, 'artifacts', 'attestations');
   const attestations = new Map<string, { timestamp: string; verdict: string }>();
@@ -171,8 +192,8 @@ function generateMarkdown(
   attestations: Map<string, { timestamp: string; verdict: string }>
 ): string {
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(t =>
-    t.status.toLowerCase() === 'completed' || t.status.toLowerCase() === 'done'
+  const completedTasks = tasks.filter(
+    (t) => t.status.toLowerCase() === 'completed' || t.status.toLowerCase() === 'done'
   ).length;
   const percentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
@@ -196,9 +217,11 @@ function generateMarkdown(
   md += `## Task Status\n\n`;
   md += `| Task ID | Description | Status | Completed At |\n`;
   md += `|---------|-------------|--------|-------------|\n`;
-  for (const task of tasks.slice(0, 50)) { // Limit for readability
+  for (const task of tasks.slice(0, 50)) {
+    // Limit for readability
     const attestation = attestations.get(task.taskId);
-    const completedAt = attestation?.verdict === 'COMPLETE' ? attestation.timestamp.split('T')[0] : '-';
+    const completedAt =
+      attestation?.verdict === 'COMPLETE' ? attestation.timestamp.split('T')[0] : '-';
     md += `| ${task.taskId} | ${task.description.substring(0, 40)}... | ${task.status} | ${completedAt} |\n`;
   }
 
@@ -229,12 +252,10 @@ export async function GET(request: NextRequest) {
 
     // Calculate metrics
     const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(t =>
-      t.status.toLowerCase() === 'completed' || t.status.toLowerCase() === 'done'
+    const completedTasks = tasks.filter(
+      (t) => t.status.toLowerCase() === 'completed' || t.status.toLowerCase() === 'done'
     ).length;
-    const inProgressTasks = tasks.filter(t =>
-      t.status.toLowerCase() === 'in progress'
-    ).length;
+    const inProgressTasks = tasks.filter((t) => t.status.toLowerCase() === 'in progress').length;
     const plannedTasks = totalTasks - completedTasks - inProgressTasks;
 
     // If markdown format requested
@@ -263,19 +284,22 @@ export async function GET(request: NextRequest) {
         percentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
       },
       phases,
-      bySection: tasks.reduce((acc, t) => {
-        if (!acc[t.section]) acc[t.section] = { total: 0, completed: 0 };
-        acc[t.section].total++;
-        if (t.status.toLowerCase() === 'completed' || t.status.toLowerCase() === 'done') {
-          acc[t.section].completed++;
-        }
-        return acc;
-      }, {} as Record<string, { total: number; completed: number }>),
+      bySection: tasks.reduce(
+        (acc, t) => {
+          if (!acc[t.section]) acc[t.section] = { total: 0, completed: 0 };
+          acc[t.section].total++;
+          if (t.status.toLowerCase() === 'completed' || t.status.toLowerCase() === 'done') {
+            acc[t.section].completed++;
+          }
+          return acc;
+        },
+        {} as Record<string, { total: number; completed: number }>
+      ),
       recentCompletions: tasks
-        .filter(t => t.completedAt)
+        .filter((t) => t.completedAt)
         .sort((a, b) => (b.completedAt || '').localeCompare(a.completedAt || ''))
         .slice(0, 10)
-        .map(t => ({
+        .map((t) => ({
           taskId: t.taskId,
           description: t.description.substring(0, 60),
           completedAt: t.completedAt,

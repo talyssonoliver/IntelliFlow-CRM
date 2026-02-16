@@ -5,7 +5,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const { mockOn, mockClose, mockBroadcast } = vi.hoisted(() => ({
   mockOn: vi.fn(),
-  mockClose: vi.fn((cb?: Function) => { if (cb) cb(); }),
+  mockClose: vi.fn((cb?: Function) => {
+    if (cb) cb();
+  }),
   mockBroadcast: vi.fn(),
 }));
 
@@ -41,7 +43,9 @@ describe('WS_PORT', () => {
 });
 
 describe('createWebSocketServer', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('should apply tRPC WS handler', () => {
     createWebSocketServer(4000);
@@ -73,7 +77,9 @@ describe('createWebSocketServer', () => {
 });
 
 describe('connection handler', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('should log client connection and register ws handlers', () => {
     const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -126,7 +132,9 @@ describe('connection handler', () => {
 });
 
 describe('server lifecycle handlers', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('should log on listening', () => {
     const spy = vi.spyOn(console, 'log').mockImplementation(() => {});

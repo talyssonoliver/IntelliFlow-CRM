@@ -7,11 +7,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ClaimReviewUseCase, ClaimReviewInput } from '../ClaimReviewUseCase';
-import {
-  AIOutputReview,
-  DomainEvent,
-  ReviewStatus,
-} from '@intelliflow/domain';
+import { AIOutputReview, DomainEvent, ReviewStatus } from '@intelliflow/domain';
 import { IAIOutputReviewRepository } from '../../../ports/repositories';
 import { EventBusPort } from '../../../ports/external';
 

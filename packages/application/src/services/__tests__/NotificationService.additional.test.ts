@@ -38,18 +38,30 @@ function createMockPreferenceRepo() {
 
 function createMockDeliveryService() {
   return {
-    sendEmail: vi.fn().mockResolvedValue(Result.ok({
-      id: 'notif_1', channel: 'email', status: 'sent',
-      providerMessageId: 'prov_msg_1',
-    })),
-    sendSms: vi.fn().mockResolvedValue(Result.ok({
-      id: 'notif_1', channel: 'sms', status: 'sent',
-      providerMessageId: 'prov_sms_1',
-    })),
-    sendPush: vi.fn().mockResolvedValue(Result.ok({
-      id: 'notif_1', channel: 'push', status: 'sent',
-      providerMessageId: 'prov_push_1',
-    })),
+    sendEmail: vi.fn().mockResolvedValue(
+      Result.ok({
+        id: 'notif_1',
+        channel: 'email',
+        status: 'sent',
+        providerMessageId: 'prov_msg_1',
+      })
+    ),
+    sendSms: vi.fn().mockResolvedValue(
+      Result.ok({
+        id: 'notif_1',
+        channel: 'sms',
+        status: 'sent',
+        providerMessageId: 'prov_sms_1',
+      })
+    ),
+    sendPush: vi.fn().mockResolvedValue(
+      Result.ok({
+        id: 'notif_1',
+        channel: 'push',
+        status: 'sent',
+        providerMessageId: 'prov_push_1',
+      })
+    ),
   };
 }
 
@@ -86,15 +98,19 @@ describe('NotificationService - additional coverage', () => {
       prefRepo as any,
       delivery as any,
       eventBus as any,
-      auditLogger as any,
+      auditLogger as any
     );
   });
 
   describe('send', () => {
     it('should send email notification successfully', async () => {
       const result = await service.send({
-        tenantId: 'tenant_1', recipientId: 'user_1', recipientEmail: 'a@b.com',
-        channel: 'email', subject: 'Hi', body: 'Hello world',
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        recipientEmail: 'a@b.com',
+        channel: 'email',
+        subject: 'Hi',
+        body: 'Hello world',
       });
       expect(result.status).toBe('sent');
       expect(result.providerMessageId).toBe('prov_msg_1');
@@ -110,8 +126,11 @@ describe('NotificationService - additional coverage', () => {
         isInQuietHours: vi.fn().mockReturnValue(false),
       } as any);
       const result = await service.send({
-        tenantId: 'tenant_1', recipientId: 'user_1',
-        channel: 'email', subject: 'Hi', body: 'Body',
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        channel: 'email',
+        subject: 'Hi',
+        body: 'Body',
       });
       expect(result.status).toBe('filtered');
       expect(result.filteredReason).toContain('Do Not Disturb');
@@ -126,8 +145,11 @@ describe('NotificationService - additional coverage', () => {
         isInQuietHours: vi.fn().mockReturnValue(false),
       } as any);
       const result = await service.send({
-        tenantId: 'tenant_1', recipientId: 'user_1',
-        channel: 'email', subject: 'Hi', body: 'Body',
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        channel: 'email',
+        subject: 'Hi',
+        body: 'Body',
       });
       expect(result.status).toBe('filtered');
       expect(result.filteredReason).toContain('disabled');
@@ -142,8 +164,12 @@ describe('NotificationService - additional coverage', () => {
         isInQuietHours: vi.fn().mockReturnValue(false),
       } as any);
       const result = await service.send({
-        tenantId: 'tenant_1', recipientId: 'user_1',
-        channel: 'email', subject: 'Hi', body: 'Body', category: 'marketing',
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        channel: 'email',
+        subject: 'Hi',
+        body: 'Body',
+        category: 'marketing',
       });
       expect(result.status).toBe('filtered');
       expect(result.filteredReason).toContain('disabled');
@@ -158,8 +184,11 @@ describe('NotificationService - additional coverage', () => {
         isInQuietHours: vi.fn().mockReturnValue(true),
       } as any);
       const result = await service.send({
-        tenantId: 'tenant_1', recipientId: 'user_1',
-        channel: 'email', subject: 'Hi', body: 'Body',
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        channel: 'email',
+        subject: 'Hi',
+        body: 'Body',
       });
       expect(result.status).toBe('filtered');
       expect(result.filteredReason).toContain('quiet hours');
@@ -168,8 +197,12 @@ describe('NotificationService - additional coverage', () => {
     it('should return scheduled for future scheduledAt', async () => {
       const future = new Date(Date.now() + 86400000);
       const result = await service.send({
-        tenantId: 'tenant_1', recipientId: 'user_1',
-        channel: 'email', subject: 'Hi', body: 'Body', scheduledAt: future,
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        channel: 'email',
+        subject: 'Hi',
+        body: 'Body',
+        scheduledAt: future,
       });
       expect(result.status).toBe('scheduled');
       expect(notifRepo.save).toHaveBeenCalled();
@@ -177,16 +210,23 @@ describe('NotificationService - additional coverage', () => {
 
     it('should send in_app notification immediately', async () => {
       const result = await service.send({
-        tenantId: 'tenant_1', recipientId: 'user_1',
-        channel: 'in_app', subject: 'In-app', body: 'In-app body',
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        channel: 'in_app',
+        subject: 'In-app',
+        body: 'In-app body',
       });
       expect(result.status).toBe('sent');
     });
 
     it('should send sms notification', async () => {
       const result = await service.send({
-        tenantId: 'tenant_1', recipientId: 'user_1', recipientPhone: '+1234567890',
-        channel: 'sms', subject: 'SMS', body: 'Text',
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        recipientPhone: '+1234567890',
+        channel: 'sms',
+        subject: 'SMS',
+        body: 'Text',
       });
       expect(result.status).toBe('sent');
       expect(delivery.sendSms).toHaveBeenCalled();
@@ -194,8 +234,11 @@ describe('NotificationService - additional coverage', () => {
 
     it('should fail sms without phone', async () => {
       const result = await service.send({
-        tenantId: 'tenant_1', recipientId: 'user_1',
-        channel: 'sms', subject: 'SMS', body: 'Text',
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        channel: 'sms',
+        subject: 'SMS',
+        body: 'Text',
       });
       expect(result.status).toBe('failed');
       expect(result.error).toContain('phone');
@@ -203,8 +246,11 @@ describe('NotificationService - additional coverage', () => {
 
     it('should send push notification', async () => {
       const result = await service.send({
-        tenantId: 'tenant_1', recipientId: 'user_1',
-        channel: 'push', subject: 'Push', body: 'Push body',
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        channel: 'push',
+        subject: 'Push',
+        body: 'Push body',
       });
       expect(result.status).toBe('sent');
       expect(delivery.sendPush).toHaveBeenCalled();
@@ -215,8 +261,12 @@ describe('NotificationService - additional coverage', () => {
         Result.fail({ message: 'SMTP error', code: 'EMAIL_FAIL' })
       );
       const result = await service.send({
-        tenantId: 'tenant_1', recipientId: 'user_1', recipientEmail: 'a@b.com',
-        channel: 'email', subject: 'Hi', body: 'Body',
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        recipientEmail: 'a@b.com',
+        channel: 'email',
+        subject: 'Hi',
+        body: 'Body',
       });
       expect(result.status).toBe('failed');
       expect(result.error).toContain('SMTP error');
@@ -228,8 +278,12 @@ describe('NotificationService - additional coverage', () => {
         Result.fail({ message: 'Carrier reject', code: 'SMS_FAIL' })
       );
       const result = await service.send({
-        tenantId: 'tenant_1', recipientId: 'user_1', recipientPhone: '+1234567890',
-        channel: 'sms', subject: 'SMS', body: 'Text',
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        recipientPhone: '+1234567890',
+        channel: 'sms',
+        subject: 'SMS',
+        body: 'Text',
       });
       expect(result.status).toBe('failed');
     });
@@ -239,24 +293,35 @@ describe('NotificationService - additional coverage', () => {
         Result.fail({ message: 'Token invalid', code: 'PUSH_FAIL' })
       );
       const result = await service.send({
-        tenantId: 'tenant_1', recipientId: 'user_1',
-        channel: 'push', subject: 'Push', body: 'Body',
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        channel: 'push',
+        subject: 'Push',
+        body: 'Body',
       });
       expect(result.status).toBe('failed');
     });
 
     it('should publish events on success', async () => {
       await service.send({
-        tenantId: 'tenant_1', recipientId: 'user_1', recipientEmail: 'a@b.com',
-        channel: 'email', subject: 'Hi', body: 'Body',
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        recipientEmail: 'a@b.com',
+        channel: 'email',
+        subject: 'Hi',
+        body: 'Body',
       });
       expect(eventBus.publish).toHaveBeenCalled();
     });
 
     it('should audit log on success', async () => {
       await service.send({
-        tenantId: 'tenant_1', recipientId: 'user_1', recipientEmail: 'a@b.com',
-        channel: 'email', subject: 'Hi', body: 'Body',
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        recipientEmail: 'a@b.com',
+        channel: 'email',
+        subject: 'Hi',
+        body: 'Body',
       });
       expect(auditLogger.logNotificationSent).toHaveBeenCalled();
     });
@@ -265,13 +330,19 @@ describe('NotificationService - additional coverage', () => {
   describe('sendFromTemplate', () => {
     it('should render template and send', async () => {
       service.registerTemplate({
-        id: 'tpl_1', name: 'Welcome', channel: 'email',
-        subject: 'Hello {{name}}', bodyText: 'Welcome {{name}} to {{company}}',
+        id: 'tpl_1',
+        name: 'Welcome',
+        channel: 'email',
+        subject: 'Hello {{name}}',
+        bodyText: 'Welcome {{name}} to {{company}}',
         variables: ['name', 'company'],
       });
       const result = await service.sendFromTemplate('tpl_1', {
-        tenantId: 'tenant_1', recipientId: 'user_1', recipientEmail: 'a@b.com',
-        channel: 'email', variables: { name: 'John', company: 'Acme' },
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        recipientEmail: 'a@b.com',
+        channel: 'email',
+        variables: { name: 'John', company: 'Acme' },
       });
       expect(result.status).toBe('sent');
     });
@@ -279,22 +350,30 @@ describe('NotificationService - additional coverage', () => {
     it('should throw for unknown template', async () => {
       await expect(
         service.sendFromTemplate('nonexistent', {
-          tenantId: 'tenant_1', recipientId: 'user_1',
-          channel: 'email', variables: {},
+          tenantId: 'tenant_1',
+          recipientId: 'user_1',
+          channel: 'email',
+          variables: {},
         })
       ).rejects.toThrow('Template not found');
     });
 
     it('should render HTML body when available', async () => {
       service.registerTemplate({
-        id: 'tpl_2', name: 'HTML', channel: 'email',
-        subject: 'Sub', bodyText: 'Text {{x}}',
+        id: 'tpl_2',
+        name: 'HTML',
+        channel: 'email',
+        subject: 'Sub',
+        bodyText: 'Text {{x}}',
         bodyHtml: '<b>HTML {{x}}</b>',
         variables: ['x'],
       });
       const result = await service.sendFromTemplate('tpl_2', {
-        tenantId: 'tenant_1', recipientId: 'user_1', recipientEmail: 'a@b.com',
-        channel: 'email', variables: { x: 'val' },
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        recipientEmail: 'a@b.com',
+        channel: 'email',
+        variables: { x: 'val' },
       });
       expect(result.status).toBe('sent');
     });
@@ -303,12 +382,20 @@ describe('NotificationService - additional coverage', () => {
   describe('registerTemplate / getTemplates', () => {
     it('should register and retrieve templates', () => {
       service.registerTemplate({
-        id: 't1', name: 'T1', channel: 'email',
-        subject: 'S', bodyText: 'B', variables: [],
+        id: 't1',
+        name: 'T1',
+        channel: 'email',
+        subject: 'S',
+        bodyText: 'B',
+        variables: [],
       });
       service.registerTemplate({
-        id: 't2', name: 'T2', channel: 'sms',
-        subject: 'S2', bodyText: 'B2', variables: [],
+        id: 't2',
+        name: 'T2',
+        channel: 'sms',
+        subject: 'S2',
+        bodyText: 'B2',
+        variables: [],
       });
       expect(service.getTemplates()).toHaveLength(2);
       expect(service.getTemplates('email')).toHaveLength(1);
@@ -388,14 +475,20 @@ describe('NotificationService - additional coverage', () => {
     it('should use default channel and limit', async () => {
       await service.getRecent('tenant_1', 'user_1');
       expect(notifRepo.getRecentForRecipient).toHaveBeenCalledWith(
-        'tenant_1', 'user_1', 'in_app', 50
+        'tenant_1',
+        'user_1',
+        'in_app',
+        50
       );
     });
 
     it('should accept custom channel and limit', async () => {
       await service.getRecent('tenant_1', 'user_1', 'email', 10);
       expect(notifRepo.getRecentForRecipient).toHaveBeenCalledWith(
-        'tenant_1', 'user_1', 'email', 10
+        'tenant_1',
+        'user_1',
+        'email',
+        10
       );
     });
   });
@@ -468,20 +561,28 @@ describe('NotificationService - additional coverage', () => {
   describe('without audit logger', () => {
     it('should work without audit logger on send', async () => {
       const svcNoAudit = new NotificationService(
-        notifRepo as any, prefRepo as any,
-        delivery as any, eventBus as any,
+        notifRepo as any,
+        prefRepo as any,
+        delivery as any,
+        eventBus as any
       );
       const result = await svcNoAudit.send({
-        tenantId: 'tenant_1', recipientId: 'user_1', recipientEmail: 'a@b.com',
-        channel: 'email', subject: 'Hi', body: 'Body',
+        tenantId: 'tenant_1',
+        recipientId: 'user_1',
+        recipientEmail: 'a@b.com',
+        channel: 'email',
+        subject: 'Hi',
+        body: 'Body',
       });
       expect(result.status).toBe('sent');
     });
 
     it('should work without audit logger on updatePreferences', async () => {
       const svcNoAudit = new NotificationService(
-        notifRepo as any, prefRepo as any,
-        delivery as any, eventBus as any,
+        notifRepo as any,
+        prefRepo as any,
+        delivery as any,
+        eventBus as any
       );
       const pref = await svcNoAudit.updatePreferences('tenant_1', 'user_1', {
         doNotDisturb: true,

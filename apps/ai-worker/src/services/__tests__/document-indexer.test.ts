@@ -206,13 +206,15 @@ describe('DocumentIndexer', () => {
         const queryStr = String(args);
         const idMatch = queryStr.match(/doc-(\d+)/);
         if (idMatch) {
-          return Promise.resolve([{
-            id: `doc-${idMatch[1]}`,
-            title: `Doc doc-${idMatch[1]}`,
-            description: null,
-            extracted_text: 'Sample text for embedding',
-            tags: [],
-          }]);
+          return Promise.resolve([
+            {
+              id: `doc-${idMatch[1]}`,
+              title: `Doc doc-${idMatch[1]}`,
+              description: null,
+              extracted_text: 'Sample text for embedding',
+              tags: [],
+            },
+          ]);
         }
         return Promise.resolve([]);
       });
@@ -265,13 +267,15 @@ describe('DocumentIndexer', () => {
         const queryStr = String(args);
         const idMatch = queryStr.match(/doc-(\d)/);
         if (idMatch) {
-          return Promise.resolve([{
-            id: `doc-${idMatch[1]}`,
-            title: `Doc doc-${idMatch[1]}`,
-            description: null,
-            extracted_text: 'Text',
-            tags: [],
-          }]);
+          return Promise.resolve([
+            {
+              id: `doc-${idMatch[1]}`,
+              title: `Doc doc-${idMatch[1]}`,
+              description: null,
+              extracted_text: 'Text',
+              tags: [],
+            },
+          ]);
         }
         return Promise.resolve([]);
       });
@@ -289,7 +293,11 @@ describe('DocumentIndexer', () => {
 
     it('should reindex all notes for a tenant', async () => {
       mockPrismaClient.contactNote.count.mockResolvedValue(3);
-      mockPrismaClient.contactNote.findMany.mockResolvedValue([{ id: 'note-1' }, { id: 'note-2' }, { id: 'note-3' }]);
+      mockPrismaClient.contactNote.findMany.mockResolvedValue([
+        { id: 'note-1' },
+        { id: 'note-2' },
+        { id: 'note-3' },
+      ]);
       mockPrismaClient.contactNote.findUnique.mockImplementation(({ where }) => {
         return Promise.resolve({
           id: where.id,
@@ -337,7 +345,10 @@ describe('DocumentIndexer', () => {
 
   describe('Index Maintenance', () => {
     it('should get unindexed documents', async () => {
-      mockPrismaClient.$queryRaw.mockResolvedValue([{ id: 'doc-unindexed-1' }, { id: 'doc-unindexed-2' }]);
+      mockPrismaClient.$queryRaw.mockResolvedValue([
+        { id: 'doc-unindexed-1' },
+        { id: 'doc-unindexed-2' },
+      ]);
 
       const unindexed = await indexer.getUnindexedDocuments('tenant-123', 10);
 
@@ -392,13 +403,15 @@ describe('DocumentIndexer', () => {
 
     it('should handle document with minimal fields', async () => {
       // Implementation uses $queryRaw to fetch documents
-      mockPrismaClient.$queryRaw.mockResolvedValue([{
-        id: 'minimal-doc',
-        title: 'Title Only',
-        description: null,
-        extracted_text: null,
-        tags: null,
-      }]);
+      mockPrismaClient.$queryRaw.mockResolvedValue([
+        {
+          id: 'minimal-doc',
+          title: 'Title Only',
+          description: null,
+          extracted_text: null,
+          tags: null,
+        },
+      ]);
       mockPrismaClient.$executeRaw.mockResolvedValue(1);
 
       const result = await indexer.indexDocument('minimal-doc');

@@ -1,23 +1,29 @@
 # Fix Material Icons CLS/FOUT — IntelliFlow CRM
 
-**Task**: Implement Option 1 — fix Material Icons Outlined CLS/FOUT on hard refresh
+**Task**: Implement Option 1 — fix Material Icons Outlined CLS/FOUT on hard
+refresh
 
 ## Problem
 
 Material Icons Outlined currently causes:
-- **FOUT (Flash of Unstyled Text)**: Ligature text like "search", "menu" appears briefly before icon renders
-- **CLS (Cumulative Layout Shift)**: Icon containers expand/collapse causing layout jank
+
+- **FOUT (Flash of Unstyled Text)**: Ligature text like "search", "menu" appears
+  briefly before icon renders
+- **CLS (Cumulative Layout Shift)**: Icon containers expand/collapse causing
+  layout jank
 
 ## Goal
 
-Eliminate first-render UI shifting and ligature text visibility while keeping existing markup unchanged across the codebase.
+Eliminate first-render UI shifting and ligature text visibility while keeping
+existing markup unchanged across the codebase.
 
 ---
 
 ## Scope
 
 - **Affected App**: `apps/web/` (Next.js 16.0.10 frontend)
-- **Current Usage**: Ligature-based Material Icons Outlined (e.g., `<span class="material-icons-outlined">search</span>`)
+- **Current Usage**: Ligature-based Material Icons Outlined (e.g.,
+  `<span class="material-icons-outlined">search</span>`)
 - **UI Package**: `packages/ui/src/components/` (shadcn/ui based)
 - **Global Styles**: `apps/web/src/app/globals.css`
 
@@ -37,6 +43,7 @@ Eliminate first-render UI shifting and ligature text visibility while keeping ex
 ### A) Self-Host and Preload the WOFF2 Font
 
 1. **Download the font file**:
+
    ```bash
    # Download Material Icons Outlined WOFF2
    curl -o apps/web/public/fonts/MaterialIconsOutlined.woff2 \
@@ -44,6 +51,7 @@ Eliminate first-render UI shifting and ligature text visibility while keeping ex
    ```
 
 2. **Add preload to document head** in `apps/web/src/app/layout.tsx`:
+
    ```tsx
    <head>
      <link
@@ -59,11 +67,11 @@ Eliminate first-render UI shifting and ligature text visibility while keeping ex
 3. **Add @font-face** in `apps/web/src/app/globals.css`:
    ```css
    @font-face {
-     font-family: "Material Icons Outlined";
+     font-family: 'Material Icons Outlined';
      font-style: normal;
      font-weight: 400;
      font-display: block;
-     src: url("/fonts/MaterialIconsOutlined.woff2") format("woff2");
+     src: url('/fonts/MaterialIconsOutlined.woff2') format('woff2');
    }
    ```
 
@@ -73,7 +81,7 @@ Add to `apps/web/src/app/globals.css`:
 
 ```css
 .material-icons-outlined {
-  font-family: "Material Icons Outlined";
+  font-family: 'Material Icons Outlined';
   font-weight: normal;
   font-style: normal;
   font-size: 24px;
@@ -87,7 +95,7 @@ Add to `apps/web/src/app/globals.css`:
   letter-spacing: normal;
   text-transform: none;
   word-wrap: normal;
-  -webkit-font-feature-settings: "liga";
+  -webkit-font-feature-settings: 'liga';
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   -moz-osx-font-smoothing: grayscale;
@@ -143,14 +151,18 @@ Add to `apps/web/src/app/layout.tsx` (in the `<head>` or early `<body>`):
 
 **Option 2 (Simpler): Rely on font-display: block only**
 
-If gating is undesirable, the `font-display: block` in `@font-face` will briefly hide icons (blank space) rather than show ligature text. Keep reserved box sizing to prevent CLS.
+If gating is undesirable, the `font-display: block` in `@font-face` will briefly
+hide icons (blank space) rather than show ligature text. Keep reserved box
+sizing to prevent CLS.
 
 ### D) Remove Conflicting Font Imports
 
 Check these files for duplicate Google Fonts imports and remove if self-hosting:
 
-- `apps/web/src/app/layout.tsx` — Remove any `<link>` to Google Fonts Material Icons
-- `apps/web/src/app/globals.css` — Remove any `@import` for Material Icons from fonts.googleapis.com
+- `apps/web/src/app/layout.tsx` — Remove any `<link>` to Google Fonts Material
+  Icons
+- `apps/web/src/app/globals.css` — Remove any `@import` for Material Icons from
+  fonts.googleapis.com
 
 **Ensure single source of truth** for "Material Icons Outlined" font-family.
 
@@ -172,37 +184,37 @@ Check these files for duplicate Google Fonts imports and remove if self-hosting:
 Add to `tests/e2e/icons.spec.ts`:
 
 ```typescript
-import { test, expect } from "@playwright/test";
+import { test, expect } from '@playwright/test';
 
-test.describe("Material Icons Loading", () => {
-  test("icons should not show ligature text on load", async ({ page }) => {
+test.describe('Material Icons Loading', () => {
+  test('icons should not show ligature text on load', async ({ page }) => {
     // Throttle network to catch FOUT
-    await page.route("**/*.woff2", (route) => {
+    await page.route('**/*.woff2', (route) => {
       route.continue();
     });
 
-    await page.goto("/dashboard");
+    await page.goto('/dashboard');
 
     // Wait for fonts-ready class
-    await expect(page.locator("html")).toHaveClass(/fonts-ready/, {
+    await expect(page.locator('html')).toHaveClass(/fonts-ready/, {
       timeout: 10000,
     });
 
     // Check icon elements have correct font-family
-    const iconElement = page.locator(".material-icons-outlined").first();
+    const iconElement = page.locator('.material-icons-outlined').first();
     const fontFamily = await iconElement.evaluate(
       (el) => getComputedStyle(el).fontFamily
     );
-    expect(fontFamily).toContain("Material Icons Outlined");
+    expect(fontFamily).toContain('Material Icons Outlined');
 
     // Verify icon is visible
     await expect(iconElement).toBeVisible();
   });
 
-  test("icons should maintain stable dimensions", async ({ page }) => {
-    await page.goto("/dashboard");
+  test('icons should maintain stable dimensions', async ({ page }) => {
+    await page.goto('/dashboard');
 
-    const icon = page.locator(".material-icons-outlined").first();
+    const icon = page.locator('.material-icons-outlined').first();
     const box = await icon.boundingBox();
 
     expect(box?.width).toBe(24);
@@ -219,7 +231,8 @@ test.describe("Material Icons Loading", () => {
 - [ ] Preload tag in `apps/web/src/app/layout.tsx`
 - [ ] `@font-face` in `apps/web/src/app/globals.css`
 - [ ] Global `.material-icons-outlined` CSS rules
-- [ ] Font-ready gate (JS + CSS) OR documented decision for `font-display: block` only
+- [ ] Font-ready gate (JS + CSS) OR documented decision for
+      `font-display: block` only
 - [ ] Removed conflicting Google Fonts imports
 - [ ] Playwright test in `tests/e2e/icons.spec.ts`
 - [ ] Manual verification notes
@@ -236,10 +249,10 @@ test.describe("Material Icons Loading", () => {
 
 ## Related Files
 
-| File | Purpose |
-|------|---------|
-| `apps/web/src/app/layout.tsx` | Root layout, add preload + font-ready script |
-| `apps/web/src/app/globals.css` | Global styles, @font-face + icon CSS |
-| `apps/web/public/fonts/` | Self-hosted font assets |
-| `packages/ui/src/components/` | UI components using icons |
-| `tests/e2e/` | Playwright E2E tests |
+| File                           | Purpose                                      |
+| ------------------------------ | -------------------------------------------- |
+| `apps/web/src/app/layout.tsx`  | Root layout, add preload + font-ready script |
+| `apps/web/src/app/globals.css` | Global styles, @font-face + icon CSS         |
+| `apps/web/public/fonts/`       | Self-hosted font assets                      |
+| `packages/ui/src/components/`  | UI components using icons                    |
+| `tests/e2e/`                   | Playwright E2E tests                         |

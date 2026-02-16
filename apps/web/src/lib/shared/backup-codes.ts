@@ -135,7 +135,9 @@ export function downloadBackupCodes(codes: string[], email: string, generatedAt:
  */
 export function printBackupCodes(codes: string[], email: string, generatedAt: Date): void {
   const dateStr = generatedAt.toISOString().split('T')[0];
-  const formattedCodes = codes.map((code, i) => `<tr><td>${i + 1}.</td><td>${formatBackupCode(code)}</td></tr>`).join('');
+  const formattedCodes = codes
+    .map((code, i) => `<tr><td>${i + 1}.</td><td>${formatBackupCode(code)}</td></tr>`)
+    .join('');
 
   const printContent = `
     <!DOCTYPE html>

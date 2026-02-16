@@ -37,10 +37,8 @@ export default function TicketDetailPage() {
 
   // tRPC queries
   const { data: ticket, isLoading } = api.ticket.getById.useQuery({ id: ticketId });
-  const {
-    data: assigneeOptions = [],
-    isLoading: isAssigneeOptionsLoading,
-  } = api.ticket.assignees.useQuery();
+  const { data: assigneeOptions = [], isLoading: isAssigneeOptionsLoading } =
+    api.ticket.assignees.useQuery();
 
   // Generic update mutation — used for status, priority, and assignment changes
   const updateMutation = api.ticket.update.useMutation({
@@ -60,7 +58,11 @@ export default function TicketDetailPage() {
       toast({ title: 'Response Added', description: 'Your response has been posted.' });
     },
     onError: (error) => {
-      toast({ title: 'Failed to add response', description: error.message, variant: 'destructive' });
+      toast({
+        title: 'Failed to add response',
+        description: error.message,
+        variant: 'destructive',
+      });
     },
   });
 
@@ -132,10 +134,11 @@ export default function TicketDetailPage() {
 
   // Must be called unconditionally (before early returns) to satisfy Rules of Hooks
   const normalizedAssigneeOptions = useMemo(
-    () => assigneeOptions.map((option) => ({
-      ...option,
-      avatar: normalizeAvatarSource(option.avatar) ?? null,
-    })),
+    () =>
+      assigneeOptions.map((option) => ({
+        ...option,
+        avatar: normalizeAvatarSource(option.avatar) ?? null,
+      })),
     [assigneeOptions]
   );
 
@@ -182,7 +185,10 @@ export default function TicketDetailPage() {
 
 function TicketDetailSkeleton() {
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-[#0B1116] p-6 md:p-8" data-testid="ticket-detail-skeleton">
+    <div
+      className="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-[#0B1116] p-6 md:p-8"
+      data-testid="ticket-detail-skeleton"
+    >
       <div className="mx-auto flex flex-col gap-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-2">

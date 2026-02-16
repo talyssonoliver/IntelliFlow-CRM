@@ -26,7 +26,7 @@ describe('generateOpenAPISpec', () => {
         'Legal Operations',
         'Platform & System',
         'Security & Compliance',
-      ]),
+      ])
     );
     expect(spec.tags).toHaveLength(10);
   });
@@ -41,9 +41,7 @@ describe('generateOpenAPISpec', () => {
   it('includes 3 servers (development, staging, production)', () => {
     expect(spec.servers).toHaveLength(3);
     const descriptions = spec.servers.map((s: { description: string }) => s.description);
-    expect(descriptions).toEqual(
-      expect.arrayContaining(['Development', 'Staging', 'Production']),
-    );
+    expect(descriptions).toEqual(expect.arrayContaining(['Development', 'Staging', 'Production']));
   });
 
   it('includes standard error responses (400, 401, 403, 404, 429, 500)', () => {
@@ -56,7 +54,7 @@ describe('generateOpenAPISpec', () => {
         'NotFound',
         'TooManyRequests',
         'InternalServerError',
-      ]),
+      ])
     );
   });
 

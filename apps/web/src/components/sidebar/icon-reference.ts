@@ -33,11 +33,11 @@ export const MODULE_ICONS = {
 
 export const VIEW_ICONS = {
   // List views
-  all: 'list',              // All items in a module
-  my: 'person',             // Items assigned to current user
-  starred: 'star',          // Starred/favorite items
-  recent: 'schedule',       // Recently added/modified
-  recentViewed: 'history',  // Recently viewed by user
+  all: 'list', // All items in a module
+  my: 'person', // Items assigned to current user
+  starred: 'star', // Starred/favorite items
+  recent: 'schedule', // Recently added/modified
+  recentViewed: 'history', // Recently viewed by user
 
   // Status views
   active: 'play_circle',
@@ -271,10 +271,10 @@ export const MODULE_COLORS = {
 // Icon Type Definitions
 // =============================================================================
 
-export type ModuleIcon = typeof MODULE_ICONS[keyof typeof MODULE_ICONS];
-export type ViewIcon = typeof VIEW_ICONS[keyof typeof VIEW_ICONS];
-export type SegmentIcon = typeof SEGMENT_ICONS[keyof typeof SEGMENT_ICONS];
-export type ActionIcon = typeof ACTION_ICONS[keyof typeof ACTION_ICONS];
-export type StatusIcon = typeof STATUS_ICONS[keyof typeof STATUS_ICONS];
-export type FeatureIcon = typeof FEATURE_ICONS[keyof typeof FEATURE_ICONS];
-export type ModuleColorTheme = typeof MODULE_COLORS[keyof typeof MODULE_COLORS];
+export type ModuleIcon = (typeof MODULE_ICONS)[keyof typeof MODULE_ICONS];
+export type ViewIcon = (typeof VIEW_ICONS)[keyof typeof VIEW_ICONS];
+export type SegmentIcon = (typeof SEGMENT_ICONS)[keyof typeof SEGMENT_ICONS];
+export type ActionIcon = (typeof ACTION_ICONS)[keyof typeof ACTION_ICONS];
+export type StatusIcon = (typeof STATUS_ICONS)[keyof typeof STATUS_ICONS];
+export type FeatureIcon = (typeof FEATURE_ICONS)[keyof typeof FEATURE_ICONS];
+export type ModuleColorTheme = (typeof MODULE_COLORS)[keyof typeof MODULE_COLORS];

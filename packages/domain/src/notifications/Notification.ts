@@ -32,7 +32,14 @@ export type NotificationPriority = 'high' | 'normal' | 'low';
  * Notification constants (single source of truth)
  */
 export const NOTIFICATION_CHANNELS = ['in_app', 'email', 'sms', 'push', 'webhook'] as const;
-export const NOTIFICATION_STATUSES = ['pending', 'sent', 'delivered', 'failed', 'read', 'bounced'] as const;
+export const NOTIFICATION_STATUSES = [
+  'pending',
+  'sent',
+  'delivered',
+  'failed',
+  'read',
+  'bounced',
+] as const;
 export const NOTIFICATION_PRIORITIES = ['high', 'normal', 'low'] as const;
 
 interface NotificationProps {
@@ -222,10 +229,7 @@ export class Notification extends AggregateRoot<NotificationId> {
   /**
    * Reconstruct from persistence
    */
-  static reconstitute(
-    id: NotificationId,
-    props: NotificationProps
-  ): Notification {
+  static reconstitute(id: NotificationId, props: NotificationProps): Notification {
     return new Notification(id, props);
   }
 
@@ -310,11 +314,7 @@ export class Notification extends AggregateRoot<NotificationId> {
     this.props.updatedAt = new Date();
 
     this.addDomainEvent(
-      new NotificationReadEvent(
-        this.id.value,
-        this.props.tenantId,
-        this.props.recipientId
-      )
+      new NotificationReadEvent(this.id.value, this.props.tenantId, this.props.recipientId)
     );
   }
 

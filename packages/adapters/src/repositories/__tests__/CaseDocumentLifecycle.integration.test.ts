@@ -46,7 +46,12 @@ describe('Case Document Lifecycle Integration', () => {
       });
 
       // Grant admin access to creator
-      document.grantAccess('123e4567-e89b-12d3-a456-426614174001', 'USER', AccessLevel.ADMIN, '123e4567-e89b-12d3-a456-426614174001');
+      document.grantAccess(
+        '123e4567-e89b-12d3-a456-426614174001',
+        'USER',
+        AccessLevel.ADMIN,
+        '123e4567-e89b-12d3-a456-426614174001'
+      );
 
       await repository.save(document);
 
@@ -102,12 +107,14 @@ describe('Case Document Lifecycle Integration', () => {
       });
 
       // Cannot approve without submitting for review first
-      expect(() => document.approve('123e4567-e89b-12d3-a456-426614174001')).toThrow('Only documents under review can be approved');
+      expect(() => document.approve('123e4567-e89b-12d3-a456-426614174001')).toThrow(
+        'Only documents under review can be approved'
+      );
 
       // Cannot sign without approval
-      expect(() => document.sign('123e4567-e89b-12d3-a456-426614174001', '127.0.0.1', 'test')).toThrow(
-        'Only approved documents can be signed'
-      );
+      expect(() =>
+        document.sign('123e4567-e89b-12d3-a456-426614174001', '127.0.0.1', 'test')
+      ).toThrow('Only approved documents can be signed');
     });
 
     it('should handle document versioning workflow', async () => {
@@ -130,7 +137,11 @@ describe('Case Document Lifecycle Integration', () => {
       await repository.save(v1);
 
       // Create minor version (amendment)
-      const v2 = v1.createMinorVersion('123e4567-e89b-12d3-a456-426614174001', 's3://docs/contract-v2.pdf', 'b'.repeat(64));
+      const v2 = v1.createMinorVersion(
+        '123e4567-e89b-12d3-a456-426614174001',
+        's3://docs/contract-v2.pdf',
+        'b'.repeat(64)
+      );
       await repository.save(v1); // Save old version (now superseded)
       await repository.save(v2); // Save new version
 
@@ -140,7 +151,11 @@ describe('Case Document Lifecycle Integration', () => {
       expect(v1.status).toBe(DocumentStatus.SUPERSEDED);
 
       // Create patch version (typo fix)
-      const v3 = v2.createPatchVersion('123e4567-e89b-12d3-a456-426614174001', 's3://docs/contract-v3.pdf', 'c'.repeat(64));
+      const v3 = v2.createPatchVersion(
+        '123e4567-e89b-12d3-a456-426614174001',
+        's3://docs/contract-v3.pdf',
+        'c'.repeat(64)
+      );
       await repository.save(v2);
       await repository.save(v3);
 
@@ -185,7 +200,9 @@ describe('Case Document Lifecycle Integration', () => {
       await repository.save(document);
 
       // Attempt to delete (should fail)
-      expect(() => document.delete('123e4567-e89b-12d3-a456-426614174001')).toThrow('Cannot delete document under legal hold');
+      expect(() => document.delete('123e4567-e89b-12d3-a456-426614174001')).toThrow(
+        'Cannot delete document under legal hold'
+      );
 
       // Release hold
       document.releaseLegalHold('legal-team-456');
@@ -217,13 +234,28 @@ describe('Case Document Lifecycle Integration', () => {
       });
 
       // Owner grants admin access to themselves
-      document.grantAccess('123e4567-e89b-12d3-a456-426614174005', 'USER', AccessLevel.ADMIN, '123e4567-e89b-12d3-a456-426614174005');
+      document.grantAccess(
+        '123e4567-e89b-12d3-a456-426614174005',
+        'USER',
+        AccessLevel.ADMIN,
+        '123e4567-e89b-12d3-a456-426614174005'
+      );
 
       // Grant view access to viewer
-      document.grantAccess('123e4567-e89b-12d3-a456-426614174006', 'USER', AccessLevel.VIEW, '123e4567-e89b-12d3-a456-426614174005');
+      document.grantAccess(
+        '123e4567-e89b-12d3-a456-426614174006',
+        'USER',
+        AccessLevel.VIEW,
+        '123e4567-e89b-12d3-a456-426614174005'
+      );
 
       // Grant edit access to editor
-      document.grantAccess('123e4567-e89b-12d3-a456-426614174007', 'USER', AccessLevel.EDIT, '123e4567-e89b-12d3-a456-426614174005');
+      document.grantAccess(
+        '123e4567-e89b-12d3-a456-426614174007',
+        'USER',
+        AccessLevel.EDIT,
+        '123e4567-e89b-12d3-a456-426614174005'
+      );
 
       await repository.save(document);
 
@@ -231,23 +263,43 @@ describe('Case Document Lifecycle Integration', () => {
       expect(document.acl).toHaveLength(3);
 
       // Check access levels
-      expect(document.hasAccess('123e4567-e89b-12d3-a456-426614174005', AccessLevel.ADMIN)).toBe(true);
-      expect(document.hasAccess('123e4567-e89b-12d3-a456-426614174006', AccessLevel.VIEW)).toBe(true);
-      expect(document.hasAccess('123e4567-e89b-12d3-a456-426614174006', AccessLevel.EDIT)).toBe(false);
-      expect(document.hasAccess('123e4567-e89b-12d3-a456-426614174007', AccessLevel.EDIT)).toBe(true);
+      expect(document.hasAccess('123e4567-e89b-12d3-a456-426614174005', AccessLevel.ADMIN)).toBe(
+        true
+      );
+      expect(document.hasAccess('123e4567-e89b-12d3-a456-426614174006', AccessLevel.VIEW)).toBe(
+        true
+      );
+      expect(document.hasAccess('123e4567-e89b-12d3-a456-426614174006', AccessLevel.EDIT)).toBe(
+        false
+      );
+      expect(document.hasAccess('123e4567-e89b-12d3-a456-426614174007', AccessLevel.EDIT)).toBe(
+        true
+      );
 
       // Test findAccessibleByUser
-      const viewerDocs = await repository.findAccessibleByUser('123e4567-e89b-12d3-a456-426614174006', 'tenant-123');
-      const editorDocs = await repository.findAccessibleByUser('123e4567-e89b-12d3-a456-426614174007', 'tenant-123');
+      const viewerDocs = await repository.findAccessibleByUser(
+        '123e4567-e89b-12d3-a456-426614174006',
+        'tenant-123'
+      );
+      const editorDocs = await repository.findAccessibleByUser(
+        '123e4567-e89b-12d3-a456-426614174007',
+        'tenant-123'
+      );
 
       expect(viewerDocs).toHaveLength(1);
       expect(editorDocs).toHaveLength(1);
 
       // Revoke access from viewer
-      document.revokeAccess('123e4567-e89b-12d3-a456-426614174006', '123e4567-e89b-12d3-a456-426614174005');
+      document.revokeAccess(
+        '123e4567-e89b-12d3-a456-426614174006',
+        '123e4567-e89b-12d3-a456-426614174005'
+      );
       await repository.save(document);
 
-      const viewerDocsAfter = await repository.findAccessibleByUser('123e4567-e89b-12d3-a456-426614174006', 'tenant-123');
+      const viewerDocsAfter = await repository.findAccessibleByUser(
+        '123e4567-e89b-12d3-a456-426614174006',
+        'tenant-123'
+      );
       expect(viewerDocsAfter).toHaveLength(0);
     });
 
@@ -271,14 +323,25 @@ describe('Case Document Lifecycle Integration', () => {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
 
-      document.grantAccess('123e4567-e89b-12d3-a456-426614174008', 'USER', AccessLevel.VIEW, '123e4567-e89b-12d3-a456-426614174005', yesterday);
+      document.grantAccess(
+        '123e4567-e89b-12d3-a456-426614174008',
+        'USER',
+        AccessLevel.VIEW,
+        '123e4567-e89b-12d3-a456-426614174005',
+        yesterday
+      );
       await repository.save(document);
 
       // Access should be denied due to expiration
-      expect(document.hasAccess('123e4567-e89b-12d3-a456-426614174008', AccessLevel.VIEW)).toBe(false);
+      expect(document.hasAccess('123e4567-e89b-12d3-a456-426614174008', AccessLevel.VIEW)).toBe(
+        false
+      );
 
       // Document should not be in accessible list
-      const docs = await repository.findAccessibleByUser('123e4567-e89b-12d3-a456-426614174008', 'tenant-123');
+      const docs = await repository.findAccessibleByUser(
+        '123e4567-e89b-12d3-a456-426614174008',
+        'tenant-123'
+      );
       expect(docs).toHaveLength(0);
     });
   });
@@ -343,7 +406,10 @@ describe('Case Document Lifecycle Integration', () => {
       expect(legalCase.documentIds).toContain(doc2.id);
 
       // Attempt to attach same document again (should fail)
-      const duplicateAttach = legalCase.attachDocument(doc1.id, '123e4567-e89b-12d3-a456-426614174001');
+      const duplicateAttach = legalCase.attachDocument(
+        doc1.id,
+        '123e4567-e89b-12d3-a456-426614174001'
+      );
       expect(duplicateAttach.isFailure).toBe(true);
 
       // Detach a document
@@ -353,7 +419,10 @@ describe('Case Document Lifecycle Integration', () => {
       expect(legalCase.documentIds).not.toContain(doc1.id);
 
       // Attempt to detach non-attached document (should fail)
-      const invalidDetach = legalCase.detachDocument('non-existent-id', '123e4567-e89b-12d3-a456-426614174001');
+      const invalidDetach = legalCase.detachDocument(
+        'non-existent-id',
+        '123e4567-e89b-12d3-a456-426614174001'
+      );
       expect(invalidDetach.isFailure).toBe(true);
 
       // Query documents by case ID
@@ -379,7 +448,10 @@ describe('Case Document Lifecycle Integration', () => {
       legalCase.close('Case resolved', '123e4567-e89b-12d3-a456-426614174012');
 
       // Attempt to attach document (should fail)
-      const attachResult = legalCase.attachDocument('123e4567-e89b-12d3-a456-426614174013', '123e4567-e89b-12d3-a456-426614174014');
+      const attachResult = legalCase.attachDocument(
+        '123e4567-e89b-12d3-a456-426614174013',
+        '123e4567-e89b-12d3-a456-426614174014'
+      );
       expect(attachResult.isFailure).toBe(true);
       expect(attachResult.error.code).toBe('CASE_ALREADY_CLOSED');
     });
@@ -396,7 +468,10 @@ describe('Case Document Lifecycle Integration', () => {
       legalCase.clearDomainEvents(); // Clear creation event
 
       // Attach document
-      legalCase.attachDocument('123e4567-e89b-12d3-a456-426614174013', '123e4567-e89b-12d3-a456-426614174014');
+      legalCase.attachDocument(
+        '123e4567-e89b-12d3-a456-426614174013',
+        '123e4567-e89b-12d3-a456-426614174014'
+      );
 
       const events = legalCase.getDomainEvents();
       expect(events).toHaveLength(1);
@@ -404,7 +479,10 @@ describe('Case Document Lifecycle Integration', () => {
 
       // Detach document
       legalCase.clearDomainEvents();
-      legalCase.detachDocument('123e4567-e89b-12d3-a456-426614174013', '123e4567-e89b-12d3-a456-426614174014');
+      legalCase.detachDocument(
+        '123e4567-e89b-12d3-a456-426614174013',
+        '123e4567-e89b-12d3-a456-426614174014'
+      );
 
       const detachEvents = legalCase.getDomainEvents();
       expect(detachEvents).toHaveLength(1);
@@ -447,8 +525,14 @@ describe('Case Document Lifecycle Integration', () => {
       await repository.save(tenant1Doc);
       await repository.save(tenant2Doc);
 
-      const tenant1Docs = await repository.findAccessibleByUser('123e4567-e89b-12d3-a456-426614174001', '123e4567-e89b-12d3-a456-426614174015');
-      const tenant2Docs = await repository.findAccessibleByUser('123e4567-e89b-12d3-a456-426614174001', '123e4567-e89b-12d3-a456-426614174016');
+      const tenant1Docs = await repository.findAccessibleByUser(
+        '123e4567-e89b-12d3-a456-426614174001',
+        '123e4567-e89b-12d3-a456-426614174015'
+      );
+      const tenant2Docs = await repository.findAccessibleByUser(
+        '123e4567-e89b-12d3-a456-426614174001',
+        '123e4567-e89b-12d3-a456-426614174016'
+      );
 
       expect(tenant1Docs).toHaveLength(1);
       expect(tenant2Docs).toHaveLength(1);
@@ -496,7 +580,10 @@ describe('Case Document Lifecycle Integration', () => {
       caseDocs = await repository.findByCaseId('123e4567-e89b-12d3-a456-426614174003');
       expect(caseDocs).toHaveLength(0);
 
-      const userDocs = await repository.findAccessibleByUser('123e4567-e89b-12d3-a456-426614174001', 'tenant-123');
+      const userDocs = await repository.findAccessibleByUser(
+        '123e4567-e89b-12d3-a456-426614174001',
+        'tenant-123'
+      );
       expect(userDocs).toHaveLength(0);
     });
 

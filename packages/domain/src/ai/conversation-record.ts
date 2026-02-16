@@ -11,13 +11,7 @@
 // Conversation Statuses
 // =============================================================================
 
-export const CONVERSATION_STATUSES = [
-  'ACTIVE',
-  'PAUSED',
-  'ENDED',
-  'ARCHIVED',
-  'DELETED',
-] as const;
+export const CONVERSATION_STATUSES = ['ACTIVE', 'PAUSED', 'ENDED', 'ARCHIVED', 'DELETED'] as const;
 
 export type ConversationStatus = (typeof CONVERSATION_STATUSES)[number];
 
@@ -80,12 +74,7 @@ export type ToolCallStatus = (typeof TOOL_CALL_STATUSES)[number];
 // Approval Statuses
 // =============================================================================
 
-export const APPROVAL_STATUSES = [
-  'PENDING',
-  'APPROVED',
-  'REJECTED',
-  'EXPIRED',
-] as const;
+export const APPROVAL_STATUSES = ['PENDING', 'APPROVED', 'REJECTED', 'EXPIRED'] as const;
 
 export type ApprovalStatus = (typeof APPROVAL_STATUSES)[number];
 
@@ -96,7 +85,10 @@ export type ApprovalStatus = (typeof APPROVAL_STATUSES)[number];
 export interface ConversationRecordRepository {
   findById(id: string): Promise<ConversationRecordData | null>;
   findBySessionId(sessionId: string): Promise<ConversationRecordData | null>;
-  findByTenant(tenantId: string, options?: { limit?: number; offset?: number }): Promise<ConversationRecordData[]>;
+  findByTenant(
+    tenantId: string,
+    options?: { limit?: number; offset?: number }
+  ): Promise<ConversationRecordData[]>;
   save(conversation: ConversationRecordData): Promise<void>;
   updateStatus(id: string, status: ConversationStatus): Promise<void>;
 }

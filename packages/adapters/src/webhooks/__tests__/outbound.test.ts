@@ -555,7 +555,7 @@ describe('OutboundWebhookClient', () => {
       const responses = await client.sendBatch(requests);
 
       expect(responses).toHaveLength(3);
-      expect(responses.every(r => r.success)).toBe(true);
+      expect(responses.every((r) => r.success)).toBe(true);
       expect(mockFetch).toHaveBeenCalledTimes(3);
     });
 

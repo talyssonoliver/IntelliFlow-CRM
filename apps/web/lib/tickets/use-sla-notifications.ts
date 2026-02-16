@@ -63,9 +63,7 @@ export function useSLANotifications(config: Partial<NotificationConfig> = {}) {
  * Hook to listen for SLA notifications
  * Useful for displaying toasts or custom UI elements
  */
-export function useSLANotificationListener(
-  callback: (notification: any) => void
-) {
+export function useSLANotificationListener(callback: (notification: any) => void) {
   const manager = useSLANotifications();
 
   useEffect(() => {

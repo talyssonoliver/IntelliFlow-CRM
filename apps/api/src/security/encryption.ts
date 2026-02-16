@@ -108,19 +108,13 @@ export class EnvironmentKeyProvider implements KeyProvider {
     if (!masterKey) {
       throw new EncryptionError(
         'MISSING_KEY',
-        `Encryption master key not found in ${this.masterKeyEnvVar}`,
+        `Encryption master key not found in ${this.masterKeyEnvVar}`
       );
     }
 
     // Derive version-specific key from master key
     const salt = Buffer.from(`intelliflow-v${version}`);
-    const derivedKey = pbkdf2Sync(
-      masterKey,
-      salt,
-      PBKDF2_ITERATIONS,
-      KEY_LENGTH,
-      PBKDF2_DIGEST,
-    );
+    const derivedKey = pbkdf2Sync(masterKey, salt, PBKDF2_ITERATIONS, KEY_LENGTH, PBKDF2_DIGEST);
 
     this.keyCache.set(version, derivedKey);
     return derivedKey;
@@ -150,11 +144,7 @@ export class VaultKeyProvider implements KeyProvider {
   private keyName: string;
   private currentVersion = 1;
 
-  constructor(options?: {
-    address?: string;
-    token?: string;
-    keyName?: string;
-  }) {
+  constructor(options?: { address?: string; token?: string; keyName?: string }) {
     this.vaultAddress = options?.address || process.env.VAULT_ADDR || 'http://127.0.0.1:8200';
     this.vaultToken = options?.token || process.env.VAULT_TOKEN || '';
     this.keyName = options?.keyName || 'intelliflow-data-key';
@@ -184,14 +174,11 @@ export class VaultKeyProvider implements KeyProvider {
 
   async getKeyMetadata(version: number): Promise<KeyMetadata | null> {
     try {
-      const response = await fetch(
-        `${this.vaultAddress}/v1/transit/keys/${this.keyName}`,
-        {
-          headers: {
-            'X-Vault-Token': this.vaultToken,
-          },
+      const response = await fetch(`${this.vaultAddress}/v1/transit/keys/${this.keyName}`, {
+        headers: {
+          'X-Vault-Token': this.vaultToken,
         },
-      );
+      });
 
       if (!response.ok) return null;
 
@@ -211,19 +198,16 @@ export class VaultKeyProvider implements KeyProvider {
    * Encrypt using Vault Transit backend directly
    */
   async encryptWithVault(plaintext: string): Promise<string> {
-    const response = await fetch(
-      `${this.vaultAddress}/v1/transit/encrypt/${this.keyName}`,
-      {
-        method: 'POST',
-        headers: {
-          'X-Vault-Token': this.vaultToken,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          plaintext: Buffer.from(plaintext).toString('base64'),
-        }),
+    const response = await fetch(`${this.vaultAddress}/v1/transit/encrypt/${this.keyName}`, {
+      method: 'POST',
+      headers: {
+        'X-Vault-Token': this.vaultToken,
+        'Content-Type': 'application/json',
       },
-    );
+      body: JSON.stringify({
+        plaintext: Buffer.from(plaintext).toString('base64'),
+      }),
+    });
 
     if (!response.ok) {
       throw new EncryptionError('VAULT_ERROR', 'Failed to encrypt with Vault');
@@ -237,19 +221,16 @@ export class VaultKeyProvider implements KeyProvider {
    * Decrypt using Vault Transit backend directly
    */
   async decryptWithVault(ciphertext: string): Promise<string> {
-    const response = await fetch(
-      `${this.vaultAddress}/v1/transit/decrypt/${this.keyName}`,
-      {
-        method: 'POST',
-        headers: {
-          'X-Vault-Token': this.vaultToken,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ciphertext,
-        }),
+    const response = await fetch(`${this.vaultAddress}/v1/transit/decrypt/${this.keyName}`, {
+      method: 'POST',
+      headers: {
+        'X-Vault-Token': this.vaultToken,
+        'Content-Type': 'application/json',
       },
-    );
+      body: JSON.stringify({
+        ciphertext,
+      }),
+    });
 
     if (!response.ok) {
       throw new EncryptionError('VAULT_ERROR', 'Failed to decrypt with Vault');
@@ -267,7 +248,7 @@ export class EncryptionError extends Error {
   constructor(
     public code: string,
     message: string,
-    public cause?: Error,
+    public cause?: Error
   ) {
     super(message);
     this.name = 'EncryptionError';
@@ -300,10 +281,7 @@ export class EncryptionService {
         cipher.setAAD(Buffer.from(options.aad), { plaintextLength: Buffer.byteLength(plaintext) });
       }
 
-      const encrypted = Buffer.concat([
-        cipher.update(plaintext, 'utf8'),
-        cipher.final(),
-      ]);
+      const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
 
       const authTag = cipher.getAuthTag();
 
@@ -319,7 +297,7 @@ export class EncryptionService {
       throw new EncryptionError(
         'ENCRYPTION_FAILED',
         'Failed to encrypt data',
-        error instanceof Error ? error : undefined,
+        error instanceof Error ? error : undefined
       );
     }
   }
@@ -342,17 +320,14 @@ export class EncryptionService {
         decipher.setAAD(Buffer.from(options.aad));
       }
 
-      const decrypted = Buffer.concat([
-        decipher.update(ciphertext),
-        decipher.final(),
-      ]);
+      const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 
       return decrypted.toString('utf8');
     } catch (error) {
       throw new EncryptionError(
         'DECRYPTION_FAILED',
         'Failed to decrypt data - possible tampering or wrong key',
-        error instanceof Error ? error : undefined,
+        error instanceof Error ? error : undefined
       );
     }
   }
@@ -371,14 +346,14 @@ export class EncryptionService {
   async decryptFromString(encryptedString: string, options?: EncryptionOptions): Promise<string> {
     try {
       const encrypted = JSON.parse(
-        Buffer.from(encryptedString, 'base64').toString('utf8'),
+        Buffer.from(encryptedString, 'base64').toString('utf8')
       ) as EncryptedData;
       return this.decrypt(encrypted, options);
     } catch (error) {
       throw new EncryptionError(
         'INVALID_FORMAT',
         'Invalid encrypted data format',
-        error instanceof Error ? error : undefined,
+        error instanceof Error ? error : undefined
       );
     }
   }
@@ -463,7 +438,7 @@ export const FieldEncryption = {
   async encryptField<T extends Record<string, unknown>>(
     obj: T,
     fieldPath: string,
-    service?: EncryptionService,
+    service?: EncryptionService
   ): Promise<T> {
     const svc = service || getEncryptionService();
     const parts = fieldPath.split('.');
@@ -490,7 +465,7 @@ export const FieldEncryption = {
   async decryptField<T extends Record<string, unknown>>(
     obj: T,
     fieldPath: string,
-    service?: EncryptionService,
+    service?: EncryptionService
   ): Promise<T> {
     const svc = service || getEncryptionService();
     const parts = fieldPath.split('.');

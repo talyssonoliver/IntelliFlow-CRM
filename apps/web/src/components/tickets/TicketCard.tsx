@@ -47,10 +47,14 @@ export function TicketCard({ ticket, onClick, onQuickAction, compact = false }: 
       <div className="flex items-center gap-2 mb-3">
         <span className="text-xs text-muted-foreground truncate">{ticket.contactName}</span>
         <span className="text-muted-foreground">·</span>
-        <div className={`flex items-center gap-1 text-xs font-semibold uppercase ${priorityConfig.text}`}>
+        <div
+          className={`flex items-center gap-1 text-xs font-semibold uppercase ${priorityConfig.text}`}
+        >
           <span
             className="material-symbols-outlined text-[14px]"
-            style={{ fontVariationSettings: ticket.priority === 'CRITICAL' ? "'FILL' 1" : undefined }}
+            style={{
+              fontVariationSettings: ticket.priority === 'CRITICAL' ? "'FILL' 1" : undefined,
+            }}
           >
             {priorityConfig.icon}
           </span>
@@ -81,14 +85,20 @@ export function TicketCard({ ticket, onClick, onQuickAction, compact = false }: 
       {onQuickAction && (
         <div className="flex gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
-            onClick={(e) => { e.stopPropagation(); onQuickAction('resolve'); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onQuickAction('resolve');
+            }}
             className="flex-1 py-1 text-[10px] font-semibold rounded bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/30 transition-colors"
             aria-label="Resolve ticket"
           >
             Resolve
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); onQuickAction('escalate'); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onQuickAction('escalate');
+            }}
             className="flex-1 py-1 text-[10px] font-semibold rounded bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
             aria-label="Escalate ticket"
           >

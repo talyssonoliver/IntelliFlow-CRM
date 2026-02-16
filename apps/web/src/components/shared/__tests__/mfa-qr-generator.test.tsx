@@ -26,7 +26,8 @@ const mockClipboard = {
 
 describe('MfaQrGenerator', () => {
   const defaultProps = {
-    otpauthUrl: 'otpauth://totp/IntelliFlow:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=IntelliFlow',
+    otpauthUrl:
+      'otpauth://totp/IntelliFlow:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=IntelliFlow',
     secret: 'JBSWY3DPEHPK3PXP',
     accountName: 'user@example.com',
     onConfirm: vi.fn(),
@@ -121,7 +122,8 @@ describe('MfaQrGenerator', () => {
 
       await waitFor(() => {
         // The account text appears in the manual section
-        const manualSection = screen.getByLabelText(/secret key for manual entry/i).parentElement?.parentElement;
+        const manualSection = screen.getByLabelText(/secret key for manual entry/i).parentElement
+          ?.parentElement;
         expect(manualSection).toHaveTextContent(defaultProps.accountName);
       });
     });
@@ -210,9 +212,7 @@ describe('MfaQrGenerator', () => {
 
   describe('Styling', () => {
     it('should apply custom className', () => {
-      const { container } = render(
-        <MfaQrGenerator {...defaultProps} className="custom-class" />
-      );
+      const { container } = render(<MfaQrGenerator {...defaultProps} className="custom-class" />);
 
       expect(container.firstChild).toHaveClass('custom-class');
     });

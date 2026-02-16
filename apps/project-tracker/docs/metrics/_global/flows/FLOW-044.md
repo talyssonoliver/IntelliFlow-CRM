@@ -2,25 +2,31 @@
 
 ## Overview
 
-| Property | Value |
-|----------|-------|
-| **Flow ID** | FLOW-044 |
-| **Name** | Encryption Key Management |
-| **Category** | Security |
-| **Priority** | Critical |
-| **Sprint** | 0 (setup), 1 (integration) |
+| Property          | Value                         |
+| ----------------- | ----------------------------- |
+| **Flow ID**       | FLOW-044                      |
+| **Name**          | Encryption Key Management     |
+| **Category**      | Security                      |
+| **Priority**      | Critical                      |
+| **Sprint**        | 0 (setup), 1 (integration)    |
 | **Related Tasks** | EXC-SEC-001, IFC-113, IFC-072 |
 
 ## Description
 
-End-to-end encryption key lifecycle management via HashiCorp Vault's Transit secrets engine. Provides encryption-as-a-service for application data at rest, automatic key rotation on a monthly schedule, key versioning with configurable retention, and full audit logging of all cryptographic operations. Integrates with IntelliFlow's zero trust security model.
+End-to-end encryption key lifecycle management via HashiCorp Vault's Transit
+secrets engine. Provides encryption-as-a-service for application data at rest,
+automatic key rotation on a monthly schedule, key versioning with configurable
+retention, and full audit logging of all cryptographic operations. Integrates
+with IntelliFlow's zero trust security model.
 
 ---
 
 ## Actors
 
-- **Application Service**: Requests encrypt/decrypt operations via Vault Transit API
-- **Vault Server**: Manages key material, performs cryptographic operations, enforces policies
+- **Application Service**: Requests encrypt/decrypt operations via Vault Transit
+  API
+- **Vault Server**: Manages key material, performs cryptographic operations,
+  enforces policies
 - **Security Admin**: Configures keys, rotation schedules, and access policies
 - **Audit System**: Logs all key operations for compliance
 - **CI/CD Pipeline**: Uses AppRole auth for automated secret access
@@ -99,17 +105,19 @@ End-to-end encryption key lifecycle management via HashiCorp Vault's Transit sec
 
 ### Step 1: Key Provisioning
 
-**Trigger**: Security Admin creates encryption keys during initial setup or key rotation
+**Trigger**: Security Admin creates encryption keys during initial setup or key
+rotation
 
 **Keys Defined** (from `artifacts/misc/vault-config.yaml`):
 
-| Key Name | Algorithm | Purpose | Auto-Rotate | Exportable |
-|----------|-----------|---------|-------------|------------|
-| `intelliflow-data-key` | AES-256-GCM | Data encryption at rest | 30 days | No |
-| `intelliflow-key-wrap` | RSA-4096 | Key wrapping / envelope encryption | Manual | No |
-| `intelliflow-signing-key` | Ed25519 | Digital signatures & integrity | Manual | No |
+| Key Name                  | Algorithm   | Purpose                            | Auto-Rotate | Exportable |
+| ------------------------- | ----------- | ---------------------------------- | ----------- | ---------- |
+| `intelliflow-data-key`    | AES-256-GCM | Data encryption at rest            | 30 days     | No         |
+| `intelliflow-key-wrap`    | RSA-4096    | Key wrapping / envelope encryption | Manual      | No         |
+| `intelliflow-signing-key` | Ed25519     | Digital signatures & integrity     | Manual      | No         |
 
 **Vault CLI**:
+
 ```bash
 # Create data encryption key
 vault write -f transit/keys/intelliflow-data-key \
@@ -135,6 +143,7 @@ vault write -f transit/keys/intelliflow-signing-key \
 **Trigger**: Application service needs to encrypt sensitive data before storage
 
 **Vault API Call**:
+
 ```
 POST /v1/transit/encrypt/intelliflow-data-key
 {
@@ -143,6 +152,7 @@ POST /v1/transit/encrypt/intelliflow-data-key
 ```
 
 **Response**:
+
 ```json
 {
   "data": {
@@ -153,25 +163,26 @@ POST /v1/transit/encrypt/intelliflow-data-key
 ```
 
 **Application Integration**:
+
 ```typescript
 interface EncryptionService {
-  encrypt(plaintext: string): Promise<string>;    // Returns vault:vN:ciphertext
-  decrypt(ciphertext: string): Promise<string>;   // Returns plaintext
-  sign(data: string): Promise<string>;            // Returns signature
+  encrypt(plaintext: string): Promise<string>; // Returns vault:vN:ciphertext
+  decrypt(ciphertext: string): Promise<string>; // Returns plaintext
+  sign(data: string): Promise<string>; // Returns signature
   verify(data: string, signature: string): Promise<boolean>;
 }
 ```
 
 **Data Encrypted at Rest**:
 
-| Entity | Fields | Rationale |
-|--------|--------|-----------|
-| Contact | email, phone | PII / GDPR |
-| Lead | email, phone, company | PII / GDPR |
-| Account | billingAddress | Financial PII |
-| User | preferences (if contains PII) | Internal privacy |
-| API Keys | keyValue | Security credential |
-| AI Prompts | system prompts (if proprietary) | IP protection |
+| Entity     | Fields                          | Rationale           |
+| ---------- | ------------------------------- | ------------------- |
+| Contact    | email, phone                    | PII / GDPR          |
+| Lead       | email, phone, company           | PII / GDPR          |
+| Account    | billingAddress                  | Financial PII       |
+| User       | preferences (if contains PII)   | Internal privacy    |
+| API Keys   | keyValue                        | Security credential |
+| AI Prompts | system prompts (if proprietary) | IP protection       |
 
 ---
 
@@ -180,6 +191,7 @@ interface EncryptionService {
 **Trigger**: Application service reads encrypted data and needs plaintext
 
 **Vault API Call**:
+
 ```
 POST /v1/transit/decrypt/intelliflow-data-key
 {
@@ -187,7 +199,9 @@ POST /v1/transit/decrypt/intelliflow-data-key
 }
 ```
 
-**Key Version Handling**: Vault automatically handles decryption with older key versions. The version is encoded in the ciphertext prefix (`vault:v1:`, `vault:v2:`, etc.).
+**Key Version Handling**: Vault automatically handles decryption with older key
+versions. The version is encoded in the ciphertext prefix (`vault:v1:`,
+`vault:v2:`, etc.).
 
 ---
 
@@ -196,6 +210,7 @@ POST /v1/transit/decrypt/intelliflow-data-key
 **Schedule**: Monthly (1st day, midnight UTC) via `auto_rotate_period: 720h`
 
 **Rotation Process**:
+
 ```
 ┌──────────────┐
 │ Cron Trigger │ (0 0 1 * *)
@@ -228,7 +243,8 @@ POST /v1/transit/decrypt/intelliflow-data-key
 └──────────────────┘
 ```
 
-**Retention**: Last 5 key versions kept; older versions prunable after re-encryption
+**Retention**: Last 5 key versions kept; older versions prunable after
+re-encryption
 
 ---
 
@@ -236,16 +252,17 @@ POST /v1/transit/decrypt/intelliflow-data-key
 
 **Secret Paths**:
 
-| Path | Contents | Access |
-|------|----------|--------|
-| `secret/data/intelliflow/config` | App configuration | All services |
-| `secret/data/intelliflow/openai` | OpenAI API key | AI Worker only |
-| `secret/data/intelliflow/supabase` | Supabase credentials | API + Web |
-| `secret/data/intelliflow/redis` | Redis connection | API + AI Worker |
-| `secret/data/intelliflow/encryption` | Encryption metadata | API only |
-| `secret/data/intelliflow/tls` | TLS certificates | All services |
+| Path                                 | Contents             | Access          |
+| ------------------------------------ | -------------------- | --------------- |
+| `secret/data/intelliflow/config`     | App configuration    | All services    |
+| `secret/data/intelliflow/openai`     | OpenAI API key       | AI Worker only  |
+| `secret/data/intelliflow/supabase`   | Supabase credentials | API + Web       |
+| `secret/data/intelliflow/redis`      | Redis connection     | API + AI Worker |
+| `secret/data/intelliflow/encryption` | Encryption metadata  | API only        |
+| `secret/data/intelliflow/tls`        | TLS certificates     | All services    |
 
 **KV v2 Features**:
+
 - Version history (track secret changes)
 - Check-and-set (prevent concurrent writes)
 - Soft delete with recovery window
@@ -256,12 +273,13 @@ POST /v1/transit/decrypt/intelliflow-data-key
 
 **Audit Backends**:
 
-| Backend | Format | Purpose |
-|---------|--------|---------|
-| File (`/var/log/vault/audit.log`) | JSON | Local audit trail |
-| Syslog (`vault-intelliflow`) | JSON | Centralized logging |
+| Backend                           | Format | Purpose             |
+| --------------------------------- | ------ | ------------------- |
+| File (`/var/log/vault/audit.log`) | JSON   | Local audit trail   |
+| Syslog (`vault-intelliflow`)      | JSON   | Centralized logging |
 
 **Audit Entry Fields**:
+
 ```json
 {
   "time": "2026-02-09T00:00:00Z",
@@ -287,15 +305,15 @@ POST /v1/transit/decrypt/intelliflow-data-key
 
 ## Edge Cases
 
-| Scenario | Handling |
-|----------|----------|
-| Vault sealed/unavailable | Circuit breaker; queue operations; alert Security Admin |
-| Key version exhaustion | Old versions auto-pruned after re-encryption campaign |
-| Dev mode token expiry | Dev mode root token never expires; production uses renewable tokens |
-| Cross-service key access | mTLS + policy enforcement; deny by default |
+| Scenario                            | Handling                                                                             |
+| ----------------------------------- | ------------------------------------------------------------------------------------ |
+| Vault sealed/unavailable            | Circuit breaker; queue operations; alert Security Admin                              |
+| Key version exhaustion              | Old versions auto-pruned after re-encryption campaign                                |
+| Dev mode token expiry               | Dev mode root token never expires; production uses renewable tokens                  |
+| Cross-service key access            | mTLS + policy enforcement; deny by default                                           |
 | Rotation during active transactions | Vault handles atomically; new encryptions use new key; old ciphertexts still decrypt |
-| Key deletion attempt | `deletion_allowed: false` prevents accidental key destruction |
-| Vault cluster failover | HA with Raft consensus; automatic leader election |
+| Key deletion attempt                | `deletion_allowed: false` prevents accidental key destruction                        |
+| Vault cluster failover              | HA with Raft consensus; automatic leader election                                    |
 
 ---
 
@@ -303,74 +321,74 @@ POST /v1/transit/decrypt/intelliflow-data-key
 
 ### Infrastructure (IMPLEMENTED)
 
-| Artifact | Path | Status |
-|----------|------|--------|
-| Vault Config | `artifacts/misc/vault-config.yaml` | COMPLETE |
-| Zero Trust Design | `docs/security/zero-trust-design.md` | COMPLETE |
-| Task Status | `apps/project-tracker/docs/metrics/sprint-0/.../EXC-SEC-001.json` | COMPLETE |
+| Artifact          | Path                                                              | Status   |
+| ----------------- | ----------------------------------------------------------------- | -------- |
+| Vault Config      | `artifacts/misc/vault-config.yaml`                                | COMPLETE |
+| Zero Trust Design | `docs/security/zero-trust-design.md`                              | COMPLETE |
+| Task Status       | `apps/project-tracker/docs/metrics/sprint-0/.../EXC-SEC-001.json` | COMPLETE |
 
 ### Application Integration (PARTIAL)
 
-| Artifact | Path | Status |
-|----------|------|--------|
-| Encryption Service | `packages/adapters/src/security/vault-client.ts` | **NOT IMPLEMENTED** |
-| Encryption Middleware | `apps/api/src/middleware/encryption.ts` | **NOT IMPLEMENTED** |
-| Key Rotation Script | `scripts/security/rotate-keys.sh` | **NOT IMPLEMENTED** |
-| Vault Health Check | `infra/monitoring/vault-health.yaml` | **NOT IMPLEMENTED** |
+| Artifact              | Path                                             | Status              |
+| --------------------- | ------------------------------------------------ | ------------------- |
+| Encryption Service    | `packages/adapters/src/security/vault-client.ts` | **NOT IMPLEMENTED** |
+| Encryption Middleware | `apps/api/src/middleware/encryption.ts`          | **NOT IMPLEMENTED** |
+| Key Rotation Script   | `scripts/security/rotate-keys.sh`                | **NOT IMPLEMENTED** |
+| Vault Health Check    | `infra/monitoring/vault-health.yaml`             | **NOT IMPLEMENTED** |
 
 ---
 
 ## Access Policies
 
-| Policy | Path | Capabilities |
-|--------|------|-------------|
-| `intelliflow-app-encrypt` | `transit/encrypt/intelliflow-data-key` | update |
-| `intelliflow-app-decrypt` | `transit/decrypt/intelliflow-data-key` | update |
-| `intelliflow-key-admin` | `transit/keys/*` | create, read, update, delete, list |
-| `intelliflow-secrets-read` | `secret/data/intelliflow/*` | read |
+| Policy                     | Path                                   | Capabilities                       |
+| -------------------------- | -------------------------------------- | ---------------------------------- |
+| `intelliflow-app-encrypt`  | `transit/encrypt/intelliflow-data-key` | update                             |
+| `intelliflow-app-decrypt`  | `transit/decrypt/intelliflow-data-key` | update                             |
+| `intelliflow-key-admin`    | `transit/keys/*`                       | create, read, update, delete, list |
+| `intelliflow-secrets-read` | `secret/data/intelliflow/*`            | read                               |
 
 **Authentication Methods** (production):
 
-| Method | Use Case |
-|--------|----------|
-| Kubernetes | Container workloads in K8s |
-| AppRole | CI/CD pipelines and automated systems |
-| OIDC | Human administrators via SSO |
+| Method     | Use Case                              |
+| ---------- | ------------------------------------- |
+| Kubernetes | Container workloads in K8s            |
+| AppRole    | CI/CD pipelines and automated systems |
+| OIDC       | Human administrators via SSO          |
 
 ---
 
 ## Compliance Requirements
 
-| Regulation | Requirement | Implementation |
-|------------|-------------|----------------|
-| GDPR Art. 32 | Encryption of personal data | Transit engine for PII fields |
-| SOC 2 Type II | Key management controls | Vault audit log + rotation |
-| ISO 27001 A.10 | Cryptographic controls | AES-256-GCM + key versioning |
-| PCI DSS 3.5 | Protect encryption keys | Non-exportable keys, policy-based access |
+| Regulation     | Requirement                 | Implementation                           |
+| -------------- | --------------------------- | ---------------------------------------- |
+| GDPR Art. 32   | Encryption of personal data | Transit engine for PII fields            |
+| SOC 2 Type II  | Key management controls     | Vault audit log + rotation               |
+| ISO 27001 A.10 | Cryptographic controls      | AES-256-GCM + key versioning             |
+| PCI DSS 3.5    | Protect encryption keys     | Non-exportable keys, policy-based access |
 
 ---
 
 ## Performance Requirements
 
-| Metric | Target |
-|--------|--------|
-| Encrypt latency | <5ms |
-| Decrypt latency | <5ms |
-| Key rotation duration | <1s |
-| Vault health check | <100ms |
-| Setup time | <10 min (KPI from EXC-SEC-001) |
+| Metric                | Target                         |
+| --------------------- | ------------------------------ |
+| Encrypt latency       | <5ms                           |
+| Decrypt latency       | <5ms                           |
+| Key rotation duration | <1s                            |
+| Vault health check    | <100ms                         |
+| Setup time            | <10 min (KPI from EXC-SEC-001) |
 
 ---
 
 ## Success Metrics
 
-| KPI | Target | Validation |
-|-----|--------|------------|
-| Setup time | <10 min | Task completion timestamp |
-| Zero manual key exposure | 0 incidents | Audit log review |
-| Key rotation compliance | 100% on schedule | Monthly rotation log |
-| Encryption coverage | 100% PII fields | Code audit |
-| Vault availability | 99.9% | Health check monitoring |
+| KPI                      | Target           | Validation                |
+| ------------------------ | ---------------- | ------------------------- |
+| Setup time               | <10 min          | Task completion timestamp |
+| Zero manual key exposure | 0 incidents      | Audit log review          |
+| Key rotation compliance  | 100% on schedule | Monthly rotation log      |
+| Encryption coverage      | 100% PII fields  | Code audit                |
+| Vault availability       | 99.9%            | Health check monitoring   |
 
 ---
 
@@ -384,16 +402,15 @@ POST /v1/transit/decrypt/intelliflow-data-key
 
 ## Implementation Tasks
 
-| Task | Sprint | Status |
-|------|--------|--------|
-| EXC-SEC-001 (Vault Setup) | 0 | COMPLETED |
-| IFC-072 (Zero Trust Model) | 1 | COMPLETED |
-| IFC-113 (Secrets Management) | 1 | COMPLETED |
-| **Vault Client Adapter** | TBD | NOT STARTED |
-| **Encryption Middleware** | TBD | NOT STARTED |
-| **Key Rotation Automation** | TBD | NOT STARTED |
+| Task                         | Sprint | Status      |
+| ---------------------------- | ------ | ----------- |
+| EXC-SEC-001 (Vault Setup)    | 0      | COMPLETED   |
+| IFC-072 (Zero Trust Model)   | 1      | COMPLETED   |
+| IFC-113 (Secrets Management) | 1      | COMPLETED   |
+| **Vault Client Adapter**     | TBD    | NOT STARTED |
+| **Encryption Middleware**    | TBD    | NOT STARTED |
+| **Key Rotation Automation**  | TBD    | NOT STARTED |
 
 ---
 
-*Flow documented: 2026-02-09*
-*Last updated: 2026-02-09*
+_Flow documented: 2026-02-09_ _Last updated: 2026-02-09_

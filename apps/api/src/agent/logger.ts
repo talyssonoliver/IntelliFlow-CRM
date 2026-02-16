@@ -17,12 +17,7 @@
 
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import {
-  AgentActionLog,
-  AgentActionType,
-  EntityType,
-  ApprovalStatus,
-} from './types';
+import { AgentActionLog, AgentActionType, EntityType, ApprovalStatus } from './types';
 
 /**
  * Log levels for filtering
@@ -292,9 +287,7 @@ export class AgentActionLogger {
   /**
    * Get statistics from logs
    */
-  async getStatistics(
-    sessionId?: string
-  ): Promise<{
+  async getStatistics(sessionId?: string): Promise<{
     totalActions: number;
     successfulActions: number;
     failedActions: number;
@@ -321,9 +314,7 @@ export class AgentActionLogger {
       rejectedActions: logs.filter((l) => l.approvalStatus === 'REJECTED').length,
       rollbacks: logs.filter((l) => l.metadata?.eventType === 'rollback').length,
       avgDurationMs:
-        logs.length > 0
-          ? logs.reduce((sum, l) => sum + l.durationMs, 0) / logs.length
-          : 0,
+        logs.length > 0 ? logs.reduce((sum, l) => sum + l.durationMs, 0) / logs.length : 0,
       byToolName: {} as Record<string, number>,
       byActionType: {} as Record<string, number>,
     };

@@ -4,7 +4,15 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
-export type ActivityType = 'email' | 'call' | 'meeting' | 'chat' | 'document' | 'deal' | 'ticket' | 'note';
+export type ActivityType =
+  | 'email'
+  | 'call'
+  | 'meeting'
+  | 'chat'
+  | 'document'
+  | 'deal'
+  | 'ticket'
+  | 'note';
 
 export interface Activity {
   id: string;
@@ -63,9 +71,17 @@ const activityIcons: Record<ActivityType, string> = {
 };
 
 const sentimentConfig: Record<string, { icon: string; label: string; className: string }> = {
-  positive: { icon: 'sentiment_satisfied', label: 'Positive sentiment', className: 'text-green-500' },
+  positive: {
+    icon: 'sentiment_satisfied',
+    label: 'Positive sentiment',
+    className: 'text-green-500',
+  },
   neutral: { icon: 'sentiment_neutral', label: 'Neutral sentiment', className: 'text-slate-400' },
-  negative: { icon: 'sentiment_dissatisfied', label: 'Negative sentiment', className: 'text-red-500' },
+  negative: {
+    icon: 'sentiment_dissatisfied',
+    label: 'Negative sentiment',
+    className: 'text-red-500',
+  },
 };
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
@@ -102,7 +118,11 @@ export function ActivityTimeline({
     if (typeFilter !== 'all' && a.type !== typeFilter) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      return a.title.toLowerCase().includes(q) || a.description.toLowerCase().includes(q) || a.user.toLowerCase().includes(q);
+      return (
+        a.title.toLowerCase().includes(q) ||
+        a.description.toLowerCase().includes(q) ||
+        a.user.toLowerCase().includes(q)
+      );
     }
     return true;
   });
@@ -112,7 +132,7 @@ export function ActivityTimeline({
       setSearchQuery(value);
       onSearch?.(value);
     },
-    [onSearch],
+    [onSearch]
   );
 
   const toggleExpand = useCallback((id: string) => {
@@ -131,7 +151,7 @@ export function ActivityTimeline({
       (entries) => {
         if (entries[0]?.isIntersecting) onLoadMore();
       },
-      { threshold: 0.1 },
+      { threshold: 0.1 }
     );
     observer.observe(loadMoreRef.current);
     return () => observer.disconnect();
@@ -152,7 +172,9 @@ export function ActivityTimeline({
     <div className="space-y-4">
       {/* Search */}
       <div className="relative">
-        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">
+          search
+        </span>
         <input
           type="text"
           value={searchQuery}
@@ -178,7 +200,9 @@ export function ActivityTimeline({
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
           >
-            <span className="material-symbols-outlined text-sm" aria-hidden="true">{filter.icon}</span>
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">
+              {filter.icon}
+            </span>
             {filter.label}
           </button>
         ))}
@@ -191,7 +215,11 @@ export function ActivityTimeline({
 
       {/* Timeline */}
       {filtered.length > 0 ? (
-        <ol role="list" aria-label="Activity timeline, newest first" className="relative space-y-4 pl-4">
+        <ol
+          role="list"
+          aria-label="Activity timeline, newest first"
+          className="relative space-y-4 pl-4"
+        >
           {filtered.map((activity) => {
             const isExpanded = expandedIds.has(activity.id);
             const detailPanelId = `detail-${activity.id}`;
@@ -200,7 +228,10 @@ export function ActivityTimeline({
             return (
               <li key={activity.id} className="relative">
                 {/* Timeline line */}
-                <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700 -ml-4" aria-hidden="true" />
+                <div
+                  className="absolute left-0 top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700 -ml-4"
+                  aria-hidden="true"
+                />
 
                 {/* Activity Card */}
                 <div className="relative ml-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
@@ -209,25 +240,38 @@ export function ActivityTimeline({
                     className={`absolute -left-8 top-4 w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center z-10 ${activityIconBg[activity.type]}`}
                     aria-hidden="true"
                   >
-                    <span className="material-symbols-outlined text-base">{activityIcons[activity.type]}</span>
+                    <span className="material-symbols-outlined text-base">
+                      {activityIcons[activity.type]}
+                    </span>
                   </div>
 
                   {/* Header */}
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="text-sm font-semibold text-slate-900 dark:text-white">{activity.title}</p>
+                        <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                          {activity.title}
+                        </p>
                         {sentiment && (
                           <span className={sentiment.className} title={sentiment.label}>
-                            <span className="material-symbols-outlined text-base" aria-hidden="true">{sentiment.icon}</span>
+                            <span
+                              className="material-symbols-outlined text-base"
+                              aria-hidden="true"
+                            >
+                              {sentiment.icon}
+                            </span>
                             <span className="sr-only">{sentiment.label}</span>
                           </span>
                         )}
                       </div>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{activity.description}</p>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+                        {activity.description}
+                      </p>
                       <p className="text-xs text-slate-500 mt-1">
                         {activity.user} &bull;{' '}
-                        <time dateTime={activity.timestamp}>{formatRelativeTime(activity.timestamp)}</time>
+                        <time dateTime={activity.timestamp}>
+                          {formatRelativeTime(activity.timestamp)}
+                        </time>
                       </p>
                     </div>
                     <button
@@ -237,7 +281,9 @@ export function ActivityTimeline({
                       onClick={() => toggleExpand(activity.id)}
                       className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
                     >
-                      <span className={`material-symbols-outlined text-lg transition-transform ${isExpanded ? 'rotate-180' : ''}`}>
+                      <span
+                        className={`material-symbols-outlined text-lg transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                      >
                         expand_more
                       </span>
                     </button>
@@ -245,7 +291,10 @@ export function ActivityTimeline({
 
                   {/* Expandable Details */}
                   {isExpanded && (
-                    <div id={detailPanelId} className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <div
+                      id={detailPanelId}
+                      className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800"
+                    >
                       <p className="text-sm text-slate-600 dark:text-slate-400">
                         Full details for {activity.title}
                       </p>
@@ -258,7 +307,12 @@ export function ActivityTimeline({
         </ol>
       ) : (
         <div className="text-center py-12">
-          <span className="material-symbols-outlined text-4xl text-slate-300 mb-4" aria-hidden="true">search_off</span>
+          <span
+            className="material-symbols-outlined text-4xl text-slate-300 mb-4"
+            aria-hidden="true"
+          >
+            search_off
+          </span>
           <p className="text-slate-500">No activities match your filters</p>
         </div>
       )}

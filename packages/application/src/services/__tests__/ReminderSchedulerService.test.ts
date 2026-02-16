@@ -81,9 +81,7 @@ describe('ReminderSchedulerService', () => {
         priority: 'high',
       };
 
-      vi.mocked(mockNotificationService.schedule).mockResolvedValue(
-        Result.ok(mockScheduled)
-      );
+      vi.mocked(mockNotificationService.schedule).mockResolvedValue(Result.ok(mockScheduled));
 
       await service.handleAppointmentCreated(event, appointment);
 
@@ -159,9 +157,7 @@ describe('ReminderSchedulerService', () => {
         priority: 'high',
       };
 
-      vi.mocked(mockNotificationService.schedule).mockResolvedValue(
-        Result.ok(mockScheduled)
-      );
+      vi.mocked(mockNotificationService.schedule).mockResolvedValue(Result.ok(mockScheduled));
 
       await service.handleAppointmentCreated(event, appointment);
 
@@ -187,9 +183,7 @@ describe('ReminderSchedulerService', () => {
         priority: 'high',
       };
 
-      vi.mocked(mockNotificationService.schedule).mockResolvedValue(
-        Result.ok(mockScheduled)
-      );
+      vi.mocked(mockNotificationService.schedule).mockResolvedValue(Result.ok(mockScheduled));
 
       await service.handleAppointmentCreated(event, appointment);
 
@@ -224,9 +218,7 @@ describe('ReminderSchedulerService', () => {
         priority: 'high',
       };
 
-      vi.mocked(mockNotificationService.schedule).mockResolvedValue(
-        Result.ok(initialReminder)
-      );
+      vi.mocked(mockNotificationService.schedule).mockResolvedValue(Result.ok(initialReminder));
 
       await service.handleAppointmentCreated(createEvent, appointment);
 
@@ -259,13 +251,9 @@ describe('ReminderSchedulerService', () => {
         priority: 'high',
       };
 
-      vi.mocked(mockNotificationService.schedule).mockResolvedValue(
-        Result.ok(newReminder)
-      );
+      vi.mocked(mockNotificationService.schedule).mockResolvedValue(Result.ok(newReminder));
 
-      vi.mocked(mockNotificationService.cancelScheduled).mockResolvedValue(
-        Result.ok(undefined)
-      );
+      vi.mocked(mockNotificationService.cancelScheduled).mockResolvedValue(Result.ok(undefined));
 
       // Service uses appointment.id.value to look up reminders, so we can pass
       // the original appointment object (the id is what matters)
@@ -312,9 +300,7 @@ describe('ReminderSchedulerService', () => {
         priority: 'high',
       };
 
-      vi.mocked(mockNotificationService.schedule).mockResolvedValue(
-        Result.ok(newReminder)
-      );
+      vi.mocked(mockNotificationService.schedule).mockResolvedValue(Result.ok(newReminder));
 
       const updatedAppointment = Appointment.create({
         title: appointment.title,
@@ -356,9 +342,7 @@ describe('ReminderSchedulerService', () => {
         priority: 'high',
       };
 
-      vi.mocked(mockNotificationService.schedule).mockResolvedValue(
-        Result.ok(reminder)
-      );
+      vi.mocked(mockNotificationService.schedule).mockResolvedValue(Result.ok(reminder));
 
       await service.handleAppointmentCreated(createEvent, appointment);
 
@@ -369,9 +353,7 @@ describe('ReminderSchedulerService', () => {
         'Meeting no longer needed'
       );
 
-      vi.mocked(mockNotificationService.cancelScheduled).mockResolvedValue(
-        Result.ok(undefined)
-      );
+      vi.mocked(mockNotificationService.cancelScheduled).mockResolvedValue(Result.ok(undefined));
 
       await service.handleAppointmentCancelled(cancelEvent, appointment);
 
@@ -379,15 +361,9 @@ describe('ReminderSchedulerService', () => {
     });
 
     it('should handle cancellation when no reminders exist', async () => {
-      const cancelEvent = new AppointmentCancelledEvent(
-        appointment.id,
-        'user-123',
-        'Cancelled'
-      );
+      const cancelEvent = new AppointmentCancelledEvent(appointment.id, 'user-123', 'Cancelled');
 
-      vi.mocked(mockNotificationService.cancelScheduled).mockResolvedValue(
-        Result.ok(undefined)
-      );
+      vi.mocked(mockNotificationService.cancelScheduled).mockResolvedValue(Result.ok(undefined));
 
       await service.handleAppointmentCancelled(cancelEvent, appointment);
 
@@ -414,9 +390,7 @@ describe('ReminderSchedulerService', () => {
         priority: 'high',
       };
 
-      vi.mocked(mockNotificationService.schedule).mockResolvedValue(
-        Result.ok(reminder)
-      );
+      vi.mocked(mockNotificationService.schedule).mockResolvedValue(Result.ok(reminder));
 
       await service.handleAppointmentCreated(createEvent, appointment);
 
@@ -425,15 +399,9 @@ describe('ReminderSchedulerService', () => {
       expect(reminderIds).toContain('reminder-clear');
 
       // Now cancel
-      const cancelEvent = new AppointmentCancelledEvent(
-        appointment.id,
-        'user-123',
-        'Cancelled'
-      );
+      const cancelEvent = new AppointmentCancelledEvent(appointment.id, 'user-123', 'Cancelled');
 
-      vi.mocked(mockNotificationService.cancelScheduled).mockResolvedValue(
-        Result.ok(undefined)
-      );
+      vi.mocked(mockNotificationService.cancelScheduled).mockResolvedValue(Result.ok(undefined));
 
       await service.handleAppointmentCancelled(cancelEvent, appointment);
 
@@ -467,9 +435,7 @@ describe('ReminderSchedulerService', () => {
         priority: 'high',
       };
 
-      vi.mocked(mockNotificationService.schedule).mockResolvedValue(
-        Result.ok(reminder1)
-      );
+      vi.mocked(mockNotificationService.schedule).mockResolvedValue(Result.ok(reminder1));
 
       await service.handleAppointmentCreated(event, appointment);
 

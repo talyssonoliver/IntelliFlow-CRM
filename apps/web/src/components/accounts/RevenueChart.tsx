@@ -48,10 +48,7 @@ interface RevenueChartProps {
 }
 
 export function RevenueChart({ stageBreakdown, opportunities }: RevenueChartProps) {
-  const monthlyData = useMemo(
-    () => transformPipelineData(opportunities ?? []),
-    [opportunities]
-  );
+  const monthlyData = useMemo(() => transformPipelineData(opportunities ?? []), [opportunities]);
 
   const hasStageData = stageBreakdown && Object.keys(stageBreakdown).length > 0;
   const hasMonthlyData = monthlyData.length > 0;
@@ -59,7 +56,9 @@ export function RevenueChart({ stageBreakdown, opportunities }: RevenueChartProp
   if (!hasStageData && !hasMonthlyData) {
     return (
       <div className="text-center py-12">
-        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3">bar_chart</span>
+        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3">
+          bar_chart
+        </span>
         <p className="text-muted-foreground">No opportunity data available for charting</p>
       </div>
     );
@@ -124,7 +123,9 @@ export function RevenueChart({ stageBreakdown, opportunities }: RevenueChartProp
                         {formatCurrency(bucket.value)}
                       </div>
                     </div>
-                    <span className="text-[10px] text-muted-foreground">{bucket.month.slice(5)}</span>
+                    <span className="text-[10px] text-muted-foreground">
+                      {bucket.month.slice(5)}
+                    </span>
                   </div>
                 );
               });

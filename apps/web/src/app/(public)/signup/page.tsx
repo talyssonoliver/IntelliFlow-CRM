@@ -29,17 +29,9 @@ import {
   ToastClose,
 } from '@intelliflow/ui';
 import { useAuth, useRedirectIfAuthenticated } from '@/lib/auth/AuthContext';
-import {
-  SocialLoginGrid,
-  OAuthDivider,
-  AuthBackground,
-  AuthCard,
-} from '@/components/shared';
+import { SocialLoginGrid, OAuthDivider, AuthBackground, AuthCard } from '@/components/shared';
 import { RegistrationForm, type RegistrationFormData } from '@/components/shared/registration-form';
-import {
-  sendWelcomeEmail,
-  generateVerificationToken,
-} from '@/lib/shared/welcome-email';
+import { sendWelcomeEmail, generateVerificationToken } from '@/lib/shared/welcome-email';
 
 // ============================================
 // Types
@@ -158,92 +150,92 @@ function SignUpPageContent() {
   });
 
   // Toast helper
-  const showToast = useCallback((
-    variant: ToastData['variant'],
-    title: string,
-    description: string
-  ) => {
-    setToast({ open: true, variant, title, description });
-  }, []);
+  const showToast = useCallback(
+    (variant: ToastData['variant'], title: string, description: string) => {
+      setToast({ open: true, variant, title, description });
+    },
+    []
+  );
 
   // Handle registration form submission
   // Note: In production, this would call an API endpoint to create the user
   // For now, we simulate the signup flow and send a welcome email
-  const handleSubmit = useCallback(async (data: RegistrationFormData) => {
-    setIsSubmitting(true);
+  const handleSubmit = useCallback(
+    async (data: RegistrationFormData) => {
+      setIsSubmitting(true);
 
-    try {
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      try {
+        // Simulate API call delay
+        await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      // TODO: Replace with actual signup API call when backend is ready
-      // const response = await fetch('/api/auth/signup', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ email: data.email, password: data.password, fullName: data.fullName }),
-      // });
+        // TODO: Replace with actual signup API call when backend is ready
+        // const response = await fetch('/api/auth/signup', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({ email: data.email, password: data.password, fullName: data.fullName }),
+        // });
 
-      // Get UTM data for marketing attribution
-      const utmData = getUTMData();
+        // Get UTM data for marketing attribution
+        const utmData = getUTMData();
 
-      // Generate verification token and send welcome email
-      const verificationToken = generateVerificationToken();
-      const emailResult = await sendWelcomeEmail({
-        fullName: data.fullName,
-        email: data.email,
-        verificationToken,
-      });
+        // Generate verification token and send welcome email
+        const verificationToken = generateVerificationToken();
+        const emailResult = await sendWelcomeEmail({
+          fullName: data.fullName,
+          email: data.email,
+          verificationToken,
+        });
 
-      // Log UTM data for attribution (in production, send to analytics)
-      if (utmData) {
-        console.info('[SignUp] Registration with UTM:', utmData);
+        // Log UTM data for attribution (in production, send to analytics)
+        if (utmData) {
+          console.info('[SignUp] Registration with UTM:', utmData);
+        }
+
+        if (!emailResult.ok) {
+          console.warn('[SignUp] Failed to send welcome email:', emailResult.error);
+          // Don't block registration if email fails
+        }
+
+        // Show success and redirect
+        showToast('success', 'Account created!', 'Please check your email to verify your account.');
+
+        // Redirect to success page after a short delay
+        setTimeout(() => {
+          router.push('/signup/success?email=' + encodeURIComponent(data.email));
+        }, 1500);
+      } catch (error) {
+        console.error('[SignUp] Unexpected error:', error);
+        showToast(
+          'destructive',
+          'Registration failed',
+          'An unexpected error occurred. Please try again.'
+        );
+        setIsSubmitting(false);
       }
-
-      if (!emailResult.ok) {
-        console.warn('[SignUp] Failed to send welcome email:', emailResult.error);
-        // Don't block registration if email fails
-      }
-
-      // Show success and redirect
-      showToast(
-        'success',
-        'Account created!',
-        'Please check your email to verify your account.'
-      );
-
-      // Redirect to success page after a short delay
-      setTimeout(() => {
-        router.push('/signup/success?email=' + encodeURIComponent(data.email));
-      }, 1500);
-
-    } catch (error) {
-      console.error('[SignUp] Unexpected error:', error);
-      showToast(
-        'destructive',
-        'Registration failed',
-        'An unexpected error occurred. Please try again.'
-      );
-      setIsSubmitting(false);
-    }
-  }, [router, showToast, getUTMData]);
+    },
+    [router, showToast, getUTMData]
+  );
 
   // Handle OAuth registration
   // Maps 'microsoft' to 'azure' for the auth context
-  const handleOAuthSignUp = useCallback(async (provider: 'google' | 'microsoft') => {
-    try {
-      // Map provider names to auth context expected values
-      const authProvider = provider === 'microsoft' ? 'azure' : 'google';
-      await auth.loginWithOAuth(authProvider);
-      // OAuth redirects automatically on success
-    } catch (error) {
-      console.error(`[SignUp] ${provider} OAuth error:`, error);
-      showToast(
-        'destructive',
-        'Registration failed',
-        `An error occurred with ${provider} sign up. Please try again.`
-      );
-    }
-  }, [auth, showToast]);
+  const handleOAuthSignUp = useCallback(
+    async (provider: 'google' | 'microsoft') => {
+      try {
+        // Map provider names to auth context expected values
+        const authProvider = provider === 'microsoft' ? 'azure' : 'google';
+        await auth.loginWithOAuth(authProvider);
+        // OAuth redirects automatically on success
+      } catch (error) {
+        console.error(`[SignUp] ${provider} OAuth error:`, error);
+        showToast(
+          'destructive',
+          'Registration failed',
+          `An error occurred with ${provider} sign up. Please try again.`
+        );
+      }
+    },
+    [auth, showToast]
+  );
 
   return (
     <ToastProvider>
@@ -267,10 +259,7 @@ function SignUpPageContent() {
             <OAuthDivider />
 
             {/* Registration Form */}
-            <RegistrationForm
-              onSubmit={handleSubmit}
-              isLoading={isSubmitting}
-            />
+            <RegistrationForm onSubmit={handleSubmit} isLoading={isSubmitting} />
 
             {/* Sign in link */}
             <div className="text-center pt-4 border-t border-white/10">

@@ -241,5 +241,3 @@ export function calculateCompletionRate(tasks: Task[]): number {
 
 // Re-export status constants for convenience
 export { TASK_STATUSES, STATUS_ALIASES, STATUS_GROUPS } from './types';
-
-

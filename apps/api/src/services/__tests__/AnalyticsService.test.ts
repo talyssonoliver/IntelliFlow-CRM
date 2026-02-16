@@ -245,9 +245,7 @@ describe('AnalyticsService', () => {
     });
 
     it('should map source names correctly', async () => {
-      const mockLeadsBySource = [
-        { source: 'COLD_CALL', _count: 10 },
-      ];
+      const mockLeadsBySource = [{ source: 'COLD_CALL', _count: 10 }];
 
       mockPrisma.lead.groupBy.mockResolvedValue(mockLeadsBySource);
 
@@ -257,9 +255,7 @@ describe('AnalyticsService', () => {
     });
 
     it('should use default color for unknown sources', async () => {
-      const mockLeadsBySource = [
-        { source: 'UNKNOWN_SOURCE', _count: 5 },
-      ];
+      const mockLeadsBySource = [{ source: 'UNKNOWN_SOURCE', _count: 5 }];
 
       mockPrisma.lead.groupBy.mockResolvedValue(mockLeadsBySource);
 

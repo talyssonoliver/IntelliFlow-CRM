@@ -422,9 +422,18 @@
         "fieldConfig": {
           "defaults": {
             "mappings": [
-              { "type": "value", "options": { "0": { "text": "CLOSED", "color": "green" } } },
-              { "type": "value", "options": { "1": { "text": "HALF_OPEN", "color": "yellow" } } },
-              { "type": "value", "options": { "2": { "text": "OPEN", "color": "red" } } }
+              {
+                "type": "value",
+                "options": { "0": { "text": "CLOSED", "color": "green" } }
+              },
+              {
+                "type": "value",
+                "options": { "1": { "text": "HALF_OPEN", "color": "yellow" } }
+              },
+              {
+                "type": "value",
+                "options": { "2": { "text": "OPEN", "color": "red" } }
+              }
             ]
           }
         }

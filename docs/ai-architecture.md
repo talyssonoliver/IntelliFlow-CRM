@@ -1,8 +1,6 @@
 # IntelliFlow CRM - AI Architecture
 
-**Version:** 1.0.0
-**Last Updated:** 2025-12-31
-**Owner:** STOA-Intelligence
+**Version:** 1.0.0 **Last Updated:** 2025-12-31 **Owner:** STOA-Intelligence
 **Status:** Design Approved (IFC-020)
 
 ---
@@ -25,13 +23,18 @@
 ---
 
 **Related Diagrams:**
-- [LangChain Pipeline Flow Diagram](../architecture/diagrams/langchain-flow-diagram.mermaid) - Visual representation of the complete pipeline
+
+- [LangChain Pipeline Flow Diagram](../architecture/diagrams/langchain-flow-diagram.mermaid) -
+  Visual representation of the complete pipeline
 
 ---
 
 ## Executive Summary
 
-IntelliFlow CRM's AI architecture is built on **LangChain** with **Zep** for memory persistence, designed to provide intelligent, context-aware automation across the customer lifecycle. The system follows hexagonal architecture principles, ensuring modularity, testability, and vendor flexibility.
+IntelliFlow CRM's AI architecture is built on **LangChain** with **Zep** for
+memory persistence, designed to provide intelligent, context-aware automation
+across the customer lifecycle. The system follows hexagonal architecture
+principles, ensuring modularity, testability, and vendor flexibility.
 
 ### Key Capabilities
 
@@ -43,13 +46,13 @@ IntelliFlow CRM's AI architecture is built on **LangChain** with **Zep** for mem
 
 ### Performance Targets
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Lead Scoring Latency (p95) | <2s | TBD |
-| Batch Processing Rate | 60 leads/min | TBD |
-| Cost per Lead Score | <$0.01 | TBD |
-| Memory Retrieval Latency | <100ms | TBD |
-| Confidence Threshold | >0.5 for auto-action | N/A |
+| Metric                     | Target               | Current |
+| -------------------------- | -------------------- | ------- |
+| Lead Scoring Latency (p95) | <2s                  | TBD     |
+| Batch Processing Rate      | 60 leads/min         | TBD     |
+| Cost per Lead Score        | <$0.01               | TBD     |
+| Memory Retrieval Latency   | <100ms               | TBD     |
+| Confidence Threshold       | >0.5 for auto-action | N/A     |
 
 ---
 
@@ -85,7 +88,8 @@ const scoringResultSchema = z.object({
 });
 ```
 
-All LLM outputs are parsed and validated against Zod schemas before being returned to the application layer.
+All LLM outputs are parsed and validated against Zod schemas before being
+returned to the application layer.
 
 ### 3. Cost Awareness
 
@@ -102,7 +106,9 @@ interface TokenUsage {
 }
 ```
 
-Costs are aggregated daily and compared against configurable limits. When thresholds are exceeded, alerts are sent and auto-actions are disabled until reset.
+Costs are aggregated daily and compared against configurable limits. When
+thresholds are exceeded, alerts are sent and auto-actions are disabled until
+reset.
 
 ### 4. Human-in-the-Loop
 
@@ -122,7 +128,8 @@ The system supports multiple LLM providers:
 - **Ollama**: Local development (Mistral, Llama 2)
 - **Future**: Anthropic Claude, Google Gemini
 
-Provider selection is environment-driven, allowing seamless switching without code changes.
+Provider selection is environment-driven, allowing seamless switching without
+code changes.
 
 ### 6. Observability
 
@@ -194,11 +201,13 @@ All AI operations are instrumented:
 
 #### LeadScoringChain
 
-Scores leads based on profile completeness, engagement indicators, and qualification signals.
+Scores leads based on profile completeness, engagement indicators, and
+qualification signals.
 
 **Location**: `apps/ai-worker/src/chains/scoring.chain.ts`
 
 **Input**:
+
 ```typescript
 interface LeadInput {
   email: string;
@@ -213,10 +222,11 @@ interface LeadInput {
 ```
 
 **Output**:
+
 ```typescript
 interface ScoringResult {
-  score: number;              // 0-100
-  confidence: number;         // 0-1
+  score: number; // 0-100
+  confidence: number; // 0-1
   factors: Array<{
     name: string;
     impact: number;
@@ -227,6 +237,7 @@ interface ScoringResult {
 ```
 
 **Performance**:
+
 - Target latency: <2s (p95)
 - Batch processing: 60 leads/min with rate limiting
 - Cost: ~$0.005 per score (GPT-3.5 Turbo)
@@ -238,6 +249,7 @@ Generates vector embeddings for semantic search.
 **Location**: `apps/ai-worker/src/chains/embedding.chain.ts`
 
 **Input**:
+
 ```typescript
 interface EmbeddingInput {
   text: string;
@@ -246,15 +258,17 @@ interface EmbeddingInput {
 ```
 
 **Output**:
+
 ```typescript
 interface EmbeddingResult {
-  embedding: number[];        // 1536-dim vector (OpenAI)
+  embedding: number[]; // 1536-dim vector (OpenAI)
   model: string;
   tokenCount: number;
 }
 ```
 
 **Performance**:
+
 - Target latency: <500ms
 - Batch size: 100 texts/batch
 - Cost: ~$0.0001 per embedding
@@ -284,15 +298,23 @@ All agents extend `BaseAgent` which provides:
 **Location**: `apps/ai-worker/src/agents/base.agent.ts`
 
 **Interface**:
+
 ```typescript
 abstract class BaseAgent<TInput, TOutput> {
   constructor(config: BaseAgentConfig);
 
-  async execute(task: AgentTask<TInput, TOutput>): Promise<AgentResult<TOutput>>;
+  async execute(
+    task: AgentTask<TInput, TOutput>
+  ): Promise<AgentResult<TOutput>>;
 
-  protected abstract executeTask(task: AgentTask<TInput, TOutput>): Promise<TOutput>;
+  protected abstract executeTask(
+    task: AgentTask<TInput, TOutput>
+  ): Promise<TOutput>;
 
-  protected async calculateConfidence(task: AgentTask, output: TOutput): Promise<number>;
+  protected async calculateConfidence(
+    task: AgentTask,
+    output: TOutput
+  ): Promise<number>;
 
   protected async invokeLLM(messages: BaseMessage[]): Promise<string>;
 }
@@ -306,13 +328,16 @@ Qualifies leads by asking clarifying questions and evaluating responses.
 
 **Role**: "Lead Qualification Specialist"
 
-**Goal**: "Determine if a lead meets our ideal customer profile by gathering and analyzing key information"
+**Goal**: "Determine if a lead meets our ideal customer profile by gathering and
+analyzing key information"
 
 **Tools**:
+
 - CRMSearchTool (search for similar leads)
 - CRMUpdateTool (update lead status)
 
 **Workflow**:
+
 1. Analyze lead profile
 2. Identify missing information
 3. Generate qualification questions
@@ -331,7 +356,8 @@ Schedules and executes automated follow-ups.
 
 ### Tools
 
-**Tools** are callable functions that agents can use to interact with external systems.
+**Tools** are callable functions that agents can use to interact with external
+systems.
 
 All tools implement the `LangChain Tool` interface:
 
@@ -350,16 +376,19 @@ interface Tool {
 Searches the CRM database for leads, contacts, or opportunities.
 
 **Input Schema**:
+
 ```typescript
 const searchInputSchema = z.object({
   entity: z.enum(['lead', 'contact', 'opportunity', 'task']),
   filters: z.object({
     status: z.array(z.string()).optional(),
     source: z.array(z.string()).optional(),
-    score: z.object({
-      min: z.number().optional(),
-      max: z.number().optional(),
-    }).optional(),
+    score: z
+      .object({
+        min: z.number().optional(),
+        max: z.number().optional(),
+      })
+      .optional(),
     createdAfter: z.string().datetime().optional(),
   }),
   limit: z.number().max(100).default(10),
@@ -373,6 +402,7 @@ const searchInputSchema = z.object({
 Updates CRM entities (leads, contacts, etc.).
 
 **Input Schema**:
+
 ```typescript
 const updateInputSchema = z.object({
   entity: z.enum(['lead', 'contact', 'opportunity', 'task']),
@@ -629,13 +659,13 @@ class CRMSearchTool extends Tool {
 
 ### Available Tools
 
-| Tool Name | Description | Input Schema | Output |
-|-----------|-------------|--------------|--------|
-| `crm_search` | Search CRM entities | `{ entity, filters, limit }` | JSON array |
-| `crm_update` | Update CRM entity | `{ entity, id, updates }` | Updated entity |
-| `crm_create` | Create CRM entity | `{ entity, data }` | Created entity |
-| `email_send` | Send email | `{ to, subject, body, template }` | Email ID |
-| `calendar_schedule` | Schedule event | `{ title, start, end, attendees }` | Event ID |
+| Tool Name           | Description         | Input Schema                       | Output         |
+| ------------------- | ------------------- | ---------------------------------- | -------------- |
+| `crm_search`        | Search CRM entities | `{ entity, filters, limit }`       | JSON array     |
+| `crm_update`        | Update CRM entity   | `{ entity, id, updates }`          | Updated entity |
+| `crm_create`        | Create CRM entity   | `{ entity, data }`                 | Created entity |
+| `email_send`        | Send email          | `{ to, subject, body, template }`  | Email ID       |
+| `calendar_schedule` | Schedule event      | `{ title, start, end, attendees }` | Event ID       |
 
 ### Tool Authorization
 
@@ -746,7 +776,10 @@ class LeadScoringChain {
   /**
    * Validate scoring result meets quality thresholds
    */
-  validateScoringResult(result: ScoringResult): { valid: boolean; issues: string[] };
+  validateScoringResult(result: ScoringResult): {
+    valid: boolean;
+    issues: string[];
+  };
 }
 ```
 
@@ -758,7 +791,9 @@ abstract class BaseAgent<TInput, TOutput> {
    * Execute agent task
    * @returns AgentResult with success, output, confidence
    */
-  async execute(task: AgentTask<TInput, TOutput>): Promise<AgentResult<TOutput>>;
+  async execute(
+    task: AgentTask<TInput, TOutput>
+  ): Promise<AgentResult<TOutput>>;
 
   /**
    * Get agent statistics
@@ -844,7 +879,11 @@ class CostTracker {
   private dailyUsage: Map<string, number> = new Map();
 
   async recordUsage(usage: TokenUsage): Promise<void> {
-    const cost = calculateCost(usage.model, usage.inputTokens, usage.outputTokens);
+    const cost = calculateCost(
+      usage.model,
+      usage.inputTokens,
+      usage.outputTokens
+    );
     const today = new Date().toISOString().split('T')[0];
 
     const currentUsage = this.dailyUsage.get(today) || 0;
@@ -1170,7 +1209,5 @@ apps/ai-worker/
 
 ---
 
-**Document Status**: Design Approved
-**Next Review**: Sprint 13
-**Maintainer**: STOA-Intelligence
-**Approvers**: Tech Lead, Security Lead, Architecture Lead
+**Document Status**: Design Approved **Next Review**: Sprint 13 **Maintainer**:
+STOA-Intelligence **Approvers**: Tech Lead, Security Lead, Architecture Lead

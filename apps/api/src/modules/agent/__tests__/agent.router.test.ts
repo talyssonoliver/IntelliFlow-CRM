@@ -109,8 +109,10 @@ vi.mock('../../../agent/approval-workflow', () => ({
   approvalWorkflowService: {
     getPendingActions: (userId: string) => mockApprovalGetPendingActions(userId),
     getPendingAction: (actionId: string) => mockApprovalGetPendingAction(actionId),
-    approveAction: (decision: unknown, context: unknown) => mockApprovalApproveAction(decision, context),
-    rejectAction: (decision: unknown, context: unknown) => mockApprovalRejectAction(decision, context),
+    approveAction: (decision: unknown, context: unknown) =>
+      mockApprovalApproveAction(decision, context),
+    rejectAction: (decision: unknown, context: unknown) =>
+      mockApprovalRejectAction(decision, context),
   },
   pendingActionsStore: {
     add: (action: unknown) => mockPendingActionsAdd(action),
@@ -122,7 +124,8 @@ vi.mock('../../../agent/approval-workflow', () => ({
 // Mock the authorization module
 vi.mock('../../../agent/authorization', () => ({
   agentAuthorizationService: {
-    authorizeToolExecution: (tool: unknown, input: unknown, context: unknown) => mockAuthorizeToolExecution(tool, input, context),
+    authorizeToolExecution: (tool: unknown, input: unknown, context: unknown) =>
+      mockAuthorizeToolExecution(tool, input, context),
   },
   buildAuthContext: (userInfo: { userId: string; role: string }, sessionId: string) => ({
     userId: userInfo.userId,
@@ -160,12 +163,14 @@ function createAgentTestContext(authenticated = true): BaseContext {
     services: {} as any,
     security: {} as any,
     adapters: {} as any,
-    user: authenticated ? {
-      userId: TEST_UUIDS.user1,
-      email: 'test@example.com',
-      role: 'USER',
-      tenantId: TEST_UUIDS.tenant,
-    } : undefined,
+    user: authenticated
+      ? {
+          userId: TEST_UUIDS.user1,
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: TEST_UUIDS.tenant,
+        }
+      : undefined,
     tenant: {
       tenantId: TEST_UUIDS.tenant,
       tenantType: 'user' as const,
@@ -216,12 +221,12 @@ describe('agentRouter', () => {
       const result = await caller.listTools();
 
       // Tools requiring approval
-      expect(result.requiringApproval.map(t => t.name)).toContain('create_case');
-      expect(result.requiringApproval.map(t => t.name)).toContain('create_appointment');
+      expect(result.requiringApproval.map((t) => t.name)).toContain('create_case');
+      expect(result.requiringApproval.map((t) => t.name)).toContain('create_appointment');
 
       // Tools not requiring approval
-      expect(result.noApproval.map(t => t.name)).toContain('search_leads');
-      expect(result.noApproval.map(t => t.name)).toContain('search_contacts');
+      expect(result.noApproval.map((t) => t.name)).toContain('search_leads');
+      expect(result.noApproval.map((t) => t.name)).toContain('search_contacts');
     });
 
     it('should include tool metadata', async () => {
@@ -347,7 +352,12 @@ describe('agentRouter', () => {
       // Type guard for approval required result
       expect('requiresApproval' in result).toBe(true);
       // Cast to expected type after guard check
-      const approvalResult = result as { requiresApproval: boolean; actionId: string; preview: unknown; expiresAt: Date };
+      const approvalResult = result as {
+        requiresApproval: boolean;
+        actionId: string;
+        preview: unknown;
+        expiresAt: Date;
+      };
       expect(approvalResult.requiresApproval).toBe(true);
       expect(approvalResult.actionId).toBeDefined();
       expect(approvalResult.preview).toBeDefined();
@@ -362,9 +372,7 @@ describe('agentRouter', () => {
       const ctx = createAgentTestContext();
       const caller = agentRouter.createCaller(ctx);
 
-      await expect(
-        caller.executeTool({ toolName: 'unknown_tool', input: {} })
-      ).rejects.toThrow(
+      await expect(caller.executeTool({ toolName: 'unknown_tool', input: {} })).rejects.toThrow(
         expect.objectContaining({
           code: 'NOT_FOUND',
           message: expect.stringContaining('unknown_tool'),
@@ -403,9 +411,9 @@ describe('agentRouter', () => {
       const ctx = createAgentTestContext(false);
       const caller = agentRouter.createCaller(ctx);
 
-      await expect(
-        caller.executeTool({ toolName: 'search_leads', input: {} })
-      ).rejects.toThrow(TRPCError);
+      await expect(caller.executeTool({ toolName: 'search_leads', input: {} })).rejects.toThrow(
+        TRPCError
+      );
     });
   });
 
@@ -500,9 +508,7 @@ describe('agentRouter', () => {
       const ctx = createAgentTestContext();
       const caller = agentRouter.createCaller(ctx);
 
-      await expect(
-        caller.getPendingAction({ actionId: 'non_existent' })
-      ).rejects.toThrow(
+      await expect(caller.getPendingAction({ actionId: 'non_existent' })).rejects.toThrow(
         expect.objectContaining({
           code: 'NOT_FOUND',
           message: expect.stringContaining('non_existent'),

@@ -43,9 +43,6 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error('ADR API error:', error);
-    return NextResponse.json(
-      { success: false, error: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }
 }

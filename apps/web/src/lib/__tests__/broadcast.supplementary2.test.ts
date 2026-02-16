@@ -180,7 +180,9 @@ describe('AuthBroadcast supplementary2', () => {
     it('continues calling other subscribers when one throws', async () => {
       const bc1 = await freshBroadcast();
       const bc2 = await freshBroadcast();
-      const errorCb = vi.fn(() => { throw new Error('Subscriber broke'); });
+      const errorCb = vi.fn(() => {
+        throw new Error('Subscriber broke');
+      });
       const goodCb = vi.fn();
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -264,10 +266,12 @@ describe('AuthBroadcast supplementary2', () => {
 
       // Simulate storage event from another tab
       for (const listener of storageListeners) {
-        listener(new StorageEvent('storage', {
-          key: 'intelliflow-logout-event',
-          newValue: Date.now().toString(),
-        }));
+        listener(
+          new StorageEvent('storage', {
+            key: 'intelliflow-logout-event',
+            newValue: Date.now().toString(),
+          })
+        );
       }
 
       expect(cb).toHaveBeenCalled();
@@ -285,10 +289,12 @@ describe('AuthBroadcast supplementary2', () => {
       bc.subscribe(cb);
 
       for (const listener of storageListeners) {
-        listener(new StorageEvent('storage', {
-          key: 'some-other-key',
-          newValue: '123',
-        }));
+        listener(
+          new StorageEvent('storage', {
+            key: 'some-other-key',
+            newValue: '123',
+          })
+        );
       }
 
       expect(cb).not.toHaveBeenCalled();
@@ -305,10 +311,12 @@ describe('AuthBroadcast supplementary2', () => {
       bc.subscribe(cb);
 
       for (const listener of storageListeners) {
-        listener(new StorageEvent('storage', {
-          key: 'intelliflow-logout-event',
-          newValue: null,
-        }));
+        listener(
+          new StorageEvent('storage', {
+            key: 'intelliflow-logout-event',
+            newValue: null,
+          })
+        );
       }
 
       expect(cb).not.toHaveBeenCalled();

@@ -30,10 +30,7 @@ import {
   DEFAULT_RELEVANCE_CONFIG as CANONICAL_RELEVANCE_CONFIG,
   RELEVANCE_PRESETS,
 } from '../config/relevance-config';
-import type {
-  ConversationRecordData,
-  MessageRecordWithConversation,
-} from '@intelliflow/domain';
+import type { ConversationRecordData, MessageRecordWithConversation } from '@intelliflow/domain';
 
 // Simple type interfaces to avoid Prisma generic complexity
 interface RolePermission {
@@ -198,28 +195,36 @@ export const SearchConfigSchema = z.object({
   userId: z.string(),
   userRoles: z.array(z.string()).optional().default([]),
   query: z.string().min(1).max(1000),
-  sources: z.array(z.enum([
-    'leads',
-    'contacts',
-    'accounts',
-    'opportunities',
-    'documents',
-    'notes',
-    'conversations',
-    'messages',
-    'tickets',
-  ])).optional(),
-  filters: z.object({
-    dateRange: z.object({
-      start: z.date().optional(),
-      end: z.date().optional(),
-    }).optional(),
-    status: z.array(z.string()).optional(),
-    owner: z.string().optional(),
-    tags: z.array(z.string()).optional(),
-    classification: z.array(z.string()).optional(),
-    documentTypes: z.array(z.string()).optional(),
-  }).optional(),
+  sources: z
+    .array(
+      z.enum([
+        'leads',
+        'contacts',
+        'accounts',
+        'opportunities',
+        'documents',
+        'notes',
+        'conversations',
+        'messages',
+        'tickets',
+      ])
+    )
+    .optional(),
+  filters: z
+    .object({
+      dateRange: z
+        .object({
+          start: z.date().optional(),
+          end: z.date().optional(),
+        })
+        .optional(),
+      status: z.array(z.string()).optional(),
+      owner: z.string().optional(),
+      tags: z.array(z.string()).optional(),
+      classification: z.array(z.string()).optional(),
+      documentTypes: z.array(z.string()).optional(),
+    })
+    .optional(),
   // IFC-155: Case-scoped search
   caseId: z.string().uuid().optional(),
   searchType: z.enum(['fulltext', 'semantic', 'hybrid']).optional().default('hybrid'),
@@ -283,10 +288,7 @@ export class ACLService {
     const userRoles = await this.prisma.userRoleAssignment.findMany({
       where: {
         userId,
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: new Date() } },
-        ],
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
       include: {
         role: {
@@ -313,10 +315,7 @@ export class ACLService {
       where: {
         userId,
         granted: true,
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: new Date() } },
-        ],
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
       include: {
         permission: true,
@@ -442,25 +441,20 @@ export class RelevanceEvaluator {
    * Combine full-text and semantic scores
    */
   combineScores(fullTextScore: number, semanticScore: number): number {
-    return (
-      fullTextScore * this.config.fullTextWeight +
-      semanticScore * this.config.semanticWeight
-    );
+    return fullTextScore * this.config.fullTextWeight + semanticScore * this.config.semanticWeight;
   }
 
   /**
    * Apply time decay to relevance score
    */
   applyTimeDecay(score: number, documentDate: Date): number {
-    const daysSince = Math.max(0,
-      (this.config.dateDecayOrigin.getTime() - documentDate.getTime()) /
-      (1000 * 60 * 60 * 24)
+    const daysSince = Math.max(
+      0,
+      (this.config.dateDecayOrigin.getTime() - documentDate.getTime()) / (1000 * 60 * 60 * 24)
     );
 
     // Exponential decay with configurable half-life
-    const decayFactor = Math.exp(
-      -Math.log(2) * daysSince / this.config.dateDecayScale
-    );
+    const decayFactor = Math.exp((-Math.log(2) * daysSince) / this.config.dateDecayScale);
 
     return score * (1 + (this.config.recentBoost - 1) * decayFactor);
   }
@@ -470,9 +464,7 @@ export class RelevanceEvaluator {
    */
   applyTitleBoost(score: number, queryTerms: string[], title: string): number {
     const titleLower = title.toLowerCase();
-    const matchCount = queryTerms.filter(term =>
-      titleLower.includes(term.toLowerCase())
-    ).length;
+    const matchCount = queryTerms.filter((term) => titleLower.includes(term.toLowerCase())).length;
 
     if (matchCount > 0) {
       const matchRatio = matchCount / queryTerms.length;
@@ -504,7 +496,7 @@ export class RelevanceEvaluator {
    */
   filterAndRank(results: SearchResult[], queryTerms: string[]): SearchResult[] {
     return results
-      .map(result => ({
+      .map((result) => ({
         ...result,
         relevanceScore: this.calculateFinalScore(
           result.relevanceScore,
@@ -514,7 +506,7 @@ export class RelevanceEvaluator {
           queryTerms
         ),
       }))
-      .filter(r => r.relevanceScore >= this.config.minScore)
+      .filter((r) => r.relevanceScore >= this.config.minScore)
       .sort((a, b) => b.relevanceScore - a.relevanceScore)
       .slice(0, this.config.maxResults);
   }
@@ -569,7 +561,7 @@ export class RetrievalService {
     ];
 
     // Execute searches in parallel
-    const searchPromises = sources.map(source =>
+    const searchPromises = sources.map((source) =>
       this.searchSource(source, validatedConfig, aclContext)
     );
 
@@ -580,13 +572,10 @@ export class RetrievalService {
     const queryTerms = validatedConfig.query
       .toLowerCase()
       .split(/\s+/)
-      .filter(t => t.length > 2);
+      .filter((t) => t.length > 2);
 
     // Apply relevance ranking
-    const rankedResults = this.relevanceEvaluator.filterAndRank(
-      allResults,
-      queryTerms
-    );
+    const rankedResults = this.relevanceEvaluator.filterAndRank(allResults, queryTerms);
 
     // Apply pagination
     const paginatedResults = rankedResults.slice(
@@ -715,11 +704,7 @@ export class RetrievalService {
     });
 
     // Filter by ACL and map results
-    return this.filterAndMapDocumentResults(
-      documents as CaseDocumentRecord[],
-      aclContext,
-      results
-    );
+    return this.filterAndMapDocumentResults(documents as CaseDocumentRecord[], aclContext, results);
   }
 
   /**
@@ -905,7 +890,9 @@ export class RetrievalService {
     try {
       // IFC-020: Use actual EmbeddingChain for pgvector semantic search
       const result = await this.embeddingChain.generateEmbedding({ text: query });
-      console.log(`[IFC-020] Embedding generated for query: ${query.slice(0, 50)}... (${result.dimensions} dimensions)`);
+      console.log(
+        `[IFC-020] Embedding generated for query: ${query.slice(0, 50)}... (${result.dimensions} dimensions)`
+      );
       return result.vector;
     } catch (error) {
       // GATE:no-null-fallback - Only fallback to FTS on actual errors
@@ -926,7 +913,7 @@ export class RetrievalService {
     aclContext: ACLContext,
     ftsResults: FTSSearchResult[]
   ): SearchResult[] {
-    const rankMap = new Map(ftsResults.map(r => [r.id, r]));
+    const rankMap = new Map(ftsResults.map((r) => [r.id, r]));
 
     // Filter by ACL
     const accessibleDocs = documents.filter((doc: CaseDocumentRecord) => {
@@ -947,10 +934,8 @@ export class RetrievalService {
         source: 'documents',
         title: doc.title,
         content: doc.description || '',
-        snippet: ftsResult?.snippet || this.generateSnippet(
-          `${doc.title} ${doc.description || ''}`,
-          ''
-        ),
+        snippet:
+          ftsResult?.snippet || this.generateSnippet(`${doc.title} ${doc.description || ''}`, ''),
         relevanceScore: ftsResult?.rank || 0,
         metadata: {
           documentType: doc.document_type,
@@ -961,7 +946,9 @@ export class RetrievalService {
         },
         acl: {
           viewableBy: doc.acl
-            .filter((a: DocumentAclRecord) => ['VIEW', 'COMMENT', 'EDIT', 'ADMIN'].includes(a.access_level))
+            .filter((a: DocumentAclRecord) =>
+              ['VIEW', 'COMMENT', 'EDIT', 'ADMIN'].includes(a.access_level)
+            )
             .map((a: DocumentAclRecord) => a.principal_id),
           editableBy: doc.acl
             .filter((a: DocumentAclRecord) => ['EDIT', 'ADMIN'].includes(a.access_level))
@@ -981,7 +968,7 @@ export class RetrievalService {
     aclContext: ACLContext,
     semanticResults: VectorSearchResult[]
   ): SearchResult[] {
-    const similarityMap = new Map(semanticResults.map(r => [r.id, r]));
+    const similarityMap = new Map(semanticResults.map((r) => [r.id, r]));
 
     // Filter by ACL
     const accessibleDocs = documents.filter((doc: CaseDocumentRecord) => {
@@ -1014,7 +1001,9 @@ export class RetrievalService {
         },
         acl: {
           viewableBy: doc.acl
-            .filter((a: DocumentAclRecord) => ['VIEW', 'COMMENT', 'EDIT', 'ADMIN'].includes(a.access_level))
+            .filter((a: DocumentAclRecord) =>
+              ['VIEW', 'COMMENT', 'EDIT', 'ADMIN'].includes(a.access_level)
+            )
             .map((a: DocumentAclRecord) => a.principal_id),
           editableBy: doc.acl
             .filter((a: DocumentAclRecord) => ['EDIT', 'ADMIN'].includes(a.access_level))
@@ -1208,10 +1197,7 @@ export class RetrievalService {
       source: 'opportunities',
       title: opp.name,
       content: `${opp.stage} - ${opp.account.name} - ${opp.description || ''}`,
-      snippet: this.generateSnippet(
-        `${opp.name} ${opp.description || ''}`,
-        config.query
-      ),
+      snippet: this.generateSnippet(`${opp.name} ${opp.description || ''}`, config.query),
       relevanceScore: this.calculateFullTextScore(config.query, opp.name),
       metadata: {
         stage: opp.stage,
@@ -1276,10 +1262,7 @@ export class RetrievalService {
       source: 'documents',
       title: doc.title,
       content: doc.description || '',
-      snippet: this.generateSnippet(
-        `${doc.title} ${doc.description || ''}`,
-        config.query
-      ),
+      snippet: this.generateSnippet(`${doc.title} ${doc.description || ''}`, config.query),
       relevanceScore: this.calculateFullTextScore(config.query, doc.title),
       metadata: {
         documentType: doc.document_type,
@@ -1289,7 +1272,9 @@ export class RetrievalService {
       },
       acl: {
         viewableBy: doc.acl
-          .filter((a: DocumentAclRecord) => ['VIEW', 'COMMENT', 'EDIT', 'ADMIN'].includes(a.access_level))
+          .filter((a: DocumentAclRecord) =>
+            ['VIEW', 'COMMENT', 'EDIT', 'ADMIN'].includes(a.access_level)
+          )
           .map((a: DocumentAclRecord) => a.principal_id),
         editableBy: doc.acl
           .filter((a: DocumentAclRecord) => ['EDIT', 'ADMIN'].includes(a.access_level))
@@ -1326,10 +1311,7 @@ export class RetrievalService {
       source: 'conversations',
       title: conv.title || `Conversation ${conv.sessionId.slice(0, 8)}`,
       content: conv.summary || '',
-      snippet: this.generateSnippet(
-        `${conv.title || ''} ${conv.summary || ''}`,
-        config.query
-      ),
+      snippet: this.generateSnippet(`${conv.title || ''} ${conv.summary || ''}`, config.query),
       relevanceScore: this.calculateFullTextScore(
         config.query,
         `${conv.title || ''} ${conv.summary || ''}`
@@ -1371,25 +1353,27 @@ export class RetrievalService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return (messages as MessageRecordWithConversation[]).map((msg: MessageRecordWithConversation) => ({
-      id: msg.id,
-      source: 'messages',
-      title: `Message in ${msg.conversation.title || 'conversation'}`,
-      content: msg.content,
-      snippet: this.generateSnippet(msg.content, config.query),
-      relevanceScore: this.calculateFullTextScore(config.query, msg.content),
-      metadata: {
-        role: msg.role,
-        conversationId: msg.conversationId,
-        conversationTitle: msg.conversation.title,
-      },
-      acl: {
-        viewableBy: [msg.conversation.userId],
-        editableBy: [msg.conversation.userId],
-      },
-      createdAt: msg.createdAt,
-      updatedAt: msg.createdAt,
-    }));
+    return (messages as MessageRecordWithConversation[]).map(
+      (msg: MessageRecordWithConversation) => ({
+        id: msg.id,
+        source: 'messages',
+        title: `Message in ${msg.conversation.title || 'conversation'}`,
+        content: msg.content,
+        snippet: this.generateSnippet(msg.content, config.query),
+        relevanceScore: this.calculateFullTextScore(config.query, msg.content),
+        metadata: {
+          role: msg.role,
+          conversationId: msg.conversationId,
+          conversationTitle: msg.conversation.title,
+        },
+        acl: {
+          viewableBy: [msg.conversation.userId],
+          editableBy: [msg.conversation.userId],
+        },
+        createdAt: msg.createdAt,
+        updatedAt: msg.createdAt,
+      })
+    );
   }
 
   /**
@@ -1420,10 +1404,7 @@ export class RetrievalService {
       source: 'tickets',
       title: `${ticket.ticketNumber}: ${ticket.subject}`,
       content: ticket.description || '',
-      snippet: this.generateSnippet(
-        `${ticket.subject} ${ticket.description || ''}`,
-        config.query
-      ),
+      snippet: this.generateSnippet(`${ticket.subject} ${ticket.description || ''}`, config.query),
       relevanceScore: this.calculateFullTextScore(config.query, ticket.subject),
       metadata: {
         ticketNumber: ticket.ticketNumber,
@@ -1456,7 +1437,7 @@ export class RetrievalService {
         matchCount++;
         // Bonus for early matches
         const position = contentLower.indexOf(term);
-        positionBonus += 1 - (position / contentLower.length);
+        positionBonus += 1 - position / contentLower.length;
       }
     }
 

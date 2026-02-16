@@ -163,8 +163,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Note: loginWithOAuth uses Supabase client directly, not tRPC
 
   // Check if we just logged out (prevents redirect loop)
-  const isLoggedOutPage = typeof window !== 'undefined' &&
-    window.location.search.includes('logged_out=true');
+  const isLoggedOutPage =
+    typeof window !== 'undefined' && window.location.search.includes('logged_out=true');
 
   // tRPC queries - skip fetching if we just logged out
   const statusQuery = trpc.auth.getStatus.useQuery(undefined, {
@@ -231,34 +231,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     // Listen for Supabase auth state changes (including token refresh)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('[AuthContext] Supabase auth state change:', event);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('[AuthContext] Supabase auth state change:', event);
 
-        if (event === 'TOKEN_REFRESHED' && session) {
-          console.log('[AuthContext] Token refreshed by Supabase, updating storage...');
+      if (event === 'TOKEN_REFRESHED' && session) {
+        console.log('[AuthContext] Token refreshed by Supabase, updating storage...');
 
-          // Update stored tokens
-          localStorage.setItem('accessToken', session.access_token);
-          if (session.refresh_token) {
-            localStorage.setItem('refreshToken', session.refresh_token);
-          }
-
-          // Sync to cookie
-          import('@/lib/shared/session-cleanup').then(({ syncTokenToCookie }) => {
-            syncTokenToCookie(session.access_token);
-          });
-
-          // Invalidate auth status query to pick up new token
-          queryClient.invalidateQueries({ queryKey: [['auth', 'getStatus']] });
-        } else if (event === 'SIGNED_OUT') {
-          console.log('[AuthContext] Signed out via Supabase');
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
-          document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        // Update stored tokens
+        localStorage.setItem('accessToken', session.access_token);
+        if (session.refresh_token) {
+          localStorage.setItem('refreshToken', session.refresh_token);
         }
+
+        // Sync to cookie
+        import('@/lib/shared/session-cleanup').then(({ syncTokenToCookie }) => {
+          syncTokenToCookie(session.access_token);
+        });
+
+        // Invalidate auth status query to pick up new token
+        queryClient.invalidateQueries({ queryKey: [['auth', 'getStatus']] });
+      } else if (event === 'SIGNED_OUT') {
+        console.log('[AuthContext] Signed out via Supabase');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
       }
-    );
+    });
 
     // Initial sync
     syncTokensToSupabase();
@@ -281,7 +281,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      console.log(`[AuthContext] Scheduling token refresh in ${Math.round(timeUntilRefresh / 1000 / 60)} minutes`);
+      console.log(
+        `[AuthContext] Scheduling token refresh in ${Math.round(timeUntilRefresh / 1000 / 60)} minutes`
+      );
 
       // Clear existing timer
       if (refreshTimerRef.current) {
@@ -313,7 +315,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Debug: Log token status on mount
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('accessToken');
-      console.log('[AuthContext] Token in localStorage:', token ? `${token.substring(0, 20)}...` : 'null');
+      console.log(
+        '[AuthContext] Token in localStorage:',
+        token ? `${token.substring(0, 20)}...` : 'null'
+      );
 
       // Sync token from localStorage to cookie for proxy access
       if (token) {
@@ -386,7 +391,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading: false,
       }));
     }
-  }, [statusQuery.isPending, statusQuery.isFetching, statusQuery.isSuccess, statusQuery.isError, statusQuery.data, isLoggedOutPage]);
+  }, [
+    statusQuery.isPending,
+    statusQuery.isFetching,
+    statusQuery.isSuccess,
+    statusQuery.isError,
+    statusQuery.data,
+    isLoggedOutPage,
+  ]);
 
   // ==========================================
   // Auth Methods
@@ -472,62 +484,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Login with OAuth provider
    * Uses the Supabase browser client directly for proper session handling
    */
-  const loginWithOAuth = useCallback(
-    async (provider: 'google' | 'azure'): Promise<void> => {
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
+  const loginWithOAuth = useCallback(async (provider: 'google' | 'azure'): Promise<void> => {
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-      try {
-        const supabase = getSupabaseBrowserClient();
-        if (!supabase) {
-          throw new Error('Failed to initialize authentication client');
-        }
+    try {
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) {
+        throw new Error('Failed to initialize authentication client');
+      }
 
-        const redirectTo = typeof window !== 'undefined'
-          ? `${window.location.origin}/auth/callback`
-          : undefined;
+      const redirectTo =
+        typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined;
 
-        // Map our provider names to Supabase provider names
-        const supabaseProvider = provider === 'azure' ? 'azure' : 'google';
+      // Map our provider names to Supabase provider names
+      const supabaseProvider = provider === 'azure' ? 'azure' : 'google';
 
-        console.log('[OAuth] Initiating login with provider:', supabaseProvider, 'redirectTo:', redirectTo);
+      console.log(
+        '[OAuth] Initiating login with provider:',
+        supabaseProvider,
+        'redirectTo:',
+        redirectTo
+      );
 
-        const { data, error } = await supabase.auth.signInWithOAuth({
-          provider: supabaseProvider,
-          options: {
-            redirectTo,
-          },
-        });
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: supabaseProvider,
+        options: {
+          redirectTo,
+        },
+      });
 
-        console.log('[OAuth] Result:', { url: data?.url ? 'received' : 'null', error: error?.message });
+      console.log('[OAuth] Result:', {
+        url: data?.url ? 'received' : 'null',
+        error: error?.message,
+      });
 
-        if (error) {
-          throw error;
-        }
+      if (error) {
+        throw error;
+      }
 
-        if (data?.url) {
-          // Redirect to OAuth provider
-          console.log('[OAuth] Redirecting to:', data.url);
-          window.location.href = data.url;
-        } else {
-          console.error('[OAuth] No URL returned from Supabase');
-          setState((prev) => ({
-            ...prev,
-            isLoading: false,
-            error: 'OAuth provider not configured. Please contact support.',
-          }));
-        }
-      } catch (error) {
-        console.error('[OAuth] Error:', error);
-        const message = error instanceof Error ? error.message : 'OAuth login failed';
+      if (data?.url) {
+        // Redirect to OAuth provider
+        console.log('[OAuth] Redirecting to:', data.url);
+        window.location.href = data.url;
+      } else {
+        console.error('[OAuth] No URL returned from Supabase');
         setState((prev) => ({
           ...prev,
           isLoading: false,
-          error: message,
+          error: 'OAuth provider not configured. Please contact support.',
         }));
       }
-    },
-    []
-  );
+    } catch (error) {
+      console.error('[OAuth] Error:', error);
+      const message = error instanceof Error ? error.message : 'OAuth login failed';
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: message,
+      }));
+    }
+  }, []);
 
   /**
    * Verify MFA code
@@ -711,19 +727,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   /**
    * Set MFA required state (for external use)
    */
-  const setMfaRequired = useCallback(
-    (challengeId: string, methods: string[]): void => {
-      setState((prev) => ({
-        ...prev,
-        mfa: {
-          required: true,
-          challengeId,
-          methods: methods as MfaState['methods'],
-        },
-      }));
-    },
-    []
-  );
+  const setMfaRequired = useCallback((challengeId: string, methods: string[]): void => {
+    setState((prev) => ({
+      ...prev,
+      mfa: {
+        required: true,
+        challengeId,
+        methods: methods as MfaState['methods'],
+      },
+    }));
+  }, []);
 
   // ==========================================
   // Context Value
@@ -740,11 +753,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setMfaRequired,
   };
 
-  return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>;
 }
 
 // ============================================
@@ -788,17 +797,17 @@ export function useRequireAuth(): AuthContextType {
     const hasLocalToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
 
     // Check for recent redirect to prevent loops (within last 2 seconds)
-    const lastRedirectTime = typeof window !== 'undefined'
-      ? sessionStorage.getItem('auth_redirect_time')
-      : null;
-    const isRecentRedirect = lastRedirectTime && (Date.now() - parseInt(lastRedirectTime, 10)) < 2000;
+    const lastRedirectTime =
+      typeof window !== 'undefined' ? sessionStorage.getItem('auth_redirect_time') : null;
+    const isRecentRedirect = lastRedirectTime && Date.now() - parseInt(lastRedirectTime, 10) < 2000;
 
     // Check for recent OAuth login success (OAuth callback sets this flag)
     // This prevents redirect during the brief moment when token is stored but auth query hasn't completed
-    const oauthLoginTime = typeof window !== 'undefined'
-      ? sessionStorage.getItem('oauth_login_success')
-      : null;
-    const isRecentOAuthLogin = !!(oauthLoginTime && (Date.now() - parseInt(oauthLoginTime, 10)) < 10000);
+    const oauthLoginTime =
+      typeof window !== 'undefined' ? sessionStorage.getItem('oauth_login_success') : null;
+    const isRecentOAuthLogin = !!(
+      oauthLoginTime && Date.now() - parseInt(oauthLoginTime, 10) < 10000
+    );
 
     // Also check URL param as backup (in case sessionStorage doesn't work)
     const isOAuthFlow = isRecentOAuthLogin || hasOAuthParam;
@@ -849,13 +858,17 @@ export function useRequireAuth(): AuthContextType {
 
     // If OAuth flow is in progress and we have a token, wait for auth to complete
     if (isOAuthFlow && hasLocalToken) {
-      console.log('[useRequireAuth] OAuth flow detected with token, waiting for auth to complete...');
+      console.log(
+        '[useRequireAuth] OAuth flow detected with token, waiting for auth to complete...'
+      );
       return;
     }
 
     // If a token exists but auth already determined we're unauthenticated, treat it as expired/invalid.
     if (hasLocalToken && !auth.isAuthenticated && !auth.isLoading) {
-      console.log('[useRequireAuth] Token present but auth failed; clearing token and redirecting to login');
+      console.log(
+        '[useRequireAuth] Token present but auth failed; clearing token and redirecting to login'
+      );
       localStorage.removeItem('accessToken');
       sessionStorage.removeItem('oauth_login_success');
       sessionStorage.removeItem('auth_redirect_time');
@@ -876,10 +889,11 @@ export function useRequireAuth(): AuthContextType {
 
   // Check for recent OAuth login to extend loading state
   const hasLocalToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
-  const oauthLoginTime = typeof window !== 'undefined'
-    ? sessionStorage.getItem('oauth_login_success')
-    : null;
-  const isRecentOAuthLogin = !!(oauthLoginTime && (Date.now() - parseInt(oauthLoginTime, 10)) < 10000);
+  const oauthLoginTime =
+    typeof window !== 'undefined' ? sessionStorage.getItem('oauth_login_success') : null;
+  const isRecentOAuthLogin = !!(
+    oauthLoginTime && Date.now() - parseInt(oauthLoginTime, 10) < 10000
+  );
   const isOAuthFlow = isRecentOAuthLogin || hasOAuthParam;
 
   // Return auth with isLoading=true if not yet authenticated
@@ -888,7 +902,10 @@ export function useRequireAuth(): AuthContextType {
     ...auth,
     // Keep isLoading true until we confirm authentication (or have no token to validate)
     // Also keep loading during OAuth flow to prevent premature content render
-    isLoading: auth.isLoading || (hasLocalToken && !auth.isAuthenticated) || (isOAuthFlow && !auth.isAuthenticated),
+    isLoading:
+      auth.isLoading ||
+      (hasLocalToken && !auth.isAuthenticated) ||
+      (isOAuthFlow && !auth.isAuthenticated),
   };
 }
 
@@ -916,10 +933,11 @@ export function useRedirectIfAuthenticated(redirectTo: string = '/dashboard'): A
   const hasLocalToken = typeof window !== 'undefined' && !!localStorage.getItem('accessToken');
 
   // Check for recent OAuth login - if set, we know auth should be valid
-  const oauthLoginTime = typeof window !== 'undefined'
-    ? sessionStorage.getItem('oauth_login_success')
-    : null;
-  const isRecentOAuthLogin = !!(oauthLoginTime && (Date.now() - parseInt(oauthLoginTime, 10)) < 10000);
+  const oauthLoginTime =
+    typeof window !== 'undefined' ? sessionStorage.getItem('oauth_login_success') : null;
+  const isRecentOAuthLogin = !!(
+    oauthLoginTime && Date.now() - parseInt(oauthLoginTime, 10) < 10000
+  );
 
   // Debug: Log current state
   console.log('[useRedirectIfAuthenticated] Current state:', {
@@ -949,7 +967,10 @@ export function useRedirectIfAuthenticated(redirectTo: string = '/dashboard'): A
     // If there was a recent OAuth login and we have a token, redirect immediately
     // This handles the case where OAuth callback completed successfully
     if (isRecentOAuthLogin && hasLocalToken) {
-      console.log('[useRedirectIfAuthenticated] Recent OAuth login with token, using window.location to navigate to:', finalRedirectTo);
+      console.log(
+        '[useRedirectIfAuthenticated] Recent OAuth login with token, using window.location to navigate to:',
+        finalRedirectTo
+      );
       hasRedirectedRef.current = true;
       // Use window.location.href because router.replace doesn't work reliably
       window.location.href = finalRedirectTo;
@@ -965,12 +986,22 @@ export function useRedirectIfAuthenticated(redirectTo: string = '/dashboard'): A
 
     // Only redirect if actually authenticated (token validated by query)
     if (auth.isAuthenticated) {
-      console.log('[useRedirectIfAuthenticated] Auth confirmed, using window.location to navigate to:', finalRedirectTo);
+      console.log(
+        '[useRedirectIfAuthenticated] Auth confirmed, using window.location to navigate to:',
+        finalRedirectTo
+      );
       hasRedirectedRef.current = true;
       // Use window.location.href because router.replace doesn't seem to work reliably
       window.location.href = finalRedirectTo;
     }
-  }, [auth.isLoading, auth.isAuthenticated, finalRedirectTo, justLoggedOut, hasLocalToken, isRecentOAuthLogin]);
+  }, [
+    auth.isLoading,
+    auth.isAuthenticated,
+    finalRedirectTo,
+    justLoggedOut,
+    hasLocalToken,
+    isRecentOAuthLogin,
+  ]);
 
   return auth;
 }

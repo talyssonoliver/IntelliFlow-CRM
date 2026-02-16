@@ -364,18 +364,9 @@ describe('Rollback Service', () => {
         agentName: 'Agent 1',
       });
 
-      await modifyAndApproveAction(
-        action.id,
-        'user-1',
-        { score: 70 },
-        'Adjusted score'
-      );
+      await modifyAndApproveAction(action.id, 'user-1', { score: 70 }, 'Adjusted score');
 
-      const result = await rollbackAction(
-        action.id,
-        'user-2',
-        'Rollback modified'
-      );
+      const result = await rollbackAction(action.id, 'user-2', 'Rollback modified');
 
       expect(result.success).toBe(true);
       expect(result.previousStatus).toBe('modified');

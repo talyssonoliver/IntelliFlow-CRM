@@ -142,7 +142,8 @@ describe('IcsGenerationService - b11', () => {
 
   describe('generate() with reminders and meetingUrl', () => {
     it('should include alarms when reminders are provided', () => {
-      const icsContent = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test//EN\r\nBEGIN:VEVENT\r\nEND:VEVENT\r\nEND:VCALENDAR';
+      const icsContent =
+        'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test//EN\r\nBEGIN:VEVENT\r\nEND:VEVENT\r\nEND:VCALENDAR';
       mockCreateEvent.mockReturnValue({ error: undefined as any, value: icsContent as any });
 
       const appointment = makeMockAppointment();
@@ -174,7 +175,8 @@ describe('IcsGenerationService - b11', () => {
 
   describe('generate() with CANCEL method', () => {
     it('should set status to CANCELLED and include cancellation reason in description', () => {
-      const icsContent = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test//EN\r\nBEGIN:VEVENT\r\nEND:VEVENT\r\nEND:VCALENDAR';
+      const icsContent =
+        'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test//EN\r\nBEGIN:VEVENT\r\nEND:VEVENT\r\nEND:VCALENDAR';
       mockCreateEvent.mockReturnValue({ error: undefined as any, value: icsContent as any });
 
       const appointment = makeMockAppointment({ description: 'Original desc' });
@@ -196,7 +198,8 @@ describe('IcsGenerationService - b11', () => {
     });
 
     it('should handle CANCEL with cancellationReason but no description', () => {
-      const icsContent = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test//EN\r\nBEGIN:VEVENT\r\nEND:VEVENT\r\nEND:VCALENDAR';
+      const icsContent =
+        'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Test//EN\r\nBEGIN:VEVENT\r\nEND:VEVENT\r\nEND:VCALENDAR';
       mockCreateEvent.mockReturnValue({ error: undefined as any, value: icsContent as any });
 
       const appointment = makeMockAppointment({ description: undefined });
@@ -219,7 +222,8 @@ describe('IcsGenerationService - b11', () => {
 
   describe('addMethod() edge cases', () => {
     it('should add METHOD after VERSION when no PRODID', () => {
-      const icsWithoutProdId = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nEND:VEVENT\r\nEND:VCALENDAR';
+      const icsWithoutProdId =
+        'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nEND:VEVENT\r\nEND:VCALENDAR';
       mockCreateEvent.mockReturnValue({ error: undefined as any, value: icsWithoutProdId as any });
 
       const appointment = makeMockAppointment();
@@ -273,11 +277,7 @@ describe('IcsGenerationService - b11', () => {
     });
 
     it('should fail when required field is missing', () => {
-      const invalidIcs = [
-        'BEGIN:VCALENDAR',
-        'VERSION:2.0',
-        'END:VCALENDAR',
-      ].join('\r\n');
+      const invalidIcs = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'END:VCALENDAR'].join('\r\n');
 
       const result = service.validate(invalidIcs);
       expect(result.isFailure).toBe(true);

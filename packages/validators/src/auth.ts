@@ -286,28 +286,32 @@ export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 /**
  * Reset password schema
  */
-export const resetPasswordSchema = z.object({
-  token: z.string().min(1),
-  password: strongPasswordSchema,
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
+export const resetPasswordSchema = z
+  .object({
+    token: z.string().min(1),
+    password: strongPasswordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
 
 /**
  * Change password schema (for authenticated users)
  */
-export const changePasswordSchema = z.object({
-  currentPassword: z.string().min(1),
-  newPassword: strongPasswordSchema,
-  confirmPassword: z.string(),
-}).refine((data) => data.newPassword === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1),
+    newPassword: strongPasswordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 
@@ -318,18 +322,20 @@ export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
 /**
  * Signup schema
  */
-export const signupSchema = z.object({
-  email: emailSchema,
-  password: strongPasswordSchema,
-  confirmPassword: z.string(),
-  name: z.string().min(1).max(100).trim(),
-  acceptTerms: z.literal(true, {
-    errorMap: () => ({ message: 'You must accept the terms and conditions' }),
-  }),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
-});
+export const signupSchema = z
+  .object({
+    email: emailSchema,
+    password: strongPasswordSchema,
+    confirmPassword: z.string(),
+    name: z.string().min(1).max(100).trim(),
+    acceptTerms: z.literal(true, {
+      errorMap: () => ({ message: 'You must accept the terms and conditions' }),
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
 
 export type SignupInput = z.infer<typeof signupSchema>;
 

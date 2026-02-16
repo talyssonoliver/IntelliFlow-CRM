@@ -67,7 +67,7 @@ describe('Email Handler', () => {
       // Implementation uses String(phone) which works with string or formatted object
       const dataWithPhone = {
         ...validFormData,
-        phone: '+1 (234) 567-890'
+        phone: '+1 (234) 567-890',
       };
 
       const payload = buildContactEmailPayload(dataWithPhone as unknown as ContactFormInput);

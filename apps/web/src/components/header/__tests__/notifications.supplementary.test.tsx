@@ -20,7 +20,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('react', async () => {
   const actual = await vi.importActual('react');
   return {
-    ...actual as any,
+    ...(actual as any),
     useState: vi.fn((init: any) => [init, vi.fn()]),
     useEffect: vi.fn(),
     useRef: vi.fn(() => ({ current: null })),
@@ -146,7 +146,14 @@ describe('Notifications header component - logic tests', () => {
       const reminders = {
         unreadCount: 2,
         recentNotifications: [
-          { reminderId: 'r1', title: 'Test', message: 'msg', priority: 'medium', timeUntilDue: '1h', entityLink: '/test' },
+          {
+            reminderId: 'r1',
+            title: 'Test',
+            message: 'msg',
+            priority: 'medium',
+            timeUntilDue: '1h',
+            entityLink: '/test',
+          },
         ],
       };
       const notifications = reminders?.recentNotifications ?? [];
@@ -273,7 +280,9 @@ describe('Notifications header component - logic tests', () => {
   describe('notification toggle', () => {
     it('should toggle isOpen state', () => {
       let isOpen = false;
-      const toggle = () => { isOpen = !isOpen; };
+      const toggle = () => {
+        isOpen = !isOpen;
+      };
 
       toggle();
       expect(isOpen).toBe(true);

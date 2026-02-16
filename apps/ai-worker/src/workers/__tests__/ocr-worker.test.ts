@@ -288,9 +288,7 @@ describe('OCRWorker', () => {
         arrayBuffer: () => Promise.resolve(pdfAB),
       } as any);
 
-      const result = await worker.processDocument(
-        makeJobInput({ engine: undefined })
-      );
+      const result = await worker.processDocument(makeJobInput({ engine: undefined }));
 
       expect(result.engine).toBe('tesseract');
     });

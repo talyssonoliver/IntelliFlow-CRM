@@ -82,7 +82,8 @@ Three test files covering each layer:
 
 ### Layer 2: ESLint Rules
 
-Added to `eslint.config.mjs` (flat config) as overrides for specific directories:
+Added to `eslint.config.mjs` (flat config) as overrides for specific
+directories:
 
 ```javascript
 // eslint.config.mjs (excerpt)

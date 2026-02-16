@@ -60,9 +60,11 @@ describe('RecurrenceEditor', () => {
     const pattern: RecurrencePattern = { frequency: 'WEEKLY', interval: 1, daysOfWeek: ['MONDAY'] };
     render(<RecurrenceEditor value={pattern} onChange={onChange} />);
     fireEvent.click(screen.getByText('Wed'));
-    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({
-      daysOfWeek: ['MONDAY', 'WEDNESDAY'],
-    }));
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        daysOfWeek: ['MONDAY', 'WEDNESDAY'],
+      })
+    );
   });
 
   it('shows day of month selector for MONTHLY', () => {

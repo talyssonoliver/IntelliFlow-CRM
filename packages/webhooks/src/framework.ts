@@ -79,11 +79,7 @@ export type Middleware = (
 /**
  * Signature verification function
  */
-export type SignatureVerifyFn = (
-  payload: string,
-  signature: string,
-  secret: string
-) => boolean;
+export type SignatureVerifyFn = (payload: string, signature: string, secret: string) => boolean;
 
 /**
  * Source configuration
@@ -158,11 +154,14 @@ export const hmacSha256Verify: SignatureVerifyFn = (payload, signature, secret) 
  * Stripe signature verifier
  */
 export const stripeVerify: SignatureVerifyFn = (payload, signature, secret) => {
-  const parts = signature.split(',').reduce((acc, part) => {
-    const [key, value] = part.split('=');
-    if (key && value) acc[key] = value;
-    return acc;
-  }, {} as Record<string, string>);
+  const parts = signature.split(',').reduce(
+    (acc, part) => {
+      const [key, value] = part.split('=');
+      if (key && value) acc[key] = value;
+      return acc;
+    },
+    {} as Record<string, string>
+  );
 
   const timestamp = parts['t'];
   const v1 = parts['v1'];
@@ -172,9 +171,7 @@ export const stripeVerify: SignatureVerifyFn = (payload, signature, secret) => {
   const now = Math.floor(Date.now() / 1000);
   if (Math.abs(now - parseInt(timestamp)) > 300) return false;
 
-  const expected = createHmac('sha256', secret)
-    .update(`${timestamp}.${payload}`)
-    .digest('hex');
+  const expected = createHmac('sha256', secret).update(`${timestamp}.${payload}`).digest('hex');
 
   try {
     return timingSafeEqual(Buffer.from(v1), Buffer.from(expected));
@@ -207,7 +204,9 @@ export const githubVerify: SignatureVerifyFn = (payload, signature, secret) => {
 export function defaultEventTransformer(raw: unknown): WebhookEvent {
   const data = raw as Record<string, unknown>;
   return {
-    id: (data.id || data.event_id || createHash('sha256').update(JSON.stringify(data)).digest('hex').slice(0, 16)) as string,
+    id: (data.id ||
+      data.event_id ||
+      createHash('sha256').update(JSON.stringify(data)).digest('hex').slice(0, 16)) as string,
     type: (data.type || data.event_type || data.event || 'unknown') as string,
     source: 'unknown',
     timestamp: data.timestamp ? new Date(data.timestamp as string) : new Date(),
@@ -239,7 +238,9 @@ export function stripeEventTransformer(raw: unknown): WebhookEvent {
 export function sendgridEventTransformer(raw: unknown): WebhookEvent {
   const data = raw as Record<string, unknown>;
   return {
-    id: (data.sg_message_id || data.event_id || createHash('sha256').update(JSON.stringify(data)).digest('hex').slice(0, 16)) as string,
+    id: (data.sg_message_id ||
+      data.event_id ||
+      createHash('sha256').update(JSON.stringify(data)).digest('hex').slice(0, 16)) as string,
     type: `email.${data.event}`,
     source: 'sendgrid',
     timestamp: data.timestamp ? new Date((data.timestamp as number) * 1000) : new Date(),
@@ -378,7 +379,7 @@ class DeadLetterQueue {
   }
 
   remove(eventId: string): boolean {
-    const index = this.entries.findIndex(e => e.event.id === eventId);
+    const index = this.entries.findIndex((e) => e.event.id === eventId);
     if (index >= 0) {
       this.entries.splice(index, 1);
       return true;
@@ -651,7 +652,7 @@ export class WebhookFramework {
       // Execute middleware and handlers
       try {
         await this.executeWithMiddleware(event, context, async () => {
-          await Promise.all(handlers.map(h => h(event, context)));
+          await Promise.all(handlers.map((h) => h(event, context)));
         });
 
         // Mark as processed
@@ -751,7 +752,7 @@ export class WebhookFramework {
 
       try {
         await this.executeWithMiddleware(entry.event, entry.context, async () => {
-          await Promise.all(handlers.map(h => h(entry.event, entry.context)));
+          await Promise.all(handlers.map((h) => h(entry.event, entry.context)));
         });
         succeeded++;
         this.idempotency.set(`${entry.context.source}:${entry.event.id}`, { success: true });
@@ -796,7 +797,7 @@ export class WebhookFramework {
    */
   async reprocessDeadLetter(eventId: string): Promise<boolean> {
     const entries = this.deadLetterQueue.getAll();
-    const entry = entries.find(e => e.event.id === eventId);
+    const entry = entries.find((e) => e.event.id === eventId);
     if (!entry) return false;
 
     this.deadLetterQueue.remove(eventId);
@@ -808,7 +809,7 @@ export class WebhookFramework {
     ];
 
     try {
-      await Promise.all(handlers.map(h => h(entry.event, entry.context)));
+      await Promise.all(handlers.map((h) => h(entry.event, entry.context)));
       return true;
     } catch {
       return false;
@@ -833,12 +834,7 @@ export class WebhookFramework {
     ip?: string;
   }) => Promise<{ status: number; json: unknown }> {
     return async (req) => {
-      const result = await this.handle(
-        req.params.source,
-        req.body,
-        req.headers,
-        req.ip
-      );
+      const result = await this.handle(req.params.source, req.body, req.headers, req.ip);
 
       return {
         status: result.statusCode,

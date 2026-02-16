@@ -60,12 +60,7 @@ export type AgentActionStatus = (typeof AGENT_ACTION_STATUSES)[number];
 /**
  * Priority levels for timeline events
  */
-export const TIMELINE_PRIORITIES = [
-  'low',
-  'medium',
-  'high',
-  'urgent',
-] as const;
+export const TIMELINE_PRIORITIES = ['low', 'medium', 'high', 'urgent'] as const;
 
 export type TimelinePriority = (typeof TIMELINE_PRIORITIES)[number];
 
@@ -94,10 +89,7 @@ export type CommunicationChannel = (typeof COMMUNICATION_CHANNELS)[number];
 /**
  * Communication direction
  */
-export const COMMUNICATION_DIRECTIONS = [
-  'inbound',
-  'outbound',
-] as const;
+export const COMMUNICATION_DIRECTIONS = ['inbound', 'outbound'] as const;
 
 export type CommunicationDirection = (typeof COMMUNICATION_DIRECTIONS)[number];
 

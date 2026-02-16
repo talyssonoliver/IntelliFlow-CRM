@@ -90,10 +90,7 @@ export default function QualityDashboard() {
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
         </div>
-        <button
-          onClick={fetchData}
-          className="mt-2 text-sm underline hover:no-underline"
-        >
+        <button onClick={fetchData} className="mt-2 text-sm underline hover:no-underline">
           Try again
         </button>
       </div>
@@ -127,9 +124,7 @@ export default function QualityDashboard() {
           <Icon name="check_circle" className="text-green-600" size="xl" />
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Quality Metrics</h3>
-            <p className="text-sm text-gray-500">
-              Debt, coverage, and code analysis
-            </p>
+            <p className="text-sm text-gray-500">Debt, coverage, and code analysis</p>
           </div>
         </div>
         <RefreshButton
@@ -147,10 +142,7 @@ export default function QualityDashboard() {
             Test Coverage
           </h4>
           {data?.coverage.lastUpdated && (
-            <StaleIndicator
-              lastUpdated={data.coverage.lastUpdated}
-              thresholdMinutes={1440}
-            />
+            <StaleIndicator lastUpdated={data.coverage.lastUpdated} thresholdMinutes={1440} />
           )}
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -164,19 +156,25 @@ export default function QualityDashboard() {
             title="Branches"
             value={`${data?.coverage.branches.toFixed(1) ?? 0}%`}
             icon="fork_right"
-            variant={getCoverageColor(data?.coverage.branches ?? 0) as 'success' | 'warning' | 'error'}
+            variant={
+              getCoverageColor(data?.coverage.branches ?? 0) as 'success' | 'warning' | 'error'
+            }
           />
           <MetricCard
             title="Functions"
             value={`${data?.coverage.functions.toFixed(1) ?? 0}%`}
             icon="package_2"
-            variant={getCoverageColor(data?.coverage.functions ?? 0) as 'success' | 'warning' | 'error'}
+            variant={
+              getCoverageColor(data?.coverage.functions ?? 0) as 'success' | 'warning' | 'error'
+            }
           />
           <MetricCard
             title="Statements"
             value={`${data?.coverage.statements.toFixed(1) ?? 0}%`}
             icon="description"
-            variant={getCoverageColor(data?.coverage.statements ?? 0) as 'success' | 'warning' | 'error'}
+            variant={
+              getCoverageColor(data?.coverage.statements ?? 0) as 'success' | 'warning' | 'error'
+            }
           />
         </div>
       </div>
@@ -190,10 +188,7 @@ export default function QualityDashboard() {
           </h4>
           <div className="flex items-center gap-2">
             {data?.debt.lastUpdated && (
-              <StaleIndicator
-                lastUpdated={data.debt.lastUpdated}
-                thresholdMinutes={10080}
-              />
+              <StaleIndicator lastUpdated={data.debt.lastUpdated} thresholdMinutes={10080} />
             )}
             <RefreshButton
               onRefresh={() => handleRefresh('debt')}
@@ -224,12 +219,7 @@ export default function QualityDashboard() {
             icon="warning"
             variant={(data?.debt.high ?? 0) > 0 ? 'warning' : 'default'}
           />
-          <MetricCard
-            title="Medium"
-            value={data?.debt.medium ?? 0}
-            icon="info"
-            variant="default"
-          />
+          <MetricCard title="Medium" value={data?.debt.medium ?? 0} icon="info" variant="default" />
           <MetricCard
             title="Low"
             value={data?.debt.low ?? 0}
@@ -248,10 +238,7 @@ export default function QualityDashboard() {
           </h4>
           <div className="flex items-center gap-2">
             {data?.sonarqube.lastUpdated && (
-              <StaleIndicator
-                lastUpdated={data.sonarqube.lastUpdated}
-                thresholdMinutes={10080}
-              />
+              <StaleIndicator lastUpdated={data.sonarqube.lastUpdated} thresholdMinutes={10080} />
             )}
             <RefreshButton
               onRefresh={() => handleRefresh('sonar')}
@@ -265,7 +252,9 @@ export default function QualityDashboard() {
         <div className="mb-4">
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-500">Quality Gate:</span>
-            <span className={`font-semibold ${getQualityGateColor(data?.sonarqube.qualityGate ?? 'Unknown')}`}>
+            <span
+              className={`font-semibold ${getQualityGateColor(data?.sonarqube.qualityGate ?? 'Unknown')}`}
+            >
               {data?.sonarqube.qualityGate ?? 'Unknown'}
             </span>
           </div>
@@ -306,10 +295,7 @@ export default function QualityDashboard() {
             Phantom Completion Audit
           </h4>
           {data?.phantomAudit.lastUpdated && (
-            <StaleIndicator
-              lastUpdated={data.phantomAudit.lastUpdated}
-              thresholdMinutes={10080}
-            />
+            <StaleIndicator lastUpdated={data.phantomAudit.lastUpdated} thresholdMinutes={10080} />
           )}
         </div>
         <div className="grid grid-cols-2 gap-4">

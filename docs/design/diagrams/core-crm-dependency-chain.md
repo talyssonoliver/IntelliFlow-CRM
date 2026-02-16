@@ -1,24 +1,26 @@
 # Core CRM Domain - Dependency Chain Analysis
 
-**Generated**: 2026-02-03
-**Purpose**: Ensure complete hexagonal architecture implementation with no orphaned tasks
+**Generated**: 2026-02-03 **Purpose**: Ensure complete hexagonal architecture
+implementation with no orphaned tasks
 
 ---
 
 ## Executive Summary
 
-The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account, Opportunity/Deal, Task, and Ticket. Analysis reveals significant gaps in router and frontend layers.
+The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account,
+Opportunity/Deal, Task, and Ticket. Analysis reveals significant gaps in router
+and frontend layers.
 
-| Entity | Domain | Database | Adapter | Router | Frontend | Status |
-|--------|--------|----------|---------|--------|----------|--------|
-| Lead | IFC-101 | IFC-017 | IFC-107 | IFC-013 | IFC-004 | COMPLETE |
-| Contact | IFC-102 | IFC-017 | IFC-107 | MISSING | MISSING | ORPHAN |
-| Account | IFC-103 | IFC-017 | IFC-107 | MISSING | MISSING | ORPHAN |
-| Opportunity | IFC-104 | IFC-017 | IFC-107 | MISSING | PG-131* | PARTIAL |
-| Task | IFC-105 | IFC-017 | IFC-107 | IFC-187 | MISSING | PARTIAL |
-| Ticket | IFC-188 | IFC-017 | IFC-107 | IFC-189 | PG-137✅ | COMPLETE |
+| Entity      | Domain  | Database | Adapter | Router  | Frontend | Status   |
+| ----------- | ------- | -------- | ------- | ------- | -------- | -------- |
+| Lead        | IFC-101 | IFC-017  | IFC-107 | IFC-013 | IFC-004  | COMPLETE |
+| Contact     | IFC-102 | IFC-017  | IFC-107 | MISSING | MISSING  | ORPHAN   |
+| Account     | IFC-103 | IFC-017  | IFC-107 | MISSING | MISSING  | ORPHAN   |
+| Opportunity | IFC-104 | IFC-017  | IFC-107 | MISSING | PG-131\* | PARTIAL  |
+| Task        | IFC-105 | IFC-017  | IFC-107 | IFC-187 | MISSING  | PARTIAL  |
+| Ticket      | IFC-188 | IFC-017  | IFC-107 | IFC-189 | PG-137✅ | COMPLETE |
 
-*PG-131 is Deal Forecast only, no list/detail page
+\*PG-131 is Deal Forecast only, no list/detail page
 
 ---
 
@@ -132,8 +134,8 @@ The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account, Oppor
     │  - /leads/[id]  │  │  - /contacts/   │  │  - /accounts/   │  │    forecast     │  │  - /tasks/[id]  │
     │                 │  │    [id]         │  │    [id]         │  │                 │  │                 │
     │                 │  │                 │  │                 │  │  MISSING:       │  │                 │
-    │  COMPLETED ✅   │  │  CREATE: PG-133 │  │  COMPLETED ✅   │  │  - /deals list  │  │  COMPLETED ✅   │
-    │  Sprint 2       │  │                 │  │  Sprint 5       │  │  CREATE: PG-135 │  │  Sprint 6       │
+    │  COMPLETED ✅   │  │  CREATE: PG-133 │  │  COMPLETED ✅   │  │  COMPLETED ✅   │  │  COMPLETED ✅   │
+    │  Sprint 2       │  │                 │  │  Sprint 5       │  │  PG-135 DONE    │  │  Sprint 6       │
     └─────────────────┘  └─────────────────┘  └─────────────────┘  └─────────────────┘  └─────────────────┘
 ```
 
@@ -213,38 +215,39 @@ The **Core CRM** domain covers 6 primary entities: Lead, Contact, Account, Oppor
 
 ### Backend Routers (Missing)
 
-| New Task ID | Entity | Description | Dependencies | Sprint |
-|-------------|--------|-------------|--------------|--------|
-| IFC-184 | Contact | Contact tRPC Router - CRUD + search | IFC-102, IFC-107, IFC-003 | 4 |
-| IFC-185 | Account | Account tRPC Router - CRUD + hierarchy | IFC-103, IFC-107, IFC-003 | 4 |
-| IFC-186 | Deal | Deal/Opportunity tRPC Router - CRUD + pipeline | IFC-104, IFC-107, IFC-003 | 5 |
-| IFC-187 | Task | Task tRPC Router - CRUD + assign + timeline | IFC-105, IFC-107, IFC-003 | 5 |
-| IFC-188 | Ticket | Ticket Domain Entity - aggregate + validators | IFC-002, IFC-003 | 4 |
-| IFC-189 | Ticket | Ticket tRPC Router - CRUD + SLA + escalation | IFC-188, IFC-003 | 5 |
+| New Task ID | Entity  | Description                                    | Dependencies              | Sprint |
+| ----------- | ------- | ---------------------------------------------- | ------------------------- | ------ |
+| IFC-184     | Contact | Contact tRPC Router - CRUD + search            | IFC-102, IFC-107, IFC-003 | 4      |
+| IFC-185     | Account | Account tRPC Router - CRUD + hierarchy         | IFC-103, IFC-107, IFC-003 | 4      |
+| IFC-186     | Deal    | Deal/Opportunity tRPC Router - CRUD + pipeline | IFC-104, IFC-107, IFC-003 | 5      |
+| IFC-187     | Task    | Task tRPC Router - CRUD + assign + timeline    | IFC-105, IFC-107, IFC-003 | 5      |
+| IFC-188     | Ticket  | Ticket Domain Entity - aggregate + validators  | IFC-002, IFC-003          | 4      |
+| IFC-189     | Ticket  | Ticket tRPC Router - CRUD + SLA + escalation   | IFC-188, IFC-003          | 5      |
 
 ### Frontend Pages (Missing)
 
-| New Task ID | Entity | Description | Dependencies | Sprint |
-|-------------|--------|-------------|--------------|--------|
-| PG-133 | Contact | Contact List & Detail Pages | IFC-184 | 5 |
-| PG-134 | Account | Account List & Detail Pages | IFC-185 | 5 |
-| PG-135 | Deal | Deal List Page (pipeline view) | IFC-186 | 6 |
-| PG-136 | Task | Task Management UI | IFC-187 | 6 |
-| PG-137 | Ticket | Ticket Management UI | IFC-189 | 6 |
+| New Task ID | Entity  | Description                    | Dependencies | Sprint |
+| ----------- | ------- | ------------------------------ | ------------ | ------ |
+| PG-133      | Contact | Contact List & Detail Pages    | IFC-184      | 5      |
+| PG-134      | Account | Account List & Detail Pages    | IFC-185      | 5      |
+| PG-135      | Deal    | Deal List Page (pipeline view) | IFC-186      | 6      |
+| PG-136      | Task    | Task Management UI             | IFC-187      | 6      |
+| PG-137      | Ticket  | Ticket Management UI           | IFC-189      | 6      |
 
 ---
 
 ## Orphan Status Summary
 
-| Entity | Backend Orphan? | Frontend Orphan? | Action Required |
-|--------|-----------------|------------------|-----------------|
-| Lead | No | No | None - Complete |
-| Contact | No (domain exists) | YES | Create IFC-184, PG-133 |
-| Account | No (router done ✅) | No (PG-134 ✅) | Complete |
-| Opportunity | No (router done ✅) | YES | Create PG-135 |
-| Task | No (router done ✅) | No (PG-136 ✅) | Complete — 9 components, 104 tests, tRPC integration |
-| Ticket | No (router done ✅) | No (PG-137 ✅) | Complete — 7 components, 79 tests, tRPC integration |
+| Entity      | Backend Orphan?     | Frontend Orphan? | Action Required                                      |
+| ----------- | ------------------- | ---------------- | ---------------------------------------------------- |
+| Lead        | No                  | No               | None - Complete                                      |
+| Contact     | No (domain exists)  | YES              | Create IFC-184, PG-133                               |
+| Account     | No (router done ✅) | No (PG-134 ✅)   | Complete                                             |
+| Opportunity | No (router done ✅) | No (PG-135 ✅)   | Complete — 6 components, 72 tests, DnD pipeline      |
+| Task        | No (router done ✅) | No (PG-136 ✅)   | Complete — 9 components, 104 tests, tRPC integration |
+| Ticket      | No (router done ✅) | No (PG-137 ✅)   | Complete — 7 components, 79 tests, tRPC integration  |
 
 **Total New Tasks Required: 10** (IFC-189 completed 2026-02-07)
+
 - 5 Backend (IFC-184 to IFC-188, IFC-189 ✅)
 - 5 Frontend (PG-133 to PG-137)

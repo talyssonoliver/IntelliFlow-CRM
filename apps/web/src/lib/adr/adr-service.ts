@@ -9,14 +9,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // Configuration
-const ADR_PATHS = [
-  'docs/planning/adr',
-  'docs/architecture/adr',
-  'docs/shared',
-];
+const ADR_PATHS = ['docs/planning/adr', 'docs/architecture/adr', 'docs/shared'];
 
 const VALID_STATUSES = ['Proposed', 'Accepted', 'Rejected', 'Deprecated', 'Superseded'] as const;
-export type ADRStatus = typeof VALID_STATUSES[number];
+export type ADRStatus = (typeof VALID_STATUSES)[number];
 
 const TEMPLATE_PATH = 'docs/architecture/adr/000-template.md';
 
@@ -63,7 +59,8 @@ export function parseADR(filePath: string): ADRMetadata | null {
 
     // Extract ID from filename or title
     const fileName = path.basename(filePath, '.md');
-    const idMatch = title.match(/ADR-(\d+)/) || fileName.match(/ADR-(\d+)/i) || fileName.match(/^(\d+)/);
+    const idMatch =
+      title.match(/ADR-(\d+)/) || fileName.match(/ADR-(\d+)/i) || fileName.match(/^(\d+)/);
     const id = idMatch ? `ADR-${idMatch[1].padStart(3, '0')}` : fileName;
 
     // Extract status
@@ -143,7 +140,11 @@ export function getAllADRs(): ADRMetadata[] {
 
   for (const file of files) {
     const metadata = parseADR(file);
-    if (metadata && !metadata.title.includes('Template') && !metadata.filePath.includes('template')) {
+    if (
+      metadata &&
+      !metadata.title.includes('Template') &&
+      !metadata.filePath.includes('template')
+    ) {
       adrs.push(metadata);
     }
   }
@@ -202,7 +203,11 @@ export function validateADR(adr: ADRMetadata): ValidationResult {
     }
 
     // Check date format
-    if (!adr.date.match(/^\d{4}-\d{2}-\d{2}$/) && adr.date !== 'Unknown' && !adr.date.includes('YYYY')) {
+    if (
+      !adr.date.match(/^\d{4}-\d{2}-\d{2}$/) &&
+      adr.date !== 'Unknown' &&
+      !adr.date.includes('YYYY')
+    ) {
       warnings.push(`Date format should be YYYY-MM-DD: ${adr.date}`);
     }
 
@@ -246,7 +251,10 @@ export function validateAllADRs(): ADRValidation[] {
 /**
  * Create a new ADR from template
  */
-export function createADR(title: string, technicalStory?: string): { success: boolean; path?: string; error?: string } {
+export function createADR(
+  title: string,
+  technicalStory?: string
+): { success: boolean; path?: string; error?: string } {
   const baseDir = getBaseDir();
   const templatePath = path.resolve(baseDir, TEMPLATE_PATH);
 
@@ -263,7 +271,10 @@ export function createADR(title: string, technicalStory?: string): { success: bo
     }, 0);
 
     const nextId = (maxId + 1).toString().padStart(3, '0');
-    const fileName = `ADR-${nextId}-${title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}.md`;
+    const fileName = `ADR-${nextId}-${title
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')}.md`;
     const outputPath = path.resolve(baseDir, 'docs/planning/adr', fileName);
 
     // Ensure directory exists
@@ -282,10 +293,7 @@ export function createADR(title: string, technicalStory?: string): { success: bo
     template = template.replace(/\[Proposed \| Accepted.*\]/g, 'Proposed');
 
     if (technicalStory) {
-      template = template.replace(
-        /\[Link to relevant task\/issue.*\]/g,
-        technicalStory
-      );
+      template = template.replace(/\[Link to relevant task\/issue.*\]/g, technicalStory);
     }
 
     // Remove guidelines section
@@ -308,9 +316,15 @@ export function createADR(title: string, technicalStory?: string): { success: bo
 /**
  * Update ADR status
  */
-export function updateADRStatus(adrId: string, newStatus: string): { success: boolean; error?: string } {
+export function updateADRStatus(
+  adrId: string,
+  newStatus: string
+): { success: boolean; error?: string } {
   if (!VALID_STATUSES.some((s) => newStatus.toLowerCase().startsWith(s.toLowerCase()))) {
-    return { success: false, error: `Invalid status. Valid statuses: ${VALID_STATUSES.join(', ')}` };
+    return {
+      success: false,
+      error: `Invalid status. Valid statuses: ${VALID_STATUSES.join(', ')}`,
+    };
   }
 
   const adrs = getAllADRs();
@@ -326,10 +340,7 @@ export function updateADRStatus(adrId: string, newStatus: string): { success: bo
     let content = fs.readFileSync(fullPath, 'utf-8');
 
     // Update status
-    content = content.replace(
-      /\*\*Status:\*\*\s*.+/i,
-      `**Status:** ${newStatus}`
-    );
+    content = content.replace(/\*\*Status:\*\*\s*.+/i, `**Status:** ${newStatus}`);
 
     // Update date if accepting
     if (newStatus.toLowerCase() === 'accepted') {
@@ -419,7 +430,9 @@ export function generateADRIndex(): string {
   // Group by status
   const accepted = adrs.filter((a) => a.status.includes('Accepted'));
   const proposed = adrs.filter((a) => a.status.includes('Proposed'));
-  const deprecated = adrs.filter((a) => a.status.includes('Deprecated') || a.status.includes('Superseded'));
+  const deprecated = adrs.filter(
+    (a) => a.status.includes('Deprecated') || a.status.includes('Superseded')
+  );
   const rejected = adrs.filter((a) => a.status.includes('Rejected'));
 
   const lines: string[] = [
@@ -446,7 +459,9 @@ export function generateADRIndex(): string {
     lines.push('| ID | Title | Date | Sprint | Story |');
     lines.push('|----|-------|------|--------|-------|');
     for (const adr of accepted) {
-      lines.push(`| ${adr.id} | ${adr.title} | ${adr.date} | ${adr.sprint} | ${adr.technicalStory || '-'} |`);
+      lines.push(
+        `| ${adr.id} | ${adr.title} | ${adr.date} | ${adr.sprint} | ${adr.technicalStory || '-'} |`
+      );
     }
     lines.push('');
   }
@@ -458,7 +473,9 @@ export function generateADRIndex(): string {
     lines.push('| ID | Title | Date | Sprint | Story |');
     lines.push('|----|-------|------|--------|-------|');
     for (const adr of proposed) {
-      lines.push(`| ${adr.id} | ${adr.title} | ${adr.date} | ${adr.sprint} | ${adr.technicalStory || '-'} |`);
+      lines.push(
+        `| ${adr.id} | ${adr.title} | ${adr.date} | ${adr.sprint} | ${adr.technicalStory || '-'} |`
+      );
     }
     lines.push('');
   }

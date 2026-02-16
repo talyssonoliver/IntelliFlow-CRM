@@ -42,11 +42,11 @@ export const widgetRegistry: Record<string, ComponentType<WidgetProps>> = {
   'recent-activity': RecentActivityWidget,
 
   // Additional customization widgets
-  'revenue': RevenueWidget,
+  revenue: RevenueWidget,
   'active-leads': ActiveLeadsWidget,
   'conversion-rate': ConversionRateWidget,
   'pending-tasks': PendingTasksWidget,
-  'pipeline': PipelineWidget,
+  pipeline: PipelineWidget,
   'top-performers': TopPerformersWidget,
   'upcoming-events': UpcomingEventsWidget,
   'team-chat': TeamChatWidget,

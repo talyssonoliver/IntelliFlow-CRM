@@ -17,7 +17,11 @@
  */
 
 import { useEffect, useCallback, useRef, useState } from 'react';
-import { createClient, RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import {
+  createClient,
+  RealtimeChannel,
+  RealtimePostgresChangesPayload,
+} from '@supabase/supabase-js';
 
 // Import tRPC subscription hooks
 import {
@@ -73,7 +77,9 @@ interface SupabaseSubscriptionMetrics extends SubscriptionMetrics {
 
 // Supabase client initialization
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://127.0.0.1:54321';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   realtime: {
@@ -472,9 +478,7 @@ export function useActivitySubscription(options: ActivitySubscriptionOptions = {
         }
 
         const timestamp =
-          typeof event.timestamp === 'string'
-            ? event.timestamp
-            : event.timestamp.toISOString();
+          typeof event.timestamp === 'string' ? event.timestamp : event.timestamp.toISOString();
 
         appendActivity({
           id: `lead-scored-${event.leadId}-${timestamp}`,
@@ -513,9 +517,7 @@ export function useActivitySubscription(options: ActivitySubscriptionOptions = {
     const systemEvent = useTrpcSystemEventSubscription({
       onData: (event) => {
         const timestamp =
-          typeof event.timestamp === 'string'
-            ? event.timestamp
-            : event.timestamp.toISOString();
+          typeof event.timestamp === 'string' ? event.timestamp : event.timestamp.toISOString();
 
         appendActivity({
           id: `system-event-${event.type}-${timestamp}`,
@@ -536,11 +538,7 @@ export function useActivitySubscription(options: ActivitySubscriptionOptions = {
     const taskAssignedStatus = taskAssigned?.status ?? 'disconnected';
     const systemEventStatus = systemEvent?.status ?? 'disconnected';
 
-    const statuses: ConnectionStatus[] = [
-      leadScoredStatus,
-      taskAssignedStatus,
-      systemEventStatus,
-    ];
+    const statuses: ConnectionStatus[] = [leadScoredStatus, taskAssignedStatus, systemEventStatus];
 
     const status: ConnectionStatus = statuses.includes('error')
       ? 'error'
@@ -569,7 +567,9 @@ export function useActivitySubscription(options: ActivitySubscriptionOptions = {
         (systemEvent?.metrics?.messagesReceived ?? 0),
       averageLatency:
         latencySamples.length > 0
-          ? Math.round(latencySamples.reduce((sum, value) => sum + value, 0) / latencySamples.length)
+          ? Math.round(
+              latencySamples.reduce((sum, value) => sum + value, 0) / latencySamples.length
+            )
           : 0,
       lastMessageAt:
         lastMessageAtCandidates.length > 0 ? Math.max(...lastMessageAtCandidates) : null,
@@ -596,9 +596,7 @@ export function useActivitySubscription(options: ActivitySubscriptionOptions = {
 
   // Filter by opportunityId if entityType is 'opportunity'
   const filter =
-    entityType === 'opportunity' && entityId
-      ? `opportunityId=eq.${entityId}`
-      : undefined;
+    entityType === 'opportunity' && entityId ? `opportunityId=eq.${entityId}` : undefined;
 
   const subscription = useSubscription<ActivityRecord>({
     table: 'activity_events',

@@ -9,14 +9,39 @@ import { Icon } from '@/lib/icons';
 // =============================================================================
 
 type FileCategory =
-  | 'app-source' | 'package-source' | 'test-source'
-  | 'attestation' | 'benchmark' | 'coverage' | 'report' | 'metric' | 'log' | 'generated'
-  | 'ci-config' | 'infra-config' | 'tool-config' | 'claude-config'
-  | 'docs' | 'readme' | 'tool' | 'script' | 'misc';
+  | 'app-source'
+  | 'package-source'
+  | 'test-source'
+  | 'attestation'
+  | 'benchmark'
+  | 'coverage'
+  | 'report'
+  | 'metric'
+  | 'log'
+  | 'generated'
+  | 'ci-config'
+  | 'infra-config'
+  | 'tool-config'
+  | 'claude-config'
+  | 'docs'
+  | 'readme'
+  | 'tool'
+  | 'script'
+  | 'misc';
 
 type DirectoryType =
-  | 'apps' | 'packages' | 'docs' | 'infra' | 'scripts' | 'tools'
-  | 'artifacts' | 'tests' | '.claude' | '.github' | '.specify' | 'root';
+  | 'apps'
+  | 'packages'
+  | 'docs'
+  | 'infra'
+  | 'scripts'
+  | 'tools'
+  | 'artifacts'
+  | 'tests'
+  | '.claude'
+  | '.github'
+  | '.specify'
+  | 'root';
 
 interface FileEntry {
   path: string;
@@ -258,7 +283,10 @@ export default function ArtifactsView({ onTaskClick }: ArtifactsViewProps) {
   // Cleanup action states
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [actionMessage, setActionMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [actionMessage, setActionMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
 
   // Code analysis states
   const [codeAnalysis, setCodeAnalysis] = useState<CodeAnalysisResult | null>(null);
@@ -272,51 +300,56 @@ export default function ArtifactsView({ onTaskClick }: ArtifactsViewProps) {
 
   // Prompt generation states
   const [generatingPrompt, setGeneratingPrompt] = useState<string | null>(null);
-  const [generatedPrompt, setGeneratedPrompt] = useState<{ dir: string; content: string } | null>(null);
+  const [generatedPrompt, setGeneratedPrompt] = useState<{ dir: string; content: string } | null>(
+    null
+  );
 
   // Folder navigation state
   const [currentPath, setCurrentPath] = useState<string>(''); // Empty = root
 
-  const fetchData = useCallback(async (refresh = false) => {
-    setLoading(true);
-    setError(null);
+  const fetchData = useCallback(
+    async (refresh = false) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      // Fetch ALL files (large pageSize to get everything)
-      const params = new URLSearchParams({
-        page: '1',
-        pageSize: '10000',
-        scope: 'all',
-      });
+      try {
+        // Fetch ALL files (large pageSize to get everything)
+        const params = new URLSearchParams({
+          page: '1',
+          pageSize: '10000',
+          scope: 'all',
+        });
 
-      if (refresh) {
-        params.set('refresh', 'true');
+        if (refresh) {
+          params.set('refresh', 'true');
+        }
+
+        if (directoryFilter !== 'all') {
+          params.set('directory', directoryFilter);
+        }
+
+        if (orphanFilter === 'orphans') {
+          params.set('orphans', 'true');
+        } else if (orphanFilter === 'linked') {
+          params.set('linked', 'true');
+        }
+
+        const response = await fetch(`/api/artifacts?${params}`);
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch data');
+        }
+
+        const result = await response.json();
+        setData(result);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      } finally {
+        setLoading(false);
       }
-
-      if (directoryFilter !== 'all') {
-        params.set('directory', directoryFilter);
-      }
-
-      if (orphanFilter === 'orphans') {
-        params.set('orphans', 'true');
-      } else if (orphanFilter === 'linked') {
-        params.set('linked', 'true');
-      }
-
-      const response = await fetch(`/api/artifacts?${params}`);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch data');
-      }
-
-      const result = await response.json();
-      setData(result);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
-    } finally {
-      setLoading(false);
-    }
-  }, [_page, directoryFilter, orphanFilter]);
+    },
+    [_page, directoryFilter, orphanFilter]
+  );
 
   useEffect(() => {
     fetchData();
@@ -482,7 +515,13 @@ These files exist but are NOT linked to any task in Sprint_plan.csv:
 
 | File | Size | Last Modified | Suggested Action |
 |------|------|---------------|------------------|
-${orphanFiles.slice(0, 50).map((f) => `| \`${f.path}\` | ${formatBytes(f.size)} | ${formatDate(f.lastModified)} | _Review needed_ |`).join('\n')}
+${orphanFiles
+  .slice(0, 50)
+  .map(
+    (f) =>
+      `| \`${f.path}\` | ${formatBytes(f.size)} | ${formatDate(f.lastModified)} | _Review needed_ |`
+  )
+  .join('\n')}
 ${orphanFiles.length > 50 ? `\n*...and ${orphanFiles.length - 50} more orphan files*\n` : ''}
 
 ---
@@ -502,7 +541,13 @@ If the file needs documentation or is of unclear purpose:
 
 \`\`\`csv
 Task ID,Section,Description,Owner,Dependencies,Pre-requisites,Definition of Done,KPIs,Validation Method,Target Sprint,Artifacts To Track,Status
-EXP-${folderPath.toUpperCase().replace(/[^A-Z0-9]/g, '-').slice(0, 20)}-001,Cleanup,Audit and document ${folderPath} orphan files,Dev Team (STOA-Quality),None,FILE:audit-matrix.yml,Files reviewed and documented; unused files removed or archived; remaining files linked to tasks,100% files accounted for,AUDIT:manual-review,Continuous,"EVIDENCE:artifacts/attestations/EXP-${folderPath.replace(/\//g, '-').slice(0, 15)}-001/context_ack.json",Backlog
+EXP-${folderPath
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '-')
+        .slice(
+          0,
+          20
+        )}-001,Cleanup,Audit and document ${folderPath} orphan files,Dev Team (STOA-Quality),None,FILE:audit-matrix.yml,Files reviewed and documented; unused files removed or archived; remaining files linked to tasks,100% files accounted for,AUDIT:manual-review,Continuous,"EVIDENCE:artifacts/attestations/EXP-${folderPath.replace(/\//g, '-').slice(0, 15)}-001/context_ack.json",Backlog
 \`\`\`
 
 ### Option 3: Delete/Archive
@@ -519,7 +564,10 @@ Use the **Artifacts** tab → **Cleanup** to archive or delete.
 
 These files ARE already linked to tasks:
 
-${linkedFiles.slice(0, 20).map((f) => `- \`${f.path}\` → ${f.linkedTasks.join(', ')}`).join('\n')}
+${linkedFiles
+  .slice(0, 20)
+  .map((f) => `- \`${f.path}\` → ${f.linkedTasks.join(', ')}`)
+  .join('\n')}
 ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked files*` : ''}
 
 ---
@@ -587,20 +635,22 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
   // Get folders and files at current path level for navigation
   const getFolderContents = (basePath: string) => {
     // Get all files under this path
-    const filesAtPath = basePath === ''
-      ? files
-      : files.filter((f) => f.path.startsWith(basePath + '/'));
+    const filesAtPath =
+      basePath === '' ? files : files.filter((f) => f.path.startsWith(basePath + '/'));
 
     // Build folder structure
-    const folderMap = new Map<string, {
-      path: string;
-      name: string;
-      fileCount: number;
-      totalSize: number;
-      linkedCount: number;
-      orphanCount: number;
-      hasSubFolders: boolean;
-    }>();
+    const folderMap = new Map<
+      string,
+      {
+        path: string;
+        name: string;
+        fileCount: number;
+        totalSize: number;
+        linkedCount: number;
+        orphanCount: number;
+        hasSubFolders: boolean;
+      }
+    >();
 
     // Files directly in current folder (not in subfolders)
     const directFiles: FileEntry[] = [];
@@ -698,8 +748,18 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
             { id: 'files', label: 'All Files', icon: 'folder_open' },
             { id: 'cleanup', label: 'Cleanup', icon: 'delete', badge: cleanup.length },
             { id: 'missing', label: 'Missing', icon: 'cancel', badge: missing.length },
-            { id: 'history', label: 'History', icon: 'history', badge: historyData?.summary?.staleFiles },
-            { id: 'code-health', label: 'Code Health', icon: 'monitoring', badge: codeAnalysis?.knip?.summary?.unusedFiles },
+            {
+              id: 'history',
+              label: 'History',
+              icon: 'history',
+              badge: historyData?.summary?.staleFiles,
+            },
+            {
+              id: 'code-health',
+              label: 'Code Health',
+              icon: 'monitoring',
+              badge: codeAnalysis?.knip?.summary?.unusedFiles,
+            },
           ].map(({ id, label, icon, badge }) => (
             <button
               key={id}
@@ -738,7 +798,9 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Files</p>
-                  <p className="text-3xl font-bold text-gray-900">{health.totalFiles.toLocaleString()}</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {health.totalFiles.toLocaleString()}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Icon name="description" size="xl" className="text-blue-600" />
@@ -750,7 +812,9 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Size</p>
-                  <p className="text-3xl font-bold text-gray-900">{formatBytes(health.totalSize)}</p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {formatBytes(health.totalSize)}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                   <Icon name="hard_drive" size="xl" className="text-purple-600" />
@@ -762,7 +826,9 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Test Coverage</p>
-                  <p className="text-3xl font-bold text-green-600">{health.testCoverage.toFixed(1)}%</p>
+                  <p className="text-3xl font-bold text-green-600">
+                    {health.testCoverage.toFixed(1)}%
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                   <Icon name="science" size="xl" className="text-green-600" />
@@ -774,7 +840,9 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Orphan Files</p>
-                  <p className="text-3xl font-bold text-yellow-600">{health.orphanFiles.toLocaleString()}</p>
+                  <p className="text-3xl font-bold text-yellow-600">
+                    {health.orphanFiles.toLocaleString()}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                   <Icon name="warning" size="xl" className="text-yellow-600" />
@@ -849,14 +917,7 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
               <div className="flex items-center justify-center h-48">
                 <div className="relative w-48 h-48">
                   <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      fill="none"
-                      stroke="#e5e7eb"
-                      strokeWidth="20"
-                    />
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#e5e7eb" strokeWidth="20" />
                     <circle
                       cx="50"
                       cy="50"
@@ -891,257 +952,280 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
       )}
 
       {/* Files Tab */}
-      {activeTab === 'files' && (() => {
-        const { folders, directFiles } = getFolderContents(currentPath);
-        const breadcrumbs = getBreadcrumbs();
-        const pathFiles = files.filter((f) =>
-          currentPath === '' ? true : f.path.startsWith(currentPath + '/')
-        );
-        const pathOrphans = pathFiles.filter((f) => f.isOrphan).length;
-        const pathLinked = pathFiles.filter((f) => !f.isOrphan).length;
+      {activeTab === 'files' &&
+        (() => {
+          const { folders, directFiles } = getFolderContents(currentPath);
+          const breadcrumbs = getBreadcrumbs();
+          const pathFiles = files.filter((f) =>
+            currentPath === '' ? true : f.path.startsWith(currentPath + '/')
+          );
+          const pathOrphans = pathFiles.filter((f) => f.isOrphan).length;
+          const pathLinked = pathFiles.filter((f) => !f.isOrphan).length;
 
-        return (
-          <div className="flex flex-col h-full min-h-[600px] space-y-4">
-            {/* Generated Prompt Modal */}
-            {generatedPrompt && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-                <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] flex flex-col m-4">
-                  <div className="flex items-center justify-between px-6 py-4 border-b">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      File Audit Prompt: {generatedPrompt.dir}/
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={downloadPrompt}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
-                      >
-                        <Icon name="download" size="sm" />
-                        Download
-                      </button>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(generatedPrompt.content);
-                        }}
-                        className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                      >
-                        Copy
-                      </button>
-                      <button
-                        onClick={() => setGeneratedPrompt(null)}
-                        className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
-                      >
-                        Close
-                      </button>
+          return (
+            <div className="flex flex-col h-full min-h-[600px] space-y-4">
+              {/* Generated Prompt Modal */}
+              {generatedPrompt && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+                  <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] flex flex-col m-4">
+                    <div className="flex items-center justify-between px-6 py-4 border-b">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        File Audit Prompt: {generatedPrompt.dir}/
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={downloadPrompt}
+                          className="flex items-center gap-2 px-3 py-1.5 bg-green-600 text-white rounded hover:bg-green-700 text-sm"
+                        >
+                          <Icon name="download" size="sm" />
+                          Download
+                        </button>
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(generatedPrompt.content);
+                          }}
+                          className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                        >
+                          Copy
+                        </button>
+                        <button
+                          onClick={() => setGeneratedPrompt(null)}
+                          className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex-1 overflow-auto p-6">
+                      <pre className="whitespace-pre-wrap text-sm font-mono text-gray-800 bg-gray-50 p-4 rounded">
+                        {generatedPrompt.content}
+                      </pre>
                     </div>
                   </div>
-                  <div className="flex-1 overflow-auto p-6">
-                    <pre className="whitespace-pre-wrap text-sm font-mono text-gray-800 bg-gray-50 p-4 rounded">
-                      {generatedPrompt.content}
-                    </pre>
+                </div>
+              )}
+
+              {/* Breadcrumb Navigation */}
+              <div className="bg-white rounded-lg shadow p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => setCurrentPath('')}
+                      className={`flex items-center gap-1 px-2 py-1 rounded text-sm font-medium transition-colors ${
+                        currentPath === ''
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Icon name="folder_open" size="sm" />
+                      Root
+                    </button>
+                    {breadcrumbs.map((crumb, index) => (
+                      <React.Fragment key={crumb.path}>
+                        <Icon
+                          name="expand_more"
+                          size="sm"
+                          className="text-gray-400 rotate-[-90deg]"
+                        />
+                        <button
+                          onClick={() => setCurrentPath(crumb.path)}
+                          className={`px-2 py-1 rounded text-sm font-medium transition-colors ${
+                            index === breadcrumbs.length - 1
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                        >
+                          {crumb.name}
+                        </button>
+                      </React.Fragment>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-4 text-sm">
+                    <span className="text-gray-500">{pathFiles.length} files</span>
+                    <span className="text-green-600">{pathLinked} linked</span>
+                    <span className="text-yellow-600">{pathOrphans} orphans</span>
+                    {pathOrphans > 0 && currentPath && (
+                      <button
+                        onClick={() => generateFileAuditPrompt(currentPath)}
+                        disabled={generatingPrompt === currentPath}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-700 rounded text-sm font-medium hover:bg-purple-200"
+                      >
+                        {generatingPrompt === currentPath ? (
+                          <Icon name="progress_activity" size="sm" className="animate-spin" />
+                        ) : (
+                          <Icon name="auto_awesome" size="sm" />
+                        )}
+                        Audit This Folder
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
-            )}
 
-            {/* Breadcrumb Navigation */}
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    onClick={() => setCurrentPath('')}
-                    className={`flex items-center gap-1 px-2 py-1 rounded text-sm font-medium transition-colors ${
-                      currentPath === ''
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Icon name="folder_open" size="sm" />
-                    Root
-                  </button>
-                  {breadcrumbs.map((crumb, index) => (
-                    <React.Fragment key={crumb.path}>
-                      <Icon name="expand_more" size="sm" className="text-gray-400 rotate-[-90deg]" />
-                      <button
-                        onClick={() => setCurrentPath(crumb.path)}
-                        className={`px-2 py-1 rounded text-sm font-medium transition-colors ${
-                          index === breadcrumbs.length - 1
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                      >
-                        {crumb.name}
-                      </button>
-                    </React.Fragment>
+              {/* Folders Grid */}
+              {folders.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {folders.map((folder) => (
+                    <div
+                      key={folder.path}
+                      className="bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden"
+                    >
+                      <div className="p-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <button
+                            onClick={() => setCurrentPath(folder.path)}
+                            className="flex items-center gap-2 text-left flex-1 min-w-0"
+                          >
+                            <Icon
+                              name="folder_open"
+                              size="lg"
+                              className="text-blue-500 flex-shrink-0"
+                            />
+                            <div className="min-w-0">
+                              <p className="font-medium text-gray-900 truncate">{folder.name}</p>
+                              <p className="text-xs text-gray-500">
+                                {folder.fileCount} files · {formatBytes(folder.totalSize)}
+                              </p>
+                            </div>
+                          </button>
+                          {folder.hasSubFolders && (
+                            <Icon
+                              name="expand_more"
+                              size="sm"
+                              className="text-gray-400 rotate-[-90deg] flex-shrink-0"
+                            />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-3 mt-2 text-xs">
+                          <span className="text-green-600">{folder.linkedCount} linked</span>
+                          <span className="text-yellow-600">{folder.orphanCount} orphans</span>
+                        </div>
+                        {folder.orphanCount > 0 && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              generateFileAuditPrompt(folder.path);
+                            }}
+                            disabled={generatingPrompt === folder.path}
+                            className="mt-2 w-full flex items-center justify-center gap-1.5 px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs font-medium hover:bg-purple-100"
+                          >
+                            {generatingPrompt === folder.path ? (
+                              <Icon name="progress_activity" size="xs" className="animate-spin" />
+                            ) : (
+                              <Icon name="auto_awesome" size="xs" />
+                            )}
+                            Audit
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   ))}
                 </div>
+              )}
 
-                <div className="flex items-center gap-4 text-sm">
-                  <span className="text-gray-500">
-                    {pathFiles.length} files
-                  </span>
-                  <span className="text-green-600">{pathLinked} linked</span>
-                  <span className="text-yellow-600">{pathOrphans} orphans</span>
-                  {pathOrphans > 0 && currentPath && (
+              {/* Direct Files at This Level */}
+              {directFiles.length > 0 && (
+                <div className="bg-white rounded-lg shadow overflow-hidden">
+                  <div className="px-4 py-3 bg-gray-50 border-b">
+                    <h4 className="font-medium text-gray-700">
+                      Files in {currentPath || 'root'} ({directFiles.length})
+                    </h4>
+                  </div>
+                  <div className="divide-y divide-gray-100 max-h-[400px] overflow-y-auto">
+                    {directFiles.map((file) => (
+                      <div
+                        key={file.path}
+                        className={`px-4 py-3 flex items-center justify-between hover:bg-gray-50 ${
+                          file.isOrphan ? 'bg-yellow-50' : ''
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <Icon
+                              name="description"
+                              size="sm"
+                              className="text-gray-400 flex-shrink-0"
+                            />
+                            <span className="text-sm font-mono text-gray-900 truncate">
+                              {file.path.split('/').pop()}
+                            </span>
+                            {file.isOrphan && (
+                              <span className="px-2 py-0.5 text-xs bg-yellow-200 text-yellow-800 rounded">
+                                Orphan
+                              </span>
+                            )}
+                            {file.isTestFile && (
+                              <span className="px-2 py-0.5 text-xs bg-pink-100 text-pink-700 rounded">
+                                Test
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
+                            <span>{formatBytes(file.size)}</span>
+                            <span className="flex items-center gap-1">
+                              <Icon name="schedule" size="xs" />
+                              {formatDate(file.lastModified)}
+                            </span>
+                          </div>
+                        </div>
+                        {file.linkedTasks.length > 0 && (
+                          <div className="flex items-center gap-1 ml-4">
+                            {file.linkedTasks.slice(0, 2).map((taskId) => (
+                              <button
+                                key={taskId}
+                                onClick={() => onTaskClick?.(taskId)}
+                                className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                              >
+                                {taskId}
+                              </button>
+                            ))}
+                            {file.linkedTasks.length > 2 && (
+                              <span className="text-xs text-gray-500">
+                                +{file.linkedTasks.length - 2}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {folders.length === 0 && directFiles.length === 0 && (
+                <div className="bg-gray-50 rounded-lg p-8 text-center">
+                  <Icon
+                    name="folder_open"
+                    size="2xl"
+                    className="text-gray-400 mx-auto mb-4 text-5xl"
+                  />
+                  <p className="text-gray-600">No files found at this path</p>
+                  {currentPath && (
                     <button
-                      onClick={() => generateFileAuditPrompt(currentPath)}
-                      disabled={generatingPrompt === currentPath}
-                      className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-700 rounded text-sm font-medium hover:bg-purple-200"
+                      onClick={() => setCurrentPath('')}
+                      className="mt-4 text-blue-600 hover:underline"
                     >
-                      {generatingPrompt === currentPath ? (
-                        <Icon name="progress_activity" size="sm" className="animate-spin" />
-                      ) : (
-                        <Icon name="auto_awesome" size="sm" />
-                      )}
-                      Audit This Folder
+                      Go back to root
                     </button>
                   )}
                 </div>
-              </div>
+              )}
             </div>
-
-            {/* Folders Grid */}
-            {folders.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                {folders.map((folder) => (
-                  <div
-                    key={folder.path}
-                    className="bg-white rounded-lg shadow hover:shadow-md transition-shadow overflow-hidden"
-                  >
-                    <div className="p-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <button
-                          onClick={() => setCurrentPath(folder.path)}
-                          className="flex items-center gap-2 text-left flex-1 min-w-0"
-                        >
-                          <Icon name="folder_open" size="lg" className="text-blue-500 flex-shrink-0" />
-                          <div className="min-w-0">
-                            <p className="font-medium text-gray-900 truncate">{folder.name}</p>
-                            <p className="text-xs text-gray-500">
-                              {folder.fileCount} files · {formatBytes(folder.totalSize)}
-                            </p>
-                          </div>
-                        </button>
-                        {folder.hasSubFolders && (
-                          <Icon name="expand_more" size="sm" className="text-gray-400 rotate-[-90deg] flex-shrink-0" />
-                        )}
-                      </div>
-                      <div className="flex items-center gap-3 mt-2 text-xs">
-                        <span className="text-green-600">{folder.linkedCount} linked</span>
-                        <span className="text-yellow-600">{folder.orphanCount} orphans</span>
-                      </div>
-                      {folder.orphanCount > 0 && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            generateFileAuditPrompt(folder.path);
-                          }}
-                          disabled={generatingPrompt === folder.path}
-                          className="mt-2 w-full flex items-center justify-center gap-1.5 px-2 py-1 bg-purple-50 text-purple-700 rounded text-xs font-medium hover:bg-purple-100"
-                        >
-                          {generatingPrompt === folder.path ? (
-                            <Icon name="progress_activity" size="xs" className="animate-spin" />
-                          ) : (
-                            <Icon name="auto_awesome" size="xs" />
-                          )}
-                          Audit
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Direct Files at This Level */}
-            {directFiles.length > 0 && (
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <div className="px-4 py-3 bg-gray-50 border-b">
-                  <h4 className="font-medium text-gray-700">
-                    Files in {currentPath || 'root'} ({directFiles.length})
-                  </h4>
-                </div>
-                <div className="divide-y divide-gray-100 max-h-[400px] overflow-y-auto">
-                  {directFiles.map((file) => (
-                    <div
-                      key={file.path}
-                      className={`px-4 py-3 flex items-center justify-between hover:bg-gray-50 ${
-                        file.isOrphan ? 'bg-yellow-50' : ''
-                      }`}
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <Icon name="description" size="sm" className="text-gray-400 flex-shrink-0" />
-                          <span className="text-sm font-mono text-gray-900 truncate">
-                            {file.path.split('/').pop()}
-                          </span>
-                          {file.isOrphan && (
-                            <span className="px-2 py-0.5 text-xs bg-yellow-200 text-yellow-800 rounded">
-                              Orphan
-                            </span>
-                          )}
-                          {file.isTestFile && (
-                            <span className="px-2 py-0.5 text-xs bg-pink-100 text-pink-700 rounded">
-                              Test
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
-                          <span>{formatBytes(file.size)}</span>
-                          <span className="flex items-center gap-1">
-                            <Icon name="schedule" size="xs" />
-                            {formatDate(file.lastModified)}
-                          </span>
-                        </div>
-                      </div>
-                      {file.linkedTasks.length > 0 && (
-                        <div className="flex items-center gap-1 ml-4">
-                          {file.linkedTasks.slice(0, 2).map((taskId) => (
-                            <button
-                              key={taskId}
-                              onClick={() => onTaskClick?.(taskId)}
-                              className="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                            >
-                              {taskId}
-                            </button>
-                          ))}
-                          {file.linkedTasks.length > 2 && (
-                            <span className="text-xs text-gray-500">
-                              +{file.linkedTasks.length - 2}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {folders.length === 0 && directFiles.length === 0 && (
-              <div className="bg-gray-50 rounded-lg p-8 text-center">
-                <Icon name="folder_open" size="2xl" className="text-gray-400 mx-auto mb-4 text-5xl" />
-                <p className="text-gray-600">No files found at this path</p>
-                {currentPath && (
-                  <button
-                    onClick={() => setCurrentPath('')}
-                    className="mt-4 text-blue-600 hover:underline"
-                  >
-                    Go back to root
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      })()}
+          );
+        })()}
 
       {/* Cleanup Tab */}
       {activeTab === 'cleanup' && (
         <div className="space-y-4">
           {cleanup.length === 0 ? (
             <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
-              <Icon name="check_circle" size="2xl" className="text-green-500 mx-auto mb-4 text-5xl" />
+              <Icon
+                name="check_circle"
+                size="2xl"
+                className="text-green-500 mx-auto mb-4 text-5xl"
+              />
               <h3 className="text-lg font-semibold text-green-800">All Clear!</h3>
               <p className="text-green-600 mt-2">No cleanup suggestions at this time.</p>
             </div>
@@ -1149,11 +1233,13 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
             <>
               {/* Action Message */}
               {actionMessage && (
-                <div className={`p-4 rounded-lg border ${
-                  actionMessage.type === 'success'
-                    ? 'bg-green-50 border-green-200 text-green-800'
-                    : 'bg-red-50 border-red-200 text-red-800'
-                }`}>
+                <div
+                  className={`p-4 rounded-lg border ${
+                    actionMessage.type === 'success'
+                      ? 'bg-green-50 border-green-200 text-green-800'
+                      : 'bg-red-50 border-red-200 text-red-800'
+                  }`}
+                >
                   {actionMessage.text}
                 </div>
               )}
@@ -1278,20 +1364,24 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
                           {selectedPaths.has(item.path) ? (
                             <Icon name="check_box" size="sm" className="text-blue-600" />
                           ) : (
-                            <Icon name="check_box_outline_blank" size="sm" className="text-gray-400" />
+                            <Icon
+                              name="check_box_outline_blank"
+                              size="sm"
+                              className="text-gray-400"
+                            />
                           )}
                         </td>
                         <td className="px-4 py-4">
-                          <span className={`px-2 py-1 text-xs rounded border ${getPriorityColor(item.priority)}`}>
+                          <span
+                            className={`px-2 py-1 text-xs rounded border ${getPriorityColor(item.priority)}`}
+                          >
                             {item.priority}
                           </span>
                         </td>
                         <td className="px-4 py-4 font-mono text-sm text-gray-900 max-w-md truncate">
                           {item.path}
                         </td>
-                        <td className="px-4 py-4 text-sm text-gray-600 max-w-sm">
-                          {item.reason}
-                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-600 max-w-sm">{item.reason}</td>
                         <td className="px-4 py-4 text-sm text-gray-500">
                           {formatBytes(item.size)}
                         </td>
@@ -1310,7 +1400,11 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
         <div className="space-y-4">
           {missing.length === 0 ? (
             <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
-              <Icon name="check_circle" size="2xl" className="text-green-500 mx-auto mb-4 text-5xl" />
+              <Icon
+                name="check_circle"
+                size="2xl"
+                className="text-green-500 mx-auto mb-4 text-5xl"
+              />
               <h3 className="text-lg font-semibold text-green-800">All Files Present</h3>
               <p className="text-green-600 mt-2">No missing files detected.</p>
             </div>
@@ -1347,17 +1441,19 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
                     {missing.map((item, index) => (
                       <tr key={`${item.path}-${item.prefix}-${index}`} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
-                          <span className={`px-2 py-1 text-xs rounded ${
-                            item.prefix === 'ARTIFACT' ? 'bg-blue-100 text-blue-800' :
-                            item.prefix === 'EVIDENCE' ? 'bg-purple-100 text-purple-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
+                          <span
+                            className={`px-2 py-1 text-xs rounded ${
+                              item.prefix === 'ARTIFACT'
+                                ? 'bg-blue-100 text-blue-800'
+                                : item.prefix === 'EVIDENCE'
+                                  ? 'bg-purple-100 text-purple-800'
+                                  : 'bg-gray-100 text-gray-800'
+                            }`}
+                          >
                             {item.prefix}
                           </span>
                         </td>
-                        <td className="px-6 py-4 font-mono text-sm text-gray-900">
-                          {item.path}
-                        </td>
+                        <td className="px-6 py-4 font-mono text-sm text-gray-900">{item.path}</td>
                         <td className="px-6 py-4">
                           <div className="flex flex-wrap gap-1">
                             {item.expectedBy.map((taskId) => (
@@ -1429,7 +1525,11 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
           {/* Loading State */}
           {historyLoading && !historyData && (
             <div className="bg-white rounded-lg shadow p-8 text-center">
-              <Icon name="progress_activity" size="2xl" className="text-blue-500 animate-spin mx-auto mb-4" />
+              <Icon
+                name="progress_activity"
+                size="2xl"
+                className="text-blue-500 animate-spin mx-auto mb-4"
+              />
               <p className="text-gray-600">Scanning git history (this may take a minute)...</p>
             </div>
           )}
@@ -1439,7 +1539,9 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
             <div className="bg-gray-50 rounded-lg p-8 text-center">
               <Icon name="history" size="2xl" className="text-gray-400 mx-auto mb-4 text-5xl" />
               <h3 className="text-lg font-medium text-gray-700">No History Scanned</h3>
-              <p className="text-gray-500 mt-2">Click "Scan History" to analyze file creation dates and detect stale files</p>
+              <p className="text-gray-500 mt-2">
+                Click "Scan History" to analyze file creation dates and detect stale files
+              </p>
             </div>
           )}
 
@@ -1452,16 +1554,22 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
               </div>
               <div className="bg-white rounded-lg shadow p-4">
                 <p className="text-sm font-medium text-gray-600">Stale Files</p>
-                <p className="text-2xl font-bold text-orange-600">{historyData.summary.staleFiles}</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {historyData.summary.staleFiles}
+                </p>
                 <p className="text-xs text-gray-500">&gt;{staleDays} days old</p>
               </div>
               <div className="bg-white rounded-lg shadow p-4">
                 <p className="text-sm font-medium text-gray-600">Tracked in Git</p>
-                <p className="text-2xl font-bold text-green-600">{historyData.summary.trackedInGit}</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {historyData.summary.trackedInGit}
+                </p>
               </div>
               <div className="bg-white rounded-lg shadow p-4">
                 <p className="text-sm font-medium text-gray-600">Untracked</p>
-                <p className="text-2xl font-bold text-yellow-600">{historyData.summary.untrackedFiles}</p>
+                <p className="text-2xl font-bold text-yellow-600">
+                  {historyData.summary.untrackedFiles}
+                </p>
               </div>
               <div className="bg-white rounded-lg shadow p-4">
                 <p className="text-sm font-medium text-gray-600">With Task ID</p>
@@ -1535,7 +1643,11 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
                         >
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
-                              <Icon name="description" size="sm" className="text-gray-400 flex-shrink-0" />
+                              <Icon
+                                name="description"
+                                size="sm"
+                                className="text-gray-400 flex-shrink-0"
+                              />
                               <span className="text-sm font-mono text-gray-900 truncate max-w-xs">
                                 {file.path}
                               </span>
@@ -1582,7 +1694,11 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
                           </td>
                           <td className="px-4 py-3 text-sm">
                             {file.daysSinceModified !== null ? (
-                              <span className={file.isStale ? 'text-orange-600 font-medium' : 'text-gray-600'}>
+                              <span
+                                className={
+                                  file.isStale ? 'text-orange-600 font-medium' : 'text-gray-600'
+                                }
+                              >
                                 {file.daysSinceModified}d
                               </span>
                             ) : (
@@ -1625,11 +1741,22 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <h4 className="font-medium text-blue-800 mb-2">How This Works</h4>
             <ul className="text-sm text-blue-700 space-y-1">
-              <li>• <strong>Created:</strong> When the file was first added to git</li>
-              <li>• <strong>Purpose:</strong> The commit message explaining why it was created</li>
-              <li>• <strong>Task ID:</strong> Extracted from commit message (e.g., IFC-001, ENV-001-AI)</li>
-              <li>• <strong>Age:</strong> Days since last modification</li>
-              <li>• <strong>Stale:</strong> Files not modified in more than {staleDays} days</li>
+              <li>
+                • <strong>Created:</strong> When the file was first added to git
+              </li>
+              <li>
+                • <strong>Purpose:</strong> The commit message explaining why it was created
+              </li>
+              <li>
+                • <strong>Task ID:</strong> Extracted from commit message (e.g., IFC-001,
+                ENV-001-AI)
+              </li>
+              <li>
+                • <strong>Age:</strong> Days since last modification
+              </li>
+              <li>
+                • <strong>Stale:</strong> Files not modified in more than {staleDays} days
+              </li>
             </ul>
           </div>
         </div>
@@ -1677,7 +1804,11 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
           {/* Loading State */}
           {analysisLoading && !codeAnalysis && (
             <div className="bg-white rounded-lg shadow p-8 text-center">
-              <Icon name="progress_activity" size="2xl" className="text-blue-500 animate-spin mx-auto mb-4" />
+              <Icon
+                name="progress_activity"
+                size="2xl"
+                className="text-blue-500 animate-spin mx-auto mb-4"
+              />
               <p className="text-gray-600">Running code analysis (this may take a minute)...</p>
             </div>
           )}
@@ -1720,7 +1851,8 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
                 <div className="bg-white rounded-lg shadow p-4">
                   <p className="text-sm font-medium text-gray-600">Unused Dependencies</p>
                   <p className="text-2xl font-bold text-purple-600">
-                    {codeAnalysis.depcheck.summary.unusedDeps + codeAnalysis.depcheck.summary.unusedDevDeps}
+                    {codeAnalysis.depcheck.summary.unusedDeps +
+                      codeAnalysis.depcheck.summary.unusedDevDeps}
                   </p>
                 </div>
               )}
@@ -1759,11 +1891,10 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
                 )}
 
                 {/* Unused Dependencies */}
-                {(codeAnalysis.knip.data.dependencies.length > 0 || codeAnalysis.knip.data.devDependencies.length > 0) && (
+                {(codeAnalysis.knip.data.dependencies.length > 0 ||
+                  codeAnalysis.knip.data.devDependencies.length > 0) && (
                   <div className="p-4">
-                    <h5 className="font-medium text-gray-700 mb-2">
-                      Unused Dependencies
-                    </h5>
+                    <h5 className="font-medium text-gray-700 mb-2">Unused Dependencies</h5>
                     <div className="flex flex-wrap gap-2">
                       {codeAnalysis.knip.data.dependencies.map((dep, i) => (
                         <span key={i} className="px-2 py-1 bg-red-100 text-red-700 rounded text-sm">
@@ -1771,7 +1902,10 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
                         </span>
                       ))}
                       {codeAnalysis.knip.data.devDependencies.map((dep, i) => (
-                        <span key={i} className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-sm">
+                        <span
+                          key={i}
+                          className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-sm"
+                        >
                           {dep} (dev)
                         </span>
                       ))}
@@ -1783,7 +1917,9 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
                 {codeAnalysis.knip.data.exports.length > 0 && (
                   <div className="p-4">
                     <h5 className="font-medium text-gray-700 mb-2">
-                      Unused Exports ({codeAnalysis.knip.data.exports.reduce((sum, e) => sum + e.exports.length, 0)})
+                      Unused Exports (
+                      {codeAnalysis.knip.data.exports.reduce((sum, e) => sum + e.exports.length, 0)}
+                      )
                     </h5>
                     <div className="max-h-48 overflow-y-auto space-y-2">
                       {codeAnalysis.knip.data.exports.slice(0, 20).map((item, i) => (
@@ -1791,7 +1927,10 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
                           <span className="font-mono text-gray-600">{item.file}</span>
                           <div className="flex flex-wrap gap-1 mt-1 ml-4">
                             {item.exports.map((exp, j) => (
-                              <span key={j} className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs">
+                              <span
+                                key={j}
+                                className="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs"
+                              >
                                 {exp}
                               </span>
                             ))}
@@ -1837,7 +1976,10 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
                     </h5>
                     <div className="flex flex-wrap gap-2">
                       {codeAnalysis.depcheck.data.devDependencies.map((dep, i) => (
-                        <span key={i} className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-sm">
+                        <span
+                          key={i}
+                          className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-sm"
+                        >
                           {dep}
                         </span>
                       ))}
@@ -1848,15 +1990,22 @@ ${linkedFiles.length > 20 ? `\n*...and ${linkedFiles.length - 20} more linked fi
                 {Object.keys(codeAnalysis.depcheck.data.missing).length > 0 && (
                   <div className="p-4">
                     <h5 className="font-medium text-gray-700 mb-2">
-                      Missing Dependencies ({Object.keys(codeAnalysis.depcheck.data.missing).length})
+                      Missing Dependencies ({Object.keys(codeAnalysis.depcheck.data.missing).length}
+                      )
                     </h5>
                     <div className="max-h-48 overflow-y-auto space-y-2">
-                      {Object.entries(codeAnalysis.depcheck.data.missing).slice(0, 20).map(([dep, files], i) => (
-                        <div key={i} className="text-sm">
-                          <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded">{dep}</span>
-                          <span className="text-gray-500 ml-2">used in {files.length} file(s)</span>
-                        </div>
-                      ))}
+                      {Object.entries(codeAnalysis.depcheck.data.missing)
+                        .slice(0, 20)
+                        .map(([dep, files], i) => (
+                          <div key={i} className="text-sm">
+                            <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded">
+                              {dep}
+                            </span>
+                            <span className="text-gray-500 ml-2">
+                              used in {files.length} file(s)
+                            </span>
+                          </div>
+                        ))}
                     </div>
                   </div>
                 )}

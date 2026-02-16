@@ -435,7 +435,7 @@ describe('Agent Logger', () => {
       });
 
       // Wait a bit to ensure timestamp difference
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
       const afterTime = new Date();
 
       await logger.log({
@@ -451,7 +451,7 @@ describe('Agent Logger', () => {
       });
 
       const logsAfter = await logger.getRecentLogs({ since: afterTime });
-      expect(logsAfter.every(l => l.toolName === 'new_action')).toBe(true);
+      expect(logsAfter.every((l) => l.toolName === 'new_action')).toBe(true);
     });
   });
 
@@ -530,9 +530,7 @@ describe('Agent Logger', () => {
         approvalStatus: 'APPROVED',
       });
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('approval=APPROVED')
-      );
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('approval=APPROVED'));
       consoleSpy.mockRestore();
       await consoleLogger.stop();
     });
@@ -558,9 +556,7 @@ describe('Agent Logger', () => {
         approvalRequired: false,
       });
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Test error message')
-      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith(expect.stringContaining('Test error message'));
       consoleErrorSpy.mockRestore();
       await consoleLogger.stop();
     });

@@ -45,12 +45,8 @@ describe('CommentsWidget', () => {
     it('should render comment form', () => {
       render(<CommentsWidget postSlug="test-post" />);
 
-      expect(
-        screen.getByPlaceholderText(/share your thoughts/i)
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole('button', { name: /post comment/i })
-      ).toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/share your thoughts/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /post comment/i })).toBeInTheDocument();
     });
 
     it('should render comments list with sample data', () => {
@@ -164,9 +160,7 @@ describe('CommentsWidget', () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       render(<CommentsWidget postSlug="test-post" />);
 
-      const textarea = screen.getByPlaceholderText(
-        /share your thoughts/i
-      ) as HTMLTextAreaElement;
+      const textarea = screen.getByPlaceholderText(/share your thoughts/i) as HTMLTextAreaElement;
       await user.type(textarea, 'Comment to clear');
 
       const submitButton = screen.getByRole('button', { name: /post comment/i });
@@ -205,8 +199,8 @@ describe('CommentsWidget', () => {
 
       // Find buttons containing the thumb_up icon
       const likeButtons = container.querySelectorAll('button');
-      const hasLikeButton = Array.from(likeButtons).some(
-        btn => btn.textContent?.includes('thumb_up')
+      const hasLikeButton = Array.from(likeButtons).some((btn) =>
+        btn.textContent?.includes('thumb_up')
       );
 
       expect(hasLikeButton).toBe(true);
@@ -250,9 +244,7 @@ describe('CommentsWidget', () => {
       const cancelButton = screen.getByRole('button', { name: /cancel/i });
       await user.click(cancelButton);
 
-      expect(
-        screen.queryByPlaceholderText(/write a reply/i)
-      ).not.toBeInTheDocument();
+      expect(screen.queryByPlaceholderText(/write a reply/i)).not.toBeInTheDocument();
     });
 
     it('should add reply to parent comment on submit', async () => {
@@ -295,7 +287,7 @@ describe('CommentsWidget', () => {
 
       // Find buttons in the reply form area
       const formButtons = container.querySelectorAll('button');
-      const cancelButton = Array.from(formButtons).find(b => b.textContent?.includes('Cancel'));
+      const cancelButton = Array.from(formButtons).find((b) => b.textContent?.includes('Cancel'));
       expect(cancelButton).toBeInTheDocument();
     });
   });
@@ -318,9 +310,7 @@ describe('CommentsWidget', () => {
     it('should have proper button labels', () => {
       render(<CommentsWidget postSlug="test-post" />);
 
-      expect(
-        screen.getByRole('button', { name: /post comment/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /post comment/i })).toBeInTheDocument();
     });
 
     it('should support keyboard navigation', async () => {
@@ -345,9 +335,7 @@ describe('CommentsWidget', () => {
     it('should show helpful text for comment guidelines', () => {
       render(<CommentsWidget postSlug="test-post" />);
 
-      expect(
-        screen.getByText(/be respectful and constructive/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/be respectful and constructive/i)).toBeInTheDocument();
     });
   });
 
@@ -357,9 +345,7 @@ describe('CommentsWidget', () => {
 
       // Sample comments have dates like "Dec 29, 2025"
       const datePattern = /[A-Z][a-z]+ \d+, \d{4}/;
-      const dates = screen
-        .getAllByText(datePattern)
-        .filter(el => el.textContent);
+      const dates = screen.getAllByText(datePattern).filter((el) => el.textContent);
 
       expect(dates.length).toBeGreaterThan(0);
     });

@@ -327,4 +327,3 @@ function GateValidationSummary({
     </div>
   );
 }
-

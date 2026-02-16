@@ -213,7 +213,7 @@ describe('RetrievalService - Additional Coverage', () => {
       });
 
       // Non-admin should only see their own notes
-      const noteResults = response.results.filter(r => r.source === 'notes');
+      const noteResults = response.results.filter((r) => r.source === 'notes');
       for (const note of noteResults) {
         expect(note.acl.viewableBy).toContain('user-1');
       }
@@ -229,7 +229,8 @@ describe('RetrievalService - Additional Coverage', () => {
       mockPrisma.$queryRaw.mockResolvedValue([
         {
           id: 'note-no-snippet',
-          content: 'A test query search note without snippet that is long enough to test truncation behavior',
+          content:
+            'A test query search note without snippet that is long enough to test truncation behavior',
           author: 'user-1',
           contactId: 'contact-1',
           rank: 0.6,
@@ -266,7 +267,13 @@ describe('RetrievalService - Additional Coverage', () => {
 
       // FTS returns document IDs
       mockPrisma.$queryRaw.mockResolvedValue([
-        { id: 'doc-1', title: 'Test Doc', description: 'Test query search document', rank: 0.9, snippet: 'Test <b>query</b>' },
+        {
+          id: 'doc-1',
+          title: 'Test Doc',
+          description: 'Test query search document',
+          rank: 0.9,
+          snippet: 'Test <b>query</b>',
+        },
       ]);
 
       // Full document with ACL
@@ -285,9 +292,7 @@ describe('RetrievalService - Additional Coverage', () => {
           created_at: now,
           updated_at: now,
           related_case_id: null,
-          acl: [
-            { principal_type: 'USER', principal_id: 'user-1', access_level: 'VIEW' },
-          ],
+          acl: [{ principal_type: 'USER', principal_id: 'user-1', access_level: 'VIEW' }],
         },
       ]);
 
@@ -309,7 +314,13 @@ describe('RetrievalService - Additional Coverage', () => {
       ]);
 
       mockPrisma.$queryRaw.mockResolvedValue([
-        { id: 'doc-2', title: 'Legal Doc', description: 'Legal test query search', rank: 0.85, snippet: 'Legal <b>test</b>' },
+        {
+          id: 'doc-2',
+          title: 'Legal Doc',
+          description: 'Legal test query search',
+          rank: 0.85,
+          snippet: 'Legal <b>test</b>',
+        },
       ]);
 
       mockPrisma.caseDocument.findMany.mockResolvedValue([
@@ -327,9 +338,7 @@ describe('RetrievalService - Additional Coverage', () => {
           created_at: now,
           updated_at: now,
           related_case_id: 'case-123',
-          acl: [
-            { principal_type: 'ROLE', principal_id: 'LEGAL', access_level: 'EDIT' },
-          ],
+          acl: [{ principal_type: 'ROLE', principal_id: 'LEGAL', access_level: 'EDIT' }],
         },
       ]);
 
@@ -349,7 +358,13 @@ describe('RetrievalService - Additional Coverage', () => {
       ]);
 
       mockPrisma.$queryRaw.mockResolvedValue([
-        { id: 'doc-3', title: 'My Doc', description: 'My test query search', rank: 0.9, snippet: 'My <b>test</b>' },
+        {
+          id: 'doc-3',
+          title: 'My Doc',
+          description: 'My test query search',
+          rank: 0.9,
+          snippet: 'My <b>test</b>',
+        },
       ]);
 
       mockPrisma.caseDocument.findMany.mockResolvedValue([
@@ -387,7 +402,13 @@ describe('RetrievalService - Additional Coverage', () => {
       ]);
 
       mockPrisma.$queryRaw.mockResolvedValue([
-        { id: 'doc-4', title: 'Secret Doc', description: 'Secret test query search', rank: 0.95, snippet: 'Secret <b>test</b>' },
+        {
+          id: 'doc-4',
+          title: 'Secret Doc',
+          description: 'Secret test query search',
+          rank: 0.95,
+          snippet: 'Secret <b>test</b>',
+        },
       ]);
 
       mockPrisma.caseDocument.findMany.mockResolvedValue([
@@ -405,9 +426,7 @@ describe('RetrievalService - Additional Coverage', () => {
           created_at: now,
           updated_at: now,
           related_case_id: null,
-          acl: [
-            { principal_type: 'USER', principal_id: 'user-other', access_level: 'ADMIN' },
-          ], // ACL for different user
+          acl: [{ principal_type: 'USER', principal_id: 'user-other', access_level: 'ADMIN' }], // ACL for different user
         },
       ]);
 
@@ -418,7 +437,7 @@ describe('RetrievalService - Additional Coverage', () => {
       });
 
       // user-1 should not see doc-4 (no matching ACL, not creator, not ADMIN)
-      const docResults = response.results.filter(r => r.id === 'doc-4');
+      const docResults = response.results.filter((r) => r.id === 'doc-4');
       expect(docResults.length).toBe(0);
     });
 
@@ -433,7 +452,7 @@ describe('RetrievalService - Additional Coverage', () => {
       });
 
       // caseDocument.findMany should NOT be called when no IDs from FTS
-      expect(response.results.filter(r => r.source === 'documents').length).toBe(0);
+      expect(response.results.filter((r) => r.source === 'documents').length).toBe(0);
     });
   });
 
@@ -477,7 +496,12 @@ describe('RetrievalService - Additional Coverage', () => {
 
       // Vector search results
       mockPrisma.$queryRaw.mockResolvedValue([
-        { id: 'doc-sem-1', title: 'Semantic Doc', description: 'Relevant semantic test query search doc', similarity: 0.92 },
+        {
+          id: 'doc-sem-1',
+          title: 'Semantic Doc',
+          description: 'Relevant semantic test query search doc',
+          similarity: 0.92,
+        },
       ]);
 
       mockPrisma.caseDocument.findMany.mockResolvedValue([
@@ -495,9 +519,7 @@ describe('RetrievalService - Additional Coverage', () => {
           created_at: now,
           updated_at: now,
           related_case_id: null,
-          acl: [
-            { principal_type: 'TENANT', principal_id: 'tenant-1', access_level: 'VIEW' },
-          ],
+          acl: [{ principal_type: 'TENANT', principal_id: 'tenant-1', access_level: 'VIEW' }],
         },
       ]);
 
@@ -520,7 +542,7 @@ describe('RetrievalService - Additional Coverage', () => {
         searchType: 'semantic',
       });
 
-      expect(response.results.filter(r => r.source === 'documents').length).toBe(0);
+      expect(response.results.filter((r) => r.source === 'documents').length).toBe(0);
     });
   });
 
@@ -541,14 +563,36 @@ describe('RetrievalService - Additional Coverage', () => {
         if (callCount <= 2) {
           // FTS results (1st call for FTS query, 2nd is also FTS for the fallback)
           return Promise.resolve([
-            { id: 'shared-doc', title: 'Shared Doc', description: 'Test query search overlap doc', rank: 0.9, snippet: '<b>test</b>' },
-            { id: 'fts-only-doc', title: 'FTS Only', description: 'FTS test query search only doc', rank: 0.7, snippet: '<b>test</b>' },
+            {
+              id: 'shared-doc',
+              title: 'Shared Doc',
+              description: 'Test query search overlap doc',
+              rank: 0.9,
+              snippet: '<b>test</b>',
+            },
+            {
+              id: 'fts-only-doc',
+              title: 'FTS Only',
+              description: 'FTS test query search only doc',
+              rank: 0.7,
+              snippet: '<b>test</b>',
+            },
           ]);
         }
         // Semantic results
         return Promise.resolve([
-          { id: 'shared-doc', title: 'Shared Doc', description: 'Test query search overlap doc', similarity: 0.88 },
-          { id: 'semantic-only-doc', title: 'Semantic Only', description: 'Semantic test query search only doc', similarity: 0.82 },
+          {
+            id: 'shared-doc',
+            title: 'Shared Doc',
+            description: 'Test query search overlap doc',
+            similarity: 0.88,
+          },
+          {
+            id: 'semantic-only-doc',
+            title: 'Semantic Only',
+            description: 'Semantic test query search only doc',
+            similarity: 0.82,
+          },
         ]);
       });
 
@@ -1044,11 +1088,9 @@ describe('RetrievalService - Additional Coverage', () => {
     });
 
     it('should accept custom relevanceConfig and embeddingChain', () => {
-      const svc = createRetrievalService(
-        mockPrisma as any,
-        { minScore: 0.5, maxResults: 10 },
-        { generateEmbedding: vi.fn() } as any
-      );
+      const svc = createRetrievalService(mockPrisma as any, { minScore: 0.5, maxResults: 10 }, {
+        generateEmbedding: vi.fn(),
+      } as any);
       expect(svc).toBeInstanceOf(RetrievalService);
     });
   });

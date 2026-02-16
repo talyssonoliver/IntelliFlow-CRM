@@ -91,11 +91,7 @@ describe('GuardrailsAIService audit integration', () => {
 
     mockAIService = createMockAIService();
     mockAuditLogPort = createMockAuditLogPort();
-    guardrailsService = new GuardrailsAIService(
-      mockAIService,
-      mockAuditLogPort,
-      defaultConfig
-    );
+    guardrailsService = new GuardrailsAIService(mockAIService, mockAuditLogPort, defaultConfig);
   });
 
   afterEach(() => {
@@ -327,11 +323,7 @@ describe('GuardrailsAIService audit integration', () => {
       };
 
       // Service should still construct but log events correctly
-      const service = new GuardrailsAIService(
-        mockAIService,
-        mockAuditLogPort,
-        configWithoutTenant
-      );
+      const service = new GuardrailsAIService(mockAIService, mockAuditLogPort, configWithoutTenant);
 
       expect(service).toBeDefined();
     });

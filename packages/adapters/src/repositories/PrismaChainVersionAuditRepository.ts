@@ -53,7 +53,10 @@ export class PrismaChainVersionAuditRepository implements ChainVersionAuditRepos
     return rows.map((r) => this.toRecord(r));
   }
 
-  async findByAction(action: ChainVersionAuditAction, limit?: number): Promise<ChainVersionAuditRecord[]> {
+  async findByAction(
+    action: ChainVersionAuditAction,
+    limit?: number
+  ): Promise<ChainVersionAuditRecord[]> {
     const rows = await this.prisma.chainVersionAudit.findMany({
       where: { action },
       orderBy: { performedAt: 'desc' },
@@ -73,9 +76,7 @@ export class PrismaChainVersionAuditRepository implements ChainVersionAuditRepos
       id: row.id,
       versionId: row.versionId,
       action: row.action as ChainVersionAuditAction,
-      previousState: row.previousStatus
-        ? { status: row.previousStatus, ...metadata }
-        : null,
+      previousState: row.previousStatus ? { status: row.previousStatus, ...metadata } : null,
       newState: { status: row.newStatus, ...metadata },
       performedBy: row.performedBy,
       performedAt: row.performedAt,

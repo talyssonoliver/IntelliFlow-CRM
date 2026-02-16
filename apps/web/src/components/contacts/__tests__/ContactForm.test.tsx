@@ -35,11 +35,7 @@ describe('ContactForm', () => {
   describe('Rendering', () => {
     it('renders in create mode with empty fields', () => {
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       expect(screen.getByLabelText(/First Name/i)).toHaveValue('');
@@ -65,11 +61,7 @@ describe('ContactForm', () => {
 
     it('renders step indicator', () => {
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       expect(screen.getByText('Personal Details')).toBeInTheDocument();
@@ -79,11 +71,7 @@ describe('ContactForm', () => {
 
     it('shows step 1 content by default', () => {
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       expect(screen.getByText('Contact Information')).toBeInTheDocument();
@@ -96,11 +84,7 @@ describe('ContactForm', () => {
     it('navigates to step 2 on Next click', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       // Fill required fields
@@ -119,11 +103,7 @@ describe('ContactForm', () => {
     it('navigates back to step 1 on Previous click', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       // Fill and go to step 2
@@ -146,11 +126,7 @@ describe('ContactForm', () => {
     it('allows clicking on completed steps', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       // Complete step 1
@@ -173,11 +149,7 @@ describe('ContactForm', () => {
 
     it('does not allow clicking on upcoming steps', () => {
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       const step3Button = screen.getByRole('button', { name: /Additional Info/i });
@@ -186,11 +158,7 @@ describe('ContactForm', () => {
 
     it('shows Cancel on step 1', () => {
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       expect(screen.getByText('Cancel')).toBeInTheDocument();
@@ -199,11 +167,7 @@ describe('ContactForm', () => {
     it('shows Previous on step 2', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       await user.type(screen.getByLabelText(/First Name/i), 'John');
@@ -221,11 +185,7 @@ describe('ContactForm', () => {
     it('shows error for empty first name', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       await user.click(screen.getByText('Next Step'));
@@ -241,11 +201,7 @@ describe('ContactForm', () => {
     it('shows error for empty last name', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       await user.click(screen.getByText('Next Step'));
@@ -261,11 +217,7 @@ describe('ContactForm', () => {
     it('shows error for empty email', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       await user.click(screen.getByText('Next Step'));
@@ -281,11 +233,7 @@ describe('ContactForm', () => {
     it('shows error for invalid email format', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       await user.type(screen.getByLabelText(/First Name/i), 'John');
@@ -305,11 +253,7 @@ describe('ContactForm', () => {
     it('shows error for invalid phone format', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       await user.type(screen.getByLabelText(/First Name/i), 'John');
@@ -330,11 +274,7 @@ describe('ContactForm', () => {
     it('clears error when field is corrected', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       // Trigger validation error
@@ -361,11 +301,7 @@ describe('ContactForm', () => {
     it('shows error summary when validation fails', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       await user.click(screen.getByText('Next Step'));
@@ -378,11 +314,7 @@ describe('ContactForm', () => {
     it('focuses error summary on validation failure', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       await user.click(screen.getByText('Next Step'));
@@ -397,11 +329,7 @@ describe('ContactForm', () => {
     it('lists all validation errors in summary', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       await user.click(screen.getByText('Next Step'));
@@ -449,11 +377,7 @@ describe('ContactForm', () => {
     it('selects default status (ACTIVE)', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       // Fill step 1 and navigate to step 3
@@ -469,7 +393,9 @@ describe('ContactForm', () => {
       await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
-        const activeRadio = screen.getByRole('radio', { name: /Active Currently engaged contact/i });
+        const activeRadio = screen.getByRole('radio', {
+          name: /Active Currently engaged contact/i,
+        });
         expect(activeRadio).toBeChecked();
       });
     });
@@ -496,7 +422,9 @@ describe('ContactForm', () => {
       await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: /Additional Information/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', { name: /Additional Information/i })
+        ).toBeInTheDocument();
       });
 
       const prospectRadio = screen.getByRole('radio', { name: /Prospect Potential customer/i });
@@ -512,11 +440,7 @@ describe('ContactForm', () => {
       handlers.onSubmit.mockResolvedValue(undefined);
 
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       // Step 1
@@ -533,16 +457,20 @@ describe('ContactForm', () => {
 
       // Step 3
       await waitFor(() => {
-        expect(screen.getByRole('heading', { name: /Additional Information/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole('heading', { name: /Additional Information/i })
+        ).toBeInTheDocument();
       });
       await user.click(screen.getByText('Create Contact'));
 
       await waitFor(() => {
-        expect(handlers.onSubmit).toHaveBeenCalledWith(expect.objectContaining({
-          firstName: 'John',
-          lastName: 'Doe',
-          email: 'john@example.com',
-        }));
+        expect(handlers.onSubmit).toHaveBeenCalledWith(
+          expect.objectContaining({
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john@example.com',
+          })
+        );
       });
     });
 
@@ -604,11 +532,7 @@ describe('ContactForm', () => {
     it('calls onCancel when Cancel clicked', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       await user.click(screen.getByText('Cancel'));
@@ -619,11 +543,7 @@ describe('ContactForm', () => {
   describe('Accessibility', () => {
     it('has progress indicator with aria attributes', () => {
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       const progress = screen.getByRole('progressbar');
@@ -634,11 +554,7 @@ describe('ContactForm', () => {
 
     it('marks current step with aria-current', () => {
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       const step1Button = screen.getByRole('button', { name: /Personal Details/i });
@@ -647,11 +563,7 @@ describe('ContactForm', () => {
 
     it('marks required fields with aria-required', () => {
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       expect(screen.getByLabelText(/First Name/i)).toHaveAttribute('aria-required', 'true');
@@ -662,11 +574,7 @@ describe('ContactForm', () => {
     it('marks invalid fields with aria-invalid', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       await user.click(screen.getByText('Next Step'));
@@ -679,11 +587,7 @@ describe('ContactForm', () => {
     it('links error messages with aria-describedby', async () => {
       const user = userEvent.setup();
       render(
-        <ContactForm
-          mode="create"
-          onSubmit={handlers.onSubmit}
-          onCancel={handlers.onCancel}
-        />
+        <ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />
       );
 
       await user.click(screen.getByText('Next Step'));

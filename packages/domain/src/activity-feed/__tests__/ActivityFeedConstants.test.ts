@@ -46,9 +46,23 @@ describe('ActivityFeedConstants', () => {
 
     it('includes all expected types', () => {
       const expected = [
-        'EMAIL', 'CALL', 'MEETING', 'NOTE', 'TASK', 'CHAT', 'DOCUMENT',
-        'DEAL', 'TICKET', 'STAGE_CHANGE', 'STATUS_CHANGE', 'SCORE_UPDATE',
-        'QUALIFICATION', 'AGENT_ACTION', 'SLA_ALERT', 'ASSIGNMENT', 'SYSTEM',
+        'EMAIL',
+        'CALL',
+        'MEETING',
+        'NOTE',
+        'TASK',
+        'CHAT',
+        'DOCUMENT',
+        'DEAL',
+        'TICKET',
+        'STAGE_CHANGE',
+        'STATUS_CHANGE',
+        'SCORE_UPDATE',
+        'QUALIFICATION',
+        'AGENT_ACTION',
+        'SLA_ALERT',
+        'ASSIGNMENT',
+        'SYSTEM',
       ];
       for (const t of expected) {
         expect(ACTIVITY_FEED_TYPES).toContain(t);

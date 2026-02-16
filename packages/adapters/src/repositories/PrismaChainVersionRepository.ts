@@ -11,10 +11,7 @@ import {
   type PrismaClient,
   type ChainVersion as PrismaChainVersion,
 } from '@intelliflow/db';
-import type {
-  ChainVersionRecord,
-  ChainVersionRepositoryPort,
-} from '@intelliflow/application';
+import type { ChainVersionRecord, ChainVersionRepositoryPort } from '@intelliflow/application';
 import type { ChainType, ChainVersionStatus, VersionRolloutStrategy } from '@intelliflow/domain';
 
 export class PrismaChainVersionRepository implements ChainVersionRepositoryPort {

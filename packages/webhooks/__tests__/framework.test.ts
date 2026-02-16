@@ -15,15 +15,11 @@ describe('Webhook Framework', () => {
         const payload = 'test payload';
         const secret = 'test-secret';
         // Pre-computed HMAC-SHA256
-        const signature =
-          '3f4fc4c4c1c6a4b6e4f8a4c8c3f4c4c4c1c6a4b6e4f8a4c8c3f4c4c4c1c6a4b6';
+        const signature = '3f4fc4c4c1c6a4b6e4f8a4c8c3f4c4c4c1c6a4b6e4f8a4c8c3f4c4c4c1c6a4b6';
 
         // For this test, we'll use the actual verifier
         const crypto = require('crypto');
-        const correctSignature = crypto
-          .createHmac('sha256', secret)
-          .update(payload)
-          .digest('hex');
+        const correctSignature = crypto.createHmac('sha256', secret).update(payload).digest('hex');
 
         const result = SignatureVerifiers.hmacSha256(payload, correctSignature, secret);
         expect(result).toBe(true);
@@ -378,7 +374,7 @@ describe('Webhook Framework', () => {
         expect(result.success).toBe(false);
 
         // Process retries
-        await new Promise(resolve => setTimeout(resolve, 1100)); // Wait for retry window
+        await new Promise((resolve) => setTimeout(resolve, 1100)); // Wait for retry window
         const retryResult = await framework.processRetries();
 
         expect(retryResult.processed).toBeGreaterThan(0);
@@ -413,7 +409,7 @@ describe('Webhook Framework', () => {
 
         // Exhaust retries
         for (let i = 0; i < 3; i++) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
           await shortRetryFramework.processRetries();
         }
 
@@ -458,7 +454,7 @@ describe('Webhook Framework', () => {
         });
 
         framework.on('timed.event', async () => {
-          await new Promise(resolve => setTimeout(resolve, 10));
+          await new Promise((resolve) => setTimeout(resolve, 10));
         });
 
         const payload = JSON.stringify({
@@ -525,7 +521,7 @@ describe('Webhook Framework', () => {
         await shortTtlFramework.handle('test', payload, {});
 
         // Wait for TTL expiry
-        await new Promise(resolve => setTimeout(resolve, 150));
+        await new Promise((resolve) => setTimeout(resolve, 150));
 
         const cleaned = shortTtlFramework.cleanup();
         expect(cleaned.idempotencyRemoved).toBeGreaterThan(0);
@@ -557,7 +553,7 @@ describe('Webhook Framework', () => {
 
         // Exhaust retries to send to DLQ
         for (let i = 0; i < 5; i++) {
-          await new Promise(resolve => setTimeout(resolve, 50));
+          await new Promise((resolve) => setTimeout(resolve, 50));
           await framework.processRetries();
         }
 

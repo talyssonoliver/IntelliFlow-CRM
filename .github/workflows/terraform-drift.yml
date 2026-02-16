@@ -3,11 +3,11 @@ name: Terraform Drift Detection
 on:
   schedule:
     # Run daily at 8 AM UTC
-    - cron: "0 8 * * *"
+    - cron: '0 8 * * *'
   workflow_dispatch:
     inputs:
       environment:
-        description: "Environment to check for drift"
+        description: 'Environment to check for drift'
         required: true
         type: choice
         options:
@@ -17,8 +17,8 @@ on:
           - all
 
 env:
-  TF_VERSION: "1.6.0"
-  TF_WORKING_DIR: "infra/terraform"
+  TF_VERSION: '1.6.0'
+  TF_WORKING_DIR: 'infra/terraform'
 
 jobs:
   detect-drift:

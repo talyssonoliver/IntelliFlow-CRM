@@ -320,10 +320,7 @@ export class DurableAuditLogAdapter implements AuditLogPort {
   /**
    * Process metadata - encrypt PII if configured.
    */
-  private processMetadata(
-    metadata: AISecurityMetadata,
-    tenantId: string
-  ): Record<string, unknown> {
+  private processMetadata(metadata: AISecurityMetadata, tenantId: string): Record<string, unknown> {
     const processed: Record<string, unknown> = { ...metadata };
 
     // Encrypt PII fields if configured (Decision 5)
@@ -377,10 +374,7 @@ export class DurableAuditLogAdapter implements AuditLogPort {
    * Classify data sensitivity level based on event type.
    */
   private classifyData(event: AISecurityEventInput): string {
-    const criticalTypes = [
-      'AI_PROMPT_INJECTION_DETECTED',
-      'AI_CROSS_TENANT_ACCESS_ATTEMPT',
-    ];
+    const criticalTypes = ['AI_PROMPT_INJECTION_DETECTED', 'AI_CROSS_TENANT_ACCESS_ATTEMPT'];
 
     const highTypes = [
       'AI_PII_EXPOSURE_BLOCKED',

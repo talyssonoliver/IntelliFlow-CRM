@@ -6,10 +6,11 @@ import type { WidgetProps } from './index';
 
 export function TotalLeadsWidget(_props: WidgetProps) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data: stats, isLoading, error } = trpc.lead.stats.useQuery(
-    undefined,
-    { enabled: isAuthenticated && !authLoading }
-  );
+  const {
+    data: stats,
+    isLoading,
+    error,
+  } = trpc.lead.stats.useQuery(undefined, { enabled: isAuthenticated && !authLoading });
 
   if (isLoading || authLoading) {
     return (

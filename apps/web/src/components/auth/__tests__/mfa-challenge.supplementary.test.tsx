@@ -94,10 +94,7 @@ describe('MfaChallenge', () => {
 
     it('shows method selector with multiple methods', () => {
       render(
-        <MfaChallenge
-          {...defaultProps}
-          availableMethods={['totp', 'sms', 'email', 'backup']}
-        />
+        <MfaChallenge {...defaultProps} availableMethods={['totp', 'sms', 'email', 'backup']} />
       );
 
       expect(screen.getByText('Authenticator App')).toBeInTheDocument();
@@ -143,12 +140,7 @@ describe('MfaChallenge', () => {
     it('switches to Backup Code method with text input', async () => {
       const user = userEvent.setup();
 
-      render(
-        <MfaChallenge
-          {...defaultProps}
-          availableMethods={['totp', 'backup']}
-        />
-      );
+      render(<MfaChallenge {...defaultProps} availableMethods={['totp', 'backup']} />);
 
       await user.click(screen.getByText('Backup Code'));
 
@@ -317,9 +309,7 @@ describe('MfaChallenge', () => {
 
   describe('Error Display', () => {
     it('displays external error prop', () => {
-      render(
-        <MfaChallenge {...defaultProps} error="Token expired" />
-      );
+      render(<MfaChallenge {...defaultProps} error="Token expired" />);
 
       expect(screen.getByText('Token expired')).toBeInTheDocument();
     });
@@ -366,9 +356,7 @@ describe('MfaChallenge', () => {
     });
 
     it('does not show resend for TOTP method', () => {
-      render(
-        <MfaChallenge {...defaultProps} onResend={vi.fn()} />
-      );
+      render(<MfaChallenge {...defaultProps} onResend={vi.fn()} />);
 
       expect(screen.queryByText(/didn't receive a code/i)).not.toBeInTheDocument();
     });
@@ -431,12 +419,7 @@ describe('MfaChallenge', () => {
     it('renders single text input for backup code', async () => {
       const user = userEvent.setup();
 
-      render(
-        <MfaChallenge
-          {...defaultProps}
-          availableMethods={['totp', 'backup']}
-        />
-      );
+      render(<MfaChallenge {...defaultProps} availableMethods={['totp', 'backup']} />);
 
       await user.click(screen.getByText('Backup Code'));
 
@@ -449,11 +432,7 @@ describe('MfaChallenge', () => {
       const user = userEvent.setup();
 
       render(
-        <MfaChallenge
-          {...defaultProps}
-          availableMethods={['backup']}
-          defaultMethod="backup"
-        />
+        <MfaChallenge {...defaultProps} availableMethods={['backup']} defaultMethod="backup" />
       );
 
       const input = screen.getByPlaceholderText(/enter backup code/i);
@@ -466,11 +445,7 @@ describe('MfaChallenge', () => {
       const user = userEvent.setup();
 
       render(
-        <MfaChallenge
-          {...defaultProps}
-          availableMethods={['backup']}
-          defaultMethod="backup"
-        />
+        <MfaChallenge {...defaultProps} availableMethods={['backup']} defaultMethod="backup" />
       );
 
       const input = screen.getByPlaceholderText(/enter backup code/i);

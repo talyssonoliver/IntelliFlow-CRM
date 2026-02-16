@@ -82,7 +82,8 @@ export const CommunicationDirection = {
   OUTBOUND: 'outbound',
 } as const;
 
-export type CommunicationDirection = (typeof CommunicationDirection)[keyof typeof CommunicationDirection];
+export type CommunicationDirection =
+  (typeof CommunicationDirection)[keyof typeof CommunicationDirection];
 
 // =============================================================================
 // Timeline Event Interfaces
@@ -435,10 +436,7 @@ export function getAgentActionStatusLabel(status: AgentActionStatus): string {
  * Check if an event is an agent action requiring approval
  */
 export function isAgentActionPendingApproval(event: TimelineEvent): boolean {
-  return (
-    event.type === 'agent_action' &&
-    event.agentAction?.status === 'pending_approval'
-  );
+  return event.type === 'agent_action' && event.agentAction?.status === 'pending_approval';
 }
 
 /**

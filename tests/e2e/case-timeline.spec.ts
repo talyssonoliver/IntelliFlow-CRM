@@ -186,7 +186,9 @@ test.describe('Case Timeline (IFC-159)', () => {
       await page.waitForLoadState('networkidle');
 
       // Find and click sort button
-      const sortButton = page.locator('button:has-text("Earliest First"), button:has-text("Latest First")');
+      const sortButton = page.locator(
+        'button:has-text("Earliest First"), button:has-text("Latest First")'
+      );
       if ((await sortButton.count()) > 0) {
         const initialText = await sortButton.textContent();
         await sortButton.click();

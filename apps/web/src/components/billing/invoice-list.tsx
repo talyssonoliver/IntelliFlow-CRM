@@ -68,20 +68,14 @@ function StatusBadge({ status }: { status: string }) {
   const { label, variant } = getInvoiceStatusDisplay(status);
 
   const variantClasses: Record<StatusVariant, string> = {
-    success:
-      'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    warning:
-      'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+    success: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    warning: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
     error: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    default:
-      'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300',
+    default: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300',
   };
 
   return (
-    <Badge
-      className={`${variantClasses[variant]} border-0 font-medium`}
-      variant="outline"
-    >
+    <Badge className={`${variantClasses[variant]} border-0 font-medium`} variant="outline">
       {label}
     </Badge>
   );
@@ -119,16 +113,11 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-        <span className="material-symbols-outlined text-3xl text-slate-400">
-          receipt_long
-        </span>
+        <span className="material-symbols-outlined text-3xl text-slate-400">receipt_long</span>
       </div>
-      <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-white">
-        No invoices yet
-      </h3>
+      <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-white">No invoices yet</h3>
       <p className="max-w-sm text-sm text-slate-500 dark:text-slate-400">
-        When you subscribe to a plan or make payments, your invoices will appear
-        here.
+        When you subscribe to a plan or make payments, your invoices will appear here.
       </p>
     </div>
   );
@@ -160,11 +149,7 @@ function InvoiceActions({ invoice }: { invoice: SerializedInvoice }) {
   };
 
   if (!pdfInfo.canView) {
-    return (
-      <span className="text-xs text-slate-400 dark:text-slate-500">
-        Not available
-      </span>
-    );
+    return <span className="text-xs text-slate-400 dark:text-slate-500">Not available</span>;
   }
 
   return (
@@ -252,9 +237,7 @@ export function InvoiceList({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-xl text-primary">
-              receipt_long
-            </span>
+            <span className="material-symbols-outlined text-xl text-primary">receipt_long</span>
             Invoices
           </CardTitle>
           <CardDescription>Loading your invoice history...</CardDescription>
@@ -271,9 +254,7 @@ export function InvoiceList({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-xl text-primary">
-              receipt_long
-            </span>
+            <span className="material-symbols-outlined text-xl text-primary">receipt_long</span>
             Invoices
           </CardTitle>
         </CardHeader>
@@ -290,9 +271,7 @@ export function InvoiceList({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-xl text-primary">
-                receipt_long
-              </span>
+              <span className="material-symbols-outlined text-xl text-primary">receipt_long</span>
               Invoices
             </CardTitle>
             <CardDescription>
@@ -339,9 +318,7 @@ export function InvoiceList({
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined mr-2 text-lg">
-                    expand_more
-                  </span>
+                  <span className="material-symbols-outlined mr-2 text-lg">expand_more</span>
                   Load More
                 </>
               )}

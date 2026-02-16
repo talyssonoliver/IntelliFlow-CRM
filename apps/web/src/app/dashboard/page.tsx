@@ -79,7 +79,10 @@ export default function DashboardPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
             {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="h-32 bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark animate-pulse" />
+              <Card
+                key={i}
+                className="h-32 bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark animate-pulse"
+              />
             ))}
           </div>
         </div>
@@ -106,7 +109,10 @@ export default function DashboardPage() {
             href="/dashboard/customize"
             className="group inline-flex items-center gap-2 px-4 py-2.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm rounded-lg hover:bg-slate-50 hover:border-slate-400 dark:hover:bg-slate-700 dark:hover:border-slate-500 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-ds-primary focus:ring-offset-2"
           >
-            <span className="material-symbols-outlined text-base transition-transform group-hover:rotate-90">tune</span>Customize
+            <span className="material-symbols-outlined text-base transition-transform group-hover:rotate-90">
+              tune
+            </span>
+            Customize
           </Link>
           <Link
             href="/dashboard/new"
@@ -140,9 +146,7 @@ export default function DashboardPage() {
                 {WidgetComponent ? (
                   <WidgetComponent config={widget.config} />
                 ) : (
-                  <div className="p-6 text-slate-400">
-                    Unknown widget: {widget.type}
-                  </div>
+                  <div className="p-6 text-slate-400">Unknown widget: {widget.type}</div>
                 )}
               </Card>
             );
@@ -152,7 +156,10 @@ export default function DashboardPage() {
         /* Loading skeleton */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="h-32 bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark animate-pulse" />
+            <Card
+              key={i}
+              className="h-32 bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark animate-pulse"
+            />
           ))}
         </div>
       )}

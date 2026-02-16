@@ -74,14 +74,11 @@ export async function GET() {
     const allTasks = loadCSVTasks();
 
     if (!allTasks.length) {
-      return NextResponse.json(
-        { error: 'No tasks found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'No tasks found' }, { status: 404 });
     }
 
     // Filter sprint tasks only (exclude Continuous)
-    const sprintTasks = allTasks.filter(t => typeof t.sprint === 'number');
+    const sprintTasks = allTasks.filter((t) => typeof t.sprint === 'number');
 
     // Calculate velocity by sprint
     const sprintMap = new Map<number, { planned: number; completed: number }>();
@@ -103,9 +100,8 @@ export async function GET() {
     // Calculate sprint bars for visualization
     const sprintBars: SprintBar[] = Array.from(sprintMap.entries())
       .map(([sprint, counts]) => {
-        const velocity = counts.planned > 0
-          ? Math.round((counts.completed / counts.planned) * 100)
-          : 0;
+        const velocity =
+          counts.planned > 0 ? Math.round((counts.completed / counts.planned) * 100) : 0;
         return {
           sprint,
           velocity,
@@ -118,13 +114,12 @@ export async function GET() {
 
     // Calculate overall velocity
     const totalPlanned = sprintTasks.length;
-    const totalCompleted = sprintTasks.filter(t => {
+    const totalCompleted = sprintTasks.filter((t) => {
       const status = t.status.toLowerCase();
       return status === 'completed' || status === 'done';
     }).length;
-    const currentVelocity = totalPlanned > 0
-      ? Math.round((totalCompleted / totalPlanned) * 100)
-      : 0;
+    const currentVelocity =
+      totalPlanned > 0 ? Math.round((totalCompleted / totalPlanned) * 100) : 0;
 
     // Calculate trend from recent sprints
     const recentSprints = sprintBars.slice(-3);
@@ -132,8 +127,10 @@ export async function GET() {
     let trend: 'improving' | 'stable' | 'declining' = 'stable';
 
     if (recentSprints.length >= 2 && previousSprints.length >= 1) {
-      const avgRecent = recentSprints.reduce((sum, s) => sum + s.velocity, 0) / recentSprints.length;
-      const avgPrevious = previousSprints.reduce((sum, s) => sum + s.velocity, 0) / previousSprints.length;
+      const avgRecent =
+        recentSprints.reduce((sum, s) => sum + s.velocity, 0) / recentSprints.length;
+      const avgPrevious =
+        previousSprints.reduce((sum, s) => sum + s.velocity, 0) / previousSprints.length;
       if (avgRecent > avgPrevious * 1.1) trend = 'improving';
       else if (avgRecent < avgPrevious * 0.9) trend = 'declining';
     }
@@ -145,13 +142,21 @@ export async function GET() {
 
     // Calculate forecast for next sprint using rolling average
     const lookbackSprints = config?.forecast?.lookbackSprints ?? 3;
-    const lastCompletedSprints = sprintBars.filter(s => s.completed > 0).slice(-lookbackSprints);
-    const avgVelocity = lastCompletedSprints.length > 0
-      ? Math.round(lastCompletedSprints.reduce((sum, s) => sum + s.velocity, 0) / lastCompletedSprints.length)
-      : null;
+    const lastCompletedSprints = sprintBars.filter((s) => s.completed > 0).slice(-lookbackSprints);
+    const avgVelocity =
+      lastCompletedSprints.length > 0
+        ? Math.round(
+            lastCompletedSprints.reduce((sum, s) => sum + s.velocity, 0) /
+              lastCompletedSprints.length
+          )
+        : null;
 
     // Determine confidence based on thresholds
-    const confidenceThresholds = config?.forecast?.confidenceThresholds ?? { high: 80, medium: 60, low: 40 };
+    const confidenceThresholds = config?.forecast?.confidenceThresholds ?? {
+      high: 80,
+      medium: 60,
+      low: 40,
+    };
     let confidence: 'high' | 'medium' | 'low' = 'low';
     if (avgVelocity !== null) {
       if (avgVelocity >= confidenceThresholds.high) confidence = 'high';
@@ -163,35 +168,38 @@ export async function GET() {
     if (currentVelocity < minVelocityWarning) healthStatus = 'critical';
     else if (currentVelocity < targetVelocity) healthStatus = 'warning';
 
-    return NextResponse.json({
-      timestamp: new Date().toISOString(),
-      config: {
-        sprintLengthDays,
-        targetVelocity,
-        minVelocityWarning,
-        forecastErrorThreshold: config?.config?.forecastErrorThreshold ?? 20,
-        velocityGoal: config?.config?.velocityGoal ?? 'Maintain target velocity',
+    return NextResponse.json(
+      {
+        timestamp: new Date().toISOString(),
+        config: {
+          sprintLengthDays,
+          targetVelocity,
+          minVelocityWarning,
+          forecastErrorThreshold: config?.config?.forecastErrorThreshold ?? 20,
+          velocityGoal: config?.config?.velocityGoal ?? 'Maintain target velocity',
+        },
+        actual: {
+          currentVelocity,
+          trend,
+          healthStatus,
+          totalPlanned,
+          totalCompleted,
+          sprintCount: sprintBars.length,
+          bySprintBars: sprintBars,
+        },
+        forecast: {
+          nextSprintPrediction: avgVelocity,
+          confidence,
+          method: config?.forecast?.method ?? 'rolling-3-sprint-average',
+          lookbackSprints,
+        },
       },
-      actual: {
-        currentVelocity,
-        trend,
-        healthStatus,
-        totalPlanned,
-        totalCompleted,
-        sprintCount: sprintBars.length,
-        bySprintBars: sprintBars,
-      },
-      forecast: {
-        nextSprintPrediction: avgVelocity,
-        confidence,
-        method: config?.forecast?.method ?? 'rolling-3-sprint-average',
-        lookbackSprints,
-      },
-    }, {
-      headers: {
-        'Cache-Control': 'no-store, no-cache, max-age=0',
-      },
-    });
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, max-age=0',
+        },
+      }
+    );
   } catch (error) {
     console.error('Error generating velocity data:', error);
     return NextResponse.json(

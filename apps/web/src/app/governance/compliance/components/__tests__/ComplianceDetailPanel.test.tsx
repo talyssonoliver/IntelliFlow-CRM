@@ -96,25 +96,13 @@ describe('ComplianceDetailPanel', () => {
 
   describe('Closed State', () => {
     it('should not render content when closed', () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={false}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={false} onClose={mockOnClose} />);
 
       expect(screen.queryByText('ISO 27001')).not.toBeInTheDocument();
     });
 
     it('should not fetch data when closed', () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={false}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={false} onClose={mockOnClose} />);
 
       expect(screen.queryByText('Loading')).not.toBeInTheDocument();
     });
@@ -122,13 +110,7 @@ describe('ComplianceDetailPanel', () => {
 
   describe('Open State', () => {
     it('should display standard name when open', async () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText('ISO 27001')).toBeInTheDocument();
@@ -136,13 +118,7 @@ describe('ComplianceDetailPanel', () => {
     });
 
     it('should display compliance score', async () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText('92%')).toBeInTheDocument();
@@ -150,13 +126,7 @@ describe('ComplianceDetailPanel', () => {
     });
 
     it('should display trend indicator', async () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText('+2.4%')).toBeInTheDocument();
@@ -164,13 +134,7 @@ describe('ComplianceDetailPanel', () => {
     });
 
     it('should display status badge', async () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText('compliant')).toBeInTheDocument();
@@ -178,13 +142,7 @@ describe('ComplianceDetailPanel', () => {
     });
 
     it('should display next audit date', async () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText('Next Audit')).toBeInTheDocument();
@@ -192,13 +150,7 @@ describe('ComplianceDetailPanel', () => {
     });
 
     it('should display certification expiry', async () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText('Cert. Expiry')).toBeInTheDocument();
@@ -208,13 +160,7 @@ describe('ComplianceDetailPanel', () => {
 
   describe('Tabs Navigation', () => {
     it('should display controls tab by default', async () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         const controlsTab = screen.getByRole('button', { name: /controls/i });
@@ -223,13 +169,7 @@ describe('ComplianceDetailPanel', () => {
     });
 
     it('should have history tab', async () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /history/i })).toBeInTheDocument();
@@ -237,13 +177,7 @@ describe('ComplianceDetailPanel', () => {
     });
 
     it('should have changes tab', async () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByRole('button', { name: /changes/i })).toBeInTheDocument();
@@ -252,13 +186,7 @@ describe('ComplianceDetailPanel', () => {
 
     it('should switch to history tab when clicked', async () => {
       const user = userEvent.setup();
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText('ISO 27001')).toBeInTheDocument();
@@ -274,13 +202,7 @@ describe('ComplianceDetailPanel', () => {
 
     it('should switch to changes tab when clicked', async () => {
       const user = userEvent.setup();
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText('ISO 27001')).toBeInTheDocument();
@@ -297,13 +219,7 @@ describe('ComplianceDetailPanel', () => {
 
   describe('Controls Tab', () => {
     it('should display control statistics', async () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText('Passed')).toBeInTheDocument();
@@ -314,28 +230,18 @@ describe('ComplianceDetailPanel', () => {
     });
 
     it('should display control list', async () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText(/A\.5\.1: Information Security Policies/)).toBeInTheDocument();
-        expect(screen.getByText(/A\.6\.1: Organization of Information Security/)).toBeInTheDocument();
+        expect(
+          screen.getByText(/A\.6\.1: Organization of Information Security/)
+        ).toBeInTheDocument();
       });
     });
 
     it('should display control status icons', async () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       // Wait for data to load first
       await waitFor(() => {
@@ -351,13 +257,7 @@ describe('ComplianceDetailPanel', () => {
     });
 
     it('should display control notes when available', async () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText('All policies reviewed and approved')).toBeInTheDocument();
@@ -365,13 +265,7 @@ describe('ComplianceDetailPanel', () => {
     });
 
     it('should display last assessed date for controls', async () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         // Multiple controls have last assessed dates
@@ -384,13 +278,7 @@ describe('ComplianceDetailPanel', () => {
   describe('History Tab', () => {
     it('should display historical scores', async () => {
       const user = userEvent.setup();
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText('ISO 27001')).toBeInTheDocument();
@@ -411,13 +299,7 @@ describe('ComplianceDetailPanel', () => {
 
     it('should render SVG chart', async () => {
       const user = userEvent.setup();
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText('ISO 27001')).toBeInTheDocument();
@@ -441,13 +323,7 @@ describe('ComplianceDetailPanel', () => {
   describe('Changes Tab', () => {
     it('should display recent changes', async () => {
       const user = userEvent.setup();
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText('ISO 27001')).toBeInTheDocument();
@@ -465,13 +341,7 @@ describe('ComplianceDetailPanel', () => {
 
     it('should display change author', async () => {
       const user = userEvent.setup();
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       await waitFor(() => {
         expect(screen.getByText('ISO 27001')).toBeInTheDocument();
@@ -489,13 +359,7 @@ describe('ComplianceDetailPanel', () => {
 
   describe('Null Standard', () => {
     it('should show placeholder when no standard selected', () => {
-      render(
-        <ComplianceDetailPanel
-          standardId={null}
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId={null} open={true} onClose={mockOnClose} />);
 
       expect(screen.getByText('Select a compliance standard to view details')).toBeInTheDocument();
     });
@@ -503,22 +367,10 @@ describe('ComplianceDetailPanel', () => {
 
   describe('Loading State', () => {
     it('should show loading spinner while fetching', async () => {
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       // Initially should show loading (spinner icon)
-      render(
-        <ComplianceDetailPanel
-          standardId="iso-27001"
-          open={true}
-          onClose={mockOnClose}
-        />
-      );
+      render(<ComplianceDetailPanel standardId="iso-27001" open={true} onClose={mockOnClose} />);
 
       // Should eventually load
       await waitFor(() => {

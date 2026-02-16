@@ -60,7 +60,12 @@
     "lint:fix": {
       "dependsOn": ["^build"],
       "cache": false,
-      "inputs": ["src/**/*.ts", "src/**/*.tsx", "eslint.config.mjs", "tsconfig.json"]
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "eslint.config.mjs",
+        "tsconfig.json"
+      ]
     },
     "typecheck": {
       "dependsOn": ["^build"],

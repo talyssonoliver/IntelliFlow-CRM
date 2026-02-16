@@ -56,12 +56,7 @@ import {
   getFailedValidations,
 } from './validation-runner';
 
-import {
-  verifyTaskKpis,
-  generateKpiSummary,
-  getFailedKpis,
-  getManualKpis,
-} from './kpi-verifier';
+import { verifyTaskKpis, generateKpiSummary, getFailedKpis, getManualKpis } from './kpi-verifier';
 
 // Integration imports
 import {
@@ -74,16 +69,9 @@ import {
   type SprintAttestationSummary,
 } from './attestation-generator';
 
-import {
-  getWaiverStatus,
-  type WaiverStatus,
-} from './waiver-checker';
+import { getWaiverStatus, type WaiverStatus } from './waiver-checker';
 
-import {
-  createActionsFromAttestation,
-  addToDebtLedger,
-  addToReviewQueue,
-} from './action-tracker';
+import { createActionsFromAttestation, addToDebtLedger, addToReviewQueue } from './action-tracker';
 
 // =============================================================================
 // Configuration Defaults
@@ -106,10 +94,7 @@ const DEFAULT_CONFIG: SprintAuditConfig = {
  * Loads tasks from Sprint_plan.csv
  */
 export function loadSprintTasks(repoRoot: string): CsvTask[] {
-  const csvPath = path.join(
-    repoRoot,
-    'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv'
-  );
+  const csvPath = path.join(repoRoot, 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv');
 
   if (!fs.existsSync(csvPath)) {
     throw new Error(`Sprint_plan.csv not found at ${csvPath}`);
@@ -165,7 +150,9 @@ export function verifyDependencies(
   repoRoot: string
 ): DependencyVerification {
   const dependencies = task.Dependencies
-    ? task.Dependencies.split(',').map((d) => d.trim()).filter((d) => d)
+    ? task.Dependencies.split(',')
+        .map((d) => d.trim())
+        .filter((d) => d)
     : [];
 
   const attestationsFound: string[] = [];
@@ -174,7 +161,8 @@ export function verifyDependencies(
   for (const depId of dependencies) {
     // Check if dependency is completed
     const depTask = allTasks.find((t) => t['Task ID'] === depId);
-    const isCompleted = depTask && ['completed', 'done'].includes(depTask.Status?.toLowerCase() || '');
+    const isCompleted =
+      depTask && ['completed', 'done'].includes(depTask.Status?.toLowerCase() || '');
 
     if (!isCompleted) {
       missing.push(depId);
@@ -347,7 +335,9 @@ export async function auditTask(
   try {
     waiverStatus = getWaiverStatus(config.repoRoot, taskId);
     if (waiverStatus.hasWaiver) {
-      console.log(`  Waiver: expires ${waiverStatus.waiverExpiry} (${waiverStatus.daysUntilExpiry} days)`);
+      console.log(
+        `  Waiver: expires ${waiverStatus.waiverExpiry} (${waiverStatus.daysUntilExpiry} days)`
+      );
     }
   } catch {
     // plan-overrides.yaml not found, continue without waiver checking
@@ -368,7 +358,8 @@ export async function auditTask(
   // 2. Filter placeholders for task artifacts (uses cached scan from sprint level)
   const artifactPaths = parseArtifactSpec(task['Artifacts To Track'] || '');
   // Use cached placeholders if provided (much faster), otherwise scan (for standalone task audits)
-  const allPlaceholders = cachedPlaceholders ?? await runPlaceholderScan(config.repoRoot, DEFAULT_SCAN_CONFIG);
+  const allPlaceholders =
+    cachedPlaceholders ?? (await runPlaceholderScan(config.repoRoot, DEFAULT_SCAN_CONFIG));
   const placeholders = filterFindingsByTaskArtifacts(allPlaceholders, artifactPaths);
   if (placeholders.length > 0) {
     issues.push(`Found ${placeholders.length} placeholder(s) in task artifacts`);
@@ -432,12 +423,7 @@ export async function auditTask(
   };
 
   // 8. Generate attestation (uses existing schema format)
-  const attestation = generateAttestation(
-    taskId,
-    findings,
-    runId,
-    issues.join('; ')
-  );
+  const attestation = generateAttestation(taskId, findings, runId, issues.join('; '));
 
   // 9. Write attestation to sprint-based location
   const sprintNumber = parseInt(task['Target Sprint'] || '0', 10);
@@ -464,11 +450,7 @@ export async function auditTask(
     // 11. Add to review queue if needs human review
     if (attestation.verdict === 'NEEDS_HUMAN') {
       try {
-        await addToReviewQueue(
-          config.repoRoot,
-          attestation,
-          waiverStatus?.tier || 'C'
-        );
+        await addToReviewQueue(config.repoRoot, attestation, waiverStatus?.tier || 'C');
         console.log(`  Added to review queue`);
       } catch (err) {
         console.warn(`  Warning: Could not update review-queue.json: ${err}`);
@@ -553,17 +535,23 @@ export async function auditSprintCompletion(
   const placeholderScanStart = Date.now();
   const cachedPlaceholders = await runPlaceholderScan(fullConfig.repoRoot, DEFAULT_SCAN_CONFIG);
   const placeholderScanDuration = ((Date.now() - placeholderScanStart) / 1000).toFixed(1);
-  console.log(`Placeholder scan complete: ${cachedPlaceholders.length} findings in ${placeholderScanDuration}s\n`);
+  console.log(
+    `Placeholder scan complete: ${cachedPlaceholders.length} findings in ${placeholderScanDuration}s\n`
+  );
 
   // Save placeholder scan to evidence directory
   await fs.promises.writeFile(
     outputPaths.placeholderScanPath,
-    JSON.stringify({
-      scanned_at: new Date().toISOString(),
-      duration_seconds: parseFloat(placeholderScanDuration),
-      total_findings: cachedPlaceholders.length,
-      findings: cachedPlaceholders,
-    }, null, 2),
+    JSON.stringify(
+      {
+        scanned_at: new Date().toISOString(),
+        duration_seconds: parseFloat(placeholderScanDuration),
+        total_findings: cachedPlaceholders.length,
+        findings: cachedPlaceholders,
+      },
+      null,
+      2
+    ),
     'utf-8'
   );
 
@@ -591,8 +579,9 @@ export async function auditSprintCompletion(
   const artifactHashes = collectArtifactHashes(taskResults);
 
   // Determine sprint verdict
-  const sprintVerdict: SprintVerdict =
-    taskResults.every((r) => r.verdict === 'PASS') ? 'PASS' : 'FAIL';
+  const sprintVerdict: SprintVerdict = taskResults.every((r) => r.verdict === 'PASS')
+    ? 'PASS'
+    : 'FAIL';
 
   const durationSeconds = (Date.now() - startTime) / 1000;
 

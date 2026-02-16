@@ -77,7 +77,9 @@ export class AppointmentIcsEventHandler {
         return;
       }
 
-      console.log(`[AppointmentIcsEventHandler] Invitation sent for appointment ${appointment.id.value}`);
+      console.log(
+        `[AppointmentIcsEventHandler] Invitation sent for appointment ${appointment.id.value}`
+      );
     } catch (error) {
       console.error('[AppointmentIcsEventHandler] Error handling appointment created:', error);
     }
@@ -106,7 +108,10 @@ export class AppointmentIcsEventHandler {
       });
 
       if (icsResult.isFailure) {
-        console.error('[AppointmentIcsEventHandler] ICS update generation failed:', icsResult.error);
+        console.error(
+          '[AppointmentIcsEventHandler] ICS update generation failed:',
+          icsResult.error
+        );
         return;
       }
 
@@ -134,11 +139,16 @@ export class AppointmentIcsEventHandler {
       });
 
       if (emailResult.isFailure) {
-        console.error('[AppointmentIcsEventHandler] Reschedule email send failed:', emailResult.error);
+        console.error(
+          '[AppointmentIcsEventHandler] Reschedule email send failed:',
+          emailResult.error
+        );
         return;
       }
 
-      console.log(`[AppointmentIcsEventHandler] Reschedule notification sent for appointment ${appointment.id.value}`);
+      console.log(
+        `[AppointmentIcsEventHandler] Reschedule notification sent for appointment ${appointment.id.value}`
+      );
     } catch (error) {
       console.error('[AppointmentIcsEventHandler] Error handling appointment rescheduled:', error);
     }
@@ -166,7 +176,10 @@ export class AppointmentIcsEventHandler {
       });
 
       if (icsResult.isFailure) {
-        console.error('[AppointmentIcsEventHandler] ICS cancellation generation failed:', icsResult.error);
+        console.error(
+          '[AppointmentIcsEventHandler] ICS cancellation generation failed:',
+          icsResult.error
+        );
         return;
       }
 
@@ -192,11 +205,16 @@ export class AppointmentIcsEventHandler {
       });
 
       if (emailResult.isFailure) {
-        console.error('[AppointmentIcsEventHandler] Cancellation email send failed:', emailResult.error);
+        console.error(
+          '[AppointmentIcsEventHandler] Cancellation email send failed:',
+          emailResult.error
+        );
         return;
       }
 
-      console.log(`[AppointmentIcsEventHandler] Cancellation notification sent for appointment ${appointment.id.value}`);
+      console.log(
+        `[AppointmentIcsEventHandler] Cancellation notification sent for appointment ${appointment.id.value}`
+      );
     } catch (error) {
       console.error('[AppointmentIcsEventHandler] Error handling appointment cancelled:', error);
     }

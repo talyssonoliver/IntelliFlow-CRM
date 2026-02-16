@@ -98,10 +98,7 @@
             }
           }
         },
-        "required": [
-          "name",
-          "kpis"
-        ],
+        "required": ["name", "kpis"],
         "additionalProperties": false
       }
     },
@@ -142,11 +139,6 @@
       "additionalProperties": false
     }
   },
-  "required": [
-    "version",
-    "last_updated",
-    "categories",
-    "measurement_schedule"
-  ],
+  "required": ["version", "last_updated", "categories", "measurement_schedule"],
   "additionalProperties": false
 }

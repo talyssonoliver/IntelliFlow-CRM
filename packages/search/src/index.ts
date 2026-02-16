@@ -70,7 +70,14 @@ export const SEARCH_MODES: readonly SearchMode[] = ['fulltext', 'semantic', 'hyb
 // Search Sources
 // ============================================
 
-export type SearchSource = 'leads' | 'contacts' | 'accounts' | 'opportunities' | 'tickets' | 'documents' | 'notes';
+export type SearchSource =
+  | 'leads'
+  | 'contacts'
+  | 'accounts'
+  | 'opportunities'
+  | 'tickets'
+  | 'documents'
+  | 'notes';
 
 export const SEARCH_SOURCES: readonly SearchSource[] = [
   'leads',

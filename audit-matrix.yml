@@ -175,7 +175,7 @@ tools:
     command: 'pnpm exec depcruise --config .dependency-cruiser.cjs packages apps --output-type err'
     thresholds: {}
     expected_outputs: ['log']
-    
+
   # ---------------------------------------------------------------------------
   # Tier 2 warnings
   # ---------------------------------------------------------------------------

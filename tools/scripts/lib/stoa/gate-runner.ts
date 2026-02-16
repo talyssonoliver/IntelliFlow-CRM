@@ -46,10 +46,7 @@ export interface CommandContext {
  * @param context - Values to substitute
  * @returns Command with placeholders replaced
  */
-export function substituteCommandTemplate(
-  command: string,
-  context: CommandContext
-): string {
+export function substituteCommandTemplate(command: string, context: CommandContext): string {
   let result = command;
 
   if (context.sprint !== undefined) {

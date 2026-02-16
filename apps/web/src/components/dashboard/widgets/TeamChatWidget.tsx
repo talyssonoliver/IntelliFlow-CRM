@@ -11,7 +11,13 @@ interface Message {
 }
 
 const messages: Message[] = [
-  { id: '1', user: 'Sarah', avatar: 'S', message: 'Just closed the deal with TechCorp!', time: '5m' },
+  {
+    id: '1',
+    user: 'Sarah',
+    avatar: 'S',
+    message: 'Just closed the deal with TechCorp!',
+    time: '5m',
+  },
   { id: '2', user: 'Mike', avatar: 'M', message: 'Great work team!', time: '12m' },
   { id: '3', user: 'Emily', avatar: 'E', message: 'Meeting notes uploaded', time: '1h' },
 ];

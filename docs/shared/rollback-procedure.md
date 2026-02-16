@@ -2,29 +2,29 @@
 
 ## Overview
 
-Immediate rollback instructions for legacy data migration cutover.
-**Target rollback time:** <15 minutes
+Immediate rollback instructions for legacy data migration cutover. **Target
+rollback time:** <15 minutes
 
 ## Document Information
 
-| Property | Value |
-|----------|-------|
-| Task ID | IFC-070 |
-| Version | 1.0 |
-| Last Updated | 2026-01-08 |
-| Owner | Infrastructure Team |
+| Property     | Value               |
+| ------------ | ------------------- |
+| Task ID      | IFC-070             |
+| Version      | 1.0                 |
+| Last Updated | 2026-01-08          |
+| Owner        | Infrastructure Team |
 
 ## Automatic Rollback Triggers
 
 The following conditions automatically trigger rollback evaluation:
 
-| Trigger | Threshold | Action |
-|---------|-----------|--------|
-| Health check failures | 3 consecutive | Immediate rollback |
-| Error rate | >5% within 5 minutes | Immediate rollback |
-| P99 latency | >2x baseline (>400ms) | Evaluate rollback |
-| Data integrity | >1% failure rate | Immediate rollback |
-| Disk space | <10% remaining | Pause and evaluate |
+| Trigger               | Threshold             | Action             |
+| --------------------- | --------------------- | ------------------ |
+| Health check failures | 3 consecutive         | Immediate rollback |
+| Error rate            | >5% within 5 minutes  | Immediate rollback |
+| P99 latency           | >2x baseline (>400ms) | Evaluate rollback  |
+| Data integrity        | >1% failure rate      | Immediate rollback |
+| Disk space            | <10% remaining        | Pause and evaluate |
 
 ## Prerequisites
 
@@ -37,18 +37,19 @@ Before initiating rollback, verify:
 
 ## Rollback Decision Matrix
 
-| Severity | Criteria | Decision |
-|----------|----------|----------|
-| **Critical** | Data loss detected, >10% error rate | Immediate rollback, no approval needed |
-| **High** | >5% error rate, critical path blocked | Rollback with DBA approval |
-| **Medium** | Performance degraded, non-critical errors | Evaluate, prepare rollback |
-| **Low** | Minor issues, workarounds available | Monitor, defer rollback decision |
+| Severity     | Criteria                                  | Decision                               |
+| ------------ | ----------------------------------------- | -------------------------------------- |
+| **Critical** | Data loss detected, >10% error rate       | Immediate rollback, no approval needed |
+| **High**     | >5% error rate, critical path blocked     | Rollback with DBA approval             |
+| **Medium**   | Performance degraded, non-critical errors | Evaluate, prepare rollback             |
+| **Low**      | Minor issues, workarounds available       | Monitor, defer rollback decision       |
 
 ## Manual Rollback Procedure
 
 ### Step 1: Detection and Assessment (0-5 minutes)
 
 1. **Confirm the issue**
+
    ```bash
    # Check health endpoints
    curl -s https://api.intelliflow.com/health | jq .
@@ -76,6 +77,7 @@ Before initiating rollback, verify:
    - Infrastructure Lead: Required for infrastructure changes
 
 2. **Notify stakeholders**
+
    ```
    @channel [INCIDENT] Migration rollback initiated
    - Issue: [Brief description]
@@ -91,6 +93,7 @@ Before initiating rollback, verify:
 ### Step 3: Execution (<5 minutes)
 
 1. **Stop application servers**
+
    ```bash
    # Scale down to 0 replicas
    kubectl scale deployment intelliflow-api --replicas=0
@@ -100,6 +103,7 @@ Before initiating rollback, verify:
    ```
 
 2. **Restore database from snapshot**
+
    ```bash
    # Connect to database server
    ssh dba@db.intelliflow.internal
@@ -114,6 +118,7 @@ Before initiating rollback, verify:
    ```
 
 3. **Clear caches**
+
    ```bash
    # Flush Redis cache
    redis-cli -h redis.intelliflow.internal FLUSHALL
@@ -123,6 +128,7 @@ Before initiating rollback, verify:
    ```
 
 4. **Restart application servers**
+
    ```bash
    # Scale back up
    kubectl scale deployment intelliflow-api --replicas=3
@@ -136,12 +142,14 @@ Before initiating rollback, verify:
 Run through verification checklist:
 
 - [ ] Health check endpoints return 200
+
   ```bash
   curl -s https://api.intelliflow.com/health | jq .status
   # Expected: "healthy"
   ```
 
 - [ ] User login works with restored data
+
   ```bash
   # Test login endpoint
   curl -X POST https://api.intelliflow.com/auth/login \
@@ -150,6 +158,7 @@ Run through verification checklist:
   ```
 
 - [ ] Sample queries return expected results
+
   ```sql
   -- Verify lead count matches pre-migration
   SELECT COUNT(*) FROM leads;
@@ -159,6 +168,7 @@ Run through verification checklist:
   ```
 
 - [ ] Error rate normalized (<0.1%)
+
   ```bash
   kubectl logs -l app=intelliflow-api --since=5m | grep -c ERROR
   ```
@@ -168,6 +178,7 @@ Run through verification checklist:
 ### Step 5: Communication
 
 1. **Internal notification**
+
    ```
    @channel [RESOLVED] Migration rollback complete
    - Status: Systems restored to pre-migration state
@@ -232,15 +243,15 @@ echo "=== Rollback Complete ==="
 
 ## Rollback Verification Checklist
 
-| Check | Command | Expected Result |
-|-------|---------|-----------------|
-| API Health | `curl /health` | `{"status":"healthy"}` |
-| Database Connection | `psql -c "SELECT 1"` | `1` |
-| User Count | `SELECT COUNT(*) FROM users` | Match pre-migration |
-| Lead Count | `SELECT COUNT(*) FROM leads` | Match pre-migration |
-| Recent Data | `SELECT MAX(created_at) FROM leads` | Pre-migration timestamp |
-| Error Rate | Check monitoring | <0.1% |
-| Response Time | Check monitoring | <200ms p99 |
+| Check               | Command                             | Expected Result         |
+| ------------------- | ----------------------------------- | ----------------------- |
+| API Health          | `curl /health`                      | `{"status":"healthy"}`  |
+| Database Connection | `psql -c "SELECT 1"`                | `1`                     |
+| User Count          | `SELECT COUNT(*) FROM users`        | Match pre-migration     |
+| Lead Count          | `SELECT COUNT(*) FROM leads`        | Match pre-migration     |
+| Recent Data         | `SELECT MAX(created_at) FROM leads` | Pre-migration timestamp |
+| Error Rate          | Check monitoring                    | <0.1%                   |
+| Response Time       | Check monitoring                    | <200ms p99              |
 
 ## Post-Rollback Actions
 
@@ -273,12 +284,13 @@ echo "=== Rollback Complete ==="
 
 ## Contacts
 
-| Role | Name | Contact |
-|------|------|---------|
-| DBA On-Call | - | pager-dba@intelliflow.com |
-| Infrastructure Lead | - | pager-infra@intelliflow.com |
-| Engineering Manager | - | em@intelliflow.com |
+| Role                | Name | Contact                     |
+| ------------------- | ---- | --------------------------- |
+| DBA On-Call         | -    | pager-dba@intelliflow.com   |
+| Infrastructure Lead | -    | pager-infra@intelliflow.com |
+| Engineering Manager | -    | em@intelliflow.com          |
 
 ---
 
-*This document is part of IFC-070 (Data Migration from Legacy) and satisfies the rollback-procedure.md DoD artifact requirement.*
+_This document is part of IFC-070 (Data Migration from Legacy) and satisfies the
+rollback-procedure.md DoD artifact requirement._

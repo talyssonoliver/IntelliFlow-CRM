@@ -58,7 +58,8 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
     const base: RecurrencePattern = { frequency, interval: value.interval };
     if (frequency === 'WEEKLY') base.daysOfWeek = [];
     if (endCondition === 'date' && value.endDate) base.endDate = value.endDate;
-    if (endCondition === 'count' && value.occurrenceCount) base.occurrenceCount = value.occurrenceCount;
+    if (endCondition === 'count' && value.occurrenceCount)
+      base.occurrenceCount = value.occurrenceCount;
     onChange(base);
   };
 
@@ -71,9 +72,7 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
 
   const toggleDay = (day: DayOfWeek) => {
     const current = value.daysOfWeek || [];
-    const next = current.includes(day)
-      ? current.filter((d) => d !== day)
-      : [...current, day];
+    const next = current.includes(day) ? current.filter((d) => d !== day) : [...current, day];
     update({ daysOfWeek: next });
   };
 
@@ -139,9 +138,13 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
           className="w-16 rounded-md border border-gray-300 px-2 py-1 text-sm text-center disabled:opacity-50"
         />
         <span className="text-sm text-gray-700">
-          {value.frequency === 'DAILY' ? 'day(s)' :
-           value.frequency === 'WEEKLY' ? 'week(s)' :
-           value.frequency === 'MONTHLY' ? 'month(s)' : 'year(s)'}
+          {value.frequency === 'DAILY'
+            ? 'day(s)'
+            : value.frequency === 'WEEKLY'
+              ? 'week(s)'
+              : value.frequency === 'MONTHLY'
+                ? 'month(s)'
+                : 'year(s)'}
         </span>
       </div>
 
@@ -175,7 +178,9 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
       {/* Monthly: Day of month */}
       {value.frequency === 'MONTHLY' && (
         <div className="flex items-center gap-2">
-          <label htmlFor="day-of-month" className="text-sm text-gray-700">On day</label>
+          <label htmlFor="day-of-month" className="text-sm text-gray-700">
+            On day
+          </label>
           <select
             id="day-of-month"
             value={value.dayOfMonth || 1}
@@ -184,7 +189,9 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
             className="rounded-md border border-gray-300 px-2 py-1 text-sm disabled:opacity-50"
           >
             {Array.from({ length: 31 }, (_, i) => (
-              <option key={i + 1} value={i + 1}>{i + 1}</option>
+              <option key={i + 1} value={i + 1}>
+                {i + 1}
+              </option>
             ))}
           </select>
         </div>
@@ -193,7 +200,9 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
       {/* Yearly: Month + Day */}
       {value.frequency === 'YEARLY' && (
         <div className="flex items-center gap-2 flex-wrap">
-          <label htmlFor="month-of-year" className="text-sm text-gray-700">Month</label>
+          <label htmlFor="month-of-year" className="text-sm text-gray-700">
+            Month
+          </label>
           <select
             id="month-of-year"
             value={value.monthOfYear || 1}
@@ -201,11 +210,28 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
             disabled={disabled}
             className="rounded-md border border-gray-300 px-2 py-1 text-sm disabled:opacity-50"
           >
-            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => (
-              <option key={i + 1} value={i + 1}>{m}</option>
+            {[
+              'Jan',
+              'Feb',
+              'Mar',
+              'Apr',
+              'May',
+              'Jun',
+              'Jul',
+              'Aug',
+              'Sep',
+              'Oct',
+              'Nov',
+              'Dec',
+            ].map((m, i) => (
+              <option key={i + 1} value={i + 1}>
+                {m}
+              </option>
             ))}
           </select>
-          <label htmlFor="yearly-day" className="text-sm text-gray-700">Day</label>
+          <label htmlFor="yearly-day" className="text-sm text-gray-700">
+            Day
+          </label>
           <select
             id="yearly-day"
             value={value.dayOfMonth || 1}
@@ -214,7 +240,9 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
             className="rounded-md border border-gray-300 px-2 py-1 text-sm disabled:opacity-50"
           >
             {Array.from({ length: 31 }, (_, i) => (
-              <option key={i + 1} value={i + 1}>{i + 1}</option>
+              <option key={i + 1} value={i + 1}>
+                {i + 1}
+              </option>
             ))}
           </select>
         </div>
@@ -249,7 +277,9 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
               <input
                 type="date"
                 value={value.endDate ? new Date(value.endDate).toISOString().split('T')[0] : ''}
-                onChange={(e) => update({ endDate: e.target.value ? new Date(e.target.value) : undefined })}
+                onChange={(e) =>
+                  update({ endDate: e.target.value ? new Date(e.target.value) : undefined })
+                }
                 className="rounded-md border border-gray-300 px-2 py-1 text-sm"
               />
             )}
@@ -287,7 +317,10 @@ export function RecurrenceEditor({ value, onChange, disabled }: RecurrenceEditor
 
       {/* Preview */}
       {preview && (
-        <p className="text-xs text-gray-500 italic border-t border-gray-200 pt-2" data-testid="recurrence-preview">
+        <p
+          className="text-xs text-gray-500 italic border-t border-gray-200 pt-2"
+          data-testid="recurrence-preview"
+        >
           {preview}
         </p>
       )}

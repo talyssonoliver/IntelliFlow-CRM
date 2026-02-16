@@ -189,15 +189,12 @@ function updateAllMetricsFiles(
   }
 
   // Calculate and sync PMBOK schedule data
-  const scheduleResult = safeUpdate(
-    () => {
-      const result = syncScheduleData(tasks, metricsDir);
-      if (!result.success) {
-        throw new Error(result.errors.join('; '));
-      }
-    },
-    'schedule-data'
-  );
+  const scheduleResult = safeUpdate(() => {
+    const result = syncScheduleData(tasks, metricsDir);
+    if (!result.success) {
+      throw new Error(result.errors.join('; '));
+    }
+  }, 'schedule-data');
   if (scheduleResult.success) {
     filesUpdated.push('schedule-data (PMBOK)');
   } else {
@@ -259,4 +256,3 @@ export function formatSyncResult(result: SyncResult): string {
 
   return lines.join('\n');
 }
-

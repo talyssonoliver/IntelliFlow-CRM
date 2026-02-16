@@ -65,13 +65,14 @@ describe('Gmail Email Adapter', () => {
     it('should exchange code for tokens', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          access_token: 'new_access_token',
-          refresh_token: 'new_refresh_token',
-          expires_in: 3600,
-          token_type: 'Bearer',
-          scope: 'https://www.googleapis.com/auth/gmail.readonly',
-        }),
+        json: () =>
+          Promise.resolve({
+            access_token: 'new_access_token',
+            refresh_token: 'new_refresh_token',
+            expires_in: 3600,
+            token_type: 'Bearer',
+            scope: 'https://www.googleapis.com/auth/gmail.readonly',
+          }),
       });
 
       const response = await fetch('https://oauth2.googleapis.com/token', {
@@ -91,11 +92,12 @@ describe('Gmail Email Adapter', () => {
     it('should refresh access token', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          access_token: 'refreshed_access_token',
-          expires_in: 3600,
-          token_type: 'Bearer',
-        }),
+        json: () =>
+          Promise.resolve({
+            access_token: 'refreshed_access_token',
+            expires_in: 3600,
+            token_type: 'Bearer',
+          }),
       });
 
       const response = await fetch('https://oauth2.googleapis.com/token', {
@@ -116,17 +118,18 @@ describe('Gmail Email Adapter', () => {
     it('should send an email', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          id: 'msg_123',
-          threadId: 'thread_123',
-          labelIds: ['SENT'],
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'msg_123',
+            threadId: 'thread_123',
+            labelIds: ['SENT'],
+          }),
       });
 
       const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -143,25 +146,29 @@ describe('Gmail Email Adapter', () => {
     it('should get a message by ID', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          id: 'msg_123',
-          threadId: 'thread_123',
-          snippet: 'This is a test email...',
-          payload: {
-            headers: [
-              { name: 'From', value: 'sender@example.com' },
-              { name: 'To', value: 'recipient@example.com' },
-              { name: 'Subject', value: 'Test Email' },
-            ],
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'msg_123',
+            threadId: 'thread_123',
+            snippet: 'This is a test email...',
+            payload: {
+              headers: [
+                { name: 'From', value: 'sender@example.com' },
+                { name: 'To', value: 'recipient@example.com' },
+                { name: 'Subject', value: 'Test Email' },
+              ],
+            },
+          }),
       });
 
-      const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/msg_123', {
-        headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://gmail.googleapis.com/gmail/v1/users/me/messages/msg_123',
+        {
+          headers: {
+            Authorization: `Bearer ${mockTokens.accessToken}`,
+          },
+        }
+      );
 
       const result = await response.json();
 
@@ -172,21 +179,25 @@ describe('Gmail Email Adapter', () => {
     it('should list messages with query', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          messages: [
-            { id: 'msg_1', threadId: 'thread_1' },
-            { id: 'msg_2', threadId: 'thread_2' },
-          ],
-          nextPageToken: 'next_token',
-          resultSizeEstimate: 100,
-        }),
+        json: () =>
+          Promise.resolve({
+            messages: [
+              { id: 'msg_1', threadId: 'thread_1' },
+              { id: 'msg_2', threadId: 'thread_2' },
+            ],
+            nextPageToken: 'next_token',
+            resultSizeEstimate: 100,
+          }),
       });
 
-      const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages?q=is:unread&maxResults=10', {
-        headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://gmail.googleapis.com/gmail/v1/users/me/messages?q=is:unread&maxResults=10',
+        {
+          headers: {
+            Authorization: `Bearer ${mockTokens.accessToken}`,
+          },
+        }
+      );
 
       const result = await response.json();
 
@@ -200,12 +211,15 @@ describe('Gmail Email Adapter', () => {
         status: 204,
       });
 
-      const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/msg_123', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://gmail.googleapis.com/gmail/v1/users/me/messages/msg_123',
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${mockTokens.accessToken}`,
+          },
+        }
+      );
 
       expect(response.ok).toBe(true);
       expect(response.status).toBe(204);
@@ -214,18 +228,22 @@ describe('Gmail Email Adapter', () => {
     it('should trash a message', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          id: 'msg_123',
-          labelIds: ['TRASH'],
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'msg_123',
+            labelIds: ['TRASH'],
+          }),
       });
 
-      const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/msg_123/trash', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://gmail.googleapis.com/gmail/v1/users/me/messages/msg_123/trash',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${mockTokens.accessToken}`,
+          },
+        }
+      );
 
       const result = await response.json();
 
@@ -237,20 +255,24 @@ describe('Gmail Email Adapter', () => {
     it('should get a thread', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          id: 'thread_123',
-          messages: [
-            { id: 'msg_1', snippet: 'First message' },
-            { id: 'msg_2', snippet: 'Reply' },
-          ],
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'thread_123',
+            messages: [
+              { id: 'msg_1', snippet: 'First message' },
+              { id: 'msg_2', snippet: 'Reply' },
+            ],
+          }),
       });
 
-      const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/threads/thread_123', {
-        headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://gmail.googleapis.com/gmail/v1/users/me/threads/thread_123',
+        {
+          headers: {
+            Authorization: `Bearer ${mockTokens.accessToken}`,
+          },
+        }
+      );
 
       const result = await response.json();
 
@@ -263,17 +285,18 @@ describe('Gmail Email Adapter', () => {
     it('should list labels', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          labels: [
-            { id: 'INBOX', name: 'INBOX', type: 'system' },
-            { id: 'Label_1', name: 'Custom Label', type: 'user' },
-          ],
-        }),
+        json: () =>
+          Promise.resolve({
+            labels: [
+              { id: 'INBOX', name: 'INBOX', type: 'system' },
+              { id: 'Label_1', name: 'Custom Label', type: 'user' },
+            ],
+          }),
       });
 
       const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/labels', {
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
         },
       });
 
@@ -285,17 +308,18 @@ describe('Gmail Email Adapter', () => {
     it('should create a label', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          id: 'Label_new',
-          name: 'New Label',
-          type: 'user',
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'Label_new',
+            name: 'New Label',
+            type: 'user',
+          }),
       });
 
       const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/labels', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ name: 'New Label' }),
@@ -311,24 +335,27 @@ describe('Gmail Email Adapter', () => {
     it('should create a draft', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          id: 'draft_123',
-          message: {
-            id: 'msg_123',
-            threadId: 'thread_123',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'draft_123',
+            message: {
+              id: 'msg_123',
+              threadId: 'thread_123',
+            },
+          }),
       });
 
       const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/drafts', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           message: {
-            raw: Buffer.from('To: test@example.com\nSubject: Draft\n\nDraft content').toString('base64url'),
+            raw: Buffer.from('To: test@example.com\nSubject: Draft\n\nDraft content').toString(
+              'base64url'
+            ),
           },
         }),
       });
@@ -341,17 +368,18 @@ describe('Gmail Email Adapter', () => {
     it('should send a draft', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          id: 'msg_sent_123',
-          threadId: 'thread_123',
-          labelIds: ['SENT'],
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'msg_sent_123',
+            threadId: 'thread_123',
+            labelIds: ['SENT'],
+          }),
       });
 
       const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/drafts/send', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ id: 'draft_123' }),
@@ -368,18 +396,19 @@ describe('Gmail Email Adapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
-        json: () => Promise.resolve({
-          error: {
-            code: 401,
-            message: 'Invalid Credentials',
-            status: 'UNAUTHENTICATED',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            error: {
+              code: 401,
+              message: 'Invalid Credentials',
+              status: 'UNAUTHENTICATED',
+            },
+          }),
       });
 
       const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages', {
         headers: {
-          'Authorization': 'Bearer invalid_token',
+          Authorization: 'Bearer invalid_token',
         },
       });
 
@@ -391,18 +420,19 @@ describe('Gmail Email Adapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 429,
-        json: () => Promise.resolve({
-          error: {
-            code: 429,
-            message: 'Rate Limit Exceeded',
-            status: 'RESOURCE_EXHAUSTED',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            error: {
+              code: 429,
+              message: 'Rate Limit Exceeded',
+              status: 'RESOURCE_EXHAUSTED',
+            },
+          }),
       });
 
       const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages', {
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
         },
       });
 
@@ -415,16 +445,17 @@ describe('Gmail Email Adapter', () => {
     it('should check connection health', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          emailAddress: 'test@gmail.com',
-          messagesTotal: 1000,
-          threadsTotal: 500,
-        }),
+        json: () =>
+          Promise.resolve({
+            emailAddress: 'test@gmail.com',
+            messagesTotal: 1000,
+            threadsTotal: 500,
+          }),
       });
 
       const response = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/profile', {
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
         },
       });
 
@@ -456,7 +487,9 @@ describe('Outlook Email Adapter', () => {
       const tenantId = 'common';
       const redirectUri = 'http://localhost:3000/callback';
 
-      const authUrl = new URL(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize`);
+      const authUrl = new URL(
+        `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize`
+      );
       authUrl.searchParams.set('client_id', clientId);
       authUrl.searchParams.set('redirect_uri', redirectUri);
       authUrl.searchParams.set('response_type', 'code');
@@ -469,13 +502,14 @@ describe('Outlook Email Adapter', () => {
     it('should exchange code for tokens', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          access_token: 'new_access_token',
-          refresh_token: 'new_refresh_token',
-          expires_in: 3600,
-          token_type: 'Bearer',
-          scope: 'Mail.ReadWrite Mail.Send',
-        }),
+        json: () =>
+          Promise.resolve({
+            access_token: 'new_access_token',
+            refresh_token: 'new_refresh_token',
+            expires_in: 3600,
+            token_type: 'Bearer',
+            scope: 'Mail.ReadWrite Mail.Send',
+          }),
       });
 
       const response = await fetch('https://login.microsoftonline.com/common/oauth2/v2.0/token', {
@@ -502,7 +536,7 @@ describe('Outlook Email Adapter', () => {
       const response = await fetch('https://graph.microsoft.com/v1.0/me/sendMail', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -512,9 +546,7 @@ describe('Outlook Email Adapter', () => {
               contentType: 'Text',
               content: 'Hello from Outlook',
             },
-            toRecipients: [
-              { emailAddress: { address: 'test@example.com' } },
-            ],
+            toRecipients: [{ emailAddress: { address: 'test@example.com' } }],
           },
         }),
       });
@@ -526,21 +558,22 @@ describe('Outlook Email Adapter', () => {
     it('should get a message by ID', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          id: 'msg_123',
-          conversationId: 'conv_123',
-          subject: 'Test Email',
-          bodyPreview: 'This is a test...',
-          from: {
-            emailAddress: { address: 'sender@example.com', name: 'Sender' },
-          },
-          receivedDateTime: '2025-01-15T10:00:00Z',
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'msg_123',
+            conversationId: 'conv_123',
+            subject: 'Test Email',
+            bodyPreview: 'This is a test...',
+            from: {
+              emailAddress: { address: 'sender@example.com', name: 'Sender' },
+            },
+            receivedDateTime: '2025-01-15T10:00:00Z',
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/me/messages/msg_123', {
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
         },
       });
 
@@ -553,20 +586,24 @@ describe('Outlook Email Adapter', () => {
     it('should list messages with filters', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          value: [
-            { id: 'msg_1', subject: 'Email 1' },
-            { id: 'msg_2', subject: 'Email 2' },
-          ],
-          '@odata.nextLink': 'https://graph.microsoft.com/v1.0/me/messages?$skip=2',
-        }),
+        json: () =>
+          Promise.resolve({
+            value: [
+              { id: 'msg_1', subject: 'Email 1' },
+              { id: 'msg_2', subject: 'Email 2' },
+            ],
+            '@odata.nextLink': 'https://graph.microsoft.com/v1.0/me/messages?$skip=2',
+          }),
       });
 
-      const response = await fetch('https://graph.microsoft.com/v1.0/me/messages?$top=2&$filter=isRead eq false', {
-        headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://graph.microsoft.com/v1.0/me/messages?$top=2&$filter=isRead eq false',
+        {
+          headers: {
+            Authorization: `Bearer ${mockTokens.accessToken}`,
+          },
+        }
+      );
 
       const result = await response.json();
 
@@ -583,7 +620,7 @@ describe('Outlook Email Adapter', () => {
       const response = await fetch('https://graph.microsoft.com/v1.0/me/messages/msg_123', {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
         },
       });
 
@@ -594,16 +631,17 @@ describe('Outlook Email Adapter', () => {
     it('should move a message to folder', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          id: 'msg_123',
-          parentFolderId: 'folder_archive',
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'msg_123',
+            parentFolderId: 'folder_archive',
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/me/messages/msg_123/move', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ destinationId: 'folder_archive' }),
@@ -617,16 +655,17 @@ describe('Outlook Email Adapter', () => {
     it('should mark a message as read', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          id: 'msg_123',
-          isRead: true,
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'msg_123',
+            isRead: true,
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/me/messages/msg_123', {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ isRead: true }),
@@ -642,17 +681,18 @@ describe('Outlook Email Adapter', () => {
     it('should list folders', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          value: [
-            { id: 'inbox', displayName: 'Inbox', unreadItemCount: 5 },
-            { id: 'sent', displayName: 'Sent Items', unreadItemCount: 0 },
-          ],
-        }),
+        json: () =>
+          Promise.resolve({
+            value: [
+              { id: 'inbox', displayName: 'Inbox', unreadItemCount: 5 },
+              { id: 'sent', displayName: 'Sent Items', unreadItemCount: 0 },
+            ],
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/me/mailFolders', {
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
         },
       });
 
@@ -664,16 +704,17 @@ describe('Outlook Email Adapter', () => {
     it('should create a folder', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          id: 'folder_new',
-          displayName: 'New Folder',
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'folder_new',
+            displayName: 'New Folder',
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/me/mailFolders', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ displayName: 'New Folder' }),
@@ -689,19 +730,23 @@ describe('Outlook Email Adapter', () => {
     it('should list attachments', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          value: [
-            { id: 'att_1', name: 'document.pdf', size: 1024 },
-            { id: 'att_2', name: 'image.png', size: 2048 },
-          ],
-        }),
+        json: () =>
+          Promise.resolve({
+            value: [
+              { id: 'att_1', name: 'document.pdf', size: 1024 },
+              { id: 'att_2', name: 'image.png', size: 2048 },
+            ],
+          }),
       });
 
-      const response = await fetch('https://graph.microsoft.com/v1.0/me/messages/msg_123/attachments', {
-        headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://graph.microsoft.com/v1.0/me/messages/msg_123/attachments',
+        {
+          headers: {
+            Authorization: `Bearer ${mockTokens.accessToken}`,
+          },
+        }
+      );
 
       const result = await response.json();
 
@@ -711,18 +756,22 @@ describe('Outlook Email Adapter', () => {
     it('should get attachment content', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          id: 'att_1',
-          name: 'document.pdf',
-          contentBytes: 'base64encodedcontent',
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'att_1',
+            name: 'document.pdf',
+            contentBytes: 'base64encodedcontent',
+          }),
       });
 
-      const response = await fetch('https://graph.microsoft.com/v1.0/me/messages/msg_123/attachments/att_1', {
-        headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://graph.microsoft.com/v1.0/me/messages/msg_123/attachments/att_1',
+        {
+          headers: {
+            Authorization: `Bearer ${mockTokens.accessToken}`,
+          },
+        }
+      );
 
       const result = await response.json();
 
@@ -735,17 +784,18 @@ describe('Outlook Email Adapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 201,
-        json: () => Promise.resolve({
-          id: 'draft_123',
-          isDraft: true,
-          subject: 'Draft Email',
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'draft_123',
+            isDraft: true,
+            subject: 'Draft Email',
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/me/messages', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -768,7 +818,7 @@ describe('Outlook Email Adapter', () => {
       const response = await fetch('https://graph.microsoft.com/v1.0/me/messages/draft_123/send', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
         },
       });
 
@@ -786,7 +836,7 @@ describe('Outlook Email Adapter', () => {
       const response = await fetch('https://graph.microsoft.com/v1.0/me/messages/msg_123/reply', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -806,13 +856,11 @@ describe('Outlook Email Adapter', () => {
       const response = await fetch('https://graph.microsoft.com/v1.0/me/messages/msg_123/forward', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          toRecipients: [
-            { emailAddress: { address: 'forward@example.com' } },
-          ],
+          toRecipients: [{ emailAddress: { address: 'forward@example.com' } }],
           comment: 'FYI',
         }),
       });
@@ -826,17 +874,18 @@ describe('Outlook Email Adapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
-        json: () => Promise.resolve({
-          error: {
-            code: 'InvalidAuthenticationToken',
-            message: 'Access token is empty.',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            error: {
+              code: 'InvalidAuthenticationToken',
+              message: 'Access token is empty.',
+            },
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/me/messages', {
         headers: {
-          'Authorization': 'Bearer invalid',
+          Authorization: 'Bearer invalid',
         },
       });
 
@@ -848,17 +897,18 @@ describe('Outlook Email Adapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
-        json: () => Promise.resolve({
-          error: {
-            code: 'ErrorItemNotFound',
-            message: 'The specified object was not found in the store.',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            error: {
+              code: 'ErrorItemNotFound',
+              message: 'The specified object was not found in the store.',
+            },
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/me/messages/invalid_id', {
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
         },
       });
 
@@ -871,19 +921,20 @@ describe('Outlook Email Adapter', () => {
         ok: false,
         status: 429,
         headers: {
-          get: (name: string) => name === 'Retry-After' ? '60' : null,
+          get: (name: string) => (name === 'Retry-After' ? '60' : null),
         },
-        json: () => Promise.resolve({
-          error: {
-            code: 'TooManyRequests',
-            message: 'Too many requests.',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            error: {
+              code: 'TooManyRequests',
+              message: 'Too many requests.',
+            },
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/me/messages', {
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
         },
       });
 
@@ -896,15 +947,16 @@ describe('Outlook Email Adapter', () => {
     it('should check connection health', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          displayName: 'Test User',
-          mail: 'test@outlook.com',
-        }),
+        json: () =>
+          Promise.resolve({
+            displayName: 'Test User',
+            mail: 'test@outlook.com',
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/me', {
         headers: {
-          'Authorization': `Bearer ${mockTokens.accessToken}`,
+          Authorization: `Bearer ${mockTokens.accessToken}`,
         },
       });
 

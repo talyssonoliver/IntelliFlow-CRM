@@ -120,7 +120,13 @@ describe('useReviewQueue', () => {
 
   it('returns stats from stats query', () => {
     const result = useReviewQueue();
-    expect(result.stats).toEqual({ pending: 5, approved: 10, rejected: 2, escalated: 1, slaBreached: 0 });
+    expect(result.stats).toEqual({
+      pending: 5,
+      approved: 10,
+      rejected: 2,
+      escalated: 1,
+      slaBreached: 0,
+    });
   });
 
   it('returns isLoading from list query', () => {
@@ -154,7 +160,11 @@ describe('useReviewQueue', () => {
 
   it('claim onSuccess stores lock token and calls invalidateAll', () => {
     useReviewQueue();
-    claimOpts.onSuccess({ lockToken: 'tok-1', review: { id: 'r1' }, expiresAt: new Date().toISOString() });
+    claimOpts.onSuccess({
+      lockToken: 'tok-1',
+      review: { id: 'r1' },
+      expiresAt: new Date().toISOString(),
+    });
     expect(mockInvalidateList).toHaveBeenCalled();
     expect(mockInvalidateStats).toHaveBeenCalled();
     expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Review claimed' }));
@@ -163,10 +173,12 @@ describe('useReviewQueue', () => {
   it('claim onError shows destructive toast', () => {
     useReviewQueue();
     claimOpts.onError({ message: 'Already claimed' });
-    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'Failed to claim',
-      variant: 'destructive',
-    }));
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Failed to claim',
+        variant: 'destructive',
+      })
+    );
   });
 
   it('approve onSuccess clears lock token and invalidates', () => {
@@ -194,28 +206,34 @@ describe('useReviewQueue', () => {
   it('approve onError shows destructive toast', () => {
     useReviewQueue();
     approveOpts.onError({ message: 'Token expired' });
-    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'Failed to approve',
-      variant: 'destructive',
-    }));
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Failed to approve',
+        variant: 'destructive',
+      })
+    );
   });
 
   it('reject onError shows destructive toast', () => {
     useReviewQueue();
     rejectOpts.onError({ message: 'Not found' });
-    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'Failed to reject',
-      variant: 'destructive',
-    }));
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Failed to reject',
+        variant: 'destructive',
+      })
+    );
   });
 
   it('escalate onError shows destructive toast', () => {
     useReviewQueue();
     escalateOpts.onError({ message: 'Unauthorized' });
-    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'Failed to escalate',
-      variant: 'destructive',
-    }));
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Failed to escalate',
+        variant: 'destructive',
+      })
+    );
   });
 
   it('merges initial filters with defaults', () => {

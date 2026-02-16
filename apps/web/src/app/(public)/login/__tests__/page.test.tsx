@@ -190,7 +190,9 @@ describe('LoginPage', () => {
       await user.type(emailInput, 't');
 
       // Error should be cleared
-      expect(screen.queryByText(/please enter a valid email|email is required/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/please enter a valid email|email is required/i)
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -277,9 +279,7 @@ describe('LoginPage', () => {
 
       await waitFor(
         () => {
-          expect(mockPush).toHaveBeenCalledWith(
-            expect.stringContaining('/auth/mfa/verify')
-          );
+          expect(mockPush).toHaveBeenCalledWith(expect.stringContaining('/auth/mfa/verify'));
         },
         { timeout: 3000 }
       );

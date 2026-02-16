@@ -42,7 +42,11 @@ export default function DocumentDetailPage() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
 
   // Fetch document data
-  const { data: documentData, isLoading, error } = trpc.documents.getById.useQuery(
+  const {
+    data: documentData,
+    isLoading,
+    error,
+  } = trpc.documents.getById.useQuery(
     { id: documentId },
     { enabled: isAuthenticated && !authLoading && !!documentId }
   );
@@ -93,10 +97,14 @@ export default function DocumentDetailPage() {
   for (let index = 0; index < auditEntries.length; index++) {
     const entry = auditEntries[index];
     // Extract version from metadata if available, otherwise use index as fallback
-    const metadata = entry.metadata as { version?: { major?: number; minor?: number; patch?: number }; sizeBytes?: number } | null;
+    const metadata = entry.metadata as {
+      version?: { major?: number; minor?: number; patch?: number };
+      sizeBytes?: number;
+    } | null;
     const version = metadata?.version;
     // created_at comes as string from tRPC serialization
-    const createdAt = typeof entry.created_at === 'string' ? entry.created_at : String(entry.created_at);
+    const createdAt =
+      typeof entry.created_at === 'string' ? entry.created_at : String(entry.created_at);
     // changes field can be JSON object or null from Prisma
     const changesStr = entry.changes != null ? JSON.stringify(entry.changes) : null;
 
@@ -104,8 +112,11 @@ export default function DocumentDetailPage() {
       id: entry.id,
       versionMajor: version?.major ?? 1,
       versionMinor: version?.minor ?? 0,
-      versionPatch: version?.patch ?? (auditEntries.length - index - 1),
-      action: entry.event_type.replace(/_/g, ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase()),
+      versionPatch: version?.patch ?? auditEntries.length - index - 1,
+      action: entry.event_type
+        .replace(/_/g, ' ')
+        .toLowerCase()
+        .replace(/^\w/, (c) => c.toUpperCase()),
       timestamp: createdAt,
       performedBy: entry.user_id,
       changes: changesStr,
@@ -114,7 +125,8 @@ export default function DocumentDetailPage() {
   }
 
   // Check for auth errors
-  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+  const isAuthError =
+    error?.data?.code === 'UNAUTHORIZED' ||
     error?.message?.toLowerCase().includes('authentication') ||
     error?.message?.toLowerCase().includes('unauthorized');
 
@@ -129,7 +141,9 @@ export default function DocumentDetailPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <span className="material-symbols-outlined text-[64px] text-slate-400 animate-spin">progress_activity</span>
+          <span className="material-symbols-outlined text-[64px] text-slate-400 animate-spin">
+            progress_activity
+          </span>
           <p className="mt-4 text-slate-600 dark:text-slate-400">Loading document...</p>
         </div>
       </div>
@@ -141,7 +155,9 @@ export default function DocumentDetailPage() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <span className="material-symbols-outlined text-[64px] text-slate-400 animate-spin">progress_activity</span>
+          <span className="material-symbols-outlined text-[64px] text-slate-400 animate-spin">
+            progress_activity
+          </span>
           <p className="mt-4 text-slate-600 dark:text-slate-400">Redirecting to login...</p>
         </div>
       </div>
@@ -154,8 +170,13 @@ export default function DocumentDetailPage() {
         <div className="text-center">
           <span className="material-symbols-outlined text-[64px] text-red-500">error</span>
           <p className="mt-4 text-red-600 dark:text-red-400">Failed to load document</p>
-          <p className="text-sm text-slate-500 dark:text-slate-400">{error?.message || 'Document not found'}</p>
-          <Link href="/documents" className="mt-4 inline-block px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600">
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            {error?.message || 'Document not found'}
+          </p>
+          <Link
+            href="/documents"
+            className="mt-4 inline-block px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600"
+          >
             Back to Documents
           </Link>
         </div>
@@ -177,7 +198,9 @@ export default function DocumentDetailPage() {
     createdBy: documentData.createdBy,
     lastModifiedAt: documentData.updatedAt,
     lastModifiedBy: documentData.updatedBy,
-    isLegalHold: documentData.retentionUntil ? new Date(documentData.retentionUntil) > new Date() : false,
+    isLegalHold: documentData.retentionUntil
+      ? new Date(documentData.retentionUntil) > new Date()
+      : false,
     signatureCount: documentData.eSignature ? 1 : 0,
     relatedCase: documentData.metadata.relatedCaseId || null,
     relatedContact: documentData.metadata.relatedContactId || null,
@@ -196,28 +219,38 @@ export default function DocumentDetailPage() {
     grantedAt: string | Date;
     expiresAt?: string | Date | null;
   }
-  const accessControlList: ACLEntry[] = (documentData.acl || []).map((acl: DomainACLEntry, index: number) => ({
-    id: `acl-${index}`, // Generate ID since domain ACL doesn't have a separate ID
-    principalType: acl.principalType,
-    principalId: acl.principalId,
-    principalName: acl.principalId, // In real app, this would be looked up
-    level: acl.accessLevel as AccessLevel,
-    grantedAt: typeof acl.grantedAt === 'string' ? acl.grantedAt : String(acl.grantedAt),
-    grantedBy: acl.grantedBy,
-    expiresAt: acl.expiresAt ? (typeof acl.expiresAt === 'string' ? acl.expiresAt : String(acl.expiresAt)) : null,
-  }));
+  const accessControlList: ACLEntry[] = (documentData.acl || []).map(
+    (acl: DomainACLEntry, index: number) => ({
+      id: `acl-${index}`, // Generate ID since domain ACL doesn't have a separate ID
+      principalType: acl.principalType,
+      principalId: acl.principalId,
+      principalName: acl.principalId, // In real app, this would be looked up
+      level: acl.accessLevel as AccessLevel,
+      grantedAt: typeof acl.grantedAt === 'string' ? acl.grantedAt : String(acl.grantedAt),
+      grantedBy: acl.grantedBy,
+      expiresAt: acl.expiresAt
+        ? typeof acl.expiresAt === 'string'
+          ? acl.expiresAt
+          : String(acl.expiresAt)
+        : null,
+    })
+  );
 
   // Map e-signature data from API response
   // Note: Domain model's eSignature object has: signedBy, signedAt, signatureHash, ipAddress, userAgent
   // UI component needs an 'id' for React key, using document ID as fallback
-  const signatures = documentData.eSignature ? [{
-    id: documentData.id, // Use document ID since eSignature schema doesn't include separate ID
-    signerName: documentData.eSignature.signedBy,
-    signerEmail: 'user@company.com', // TODO: Fetch user email from signedBy userId
-    signedAt: documentData.eSignature.signedAt || '',
-    ipAddress: documentData.eSignature.ipAddress || '',
-    userAgent: documentData.eSignature.userAgent || '',
-  }] : [];
+  const signatures = documentData.eSignature
+    ? [
+        {
+          id: documentData.id, // Use document ID since eSignature schema doesn't include separate ID
+          signerName: documentData.eSignature.signedBy,
+          signerEmail: 'user@company.com', // TODO: Fetch user email from signedBy userId
+          signedAt: documentData.eSignature.signedAt || '',
+          ipAddress: documentData.eSignature.ipAddress || '',
+          userAgent: documentData.eSignature.userAgent || '',
+        },
+      ]
+    : [];
 
   // Comments are not yet implemented in backend
   interface Comment {
@@ -265,12 +298,32 @@ export default function DocumentDetailPage() {
 
   const getStatusConfig = (status: DocumentStatus) => {
     const configs = {
-      DRAFT: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-700 dark:text-slate-300', icon: 'edit_note' },
-      UNDER_REVIEW: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-400', icon: 'rate_review' },
-      APPROVED: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', icon: 'check_circle' },
+      DRAFT: {
+        bg: 'bg-slate-100 dark:bg-slate-800',
+        text: 'text-slate-700 dark:text-slate-300',
+        icon: 'edit_note',
+      },
+      UNDER_REVIEW: {
+        bg: 'bg-amber-100 dark:bg-amber-900/30',
+        text: 'text-amber-700 dark:text-amber-400',
+        icon: 'rate_review',
+      },
+      APPROVED: {
+        bg: 'bg-green-100 dark:bg-green-900/30',
+        text: 'text-green-700 dark:text-green-400',
+        icon: 'check_circle',
+      },
       SIGNED: { bg: 'bg-[#137fec]/10', text: 'text-[#137fec]', icon: 'verified' },
-      ARCHIVED: { bg: 'bg-gray-100 dark:bg-gray-900/30', text: 'text-gray-600 dark:text-gray-400', icon: 'archive' },
-      SUPERSEDED: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400', icon: 'history' },
+      ARCHIVED: {
+        bg: 'bg-gray-100 dark:bg-gray-900/30',
+        text: 'text-gray-600 dark:text-gray-400',
+        icon: 'archive',
+      },
+      SUPERSEDED: {
+        bg: 'bg-purple-100 dark:bg-purple-900/30',
+        text: 'text-purple-700 dark:text-purple-400',
+        icon: 'history',
+      },
     };
     return configs[status] || configs.DRAFT;
   };
@@ -279,7 +332,10 @@ export default function DocumentDetailPage() {
     const configs = {
       NONE: { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-600 dark:text-slate-400' },
       VIEW: { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400' },
-      COMMENT: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400' },
+      COMMENT: {
+        bg: 'bg-purple-100 dark:bg-purple-900/30',
+        text: 'text-purple-700 dark:text-purple-400',
+      },
       EDIT: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-400' },
       ADMIN: { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400' },
     };
@@ -294,7 +350,9 @@ export default function DocumentDetailPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-            <Link href="/documents" className="hover:text-[#137fec]">Documents</Link>
+            <Link href="/documents" className="hover:text-[#137fec]">
+              Documents
+            </Link>
             <span className="material-symbols-outlined text-[16px]">chevron_right</span>
             <span className="font-medium text-slate-900 dark:text-white">{document.title}</span>
           </div>
@@ -323,12 +381,16 @@ export default function DocumentDetailPage() {
           {/* Document Info Card */}
           <Card className="overflow-hidden">
             <div className="h-24 bg-gradient-to-r from-blue-100 to-blue-50 dark:from-slate-800 dark:to-slate-800 flex items-center justify-center">
-              <span className="material-symbols-outlined text-[64px] text-[#137fec]">description</span>
+              <span className="material-symbols-outlined text-[64px] text-[#137fec]">
+                description
+              </span>
             </div>
             <div className="px-5 py-6">
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}>
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusConfig.bg} ${statusConfig.text}`}
+                  >
                     <span className="material-symbols-outlined text-sm">{statusConfig.icon}</span>
                     {document.status.replace('_', ' ')}
                   </span>
@@ -346,43 +408,69 @@ export default function DocumentDetailPage() {
 
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[20px] text-slate-400 mt-0.5">folder</span>
+                  <span className="material-symbols-outlined text-[20px] text-slate-400 mt-0.5">
+                    folder
+                  </span>
                   <div className="flex flex-col">
-                    <span className="text-xs text-slate-400 uppercase font-semibold">Classification</span>
-                    <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">{document.classification}</span>
+                    <span className="text-xs text-slate-400 uppercase font-semibold">
+                      Classification
+                    </span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300 font-medium">
+                      {document.classification}
+                    </span>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[20px] text-slate-400 mt-0.5">bookmark</span>
+                  <span className="material-symbols-outlined text-[20px] text-slate-400 mt-0.5">
+                    bookmark
+                  </span>
                   <div className="flex flex-col">
                     <span className="text-xs text-slate-400 uppercase font-semibold">Version</span>
-                    <span className="text-sm text-slate-700 dark:text-slate-300 font-mono">v{document.version}</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300 font-mono">
+                      v{document.version}
+                    </span>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[20px] text-slate-400 mt-0.5">insert_drive_file</span>
+                  <span className="material-symbols-outlined text-[20px] text-slate-400 mt-0.5">
+                    insert_drive_file
+                  </span>
                   <div className="flex flex-col">
-                    <span className="text-xs text-slate-400 uppercase font-semibold">File Size</span>
-                    <span className="text-sm text-slate-700 dark:text-slate-300">{formatFileSize(document.sizeBytes)}</span>
+                    <span className="text-xs text-slate-400 uppercase font-semibold">
+                      File Size
+                    </span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300">
+                      {formatFileSize(document.sizeBytes)}
+                    </span>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[20px] text-slate-400 mt-0.5">calendar_today</span>
+                  <span className="material-symbols-outlined text-[20px] text-slate-400 mt-0.5">
+                    calendar_today
+                  </span>
                   <div className="flex flex-col">
                     <span className="text-xs text-slate-400 uppercase font-semibold">Created</span>
-                    <span className="text-sm text-slate-700 dark:text-slate-300">{formatDate(document.createdAt)}</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300">
+                      {formatDate(document.createdAt)}
+                    </span>
                     <span className="text-xs text-slate-500">by {document.createdBy}</span>
                   </div>
                 </div>
 
                 <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[20px] text-slate-400 mt-0.5">update</span>
+                  <span className="material-symbols-outlined text-[20px] text-slate-400 mt-0.5">
+                    update
+                  </span>
                   <div className="flex flex-col">
-                    <span className="text-xs text-slate-400 uppercase font-semibold">Last Modified</span>
-                    <span className="text-sm text-slate-700 dark:text-slate-300">{formatRelativeTime(document.lastModifiedAt)}</span>
+                    <span className="text-xs text-slate-400 uppercase font-semibold">
+                      Last Modified
+                    </span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300">
+                      {formatRelativeTime(document.lastModifiedAt)}
+                    </span>
                     <span className="text-xs text-slate-500">by {document.lastModifiedBy}</span>
                   </div>
                 </div>
@@ -393,7 +481,10 @@ export default function DocumentDetailPage() {
                 <p className="text-xs text-slate-400 uppercase font-semibold mb-3">Tags</p>
                 <div className="flex flex-wrap gap-2">
                   {document.tags.map((tag: string) => (
-                    <span key={tag} className="px-2 py-1 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-medium">
+                    <span
+                      key={tag}
+                      className="px-2 py-1 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-medium"
+                    >
                       {tag}
                     </span>
                   ))}
@@ -406,13 +497,19 @@ export default function DocumentDetailPage() {
                   <p className="text-xs text-slate-400 uppercase font-semibold mb-3">Related</p>
                   <div className="space-y-2">
                     {document.relatedCase && (
-                      <Link href={`/cases/${document.relatedCase}`} className="flex items-center gap-2 text-sm text-[#137fec] hover:underline">
+                      <Link
+                        href={`/cases/${document.relatedCase}`}
+                        className="flex items-center gap-2 text-sm text-[#137fec] hover:underline"
+                      >
                         <span className="material-symbols-outlined text-[16px]">gavel</span>
                         {document.relatedCase}
                       </Link>
                     )}
                     {document.relatedContact && (
-                      <Link href={`/contacts/${document.relatedContact}`} className="flex items-center gap-2 text-sm text-[#137fec] hover:underline">
+                      <Link
+                        href={`/contacts/${document.relatedContact}`}
+                        className="flex items-center gap-2 text-sm text-[#137fec] hover:underline"
+                      >
                         <span className="material-symbols-outlined text-[16px]">person</span>
                         {document.relatedContact}
                       </Link>
@@ -440,7 +537,9 @@ export default function DocumentDetailPage() {
                 >
                   {tab.label}
                   {tab.count !== undefined && tab.count > 0 && (
-                    <span className="ml-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full">{tab.count}</span>
+                    <span className="ml-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full">
+                      {tab.count}
+                    </span>
                   )}
                 </button>
               ))}
@@ -451,17 +550,25 @@ export default function DocumentDetailPage() {
               {activeTab === 'overview' && (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Description</h3>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
+                      Description
+                    </h3>
                     <p className="text-slate-600 dark:text-slate-400">{document.description}</p>
                   </div>
 
                   {/* Document Preview */}
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Document Preview</h3>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
+                      Document Preview
+                    </h3>
                     <div className="aspect-[8.5/11] bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center">
                       <div className="text-center">
-                        <span className="material-symbols-outlined text-[80px] text-slate-400">description</span>
-                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">PDF Preview</p>
+                        <span className="material-symbols-outlined text-[80px] text-slate-400">
+                          description
+                        </span>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
+                          PDF Preview
+                        </p>
                         <button className="mt-4 px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
                           Open Full View
                         </button>
@@ -471,23 +578,41 @@ export default function DocumentDetailPage() {
 
                   {/* Quick Actions */}
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Quick Actions</h3>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
+                      Quick Actions
+                    </h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       <button className="flex flex-col items-center gap-2 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <span className="material-symbols-outlined text-[32px] text-[#137fec]">draw</span>
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Sign</span>
+                        <span className="material-symbols-outlined text-[32px] text-[#137fec]">
+                          draw
+                        </span>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          Sign
+                        </span>
                       </button>
                       <button className="flex flex-col items-center gap-2 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <span className="material-symbols-outlined text-[32px] text-[#137fec]">check_circle</span>
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Approve</span>
+                        <span className="material-symbols-outlined text-[32px] text-[#137fec]">
+                          check_circle
+                        </span>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          Approve
+                        </span>
                       </button>
                       <button className="flex flex-col items-center gap-2 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <span className="material-symbols-outlined text-[32px] text-[#137fec]">content_copy</span>
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Duplicate</span>
+                        <span className="material-symbols-outlined text-[32px] text-[#137fec]">
+                          content_copy
+                        </span>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          Duplicate
+                        </span>
                       </button>
                       <button className="flex flex-col items-center gap-2 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
-                        <span className="material-symbols-outlined text-[32px] text-[#137fec]">print</span>
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Print</span>
+                        <span className="material-symbols-outlined text-[32px] text-[#137fec]">
+                          print
+                        </span>
+                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                          Print
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -498,7 +623,9 @@ export default function DocumentDetailPage() {
               {activeTab === 'versions' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Version History</h3>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                      Version History
+                    </h3>
                     <button className="px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
                       Create New Version
                     </button>
@@ -508,11 +635,18 @@ export default function DocumentDetailPage() {
                     auditTrail.map((event, index) => {
                       const isCurrent = index === 0; // Most recent event is current
                       return (
-                        <div key={event.id} className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-[#137fec] transition-colors">
+                        <div
+                          key={event.id}
+                          className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:border-[#137fec] transition-colors"
+                        >
                           <div className="flex items-start justify-between">
                             <div className="flex items-start gap-3">
-                              <div className={`p-2 rounded ${isCurrent ? 'bg-[#137fec]/10' : 'bg-slate-100 dark:bg-slate-800'}`}>
-                                <span className={`material-symbols-outlined text-[24px] ${isCurrent ? 'text-[#137fec]' : 'text-slate-400'}`}>
+                              <div
+                                className={`p-2 rounded ${isCurrent ? 'bg-[#137fec]/10' : 'bg-slate-100 dark:bg-slate-800'}`}
+                              >
+                                <span
+                                  className={`material-symbols-outlined text-[24px] ${isCurrent ? 'text-[#137fec]' : 'text-slate-400'}`}
+                                >
                                   {isCurrent ? 'verified' : 'history'}
                                 </span>
                               </div>
@@ -537,7 +671,9 @@ export default function DocumentDetailPage() {
                                   {event.metadata?.sizeBytes && (
                                     <>
                                       <span>•</span>
-                                      <span>{formatFileSize(Number(event.metadata.sizeBytes))}</span>
+                                      <span>
+                                        {formatFileSize(Number(event.metadata.sizeBytes))}
+                                      </span>
                                     </>
                                   )}
                                 </div>
@@ -545,14 +681,20 @@ export default function DocumentDetailPage() {
                             </div>
                             <div className="flex gap-2">
                               <button className="p-1.5 text-slate-400 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
-                                <span className="material-symbols-outlined text-[20px]">download</span>
+                                <span className="material-symbols-outlined text-[20px]">
+                                  download
+                                </span>
                               </button>
                               <button className="p-1.5 text-slate-400 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
-                                <span className="material-symbols-outlined text-[20px]">visibility</span>
+                                <span className="material-symbols-outlined text-[20px]">
+                                  visibility
+                                </span>
                               </button>
                               {!isCurrent && (
                                 <button className="p-1.5 text-slate-400 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
-                                  <span className="material-symbols-outlined text-[20px]">restore</span>
+                                  <span className="material-symbols-outlined text-[20px]">
+                                    restore
+                                  </span>
                                 </button>
                               )}
                             </div>
@@ -562,8 +704,12 @@ export default function DocumentDetailPage() {
                     })
                   ) : (
                     <div className="text-center py-12">
-                      <span className="material-symbols-outlined text-[48px] text-slate-400">history</span>
-                      <p className="mt-4 text-slate-600 dark:text-slate-400">No version history available</p>
+                      <span className="material-symbols-outlined text-[48px] text-slate-400">
+                        history
+                      </span>
+                      <p className="mt-4 text-slate-600 dark:text-slate-400">
+                        No version history available
+                      </p>
                     </div>
                   )}
                 </div>
@@ -573,7 +719,9 @@ export default function DocumentDetailPage() {
               {activeTab === 'access-control' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">Access Control List</h3>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                      Access Control List
+                    </h3>
                     <button className="px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
                       Grant Access
                     </button>
@@ -583,12 +731,24 @@ export default function DocumentDetailPage() {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-slate-200 dark:border-slate-700">
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Principal</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Type</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Access Level</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Granted</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Expires</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Actions</th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">
+                            Principal
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">
+                            Type
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">
+                            Access Level
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">
+                            Granted
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">
+                            Expires
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">
+                            Actions
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -596,20 +756,33 @@ export default function DocumentDetailPage() {
                           accessControlList.map((acl: ACLEntry) => {
                             const levelBadge = getAccessLevelBadge(acl.level);
                             return (
-                              <tr key={acl.id} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                              <tr
+                                key={acl.id}
+                                className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                              >
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-2">
                                     <span className="material-symbols-outlined text-[20px] text-slate-400">
-                                      {acl.principalType === 'USER' ? 'person' : acl.principalType === 'ROLE' ? 'group' : 'business'}
+                                      {acl.principalType === 'USER'
+                                        ? 'person'
+                                        : acl.principalType === 'ROLE'
+                                          ? 'group'
+                                          : 'business'}
                                     </span>
-                                    <span className="text-sm font-medium text-slate-900 dark:text-white">{acl.principalName}</span>
+                                    <span className="text-sm font-medium text-slate-900 dark:text-white">
+                                      {acl.principalName}
+                                    </span>
                                   </div>
                                 </td>
                                 <td className="px-4 py-3">
-                                  <span className="text-xs text-slate-600 dark:text-slate-400">{acl.principalType}</span>
+                                  <span className="text-xs text-slate-600 dark:text-slate-400">
+                                    {acl.principalType}
+                                  </span>
                                 </td>
                                 <td className="px-4 py-3">
-                                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${levelBadge.bg} ${levelBadge.text}`}>
+                                  <span
+                                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${levelBadge.bg} ${levelBadge.text}`}
+                                  >
                                     {acl.level}
                                   </span>
                                 </td>
@@ -626,7 +799,9 @@ export default function DocumentDetailPage() {
                                 </td>
                                 <td className="px-4 py-3">
                                   <button className="p-1 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors">
-                                    <span className="material-symbols-outlined text-[20px]">delete</span>
+                                    <span className="material-symbols-outlined text-[20px]">
+                                      delete
+                                    </span>
                                   </button>
                                 </td>
                               </tr>
@@ -635,8 +810,12 @@ export default function DocumentDetailPage() {
                         ) : (
                           <tr>
                             <td colSpan={6} className="px-4 py-12 text-center">
-                              <span className="material-symbols-outlined text-[48px] text-slate-400">lock</span>
-                              <p className="mt-4 text-slate-600 dark:text-slate-400">No access control entries</p>
+                              <span className="material-symbols-outlined text-[48px] text-slate-400">
+                                lock
+                              </span>
+                              <p className="mt-4 text-slate-600 dark:text-slate-400">
+                                No access control entries
+                              </p>
                             </td>
                           </tr>
                         )}
@@ -650,7 +829,9 @@ export default function DocumentDetailPage() {
               {activeTab === 'signatures' && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">E-Signatures</h3>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                      E-Signatures
+                    </h3>
                     <button className="px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
                       Request Signature
                     </button>
@@ -660,38 +841,54 @@ export default function DocumentDetailPage() {
                     <>
                       <div className="p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg mb-4">
                         <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-green-600 dark:text-green-400">check_circle</span>
+                          <span className="material-symbols-outlined text-green-600 dark:text-green-400">
+                            check_circle
+                          </span>
                           <span className="text-sm font-medium text-green-800 dark:text-green-300">
-                            Document fully signed by {signatures.length} {signatures.length === 1 ? 'party' : 'parties'}
+                            Document fully signed by {signatures.length}{' '}
+                            {signatures.length === 1 ? 'party' : 'parties'}
                           </span>
                         </div>
                       </div>
 
                       {signatures.map((signature) => (
-                        <div key={signature.id} className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg">
+                        <div
+                          key={signature.id}
+                          className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg"
+                        >
                           <div className="flex items-start gap-3">
                             <div className="p-2 rounded bg-green-100 dark:bg-green-900/30">
-                              <span className="material-symbols-outlined text-[24px] text-green-600 dark:text-green-400">draw</span>
+                              <span className="material-symbols-outlined text-[24px] text-green-600 dark:text-green-400">
+                                draw
+                              </span>
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="font-medium text-slate-900 dark:text-white">{signature.signerName}</span>
+                                <span className="font-medium text-slate-900 dark:text-white">
+                                  {signature.signerName}
+                                </span>
                                 <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
                                   Signed
                                 </span>
                               </div>
-                              <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">{signature.signerEmail}</p>
+                              <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+                                {signature.signerEmail}
+                              </p>
                               <div className="grid grid-cols-2 gap-2 text-xs text-slate-500">
                                 <div>
-                                  <span className="font-semibold">Signed at:</span> {formatDate(signature.signedAt)}
+                                  <span className="font-semibold">Signed at:</span>{' '}
+                                  {formatDate(signature.signedAt)}
                                 </div>
                                 <div>
-                                  <span className="font-semibold">IP Address:</span> {signature.ipAddress}
+                                  <span className="font-semibold">IP Address:</span>{' '}
+                                  {signature.ipAddress}
                                 </div>
                               </div>
                             </div>
                             <button className="p-1.5 text-slate-400 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded transition-colors">
-                              <span className="material-symbols-outlined text-[20px]">more_vert</span>
+                              <span className="material-symbols-outlined text-[20px]">
+                                more_vert
+                              </span>
                             </button>
                           </div>
                         </div>
@@ -699,7 +896,9 @@ export default function DocumentDetailPage() {
                     </>
                   ) : (
                     <div className="text-center py-12">
-                      <span className="material-symbols-outlined text-[48px] text-slate-400">draw</span>
+                      <span className="material-symbols-outlined text-[48px] text-slate-400">
+                        draw
+                      </span>
                       <p className="mt-4 text-slate-600 dark:text-slate-400">No signatures yet</p>
                       <p className="text-sm text-slate-500">Request a signature to get started</p>
                     </div>
@@ -711,7 +910,9 @@ export default function DocumentDetailPage() {
               {activeTab === 'comments' && (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Comments & Annotations</h3>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
+                      Comments & Annotations
+                    </h3>
 
                     {/* Add Comment */}
                     <div className="p-4 border border-slate-200 dark:border-slate-700 rounded-lg mb-6">
@@ -724,10 +925,14 @@ export default function DocumentDetailPage() {
                       <div className="flex justify-between items-center mt-2">
                         <div className="flex gap-2">
                           <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                            <span className="material-symbols-outlined text-[20px]">attach_file</span>
+                            <span className="material-symbols-outlined text-[20px]">
+                              attach_file
+                            </span>
                           </button>
                           <button className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                            <span className="material-symbols-outlined text-[20px]">sentiment_satisfied</span>
+                            <span className="material-symbols-outlined text-[20px]">
+                              sentiment_satisfied
+                            </span>
                           </button>
                         </div>
                         <button className="bg-[#137fec] text-white text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-colors">
@@ -751,20 +956,32 @@ export default function DocumentDetailPage() {
                             <div className="flex-1">
                               <div className="p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                                 <div className="flex items-center justify-between mb-1">
-                                  <span className="text-sm font-medium text-slate-900 dark:text-white">{comment.author}</span>
-                                  <span className="text-xs text-slate-500">{formatRelativeTime(comment.createdAt)}</span>
+                                  <span className="text-sm font-medium text-slate-900 dark:text-white">
+                                    {comment.author}
+                                  </span>
+                                  <span className="text-xs text-slate-500">
+                                    {formatRelativeTime(comment.createdAt)}
+                                  </span>
                                 </div>
-                                <p className="text-sm text-slate-700 dark:text-slate-300">{comment.content}</p>
+                                <p className="text-sm text-slate-700 dark:text-slate-300">
+                                  {comment.content}
+                                </p>
                               </div>
                               <div className="flex items-center gap-4 mt-2 px-3">
-                                <button className="text-xs text-slate-500 hover:text-[#137fec] font-medium">Reply</button>
+                                <button className="text-xs text-slate-500 hover:text-[#137fec] font-medium">
+                                  Reply
+                                </button>
                                 {comment.isResolved ? (
                                   <span className="text-xs text-green-600 dark:text-green-400 font-medium flex items-center gap-1">
-                                    <span className="material-symbols-outlined text-[14px]">check_circle</span>
+                                    <span className="material-symbols-outlined text-[14px]">
+                                      check_circle
+                                    </span>
                                     Resolved
                                   </span>
                                 ) : (
-                                  <button className="text-xs text-slate-500 hover:text-[#137fec] font-medium">Mark as Resolved</button>
+                                  <button className="text-xs text-slate-500 hover:text-[#137fec] font-medium">
+                                    Mark as Resolved
+                                  </button>
                                 )}
                               </div>
                             </div>
@@ -772,7 +989,9 @@ export default function DocumentDetailPage() {
                         ))
                       ) : (
                         <div className="text-center py-12">
-                          <span className="material-symbols-outlined text-[48px] text-slate-400">comment</span>
+                          <span className="material-symbols-outlined text-[48px] text-slate-400">
+                            comment
+                          </span>
                           <p className="mt-4 text-slate-600 dark:text-slate-400">No comments yet</p>
                           <p className="text-sm text-slate-500">Be the first to add a comment</p>
                         </div>

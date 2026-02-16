@@ -86,9 +86,14 @@ export interface TableRowActionsProps<T> {
   }>;
 }
 
-export function TableRowActions<T>({ row, actions, quickActions, dropdownActions }: TableRowActionsProps<T>) {
+export function TableRowActions<T>({
+  row,
+  actions,
+  quickActions,
+  dropdownActions,
+}: TableRowActionsProps<T>) {
   // Filter out separator items for the dropdown
-  const menuItems = dropdownActions?.filter(a => !a.separator) || [];
+  const menuItems = dropdownActions?.filter((a) => !a.separator) || [];
   const hasDropdown = menuItems.length > 0;
 
   return (
@@ -137,10 +142,14 @@ export function TableRowActions<T>({ row, actions, quickActions, dropdownActions
                 <DropdownMenuItem
                   key={action.id || index}
                   onClick={action.onClick}
-                  className={action.variant === 'danger' ? 'text-destructive focus:text-destructive' : ''}
+                  className={
+                    action.variant === 'danger' ? 'text-destructive focus:text-destructive' : ''
+                  }
                 >
                   {action.icon && (
-                    <span className="material-symbols-outlined text-[18px] mr-2">{action.icon}</span>
+                    <span className="material-symbols-outlined text-[18px] mr-2">
+                      {action.icon}
+                    </span>
                   )}
                   {action.label}
                 </DropdownMenuItem>
@@ -190,13 +199,17 @@ export function ConfirmationDialog({
       <div className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
         <div className="flex items-start gap-4">
           {icon && (
-            <div className={`p-2 rounded-full ${variant === 'destructive' ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-primary/10 text-primary'}`}>
+            <div
+              className={`p-2 rounded-full ${variant === 'destructive' ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-primary/10 text-primary'}`}
+            >
               <span className="material-symbols-outlined text-xl">{icon}</span>
             </div>
           )}
           <div className="flex-1">
             <h2 className="text-lg font-semibold">{title}</h2>
-            {description && <p className="mt-2 text-slate-600 dark:text-slate-400 text-sm">{description}</p>}
+            {description && (
+              <p className="mt-2 text-slate-600 dark:text-slate-400 text-sm">{description}</p>
+            )}
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-3">
@@ -210,7 +223,11 @@ export function ConfirmationDialog({
             }}
             disabled={isLoading}
           >
-            {isLoading && <span className="material-symbols-outlined text-sm mr-2 animate-spin">progress_activity</span>}
+            {isLoading && (
+              <span className="material-symbols-outlined text-sm mr-2 animate-spin">
+                progress_activity
+              </span>
+            )}
             {confirmLabel}
           </Button>
         </div>
@@ -278,9 +295,7 @@ export function StatusSelectDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleConfirm}>
-            Confirm
-          </Button>
+          <Button onClick={handleConfirm}>Confirm</Button>
         </div>
       </div>
     </div>
@@ -298,7 +313,12 @@ interface BulkActionsBarProps<T> {
   onClearSelection: () => void;
 }
 
-function BulkActionsBar<T>({ selectedCount, bulkActions, selectedRows, onClearSelection }: BulkActionsBarProps<T>) {
+function BulkActionsBar<T>({
+  selectedCount,
+  bulkActions,
+  selectedRows,
+  onClearSelection,
+}: BulkActionsBarProps<T>) {
   if (selectedCount === 0) return null;
 
   return (
@@ -423,7 +443,7 @@ export function DataTable<TData, TValue>({
 
   // Get selected rows data
   const selectedRows = React.useMemo(() => {
-    return table.getSelectedRowModel().rows.map(row => row.original);
+    return table.getSelectedRowModel().rows.map((row) => row.original);
   }, [table.getSelectedRowModel().rows]);
 
   const clearSelection = React.useCallback(() => {
@@ -431,7 +451,10 @@ export function DataTable<TData, TValue>({
   }, []);
 
   // Column width styles - reads from column definition size property
-  const getColumnStyle = (columnId: string, columnDef?: ColumnDef<TData, TValue>): React.CSSProperties => {
+  const getColumnStyle = (
+    columnId: string,
+    columnDef?: ColumnDef<TData, TValue>
+  ): React.CSSProperties => {
     if (columnId === 'select') return { width: 40, minWidth: 40, maxWidth: 40 };
     // Use size from column definition if available
     const size = (columnDef as { size?: number })?.size;
@@ -458,12 +481,18 @@ export function DataTable<TData, TValue>({
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50/50">
+              <TableRow
+                key={headerGroup.id}
+                className="bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50/50"
+              >
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead
                       key={header.id}
-                      style={getColumnStyle(header.id, header.column.columnDef as ColumnDef<TData, TValue>)}
+                      style={getColumnStyle(
+                        header.id,
+                        header.column.columnDef as ColumnDef<TData, TValue>
+                      )}
                       className="font-semibold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
                     >
                       {header.isPlaceholder
@@ -490,7 +519,10 @@ export function DataTable<TData, TValue>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
                       key={cell.id}
-                      style={getColumnStyle(cell.column.id, cell.column.columnDef as ColumnDef<TData, TValue>)}
+                      style={getColumnStyle(
+                        cell.column.id,
+                        cell.column.columnDef as ColumnDef<TData, TValue>
+                      )}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext()) as React.ReactNode}
                     </TableCell>

@@ -24,13 +24,7 @@ import { Button } from '../button';
 import { Label } from '../label';
 import { Slider } from '../slider';
 import { Textarea } from '../textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../select';
 import { cn } from '../../lib/utils';
 import { FEEDBACK_CATEGORIES } from '@intelliflow/domain';
 import type { FeedbackCategory } from '@intelliflow/domain';
@@ -225,9 +219,7 @@ export function ScoreCorrectionModal({
               maxLength={1000}
             />
             {reason.length > 0 && (
-              <div className="text-right text-xs text-muted-foreground">
-                {reason.length}/1000
-              </div>
+              <div className="text-right text-xs text-muted-foreground">{reason.length}/1000</div>
             )}
           </div>
         </div>

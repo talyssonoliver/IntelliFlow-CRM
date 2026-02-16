@@ -13,7 +13,7 @@ import { Money, InvalidMoneyError, CurrencyMismatchError } from '../Money';
 describe('Money', () => {
   describe('create()', () => {
     it('should create money from a valid decimal amount', () => {
-      const result = Money.create(12.50, 'USD');
+      const result = Money.create(12.5, 'USD');
 
       expect(result.isSuccess).toBe(true);
       expect(result.value).toBeInstanceOf(Money);
@@ -29,7 +29,7 @@ describe('Money', () => {
     });
 
     it('should create money with EUR', () => {
-      const result = Money.create(25.00, 'EUR');
+      const result = Money.create(25.0, 'EUR');
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.currency).toBe('EUR');
@@ -117,7 +117,7 @@ describe('Money', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.cents).toBe(1250);
-      expect(result.value.amount).toBe(12.50);
+      expect(result.value.amount).toBe(12.5);
     });
 
     it('should default to USD', () => {
@@ -183,7 +183,7 @@ describe('Money', () => {
 
   describe('amount property', () => {
     it('should return decimal amount for standard currency', () => {
-      const money = Money.create(12.50, 'USD').value;
+      const money = Money.create(12.5, 'USD').value;
 
       expect(money.amount).toBe(12.5);
     });
@@ -375,7 +375,7 @@ describe('Money', () => {
 
   describe('toValue()', () => {
     it('should return cents, currency, and amount', () => {
-      const money = Money.create(12.50, 'USD').value;
+      const money = Money.create(12.5, 'USD').value;
       const value = money.toValue();
 
       expect(value).toEqual({

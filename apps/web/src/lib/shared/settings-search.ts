@@ -29,26 +29,16 @@ export const SETTINGS_ITEMS: SettingItem[] = [
   {
     id: 'account',
     title: 'Account',
-    description:
-      'Manage your personal information, password, and security settings',
+    description: 'Manage your personal information, password, and security settings',
     href: '/settings/account',
     icon: 'person',
     color: 'bg-primary',
-    keywords: [
-      'profile',
-      'password',
-      'email',
-      'name',
-      'avatar',
-      '2fa',
-      'sessions',
-    ],
+    keywords: ['profile', 'password', 'email', 'name', 'avatar', '2fa', 'sessions'],
   },
   {
     id: 'team',
     title: 'Team',
-    description:
-      'Invite team members, manage roles, and control access permissions',
+    description: 'Invite team members, manage roles, and control access permissions',
     href: '/settings/team',
     icon: 'group',
     color: 'bg-primary/80',
@@ -57,26 +47,16 @@ export const SETTINGS_ITEMS: SettingItem[] = [
   {
     id: 'ai',
     title: 'AI Chains',
-    description:
-      'Manage AI chain versions, rollout strategies, and memory budget',
+    description: 'Manage AI chain versions, rollout strategies, and memory budget',
     href: '/settings/ai',
     icon: 'auto_awesome',
     color: 'bg-primary/90',
-    keywords: [
-      'llm',
-      'model',
-      'chain',
-      'version',
-      'rollback',
-      'experiment',
-      'budget',
-    ],
+    keywords: ['llm', 'model', 'chain', 'version', 'rollback', 'experiment', 'budget'],
   },
   {
     id: 'pipeline',
     title: 'Pipeline',
-    description:
-      'Configure deal pipeline stages, automation rules, and workflows',
+    description: 'Configure deal pipeline stages, automation rules, and workflows',
     href: '/settings/pipeline',
     icon: 'linear_scale',
     color: 'bg-primary/70',
@@ -85,26 +65,16 @@ export const SETTINGS_ITEMS: SettingItem[] = [
   {
     id: 'integrations',
     title: 'Integrations',
-    description:
-      'Connect third-party apps and services to enhance your workflow',
+    description: 'Connect third-party apps and services to enhance your workflow',
     href: '/settings/integrations',
     icon: 'extension',
     color: 'bg-primary/80',
-    keywords: [
-      'slack',
-      'google',
-      'salesforce',
-      'hubspot',
-      'webhook',
-      'api',
-      'connect',
-    ],
+    keywords: ['slack', 'google', 'salesforce', 'hubspot', 'webhook', 'api', 'connect'],
   },
   {
     id: 'notifications',
     title: 'Notifications',
-    description:
-      'Configure email, push, and in-app notification preferences',
+    description: 'Configure email, push, and in-app notification preferences',
     href: '/settings/notifications',
     icon: 'notifications',
     color: 'bg-primary/60',
@@ -113,8 +83,7 @@ export const SETTINGS_ITEMS: SettingItem[] = [
   {
     id: 'security',
     title: 'Security',
-    description:
-      'Multi-factor authentication, session management, and security policies',
+    description: 'Multi-factor authentication, session management, and security policies',
     href: '/settings/security/mfa',
     icon: 'security',
     color: 'bg-destructive',
@@ -170,10 +139,7 @@ function scoreMatch(text: string, normalizedQuery: string): number {
  *
  * Returns items with score > 0, sorted by score descending.
  */
-export function filterSettings(
-  query: string,
-  items: SettingItem[]
-): SettingItem[] {
+export function filterSettings(query: string, items: SettingItem[]): SettingItem[] {
   const normalized = query.trim().toLowerCase();
   if (!normalized) return items;
 
@@ -236,9 +202,7 @@ export function highlightMatch(
 export function getResolvedCategories(
   searchQuery?: string
 ): { id: string; title: string; items: SettingItem[] }[] {
-  const filteredItems = searchQuery
-    ? filterSettings(searchQuery, SETTINGS_ITEMS)
-    : SETTINGS_ITEMS;
+  const filteredItems = searchQuery ? filterSettings(searchQuery, SETTINGS_ITEMS) : SETTINGS_ITEMS;
 
   const filteredIds = new Set(filteredItems.map((i) => i.id));
 

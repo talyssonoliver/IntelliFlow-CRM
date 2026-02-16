@@ -13,7 +13,10 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 // Debug: Log env vars (remove in production)
 if (typeof window !== 'undefined') {
   console.log('[Supabase Browser] URL:', SUPABASE_URL ? 'set' : 'MISSING');
-  console.log('[Supabase Browser] Key:', SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.substring(0, 20) + '...' : 'MISSING');
+  console.log(
+    '[Supabase Browser] Key:',
+    SUPABASE_ANON_KEY ? SUPABASE_ANON_KEY.substring(0, 20) + '...' : 'MISSING'
+  );
 }
 
 /**

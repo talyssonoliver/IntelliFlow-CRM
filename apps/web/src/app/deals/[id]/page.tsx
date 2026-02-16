@@ -21,7 +21,13 @@ const Icon = ({ name, className = '' }: { name: string; className?: string }) =>
 // Types
 // =============================================================================
 
-type StageId = 'PROSPECTING' | 'QUALIFICATION' | 'PROPOSAL' | 'NEGOTIATION' | 'CLOSED_WON' | 'CLOSED_LOST';
+type StageId =
+  | 'PROSPECTING'
+  | 'QUALIFICATION'
+  | 'PROPOSAL'
+  | 'NEGOTIATION'
+  | 'CLOSED_WON'
+  | 'CLOSED_LOST';
 
 interface Deal {
   id: string;
@@ -179,7 +185,8 @@ const SAMPLE_ACTIVITIES: ActivityEvent[] = [
     id: '2',
     type: 'call',
     title: 'Call with Robert Fox',
-    description: 'Discussed timeline for implementation. They are keen to start by Nov 1st. Need to adjust contract start date.',
+    description:
+      'Discussed timeline for implementation. They are keen to start by Nov 1st. Need to adjust contract start date.',
     timestamp: '2:15 PM',
     date: 'yesterday',
   },
@@ -246,7 +253,13 @@ function getAgentStatusBadge(status: AgentActionStatus): { label: string; classN
 // Components
 // =============================================================================
 
-function StageProgress({ currentStageIndex, probability }: { currentStageIndex: number; probability: number }) {
+function StageProgress({
+  currentStageIndex,
+  probability,
+}: {
+  currentStageIndex: number;
+  probability: number;
+}) {
   const progressWidth = ((currentStageIndex + 1) / STAGES.length) * 100;
 
   return (
@@ -285,10 +298,7 @@ function StageProgress({ currentStageIndex, probability }: { currentStageIndex: 
       {/* Stage Labels */}
       <div className="flex justify-between mt-2 text-xs font-medium text-slate-500 px-1">
         {STAGES.map((stage, index) => (
-          <span
-            key={stage.id}
-            className={index <= currentStageIndex ? 'text-primary' : ''}
-          >
+          <span key={stage.id} className={index <= currentStageIndex ? 'text-primary' : ''}>
             {stage.label}
           </span>
         ))}
@@ -346,9 +356,7 @@ function StakeholdersCard({ deal }: { deal: Deal }) {
         <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
           Stakeholders
         </h3>
-        <button className="text-primary hover:text-primary/80 text-xs font-semibold">
-          Edit
-        </button>
+        <button className="text-primary hover:text-primary/80 text-xs font-semibold">Edit</button>
       </div>
       <div className="flex flex-col gap-4">
         {/* Account */}
@@ -678,10 +686,7 @@ export default function DealDetailPage() {
       <div className="mx-auto flex flex-col gap-6">
         {/* Header using EntityHeader */}
         <EntityHeader
-          breadcrumbs={[
-            { label: 'Deals', href: '/deals' },
-            { label: deal.name },
-          ]}
+          breadcrumbs={[{ label: 'Deals', href: '/deals' }, { label: deal.name }]}
           title={deal.name}
           entityId={deal.id}
           badges={[

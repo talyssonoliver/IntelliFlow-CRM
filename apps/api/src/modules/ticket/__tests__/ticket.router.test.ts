@@ -149,7 +149,9 @@ describe('ticketRouter', () => {
       ]);
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const result = await caller.assignees();
 
@@ -185,7 +187,9 @@ describe('ticketRouter', () => {
 
     it('should create a new ticket', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const result = await caller.create(validCreateInput);
 
@@ -200,7 +204,9 @@ describe('ticketRouter', () => {
       mockTicketService.create.mockRejectedValueOnce(new Error('Creation failed'));
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       await expect(caller.create(validCreateInput)).rejects.toThrow(TRPCError);
     });
@@ -210,7 +216,9 @@ describe('ticketRouter', () => {
         ...createMockContext(),
         services: {},
       };
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       await expect(caller.create(validCreateInput)).rejects.toThrow(/Ticket service not available/);
     });
@@ -223,7 +231,9 @@ describe('ticketRouter', () => {
   describe('getById', () => {
     it('should return ticket by ID', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const result = await caller.getById({ id: TICKET_UUID });
 
@@ -235,7 +245,9 @@ describe('ticketRouter', () => {
       mockTicketService.findById.mockResolvedValueOnce(null);
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const nonExistentUuid = 'e5f6a7b8-c9d0-1234-ef01-345678901234';
       await expect(caller.getById({ id: nonExistentUuid })).rejects.toThrow(/Ticket not found/);
@@ -249,7 +261,9 @@ describe('ticketRouter', () => {
   describe('list', () => {
     it('should return paginated tickets', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const result = await caller.list({
         page: 1,
@@ -265,7 +279,9 @@ describe('ticketRouter', () => {
 
     it('should filter by status', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       await caller.list({
         status: 'OPEN',
@@ -280,7 +296,9 @@ describe('ticketRouter', () => {
 
     it('should filter by priority', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       await caller.list({
         priority: 'HIGH',
@@ -295,7 +313,9 @@ describe('ticketRouter', () => {
 
     it('should filter by assignee', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const assigneeUuid = 'f6a7b8c9-d0e1-2345-f012-456789012345';
       await caller.list({
@@ -311,7 +331,9 @@ describe('ticketRouter', () => {
 
     it('should use default pagination values', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       await caller.list({});
 
@@ -331,7 +353,9 @@ describe('ticketRouter', () => {
   describe('update', () => {
     it('should update ticket', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const result = await caller.update({
         id: TICKET_UUID,
@@ -353,7 +377,9 @@ describe('ticketRouter', () => {
       mockTicketService.update.mockRejectedValueOnce(new Error('Update failed'));
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       await expect(
         caller.update({
@@ -371,7 +397,9 @@ describe('ticketRouter', () => {
   describe('delete', () => {
     it('should delete ticket', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const result = await caller.delete({ id: TICKET_UUID });
 
@@ -383,7 +411,9 @@ describe('ticketRouter', () => {
       mockTicketService.delete.mockRejectedValueOnce(new Error('Delete failed'));
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       await expect(caller.delete({ id: TICKET_UUID })).rejects.toThrow(TRPCError);
     });
@@ -396,7 +426,9 @@ describe('ticketRouter', () => {
   describe('stats', () => {
     it('should return ticket statistics', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const result = await caller.stats({});
 
@@ -416,7 +448,9 @@ describe('ticketRouter', () => {
   describe('addResponse', () => {
     it('should add response to ticket', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const result = await caller.addResponse({
         ticketId: TICKET_UUID,
@@ -438,7 +472,9 @@ describe('ticketRouter', () => {
       mockTicketService.addResponse.mockRejectedValueOnce(new Error('Failed to add response'));
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       await expect(
         caller.addResponse({
@@ -458,7 +494,9 @@ describe('ticketRouter', () => {
   describe('bulkAssign', () => {
     it('should bulk assign tickets', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const result = await caller.bulkAssign({
         ticketIds: ['ticket_1', 'ticket_2', 'ticket_3'],
@@ -477,7 +515,9 @@ describe('ticketRouter', () => {
         .mockResolvedValueOnce(mockTicket);
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const result = await caller.bulkAssign({
         ticketIds: ['ticket_1', 'ticket_2', 'ticket_3'],
@@ -492,7 +532,9 @@ describe('ticketRouter', () => {
   describe('bulkUpdateStatus', () => {
     it('should bulk update ticket status', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const result = await caller.bulkUpdateStatus({
         ticketIds: ['ticket_1', 'ticket_2'],
@@ -509,7 +551,9 @@ describe('ticketRouter', () => {
   describe('bulkResolve', () => {
     it('should bulk resolve tickets', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const result = await caller.bulkResolve({
         ticketIds: ['ticket_1', 'ticket_2'],
@@ -524,7 +568,9 @@ describe('ticketRouter', () => {
   describe('bulkEscalate', () => {
     it('should bulk escalate tickets to critical priority', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const result = await caller.bulkEscalate({
         ticketIds: ['ticket_1', 'ticket_2'],
@@ -539,7 +585,9 @@ describe('ticketRouter', () => {
   describe('bulkClose', () => {
     it('should bulk close tickets', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const result = await caller.bulkClose({
         ticketIds: ['ticket_1', 'ticket_2'],
@@ -575,7 +623,9 @@ describe('ticketRouter', () => {
 
     it('should return filter options with counts', async () => {
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       const result = await caller.filterOptions();
 
@@ -594,7 +644,9 @@ describe('ticketRouter', () => {
         .mockResolvedValueOnce([]);
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       await caller.filterOptions({
         status: 'OPEN',
@@ -621,7 +673,9 @@ describe('ticketRouter', () => {
       mockPrisma.tenant.findUnique.mockResolvedValueOnce(null);
 
       const mockContext = createMockContext();
-      const caller = ticketRouter.createCaller(mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]);
+      const caller = ticketRouter.createCaller(
+        mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
+      );
 
       await expect(caller.stats({})).rejects.toThrow(/Default tenant not found/);
     });

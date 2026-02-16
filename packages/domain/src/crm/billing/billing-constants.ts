@@ -6,11 +6,24 @@ export const INVOICE_STATUSES = ['DRAFT', 'OPEN', 'PAID', 'VOID', 'UNCOLLECTIBLE
 export type InvoiceStatus = (typeof INVOICE_STATUSES)[number];
 
 // Payment tracking within invoice
-export const PAYMENT_STATUSES = ['PENDING', 'PARTIALLY_PAID', 'PAID', 'REFUNDED', 'PARTIALLY_REFUNDED'] as const;
+export const PAYMENT_STATUSES = [
+  'PENDING',
+  'PARTIALLY_PAID',
+  'PAID',
+  'REFUNDED',
+  'PARTIALLY_REFUNDED',
+] as const;
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
 // Payment methods
-export const PAYMENT_METHODS = ['CARD', 'BANK_TRANSFER', 'ACH', 'PAYPAL', 'MANUAL', 'CREDIT'] as const;
+export const PAYMENT_METHODS = [
+  'CARD',
+  'BANK_TRANSFER',
+  'ACH',
+  'PAYPAL',
+  'MANUAL',
+  'CREDIT',
+] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 // Line item types
@@ -22,7 +35,14 @@ export const TAX_TYPES = ['VAT', 'SALES_TAX', 'GST', 'NONE'] as const;
 export type TaxType = (typeof TAX_TYPES)[number];
 
 // Refund reasons
-export const REFUND_REASONS = ['CUSTOMER_REQUEST', 'DUPLICATE_PAYMENT', 'BILLING_ERROR', 'SERVICE_NOT_DELIVERED', 'SUBSCRIPTION_CANCELLED', 'OTHER'] as const;
+export const REFUND_REASONS = [
+  'CUSTOMER_REQUEST',
+  'DUPLICATE_PAYMENT',
+  'BILLING_ERROR',
+  'SERVICE_NOT_DELIVERED',
+  'SUBSCRIPTION_CANCELLED',
+  'OTHER',
+] as const;
 export type RefundReason = (typeof REFUND_REASONS)[number];
 
 // State machine transitions

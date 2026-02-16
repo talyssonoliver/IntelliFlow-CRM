@@ -41,21 +41,53 @@ describe('RemindersContext - State Logic', () => {
   describe('unread count logic', () => {
     it('counts notifications not in read set', () => {
       const notifications = [
-        { reminderId: 'r1', title: 'T1', message: 'M1', priority: 'medium' as const, dueDate: new Date(), timeUntilDue: '1h', entityLink: '/' },
-        { reminderId: 'r2', title: 'T2', message: 'M2', priority: 'high' as const, dueDate: new Date(), timeUntilDue: '2h', entityLink: '/' },
-        { reminderId: 'r3', title: 'T3', message: 'M3', priority: 'low' as const, dueDate: new Date(), timeUntilDue: '3h', entityLink: '/' },
+        {
+          reminderId: 'r1',
+          title: 'T1',
+          message: 'M1',
+          priority: 'medium' as const,
+          dueDate: new Date(),
+          timeUntilDue: '1h',
+          entityLink: '/',
+        },
+        {
+          reminderId: 'r2',
+          title: 'T2',
+          message: 'M2',
+          priority: 'high' as const,
+          dueDate: new Date(),
+          timeUntilDue: '2h',
+          entityLink: '/',
+        },
+        {
+          reminderId: 'r3',
+          title: 'T3',
+          message: 'M3',
+          priority: 'low' as const,
+          dueDate: new Date(),
+          timeUntilDue: '3h',
+          entityLink: '/',
+        },
       ];
       const readSet = new Set(['r1']);
-      const unread = notifications.filter(n => !readSet.has(n.reminderId)).length;
+      const unread = notifications.filter((n) => !readSet.has(n.reminderId)).length;
       expect(unread).toBe(2);
     });
 
     it('returns 0 when all are read', () => {
       const notifications = [
-        { reminderId: 'r1', title: 'T1', message: 'M1', priority: 'medium' as const, dueDate: new Date(), timeUntilDue: '1h', entityLink: '/' },
+        {
+          reminderId: 'r1',
+          title: 'T1',
+          message: 'M1',
+          priority: 'medium' as const,
+          dueDate: new Date(),
+          timeUntilDue: '1h',
+          entityLink: '/',
+        },
       ];
       const readSet = new Set(['r1']);
-      const unread = notifications.filter(n => !readSet.has(n.reminderId)).length;
+      const unread = notifications.filter((n) => !readSet.has(n.reminderId)).length;
       expect(unread).toBe(0);
     });
   });
@@ -63,13 +95,40 @@ describe('RemindersContext - State Logic', () => {
   describe('notification deduplication logic', () => {
     it('replaces existing notification with same reminderId', () => {
       const existing = [
-        { reminderId: 'r1', title: 'Old', message: 'M', priority: 'low' as const, dueDate: new Date(), timeUntilDue: '1h', entityLink: '/' },
-        { reminderId: 'r2', title: 'Other', message: 'M', priority: 'low' as const, dueDate: new Date(), timeUntilDue: '2h', entityLink: '/' },
+        {
+          reminderId: 'r1',
+          title: 'Old',
+          message: 'M',
+          priority: 'low' as const,
+          dueDate: new Date(),
+          timeUntilDue: '1h',
+          entityLink: '/',
+        },
+        {
+          reminderId: 'r2',
+          title: 'Other',
+          message: 'M',
+          priority: 'low' as const,
+          dueDate: new Date(),
+          timeUntilDue: '2h',
+          entityLink: '/',
+        },
       ];
-      const newNotif = { reminderId: 'r1', title: 'New', message: 'M', priority: 'high' as const, dueDate: new Date(), timeUntilDue: '30m', entityLink: '/' };
+      const newNotif = {
+        reminderId: 'r1',
+        title: 'New',
+        message: 'M',
+        priority: 'high' as const,
+        dueDate: new Date(),
+        timeUntilDue: '30m',
+        entityLink: '/',
+      };
 
       // Simulates the handleNotification logic
-      const updated = [newNotif, ...existing.filter(n => n.reminderId !== newNotif.reminderId)].slice(0, 10);
+      const updated = [
+        newNotif,
+        ...existing.filter((n) => n.reminderId !== newNotif.reminderId),
+      ].slice(0, 10);
 
       expect(updated).toHaveLength(2);
       expect(updated[0].title).toBe('New');
@@ -78,12 +137,28 @@ describe('RemindersContext - State Logic', () => {
 
     it('keeps max 10 notifications', () => {
       const existing = Array.from({ length: 10 }, (_, i) => ({
-        reminderId: 'r' + i, title: 'Title', message: 'M', priority: 'low' as const,
-        dueDate: new Date(), timeUntilDue: '1h', entityLink: '/',
+        reminderId: 'r' + i,
+        title: 'Title',
+        message: 'M',
+        priority: 'low' as const,
+        dueDate: new Date(),
+        timeUntilDue: '1h',
+        entityLink: '/',
       }));
-      const newNotif = { reminderId: 'r-new', title: 'New', message: 'M', priority: 'high' as const, dueDate: new Date(), timeUntilDue: '30m', entityLink: '/' };
+      const newNotif = {
+        reminderId: 'r-new',
+        title: 'New',
+        message: 'M',
+        priority: 'high' as const,
+        dueDate: new Date(),
+        timeUntilDue: '30m',
+        entityLink: '/',
+      };
 
-      const updated = [newNotif, ...existing.filter(n => n.reminderId !== newNotif.reminderId)].slice(0, 10);
+      const updated = [
+        newNotif,
+        ...existing.filter((n) => n.reminderId !== newNotif.reminderId),
+      ].slice(0, 10);
       expect(updated).toHaveLength(10);
       expect(updated[0].reminderId).toBe('r-new');
     });
@@ -91,10 +166,8 @@ describe('RemindersContext - State Logic', () => {
 
   describe('markAllAsRead logic', () => {
     it('creates set of all notification ids', () => {
-      const notifications = [
-        { reminderId: 'r1' }, { reminderId: 'r2' }, { reminderId: 'r3' },
-      ];
-      const readSet = new Set(notifications.map(n => n.reminderId));
+      const notifications = [{ reminderId: 'r1' }, { reminderId: 'r2' }, { reminderId: 'r3' }];
+      const readSet = new Set(notifications.map((n) => n.reminderId));
       expect(readSet.size).toBe(3);
       expect(readSet.has('r1')).toBe(true);
       expect(readSet.has('r2')).toBe(true);

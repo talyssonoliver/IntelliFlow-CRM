@@ -27,9 +27,7 @@ describe('Signature Verifiers', () => {
   describe('HmacSha256Verifier', () => {
     it('should verify valid HMAC signature', () => {
       const verifier = new HmacSha256Verifier();
-      const signature = createHmac('sha256', testSecret)
-        .update(testPayload)
-        .digest('hex');
+      const signature = createHmac('sha256', testSecret).update(testPayload).digest('hex');
 
       expect(verifier.verify(testPayload, signature, testSecret)).toBe(true);
     });
@@ -42,9 +40,7 @@ describe('Signature Verifiers', () => {
 
     it('should use custom prefix', () => {
       const verifier = new HmacSha256Verifier({ prefix: 'sha256=' });
-      const hash = createHmac('sha256', testSecret)
-        .update(testPayload)
-        .digest('hex');
+      const hash = createHmac('sha256', testSecret).update(testPayload).digest('hex');
       const signature = 'sha256=' + hash;
 
       expect(verifier.verify(testPayload, signature, testSecret)).toBe(true);
@@ -68,9 +64,7 @@ describe('Signature Verifiers', () => {
       const verifier = new StripeSignatureVerifier();
       const timestamp = Math.floor(Date.now() / 1000);
       const signedPayload = `${timestamp}.${testPayload}`;
-      const hash = createHmac('sha256', testSecret)
-        .update(signedPayload)
-        .digest('hex');
+      const hash = createHmac('sha256', testSecret).update(signedPayload).digest('hex');
       const signature = `t=${timestamp},v1=${hash}`;
 
       expect(verifier.verify(testPayload, signature, testSecret)).toBe(true);
@@ -95,9 +89,7 @@ describe('Signature Verifiers', () => {
       const verifier = new StripeSignatureVerifier(60); // 60 second tolerance
       const timestamp = Math.floor(Date.now() / 1000) - 120; // 2 minutes ago
       const signedPayload = `${timestamp}.${testPayload}`;
-      const hash = createHmac('sha256', testSecret)
-        .update(signedPayload)
-        .digest('hex');
+      const hash = createHmac('sha256', testSecret).update(signedPayload).digest('hex');
       const signature = `t=${timestamp},v1=${hash}`;
 
       expect(verifier.verify(testPayload, signature, testSecret)).toBe(false);
@@ -113,9 +105,7 @@ describe('Signature Verifiers', () => {
   describe('GitHubSignatureVerifier', () => {
     it('should verify valid GitHub signature', () => {
       const verifier = new GitHubSignatureVerifier();
-      const hash = createHmac('sha256', testSecret)
-        .update(testPayload)
-        .digest('hex');
+      const hash = createHmac('sha256', testSecret).update(testPayload).digest('hex');
       const signature = `sha256=${hash}`;
 
       expect(verifier.verify(testPayload, signature, testSecret)).toBe(true);
@@ -123,9 +113,7 @@ describe('Signature Verifiers', () => {
 
     it('should reject signature without sha256= prefix', () => {
       const verifier = new GitHubSignatureVerifier();
-      const hash = createHmac('sha256', testSecret)
-        .update(testPayload)
-        .digest('hex');
+      const hash = createHmac('sha256', testSecret).update(testPayload).digest('hex');
 
       expect(verifier.verify(testPayload, hash, testSecret)).toBe(false);
     });
@@ -146,9 +134,7 @@ describe('Signature Verifiers', () => {
   describe('SendGridSignatureVerifier', () => {
     it('should verify valid SendGrid signature', () => {
       const verifier = new SendGridSignatureVerifier();
-      const signature = createHmac('sha256', testSecret)
-        .update(testPayload)
-        .digest('base64');
+      const signature = createHmac('sha256', testSecret).update(testPayload).digest('base64');
 
       expect(verifier.verify(testPayload, signature, testSecret)).toBe(true);
     });
@@ -300,9 +286,7 @@ describe('WebhookEventRouter', () => {
 
     await router.route(event, context);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining('No handlers registered')
-    );
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No handlers registered'));
     consoleSpy.mockRestore();
   });
 
@@ -431,9 +415,7 @@ describe('WebhookHandler', () => {
       data: { key: 'value' },
     });
 
-    const signature = createHmac('sha256', testSecret)
-      .update(payload)
-      .digest('hex');
+    const signature = createHmac('sha256', testSecret).update(payload).digest('hex');
 
     const result = await handler.handleRequest('test', payload, {
       'x-signature': signature,
@@ -459,9 +441,7 @@ describe('WebhookHandler', () => {
       data: {},
     });
 
-    const signature = createHmac('sha256', testSecret)
-      .update(payload)
-      .digest('hex');
+    const signature = createHmac('sha256', testSecret).update(payload).digest('hex');
 
     // First request
     await handler.handleRequest('test', payload, { 'x-signature': signature });
@@ -490,9 +470,7 @@ describe('WebhookHandler', () => {
       data: {},
     });
 
-    const signature = createHmac('sha256', testSecret)
-      .update(payload)
-      .digest('hex');
+    const signature = createHmac('sha256', testSecret).update(payload).digest('hex');
 
     expect(handler.wasProcessed('test', 'evt-check')).toBe(false);
 
@@ -516,9 +494,7 @@ describe('WebhookHandler', () => {
       data: {},
     });
 
-    const signature = createHmac('sha256', testSecret)
-      .update(payload)
-      .digest('hex');
+    const signature = createHmac('sha256', testSecret).update(payload).digest('hex');
 
     await handler.handleRequest('test', payload, { 'x-signature': signature });
 
@@ -543,9 +519,7 @@ describe('WebhookHandler', () => {
       data: {},
     });
 
-    const signature = createHmac('sha256', testSecret)
-      .update(payload)
-      .digest('hex');
+    const signature = createHmac('sha256', testSecret).update(payload).digest('hex');
 
     await handler.handleRequest('test', payload, { 'x-signature': signature });
 
@@ -572,9 +546,7 @@ describe('WebhookHandler', () => {
       data: {},
     });
 
-    const signature = createHmac('sha256', testSecret)
-      .update(payload)
-      .digest('hex');
+    const signature = createHmac('sha256', testSecret).update(payload).digest('hex');
 
     const result = await handler.handleRequest('test', payload, {
       'x-signature': signature,
@@ -593,9 +565,7 @@ describe('WebhookHandler', () => {
     });
 
     const invalidPayload = 'not-json';
-    const signature = createHmac('sha256', testSecret)
-      .update(invalidPayload)
-      .digest('hex');
+    const signature = createHmac('sha256', testSecret).update(invalidPayload).digest('hex');
 
     const result = await handler.handleRequest('test', invalidPayload, {
       'x-signature': signature,
@@ -621,9 +591,7 @@ describe('WebhookHandler', () => {
       data: {},
     });
 
-    const signature = createHmac('sha256', testSecret)
-      .update(payload)
-      .digest('hex');
+    const signature = createHmac('sha256', testSecret).update(payload).digest('hex');
 
     // Use uppercase header name
     const result = await handler.handleRequest('test', payload, {

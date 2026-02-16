@@ -4,17 +4,20 @@
  * Activity Feed Component
  * IFC-069: Unified Activity Feed Service
  *
- * Virtualized infinite-scrolling activity feed with type/source filtering.
- * Uses @tanstack/react-virtual for efficient rendering of large lists.
+ * Matches home-authenticated.html mockup layout:
+ * - divide-y separators between items
+ * - "Load More Updates" button at bottom
+ * - Virtualized rendering for large lists
+ * - Supports internal (hook-driven) and external (parent-provided) data modes
  */
 
 import { useRef, useCallback, useEffect } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useActivityFeed, type UseActivityFeedOptions } from '@/hooks/useActivityFeed';
-import { ActivityFeedItem } from './ActivityFeedItem';
+import { ActivityFeedItem, type ActivityFeedItemProps } from './ActivityFeedItem';
 
-interface ActivityFeedProps extends UseActivityFeedOptions {
-  /** Height of the feed container. Defaults to 'auto' (no scroll container). */
+interface ActivityFeedBaseProps {
+  /** Height of the feed container. Defaults to 400. */
   height?: number | string;
   /** CSS class for the root container */
   className?: string;
@@ -22,24 +25,45 @@ interface ActivityFeedProps extends UseActivityFeedOptions {
   emptyMessage?: string;
 }
 
-/** Estimated height of each feed item in pixels (for virtualizer) */
-const ESTIMATED_ITEM_SIZE = 88;
+/** Internal mode: component fetches its own data */
+interface ActivityFeedInternalProps extends ActivityFeedBaseProps, UseActivityFeedOptions {
+  /** If items is provided, operates in external data mode */
+  items?: undefined;
+}
 
-export function ActivityFeed({
-  height = 600,
-  className = '',
-  emptyMessage = 'No activities yet',
-  ...feedOptions
-}: ActivityFeedProps) {
+/** External mode: parent provides items and pagination */
+interface ActivityFeedExternalProps extends ActivityFeedBaseProps {
+  items: ActivityFeedItemProps[];
+  isLoading?: boolean;
+  isError?: boolean;
+  error?: { message: string } | null;
+  isFetchingNextPage?: boolean;
+  hasNextPage?: boolean;
+  fetchNextPage?: () => void;
+}
+
+export type ActivityFeedProps = ActivityFeedInternalProps | ActivityFeedExternalProps;
+
+/** Estimated height of each feed item in pixels (for virtualizer) — increased for mockup layout */
+const ESTIMATED_ITEM_SIZE = 120;
+
+export function ActivityFeed(props: ActivityFeedProps) {
   const {
-    items,
-    isLoading,
-    isError,
-    error,
-    isFetchingNextPage,
-    hasNextPage,
-    fetchNextPage,
-  } = useActivityFeed(feedOptions);
+    height = 400,
+    className = '',
+    emptyMessage = 'No recent activity',
+  } = props;
+
+  // Resolve data source: internal hook or external props
+  const internal = useActivityFeedConditional(props);
+
+  const items = 'items' in props && props.items !== undefined ? props.items : internal.items;
+  const isLoading = 'items' in props && props.items !== undefined ? (props.isLoading ?? false) : internal.isLoading;
+  const isError = 'items' in props && props.items !== undefined ? (props.isError ?? false) : internal.isError;
+  const error = 'items' in props && props.items !== undefined ? (props.error ?? null) : internal.error;
+  const isFetchingNextPage = 'items' in props && props.items !== undefined ? (props.isFetchingNextPage ?? false) : internal.isFetchingNextPage;
+  const hasNextPage = 'items' in props && props.items !== undefined ? (props.hasNextPage ?? false) : internal.hasNextPage;
+  const fetchNextPage = 'items' in props && props.items !== undefined ? (props.fetchNextPage ?? (() => {})) : internal.fetchNextPage;
 
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -70,16 +94,17 @@ export function ActivityFeed({
     return () => el.removeEventListener('scroll', handleScroll);
   }, [handleScroll]);
 
-  // Loading state
+  // Loading state — skeleton matching mockup layout (p-5 padding, size-10 avatar)
   if (isLoading) {
     return (
-      <div className={`space-y-2 ${className}`}>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="animate-pulse flex gap-3 py-3 px-4">
-            <div className="w-8 h-8 rounded-full bg-muted" />
+      <div className={`divide-y divide-[#e2e8f0] dark:divide-[#334155] ${className}`}>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="animate-pulse flex gap-3 p-5">
+            <div className="size-10 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
             <div className="flex-1 space-y-2">
-              <div className="h-4 bg-muted rounded w-3/4" />
-              <div className="h-3 bg-muted rounded w-1/2" />
+              <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-3/4" />
+              <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-full" />
+              <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2" />
             </div>
           </div>
         ))}
@@ -90,9 +115,10 @@ export function ActivityFeed({
   // Error state
   if (isError) {
     return (
-      <div className={`p-4 text-center ${className}`}>
-        <p className="text-sm text-destructive">
-          Failed to load activity feed: {error?.message || 'Unknown error'}
+      <div className={`p-8 text-center ${className}`}>
+        <span className="material-symbols-outlined text-4xl mb-2 text-slate-400">error</span>
+        <p className="text-sm text-red-500">
+          {error?.message || 'Failed to load activity feed'}
         </p>
       </div>
     );
@@ -101,63 +127,99 @@ export function ActivityFeed({
   // Empty state
   if (items.length === 0) {
     return (
-      <div className={`p-8 text-center ${className}`}>
-        <p className="text-sm text-muted-foreground">{emptyMessage}</p>
+      <div className={`p-8 text-center text-slate-500 dark:text-slate-400 ${className}`}>
+        <span className="material-symbols-outlined text-4xl mb-2 block">inbox</span>
+        <p>{emptyMessage}</p>
       </div>
     );
   }
 
-  const containerStyle = typeof height === 'number'
-    ? { height: `${height}px`, overflow: 'auto' as const }
-    : { height, overflow: 'auto' as const };
+  const containerStyle =
+    typeof height === 'number'
+      ? { height: `${height}px`, overflow: 'auto' as const }
+      : { height, overflow: 'auto' as const };
 
   return (
-    <div ref={parentRef} className={className} style={containerStyle}>
-      <div
-        style={{
-          height: `${virtualizer.getTotalSize()}px`,
-          width: '100%',
-          position: 'relative',
-        }}
-      >
-        {virtualizer.getVirtualItems().map((virtualItem) => {
-          const item = items[virtualItem.index];
-          if (!item) return null;
+    <div className={className}>
+      <div ref={parentRef} style={containerStyle}>
+        <div
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {virtualizer.getVirtualItems().map((virtualItem) => {
+            const item = items[virtualItem.index];
+            if (!item) return null;
 
-          return (
-            <div
-              key={virtualItem.key}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                transform: `translateY(${virtualItem.start}px)`,
-              }}
-              ref={virtualizer.measureElement}
-              data-index={virtualItem.index}
-            >
-              <ActivityFeedItem
-                id={item.id}
-                source={item.source}
-                type={item.type}
-                title={item.title}
-                description={item.description}
-                timestamp={item.timestamp as Date | string}
-                actor={item.actor}
-                entity={item.entity}
-              />
-            </div>
-          );
-        })}
+            return (
+              <div
+                key={virtualItem.key}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+                ref={virtualizer.measureElement}
+                data-index={virtualItem.index}
+              >
+                {/* Divider between items (not before first) */}
+                {virtualItem.index > 0 && (
+                  <div className="border-t border-[#e2e8f0] dark:border-[#334155]" />
+                )}
+                <ActivityFeedItem
+                  id={item.id}
+                  source={item.source}
+                  type={item.type}
+                  title={item.title}
+                  description={item.description}
+                  timestamp={item.timestamp as Date | string}
+                  actor={item.actor}
+                  entity={item.entity}
+                  metadata={item.metadata}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Loading indicator at bottom */}
-      {isFetchingNextPage && (
-        <div className="py-4 text-center">
-          <span className="text-xs text-muted-foreground">Loading more...</span>
-        </div>
-      )}
+      {/* "Load More Updates" footer — matching mockup */}
+      <div className="p-4 border-t border-[#e2e8f0] dark:border-[#334155] text-center">
+        {isFetchingNextPage ? (
+          <span className="flex items-center gap-2 justify-center text-sm text-slate-500">
+            <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
+            Loading...
+          </span>
+        ) : hasNextPage ? (
+          <button
+            onClick={() => fetchNextPage()}
+            className="text-sm font-medium text-slate-500 hover:text-[#137fec] transition-colors"
+          >
+            Load More Updates
+          </button>
+        ) : (
+          <span className="text-sm text-slate-400">You&apos;re all caught up</span>
+        )}
+      </div>
     </div>
   );
+}
+
+/**
+ * Conditional hook: only fetches when in internal data mode.
+ * When items are provided externally, returns no-op defaults.
+ */
+function useActivityFeedConditional(props: ActivityFeedProps) {
+  const isExternal = 'items' in props && props.items !== undefined;
+
+  // Always call the hook (React rules) but disable it when external data is provided
+  const feedOptions: UseActivityFeedOptions = isExternal
+    ? { enabled: false }
+    : (props as ActivityFeedInternalProps);
+
+  return useActivityFeed(feedOptions);
 }

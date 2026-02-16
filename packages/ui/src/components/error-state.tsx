@@ -144,9 +144,7 @@ const ErrorState = React.forwardRef<HTMLDivElement, ErrorStateProps>(
         {/* Text Content */}
         <div className={cn('flex flex-col', sConfig.gap)}>
           <h3 className={cn(sConfig.title, 'text-foreground')}>{title}</h3>
-          <p className={cn(sConfig.message, 'text-muted-foreground max-w-md')}>
-            {message}
-          </p>
+          <p className={cn(sConfig.message, 'text-muted-foreground max-w-md')}>{message}</p>
         </div>
 
         {/* Details Toggle */}

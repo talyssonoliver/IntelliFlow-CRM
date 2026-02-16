@@ -35,7 +35,7 @@ import type { Context } from '../../context';
 import {
   getTenantContext,
   createTenantWhereClause,
-  type TenantAwareContext
+  type TenantAwareContext,
 } from '../../security/tenant-context';
 
 /**
@@ -326,7 +326,14 @@ export const contactRouter = createTRPCRouter({
     const contactService = getContactService(ctx);
 
     // Handle contact info updates via service
-    if (data.firstName || data.lastName || data.title || data.phone || data.department || data.status) {
+    if (
+      data.firstName ||
+      data.lastName ||
+      data.title ||
+      data.phone ||
+      data.department ||
+      data.status
+    ) {
       const result = await contactService.updateContactInfo(
         id,
         {
@@ -361,7 +368,11 @@ export const contactRouter = createTRPCRouter({
         }
       } else {
         // Associate with new account
-        const result = await contactService.associateWithAccount(id, accountId, typedCtx.tenant.userId);
+        const result = await contactService.associateWithAccount(
+          id,
+          accountId,
+          typedCtx.tenant.userId
+        );
         if (result.isFailure) {
           throw new TRPCError({
             code: result.error.message.includes('not found') ? 'NOT_FOUND' : 'BAD_REQUEST',
@@ -513,7 +524,7 @@ export const contactRouter = createTRPCRouter({
    * Get contact statistics using ContactService
    */
   stats: tenantProcedure.query(async ({ ctx }) => {
-   const typedCtx = getTenantContext(ctx);
+    const typedCtx = getTenantContext(ctx);
     const contactService = getContactService(ctx);
 
     const stats = await contactService.getContactStatistics(ctx.user?.userId);
@@ -605,12 +616,14 @@ export const contactRouter = createTRPCRouter({
    */
   filterOptions: tenantProcedure
     .input(
-      z.object({
-        search: z.string().optional(),
-        status: z.array(z.string()).optional(),
-        accountId: z.string().optional(),
-        department: z.string().optional(),
-      }).optional()
+      z
+        .object({
+          search: z.string().optional(),
+          status: z.array(z.string()).optional(),
+          accountId: z.string().optional(),
+          department: z.string().optional(),
+        })
+        .optional()
     )
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
@@ -651,26 +664,27 @@ export const contactRouter = createTRPCRouter({
       ]);
 
       // Get account names for display
-      const accountIds = accountCounts.map(a => a.accountId).filter(Boolean) as string[];
-      const accounts = accountIds.length > 0
-        ? await typedCtx.prismaWithTenant.account.findMany({
-            where: { id: { in: accountIds } },
-            select: { id: true, name: true },
-          })
-        : [];
-      const accountMap = new Map(accounts.map(a => [a.id, a.name]));
+      const accountIds = accountCounts.map((a) => a.accountId).filter(Boolean) as string[];
+      const accounts =
+        accountIds.length > 0
+          ? await typedCtx.prismaWithTenant.account.findMany({
+              where: { id: { in: accountIds } },
+              select: { id: true, name: true },
+            })
+          : [];
+      const accountMap = new Map(accounts.map((a) => [a.id, a.name]));
 
       return {
         departments: departmentCounts
-          .filter(d => d.department)
-          .map(d => ({
+          .filter((d) => d.department)
+          .map((d) => ({
             value: d.department as string,
             label: d.department as string,
             count: d._count,
           })),
         accounts: accountCounts
-          .filter(a => a.accountId)
-          .map(a => ({
+          .filter((a) => a.accountId)
+          .map((a) => ({
             value: a.accountId as string,
             label: accountMap.get(a.accountId as string) ?? a.accountId ?? 'Unknown',
             count: a._count,
@@ -681,197 +695,191 @@ export const contactRouter = createTRPCRouter({
   /**
    * Bulk email contacts - returns email addresses for mailto:
    */
-  bulkEmail: tenantProcedure
-    .input(bulkEmailContactsSchema)
-    .mutation(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const { ids } = input;
+  bulkEmail: tenantProcedure.input(bulkEmailContactsSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const { ids } = input;
 
-      const contacts = await typedCtx.prismaWithTenant.contact.findMany({
-        where: { id: { in: ids } },
-        select: { id: true, email: true },
-      });
+    const contacts = await typedCtx.prismaWithTenant.contact.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, email: true },
+    });
 
-      const emails = contacts.map(c => c.email);
-      const mailtoUrl = `mailto:${emails.join(',')}`;
+    const emails = contacts.map((c) => c.email);
+    const mailtoUrl = `mailto:${emails.join(',')}`;
 
-      return {
-        successful: contacts.map(c => c.id),
-        failed: ids.filter((id: string) => !contacts.find(c => c.id === id)).map((id: string) => ({
+    return {
+      successful: contacts.map((c) => c.id),
+      failed: ids
+        .filter((id: string) => !contacts.find((c) => c.id === id))
+        .map((id: string) => ({
           id,
-          error: 'Contact not found'
+          error: 'Contact not found',
         })),
-        totalProcessed: ids.length,
-        emails,
-        mailtoUrl,
-      };
-    }),
+      totalProcessed: ids.length,
+      emails,
+      mailtoUrl,
+    };
+  }),
 
   /**
    * Bulk export contacts as CSV/JSON
    */
-  bulkExport: tenantProcedure
-    .input(bulkExportContactsSchema)
-    .mutation(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const { ids, format } = input;
+  bulkExport: tenantProcedure.input(bulkExportContactsSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const { ids, format } = input;
 
-      const contacts = await typedCtx.prismaWithTenant.contact.findMany({
-        where: { id: { in: ids } },
-        include: {
-          account: { select: { name: true } },
-        },
-      });
+    const contacts = await typedCtx.prismaWithTenant.contact.findMany({
+      where: { id: { in: ids } },
+      include: {
+        account: { select: { name: true } },
+      },
+    });
 
-      let data: string;
-      if (format === 'csv') {
-        const headers = 'Email,First Name,Last Name,Title,Phone,Department,Account\n';
-        const rows = contacts.map(c =>
-          `"${c.email}","${c.firstName}","${c.lastName}","${c.title || ''}","${c.phone || ''}","${c.department || ''}","${c.account?.name || ''}"`
-        ).join('\n');
-        data = headers + rows;
-      } else {
-        data = JSON.stringify(contacts, null, 2);
-      }
+    let data: string;
+    if (format === 'csv') {
+      const headers = 'Email,First Name,Last Name,Title,Phone,Department,Account\n';
+      const rows = contacts
+        .map(
+          (c) =>
+            `"${c.email}","${c.firstName}","${c.lastName}","${c.title || ''}","${c.phone || ''}","${c.department || ''}","${c.account?.name || ''}"`
+        )
+        .join('\n');
+      data = headers + rows;
+    } else {
+      data = JSON.stringify(contacts, null, 2);
+    }
 
-      return {
-        successful: contacts.map(c => c.id),
-        failed: ids.filter((id: string) => !contacts.find(c => c.id === id)).map((id: string) => ({
+    return {
+      successful: contacts.map((c) => c.id),
+      failed: ids
+        .filter((id: string) => !contacts.find((c) => c.id === id))
+        .map((id: string) => ({
           id,
-          error: 'Contact not found'
+          error: 'Contact not found',
         })),
-        totalProcessed: ids.length,
-        data,
-        count: contacts.length,
-      };
-    }),
+      totalProcessed: ids.length,
+      data,
+      count: contacts.length,
+    };
+  }),
 
   /**
    * Bulk delete contacts
    */
-  bulkDelete: tenantProcedure
-    .input(bulkDeleteContactsSchema)
-    .mutation(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const contactService = getContactService(ctx);
-      const { ids } = input;
+  bulkDelete: tenantProcedure.input(bulkDeleteContactsSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const contactService = getContactService(ctx);
+    const { ids } = input;
 
-      const successful: string[] = [];
-      const failed: Array<{ id: string; error: string }> = [];
+    const successful: string[] = [];
+    const failed: Array<{ id: string; error: string }> = [];
 
-      for (const contactId of ids) {
-        try {
-          // Check for opportunities first
-          const contact = await typedCtx.prismaWithTenant.contact.findUnique({
-            where: { id: contactId },
-            include: { _count: { select: { opportunities: true } } },
-          });
+    for (const contactId of ids) {
+      try {
+        // Check for opportunities first
+        const contact = await typedCtx.prismaWithTenant.contact.findUnique({
+          where: { id: contactId },
+          include: { _count: { select: { opportunities: true } } },
+        });
 
-          if (!contact) {
-            failed.push({ id: contactId, error: 'Contact not found' });
-            continue;
-          }
+        if (!contact) {
+          failed.push({ id: contactId, error: 'Contact not found' });
+          continue;
+        }
 
-          if (contact._count.opportunities > 0) {
-            failed.push({
-              id: contactId,
-              error: `Contact has ${contact._count.opportunities} opportunities`
-            });
-            continue;
-          }
-
-          const result = await contactService.deleteContact(contactId);
-          if (result.isSuccess) {
-            successful.push(contactId);
-          } else {
-            failed.push({ id: contactId, error: result.error.message });
-          }
-        } catch (error) {
+        if (contact._count.opportunities > 0) {
           failed.push({
             id: contactId,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: `Contact has ${contact._count.opportunities} opportunities`,
           });
+          continue;
         }
-      }
 
-      return { successful, failed, totalProcessed: ids.length };
-    }),
+        const result = await contactService.deleteContact(contactId);
+        if (result.isSuccess) {
+          successful.push(contactId);
+        } else {
+          failed.push({ id: contactId, error: result.error.message });
+        }
+      } catch (error) {
+        failed.push({
+          id: contactId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+      }
+    }
+
+    return { successful, failed, totalProcessed: ids.length };
+  }),
 
   /**
    * Link a contact to a lead (IFC-184)
    * This is for retroactive association, distinct from lead conversion.
    */
-  linkToLead: tenantProcedure
-    .input(linkToLeadSchema)
-    .mutation(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const contactService = getContactService(ctx);
+  linkToLead: tenantProcedure.input(linkToLeadSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const contactService = getContactService(ctx);
 
-      const result = await contactService.linkToLead(
-        input.contactId,
-        input.leadId,
-        typedCtx.tenant.userId
-      );
+    const result = await contactService.linkToLead(
+      input.contactId,
+      input.leadId,
+      typedCtx.tenant.userId
+    );
 
-      if (result.isFailure) {
-        const errorMessage = result.error.message;
-        if (errorMessage.includes('not found')) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: errorMessage,
-          });
-        }
-        if (errorMessage.includes('already linked') || errorMessage.includes('Unique constraint')) {
-          throw new TRPCError({
-            code: 'CONFLICT',
-            message: errorMessage,
-          });
-        }
-        if (errorMessage.includes('same tenant')) {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: errorMessage,
-          });
-        }
+    if (result.isFailure) {
+      const errorMessage = result.error.message;
+      if (errorMessage.includes('not found')) {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
+          code: 'NOT_FOUND',
           message: errorMessage,
         });
       }
+      if (errorMessage.includes('already linked') || errorMessage.includes('Unique constraint')) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: errorMessage,
+        });
+      }
+      if (errorMessage.includes('same tenant')) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: errorMessage,
+        });
+      }
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: errorMessage,
+      });
+    }
 
-      return mapContactToResponse(result.value);
-    }),
+    return mapContactToResponse(result.value);
+  }),
 
   /**
    * Unlink a contact from a lead (IFC-184)
    */
-  unlinkFromLead: tenantProcedure
-    .input(unlinkFromLeadSchema)
-    .mutation(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const contactService = getContactService(ctx);
+  unlinkFromLead: tenantProcedure.input(unlinkFromLeadSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const contactService = getContactService(ctx);
 
-      const result = await contactService.unlinkFromLead(
-        input.contactId,
-        typedCtx.tenant.userId
-      );
+    const result = await contactService.unlinkFromLead(input.contactId, typedCtx.tenant.userId);
 
-      if (result.isFailure) {
-        const errorMessage = result.error.message;
-        if (errorMessage.includes('not found')) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: errorMessage,
-          });
-        }
+    if (result.isFailure) {
+      const errorMessage = result.error.message;
+      if (errorMessage.includes('not found')) {
         throw new TRPCError({
-          code: 'BAD_REQUEST',
+          code: 'NOT_FOUND',
           message: errorMessage,
         });
       }
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: errorMessage,
+      });
+    }
 
-      return mapContactToResponse(result.value);
-    }),
+    return mapContactToResponse(result.value);
+  }),
 
   /**
    * Get timeline events for a contact (IFC-184)
@@ -929,7 +937,10 @@ export const contactRouter = createTRPCRouter({
             ...(Object.keys(dateFilter).length > 0 && { createdAt: dateFilter }),
             ...(cursorTimestamp && {
               OR: [
-                { createdAt: input.sortOrder === 'desc' ? { lt: cursorTimestamp } : { gt: cursorTimestamp } },
+                {
+                  createdAt:
+                    input.sortOrder === 'desc' ? { lt: cursorTimestamp } : { gt: cursorTimestamp },
+                },
                 { createdAt: cursorTimestamp, id: cursorId ? { lt: cursorId } : undefined },
               ],
             }),
@@ -952,9 +963,13 @@ export const contactRouter = createTRPCRouter({
           SELECT id, content, "createdAt", "updatedAt"
           FROM "notes"
           WHERE "contactId" = ${input.contactId}
-          ${Object.keys(dateFilter).length > 0 ?
-            (dateFilter.gte ? typedCtx.prismaWithTenant.$queryRaw`AND "createdAt" >= ${dateFilter.gte}` : typedCtx.prismaWithTenant.$queryRaw``) :
-            typedCtx.prismaWithTenant.$queryRaw``}
+          ${
+            Object.keys(dateFilter).length > 0
+              ? dateFilter.gte
+                ? typedCtx.prismaWithTenant.$queryRaw`AND "createdAt" >= ${dateFilter.gte}`
+                : typedCtx.prismaWithTenant.$queryRaw``
+              : typedCtx.prismaWithTenant.$queryRaw``
+          }
           ORDER BY "createdAt" ${input.sortOrder === 'desc' ? typedCtx.prismaWithTenant.$queryRaw`DESC` : typedCtx.prismaWithTenant.$queryRaw`ASC`}
           LIMIT ${fetchLimit}
         `.catch(() => []), // Fallback if notes table doesn't exist
@@ -963,7 +978,15 @@ export const contactRouter = createTRPCRouter({
       // 5. Map to timeline events
       type TimelineEvent = {
         id: string;
-        type: 'email' | 'task' | 'appointment' | 'activity' | 'note' | 'call' | 'status_change' | 'meeting';
+        type:
+          | 'email'
+          | 'task'
+          | 'appointment'
+          | 'activity'
+          | 'note'
+          | 'call'
+          | 'status_change'
+          | 'meeting';
         title: string;
         description?: string;
         timestamp: Date;
@@ -1000,9 +1023,10 @@ export const contactRouter = createTRPCRouter({
 
       // 6. Sort all events by timestamp
       events.sort((a, b) => {
-        const diff = input.sortOrder === 'desc'
-          ? b.timestamp.getTime() - a.timestamp.getTime()
-          : a.timestamp.getTime() - b.timestamp.getTime();
+        const diff =
+          input.sortOrder === 'desc'
+            ? b.timestamp.getTime() - a.timestamp.getTime()
+            : a.timestamp.getTime() - b.timestamp.getTime();
         if (diff !== 0) return diff;
         return a.id.localeCompare(b.id);
       });

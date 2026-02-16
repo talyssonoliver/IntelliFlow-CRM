@@ -11,7 +11,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import { PipelineBoard } from '../PipelineBoard';
-import { createMockDeal, createMockDeals } from './deal-test-utils';
+import { createMockDeal } from './deal-test-utils';
 import type { OpportunityStage } from '../types';
 
 // Capture DndContext props for testing
@@ -24,7 +24,14 @@ vi.mock('@intelliflow/ui', () => ({
 
 // Mock @dnd-kit/core
 vi.mock('@dnd-kit/core', () => ({
-  DndContext: ({ children, onDragEnd, onDragStart, onDragCancel, accessibility, ...props }: Record<string, unknown> & { children: React.ReactNode }) => {
+  DndContext: ({
+    children,
+    onDragEnd,
+    onDragStart,
+    onDragCancel,
+    accessibility,
+    ...props
+  }: Record<string, unknown> & { children: React.ReactNode }) => {
     capturedDndProps = { onDragEnd, onDragStart, onDragCancel, accessibility, ...props };
     return <div data-testid="dnd-context">{children as React.ReactNode}</div>;
   },
@@ -76,7 +83,7 @@ describe('PipelineBoard', () => {
         deals={[]}
         onStageChange={mockOnStageChange}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     expect(screen.getByText('Prospecting')).toBeInTheDocument();
@@ -98,7 +105,7 @@ describe('PipelineBoard', () => {
         deals={deals}
         onStageChange={mockOnStageChange}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     expect(screen.getByText('Deal A')).toBeInTheDocument();
@@ -111,7 +118,7 @@ describe('PipelineBoard', () => {
         deals={[]}
         onStageChange={mockOnStageChange}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     const placeholders = screen.getAllByText('Drop deals here');
@@ -124,7 +131,7 @@ describe('PipelineBoard', () => {
         deals={[]}
         onStageChange={mockOnStageChange}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     const board = screen.getByRole('region', { name: 'Deal pipeline kanban board' });
@@ -137,7 +144,7 @@ describe('PipelineBoard', () => {
         deals={[]}
         onStageChange={mockOnStageChange}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     const accessibility = capturedDndProps.accessibility as Record<string, unknown>;
@@ -152,7 +159,7 @@ describe('PipelineBoard', () => {
         deals={[]}
         onStageChange={mockOnStageChange}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     const accessibility = capturedDndProps.accessibility as Record<string, Record<string, unknown>>;
@@ -161,15 +168,13 @@ describe('PipelineBoard', () => {
   });
 
   it('handleDragEnd — valid transition: calls onStageChange', () => {
-    const deals = [
-      createMockDeal({ id: 'deal-1', stage: 'PROSPECTING' as OpportunityStage }),
-    ];
+    const deals = [createMockDeal({ id: 'deal-1', stage: 'PROSPECTING' as OpportunityStage })];
     render(
       <PipelineBoard
         deals={deals}
         onStageChange={mockOnStageChange}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     const onDragEnd = capturedDndProps.onDragEnd as (event: Record<string, unknown>) => void;
@@ -182,15 +187,13 @@ describe('PipelineBoard', () => {
   });
 
   it('handleDragEnd — invalid transition: does NOT call onStageChange', () => {
-    const deals = [
-      createMockDeal({ id: 'deal-1', stage: 'PROSPECTING' as OpportunityStage }),
-    ];
+    const deals = [createMockDeal({ id: 'deal-1', stage: 'PROSPECTING' as OpportunityStage })];
     render(
       <PipelineBoard
         deals={deals}
         onStageChange={mockOnStageChange}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     // PROSPECTING cannot go directly to NEGOTIATION
@@ -213,7 +216,7 @@ describe('PipelineBoard', () => {
         deals={deals}
         onStageChange={mockOnStageChange}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     const onDragEnd = capturedDndProps.onDragEnd as (event: Record<string, unknown>) => void;
@@ -232,7 +235,7 @@ describe('PipelineBoard', () => {
         deals={[createMockDeal({ id: 'deal-1' })]}
         onStageChange={mockOnStageChange}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     const onDragEnd = capturedDndProps.onDragEnd as (event: Record<string, unknown>) => void;
@@ -245,15 +248,13 @@ describe('PipelineBoard', () => {
   });
 
   it('CLOSED_WON only valid from NEGOTIATION (AC-6)', () => {
-    const deals = [
-      createMockDeal({ id: 'deal-1', stage: 'PROPOSAL' as OpportunityStage }),
-    ];
+    const deals = [createMockDeal({ id: 'deal-1', stage: 'PROPOSAL' as OpportunityStage })];
     render(
       <PipelineBoard
         deals={deals}
         onStageChange={mockOnStageChange}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     const onDragEnd = capturedDndProps.onDragEnd as (event: Record<string, unknown>) => void;
@@ -267,15 +268,13 @@ describe('PipelineBoard', () => {
   });
 
   it('CLOSED_WON is valid from NEGOTIATION (AC-6)', () => {
-    const deals = [
-      createMockDeal({ id: 'deal-1', stage: 'NEGOTIATION' as OpportunityStage }),
-    ];
+    const deals = [createMockDeal({ id: 'deal-1', stage: 'NEGOTIATION' as OpportunityStage })];
     render(
       <PipelineBoard
         deals={deals}
         onStageChange={mockOnStageChange}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     const onDragEnd = capturedDndProps.onDragEnd as (event: Record<string, unknown>) => void;

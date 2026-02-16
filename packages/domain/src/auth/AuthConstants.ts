@@ -15,10 +15,10 @@
  * Multi-factor authentication methods supported
  */
 export const MFA_METHODS = [
-  'totp',    // Time-based One-Time Password (authenticator apps)
-  'sms',     // SMS verification
-  'email',   // Email verification
-  'backup',  // Backup codes
+  'totp', // Time-based One-Time Password (authenticator apps)
+  'sms', // SMS verification
+  'email', // Email verification
+  'backup', // Backup codes
 ] as const;
 
 export type MfaMethod = (typeof MFA_METHODS)[number];
@@ -31,8 +31,8 @@ export type MfaMethod = (typeof MFA_METHODS)[number];
  * OAuth providers supported for SSO
  */
 export const OAUTH_PROVIDERS = [
-  'google',  // Google OAuth
-  'azure',   // Microsoft Azure AD / Entra ID
+  'google', // Google OAuth
+  'azure', // Microsoft Azure AD / Entra ID
 ] as const;
 
 export type OAuthProvider = (typeof OAUTH_PROVIDERS)[number];

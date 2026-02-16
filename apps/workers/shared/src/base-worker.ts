@@ -22,7 +22,11 @@ import type { WorkerConfig } from './worker-config';
 import { loadWorkerConfig } from './worker-config';
 import { QueueConnector } from './queue-connector';
 import { HealthServer, createDefaultHealthProvider, type HealthProvider } from './health-server';
-import { setupGracefulShutdown, createCompositeShutdown, type ShutdownHandler } from './graceful-shutdown';
+import {
+  setupGracefulShutdown,
+  createCompositeShutdown,
+  type ShutdownHandler,
+} from './graceful-shutdown';
 import type { WorkerState, WorkerStatus, ComponentHealth } from './types';
 
 // ============================================================================
@@ -149,13 +153,10 @@ export abstract class BaseWorker<TJobData = unknown, TJobResult = unknown> {
 
       // 2. Create workers for each queue
       for (const queueName of this.queueNames) {
-        this.queueConnector.createWorker<TJobData, TJobResult>(
-          queueName,
-          async (job) => {
-            const result = await this.handleJob(job);
-            return result;
-          }
-        );
+        this.queueConnector.createWorker<TJobData, TJobResult>(queueName, async (job) => {
+          const result = await this.handleJob(job);
+          return result;
+        });
       }
 
       // 3. Start health server

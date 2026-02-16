@@ -79,7 +79,7 @@ describe('PrismaCaseRepository', () => {
       expect(mockPrisma.case.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { id: testCaseIdValue },
-        }),
+        })
       );
     });
   });
@@ -121,7 +121,7 @@ describe('PrismaCaseRepository', () => {
       expect(mockPrisma.case.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ status: 'OPEN' }),
-        }),
+        })
       );
     });
   });
@@ -150,7 +150,7 @@ describe('PrismaCaseRepository', () => {
               expect.objectContaining({ title: expect.objectContaining({ contains: 'test' }) }),
             ]),
           }),
-        }),
+        })
       );
     });
   });
@@ -199,7 +199,7 @@ describe('PrismaCaseRepository', () => {
             deadline: expect.objectContaining({ lt: expect.any(Date) }),
             status: expect.objectContaining({ notIn: ['CLOSED', 'CANCELLED'] }),
           }),
-        }),
+        })
       );
     });
   });

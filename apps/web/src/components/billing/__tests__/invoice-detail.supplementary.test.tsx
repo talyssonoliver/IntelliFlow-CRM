@@ -128,9 +128,7 @@ describe('InvoiceDetail', () => {
 
   describe('Loading State', () => {
     it('renders skeleton when loading', () => {
-      const { container } = render(
-        <InvoiceDetail invoice={null} isLoading={true} />
-      );
+      const { container } = render(<InvoiceDetail invoice={null} isLoading={true} />);
 
       // Skeleton should be rendered (no invoice content)
       expect(screen.queryByText(/Invoice #/)).not.toBeInTheDocument();
@@ -141,26 +139,14 @@ describe('InvoiceDetail', () => {
 
   describe('Error State', () => {
     it('renders error message', () => {
-      render(
-        <InvoiceDetail
-          invoice={null}
-          isLoading={false}
-          error="Failed to fetch invoice"
-        />
-      );
+      render(<InvoiceDetail invoice={null} isLoading={false} error="Failed to fetch invoice" />);
 
       expect(screen.getByText('Error Loading Invoice')).toBeInTheDocument();
       expect(screen.getByText('Failed to fetch invoice')).toBeInTheDocument();
     });
 
     it('renders Back to Invoices link in error state', () => {
-      render(
-        <InvoiceDetail
-          invoice={null}
-          isLoading={false}
-          error="Network error"
-        />
-      );
+      render(<InvoiceDetail invoice={null} isLoading={false} error="Network error" />);
 
       expect(screen.getByRole('link', { name: /back to invoices/i })).toHaveAttribute(
         'href',

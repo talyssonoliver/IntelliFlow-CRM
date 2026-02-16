@@ -12,7 +12,9 @@ import { DealQuickView } from '../DealQuickView';
 // Mock @intelliflow/ui
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <div data-testid="card" className={className}>{children}</div>
+    <div data-testid="card" className={className}>
+      {children}
+    </div>
   ),
 }));
 
@@ -30,7 +32,7 @@ describe('DealQuickView', () => {
         dealId={null}
         onClose={mockOnClose}
         onNavigateToDetail={mockOnNavigateToDetail}
-      />,
+      />
     );
 
     expect(container.firstChild).toBeNull();
@@ -42,7 +44,7 @@ describe('DealQuickView', () => {
         dealId="deal-123"
         onClose={mockOnClose}
         onNavigateToDetail={mockOnNavigateToDetail}
-      />,
+      />
     );
 
     expect(screen.getByText('Quick View')).toBeInTheDocument();
@@ -55,7 +57,7 @@ describe('DealQuickView', () => {
         dealId="deal-123"
         onClose={mockOnClose}
         onNavigateToDetail={mockOnNavigateToDetail}
-      />,
+      />
     );
 
     const closeButton = screen.getByLabelText('Close quick view');
@@ -71,7 +73,7 @@ describe('DealQuickView', () => {
         dealId="deal-123"
         onClose={mockOnClose}
         onNavigateToDetail={mockOnNavigateToDetail}
-      />,
+      />
     );
 
     const detailButton = screen.getByText('View Details');

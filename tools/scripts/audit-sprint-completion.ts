@@ -170,11 +170,7 @@ async function main(): Promise<void> {
       console.log(JSON.stringify(report, null, 2));
     } else {
       // Write report files
-      const paths = getAuditOutputPaths(
-        config.repoRoot!,
-        config.sprintNumber!,
-        report.run_id
-      );
+      const paths = getAuditOutputPaths(config.repoRoot!, config.sprintNumber!, report.run_id);
 
       await writeAllReports(report, paths);
       await createLatestLink(paths, config.sprintNumber!, config.repoRoot!);

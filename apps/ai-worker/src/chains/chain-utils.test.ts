@@ -134,7 +134,7 @@ describe('validateScoringResult', () => {
     const validation = validateScoringResult(result);
 
     expect(validation.valid).toBe(false);
-    expect(validation.issues.some(issue => issue.includes('Low confidence'))).toBe(true);
+    expect(validation.issues.some((issue) => issue.includes('Low confidence'))).toBe(true);
   });
 
   it('should flag missing factors', () => {
@@ -148,7 +148,7 @@ describe('validateScoringResult', () => {
     const validation = validateScoringResult(result);
 
     expect(validation.valid).toBe(false);
-    expect(validation.issues.some(issue => issue.includes('No scoring factors'))).toBe(true);
+    expect(validation.issues.some((issue) => issue.includes('No scoring factors'))).toBe(true);
   });
 
   it('should flag factors without detailed reasoning', () => {
@@ -159,7 +159,7 @@ describe('validateScoringResult', () => {
         {
           name: 'Quality',
           impact: 15,
-          reasoning: 'Good',  // Too short
+          reasoning: 'Good', // Too short
         },
       ],
       modelVersion: 'openai:gpt-4:v1',
@@ -168,7 +168,7 @@ describe('validateScoringResult', () => {
     const validation = validateScoringResult(result);
 
     expect(validation.valid).toBe(false);
-    expect(validation.issues.some(issue => issue.includes('lack detailed reasoning'))).toBe(true);
+    expect(validation.issues.some((issue) => issue.includes('lack detailed reasoning'))).toBe(true);
   });
 
   it('should detect multiple issues', () => {
@@ -410,7 +410,7 @@ describe('estimateTokens', () => {
   it('should estimate tokens for context items', () => {
     const context: ContextItemForFormatting[] = [
       {
-        title: 'Test Title',      // 10 chars
+        title: 'Test Title', // 10 chars
         source: 'documents',
         content: 'Test content here', // 17 chars
         relevanceScore: 0.9,
@@ -431,14 +431,14 @@ describe('estimateTokens', () => {
   it('should aggregate multiple items', () => {
     const context: ContextItemForFormatting[] = [
       {
-        title: 'A'.repeat(40),    // 40 chars
+        title: 'A'.repeat(40), // 40 chars
         source: 'documents',
         content: 'B'.repeat(160), // 160 chars
         relevanceScore: 0.9,
         citation: '[1]',
       },
       {
-        title: 'C'.repeat(40),    // 40 chars
+        title: 'C'.repeat(40), // 40 chars
         source: 'notes',
         content: 'D'.repeat(160), // 160 chars
         relevanceScore: 0.8,

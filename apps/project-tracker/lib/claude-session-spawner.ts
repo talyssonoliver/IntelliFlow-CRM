@@ -360,5 +360,3 @@ async function listSessions(): Promise<string[]> {
   const files = await readdir(statusDir);
   return files.filter((f) => f.endsWith('.json')).map((f) => f.replace('.json', ''));
 }
-
-

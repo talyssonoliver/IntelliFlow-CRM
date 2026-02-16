@@ -15,12 +15,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // ---------------------------------------------------------------------------
 // vi.hoisted mocks - must be used inside vi.mock() factories
 // ---------------------------------------------------------------------------
-const {
-  mockDeleteMany,
-  mockCount,
-  mockConnect,
-  mockDisconnect,
-} = vi.hoisted(() => ({
+const { mockDeleteMany, mockCount, mockConnect, mockDisconnect } = vi.hoisted(() => ({
   mockDeleteMany: vi.fn().mockResolvedValue({ count: 0 }),
   mockCount: vi.fn().mockResolvedValue(0),
   mockConnect: vi.fn().mockResolvedValue(undefined),
@@ -304,10 +299,10 @@ describe('cleanup-legacy-seed-ids - supplementary2', () => {
     it('should check counts for leads, contacts, accounts, opportunities, tasks, tickets', async () => {
       mockCount
         .mockResolvedValueOnce(10) // leads
-        .mockResolvedValueOnce(8)  // contacts
-        .mockResolvedValueOnce(5)  // accounts
-        .mockResolvedValueOnce(3)  // opportunities
-        .mockResolvedValueOnce(7)  // tasks
+        .mockResolvedValueOnce(8) // contacts
+        .mockResolvedValueOnce(5) // accounts
+        .mockResolvedValueOnce(3) // opportunities
+        .mockResolvedValueOnce(7) // tasks
         .mockResolvedValueOnce(2); // tickets
 
       const entityNames = ['Leads', 'Contacts', 'Accounts', 'Opportunities', 'Tasks', 'Tickets'];
@@ -447,7 +442,7 @@ describe('cleanup-legacy-seed-ids - supplementary2', () => {
 
       expect(consoleSpy).toHaveBeenCalledWith(
         'Error:',
-        expect.objectContaining({ message: 'ECONNREFUSED' }),
+        expect.objectContaining({ message: 'ECONNREFUSED' })
       );
       expect(process.exit).toHaveBeenCalledWith(1);
       expect(mockDisconnect).toHaveBeenCalled();
@@ -486,7 +481,9 @@ describe('cleanup-legacy-seed-ids - supplementary2', () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
       const totalDeleted = 42;
 
-      console.log(`\nCleanup complete! Deleted ${totalDeleted} total records with legacy string IDs.`);
+      console.log(
+        `\nCleanup complete! Deleted ${totalDeleted} total records with legacy string IDs.`
+      );
       console.log('\nNext steps:');
       console.log('   1. Run: pnpm --filter @intelliflow/db db:seed');
       console.log('   2. This will re-seed with the new UUID format.');

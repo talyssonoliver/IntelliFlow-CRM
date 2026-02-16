@@ -123,15 +123,18 @@ function runAuditCli(
     });
 
     // Timeout after 15 minutes (auditing many tasks can take time)
-    setTimeout(() => {
-      proc.kill('SIGTERM');
-      resolve({
-        success: false,
-        stdout,
-        stderr: 'Audit timed out after 15 minutes',
-        code: 124,
-      });
-    }, 15 * 60 * 1000);
+    setTimeout(
+      () => {
+        proc.kill('SIGTERM');
+        resolve({
+          success: false,
+          stdout,
+          stderr: 'Audit timed out after 15 minutes',
+          code: 124,
+        });
+      },
+      15 * 60 * 1000
+    );
   });
 }
 
@@ -234,10 +237,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<AuditResp
 function getSprintsWithCompletedTasks(): Array<{ sprint: number; completedCount: number }> {
   // When running from project-tracker, cwd is apps/project-tracker
   // So we use relative path from there
-  const csvPath = path.join(
-    process.cwd(),
-    'docs/metrics/_global/Sprint_plan.csv'
-  );
+  const csvPath = path.join(process.cwd(), 'docs/metrics/_global/Sprint_plan.csv');
 
   if (!fs.existsSync(csvPath)) {
     return [];
@@ -351,7 +351,9 @@ function parseCSVLine(line: string): string[] {
 /**
  * Lists attestation history for a task
  */
-function getAttestationHistory(taskId: string): Array<{ timestamp: string; verdict: string; runId: string }> {
+function getAttestationHistory(
+  taskId: string
+): Array<{ timestamp: string; verdict: string; runId: string }> {
   const repoRoot = getRepoRoot();
   const attestationDir = path.join(repoRoot, 'artifacts/attestations', taskId);
 
@@ -363,12 +365,17 @@ function getAttestationHistory(taskId: string): Array<{ timestamp: string; verdi
   const files = fs.readdirSync(attestationDir);
 
   for (const file of files) {
-    if (file.startsWith('attestation-') && file.endsWith('.json') && file !== 'attestation-latest.json') {
+    if (
+      file.startsWith('attestation-') &&
+      file.endsWith('.json') &&
+      file !== 'attestation-latest.json'
+    ) {
       try {
         const filePath = path.join(attestationDir, file);
         const content = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
         history.push({
-          timestamp: content.attestation_timestamp || file.replace('attestation-', '').replace('.json', ''),
+          timestamp:
+            content.attestation_timestamp || file.replace('attestation-', '').replace('.json', ''),
           verdict: content.verdict || 'UNKNOWN',
           runId: content.run_id || '',
         });

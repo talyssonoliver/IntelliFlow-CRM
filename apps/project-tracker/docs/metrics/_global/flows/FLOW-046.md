@@ -1,8 +1,8 @@
 ### 6.1 Account Management & Hierarchy
 
-**Cenario**: Gestor comercial precisa organizar contas de clientes em hierarquias
-(matriz/filial), visualizar pipeline por conta, e gerenciar contatos e
-oportunidades associados.
+**Cenario**: Gestor comercial precisa organizar contas de clientes em
+hierarquias (matriz/filial), visualizar pipeline por conta, e gerenciar contatos
+e oportunidades associados.
 
 **Especificacoes Tecnicas**:
 

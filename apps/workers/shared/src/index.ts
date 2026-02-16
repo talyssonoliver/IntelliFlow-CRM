@@ -43,10 +43,7 @@ export { HealthServer, createDefaultHealthProvider } from './health-server';
 export type { HealthProvider, HealthServerOptions } from './health-server';
 
 // Graceful Shutdown
-export {
-  setupGracefulShutdown,
-  createCompositeShutdown,
-} from './graceful-shutdown';
+export { setupGracefulShutdown, createCompositeShutdown } from './graceful-shutdown';
 export type { GracefulShutdownOptions, ShutdownHandler } from './graceful-shutdown';
 
 // Types

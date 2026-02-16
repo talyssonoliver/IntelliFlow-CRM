@@ -11,9 +11,15 @@ import { TaskForm } from '../TaskForm';
 // Mock Sheet components to render inline (no portal)
 vi.mock('@intelliflow/ui', () => ({
   toast: vi.fn(),
-  Sheet: ({ children, open }: any) => open ? <div data-testid="sheet-root">{children}</div> : null,
+  Sheet: ({ children, open }: any) =>
+    open ? <div data-testid="sheet-root">{children}</div> : null,
   SheetContent: ({ children, ...props }: any) => (
-    <div role="dialog" aria-modal="true" aria-label={props['aria-label']} data-testid="sheet-content">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={props['aria-label']}
+      data-testid="sheet-content"
+    >
       {children}
     </div>
   ),
@@ -52,26 +58,20 @@ describe('TaskForm', () => {
   });
 
   it('renders create form when open', () => {
-    render(
-      <TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />
-    );
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />);
 
     expect(screen.getByText('New Task')).toBeInTheDocument();
     expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
   });
 
   it('renders edit form title', () => {
-    render(
-      <TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="edit" />
-    );
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="edit" />);
 
     expect(screen.getByText('Edit Task')).toBeInTheDocument();
   });
 
   it('renders all form fields', () => {
-    render(
-      <TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />
-    );
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />);
 
     expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
@@ -86,17 +86,13 @@ describe('TaskForm', () => {
 
     expect(screen.queryByLabelText(/status/i)).not.toBeInTheDocument();
 
-    rerender(
-      <TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="edit" />
-    );
+    rerender(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="edit" />);
 
     expect(screen.getByLabelText(/status/i)).toBeInTheDocument();
   });
 
   it('renders entity type radio buttons', () => {
-    render(
-      <TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />
-    );
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />);
 
     expect(screen.getByText('None')).toBeInTheDocument();
     expect(screen.getByText('Lead')).toBeInTheDocument();
@@ -105,9 +101,7 @@ describe('TaskForm', () => {
   });
 
   it('validates required title field', () => {
-    render(
-      <TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />
-    );
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />);
 
     const submitBtn = screen.getByText('Create Task');
     fireEvent.click(submitBtn);
@@ -117,9 +111,7 @@ describe('TaskForm', () => {
   });
 
   it('validates title max length', () => {
-    render(
-      <TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />
-    );
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />);
 
     const titleInput = screen.getByLabelText(/title/i);
     fireEvent.change(titleInput, { target: { value: 'a'.repeat(201) } });
@@ -131,9 +123,7 @@ describe('TaskForm', () => {
   });
 
   it('calls onSubmit with valid form data', () => {
-    render(
-      <TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />
-    );
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />);
 
     const titleInput = screen.getByLabelText(/title/i);
     fireEvent.change(titleInput, { target: { value: 'New Task' } });
@@ -141,17 +131,17 @@ describe('TaskForm', () => {
     const submitBtn = screen.getByText('Create Task');
     fireEvent.click(submitBtn);
 
-    expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
-      title: 'New Task',
-      priority: 'MEDIUM',
-      status: 'PENDING',
-    }));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'New Task',
+        priority: 'MEDIUM',
+        status: 'PENDING',
+      })
+    );
   });
 
   it('calls onClose when Cancel is clicked', () => {
-    render(
-      <TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />
-    );
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />);
 
     fireEvent.click(screen.getByText('Cancel'));
     expect(onClose).toHaveBeenCalled();
@@ -177,26 +167,20 @@ describe('TaskForm', () => {
   });
 
   it('renders Save Changes button in edit mode', () => {
-    render(
-      <TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="edit" />
-    );
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="edit" />);
 
     expect(screen.getByText('Save Changes')).toBeInTheDocument();
   });
 
   it('has accessible dialog role', () => {
-    render(
-      <TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />
-    );
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />);
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.getByRole('dialog')).toHaveAttribute('aria-modal', 'true');
   });
 
   it('shows EntitySearchField when entity type is not none', () => {
-    render(
-      <TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />
-    );
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />);
 
     // Initially "none" is selected, no search field
     expect(screen.queryByTestId('entity-search-lead')).not.toBeInTheDocument();

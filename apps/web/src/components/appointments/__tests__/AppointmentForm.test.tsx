@@ -50,7 +50,9 @@ describe('AppointmentForm', () => {
   it('validates end time must be after start time', async () => {
     render(<AppointmentForm {...defaultProps} />);
     fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Test' } });
-    fireEvent.change(screen.getByLabelText(/Start Time/), { target: { value: '2026-02-15T10:00' } });
+    fireEvent.change(screen.getByLabelText(/Start Time/), {
+      target: { value: '2026-02-15T10:00' },
+    });
     fireEvent.change(screen.getByLabelText(/End Time/), { target: { value: '2026-02-15T09:00' } });
     fireEvent.click(screen.getByText('Create'));
     await waitFor(() => {
@@ -61,7 +63,9 @@ describe('AppointmentForm', () => {
   it('submits valid form data', async () => {
     render(<AppointmentForm {...defaultProps} />);
     fireEvent.change(screen.getByLabelText(/Title/), { target: { value: 'Test Meeting' } });
-    fireEvent.change(screen.getByLabelText(/Start Time/), { target: { value: '2026-02-15T10:00' } });
+    fireEvent.change(screen.getByLabelText(/Start Time/), {
+      target: { value: '2026-02-15T10:00' },
+    });
     fireEvent.change(screen.getByLabelText(/End Time/), { target: { value: '2026-02-15T11:00' } });
     fireEvent.click(screen.getByText('Create'));
     await waitFor(() => {
@@ -116,15 +120,17 @@ describe('AppointmentForm', () => {
   it('shows conflict warning when conflicts exist', () => {
     const conflicts = {
       hasConflicts: true,
-      conflicts: [{
-        id: 'c1',
-        title: 'Existing Meeting',
-        startTime: new Date(),
-        endTime: new Date(),
-        appointmentType: 'MEETING',
-        overlapMinutes: 30,
-        conflictType: 'EXACT' as const,
-      }],
+      conflicts: [
+        {
+          id: 'c1',
+          title: 'Existing Meeting',
+          startTime: new Date(),
+          endTime: new Date(),
+          appointmentType: 'MEETING',
+          overlapMinutes: 30,
+          conflictType: 'EXACT' as const,
+        },
+      ],
       canOverride: true,
     };
     render(<AppointmentForm {...defaultProps} conflicts={conflicts} />);

@@ -5,7 +5,13 @@ import DocsPage from '../page';
 
 // Mock the child components to isolate page tests
 vi.mock('@/components/shared/docs-search', () => ({
-  DocsSearch: ({ categories, onFilter }: { categories: unknown[]; onFilter: (f: unknown[]) => void }) => (
+  DocsSearch: ({
+    categories,
+    onFilter,
+  }: {
+    categories: unknown[];
+    onFilter: (f: unknown[]) => void;
+  }) => (
     <div data-testid="docs-search">
       <input
         data-testid="search-input"
@@ -14,9 +20,13 @@ vi.mock('@/components/shared/docs-search', () => ({
           if (!query) {
             onFilter(categories);
           } else {
-            onFilter((categories as Array<{ title: string; description: string }>).filter(
-              (c) => c.title.toLowerCase().includes(query) || c.description.toLowerCase().includes(query)
-            ));
+            onFilter(
+              (categories as Array<{ title: string; description: string }>).filter(
+                (c) =>
+                  c.title.toLowerCase().includes(query) ||
+                  c.description.toLowerCase().includes(query)
+              )
+            );
           }
         }}
       />

@@ -12,6 +12,11 @@
     "skipLibCheck": true,
     "target": "ES2022"
   },
-  "include": ["shared/**/*", "events-worker/**/*", "ingestion-worker/**/*", "notifications-worker/**/*"],
+  "include": [
+    "shared/**/*",
+    "events-worker/**/*",
+    "ingestion-worker/**/*",
+    "notifications-worker/**/*"
+  ],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/__tests__/**"]
 }

@@ -12,10 +12,9 @@ interface TrafficSourceData {
 
 export function TrafficSourcesWidget(_props: WidgetProps) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data: sources, isLoading } = trpc.analytics.trafficSources.useQuery(
-    undefined,
-    { enabled: isAuthenticated && !authLoading }
-  );
+  const { data: sources, isLoading } = trpc.analytics.trafficSources.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+  });
 
   if (isLoading || authLoading) {
     return (
@@ -58,9 +57,7 @@ export function TrafficSourcesWidget(_props: WidgetProps) {
         {sources.map((source: TrafficSourceData) => (
           <div key={source.name} className="flex items-center gap-2">
             <div className={`size-3 rounded-full ${source.color}`} />
-            <span className="text-sm text-slate-600 dark:text-slate-400 flex-1">
-              {source.name}
-            </span>
+            <span className="text-sm text-slate-600 dark:text-slate-400 flex-1">{source.name}</span>
             <span className="text-sm font-medium text-slate-900 dark:text-white">
               {source.percentage}%
             </span>

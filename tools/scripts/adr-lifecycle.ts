@@ -29,11 +29,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // Configuration
-const ADR_PATHS = [
-  'docs/planning/adr',
-  'docs/architecture/adr',
-  'docs/shared',
-];
+const ADR_PATHS = ['docs/planning/adr', 'docs/architecture/adr', 'docs/shared'];
 
 const VALID_STATUSES = ['Proposed', 'Accepted', 'Rejected', 'Deprecated', 'Superseded'];
 
@@ -71,7 +67,8 @@ function parseADR(filePath: string): ADRMetadata | null {
 
     // Extract ID from filename or title
     const fileName = path.basename(filePath, '.md');
-    const idMatch = title.match(/ADR-(\d+)/) || fileName.match(/ADR-(\d+)/i) || fileName.match(/^(\d+)/);
+    const idMatch =
+      title.match(/ADR-(\d+)/) || fileName.match(/ADR-(\d+)/i) || fileName.match(/^(\d+)/);
     const id = idMatch ? `ADR-${idMatch[1].padStart(3, '0')}` : fileName;
 
     // Extract status
@@ -150,7 +147,11 @@ function getAllADRs(): ADRMetadata[] {
 
   for (const file of files) {
     const metadata = parseADR(file);
-    if (metadata && !metadata.title.includes('Template') && !metadata.filePath.includes('template')) {
+    if (
+      metadata &&
+      !metadata.title.includes('Template') &&
+      !metadata.filePath.includes('template')
+    ) {
       adrs.push(metadata);
     }
   }
@@ -190,10 +191,7 @@ function createADR(title: string, technicalStory?: string): void {
   template = template.replace(/\[Proposed \| Accepted.*\]/, 'Proposed');
 
   if (technicalStory) {
-    template = template.replace(
-      /\[Link to relevant task\/issue.*\]/,
-      technicalStory
-    );
+    template = template.replace(/\[Link to relevant task\/issue.*\]/, technicalStory);
   }
 
   // Remove guidelines section for actual ADRs
@@ -297,10 +295,7 @@ function updateStatus(adrId: string, newStatus: string): void {
   let content = fs.readFileSync(adr.filePath, 'utf-8');
 
   // Update status
-  content = content.replace(
-    /\*\*Status:\*\*\s*.+/i,
-    `**Status:** ${newStatus}`
-  );
+  content = content.replace(/\*\*Status:\*\*\s*.+/i, `**Status:** ${newStatus}`);
 
   // Update date if accepting
   if (newStatus.toLowerCase() === 'accepted') {
@@ -381,7 +376,11 @@ function validateADR(adr: ADRMetadata): ValidationResult {
   }
 
   // Check date format
-  if (!adr.date.match(/^\d{4}-\d{2}-\d{2}$/) && adr.date !== 'Unknown' && !adr.date.includes('YYYY')) {
+  if (
+    !adr.date.match(/^\d{4}-\d{2}-\d{2}$/) &&
+    adr.date !== 'Unknown' &&
+    !adr.date.includes('YYYY')
+  ) {
     warnings.push(`Date format should be YYYY-MM-DD: ${adr.date}`);
   }
 

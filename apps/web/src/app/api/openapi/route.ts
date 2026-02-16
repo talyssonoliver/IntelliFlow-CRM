@@ -14,9 +14,6 @@ export async function GET() {
       },
     });
   } catch {
-    return NextResponse.json(
-      { error: 'OpenAPI spec not available' },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: 'OpenAPI spec not available' }, { status: 503 });
   }
 }

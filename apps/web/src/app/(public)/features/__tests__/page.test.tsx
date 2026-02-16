@@ -53,13 +53,13 @@ describe('FeaturesPage', () => {
     });
 
     it('should validate feature structure', () => {
-      featuresData.categories.forEach(category => {
+      featuresData.categories.forEach((category) => {
         expect(category).toHaveProperty('id');
         expect(category).toHaveProperty('name');
         expect(category).toHaveProperty('description');
         expect(category).toHaveProperty('features');
 
-        category.features.forEach(feature => {
+        category.features.forEach((feature) => {
           expect(feature).toHaveProperty('id');
           expect(feature).toHaveProperty('title');
           expect(feature).toHaveProperty('description');
@@ -79,7 +79,7 @@ describe('FeaturesPage', () => {
     });
 
     it('should have 4 features per category', () => {
-      featuresData.categories.forEach(category => {
+      featuresData.categories.forEach((category) => {
         expect(category.features).toHaveLength(4);
       });
     });
@@ -155,7 +155,7 @@ describe('FeaturesPage', () => {
 
       const links = screen.getAllByRole('link');
 
-      links.forEach(link => {
+      links.forEach((link) => {
         // Links should either have text content or aria-label
         const hasTextContent = link.textContent && link.textContent.trim().length > 0;
         const hasAriaLabel = link.getAttribute('aria-label') !== null;
@@ -169,7 +169,7 @@ describe('FeaturesPage', () => {
 
       const interactiveElements = screen.getAllByRole('link');
 
-      interactiveElements.forEach(element => {
+      interactiveElements.forEach((element) => {
         // Should be focusable (not have tabindex="-1")
         expect(element.getAttribute('tabindex')).not.toBe('-1');
       });
@@ -181,7 +181,7 @@ describe('FeaturesPage', () => {
       // Check that we're using semantic color classes from the design system
       const textElements = container.querySelectorAll('p, h1, h2, h3');
 
-      textElements.forEach(element => {
+      textElements.forEach((element) => {
         const classes = element.className;
         // Should use slate colors for text (which meet 4.5:1 contrast)
         const hasProperTextColor =
@@ -206,7 +206,9 @@ describe('FeaturesPage', () => {
       render(<FeaturesPage />);
 
       // Should have at least one primary CTA
-      const ctaButtons = screen.getAllByRole('link', { name: /get started|start|try|demo|pricing/i });
+      const ctaButtons = screen.getAllByRole('link', {
+        name: /get started|start|try|demo|pricing/i,
+      });
       expect(ctaButtons.length).toBeGreaterThan(0);
     });
   });
@@ -217,13 +219,11 @@ describe('FeaturesPage', () => {
 
       const grids = container.querySelectorAll('[class*="grid"]');
 
-      grids.forEach(grid => {
+      grids.forEach((grid) => {
         const classes = grid.className;
         // Should have responsive breakpoints (md:, lg:, etc.)
         const hasResponsiveClasses =
-          classes.includes('md:') ||
-          classes.includes('lg:') ||
-          classes.includes('sm:');
+          classes.includes('md:') || classes.includes('lg:') || classes.includes('sm:');
 
         expect(hasResponsiveClasses).toBe(true);
       });
@@ -244,7 +244,7 @@ describe('FeaturesPage', () => {
       const sections = container.querySelectorAll('section, div[class*="bg-"]');
 
       let hasDarkVariants = false;
-      sections.forEach(section => {
+      sections.forEach((section) => {
         if (section.className.includes('dark:')) {
           hasDarkVariants = true;
         }
@@ -259,7 +259,7 @@ describe('FeaturesPage', () => {
       const textElements = container.querySelectorAll('p, h1, h2, h3, span');
 
       let hasDarkTextVariants = false;
-      textElements.forEach(element => {
+      textElements.forEach((element) => {
         if (element.className.includes('dark:text-')) {
           hasDarkTextVariants = true;
         }

@@ -1,4 +1,10 @@
-import type { PrismaClient, Ticket, TicketStatus, TicketPriority, SLAStatus } from '@intelliflow/db';
+import type {
+  PrismaClient,
+  Ticket,
+  TicketStatus,
+  TicketPriority,
+  SLAStatus,
+} from '@intelliflow/db';
 
 /**
  * Ticket Service
@@ -32,11 +38,16 @@ export class TicketService {
   /**
    * Batch-load assignee profiles for tickets.
    */
-  private async getAssigneeProfiles(assigneeIds: string[]): Promise<Map<string, {
-    name: string | null;
-    title: string;
-    avatar: string | null;
-  }>> {
+  private async getAssigneeProfiles(assigneeIds: string[]): Promise<
+    Map<
+      string,
+      {
+        name: string | null;
+        title: string;
+        avatar: string | null;
+      }
+    >
+  > {
     if (assigneeIds.length === 0) {
       return new Map();
     }
@@ -172,9 +183,7 @@ export class TicketService {
         { subject: { contains: search, mode: 'insensitive' } },
         { ticketNumber: { contains: search, mode: 'insensitive' } },
         { contactName: { contains: search, mode: 'insensitive' } },
-        ...(matchingAssigneeIds.length > 0
-          ? [{ assigneeId: { in: matchingAssigneeIds } }]
-          : []),
+        ...(matchingAssigneeIds.length > 0 ? [{ assigneeId: { in: matchingAssigneeIds } }] : []),
       ];
     }
 
@@ -202,7 +211,9 @@ export class TicketService {
     });
 
     // Resolve assignee display metadata in one query for all returned tickets
-    const assigneeIds = [...new Set(tickets.map((ticket) => ticket.assigneeId).filter((id): id is string => !!id))];
+    const assigneeIds = [
+      ...new Set(tickets.map((ticket) => ticket.assigneeId).filter((id): id is string => !!id)),
+    ];
     const assigneeProfiles = await this.getAssigneeProfiles(assigneeIds);
 
     // Calculate SLA status for each ticket and attach assignee metadata
@@ -248,7 +259,9 @@ export class TicketService {
       return null;
     }
 
-    const assigneeProfiles = await this.getAssigneeProfiles(ticket.assigneeId ? [ticket.assigneeId] : []);
+    const assigneeProfiles = await this.getAssigneeProfiles(
+      ticket.assigneeId ? [ticket.assigneeId] : []
+    );
 
     return this.withAssigneeMetadata(
       {
@@ -291,24 +304,34 @@ export class TicketService {
     // Get SLA times based on priority
     const getResponseMinutes = (priority: TicketPriority) => {
       switch (priority) {
-        case 'CRITICAL': return slaPolicy.criticalResponseMinutes;
-        case 'HIGH': return slaPolicy.highResponseMinutes;
-        case 'MEDIUM': return slaPolicy.mediumResponseMinutes;
-        case 'LOW': return slaPolicy.lowResponseMinutes;
+        case 'CRITICAL':
+          return slaPolicy.criticalResponseMinutes;
+        case 'HIGH':
+          return slaPolicy.highResponseMinutes;
+        case 'MEDIUM':
+          return slaPolicy.mediumResponseMinutes;
+        case 'LOW':
+          return slaPolicy.lowResponseMinutes;
       }
     };
 
     const getResolutionMinutes = (priority: TicketPriority) => {
       switch (priority) {
-        case 'CRITICAL': return slaPolicy.criticalResolutionMinutes;
-        case 'HIGH': return slaPolicy.highResolutionMinutes;
-        case 'MEDIUM': return slaPolicy.mediumResolutionMinutes;
-        case 'LOW': return slaPolicy.lowResolutionMinutes;
+        case 'CRITICAL':
+          return slaPolicy.criticalResolutionMinutes;
+        case 'HIGH':
+          return slaPolicy.highResolutionMinutes;
+        case 'MEDIUM':
+          return slaPolicy.mediumResolutionMinutes;
+        case 'LOW':
+          return slaPolicy.lowResolutionMinutes;
       }
     };
 
     const slaResponseDue = new Date(now.getTime() + getResponseMinutes(data.priority) * 60 * 1000);
-    const slaResolutionDue = new Date(now.getTime() + getResolutionMinutes(data.priority) * 60 * 1000);
+    const slaResolutionDue = new Date(
+      now.getTime() + getResolutionMinutes(data.priority) * 60 * 1000
+    );
 
     const ticket = await this.prisma.ticket.create({
       data: {
@@ -411,7 +434,9 @@ export class TicketService {
     }
 
     if (ticket.status === 'RESOLVED' || ticket.status === 'CLOSED') {
-      throw new Error('Cannot delete resolved or closed tickets. Use archive instead to remove from active views.');
+      throw new Error(
+        'Cannot delete resolved or closed tickets. Use archive instead to remove from active views.'
+      );
     }
 
     if (ticket.status === 'ARCHIVED') {
@@ -526,7 +551,11 @@ export class TicketService {
 
     // Zero-fill all 5 SLA statuses
     const bySLAStatus: Record<string, number> = {
-      ON_TRACK: 0, AT_RISK: 0, BREACHED: 0, MET: 0, PAUSED: 0,
+      ON_TRACK: 0,
+      AT_RISK: 0,
+      BREACHED: 0,
+      MET: 0,
+      PAUSED: 0,
     };
     bySLAStatusRaw.forEach((item: any) => {
       bySLAStatus[item.slaStatus] = item._count;
@@ -534,14 +563,20 @@ export class TicketService {
 
     return {
       total,
-      byStatus: byStatus.reduce((acc: Record<string, number>, item: any) => {
-        acc[item.status] = item._count;
-        return acc;
-      }, {} as Record<string, number>),
-      byPriority: byPriority.reduce((acc: Record<string, number>, item: any) => {
-        acc[item.priority] = item._count;
-        return acc;
-      }, {} as Record<string, number>),
+      byStatus: byStatus.reduce(
+        (acc: Record<string, number>, item: any) => {
+          acc[item.status] = item._count;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+      byPriority: byPriority.reduce(
+        (acc: Record<string, number>, item: any) => {
+          acc[item.priority] = item._count;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
       bySLAStatus,
       slaBreached: breachedTickets,
       resolvedToday,
@@ -567,8 +602,7 @@ export class TicketService {
     if (tickets.length === 0) return 0;
 
     const totalResponseTime = tickets.reduce((sum: number, ticket: any) => {
-      const responseTime =
-        ticket.firstResponseAt!.getTime() - ticket.createdAt.getTime();
+      const responseTime = ticket.firstResponseAt!.getTime() - ticket.createdAt.getTime();
       return sum + responseTime;
     }, 0);
 
@@ -579,12 +613,7 @@ export class TicketService {
   /**
    * Add a response to a ticket
    */
-  async addResponse(
-    ticketId: string,
-    content: string,
-    authorName: string,
-    authorRole: string
-  ) {
+  async addResponse(ticketId: string, content: string, authorName: string, authorRole: string) {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id: ticketId },
     });

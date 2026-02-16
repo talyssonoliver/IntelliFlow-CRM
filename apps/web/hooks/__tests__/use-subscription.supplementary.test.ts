@@ -37,7 +37,13 @@ vi.mock('@supabase/supabase-js', () => ({
 vi.mock('@/hooks/use-trpc-subscriptions', () => ({
   useLeadScoredSubscription: vi.fn(() => ({
     status: 'connected',
-    metrics: { messagesReceived: 0, averageLatency: 0, lastMessageAt: null, connectionUptime: 0, errors: 0 },
+    metrics: {
+      messagesReceived: 0,
+      averageLatency: 0,
+      lastMessageAt: null,
+      connectionUptime: 0,
+      errors: 0,
+    },
     subscribe: vi.fn(),
     unsubscribe: vi.fn(),
     isConnected: true,
@@ -65,7 +71,12 @@ describe('useSubscription (Supabase backend)', () => {
     subscribeCb = null;
     postgresHandler = null;
 
-    mockOn.mockImplementation(function (this: typeof mockChannel, event: string, _config: unknown, handler?: (...args: unknown[]) => void) {
+    mockOn.mockImplementation(function (
+      this: typeof mockChannel,
+      event: string,
+      _config: unknown,
+      handler?: (...args: unknown[]) => void
+    ) {
       if (event === 'postgres_changes' && handler) {
         postgresHandler = handler;
       }
@@ -82,9 +93,7 @@ describe('useSubscription (Supabase backend)', () => {
   });
 
   it('starts with disconnected status and transitions to connecting then connected on mount', async () => {
-    const { result } = renderHook(() =>
-      useSubscription({ table: 'lead', events: ['*'] })
-    );
+    const { result } = renderHook(() => useSubscription({ table: 'lead', events: ['*'] }));
 
     // The hook auto-subscribes on mount, which calls subscribe
     // The status should transition from disconnected -> connecting -> connected
@@ -101,9 +110,7 @@ describe('useSubscription (Supabase backend)', () => {
 
   it('transitions to error status when subscription callback receives an error', () => {
     const onStatusChange = vi.fn();
-    const { result } = renderHook(() =>
-      useSubscription({ table: 'lead', onStatusChange })
-    );
+    const { result } = renderHook(() => useSubscription({ table: 'lead', onStatusChange }));
 
     act(() => {
       subscribeCb?.('', new Error('Connection refused'));
@@ -113,9 +120,7 @@ describe('useSubscription (Supabase backend)', () => {
   });
 
   it('transitions to disconnected on CLOSED status and increments reconnectCount', () => {
-    const { result } = renderHook(() =>
-      useSubscription({ table: 'lead' })
-    );
+    const { result } = renderHook(() => useSubscription({ table: 'lead' }));
 
     act(() => {
       subscribeCb?.('SUBSCRIBED');
@@ -130,9 +135,7 @@ describe('useSubscription (Supabase backend)', () => {
   });
 
   it('transitions to disconnected on CHANNEL_ERROR and increments reconnectCount', () => {
-    const { result } = renderHook(() =>
-      useSubscription({ table: 'lead' })
-    );
+    const { result } = renderHook(() => useSubscription({ table: 'lead' }));
 
     act(() => {
       subscribeCb?.('CHANNEL_ERROR');
@@ -143,9 +146,7 @@ describe('useSubscription (Supabase backend)', () => {
 
   it('calls onStatusChange callback when status changes', () => {
     const onStatusChange = vi.fn();
-    renderHook(() =>
-      useSubscription({ table: 'contact', onStatusChange })
-    );
+    renderHook(() => useSubscription({ table: 'contact', onStatusChange }));
 
     act(() => {
       subscribeCb?.('SUBSCRIBED');
@@ -187,9 +188,7 @@ describe('useSubscription (Supabase backend)', () => {
   });
 
   it('updates metrics when handling a payload', () => {
-    const { result } = renderHook(() =>
-      useSubscription({ table: 'lead' })
-    );
+    const { result } = renderHook(() => useSubscription({ table: 'lead' }));
 
     act(() => {
       subscribeCb?.('SUBSCRIBED');
@@ -213,9 +212,7 @@ describe('useSubscription (Supabase backend)', () => {
   it('warns when latency exceeds 100ms target', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    renderHook(() =>
-      useSubscription({ table: 'lead' })
-    );
+    renderHook(() => useSubscription({ table: 'lead' }));
 
     act(() => {
       subscribeCb?.('SUBSCRIBED');
@@ -234,17 +231,13 @@ describe('useSubscription (Supabase backend)', () => {
       postgresHandler?.(payload);
     });
 
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Latency exceeded target')
-    );
+    expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Latency exceeded target'));
 
     warnSpy.mockRestore();
   });
 
   it('uses receivedAt as committedAt when commit_timestamp is missing', () => {
-    const { result } = renderHook(() =>
-      useSubscription({ table: 'lead' })
-    );
+    const { result } = renderHook(() => useSubscription({ table: 'lead' }));
 
     act(() => {
       subscribeCb?.('SUBSCRIBED');
@@ -266,9 +259,7 @@ describe('useSubscription (Supabase backend)', () => {
   });
 
   it('subscribe() is a no-op when already subscribed', () => {
-    const { result } = renderHook(() =>
-      useSubscription({ table: 'lead' })
-    );
+    const { result } = renderHook(() => useSubscription({ table: 'lead' }));
 
     // Already subscribed on mount, calling subscribe again should be a no-op
     const channelCallCount = mockSupabaseClient.channel.mock.calls.length;
@@ -282,9 +273,7 @@ describe('useSubscription (Supabase backend)', () => {
   });
 
   it('unsubscribe() removes channel and updates status', async () => {
-    const { result } = renderHook(() =>
-      useSubscription({ table: 'lead' })
-    );
+    const { result } = renderHook(() => useSubscription({ table: 'lead' }));
 
     act(() => {
       subscribeCb?.('SUBSCRIBED');
@@ -301,9 +290,7 @@ describe('useSubscription (Supabase backend)', () => {
 
   it('unsubscribe() is a no-op when not subscribed', async () => {
     // Render with already-subscribed state, then unsubscribe twice
-    const { result } = renderHook(() =>
-      useSubscription({ table: 'lead' })
-    );
+    const { result } = renderHook(() => useSubscription({ table: 'lead' }));
 
     await act(async () => {
       await result.current.unsubscribe();
@@ -319,9 +306,7 @@ describe('useSubscription (Supabase backend)', () => {
   });
 
   it('cleanup on unmount removes channel', () => {
-    const { unmount } = renderHook(() =>
-      useSubscription({ table: 'lead' })
-    );
+    const { unmount } = renderHook(() => useSubscription({ table: 'lead' }));
 
     act(() => {
       subscribeCb?.('SUBSCRIBED');
@@ -376,9 +361,7 @@ describe('useSubscription (Supabase backend)', () => {
   it('does not log when debug is false (default)', () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-    renderHook(() =>
-      useSubscription({ table: 'lead' })
-    );
+    renderHook(() => useSubscription({ table: 'lead' }));
 
     // No debug logs should have been produced with [useSubscription:lead]
     const subscriptionLogs = logSpy.mock.calls.filter(
@@ -390,9 +373,7 @@ describe('useSubscription (Supabase backend)', () => {
   });
 
   it('initial metrics are zeroed', () => {
-    const { result } = renderHook(() =>
-      useSubscription({ table: 'lead' })
-    );
+    const { result } = renderHook(() => useSubscription({ table: 'lead' }));
 
     expect(result.current.metrics).toEqual(
       expect.objectContaining({

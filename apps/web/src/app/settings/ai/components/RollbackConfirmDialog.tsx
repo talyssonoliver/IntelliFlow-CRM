@@ -80,10 +80,8 @@ export function RollbackConfirmDialog({
           <DialogTitle>Rollback to Version?</DialogTitle>
           <DialogDescription>
             This will create a new version based on{' '}
-            <span className="font-mono text-foreground">
-              {targetVersion.id.slice(0, 8)}...
-            </span>{' '}
-            and activate it. The current active version will be deprecated.
+            <span className="font-mono text-foreground">{targetVersion.id.slice(0, 8)}...</span> and
+            activate it. The current active version will be deprecated.
           </DialogDescription>
         </DialogHeader>
 
@@ -133,8 +131,8 @@ export function RollbackConfirmDialog({
                 {characterCount < MIN_REASON_LENGTH
                   ? `Minimum ${MIN_REASON_LENGTH} characters required`
                   : characterCount > MAX_REASON_LENGTH
-                  ? `Maximum ${MAX_REASON_LENGTH} characters allowed`
-                  : 'Reason will be recorded in the audit log'}
+                    ? `Maximum ${MAX_REASON_LENGTH} characters allowed`
+                    : 'Reason will be recorded in the audit log'}
               </span>
               <span
                 id="reason-count"
@@ -158,17 +156,10 @@ export function RollbackConfirmDialog({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => handleOpenChange(false)}
-            disabled={isLoading}
-          >
+          <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isLoading}>
             Cancel
           </Button>
-          <Button
-            onClick={handleConfirm}
-            disabled={!canConfirm}
-          >
+          <Button onClick={handleConfirm} disabled={!canConfirm}>
             {isLoading ? 'Rolling back...' : 'Confirm Rollback'}
           </Button>
         </DialogFooter>

@@ -211,10 +211,7 @@ export default function PricingPage() {
                   <React.Fragment key={catIndex}>
                     {/* Category Header */}
                     <tr className="bg-slate-50 dark:bg-slate-900">
-                      <td
-                        colSpan={5}
-                        className="p-4 font-semibold text-slate-900 dark:text-white"
-                      >
+                      <td colSpan={5} className="p-4 font-semibold text-slate-900 dark:text-white">
                         {category.category}
                       </td>
                     </tr>
@@ -225,21 +222,15 @@ export default function PricingPage() {
                         key={featIndex}
                         className="border-t border-slate-200 dark:border-slate-700"
                       >
-                        <td className="p-4 text-slate-600 dark:text-slate-400">
-                          {feature.name}
-                        </td>
-                        <td className="p-4 text-center">
-                          {renderFeatureValue(feature.starter)}
-                        </td>
+                        <td className="p-4 text-slate-600 dark:text-slate-400">{feature.name}</td>
+                        <td className="p-4 text-center">{renderFeatureValue(feature.starter)}</td>
                         <td className="p-4 text-center">
                           {renderFeatureValue(feature.professional)}
                         </td>
                         <td className="p-4 text-center">
                           {renderFeatureValue(feature.enterprise)}
                         </td>
-                        <td className="p-4 text-center">
-                          {renderFeatureValue(feature.custom)}
-                        </td>
+                        <td className="p-4 text-center">{renderFeatureValue(feature.custom)}</td>
                       </tr>
                     ))}
                   </React.Fragment>
@@ -281,9 +272,7 @@ export default function PricingPage() {
                   </span>
                 </button>
                 {openFaq === index && (
-                  <div className="px-6 pb-6 text-slate-600 dark:text-slate-400">
-                    {faq.answer}
-                  </div>
+                  <div className="px-6 pb-6 text-slate-600 dark:text-slate-400">{faq.answer}</div>
                 )}
               </div>
             ))}

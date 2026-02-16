@@ -63,17 +63,14 @@ interface ReminderNotification {
 /** Simulates handleNotification logic from the provider */
 function handleNotification(
   prev: ReminderNotification[],
-  notification: ReminderNotification,
+  notification: ReminderNotification
 ): ReminderNotification[] {
   const updated = [notification, ...prev.filter((n) => n.reminderId !== notification.reminderId)];
   return updated.slice(0, 10);
 }
 
 /** Simulates unreadCount memo from the provider */
-function computeUnreadCount(
-  notifications: ReminderNotification[],
-  readSet: Set<string>,
-): number {
+function computeUnreadCount(notifications: ReminderNotification[], readSet: Set<string>): number {
   return notifications.filter((n) => !readSet.has(n.reminderId)).length;
 }
 
@@ -90,7 +87,7 @@ function markAsRead(prev: Set<string>, reminderId: string): Set<string> {
 /** Simulates dismiss logic - removes from recent notifications */
 function dismissFromRecent(
   prev: ReminderNotification[],
-  reminderId: string,
+  reminderId: string
 ): ReminderNotification[] {
   return prev.filter((n) => n.reminderId !== reminderId);
 }
@@ -141,9 +138,7 @@ describe('RemindersContext logic (supplementary2)', () => {
     });
 
     it('caps at 10 notifications', () => {
-      const existing = Array.from({ length: 10 }, (_, i) =>
-        makeNotification(`r${i}`)
-      );
+      const existing = Array.from({ length: 10 }, (_, i) => makeNotification(`r${i}`));
       const newNotif = makeNotification('r-new');
       const result = handleNotification(existing, newNotif);
 
@@ -154,9 +149,7 @@ describe('RemindersContext logic (supplementary2)', () => {
     });
 
     it('replaces duplicate in full list without exceeding 10', () => {
-      const existing = Array.from({ length: 10 }, (_, i) =>
-        makeNotification(`r${i}`)
-      );
+      const existing = Array.from({ length: 10 }, (_, i) => makeNotification(`r${i}`));
       // Replace r5 which is in the middle
       const update = makeNotification('r5', 'Updated');
       const result = handleNotification(existing, update);
@@ -342,7 +335,10 @@ describe('RemindersContext logic (supplementary2)', () => {
     });
 
     it('getPendingReminders returns the mock value', () => {
-      const pending = [{ id: 'r1', status: 'pending' }, { id: 'r2', status: 'pending' }];
+      const pending = [
+        { id: 'r1', status: 'pending' },
+        { id: 'r2', status: 'pending' },
+      ];
       mocks.mockGetPendingReminders.mockReturnValueOnce(pending);
       const result = mocks.mockGetPendingReminders();
       expect(result).toHaveLength(2);

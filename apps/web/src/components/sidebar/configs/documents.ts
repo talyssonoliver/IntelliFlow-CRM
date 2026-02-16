@@ -14,8 +14,18 @@ export const documentsSidebarConfig: SidebarConfig = {
       items: [
         { id: 'all', label: 'All Documents', icon: VIEW_ICONS.all, href: '/documents' },
         { id: 'my', label: 'My Documents', icon: VIEW_ICONS.my, href: '/documents?view=my' },
-        { id: 'recent', label: 'Recently Added', icon: VIEW_ICONS.recent, href: '/documents?view=recent' },
-        { id: 'starred', label: 'Starred', icon: VIEW_ICONS.starred, href: '/documents?view=starred' },
+        {
+          id: 'recent',
+          label: 'Recently Added',
+          icon: VIEW_ICONS.recent,
+          href: '/documents?view=recent',
+        },
+        {
+          id: 'starred',
+          label: 'Starred',
+          icon: VIEW_ICONS.starred,
+          href: '/documents?view=starred',
+        },
       ],
     },
     {

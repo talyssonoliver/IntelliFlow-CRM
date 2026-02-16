@@ -2,7 +2,15 @@
  * Mock data fixtures for Case components — PG-138
  */
 
-import type { CaseListItem, CaseDetailData, CaseTaskItem, CaseStats, CaseFilterOptions, CaseAssigneeOption, PartyData } from '@/components/cases/types';
+import type {
+  CaseListItem,
+  CaseDetailData,
+  CaseTaskItem,
+  CaseStats,
+  CaseFilterOptions,
+  CaseAssigneeOption,
+  PartyData,
+} from '@/components/cases/types';
 
 export const mockTask1: CaseTaskItem = {
   id: 'task-1',
@@ -143,15 +151,40 @@ export const mockAssignees: CaseAssigneeOption[] = [
 ];
 
 export const mockParties: PartyData[] = [
-  { id: 'party-1', name: 'Robert Smith', role: 'CLIENT', organization: 'Smith Holdings', email: 'robert@smith.com', phone: '+1-555-0101' },
-  { id: 'party-2', name: 'Linda Johnson', role: 'OPPOSING_COUNSEL', organization: 'Johnson Legal', email: 'linda@johnson.com' },
-  { id: 'party-3', name: 'Dr. Michael Brown', role: 'EXPERT', organization: 'Brown Consulting', notes: 'Property valuation expert' },
+  {
+    id: 'party-1',
+    name: 'Robert Smith',
+    role: 'CLIENT',
+    organization: 'Smith Holdings',
+    email: 'robert@smith.com',
+    phone: '+1-555-0101',
+  },
+  {
+    id: 'party-2',
+    name: 'Linda Johnson',
+    role: 'OPPOSING_COUNSEL',
+    organization: 'Johnson Legal',
+    email: 'linda@johnson.com',
+  },
+  {
+    id: 'party-3',
+    name: 'Dr. Michael Brown',
+    role: 'EXPERT',
+    organization: 'Brown Consulting',
+    notes: 'Property valuation expert',
+  },
 ];
 
 export const mockCaseDetail: CaseDetailData = {
   ...mockCase1,
   parties: mockParties,
   appointments: [
-    { id: 'appt-1', title: 'Client Meeting', startTime: '2026-03-01T10:00:00Z', endTime: '2026-03-01T11:00:00Z', status: 'CONFIRMED' },
+    {
+      id: 'appt-1',
+      title: 'Client Meeting',
+      startTime: '2026-03-01T10:00:00Z',
+      endTime: '2026-03-01T11:00:00Z',
+      status: 'CONFIRMED',
+    },
   ],
 };

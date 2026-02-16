@@ -111,7 +111,10 @@ describe('Account Router', () => {
       ctx.services!.account!.createAccount = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'VALIDATION_ERROR', message: `Account with name "${input.name}" already exists` },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: `Account with name "${input.name}" already exists`,
+        },
       });
 
       await expect(caller.create(input)).rejects.toThrow(
@@ -296,10 +299,15 @@ describe('Account Router', () => {
       ctx.services!.account!.updateAccountInfo = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'VALIDATION_ERROR', message: 'Account with name "Existing Corp" already exists' },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Account with name "Existing Corp" already exists',
+        },
       });
 
-      await expect(caller.update({ id: TEST_UUIDS.account1, name: 'Existing Corp' })).rejects.toThrow(
+      await expect(
+        caller.update({ id: TEST_UUIDS.account1, name: 'Existing Corp' })
+      ).rejects.toThrow(
         expect.objectContaining({
           code: 'CONFLICT',
         })
@@ -342,7 +350,11 @@ describe('Account Router', () => {
       ctx.services!.account!.deleteAccount = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'VALIDATION_ERROR', message: 'Cannot delete account with 5 associated contacts. Reassign or delete contacts first.' },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message:
+            'Cannot delete account with 5 associated contacts. Reassign or delete contacts first.',
+        },
       });
 
       await expect(caller.delete({ id: TEST_UUIDS.account1 })).rejects.toThrow(
@@ -365,7 +377,11 @@ describe('Account Router', () => {
       ctx.services!.account!.deleteAccount = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'VALIDATION_ERROR', message: 'Cannot delete account with 2 active opportunities. Close or reassign them first.' },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message:
+            'Cannot delete account with 2 active opportunities. Close or reassign them first.',
+        },
       });
 
       await expect(caller.delete({ id: TEST_UUIDS.account1 })).rejects.toThrow(
@@ -472,8 +488,12 @@ describe('Account Router', () => {
 
     it('should apply search filter to filterOptions query', async () => {
       vi.mocked(prismaMock.account.groupBy)
-        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>)
-        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
+        .mockResolvedValueOnce(
+          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
+        )
+        .mockResolvedValueOnce(
+          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
+        );
 
       await caller.filterOptions({ search: 'Tech' });
 
@@ -492,8 +512,12 @@ describe('Account Router', () => {
 
     it('should apply industry filter to filterOptions query', async () => {
       vi.mocked(prismaMock.account.groupBy)
-        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>)
-        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
+        .mockResolvedValueOnce(
+          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
+        )
+        .mockResolvedValueOnce(
+          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
+        );
 
       await caller.filterOptions({ industry: 'Finance' });
 
@@ -508,8 +532,12 @@ describe('Account Router', () => {
 
     it('should apply ownerId filter to filterOptions query', async () => {
       vi.mocked(prismaMock.account.groupBy)
-        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>)
-        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
+        .mockResolvedValueOnce(
+          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
+        )
+        .mockResolvedValueOnce(
+          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
+        );
 
       await caller.filterOptions({ ownerId: TEST_UUIDS.user1 });
 
@@ -524,9 +552,9 @@ describe('Account Router', () => {
 
     it('should handle empty owner IDs', async () => {
       vi.mocked(prismaMock.account.groupBy)
-        .mockResolvedValueOnce([
-          { industry: 'Tech', _count: 5 },
-        ] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>)
+        .mockResolvedValueOnce([{ industry: 'Tech', _count: 5 }] as unknown as Awaited<
+          ReturnType<typeof prismaMock.account.groupBy>
+        >)
         .mockResolvedValueOnce([
           { ownerId: null, _count: 3 }, // null ownerId
         ] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
@@ -540,8 +568,12 @@ describe('Account Router', () => {
 
     it('should handle undefined input', async () => {
       vi.mocked(prismaMock.account.groupBy)
-        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>)
-        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
+        .mockResolvedValueOnce(
+          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
+        )
+        .mockResolvedValueOnce(
+          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
+        );
 
       const result = await caller.filterOptions(undefined);
 
@@ -551,10 +583,12 @@ describe('Account Router', () => {
 
     it('should fallback to ownerId when owner not found in map', async () => {
       vi.mocked(prismaMock.account.groupBy)
-        .mockResolvedValueOnce([] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>)
-        .mockResolvedValueOnce([
-          { ownerId: TEST_UUIDS.user1, _count: 5 },
-        ] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>);
+        .mockResolvedValueOnce(
+          [] as unknown as Awaited<ReturnType<typeof prismaMock.account.groupBy>>
+        )
+        .mockResolvedValueOnce([{ ownerId: TEST_UUIDS.user1, _count: 5 }] as unknown as Awaited<
+          ReturnType<typeof prismaMock.account.groupBy>
+        >);
 
       // Return empty - user not found
       prismaMock.user.findMany.mockResolvedValue([]);
@@ -903,7 +937,16 @@ describe('Account Router', () => {
         isSuccess: true,
         isFailure: false,
         value: {
-          contacts: [{ id: 'c1', firstName: 'A', lastName: 'B', email: 'a@b.com', status: 'ACTIVE', createdAt: new Date() }],
+          contacts: [
+            {
+              id: 'c1',
+              firstName: 'A',
+              lastName: 'B',
+              email: 'a@b.com',
+              status: 'ACTIVE',
+              createdAt: new Date(),
+            },
+          ],
           nextCursor: 'c1',
           total: 50,
         },
@@ -927,7 +970,16 @@ describe('Account Router', () => {
         isSuccess: true,
         isFailure: false,
         value: {
-          contacts: [{ id: 'c1', firstName: 'A', lastName: 'B', email: 'a@b.com', status: 'ACTIVE', createdAt: new Date() }],
+          contacts: [
+            {
+              id: 'c1',
+              firstName: 'A',
+              lastName: 'B',
+              email: 'a@b.com',
+              status: 'ACTIVE',
+              createdAt: new Date(),
+            },
+          ],
           nextCursor: undefined,
           total: 1,
         },
@@ -971,9 +1023,7 @@ describe('Account Router', () => {
         error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
       });
 
-      await expect(
-        caller.getContacts({ accountId: TEST_UUIDS.nonExistent })
-      ).rejects.toThrow(
+      await expect(caller.getContacts({ accountId: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({ code: 'NOT_FOUND' })
       );
     });
@@ -985,9 +1035,7 @@ describe('Account Router', () => {
         error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
       });
 
-      await expect(
-        caller.getContacts({ accountId: TEST_UUIDS.account1 })
-      ).rejects.toThrow(
+      await expect(caller.getContacts({ accountId: TEST_UUIDS.account1 })).rejects.toThrow(
         expect.objectContaining({ code: 'NOT_FOUND' })
       );
     });
@@ -1075,8 +1123,22 @@ describe('Account Router', () => {
 
     it('should calculate summary correctly', async () => {
       const mockOpps = [
-        { id: 'o1', name: 'Deal A', stage: 'PROPOSAL', value: 10000, probability: 50, createdAt: new Date() },
-        { id: 'o2', name: 'Deal B', stage: 'QUALIFICATION', value: 20000, probability: 25, createdAt: new Date() },
+        {
+          id: 'o1',
+          name: 'Deal A',
+          stage: 'PROPOSAL',
+          value: 10000,
+          probability: 50,
+          createdAt: new Date(),
+        },
+        {
+          id: 'o2',
+          name: 'Deal B',
+          stage: 'QUALIFICATION',
+          value: 20000,
+          probability: 25,
+          createdAt: new Date(),
+        },
       ];
 
       ctx.services!.account!.getAccountOpportunities = vi.fn().mockResolvedValue({
@@ -1133,7 +1195,16 @@ describe('Account Router', () => {
         isSuccess: true,
         isFailure: false,
         value: {
-          opportunities: [{ id: 'o1', name: 'D', stage: 'PROPOSAL', value: 100, probability: 50, createdAt: new Date() }],
+          opportunities: [
+            {
+              id: 'o1',
+              name: 'D',
+              stage: 'PROPOSAL',
+              value: 100,
+              probability: 50,
+              createdAt: new Date(),
+            },
+          ],
           nextCursor: 'o1',
           total: 20,
           summary: { totalValue: 100, weightedValue: 50, stageBreakdown: { PROPOSAL: 1 } },
@@ -1161,9 +1232,7 @@ describe('Account Router', () => {
         error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
       });
 
-      await expect(
-        caller.getOpportunities({ accountId: TEST_UUIDS.nonExistent })
-      ).rejects.toThrow(
+      await expect(caller.getOpportunities({ accountId: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({ code: 'NOT_FOUND' })
       );
     });
@@ -1175,9 +1244,7 @@ describe('Account Router', () => {
         error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
       });
 
-      await expect(
-        caller.getOpportunities({ accountId: TEST_UUIDS.account2 })
-      ).rejects.toThrow(
+      await expect(caller.getOpportunities({ accountId: TEST_UUIDS.account2 })).rejects.toThrow(
         expect.objectContaining({ code: 'NOT_FOUND' })
       );
     });
@@ -1269,15 +1336,17 @@ describe('Account Router', () => {
         isSuccess: true,
         isFailure: false,
         value: {
-          activities: [{
-            id: 'act-1',
-            type: 'CONTACT_CREATED',
-            description: 'Contact added',
-            entityType: 'CONTACT' as const,
-            entityId: TEST_UUIDS.contact1,
-            entityName: 'Jane Smith',
-            createdAt: new Date(),
-          }],
+          activities: [
+            {
+              id: 'act-1',
+              type: 'CONTACT_CREATED',
+              description: 'Contact added',
+              entityType: 'CONTACT' as const,
+              entityId: TEST_UUIDS.contact1,
+              entityName: 'Jane Smith',
+              createdAt: new Date(),
+            },
+          ],
           nextCursor: undefined,
         },
       });
@@ -1330,9 +1399,7 @@ describe('Account Router', () => {
         error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
       });
 
-      await expect(
-        caller.getActivity({ accountId: TEST_UUIDS.nonExistent })
-      ).rejects.toThrow(
+      await expect(caller.getActivity({ accountId: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({ code: 'NOT_FOUND' })
       );
     });
@@ -1344,9 +1411,7 @@ describe('Account Router', () => {
         error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
       });
 
-      await expect(
-        caller.getActivity({ accountId: TEST_UUIDS.account2 })
-      ).rejects.toThrow(
+      await expect(caller.getActivity({ accountId: TEST_UUIDS.account2 })).rejects.toThrow(
         expect.objectContaining({ code: 'NOT_FOUND' })
       );
     });
@@ -1396,9 +1461,7 @@ describe('Account Router', () => {
         error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
       });
 
-      await expect(
-        caller.getContacts({ accountId: TEST_UUIDS.account2 })
-      ).rejects.toThrow(
+      await expect(caller.getContacts({ accountId: TEST_UUIDS.account2 })).rejects.toThrow(
         expect.objectContaining({ code: 'NOT_FOUND' })
       );
     });
@@ -1410,9 +1473,7 @@ describe('Account Router', () => {
         error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
       });
 
-      await expect(
-        caller.getOpportunities({ accountId: TEST_UUIDS.account2 })
-      ).rejects.toThrow(
+      await expect(caller.getOpportunities({ accountId: TEST_UUIDS.account2 })).rejects.toThrow(
         expect.objectContaining({ code: 'NOT_FOUND' })
       );
     });
@@ -1424,9 +1485,7 @@ describe('Account Router', () => {
         error: { code: 'NOT_FOUND_ERROR', message: 'Account not found' },
       });
 
-      await expect(
-        caller.getActivity({ accountId: TEST_UUIDS.account2 })
-      ).rejects.toThrow(
+      await expect(caller.getActivity({ accountId: TEST_UUIDS.account2 })).rejects.toThrow(
         expect.objectContaining({ code: 'NOT_FOUND' })
       );
     });

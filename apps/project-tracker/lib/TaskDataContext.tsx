@@ -277,4 +277,3 @@ function useSprintStatusCounts(sprint: SprintNumber): TaskSummary {
 
   return counts;
 }
-

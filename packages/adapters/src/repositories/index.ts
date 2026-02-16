@@ -27,6 +27,9 @@ export * from './PrismaChainVersionAuditRepository';
 // Activity Feed Repository (IFC-069)
 export * from './PrismaActivityFeedRepository';
 
+// Tenant Module Repository (IFC-209)
+export * from './PrismaTenantModuleRepository';
+
 // Outbox pattern (domain events)
 export * from './PrismaOutboxRepository';
 

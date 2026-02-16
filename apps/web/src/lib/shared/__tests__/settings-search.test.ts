@@ -147,23 +147,17 @@ describe('settings-search', () => {
 
     it('returns whole text unhighlighted for no match', () => {
       const result = highlightMatch('Account Settings', 'xyz');
-      expect(result).toEqual([
-        { text: 'Account Settings', highlighted: false },
-      ]);
+      expect(result).toEqual([{ text: 'Account Settings', highlighted: false }]);
     });
 
     it('returns whole text unhighlighted for empty query', () => {
       const result = highlightMatch('Account Settings', '');
-      expect(result).toEqual([
-        { text: 'Account Settings', highlighted: false },
-      ]);
+      expect(result).toEqual([{ text: 'Account Settings', highlighted: false }]);
     });
 
     it('returns whole text unhighlighted for whitespace query', () => {
       const result = highlightMatch('Account Settings', '   ');
-      expect(result).toEqual([
-        { text: 'Account Settings', highlighted: false },
-      ]);
+      expect(result).toEqual([{ text: 'Account Settings', highlighted: false }]);
     });
 
     it('handles case-insensitive matching', () => {

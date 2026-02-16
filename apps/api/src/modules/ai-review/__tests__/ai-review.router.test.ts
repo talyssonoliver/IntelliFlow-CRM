@@ -148,7 +148,7 @@ describe('aiReviewRouter', () => {
     // Test the error mapping function directly via import
     it('should map ReviewNotFoundError to NOT_FOUND', async () => {
       const { mapDomainErrorToTRPCError } = await import('../ai-review.router.js');
-      const { ReviewNotFoundError } = await import('@intelliflow/application') as any;
+      const { ReviewNotFoundError } = (await import('@intelliflow/application')) as any;
       const error = new ReviewNotFoundError();
       const trpcError = mapDomainErrorToTRPCError(error);
       expect(trpcError.code).toBe('NOT_FOUND');
@@ -156,7 +156,7 @@ describe('aiReviewRouter', () => {
 
     it('should map ReviewAlreadyClaimedError to CONFLICT', async () => {
       const { mapDomainErrorToTRPCError } = await import('../ai-review.router.js');
-      const { ReviewAlreadyClaimedError } = await import('@intelliflow/application') as any;
+      const { ReviewAlreadyClaimedError } = (await import('@intelliflow/application')) as any;
       const error = new ReviewAlreadyClaimedError();
       const trpcError = mapDomainErrorToTRPCError(error);
       expect(trpcError.code).toBe('CONFLICT');
@@ -164,7 +164,7 @@ describe('aiReviewRouter', () => {
 
     it('should map InvalidReviewStateError to BAD_REQUEST', async () => {
       const { mapDomainErrorToTRPCError } = await import('../ai-review.router.js');
-      const { InvalidReviewStateError } = await import('@intelliflow/application') as any;
+      const { InvalidReviewStateError } = (await import('@intelliflow/application')) as any;
       const error = new InvalidReviewStateError('APPROVED');
       const trpcError = mapDomainErrorToTRPCError(error);
       expect(trpcError.code).toBe('BAD_REQUEST');
@@ -172,7 +172,7 @@ describe('aiReviewRouter', () => {
 
     it('should map ConcurrentModificationError to CONFLICT', async () => {
       const { mapDomainErrorToTRPCError } = await import('../ai-review.router.js');
-      const { ConcurrentModificationError } = await import('@intelliflow/application') as any;
+      const { ConcurrentModificationError } = (await import('@intelliflow/application')) as any;
       const error = new ConcurrentModificationError();
       const trpcError = mapDomainErrorToTRPCError(error);
       expect(trpcError.code).toBe('CONFLICT');
@@ -180,7 +180,7 @@ describe('aiReviewRouter', () => {
 
     it('should map InvalidLockTokenError to UNAUTHORIZED', async () => {
       const { mapDomainErrorToTRPCError } = await import('../ai-review.router.js');
-      const { InvalidLockTokenError } = await import('@intelliflow/application') as any;
+      const { InvalidLockTokenError } = (await import('@intelliflow/application')) as any;
       const error = new InvalidLockTokenError();
       const trpcError = mapDomainErrorToTRPCError(error);
       expect(trpcError.code).toBe('UNAUTHORIZED');
@@ -188,7 +188,7 @@ describe('aiReviewRouter', () => {
 
     it('should map LockExpiredError to UNAUTHORIZED', async () => {
       const { mapDomainErrorToTRPCError } = await import('../ai-review.router.js');
-      const { LockExpiredError } = await import('@intelliflow/application') as any;
+      const { LockExpiredError } = (await import('@intelliflow/application')) as any;
       const error = new LockExpiredError();
       const trpcError = mapDomainErrorToTRPCError(error);
       expect(trpcError.code).toBe('UNAUTHORIZED');
@@ -196,7 +196,7 @@ describe('aiReviewRouter', () => {
 
     it('should map NotLockHolderError to FORBIDDEN', async () => {
       const { mapDomainErrorToTRPCError } = await import('../ai-review.router.js');
-      const { NotLockHolderError } = await import('@intelliflow/application') as any;
+      const { NotLockHolderError } = (await import('@intelliflow/application')) as any;
       const error = new NotLockHolderError();
       const trpcError = mapDomainErrorToTRPCError(error);
       expect(trpcError.code).toBe('FORBIDDEN');
@@ -204,7 +204,7 @@ describe('aiReviewRouter', () => {
 
     it('should map MaxEscalationReachedError to CONFLICT', async () => {
       const { mapDomainErrorToTRPCError } = await import('../ai-review.router.js');
-      const { MaxEscalationReachedError } = await import('@intelliflow/application') as any;
+      const { MaxEscalationReachedError } = (await import('@intelliflow/application')) as any;
       const error = new MaxEscalationReachedError(3);
       const trpcError = mapDomainErrorToTRPCError(error);
       expect(trpcError.code).toBe('CONFLICT');
@@ -274,7 +274,7 @@ describe('aiReviewRouter', () => {
         createMockReview({ status: 'ESCALATED', escalationDepth: 1 }),
       ];
       (mockPrisma.aIOutputReview.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(
-        reviews.map(r => ({
+        reviews.map((r) => ({
           id: r.id.value || TEST_REVIEW_ID,
           tenantId: r.tenantId,
           outputType: r.outputType,
@@ -381,11 +381,21 @@ describe('aiReviewRouter', () => {
     it('should return all 16 response fields', () => {
       const review = createMockReview();
       const expectedFields = [
-        'tenantId', 'outputType', 'outputPayload', 'confidence',
-        'status', 'slaDeadline', 'escalationDepth',
-        'lockedBy', 'lockedAt', 'lockExpiresAt',
-        'reviewerId', 'reviewDecision', 'reviewNotes',
-        'createdAt', 'updatedAt',
+        'tenantId',
+        'outputType',
+        'outputPayload',
+        'confidence',
+        'status',
+        'slaDeadline',
+        'escalationDepth',
+        'lockedBy',
+        'lockedAt',
+        'lockExpiresAt',
+        'reviewerId',
+        'reviewDecision',
+        'reviewNotes',
+        'createdAt',
+        'updatedAt',
       ];
 
       for (const field of expectedFields) {
@@ -827,7 +837,7 @@ describe('aiReviewRouter', () => {
 
     it('should not expose tenant ID in error messages', async () => {
       const { mapDomainErrorToTRPCError } = await import('../ai-review.router.js');
-      const { ReviewNotFoundError } = await import('@intelliflow/application') as any;
+      const { ReviewNotFoundError } = (await import('@intelliflow/application')) as any;
 
       const error = new ReviewNotFoundError();
       const trpcError = mapDomainErrorToTRPCError(error);

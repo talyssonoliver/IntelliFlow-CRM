@@ -109,11 +109,13 @@ describe('IcsGenerationService', () => {
       const result = service.generateInvitation(appointment, {
         organizerEmail: 'organizer@example.com',
         attendees: [],
-        reminders: [{
-          minutesBefore: 15,
-          action: 'DISPLAY',
-          description: 'Reminder: Meeting in 15 minutes',
-        }],
+        reminders: [
+          {
+            minutesBefore: 15,
+            action: 'DISPLAY',
+            description: 'Reminder: Meeting in 15 minutes',
+          },
+        ],
       });
 
       expect(result.isSuccess).toBe(true);

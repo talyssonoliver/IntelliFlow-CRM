@@ -35,7 +35,8 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const sprintParam = searchParams.get('sprint');
-    const sprintNumber = sprintParam === 'all' ? ('all' as const) : parseInt(sprintParam || '0', 10);
+    const sprintNumber =
+      sprintParam === 'all' ? ('all' as const) : parseInt(sprintParam || '0', 10);
 
     const metricsDir = join(process.cwd(), 'docs', 'metrics');
     const csvPath = join(metricsDir, '_global', 'Sprint_plan.csv');
@@ -80,9 +81,7 @@ export async function GET(request: Request) {
       sprintNumber === 'all'
         ? tasks
         : tasks.filter((t) => t['Target Sprint'] === String(sprintNumber));
-    const activeTasks = sprintTasks.filter(
-      (t) => t.Status !== 'Done' && t.Status !== 'Completed'
-    );
+    const activeTasks = sprintTasks.filter((t) => t.Status !== 'Done' && t.Status !== 'Completed');
     const completedCount = sprintTasks.filter(
       (t) => t.Status === 'Done' || t.Status === 'Completed'
     ).length;

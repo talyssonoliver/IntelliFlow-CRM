@@ -122,7 +122,7 @@ describe('NextBestActionAgent', () => {
     it('should validate entity types', () => {
       const entityTypes = ['lead', 'opportunity', 'contact'];
 
-      entityTypes.forEach(entityType => {
+      entityTypes.forEach((entityType) => {
         const context = {
           entityType,
           entityId: '550e8400-e29b-41d4-a716-446655440000',
@@ -213,7 +213,7 @@ describe('NextBestActionAgent', () => {
       });
 
       expect(result.success).toBe(true);
-      result.output!.recommendations.forEach(rec => {
+      result.output!.recommendations.forEach((rec) => {
         expect(ACTION_TYPES).toContain(rec.action);
       });
     });
@@ -233,7 +233,7 @@ describe('NextBestActionAgent', () => {
       });
 
       expect(result.success).toBe(true);
-      result.output!.recommendations.forEach(rec => {
+      result.output!.recommendations.forEach((rec) => {
         expect(ACTION_PRIORITIES).toContain(rec.priority);
       });
     });
@@ -258,7 +258,7 @@ describe('NextBestActionAgent', () => {
       expect(result.success).toBe(true);
       // Should have a high-priority call recommendation
       const hasCallRecommendation = result.output!.recommendations.some(
-        rec => rec.action === 'CALL' && ['CRITICAL', 'HIGH'].includes(rec.priority)
+        (rec) => rec.action === 'CALL' && ['CRITICAL', 'HIGH'].includes(rec.priority)
       );
       expect(hasCallRecommendation).toBe(true);
     });
@@ -280,7 +280,7 @@ describe('NextBestActionAgent', () => {
 
       expect(result.success).toBe(true);
       const hasReEngageRecommendation = result.output!.recommendations.some(
-        rec => rec.action === 'RE_ENGAGE'
+        (rec) => rec.action === 'RE_ENGAGE'
       );
       expect(hasReEngageRecommendation).toBe(true);
     });
@@ -302,7 +302,7 @@ describe('NextBestActionAgent', () => {
 
       expect(result.success).toBe(true);
       const hasNurtureRecommendation = result.output!.recommendations.some(
-        rec => rec.action === 'NURTURE'
+        (rec) => rec.action === 'NURTURE'
       );
       expect(hasNurtureRecommendation).toBe(true);
     });
@@ -325,7 +325,7 @@ describe('NextBestActionAgent', () => {
 
       expect(result.success).toBe(true);
       const hasCloseRecommendation = result.output!.recommendations.some(
-        rec => rec.action === 'CLOSE_DEAL'
+        (rec) => rec.action === 'CLOSE_DEAL'
       );
       expect(hasCloseRecommendation).toBe(true);
     });

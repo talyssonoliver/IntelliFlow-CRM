@@ -61,7 +61,9 @@ vi.mock('@/lib/trpc', () => ({
       getSubscription: { useQuery: (...args: unknown[]) => mockGetSubscription(...args) },
       getPaymentMethods: { useQuery: (...args: unknown[]) => mockGetPaymentMethods(...args) },
       listInvoices: { useQuery: (...args: unknown[]) => mockListInvoices(...args) },
-      getBillingInformation: { useQuery: (...args: unknown[]) => mockGetBillingInformation(...args) },
+      getBillingInformation: {
+        useQuery: (...args: unknown[]) => mockGetBillingInformation(...args),
+      },
     },
   },
 }));
@@ -76,8 +78,18 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 
 // Mock next/link
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -86,9 +98,21 @@ describe('BillingPortal', () => {
     vi.clearAllMocks();
     // Reset to defaults
     mockGetSubscription.mockReturnValue({ data: mockSubscription, isLoading: false, error: null });
-    mockGetPaymentMethods.mockReturnValue({ data: mockPaymentMethods, isLoading: false, error: null });
-    mockListInvoices.mockReturnValue({ data: { invoices: mockInvoices, total: 1, page: 1, limit: 5, hasMore: false }, isLoading: false, error: null });
-    mockGetBillingInformation.mockReturnValue({ data: mockBillingInfo, isLoading: false, error: null });
+    mockGetPaymentMethods.mockReturnValue({
+      data: mockPaymentMethods,
+      isLoading: false,
+      error: null,
+    });
+    mockListInvoices.mockReturnValue({
+      data: { invoices: mockInvoices, total: 1, page: 1, limit: 5, hasMore: false },
+      isLoading: false,
+      error: null,
+    });
+    mockGetBillingInformation.mockReturnValue({
+      data: mockBillingInfo,
+      isLoading: false,
+      error: null,
+    });
   });
 
   // ============================================
@@ -236,7 +260,11 @@ describe('BillingPortal', () => {
       mockGetPaymentMethods.mockReturnValue({
         data: [
           createMockPaymentMethod(),
-          createMockPaymentMethod({ id: 'pm_456', isDefault: false, card: { brand: 'mastercard', last4: '5555', expMonth: 6, expYear: 2027 } }),
+          createMockPaymentMethod({
+            id: 'pm_456',
+            isDefault: false,
+            card: { brand: 'mastercard', last4: '5555', expMonth: 6, expYear: 2027 },
+          }),
         ],
         isLoading: false,
         error: null,
@@ -345,7 +373,10 @@ describe('BillingPortal', () => {
       mockListInvoices.mockReturnValue({
         data: {
           invoices: [createMockInvoice({ status: 'open', amountPaid: 0 })],
-          total: 1, page: 1, limit: 5, hasMore: false,
+          total: 1,
+          page: 1,
+          limit: 5,
+          hasMore: false,
         },
         isLoading: false,
         error: null,
@@ -364,7 +395,10 @@ describe('BillingPortal', () => {
       mockListInvoices.mockReturnValue({
         data: {
           invoices: [createMockInvoice({ invoicePdf: undefined })],
-          total: 1, page: 1, limit: 5, hasMore: false,
+          total: 1,
+          page: 1,
+          limit: 5,
+          hasMore: false,
         },
         isLoading: false,
         error: null,
@@ -430,7 +464,7 @@ describe('BillingPortal', () => {
     });
 
     it('shows auth loading skeleton', async () => {
-      const { useAuth } = vi.mocked(await import('@/lib/auth/AuthContext') as any);
+      const { useAuth } = vi.mocked((await import('@/lib/auth/AuthContext')) as any);
       useAuth.mockReturnValue({ isAuthenticated: false, isLoading: true });
       const { container } = render(<BillingPortal />);
       const skeletons = container.querySelectorAll('[class*="animate-pulse"]');
@@ -539,25 +573,41 @@ describe('BillingPortal', () => {
 
   describe('Error States', () => {
     it('handles subscription query failure', () => {
-      mockGetSubscription.mockReturnValue({ data: undefined, isLoading: false, error: new Error('fetch failed') });
+      mockGetSubscription.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('fetch failed'),
+      });
       render(<BillingPortal />);
       expect(screen.getByText('Failed to load subscription details')).toBeInTheDocument();
     });
 
     it('handles payment methods query failure', () => {
-      mockGetPaymentMethods.mockReturnValue({ data: undefined, isLoading: false, error: new Error('fetch failed') });
+      mockGetPaymentMethods.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('fetch failed'),
+      });
       render(<BillingPortal />);
       expect(screen.getByText('Failed to load payment methods')).toBeInTheDocument();
     });
 
     it('handles invoices query failure', () => {
-      mockListInvoices.mockReturnValue({ data: undefined, isLoading: false, error: new Error('fetch failed') });
+      mockListInvoices.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('fetch failed'),
+      });
       render(<BillingPortal />);
       expect(screen.getByText('Failed to load billing history')).toBeInTheDocument();
     });
 
     it('handles billing info query failure', () => {
-      mockGetBillingInformation.mockReturnValue({ data: undefined, isLoading: false, error: new Error('fetch failed') });
+      mockGetBillingInformation.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: new Error('fetch failed'),
+      });
       render(<BillingPortal />);
       expect(screen.getByText('Failed to load billing information')).toBeInTheDocument();
     });

@@ -81,9 +81,7 @@ export function ConfirmationDialog({
     }
   };
 
-  const iconColorClass = variant === 'destructive'
-    ? 'text-red-500'
-    : 'text-primary';
+  const iconColorClass = variant === 'destructive' ? 'text-red-500' : 'text-primary';
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -91,38 +89,32 @@ export function ConfirmationDialog({
         <AlertDialogHeader>
           {icon && (
             <div className="flex justify-center mb-4">
-              <div className={cn(
-                'size-12 rounded-full flex items-center justify-center',
-                variant === 'destructive'
-                  ? 'bg-red-100 dark:bg-red-900/30'
-                  : 'bg-primary/10'
-              )}>
+              <div
+                className={cn(
+                  'size-12 rounded-full flex items-center justify-center',
+                  variant === 'destructive' ? 'bg-red-100 dark:bg-red-900/30' : 'bg-primary/10'
+                )}
+              >
                 <span className={cn('material-symbols-outlined text-2xl', iconColorClass)}>
                   {icon}
                 </span>
               </div>
             </div>
           )}
-          <AlertDialogTitle className="text-center sm:text-left">
-            {title}
-          </AlertDialogTitle>
+          <AlertDialogTitle className="text-center sm:text-left">{title}</AlertDialogTitle>
           <AlertDialogDescription className="text-center sm:text-left">
             {description}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={loading}>
-            {cancelLabel}
-          </AlertDialogCancel>
+          <AlertDialogCancel disabled={loading}>{cancelLabel}</AlertDialogCancel>
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault();
               handleConfirm();
             }}
             disabled={loading}
-            className={cn(
-              variant === 'destructive' && buttonVariants({ variant: 'destructive' })
-            )}
+            className={cn(variant === 'destructive' && buttonVariants({ variant: 'destructive' }))}
           >
             {loading ? (
               <>

@@ -70,12 +70,20 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     tenantId: string,
     limit: number,
     cursor: ActivityFeedCursor | null,
-    filters: ActivityFeedFilters,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
     // Determine which sources to query
     const sourcesToQuery = filters.sources?.length
       ? filters.sources
-      : (['LEAD_ACTIVITY', 'CONTACT_ACTIVITY', 'OPPORTUNITY_EVENT', 'TICKET_ACTIVITY', 'EMAIL', 'CALL', 'CHAT'] as ActivityFeedSource[]);
+      : ([
+          'LEAD_ACTIVITY',
+          'CONTACT_ACTIVITY',
+          'OPPORTUNITY_EVENT',
+          'TICKET_ACTIVITY',
+          'EMAIL',
+          'CALL',
+          'CHAT',
+        ] as ActivityFeedSource[]);
 
     // If filtering by entity type, only query relevant sources
     const filteredSources = filters.entityType
@@ -83,13 +91,11 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       : sourcesToQuery;
 
     // Build cursor condition for each query
-    const cursorCondition = cursor
-      ? { timestamp: cursor.timestamp, id: cursor.id }
-      : null;
+    const cursorCondition = cursor ? { timestamp: cursor.timestamp, id: cursor.id } : null;
 
     // Execute all source queries in parallel
     const queries = filteredSources.map((source) =>
-      this.querySource(source, tenantId, limit, cursorCondition, filters),
+      this.querySource(source, tenantId, limit, cursorCondition, filters)
     );
 
     const results = await Promise.all(queries);
@@ -110,11 +116,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     entityType: string,
     entityId: string,
     limit: number,
-    cursor: ActivityFeedCursor | null,
+    cursor: ActivityFeedCursor | null
   ): Promise<UnifiedActivityItem[]> {
-    const cursorCondition = cursor
-      ? { timestamp: cursor.timestamp, id: cursor.id }
-      : null;
+    const cursorCondition = cursor ? { timestamp: cursor.timestamp, id: cursor.id } : null;
 
     const filters: ActivityFeedFilters = {
       entityType: entityType as any,
@@ -125,7 +129,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     const sources = this.getSourcesForEntityType(entityType);
 
     const queries = sources.map((source) =>
-      this.querySource(source, tenantId, limit, cursorCondition, filters),
+      this.querySource(source, tenantId, limit, cursorCondition, filters)
     );
 
     const results = await Promise.all(queries);
@@ -148,7 +152,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     tenantId: string,
     limit: number,
     cursor: { timestamp: Date; id: string } | null,
-    filters: ActivityFeedFilters,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
     switch (source) {
       case 'LEAD_ACTIVITY':
@@ -174,7 +178,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     tenantId: string,
     limit: number,
     cursor: { timestamp: Date; id: string } | null,
-    filters: ActivityFeedFilters,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
     const where: any = { tenantId };
     if (cursor) {
@@ -217,7 +221,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     tenantId: string,
     limit: number,
     cursor: { timestamp: Date; id: string } | null,
-    filters: ActivityFeedFilters,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
     const where: any = { tenantId };
     if (cursor) {
@@ -260,7 +264,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     tenantId: string,
     limit: number,
     cursor: { timestamp: Date; id: string } | null,
-    filters: ActivityFeedFilters,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
     const where: any = { tenantId };
     if (cursor) {
@@ -291,9 +295,10 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       entity: r.opportunity
         ? { id: r.opportunity.id, type: 'OPPORTUNITY' as const, name: r.opportunity.name }
         : null,
-      metadata: r.stageFrom || r.stageTo
-        ? { stageFrom: r.stageFrom, stageTo: r.stageTo, confidenceScore: r.confidenceScore }
-        : null,
+      metadata:
+        r.stageFrom || r.stageTo
+          ? { stageFrom: r.stageFrom, stageTo: r.stageTo, confidenceScore: r.confidenceScore }
+          : null,
     }));
   }
 
@@ -301,7 +306,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     tenantId: string,
     limit: number,
     cursor: { timestamp: Date; id: string } | null,
-    filters: ActivityFeedFilters,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
     const where: any = { tenantId };
     if (cursor) {
@@ -330,7 +335,11 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       timestamp: r.timestamp,
       actor: { id: null, name: r.authorName },
       entity: r.ticket
-        ? { id: r.ticket.id, type: 'TICKET' as const, name: `${r.ticket.ticketNumber}: ${r.ticket.subject}` }
+        ? {
+            id: r.ticket.id,
+            type: 'TICKET' as const,
+            name: `${r.ticket.ticketNumber}: ${r.ticket.subject}`,
+          }
         : null,
       metadata: r.systemEventData as Record<string, unknown> | null,
     }));
@@ -340,7 +349,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     tenantId: string,
     limit: number,
     cursor: { timestamp: Date; id: string } | null,
-    filters: ActivityFeedFilters,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
     const where: any = { tenantId };
     if (cursor) {
@@ -367,9 +376,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       description: `From: ${r.fromEmail} → To: ${r.toEmail}`,
       timestamp: r.createdAt,
       actor: r.userId ? { id: r.userId, name: r.fromEmail } : null,
-      entity: r.contactId
-        ? { id: r.contactId, type: 'CONTACT' as const, name: r.toEmail }
-        : null,
+      entity: r.contactId ? { id: r.contactId, type: 'CONTACT' as const, name: r.toEmail } : null,
       metadata: { status: r.status, openCount: r.openCount, clickCount: r.clickCount },
     }));
   }
@@ -378,7 +385,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     tenantId: string,
     limit: number,
     cursor: { timestamp: Date; id: string } | null,
-    filters: ActivityFeedFilters,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
     const where: any = { tenantId };
     if (cursor) {
@@ -408,7 +415,12 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       entity: r.contactId
         ? { id: r.contactId, type: 'CONTACT' as const, name: r.contactName || r.toNumber }
         : null,
-      metadata: { duration: r.duration, status: r.status, outcome: r.outcome, sentiment: r.sentiment },
+      metadata: {
+        duration: r.duration,
+        status: r.status,
+        outcome: r.outcome,
+        sentiment: r.sentiment,
+      },
     }));
   }
 
@@ -416,7 +428,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     tenantId: string,
     limit: number,
     cursor: { timestamp: Date; id: string } | null,
-    filters: ActivityFeedFilters,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
     const where: any = { tenantId };
     if (cursor) {
@@ -446,7 +458,11 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       timestamp: r.createdAt,
       actor: { id: r.senderId, name: r.senderName },
       entity: r.conversation?.contactId
-        ? { id: r.conversation.contactId, type: 'CONTACT' as const, name: r.conversation.contactName || 'Unknown' }
+        ? {
+            id: r.conversation.contactId,
+            type: 'CONTACT' as const,
+            name: r.conversation.contactName || 'Unknown',
+          }
         : null,
       metadata: r.metadata as Record<string, unknown> | null,
     }));
@@ -458,7 +474,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
 
   private filterSourcesByEntityType(
     sources: ActivityFeedSource[],
-    entityType: string,
+    entityType: string
   ): ActivityFeedSource[] {
     const entitySourceMap: Record<string, ActivityFeedSource[]> = {
       LEAD: ['LEAD_ACTIVITY'],

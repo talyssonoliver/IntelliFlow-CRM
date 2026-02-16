@@ -120,13 +120,19 @@ const NavButton = React.forwardRef<HTMLButtonElement, NavButtonProps>(
         {...props}
       >
         {iconPosition === 'left' && (
-          <span className={cn('material-symbols-outlined', iconSizeClasses[size])} aria-hidden="true">
+          <span
+            className={cn('material-symbols-outlined', iconSizeClasses[size])}
+            aria-hidden="true"
+          >
             {icon}
           </span>
         )}
         {label && <span className="hidden sm:inline">{label}</span>}
         {iconPosition === 'right' && (
-          <span className={cn('material-symbols-outlined', iconSizeClasses[size])} aria-hidden="true">
+          <span
+            className={cn('material-symbols-outlined', iconSizeClasses[size])}
+            aria-hidden="true"
+          >
             {icon}
           </span>
         )}
@@ -230,8 +236,7 @@ const Pagination = React.forwardRef<HTMLElement, PaginationProps>(
 
     // Calculate summary values
     const startItem = totalItems && pageSize ? (currentPage - 1) * pageSize + 1 : null;
-    const endItem =
-      totalItems && pageSize ? Math.min(currentPage * pageSize, totalItems) : null;
+    const endItem = totalItems && pageSize ? Math.min(currentPage * pageSize, totalItems) : null;
 
     return (
       <nav

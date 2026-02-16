@@ -25,31 +25,15 @@ import {
 } from '@intelliflow/domain';
 
 // Import validator schemas
-import {
-  leadStatusSchema,
-  leadSourceSchema,
-} from '../src/lead';
+import { leadStatusSchema, leadSourceSchema } from '../src/lead';
 
-import {
-  opportunityStageSchema,
-} from '../src/opportunity';
+import { opportunityStageSchema } from '../src/opportunity';
 
-import {
-  taskStatusSchema,
-  taskPrioritySchema,
-} from '../src/task';
+import { taskStatusSchema, taskPrioritySchema } from '../src/task';
 
-import {
-  caseStatusSchema,
-  casePrioritySchema,
-  caseTaskStatusSchema,
-} from '../src/case';
+import { caseStatusSchema, casePrioritySchema, caseTaskStatusSchema } from '../src/case';
 
-import {
-  ticketStatusSchema,
-  ticketPrioritySchema,
-  slaStatusSchema,
-} from '../src/ticket';
+import { ticketStatusSchema, ticketPrioritySchema, slaStatusSchema } from '../src/ticket';
 
 describe('Enum Consistency - DRY Architecture', () => {
   describe('Lead enums', () => {

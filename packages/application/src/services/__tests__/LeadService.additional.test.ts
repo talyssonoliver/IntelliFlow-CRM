@@ -546,11 +546,7 @@ describe('LeadService - Additional Coverage', () => {
       lead.changeStatus('CONTACTED', 'user-123');
       leadRepository.add(lead);
 
-      const result = await leadService.changeLeadStatus(
-        lead.id.value,
-        'QUALIFIED',
-        'sales-rep'
-      );
+      const result = await leadService.changeLeadStatus(lead.id.value, 'QUALIFIED', 'sales-rep');
 
       expect(result.isSuccess).toBe(true);
     });
@@ -561,11 +557,7 @@ describe('LeadService - Additional Coverage', () => {
       lead.qualify('user-123', 'Good');
       leadRepository.add(lead);
 
-      const result = await leadService.changeLeadStatus(
-        lead.id.value,
-        'NEGOTIATING',
-        'sales-rep'
-      );
+      const result = await leadService.changeLeadStatus(lead.id.value, 'NEGOTIATING', 'sales-rep');
 
       expect(result.isSuccess).toBe(true);
     });
@@ -575,11 +567,7 @@ describe('LeadService - Additional Coverage', () => {
       lead.changeStatus('UNQUALIFIED', 'user-123');
       leadRepository.add(lead);
 
-      const result = await leadService.changeLeadStatus(
-        lead.id.value,
-        'CONTACTED',
-        'sales-rep'
-      );
+      const result = await leadService.changeLeadStatus(lead.id.value, 'CONTACTED', 'sales-rep');
 
       expect(result.isSuccess).toBe(true);
     });
@@ -657,11 +645,7 @@ describe('LeadService - Additional Coverage', () => {
       leadRepository.add(lead);
       eventBus.setShouldFail(true);
 
-      const result = await leadService.changeLeadStatus(
-        lead.id.value,
-        'CONTACTED',
-        'user'
-      );
+      const result = await leadService.changeLeadStatus(lead.id.value, 'CONTACTED', 'user');
 
       expect(result.isSuccess).toBe(true);
     });

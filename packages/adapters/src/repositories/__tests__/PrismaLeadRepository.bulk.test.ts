@@ -52,17 +52,10 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
   // ============================================
   describe('bulkUpdateStatus()', () => {
     it('should update status for existing leads', async () => {
-      mockPrisma.lead.findMany.mockResolvedValue([
-        { id: 'lead-1' },
-        { id: 'lead-2' },
-      ]);
+      mockPrisma.lead.findMany.mockResolvedValue([{ id: 'lead-1' }, { id: 'lead-2' }]);
       mockPrisma.lead.updateMany.mockResolvedValue({ count: 2 });
 
-      const result = await repo.bulkUpdateStatus(
-        ['lead-1', 'lead-2'],
-        'CONTACTED',
-        'user-1'
-      );
+      const result = await repo.bulkUpdateStatus(['lead-1', 'lead-2'], 'CONTACTED', 'user-1');
 
       expect(result.successful).toEqual(['lead-1', 'lead-2']);
       expect(result.failed).toEqual([]);
@@ -77,21 +70,13 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
     });
 
     it('should report non-existent leads as failed', async () => {
-      mockPrisma.lead.findMany.mockResolvedValue([
-        { id: 'lead-1' },
-      ]);
+      mockPrisma.lead.findMany.mockResolvedValue([{ id: 'lead-1' }]);
       mockPrisma.lead.updateMany.mockResolvedValue({ count: 1 });
 
-      const result = await repo.bulkUpdateStatus(
-        ['lead-1', 'lead-missing'],
-        'QUALIFIED',
-        'user-1'
-      );
+      const result = await repo.bulkUpdateStatus(['lead-1', 'lead-missing'], 'QUALIFIED', 'user-1');
 
       expect(result.successful).toEqual(['lead-1']);
-      expect(result.failed).toEqual([
-        { id: 'lead-missing', error: 'Lead not found' },
-      ]);
+      expect(result.failed).toEqual([{ id: 'lead-missing', error: 'Lead not found' }]);
     });
 
     it('should handle all leads not found', async () => {
@@ -114,11 +99,7 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
     it('should handle database error during update', async () => {
       mockPrisma.lead.findMany.mockRejectedValue(new Error('DB connection failed'));
 
-      const result = await repo.bulkUpdateStatus(
-        ['lead-1', 'lead-2'],
-        'CONTACTED',
-        'user-1'
-      );
+      const result = await repo.bulkUpdateStatus(['lead-1', 'lead-2'], 'CONTACTED', 'user-1');
 
       expect(result.successful).toEqual([]);
       expect(result.failed).toHaveLength(2);
@@ -130,11 +111,7 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
       mockPrisma.lead.findMany.mockResolvedValue([{ id: 'lead-1' }]);
       mockPrisma.lead.updateMany.mockRejectedValue(new Error('Write failed'));
 
-      const result = await repo.bulkUpdateStatus(
-        ['lead-1'],
-        'CONTACTED',
-        'user-1'
-      );
+      const result = await repo.bulkUpdateStatus(['lead-1'], 'CONTACTED', 'user-1');
 
       expect(result.successful).toEqual([]);
       expect(result.failed).toHaveLength(1);
@@ -145,11 +122,7 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
       mockPrisma.lead.findMany.mockResolvedValue([{ id: 'lead-1' }]);
       mockPrisma.lead.updateMany.mockRejectedValue(new Error('Update failed'));
 
-      const result = await repo.bulkUpdateStatus(
-        ['lead-1', 'lead-missing'],
-        'CONTACTED',
-        'user-1'
-      );
+      const result = await repo.bulkUpdateStatus(['lead-1', 'lead-missing'], 'CONTACTED', 'user-1');
 
       // lead-missing should be "Lead not found", lead-1 should be "Update failed"
       expect(result.failed).toHaveLength(2);
@@ -170,11 +143,7 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
     it('should handle non-Error exceptions', async () => {
       mockPrisma.lead.findMany.mockRejectedValue('string error');
 
-      const result = await repo.bulkUpdateStatus(
-        ['lead-1'],
-        'CONTACTED',
-        'user-1'
-      );
+      const result = await repo.bulkUpdateStatus(['lead-1'], 'CONTACTED', 'user-1');
 
       expect(result.failed[0].error).toBe('Unknown error');
     });
@@ -185,10 +154,7 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
   // ============================================
   describe('bulkDelete()', () => {
     it('should delete existing leads', async () => {
-      mockPrisma.lead.findMany.mockResolvedValue([
-        { id: 'lead-1' },
-        { id: 'lead-2' },
-      ]);
+      mockPrisma.lead.findMany.mockResolvedValue([{ id: 'lead-1' }, { id: 'lead-2' }]);
       mockPrisma.lead.deleteMany.mockResolvedValue({ count: 2 });
 
       const result = await repo.bulkDelete(['lead-1', 'lead-2']);
@@ -208,9 +174,7 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
       const result = await repo.bulkDelete(['lead-1', 'lead-gone']);
 
       expect(result.successful).toEqual(['lead-1']);
-      expect(result.failed).toEqual([
-        { id: 'lead-gone', error: 'Lead not found' },
-      ]);
+      expect(result.failed).toEqual([{ id: 'lead-gone', error: 'Lead not found' }]);
     });
 
     it('should handle all leads not found', async () => {
@@ -225,9 +189,7 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
 
     it('should handle database error during delete', async () => {
       mockPrisma.lead.findMany.mockResolvedValue([{ id: 'lead-1' }]);
-      mockPrisma.lead.deleteMany.mockRejectedValue(
-        new Error('Foreign key constraint violation')
-      );
+      mockPrisma.lead.deleteMany.mockRejectedValue(new Error('Foreign key constraint violation'));
 
       const result = await repo.bulkDelete(['lead-1']);
 
@@ -396,10 +358,7 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
     });
 
     it('should skip already converted leads', async () => {
-      const leadsWithConverted = [
-        { ...mockLeads[0], status: 'CONVERTED' },
-        mockLeads[1],
-      ];
+      const leadsWithConverted = [{ ...mockLeads[0], status: 'CONVERTED' }, mockLeads[1]];
 
       const txClient = {
         lead: {
@@ -419,9 +378,7 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
       const result = await repo.bulkConvert(['lead-1', 'lead-2'], false, 'user-1');
 
       expect(result.successful).toEqual(['lead-2']);
-      expect(result.failed).toEqual([
-        { id: 'lead-1', error: 'Lead already converted' },
-      ]);
+      expect(result.failed).toEqual([{ id: 'lead-1', error: 'Lead already converted' }]);
     });
 
     it('should report non-existent leads as failed', async () => {
@@ -440,16 +397,10 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
 
       mockPrisma.$transaction.mockImplementation(async (cb: any) => cb(txClient));
 
-      const result = await repo.bulkConvert(
-        ['lead-1', 'lead-missing'],
-        false,
-        'user-1'
-      );
+      const result = await repo.bulkConvert(['lead-1', 'lead-missing'], false, 'user-1');
 
       expect(result.successful).toEqual(['lead-1']);
-      expect(result.failed).toEqual([
-        { id: 'lead-missing', error: 'Lead not found' },
-      ]);
+      expect(result.failed).toEqual([{ id: 'lead-missing', error: 'Lead not found' }]);
     });
 
     it('should return early when all leads are already converted', async () => {
@@ -482,9 +433,7 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
     });
 
     it('should use userId as ownerId fallback when lead has no ownerId', async () => {
-      const leadNoOwner = [
-        { ...mockLeads[1], ownerId: null },
-      ];
+      const leadNoOwner = [{ ...mockLeads[1], ownerId: null }];
 
       const txClient = {
         lead: {
@@ -596,9 +545,9 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
     it('should propagate transaction errors', async () => {
       mockPrisma.$transaction.mockRejectedValue(new Error('Transaction failed'));
 
-      await expect(
-        repo.bulkConvert(['lead-1'], false, 'user-1')
-      ).rejects.toThrow('Transaction failed');
+      await expect(repo.bulkConvert(['lead-1'], false, 'user-1')).rejects.toThrow(
+        'Transaction failed'
+      );
     });
   });
 });

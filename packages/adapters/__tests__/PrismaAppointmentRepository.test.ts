@@ -57,31 +57,33 @@ const createMockPrismaClient = () => {
 };
 
 // Create mock database record
-const createMockDbRecord = (overrides?: Partial<{
-  id: string;
-  title: string;
-  description: string | null;
-  startTime: Date;
-  endTime: Date;
-  appointmentType: string;
-  status: string;
-  location: string | null;
-  bufferMinutesBefore: number;
-  bufferMinutesAfter: number;
-  recurrence: any;
-  organizerId: string;
-  notes: string | null;
-  externalCalendarId: string | null;
-  reminderMinutes: number | null;
-  createdAt: Date;
-  updatedAt: Date;
-  cancelledAt: Date | null;
-  completedAt: Date | null;
-  cancellationReason: string | null;
-  parentAppointmentId: string | null;
-  attendees: { userId: string }[];
-  linkedCases: { caseId: string }[];
-}>) => {
+const createMockDbRecord = (
+  overrides?: Partial<{
+    id: string;
+    title: string;
+    description: string | null;
+    startTime: Date;
+    endTime: Date;
+    appointmentType: string;
+    status: string;
+    location: string | null;
+    bufferMinutesBefore: number;
+    bufferMinutesAfter: number;
+    recurrence: any;
+    organizerId: string;
+    notes: string | null;
+    externalCalendarId: string | null;
+    reminderMinutes: number | null;
+    createdAt: Date;
+    updatedAt: Date;
+    cancelledAt: Date | null;
+    completedAt: Date | null;
+    cancellationReason: string | null;
+    parentAppointmentId: string | null;
+    attendees: { userId: string }[];
+    linkedCases: { caseId: string }[];
+  }>
+) => {
   const defaults = {
     id: '550e8400-e29b-41d4-a716-446655440000',
     title: 'Test Meeting',
@@ -162,7 +164,7 @@ describe('PrismaAppointmentRepository', () => {
       (mockPrisma.appointment.findMany as any).mockResolvedValue(mockRecords);
 
       const { AppointmentId } = await import('@intelliflow/domain');
-      const ids = mockRecords.map(r => AppointmentId.create(r.id).value);
+      const ids = mockRecords.map((r) => AppointmentId.create(r.id).value);
 
       const result = await repository.findByIds(ids);
 
@@ -197,7 +199,11 @@ describe('PrismaAppointmentRepository', () => {
     it('should return appointments for organizer', async () => {
       const mockRecords = [
         createMockDbRecord({ organizerId: 'user-123', title: 'My Meeting 1' }),
-        createMockDbRecord({ id: '550e8400-e29b-41d4-a716-446655440001', organizerId: 'user-123', title: 'My Meeting 2' }),
+        createMockDbRecord({
+          id: '550e8400-e29b-41d4-a716-446655440001',
+          organizerId: 'user-123',
+          title: 'My Meeting 2',
+        }),
       ];
       (mockPrisma.appointment.findMany as any).mockResolvedValue(mockRecords);
 
@@ -243,10 +249,7 @@ describe('PrismaAppointmentRepository', () => {
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            OR: [
-              { organizerId: 'user-123' },
-              { attendees: { some: { userId: 'user-123' } } },
-            ],
+            OR: [{ organizerId: 'user-123' }, { attendees: { some: { userId: 'user-123' } } }],
           },
         })
       );
@@ -292,10 +295,7 @@ describe('PrismaAppointmentRepository', () => {
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            AND: [
-              { startTime: { lt: endTime } },
-              { endTime: { gt: startTime } },
-            ],
+            AND: [{ startTime: { lt: endTime } }, { endTime: { gt: startTime } }],
           },
         })
       );
@@ -344,9 +344,7 @@ describe('PrismaAppointmentRepository', () => {
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            AND: expect.arrayContaining([
-              { id: { not: '550e8400-e29b-41d4-a716-446655440099' } },
-            ]),
+            AND: expect.arrayContaining([{ id: { not: '550e8400-e29b-41d4-a716-446655440099' } }]),
           },
         })
       );
@@ -457,10 +455,7 @@ describe('PrismaAppointmentRepository', () => {
           where: {
             AND: expect.arrayContaining([
               {
-                OR: [
-                  { organizerId: 'user-123' },
-                  { attendees: { some: { userId: 'user-123' } } },
-                ],
+                OR: [{ organizerId: 'user-123' }, { attendees: { some: { userId: 'user-123' } } }],
               },
               { startTime: { gte: expect.any(Date) } },
               { status: { notIn: ['CANCELLED', 'COMPLETED', 'NO_SHOW'] } },
@@ -484,9 +479,7 @@ describe('PrismaAppointmentRepository', () => {
       expect(mockPrisma.appointment.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: {
-            AND: expect.arrayContaining([
-              { endTime: { lt: expect.any(Date) } },
-            ]),
+            AND: expect.arrayContaining([{ endTime: { lt: expect.any(Date) } }]),
           },
           orderBy: { startTime: 'desc' },
         })
@@ -658,7 +651,9 @@ describe('PrismaAppointmentRepository', () => {
 
     it('should return paginated result with hasMore', async () => {
       const mockRecords = Array.from({ length: 10 }, (_, i) =>
-        createMockDbRecord({ id: `550e8400-e29b-41d4-a716-4466554400${String(i).padStart(2, '0')}` })
+        createMockDbRecord({
+          id: `550e8400-e29b-41d4-a716-4466554400${String(i).padStart(2, '0')}`,
+        })
       );
       (mockPrisma.appointment.findMany as any).mockResolvedValue(mockRecords);
       (mockPrisma.appointment.count as any).mockResolvedValue(25);

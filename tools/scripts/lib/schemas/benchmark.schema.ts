@@ -58,31 +58,38 @@ export const performanceBudgetSchema = z.object({
 export const taskContextSchema = z.object({
   original_task: z.string().optional().describe('Task ID that originally created this benchmark'),
   original_task_status: z.string().optional().describe('Status note about the original task'),
-  follow_up_task: z.string().optional().describe('Follow-up task ID for completing real benchmarks'),
+  follow_up_task: z
+    .string()
+    .optional()
+    .describe('Follow-up task ID for completing real benchmarks'),
   follow_up_target_sprint: z.number().int().optional().describe('Target sprint for follow-up'),
   follow_up_description: z.string().optional().describe('Description of the follow-up task'),
 });
 
 // Environment details
-export const benchmarkEnvironmentSchema = z.object({
-  node: z.string().optional().describe('Node.js version'),
-  platform: z.string().optional().describe('Operating system platform'),
-  architecture: z.string().optional().describe('CPU architecture'),
-  api_available: z.boolean().optional().describe('Whether API server was available'),
-  database_available: z.boolean().optional().describe('Whether database was available'),
-  openai_configured: z.boolean().optional().describe('Whether OpenAI API key was configured'),
-  ollama_available: z.boolean().optional().describe('Whether Ollama server was available'),
-}).passthrough();
+export const benchmarkEnvironmentSchema = z
+  .object({
+    node: z.string().optional().describe('Node.js version'),
+    platform: z.string().optional().describe('Operating system platform'),
+    architecture: z.string().optional().describe('CPU architecture'),
+    api_available: z.boolean().optional().describe('Whether API server was available'),
+    database_available: z.boolean().optional().describe('Whether database was available'),
+    openai_configured: z.boolean().optional().describe('Whether OpenAI API key was configured'),
+    ollama_available: z.boolean().optional().describe('Whether Ollama server was available'),
+  })
+  .passthrough();
 
 // Results organized by category
-export const benchmarkResultsSchema = z.object({
-  api: z.array(benchmarkResultSchema).optional(),
-  database: z.array(benchmarkResultSchema).optional(),
-  frontend: z.array(benchmarkResultSchema).optional(),
-  ai: z.array(benchmarkResultSchema).optional(),
-  build: z.array(benchmarkResultSchema).optional(),
-  models: z.array(modelBenchmarkSchema).optional().describe('AI model benchmark results'),
-}).passthrough();
+export const benchmarkResultsSchema = z
+  .object({
+    api: z.array(benchmarkResultSchema).optional(),
+    database: z.array(benchmarkResultSchema).optional(),
+    frontend: z.array(benchmarkResultSchema).optional(),
+    ai: z.array(benchmarkResultSchema).optional(),
+    build: z.array(benchmarkResultSchema).optional(),
+    models: z.array(modelBenchmarkSchema).optional().describe('AI model benchmark results'),
+  })
+  .passthrough();
 
 // KPI validation summary
 export const kpiValidationSchema = z.object({
@@ -95,13 +102,15 @@ export const kpiValidationSchema = z.object({
 });
 
 // References to related files
-export const benchmarkReferencesSchema = z.object({
-  sprintPlan: z.string().optional(),
-  task: z.string().optional(),
-  performanceBudgets: z.string().optional(),
-  lighthouseConfig: z.string().optional(),
-  benchmarkScript: z.string().optional(),
-}).passthrough();
+export const benchmarkReferencesSchema = z
+  .object({
+    sprintPlan: z.string().optional(),
+    task: z.string().optional(),
+    performanceBudgets: z.string().optional(),
+    lighthouseConfig: z.string().optional(),
+    benchmarkScript: z.string().optional(),
+  })
+  .passthrough();
 
 // Main benchmark schema
 export const benchmarkSchema = z.object({
@@ -116,13 +125,16 @@ export const benchmarkSchema = z.object({
   task_context: taskContextSchema.optional(),
   environment: benchmarkEnvironmentSchema.optional(),
 
-  prerequisites: z.array(z.string()).optional().describe('Instructions for running real benchmarks'),
+  prerequisites: z
+    .array(z.string())
+    .optional()
+    .describe('Instructions for running real benchmarks'),
   instructions: z.array(z.string()).optional().describe('Instructions (alias for prerequisites)'),
 
-  budgets: z.union([
-    z.array(performanceBudgetSchema),
-    z.record(z.string(), z.object({}).passthrough())
-  ]).optional().describe('Performance budget definitions - array or object format'),
+  budgets: z
+    .union([z.array(performanceBudgetSchema), z.record(z.string(), z.object({}).passthrough())])
+    .optional()
+    .describe('Performance budget definitions - array or object format'),
   results: benchmarkResultsSchema.optional().describe('Benchmark results by category'),
 
   kpi_validation: kpiValidationSchema.optional().describe('Summary of KPI validation results'),

@@ -16,11 +16,18 @@ export default function NewTicketPage() {
   const router = useRouter();
   const createMutation = api.ticket.create.useMutation({
     onSuccess: (data: { id: string }) => {
-      toast({ title: 'Ticket Created', description: 'Your ticket has been submitted successfully.' });
+      toast({
+        title: 'Ticket Created',
+        description: 'Your ticket has been submitted successfully.',
+      });
       router.push(`/tickets/${data.id}`);
     },
     onError: (error) => {
-      toast({ title: 'Failed to create ticket', description: error.message, variant: 'destructive' });
+      toast({
+        title: 'Failed to create ticket',
+        description: error.message,
+        variant: 'destructive',
+      });
     },
   });
 

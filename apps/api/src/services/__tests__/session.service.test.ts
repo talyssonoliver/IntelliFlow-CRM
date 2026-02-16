@@ -324,9 +324,7 @@ describe('SessionService', () => {
 
     it('should handle revoking non-existent session gracefully', async () => {
       // Should not throw
-      await expect(
-        service.revokeSession('non-existent-session')
-      ).resolves.not.toThrow();
+      await expect(service.revokeSession('non-existent-session')).resolves.not.toThrow();
     });
   });
 
@@ -353,9 +351,7 @@ describe('SessionService', () => {
     });
 
     it('should handle user with no sessions', async () => {
-      await expect(
-        service.revokeAllUserSessions('user-with-no-sessions')
-      ).resolves.not.toThrow();
+      await expect(service.revokeAllUserSessions('user-with-no-sessions')).resolves.not.toThrow();
     });
   });
 
@@ -440,9 +436,7 @@ describe('SessionService', () => {
       const extendedSession = await service.extendSession(session.id);
 
       expect(extendedSession).toBeDefined();
-      expect(extendedSession!.expiresAt.getTime()).toBeGreaterThan(
-        originalExpiration.getTime()
-      );
+      expect(extendedSession!.expiresAt.getTime()).toBeGreaterThan(originalExpiration.getTime());
     });
 
     it('should return null for non-existent session', async () => {
@@ -598,10 +592,7 @@ describe('SessionService', () => {
       const session2 = await service.createSession(input);
       const currentSession = await service.createSession(input);
 
-      const revokedCount = await service.revokeOtherSessions(
-        TEST_USER_ID,
-        currentSession.id
-      );
+      const revokedCount = await service.revokeOtherSessions(TEST_USER_ID, currentSession.id);
 
       expect(revokedCount).toBe(2);
 
@@ -647,15 +638,9 @@ describe('SessionService', () => {
   describe('DEFAULT_SESSION_CONFIG', () => {
     it('should have correct default values', () => {
       expect(DEFAULT_SESSION_CONFIG.maxConcurrentSessions).toBe(3);
-      expect(DEFAULT_SESSION_CONFIG.defaultSessionDurationMs).toBe(
-        24 * 60 * 60 * 1000
-      );
-      expect(DEFAULT_SESSION_CONFIG.rememberMeDurationMs).toBe(
-        30 * 24 * 60 * 60 * 1000
-      );
-      expect(DEFAULT_SESSION_CONFIG.inactivityTimeoutMs).toBe(
-        4 * 60 * 60 * 1000
-      );
+      expect(DEFAULT_SESSION_CONFIG.defaultSessionDurationMs).toBe(24 * 60 * 60 * 1000);
+      expect(DEFAULT_SESSION_CONFIG.rememberMeDurationMs).toBe(30 * 24 * 60 * 60 * 1000);
+      expect(DEFAULT_SESSION_CONFIG.inactivityTimeoutMs).toBe(4 * 60 * 60 * 1000);
     });
   });
 });

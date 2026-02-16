@@ -41,6 +41,7 @@
   "dependencies": {
     "@intelliflow/domain": "workspace:*",
     "@intelliflow/application": "workspace:*",
+    "@intelliflow/platform": "workspace:*",
     "@intelliflow/db": "workspace:*",
     "@intelliflow/webhooks": "workspace:*",
     "@prisma/client": "^5.10.0",

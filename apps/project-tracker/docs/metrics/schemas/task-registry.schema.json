@@ -95,12 +95,7 @@
             }
           }
         },
-        "required": [
-          "total_tasks",
-          "completed",
-          "in_progress",
-          "blocked"
-        ],
+        "required": ["total_tasks", "completed", "in_progress", "blocked"],
         "additionalProperties": false
       }
     },
@@ -226,13 +221,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "section",
-          "description",
-          "owner",
-          "status",
-          "sprint"
-        ],
+        "required": ["section", "description", "owner", "status", "sprint"],
         "additionalProperties": false
       }
     }

@@ -1,6 +1,7 @@
 # IntelliFlow CRM Developer Guide
 
-This guide provides essential information for developers working on IntelliFlow CRM.
+This guide provides essential information for developers working on IntelliFlow
+CRM.
 
 ## Table of Contents
 
@@ -86,7 +87,8 @@ intelliFlow-CRM/
 
 ## Package Dependency Map
 
-The monorepo contains 22 packages, but only a subset is needed for daily development.
+The monorepo contains 22 packages, but only a subset is needed for daily
+development.
 
 ### Core Application Dependencies
 
@@ -113,35 +115,35 @@ The monorepo contains 22 packages, but only a subset is needed for daily develop
 
 ### Packages Required for Development (9 packages)
 
-| Package | Role |
-|---------|------|
-| `@intelliflow/web` | Next.js frontend application |
-| `@intelliflow/api` | tRPC API server |
-| `@intelliflow/domain` | Business logic, entities (shared) |
-| `@intelliflow/validators` | Zod schemas (shared) |
-| `@intelliflow/db` | Prisma client |
-| `@intelliflow/adapters` | Repository implementations |
-| `@intelliflow/application` | Use cases, services |
-| `@intelliflow/platform` | Platform utilities |
-| `@intelliflow/ui` | UI components |
-| `@intelliflow/api-client` | tRPC client for frontend |
+| Package                    | Role                              |
+| -------------------------- | --------------------------------- |
+| `@intelliflow/web`         | Next.js frontend application      |
+| `@intelliflow/api`         | tRPC API server                   |
+| `@intelliflow/domain`      | Business logic, entities (shared) |
+| `@intelliflow/validators`  | Zod schemas (shared)              |
+| `@intelliflow/db`          | Prisma client                     |
+| `@intelliflow/adapters`    | Repository implementations        |
+| `@intelliflow/application` | Use cases, services               |
+| `@intelliflow/platform`    | Platform utilities                |
+| `@intelliflow/ui`          | UI components                     |
+| `@intelliflow/api-client`  | tRPC client for frontend          |
 
 ### Packages NOT Required for Daily Development
 
-| Package | When to Run |
-|---------|-------------|
-| `@intelliflow/architecture-tests` | Pre-commit/CI only |
-| `@intelliflow/plan-linter` | When editing Sprint_plan.csv |
-| `@intelliflow/ai-worker` | Only if working on AI features |
-| `@intelliflow/events-worker` | Only if working on events |
-| `@intelliflow/ingestion-worker` | Only if working on ingestion |
+| Package                             | When to Run                      |
+| ----------------------------------- | -------------------------------- |
+| `@intelliflow/architecture-tests`   | Pre-commit/CI only               |
+| `@intelliflow/plan-linter`          | When editing Sprint_plan.csv     |
+| `@intelliflow/ai-worker`            | Only if working on AI features   |
+| `@intelliflow/events-worker`        | Only if working on events        |
+| `@intelliflow/ingestion-worker`     | Only if working on ingestion     |
 | `@intelliflow/notifications-worker` | Only if working on notifications |
-| `@intelliflow/observability` | Config only, rarely builds |
-| `@intelliflow/sdk` | Only if building SDK |
-| `@intelliflow/webhooks` | Only if working on webhooks |
-| `@intelliflow/worker-shared` | Only if working on workers |
-| `@intelliflow/workers` | Umbrella package for workers |
-| `@intelliflow/typescript-config` | Config only, no build |
+| `@intelliflow/observability`        | Config only, rarely builds       |
+| `@intelliflow/sdk`                  | Only if building SDK             |
+| `@intelliflow/webhooks`             | Only if working on webhooks      |
+| `@intelliflow/worker-shared`        | Only if working on workers       |
+| `@intelliflow/workers`              | Umbrella package for workers     |
+| `@intelliflow/typescript-config`    | Config only, no build            |
 
 ### Optimized Development Commands
 
@@ -213,6 +215,7 @@ Adapters Layer (infrastructure)
 ```
 
 **Key Rules:**
+
 - Domain code has NO external dependencies
 - Application layer defines ports (interfaces)
 - Adapters implement ports
@@ -227,7 +230,7 @@ export class Lead extends AggregateRoot<LeadId> {
   private constructor(
     id: LeadId,
     private email: Email,
-    private score: LeadScore,
+    private score: LeadScore
     // ...
   ) {
     super(id);
@@ -265,12 +268,12 @@ export const leadRouter = createTRPCRouter({
 
 ### Test Pyramid
 
-| Layer | Coverage Target | Tools |
-|-------|-----------------|-------|
-| Domain | >95% | Vitest |
-| Application | >90% | Vitest |
-| API Routes | >85% | Vitest + supertest |
-| E2E | Critical paths | Playwright |
+| Layer       | Coverage Target | Tools              |
+| ----------- | --------------- | ------------------ |
+| Domain      | >95%            | Vitest             |
+| Application | >90%            | Vitest             |
+| API Routes  | >85%            | Vitest + supertest |
+| E2E         | Critical paths  | Playwright         |
 
 ### Running Tests
 
@@ -406,6 +409,7 @@ All AI actions require approval before execution:
 ### Configuration
 
 AI features require:
+
 - `OPENAI_API_KEY` for production
 - Ollama for local development (`ollama serve`)
 
@@ -443,11 +447,11 @@ AI features require:
 
 ### Environments
 
-| Environment | Purpose | URL |
-|-------------|---------|-----|
-| Development | Local dev | localhost:3000 |
-| Staging | Pre-production | staging.intelliflow-crm.com |
-| Production | Live | app.intelliflow-crm.com |
+| Environment | Purpose        | URL                         |
+| ----------- | -------------- | --------------------------- |
+| Development | Local dev      | localhost:3000              |
+| Staging     | Pre-production | staging.intelliflow-crm.com |
+| Production  | Live           | app.intelliflow-crm.com     |
 
 ### CI/CD Pipeline
 
@@ -508,5 +512,4 @@ pnpm test:coverage        # Coverage report
 
 ---
 
-*Last Updated: 2026-01-01*
-*Version: 1.1.0*
+_Last Updated: 2026-01-01_ _Version: 1.1.0_

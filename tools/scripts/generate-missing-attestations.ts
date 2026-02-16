@@ -16,7 +16,10 @@ const REPO_ROOT = process.cwd();
 // OLD location (deprecated) - reading from here for migration
 const OLD_ATTESTATIONS_DIR = join(REPO_ROOT, 'artifacts', 'attestations');
 // Sprint plan for looking up task sprint numbers
-const SPRINT_PLAN_PATH = join(REPO_ROOT, 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv');
+const SPRINT_PLAN_PATH = join(
+  REPO_ROOT,
+  'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv'
+);
 
 /**
  * Load sprint plan and create task-to-sprint mapping
@@ -84,7 +87,13 @@ interface ContextAck {
   };
   kpis?: Record<string, { target: any; actual: any; met: boolean; evidence?: string }>;
   artifacts?: {
-    created?: Array<{ path: string; type?: string; format?: string; created_at?: string; sha256?: string }>;
+    created?: Array<{
+      path: string;
+      type?: string;
+      format?: string;
+      created_at?: string;
+      sha256?: string;
+    }>;
   };
   validation?: {
     method?: string;
@@ -140,20 +149,20 @@ function transformContextAckToAttestation(contextAck: ContextAck, outputDir: str
 
   // Build files_read from pre_requisites
   const filesRead = (contextAck.pre_requisites?.files || [])
-    .filter(f => f.exists)
-    .map(f => ({
+    .filter((f) => f.exists)
+    .map((f) => ({
       path: f.path,
-      sha256: 'verified-from-context-ack'
+      sha256: 'verified-from-context-ack',
     }));
 
   // Build invariants from env requirements
   const invariants = (contextAck.pre_requisites?.env || [])
-    .filter(e => e.met)
-    .map(e => e.requirement);
+    .filter((e) => e.met)
+    .map((e) => e.requirement);
 
   // Build artifact hashes
   const artifactHashes: Record<string, string> = {};
-  (contextAck.artifacts?.created || []).forEach(a => {
+  (contextAck.artifacts?.created || []).forEach((a) => {
     artifactHashes[a.path] = a.sha256 || 'pending_verification';
   });
 
@@ -162,49 +171,59 @@ function transformContextAckToAttestation(contextAck: ContextAck, outputDir: str
     kpi: key.replace(/_/g, ' '),
     target: String(kpi.target),
     actual: String(kpi.actual),
-    met: kpi.met
+    met: kpi.met,
   }));
 
   // Build definition of done items
-  const dodItems = (contextAck.definition_of_done?.criteria || []).map(c => ({
+  const dodItems = (contextAck.definition_of_done?.criteria || []).map((c) => ({
     criterion: c.description,
     met: c.met,
-    evidence: c.evidence || 'See context_ack.json'
+    evidence: c.evidence || 'See context_ack.json',
   }));
 
   // Count KPIs met
-  const kpisMet = kpiResults.filter(k => k.met).length;
+  const kpisMet = kpiResults.filter((k) => k.met).length;
 
   return {
     $schema: schemaRef,
     schema_version: '1.0.0',
     task_id: contextAck.task_id,
     attestor: 'Claude Code - Task Integrity Validator',
-    attestation_timestamp: contextAck.attestation?.attested_at || contextAck.execution?.completed_at || now,
-    verdict: contextAck.attestation?.verdict === 'APPROVED' ? 'COMPLETE' :
-             contextAck.status === 'completed' ? 'COMPLETE' : 'INCOMPLETE',
+    attestation_timestamp:
+      contextAck.attestation?.attested_at || contextAck.execution?.completed_at || now,
+    verdict:
+      contextAck.attestation?.verdict === 'APPROVED'
+        ? 'COMPLETE'
+        : contextAck.status === 'completed'
+          ? 'COMPLETE'
+          : 'INCOMPLETE',
     context_acknowledgment: {
       files_read: filesRead,
       invariants_acknowledged: invariants,
-      acknowledged_at: contextAck.execution?.completed_at || now
+      acknowledged_at: contextAck.execution?.completed_at || now,
     },
     evidence_summary: {
       artifacts_verified: Object.keys(artifactHashes).length,
       validations_passed: contextAck.validation?.result === 'PASS' ? 1 : 0,
       gates_passed: 0,
       kpis_met: kpisMet,
-      placeholders_found: 0
+      placeholders_found: 0,
     },
     artifact_hashes: artifactHashes,
-    validation_results: contextAck.validation?.result === 'PASS' ? [{
-      command: contextAck.validation.method || 'manual-review',
-      exit_code: 0,
-      passed: true
-    }] : [],
+    validation_results:
+      contextAck.validation?.result === 'PASS'
+        ? [
+            {
+              command: contextAck.validation.method || 'manual-review',
+              exit_code: 0,
+              passed: true,
+            },
+          ]
+        : [],
     gate_results: [],
     kpi_results: kpiResults,
     dependencies_verified: contextAck.dependencies?.required || [],
-    definition_of_done_items: dodItems
+    definition_of_done_items: dodItems,
   };
 }
 

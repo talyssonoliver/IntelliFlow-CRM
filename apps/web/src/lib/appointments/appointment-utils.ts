@@ -6,7 +6,12 @@
 
 import type { RecurrencePattern, DayOfWeek } from '@/components/appointments/types';
 
-export function getTypeConfig(type: string): { label: string; icon: string; color: string; bgColor: string } {
+export function getTypeConfig(type: string): {
+  label: string;
+  icon: string;
+  color: string;
+  bgColor: string;
+} {
   switch (type) {
     case 'MEETING':
       return { label: 'Meeting', icon: 'groups', color: 'text-blue-800', bgColor: 'bg-blue-100' };
@@ -15,9 +20,19 @@ export function getTypeConfig(type: string): { label: string; icon: string; colo
     case 'HEARING':
       return { label: 'Hearing', icon: 'gavel', color: 'text-red-800', bgColor: 'bg-red-100' };
     case 'CONSULTATION':
-      return { label: 'Consultation', icon: 'forum', color: 'text-purple-800', bgColor: 'bg-purple-100' };
+      return {
+        label: 'Consultation',
+        icon: 'forum',
+        color: 'text-purple-800',
+        bgColor: 'bg-purple-100',
+      };
     case 'DEPOSITION':
-      return { label: 'Deposition', icon: 'description', color: 'text-orange-800', bgColor: 'bg-orange-100' };
+      return {
+        label: 'Deposition',
+        icon: 'description',
+        color: 'text-orange-800',
+        bgColor: 'bg-orange-100',
+      };
     case 'OTHER':
       return { label: 'Other', icon: 'event', color: 'text-slate-800', bgColor: 'bg-slate-100' };
     default:
@@ -44,14 +59,26 @@ export function getStatusConfig(status: string): { label: string; color: string;
   }
 }
 
-export function getConflictSeverityColor(type: string): { color: string; bgColor: string; borderColor: string } {
+export function getConflictSeverityColor(type: string): {
+  color: string;
+  bgColor: string;
+  borderColor: string;
+} {
   switch (type) {
     case 'EXACT':
       return { color: 'text-red-800', bgColor: 'bg-red-50', borderColor: 'border-red-300' };
     case 'PARTIAL':
-      return { color: 'text-orange-800', bgColor: 'bg-orange-50', borderColor: 'border-orange-300' };
+      return {
+        color: 'text-orange-800',
+        bgColor: 'bg-orange-50',
+        borderColor: 'border-orange-300',
+      };
     case 'BUFFER':
-      return { color: 'text-yellow-800', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-300' };
+      return {
+        color: 'text-yellow-800',
+        bgColor: 'bg-yellow-50',
+        borderColor: 'border-yellow-300',
+      };
     default:
       return { color: 'text-gray-800', bgColor: 'bg-gray-50', borderColor: 'border-gray-300' };
   }
@@ -102,6 +129,7 @@ export function timeAgo(date: Date | string): string {
 }
 
 export function getInitials(name: string): string {
+  if (!name) return '?';
   return name
     .split(' ')
     .map((part) => part[0])
@@ -130,9 +158,8 @@ const FREQUENCY_LABELS: Record<string, string> = {
 export function formatRecurrence(pattern: RecurrencePattern | null | undefined): string {
   if (!pattern) return '';
   const freq = FREQUENCY_LABELS[pattern.frequency] || pattern.frequency.toLowerCase();
-  let text = pattern.interval === 1
-    ? `Repeats every ${freq}`
-    : `Repeats every ${pattern.interval} ${freq}s`;
+  let text =
+    pattern.interval === 1 ? `Repeats every ${freq}` : `Repeats every ${pattern.interval} ${freq}s`;
 
   if (pattern.frequency === 'WEEKLY' && pattern.daysOfWeek?.length) {
     const days = pattern.daysOfWeek.map((d) => DAY_LABELS[d] || d).join(', ');

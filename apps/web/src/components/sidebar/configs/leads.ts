@@ -15,7 +15,12 @@ export const leadsSidebarConfig: SidebarConfig = {
         { id: 'all', label: 'All Leads', icon: VIEW_ICONS.all, href: '/leads' },
         { id: 'my', label: 'My Leads', icon: VIEW_ICONS.my, href: '/leads?view=my' },
         { id: 'starred', label: 'Starred', icon: VIEW_ICONS.starred, href: '/leads?view=starred' },
-        { id: 'recent', label: 'Recently Viewed', icon: VIEW_ICONS.recentViewed, href: '/leads?view=recent' },
+        {
+          id: 'recent',
+          label: 'Recently Viewed',
+          icon: VIEW_ICONS.recentViewed,
+          href: '/leads?view=recent',
+        },
       ],
     },
     {

@@ -59,7 +59,9 @@ export class WebsiteUrl extends ValueObject<WebsiteUrlProps> {
     }
 
     if (trimmed.length > this.MAX_URL_LENGTH) {
-      return Result.fail(new InvalidUrlError(value, `URL exceeds maximum length of ${this.MAX_URL_LENGTH}`));
+      return Result.fail(
+        new InvalidUrlError(value, `URL exceeds maximum length of ${this.MAX_URL_LENGTH}`)
+      );
     }
 
     // Add protocol if missing
@@ -89,9 +91,10 @@ export class WebsiteUrl extends ValueObject<WebsiteUrlProps> {
     }
 
     // Normalize: remove trailing slash from pathname if it's just "/"
-    const normalized = url.pathname === '/' && url.search === '' && url.hash === ''
-      ? `${url.protocol}//${url.host}`
-      : url.href;
+    const normalized =
+      url.pathname === '/' && url.search === '' && url.hash === ''
+        ? `${url.protocol}//${url.host}`
+        : url.href;
 
     return Result.ok(new WebsiteUrl({ value: normalized }));
   }

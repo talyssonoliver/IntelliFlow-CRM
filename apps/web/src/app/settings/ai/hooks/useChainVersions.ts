@@ -17,10 +17,7 @@
 
 import { api } from '@/lib/api';
 import { useToast } from '@intelliflow/ui';
-import type {
-  ChainType,
-  ChainVersionStatus,
-} from '@intelliflow/domain';
+import type { ChainType, ChainVersionStatus } from '@intelliflow/domain';
 import type {
   ChainVersion,
   ChainVersionSummary,
@@ -123,10 +120,10 @@ export function useChainVersions(options: UseChainVersionsOptions = {}): UseChai
 
   // Build active versions record
   const activeVersions: Record<ChainType, ChainVersionSummary | null> = {
-    SCORING: scoringActiveQuery.data?.version as ChainVersionSummary | null ?? null,
-    QUALIFICATION: qualificationActiveQuery.data?.version as ChainVersionSummary | null ?? null,
-    EMAIL_WRITER: emailWriterActiveQuery.data?.version as ChainVersionSummary | null ?? null,
-    FOLLOWUP: followupActiveQuery.data?.version as ChainVersionSummary | null ?? null,
+    SCORING: (scoringActiveQuery.data?.version as ChainVersionSummary | null) ?? null,
+    QUALIFICATION: (qualificationActiveQuery.data?.version as ChainVersionSummary | null) ?? null,
+    EMAIL_WRITER: (emailWriterActiveQuery.data?.version as ChainVersionSummary | null) ?? null,
+    FOLLOWUP: (followupActiveQuery.data?.version as ChainVersionSummary | null) ?? null,
   };
 
   // Fetch stats
@@ -397,13 +394,11 @@ export function useZepBudget(): UseZepBudgetReturn {
     lastSyncedAt: null,
   };
 
-  const percentUsed = mockBudget.total > 0
-    ? Math.round((mockBudget.used / mockBudget.total) * 100)
-    : 0;
+  const percentUsed =
+    mockBudget.total > 0 ? Math.round((mockBudget.used / mockBudget.total) * 100) : 0;
 
   const budgetStatus: 'normal' | 'warning' | 'critical' =
-    percentUsed >= 95 ? 'critical' :
-    percentUsed >= 80 ? 'warning' : 'normal';
+    percentUsed >= 95 ? 'critical' : percentUsed >= 80 ? 'warning' : 'normal';
 
   return {
     budget: mockBudget,

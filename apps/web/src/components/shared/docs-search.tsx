@@ -24,9 +24,7 @@ export function DocsSearch({ categories, onFilter }: DocsSearchProps) {
 
     const lower = searchQuery.toLowerCase();
     const filtered = categories.filter(
-      (c) =>
-        c.title.toLowerCase().includes(lower) ||
-        c.description.toLowerCase().includes(lower)
+      (c) => c.title.toLowerCase().includes(lower) || c.description.toLowerCase().includes(lower)
     );
     onFilter(filtered);
     setResultCount(filtered.length);

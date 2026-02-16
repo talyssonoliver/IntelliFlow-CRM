@@ -305,9 +305,7 @@ export async function getActionHistory(
   entityType?: string
 ): Promise<ActionHistory> {
   const actions = Array.from(actionStore.values()).filter(
-    (action) =>
-      action.entityId === entityId &&
-      (!entityType || action.entityType === entityType)
+    (action) => action.entityId === entityId && (!entityType || action.entityType === entityType)
   );
 
   const approvedCount = actions.filter((a) => a.status === 'approved').length;
@@ -317,9 +315,7 @@ export async function getActionHistory(
   return {
     entityId,
     entityType: entityType || actions[0]?.entityType || 'unknown',
-    actions: actions.sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
-    ),
+    actions: actions.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
     totalActions: actions.length,
     approvedCount,
     rejectedCount,
@@ -356,10 +352,7 @@ export async function getPendingActions(): Promise<AgentAction[]> {
  * @param userId - ID of the approving user
  * @returns Updated AgentAction
  */
-export async function approveAction(
-  actionId: string,
-  userId: string
-): Promise<AgentAction | null> {
+export async function approveAction(actionId: string, userId: string): Promise<AgentAction | null> {
   const action = actionStore.get(actionId);
 
   if (!action || action.status !== 'pending') {
@@ -572,15 +565,12 @@ export async function getApprovalMetrics(
     (sum, a) => sum + (a.reviewedAt!.getTime() - a.createdAt.getTime()),
     0
   );
-  const avgReviewTimeMs =
-    reviewedActions.length > 0 ? totalReviewTime / reviewedActions.length : 0;
+  const avgReviewTimeMs = reviewedActions.length > 0 ? totalReviewTime / reviewedActions.length : 0;
 
   // Calculate approval rate
   const decidedActions = approved.length + rejected.length + modified.length;
   const approvalRate =
-    decidedActions > 0
-      ? ((approved.length + modified.length) / decidedActions) * 100
-      : 0;
+    decidedActions > 0 ? ((approved.length + modified.length) / decidedActions) * 100 : 0;
 
   // Calculate average confidence scores
   const avgConfidenceApproved =

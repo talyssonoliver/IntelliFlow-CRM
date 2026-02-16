@@ -5,9 +5,5 @@
 export { RetryHandler, DEFAULT_RETRY_CONFIG } from './RetryHandler';
 export type { RetryConfig, RetryContext } from './RetryHandler';
 
-export {
-  RateLimiter,
-  TieredRateLimiter,
-  DEFAULT_RATE_LIMITER_CONFIG,
-} from './RateLimiter';
+export { RateLimiter, TieredRateLimiter, DEFAULT_RATE_LIMITER_CONFIG } from './RateLimiter';
 export type { RateLimiterConfig } from './RateLimiter';

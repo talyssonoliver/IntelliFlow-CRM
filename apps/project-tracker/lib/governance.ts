@@ -716,7 +716,3 @@ export function checkGovernanceFilesExist(): {
     debtLedger: fs.existsSync(DEBT_LEDGER_PATH),
   };
 }
-
-
-
-

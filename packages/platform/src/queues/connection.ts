@@ -47,7 +47,9 @@ export function getDefaultConnectionConfig(): RedisConnectionConfig {
 /**
  * Get BullMQ-compatible connection options
  */
-export function getBullMQConnectionOptions(config?: Partial<RedisConnectionConfig>): ConnectionOptions {
+export function getBullMQConnectionOptions(
+  config?: Partial<RedisConnectionConfig>
+): ConnectionOptions {
   const defaultConfig = getDefaultConnectionConfig();
   const mergedConfig = { ...defaultConfig, ...config };
 

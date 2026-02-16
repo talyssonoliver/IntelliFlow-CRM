@@ -4,9 +4,28 @@
  * TypeScript interfaces for appointment scheduling components.
  */
 
-export type AppointmentType = 'MEETING' | 'CALL' | 'HEARING' | 'CONSULTATION' | 'DEPOSITION' | 'OTHER';
-export type AppointmentStatus = 'SCHEDULED' | 'CONFIRMED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'NO_SHOW';
-export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
+export type AppointmentType =
+  | 'MEETING'
+  | 'CALL'
+  | 'HEARING'
+  | 'CONSULTATION'
+  | 'DEPOSITION'
+  | 'OTHER';
+export type AppointmentStatus =
+  | 'SCHEDULED'
+  | 'CONFIRMED'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'NO_SHOW';
+export type DayOfWeek =
+  | 'MONDAY'
+  | 'TUESDAY'
+  | 'WEDNESDAY'
+  | 'THURSDAY'
+  | 'FRIDAY'
+  | 'SATURDAY'
+  | 'SUNDAY';
 
 export interface CalendarAppointment {
   id: string;

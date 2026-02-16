@@ -78,8 +78,8 @@ const EXPECTED_COUNTS: Record<string, number> = {
 
 // Acceptable variance thresholds
 const VARIANCE_THRESHOLDS = {
-  PASS: 0.5,   // <0.5% variance = PASS
-  WARN: 2.0,   // <2% variance = WARN
+  PASS: 0.5, // <0.5% variance = PASS
+  WARN: 2.0, // <2% variance = WARN
   // >2% = FAIL
 };
 
@@ -93,39 +93,57 @@ async function getEntityCounts(prisma: PrismaClient): Promise<Record<string, num
   // Count each entity type
   try {
     counts.User = await prisma.user.count();
-  } catch { counts.User = 0; }
+  } catch {
+    counts.User = 0;
+  }
 
   try {
     counts.Lead = await prisma.lead.count();
-  } catch { counts.Lead = 0; }
+  } catch {
+    counts.Lead = 0;
+  }
 
   try {
     counts.Contact = await prisma.contact.count();
-  } catch { counts.Contact = 0; }
+  } catch {
+    counts.Contact = 0;
+  }
 
   try {
     counts.Account = await prisma.account.count();
-  } catch { counts.Account = 0; }
+  } catch {
+    counts.Account = 0;
+  }
 
   try {
     counts.Opportunity = await prisma.opportunity.count();
-  } catch { counts.Opportunity = 0; }
+  } catch {
+    counts.Opportunity = 0;
+  }
 
   try {
     counts.Task = await prisma.task.count();
-  } catch { counts.Task = 0; }
+  } catch {
+    counts.Task = 0;
+  }
 
   try {
     counts.AuditLogEntry = await prisma.auditLogEntry.count();
-  } catch { counts.AuditLogEntry = 0; }
+  } catch {
+    counts.AuditLogEntry = 0;
+  }
 
   try {
     counts.AIScore = await prisma.aIScore.count();
-  } catch { counts.AIScore = 0; }
+  } catch {
+    counts.AIScore = 0;
+  }
 
   try {
     counts.SecurityEvent = await prisma.securityEvent.count();
-  } catch { counts.SecurityEvent = 0; }
+  } catch {
+    counts.SecurityEvent = 0;
+  }
 
   return counts;
 }
@@ -146,7 +164,9 @@ async function runValidationChecks(prisma: PrismaClient): Promise<ValidationChec
       entity: 'User',
       description: 'All user emails should be unique',
       passed: !hasDuplicates,
-      details: hasDuplicates ? `Found ${duplicateEmails[0]?.count} duplicate emails` : 'All emails unique',
+      details: hasDuplicates
+        ? `Found ${duplicateEmails[0]?.count} duplicate emails`
+        : 'All emails unique',
     });
   } catch {
     checks.push({
@@ -162,10 +182,7 @@ async function runValidationChecks(prisma: PrismaClient): Promise<ValidationChec
   try {
     const invalidScores = await prisma.lead.count({
       where: {
-        OR: [
-          { score: { lt: 0 } },
-          { score: { gt: 100 } },
-        ],
+        OR: [{ score: { lt: 0 } }, { score: { gt: 100 } }],
       },
     });
     checks.push({
@@ -173,7 +190,8 @@ async function runValidationChecks(prisma: PrismaClient): Promise<ValidationChec
       entity: 'Lead',
       description: 'All lead scores should be between 0-100',
       passed: invalidScores === 0,
-      details: invalidScores > 0 ? `Found ${invalidScores} leads with invalid scores` : 'All scores valid',
+      details:
+        invalidScores > 0 ? `Found ${invalidScores} leads with invalid scores` : 'All scores valid',
     });
   } catch {
     checks.push({
@@ -197,7 +215,10 @@ async function runValidationChecks(prisma: PrismaClient): Promise<ValidationChec
       entity: 'Opportunity',
       description: 'All opportunity amounts should be positive',
       passed: negativeAmounts === 0,
-      details: negativeAmounts > 0 ? `Found ${negativeAmounts} opportunities with negative amounts` : 'All amounts valid',
+      details:
+        negativeAmounts > 0
+          ? `Found ${negativeAmounts} opportunities with negative amounts`
+          : 'All amounts valid',
     });
   } catch {
     checks.push({
@@ -222,7 +243,9 @@ async function runValidationChecks(prisma: PrismaClient): Promise<ValidationChec
       entity: 'Lead',
       description: 'All leads should reference valid owners',
       passed: !hasOrphans,
-      details: hasOrphans ? `Found ${orphanedLeads[0]?.count} orphaned leads` : 'All references valid',
+      details: hasOrphans
+        ? `Found ${orphanedLeads[0]?.count} orphaned leads`
+        : 'All references valid',
     });
   } catch {
     checks.push({
@@ -247,7 +270,9 @@ async function runValidationChecks(prisma: PrismaClient): Promise<ValidationChec
       entity: 'Contact',
       description: 'All contact emails should have valid format',
       passed: !hasInvalid,
-      details: hasInvalid ? `Found ${invalidEmails[0]?.count} invalid email formats` : 'All emails valid',
+      details: hasInvalid
+        ? `Found ${invalidEmails[0]?.count} invalid email formats`
+        : 'All emails valid',
     });
   } catch {
     checks.push({
@@ -280,8 +305,9 @@ function calculateQualityMetrics(
   });
 
   // Metric 2: Validation pass rate
-  const passedChecks = validationChecks.filter(c => c.passed).length;
-  const passRate = validationChecks.length > 0 ? (passedChecks / validationChecks.length) * 100 : 100;
+  const passedChecks = validationChecks.filter((c) => c.passed).length;
+  const passRate =
+    validationChecks.length > 0 ? (passedChecks / validationChecks.length) * 100 : 100;
   metrics.push({
     metric: 'VALIDATION_PASS_RATE',
     value: Number(passRate.toFixed(2)),
@@ -290,8 +316,9 @@ function calculateQualityMetrics(
   });
 
   // Metric 3: Entity coverage (how many entity types have data)
-  const entitiesWithData = entityCounts.filter(e => e.actual > 0).length;
-  const entityCoverage = entityCounts.length > 0 ? (entitiesWithData / entityCounts.length) * 100 : 0;
+  const entitiesWithData = entityCounts.filter((e) => e.actual > 0).length;
+  const entityCoverage =
+    entityCounts.length > 0 ? (entitiesWithData / entityCounts.length) * 100 : 0;
   metrics.push({
     metric: 'ENTITY_COVERAGE',
     value: Number(entityCoverage.toFixed(2)),
@@ -320,7 +347,9 @@ function generateCSV(result: ReconciliationResult): string {
   lines.push('## Section 1: Entity Reconciliation');
   lines.push('Entity,Expected,Actual,Variance,Variance%,Status');
   for (const entity of result.entityCounts) {
-    lines.push(`${entity.entity},${entity.expected},${entity.actual},${entity.variance},${entity.variancePercent.toFixed(2)}%,${entity.status}`);
+    lines.push(
+      `${entity.entity},${entity.expected},${entity.actual},${entity.variance},${entity.variancePercent.toFixed(2)}%,${entity.status}`
+    );
   }
   lines.push('');
 
@@ -328,7 +357,9 @@ function generateCSV(result: ReconciliationResult): string {
   lines.push('## Section 2: Validation Checks');
   lines.push('Check,Entity,Description,Passed,Details');
   for (const check of result.validationChecks) {
-    lines.push(`${check.check},${check.entity},"${check.description}",${check.passed ? 'YES' : 'NO'},"${check.details}"`);
+    lines.push(
+      `${check.check},${check.entity},"${check.description}",${check.passed ? 'YES' : 'NO'},"${check.details}"`
+    );
   }
   lines.push('');
 
@@ -342,9 +373,15 @@ function generateCSV(result: ReconciliationResult): string {
 
   // Section 4: Issues Summary
   const issues = [
-    ...result.entityCounts.filter(e => e.status !== 'PASS').map(e => `Entity ${e.entity}: ${e.variancePercent.toFixed(2)}% variance`),
-    ...result.validationChecks.filter(c => !c.passed).map(c => `Validation ${c.check}: ${c.details}`),
-    ...result.qualityMetrics.filter(m => m.status !== 'PASS').map(m => `Metric ${m.metric}: ${m.value} (threshold: ${m.threshold})`),
+    ...result.entityCounts
+      .filter((e) => e.status !== 'PASS')
+      .map((e) => `Entity ${e.entity}: ${e.variancePercent.toFixed(2)}% variance`),
+    ...result.validationChecks
+      .filter((c) => !c.passed)
+      .map((c) => `Validation ${c.check}: ${c.details}`),
+    ...result.qualityMetrics
+      .filter((m) => m.status !== 'PASS')
+      .map((m) => `Metric ${m.metric}: ${m.value} (threshold: ${m.threshold})`),
   ];
 
   lines.push('## Section 4: Issues Summary');
@@ -362,7 +399,12 @@ function generateCSV(result: ReconciliationResult): string {
   // Section 5: Sign-off
   lines.push('## Section 5: Sign-off');
   lines.push('Role,Name,Date,Signature');
-  lines.push('Data Engineer,AUTO-GENERATED,' + result.timestamp + ',SHA256:' + createHash('sha256').update(JSON.stringify(result)).digest('hex').substring(0, 16));
+  lines.push(
+    'Data Engineer,AUTO-GENERATED,' +
+      result.timestamp +
+      ',SHA256:' +
+      createHash('sha256').update(JSON.stringify(result)).digest('hex').substring(0, 16)
+  );
   lines.push('DBA,PENDING,,');
   lines.push('QA Lead,PENDING,,');
 
@@ -430,13 +472,13 @@ Options:
     } else {
       console.log('No database connection - using simulated counts');
       // Simulated counts for dry run (99.8% of expected as per rehearsal)
-      Object.keys(EXPECTED_COUNTS).forEach(entity => {
+      Object.keys(EXPECTED_COUNTS).forEach((entity) => {
         actualCounts[entity] = Math.floor(EXPECTED_COUNTS[entity] * 0.998);
       });
     }
   } catch (error) {
     console.log('Database connection failed - using simulated counts');
-    Object.keys(EXPECTED_COUNTS).forEach(entity => {
+    Object.keys(EXPECTED_COUNTS).forEach((entity) => {
       actualCounts[entity] = Math.floor(EXPECTED_COUNTS[entity] * 0.998);
     });
   }
@@ -465,11 +507,41 @@ Options:
   } else {
     // Simulated validation checks for dry run
     validationChecks = [
-      { check: 'EMAIL_UNIQUENESS', entity: 'User', description: 'All user emails should be unique', passed: true, details: 'All emails unique' },
-      { check: 'SCORE_RANGE', entity: 'Lead', description: 'All lead scores should be between 0-100', passed: true, details: 'All scores valid' },
-      { check: 'POSITIVE_AMOUNTS', entity: 'Opportunity', description: 'All opportunity amounts should be positive', passed: true, details: 'All amounts valid' },
-      { check: 'FK_INTEGRITY_LEAD_OWNER', entity: 'Lead', description: 'All leads should reference valid owners', passed: true, details: 'All references valid' },
-      { check: 'EMAIL_FORMAT', entity: 'Contact', description: 'All contact emails should have valid format', passed: true, details: 'All emails valid' },
+      {
+        check: 'EMAIL_UNIQUENESS',
+        entity: 'User',
+        description: 'All user emails should be unique',
+        passed: true,
+        details: 'All emails unique',
+      },
+      {
+        check: 'SCORE_RANGE',
+        entity: 'Lead',
+        description: 'All lead scores should be between 0-100',
+        passed: true,
+        details: 'All scores valid',
+      },
+      {
+        check: 'POSITIVE_AMOUNTS',
+        entity: 'Opportunity',
+        description: 'All opportunity amounts should be positive',
+        passed: true,
+        details: 'All amounts valid',
+      },
+      {
+        check: 'FK_INTEGRITY_LEAD_OWNER',
+        entity: 'Lead',
+        description: 'All leads should reference valid owners',
+        passed: true,
+        details: 'All references valid',
+      },
+      {
+        check: 'EMAIL_FORMAT',
+        entity: 'Contact',
+        description: 'All contact emails should have valid format',
+        passed: true,
+        details: 'All emails valid',
+      },
     ];
   }
 
@@ -477,14 +549,17 @@ Options:
   const qualityMetrics = calculateQualityMetrics(entityCounts, validationChecks);
 
   // Determine overall status
-  const hasFailedEntities = entityCounts.some(e => e.status === 'FAIL');
-  const hasFailedChecks = validationChecks.some(c => !c.passed);
-  const hasFailedMetrics = qualityMetrics.some(m => m.status === 'FAIL');
+  const hasFailedEntities = entityCounts.some((e) => e.status === 'FAIL');
+  const hasFailedChecks = validationChecks.some((c) => !c.passed);
+  const hasFailedMetrics = qualityMetrics.some((m) => m.status === 'FAIL');
 
   let overallStatus: 'PASS' | 'WARN' | 'FAIL' = 'PASS';
   if (hasFailedEntities || hasFailedChecks || hasFailedMetrics) {
     overallStatus = 'FAIL';
-  } else if (entityCounts.some(e => e.status === 'WARN') || qualityMetrics.some(m => m.status === 'WARN')) {
+  } else if (
+    entityCounts.some((e) => e.status === 'WARN') ||
+    qualityMetrics.some((m) => m.status === 'WARN')
+  ) {
     overallStatus = 'WARN';
   }
 
@@ -525,12 +600,12 @@ Options:
   console.log(`Overall Status: ${overallStatus}`);
   console.log(`Completeness: ${completenessPercent.toFixed(2)}%`);
   console.log(`Entity Types: ${entityCounts.length}`);
-  console.log(`  - PASS: ${entityCounts.filter(e => e.status === 'PASS').length}`);
-  console.log(`  - WARN: ${entityCounts.filter(e => e.status === 'WARN').length}`);
-  console.log(`  - FAIL: ${entityCounts.filter(e => e.status === 'FAIL').length}`);
+  console.log(`  - PASS: ${entityCounts.filter((e) => e.status === 'PASS').length}`);
+  console.log(`  - WARN: ${entityCounts.filter((e) => e.status === 'WARN').length}`);
+  console.log(`  - FAIL: ${entityCounts.filter((e) => e.status === 'FAIL').length}`);
   console.log(`Validation Checks: ${validationChecks.length}`);
-  console.log(`  - Passed: ${validationChecks.filter(c => c.passed).length}`);
-  console.log(`  - Failed: ${validationChecks.filter(c => !c.passed).length}`);
+  console.log(`  - Passed: ${validationChecks.filter((c) => c.passed).length}`);
+  console.log(`  - Failed: ${validationChecks.filter((c) => !c.passed).length}`);
   console.log('');
 
   // Exit with appropriate code

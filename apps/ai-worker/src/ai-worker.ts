@@ -150,9 +150,10 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         status: hasApiKey || hasCompatibleEndpoint ? 'ok' : 'error',
         latency: 0,
         lastCheck,
-        message: hasApiKey || hasCompatibleEndpoint
-          ? `provider=${endpointLabel}, model=${aiConfig.openai.model}`
-          : 'OPENAI_API_KEY is missing and no OPENAI_BASE_URL is configured',
+        message:
+          hasApiKey || hasCompatibleEndpoint
+            ? `provider=${endpointLabel}, model=${aiConfig.openai.model}`
+            : 'OPENAI_API_KEY is missing and no OPENAI_BASE_URL is configured',
       };
     }
 

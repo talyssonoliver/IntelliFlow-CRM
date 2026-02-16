@@ -110,9 +110,7 @@ describe('ScoreFactorList', () => {
 
   describe('Props', () => {
     it('should forward HTML attributes', () => {
-      render(
-        <ScoreFactorList factors={defaultFactors} data-testid="factor-list" />
-      );
+      render(<ScoreFactorList factors={defaultFactors} data-testid="factor-list" />);
       expect(screen.getByTestId('factor-list')).toBeInTheDocument();
     });
 

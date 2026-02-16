@@ -11,10 +11,7 @@ import { findAllTaskJsons } from './file-io';
 /**
  * Validate metrics consistency after sync
  */
-export function validateMetricsConsistency(
-  csvPath: string,
-  metricsDir: string
-): ValidationResult {
+export function validateMetricsConsistency(csvPath: string, metricsDir: string): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -50,4 +47,3 @@ export function validateMetricsConsistency(
     };
   }
 }
-

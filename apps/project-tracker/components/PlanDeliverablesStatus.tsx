@@ -49,7 +49,10 @@ function ProgressBar({ percentage, color }: { percentage: number; color: string 
   );
 }
 
-export default function PlanDeliverablesStatus({ data, compact = false }: PlanDeliverablesStatusProps) {
+export default function PlanDeliverablesStatus({
+  data,
+  compact = false,
+}: PlanDeliverablesStatusProps) {
   const [expandedFiles, setExpandedFiles] = useState(false);
   const [expandedCheckboxes, setExpandedCheckboxes] = useState(false);
 
@@ -79,8 +82,8 @@ export default function PlanDeliverablesStatus({ data, compact = false }: PlanDe
           title={`Plan verification: ${data.overallStatus} (${data.completionPercentage}%)`}
         />
         <span className="text-xs text-gray-500">
-          {data.deliverables.verified}/{data.deliverables.total} files,{' '}
-          {data.checkboxes.checked}/{data.checkboxes.total} steps
+          {data.deliverables.verified}/{data.deliverables.total} files, {data.checkboxes.checked}/
+          {data.checkboxes.total} steps
         </span>
       </div>
     );
@@ -286,10 +289,12 @@ function PlanVerificationIndicator({
           : 'bg-red-500';
 
   return (
-    <div className="flex items-center gap-1 text-xs" title={`Plan verification: ${completionPercentage}%`}>
+    <div
+      className="flex items-center gap-1 text-xs"
+      title={`Plan verification: ${completionPercentage}%`}
+    >
       <span className={`w-2 h-2 rounded-full ${color}`} />
       <span className="text-gray-500">{completionPercentage}%</span>
     </div>
   );
 }
-

@@ -2,7 +2,15 @@
   "dashboard": {
     "title": "IntelliFlow CRM - AI Model Monitoring",
     "description": "Comprehensive monitoring for AI model drift, hallucination, latency, and ROI (IFC-117)",
-    "tags": ["intelliflow", "ai", "monitoring", "drift", "hallucination", "roi", "latency"],
+    "tags": [
+      "intelliflow",
+      "ai",
+      "monitoring",
+      "drift",
+      "hallucination",
+      "roi",
+      "latency"
+    ],
     "timezone": "browser",
     "schemaVersion": 38,
     "version": 1,
@@ -12,7 +20,18 @@
       "to": "now"
     },
     "timepicker": {
-      "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+      "refresh_intervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "2h",
+        "1d"
+      ]
     },
     "panels": [
       {
@@ -35,8 +54,14 @@
         "fieldConfig": {
           "defaults": {
             "mappings": [
-              { "type": "value", "options": { "0": { "text": "OK", "color": "green" } } },
-              { "type": "value", "options": { "1": { "text": "DRIFT", "color": "red" } } }
+              {
+                "type": "value",
+                "options": { "0": { "text": "OK", "color": "green" } }
+              },
+              {
+                "type": "value",
+                "options": { "1": { "text": "DRIFT", "color": "red" } }
+              }
             ]
           }
         }
@@ -156,8 +181,14 @@
         "fieldConfig": {
           "defaults": {
             "mappings": [
-              { "type": "value", "options": { "0": { "text": "VIOLATION", "color": "red" } } },
-              { "type": "value", "options": { "1": { "text": "COMPLIANT", "color": "green" } } }
+              {
+                "type": "value",
+                "options": { "0": { "text": "VIOLATION", "color": "red" } }
+              },
+              {
+                "type": "value",
+                "options": { "1": { "text": "COMPLIANT", "color": "green" } }
+              }
             ]
           }
         }
@@ -212,8 +243,14 @@
         "fieldConfig": {
           "defaults": {
             "mappings": [
-              { "type": "value", "options": { "0": { "text": "ABOVE TARGET", "color": "red" } } },
-              { "type": "value", "options": { "1": { "text": "ON TARGET", "color": "green" } } }
+              {
+                "type": "value",
+                "options": { "0": { "text": "ABOVE TARGET", "color": "red" } }
+              },
+              {
+                "type": "value",
+                "options": { "1": { "text": "ON TARGET", "color": "green" } }
+              }
             ]
           }
         }
@@ -303,9 +340,7 @@
             },
             "thresholds": {
               "mode": "absolute",
-              "steps": [
-                { "value": 5, "color": "red" }
-              ]
+              "steps": [{ "value": 5, "color": "red" }]
             }
           }
         }
@@ -440,7 +475,11 @@
         "fieldConfig": {
           "defaults": {
             "unit": "ops",
-            "custom": { "lineWidth": 2, "fillOpacity": 20, "stacking": { "mode": "none" } }
+            "custom": {
+              "lineWidth": 2,
+              "fillOpacity": 20,
+              "stacking": { "mode": "none" }
+            }
           }
         }
       },
@@ -488,11 +527,32 @@
                 {
                   "id": "mappings",
                   "value": [
-                    { "type": "value", "options": { "none": { "text": "None", "color": "green" } } },
-                    { "type": "value", "options": { "low": { "text": "Low", "color": "yellow" } } },
-                    { "type": "value", "options": { "medium": { "text": "Medium", "color": "orange" } } },
-                    { "type": "value", "options": { "high": { "text": "High", "color": "red" } } },
-                    { "type": "value", "options": { "critical": { "text": "Critical", "color": "dark-red" } } }
+                    {
+                      "type": "value",
+                      "options": {
+                        "none": { "text": "None", "color": "green" }
+                      }
+                    },
+                    {
+                      "type": "value",
+                      "options": { "low": { "text": "Low", "color": "yellow" } }
+                    },
+                    {
+                      "type": "value",
+                      "options": {
+                        "medium": { "text": "Medium", "color": "orange" }
+                      }
+                    },
+                    {
+                      "type": "value",
+                      "options": { "high": { "text": "High", "color": "red" } }
+                    },
+                    {
+                      "type": "value",
+                      "options": {
+                        "critical": { "text": "Critical", "color": "dark-red" }
+                      }
+                    }
                   ]
                 }
               ]

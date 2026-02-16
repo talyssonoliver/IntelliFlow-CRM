@@ -180,9 +180,7 @@ export class ROITracker {
       output: 0.00003,
     };
 
-    const cost =
-      (params.inputTokens * modelCosts.input) +
-      (params.outputTokens * modelCosts.output);
+    const cost = params.inputTokens * modelCosts.input + params.outputTokens * modelCosts.output;
 
     return this.recordCost({
       id: params.id,
@@ -225,16 +223,13 @@ export class ROITracker {
    * @param skipTrend - Internal flag to prevent infinite recursion
    */
   calculateROI(startTime?: Date, endTime?: Date, skipTrend: boolean = false): ROIResult {
-    const start = startTime ?? new Date(Date.now() - this.config.trackingPeriodDays * 24 * 60 * 60 * 1000);
+    const start =
+      startTime ?? new Date(Date.now() - this.config.trackingPeriodDays * 24 * 60 * 60 * 1000);
     const end = endTime ?? new Date();
 
     // Filter data by period
-    const periodCosts = this.costs.filter(
-      c => c.timestamp >= start && c.timestamp <= end
-    );
-    const periodValues = this.values.filter(
-      v => v.timestamp >= start && v.timestamp <= end
-    );
+    const periodCosts = this.costs.filter((c) => c.timestamp >= start && c.timestamp <= end);
+    const periodValues = this.values.filter((v) => v.timestamp >= start && v.timestamp <= end);
 
     // Calculate totals
     const totalCost = periodCosts.reduce((sum, c) => sum + c.cost, 0);
@@ -251,8 +246,7 @@ export class ROITracker {
     // Cost breakdown by operation
     const costByOperation: Record<string, number> = {};
     for (const cost of periodCosts) {
-      costByOperation[cost.operationType] =
-        (costByOperation[cost.operationType] || 0) + cost.cost;
+      costByOperation[cost.operationType] = (costByOperation[cost.operationType] || 0) + cost.cost;
     }
 
     // Value breakdown by type
@@ -349,12 +343,14 @@ export class ROITracker {
       totalCostsTracked: this.costs.length,
       totalValuesTracked: this.values.length,
       currentROI: currentROI.roi,
-      averageCostPerOperation: this.costs.length > 0
-        ? this.costs.reduce((sum, c) => sum + c.cost, 0) / this.costs.length
-        : 0,
-      averageValuePerOperation: this.values.length > 0
-        ? this.values.reduce((sum, v) => sum + v.estimatedValue, 0) / this.values.length
-        : 0,
+      averageCostPerOperation:
+        this.costs.length > 0
+          ? this.costs.reduce((sum, c) => sum + c.cost, 0) / this.costs.length
+          : 0,
+      averageValuePerOperation:
+        this.values.length > 0
+          ? this.values.reduce((sum, v) => sum + v.estimatedValue, 0) / this.values.length
+          : 0,
       roiTrend,
       topPerformingOperations: topPerforming,
       underperformingOperations: underperforming,
@@ -371,9 +367,11 @@ export class ROITracker {
     byDay: Record<string, number>;
   } {
     const now = new Date();
-    const periodStart = new Date(now.getTime() - this.config.trackingPeriodDays * 24 * 60 * 60 * 1000);
+    const periodStart = new Date(
+      now.getTime() - this.config.trackingPeriodDays * 24 * 60 * 60 * 1000
+    );
 
-    const periodCosts = this.costs.filter(c => c.timestamp >= periodStart);
+    const periodCosts = this.costs.filter((c) => c.timestamp >= periodStart);
 
     const byModel: Record<string, number> = {};
     const byOperation: Record<string, number> = {};
@@ -405,9 +403,11 @@ export class ROITracker {
     averageConfidence: number;
   } {
     const now = new Date();
-    const periodStart = new Date(now.getTime() - this.config.trackingPeriodDays * 24 * 60 * 60 * 1000);
+    const periodStart = new Date(
+      now.getTime() - this.config.trackingPeriodDays * 24 * 60 * 60 * 1000
+    );
 
-    const periodValues = this.values.filter(v => v.timestamp >= periodStart);
+    const periodValues = this.values.filter((v) => v.timestamp >= periodStart);
 
     const byType: Record<string, number> = {};
     const byDay: Record<string, number> = {};
@@ -419,9 +419,10 @@ export class ROITracker {
       byDay[dateKey] = (byDay[dateKey] || 0) + value.estimatedValue;
     }
 
-    const avgConfidence = periodValues.length > 0
-      ? periodValues.reduce((sum, v) => sum + v.confidence, 0) / periodValues.length
-      : 0;
+    const avgConfidence =
+      periodValues.length > 0
+        ? periodValues.reduce((sum, v) => sum + v.confidence, 0) / periodValues.length
+        : 0;
 
     return {
       total: periodValues.reduce((sum, v) => sum + v.estimatedValue, 0),
@@ -530,7 +531,7 @@ export class ROITracker {
     // Map values to operations via related costs
     for (const value of this.values) {
       for (const costId of value.relatedCostIds) {
-        const relatedCost = this.costs.find(c => c.id === costId);
+        const relatedCost = this.costs.find((c) => c.id === costId);
         if (relatedCost) {
           if (!operationData[relatedCost.operationType]) {
             operationData[relatedCost.operationType] = { cost: 0, value: 0 };
@@ -579,9 +580,11 @@ export class ROITracker {
     // Find operations with no recorded value
     const opCosts = new Set(Object.keys(costByOperation));
     const opValues = new Set(
-      this.values.flatMap(v =>
-        v.relatedCostIds.map(id => this.costs.find(c => c.id === id)?.operationType)
-      ).filter(Boolean)
+      this.values
+        .flatMap((v) =>
+          v.relatedCostIds.map((id) => this.costs.find((c) => c.id === id)?.operationType)
+        )
+        .filter(Boolean)
     );
 
     for (const op of opCosts) {
@@ -617,8 +620,8 @@ export class ROITracker {
     const originalCosts = this.costs.length;
     const originalValues = this.values.length;
 
-    this.costs = this.costs.filter(c => c.timestamp > cutoff);
-    this.values = this.values.filter(v => v.timestamp > cutoff);
+    this.costs = this.costs.filter((c) => c.timestamp > cutoff);
+    this.values = this.values.filter((v) => v.timestamp > cutoff);
 
     return {
       costsRemoved: originalCosts - this.costs.length,
@@ -632,19 +635,19 @@ export class ROITracker {
  */
 export const defaultROIConfig: ROITrackerConfig = {
   valueEstimates: {
-    lead_scored: 0.50, // Value of automated lead scoring
-    lead_qualified: 2.00, // Value of lead qualification
-    email_generated: 1.00, // Value of email generation
-    response_automated: 1.50, // Value of automated response
-    insight_generated: 3.00, // Value of business insight
+    lead_scored: 0.5, // Value of automated lead scoring
+    lead_qualified: 2.0, // Value of lead qualification
+    email_generated: 1.0, // Value of email generation
+    response_automated: 1.5, // Value of automated response
+    insight_generated: 3.0, // Value of business insight
     document_processed: 0.75, // Value of document analysis
-    task_automated: 2.50, // Value of task automation
-    prediction_made: 5.00, // Value of prediction
-    recommendation_made: 4.00, // Value of recommendation
+    task_automated: 2.5, // Value of task automation
+    prediction_made: 5.0, // Value of prediction
+    recommendation_made: 4.0, // Value of recommendation
     // IFC-024: Human-in-the-Loop Feedback values
-    feedback_positive: 0.10, // Confirmation of score accuracy
-    feedback_negative: -0.20, // Error signal (negative value - cost of poor scoring)
-    feedback_correction: 0.50, // Training data for model improvement
+    feedback_positive: 0.1, // Confirmation of score accuracy
+    feedback_negative: -0.2, // Error signal (negative value - cost of poor scoring)
+    feedback_correction: 0.5, // Training data for model improvement
   },
   costPerToken: {
     'gpt-4': { input: 0.00003, output: 0.00006 },
@@ -654,7 +657,7 @@ export const defaultROIConfig: ROITrackerConfig = {
     'claude-3-sonnet': { input: 0.000003, output: 0.000015 },
     'claude-3-haiku': { input: 0.00000025, output: 0.00000125 },
     'llama-3': { input: 0, output: 0 }, // Local model
-    'mistral': { input: 0, output: 0 }, // Local model
+    mistral: { input: 0, output: 0 }, // Local model
   },
   minROITarget: 2.0, // 200% ROI target
   trackingPeriodDays: 30,

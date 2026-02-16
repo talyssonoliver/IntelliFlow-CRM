@@ -101,7 +101,11 @@ export async function POST(request: Request) {
     const dependencyGraph: DependencyGraph = JSON.parse(graphContent);
 
     // Calculate phases
-    const { phases: initialPhases, parallelStreams } = calculatePhases(dependencyGraph, tasks, sprintNumber);
+    const { phases: initialPhases, parallelStreams } = calculatePhases(
+      dependencyGraph,
+      tasks,
+      sprintNumber
+    );
     let phases = initialPhases;
 
     // Apply task filter if provided

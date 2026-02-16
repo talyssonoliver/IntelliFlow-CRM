@@ -93,10 +93,9 @@ export default function TasksPage() {
   );
 
   // Reminder counts query
-  const { data: remindersData } = api.task.getReminders.useQuery(
-    undefined,
-    { enabled: isAuthenticated && !authLoading }
-  );
+  const { data: remindersData } = api.task.getReminders.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+  });
 
   // Mutations
   const createMutation = api.task.create.useMutation({
@@ -176,7 +175,13 @@ export default function TasksPage() {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     return tasks.filter((t) => {
-      if (!t.dueDate || t.status === 'COMPLETED' || t.status === 'CANCELLED' || t.status === 'ARCHIVED') return false;
+      if (
+        !t.dueDate ||
+        t.status === 'COMPLETED' ||
+        t.status === 'CANCELLED' ||
+        t.status === 'ARCHIVED'
+      )
+        return false;
       const d = typeof t.dueDate === 'string' ? new Date(t.dueDate) : t.dueDate;
       const dueDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
       return dueDay < today;
@@ -187,7 +192,13 @@ export default function TasksPage() {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     return tasks.filter((t) => {
-      if (!t.dueDate || t.status === 'COMPLETED' || t.status === 'CANCELLED' || t.status === 'ARCHIVED') return false;
+      if (
+        !t.dueDate ||
+        t.status === 'COMPLETED' ||
+        t.status === 'CANCELLED' ||
+        t.status === 'ARCHIVED'
+      )
+        return false;
       const d = typeof t.dueDate === 'string' ? new Date(t.dueDate) : t.dueDate;
       const dueDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
       return dueDay.getTime() === today.getTime();
@@ -198,65 +209,99 @@ export default function TasksPage() {
     setSearchQuery(value);
   }, []);
 
-  const handleRowClick = useCallback((id: string) => {
-    router.push(`/tasks/${id}`);
-  }, [router]);
+  const handleRowClick = useCallback(
+    (id: string) => {
+      router.push(`/tasks/${id}`);
+    },
+    [router]
+  );
 
-  const handleComplete = useCallback((id: string) => {
-    completeMutation.mutate({ taskId: id });
-  }, [completeMutation]);
+  const handleComplete = useCallback(
+    (id: string) => {
+      completeMutation.mutate({ taskId: id });
+    },
+    [completeMutation]
+  );
 
   const handleEdit = useCallback((task: TaskListItem) => {
     setEditingTask(task);
   }, []);
 
-  const handleDelete = useCallback((id: string) => {
-    deleteMutation.mutate({ id });
-  }, [deleteMutation]);
+  const handleDelete = useCallback(
+    (id: string) => {
+      deleteMutation.mutate({ id });
+    },
+    [deleteMutation]
+  );
 
-  const handleArchive = useCallback((id: string) => {
-    archiveMutation.mutate({ id });
-  }, [archiveMutation]);
+  const handleArchive = useCallback(
+    (id: string) => {
+      archiveMutation.mutate({ id });
+    },
+    [archiveMutation]
+  );
 
-  const handleBulkComplete = useCallback((ids: string[]) => {
-    ids.forEach((id) => completeMutation.mutate({ taskId: id }));
-  }, [completeMutation]);
+  const handleBulkComplete = useCallback(
+    (ids: string[]) => {
+      ids.forEach((id) => completeMutation.mutate({ taskId: id }));
+    },
+    [completeMutation]
+  );
 
-  const handleBulkDelete = useCallback((ids: string[]) => {
-    ids.forEach((id) => deleteMutation.mutate({ id }));
-  }, [deleteMutation]);
+  const handleBulkDelete = useCallback(
+    (ids: string[]) => {
+      ids.forEach((id) => deleteMutation.mutate({ id }));
+    },
+    [deleteMutation]
+  );
 
-  const handleBulkArchive = useCallback((ids: string[]) => {
-    ids.forEach((id) => archiveMutation.mutate({ id }));
-  }, [archiveMutation]);
+  const handleBulkArchive = useCallback(
+    (ids: string[]) => {
+      ids.forEach((id) => archiveMutation.mutate({ id }));
+    },
+    [archiveMutation]
+  );
 
-  const handleCreateSubmit = useCallback((formData: TaskFormData) => {
-    createMutation.mutate({
-      title: formData.title,
-      description: formData.description || undefined,
-      dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
-      priority: formData.priority,
-      leadId: formData.entityType === 'lead' && formData.entityId ? formData.entityId : undefined,
-      contactId: formData.entityType === 'contact' && formData.entityId ? formData.entityId : undefined,
-      opportunityId: formData.entityType === 'opportunity' && formData.entityId ? formData.entityId : undefined,
-    });
-  }, [createMutation]);
+  const handleCreateSubmit = useCallback(
+    (formData: TaskFormData) => {
+      createMutation.mutate({
+        title: formData.title,
+        description: formData.description || undefined,
+        dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+        priority: formData.priority,
+        leadId: formData.entityType === 'lead' && formData.entityId ? formData.entityId : undefined,
+        contactId:
+          formData.entityType === 'contact' && formData.entityId ? formData.entityId : undefined,
+        opportunityId:
+          formData.entityType === 'opportunity' && formData.entityId
+            ? formData.entityId
+            : undefined,
+      });
+    },
+    [createMutation]
+  );
 
-  const handleEditSubmit = useCallback((formData: TaskFormData) => {
-    if (!editingTask) return;
-    updateMutation.mutate({
-      id: editingTask.id,
-      title: formData.title,
-      description: formData.description || undefined,
-      dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
-      priority: formData.priority,
-      status: formData.status,
-    });
-  }, [editingTask, updateMutation]);
+  const handleEditSubmit = useCallback(
+    (formData: TaskFormData) => {
+      if (!editingTask) return;
+      updateMutation.mutate({
+        id: editingTask.id,
+        title: formData.title,
+        description: formData.description || undefined,
+        dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+        priority: formData.priority,
+        status: formData.status,
+      });
+    },
+    [editingTask, updateMutation]
+  );
 
-  const handleCalendarTaskClick = useCallback((id: string) => {
-    router.push(`/tasks/${id}`);
-  }, [router]);
+  const handleCalendarTaskClick = useCallback(
+    (id: string) => {
+      router.push(`/tasks/${id}`);
+    },
+    [router]
+  );
 
   const handleCreateWithDate = useCallback((date: Date) => {
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -280,10 +325,7 @@ export default function TasksPage() {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Tasks' },
-        ]}
+        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Tasks' }]}
         title="Task Management"
         description={`Track and manage your tasks.${totalItems > 0 ? ` (${totalItems} total)` : ''}`}
         actions={[
@@ -319,7 +361,9 @@ export default function TasksPage() {
               aria-label="List view"
               aria-pressed={viewMode === 'list'}
             >
-              <span className="material-symbols-outlined text-base" aria-hidden="true">view_list</span>
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                view_list
+              </span>
             </button>
             <button
               type="button"
@@ -330,7 +374,9 @@ export default function TasksPage() {
               aria-label="Calendar view"
               aria-pressed={viewMode === 'calendar'}
             >
-              <span className="material-symbols-outlined text-base" aria-hidden="true">calendar_month</span>
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                calendar_month
+              </span>
             </button>
           </div>
         </div>
@@ -371,7 +417,12 @@ export default function TasksPage() {
       {/* Error State */}
       {error && !isLoading && (
         <div className="flex flex-col items-center justify-center p-8 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-          <span className="material-symbols-outlined text-[48px] text-red-500 mb-4" aria-hidden="true">error</span>
+          <span
+            className="material-symbols-outlined text-[48px] text-red-500 mb-4"
+            aria-hidden="true"
+          >
+            error
+          </span>
           <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">
             Failed to load tasks
           </h3>
@@ -382,7 +433,9 @@ export default function TasksPage() {
             onClick={() => refetch()}
             className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
           >
-            <span className="material-symbols-outlined text-[16px]" aria-hidden="true">refresh</span>
+            <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+              refresh
+            </span>
             Try Again
           </button>
         </div>
@@ -404,8 +457,9 @@ export default function TasksPage() {
         />
       )}
 
-      {!error && viewMode === 'calendar' && (
-        isLoading ? (
+      {!error &&
+        viewMode === 'calendar' &&
+        (isLoading ? (
           <div className="space-y-3" data-testid="calendar-skeleton">
             <Skeleton className="h-[400px] w-full rounded" />
           </div>
@@ -415,8 +469,7 @@ export default function TasksPage() {
             onTaskClick={handleCalendarTaskClick}
             onCreateWithDate={handleCreateWithDate}
           />
-        )
-      )}
+        ))}
 
       {/* Create Form */}
       <TaskForm
@@ -432,16 +485,34 @@ export default function TasksPage() {
         open={!!editingTask}
         onClose={() => setEditingTask(null)}
         onSubmit={handleEditSubmit}
-        initialData={editingTask ? {
-          title: editingTask.title,
-          description: editingTask.description ?? '',
-          dueDate: editingTask.dueDate ? (typeof editingTask.dueDate === 'string' ? editingTask.dueDate.split('T')[0] : '') : '',
-          priority: editingTask.priority,
-          status: editingTask.status,
-          entityType: editingTask.lead ? 'lead' : editingTask.contact ? 'contact' : editingTask.opportunity ? 'opportunity' : 'none',
-          entityId: editingTask.lead?.id ?? editingTask.contact?.id ?? editingTask.opportunity?.id ?? '',
-          entityName: getEntityName(editingTask),
-        } : null}
+        initialData={
+          editingTask
+            ? {
+                title: editingTask.title,
+                description: editingTask.description ?? '',
+                dueDate: editingTask.dueDate
+                  ? typeof editingTask.dueDate === 'string'
+                    ? editingTask.dueDate.split('T')[0]
+                    : ''
+                  : '',
+                priority: editingTask.priority,
+                status: editingTask.status,
+                entityType: editingTask.lead
+                  ? 'lead'
+                  : editingTask.contact
+                    ? 'contact'
+                    : editingTask.opportunity
+                      ? 'opportunity'
+                      : 'none',
+                entityId:
+                  editingTask.lead?.id ??
+                  editingTask.contact?.id ??
+                  editingTask.opportunity?.id ??
+                  '',
+                entityName: getEntityName(editingTask),
+              }
+            : null
+        }
         mode="edit"
       />
     </div>

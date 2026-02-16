@@ -29,10 +29,7 @@ export interface ScheduleSyncResult {
 /**
  * Calculate and sync schedule data for all sprints
  */
-export function syncScheduleData(
-  tasks: TaskRecord[],
-  metricsDir: string
-): ScheduleSyncResult {
+export function syncScheduleData(tasks: TaskRecord[], metricsDir: string): ScheduleSyncResult {
   const errors: string[] = [];
   let tasksScheduled = 0;
   let criticalPathTasks = 0;
@@ -176,9 +173,10 @@ function getScheduleSummary(
   completionPercentage: number;
 } | null {
   // Filter by sprint if specified
-  const filteredTasks = sprintNum !== undefined
-    ? tasks.filter((t) => parseInt(t['Target Sprint'] || '0', 10) === sprintNum)
-    : tasks;
+  const filteredTasks =
+    sprintNum !== undefined
+      ? tasks.filter((t) => parseInt(t['Target Sprint'] || '0', 10) === sprintNum)
+      : tasks;
 
   if (filteredTasks.length === 0) return null;
 
@@ -204,4 +202,3 @@ function getScheduleSummary(
     completionPercentage: result.criticalPath.completionPercentage,
   };
 }
-

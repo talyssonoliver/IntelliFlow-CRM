@@ -86,9 +86,7 @@ export function removeQueueFromBullBoard(queueName: string): void {
  * Set up Bull Board with all queues
  * Returns the configured Bull Board instance
  */
-export function setupBullBoard(
-  config: BullBoardConfig = {}
-): ReturnType<typeof createBullBoard> {
+export function setupBullBoard(config: BullBoardConfig = {}): ReturnType<typeof createBullBoard> {
   const mergedConfig = { ...DEFAULT_CONFIG, ...config };
 
   // Create adapters for all known queues
@@ -247,9 +245,3 @@ Dashboard URL: http://localhost:3000/admin/queues (when API server is running)
     `.trim(),
   };
 }
-
-
-
-
-
-

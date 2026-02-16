@@ -17,13 +17,14 @@ const mockUser = {
 };
 
 // Mock context factory
-const createMockContext = (authenticated = true): Context => ({
-  user: authenticated ? mockUser : null,
-  tenantId: authenticated ? 'tenant-123' : null,
-  req: {} as Context['req'],
-  res: {} as Context['res'],
-  db: {} as Context['db'],
-} as unknown as Context);
+const createMockContext = (authenticated = true): Context =>
+  ({
+    user: authenticated ? mockUser : null,
+    tenantId: authenticated ? 'tenant-123' : null,
+    req: {} as Context['req'],
+    res: {} as Context['res'],
+    db: {} as Context['db'],
+  }) as unknown as Context;
 
 describe('Integrations Router', () => {
   const caller = appRouter.createCaller(createMockContext(true));

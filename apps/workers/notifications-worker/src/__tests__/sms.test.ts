@@ -81,9 +81,7 @@ describe('SMSChannel', () => {
       };
       const twilioChannel = new SMSChannel(twilioConfig);
 
-      await expect(twilioChannel.initialize()).rejects.toThrow(
-        'SMS provider credentials required'
-      );
+      await expect(twilioChannel.initialize()).rejects.toThrow('SMS provider credentials required');
     });
   });
 

@@ -401,10 +401,7 @@ export class MfaService {
   /**
    * Create an MFA challenge for a user
    */
-  createChallenge(
-    userId: string,
-    method: 'totp' | 'sms' | 'email' | 'backup'
-  ): MfaChallenge {
+  createChallenge(userId: string, method: 'totp' | 'sms' | 'email' | 'backup'): MfaChallenge {
     const challengeId = this.generateChallengeId();
 
     const challenge: MfaChallenge = {
@@ -541,9 +538,7 @@ export class MfaService {
 
     for (let i = 0; i < count; i++) {
       // Generate 10-character alphanumeric code
-      const code = randomBytes(5)
-        .toString('hex')
-        .toUpperCase();
+      const code = randomBytes(5).toString('hex').toUpperCase();
       codes.push(code);
     }
 

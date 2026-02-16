@@ -8,12 +8,7 @@
  * @implements FLOW-013 (SLA management flow)
  */
 
-import {
-  SLABreachAlert,
-  slaTrackingService,
-  SLATrackingService,
-  Ticket,
-} from './sla-service';
+import { SLABreachAlert, slaTrackingService, SLATrackingService, Ticket } from './sla-service';
 
 export type NotificationChannel = 'browser' | 'toast' | 'webhook' | 'email';
 export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
@@ -367,9 +362,7 @@ export class SLANotificationManager {
         this.sentNotifications.delete(id);
       }
     }
-    this.notificationQueue = this.notificationQueue.filter(
-      (n) => n.sentAt.getTime() >= cutoff
-    );
+    this.notificationQueue = this.notificationQueue.filter((n) => n.sentAt.getTime() >= cutoff);
   }
 
   /**
@@ -383,9 +376,7 @@ export class SLANotificationManager {
 /**
  * React hook for SLA notifications
  */
-export function useSLANotifications(
-  config: Partial<NotificationConfig> = {}
-): {
+export function useSLANotifications(config: Partial<NotificationConfig> = {}): {
   notifications: SLANotification[];
   unacknowledgedCount: number;
   acknowledge: (id: string) => void;

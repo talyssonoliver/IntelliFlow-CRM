@@ -51,9 +51,7 @@ export function EscalationAlert({
         {isBreached ? 'timer_off' : 'timelapse'}
       </span>
       <div className="flex-1">
-        <p className={`font-bold ${config.text}`}>
-          {isBreached ? 'SLA Breached' : 'SLA At Risk'}
-        </p>
+        <p className={`font-bold ${config.text}`}>{isBreached ? 'SLA Breached' : 'SLA At Risk'}</p>
         <p className="text-sm text-slate-600 dark:text-slate-400">
           {isBreached
             ? `${breachedMetric === 'response' ? 'Response' : 'Resolution'} time exceeded by ${breachedDuration}. Immediate action required.`

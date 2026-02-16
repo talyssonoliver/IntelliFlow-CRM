@@ -1,13 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetDescription,
-  toast,
-} from '@intelliflow/ui';
+import { Sheet, SheetContent, SheetTitle, SheetDescription, toast } from '@intelliflow/ui';
 import type { TaskPriority } from '@intelliflow/domain';
 import { TASK_PRIORITIES } from '@intelliflow/domain';
 import { api } from '@/lib/api';
@@ -118,16 +112,24 @@ export function TaskCreateSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full max-w-md flex flex-col overflow-hidden p-0 gap-0">
+      <SheetContent
+        side="right"
+        className="w-full max-w-md flex flex-col overflow-hidden p-0 gap-0"
+      >
         <div className="p-6 border-b flex-shrink-0">
           <SheetTitle>New Task</SheetTitle>
-          <SheetDescription>Create a new task and optionally link it to an entity.</SheetDescription>
+          <SheetDescription>
+            Create a new task and optionally link it to an entity.
+          </SheetDescription>
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
           {/* Title */}
           <div>
-            <label htmlFor="sheet-task-title" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="sheet-task-title"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               Title <span className="text-destructive">*</span>
             </label>
             <input
@@ -141,13 +143,18 @@ export function TaskCreateSheet({
               aria-describedby={errors.title ? 'sheet-title-error' : undefined}
             />
             {errors.title && (
-              <p id="sheet-title-error" className="text-xs text-destructive mt-1">{errors.title}</p>
+              <p id="sheet-title-error" className="text-xs text-destructive mt-1">
+                {errors.title}
+              </p>
             )}
           </div>
 
           {/* Description */}
           <div>
-            <label htmlFor="sheet-task-desc" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="sheet-task-desc"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               Description
             </label>
             <textarea
@@ -160,13 +167,18 @@ export function TaskCreateSheet({
               aria-describedby={errors.description ? 'sheet-desc-error' : undefined}
             />
             {errors.description && (
-              <p id="sheet-desc-error" className="text-xs text-destructive mt-1">{errors.description}</p>
+              <p id="sheet-desc-error" className="text-xs text-destructive mt-1">
+                {errors.description}
+              </p>
             )}
           </div>
 
           {/* Due Date */}
           <div>
-            <label htmlFor="sheet-task-duedate" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="sheet-task-duedate"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               Due Date
             </label>
             <input
@@ -180,7 +192,10 @@ export function TaskCreateSheet({
 
           {/* Priority */}
           <div>
-            <label htmlFor="sheet-task-priority" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="sheet-task-priority"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               Priority
             </label>
             <select
@@ -190,7 +205,9 @@ export function TaskCreateSheet({
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
               {TASK_PRIORITIES.map((p) => (
-                <option key={p} value={p}>{p.charAt(0) + p.slice(1).toLowerCase()}</option>
+                <option key={p} value={p}>
+                  {p.charAt(0) + p.slice(1).toLowerCase()}
+                </option>
               ))}
             </select>
           </div>
@@ -200,13 +217,18 @@ export function TaskCreateSheet({
             <legend className="text-sm font-medium text-foreground mb-2">Link to Entity</legend>
             <div className="flex gap-4 flex-wrap mb-3">
               {(['none', 'lead', 'contact', 'opportunity'] as const).map((type) => (
-                <label key={type} className="inline-flex items-center gap-1.5 text-sm cursor-pointer">
+                <label
+                  key={type}
+                  className="inline-flex items-center gap-1.5 text-sm cursor-pointer"
+                >
                   <input
                     type="radio"
                     name="sheet-entityType"
                     value={type}
                     checked={form.entityType === type}
-                    onChange={() => setForm((f) => ({ ...f, entityType: type, entityId: '', entityName: '' }))}
+                    onChange={() =>
+                      setForm((f) => ({ ...f, entityType: type, entityId: '', entityName: '' }))
+                    }
                     className="accent-primary"
                   />
                   {type === 'none' ? 'None' : type.charAt(0).toUpperCase() + type.slice(1)}

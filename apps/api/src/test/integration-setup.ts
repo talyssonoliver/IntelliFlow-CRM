@@ -343,7 +343,7 @@ export async function requireDatabase(): Promise<void> {
   if (!available) {
     throw new Error(
       'SKIP: Database not available for integration tests. ' +
-      'Start the test database with: docker-compose up -d postgres-test'
+        'Start the test database with: docker-compose up -d postgres-test'
     );
   }
 }
@@ -362,9 +362,7 @@ export async function verifySeedData(): Promise<void> {
   const accountCount = await testPrisma.account.count();
 
   if (leadCount === 0 || contactCount === 0 || accountCount === 0) {
-    throw new Error(
-      'No seed data found in test database. Run: pnpm --filter @intelliflow/db seed'
-    );
+    throw new Error('No seed data found in test database. Run: pnpm --filter @intelliflow/db seed');
   }
 }
 

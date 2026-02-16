@@ -16,7 +16,9 @@ vi.mock('@intelliflow/ui', () => ({
     />
   )),
   Card: vi.fn(({ children, className }: any) => (
-    <div data-testid="card" className={className}>{children}</div>
+    <div data-testid="card" className={className}>
+      {children}
+    </div>
   )),
   cn: vi.fn((...args: any[]) => args.filter(Boolean).join(' ')),
 }));
@@ -25,9 +27,7 @@ describe('SettingsPage', () => {
   describe('Rendering', () => {
     it('renders "Settings" heading via PageHeader', () => {
       render(<SettingsPage />);
-      expect(
-        screen.getByRole('heading', { level: 1, name: /settings/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: /settings/i })).toBeInTheDocument();
     });
 
     it('renders breadcrumbs with Dashboard link', () => {
@@ -66,9 +66,7 @@ describe('SettingsPage', () => {
       render(<SettingsPage />);
       expect(screen.getByText('Account & Profile')).toBeInTheDocument();
       expect(screen.getByText('AI & Automation')).toBeInTheDocument();
-      expect(
-        screen.getByText('Integrations & Communications')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Integrations & Communications')).toBeInTheDocument();
     });
 
     it('renders Recent Changes section', () => {

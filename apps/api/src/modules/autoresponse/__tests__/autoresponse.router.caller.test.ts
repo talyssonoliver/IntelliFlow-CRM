@@ -138,9 +138,7 @@ describe('autoResponseRouter (caller tests)', () => {
     it('should throw NOT_FOUND when draft does not exist', async () => {
       mockRepository.findById.mockResolvedValue(null);
 
-      await expect(
-        caller.getById({ draftId: TEST_DRAFT_ID })
-      ).rejects.toThrow(TRPCError);
+      await expect(caller.getById({ draftId: TEST_DRAFT_ID })).rejects.toThrow(TRPCError);
 
       try {
         await caller.getById({ draftId: TEST_DRAFT_ID });
@@ -165,10 +163,7 @@ describe('autoResponseRouter (caller tests)', () => {
 
       await caller.getById({ draftId: TEST_DRAFT_ID });
 
-      expect(mockRepository.findById).toHaveBeenCalledWith(
-        expect.anything(),
-        TEST_TENANT_ID
-      );
+      expect(mockRepository.findById).toHaveBeenCalledWith(expect.anything(), TEST_TENANT_ID);
     });
   });
 
@@ -455,10 +450,7 @@ describe('autoResponseRouter (caller tests)', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(mockDraftInstance.resolveEscalation).toHaveBeenCalledWith(
-        TEST_USER_ID,
-        undefined
-      );
+      expect(mockDraftInstance.resolveEscalation).toHaveBeenCalledWith(TEST_USER_ID, undefined);
     });
   });
 
@@ -472,7 +464,9 @@ describe('autoResponseRouter (caller tests)', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(mockDraftInstance.markSent).toHaveBeenCalledWith('00000000-0000-4000-8000-000000000888');
+      expect(mockDraftInstance.markSent).toHaveBeenCalledWith(
+        '00000000-0000-4000-8000-000000000888'
+      );
     });
 
     it('should throw NOT_FOUND when draft does not exist', async () => {
@@ -679,9 +673,7 @@ describe('autoResponseRouter (caller tests)', () => {
         reason: 'Client changed their mind',
       });
 
-      expect(approvedDraft.invalidate).toHaveBeenCalledWith(
-        expect.stringContaining(TEST_USER_ID)
-      );
+      expect(approvedDraft.invalidate).toHaveBeenCalledWith(expect.stringContaining(TEST_USER_ID));
       expect(approvedDraft.invalidate).toHaveBeenCalledWith(
         expect.stringContaining('Client changed their mind')
       );
@@ -703,13 +695,13 @@ describe('autoResponseRouter (caller tests)', () => {
       const adminCaller = autoResponseRouter.createCaller(protectedCtx);
 
       mockRepository.countByStatus
-        .mockResolvedValueOnce(5)  // DRAFT
-        .mockResolvedValueOnce(3)  // PENDING_APPROVAL
+        .mockResolvedValueOnce(5) // DRAFT
+        .mockResolvedValueOnce(3) // PENDING_APPROVAL
         .mockResolvedValueOnce(10) // APPROVED
-        .mockResolvedValueOnce(2)  // REJECTED
-        .mockResolvedValueOnce(1)  // ESCALATED
-        .mockResolvedValueOnce(8)  // SENT
-        .mockResolvedValueOnce(1)  // FAILED
+        .mockResolvedValueOnce(2) // REJECTED
+        .mockResolvedValueOnce(1) // ESCALATED
+        .mockResolvedValueOnce(8) // SENT
+        .mockResolvedValueOnce(1) // FAILED
         .mockResolvedValueOnce(0); // INVALIDATED
 
       const result = await adminCaller.getStatsByStatus({

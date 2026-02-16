@@ -84,15 +84,11 @@ export class HmacSha256Verifier implements SignatureVerifier {
   }
 
   verify(payload: string, signature: string, secret: string): boolean {
-    const expectedSignature = this.prefix + createHmac('sha256', secret)
-      .update(payload)
-      .digest('hex');
+    const expectedSignature =
+      this.prefix + createHmac('sha256', secret).update(payload).digest('hex');
 
     try {
-      return timingSafeEqual(
-        Buffer.from(signature),
-        Buffer.from(expectedSignature)
-      );
+      return timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
     } catch {
       return false;
     }
@@ -115,13 +111,16 @@ export class StripeSignatureVerifier implements SignatureVerifier {
 
   verify(payload: string, signature: string, secret: string): boolean {
     // Parse Stripe signature header
-    const parts = signature.split(',').reduce((acc, part) => {
-      const [key, value] = part.split('=');
-      if (key && value) {
-        acc[key] = value;
-      }
-      return acc;
-    }, {} as Record<string, string>);
+    const parts = signature.split(',').reduce(
+      (acc, part) => {
+        const [key, value] = part.split('=');
+        if (key && value) {
+          acc[key] = value;
+        }
+        return acc;
+      },
+      {} as Record<string, string>
+    );
 
     const timestamp = parts['t'];
     const v1Signature = parts['v1'];
@@ -139,15 +138,10 @@ export class StripeSignatureVerifier implements SignatureVerifier {
 
     // Compute expected signature
     const signedPayload = `${timestamp}.${payload}`;
-    const expectedSignature = createHmac('sha256', secret)
-      .update(signedPayload)
-      .digest('hex');
+    const expectedSignature = createHmac('sha256', secret).update(signedPayload).digest('hex');
 
     try {
-      return timingSafeEqual(
-        Buffer.from(v1Signature),
-        Buffer.from(expectedSignature)
-      );
+      return timingSafeEqual(Buffer.from(v1Signature), Buffer.from(expectedSignature));
     } catch {
       return false;
     }
@@ -167,15 +161,11 @@ export class GitHubSignatureVerifier implements SignatureVerifier {
       return false;
     }
 
-    const expectedSignature = 'sha256=' + createHmac('sha256', secret)
-      .update(payload)
-      .digest('hex');
+    const expectedSignature =
+      'sha256=' + createHmac('sha256', secret).update(payload).digest('hex');
 
     try {
-      return timingSafeEqual(
-        Buffer.from(signature),
-        Buffer.from(expectedSignature)
-      );
+      return timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
     } catch {
       return false;
     }
@@ -193,15 +183,10 @@ export class SendGridSignatureVerifier implements SignatureVerifier {
   verify(payload: string, signature: string, secret: string): boolean {
     // SendGrid uses ECDSA signature verification
     // For simplicity, using HMAC here - in production, use proper ECDSA
-    const expectedSignature = createHmac('sha256', secret)
-      .update(payload)
-      .digest('base64');
+    const expectedSignature = createHmac('sha256', secret).update(payload).digest('base64');
 
     try {
-      return timingSafeEqual(
-        Buffer.from(signature),
-        Buffer.from(expectedSignature)
-      );
+      return timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
     } catch {
       return false;
     }
@@ -265,13 +250,13 @@ export class WebhookEventRouter {
 
     // Execute handlers in parallel
     const results = await Promise.allSettled(
-      handlers.map(handler => handler(event, event.payload, context))
+      handlers.map((handler) => handler(event, event.payload, context))
     );
 
     // Check for failures
-    const failures = results.filter(r => r.status === 'rejected');
+    const failures = results.filter((r) => r.status === 'rejected');
     if (failures.length > 0) {
-      const errors = failures.map(f => (f as PromiseRejectedResult).reason);
+      const errors = failures.map((f) => (f as PromiseRejectedResult).reason);
       console.error(`Handler errors for event ${event.id}:`, errors);
       throw new AggregateError(errors, `${failures.length} handler(s) failed`);
     }
@@ -281,9 +266,11 @@ export class WebhookEventRouter {
    * Check if there are handlers for an event type
    */
   hasHandlers(eventType: string): boolean {
-    return this.globalHandlers.length > 0 ||
+    return (
+      this.globalHandlers.length > 0 ||
       (this.handlers.get(eventType)?.length || 0) > 0 ||
-      (this.handlers.get('*')?.length || 0) > 0;
+      (this.handlers.get('*')?.length || 0) > 0
+    );
   }
 }
 
@@ -576,10 +563,7 @@ export function createWebhookHandler(options?: {
 export const SignatureVerifiers = {
   hmacSha256: (options?: { prefix?: string; headerName?: string }) =>
     new HmacSha256Verifier(options),
-  stripe: (toleranceSeconds?: number) =>
-    new StripeSignatureVerifier(toleranceSeconds),
-  github: () =>
-    new GitHubSignatureVerifier(),
-  sendgrid: () =>
-    new SendGridSignatureVerifier(),
+  stripe: (toleranceSeconds?: number) => new StripeSignatureVerifier(toleranceSeconds),
+  github: () => new GitHubSignatureVerifier(),
+  sendgrid: () => new SendGridSignatureVerifier(),
 };

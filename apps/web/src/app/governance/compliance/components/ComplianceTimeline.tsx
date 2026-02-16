@@ -2,7 +2,11 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Card } from '@intelliflow/ui';
-import type { ComplianceEvent, ComplianceTimelineResponse, ComplianceEventType } from '@/app/api/compliance/types';
+import type {
+  ComplianceEvent,
+  ComplianceTimelineResponse,
+  ComplianceEventType,
+} from '@/app/api/compliance/types';
 
 // Event type colors
 const EVENT_TYPE_COLORS: Record<ComplianceEventType, { bg: string; text: string; dot: string }> = {
@@ -60,7 +64,9 @@ function CalendarDay({ date, events, isCurrentMonth, isToday, onEventClick }: Ca
         ${isToday ? 'ring-2 ring-primary' : ''}
       `}
     >
-      <div className={`text-xs font-medium mb-1 ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
+      <div
+        className={`text-xs font-medium mb-1 ${isToday ? 'text-primary' : 'text-muted-foreground'}`}
+      >
         {date.getDate()}
       </div>
       <div className="space-y-1">
@@ -82,9 +88,7 @@ function CalendarDay({ date, events, isCurrentMonth, isToday, onEventClick }: Ca
           );
         })}
         {events.length > 2 && (
-          <div className="text-xs text-muted-foreground text-center">
-            +{events.length - 2} more
-          </div>
+          <div className="text-xs text-muted-foreground text-center">+{events.length - 2} more</div>
         )}
       </div>
     </div>
@@ -102,11 +106,7 @@ function EventDetailModal({ event, onClose }: EventDetailModalProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <button
-        className="absolute inset-0 bg-black/50"
-        onClick={onClose}
-        aria-label="Close"
-      />
+      <button className="absolute inset-0 bg-black/50" onClick={onClose} aria-label="Close" />
       <Card className="relative z-10 w-full max-w-md p-6 m-4">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -116,10 +116,7 @@ function EventDetailModal({ event, onClose }: EventDetailModalProps) {
               <p className="text-sm text-muted-foreground">{event.standard}</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
-          >
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -141,14 +138,14 @@ function EventDetailModal({ event, onClose }: EventDetailModalProps) {
             <span className={`material-symbols-outlined ${statusInfo.color}`}>
               {statusInfo.icon}
             </span>
-            <span className={`text-sm capitalize ${statusInfo.color}`}>
-              {event.status}
-            </span>
+            <span className={`text-sm capitalize ${statusInfo.color}`}>{event.status}</span>
           </div>
 
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined text-muted-foreground">category</span>
-            <span className={`text-sm px-2 py-0.5 rounded ${typeColors.bg} ${typeColors.text} capitalize`}>
+            <span
+              className={`text-sm px-2 py-0.5 rounded ${typeColors.bg} ${typeColors.text} capitalize`}
+            >
               {event.type}
             </span>
           </div>
@@ -242,10 +239,11 @@ export function ComplianceTimeline() {
     return date.getMonth() === currentDate.getMonth();
   };
 
-  const upcomingEvents = data?.events
-    .filter((e) => e.status === 'scheduled' && new Date(e.date) >= today)
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .slice(0, 5) || [];
+  const upcomingEvents =
+    data?.events
+      .filter((e) => e.status === 'scheduled' && new Date(e.date) >= today)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 5) || [];
 
   if (loading && !data) {
     return (
@@ -390,7 +388,8 @@ export function ComplianceTimeline() {
                       {new Date(event.date).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
-                      })} • {event.standard}
+                      })}{' '}
+                      • {event.standard}
                     </p>
                   </div>
                   <span className="material-symbols-outlined text-muted-foreground text-sm">
@@ -405,10 +404,7 @@ export function ComplianceTimeline() {
 
       {/* Event Detail Modal */}
       {selectedEvent && (
-        <EventDetailModal
-          event={selectedEvent}
-          onClose={() => setSelectedEvent(null)}
-        />
+        <EventDetailModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
       )}
     </Card>
   );

@@ -9,10 +9,7 @@ This guide shows how to integrate AI guardrails into the IntelliFlow CRM API.
 Update `apps/api/src/container.ts` to wrap the AI service with guardrails:
 
 ```typescript
-import {
-  MockAIService,
-  GuardrailsAIService,
-} from '@intelliflow/adapters';
+import { MockAIService, GuardrailsAIService } from '@intelliflow/adapters';
 
 const createAdapters = (userId?: string) => {
   // ... other adapters ...
@@ -35,8 +32,9 @@ const createAdapters = (userId?: string) => {
 };
 ```
 
-**Note:** Since the container is a singleton, you'll need to create a factory function
-that accepts `userId` from the request context. See Option 2 for per-request wrapping.
+**Note:** Since the container is a singleton, you'll need to create a factory
+function that accepts `userId` from the request context. See Option 2 for
+per-request wrapping.
 
 ### Option 2: Wrap Per Request (Easier Integration)
 
@@ -310,17 +308,14 @@ describe('Lead scoring API with guardrails', () => {
 
     // Make 11 requests (limit is 10)
     for (let i = 0; i < 11; i++) {
-      requests.push(
-        caller.lead.scoreWithAI({ leadId: 'test-lead-id' })
-      );
+      requests.push(caller.lead.scoreWithAI({ leadId: 'test-lead-id' }));
     }
 
     const results = await Promise.allSettled(requests);
 
     // At least one should be rate limited
     const rateLimited = results.some(
-      (r) => r.status === 'rejected' &&
-        r.reason.message.includes('rate limit')
+      (r) => r.status === 'rejected' && r.reason.message.includes('rate limit')
     );
 
     expect(rateLimited).toBe(true);
@@ -443,5 +438,4 @@ For issues or questions about AI guardrails:
 
 ---
 
-**Last Updated:** 2025-12-30
-**Status:** Ready for Integration
+**Last Updated:** 2025-12-30 **Status:** Ready for Integration

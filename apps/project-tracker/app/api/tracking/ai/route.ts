@@ -37,7 +37,9 @@ interface AIMetrics {
   };
 }
 
-async function readJsonFile<T>(filePath: string): Promise<{ data: T | null; lastUpdated: string | null }> {
+async function readJsonFile<T>(
+  filePath: string
+): Promise<{ data: T | null; lastUpdated: string | null }> {
   try {
     const content = await fs.readFile(filePath, 'utf-8');
     const stats = await fs.stat(filePath);
@@ -53,7 +55,7 @@ async function readJsonFile<T>(filePath: string): Promise<{ data: T | null; last
 async function parseCostBudget(): Promise<{ current: number; budget: number } | null> {
   try {
     const content = await fs.readFile(COST_BUDGET_PATH, 'utf-8');
-    const lines = content.split('\n').filter(l => l.trim());
+    const lines = content.split('\n').filter((l) => l.trim());
 
     if (lines.length < 2) return null;
 
@@ -136,10 +138,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Error reading AI metrics:', error);
-    return NextResponse.json(
-      { status: 'error', message: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ status: 'error', message: String(error) }, { status: 500 });
   }
 }
 
@@ -179,9 +178,6 @@ export async function POST(_request: NextRequest) {
     });
   } catch (error) {
     console.error('Error refreshing AI metrics:', error);
-    return NextResponse.json(
-      { status: 'error', message: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ status: 'error', message: String(error) }, { status: 500 });
   }
 }

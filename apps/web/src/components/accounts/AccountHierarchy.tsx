@@ -63,7 +63,9 @@ function TreeNode({
 
   return (
     <li
-      ref={(el) => { if (el) nodeRefs.current.set(node.id, el); }}
+      ref={(el) => {
+        if (el) nodeRefs.current.set(node.id, el);
+      }}
       role="treeitem"
       aria-expanded={hasChildren ? isExpanded : undefined}
       aria-selected={isCurrent}
@@ -83,7 +85,10 @@ function TreeNode({
         {hasChildren ? (
           <button
             className="p-0.5 rounded hover:bg-muted"
-            onClick={(e) => { e.stopPropagation(); onToggle(node.id); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggle(node.id);
+            }}
             aria-label={isExpanded ? 'Collapse' : 'Expand'}
           >
             <span className="material-symbols-outlined text-base text-muted-foreground">
@@ -98,16 +103,19 @@ function TreeNode({
 
         <button
           className="text-sm font-medium text-foreground hover:text-primary hover:underline text-left truncate"
-          onClick={(e) => { e.stopPropagation(); onNavigate(node.id); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onNavigate(node.id);
+          }}
         >
           {node.name}
-          {isCurrent && (
-            <span className="text-xs text-primary ml-1">(current)</span>
-          )}
+          {isCurrent && <span className="text-xs text-primary ml-1">(current)</span>}
         </button>
 
         {node.industry && (
-          <Badge variant="outline" className="text-[10px] shrink-0">{node.industry}</Badge>
+          <Badge variant="outline" className="text-[10px] shrink-0">
+            {node.industry}
+          </Badge>
         )}
 
         {node.revenue != null && (
@@ -204,91 +212,97 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
     });
   }, []);
 
-  const onNavigate = useCallback((id: string) => {
-    router.push(`/accounts/${id}`);
-  }, [router]);
+  const onNavigate = useCallback(
+    (id: string) => {
+      router.push(`/accounts/${id}`);
+    },
+    [router]
+  );
 
   const visibleNodes = useMemo(() => {
     if (!data?.current) return [];
     return flattenVisibleNodes(data.current, expandedNodes);
   }, [data?.current, expandedNodes]);
 
-  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLUListElement>) => {
-    if (!focusedNodeId || !data?.current) return;
-    const idx = visibleNodes.indexOf(focusedNodeId);
-    if (idx === -1) return;
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLUListElement>) => {
+      if (!focusedNodeId || !data?.current) return;
+      const idx = visibleNodes.indexOf(focusedNodeId);
+      if (idx === -1) return;
 
-    switch (e.key) {
-      case 'ArrowDown': {
-        e.preventDefault();
-        if (idx < visibleNodes.length - 1) {
-          const nextId = visibleNodes[idx + 1];
-          setFocusedNodeId(nextId);
-          nodeRefs.current.get(nextId)?.focus();
+      switch (e.key) {
+        case 'ArrowDown': {
+          e.preventDefault();
+          if (idx < visibleNodes.length - 1) {
+            const nextId = visibleNodes[idx + 1];
+            setFocusedNodeId(nextId);
+            nodeRefs.current.get(nextId)?.focus();
+          }
+          break;
         }
-        break;
-      }
-      case 'ArrowUp': {
-        e.preventDefault();
-        if (idx > 0) {
-          const prevId = visibleNodes[idx - 1];
-          setFocusedNodeId(prevId);
-          nodeRefs.current.get(prevId)?.focus();
+        case 'ArrowUp': {
+          e.preventDefault();
+          if (idx > 0) {
+            const prevId = visibleNodes[idx - 1];
+            setFocusedNodeId(prevId);
+            nodeRefs.current.get(prevId)?.focus();
+          }
+          break;
         }
-        break;
-      }
-      case 'ArrowRight': {
-        e.preventDefault();
-        const node = findNode(data.current, focusedNodeId);
-        if (node && node.children.length > 0) {
-          if (!expandedNodes.has(focusedNodeId)) {
+        case 'ArrowRight': {
+          e.preventDefault();
+          const node = findNode(data.current, focusedNodeId);
+          if (node && node.children.length > 0) {
+            if (!expandedNodes.has(focusedNodeId)) {
+              onToggle(focusedNodeId);
+            } else {
+              const firstChild = node.children[0].id;
+              setFocusedNodeId(firstChild);
+              nodeRefs.current.get(firstChild)?.focus();
+            }
+          }
+          break;
+        }
+        case 'ArrowLeft': {
+          e.preventDefault();
+          if (expandedNodes.has(focusedNodeId)) {
             onToggle(focusedNodeId);
           } else {
-            const firstChild = node.children[0].id;
-            setFocusedNodeId(firstChild);
-            nodeRefs.current.get(firstChild)?.focus();
+            const parentId = findParentId(data.current, focusedNodeId);
+            if (parentId) {
+              setFocusedNodeId(parentId);
+              nodeRefs.current.get(parentId)?.focus();
+            }
           }
+          break;
         }
-        break;
-      }
-      case 'ArrowLeft': {
-        e.preventDefault();
-        if (expandedNodes.has(focusedNodeId)) {
-          onToggle(focusedNodeId);
-        } else {
-          const parentId = findParentId(data.current, focusedNodeId);
-          if (parentId) {
-            setFocusedNodeId(parentId);
-            nodeRefs.current.get(parentId)?.focus();
+        case 'Enter': {
+          e.preventDefault();
+          onNavigate(focusedNodeId);
+          break;
+        }
+        case 'Home': {
+          e.preventDefault();
+          if (visibleNodes.length > 0) {
+            const firstId = visibleNodes[0];
+            setFocusedNodeId(firstId);
+            nodeRefs.current.get(firstId)?.focus();
           }
+          break;
         }
-        break;
-      }
-      case 'Enter': {
-        e.preventDefault();
-        onNavigate(focusedNodeId);
-        break;
-      }
-      case 'Home': {
-        e.preventDefault();
-        if (visibleNodes.length > 0) {
-          const firstId = visibleNodes[0];
-          setFocusedNodeId(firstId);
-          nodeRefs.current.get(firstId)?.focus();
+        case 'End': {
+          e.preventDefault();
+          if (visibleNodes.length > 0) {
+            const lastId = visibleNodes[visibleNodes.length - 1];
+            setFocusedNodeId(lastId);
+            nodeRefs.current.get(lastId)?.focus();
+          }
+          break;
         }
-        break;
       }
-      case 'End': {
-        e.preventDefault();
-        if (visibleNodes.length > 0) {
-          const lastId = visibleNodes[visibleNodes.length - 1];
-          setFocusedNodeId(lastId);
-          nodeRefs.current.get(lastId)?.focus();
-        }
-        break;
-      }
-    }
-  }, [focusedNodeId, visibleNodes, expandedNodes, data?.current, onToggle, onNavigate]);
+    },
+    [focusedNodeId, visibleNodes, expandedNodes, data?.current, onToggle, onNavigate]
+  );
 
   if (isLoading) {
     return (
@@ -335,11 +349,7 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
 
       {hasHierarchy ? (
         <Card className="p-4">
-          <ul
-            role="tree"
-            aria-label="Account hierarchy"
-            onKeyDown={handleKeyDown}
-          >
+          <ul role="tree" aria-label="Account hierarchy" onKeyDown={handleKeyDown}>
             <TreeNode
               node={data.current}
               currentId={accountId}
@@ -355,10 +365,10 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
         </Card>
       ) : (
         <div className="text-center py-12">
-          <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3">account_tree</span>
-          <p className="text-muted-foreground">
-            This account has no parent or child accounts.
-          </p>
+          <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3">
+            account_tree
+          </span>
+          <p className="text-muted-foreground">This account has no parent or child accounts.</p>
         </div>
       )}
 
@@ -411,7 +421,9 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
                       setPickerSearch('');
                     }}
                   >
-                    <span className="material-symbols-outlined text-base text-muted-foreground">domain</span>
+                    <span className="material-symbols-outlined text-base text-muted-foreground">
+                      domain
+                    </span>
                     <span className="truncate">{account.name}</span>
                   </button>
                 ))}

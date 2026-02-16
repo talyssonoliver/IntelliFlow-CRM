@@ -10,10 +10,7 @@
  */
 
 import { z } from 'zod';
-import {
-  CASE_EVENT_WORKFLOW_ROUTING,
-  type CaseEventType,
-} from '@intelliflow/domain';
+import { CASE_EVENT_WORKFLOW_ROUTING, type CaseEventType } from '@intelliflow/domain';
 
 // ============================================================================
 // Types and Schemas
@@ -63,14 +60,7 @@ export type WorkflowDefinition = z.infer<typeof workflowDefinitionSchema>;
 export const workflowInstanceSchema = z.object({
   id: z.string().uuid(),
   definitionId: z.string(),
-  status: z.enum([
-    'pending',
-    'running',
-    'completed',
-    'failed',
-    'cancelled',
-    'waiting_for_input',
-  ]),
+  status: z.enum(['pending', 'running', 'completed', 'failed', 'cancelled', 'waiting_for_input']),
   input: z.record(z.unknown()).optional(),
   output: z.record(z.unknown()).optional(),
   error: z.string().optional(),
@@ -140,9 +130,7 @@ export interface IWorkflowEngine {
   /**
    * Get handle to an existing workflow
    */
-  getWorkflowHandle<TOutput>(
-    workflowId: string
-  ): Promise<WorkflowHandle<TOutput> | null>;
+  getWorkflowHandle<TOutput>(workflowId: string): Promise<WorkflowHandle<TOutput> | null>;
 
   /**
    * List workflows matching criteria
@@ -264,9 +252,7 @@ export class TemporalWorkflowEngine implements IWorkflowEngine {
     return new TemporalWorkflowHandle<TOutput>(handle);
   }
 
-  async getWorkflowHandle<TOutput>(
-    workflowId: string
-  ): Promise<WorkflowHandle<TOutput> | null> {
+  async getWorkflowHandle<TOutput>(workflowId: string): Promise<WorkflowHandle<TOutput> | null> {
     if (!this.client) {
       throw new Error('Temporal client not initialized');
     }
@@ -489,9 +475,7 @@ export class WorkflowEngineFactory {
   /**
    * Create or get a Temporal engine instance
    */
-  static async createTemporalEngine(
-    config: TemporalEngineConfig
-  ): Promise<TemporalWorkflowEngine> {
+  static async createTemporalEngine(config: TemporalEngineConfig): Promise<TemporalWorkflowEngine> {
     const existingEngine = this.engines.get('temporal');
     if (existingEngine) {
       return existingEngine as TemporalWorkflowEngine;
@@ -529,28 +513,19 @@ export class WorkflowEngineFactory {
  * Routes events to appropriate workflow engines based on configuration
  */
 export class WorkflowRouter {
-  private routes: Map<
-    string,
-    { engine: WorkflowEngineType; workflowName: string }
-  > = new Map();
+  private routes: Map<string, { engine: WorkflowEngineType; workflowName: string }> = new Map();
 
   /**
    * Register a route from event type to workflow
    */
-  registerRoute(
-    eventType: string,
-    engine: WorkflowEngineType,
-    workflowName: string
-  ): void {
+  registerRoute(eventType: string, engine: WorkflowEngineType, workflowName: string): void {
     this.routes.set(eventType, { engine, workflowName });
   }
 
   /**
    * Get the workflow configuration for an event type
    */
-  getRoute(
-    eventType: string
-  ): { engine: WorkflowEngineType; workflowName: string } | undefined {
+  getRoute(eventType: string): { engine: WorkflowEngineType; workflowName: string } | undefined {
     return this.routes.get(eventType);
   }
 
@@ -642,7 +617,4 @@ export function isRulesEngineEvent(eventType: CaseEventType): boolean {
 // Exports
 // ============================================================================
 
-export {
-  TemporalClientAdapter,
-  InternalTemporalHandle,
-};
+export { TemporalClientAdapter, InternalTemporalHandle };

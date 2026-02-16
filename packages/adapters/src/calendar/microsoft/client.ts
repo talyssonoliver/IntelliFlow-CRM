@@ -94,7 +94,13 @@ interface MicrosoftAttendee {
   };
   type: 'required' | 'optional' | 'resource';
   status?: {
-    response?: 'none' | 'organizer' | 'tentativelyAccepted' | 'accepted' | 'declined' | 'notResponded';
+    response?:
+      | 'none'
+      | 'organizer'
+      | 'tentativelyAccepted'
+      | 'accepted'
+      | 'declined'
+      | 'notResponded';
     time?: string;
   };
 }
@@ -364,7 +370,10 @@ export class MicrosoftCalendarAdapter implements CalendarServicePort {
           error instanceof Error ? error.message : 'Unknown error'
         );
         return Result.fail(
-          new CalendarSyncError('microsoft', error instanceof Error ? error.message : 'Unknown error')
+          new CalendarSyncError(
+            'microsoft',
+            error instanceof Error ? error.message : 'Unknown error'
+          )
         );
       }
     });
@@ -415,7 +424,10 @@ export class MicrosoftCalendarAdapter implements CalendarServicePort {
         return Result.ok(this.microsoftEventToExternal(updatedEvent));
       } catch (error) {
         return Result.fail(
-          new CalendarSyncError('microsoft', error instanceof Error ? error.message : 'Unknown error')
+          new CalendarSyncError(
+            'microsoft',
+            error instanceof Error ? error.message : 'Unknown error'
+          )
         );
       }
     });
@@ -451,7 +463,10 @@ export class MicrosoftCalendarAdapter implements CalendarServicePort {
         return Result.ok(undefined);
       } catch (error) {
         return Result.fail(
-          new CalendarSyncError('microsoft', error instanceof Error ? error.message : 'Unknown error')
+          new CalendarSyncError(
+            'microsoft',
+            error instanceof Error ? error.message : 'Unknown error'
+          )
         );
       }
     });
@@ -492,7 +507,10 @@ export class MicrosoftCalendarAdapter implements CalendarServicePort {
         return Result.ok(this.microsoftEventToExternal(event));
       } catch (error) {
         return Result.fail(
-          new CalendarSyncError('microsoft', error instanceof Error ? error.message : 'Unknown error')
+          new CalendarSyncError(
+            'microsoft',
+            error instanceof Error ? error.message : 'Unknown error'
+          )
         );
       }
     });
@@ -534,7 +552,10 @@ export class MicrosoftCalendarAdapter implements CalendarServicePort {
         return Result.ok(this.microsoftEventToExternal(data.value[0]));
       } catch (error) {
         return Result.fail(
-          new CalendarSyncError('microsoft', error instanceof Error ? error.message : 'Unknown error')
+          new CalendarSyncError(
+            'microsoft',
+            error instanceof Error ? error.message : 'Unknown error'
+          )
         );
       }
     });
@@ -574,7 +595,7 @@ export class MicrosoftCalendarAdapter implements CalendarServicePort {
         } else {
           // Initial sync
           const params = new URLSearchParams({
-            '$top': '50',
+            $top: '50',
           });
           url = `${this.apiBaseUrl}${this.calendarPath}/delta?${params}`;
         }
@@ -613,7 +634,10 @@ export class MicrosoftCalendarAdapter implements CalendarServicePort {
         });
       } catch (error) {
         return Result.fail(
-          new CalendarSyncError('microsoft', error instanceof Error ? error.message : 'Unknown error')
+          new CalendarSyncError(
+            'microsoft',
+            error instanceof Error ? error.message : 'Unknown error'
+          )
         );
       }
     });
@@ -653,8 +677,8 @@ export class MicrosoftCalendarAdapter implements CalendarServicePort {
           const params = new URLSearchParams({
             startDateTime: startTime.toISOString(),
             endDateTime: endTime.toISOString(),
-            '$top': '50',
-            '$orderby': 'start/dateTime',
+            $top: '50',
+            $orderby: 'start/dateTime',
           });
           url = `${this.apiBaseUrl}${calendarViewPath}?${params}`;
         }
@@ -682,7 +706,10 @@ export class MicrosoftCalendarAdapter implements CalendarServicePort {
         });
       } catch (error) {
         return Result.fail(
-          new CalendarSyncError('microsoft', error instanceof Error ? error.message : 'Unknown error')
+          new CalendarSyncError(
+            'microsoft',
+            error instanceof Error ? error.message : 'Unknown error'
+          )
         );
       }
     });
@@ -1031,7 +1058,9 @@ export class MicrosoftCalendarAdapter implements CalendarServicePort {
 
     switch (status) {
       case 401:
-        return Result.fail(new CalendarAuthenticationError('microsoft', 'Token expired or invalid'));
+        return Result.fail(
+          new CalendarAuthenticationError('microsoft', 'Token expired or invalid')
+        );
       case 403:
         return Result.fail(new CalendarSyncError('microsoft', errorMessage));
       case 404:

@@ -25,14 +25,8 @@ import {
   getToolsNotRequiringApproval,
   toolMetadata,
 } from '../../agent/tools';
-import {
-  approvalWorkflowService,
-  pendingActionsStore,
-} from '../../agent/approval-workflow';
-import {
-  agentAuthorizationService,
-  buildAuthContext,
-} from '../../agent/authorization';
+import { approvalWorkflowService, pendingActionsStore } from '../../agent/approval-workflow';
+import { agentAuthorizationService, buildAuthContext } from '../../agent/authorization';
 import { agentLogger } from '../../agent/logger';
 import type { Context } from '../../context';
 import type { AgentAuthContext } from '../../agent/types';
@@ -103,26 +97,24 @@ export const agentRouter = createTRPCRouter({
   /**
    * Get details of a specific tool
    */
-  getTool: protectedProcedure
-    .input(z.object({ toolName: z.string() }))
-    .query(({ input }) => {
-      const tool = getAgentTool(input.toolName);
+  getTool: protectedProcedure.input(z.object({ toolName: z.string() })).query(({ input }) => {
+    const tool = getAgentTool(input.toolName);
 
-      if (!tool) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `Tool not found: ${input.toolName}`,
-        });
-      }
+    if (!tool) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Tool not found: ${input.toolName}`,
+      });
+    }
 
-      return {
-        name: tool.name,
-        description: tool.description,
-        actionType: tool.actionType,
-        entityTypes: tool.entityTypes,
-        requiresApproval: tool.requiresApproval,
-      };
-    }),
+    return {
+      name: tool.name,
+      description: tool.description,
+      actionType: tool.actionType,
+      entityTypes: tool.entityTypes,
+      requiresApproval: tool.requiresApproval,
+    };
+  }),
 
   /**
    * Execute an agent tool
@@ -238,9 +230,7 @@ export const agentRouter = createTRPCRouter({
    */
   getPendingApprovals: protectedProcedure.query(async ({ ctx }) => {
     const agentContext = buildAgentContext(ctx);
-    const pendingActions = await approvalWorkflowService.getPendingActions(
-      agentContext.userId
-    );
+    const pendingActions = await approvalWorkflowService.getPendingActions(agentContext.userId);
 
     return pendingActions.map((action) => ({
       id: action.id,
@@ -309,10 +299,7 @@ export const agentRouter = createTRPCRouter({
         modifiedInput: input.modifiedInput,
       };
 
-      const executedAction = await approvalWorkflowService.approveAction(
-        decision,
-        agentContext
-      );
+      const executedAction = await approvalWorkflowService.approveAction(decision, agentContext);
 
       return {
         success: !executedAction.executionError,
@@ -348,10 +335,7 @@ export const agentRouter = createTRPCRouter({
         reason: input.reason,
       };
 
-      const rejectedAction = await approvalWorkflowService.rejectAction(
-        decision,
-        agentContext
-      );
+      const rejectedAction = await approvalWorkflowService.rejectAction(decision, agentContext);
 
       return {
         success: true,
@@ -369,9 +353,7 @@ export const agentRouter = createTRPCRouter({
    */
   getPendingCount: protectedProcedure.query(async ({ ctx }) => {
     const agentContext = buildAgentContext(ctx);
-    const pendingActions = await approvalWorkflowService.getPendingActions(
-      agentContext.userId
-    );
+    const pendingActions = await approvalWorkflowService.getPendingActions(agentContext.userId);
 
     return {
       count: pendingActions.length,

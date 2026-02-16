@@ -40,22 +40,23 @@ describe('Slack Messaging Adapter', () => {
     it('should post a message to a channel', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: true,
-          channel: 'C12345678',
-          ts: '1234567890.123456',
-          message: {
-            text: 'Hello, World!',
-            user: 'U12345678',
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channel: 'C12345678',
             ts: '1234567890.123456',
-          },
-        }),
+            message: {
+              text: 'Hello, World!',
+              user: 'U12345678',
+              ts: '1234567890.123456',
+            },
+          }),
       });
 
       const response = await fetch('https://slack.com/api/chat.postMessage', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
+          Authorization: `Bearer ${mockConfig.botToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -84,20 +85,21 @@ describe('Slack Messaging Adapter', () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: true,
-          channel: 'C12345678',
-          ts: '1234567890.123456',
-          message: {
-            blocks,
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channel: 'C12345678',
+            ts: '1234567890.123456',
+            message: {
+              blocks,
+            },
+          }),
       });
 
       const response = await fetch('https://slack.com/api/chat.postMessage', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
+          Authorization: `Bearer ${mockConfig.botToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -115,18 +117,19 @@ describe('Slack Messaging Adapter', () => {
     it('should update a message', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: true,
-          channel: 'C12345678',
-          ts: '1234567890.123456',
-          text: 'Updated message',
-        }),
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channel: 'C12345678',
+            ts: '1234567890.123456',
+            text: 'Updated message',
+          }),
       });
 
       const response = await fetch('https://slack.com/api/chat.update', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
+          Authorization: `Bearer ${mockConfig.botToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -145,17 +148,18 @@ describe('Slack Messaging Adapter', () => {
     it('should delete a message', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: true,
-          channel: 'C12345678',
-          ts: '1234567890.123456',
-        }),
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channel: 'C12345678',
+            ts: '1234567890.123456',
+          }),
       });
 
       const response = await fetch('https://slack.com/api/chat.delete', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
+          Authorization: `Bearer ${mockConfig.botToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -172,24 +176,28 @@ describe('Slack Messaging Adapter', () => {
     it('should get channel history', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: true,
-          messages: [
-            { ts: '1234567890.123456', text: 'Message 1', user: 'U1' },
-            { ts: '1234567890.123457', text: 'Message 2', user: 'U2' },
-          ],
-          has_more: true,
-          response_metadata: {
-            next_cursor: 'cursor123',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            messages: [
+              { ts: '1234567890.123456', text: 'Message 1', user: 'U1' },
+              { ts: '1234567890.123457', text: 'Message 2', user: 'U2' },
+            ],
+            has_more: true,
+            response_metadata: {
+              next_cursor: 'cursor123',
+            },
+          }),
       });
 
-      const response = await fetch('https://slack.com/api/conversations.history?channel=C12345678&limit=10', {
-        headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://slack.com/api/conversations.history?channel=C12345678&limit=10',
+        {
+          headers: {
+            Authorization: `Bearer ${mockConfig.botToken}`,
+          },
+        }
+      );
 
       const result = await response.json();
 
@@ -201,21 +209,35 @@ describe('Slack Messaging Adapter', () => {
     it('should get thread replies', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: true,
-          messages: [
-            { ts: '1234567890.123456', text: 'Original', user: 'U1' },
-            { ts: '1234567890.123457', text: 'Reply 1', user: 'U2', thread_ts: '1234567890.123456' },
-            { ts: '1234567890.123458', text: 'Reply 2', user: 'U1', thread_ts: '1234567890.123456' },
-          ],
-        }),
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            messages: [
+              { ts: '1234567890.123456', text: 'Original', user: 'U1' },
+              {
+                ts: '1234567890.123457',
+                text: 'Reply 1',
+                user: 'U2',
+                thread_ts: '1234567890.123456',
+              },
+              {
+                ts: '1234567890.123458',
+                text: 'Reply 2',
+                user: 'U1',
+                thread_ts: '1234567890.123456',
+              },
+            ],
+          }),
       });
 
-      const response = await fetch('https://slack.com/api/conversations.replies?channel=C12345678&ts=1234567890.123456', {
-        headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://slack.com/api/conversations.replies?channel=C12345678&ts=1234567890.123456',
+        {
+          headers: {
+            Authorization: `Bearer ${mockConfig.botToken}`,
+          },
+        }
+      );
 
       const result = await response.json();
 
@@ -234,7 +256,7 @@ describe('Slack Messaging Adapter', () => {
       const response = await fetch('https://slack.com/api/reactions.add', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
+          Authorization: `Bearer ${mockConfig.botToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -258,7 +280,7 @@ describe('Slack Messaging Adapter', () => {
       const response = await fetch('https://slack.com/api/reactions.remove', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
+          Authorization: `Bearer ${mockConfig.botToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -278,20 +300,24 @@ describe('Slack Messaging Adapter', () => {
     it('should list channels', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: true,
-          channels: [
-            { id: 'C1', name: 'general', is_channel: true },
-            { id: 'C2', name: 'random', is_channel: true },
-          ],
-        }),
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channels: [
+              { id: 'C1', name: 'general', is_channel: true },
+              { id: 'C2', name: 'random', is_channel: true },
+            ],
+          }),
       });
 
-      const response = await fetch('https://slack.com/api/conversations.list?types=public_channel,private_channel', {
-        headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://slack.com/api/conversations.list?types=public_channel,private_channel',
+        {
+          headers: {
+            Authorization: `Bearer ${mockConfig.botToken}`,
+          },
+        }
+      );
 
       const result = await response.json();
 
@@ -302,21 +328,22 @@ describe('Slack Messaging Adapter', () => {
     it('should get channel info', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: true,
-          channel: {
-            id: 'C12345678',
-            name: 'general',
-            is_channel: true,
-            is_member: true,
-            topic: { value: 'General discussion' },
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channel: {
+              id: 'C12345678',
+              name: 'general',
+              is_channel: true,
+              is_member: true,
+              topic: { value: 'General discussion' },
+            },
+          }),
       });
 
       const response = await fetch('https://slack.com/api/conversations.info?channel=C12345678', {
         headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
+          Authorization: `Bearer ${mockConfig.botToken}`,
         },
       });
 
@@ -329,20 +356,21 @@ describe('Slack Messaging Adapter', () => {
     it('should create a channel', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: true,
-          channel: {
-            id: 'C_NEW',
-            name: 'new-channel',
-            is_channel: true,
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channel: {
+              id: 'C_NEW',
+              name: 'new-channel',
+              is_channel: true,
+            },
+          }),
       });
 
       const response = await fetch('https://slack.com/api/conversations.create', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
+          Authorization: `Bearer ${mockConfig.botToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ name: 'new-channel' }),
@@ -357,19 +385,20 @@ describe('Slack Messaging Adapter', () => {
     it('should join a channel', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: true,
-          channel: {
-            id: 'C12345678',
-            is_member: true,
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channel: {
+              id: 'C12345678',
+              is_member: true,
+            },
+          }),
       });
 
       const response = await fetch('https://slack.com/api/conversations.join', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
+          Authorization: `Bearer ${mockConfig.botToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ channel: 'C12345678' }),
@@ -386,18 +415,19 @@ describe('Slack Messaging Adapter', () => {
     it('should list users', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: true,
-          members: [
-            { id: 'U1', name: 'user1', real_name: 'User One' },
-            { id: 'U2', name: 'user2', real_name: 'User Two' },
-          ],
-        }),
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            members: [
+              { id: 'U1', name: 'user1', real_name: 'User One' },
+              { id: 'U2', name: 'user2', real_name: 'User Two' },
+            ],
+          }),
       });
 
       const response = await fetch('https://slack.com/api/users.list', {
         headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
+          Authorization: `Bearer ${mockConfig.botToken}`,
         },
       });
 
@@ -410,23 +440,27 @@ describe('Slack Messaging Adapter', () => {
     it('should get user by email', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: true,
-          user: {
-            id: 'U12345678',
-            name: 'testuser',
-            profile: {
-              email: 'test@example.com',
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            user: {
+              id: 'U12345678',
+              name: 'testuser',
+              profile: {
+                email: 'test@example.com',
+              },
             },
-          },
-        }),
+          }),
       });
 
-      const response = await fetch('https://slack.com/api/users.lookupByEmail?email=test@example.com', {
-        headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://slack.com/api/users.lookupByEmail?email=test@example.com',
+        {
+          headers: {
+            Authorization: `Bearer ${mockConfig.botToken}`,
+          },
+        }
+      );
 
       const result = await response.json();
 
@@ -439,18 +473,19 @@ describe('Slack Messaging Adapter', () => {
     it('should open a direct message', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: true,
-          channel: {
-            id: 'D12345678',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            channel: {
+              id: 'D12345678',
+            },
+          }),
       });
 
       const response = await fetch('https://slack.com/api/conversations.open', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
+          Authorization: `Bearer ${mockConfig.botToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ users: 'U12345678' }),
@@ -480,7 +515,7 @@ describe('Slack Messaging Adapter', () => {
       const maxAge = 300;
       const currentTime = Math.floor(Date.now() / 1000);
 
-      const isExpired = (currentTime - oldTimestamp) > maxAge;
+      const isExpired = currentTime - oldTimestamp > maxAge;
 
       expect(isExpired).toBe(true);
     });
@@ -490,15 +525,16 @@ describe('Slack Messaging Adapter', () => {
     it('should handle invalid auth', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: false,
-          error: 'invalid_auth',
-        }),
+        json: () =>
+          Promise.resolve({
+            ok: false,
+            error: 'invalid_auth',
+          }),
       });
 
       const response = await fetch('https://slack.com/api/auth.test', {
         headers: {
-          'Authorization': 'Bearer invalid_token',
+          Authorization: 'Bearer invalid_token',
         },
       });
 
@@ -511,16 +547,17 @@ describe('Slack Messaging Adapter', () => {
     it('should handle rate limiting', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: false,
-          error: 'ratelimited',
-        }),
+        json: () =>
+          Promise.resolve({
+            ok: false,
+            error: 'ratelimited',
+          }),
       });
 
       const response = await fetch('https://slack.com/api/chat.postMessage', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
+          Authorization: `Bearer ${mockConfig.botToken}`,
         },
       });
 
@@ -533,15 +570,16 @@ describe('Slack Messaging Adapter', () => {
     it('should handle channel not found', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: false,
-          error: 'channel_not_found',
-        }),
+        json: () =>
+          Promise.resolve({
+            ok: false,
+            error: 'channel_not_found',
+          }),
       });
 
       const response = await fetch('https://slack.com/api/conversations.info?channel=INVALID', {
         headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
+          Authorization: `Bearer ${mockConfig.botToken}`,
         },
       });
 
@@ -556,20 +594,21 @@ describe('Slack Messaging Adapter', () => {
     it('should verify authentication', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          ok: true,
-          url: 'https://test-workspace.slack.com',
-          team: 'Test Workspace',
-          user: 'testbot',
-          team_id: 'T12345678',
-          user_id: 'U12345678',
-          bot_id: 'B12345678',
-        }),
+        json: () =>
+          Promise.resolve({
+            ok: true,
+            url: 'https://test-workspace.slack.com',
+            team: 'Test Workspace',
+            user: 'testbot',
+            team_id: 'T12345678',
+            user_id: 'U12345678',
+            bot_id: 'B12345678',
+          }),
       });
 
       const response = await fetch('https://slack.com/api/auth.test', {
         headers: {
-          'Authorization': `Bearer ${mockConfig.botToken}`,
+          Authorization: `Bearer ${mockConfig.botToken}`,
         },
       });
 
@@ -602,20 +641,24 @@ describe('Microsoft Teams Messaging Adapter', () => {
     it('should obtain access token', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          access_token: 'new_access_token',
-          token_type: 'Bearer',
-          expires_in: 3600,
-        }),
+        json: () =>
+          Promise.resolve({
+            access_token: 'new_access_token',
+            token_type: 'Bearer',
+            expires_in: 3600,
+          }),
       });
 
-      const response = await fetch(`https://login.microsoftonline.com/${mockConfig.tenantId}/oauth2/v2.0/token`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: 'grant_type=client_credentials&scope=https://graph.microsoft.com/.default',
-      });
+      const response = await fetch(
+        `https://login.microsoftonline.com/${mockConfig.tenantId}/oauth2/v2.0/token`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: 'grant_type=client_credentials&scope=https://graph.microsoft.com/.default',
+        }
+      );
 
       const result = await response.json();
 
@@ -627,17 +670,18 @@ describe('Microsoft Teams Messaging Adapter', () => {
     it('should list teams', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          value: [
-            { id: 'team1', displayName: 'Team One' },
-            { id: 'team2', displayName: 'Team Two' },
-          ],
-        }),
+        json: () =>
+          Promise.resolve({
+            value: [
+              { id: 'team1', displayName: 'Team One' },
+              { id: 'team2', displayName: 'Team Two' },
+            ],
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/teams', {
         headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
+          Authorization: `Bearer ${mockAccessToken}`,
         },
       });
 
@@ -649,17 +693,18 @@ describe('Microsoft Teams Messaging Adapter', () => {
     it('should get team by ID', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          id: 'team1',
-          displayName: 'Team One',
-          description: 'First team',
-          visibility: 'private',
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'team1',
+            displayName: 'Team One',
+            description: 'First team',
+            visibility: 'private',
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/teams/team1', {
         headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
+          Authorization: `Bearer ${mockAccessToken}`,
         },
       });
 
@@ -681,7 +726,7 @@ describe('Microsoft Teams Messaging Adapter', () => {
       const response = await fetch('https://graph.microsoft.com/v1.0/teams', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
+          Authorization: `Bearer ${mockAccessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -700,17 +745,18 @@ describe('Microsoft Teams Messaging Adapter', () => {
     it('should list channels', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          value: [
-            { id: 'channel1', displayName: 'General' },
-            { id: 'channel2', displayName: 'Random' },
-          ],
-        }),
+        json: () =>
+          Promise.resolve({
+            value: [
+              { id: 'channel1', displayName: 'General' },
+              { id: 'channel2', displayName: 'Random' },
+            ],
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/teams/team1/channels', {
         headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
+          Authorization: `Bearer ${mockAccessToken}`,
         },
       });
 
@@ -723,17 +769,18 @@ describe('Microsoft Teams Messaging Adapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 201,
-        json: () => Promise.resolve({
-          id: 'new_channel',
-          displayName: 'New Channel',
-          membershipType: 'standard',
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'new_channel',
+            displayName: 'New Channel',
+            membershipType: 'standard',
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/teams/team1/channels', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
+          Authorization: `Bearer ${mockAccessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -753,12 +800,15 @@ describe('Microsoft Teams Messaging Adapter', () => {
         status: 204,
       });
 
-      const response = await fetch('https://graph.microsoft.com/v1.0/teams/team1/channels/channel1', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://graph.microsoft.com/v1.0/teams/team1/channels/channel1',
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${mockAccessToken}`,
+          },
+        }
+      );
 
       expect(response.ok).toBe(true);
       expect(response.status).toBe(204);
@@ -770,29 +820,33 @@ describe('Microsoft Teams Messaging Adapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 201,
-        json: () => Promise.resolve({
-          id: 'msg1',
-          body: {
-            contentType: 'text',
-            content: 'Hello Teams!',
-          },
-          createdDateTime: new Date().toISOString(),
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'msg1',
+            body: {
+              contentType: 'text',
+              content: 'Hello Teams!',
+            },
+            createdDateTime: new Date().toISOString(),
+          }),
       });
 
-      const response = await fetch('https://graph.microsoft.com/v1.0/teams/team1/channels/channel1/messages', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          body: {
-            contentType: 'text',
-            content: 'Hello Teams!',
+      const response = await fetch(
+        'https://graph.microsoft.com/v1.0/teams/team1/channels/channel1/messages',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${mockAccessToken}`,
+            'Content-Type': 'application/json',
           },
-        }),
-      });
+          body: JSON.stringify({
+            body: {
+              contentType: 'text',
+              content: 'Hello Teams!',
+            },
+          }),
+        }
+      );
 
       const result = await response.json();
 
@@ -804,28 +858,32 @@ describe('Microsoft Teams Messaging Adapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 201,
-        json: () => Promise.resolve({
-          id: 'reply1',
-          body: {
-            contentType: 'text',
-            content: 'This is a reply',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'reply1',
+            body: {
+              contentType: 'text',
+              content: 'This is a reply',
+            },
+          }),
       });
 
-      const response = await fetch('https://graph.microsoft.com/v1.0/teams/team1/channels/channel1/messages/msg1/replies', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          body: {
-            contentType: 'text',
-            content: 'This is a reply',
+      const response = await fetch(
+        'https://graph.microsoft.com/v1.0/teams/team1/channels/channel1/messages/msg1/replies',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${mockAccessToken}`,
+            'Content-Type': 'application/json',
           },
-        }),
-      });
+          body: JSON.stringify({
+            body: {
+              contentType: 'text',
+              content: 'This is a reply',
+            },
+          }),
+        }
+      );
 
       const result = await response.json();
 
@@ -835,19 +893,23 @@ describe('Microsoft Teams Messaging Adapter', () => {
     it('should list channel messages', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          value: [
-            { id: 'msg1', body: { content: 'Message 1' } },
-            { id: 'msg2', body: { content: 'Message 2' } },
-          ],
-        }),
+        json: () =>
+          Promise.resolve({
+            value: [
+              { id: 'msg1', body: { content: 'Message 1' } },
+              { id: 'msg2', body: { content: 'Message 2' } },
+            ],
+          }),
       });
 
-      const response = await fetch('https://graph.microsoft.com/v1.0/teams/team1/channels/channel1/messages?$top=10', {
-        headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
-        },
-      });
+      const response = await fetch(
+        'https://graph.microsoft.com/v1.0/teams/team1/channels/channel1/messages?$top=10',
+        {
+          headers: {
+            Authorization: `Bearer ${mockAccessToken}`,
+          },
+        }
+      );
 
       const result = await response.json();
 
@@ -859,17 +921,18 @@ describe('Microsoft Teams Messaging Adapter', () => {
     it('should list chats', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          value: [
-            { id: 'chat1', chatType: 'oneOnOne' },
-            { id: 'chat2', chatType: 'group' },
-          ],
-        }),
+        json: () =>
+          Promise.resolve({
+            value: [
+              { id: 'chat1', chatType: 'oneOnOne' },
+              { id: 'chat2', chatType: 'group' },
+            ],
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/chats', {
         headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
+          Authorization: `Bearer ${mockAccessToken}`,
         },
       });
 
@@ -882,17 +945,18 @@ describe('Microsoft Teams Messaging Adapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 201,
-        json: () => Promise.resolve({
-          id: 'new_chat',
-          chatType: 'group',
-          topic: 'Project Discussion',
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'new_chat',
+            chatType: 'group',
+            topic: 'Project Discussion',
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/chats', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
+          Authorization: `Bearer ${mockAccessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -918,16 +982,17 @@ describe('Microsoft Teams Messaging Adapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 201,
-        json: () => Promise.resolve({
-          id: 'chat_msg1',
-          body: { content: 'Hello from chat!' },
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'chat_msg1',
+            body: { content: 'Hello from chat!' },
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/chats/chat1/messages', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
+          Authorization: `Bearer ${mockAccessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -948,17 +1013,18 @@ describe('Microsoft Teams Messaging Adapter', () => {
     it('should list team members', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          value: [
-            { id: 'member1', displayName: 'User One', roles: ['owner'] },
-            { id: 'member2', displayName: 'User Two', roles: ['member'] },
-          ],
-        }),
+        json: () =>
+          Promise.resolve({
+            value: [
+              { id: 'member1', displayName: 'User One', roles: ['owner'] },
+              { id: 'member2', displayName: 'User Two', roles: ['member'] },
+            ],
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/teams/team1/members', {
         headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
+          Authorization: `Bearer ${mockAccessToken}`,
         },
       });
 
@@ -971,16 +1037,17 @@ describe('Microsoft Teams Messaging Adapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 201,
-        json: () => Promise.resolve({
-          id: 'new_member',
-          roles: ['member'],
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'new_member',
+            roles: ['member'],
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/teams/team1/members', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
+          Authorization: `Bearer ${mockAccessToken}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -1004,7 +1071,7 @@ describe('Microsoft Teams Messaging Adapter', () => {
       const response = await fetch('https://graph.microsoft.com/v1.0/teams/team1/members/member1', {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
+          Authorization: `Bearer ${mockAccessToken}`,
         },
       });
 
@@ -1038,17 +1105,18 @@ describe('Microsoft Teams Messaging Adapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
-        json: () => Promise.resolve({
-          error: {
-            code: 'InvalidAuthenticationToken',
-            message: 'Access token is empty.',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            error: {
+              code: 'InvalidAuthenticationToken',
+              message: 'Access token is empty.',
+            },
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/teams', {
         headers: {
-          'Authorization': 'Bearer invalid',
+          Authorization: 'Bearer invalid',
         },
       });
 
@@ -1060,17 +1128,18 @@ describe('Microsoft Teams Messaging Adapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 404,
-        json: () => Promise.resolve({
-          error: {
-            code: 'NotFound',
-            message: 'Team not found',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            error: {
+              code: 'NotFound',
+              message: 'Team not found',
+            },
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/teams/invalid_team', {
         headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
+          Authorization: `Bearer ${mockAccessToken}`,
         },
       });
 
@@ -1083,19 +1152,20 @@ describe('Microsoft Teams Messaging Adapter', () => {
         ok: false,
         status: 429,
         headers: {
-          get: (name: string) => name === 'Retry-After' ? '60' : null,
+          get: (name: string) => (name === 'Retry-After' ? '60' : null),
         },
-        json: () => Promise.resolve({
-          error: {
-            code: 'TooManyRequests',
-            message: 'Too many requests',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            error: {
+              code: 'TooManyRequests',
+              message: 'Too many requests',
+            },
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/teams', {
         headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
+          Authorization: `Bearer ${mockAccessToken}`,
         },
       });
 
@@ -1108,16 +1178,17 @@ describe('Microsoft Teams Messaging Adapter', () => {
     it('should check connection health', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          id: 'user1',
-          displayName: 'Test User',
-          mail: 'test@company.com',
-        }),
+        json: () =>
+          Promise.resolve({
+            id: 'user1',
+            displayName: 'Test User',
+            mail: 'test@company.com',
+          }),
       });
 
       const response = await fetch('https://graph.microsoft.com/v1.0/me', {
         headers: {
-          'Authorization': `Bearer ${mockAccessToken}`,
+          Authorization: `Bearer ${mockAccessToken}`,
         },
       });
 

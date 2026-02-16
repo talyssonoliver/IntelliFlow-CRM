@@ -2,7 +2,13 @@ import { DomainEvent } from '../../shared/DomainEvent';
 import { TaskId } from './TaskId';
 
 // Canonical enum values - single source of truth
-export const TASK_STATUSES = ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'ARCHIVED'] as const;
+export const TASK_STATUSES = [
+  'PENDING',
+  'IN_PROGRESS',
+  'COMPLETED',
+  'CANCELLED',
+  'ARCHIVED',
+] as const;
 export const TASK_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const;
 
 // Derive types from const arrays

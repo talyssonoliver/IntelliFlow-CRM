@@ -58,9 +58,7 @@ describeIntegration('Lead Router - Integration Tests', () => {
 
       // Use a valid UUID format that doesn't exist in the database
       const nonExistentUuid = '00000000-0000-4000-8000-000000999999';
-      await expect(
-        caller.getById({ id: nonExistentUuid })
-      ).rejects.toThrow(/not found/i);
+      await expect(caller.getById({ id: nonExistentUuid })).rejects.toThrow(/not found/i);
     });
   });
 
@@ -292,7 +290,7 @@ describeIntegration('Lead Router - Integration Tests', () => {
       try {
         const result = await caller.qualify({
           leadId: testLead.id,
-          reason: 'Test qualification for integration test'
+          reason: 'Test qualification for integration test',
         });
         expect(result.status).toBe('QUALIFIED');
       } finally {

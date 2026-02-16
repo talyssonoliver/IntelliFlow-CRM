@@ -83,7 +83,15 @@ describe('Avatar', () => {
         </Avatar>
       );
       const avatar = screen.getByTestId('avatar');
-      expect(avatar).toHaveClass('relative', 'flex', 'h-10', 'w-10', 'shrink-0', 'overflow-hidden', 'rounded-full');
+      expect(avatar).toHaveClass(
+        'relative',
+        'flex',
+        'h-10',
+        'w-10',
+        'shrink-0',
+        'overflow-hidden',
+        'rounded-full'
+      );
     });
 
     it('should apply custom className to AvatarImage', () => {

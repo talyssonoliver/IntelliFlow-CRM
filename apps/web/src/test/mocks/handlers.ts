@@ -58,18 +58,21 @@ const mockQualityReports = {
 };
 
 // Track test runs
-const testRuns = new Map<string, {
-  runId: string;
-  status: 'pending' | 'running' | 'completed' | 'failed';
-  progress: {
-    testsRun: number;
-    testsPassed: number;
-    testsFailed: number;
-    testsSkipped: number;
-  };
-  startedAt: string;
-  completedAt?: string;
-}>();
+const testRuns = new Map<
+  string,
+  {
+    runId: string;
+    status: 'pending' | 'running' | 'completed' | 'failed';
+    progress: {
+      testsRun: number;
+      testsPassed: number;
+      testsFailed: number;
+      testsSkipped: number;
+    };
+    startedAt: string;
+    completedAt?: string;
+  }
+>();
 
 export const handlers = [
   // Quality Reports API
@@ -88,23 +91,17 @@ export const handlers = [
       const id = url.searchParams.get('id');
       const report = mockQualityReports.reports.find((r) => r.id === id);
       if (!report) {
-        return HttpResponse.json(
-          { success: false, error: 'Report not found' },
-          { status: 404 }
-        );
+        return HttpResponse.json({ success: false, error: 'Report not found' }, { status: 404 });
       }
       return HttpResponse.json({ success: true, data: report });
     }
 
-    return HttpResponse.json(
-      { success: false, error: 'Unknown action' },
-      { status: 400 }
-    );
+    return HttpResponse.json({ success: false, error: 'Unknown action' }, { status: 400 });
   }),
 
   // Start test run
   http.post('/api/quality-reports/test-run', async ({ request }) => {
-    const body = await request.json() as { scope?: string; coverage?: boolean };
+    const body = (await request.json()) as { scope?: string; coverage?: boolean };
     const runId = `test-mock-${Date.now()}`;
     const scope = body.scope ?? 'all';
     const withCoverage = body.coverage ?? false;
@@ -171,10 +168,7 @@ export const handlers = [
     const run = testRuns.get(runId as string);
 
     if (!run) {
-      return HttpResponse.json(
-        { success: false, error: 'Test run not found' },
-        { status: 404 }
-      );
+      return HttpResponse.json({ success: false, error: 'Test run not found' }, { status: 404 });
     }
 
     return HttpResponse.json({
@@ -189,10 +183,7 @@ export const handlers = [
     const run = testRuns.get(runId as string);
 
     if (!run) {
-      return HttpResponse.json(
-        { success: false, error: 'Test run not found' },
-        { status: 404 }
-      );
+      return HttpResponse.json({ success: false, error: 'Test run not found' }, { status: 404 });
     }
 
     run.status = 'failed';
@@ -211,10 +202,7 @@ export const handlers = [
     const runId = url.searchParams.get('runId');
 
     if (!runId) {
-      return HttpResponse.json(
-        { error: 'runId is required' },
-        { status: 400 }
-      );
+      return HttpResponse.json({ error: 'runId is required' }, { status: 400 });
     }
 
     // Return a simple response for tests (real SSE testing requires special setup)

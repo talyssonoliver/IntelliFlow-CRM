@@ -47,11 +47,13 @@ export const ScoringJobResultSchema = z.object({
   score: z.number().min(0).max(100),
   confidence: z.number().min(0).max(1),
   tier: z.enum(['HOT', 'WARM', 'COLD', 'UNQUALIFIED']),
-  factors: z.array(z.object({
-    name: z.string(),
-    impact: z.number(),
-    reasoning: z.string(),
-  })),
+  factors: z.array(
+    z.object({
+      name: z.string(),
+      impact: z.number(),
+      reasoning: z.string(),
+    })
+  ),
   recommendations: z.array(z.string()),
   modelVersion: z.string(),
   processedAt: z.string().datetime(),

@@ -6,15 +6,7 @@
  * Lazy-loaded via React.lazy() from SentimentDashboard for bundle optimization.
  */
 
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  Legend,
-} from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import type { SentimentTrendPoint } from '@/lib/sentiment/types';
 
 interface SentimentTrendProps {
@@ -50,11 +42,7 @@ export default function SentimentTrend({ trends }: SentimentTrendProps) {
             stroke="currentColor"
             className="text-muted-foreground"
           />
-          <YAxis
-            tick={{ fontSize: 12 }}
-            stroke="currentColor"
-            className="text-muted-foreground"
-          />
+          <YAxis tick={{ fontSize: 12 }} stroke="currentColor" className="text-muted-foreground" />
           <Tooltip
             contentStyle={{
               backgroundColor: 'var(--color-popover, #fff)',

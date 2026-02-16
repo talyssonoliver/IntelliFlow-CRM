@@ -21,12 +21,7 @@
 
 import { randomBytes } from 'crypto';
 import { AuditLogger } from './audit-logger';
-import {
-  EncryptionService,
-  EncryptedData,
-  KeyMetadata,
-  EncryptionError,
-} from './encryption';
+import { EncryptionService, EncryptedData, KeyMetadata, EncryptionError } from './encryption';
 
 /**
  * Key rotation configuration
@@ -80,7 +75,11 @@ export interface ReEncryptionProgress {
  */
 export interface DataProvider {
   /** Get records that need re-encryption (by key version) */
-  getRecordsByKeyVersion(version: number, limit: number, offset: number): Promise<EncryptedRecord[]>;
+  getRecordsByKeyVersion(
+    version: number,
+    limit: number,
+    offset: number
+  ): Promise<EncryptedRecord[]>;
   /** Update a record with new encrypted data */
   updateRecord(id: string, encryptedData: EncryptedData): Promise<void>;
   /** Get total count of records for a key version */
@@ -185,23 +184,16 @@ export class VaultKeyVersionStore implements KeyVersionStore {
   private vaultToken: string;
   private keyName: string;
 
-  constructor(options?: {
-    address?: string;
-    token?: string;
-    keyName?: string;
-  }) {
+  constructor(options?: { address?: string; token?: string; keyName?: string }) {
     this.vaultAddress = options?.address || process.env.VAULT_ADDR || 'http://127.0.0.1:8200';
     this.vaultToken = options?.token || process.env.VAULT_TOKEN || '';
     this.keyName = options?.keyName || 'intelliflow-data-key';
   }
 
   async getCurrentVersion(): Promise<number> {
-    const response = await fetch(
-      `${this.vaultAddress}/v1/transit/keys/${this.keyName}`,
-      {
-        headers: { 'X-Vault-Token': this.vaultToken },
-      },
-    );
+    const response = await fetch(`${this.vaultAddress}/v1/transit/keys/${this.keyName}`, {
+      headers: { 'X-Vault-Token': this.vaultToken },
+    });
 
     if (!response.ok) throw new Error('Failed to get current key version from Vault');
     const data = (await response.json()) as { data: { latest_version: number } };
@@ -210,32 +202,28 @@ export class VaultKeyVersionStore implements KeyVersionStore {
 
   async setCurrentVersion(version: number): Promise<void> {
     // Vault manages this automatically during rotation
-    await fetch(
-      `${this.vaultAddress}/v1/transit/keys/${this.keyName}/config`,
-      {
-        method: 'POST',
-        headers: {
-          'X-Vault-Token': this.vaultToken,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          min_decryption_version: version - 4, // Keep last 4 versions
-          min_encryption_version: version,
-        }),
+    await fetch(`${this.vaultAddress}/v1/transit/keys/${this.keyName}/config`, {
+      method: 'POST',
+      headers: {
+        'X-Vault-Token': this.vaultToken,
+        'Content-Type': 'application/json',
       },
-    );
+      body: JSON.stringify({
+        min_decryption_version: version - 4, // Keep last 4 versions
+        min_encryption_version: version,
+      }),
+    });
   }
 
   async getVersionMetadata(version: number): Promise<KeyMetadata | null> {
-    const response = await fetch(
-      `${this.vaultAddress}/v1/transit/keys/${this.keyName}`,
-      {
-        headers: { 'X-Vault-Token': this.vaultToken },
-      },
-    );
+    const response = await fetch(`${this.vaultAddress}/v1/transit/keys/${this.keyName}`, {
+      headers: { 'X-Vault-Token': this.vaultToken },
+    });
 
     if (!response.ok) return null;
-    const data = (await response.json()) as { data: { keys: Record<number, { creation_time: string }>; type: string } };
+    const data = (await response.json()) as {
+      data: { keys: Record<number, { creation_time: string }>; type: string };
+    };
     const keys = data.data.keys;
 
     if (!keys[version]) return null;
@@ -259,31 +247,27 @@ export class VaultKeyVersionStore implements KeyVersionStore {
     }
 
     // Update min_decryption_version to prevent decryption with deprecated key
-    await fetch(
-      `${this.vaultAddress}/v1/transit/keys/${this.keyName}/config`,
-      {
-        method: 'POST',
-        headers: {
-          'X-Vault-Token': this.vaultToken,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          min_decryption_version: version + 1,
-        }),
+    await fetch(`${this.vaultAddress}/v1/transit/keys/${this.keyName}/config`, {
+      method: 'POST',
+      headers: {
+        'X-Vault-Token': this.vaultToken,
+        'Content-Type': 'application/json',
       },
-    );
+      body: JSON.stringify({
+        min_decryption_version: version + 1,
+      }),
+    });
   }
 
   async listVersions(): Promise<KeyMetadata[]> {
-    const response = await fetch(
-      `${this.vaultAddress}/v1/transit/keys/${this.keyName}`,
-      {
-        headers: { 'X-Vault-Token': this.vaultToken },
-      },
-    );
+    const response = await fetch(`${this.vaultAddress}/v1/transit/keys/${this.keyName}`, {
+      headers: { 'X-Vault-Token': this.vaultToken },
+    });
 
     if (!response.ok) return [];
-    const data = (await response.json()) as { data: { keys: Record<string, { creation_time: string }>; type: string } };
+    const data = (await response.json()) as {
+      data: { keys: Record<string, { creation_time: string }>; type: string };
+    };
     const keys = data.data.keys;
 
     return Object.entries(keys).map(([version, info]) => ({
@@ -309,7 +293,7 @@ export class KeyRotationService {
     config?: Partial<KeyRotationConfig>,
     versionStore?: KeyVersionStore,
     encryptionService?: EncryptionService,
-    auditLogger?: AuditLogger,
+    auditLogger?: AuditLogger
   ) {
     this.config = {
       enabled: true,
@@ -341,10 +325,7 @@ export class KeyRotationService {
       if (this.config.preRotationValidation) {
         const valid = await this.preRotationValidation(previousVersion);
         if (!valid) {
-          throw new EncryptionError(
-            'PRE_ROTATION_FAILED',
-            'Pre-rotation validation failed',
-          );
+          throw new EncryptionError('PRE_ROTATION_FAILED', 'Pre-rotation validation failed');
         }
       }
 
@@ -438,7 +419,7 @@ export class KeyRotationService {
    */
   async reEncryptData(
     dataProvider: DataProvider,
-    targetVersion?: number,
+    targetVersion?: number
   ): Promise<ReEncryptionProgress> {
     const currentVersion = await this.versionStore.getCurrentVersion();
     const versionsToMigrate = targetVersion
@@ -467,14 +448,14 @@ export class KeyRotationService {
           const records = await dataProvider.getRecordsByKeyVersion(
             version,
             this.config.reEncryptionBatchSize,
-            offset,
+            offset
           );
 
           const results = await Promise.allSettled(
             records.map(async (record) => {
               const reEncrypted = await this.encryptionService.reEncrypt(record.encryptedData);
               await dataProvider.updateRecord(record.id, reEncrypted);
-            }),
+            })
           );
 
           processedRecords += results.filter((r) => r.status === 'fulfilled').length;
@@ -552,7 +533,9 @@ export class KeyRotationService {
 
     const currentMetadata = await this.versionStore.getVersionMetadata(currentVersion);
     const nextRotationDue = currentMetadata
-      ? new Date(currentMetadata.createdAt.getTime() + this.config.intervalDays * 24 * 60 * 60 * 1000)
+      ? new Date(
+          currentMetadata.createdAt.getTime() + this.config.intervalDays * 24 * 60 * 60 * 1000
+        )
       : undefined;
 
     return {
@@ -628,7 +611,7 @@ export class KeyRotationService {
    */
   private async sendRotationNotification(
     newVersion: number,
-    previousVersion: number,
+    previousVersion: number
   ): Promise<void> {
     if (!this.config.notificationWebhook) return;
 
@@ -670,9 +653,7 @@ let keyRotationServiceInstance: KeyRotationService | null = null;
 export function getKeyRotationService(): KeyRotationService {
   if (!keyRotationServiceInstance) {
     const useVault = process.env.VAULT_ENABLED === 'true';
-    const versionStore = useVault
-      ? new VaultKeyVersionStore()
-      : new InMemoryKeyVersionStore();
+    const versionStore = useVault ? new VaultKeyVersionStore() : new InMemoryKeyVersionStore();
 
     keyRotationServiceInstance = new KeyRotationService(
       {
@@ -681,7 +662,7 @@ export function getKeyRotationService(): KeyRotationService {
         retentionVersions: parseInt(process.env.KEY_RETENTION_VERSIONS || '5'),
         notificationWebhook: process.env.KEY_ROTATION_WEBHOOK,
       },
-      versionStore,
+      versionStore
     );
   }
   return keyRotationServiceInstance;

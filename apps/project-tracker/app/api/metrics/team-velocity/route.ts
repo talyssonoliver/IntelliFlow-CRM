@@ -74,8 +74,8 @@ function loadAttestationData(): Map<string, AttestationData> {
     if (!existsSync(attestationsDir)) return attestations;
 
     const taskDirs = readdirSync(attestationsDir, { withFileTypes: true })
-      .filter(d => d.isDirectory())
-      .map(d => d.name);
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name);
 
     for (const taskId of taskDirs) {
       const ackPath = join(attestationsDir, taskId, 'context_ack.json');
@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Filter out continuous tasks for velocity calculation
-    const sprintTasks = allTasks.filter(t => typeof t.sprint === 'number');
+    const sprintTasks = allTasks.filter((t) => typeof t.sprint === 'number');
 
     // Calculate velocity by sprint
     const sprintMap = new Map<number, { planned: number; completed: number }>();
@@ -141,9 +141,7 @@ export async function GET(request: NextRequest) {
         sprint,
         planned: counts.planned,
         completed: counts.completed,
-        velocity: counts.planned > 0
-          ? Math.round((counts.completed / counts.planned) * 100)
-          : 0,
+        velocity: counts.planned > 0 ? Math.round((counts.completed / counts.planned) * 100) : 0,
         tasksPerDay: Math.round((counts.completed / 10) * 10) / 10, // 10-day sprint assumption
       }))
       .sort((a, b) => a.sprint - b.sprint);
@@ -174,14 +172,17 @@ export async function GET(request: NextRequest) {
         completed: counts.completed,
         inProgress: counts.inProgress,
         planned: counts.planned,
-        completionRate: (counts.completed + counts.inProgress + counts.planned) > 0
-          ? Math.round((counts.completed / (counts.completed + counts.inProgress + counts.planned)) * 100)
-          : 0,
+        completionRate:
+          counts.completed + counts.inProgress + counts.planned > 0
+            ? Math.round(
+                (counts.completed / (counts.completed + counts.inProgress + counts.planned)) * 100
+              )
+            : 0,
       }))
       .sort((a, b) => b.completed - a.completed);
 
     if (ownerFilter) {
-      ownerVelocities = ownerVelocities.filter(o =>
+      ownerVelocities = ownerVelocities.filter((o) =>
         o.owner.toLowerCase().includes(ownerFilter.toLowerCase())
       );
     }
@@ -207,15 +208,13 @@ export async function GET(request: NextRequest) {
         section,
         completed: counts.completed,
         total: counts.total,
-        completionRate: counts.total > 0
-          ? Math.round((counts.completed / counts.total) * 100)
-          : 0,
+        completionRate: counts.total > 0 ? Math.round((counts.completed / counts.total) * 100) : 0,
       }))
       .sort((a, b) => b.completionRate - a.completionRate);
 
     // Calculate overall metrics
     const totalTasks = allTasks.length;
-    const completedTasks = allTasks.filter(t => {
+    const completedTasks = allTasks.filter((t) => {
       const status = t.status.toLowerCase();
       return status === 'completed' || status === 'done';
     }).length;
@@ -224,18 +223,27 @@ export async function GET(request: NextRequest) {
     const attestedTasks = Array.from(attestations.values());
     const kpiSummary = {
       tasksWithAttestation: attestedTasks.length,
-      tasksComplete: attestedTasks.filter(a => a.verdict === 'COMPLETE').length,
+      tasksComplete: attestedTasks.filter((a) => a.verdict === 'COMPLETE').length,
       totalKpisMet: attestedTasks.reduce((sum, a) => sum + (a.evidence_summary?.kpis_met || 0), 0),
-      totalValidationsPassed: attestedTasks.reduce((sum, a) => sum + (a.evidence_summary?.validations_passed || 0), 0),
-      totalArtifactsVerified: attestedTasks.reduce((sum, a) => sum + (a.evidence_summary?.artifacts_verified || 0), 0),
+      totalValidationsPassed: attestedTasks.reduce(
+        (sum, a) => sum + (a.evidence_summary?.validations_passed || 0),
+        0
+      ),
+      totalArtifactsVerified: attestedTasks.reduce(
+        (sum, a) => sum + (a.evidence_summary?.artifacts_verified || 0),
+        0
+      ),
     };
 
     // Calculate trend (comparing last 3 sprints)
     const recentSprints = sprintVelocities.slice(-3);
     let trend = 'stable';
     if (recentSprints.length >= 2) {
-      const avgRecent = recentSprints.reduce((sum, s) => sum + s.velocity, 0) / recentSprints.length;
-      const avgPrevious = sprintVelocities.slice(-6, -3).reduce((sum, s) => sum + s.velocity, 0) / Math.max(1, sprintVelocities.slice(-6, -3).length);
+      const avgRecent =
+        recentSprints.reduce((sum, s) => sum + s.velocity, 0) / recentSprints.length;
+      const avgPrevious =
+        sprintVelocities.slice(-6, -3).reduce((sum, s) => sum + s.velocity, 0) /
+        Math.max(1, sprintVelocities.slice(-6, -3).length);
       if (avgRecent > avgPrevious * 1.1) trend = 'improving';
       else if (avgRecent < avgPrevious * 0.9) trend = 'declining';
     }
@@ -245,7 +253,7 @@ export async function GET(request: NextRequest) {
     if (sprintFilter) {
       const sprintNum = parseInt(sprintFilter, 10);
       if (!isNaN(sprintNum)) {
-        filteredSprintVelocities = sprintVelocities.filter(s => s.sprint === sprintNum);
+        filteredSprintVelocities = sprintVelocities.filter((s) => s.sprint === sprintNum);
       }
     }
 
@@ -262,9 +270,12 @@ export async function GET(request: NextRequest) {
           totalTasks,
           completedTasks,
           overallCompletionRate: Math.round((completedTasks / totalTasks) * 100),
-          averageVelocity: sprintVelocities.length > 0
-            ? Math.round(sprintVelocities.reduce((sum, s) => sum + s.velocity, 0) / sprintVelocities.length)
-            : 0,
+          averageVelocity:
+            sprintVelocities.length > 0
+              ? Math.round(
+                  sprintVelocities.reduce((sum, s) => sum + s.velocity, 0) / sprintVelocities.length
+                )
+              : 0,
           trend,
         },
         // KPI tracking from attestations (single source of truth)

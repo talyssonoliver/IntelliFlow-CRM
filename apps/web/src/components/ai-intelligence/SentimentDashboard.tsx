@@ -21,11 +21,7 @@ import {
   Skeleton,
   cn,
 } from '@intelliflow/ui';
-import {
-  PageHeader,
-  SearchFilterBar,
-  useMultiFilterState,
-} from '@/components/shared';
+import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
 import { useSentimentDashboard } from '@/lib/sentiment/hooks';
 import type { SentimentFilters } from '@/lib/sentiment/hooks';
 import type { SentimentAnalysis } from '@/lib/sentiment/types';
@@ -70,12 +66,7 @@ function StatCard({
     <Card>
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              'h-10 w-10 rounded-lg flex items-center justify-center',
-              colorClass,
-            )}
-          >
+          <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', colorClass)}>
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               {icon}
             </span>
@@ -108,7 +99,10 @@ const SENTIMENT_OPTIONS = [
   { value: '', label: 'All Sentiments' },
   ...SENTIMENT_LABELS.map((s) => ({
     value: s,
-    label: s.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()),
+    label: s
+      .replace(/_/g, ' ')
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase()),
   })),
 ];
 
@@ -149,19 +143,23 @@ function AnalysisCard({ analysis }: { analysis: SentimentAnalysis }) {
           {/* Header: entity + sentiment badge */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className={cn(
-                'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium',
-                getSentimentBadgeClass(analysis.sentiment),
-              )}>
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium',
+                  getSentimentBadgeClass(analysis.sentiment)
+                )}
+              >
                 <span className="material-symbols-outlined text-sm" aria-hidden="true">
                   {getSentimentIcon(analysis.sentiment)}
                 </span>
                 {analysis.sentiment.replace(/_/g, ' ')}
               </span>
-              <span className={cn(
-                'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
-                getUrgencyBadgeClass(analysis.urgency),
-              )}>
+              <span
+                className={cn(
+                  'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
+                  getUrgencyBadgeClass(analysis.urgency)
+                )}
+              >
                 {analysis.urgency}
               </span>
             </div>
@@ -184,7 +182,10 @@ function AnalysisCard({ analysis }: { analysis: SentimentAnalysis }) {
               {topEmotions.map((e) => (
                 <span
                   key={e.emotion}
-                  className={cn('inline-flex items-center gap-1 text-xs', getEmotionColor(e.emotion))}
+                  className={cn(
+                    'inline-flex items-center gap-1 text-xs',
+                    getEmotionColor(e.emotion)
+                  )}
                 >
                   <span className="material-symbols-outlined text-sm" aria-hidden="true">
                     {getEmotionIcon(e.emotion)}
@@ -207,7 +208,7 @@ function AnalysisCard({ analysis }: { analysis: SentimentAnalysis }) {
                       ? 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400'
                       : kp.sentiment === 'negative'
                         ? 'bg-red-50 text-red-700 dark:bg-red-900/20 dark:text-red-400'
-                        : 'bg-slate-50 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400',
+                        : 'bg-slate-50 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400'
                   )}
                   title={kp.phrase}
                 >
@@ -221,8 +222,13 @@ function AnalysisCard({ analysis }: { analysis: SentimentAnalysis }) {
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>Confidence: {Math.round(analysis.confidence * 100)}%</span>
             {analysis.confidence < 0.3 && (
-              <span className="text-amber-600 dark:text-amber-400 flex items-center gap-0.5" data-testid="low-confidence-warning">
-                <span className="material-symbols-outlined text-sm" aria-hidden="true">warning</span>
+              <span
+                className="text-amber-600 dark:text-amber-400 flex items-center gap-0.5"
+                data-testid="low-confidence-warning"
+              >
+                <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                  warning
+                </span>
                 Low confidence
               </span>
             )}
@@ -270,19 +276,22 @@ export function SentimentDashboard() {
   const { stats, recentAnalyses, trends, isLoading, error, refetch } =
     useSentimentDashboard(filters);
 
-  const handleChipChange = useCallback((chipId: string) => {
-    setActiveChip(chipId);
-    if (chipId === 'positive') {
-      filterState.set('sentiment', 'POSITIVE');
-    } else if (chipId === 'negative') {
-      filterState.set('sentiment', 'NEGATIVE');
-    } else if (chipId === 'urgent') {
-      filterState.set('urgency', 'CRITICAL');
-    } else {
-      filterState.set('sentiment', '');
-      filterState.set('urgency', '');
-    }
-  }, [filterState]);
+  const handleChipChange = useCallback(
+    (chipId: string) => {
+      setActiveChip(chipId);
+      if (chipId === 'positive') {
+        filterState.set('sentiment', 'POSITIVE');
+      } else if (chipId === 'negative') {
+        filterState.set('sentiment', 'NEGATIVE');
+      } else if (chipId === 'urgent') {
+        filterState.set('urgency', 'CRITICAL');
+      } else {
+        filterState.set('sentiment', '');
+        filterState.set('urgency', '');
+      }
+    },
+    [filterState]
+  );
 
   const handleLoadMore = useCallback(() => {
     setPage((p) => p + 1);
@@ -292,30 +301,32 @@ export function SentimentDashboard() {
   let filteredAnalyses = recentAnalyses;
 
   if (filterState.values.sentiment) {
-    filteredAnalyses = filteredAnalyses.filter(
-      (a) => a.sentiment === filterState.values.sentiment,
-    );
+    filteredAnalyses = filteredAnalyses.filter((a) => a.sentiment === filterState.values.sentiment);
   }
 
   if (filterState.values.urgency) {
-    filteredAnalyses = filteredAnalyses.filter(
-      (a) => a.urgency === filterState.values.urgency,
-    );
+    filteredAnalyses = filteredAnalyses.filter((a) => a.urgency === filterState.values.urgency);
   }
 
   if (filterState.values.search) {
     const searchLower = filterState.values.search.toLowerCase();
-    filteredAnalyses = filteredAnalyses.filter(
-      (a) => a.entityName.toLowerCase().includes(searchLower),
+    filteredAnalyses = filteredAnalyses.filter((a) =>
+      a.entityName.toLowerCase().includes(searchLower)
     );
   }
 
   if (filterState.values.sort === 'score') {
     filteredAnalyses = [...filteredAnalyses].sort((a, b) => b.sentimentScore - a.sentimentScore);
   } else if (filterState.values.sort === 'urgency') {
-    const urgencyOrder: Record<string, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3, NONE: 4 };
+    const urgencyOrder: Record<string, number> = {
+      CRITICAL: 0,
+      HIGH: 1,
+      MEDIUM: 2,
+      LOW: 3,
+      NONE: 4,
+    };
     filteredAnalyses = [...filteredAnalyses].sort(
-      (a, b) => (urgencyOrder[a.urgency] ?? 4) - (urgencyOrder[b.urgency] ?? 4),
+      (a, b) => (urgencyOrder[a.urgency] ?? 4) - (urgencyOrder[b.urgency] ?? 4)
     );
   }
 
@@ -330,7 +341,12 @@ export function SentimentDashboard() {
         />
         <Card>
           <CardContent className="p-8 text-center">
-            <span className="material-symbols-outlined text-4xl text-red-500 mb-2" aria-hidden="true">error</span>
+            <span
+              className="material-symbols-outlined text-4xl text-red-500 mb-2"
+              aria-hidden="true"
+            >
+              error
+            </span>
             <p className="text-sm text-muted-foreground mb-4">Failed to load sentiment data</p>
             <Button onClick={() => refetch()} variant="outline" size="sm">
               Try again
@@ -352,11 +368,41 @@ export function SentimentDashboard() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        <StatCard label="Total" value={stats?.total ?? 0} icon="analytics" colorClass="bg-primary/10 text-primary" isLoading={isLoading} />
-        <StatCard label="Positive" value={stats?.positive ?? 0} icon="thumb_up" colorClass="bg-success/10 text-success" isLoading={isLoading} />
-        <StatCard label="Negative" value={stats?.negative ?? 0} icon="thumb_down" colorClass="bg-destructive/10 text-destructive" isLoading={isLoading} />
-        <StatCard label="Neutral" value={stats?.neutral ?? 0} icon="remove_circle_outline" colorClass="bg-muted text-muted-foreground" isLoading={isLoading} />
-        <StatCard label="Urgent" value={stats?.urgentCount ?? 0} icon="priority_high" colorClass="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" isLoading={isLoading} />
+        <StatCard
+          label="Total"
+          value={stats?.total ?? 0}
+          icon="analytics"
+          colorClass="bg-primary/10 text-primary"
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Positive"
+          value={stats?.positive ?? 0}
+          icon="thumb_up"
+          colorClass="bg-success/10 text-success"
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Negative"
+          value={stats?.negative ?? 0}
+          icon="thumb_down"
+          colorClass="bg-destructive/10 text-destructive"
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Neutral"
+          value={stats?.neutral ?? 0}
+          icon="remove_circle_outline"
+          colorClass="bg-muted text-muted-foreground"
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Urgent"
+          value={stats?.urgentCount ?? 0}
+          icon="priority_high"
+          colorClass="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+          isLoading={isLoading}
+        />
       </div>
 
       {/* Date Range + SearchFilterBar */}
@@ -437,7 +483,10 @@ export function SentimentDashboard() {
       ) : filteredAnalyses.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center" data-testid="empty-state">
-            <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2" aria-hidden="true">
+            <span
+              className="material-symbols-outlined text-4xl text-muted-foreground mb-2"
+              aria-hidden="true"
+            >
               sentiment_neutral
             </span>
             <p className="text-sm text-muted-foreground">No sentiment analyses found</p>
@@ -450,11 +499,7 @@ export function SentimentDashboard() {
           ))}
           {recentAnalyses.length >= 20 && (
             <div className="flex justify-center">
-              <Button
-                variant="outline"
-                onClick={handleLoadMore}
-                data-testid="load-more-button"
-              >
+              <Button variant="outline" onClick={handleLoadMore} data-testid="load-more-button">
                 Load more
               </Button>
             </div>

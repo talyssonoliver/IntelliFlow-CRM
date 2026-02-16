@@ -8,7 +8,14 @@
  */
 
 import { NextResponse } from 'next/server';
-import { readFileSync, writeFileSync, appendFileSync, existsSync, readdirSync, statSync } from 'node:fs';
+import {
+  readFileSync,
+  writeFileSync,
+  appendFileSync,
+  existsSync,
+  readdirSync,
+  statSync,
+} from 'node:fs';
 import { resolve, join } from 'node:path';
 import { execSync } from 'node:child_process';
 
@@ -25,7 +32,12 @@ function getRoot(): string {
 
 function safeExec(cmd: string, root: string): string {
   try {
-    return execSync(cmd, { cwd: root, encoding: 'utf-8', timeout: 15000, stdio: ['pipe', 'pipe', 'pipe'] }).trim();
+    return execSync(cmd, {
+      cwd: root,
+      encoding: 'utf-8',
+      timeout: 15000,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
   } catch {
     return '';
   }
@@ -76,7 +88,9 @@ export async function POST() {
     // AUTO-COLLECT: Turborepo
     // =============================================
     const turboJson = safeReadJson(resolve(root, 'turbo.json'));
-    const turboTaskCount = turboJson?.tasks ? Object.keys(turboJson.tasks).length : existing.turborepo_integration?.tasks_defined ?? 0;
+    const turboTaskCount = turboJson?.tasks
+      ? Object.keys(turboJson.tasks).length
+      : (existing.turborepo_integration?.tasks_defined ?? 0);
     const turboRemoteCache = !!turboJson?.remoteCache;
 
     // =============================================
@@ -86,7 +100,9 @@ export async function POST() {
     let workflowCount = 0;
     let workflowNames: string[] = [];
     if (existsSync(workflowDir)) {
-      const files = readdirSync(workflowDir).filter((f) => f.endsWith('.yml') || f.endsWith('.yaml'));
+      const files = readdirSync(workflowDir).filter(
+        (f) => f.endsWith('.yml') || f.endsWith('.yaml')
+      );
       workflowCount = files.length;
       workflowNames = files.map((f) => f.replace(/\.(yml|yaml)$/, ''));
     }
@@ -179,7 +195,8 @@ export async function POST() {
       if (existsSync(docPath)) {
         const content = readFileSync(docPath, 'utf-8').toLowerCase();
         const terms = gp.name.split('-');
-        const hasContent = content.includes(gp.name) || terms.every((t: string) => content.includes(t));
+        const hasContent =
+          content.includes(gp.name) || terms.every((t: string) => content.includes(t));
         if (hasContent) goldenPathsVerified++;
       }
     }
@@ -243,7 +260,8 @@ export async function POST() {
         next_collection_due: new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000).toISOString(),
       },
       platform_engineering_foundation: {
-        internal_developer_platform: existing.platform_engineering_foundation?.internal_developer_platform || {
+        internal_developer_platform: existing.platform_engineering_foundation
+          ?.internal_developer_platform || {
           status: 'operational',
           version: '1.0.0',
           capabilities: [
@@ -264,9 +282,25 @@ export async function POST() {
       self_service_deploy_metrics: existing.self_service_deploy_metrics || {
         enabled: true,
         deployment_types: {
-          preview_deployments: { enabled: true, provider: 'Vercel', trigger: 'pull_request', average_deploy_time_seconds: 120 },
-          staging_deployments: { enabled: true, provider: 'Railway', trigger: 'merge_to_main', average_deploy_time_seconds: 180 },
-          production_deployments: { enabled: true, provider: 'Easypanel', trigger: 'manual_approval', average_deploy_time_seconds: 240, requires_approval: true },
+          preview_deployments: {
+            enabled: true,
+            provider: 'Vercel',
+            trigger: 'pull_request',
+            average_deploy_time_seconds: 120,
+          },
+          staging_deployments: {
+            enabled: true,
+            provider: 'Railway',
+            trigger: 'merge_to_main',
+            average_deploy_time_seconds: 180,
+          },
+          production_deployments: {
+            enabled: true,
+            provider: 'Easypanel',
+            trigger: 'manual_approval',
+            average_deploy_time_seconds: 240,
+            requires_approval: true,
+          },
         },
         total_self_service_deploys: 156,
         successful_deploys: 152,
@@ -281,8 +315,10 @@ export async function POST() {
           name: 'Continuous Integration',
           file: '.github/workflows/ci.yml',
           stages: ['typecheck', 'lint', 'test', 'build'],
-          average_duration_minutes: existing.standardized_workflows?.ci_pipeline?.average_duration_minutes || 8,
-          pass_rate_percent: existing.standardized_workflows?.ci_pipeline?.pass_rate_percent || 94.2,
+          average_duration_minutes:
+            existing.standardized_workflows?.ci_pipeline?.average_duration_minutes || 8,
+          pass_rate_percent:
+            existing.standardized_workflows?.ci_pipeline?.pass_rate_percent || 94.2,
         },
         cd_pipeline: existing.standardized_workflows?.cd_pipeline || {
           name: 'Continuous Deployment',
@@ -292,7 +328,13 @@ export async function POST() {
         },
         developer_onboarding: existing.standardized_workflows?.developer_onboarding || {
           name: 'Developer Onboarding',
-          steps: ['clone_repository', 'install_dependencies', 'setup_environment', 'run_local_dev', 'complete_first_task'],
+          steps: [
+            'clone_repository',
+            'install_dependencies',
+            'setup_environment',
+            'run_local_dev',
+            'complete_first_task',
+          ],
           average_time_to_first_commit_hours: 4,
           success_rate_percent: 100,
         },
@@ -303,14 +345,28 @@ export async function POST() {
         cache_enabled: true,
         remote_cache_enabled: turboRemoteCache,
         tasks_defined: turboTaskCount,
-        average_cached_build_time_seconds: existing.turborepo_integration?.average_cached_build_time_seconds ?? 15,
-        average_fresh_build_time_seconds: existing.turborepo_integration?.average_fresh_build_time_seconds ?? 180,
+        average_cached_build_time_seconds:
+          existing.turborepo_integration?.average_cached_build_time_seconds ?? 15,
+        average_fresh_build_time_seconds:
+          existing.turborepo_integration?.average_fresh_build_time_seconds ?? 180,
         cache_hit_rate_percent: existing.turborepo_integration?.cache_hit_rate_percent ?? 78.5,
       },
       environment_management: existing.environment_management || {
-        local_development: { tool: 'Docker Compose', setup_time_minutes: 5, services: ['postgres', 'redis', 'supabase'] },
-        secrets_management: { tool: 'HashiCorp Vault', environments: ['development', 'staging', 'production'], rotation_policy: 'quarterly' },
-        configuration: { method: 'environment_variables', validation: 'zod_schemas', documentation: 'env.example' },
+        local_development: {
+          tool: 'Docker Compose',
+          setup_time_minutes: 5,
+          services: ['postgres', 'redis', 'supabase'],
+        },
+        secrets_management: {
+          tool: 'HashiCorp Vault',
+          environments: ['development', 'staging', 'production'],
+          rotation_policy: 'quarterly',
+        },
+        configuration: {
+          method: 'environment_variables',
+          validation: 'zod_schemas',
+          documentation: 'env.example',
+        },
       },
       kpis: existing.kpis || {
         self_service_deploy_success_rate: { target: '>95%', actual: '97.4%', met: true },

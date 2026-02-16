@@ -42,9 +42,7 @@ export function generateInvoiceFilename(invoiceId: string, date: Date): string {
     .replace(/\//g, '-');
 
   // Extract last part of invoice ID for cleaner filename
-  const shortId = invoiceId.includes('_')
-    ? invoiceId.split('_').pop() || invoiceId
-    : invoiceId;
+  const shortId = invoiceId.includes('_') ? invoiceId.split('_').pop() || invoiceId : invoiceId;
 
   return `invoice-${shortId}-${dateStr}.pdf`;
 }
@@ -68,10 +66,7 @@ export function openInvoicePdf(url: string): void {
  * Download invoice PDF file
  * Uses fetch to get the file and triggers browser download
  */
-export async function downloadInvoicePdf(
-  url: string,
-  filename: string
-): Promise<void> {
+export async function downloadInvoicePdf(url: string, filename: string): Promise<void> {
   if (!isValidPdfUrl(url)) {
     throw new Error('Invalid PDF URL provided');
   }

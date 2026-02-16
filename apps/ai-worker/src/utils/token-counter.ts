@@ -176,9 +176,7 @@ export function createTokenCounter(model?: string): TokenCounter {
         const messageOverhead = 4;
 
         const content =
-          typeof message.content === 'string'
-            ? message.content
-            : JSON.stringify(message.content);
+          typeof message.content === 'string' ? message.content : JSON.stringify(message.content);
 
         if (encoder) {
           try {

@@ -2,7 +2,7 @@
  * DealFilters Component (PG-135)
  *
  * Filter bar with owner filter, date range, and view mode toggle.
- * New component (not extraction).
+ * Styled to match the SearchFilterBar pattern used across the CRM.
  *
  * @module DealFilters
  * AC-9: Filter bar supports owner filter and date range filter
@@ -26,6 +26,9 @@ const DATE_RANGE_OPTIONS = [
   { value: 'this_year', label: 'This Year' },
 ] as const;
 
+const SELECT_CLASS =
+  'appearance-none rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 text-sm font-medium py-2.5 pr-9 pl-10 hover:bg-slate-100 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-colors cursor-pointer';
+
 export const DealFilters = React.memo(function DealFilters({
   value,
   onChange,
@@ -43,15 +46,22 @@ export const DealFilters = React.memo(function DealFilters({
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3 mb-4" role="toolbar" aria-label="Deal filters">
+    <div
+      className="flex flex-wrap items-center gap-3 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 shadow-sm mb-4"
+      role="toolbar"
+      aria-label="Deal filters"
+    >
       {/* Owner Filter */}
-      <div className="flex items-center gap-2">
-        <label htmlFor="deal-owner-filter" className="text-sm text-muted-foreground sr-only">
+      <div className="relative">
+        <label htmlFor="deal-owner-filter" className="sr-only">
           Owner
         </label>
+        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-[18px] pointer-events-none">
+          person
+        </span>
         <select
           id="deal-owner-filter"
-          className="h-9 px-3 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className={SELECT_CLASS}
           value={value.ownerId ?? ''}
           onChange={handleOwnerChange}
           aria-label="Filter by owner"
@@ -59,16 +69,22 @@ export const DealFilters = React.memo(function DealFilters({
           <option value="">All Deals</option>
           <option value="me">My Deals</option>
         </select>
+        <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-[18px] pointer-events-none">
+          expand_more
+        </span>
       </div>
 
       {/* Date Range Filter */}
-      <div className="flex items-center gap-2">
-        <label htmlFor="deal-date-filter" className="text-sm text-muted-foreground sr-only">
+      <div className="relative">
+        <label htmlFor="deal-date-filter" className="sr-only">
           Date Range
         </label>
+        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-[18px] pointer-events-none">
+          calendar_today
+        </span>
         <select
           id="deal-date-filter"
-          className="h-9 px-3 rounded-md border border-input bg-background text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          className={SELECT_CLASS}
           value={value.dateRange ?? ''}
           onChange={handleDateRangeChange}
           aria-label="Filter by date range"
@@ -79,15 +95,18 @@ export const DealFilters = React.memo(function DealFilters({
             </option>
           ))}
         </select>
+        <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-[18px] pointer-events-none">
+          expand_more
+        </span>
       </div>
 
       {/* More Filters */}
       <button
         type="button"
-        className="h-9 px-3 rounded-md border border-input bg-background text-sm text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+        className="inline-flex items-center gap-1.5 rounded-lg bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm font-medium py-2.5 px-4 hover:bg-slate-100 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
         aria-label="More filters"
       >
-        <span className="material-symbols-outlined text-sm mr-1">filter_list</span>
+        <span className="material-symbols-outlined text-[18px]">tune</span>
         More Filters
       </button>
 
@@ -95,28 +114,36 @@ export const DealFilters = React.memo(function DealFilters({
       <div className="flex-1" />
 
       {/* View Mode Toggle */}
-      <div className="flex items-center gap-1 border border-input rounded-md" role="group" aria-label="View mode">
+      <div
+        className="inline-flex items-center rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden"
+        role="group"
+        aria-label="View mode"
+      >
         <button
           type="button"
-          className={`h-9 px-3 text-sm rounded-l-md transition-colors ${
+          className={`inline-flex items-center justify-center h-10 w-10 transition-colors ${
             viewMode === 'kanban'
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-background text-muted-foreground hover:text-foreground'
+              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm'
+              : 'bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200'
           }`}
           onClick={() => onViewModeChange?.('kanban')}
           aria-pressed={viewMode === 'kanban'}
           aria-label="Kanban view"
         >
-          <span className="material-symbols-outlined text-sm">view_kanban</span>
+          <span className="material-symbols-outlined text-[20px]">view_kanban</span>
         </button>
         <button
           type="button"
-          className="h-9 px-3 text-sm rounded-r-md bg-background text-muted-foreground cursor-not-allowed opacity-50"
-          disabled
-          title="Coming soon"
-          aria-label="List view (coming soon)"
+          className={`inline-flex items-center justify-center h-10 w-10 transition-colors ${
+            viewMode === 'list'
+              ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm'
+              : 'bg-slate-50 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200'
+          }`}
+          onClick={() => onViewModeChange?.('list')}
+          aria-pressed={viewMode === 'list'}
+          aria-label="List view"
         >
-          <span className="material-symbols-outlined text-sm">view_list</span>
+          <span className="material-symbols-outlined text-[20px]">view_list</span>
         </button>
       </div>
     </div>

@@ -25,7 +25,7 @@ import { type Context } from '../../context';
 import {
   assertTenantContext,
   createTenantWhereClause,
-  type TenantAwareContext
+  type TenantAwareContext,
 } from '../../security/tenant-context';
 
 /**
@@ -125,7 +125,16 @@ export const ticketRouter = createTRPCRouter({
     const ticketService = getTicketService(ctx);
     const tenantId = await getTenantId(ctx);
 
-    const { page = 1, limit = 20, status, priority, assignedToId, search, sortBy, sortOrder } = input;
+    const {
+      page = 1,
+      limit = 20,
+      status,
+      priority,
+      assignedToId,
+      search,
+      sortBy,
+      sortOrder,
+    } = input;
     const offset = (page - 1) * limit;
 
     const result = await ticketService.findMany({
@@ -141,7 +150,9 @@ export const ticketRouter = createTRPCRouter({
     });
 
     const queryDurationMs = performance.now() - startTime;
-    console.log(`[ticket.list] Fetched ${result.total} tickets (page ${page}) in ${queryDurationMs.toFixed(2)}ms`);
+    console.log(
+      `[ticket.list] Fetched ${result.total} tickets (page ${page}) in ${queryDurationMs.toFixed(2)}ms`
+    );
     if (queryDurationMs > 200) {
       console.warn(`[ticket.list] SLOW: ${queryDurationMs.toFixed(2)}ms (target: <200ms)`);
     }
@@ -226,7 +237,9 @@ export const ticketRouter = createTRPCRouter({
     const stats = await ticketService.getStats(tenantId, input.timeWindow);
 
     const queryDurationMs = performance.now() - startTime;
-    console.log(`[ticket.stats] Computed stats (${input.timeWindow}) in ${queryDurationMs.toFixed(2)}ms`);
+    console.log(
+      `[ticket.stats] Computed stats (${input.timeWindow}) in ${queryDurationMs.toFixed(2)}ms`
+    );
     if (queryDurationMs > 500) {
       console.warn(`[ticket.stats] SLOW: ${queryDurationMs.toFixed(2)}ms (target: <500ms)`);
     }
@@ -265,10 +278,12 @@ export const ticketRouter = createTRPCRouter({
    * Bulk assign tickets to an agent
    */
   bulkAssign: tenantProcedure
-    .input(z.object({
-      ticketIds: z.array(z.string()),
-      assigneeId: z.string(),
-    }))
+    .input(
+      z.object({
+        ticketIds: z.array(z.string()),
+        assigneeId: z.string(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const ticketService = getTicketService(ctx);
       const { ticketIds, assigneeId } = input;
@@ -290,10 +305,12 @@ export const ticketRouter = createTRPCRouter({
    * Bulk update ticket status
    */
   bulkUpdateStatus: tenantProcedure
-    .input(z.object({
-      ticketIds: z.array(z.string()),
-      status: ticketStatusSchema,
-    }))
+    .input(
+      z.object({
+        ticketIds: z.array(z.string()),
+        status: ticketStatusSchema,
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const ticketService = getTicketService(ctx);
       const { ticketIds, status } = input;
@@ -315,9 +332,11 @@ export const ticketRouter = createTRPCRouter({
    * Bulk resolve tickets
    */
   bulkResolve: tenantProcedure
-    .input(z.object({
-      ticketIds: z.array(z.string()),
-    }))
+    .input(
+      z.object({
+        ticketIds: z.array(z.string()),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const ticketService = getTicketService(ctx);
       const { ticketIds } = input;
@@ -339,9 +358,11 @@ export const ticketRouter = createTRPCRouter({
    * Bulk escalate tickets
    */
   bulkEscalate: tenantProcedure
-    .input(z.object({
-      ticketIds: z.array(z.string()),
-    }))
+    .input(
+      z.object({
+        ticketIds: z.array(z.string()),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const ticketService = getTicketService(ctx);
       const { ticketIds } = input;
@@ -363,9 +384,11 @@ export const ticketRouter = createTRPCRouter({
    * Bulk close tickets
    */
   bulkClose: tenantProcedure
-    .input(z.object({
-      ticketIds: z.array(z.string()),
-    }))
+    .input(
+      z.object({
+        ticketIds: z.array(z.string()),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const ticketService = getTicketService(ctx);
       const { ticketIds } = input;
@@ -418,13 +441,15 @@ export const ticketRouter = createTRPCRouter({
    */
   filterOptions: tenantProcedure
     .input(
-      z.object({
-        search: z.string().optional(),
-        status: z.string().optional(),
-        priority: z.string().optional(),
-        slaStatus: z.string().optional(),
-        assigneeId: z.string().optional(),
-      }).optional()
+      z
+        .object({
+          search: z.string().optional(),
+          status: z.string().optional(),
+          priority: z.string().optional(),
+          slaStatus: z.string().optional(),
+          assigneeId: z.string().optional(),
+        })
+        .optional()
     )
     .query(async ({ ctx, input }) => {
       assertTenantContext(ctx);
@@ -469,17 +494,17 @@ export const ticketRouter = createTRPCRouter({
       ]);
 
       return {
-        statuses: statusCounts.map(s => ({
+        statuses: statusCounts.map((s) => ({
           value: s.status,
           label: s.status,
           count: s._count,
         })),
-        priorities: priorityCounts.map(p => ({
+        priorities: priorityCounts.map((p) => ({
           value: p.priority,
           label: p.priority,
           count: p._count,
         })),
-        slaStatuses: slaCounts.map(s => ({
+        slaStatuses: slaCounts.map((s) => ({
           value: s.slaStatus,
           label: s.slaStatus,
           count: s._count,

@@ -14,7 +14,15 @@ import {
 import StatusHistory from './tracking/StatusHistory';
 import CollapsibleSection from './CollapsibleSection';
 
-type TrackingTab = 'status' | 'featureMatrix' | 'quality' | 'risks' | 'ai' | 'security' | 'build' | 'history';
+type TrackingTab =
+  | 'status'
+  | 'featureMatrix'
+  | 'quality'
+  | 'risks'
+  | 'ai'
+  | 'security'
+  | 'build'
+  | 'history';
 
 interface TabConfig {
   id: TrackingTab;

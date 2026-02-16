@@ -96,11 +96,16 @@ export function ContactList({
           const initials = `${c.firstName?.[0] || ''}${c.lastName?.[0] || ''}`.toUpperCase() || '?';
           return (
             <div className="flex items-center gap-3">
-              <span className={`size-10 rounded-full shrink-0 flex items-center justify-center font-bold text-sm border ${getAvatarColor(name)}`} aria-hidden="true">
+              <span
+                className={`size-10 rounded-full shrink-0 flex items-center justify-center font-bold text-sm border ${getAvatarColor(name)}`}
+                aria-hidden="true"
+              >
                 {initials}
               </span>
               <div>
-                <p className="font-medium text-slate-900 dark:text-white">{c.firstName} {c.lastName}</p>
+                <p className="font-medium text-slate-900 dark:text-white">
+                  {c.firstName} {c.lastName}
+                </p>
                 {c.title && <p className="text-sm text-slate-500 dark:text-slate-400">{c.title}</p>}
               </div>
             </div>
@@ -113,8 +118,14 @@ export function ContactList({
         size: 180,
         cell: ({ row }) => (
           <div>
-            <p className="font-medium text-slate-900 dark:text-white">{row.original.account?.name || '-'}</p>
-            {row.original.department && <p className="text-sm text-slate-500 dark:text-slate-400">{row.original.department}</p>}
+            <p className="font-medium text-slate-900 dark:text-white">
+              {row.original.account?.name || '-'}
+            </p>
+            {row.original.department && (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {row.original.department}
+              </p>
+            )}
           </div>
         ),
       },
@@ -137,13 +148,21 @@ export function ContactList({
         accessorKey: 'phone',
         header: 'Phone',
         size: 140,
-        cell: ({ row }) => <span className="text-sm text-slate-500 dark:text-slate-400">{row.original.phone || '-'}</span>,
+        cell: ({ row }) => (
+          <span className="text-sm text-slate-500 dark:text-slate-400">
+            {row.original.phone || '-'}
+          </span>
+        ),
       },
       {
         accessorKey: 'createdAt',
         header: 'Added',
         size: 100,
-        cell: ({ row }) => <span className="text-sm text-slate-600 dark:text-slate-400">{formatDate(row.original.createdAt)}</span>,
+        cell: ({ row }) => (
+          <span className="text-sm text-slate-600 dark:text-slate-400">
+            {formatDate(row.original.createdAt)}
+          </span>
+        ),
       },
       {
         id: 'activity',
@@ -152,18 +171,23 @@ export function ContactList({
         cell: ({ row }) => {
           const opp = row.original._count?.opportunities ?? 0;
           const tasks = row.original._count?.tasks ?? 0;
-          if (opp === 0 && tasks === 0) return <span className="text-sm text-muted-foreground italic">No activity</span>;
+          if (opp === 0 && tasks === 0)
+            return <span className="text-sm text-muted-foreground italic">No activity</span>;
           return (
             <div className="flex flex-col gap-1">
               {opp > 0 && (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                  <span className="material-symbols-outlined text-sm" aria-hidden="true">handshake</span>
+                  <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                    handshake
+                  </span>
                   {opp} {opp === 1 ? 'Deal' : 'Deals'}
                 </span>
               )}
               {tasks > 0 && (
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                  <span className="material-symbols-outlined text-sm" aria-hidden="true">task_alt</span>
+                  <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                    task_alt
+                  </span>
                   {tasks} {tasks === 1 ? 'Task' : 'Tasks'}
                 </span>
               )}
@@ -180,14 +204,42 @@ export function ContactList({
           return (
             <TableRowActions
               quickActions={[
-                { icon: 'phone', label: 'Call', onClick: () => { if (c.phone) window.open(`tel:${c.phone}`); } },
-                { icon: 'mail', label: 'Send Email', onClick: () => window.open(`mailto:${c.email}`) },
+                {
+                  icon: 'phone',
+                  label: 'Call',
+                  onClick: () => {
+                    if (c.phone) window.open(`tel:${c.phone}`);
+                  },
+                },
+                {
+                  icon: 'mail',
+                  label: 'Send Email',
+                  onClick: () => window.open(`mailto:${c.email}`),
+                },
               ]}
               dropdownActions={[
                 { icon: 'edit', label: 'Edit Contact', onClick: () => onEdit?.(c) },
-                ...(onCreateDeal ? [{ icon: 'handshake', label: 'Create Deal', onClick: () => onCreateDeal(c) }] : []),
-                ...(onCreateTicket ? [{ icon: 'confirmation_number', label: 'Create Ticket', onClick: () => onCreateTicket(c) }] : []),
-                ...(onScheduleMeeting ? [{ icon: 'event', label: 'Schedule Meeting', onClick: () => onScheduleMeeting(c) }] : []),
+                ...(onCreateDeal
+                  ? [{ icon: 'handshake', label: 'Create Deal', onClick: () => onCreateDeal(c) }]
+                  : []),
+                ...(onCreateTicket
+                  ? [
+                      {
+                        icon: 'confirmation_number',
+                        label: 'Create Ticket',
+                        onClick: () => onCreateTicket(c),
+                      },
+                    ]
+                  : []),
+                ...(onScheduleMeeting
+                  ? [
+                      {
+                        icon: 'event',
+                        label: 'Schedule Meeting',
+                        onClick: () => onScheduleMeeting(c),
+                      },
+                    ]
+                  : []),
                 { id: 'sep-1', icon: '', label: '', onClick: () => {}, separator: true },
                 { icon: 'delete', label: 'Delete', variant: 'danger', onClick: () => onDelete(c) },
               ]}
@@ -196,16 +248,33 @@ export function ContactList({
         },
       },
     ],
-    [onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting],
+    [onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting]
   );
 
   const bulkActions: BulkAction<Contact>[] = useMemo(
     () => [
-      { icon: 'mail', label: 'Send Email', onClick: (selected) => onBulkEmail(selected.map((c) => c.id)) },
-      { icon: 'file_export', label: 'Export', onClick: (selected) => onBulkExport(selected.map((c) => c.id), 'csv') },
-      { icon: 'delete', label: 'Delete', variant: 'danger', onClick: (selected) => onBulkDelete(selected.map((c) => c.id)) },
+      {
+        icon: 'mail',
+        label: 'Send Email',
+        onClick: (selected) => onBulkEmail(selected.map((c) => c.id)),
+      },
+      {
+        icon: 'file_export',
+        label: 'Export',
+        onClick: (selected) =>
+          onBulkExport(
+            selected.map((c) => c.id),
+            'csv'
+          ),
+      },
+      {
+        icon: 'delete',
+        label: 'Delete',
+        variant: 'danger',
+        onClick: (selected) => onBulkDelete(selected.map((c) => c.id)),
+      },
     ],
-    [onBulkEmail, onBulkExport, onBulkDelete],
+    [onBulkEmail, onBulkExport, onBulkDelete]
   );
 
   if (isLoading) {
@@ -213,7 +282,10 @@ export function ContactList({
       <div role="status" aria-busy="true" className="space-y-3">
         <span className="sr-only">Loading contacts...</span>
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+          <div
+            key={i}
+            className="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
+          >
             <Skeleton className="size-10 rounded-full" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-1/3" />
@@ -229,7 +301,9 @@ export function ContactList({
   if (contacts.length === 0) {
     return (
       <div className="text-center py-12">
-        <span className="material-symbols-outlined text-5xl text-slate-300 mb-4" aria-hidden="true">person_off</span>
+        <span className="material-symbols-outlined text-5xl text-slate-300 mb-4" aria-hidden="true">
+          person_off
+        </span>
         <p className="text-slate-500 dark:text-slate-400">No contacts found</p>
       </div>
     );

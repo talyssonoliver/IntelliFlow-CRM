@@ -8,11 +8,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import {
-  AutoResponseDraft,
-  ResponseContent,
-  type TriggerType,
-} from '../index';
+import { AutoResponseDraft, ResponseContent, type TriggerType } from '../index';
 
 // Test constants
 const TEST_TENANT_ID = '00000000-0000-4000-8000-000000000001';
@@ -235,25 +231,27 @@ describe('Auto-Response Integration Tests', () => {
       // Check creation event
       let events = draft.getDomainEvents();
       expect(events.length).toBeGreaterThan(0);
-      expect(events.some(e => e.constructor.name === 'AutoResponseGeneratedEvent')).toBe(true);
+      expect(events.some((e) => e.constructor.name === 'AutoResponseGeneratedEvent')).toBe(true);
       draft.clearDomainEvents();
 
       // Submit for approval
       draft.submitForApproval(TEST_APPROVER_ID);
       events = draft.getDomainEvents();
-      expect(events.some(e => e.constructor.name === 'AutoResponseSubmittedForApprovalEvent')).toBe(true);
+      expect(
+        events.some((e) => e.constructor.name === 'AutoResponseSubmittedForApprovalEvent')
+      ).toBe(true);
       draft.clearDomainEvents();
 
       // Approve
       draft.approve(TEST_APPROVER_ID);
       events = draft.getDomainEvents();
-      expect(events.some(e => e.constructor.name === 'AutoResponseApprovedEvent')).toBe(true);
+      expect(events.some((e) => e.constructor.name === 'AutoResponseApprovedEvent')).toBe(true);
       draft.clearDomainEvents();
 
       // Mark sent
       draft.markSent('notification-123');
       events = draft.getDomainEvents();
-      expect(events.some(e => e.constructor.name === 'AutoResponseSentEvent')).toBe(true);
+      expect(events.some((e) => e.constructor.name === 'AutoResponseSentEvent')).toBe(true);
     });
   });
 

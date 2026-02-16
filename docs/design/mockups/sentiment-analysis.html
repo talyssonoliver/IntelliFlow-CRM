@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Sentiment Analysis Dashboard | IntelliFlow CRM</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .chart-gradient {
+            background: linear-gradient(180deg, rgba(19, 127, 236, 0.1) 0%, rgba(19, 127, 236, 0) 100%);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 antialiased">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar -->
+<aside class="w-64 border-r border-slate-200 bg-white flex flex-col shrink-0">
+<div class="p-6">
+<div class="flex items-center gap-3 text-primary">
+<span class="material-symbols-outlined text-3xl font-bold">account_tree</span>
+<h1 class="text-xl font-bold text-slate-900 tracking-tight">IntelliFlow</h1>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors text-sm font-medium" href="#">
+<span class="material-symbols-outlined">dashboard</span> Dashboard
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors text-sm font-medium" href="#">
+<span class="material-symbols-outlined">person_search</span> Leads
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors text-sm font-medium" href="#">
+<span class="material-symbols-outlined">contacts</span> Contacts
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors text-sm font-medium" href="#">
+<span class="material-symbols-outlined">handshake</span> Deals
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors text-sm font-medium" href="#">
+<span class="material-symbols-outlined">confirmation_number</span> Tickets
+                </a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-slate-50 rounded-lg transition-colors text-sm font-medium" href="#">
+<span class="material-symbols-outlined">bar_chart</span> Reports
+                </a>
+<div class="pt-4 pb-2">
+<p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">AI Powered</p>
+</div>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg transition-colors text-sm font-bold" href="#">
+<span class="material-symbols-outlined">smart_toy</span> AI &amp; Agents
+                </a>
+</nav>
+<div class="p-4 border-t border-slate-100">
+<div class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded-lg cursor-pointer">
+<img alt="User Profile" class="w-8 h-8 rounded-full border border-slate-200" data-alt="Corporate headshot of a male professional" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPVafHzBJNAaHyw_YwxfGEIptZUSjJM95RapSdwBo9L77yxmyn4TM2ktZOGRmlioDdRH2OJlRORNo4pFWeOqi1OdhRKOEiU4ttOkrIMfOiNWuq_IJqcolXw3vYyu_kqMmV0tssUjsZVBgBH0gNxNcO9ncUvdK56Go_zu4JJI_6ee0Tw9yQ43xc5g4zhXAXFVwOX1HdMlrzqMgleVscmgtree0IP71yPzyBpMk1z8gcyE7nMaRNOyVxP_gfGd_e74VEV8vHxCjc1TX7"/>
+<div class="min-w-0">
+<p class="text-xs font-semibold truncate">Alex Rivera</p>
+<p class="text-[10px] text-slate-500 truncate">Admin Access</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col overflow-hidden">
+<!-- Header -->
+<header class="h-16 border-b border-slate-200 bg-white px-8 flex items-center justify-between shrink-0">
+<div class="flex items-center gap-4 flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-slate-100 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary focus:bg-white transition-all" placeholder="Search across sentiment data, entities..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-8 w-[1px] bg-slate-200 mx-2"></div>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-lg">add</span> New Analysis
+                    </button>
+</div>
+</header>
+<!-- Scrollable Content -->
+<div class="flex-1 overflow-y-auto p-8 space-y-6">
+<!-- Breadcrumbs -->
+<nav class="flex text-xs font-medium text-slate-500 items-center gap-2">
+<a class="hover:text-primary transition-colors" href="#">AI &amp; Agents</a>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-slate-900">Sentiment Analysis</span>
+</nav>
+<!-- Stat Cards -->
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+<div class="flex items-center justify-between mb-3">
+<span class="material-symbols-outlined p-2 bg-slate-100 text-slate-600 rounded-lg">forum</span>
+<span class="text-[10px] font-bold text-green-600 flex items-center bg-green-50 px-1.5 py-0.5 rounded">
+<span class="material-symbols-outlined text-xs">trending_up</span> 12%
+                            </span>
+</div>
+<p class="text-xs font-medium text-slate-500">Total Analyzed</p>
+<p class="text-2xl font-bold text-slate-900 mt-1">1,284</p>
+</div>
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-green-500">
+<div class="flex items-center justify-between mb-3">
+<span class="material-symbols-outlined p-2 bg-green-50 text-green-600 rounded-lg">mood</span>
+<span class="text-[10px] font-bold text-green-600 flex items-center bg-green-50 px-1.5 py-0.5 rounded">
+<span class="material-symbols-outlined text-xs">trending_up</span> 8%
+                            </span>
+</div>
+<p class="text-xs font-medium text-slate-500">Positive</p>
+<p class="text-2xl font-bold text-slate-900 mt-1">842</p>
+</div>
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-red-500">
+<div class="flex items-center justify-between mb-3">
+<span class="material-symbols-outlined p-2 bg-red-50 text-red-600 rounded-lg">mood_bad</span>
+<span class="text-[10px] font-bold text-red-600 flex items-center bg-red-50 px-1.5 py-0.5 rounded">
+<span class="material-symbols-outlined text-xs">trending_down</span> 5%
+                            </span>
+</div>
+<p class="text-xs font-medium text-slate-500">Negative</p>
+<p class="text-2xl font-bold text-slate-900 mt-1">156</p>
+</div>
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-slate-400">
+<div class="flex items-center justify-between mb-3">
+<span class="material-symbols-outlined p-2 bg-slate-100 text-slate-600 rounded-lg">sentiment_neutral</span>
+<span class="text-[10px] font-bold text-slate-500 flex items-center bg-slate-50 px-1.5 py-0.5 rounded">
+<span class="material-symbols-outlined text-xs">remove</span> 2%
+                            </span>
+</div>
+<p class="text-xs font-medium text-slate-500">Neutral</p>
+<p class="text-2xl font-bold text-slate-900 mt-1">286</p>
+</div>
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-orange-500">
+<div class="flex items-center justify-between mb-3">
+<span class="material-symbols-outlined p-2 bg-orange-50 text-orange-600 rounded-lg">emergency</span>
+<span class="text-[10px] font-bold text-orange-600 flex items-center bg-orange-50 px-1.5 py-0.5 rounded">
+<span class="material-symbols-outlined text-xs">trending_up</span> 15%
+                            </span>
+</div>
+<p class="text-xs font-medium text-slate-500">Urgent</p>
+<p class="text-2xl font-bold text-slate-900 mt-1">42</p>
+</div>
+</div>
+<!-- Trend Chart Placeholder -->
+<div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+<div class="flex items-center justify-between mb-6">
+<div>
+<h3 class="text-base font-bold text-slate-900">Sentiment Over Time</h3>
+<p class="text-xs text-slate-500">Volume of positive vs negative interactions</p>
+</div>
+<div class="flex bg-slate-100 p-1 rounded-lg">
+<button class="px-3 py-1 text-xs font-medium rounded-md hover:bg-white transition-all">7d</button>
+<button class="px-3 py-1 text-xs font-bold rounded-md bg-white shadow-sm">30d</button>
+<button class="px-3 py-1 text-xs font-medium rounded-md hover:bg-white transition-all">90d</button>
+</div>
+</div>
+<div class="h-48 w-full relative">
+<!-- Abstract Chart Visual Representation -->
+<div class="absolute inset-0 flex items-end gap-1 px-4">
+<div class="w-full h-full chart-gradient border-t-2 border-primary rounded-t-sm opacity-50 flex items-end">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 400 100">
+<path d="M0,80 Q50,40 100,60 T200,30 T300,50 T400,20 L400,100 L0,100 Z" fill="rgba(19,127,236,0.1)"></path>
+<path d="M0,80 Q50,40 100,60 T200,30 T300,50 T400,20" fill="none" stroke="#137fec" stroke-width="2"></path>
+</svg>
+</div>
+</div>
+<div class="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-[10px] text-slate-400">
+<span>200</span><span>150</span><span>100</span><span>50</span><span>0</span>
+</div>
+<div class="absolute bottom-0 left-0 right-0 flex justify-between text-[10px] text-slate-400 px-8">
+<span>Oct 1</span><span>Oct 10</span><span>Oct 20</span><span>Oct 30</span>
+</div>
+</div>
+</div>
+<!-- Filter Bar -->
+<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center">
+<div class="flex items-center gap-2 flex-1 w-full">
+<div class="relative w-full max-w-xs">
+<select class="w-full appearance-none pl-4 pr-10 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600 focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+<option>All Entities</option>
+<option>Leads</option>
+<option>Contacts</option>
+<option>Tickets</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+</div>
+<div class="relative w-full max-w-xs">
+<select class="w-full appearance-none pl-4 pr-10 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600 focus:ring-1 focus:ring-primary focus:border-primary outline-none">
+<option>All Sentiment</option>
+<option>Positive</option>
+<option>Negative</option>
+<option>Neutral</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+</div>
+</div>
+<div class="flex items-center gap-2 shrink-0">
+<button class="px-3 py-1.5 bg-primary text-white text-xs font-bold rounded-full">All</button>
+<button class="px-3 py-1.5 bg-green-50 text-green-700 text-xs font-medium rounded-full border border-green-100 hover:bg-green-100 transition-colors">Positive</button>
+<button class="px-3 py-1.5 bg-red-50 text-red-700 text-xs font-medium rounded-full border border-red-100 hover:bg-red-100 transition-colors">Negative</button>
+<button class="px-3 py-1.5 bg-orange-50 text-orange-700 text-xs font-medium rounded-full border border-orange-100 hover:bg-orange-100 transition-colors">Urgent</button>
+</div>
+<div class="h-6 w-[1px] bg-slate-200 hidden md:block"></div>
+<div class="relative">
+<select class="appearance-none pl-4 pr-10 py-2 bg-white border-none text-sm font-bold text-slate-900 outline-none">
+<option>Newest First</option>
+<option>Highest Score</option>
+<option>Urgency</option>
+</select>
+<span class="material-symbols-outlined absolute right-1 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-lg">sort</span>
+</div>
+</div>
+<!-- Dashboard List -->
+<div class="space-y-4">
+<!-- Item 1: Critical Negative -->
+<div class="bg-white p-6 rounded-xl border-l-4 border-red-500 shadow-sm border border-slate-200 group hover:shadow-md transition-shadow">
+<div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-1">
+<a class="text-base font-bold text-primary hover:underline" href="#">Global Logistics - Shipping Delay Issue</a>
+<span class="px-2 py-0.5 bg-red-100 text-red-700 text-[10px] font-bold rounded uppercase">Critical</span>
+<span class="text-xs text-slate-400">#T-8291 • 2 hours ago</span>
+</div>
+<div class="flex flex-wrap gap-2 items-center mt-3">
+<span class="flex items-center gap-1 text-xs font-bold text-red-600 bg-red-50 px-2 py-1 rounded">
+<span class="material-symbols-outlined text-sm">mood_bad</span> Very Negative
+                                    </span>
+<div class="h-4 w-[1px] bg-slate-200 mx-2"></div>
+<div class="flex items-center gap-4 text-xs font-medium text-slate-500">
+<div class="flex flex-col gap-1">
+<span class="text-[10px] uppercase tracking-tighter text-slate-400">Frustration</span>
+<div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="w-[85%] h-full bg-red-500"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] uppercase tracking-tighter text-slate-400">Anger</span>
+<div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="w-[62%] h-full bg-orange-500"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] uppercase tracking-tighter text-slate-400">Disappointment</span>
+<div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="w-[40%] h-full bg-slate-400"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-2 md:w-64 justify-end">
+<span class="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-medium rounded-md">shipping_delays</span>
+<span class="px-2 py-1 bg-red-50 text-red-600 text-[10px] font-medium rounded-md">billing_dispute</span>
+<span class="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-medium rounded-md">refund_request</span>
+</div>
+</div>
+</div>
+<!-- Item 2: Positive -->
+<div class="bg-white p-6 rounded-xl border-l-4 border-green-500 shadow-sm border border-slate-200 group hover:shadow-md transition-shadow">
+<div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-1">
+<a class="text-base font-bold text-primary hover:underline" href="#">Sarah Jenkins - Renewed Contract</a>
+<span class="px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] font-bold rounded uppercase">Low</span>
+<span class="text-xs text-slate-400">#L-4402 • 5 hours ago</span>
+</div>
+<div class="flex flex-wrap gap-2 items-center mt-3">
+<span class="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded">
+<span class="material-symbols-outlined text-sm">mood</span> Very Positive
+                                    </span>
+<div class="h-4 w-[1px] bg-slate-200 mx-2"></div>
+<div class="flex items-center gap-4 text-xs font-medium text-slate-500">
+<div class="flex flex-col gap-1">
+<span class="text-[10px] uppercase tracking-tighter text-slate-400">Joy</span>
+<div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="w-[92%] h-full bg-green-500"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] uppercase tracking-tighter text-slate-400">Trust</span>
+<div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="w-[78%] h-full bg-blue-500"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] uppercase tracking-tighter text-slate-400">Anticipation</span>
+<div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="w-[30%] h-full bg-slate-400"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-2 md:w-64 justify-end">
+<span class="px-2 py-1 bg-green-50 text-green-600 text-[10px] font-medium rounded-md">renewal_success</span>
+<span class="px-2 py-1 bg-green-50 text-green-600 text-[10px] font-medium rounded-md">great_service</span>
+<span class="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-medium rounded-md">contract_update</span>
+</div>
+</div>
+</div>
+<!-- Item 3: Neutral/High -->
+<div class="bg-white p-6 rounded-xl border-l-4 border-yellow-500 shadow-sm border border-slate-200 group hover:shadow-md transition-shadow">
+<div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-1">
+<a class="text-base font-bold text-primary hover:underline" href="#">TechNova Solutions - API Documentation Inquiry</a>
+<span class="px-2 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded uppercase">High</span>
+<span class="text-xs text-slate-400">#C-1093 • 8 hours ago</span>
+</div>
+<div class="flex flex-wrap gap-2 items-center mt-3">
+<span class="flex items-center gap-1 text-xs font-bold text-slate-600 bg-slate-100 px-2 py-1 rounded">
+<span class="material-symbols-outlined text-sm">sentiment_neutral</span> Neutral
+                                    </span>
+<div class="h-4 w-[1px] bg-slate-200 mx-2"></div>
+<div class="flex items-center gap-4 text-xs font-medium text-slate-500">
+<div class="flex flex-col gap-1">
+<span class="text-[10px] uppercase tracking-tighter text-slate-400">Confusion</span>
+<div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="w-[55%] h-full bg-yellow-500"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] uppercase tracking-tighter text-slate-400">Interest</span>
+<div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="w-[42%] h-full bg-blue-400"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] uppercase tracking-tighter text-slate-400">Neutrality</span>
+<div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="w-[88%] h-full bg-slate-300"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-2 md:w-64 justify-end">
+<span class="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-medium rounded-md">technical_question</span>
+<span class="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-medium rounded-md">onboarding_phase</span>
+</div>
+</div>
+</div>
+<!-- Item 4: Negative -->
+<div class="bg-white p-6 rounded-xl border-l-4 border-red-400 shadow-sm border border-slate-200 group hover:shadow-md transition-shadow">
+<div class="flex flex-col md:flex-row md:items-start justify-between gap-6">
+<div class="flex-1">
+<div class="flex items-center gap-3 mb-1">
+<a class="text-base font-bold text-primary hover:underline" href="#">Robert Smith - Product Bug Report</a>
+<span class="px-2 py-0.5 bg-yellow-50 text-yellow-700 text-[10px] font-bold rounded uppercase">Medium</span>
+<span class="text-xs text-slate-400">#T-8288 • Yesterday</span>
+</div>
+<div class="flex flex-wrap gap-2 items-center mt-3">
+<span class="flex items-center gap-1 text-xs font-bold text-red-500 bg-red-50 px-2 py-1 rounded">
+<span class="material-symbols-outlined text-sm">mood_bad</span> Negative
+                                    </span>
+<div class="h-4 w-[1px] bg-slate-200 mx-2"></div>
+<div class="flex items-center gap-4 text-xs font-medium text-slate-500">
+<div class="flex flex-col gap-1">
+<span class="text-[10px] uppercase tracking-tighter text-slate-400">Frustration</span>
+<div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="w-[45%] h-full bg-red-400"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] uppercase tracking-tighter text-slate-400">Impatience</span>
+<div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="w-[30%] h-full bg-orange-400"></div>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<span class="text-[10px] uppercase tracking-tighter text-slate-400">Sadness</span>
+<div class="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+<div class="w-[12%] h-full bg-slate-400"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-2 md:w-64 justify-end">
+<span class="px-2 py-1 bg-red-50 text-red-600 text-[10px] font-medium rounded-md">ui_glitch</span>
+<span class="px-2 py-1 bg-slate-100 text-slate-600 text-[10px] font-medium rounded-md">user_experience</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Load More -->
+<div class="flex justify-center pt-4 pb-8">
+<button class="flex items-center gap-2 px-6 py-2.5 bg-white border border-slate-200 text-slate-600 text-sm font-bold rounded-lg hover:bg-slate-50 transition-colors shadow-sm">
+                        Load More Analysis <span class="material-symbols-outlined text-lg rotate-90">expand_more</span>
+</button>
+</div>
+</div>
+</main>
+</div>
+</body></html>

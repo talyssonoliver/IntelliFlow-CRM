@@ -106,9 +106,7 @@ describe('DSAR Search Index Purge (IFC-155)', () => {
     });
 
     it('should clear search_vector (FTS) for documents', async () => {
-      mockPrisma.$executeRaw
-        .mockResolvedValueOnce(10)
-        .mockResolvedValueOnce(0);
+      mockPrisma.$executeRaw.mockResolvedValueOnce(10).mockResolvedValueOnce(0);
 
       await purgeSearchIndexes(mockPrisma, 'subject-456');
 
@@ -118,9 +116,7 @@ describe('DSAR Search Index Purge (IFC-155)', () => {
     });
 
     it('should redact extracted_text with GDPR marker', async () => {
-      mockPrisma.$executeRaw
-        .mockResolvedValueOnce(1)
-        .mockResolvedValueOnce(0);
+      mockPrisma.$executeRaw.mockResolvedValueOnce(1).mockResolvedValueOnce(0);
 
       await purgeSearchIndexes(mockPrisma, 'subject-789');
 
@@ -141,9 +137,7 @@ describe('DSAR Search Index Purge (IFC-155)', () => {
     });
 
     it('should redact note content with GDPR marker', async () => {
-      mockPrisma.$executeRaw
-        .mockResolvedValueOnce(0)
-        .mockResolvedValueOnce(5);
+      mockPrisma.$executeRaw.mockResolvedValueOnce(0).mockResolvedValueOnce(5);
 
       await purgeSearchIndexes(mockPrisma, 'author-456');
 
@@ -176,9 +170,7 @@ describe('DSAR Search Index Purge (IFC-155)', () => {
     });
 
     it('should filter by subject ID correctly', async () => {
-      mockPrisma.$executeRaw
-        .mockResolvedValueOnce(3)
-        .mockResolvedValueOnce(2);
+      mockPrisma.$executeRaw.mockResolvedValueOnce(3).mockResolvedValueOnce(2);
 
       await purgeSearchIndexes(mockPrisma, 'specific-subject-id');
 
@@ -190,9 +182,7 @@ describe('DSAR Search Index Purge (IFC-155)', () => {
   describe('GDPR Compliance', () => {
     it('should ensure complete data removal (no residual embeddings)', async () => {
       // First, simulate purge
-      mockPrisma.$executeRaw
-        .mockResolvedValueOnce(10)
-        .mockResolvedValueOnce(5);
+      mockPrisma.$executeRaw.mockResolvedValueOnce(10).mockResolvedValueOnce(5);
 
       await purgeSearchIndexes(mockPrisma, 'gdpr-subject');
 
@@ -209,9 +199,7 @@ describe('DSAR Search Index Purge (IFC-155)', () => {
     });
 
     it('should log purge operation to audit trail', async () => {
-      mockPrisma.$executeRaw
-        .mockResolvedValueOnce(5)
-        .mockResolvedValueOnce(3);
+      mockPrisma.$executeRaw.mockResolvedValueOnce(5).mockResolvedValueOnce(3);
 
       const result = await purgeSearchIndexes(mockPrisma, 'audit-subject');
 
@@ -246,9 +234,7 @@ describe('DSAR Search Index Purge (IFC-155)', () => {
     });
 
     it('should use consistent redaction marker', async () => {
-      mockPrisma.$executeRaw
-        .mockResolvedValueOnce(1)
-        .mockResolvedValueOnce(1);
+      mockPrisma.$executeRaw.mockResolvedValueOnce(1).mockResolvedValueOnce(1);
 
       await purgeSearchIndexes(mockPrisma, 'marker-subject');
 
@@ -277,9 +263,7 @@ describe('DSAR Search Index Purge (IFC-155)', () => {
 
     it('should proceed when no legal hold exists', async () => {
       mockPrisma.legalHold.findFirst.mockResolvedValue(null);
-      mockPrisma.$executeRaw
-        .mockResolvedValueOnce(10)
-        .mockResolvedValueOnce(5);
+      mockPrisma.$executeRaw.mockResolvedValueOnce(10).mockResolvedValueOnce(5);
 
       const hasLegalHold = await mockPrisma.legalHold.findFirst({
         where: { subjectId: 'no-hold-subject', active: true },
@@ -297,7 +281,9 @@ describe('DSAR Search Index Purge (IFC-155)', () => {
     it('should handle database errors gracefully', async () => {
       mockPrisma.$executeRaw.mockRejectedValue(new Error('Database unavailable'));
 
-      await expect(purgeSearchIndexes(mockPrisma, 'error-subject')).rejects.toThrow('Database unavailable');
+      await expect(purgeSearchIndexes(mockPrisma, 'error-subject')).rejects.toThrow(
+        'Database unavailable'
+      );
     });
 
     it('should handle partial failures', async () => {
@@ -305,7 +291,9 @@ describe('DSAR Search Index Purge (IFC-155)', () => {
         .mockResolvedValueOnce(5) // documents succeed
         .mockRejectedValueOnce(new Error('Notes table locked')); // notes fail
 
-      await expect(purgeSearchIndexes(mockPrisma, 'partial-fail-subject')).rejects.toThrow('Notes table locked');
+      await expect(purgeSearchIndexes(mockPrisma, 'partial-fail-subject')).rejects.toThrow(
+        'Notes table locked'
+      );
     });
   });
 
@@ -373,9 +361,7 @@ describe('Integration: DSAR Workflow with Search Purge', () => {
   });
 
   it('should update DSAR request status after purge', async () => {
-    mockPrisma.$executeRaw
-      .mockResolvedValueOnce(1)
-      .mockResolvedValueOnce(1);
+    mockPrisma.$executeRaw.mockResolvedValueOnce(1).mockResolvedValueOnce(1);
     mockPrisma.dsarRequest.update.mockResolvedValue({ id: 'dsar-123', status: 'COMPLETED' });
 
     await purgeSearchIndexes(mockPrisma, 'subject-123');

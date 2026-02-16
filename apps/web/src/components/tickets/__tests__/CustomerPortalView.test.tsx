@@ -16,9 +16,7 @@ vi.mock('@intelliflow/ui', () => ({
 
 // Mock SLAIndicator
 vi.mock('../SLAIndicator', () => ({
-  SLAIndicator: ({ slaStatus }: any) => (
-    <div data-testid="sla-indicator">{slaStatus}</div>
-  ),
+  SLAIndicator: ({ slaStatus }: any) => <div data-testid="sla-indicator">{slaStatus}</div>,
 }));
 
 describe('CustomerPortalView', () => {
@@ -178,9 +176,7 @@ describe('CustomerPortalView', () => {
       />
     );
 
-    expect(
-      screen.queryByText(/Internal note should not be visible/i)
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Internal note should not be visible/i)).not.toBeInTheDocument();
   });
 
   it('calls onReply when reply submitted', async () => {

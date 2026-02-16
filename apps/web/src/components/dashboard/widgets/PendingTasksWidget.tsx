@@ -39,7 +39,9 @@ export function PendingTasksWidget(_props: WidgetProps) {
           title="Add new task"
           aria-label="Add new task"
         >
-          <span className="material-symbols-outlined text-lg" aria-hidden="true">add</span>
+          <span className="material-symbols-outlined text-lg" aria-hidden="true">
+            add
+          </span>
         </button>
       </div>
 
@@ -56,34 +58,40 @@ export function PendingTasksWidget(_props: WidgetProps) {
             <p className="text-sm text-muted-foreground">No pending tasks</p>
           </div>
         )}
-        {!isLoading && tasks.map((task: any) => (
-          <Link
-            key={task.id}
-            href={`/tasks/${task.id}`}
-            className="flex items-start gap-3 p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer group/item"
-          >
-            <input
-              type="checkbox"
-              className="mt-1 rounded border-border text-primary focus:ring-primary bg-transparent cursor-pointer"
-              checked={false}
-              title="Mark as complete"
-              onChange={() => completeMutation.mutate({ taskId: task.id })}
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-              aria-label={`Complete task: ${task.title}`}
-            />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-foreground group-hover/item:text-primary transition-colors truncate">
-                {task.title}
-              </p>
-              <p className={`text-xs ${task.dueDate && new Date(task.dueDate) < new Date() ? 'text-destructive' : 'text-muted-foreground'}`}>
-                {task.dueDate
-                  ? new Date(task.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                  : 'No due date'}
-              </p>
-            </div>
-          </Link>
-        ))}
+        {!isLoading &&
+          tasks.map((task: any) => (
+            <Link
+              key={task.id}
+              href={`/tasks/${task.id}`}
+              className="flex items-start gap-3 p-2 hover:bg-muted rounded-lg transition-colors cursor-pointer group/item"
+            >
+              <input
+                type="checkbox"
+                className="mt-1 rounded border-border text-primary focus:ring-primary bg-transparent cursor-pointer"
+                checked={false}
+                title="Mark as complete"
+                onChange={() => completeMutation.mutate({ taskId: task.id })}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+                aria-label={`Complete task: ${task.title}`}
+              />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground group-hover/item:text-primary transition-colors truncate">
+                  {task.title}
+                </p>
+                <p
+                  className={`text-xs ${task.dueDate && new Date(task.dueDate) < new Date() ? 'text-destructive' : 'text-muted-foreground'}`}
+                >
+                  {task.dueDate
+                    ? new Date(task.dueDate).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                      })
+                    : 'No due date'}
+                </p>
+              </div>
+            </Link>
+          ))}
       </div>
 
       <Link

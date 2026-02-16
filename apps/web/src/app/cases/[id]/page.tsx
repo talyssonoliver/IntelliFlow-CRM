@@ -91,7 +91,12 @@ export default function CaseDetailPage() {
     closeMutation.mutate({ caseId, resolution });
   };
 
-  const handleAddTask = (task: { title: string; description?: string; dueDate?: Date; assignee?: string }) => {
+  const handleAddTask = (task: {
+    title: string;
+    description?: string;
+    dueDate?: Date;
+    assignee?: string;
+  }) => {
     addTaskMutation.mutate({ caseId, ...task });
   };
 
@@ -142,9 +147,15 @@ export default function CaseDetailPage() {
         <div className="container mx-auto py-6 px-4">
           <Skeleton className="h-6 w-64 mb-4" />
           <div className="grid grid-cols-12 gap-6">
-            <div className="col-span-3"><Skeleton className="h-80 rounded-xl" /></div>
-            <div className="col-span-6"><Skeleton className="h-96 rounded-xl" /></div>
-            <div className="col-span-3"><Skeleton className="h-64 rounded-xl" /></div>
+            <div className="col-span-3">
+              <Skeleton className="h-80 rounded-xl" />
+            </div>
+            <div className="col-span-6">
+              <Skeleton className="h-96 rounded-xl" />
+            </div>
+            <div className="col-span-3">
+              <Skeleton className="h-64 rounded-xl" />
+            </div>
           </div>
         </div>
       </div>
@@ -156,9 +167,14 @@ export default function CaseDetailPage() {
       <div className="min-h-screen bg-background">
         <div className="container mx-auto py-6 px-4">
           <Card className="p-8 text-center rounded-xl">
-            <span className="material-symbols-outlined text-4xl text-muted-foreground/50 mb-3">search_off</span>
+            <span className="material-symbols-outlined text-4xl text-muted-foreground/50 mb-3">
+              search_off
+            </span>
             <p className="text-muted-foreground">Case not found</p>
-            <button onClick={() => router.push('/cases')} className="mt-4 text-primary hover:underline text-sm font-medium">
+            <button
+              onClick={() => router.push('/cases')}
+              className="mt-4 text-primary hover:underline text-sm font-medium"
+            >
               Back to Cases
             </button>
           </Card>

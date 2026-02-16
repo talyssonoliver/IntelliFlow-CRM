@@ -325,10 +325,7 @@ describe('Tenant Context', () => {
 
     it('should return team member IDs for manager', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ role: 'MANAGER' });
-      mockPrisma.user.findMany.mockResolvedValue([
-        { id: 'user-1' },
-        { id: 'user-2' },
-      ]);
+      mockPrisma.user.findMany.mockResolvedValue([{ id: 'user-1' }, { id: 'user-2' }]);
 
       const result = await getTeamMemberIds(mockPrisma as any, 'manager-456');
 
@@ -339,10 +336,7 @@ describe('Tenant Context', () => {
   describe('enrichTenantContext', () => {
     it('should add team member IDs for manager', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ role: 'MANAGER' });
-      mockPrisma.user.findMany.mockResolvedValue([
-        { id: 'user-1' },
-        { id: 'user-2' },
-      ]);
+      mockPrisma.user.findMany.mockResolvedValue([{ id: 'user-1' }, { id: 'user-2' }]);
 
       const tenant: TenantContext = {
         tenantId: 'manager-456',
@@ -434,9 +428,9 @@ describe('Tenant Resource Limiter', () => {
       mockPrisma.user.findUnique.mockResolvedValue({ role: 'USER' });
       mockPrisma.lead.count.mockResolvedValue(1000);
 
-      await expect(
-        enforceResourceLimit(mockPrisma as any, 'user-123', 'leads')
-      ).rejects.toThrow(TRPCError);
+      await expect(enforceResourceLimit(mockPrisma as any, 'user-123', 'leads')).rejects.toThrow(
+        TRPCError
+      );
     });
   });
 
@@ -585,9 +579,7 @@ describe('Tenant Isolation Security Tests', () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce({ role: 'USER' });
       mockPrisma.lead.count.mockResolvedValueOnce(1000);
 
-      await expect(
-        enforceResourceLimit(mockPrisma as any, 'user-a', 'leads')
-      ).rejects.toThrow();
+      await expect(enforceResourceLimit(mockPrisma as any, 'user-a', 'leads')).rejects.toThrow();
 
       // User B under limit
       mockPrisma.user.findUnique.mockResolvedValueOnce({ role: 'USER' });

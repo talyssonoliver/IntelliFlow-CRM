@@ -84,18 +84,19 @@ describe('Notifications Validators', () => {
 
     it('should have 5 notification channels', () => {
       expect(NOTIFICATION_CHANNELS).toHaveLength(5);
-      expect([...NOTIFICATION_CHANNELS]).toEqual([
-        'in_app',
-        'email',
-        'sms',
-        'push',
-        'webhook',
-      ]);
+      expect([...NOTIFICATION_CHANNELS]).toEqual(['in_app', 'email', 'sms', 'push', 'webhook']);
     });
 
     it('should have 6 notification statuses', () => {
       expect(NOTIFICATION_STATUSES).toHaveLength(6);
-      expect([...NOTIFICATION_STATUSES]).toEqual(['pending', 'sent', 'delivered', 'failed', 'read', 'bounced']);
+      expect([...NOTIFICATION_STATUSES]).toEqual([
+        'pending',
+        'sent',
+        'delivered',
+        'failed',
+        'read',
+        'bounced',
+      ]);
     });
   });
 

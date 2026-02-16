@@ -43,9 +43,7 @@ describe('Supabase Configuration', () => {
       delete process.env.SUPABASE_ANON_KEY;
       process.env.SUPABASE_SERVICE_ROLE_KEY = 'real-service-key';
 
-      await expect(import('../supabase.js')).rejects.toThrow(
-        'SUPABASE_ANON_KEY'
-      );
+      await expect(import('../supabase.js')).rejects.toThrow('SUPABASE_ANON_KEY');
     });
 
     it('should throw when SUPABASE_SERVICE_ROLE_KEY is missing in production', async () => {
@@ -55,9 +53,7 @@ describe('Supabase Configuration', () => {
       process.env.SUPABASE_ANON_KEY = 'real-anon-key';
       delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-      await expect(import('../supabase.js')).rejects.toThrow(
-        'SUPABASE_SERVICE_ROLE_KEY'
-      );
+      await expect(import('../supabase.js')).rejects.toThrow('SUPABASE_SERVICE_ROLE_KEY');
     });
 
     it('should throw listing all missing vars when none are set in production', async () => {
@@ -67,9 +63,7 @@ describe('Supabase Configuration', () => {
       delete process.env.SUPABASE_ANON_KEY;
       delete process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-      await expect(import('../supabase.js')).rejects.toThrow(
-        'SUPABASE_URL'
-      );
+      await expect(import('../supabase.js')).rejects.toThrow('SUPABASE_URL');
     });
 
     it('should NOT throw when all vars are set in production', async () => {
@@ -98,9 +92,7 @@ describe('Supabase Configuration', () => {
 
       expect(mod.supabase).toBeDefined();
       expect(mod.getConfig().usingMockKeys).toBe(true);
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[Supabase] Development mode')
-      );
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[Supabase] Development mode'));
       warnSpy.mockRestore();
     });
   });

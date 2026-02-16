@@ -77,18 +77,13 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
             )}
             {isLast || !item.href ? (
               <span
-                className={cn(
-                  isLast && 'text-foreground font-medium'
-                )}
+                className={cn(isLast && 'text-foreground font-medium')}
                 aria-current={isLast ? 'page' : undefined}
               >
                 {item.label}
               </span>
             ) : (
-              <Link
-                href={item.href}
-                className="hover:text-foreground transition-colors"
-              >
+              <Link href={item.href} className="hover:text-foreground transition-colors">
                 {item.label}
               </Link>
             )}
@@ -135,9 +130,13 @@ function ActionButton({ action }: ActionButtonProps) {
   const content = (
     <>
       {loading ? (
-        <span className="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+        <span className="material-symbols-outlined text-[20px] animate-spin">
+          progress_activity
+        </span>
       ) : icon ? (
-        <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">{icon}</span>
+        <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">
+          {icon}
+        </span>
       ) : null}
       <span className={cn(hideOnMobile && 'hidden sm:inline')}>{label}</span>
     </>
@@ -152,12 +151,7 @@ function ActionButton({ action }: ActionButtonProps) {
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled || loading}
-      className={baseClasses}
-    >
+    <button type="button" onClick={onClick} disabled={disabled || loading} className={baseClasses}>
       {content}
     </button>
   );
@@ -214,22 +208,16 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <div className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-4', className)}>
+    <div
+      className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-4', className)}
+    >
       {/* Left side: Breadcrumbs, Title, Description */}
       <div className="min-w-0 flex-1">
-        {breadcrumbs && breadcrumbs.length > 0 && (
-          <Breadcrumbs items={breadcrumbs} />
-        )}
+        {breadcrumbs && breadcrumbs.length > 0 && <Breadcrumbs items={breadcrumbs} />}
 
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
-          {title}
-        </h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">{title}</h1>
 
-        {description && (
-          <p className="text-muted-foreground mt-1">
-            {description}
-          </p>
-        )}
+        {description && <p className="text-muted-foreground mt-1">{description}</p>}
 
         {children}
       </div>

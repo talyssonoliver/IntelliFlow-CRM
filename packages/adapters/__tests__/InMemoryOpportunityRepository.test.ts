@@ -861,10 +861,7 @@ describe('InMemoryOpportunityRepository', () => {
       });
 
       // Simulate concurrent saves
-      await Promise.all([
-        repository.save(testOpportunity),
-        repository.save(opp2Result.value),
-      ]);
+      await Promise.all([repository.save(testOpportunity), repository.save(opp2Result.value)]);
 
       const allOpps = repository.getAll();
       expect(allOpps).toHaveLength(2);

@@ -140,9 +140,7 @@ function PaymentMethodCard({
             </Badge>
           )}
         </div>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Expires {expiry}
-        </p>
+        <p className="text-sm text-muted-foreground mt-0.5">Expires {expiry}</p>
       </div>
 
       {/* Actions */}
@@ -202,16 +200,11 @@ function EmptyState({ onAddCard }: { onAddCard: () => void }) {
   return (
     <div className="text-center py-12">
       <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-        <span
-          className="material-symbols-outlined text-3xl text-slate-400"
-          aria-hidden="true"
-        >
+        <span className="material-symbols-outlined text-3xl text-slate-400" aria-hidden="true">
           credit_card_off
         </span>
       </div>
-      <h3 className="text-lg font-semibold text-foreground mb-2">
-        No payment methods
-      </h3>
+      <h3 className="text-lg font-semibold text-foreground mb-2">No payment methods</h3>
       <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
         Add a payment method to manage your subscription and make purchases.
       </p>
@@ -232,7 +225,10 @@ function LoadingSkeleton() {
   return (
     <div className="space-y-3">
       {[1, 2].map((i) => (
-        <div key={i} className="flex items-center gap-4 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+        <div
+          key={i}
+          className="flex items-center gap-4 p-4 rounded-lg border border-slate-200 dark:border-slate-700"
+        >
           <Skeleton className="w-12 h-8 rounded" />
           <div className="flex-1">
             <Skeleton className="h-5 w-32 mb-1" />
@@ -334,11 +330,7 @@ function AddCardDialog({ isOpen, onClose, onAdd, isAdding }: AddCardDialogProps)
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={handleClose}
-        aria-hidden="true"
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={handleClose} aria-hidden="true" />
 
       {/* Dialog */}
       <div
@@ -410,9 +402,7 @@ function AddCardDialog({ isOpen, onClose, onAdd, isAdding }: AddCardDialogProps)
                 </span>
               </div>
             </div>
-            {errors.cardNumber && (
-              <p className="text-sm text-destructive">{errors.cardNumber}</p>
-            )}
+            {errors.cardNumber && <p className="text-sm text-destructive">{errors.cardNumber}</p>}
           </div>
 
           {/* Expiry and CVC */}
@@ -438,9 +428,7 @@ function AddCardDialog({ isOpen, onClose, onAdd, isAdding }: AddCardDialogProps)
                   errors.expiry ? 'border-destructive' : 'border-input'
                 )}
               />
-              {errors.expiry && (
-                <p className="text-sm text-destructive">{errors.expiry}</p>
-              )}
+              {errors.expiry && <p className="text-sm text-destructive">{errors.expiry}</p>}
             </div>
 
             <div className="space-y-1.5">
@@ -464,9 +452,7 @@ function AddCardDialog({ isOpen, onClose, onAdd, isAdding }: AddCardDialogProps)
                   errors.cvc ? 'border-destructive' : 'border-input'
                 )}
               />
-              {errors.cvc && (
-                <p className="text-sm text-destructive">{errors.cvc}</p>
-              )}
+              {errors.cvc && <p className="text-sm text-destructive">{errors.cvc}</p>}
             </div>
           </div>
 
@@ -491,9 +477,7 @@ function AddCardDialog({ isOpen, onClose, onAdd, isAdding }: AddCardDialogProps)
                 errors.name ? 'border-destructive' : 'border-input'
               )}
             />
-            {errors.name && (
-              <p className="text-sm text-destructive">{errors.name}</p>
-            )}
+            {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
           </div>
         </form>
 
@@ -505,7 +489,10 @@ function AddCardDialog({ isOpen, onClose, onAdd, isAdding }: AddCardDialogProps)
           <Button onClick={handleSubmit} disabled={isAdding}>
             {isAdding ? (
               <>
-                <span className="material-symbols-outlined animate-spin text-lg mr-2" aria-hidden="true">
+                <span
+                  className="material-symbols-outlined animate-spin text-lg mr-2"
+                  aria-hidden="true"
+                >
                   progress_activity
                 </span>
                 Adding...
@@ -597,21 +584,14 @@ function RemoveCardDialog({
                 >
                   warning
                 </span>
-                <p className="text-sm text-amber-700 dark:text-amber-300">
-                  {warningMessage}
-                </p>
+                <p className="text-sm text-amber-700 dark:text-amber-300">{warningMessage}</p>
               </div>
             </div>
           )}
 
           {/* Actions */}
           <div className="flex gap-3">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={onClose}
-              disabled={isRemoving}
-            >
+            <Button variant="outline" className="flex-1" onClick={onClose} disabled={isRemoving}>
               Cancel
             </Button>
             <Button
@@ -622,7 +602,10 @@ function RemoveCardDialog({
             >
               {isRemoving ? (
                 <>
-                  <span className="material-symbols-outlined animate-spin text-lg mr-2" aria-hidden="true">
+                  <span
+                    className="material-symbols-outlined animate-spin text-lg mr-2"
+                    aria-hidden="true"
+                  >
                     progress_activity
                   </span>
                   Removing...
@@ -654,10 +637,13 @@ export function PaymentMethods({ className }: PaymentMethodsProps) {
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // tRPC queries and mutations
-  const { data: paymentMethods, isLoading, error } = trpc.billing.getPaymentMethods.useQuery(
-    undefined,
-    { enabled: isAuthenticated && !authLoading }
-  );
+  const {
+    data: paymentMethods,
+    isLoading,
+    error,
+  } = trpc.billing.getPaymentMethods.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+  });
 
   const updatePaymentMethodMutation = trpc.billing.updatePaymentMethod.useMutation({
     onSuccess: () => {
@@ -686,21 +672,27 @@ export function PaymentMethods({ className }: PaymentMethodsProps) {
   }, []);
 
   // Handlers
-  const handleSetDefault = useCallback(async (paymentMethodId: string) => {
-    setSettingDefaultId(paymentMethodId);
-    try {
-      await updatePaymentMethodMutation.mutateAsync({ paymentMethodId });
-    } finally {
-      setSettingDefaultId(null);
-    }
-  }, [updatePaymentMethodMutation]);
+  const handleSetDefault = useCallback(
+    async (paymentMethodId: string) => {
+      setSettingDefaultId(paymentMethodId);
+      try {
+        await updatePaymentMethodMutation.mutateAsync({ paymentMethodId });
+      } finally {
+        setSettingDefaultId(null);
+      }
+    },
+    [updatePaymentMethodMutation]
+  );
 
-  const handleRemoveClick = useCallback((paymentMethodId: string) => {
-    const card = paymentMethods?.find((pm) => pm.id === paymentMethodId);
-    if (card) {
-      setRemoveCard(card);
-    }
-  }, [paymentMethods]);
+  const handleRemoveClick = useCallback(
+    (paymentMethodId: string) => {
+      const card = paymentMethods?.find((pm) => pm.id === paymentMethodId);
+      if (card) {
+        setRemoveCard(card);
+      }
+    },
+    [paymentMethods]
+  );
 
   const handleRemoveConfirm = useCallback(async () => {
     if (!removeCard) return;
@@ -714,24 +706,26 @@ export function PaymentMethods({ className }: PaymentMethodsProps) {
     }
   }, [removeCard, removePaymentMethodMutation]);
 
-  const handleAddCard = useCallback(async (_cardDetails: CardDetails) => {
-    // In real implementation, this would:
-    // 1. Create payment method via Stripe.js
-    // 2. Call tRPC endpoint with payment method ID
-    // For now, simulate with mock payment method ID
-    const mockPaymentMethodId = `pm_${Date.now()}`;
+  const handleAddCard = useCallback(
+    async (_cardDetails: CardDetails) => {
+      // In real implementation, this would:
+      // 1. Create payment method via Stripe.js
+      // 2. Call tRPC endpoint with payment method ID
+      // For now, simulate with mock payment method ID
+      const mockPaymentMethodId = `pm_${Date.now()}`;
 
-    await updatePaymentMethodMutation.mutateAsync({ paymentMethodId: mockPaymentMethodId });
-    setIsAddDialogOpen(false);
-  }, [updatePaymentMethodMutation]);
+      await updatePaymentMethodMutation.mutateAsync({ paymentMethodId: mockPaymentMethodId });
+      setIsAddDialogOpen(false);
+    },
+    [updatePaymentMethodMutation]
+  );
 
   // Get sorted payment methods
   const sortedPaymentMethods = paymentMethods ? sortPaymentMethods(paymentMethods) : [];
 
   // Get remove warning message
-  const removeWarning = removeCard && paymentMethods
-    ? canRemoveCard(removeCard.id, paymentMethods).reason
-    : undefined;
+  const removeWarning =
+    removeCard && paymentMethods ? canRemoveCard(removeCard.id, paymentMethods).reason : undefined;
 
   return (
     <div className={cn('space-y-6', className)}>
@@ -760,9 +754,7 @@ export function PaymentMethods({ className }: PaymentMethodsProps) {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Payment Methods</CardTitle>
-              <CardDescription className="mt-1">
-                Manage your saved payment methods
-              </CardDescription>
+              <CardDescription className="mt-1">Manage your saved payment methods</CardDescription>
             </div>
             {!isLoading && paymentMethods && paymentMethods.length > 0 && (
               <Button onClick={() => setIsAddDialogOpen(true)}>
@@ -788,7 +780,10 @@ export function PaymentMethods({ className }: PaymentMethodsProps) {
                 error
               </span>
               <p className="text-destructive mb-4">Failed to load payment methods</p>
-              <Button variant="outline" onClick={() => utils.billing.getPaymentMethods.invalidate()}>
+              <Button
+                variant="outline"
+                onClick={() => utils.billing.getPaymentMethods.invalidate()}
+              >
                 Try Again
               </Button>
             </div>

@@ -24,7 +24,12 @@ interface Vulnerability {
 
 function normalizeSeverity(severity: string | undefined): VulnerabilitySeverity {
   const normalized = (severity || 'medium').toLowerCase();
-  if (normalized === 'critical' || normalized === 'high' || normalized === 'medium' || normalized === 'low') {
+  if (
+    normalized === 'critical' ||
+    normalized === 'high' ||
+    normalized === 'medium' ||
+    normalized === 'low'
+  ) {
     return normalized;
   }
   return 'medium';
@@ -118,16 +123,14 @@ export async function GET(_request: NextRequest) {
     ];
 
     // Dedupe by ID
-    const uniqueVulns = Array.from(
-      new Map(allVulnerabilities.map(v => [v.id, v])).values()
-    );
+    const uniqueVulns = Array.from(new Map(allVulnerabilities.map((v) => [v.id, v])).values());
 
     // Calculate severity counts
     const severityCounts = {
-      critical: uniqueVulns.filter(v => v.severity === 'critical').length,
-      high: uniqueVulns.filter(v => v.severity === 'high').length,
-      medium: uniqueVulns.filter(v => v.severity === 'medium').length,
-      low: uniqueVulns.filter(v => v.severity === 'low').length,
+      critical: uniqueVulns.filter((v) => v.severity === 'critical').length,
+      high: uniqueVulns.filter((v) => v.severity === 'high').length,
+      medium: uniqueVulns.filter((v) => v.severity === 'medium').length,
+      low: uniqueVulns.filter((v) => v.severity === 'low').length,
     };
 
     // Calculate security score (100 - deductions)
@@ -138,9 +141,14 @@ export async function GET(_request: NextRequest) {
     score -= severityCounts.low * 1;
     score = Math.max(0, score);
 
-    const status = severityCounts.critical > 0 ? 'critical' :
-                   severityCounts.high > 0 ? 'warning' :
-                   score >= 80 ? 'passing' : 'warning';
+    const status =
+      severityCounts.critical > 0
+        ? 'critical'
+        : severityCounts.high > 0
+          ? 'warning'
+          : score >= 80
+            ? 'passing'
+            : 'warning';
 
     return NextResponse.json(
       {
@@ -152,23 +160,24 @@ export async function GET(_request: NextRequest) {
         summary: {
           total: uniqueVulns.length,
           ...severityCounts,
-          fixable: uniqueVulns.filter(v => v.fixAvailable).length,
+          fixable: uniqueVulns.filter((v) => v.fixAvailable).length,
         },
         sources: {
-          pnpmAudit: pnpmAudit ? { count: pnpmAudit.vulnerabilities.length, lastScan: pnpmAudit.timestamp } : null,
-          trivy: trivyScan ? { count: trivyScan.vulnerabilities.length, lastScan: trivyScan.timestamp } : null,
+          pnpmAudit: pnpmAudit
+            ? { count: pnpmAudit.vulnerabilities.length, lastScan: pnpmAudit.timestamp }
+            : null,
+          trivy: trivyScan
+            ? { count: trivyScan.vulnerabilities.length, lastScan: trivyScan.timestamp }
+            : null,
         },
-        criticalVulnerabilities: uniqueVulns
-          .filter(v => v.severity === 'critical')
-          .slice(0, 10),
-        highVulnerabilities: uniqueVulns
-          .filter(v => v.severity === 'high')
-          .slice(0, 10),
-        recommendation: severityCounts.critical > 0
-          ? 'URGENT: Fix critical vulnerabilities immediately'
-          : severityCounts.high > 0
-          ? 'Fix high severity vulnerabilities before deployment'
-          : 'Security posture acceptable',
+        criticalVulnerabilities: uniqueVulns.filter((v) => v.severity === 'critical').slice(0, 10),
+        highVulnerabilities: uniqueVulns.filter((v) => v.severity === 'high').slice(0, 10),
+        recommendation:
+          severityCounts.critical > 0
+            ? 'URGENT: Fix critical vulnerabilities immediately'
+            : severityCounts.high > 0
+              ? 'Fix high severity vulnerabilities before deployment'
+              : 'Security posture acceptable',
       },
       {
         headers: {

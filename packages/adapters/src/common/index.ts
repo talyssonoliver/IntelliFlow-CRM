@@ -34,8 +34,4 @@ export {
   InMemoryIdempotencyStore,
   calculateContentHash,
 } from './idempotency';
-export type {
-  IdempotencyConfig,
-  IdempotencyStore,
-  IdempotencyRecord,
-} from './idempotency';
+export type { IdempotencyConfig, IdempotencyStore, IdempotencyRecord } from './idempotency';

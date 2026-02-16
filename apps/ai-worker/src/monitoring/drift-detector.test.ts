@@ -74,7 +74,7 @@ describe('DriftDetector', () => {
       });
 
       detector.recordSample({
-        value: 0.80,
+        value: 0.8,
         timestamp: new Date(),
         model: 'gpt-4',
         metric: 'confidence_level',
@@ -227,7 +227,9 @@ describe('DriftDetector', () => {
     it('should detect no drift with stable distribution', () => {
       // Add stable samples with consistent values (no random variance)
       // Use same fixed values for both baseline and current window
-      const fixedValues = [0.70, 0.72, 0.74, 0.76, 0.78, 0.80, 0.71, 0.73, 0.75, 0.77, 0.79, 0.81, 0.72, 0.74, 0.76];
+      const fixedValues = [
+        0.7, 0.72, 0.74, 0.76, 0.78, 0.8, 0.71, 0.73, 0.75, 0.77, 0.79, 0.81, 0.72, 0.74, 0.76,
+      ];
 
       for (let i = 0; i < fixedValues.length; i++) {
         detector.recordSample({
@@ -325,7 +327,7 @@ describe('DriftDetector', () => {
           metric: 'score_distribution',
         });
         detector.recordSample({
-          value: 0.80,
+          value: 0.8,
           timestamp: new Date(Date.now() - i * 60000),
           model: 'gpt-4',
           metric: 'confidence_level',

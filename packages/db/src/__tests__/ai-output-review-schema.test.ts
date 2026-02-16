@@ -15,9 +15,7 @@ describe('AI Output Review Schema Validation', () => {
   describe('AIOutputReview model', () => {
     it('should have required columns in Prisma model', () => {
       // Verify the model exists by checking Prisma types
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReview'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReview');
 
       expect(model).toBeDefined();
 
@@ -56,9 +54,7 @@ describe('AI Output Review Schema Validation', () => {
     });
 
     it('should have tenant relation with cascade delete', () => {
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReview'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReview');
       const tenantField = model?.fields.find((f) => f.name === 'tenant');
 
       expect(tenantField).toBeDefined();
@@ -71,12 +67,8 @@ describe('AI Output Review Schema Validation', () => {
     });
 
     it('should have auditEntries relation', () => {
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReview'
-      );
-      const auditEntriesField = model?.fields.find(
-        (f) => f.name === 'auditEntries'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReview');
+      const auditEntriesField = model?.fields.find((f) => f.name === 'auditEntries');
 
       expect(auditEntriesField).toBeDefined();
       expect(auditEntriesField?.type).toBe('AIOutputReviewAudit');
@@ -84,9 +76,7 @@ describe('AI Output Review Schema Validation', () => {
     });
 
     it('should have version field defaulting to 1 for optimistic locking', () => {
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReview'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReview');
       const versionField = model?.fields.find((f) => f.name === 'version');
 
       expect(versionField).toBeDefined();
@@ -96,9 +86,7 @@ describe('AI Output Review Schema Validation', () => {
     });
 
     it('should have status field defaulting to PENDING', () => {
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReview'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReview');
       const statusField = model?.fields.find((f) => f.name === 'status');
 
       expect(statusField).toBeDefined();
@@ -108,15 +96,11 @@ describe('AI Output Review Schema Validation', () => {
     });
 
     it('should have nullable lock fields', () => {
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReview'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReview');
 
       const lockedBy = model?.fields.find((f) => f.name === 'lockedBy');
       const lockedAt = model?.fields.find((f) => f.name === 'lockedAt');
-      const lockExpiresAt = model?.fields.find(
-        (f) => f.name === 'lockExpiresAt'
-      );
+      const lockExpiresAt = model?.fields.find((f) => f.name === 'lockExpiresAt');
 
       expect(lockedBy?.isRequired).toBe(false);
       expect(lockedAt?.isRequired).toBe(false);
@@ -124,23 +108,15 @@ describe('AI Output Review Schema Validation', () => {
     });
 
     it('should use Float type for confidence', () => {
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReview'
-      );
-      const confidenceField = model?.fields.find(
-        (f) => f.name === 'confidence'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReview');
+      const confidenceField = model?.fields.find((f) => f.name === 'confidence');
 
       expect(confidenceField?.type).toBe('Float');
     });
 
     it('should use Json type for outputPayload', () => {
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReview'
-      );
-      const payloadField = model?.fields.find(
-        (f) => f.name === 'outputPayload'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReview');
+      const payloadField = model?.fields.find((f) => f.name === 'outputPayload');
 
       expect(payloadField?.type).toBe('Json');
     });
@@ -148,9 +124,7 @@ describe('AI Output Review Schema Validation', () => {
 
   describe('AIOutputReviewAudit model', () => {
     it('should have required columns', () => {
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReviewAudit'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReviewAudit');
 
       expect(model).toBeDefined();
 
@@ -171,9 +145,7 @@ describe('AI Output Review Schema Validation', () => {
     });
 
     it('should have review relation', () => {
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReviewAudit'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReviewAudit');
       const reviewField = model?.fields.find((f) => f.name === 'review');
 
       expect(reviewField).toBeDefined();
@@ -181,9 +153,7 @@ describe('AI Output Review Schema Validation', () => {
     });
 
     it('should have reviewId as required field', () => {
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReviewAudit'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReviewAudit');
       const reviewIdField = model?.fields.find((f) => f.name === 'reviewId');
 
       expect(reviewIdField).toBeDefined();
@@ -191,18 +161,14 @@ describe('AI Output Review Schema Validation', () => {
     });
 
     it('should have nullable actorId for system events', () => {
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReviewAudit'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReviewAudit');
       const actorIdField = model?.fields.find((f) => f.name === 'actorId');
 
       expect(actorIdField?.isRequired).toBe(false);
     });
 
     it('should have actorType defaulting to USER', () => {
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReviewAudit'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReviewAudit');
       const actorTypeField = model?.fields.find((f) => f.name === 'actorType');
 
       expect(actorTypeField?.hasDefaultValue).toBe(true);
@@ -210,9 +176,7 @@ describe('AI Output Review Schema Validation', () => {
     });
 
     it('should have timestamp with default now()', () => {
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReviewAudit'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReviewAudit');
       const timestampField = model?.fields.find((f) => f.name === 'timestamp');
 
       expect(timestampField?.type).toBe('DateTime');
@@ -220,9 +184,7 @@ describe('AI Output Review Schema Validation', () => {
     });
 
     it('should use Json type for nullable metadata', () => {
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReviewAudit'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReviewAudit');
       const metadataField = model?.fields.find((f) => f.name === 'metadata');
 
       expect(metadataField?.type).toBe('Json');
@@ -232,17 +194,13 @@ describe('AI Output Review Schema Validation', () => {
 
   describe('Table mapping', () => {
     it('should map AIOutputReview to ai_output_reviews table', () => {
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReview'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReview');
 
       expect(model?.dbName).toBe('ai_output_reviews');
     });
 
     it('should map AIOutputReviewAudit to ai_output_review_audit table', () => {
-      const model = Prisma.dmmf.datamodel.models.find(
-        (m) => m.name === 'AIOutputReviewAudit'
-      );
+      const model = Prisma.dmmf.datamodel.models.find((m) => m.name === 'AIOutputReviewAudit');
 
       expect(model?.dbName).toBe('ai_output_review_audit');
     });

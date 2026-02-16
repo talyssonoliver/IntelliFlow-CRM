@@ -545,7 +545,11 @@ describe('Update Agent Tools', () => {
           updatedAt: new Date(),
         };
 
-        const result = await updateAppointmentTool.rollback!('action-123', executionResult, context);
+        const result = await updateAppointmentTool.rollback!(
+          'action-123',
+          executionResult,
+          context
+        );
 
         expect(result.success).toBe(true);
         expect(result.actionId).toBe('action-123');
@@ -568,7 +572,11 @@ describe('Update Agent Tools', () => {
         const { rollbackStore } = await import('../../approval-workflow.js');
         vi.mocked(rollbackStore.add).mockRejectedValueOnce(new Error('Rollback error'));
 
-        const result = await updateAppointmentTool.rollback!('action-123', executionResult, context);
+        const result = await updateAppointmentTool.rollback!(
+          'action-123',
+          executionResult,
+          context
+        );
 
         expect(result.success).toBe(false);
         expect(result.error).toContain('Rollback');

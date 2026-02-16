@@ -28,13 +28,17 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }: any) => (
-    <a href={href} {...props}>{children}</a>
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
 // Mock Recharts to avoid SVG rendering issues in happy-dom
 vi.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: any) => <div data-testid="responsive-container">{children}</div>,
+  ResponsiveContainer: ({ children }: any) => (
+    <div data-testid="responsive-container">{children}</div>
+  ),
   AreaChart: ({ children }: any) => <div data-testid="area-chart">{children}</div>,
   Area: () => <div data-testid="area" />,
   XAxis: () => null,
@@ -101,7 +105,9 @@ describe('ChurnDashboard', () => {
 
     it('renders description text', () => {
       render(<ChurnDashboard />);
-      expect(screen.getByText('AI-powered churn risk analysis and intervention recommendations.')).toBeInTheDocument();
+      expect(
+        screen.getByText('AI-powered churn risk analysis and intervention recommendations.')
+      ).toBeInTheDocument();
     });
 
     it('renders 5 stat cards (Critical, High, Medium, Low, Minimal)', () => {
@@ -131,7 +137,13 @@ describe('ChurnDashboard', () => {
     });
 
     it('renders loading skeleton when isLoading', () => {
-      setMockHook({ isLoading: true, stats: null, atRiskCustomers: [], trends: [], distribution: null });
+      setMockHook({
+        isLoading: true,
+        stats: null,
+        atRiskCustomers: [],
+        trends: [],
+        distribution: null,
+      });
       render(<ChurnDashboard />);
       const skeletons = document.querySelectorAll('[class*="animate-pulse"], [class*="skeleton"]');
       expect(skeletons.length).toBeGreaterThan(0);
@@ -199,7 +211,9 @@ describe('ChurnDashboard', () => {
     it('next best action text displays', () => {
       render(<ChurnDashboard />);
       // Text appears in both InterventionAlerts button and CustomerCard
-      expect(screen.getAllByText('Schedule urgent retention call').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('Schedule urgent retention call').length).toBeGreaterThanOrEqual(
+        1
+      );
     });
 
     it('recommendations list renders', () => {
@@ -219,10 +233,11 @@ describe('ChurnDashboard', () => {
       render(<ChurnDashboard />);
       const selects = screen.getAllByRole('combobox');
       // Risk level filter is the second filter
-      const riskSelect = selects.find((el) => {
-        const options = within(el).queryAllByRole('option');
-        return options.some((o) => o.textContent?.includes('Risk'));
-      }) ?? selects[1];
+      const riskSelect =
+        selects.find((el) => {
+          const options = within(el).queryAllByRole('option');
+          return options.some((o) => o.textContent?.includes('Risk'));
+        }) ?? selects[1];
       if (riskSelect) {
         fireEvent.change(riskSelect, { target: { value: 'CRITICAL' } });
       }
@@ -342,7 +357,12 @@ describe('ChurnDashboard', () => {
     });
 
     it('error state with retry button', () => {
-      setMockHook({ error: new Error('Network error') as any, stats: null, atRiskCustomers: [], trends: [] });
+      setMockHook({
+        error: new Error('Network error') as any,
+        stats: null,
+        atRiskCustomers: [],
+        trends: [],
+      });
       render(<ChurnDashboard />);
       expect(screen.getByText('Failed to load churn risk data')).toBeInTheDocument();
       const retryBtn = screen.getByText('Try again');

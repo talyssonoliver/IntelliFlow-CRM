@@ -87,10 +87,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <main>{children}</main>
             </div>
             <Toaster />
-            <CookieConsentBanner
-              privacyPolicyUrl="/privacy"
-              cookiePolicyUrl="/cookies"
-            />
+            <CookieConsentBanner privacyPolicyUrl="/privacy" cookiePolicyUrl="/cookies" />
           </Providers>
         </ThemeProvider>
       </body>

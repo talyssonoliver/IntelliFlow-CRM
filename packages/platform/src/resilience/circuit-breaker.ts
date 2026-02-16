@@ -409,19 +409,14 @@ export class CircuitBreaker {
 /**
  * Create a circuit breaker with the given configuration
  */
-export function createCircuitBreaker(
-  config: Partial<CircuitBreakerConfig> = {}
-): CircuitBreaker {
+export function createCircuitBreaker(config: Partial<CircuitBreakerConfig> = {}): CircuitBreaker {
   return new CircuitBreaker(config);
 }
 
 /**
  * Decorator for adding circuit breaker protection to async methods
  */
-export function withCircuitBreaker<T>(
-  breaker: CircuitBreaker,
-  fallback?: FallbackFn<T>
-) {
+export function withCircuitBreaker<T>(breaker: CircuitBreaker, fallback?: FallbackFn<T>) {
   return function (
     _target: unknown,
     _propertyKey: string,

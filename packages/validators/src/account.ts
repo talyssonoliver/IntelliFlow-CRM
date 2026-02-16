@@ -6,12 +6,24 @@ export { idSchema } from './common';
 
 // Base account fields schema (DRY - used by create and update)
 const baseAccountFieldsSchema = z.object({
-  name: z.string().min(1).max(200).transform(val => val.trim()), // Company names can be longer
+  name: z
+    .string()
+    .min(1)
+    .max(200)
+    .transform((val) => val.trim()), // Company names can be longer
   website: urlSchema, // Uses WebsiteUrl Value Object transformer
-  industry: z.string().max(100).transform(val => val.trim()).optional(),
+  industry: z
+    .string()
+    .max(100)
+    .transform((val) => val.trim())
+    .optional(),
   employees: z.number().int().positive().optional(),
   revenue: z.number().positive().optional(), // Could use moneySchema in future
-  description: z.string().max(1000).transform(val => val.trim()).optional(),
+  description: z
+    .string()
+    .max(1000)
+    .transform((val) => val.trim())
+    .optional(),
 });
 
 // Create Account Schema
@@ -22,12 +34,10 @@ export const createAccountSchema = baseAccountFieldsSchema.extend({
 export type CreateAccountInput = z.infer<typeof createAccountSchema>;
 
 // Update Account Schema - all fields optional except id
-export const updateAccountSchema = baseAccountFieldsSchema
-  .partial()
-  .extend({
-    id: idSchema,
-    parentAccountId: idSchema.nullable().optional(),
-  });
+export const updateAccountSchema = baseAccountFieldsSchema.partial().extend({
+  id: idSchema,
+  parentAccountId: idSchema.nullable().optional(),
+});
 
 export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;
 
@@ -187,10 +197,12 @@ export const accountActivitySchema = z.object({
   entityType: z.enum(['CONTACT', 'OPPORTUNITY']),
   entityId: idSchema,
   entityName: z.string(),
-  performedBy: z.object({
-    id: idSchema,
-    name: z.string(),
-  }).optional(),
+  performedBy: z
+    .object({
+      id: idSchema,
+      name: z.string(),
+    })
+    .optional(),
   createdAt: z.coerce.date(),
 });
 

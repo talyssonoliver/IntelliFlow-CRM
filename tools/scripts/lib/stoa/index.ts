@@ -213,19 +213,10 @@ export {
 } from './spec-session.js';
 
 // Plan Session
-export {
-  createPlanSession,
-  generatePlan,
-  writePlan,
-} from './plan-session.js';
+export { createPlanSession, generatePlan, writePlan } from './plan-session.js';
 
 // Agent Mode
-export {
-  isAgentTeamsEnabled,
-  isTeammate,
-  resolveAgentMode,
-  type AgentMode,
-} from './agent-mode.js';
+export { isAgentTeamsEnabled, isTeammate, resolveAgentMode, type AgentMode } from './agent-mode.js';
 
 // Paths
 export {

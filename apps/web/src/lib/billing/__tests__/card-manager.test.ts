@@ -358,10 +358,7 @@ describe('getNextDefaultCard', () => {
   });
 
   it('returns first valid card when removed card is not default', () => {
-    const methods = [
-      makePM('pm_1', true),
-      makePM('pm_2', false),
-    ];
+    const methods = [makePM('pm_1', true), makePM('pm_2', false)];
     const result = getNextDefaultCard('pm_2', methods);
     expect(result).not.toBeNull();
     expect(result!.id).toBe('pm_1');
@@ -386,10 +383,7 @@ describe('sortPaymentMethods', () => {
   });
 
   it('puts default card first', () => {
-    const methods = [
-      makePM('pm_1', false, 6, 2027),
-      makePM('pm_2', true, 3, 2026),
-    ];
+    const methods = [makePM('pm_1', false, 6, 2027), makePM('pm_2', true, 3, 2026)];
     const sorted = sortPaymentMethods(methods);
     expect(sorted[0].id).toBe('pm_2');
     expect(sorted[1].id).toBe('pm_1');
@@ -426,10 +420,7 @@ describe('sortPaymentMethods', () => {
   });
 
   it('does not mutate original array', () => {
-    const methods = [
-      makePM('pm_1', false, 6, 2026),
-      makePM('pm_2', true, 6, 2026),
-    ];
+    const methods = [makePM('pm_1', false, 6, 2026), makePM('pm_2', true, 6, 2026)];
     const originalOrder = methods.map((m) => m.id);
     sortPaymentMethods(methods);
     expect(methods.map((m) => m.id)).toEqual(originalOrder);

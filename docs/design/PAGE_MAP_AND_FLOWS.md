@@ -1,13 +1,17 @@
 # IntelliFlow CRM - Page Map & User Flows
 
-This document provides a comprehensive overview of all pages, routes, navigation structure, and user flows in the IntelliFlow CRM web application.
+This document provides a comprehensive overview of all pages, routes, navigation
+structure, and user flows in the IntelliFlow CRM web application.
 
-> **Note**: For detailed user flow specifications with YAML definitions, Mermaid diagrams, and technical artifacts, see the **Flow Documentation** at:
+> **Note**: For detailed user flow specifications with YAML definitions, Mermaid
+> diagrams, and technical artifacts, see the **Flow Documentation** at:
 > `apps/project-tracker/docs/metrics/_global/flows/`
 >
-> The flow index is at: `apps/project-tracker/docs/metrics/_global/flows/flow-index.md`
+> The flow index is at:
+> `apps/project-tracker/docs/metrics/_global/flows/flow-index.md`
 >
-> **For integration tasks and page specs**: See `docs/design/integration-backlog.md` (23 tasks with API requirements)
+> **For integration tasks and page specs**: See
+> `docs/design/integration-backlog.md` (23 tasks with API requirements)
 
 ---
 
@@ -28,13 +32,13 @@ This document provides a comprehensive overview of all pages, routes, navigation
 
 ### Summary Statistics
 
-| Category | Count |
-|----------|-------|
-| Total Pages | 68 |
-| Public Pages | 20 |
-| Protected Pages | 48 |
-| API Routes | 16 |
-| Layouts | 15 |
+| Category        | Count |
+| --------------- | ----- |
+| Total Pages     | 68    |
+| Public Pages    | 20    |
+| Protected Pages | 48    |
+| API Routes      | 16    |
+| Layouts         | 15    |
 
 ---
 
@@ -44,187 +48,187 @@ This document provides a comprehensive overview of all pages, routes, navigation
 
 These pages are accessible without login. Located in `(public)` route group.
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/` | Home | Landing page (shows PublicHomePage or AuthenticatedHomePage based on auth) |
-| `/login` | Login | Email/password + OAuth login |
-| `/signup` | Sign Up | New account registration |
-| `/signup/success` | Sign Up Success | Registration confirmation |
-| `/forgot-password` | Forgot Password | Password reset request |
-| `/reset-password/[token]` | Reset Password | Password reset with token |
-| `/logout` | Logout | Session termination |
-| `/about` | About | Company information |
-| `/features` | Features | Product features showcase |
-| `/pricing` | Pricing | Subscription plans |
-| `/security` | Security | Security practices |
-| `/contact` | Contact | Contact form |
-| `/partners` | Partners | Partner program |
-| `/press` | Press | Press releases |
-| `/status` | Status | System status page |
-| `/blog` | Blog | Blog listing |
-| `/blog/[slug]` | Blog Post | Individual blog article |
-| `/careers` | Careers | Job listings |
-| `/careers/[id]` | Job Detail | Individual job posting |
-| `/lp/[slug]` | Landing Page | Dynamic marketing landing pages |
+| Route                     | Page            | Description                                                                |
+| ------------------------- | --------------- | -------------------------------------------------------------------------- |
+| `/`                       | Home            | Landing page (shows PublicHomePage or AuthenticatedHomePage based on auth) |
+| `/login`                  | Login           | Email/password + OAuth login                                               |
+| `/signup`                 | Sign Up         | New account registration                                                   |
+| `/signup/success`         | Sign Up Success | Registration confirmation                                                  |
+| `/forgot-password`        | Forgot Password | Password reset request                                                     |
+| `/reset-password/[token]` | Reset Password  | Password reset with token                                                  |
+| `/logout`                 | Logout          | Session termination                                                        |
+| `/about`                  | About           | Company information                                                        |
+| `/features`               | Features        | Product features showcase                                                  |
+| `/pricing`                | Pricing         | Subscription plans                                                         |
+| `/security`               | Security        | Security practices                                                         |
+| `/contact`                | Contact         | Contact form                                                               |
+| `/partners`               | Partners        | Partner program                                                            |
+| `/press`                  | Press           | Press releases                                                             |
+| `/status`                 | Status          | System status page                                                         |
+| `/blog`                   | Blog            | Blog listing                                                               |
+| `/blog/[slug]`            | Blog Post       | Individual blog article                                                    |
+| `/careers`                | Careers         | Job listings                                                               |
+| `/careers/[id]`           | Job Detail      | Individual job posting                                                     |
+| `/lp/[slug]`              | Landing Page    | Dynamic marketing landing pages                                            |
 
 ---
 
 ### 2. Authentication Pages
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/auth/callback` | OAuth Callback | Handles OAuth provider redirects (Google, etc.) |
-| `/auth/mfa/verify` | MFA Verification | Two-factor authentication input |
-| `/auth/verify-email/[token]` | Email Verification | Email confirmation with token |
+| Route                        | Page               | Description                                     |
+| ---------------------------- | ------------------ | ----------------------------------------------- |
+| `/auth/callback`             | OAuth Callback     | Handles OAuth provider redirects (Google, etc.) |
+| `/auth/mfa/verify`           | MFA Verification   | Two-factor authentication input                 |
+| `/auth/verify-email/[token]` | Email Verification | Email confirmation with token                   |
 
 ---
 
 ### 3. Dashboard
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/dashboard` | Dashboard | Main dashboard with widgets and metrics |
-| `/dashboard/new` | New Dashboard | Create custom dashboard |
-| `/dashboard/customize` | Customize Dashboard | Edit dashboard layout and widgets |
+| Route                  | Page                | Description                             |
+| ---------------------- | ------------------- | --------------------------------------- |
+| `/dashboard`           | Dashboard           | Main dashboard with widgets and metrics |
+| `/dashboard/new`       | New Dashboard       | Create custom dashboard                 |
+| `/dashboard/customize` | Customize Dashboard | Edit dashboard layout and widgets       |
 
 ---
 
 ### 4. CRM Core - Leads
 
-| Route | Page | Description | Sidebar Section |
-|-------|------|-------------|-----------------|
-| `/leads` | Leads List | All leads with filters and search | Lead Views |
-| `/leads?view=my` | My Leads | Leads assigned to current user | Lead Views |
-| `/leads?view=starred` | Starred Leads | Bookmarked leads | Lead Views |
-| `/leads?view=recent` | Recent Leads | Recently viewed leads | Lead Views |
-| `/leads?segment=new-week` | New This Week | Leads created this week | Segments |
-| `/leads?segment=hot` | Hot Leads | Leads with score >80 | Segments |
-| `/leads?segment=followup` | Needs Follow-up | Leads requiring action | Segments |
-| `/leads/new` | New Lead | Create lead form | - |
-| `/leads/[id]` | Lead Detail | Lead 360° view with activities | - |
+| Route                     | Page            | Description                       | Sidebar Section |
+| ------------------------- | --------------- | --------------------------------- | --------------- |
+| `/leads`                  | Leads List      | All leads with filters and search | Lead Views      |
+| `/leads?view=my`          | My Leads        | Leads assigned to current user    | Lead Views      |
+| `/leads?view=starred`     | Starred Leads   | Bookmarked leads                  | Lead Views      |
+| `/leads?view=recent`      | Recent Leads    | Recently viewed leads             | Lead Views      |
+| `/leads?segment=new-week` | New This Week   | Leads created this week           | Segments        |
+| `/leads?segment=hot`      | Hot Leads       | Leads with score >80              | Segments        |
+| `/leads?segment=followup` | Needs Follow-up | Leads requiring action            | Segments        |
+| `/leads/new`              | New Lead        | Create lead form                  | -               |
+| `/leads/[id]`             | Lead Detail     | Lead 360° view with activities    | -               |
 
 ---
 
 ### 5. CRM Core - Contacts
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/contacts` | Contacts List | All contacts with filters |
-| `/contacts/new` | New Contact | Create contact form |
+| Route            | Page           | Description                 |
+| ---------------- | -------------- | --------------------------- |
+| `/contacts`      | Contacts List  | All contacts with filters   |
+| `/contacts/new`  | New Contact    | Create contact form         |
 | `/contacts/[id]` | Contact Detail | Contact profile and history |
 
 ---
 
 ### 6. CRM Core - Deals (Opportunities)
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/deals` | Deals List | Pipeline view and deal list |
-| `/deals/[id]` | Deal Detail | Deal overview with stages |
-| `/deals/[id]/forecast` | Deal Forecast | AI-powered deal probability |
-| `/deals/forecast` | Forecast Overview | Sales forecasting dashboard |
+| Route                  | Page              | Description                 |
+| ---------------------- | ----------------- | --------------------------- |
+| `/deals`               | Deals List        | Pipeline view and deal list |
+| `/deals/[id]`          | Deal Detail       | Deal overview with stages   |
+| `/deals/[id]/forecast` | Deal Forecast     | AI-powered deal probability |
+| `/deals/forecast`      | Forecast Overview | Sales forecasting dashboard |
 
 ---
 
 ### 7. CRM Core - Tickets (Support)
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/tickets` | Tickets List | Support tickets queue |
+| Route           | Page          | Description                   |
+| --------------- | ------------- | ----------------------------- |
+| `/tickets`      | Tickets List  | Support tickets queue         |
 | `/tickets/[id]` | Ticket Detail | Ticket view with conversation |
 
 ---
 
 ### 8. Documents
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/documents` | Documents List | Document repository |
-| `/documents/new` | Upload Document | Document upload form |
+| Route             | Page            | Description                   |
+| ----------------- | --------------- | ----------------------------- |
+| `/documents`      | Documents List  | Document repository           |
+| `/documents/new`  | Upload Document | Document upload form          |
 | `/documents/[id]` | Document Detail | Document preview and metadata |
 
 ---
 
 ### 9. AI & Agent Actions
 
-| Route | Page | Description |
-|-------|------|-------------|
+| Route              | Page          | Description                       |
+| ------------------ | ------------- | --------------------------------- |
 | `/agent-approvals` | Agent Actions | AI agent approval queue (IFC-149) |
 
 ---
 
 ### 10. Analytics & Reports
 
-| Route | Page | Description |
-|-------|------|-------------|
+| Route        | Page                | Description               |
+| ------------ | ------------------- | ------------------------- |
 | `/analytics` | Analytics Dashboard | Charts, metrics, and KPIs |
 
 ---
 
 ### 11. Cases (Legal/Service)
 
-| Route | Page | Description |
-|-------|------|-------------|
+| Route             | Page          | Description             |
+| ----------------- | ------------- | ----------------------- |
 | `/cases/timeline` | Case Timeline | Case history and events |
 
 ---
 
 ### 12. Notifications
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/notifications` | Notifications | All notifications list |
+| Route                     | Page                  | Description              |
+| ------------------------- | --------------------- | ------------------------ |
+| `/notifications`          | Notifications         | All notifications list   |
 | `/notifications/settings` | Notification Settings | Notification preferences |
 
 ---
 
 ### 13. User Profile
 
-| Route | Page | Description |
-|-------|------|-------------|
+| Route      | Page         | Description          |
+| ---------- | ------------ | -------------------- |
 | `/profile` | User Profile | User account details |
 
 ---
 
 ### 14. Settings
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/settings` | Settings Overview | Settings navigation |
-| `/settings/account` | Account Settings | Personal account settings |
-| `/settings/team` | Team Settings | Team members and roles |
-| `/settings/ai` | AI Chains | AI configuration and chains |
-| `/settings/integrations` | Integrations | Third-party integrations |
-| `/settings/notifications` | Notification Settings | Alert preferences |
-| `/settings/pipeline` | Pipeline Settings | Sales pipeline stages |
-| `/settings/security/mfa` | MFA Settings | Two-factor authentication setup |
+| Route                     | Page                  | Description                     |
+| ------------------------- | --------------------- | ------------------------------- |
+| `/settings`               | Settings Overview     | Settings navigation             |
+| `/settings/account`       | Account Settings      | Personal account settings       |
+| `/settings/team`          | Team Settings         | Team members and roles          |
+| `/settings/ai`            | AI Chains             | AI configuration and chains     |
+| `/settings/integrations`  | Integrations          | Third-party integrations        |
+| `/settings/notifications` | Notification Settings | Alert preferences               |
+| `/settings/pipeline`      | Pipeline Settings     | Sales pipeline stages           |
+| `/settings/security/mfa`  | MFA Settings          | Two-factor authentication setup |
 
 ---
 
 ### 15. Billing
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/billing` | Billing Overview | Subscription summary |
-| `/billing/checkout` | Checkout | Payment processing |
-| `/billing/subscriptions` | Subscriptions | Manage subscription plans |
-| `/billing/payment-methods` | Payment Methods | Credit cards and payment options |
-| `/billing/invoices` | Invoices | Invoice history |
-| `/billing/invoices/[id]` | Invoice Detail | Individual invoice view |
-| `/billing/receipts` | Receipts | Payment receipts |
+| Route                      | Page             | Description                      |
+| -------------------------- | ---------------- | -------------------------------- |
+| `/billing`                 | Billing Overview | Subscription summary             |
+| `/billing/checkout`        | Checkout         | Payment processing               |
+| `/billing/subscriptions`   | Subscriptions    | Manage subscription plans        |
+| `/billing/payment-methods` | Payment Methods  | Credit cards and payment options |
+| `/billing/invoices`        | Invoices         | Invoice history                  |
+| `/billing/invoices/[id]`   | Invoice Detail   | Individual invoice view          |
+| `/billing/receipts`        | Receipts         | Payment receipts                 |
 
 ---
 
 ### 16. Governance
 
-| Route | Page | Description |
-|-------|------|-------------|
-| `/governance` | Governance Overview | Compliance dashboard |
-| `/governance/adr` | ADR Registry | Architecture Decision Records |
-| `/governance/compliance` | Compliance | Compliance standards tracking |
-| `/governance/policies` | Policies | Policy management |
-| `/governance/quality-reports` | Quality Reports | Quality assessment reports |
-| `/governance/quality-reports/[reportId]` | Report Detail | Individual quality report |
+| Route                                    | Page                | Description                   |
+| ---------------------------------------- | ------------------- | ----------------------------- |
+| `/governance`                            | Governance Overview | Compliance dashboard          |
+| `/governance/adr`                        | ADR Registry        | Architecture Decision Records |
+| `/governance/compliance`                 | Compliance          | Compliance standards tracking |
+| `/governance/policies`                   | Policies            | Policy management             |
+| `/governance/quality-reports`            | Quality Reports     | Quality assessment reports    |
+| `/governance/quality-reports/[reportId]` | Report Detail       | Individual quality report     |
 
 ---
 
@@ -256,11 +260,11 @@ These pages are accessible without login. Located in `(public)` route group.
 
 ### Role Hierarchy
 
-| Role | Access Level | Description |
-|------|--------------|-------------|
-| `USER` | Basic | Standard CRM access |
-| `MANAGER` | Elevated | Team analytics + user management |
-| `ADMIN` | Full | System administration |
+| Role      | Access Level | Description                      |
+| --------- | ------------ | -------------------------------- |
+| `USER`    | Basic        | Standard CRM access              |
+| `MANAGER` | Elevated     | Team analytics + user management |
+| `ADMIN`   | Full         | System administration            |
 
 ### Authentication Flow
 
@@ -325,22 +329,23 @@ Visible to authenticated users only.
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-| Nav Item | Route | Icon |
-|----------|-------|------|
-| Dashboard | `/dashboard` | `dashboard` |
-| Leads | `/leads` | `group` |
-| Contacts | `/contacts` | `person` |
-| Deals | `/deals` | `handshake` |
-| Tickets | `/tickets` | `confirmation_number` |
-| Documents | `/documents` | `description` |
-| Agent Actions | `/agent-approvals` | `smart_toy` |
-| Reports | `/analytics` | `bar_chart` |
+| Nav Item      | Route              | Icon                  |
+| ------------- | ------------------ | --------------------- |
+| Dashboard     | `/dashboard`       | `dashboard`           |
+| Leads         | `/leads`           | `group`               |
+| Contacts      | `/contacts`        | `person`              |
+| Deals         | `/deals`           | `handshake`           |
+| Tickets       | `/tickets`         | `confirmation_number` |
+| Documents     | `/documents`       | `description`         |
+| Agent Actions | `/agent-approvals` | `smart_toy`           |
+| Reports       | `/analytics`       | `bar_chart`           |
 
 ### Context Sidebars
 
 Each module has a dedicated sidebar with views and segments.
 
 #### Leads Sidebar
+
 ```
 Lead Views
 ├── All Leads           /leads
@@ -355,6 +360,7 @@ Segments
 ```
 
 #### Settings Sidebar
+
 ```
 Settings
 ├── Account             /settings/account
@@ -369,60 +375,61 @@ More
 
 ### Available Sidebars
 
-| Module | Config File |
-|--------|-------------|
-| Leads | `configs/leads.ts` |
-| Contacts | `configs/contacts.ts` |
-| Documents | `configs/documents.ts` |
-| Deals | `configs/deals.ts` |
-| Tickets | `configs/tickets.ts` |
-| Analytics | `configs/analytics.ts` |
+| Module          | Config File                  |
+| --------------- | ---------------------------- |
+| Leads           | `configs/leads.ts`           |
+| Contacts        | `configs/contacts.ts`        |
+| Documents       | `configs/documents.ts`       |
+| Deals           | `configs/deals.ts`           |
+| Tickets         | `configs/tickets.ts`         |
+| Analytics       | `configs/analytics.ts`       |
 | Agent Approvals | `configs/agent-approvals.ts` |
-| Notifications | `configs/notifications.ts` |
-| Governance | `configs/governance.ts` |
-| Settings | `configs/settings.ts` |
-| Billing | `configs/billing.ts` |
+| Notifications   | `configs/notifications.ts`   |
+| Governance      | `configs/governance.ts`      |
+| Settings        | `configs/settings.ts`        |
+| Billing         | `configs/billing.ts`         |
 
 ---
 
 ## User Flows Summary
 
-> **Detailed Flow Documentation**: All user flows are documented with full YAML specifications, Mermaid sequence diagrams, and technical artifacts in:
+> **Detailed Flow Documentation**: All user flows are documented with full YAML
+> specifications, Mermaid sequence diagrams, and technical artifacts in:
 > `apps/project-tracker/docs/metrics/_global/flows/`
 
 ### Flow Categories Overview
 
-| Category | Flows | Description |
-|----------|-------|-------------|
-| **Acesso e Identidade** | FLOW-001 to FLOW-004 | Authentication, MFA, permissions, workspace switching |
-| **Comercial Core** | FLOW-005 to FLOW-010 | Leads, deals, pipeline, conversions, renewals |
-| **Relacionamento e Suporte** | FLOW-011 to FLOW-015 | Tickets, SLA, escalation, feedback |
-| **Comunicação** | FLOW-016 to FLOW-022 | Email, chat, calls, meetings, activity feed |
-| **Analytics e Insights** | FLOW-023 to FLOW-028 | Reports, dashboards, forecasting |
-| **Segurança e Compliance** | FLOW-029 to FLOW-033, FLOW-040 | Backup, DR, GDPR, DSAR |
-| **Qualidade e Testes** | FLOW-034 to FLOW-038 | Testing, performance, quality gates |
-| **Search & AI** | FLOW-039, FLOW-041 | Document search, RAG retrieval |
-| **AI Configuration** | FLOW-045 | AI chain versioning, experiments |
+| Category                     | Flows                          | Description                                           |
+| ---------------------------- | ------------------------------ | ----------------------------------------------------- |
+| **Acesso e Identidade**      | FLOW-001 to FLOW-004           | Authentication, MFA, permissions, workspace switching |
+| **Comercial Core**           | FLOW-005 to FLOW-010           | Leads, deals, pipeline, conversions, renewals         |
+| **Relacionamento e Suporte** | FLOW-011 to FLOW-015           | Tickets, SLA, escalation, feedback                    |
+| **Comunicação**              | FLOW-016 to FLOW-022           | Email, chat, calls, meetings, activity feed           |
+| **Analytics e Insights**     | FLOW-023 to FLOW-028           | Reports, dashboards, forecasting                      |
+| **Segurança e Compliance**   | FLOW-029 to FLOW-033, FLOW-040 | Backup, DR, GDPR, DSAR                                |
+| **Qualidade e Testes**       | FLOW-034 to FLOW-038           | Testing, performance, quality gates                   |
+| **Search & AI**              | FLOW-039, FLOW-041             | Document search, RAG retrieval                        |
+| **AI Configuration**         | FLOW-045                       | AI chain versioning, experiments                      |
 
 ### Quick Flow Reference
 
-| Route | Primary Flow | Description |
-|-------|--------------|-------------|
-| `/login` | **FLOW-001** | Login with MFA (SSO, OAuth2, 2FA) |
-| `/forgot-password` | **FLOW-003** | Password recovery |
-| `/admin/users` | **FLOW-002** | User and permission management |
-| `/leads/new` | **FLOW-005** | Lead creation with AI scoring |
-| `/leads/[id]` (convert) | **FLOW-006** | Lead to contact/deal conversion |
-| `/deals` (Kanban) | **FLOW-007** | Pipeline management |
-| `/deals/[id]` | **FLOW-008** | Deal creation and updates |
-| `/deals/[id]` (close) | **FLOW-009** | Deal won/lost closure |
-| `/tickets/new` | **FLOW-011** | Support ticket creation |
-| `/tickets/[id]` | **FLOW-012, 013, 014** | Routing, SLA, resolution |
-| `/contacts/[id]` | **FLOW-020** | Activity timeline |
-| `/analytics` | **FLOW-023** | Report builder |
-| `/search` | **FLOW-039** | Document search (FTS + semantic) |
-| `/settings/ai` | **FLOW-045** | AI chain versioning admin |
-| `/agent-approvals` | IFC-149 | AI agent action approvals |
+| Route                   | Primary Flow           | Description                       |
+| ----------------------- | ---------------------- | --------------------------------- |
+| `/login`                | **FLOW-001**           | Login with MFA (SSO, OAuth2, 2FA) |
+| `/forgot-password`      | **FLOW-003**           | Password recovery                 |
+| `/admin/users`          | **FLOW-002**           | User and permission management    |
+| `/leads/new`            | **FLOW-005**           | Lead creation with AI scoring     |
+| `/leads/[id]` (convert) | **FLOW-006**           | Lead to contact/deal conversion   |
+| `/deals` (Kanban)       | **FLOW-007**           | Pipeline management               |
+| `/deals/[id]`           | **FLOW-008**           | Deal creation and updates         |
+| `/deals/[id]` (close)   | **FLOW-009**           | Deal won/lost closure             |
+| `/tickets/new`          | **FLOW-011**           | Support ticket creation           |
+| `/tickets/[id]`         | **FLOW-012, 013, 014** | Routing, SLA, resolution          |
+| `/contacts/[id]`        | **FLOW-020**           | Activity timeline                 |
+| `/analytics`            | **FLOW-023**           | Report builder                    |
+| `/search`               | **FLOW-039**           | Document search (FTS + semantic)  |
+| `/settings/ai`          | **FLOW-045**           | AI chain versioning admin         |
+| `/agent-approvals`      | IFC-149                | AI agent action approvals         |
 
 ---
 
@@ -787,12 +794,12 @@ pre_conditions:
 
 flow_steps:
   step_name:
-    description: "Step description"
+    description: 'Step description'
     validations: [...]
     artifacts: [...]
 
 edge_cases:
-  - case_name: "Description"
+  - case_name: 'Description'
 
 technical_artifacts:
   database: [schemas, indexes]
@@ -883,13 +890,13 @@ app/
 
 ### Route Group Purposes
 
-| Group | Purpose |
-|-------|---------|
-| `(public)` | Marketing pages, no auth required |
-| `(list)` | List views with sidebar navigation |
-| `[id]` | Dynamic detail pages |
-| `[slug]` | Dynamic content pages (blog, careers) |
-| `[token]` | Token-based verification pages |
+| Group      | Purpose                               |
+| ---------- | ------------------------------------- |
+| `(public)` | Marketing pages, no auth required     |
+| `(list)`   | List views with sidebar navigation    |
+| `[id]`     | Dynamic detail pages                  |
+| `[slug]`   | Dynamic content pages (blog, careers) |
+| `[token]`  | Token-based verification pages        |
 
 ---
 
@@ -897,24 +904,24 @@ app/
 
 ### Internal API Endpoints
 
-| Route | Method | Description |
-|-------|--------|-------------|
-| `/api/trpc/[trpc]` | ALL | tRPC API handler |
-| `/api/adr` | GET | List ADRs |
-| `/api/adr/create` | POST | Create new ADR |
-| `/api/adr/status` | GET/POST | ADR status management |
-| `/api/adr/validate` | POST | Validate ADR |
-| `/api/adr/index` | GET | ADR index |
-| `/api/compliance/[standardId]` | GET | Compliance standard details |
-| `/api/compliance/risks` | GET | Compliance risks |
-| `/api/compliance/timeline` | GET | Compliance timeline |
-| `/api/quality-reports` | GET | Quality reports list |
-| `/api/quality-reports/generate` | POST | Generate report |
-| `/api/quality-reports/status` | GET | Report status |
-| `/api/quality-reports/view` | GET | View report |
-| `/api/quality-reports/test-run` | POST | Trigger test run |
-| `/api/quality-reports/test-run/[runId]` | GET | Test run status |
-| `/api/quality-reports/test-run/events` | GET | SSE events |
+| Route                                   | Method   | Description                 |
+| --------------------------------------- | -------- | --------------------------- |
+| `/api/trpc/[trpc]`                      | ALL      | tRPC API handler            |
+| `/api/adr`                              | GET      | List ADRs                   |
+| `/api/adr/create`                       | POST     | Create new ADR              |
+| `/api/adr/status`                       | GET/POST | ADR status management       |
+| `/api/adr/validate`                     | POST     | Validate ADR                |
+| `/api/adr/index`                        | GET      | ADR index                   |
+| `/api/compliance/[standardId]`          | GET      | Compliance standard details |
+| `/api/compliance/risks`                 | GET      | Compliance risks            |
+| `/api/compliance/timeline`              | GET      | Compliance timeline         |
+| `/api/quality-reports`                  | GET      | Quality reports list        |
+| `/api/quality-reports/generate`         | POST     | Generate report             |
+| `/api/quality-reports/status`           | GET      | Report status               |
+| `/api/quality-reports/view`             | GET      | View report                 |
+| `/api/quality-reports/test-run`         | POST     | Trigger test run            |
+| `/api/quality-reports/test-run/[runId]` | GET      | Test run status             |
+| `/api/quality-reports/test-run/events`  | GET      | SSE events                  |
 
 ---
 
@@ -922,22 +929,23 @@ app/
 
 ### Pages Requiring Backend Integration
 
-| Page | Integration Status | Required APIs |
-|------|-------------------|---------------|
-| `/` (Authenticated Home) | 🔴 Hardcoded | `dashboard.getWelcomeSummary`, `feed.getItems`, `ai.getDailyInsights`, `goals.getTodayFocus`, `pins.getAll` |
-| `/dashboard` | 🟡 Partial | `dashboard.getMetrics`, `dashboard.getWidgets` |
-| `/leads` | 🟢 Integrated | `leads.list`, `leads.getById` |
-| `/leads/[id]` | 🟡 Partial | `leads.getById`, `activities.getByLead` |
-| `/contacts` | 🟢 Integrated | `contacts.list`, `contacts.getById` |
-| `/deals` | 🟢 Integrated | `deals.list`, `deals.getById` |
-| `/deals/[id]/forecast` | 🔴 Hardcoded | `ai.getDealForecast` |
-| `/tickets` | 🟢 Integrated | `tickets.list`, `tickets.getById` |
-| `/analytics` | 🟡 Partial | `analytics.getMetrics` |
-| `/agent-approvals` | 🟡 Partial | `agentActions.getPending` |
-| `/billing` | 🔴 Hardcoded | Stripe integration |
-| `/governance/*` | 🟢 Integrated | Local file system APIs |
+| Page                     | Integration Status | Required APIs                                                                                               |
+| ------------------------ | ------------------ | ----------------------------------------------------------------------------------------------------------- |
+| `/` (Authenticated Home) | 🔴 Hardcoded       | `dashboard.getWelcomeSummary`, `feed.getItems`, `ai.getDailyInsights`, `goals.getTodayFocus`, `pins.getAll` |
+| `/dashboard`             | 🟡 Partial         | `dashboard.getMetrics`, `dashboard.getWidgets`                                                              |
+| `/leads`                 | 🟢 Integrated      | `leads.list`, `leads.getById`                                                                               |
+| `/leads/[id]`            | 🟡 Partial         | `leads.getById`, `activities.getByLead`                                                                     |
+| `/contacts`              | 🟢 Integrated      | `contacts.list`, `contacts.getById`                                                                         |
+| `/deals`                 | 🟢 Integrated      | `deals.list`, `deals.getById`                                                                               |
+| `/deals/[id]/forecast`   | 🔴 Hardcoded       | `ai.getDealForecast`                                                                                        |
+| `/tickets`               | 🟢 Integrated      | `tickets.list`, `tickets.getById`                                                                           |
+| `/analytics`             | 🟡 Partial         | `analytics.getMetrics`                                                                                      |
+| `/agent-approvals`       | 🟡 Partial         | `agentActions.getPending`                                                                                   |
+| `/billing`               | 🔴 Hardcoded       | Stripe integration                                                                                          |
+| `/governance/*`          | 🟢 Integrated      | Local file system APIs                                                                                      |
 
 ### Legend
+
 - 🔴 Hardcoded - Uses static/mock data
 - 🟡 Partial - Some integration, some hardcoded
 - 🟢 Integrated - Fully connected to backend
@@ -948,50 +956,50 @@ app/
 
 ### All 42 Documented Flows
 
-| Flow ID | Name | Category | Sprint | Priority |
-|---------|------|----------|--------|----------|
-| FLOW-001 | Login com Autenticação Multifator | Acesso e Identidade | 1 | Critical |
-| FLOW-002 | Gestão de Usuários e Permissões | Acesso e Identidade | 1 | High |
-| FLOW-003 | Recuperação de Senha | Acesso e Identidade | 1 | High |
-| FLOW-004 | Troca de Tenant/Workspace | Acesso e Identidade | 2 | Medium |
-| FLOW-005 | Criação de Novo Lead | Comercial Core | 1 | Critical |
-| FLOW-006 | Conversão Lead para Contato e Deal | Comercial Core | 4 | Critical |
-| FLOW-007 | Gestão de Pipeline Kanban | Comercial Core | 4 | Critical |
-| FLOW-008 | Criação e Atualização de Deal | Comercial Core | 4 | Critical |
-| FLOW-009 | Fechamento de Deal Won/Lost | Comercial Core | 5 | Critical |
-| FLOW-010 | Renovação de Contrato | Comercial Core | 5 | High |
-| FLOW-011 | Abertura de Ticket de Suporte | Relacionamento e Suporte | 2 | High |
-| FLOW-012 | Roteamento Automático de Tickets | Relacionamento e Suporte | 5 | High |
-| FLOW-013 | Gestão de SLA e Escalation | Relacionamento e Suporte | 5 | High |
-| FLOW-014 | Resolução e Fechamento de Ticket | Relacionamento e Suporte | 4 | High |
-| FLOW-015 | Coleta e Análise de Feedback (NPS/CSAT) | Relacionamento e Suporte | 6 | Medium |
-| FLOW-016 | Envio de Email com Tracking | Comunicação | 5 | High |
-| FLOW-017 | Integração de Chat Bidirecional | Comunicação | 5 | Medium |
-| FLOW-018 | Registro de Chamadas Telefônicas | Comunicação | 5 | Medium |
-| FLOW-019 | Agendamento de Reuniões | Comunicação | 5 | Medium |
-| FLOW-020 | Feed de Atividade Unificado | Comunicação | 5 | High |
-| FLOW-021 | Campanha de Email Marketing | Comunicação | 6 | Medium |
-| FLOW-022 | Notificações Push/In-App | Comunicação | 7 | Medium |
-| FLOW-023 | Construtor de Relatórios | Analytics e Insights | 5 | High |
-| FLOW-024 | Dashboard Customizável | Analytics e Insights | 6 | High |
-| FLOW-025 | Previsão de Vendas (AI) | Analytics e Insights | 7 | High |
-| FLOW-026 | Análise de Sentimento | Analytics e Insights | 8 | Medium |
-| FLOW-027 | Métricas de Performance | Analytics e Insights | 8 | High |
-| FLOW-028 | Exportação de Dados | Analytics e Insights | 9 | Medium |
-| FLOW-029 | Gestão de Audit Log | Segurança e Compliance | 2 | Critical |
-| FLOW-030 | Backup e Disaster Recovery | Segurança e Compliance | 0 | Critical |
-| FLOW-031 | Criptografia de Dados | Segurança e Compliance | 1 | Critical |
-| FLOW-032 | Conformidade LGPD/GDPR | Segurança e Compliance | 3 | Critical |
-| FLOW-033 | Gestão de API Keys | Segurança e Compliance | 3 | High |
-| FLOW-034 | Testes Unitários Automatizados | Qualidade e Testes | 2 | High |
-| FLOW-035 | Testes de Integração | Qualidade e Testes | 2 | High |
-| FLOW-036 | Testes E2E (Playwright) | Qualidade e Testes | 3 | High |
-| FLOW-037 | Code Review Automatizado | Qualidade e Testes | 3 | High |
-| FLOW-038 | Testes de Performance e Load | Qualidade e Testes | 2 | High |
-| FLOW-039 | Document Search (FTS + Semantic) | Search & AI | 12 | Critical |
-| FLOW-040 | DSAR Data Erasure (GDPR Article 17) | Segurança e Compliance | 11-12 | Critical |
-| FLOW-041 | Case RAG Retrieval (Agent Tool) | Search & AI | 12-13 | Critical |
-| FLOW-045 | AI Chain Versioning Admin UI | AI & Configuration | 14 | High |
+| Flow ID  | Name                                    | Category                 | Sprint | Priority |
+| -------- | --------------------------------------- | ------------------------ | ------ | -------- |
+| FLOW-001 | Login com Autenticação Multifator       | Acesso e Identidade      | 1      | Critical |
+| FLOW-002 | Gestão de Usuários e Permissões         | Acesso e Identidade      | 1      | High     |
+| FLOW-003 | Recuperação de Senha                    | Acesso e Identidade      | 1      | High     |
+| FLOW-004 | Troca de Tenant/Workspace               | Acesso e Identidade      | 2      | Medium   |
+| FLOW-005 | Criação de Novo Lead                    | Comercial Core           | 1      | Critical |
+| FLOW-006 | Conversão Lead para Contato e Deal      | Comercial Core           | 4      | Critical |
+| FLOW-007 | Gestão de Pipeline Kanban               | Comercial Core           | 4      | Critical |
+| FLOW-008 | Criação e Atualização de Deal           | Comercial Core           | 4      | Critical |
+| FLOW-009 | Fechamento de Deal Won/Lost             | Comercial Core           | 5      | Critical |
+| FLOW-010 | Renovação de Contrato                   | Comercial Core           | 5      | High     |
+| FLOW-011 | Abertura de Ticket de Suporte           | Relacionamento e Suporte | 2      | High     |
+| FLOW-012 | Roteamento Automático de Tickets        | Relacionamento e Suporte | 5      | High     |
+| FLOW-013 | Gestão de SLA e Escalation              | Relacionamento e Suporte | 5      | High     |
+| FLOW-014 | Resolução e Fechamento de Ticket        | Relacionamento e Suporte | 4      | High     |
+| FLOW-015 | Coleta e Análise de Feedback (NPS/CSAT) | Relacionamento e Suporte | 6      | Medium   |
+| FLOW-016 | Envio de Email com Tracking             | Comunicação              | 5      | High     |
+| FLOW-017 | Integração de Chat Bidirecional         | Comunicação              | 5      | Medium   |
+| FLOW-018 | Registro de Chamadas Telefônicas        | Comunicação              | 5      | Medium   |
+| FLOW-019 | Agendamento de Reuniões                 | Comunicação              | 5      | Medium   |
+| FLOW-020 | Feed de Atividade Unificado             | Comunicação              | 5      | High     |
+| FLOW-021 | Campanha de Email Marketing             | Comunicação              | 6      | Medium   |
+| FLOW-022 | Notificações Push/In-App                | Comunicação              | 7      | Medium   |
+| FLOW-023 | Construtor de Relatórios                | Analytics e Insights     | 5      | High     |
+| FLOW-024 | Dashboard Customizável                  | Analytics e Insights     | 6      | High     |
+| FLOW-025 | Previsão de Vendas (AI)                 | Analytics e Insights     | 7      | High     |
+| FLOW-026 | Análise de Sentimento                   | Analytics e Insights     | 8      | Medium   |
+| FLOW-027 | Métricas de Performance                 | Analytics e Insights     | 8      | High     |
+| FLOW-028 | Exportação de Dados                     | Analytics e Insights     | 9      | Medium   |
+| FLOW-029 | Gestão de Audit Log                     | Segurança e Compliance   | 2      | Critical |
+| FLOW-030 | Backup e Disaster Recovery              | Segurança e Compliance   | 0      | Critical |
+| FLOW-031 | Criptografia de Dados                   | Segurança e Compliance   | 1      | Critical |
+| FLOW-032 | Conformidade LGPD/GDPR                  | Segurança e Compliance   | 3      | Critical |
+| FLOW-033 | Gestão de API Keys                      | Segurança e Compliance   | 3      | High     |
+| FLOW-034 | Testes Unitários Automatizados          | Qualidade e Testes       | 2      | High     |
+| FLOW-035 | Testes de Integração                    | Qualidade e Testes       | 2      | High     |
+| FLOW-036 | Testes E2E (Playwright)                 | Qualidade e Testes       | 3      | High     |
+| FLOW-037 | Code Review Automatizado                | Qualidade e Testes       | 3      | High     |
+| FLOW-038 | Testes de Performance e Load            | Qualidade e Testes       | 2      | High     |
+| FLOW-039 | Document Search (FTS + Semantic)        | Search & AI              | 12     | Critical |
+| FLOW-040 | DSAR Data Erasure (GDPR Article 17)     | Segurança e Compliance   | 11-12  | Critical |
+| FLOW-041 | Case RAG Retrieval (Agent Tool)         | Search & AI              | 12-13  | Critical |
+| FLOW-045 | AI Chain Versioning Admin UI            | AI & Configuration       | 14     | High     |
 
 ### File Locations
 
@@ -1008,20 +1016,19 @@ apps/project-tracker/docs/metrics/_global/flows/
 
 ### Related Documentation
 
-| Document | Location | Description |
-|----------|----------|-------------|
-| Flow Index | `flows/flow-index.md` | Master index linking flows to routes |
-| Sitemap | `docs/design/sitemap.md` | All application routes |
-| Style Guide | `docs/company/brand/style-guide.md` | Component patterns |
-| Page Registry | `docs/design/page-registry.md` | Detailed page specs |
-| Sprint Plan | `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` | Task tracking |
+| Document      | Location                                                    | Description                          |
+| ------------- | ----------------------------------------------------------- | ------------------------------------ |
+| Flow Index    | `flows/flow-index.md`                                       | Master index linking flows to routes |
+| Sitemap       | `docs/design/sitemap.md`                                    | All application routes               |
+| Style Guide   | `docs/company/brand/style-guide.md`                         | Component patterns                   |
+| Page Registry | `docs/design/page-registry.md`                              | Detailed page specs                  |
+| Sprint Plan   | `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` | Task tracking                        |
 
 ---
 
 ## Document History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2026-02-02 | Claude Code | Initial documentation |
-| 1.1 | 2026-02-02 | Claude Code | Added reference to existing flow documentation |
-
+| Version | Date       | Author      | Changes                                        |
+| ------- | ---------- | ----------- | ---------------------------------------------- |
+| 1.0     | 2026-02-02 | Claude Code | Initial documentation                          |
+| 1.1     | 2026-02-02 | Claude Code | Added reference to existing flow documentation |

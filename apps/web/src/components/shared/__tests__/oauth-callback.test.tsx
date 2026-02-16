@@ -167,17 +167,23 @@ describe('OAuthCallback', () => {
     it('redirects to dashboard by default', async () => {
       render(<OAuthCallback />);
 
-      await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/dashboard');
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(mockPush).toHaveBeenCalledWith('/dashboard');
+        },
+        { timeout: 3000 }
+      );
     });
 
     it('redirects to custom URL when provided', async () => {
       render(<OAuthCallback redirectUrl="/onboarding" />);
 
-      await waitFor(() => {
-        expect(mockPush).toHaveBeenCalledWith('/onboarding');
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(mockPush).toHaveBeenCalledWith('/onboarding');
+        },
+        { timeout: 3000 }
+      );
     });
   });
 
@@ -339,7 +345,8 @@ describe('OAuthCallback', () => {
       render(<OAuthCallback />);
 
       // Check initial loading state
-      const container = document.querySelector('[data-testid="oauth-callback"]') || document.querySelector('main');
+      const container =
+        document.querySelector('[data-testid="oauth-callback"]') || document.querySelector('main');
       if (container) {
         // May have aria-busy during loading
         expect(container).toBeInTheDocument();
@@ -361,11 +368,18 @@ describe('OAuthCallback', () => {
     it('shows exchanging state while calling API', async () => {
       // Delay the mutation to catch the loading state
       mockOAuthCallback.mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve({
-          success: true,
-          session: { accessToken: 'token' },
-          user: { id: '1' },
-        }), 100))
+        () =>
+          new Promise((resolve) =>
+            setTimeout(
+              () =>
+                resolve({
+                  success: true,
+                  session: { accessToken: 'token' },
+                  user: { id: '1' },
+                }),
+              100
+            )
+          )
       );
 
       render(<OAuthCallback />);

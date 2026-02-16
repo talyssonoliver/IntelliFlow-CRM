@@ -212,9 +212,7 @@ describe('MfaVerification', { timeout: 5000 }, () => {
     it('accepts redirectUrl prop', () => {
       // Simplified test: verify component accepts redirectUrl prop
       // Full redirect flow tested in E2E tests
-      const { container } = render(
-        <MfaVerification {...defaultProps} redirectUrl="/dashboard" />
-      );
+      const { container } = render(<MfaVerification {...defaultProps} redirectUrl="/dashboard" />);
       expect(container.querySelector('[data-testid="mfa-verification"]')).toBeInTheDocument();
     });
   });
@@ -314,9 +312,7 @@ describe('MfaVerification', { timeout: 5000 }, () => {
   // ============================================
   describe('styling', () => {
     it('applies custom className', () => {
-      const { container } = render(
-        <MfaVerification {...defaultProps} className="custom-class" />
-      );
+      const { container } = render(<MfaVerification {...defaultProps} className="custom-class" />);
 
       expect(container.firstChild).toHaveClass('custom-class');
     });

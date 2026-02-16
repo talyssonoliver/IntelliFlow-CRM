@@ -8,7 +8,7 @@ import { describe, it, expect } from 'vitest';
 function isItemActive(
   item: { href: string },
   pathname: string,
-  searchParams: URLSearchParams,
+  searchParams: URLSearchParams
 ): boolean {
   const itemUrl = new URL(item.href, 'http://localhost');
   const itemPath = itemUrl.pathname;
@@ -52,7 +52,7 @@ describe('AppSidebar - isItemActive logic', () => {
     const result = isItemActive(
       { href: '/leads?view=my' },
       '/leads',
-      new URLSearchParams('view=my'),
+      new URLSearchParams('view=my')
     );
     expect(result).toBe(true);
   });
@@ -61,26 +61,18 @@ describe('AppSidebar - isItemActive logic', () => {
     const result = isItemActive(
       { href: '/leads?view=my' },
       '/leads',
-      new URLSearchParams('view=all'),
+      new URLSearchParams('view=all')
     );
     expect(result).toBe(false);
   });
 
   it('basic item not active when view param present', () => {
-    const result = isItemActive(
-      { href: '/leads' },
-      '/leads',
-      new URLSearchParams('view=my'),
-    );
+    const result = isItemActive({ href: '/leads' }, '/leads', new URLSearchParams('view=my'));
     expect(result).toBe(false);
   });
 
   it('basic item not active when segment param present', () => {
-    const result = isItemActive(
-      { href: '/leads' },
-      '/leads',
-      new URLSearchParams('segment=hot'),
-    );
+    const result = isItemActive({ href: '/leads' }, '/leads', new URLSearchParams('segment=hot'));
     expect(result).toBe(false);
   });
 });

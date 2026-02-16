@@ -1,10 +1,6 @@
 import { z } from 'zod';
 import { idSchema, paginationSchema } from './common';
-import {
-  AUTO_RESPONSE_STATUSES,
-  TRIGGER_TYPES,
-  ALLOWED_LEAD_STATUSES,
-} from '@intelliflow/domain';
+import { AUTO_RESPONSE_STATUSES, TRIGGER_TYPES, ALLOWED_LEAD_STATUSES } from '@intelliflow/domain';
 
 // Re-export common schemas used by API routers
 export { idSchema } from './common';

@@ -33,8 +33,8 @@ export interface CookieConsent {
   analytics: boolean;
   marketing: boolean;
   preferences: boolean;
-  timestamp: string;  // ISO 8601 timestamp of consent
-  version: string;    // Consent policy version
+  timestamp: string; // ISO 8601 timestamp of consent
+  version: string; // Consent policy version
 }
 
 /**
@@ -249,7 +249,9 @@ export interface UseCookieConsentReturn {
   showBanner: boolean;
   acceptAll: () => void;
   rejectAll: () => void;
-  updateConsent: (categories: Partial<Omit<CookieConsent, 'necessary' | 'timestamp' | 'version'>>) => void;
+  updateConsent: (
+    categories: Partial<Omit<CookieConsent, 'necessary' | 'timestamp' | 'version'>>
+  ) => void;
   openSettings: () => void;
   closeSettings: () => void;
   settingsOpen: boolean;
@@ -433,8 +435,8 @@ export function CookieConsentBanner({
                   id="cookie-consent-description"
                   className="mt-1 text-sm text-gray-600 dark:text-gray-300"
                 >
-                  We use cookies to enhance your experience. By continuing to visit this site you agree to our use of necessary cookies.
-                  You can customize your preferences below.{' '}
+                  We use cookies to enhance your experience. By continuing to visit this site you
+                  agree to our use of necessary cookies. You can customize your preferences below.{' '}
                   <a
                     href={privacyPolicyUrl}
                     className="text-blue-600 hover:underline"
@@ -492,11 +494,7 @@ export function CookieConsentBanner({
           aria-labelledby="cookie-settings-title"
         >
           {/* Backdrop */}
-          <div
-            className="fixed inset-0 bg-black/50"
-            onClick={closeSettings}
-            aria-hidden="true"
-          />
+          <div className="fixed inset-0 bg-black/50" onClick={closeSettings} aria-hidden="true" />
 
           {/* Modal */}
           <div className="relative min-h-screen flex items-center justify-center p-4">
@@ -519,7 +517,12 @@ export function CookieConsentBanner({
                     aria-label="Close settings"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -626,26 +629,17 @@ function CookieCategorySection({
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div
-      className="border dark:border-gray-700 rounded-lg overflow-hidden"
-      data-testid={testId}
-    >
+    <div className="border dark:border-gray-700 rounded-lg overflow-hidden" data-testid={testId}>
       <div className="p-4 bg-gray-50 dark:bg-gray-800">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <h3 className="text-base font-medium text-gray-900 dark:text-white">
-              {title}
-            </h3>
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-              {description}
-            </p>
+            <h3 className="text-base font-medium text-gray-900 dark:text-white">{title}</h3>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{description}</p>
           </div>
 
           <div className="ml-4 flex items-center">
             {locked ? (
-              <span className="text-sm text-gray-500 dark:text-gray-400">
-                Always active
-              </span>
+              <span className="text-sm text-gray-500 dark:text-gray-400">Always active</span>
             ) : (
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -694,10 +688,14 @@ function CookieCategorySection({
             <tbody className="divide-y dark:divide-gray-700">
               {cookies.map((cookie) => (
                 <tr key={cookie.name}>
-                  <td className="px-4 py-2 font-mono text-gray-900 dark:text-white">{cookie.name}</td>
+                  <td className="px-4 py-2 font-mono text-gray-900 dark:text-white">
+                    {cookie.name}
+                  </td>
                   <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{cookie.provider}</td>
                   <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{cookie.duration}</td>
-                  <td className="px-4 py-2 text-gray-600 dark:text-gray-300">{cookie.description}</td>
+                  <td className="px-4 py-2 text-gray-600 dark:text-gray-300">
+                    {cookie.description}
+                  </td>
                 </tr>
               ))}
             </tbody>

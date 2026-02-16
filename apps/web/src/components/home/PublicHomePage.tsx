@@ -2,9 +2,17 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 
 const heroStats = [
-  { label: 'Response target', value: '<200ms', helper: 'Snappy hero & CTA paint with async hydration' },
+  {
+    label: 'Response target',
+    value: '<200ms',
+    helper: 'Snappy hero & CTA paint with async hydration',
+  },
   { label: 'Lighthouse baseline', value: '90%+', helper: 'Performance, a11y, SEO, best practices' },
-  { label: 'Delivery efficiency', value: '50% less handoff', helper: 'Audit-ready flows with evidence trails' },
+  {
+    label: 'Delivery efficiency',
+    value: '50% less handoff',
+    helper: 'Audit-ready flows with evidence trails',
+  },
 ];
 
 const valuePillars = [
@@ -41,7 +49,8 @@ const flowHighlights = [
   },
   {
     title: 'Service intelligence (Flow-011/012)',
-    description: 'Intent routing, SLA-aware timers, and audit-friendly transcripts for every ticket.',
+    description:
+      'Intent routing, SLA-aware timers, and audit-friendly transcripts for every ticket.',
     icon: 'support',
   },
 ];
@@ -49,17 +58,20 @@ const flowHighlights = [
 const howItWorks = [
   {
     title: 'Model the flow',
-    description: 'Pick from sitemap-aligned templates tied to flows and DoD; tweak copy, add GTM tags.',
+    description:
+      'Pick from sitemap-aligned templates tied to flows and DoD; tweak copy, add GTM tags.',
     icon: 'account_tree',
   },
   {
     title: 'Wire guardrails',
-    description: 'Enable audit-matrix gates, WCAG patterns, performance budgets, and telemetry hooks.',
+    description:
+      'Enable audit-matrix gates, WCAG patterns, performance budgets, and telemetry hooks.',
     icon: 'shield_lock',
   },
   {
     title: 'Ship with evidence',
-    description: 'Emit attestation, hashes, and Lighthouse ≥90 proof so approvals are deterministic.',
+    description:
+      'Emit attestation, hashes, and Lighthouse ≥90 proof so approvals are deterministic.',
     icon: 'task_alt',
   },
 ];
@@ -90,7 +102,10 @@ export function PublicHomePage() {
                 AI-first CRM with evidence-first delivery
               </div>
 
-              <h1 id="hero-heading" className="text-4xl lg:text-5xl font-bold leading-tight text-white">
+              <h1
+                id="hero-heading"
+                className="text-4xl lg:text-5xl font-bold leading-tight text-white"
+              >
                 Move faster, stay governed. Ship AI-first customer journeys without losing control.
               </h1>
               <p className="text-lg text-slate-200 max-w-3xl">
@@ -147,7 +162,10 @@ export function PublicHomePage() {
                 <div className="relative space-y-4 text-slate-100">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-lg text-[#7cc4ff]" aria-hidden="true">
+                      <span
+                        className="material-symbols-outlined text-lg text-[#7cc4ff]"
+                        aria-hidden="true"
+                      >
                         dashboard_customize
                       </span>
                       <p className="text-sm text-slate-300">Command Center</p>
@@ -173,7 +191,10 @@ export function PublicHomePage() {
 
                   <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
                     <div className="flex items-center gap-2 text-sm text-slate-200">
-                      <span className="material-symbols-outlined text-base text-[#7cc4ff]" aria-hidden="true">
+                      <span
+                        className="material-symbols-outlined text-base text-[#7cc4ff]"
+                        aria-hidden="true"
+                      >
                         shield_person
                       </span>
                       Live governance health
@@ -200,10 +221,15 @@ export function PublicHomePage() {
 
       <section className="bg-white py-10">
         <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
-          <div className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-4">Trusted by teams shipping faster</div>
+          <div className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-4">
+            Trusted by teams shipping faster
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-slate-500 text-sm">
             {socialProof.map((name) => (
-              <div key={name} className="px-3 py-2 rounded-lg bg-slate-50 text-center border border-slate-100">
+              <div
+                key={name}
+                className="px-3 py-2 rounded-lg bg-slate-50 text-center border border-slate-100"
+              >
                 {name}
               </div>
             ))}
@@ -211,7 +237,10 @@ export function PublicHomePage() {
         </div>
       </section>
 
-      <section aria-labelledby="pillars-heading" className="py-16 lg:py-24 bg-slate-50 text-slate-900">
+      <section
+        aria-labelledby="pillars-heading"
+        className="py-16 lg:py-24 bg-slate-50 text-slate-900"
+      >
         <div className="container px-4 lg:px-6 mx-auto max-w-6xl space-y-10">
           <div className="max-w-3xl space-y-3">
             <h2 id="pillars-heading" className="text-3xl lg:text-4xl font-bold">
@@ -231,7 +260,10 @@ export function PublicHomePage() {
                 className="p-6 h-full border border-border-light bg-white hover:border-[#137fec] transition-colors shadow-sm"
               >
                 <div className="w-12 h-12 rounded-lg bg-[#137fec]/10 flex items-center justify-center mb-4">
-                  <span className="material-symbols-outlined text-2xl text-[#137fec]" aria-hidden="true">
+                  <span
+                    className="material-symbols-outlined text-2xl text-[#137fec]"
+                    aria-hidden="true"
+                  >
                     {pillar.icon}
                   </span>
                 </div>
@@ -263,7 +295,10 @@ export function PublicHomePage() {
                 className="p-6 h-full border border-border-light bg-slate-50 hover:border-[#137fec] transition-colors shadow-sm"
               >
                 <div className="w-12 h-12 rounded-lg bg-[#137fec]/10 flex items-center justify-center mb-4">
-                  <span className="material-symbols-outlined text-2xl text-[#137fec]" aria-hidden="true">
+                  <span
+                    className="material-symbols-outlined text-2xl text-[#137fec]"
+                    aria-hidden="true"
+                  >
                     {flow.icon}
                   </span>
                 </div>
@@ -279,7 +314,9 @@ export function PublicHomePage() {
         <div className="container px-4 lg:px-6 mx-auto max-w-6xl space-y-10">
           <div className="max-w-3xl space-y-3">
             <h2 className="text-3xl lg:text-4xl font-bold">How it works</h2>
-            <p className="text-base text-slate-200">Go from idea to audited launch without losing momentum.</p>
+            <p className="text-base text-slate-200">
+              Go from idea to audited launch without losing momentum.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -304,7 +341,10 @@ export function PublicHomePage() {
         </div>
       </section>
 
-      <section aria-labelledby="assurance-heading" className="py-16 lg:py-24 bg-white text-slate-900">
+      <section
+        aria-labelledby="assurance-heading"
+        className="py-16 lg:py-24 bg-white text-slate-900"
+      >
         <div className="container px-4 lg:px-6 mx-auto max-w-6xl space-y-8">
           <div className="max-w-3xl space-y-2">
             <h2 id="assurance-heading" className="text-3xl font-bold">
@@ -341,8 +381,8 @@ export function PublicHomePage() {
             Ready to launch AI-first, governed experiences in days?
           </h2>
           <p className="text-lg text-white/90">
-            Keep automation guardrails, accessibility, and performance budgets in one place from
-            day one.
+            Keep automation guardrails, accessibility, and performance budgets in one place from day
+            one.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link

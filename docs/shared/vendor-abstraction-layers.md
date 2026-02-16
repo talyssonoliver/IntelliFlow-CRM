@@ -1,19 +1,20 @@
 # Vendor Abstraction Layers
 
-**Document ID**: IFC-057
-**Status**: Completed
-**Last Updated**: 2025-12-29
-**Purpose**: Document abstraction layers for critical vendor dependencies to enable vendor portability
+**Document ID**: IFC-057 **Status**: Completed **Last Updated**: 2025-12-29
+**Purpose**: Document abstraction layers for critical vendor dependencies to
+enable vendor portability
 
 ## Overview
 
-IntelliFlow CRM is architected with explicit abstraction layers to minimize vendor lock-in across three critical infrastructure domains:
+IntelliFlow CRM is architected with explicit abstraction layers to minimize
+vendor lock-in across three critical infrastructure domains:
 
 1. **Database** (Supabase → PostgreSQL)
 2. **Authentication** (Supabase Auth → Any OAuth2/OIDC provider)
 3. **Hosting** (Vercel → Any Node.js host)
 
-This document outlines the abstraction boundaries and migration paths for each vendor relationship.
+This document outlines the abstraction boundaries and migration paths for each
+vendor relationship.
 
 ---
 
@@ -21,8 +22,7 @@ This document outlines the abstraction boundaries and migration paths for each v
 
 ### Current Implementation
 
-**Vendor**: Supabase (PostgreSQL managed service)
-**ORM**: Prisma
+**Vendor**: Supabase (PostgreSQL managed service) **ORM**: Prisma
 
 ### Abstraction Architecture
 
@@ -52,11 +52,13 @@ This document outlines the abstraction boundaries and migration paths for each v
 
 ### Repository Pattern
 
-All repositories follow the **Repository Pattern** with clear interface definitions:
+All repositories follow the **Repository Pattern** with clear interface
+definitions:
 
 **Location**: `packages/application/src/ports/repositories/`
 
 Example: `LeadRepositoryPort.ts`
+
 ```typescript
 export type LeadRepository = {
   save(lead: Lead): Promise<void>;
@@ -68,6 +70,7 @@ export type LeadRepository = {
 ```
 
 **Implementation**: `packages/adapters/src/repositories/PrismaLeadRepository.ts`
+
 ```typescript
 export class PrismaLeadRepository implements LeadRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -80,35 +83,40 @@ export class PrismaLeadRepository implements LeadRepository {
 To migrate from Supabase PostgreSQL to alternative database:
 
 **Step 1**: Implement new repository adapter
+
 - Create `packages/adapters/src/repositories/TypeORMLeadRepository.ts`
 - Implement `LeadRepository` interface
 - No changes to domain or application layers required
 
 **Step 2**: Update dependency injection
-- Replace `PrismaLeadRepository` with `TypeORMLeadRepository` in composition root
+
+- Replace `PrismaLeadRepository` with `TypeORMLeadRepository` in composition
+  root
 - Location: `apps/api/src/composition-root.ts` (or DI container)
 
 **Step 3**: Data migration
+
 - Export data from PostgreSQL using Prisma
 - Transform to target database schema
 - Load into new database
 - Run validation tests
 
 **Step 4**: Validate
+
 - Run repository integration tests
 - Verify data consistency
 - Switch production traffic
 
 ### Supported ORM Alternatives
 
-| Database | ORM | Status | Migration Effort |
-|----------|-----|--------|------------------|
-| PostgreSQL | Prisma | ✅ Current | Baseline |
-| PostgreSQL | TypeORM | 📋 Ready | 1-2 weeks |
-| PostgreSQL | Sequelize | 📋 Possible | 2-3 weeks |
-| MySQL | Prisma | 📋 Possible | 1-2 weeks |
-| MongoDB | Mongoose | 📋 Possible | 3-4 weeks |
-| DynamoDB | AWS SDK | 📋 Possible | 4+ weeks |
+| Database   | ORM       | Status      | Migration Effort |
+| ---------- | --------- | ----------- | ---------------- |
+| PostgreSQL | Prisma    | ✅ Current  | Baseline         |
+| PostgreSQL | TypeORM   | 📋 Ready    | 1-2 weeks        |
+| PostgreSQL | Sequelize | 📋 Possible | 2-3 weeks        |
+| MySQL      | Prisma    | 📋 Possible | 1-2 weeks        |
+| MongoDB    | Mongoose  | 📋 Possible | 3-4 weeks        |
+| DynamoDB   | AWS SDK   | 📋 Possible | 4+ weeks         |
 
 ---
 
@@ -116,8 +124,8 @@ To migrate from Supabase PostgreSQL to alternative database:
 
 ### Current Implementation
 
-**Vendor**: Supabase Auth (SAML, OAuth2)
-**Current Providers**: Email/Password, Google, GitHub
+**Vendor**: Supabase Auth (SAML, OAuth2) **Current Providers**: Email/Password,
+Google, GitHub
 
 ### Abstraction Architecture
 
@@ -145,7 +153,10 @@ To migrate from Supabase PostgreSQL to alternative database:
 ```typescript
 export interface AuthenticationPort {
   // OAuth2/OIDC login initiation
-  initiateLogin(provider: string, redirectUrl: string): Promise<LoginInitiation>;
+  initiateLogin(
+    provider: string,
+    redirectUrl: string
+  ): Promise<LoginInitiation>;
 
   // Token exchange
   exchangeCodeForToken(code: string, codeVerifier: string): Promise<TokenSet>;
@@ -165,7 +176,11 @@ export interface AuthenticationPort {
 
 export interface AuthorizationPort {
   // Check user permissions
-  checkPermission(userId: string, resource: string, action: string): Promise<boolean>;
+  checkPermission(
+    userId: string,
+    resource: string,
+    action: string
+  ): Promise<boolean>;
 
   // Get user roles
   getUserRoles(userId: string): Promise<string[]>;
@@ -177,41 +192,46 @@ export interface AuthorizationPort {
 To migrate from Supabase to alternative provider:
 
 **Step 1**: Implement new authentication adapter
+
 - Create `packages/adapters/src/external/authentication/Auth0AuthAdapter.ts`
 - Implement `AuthenticationPort` interface
 - Handle OIDC/OAuth2 flows
 
 **Step 2**: Update authentication configuration
+
 - Replace Supabase client initialization with new provider client
 - Location: `apps/api/src/config/auth.config.ts`
 
 **Step 3**: Update frontend authentication
+
 - Replace Supabase Auth UI with new provider SDK
 - Location: `apps/web/src/lib/auth.ts`
 
 **Step 4**: Data migration (optional)
+
 - If provider requires user sync:
   - Export users from Supabase
   - Import to new provider
   - Update user records with new provider IDs
 
 **Step 5**: Validate
+
 - Test login/logout flows
 - Verify token generation and validation
 - Test role-based access control (RBAC)
 
 ### Supported Authentication Providers
 
-| Provider | Type | Status | Migration Effort |
-|----------|------|--------|------------------|
-| Supabase Auth | OAuth2/OIDC | ✅ Current | Baseline |
-| Auth0 | OAuth2/OIDC | 📋 Ready | 1-2 weeks |
-| Keycloak | OAuth2/OIDC | 📋 Ready | 1-2 weeks |
-| Okta | OAuth2/OIDC | 📋 Possible | 2 weeks |
-| AWS Cognito | OAuth2/OIDC | 📋 Possible | 2 weeks |
-| Azure AD | OAuth2/OIDC | 📋 Possible | 2 weeks |
-| Clerk | OAuth2 | 📋 Possible | 1 week |
-| Firebase Auth | Custom | 📋 Possible | 2-3 weeks |
+| Provider      | Type        | Status      | Migration Effort |
+| ------------- | ----------- | ----------- | ---------------- |
+| Supabase Auth | OAuth2/OIDC | ✅ Current  | Baseline         |
+| Auth0         | OAuth2/OIDC | 📋 Ready    | 1-2 weeks        |
+| Keycloak      | OAuth2/OIDC | 📋 Ready    | 1-2 weeks        |
+| Okta          | OAuth2/OIDC | 📋 Possible | 2 weeks          |
+| AWS Cognito   | OAuth2/OIDC | 📋 Possible | 2 weeks          |
+| Azure AD      | OAuth2/OIDC | 📋 Possible | 2 weeks          |
+| Clerk         | OAuth2      | 📋 Possible | 1 week           |
+| Firebase Auth | Custom      | 📋 Possible | 2-3 weeks        |
 
 ---
 
@@ -219,8 +239,8 @@ To migrate from Supabase to alternative provider:
 
 ### Current Implementation
 
-**Vendor**: Vercel (Next.js hosting)
-**Components**: Frontend (apps/web), API (apps/api), Project Tracker (apps/project-tracker)
+**Vendor**: Vercel (Next.js hosting) **Components**: Frontend (apps/web), API
+(apps/api), Project Tracker (apps/project-tracker)
 
 ### Abstraction Architecture
 
@@ -243,21 +263,25 @@ To migrate from Supabase to alternative provider:
 ### Hosting-Agnostic Patterns
 
 **1. Environment Variables**
+
 - All configuration via `.env` files
 - No hardcoded URLs or secrets
 - Supports both local and cloud environments
 
 **Location**:
+
 - `.env.example` - Template
 - `.env.local` - Local overrides
 - `.env.production` - Production secrets (never committed)
 
 **2. Build Configuration**
+
 - Standard Node.js/npm ecosystem
 - `package.json` scripts work on any Node.js host
 - No Vercel-specific APIs (except optional: Image Optimization)
 
 **3. API Routes**
+
 - Next.js API routes as standard Node.js handlers
 - Deployable to any Node.js runtime
 
@@ -266,6 +290,7 @@ To migrate from Supabase to alternative provider:
 To migrate from Vercel to alternative host:
 
 **Step 1**: Choose target platform
+
 - AWS Lambda/EC2 (traditional or serverless)
 - Google Cloud Run
 - Azure App Service
@@ -275,6 +300,7 @@ To migrate from Vercel to alternative host:
 - Render
 
 **Step 2**: Build and test locally
+
 ```bash
 # Build production artifact
 pnpm run build
@@ -284,33 +310,36 @@ node .next/standalone/server.js
 ```
 
 **Step 3**: Prepare deployment configuration
+
 - Docker: Create Dockerfile (use Node.js image)
 - Environment variables: Set secrets in new platform
 - Database: Update DATABASE_URL connection string
 - CDN: Configure static assets distribution (if needed)
 
 **Step 4**: Deploy and validate
+
 - Deploy application
 - Verify environment variables are loaded
 - Test critical API endpoints
 - Run smoke tests
 
 **Step 5**: Traffic migration
+
 - Set up gradual traffic shift (if blue/green available)
 - Monitor error rates
 - Verify performance metrics
 
 ### Supported Hosting Alternatives
 
-| Platform | Type | Build Time | Serverless? | Status | Migration Effort |
-|----------|------|-----------|-------------|--------|------------------|
-| Vercel | PaaS | < 2min | Yes | ✅ Current | Baseline |
-| Railway | PaaS | < 5min | No | 📋 Ready | < 1 week |
-| Render | PaaS | < 5min | No | 📋 Ready | < 1 week |
-| AWS Lambda | Serverless | < 2min | Yes | 📋 Possible | 1-2 weeks |
-| Google Cloud Run | Serverless | < 2min | Yes | 📋 Possible | 1-2 weeks |
-| DigitalOcean App | PaaS | < 5min | No | 📋 Ready | < 1 week |
-| Self-hosted Docker | On-premise | Custom | No | 📋 Possible | 2-3 weeks |
+| Platform           | Type       | Build Time | Serverless? | Status      | Migration Effort |
+| ------------------ | ---------- | ---------- | ----------- | ----------- | ---------------- |
+| Vercel             | PaaS       | < 2min     | Yes         | ✅ Current  | Baseline         |
+| Railway            | PaaS       | < 5min     | No          | 📋 Ready    | < 1 week         |
+| Render             | PaaS       | < 5min     | No          | 📋 Ready    | < 1 week         |
+| AWS Lambda         | Serverless | < 2min     | Yes         | 📋 Possible | 1-2 weeks        |
+| Google Cloud Run   | Serverless | < 2min     | Yes         | 📋 Possible | 1-2 weeks        |
+| DigitalOcean App   | PaaS       | < 5min     | No          | 📋 Ready    | < 1 week         |
+| Self-hosted Docker | On-premise | Custom     | No          | 📋 Possible | 2-3 weeks        |
 
 ---
 
@@ -319,6 +348,7 @@ node .next/standalone/server.js
 ### Configuration Management
 
 **Pattern**: Environment-based configuration
+
 ```
 apps/*/
 ├── .env.example          # Template (always committed)
@@ -328,6 +358,7 @@ apps/*/
 ```
 
 **Best Practices**:
+
 - No hardcoded vendor endpoints
 - Use feature flags for gradual rollouts
 - Vault-based secrets management (HashiCorp Vault setup in EXC-SEC-001)
@@ -335,6 +366,7 @@ apps/*/
 ### Observability
 
 All vendors provide similar observability:
+
 - Structured logging (winston/pino)
 - Distributed tracing (OpenTelemetry)
 - Metrics collection (Prometheus)
@@ -344,11 +376,12 @@ All vendors provide similar observability:
 
 ### Testing Strategy
 
-**Unit Tests**: Mock repository interfaces, no real vendor calls
-**Integration Tests**: Use testcontainers (PostgreSQL in Docker)
-**End-to-End Tests**: Can run against any deployed instance
+**Unit Tests**: Mock repository interfaces, no real vendor calls **Integration
+Tests**: Use testcontainers (PostgreSQL in Docker) **End-to-End Tests**: Can run
+against any deployed instance
 
 **Test Database Setup**:
+
 ```bash
 # Start PostgreSQL container for testing
 docker-compose -f docker-compose.test.yml up
@@ -387,14 +420,14 @@ pnpm run test:integration
 
 **When to migrate?**
 
-| Scenario | Decision | Timeline |
-|----------|----------|----------|
-| Cost optimization | Evaluate at Sprint 12+ | 1-2 weeks |
-| Vendor pricing increase | Evaluate if > 30% increase | 2-4 weeks |
-| Data residency requirement | Migrate after MVP | 1-2 weeks |
-| Compliance mandate | Migrate within 30 days | 1-2 weeks |
-| Feature requirement | Evaluate feature availability | 1-3 weeks |
-| Performance issue | Investigate before migrating | Varies |
+| Scenario                   | Decision                      | Timeline  |
+| -------------------------- | ----------------------------- | --------- |
+| Cost optimization          | Evaluate at Sprint 12+        | 1-2 weeks |
+| Vendor pricing increase    | Evaluate if > 30% increase    | 2-4 weeks |
+| Data residency requirement | Migrate after MVP             | 1-2 weeks |
+| Compliance mandate         | Migrate within 30 days        | 1-2 weeks |
+| Feature requirement        | Evaluate feature availability | 1-3 weeks |
+| Performance issue          | Investigate before migrating  | Varies    |
 
 ---
 
@@ -403,18 +436,21 @@ pnpm run test:integration
 ### Vendor Metrics to Track
 
 **Database**:
+
 - Query latency (p95, p99)
 - Connection pool usage
 - Storage size growth
 - Backup/restore time
 
 **Authentication**:
+
 - Login success rate
 - Token generation latency
 - OAuth provider availability
 - Session duration
 
 **Hosting**:
+
 - Response time (API p95, p99)
 - Uptime percentage
 - Build time
@@ -436,12 +472,14 @@ pnpm run test:integration
 ## 8. References
 
 **Related Tasks**:
+
 - IFC-011: Framework/SDLC Definition
 - IFC-057: Vendor Lock-in Mitigation (this document)
 - ENV-004-AI: Supabase Integration
 - EXC-SEC-001: HashiCorp Vault Setup
 
 **Key Documents**:
+
 - Hexagonal Architecture: `docs/architecture/adr/001-hexagonal-architecture.md`
 - Domain Driven Design Context Map: `docs/shared/context-map.puml`
 - Artifact Conventions: `docs/architecture/artifact-conventions.md`
@@ -457,4 +495,5 @@ pnpm run test:integration
 
 ---
 
-**Approval**: IFC-057 completion verified with vendor lock-in risk eliminated through documented abstraction layers.
+**Approval**: IFC-057 completion verified with vendor lock-in risk eliminated
+through documented abstraction layers.

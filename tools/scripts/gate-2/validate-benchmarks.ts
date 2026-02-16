@@ -160,12 +160,20 @@ function validateBenchmarks(): ValidationResult {
   if (passed) {
     console.log('┌─────────────────────────────────────────────────────────────┐');
     console.log('│  ✓ PASS: Benchmark success rate meets threshold             │');
-    console.log(`│  ${(successRate * 100).toFixed(2)}% >= ${(SUCCESS_THRESHOLD * 100).toFixed(0)}%`.padEnd(62) + '│');
+    console.log(
+      `│  ${(successRate * 100).toFixed(2)}% >= ${(SUCCESS_THRESHOLD * 100).toFixed(0)}%`.padEnd(
+        62
+      ) + '│'
+    );
     console.log('└─────────────────────────────────────────────────────────────┘');
   } else {
     console.log('┌─────────────────────────────────────────────────────────────┐');
     console.log('│  ✗ FAIL: Benchmark success rate below threshold             │');
-    console.log(`│  ${(successRate * 100).toFixed(2)}% < ${(SUCCESS_THRESHOLD * 100).toFixed(0)}%`.padEnd(62) + '│');
+    console.log(
+      `│  ${(successRate * 100).toFixed(2)}% < ${(SUCCESS_THRESHOLD * 100).toFixed(0)}%`.padEnd(
+        62
+      ) + '│'
+    );
     console.log(`│  Gap: Need +${(gap * 100).toFixed(2)}% improvement`.padEnd(62) + '│');
     console.log('│                                                             │');
     console.log('│  Common causes:                                             │');

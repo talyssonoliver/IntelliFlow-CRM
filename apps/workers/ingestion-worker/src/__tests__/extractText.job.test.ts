@@ -141,7 +141,8 @@ describe('TextExtractionProcessor', () => {
       });
 
       it('should remove style tags', async () => {
-        const htmlContent = '<html><body><style>.class{color:red}</style><p>Content</p></body></html>';
+        const htmlContent =
+          '<html><body><style>.class{color:red}</style><p>Content</p></body></html>';
         mockFetch.mockResolvedValueOnce({
           ok: true,
           arrayBuffer: () => Promise.resolve(Buffer.from(htmlContent)),

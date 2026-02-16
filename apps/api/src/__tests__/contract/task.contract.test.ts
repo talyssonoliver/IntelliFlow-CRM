@@ -193,7 +193,10 @@ describe('Task Router Contract Tests', () => {
       ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'VALIDATION_ERROR', message: `Contact not found: ${TEST_UUIDS.nonExistent}` },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: `Contact not found: ${TEST_UUIDS.nonExistent}`,
+        },
       });
 
       try {
@@ -214,7 +217,10 @@ describe('Task Router Contract Tests', () => {
       ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'VALIDATION_ERROR', message: `Opportunity not found: ${TEST_UUIDS.nonExistent}` },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: `Opportunity not found: ${TEST_UUIDS.nonExistent}`,
+        },
       });
 
       try {

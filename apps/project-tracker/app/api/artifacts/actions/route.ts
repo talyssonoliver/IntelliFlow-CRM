@@ -134,9 +134,7 @@ export async function POST(request: NextRequest) {
       /^README\.md$/,
     ];
 
-    const unsafePaths = paths.filter((p) =>
-      protectedPatterns.some((pattern) => pattern.test(p))
-    );
+    const unsafePaths = paths.filter((p) => protectedPatterns.some((pattern) => pattern.test(p)));
 
     if (unsafePaths.length > 0) {
       return NextResponse.json(

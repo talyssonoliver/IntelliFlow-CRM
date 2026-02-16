@@ -74,7 +74,7 @@ describe('activityFeedRouter', () => {
         'test-tenant-id',
         20, // default limit
         undefined, // no cursor
-        expect.objectContaining({}),
+        expect.objectContaining({})
       );
     });
 
@@ -87,7 +87,7 @@ describe('activityFeedRouter', () => {
         'test-tenant-id',
         50,
         undefined,
-        expect.anything(),
+        expect.anything()
       );
     });
 
@@ -101,7 +101,7 @@ describe('activityFeedRouter', () => {
         'test-tenant-id',
         20,
         cursor,
-        expect.anything(),
+        expect.anything()
       );
     });
 
@@ -114,7 +114,7 @@ describe('activityFeedRouter', () => {
         'test-tenant-id',
         20,
         undefined,
-        expect.objectContaining({ types: ['EMAIL', 'CALL'] }),
+        expect.objectContaining({ types: ['EMAIL', 'CALL'] })
       );
     });
 
@@ -127,7 +127,7 @@ describe('activityFeedRouter', () => {
         'test-tenant-id',
         20,
         undefined,
-        expect.objectContaining({ sources: ['LEAD_ACTIVITY', 'EMAIL'] }),
+        expect.objectContaining({ sources: ['LEAD_ACTIVITY', 'EMAIL'] })
       );
     });
 
@@ -140,7 +140,7 @@ describe('activityFeedRouter', () => {
         'test-tenant-id',
         20,
         undefined,
-        expect.objectContaining({ entityType: 'LEAD' }),
+        expect.objectContaining({ entityType: 'LEAD' })
       );
     });
 
@@ -153,7 +153,7 @@ describe('activityFeedRouter', () => {
         'test-tenant-id',
         20,
         undefined,
-        expect.objectContaining({ entityType: 'CONTACT', entityId: 'contact-123' }),
+        expect.objectContaining({ entityType: 'CONTACT', entityId: 'contact-123' })
       );
     });
 
@@ -185,7 +185,7 @@ describe('activityFeedRouter', () => {
         'test-tenant-id',
         20,
         undefined,
-        expect.objectContaining({}),
+        expect.objectContaining({})
       );
     });
 
@@ -226,7 +226,7 @@ describe('activityFeedRouter', () => {
         'lead-123',
         20,
         undefined,
-        undefined,
+        undefined
       );
     });
 
@@ -247,7 +247,7 @@ describe('activityFeedRouter', () => {
         'contact-1',
         10,
         cursor,
-        undefined,
+        undefined
       );
     });
 
@@ -266,7 +266,7 @@ describe('activityFeedRouter', () => {
         'lead-1',
         20,
         undefined,
-        ['EMAIL', 'CALL'],
+        ['EMAIL', 'CALL']
       );
     });
 
@@ -293,7 +293,7 @@ describe('activityFeedRouter', () => {
       const caller = activityFeedRouter.createCaller(ctx);
 
       await expect(
-        caller.getEntityFeed({ entityType: 'LEAD', entityId: 'lead-1' }),
+        caller.getEntityFeed({ entityType: 'LEAD', entityId: 'lead-1' })
       ).rejects.toThrow(/Tenant context required/);
     });
 
@@ -303,7 +303,7 @@ describe('activityFeedRouter', () => {
       const caller = activityFeedRouter.createCaller(ctx);
 
       await expect(
-        caller.getEntityFeed({ entityType: 'LEAD', entityId: 'lead-1' }),
+        caller.getEntityFeed({ entityType: 'LEAD', entityId: 'lead-1' })
       ).rejects.toThrow(/ActivityFeedService not available/);
     });
   });

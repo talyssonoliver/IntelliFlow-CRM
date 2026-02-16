@@ -17,11 +17,11 @@ export function DocsNavigation({ categories }: DocsNavigationProps) {
         const isDisabled = category.comingSoon || category.external;
 
         const cardContent = (
-          <Card className={`p-6 h-full transition-all ${
-            isDisabled
-              ? 'opacity-70 cursor-not-allowed'
-              : 'hover:border-primary hover:shadow-md'
-          }`}>
+          <Card
+            className={`p-6 h-full transition-all ${
+              isDisabled ? 'opacity-70 cursor-not-allowed' : 'hover:border-primary hover:shadow-md'
+            }`}
+          >
             <div className="flex items-start gap-4">
               <div
                 className={`w-12 h-12 ${category.color} rounded-lg flex items-center justify-center flex-shrink-0`}
@@ -32,9 +32,11 @@ export function DocsNavigation({ categories }: DocsNavigationProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h2 className={`text-lg font-semibold text-foreground transition-colors ${
-                    !isDisabled && 'group-hover:text-primary'
-                  }`}>
+                  <h2
+                    className={`text-lg font-semibold text-foreground transition-colors ${
+                      !isDisabled && 'group-hover:text-primary'
+                    }`}
+                  >
                     {category.title}
                   </h2>
                   {category.docCount != null && (
@@ -53,13 +55,13 @@ export function DocsNavigation({ categories }: DocsNavigationProps) {
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">
-                  {category.description}
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">{category.description}</p>
               </div>
-              <span className={`material-symbols-outlined text-muted-foreground transition-all ${
-                !isDisabled && 'group-hover:text-primary group-hover:translate-x-1'
-              }`}>
+              <span
+                className={`material-symbols-outlined text-muted-foreground transition-all ${
+                  !isDisabled && 'group-hover:text-primary group-hover:translate-x-1'
+                }`}
+              >
                 chevron_right
               </span>
             </div>
@@ -67,20 +69,11 @@ export function DocsNavigation({ categories }: DocsNavigationProps) {
         );
 
         if (isDisabled) {
-          return (
-            <div key={category.id}>
-              {cardContent}
-            </div>
-          );
+          return <div key={category.id}>{cardContent}</div>;
         }
 
         return (
-          <Link
-            key={category.id}
-            href={category.href}
-            className="group"
-            {...linkProps}
-          >
+          <Link key={category.id} href={category.href} className="group" {...linkProps}>
             {cardContent}
           </Link>
         );

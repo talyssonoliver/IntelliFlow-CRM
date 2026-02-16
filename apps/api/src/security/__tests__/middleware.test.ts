@@ -73,7 +73,12 @@ describe('Security Middleware', () => {
   let mockPrisma: PrismaClient;
   const TEST_TENANT_ID = 'test-tenant-123';
 
-  function createMockContext(user?: { userId: string; email: string; role: string; tenantId: string }): Context {
+  function createMockContext(user?: {
+    userId: string;
+    email: string;
+    role: string;
+    tenantId: string;
+  }): Context {
     return {
       prisma: mockPrisma,
       user,

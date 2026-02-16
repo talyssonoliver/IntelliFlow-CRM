@@ -5,7 +5,12 @@ import { Card } from '@intelliflow/ui';
 
 const integrations = [
   { name: 'Slack', description: 'Team communication', icon: 'chat', connected: true },
-  { name: 'Google Calendar', description: 'Calendar sync', icon: 'calendar_today', connected: true },
+  {
+    name: 'Google Calendar',
+    description: 'Calendar sync',
+    icon: 'calendar_today',
+    connected: true,
+  },
   { name: 'Salesforce', description: 'CRM sync', icon: 'cloud', connected: false },
   { name: 'HubSpot', description: 'Marketing automation', icon: 'hub', connected: false },
   { name: 'Mailchimp', description: 'Email campaigns', icon: 'mail', connected: false },
@@ -26,9 +31,7 @@ export default function IntegrationsPage() {
             <span className="text-foreground font-medium">Integrations</span>
           </nav>
           <h1 className="text-2xl font-bold text-foreground">Integrations</h1>
-          <p className="text-muted-foreground mt-1">
-            Connect third-party apps and services
-          </p>
+          <p className="text-muted-foreground mt-1">Connect third-party apps and services</p>
         </div>
 
         {/* Integrations Grid */}

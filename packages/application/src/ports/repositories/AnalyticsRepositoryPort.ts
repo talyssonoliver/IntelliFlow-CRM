@@ -108,50 +108,35 @@ export interface AnalyticsRepository {
    * @param tenantId - Tenant to filter by
    * @param months - Number of months to look back
    */
-  getDealsWonByMonth(
-    tenantId: string,
-    months: number
-  ): Promise<OpportunityGroupByResult[]>;
+  getDealsWonByMonth(tenantId: string, months: number): Promise<OpportunityGroupByResult[]>;
 
   /**
    * Get monthly revenue from closed won opportunities
    * @param tenantId - Tenant to filter by
    * @param dateRange - Date range to query
    */
-  getMonthlyRevenue(
-    tenantId: string,
-    dateRange: DateRangeQuery
-  ): Promise<number>;
+  getMonthlyRevenue(tenantId: string, dateRange: DateRangeQuery): Promise<number>;
 
   /**
    * Count leads created in date range
    * @param tenantId - Tenant to filter by
    * @param dateRange - Date range to query
    */
-  countLeadsInRange(
-    tenantId: string,
-    dateRange: DateRangeQuery
-  ): Promise<number>;
+  countLeadsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number>;
 
   /**
    * Count opportunities created in date range
    * @param tenantId - Tenant to filter by
    * @param dateRange - Date range to query
    */
-  countOpportunitiesInRange(
-    tenantId: string,
-    dateRange: DateRangeQuery
-  ): Promise<number>;
+  countOpportunitiesInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number>;
 
   /**
    * Count contacts created in date range
    * @param tenantId - Tenant to filter by
    * @param dateRange - Date range to query
    */
-  countContactsInRange(
-    tenantId: string,
-    dateRange: DateRangeQuery
-  ): Promise<number>;
+  countContactsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number>;
 
   /**
    * Get leads grouped by source
@@ -165,11 +150,7 @@ export interface AnalyticsRepository {
    * @param limit - Maximum entries to return
    * @param actions - Filter to specific actions
    */
-  getRecentAuditLogs(
-    tenantId: string,
-    limit: number,
-    actions?: string[]
-  ): Promise<ActivityItem[]>;
+  getRecentAuditLogs(tenantId: string, limit: number, actions?: string[]): Promise<ActivityItem[]>;
 
   /**
    * Count total leads for tenant

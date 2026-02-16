@@ -23,7 +23,19 @@ const searchAuditLogsSchema = z.object({
   resourceId: z.string().optional(),
   actorId: z.string().optional(),
   eventType: z.string().optional(),
-  action: z.enum(['CREATE', 'UPDATE', 'DELETE', 'READ', 'LOGIN', 'LOGOUT', 'LOGIN_FAILED', 'PASSWORD_RESET', 'PERMISSION_DENIED']).optional(),
+  action: z
+    .enum([
+      'CREATE',
+      'UPDATE',
+      'DELETE',
+      'READ',
+      'LOGIN',
+      'LOGOUT',
+      'LOGIN_FAILED',
+      'PASSWORD_RESET',
+      'PERMISSION_DENIED',
+    ])
+    .optional(),
   startDate: z.date().optional(),
   endDate: z.date().optional(),
   limit: z.number().min(1).max(1000).default(100),

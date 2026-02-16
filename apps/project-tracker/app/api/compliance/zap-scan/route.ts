@@ -90,7 +90,8 @@ export async function GET(_request: NextRequest) {
           source: 'unavailable',
           timestamp: new Date().toISOString(),
           pattern: 'RSI',
-          message: 'No ZAP scan report available. Run: zap-cli quick-scan http://localhost:3000 --output-format json',
+          message:
+            'No ZAP scan report available. Run: zap-cli quick-scan http://localhost:3000 --output-format json',
           status: 'unknown',
           recommendation: 'Run OWASP ZAP scan to assess web application security',
         },
@@ -106,10 +107,10 @@ export async function GET(_request: NextRequest) {
 
     // Count by risk level
     const riskCounts = {
-      high: alerts.filter(a => a.risk === 'High').length,
-      medium: alerts.filter(a => a.risk === 'Medium').length,
-      low: alerts.filter(a => a.risk === 'Low').length,
-      informational: alerts.filter(a => a.risk === 'Informational').length,
+      high: alerts.filter((a) => a.risk === 'High').length,
+      medium: alerts.filter((a) => a.risk === 'Medium').length,
+      low: alerts.filter((a) => a.risk === 'Low').length,
+      informational: alerts.filter((a) => a.risk === 'Informational').length,
     };
 
     // Calculate OWASP compliance score
@@ -119,8 +120,7 @@ export async function GET(_request: NextRequest) {
     score -= riskCounts.low * 2;
     score = Math.max(0, score);
 
-    const status = riskCounts.high > 0 ? 'failing' :
-                   riskCounts.medium > 0 ? 'warning' : 'passing';
+    const status = riskCounts.high > 0 ? 'failing' : riskCounts.medium > 0 ? 'warning' : 'passing';
 
     // Map to OWASP Top 10 categories
     const owaspMapping = new Map<string, string[]>();
@@ -157,25 +157,26 @@ export async function GET(_request: NextRequest) {
           Array.from(owaspMapping.entries()).map(([cat, issues]) => [cat, issues.length])
         ),
         highRiskAlerts: alerts
-          .filter(a => a.risk === 'High')
-          .map(a => ({
+          .filter((a) => a.risk === 'High')
+          .map((a) => ({
             name: a.name,
             description: a.description.substring(0, 200),
             solution: a.solution.substring(0, 200),
             cweid: a.cweid,
           })),
         mediumRiskAlerts: alerts
-          .filter(a => a.risk === 'Medium')
+          .filter((a) => a.risk === 'Medium')
           .slice(0, 5)
-          .map(a => ({
+          .map((a) => ({
             name: a.name,
             count: a.count,
           })),
-        recommendation: riskCounts.high > 0
-          ? 'CRITICAL: Address high-risk vulnerabilities before production'
-          : riskCounts.medium > 0
-          ? 'Review and remediate medium-risk findings'
-          : 'Web application security posture is acceptable',
+        recommendation:
+          riskCounts.high > 0
+            ? 'CRITICAL: Address high-risk vulnerabilities before production'
+            : riskCounts.medium > 0
+              ? 'Review and remediate medium-risk findings'
+              : 'Web application security posture is acceptable',
       },
       {
         headers: {

@@ -29,19 +29,27 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@tanstack/react-query', () => {
   class QueryCache {
     config: any;
-    constructor(config: any) { this.config = config; }
+    constructor(config: any) {
+      this.config = config;
+    }
   }
   class MutationCache {
     config: any;
-    constructor(config: any) { this.config = config; }
+    constructor(config: any) {
+      this.config = config;
+    }
   }
   class QueryClient {
     config: any;
-    constructor(config: any) { this.config = config; }
+    constructor(config: any) {
+      this.config = config;
+    }
   }
   return {
     QueryClient,
-    QueryClientProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="query-client-provider">{children}</div>,
+    QueryClientProvider: ({ children }: { children: React.ReactNode }) => (
+      <div data-testid="query-client-provider">{children}</div>
+    ),
     QueryCache,
     MutationCache,
   };
@@ -56,17 +64,23 @@ vi.mock('@trpc/client', () => ({
 
 vi.mock('@/lib/trpc', () => ({
   trpc: {
-    Provider: ({ children }: { children: React.ReactNode }) => <div data-testid="trpc-provider">{children}</div>,
+    Provider: ({ children }: { children: React.ReactNode }) => (
+      <div data-testid="trpc-provider">{children}</div>
+    ),
     createClient: vi.fn(() => ({})),
   },
 }));
 
 vi.mock('@/lib/auth/AuthContext', () => ({
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="auth-provider">{children}</div>
+  ),
 }));
 
 vi.mock('@/lib/cases/reminders-context', () => ({
-  RemindersProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="reminders-provider">{children}</div>,
+  RemindersProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="reminders-provider">{children}</div>
+  ),
 }));
 
 // ============================================================
@@ -89,7 +103,7 @@ describe('Providers component (supplementary)', () => {
       render(
         <Providers>
           <div data-testid="child">Hello</div>
-        </Providers>,
+        </Providers>
       );
 
       expect(screen.getByTestId('trpc-provider')).toBeInTheDocument();
@@ -104,7 +118,7 @@ describe('Providers component (supplementary)', () => {
       render(
         <Providers>
           <div data-testid="child">Content</div>
-        </Providers>,
+        </Providers>
       );
 
       const trpcProvider = screen.getByTestId('trpc-provider');

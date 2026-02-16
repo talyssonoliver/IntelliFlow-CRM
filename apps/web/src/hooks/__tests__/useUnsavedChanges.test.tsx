@@ -8,10 +8,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { ReactNode } from 'react';
-import {
-  useUnsavedChanges,
-  UnsavedChangesProvider,
-} from '../useUnsavedChanges';
+import { useUnsavedChanges, UnsavedChangesProvider } from '../useUnsavedChanges';
 
 // Wrapper component for testing with context
 function createWrapper() {

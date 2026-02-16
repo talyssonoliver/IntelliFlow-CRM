@@ -158,7 +158,13 @@ describe('ErrorState', () => {
 
     it('should center content', () => {
       const { container } = render(<ErrorState message="Error" />);
-      expect(container.firstChild).toHaveClass('flex', 'flex-col', 'items-center', 'justify-center', 'text-center');
+      expect(container.firstChild).toHaveClass(
+        'flex',
+        'flex-col',
+        'items-center',
+        'justify-center',
+        'text-center'
+      );
     });
   });
 

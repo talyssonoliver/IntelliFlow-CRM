@@ -169,9 +169,7 @@ describe('DeadlineEngine', () => {
         const resultWith = engine.computeDeadline(triggerDate, ruleWithEndDay);
         const resultWithout = engine.computeDeadline(triggerDate, ruleWithoutEndDay);
 
-        expect(resultWithout.value.dueDate.getDate()).toBe(
-          resultWith.value.dueDate.getDate() + 1
-        );
+        expect(resultWithout.value.dueDate.getDate()).toBe(resultWith.value.dueDate.getDate() + 1);
       });
     });
 
@@ -254,12 +252,7 @@ describe('DeadlineEngine', () => {
       ];
       const triggerDate = new Date(2025, 0, 1);
 
-      const result = engine.createDeadlinesFromRules(
-        caseId,
-        triggerDate,
-        rules,
-        'attorney-123'
-      );
+      const result = engine.createDeadlinesFromRules(caseId, triggerDate, rules, 'attorney-123');
 
       expect(result.value[0].assignedTo).toBe('attorney-123');
       expect(result.value[1].assignedTo).toBe('attorney-123');

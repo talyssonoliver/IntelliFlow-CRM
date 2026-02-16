@@ -38,9 +38,18 @@ const DOC_TYPE_COLORS: Record<string, string> = {
 
 const STATUS_BADGE: Record<string, { label: string; cls: string }> = {
   DRAFT: { label: 'Draft', cls: 'bg-muted text-muted-foreground' },
-  UNDER_REVIEW: { label: 'In Review', cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' },
-  APPROVED: { label: 'Approved', cls: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-  SIGNED: { label: 'Signed', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+  UNDER_REVIEW: {
+    label: 'In Review',
+    cls: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  },
+  APPROVED: {
+    label: 'Approved',
+    cls: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  },
+  SIGNED: {
+    label: 'Signed',
+    cls: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  },
   ARCHIVED: { label: 'Archived', cls: 'bg-muted text-muted-foreground' },
   SUPERSEDED: { label: 'Superseded', cls: 'bg-muted text-muted-foreground line-through' },
 };
@@ -61,13 +70,10 @@ function formatDate(date: Date | string): string {
 }
 
 export function DocumentLinks({ caseId }: DocumentLinksProps) {
-  const { data, isLoading } = api.documents.list.useQuery(
-    { caseId, limit: 20 } as never,
-    {
-      staleTime: 60_000,
-      refetchOnWindowFocus: false,
-    },
-  );
+  const { data, isLoading } = api.documents.list.useQuery({ caseId, limit: 20 } as never, {
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
 
   if (isLoading) {
     return (
@@ -86,7 +92,9 @@ export function DocumentLinks({ caseId }: DocumentLinksProps) {
     );
   }
 
-  const documents = (data as Record<string, unknown>)?.documents as Array<Record<string, unknown>> | undefined;
+  const documents = (data as Record<string, unknown>)?.documents as
+    | Array<Record<string, unknown>>
+    | undefined;
 
   if (!documents || documents.length === 0) {
     return (
@@ -114,7 +122,12 @@ export function DocumentLinks({ caseId }: DocumentLinksProps) {
             key={doc.id as string}
             className="flex items-center gap-4 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer group"
           >
-            <div className={cn('size-10 rounded-lg flex items-center justify-center shrink-0', typeColor)}>
+            <div
+              className={cn(
+                'size-10 rounded-lg flex items-center justify-center shrink-0',
+                typeColor
+              )}
+            >
               <span className="material-symbols-outlined text-lg">{icon}</span>
             </div>
 
@@ -123,15 +136,28 @@ export function DocumentLinks({ caseId }: DocumentLinksProps) {
                 {doc.title as string}
               </p>
               <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                <span>v{vMajor}.{vMinor}</span>
+                <span>
+                  v{vMajor}.{vMinor}
+                </span>
                 <span>·</span>
-                <span>{formatFileSize((doc.size_bytes as number) ?? (doc.sizeBytes as number) ?? 0)}</span>
+                <span>
+                  {formatFileSize((doc.size_bytes as number) ?? (doc.sizeBytes as number) ?? 0)}
+                </span>
                 <span>·</span>
-                <span>{formatDate((doc.created_at as string) ?? (doc.createdAt as string) ?? new Date())}</span>
+                <span>
+                  {formatDate(
+                    (doc.created_at as string) ?? (doc.createdAt as string) ?? new Date()
+                  )}
+                </span>
               </div>
             </div>
 
-            <span className={cn('inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0', statusBadge.cls)}>
+            <span
+              className={cn(
+                'inline-flex px-2 py-0.5 rounded-full text-[10px] font-medium shrink-0',
+                statusBadge.cls
+              )}
+            >
               {statusBadge.label}
             </span>
           </div>

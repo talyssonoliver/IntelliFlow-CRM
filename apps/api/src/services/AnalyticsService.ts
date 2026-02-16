@@ -163,9 +163,10 @@ export class AnalyticsService {
     if (result.length >= 12) {
       const latest = result.at(-1)!;
       const yearAgo = result.at(-13) || result.at(0)!;
-      const yoyChange = yearAgo.value > 0
-        ? Math.round(((latest.value - yearAgo.value) / yearAgo.value) * 100 * 10) / 10
-        : 0;
+      const yoyChange =
+        yearAgo.value > 0
+          ? Math.round(((latest.value - yearAgo.value) / yearAgo.value) * 100 * 10) / 10
+          : 0;
       latest.yoyChange = yoyChange;
     }
 
@@ -219,12 +220,7 @@ export class AnalyticsService {
       where: {
         tenantId,
         action: {
-          in: [
-            'CREATE',
-            'QUALIFY',
-            'CONVERT',
-            'UPDATE',
-          ],
+          in: ['CREATE', 'QUALIFY', 'CONVERT', 'UPDATE'],
         },
       },
       orderBy: {

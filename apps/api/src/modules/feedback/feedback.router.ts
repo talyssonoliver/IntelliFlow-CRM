@@ -115,11 +115,13 @@ export const feedbackRouter = createTRPCRouter({
    * SECURITY: Uses protectedProcedure (restricted access for training data export)
    */
   exportTrainingData: protectedProcedure
-    .input(z.object({
-      modelVersion: z.string().min(1),
-      dateFrom: z.coerce.date(),
-      dateTo: z.coerce.date(),
-    }))
+    .input(
+      z.object({
+        modelVersion: z.string().min(1),
+        dateFrom: z.coerce.date(),
+        dateTo: z.coerce.date(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const feedbackService = getFeedbackService(ctx);
       return feedbackService.exportTrainingData(

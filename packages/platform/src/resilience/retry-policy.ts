@@ -235,7 +235,10 @@ async function withTimeout<T>(fn: () => Promise<T>, timeoutMs: number): Promise<
   return Promise.race([
     fn(),
     new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new TimeoutError(`Operation timed out after ${timeoutMs}ms`)), timeoutMs)
+      setTimeout(
+        () => reject(new TimeoutError(`Operation timed out after ${timeoutMs}ms`)),
+        timeoutMs
+      )
     ),
   ]);
 }

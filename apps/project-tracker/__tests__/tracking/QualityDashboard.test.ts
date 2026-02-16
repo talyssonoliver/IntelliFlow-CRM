@@ -56,19 +56,26 @@ interface HistorySnapshot {
   value: number;
 }
 
-function formatChartPoints(data: HistorySnapshot[], width: number, height: number, padding: number): string {
+function formatChartPoints(
+  data: HistorySnapshot[],
+  width: number,
+  height: number,
+  padding: number
+): string {
   if (!data || data.length === 0) return '';
 
-  const values = data.map(d => d.value).reverse();
+  const values = data.map((d) => d.value).reverse();
   const max = Math.max(...values, 1);
   const min = Math.min(...values, 0);
   const range = max - min || 1;
 
-  return values.map((v, i) => {
-    const x = padding + (i / (values.length - 1 || 1)) * (width - 2 * padding);
-    const y = height - padding - ((v - min) / range) * (height - 2 * padding);
-    return `${x},${y}`;
-  }).join(' ');
+  return values
+    .map((v, i) => {
+      const x = padding + (i / (values.length - 1 || 1)) * (width - 2 * padding);
+      const y = height - padding - ((v - min) / range) * (height - 2 * padding);
+      return `${x},${y}`;
+    })
+    .join(' ');
 }
 
 /**
@@ -422,7 +429,7 @@ describe('QualityDashboard Component Logic', () => {
     it('supports all refresh types', () => {
       const validTypes = ['all', 'debt', 'sonar', 'coverage'];
 
-      validTypes.forEach(type => {
+      validTypes.forEach((type) => {
         expect(['all', 'debt', 'sonar', 'coverage']).toContain(type);
       });
     });
@@ -435,7 +442,7 @@ describe('QualityDashboard Component Logic', () => {
         { type: 'coverage', label: 'Run Tests' },
       ];
 
-      buttons.forEach(btn => {
+      buttons.forEach((btn) => {
         expect(btn.label.length).toBeGreaterThan(0);
       });
     });

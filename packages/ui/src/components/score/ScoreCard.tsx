@@ -34,8 +34,7 @@ const scoreCardVariants = cva(
 );
 
 export interface ScoreCardProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof scoreCardVariants> {
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof scoreCardVariants> {
   data: LeadScoreData;
   title?: string;
   showConfidence?: boolean;
@@ -87,13 +86,26 @@ function ScoreCard({
             {title && <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>}
             <div className="flex items-center gap-3">
               <span className={cn('font-bold', scoreSize, tierConfig.color)}>{data.score}</span>
-              <div className={cn('px-2 py-0.5 rounded-full text-xs font-medium', tierConfig.bgColor, tierConfig.color)}>
+              <div
+                className={cn(
+                  'px-2 py-0.5 rounded-full text-xs font-medium',
+                  tierConfig.bgColor,
+                  tierConfig.color
+                )}
+              >
                 {tierConfig.label}
               </div>
             </div>
           </div>
-          <div className={cn('flex items-center justify-center w-10 h-10 rounded-full', tierConfig.bgColor)}>
-            <span className={cn('material-symbols-outlined', tierConfig.color)} aria-hidden="true">{tierConfig.icon}</span>
+          <div
+            className={cn(
+              'flex items-center justify-center w-10 h-10 rounded-full',
+              tierConfig.bgColor
+            )}
+          >
+            <span className={cn('material-symbols-outlined', tierConfig.color)} aria-hidden="true">
+              {tierConfig.icon}
+            </span>
           </div>
         </div>
 
@@ -105,12 +117,24 @@ function ScoreCard({
 
         <div className="mt-4 pt-4 border-t border-border">
           <h4 className="text-sm font-medium text-foreground mb-3">Scoring Factors</h4>
-          <ScoreFactorList factors={data.factors} sortByImpact showImpactBars={showImpactBars} showSummary collapsedLimit={4} />
+          <ScoreFactorList
+            factors={data.factors}
+            sortByImpact
+            showImpactBars={showImpactBars}
+            showSummary
+            collapsedLimit={4}
+          />
         </div>
 
         {showModelInfo && (
           <div className="mt-4 pt-4 border-t border-border">
-            <ModelInfo modelVersion={data.modelVersion} scoredAt={scoredAt} showIcon showTimestamp={!!scoredAt} size={componentSize} />
+            <ModelInfo
+              modelVersion={data.modelVersion}
+              scoredAt={scoredAt}
+              showIcon
+              showTimestamp={!!scoredAt}
+              size={componentSize}
+            />
           </div>
         )}
 
@@ -126,7 +150,9 @@ function ScoreCard({
                     className="flex items-center gap-1 px-3 py-1.5 rounded-md text-sm border border-border hover:bg-muted transition-colors"
                     aria-label="This score was helpful"
                   >
-                    <span className="material-symbols-outlined text-sm" aria-hidden="true">thumb_up</span>
+                    <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                      thumb_up
+                    </span>
                     Helpful
                   </button>
                   <button
@@ -135,7 +161,9 @@ function ScoreCard({
                     className="flex items-center gap-1 px-3 py-1.5 rounded-md text-sm border border-border hover:bg-muted transition-colors"
                     aria-label="This score was not helpful"
                   >
-                    <span className="material-symbols-outlined text-sm" aria-hidden="true">thumb_down</span>
+                    <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                      thumb_down
+                    </span>
                     Not helpful
                   </button>
                 </>
@@ -147,7 +175,9 @@ function ScoreCard({
                   className="flex items-center gap-1 px-3 py-1.5 rounded-md text-sm border border-primary text-primary hover:bg-primary/10 transition-colors"
                   aria-label="Suggest a different score"
                 >
-                  <span className="material-symbols-outlined text-sm" aria-hidden="true">edit</span>
+                  <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                    edit
+                  </span>
                   Suggest Correction
                 </button>
               )}

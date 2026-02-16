@@ -113,9 +113,11 @@ export const rescheduleTaskSchema = z.object({
 export type RescheduleTaskInput = z.infer<typeof rescheduleTaskSchema>;
 
 // Get Reminders Schema
-export const getRemindersSchema = z.object({
-  ownerId: idSchema.optional(),
-}).optional();
+export const getRemindersSchema = z
+  .object({
+    ownerId: idSchema.optional(),
+  })
+  .optional();
 
 export type GetRemindersInput = z.infer<typeof getRemindersSchema>;
 

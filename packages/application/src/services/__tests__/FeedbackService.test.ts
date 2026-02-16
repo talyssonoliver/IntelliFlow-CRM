@@ -9,11 +9,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import {
-  FeedbackService,
-  FeedbackRepositoryPort,
-  LeadDataPort,
-} from '../FeedbackService';
+import { FeedbackService, FeedbackRepositoryPort, LeadDataPort } from '../FeedbackService';
 
 // ---------------------------------------------------------------------------
 // Mock factories
@@ -116,7 +112,7 @@ describe('FeedbackService', () => {
     service = new FeedbackService(
       feedbackRepo as FeedbackRepositoryPort,
       leadDataPort as LeadDataPort,
-      eventBus as any,
+      eventBus as any
     );
   });
 
@@ -139,7 +135,7 @@ describe('FeedbackService', () => {
           aiScoreId: 'ai-score-1',
         },
         'user-1',
-        'tenant-1',
+        'tenant-1'
       );
 
       expect(result).toEqual(created);
@@ -153,7 +149,7 @@ describe('FeedbackService', () => {
           correctionCategory: null,
           userId: 'user-1',
           tenantId: 'tenant-1',
-        }),
+        })
       );
     });
 
@@ -170,7 +166,7 @@ describe('FeedbackService', () => {
           leadId: 'lead-1',
         },
         'user-1',
-        'tenant-1',
+        'tenant-1'
       );
 
       expect(result.feedbackType).toBe('THUMBS_DOWN');
@@ -188,7 +184,7 @@ describe('FeedbackService', () => {
           leadId: 'lead-1',
         },
         'user-1',
-        'tenant-1',
+        'tenant-1'
       );
 
       expect(eventBus.publish).toHaveBeenCalledTimes(1);
@@ -211,7 +207,7 @@ describe('FeedbackService', () => {
           leadId: 'lead-1',
         },
         'user-1',
-        'tenant-1',
+        'tenant-1'
       );
 
       const createCall = feedbackRepo.create.mock.calls[0][0];
@@ -241,7 +237,7 @@ describe('FeedbackService', () => {
           reason: 'Score too high',
         },
         'user-1',
-        'tenant-1',
+        'tenant-1'
       );
 
       expect(result).toEqual(created);
@@ -251,7 +247,7 @@ describe('FeedbackService', () => {
           correctedScore: 60,
           correctionMagnitude: 15, // |75 - 60|
           correctionCategory: 'SCORE_TOO_HIGH',
-        }),
+        })
       );
     });
 
@@ -269,7 +265,7 @@ describe('FeedbackService', () => {
           correctionCategory: 'SCORE_TOO_HIGH',
         },
         'user-1',
-        'tenant-1',
+        'tenant-1'
       );
 
       const event = eventBus.publish.mock.calls[0][0];
@@ -293,7 +289,7 @@ describe('FeedbackService', () => {
           correctionCategory: 'SCORE_TOO_HIGH',
         },
         'user-1',
-        'tenant-1',
+        'tenant-1'
       );
 
       expect(feedbackRepo.findByModelVersion).toHaveBeenCalledWith('v1.0', expect.any(Date));
@@ -308,7 +304,7 @@ describe('FeedbackService', () => {
           id: `fb-${i}`,
           feedbackType: 'THUMBS_DOWN',
           createdAt: new Date(),
-        }),
+        })
       );
       feedbackRepo.findByModelVersion.mockResolvedValue(feedback);
 
@@ -322,7 +318,7 @@ describe('FeedbackService', () => {
           correctionCategory: 'SCORE_TOO_HIGH',
         },
         'user-1',
-        'tenant-1',
+        'tenant-1'
       );
 
       // Should have published 2 events: feedback submitted + retraining recommended
@@ -345,7 +341,7 @@ describe('FeedbackService', () => {
           correctionCategory: 'SCORE_TOO_HIGH',
         },
         'user-1',
-        'tenant-1',
+        'tenant-1'
       );
 
       const createCall = feedbackRepo.create.mock.calls[0][0];
@@ -418,10 +414,10 @@ describe('FeedbackService', () => {
 
     it('should calculate correction distribution', async () => {
       const feedback = [
-        makeCorrection({ id: 'fb-1', correctionMagnitude: 5 }),   // minor
-        makeCorrection({ id: 'fb-2', correctionMagnitude: 15 }),  // moderate
-        makeCorrection({ id: 'fb-3', correctionMagnitude: 35 }),  // major
-        makeCorrection({ id: 'fb-4', correctionMagnitude: 60 }),  // severe
+        makeCorrection({ id: 'fb-1', correctionMagnitude: 5 }), // minor
+        makeCorrection({ id: 'fb-2', correctionMagnitude: 15 }), // moderate
+        makeCorrection({ id: 'fb-3', correctionMagnitude: 35 }), // major
+        makeCorrection({ id: 'fb-4', correctionMagnitude: 60 }), // severe
       ];
       feedbackRepo.findAll.mockResolvedValue(feedback);
 
@@ -501,14 +497,14 @@ describe('FeedbackService', () => {
           id: `fb-${i}`,
           feedbackType: i < 50 ? 'THUMBS_DOWN' : 'THUMBS_UP',
           createdAt: new Date(),
-        }),
+        })
       );
       feedbackRepo.findAll.mockResolvedValue(feedback);
 
       const analytics = await service.getAnalytics({});
 
       const negRec = analytics.improvementRecommendations.find((r: string) =>
-        r.includes('Negative feedback ratio'),
+        r.includes('Negative feedback ratio')
       );
       expect(negRec).toBeDefined();
     });
@@ -525,7 +521,7 @@ describe('FeedbackService', () => {
       const analytics = await service.getAnalytics({});
 
       const overRec = analytics.improvementRecommendations.find((r: string) =>
-        r.includes('overestimates'),
+        r.includes('overestimates')
       );
       expect(overRec).toBeDefined();
     });
@@ -541,7 +537,7 @@ describe('FeedbackService', () => {
       const analytics = await service.getAnalytics({});
 
       const underRec = analytics.improvementRecommendations.find((r: string) =>
-        r.includes('underestimates'),
+        r.includes('underestimates')
       );
       expect(underRec).toBeDefined();
     });
@@ -558,7 +554,7 @@ describe('FeedbackService', () => {
       const analytics = await service.getAnalytics({});
 
       const contextRec = analytics.improvementRecommendations.find((r: string) =>
-        r.includes('missing context'),
+        r.includes('missing context')
       );
       expect(contextRec).toBeDefined();
     });
@@ -575,7 +571,7 @@ describe('FeedbackService', () => {
       const analytics = await service.getAnalytics({});
 
       const factorsRec = analytics.improvementRecommendations.find((r: string) =>
-        r.includes('factor weighting'),
+        r.includes('factor weighting')
       );
       expect(factorsRec).toBeDefined();
     });
@@ -605,7 +601,7 @@ describe('FeedbackService', () => {
           id: `fb-${i}`,
           feedbackType: i < 50 ? 'THUMBS_DOWN' : 'THUMBS_UP',
           createdAt: new Date(),
-        }),
+        })
       );
       feedbackRepo.findAll.mockResolvedValue(feedback);
 
@@ -623,7 +619,7 @@ describe('FeedbackService', () => {
   describe('checkRetrainingNeeded', () => {
     it('should return not needed with insufficient data', async () => {
       feedbackRepo.findByModelVersion.mockResolvedValue(
-        Array.from({ length: 10 }, (_, i) => makeFeedback({ id: `fb-${i}` })),
+        Array.from({ length: 10 }, (_, i) => makeFeedback({ id: `fb-${i}` }))
       );
 
       const check = await service.checkRetrainingNeeded('v1.0');
@@ -638,7 +634,7 @@ describe('FeedbackService', () => {
         makeFeedback({
           id: `fb-${i}`,
           feedbackType: i < 40 ? 'THUMBS_DOWN' : 'THUMBS_UP',
-        }),
+        })
       );
       feedbackRepo.findByModelVersion.mockResolvedValue(feedback);
 
@@ -655,7 +651,7 @@ describe('FeedbackService', () => {
           id: `fb-${i}`,
           correctionMagnitude: 30,
           feedbackType: 'SCORE_CORRECTION',
-        }),
+        })
       );
       feedbackRepo.findByModelVersion.mockResolvedValue(feedback);
 
@@ -670,7 +666,7 @@ describe('FeedbackService', () => {
         makeFeedback({
           id: `fb-${i}`,
           feedbackType: i < 10 ? 'THUMBS_DOWN' : 'THUMBS_UP',
-        }),
+        })
       );
       feedbackRepo.findByModelVersion.mockResolvedValue(feedback);
 
@@ -715,7 +711,7 @@ describe('FeedbackService', () => {
         'v1.0',
         new Date('2025-01-01'),
         new Date('2025-02-01'),
-        'exporter-1',
+        'exporter-1'
       );
 
       expect(result.corrections).toHaveLength(2);
@@ -732,13 +728,18 @@ describe('FeedbackService', () => {
         makeFeedback({ id: 'fb-3', feedbackType: 'THUMBS_DOWN' }),
       ];
       feedbackRepo.findByModelVersion.mockResolvedValue(mixed);
-      leadDataPort.getLeadData.mockResolvedValue({ email: 'test@test.com', company: null, title: null, source: 'WEB' });
+      leadDataPort.getLeadData.mockResolvedValue({
+        email: 'test@test.com',
+        company: null,
+        title: null,
+        source: 'WEB',
+      });
 
       const result = await service.exportTrainingData(
         'v1.0',
         new Date('2025-01-01'),
         new Date('2025-02-01'),
-        'exporter-1',
+        'exporter-1'
       );
 
       expect(result.corrections).toHaveLength(1);
@@ -754,23 +755,26 @@ describe('FeedbackService', () => {
         'v1.0',
         new Date('2025-01-01'),
         new Date('2025-02-01'),
-        'exporter-1',
+        'exporter-1'
       );
 
       expect(result.corrections[0].leadData).toEqual({});
     });
 
     it('should publish TrainingDataExportedEvent', async () => {
-      feedbackRepo.findByModelVersion.mockResolvedValue([
-        makeCorrection({ correctedScore: 60 }),
-      ]);
-      leadDataPort.getLeadData.mockResolvedValue({ email: 'test@test.com', company: null, title: null, source: 'WEB' });
+      feedbackRepo.findByModelVersion.mockResolvedValue([makeCorrection({ correctedScore: 60 })]);
+      leadDataPort.getLeadData.mockResolvedValue({
+        email: 'test@test.com',
+        company: null,
+        title: null,
+        source: 'WEB',
+      });
 
       await service.exportTrainingData(
         'v1.0',
         new Date('2025-01-01'),
         new Date('2025-02-01'),
-        'exporter-1',
+        'exporter-1'
       );
 
       expect(eventBus.publish).toHaveBeenCalledTimes(1);
@@ -785,13 +789,18 @@ describe('FeedbackService', () => {
       feedbackRepo.findByModelVersion.mockResolvedValue([
         makeCorrection({ correctedScore: 60, correctionCategory: null }),
       ]);
-      leadDataPort.getLeadData.mockResolvedValue({ email: 'test@test.com', company: null, title: null, source: 'WEB' });
+      leadDataPort.getLeadData.mockResolvedValue({
+        email: 'test@test.com',
+        company: null,
+        title: null,
+        source: 'WEB',
+      });
 
       const result = await service.exportTrainingData(
         'v1.0',
         new Date('2025-01-01'),
         new Date('2025-02-01'),
-        'exporter-1',
+        'exporter-1'
       );
 
       expect(result.corrections[0].category).toBe('UNKNOWN');
@@ -804,7 +813,7 @@ describe('FeedbackService', () => {
         'v1.0',
         new Date('2025-01-01'),
         new Date('2025-02-01'),
-        'exporter-1',
+        'exporter-1'
       );
 
       expect(result.corrections).toEqual([]);

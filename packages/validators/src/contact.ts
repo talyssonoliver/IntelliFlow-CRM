@@ -39,12 +39,10 @@ export const createContactSchema = baseContactFieldsSchema;
 export type CreateContactInput = z.infer<typeof createContactSchema>;
 
 // Update Contact Schema - all fields optional except id
-export const updateContactSchema = baseContactFieldsSchema
-  .partial()
-  .extend({
-    id: idSchema,
-    accountId: idSchema.optional().nullable(), // Allow unsetting account
-  });
+export const updateContactSchema = baseContactFieldsSchema.partial().extend({
+  id: idSchema,
+  accountId: idSchema.optional().nullable(), // Allow unsetting account
+});
 
 export type UpdateContactInput = z.infer<typeof updateContactSchema>;
 
@@ -115,7 +113,9 @@ export type UnlinkFromLeadInput = z.infer<typeof unlinkFromLeadSchema>;
 // IFC-184: Contact Timeline Schema
 export const contactTimelineSchema = z.object({
   contactId: idSchema,
-  eventTypes: z.array(z.enum(['activity', 'note', 'task', 'appointment', 'email', 'call', 'status_change'])).optional(),
+  eventTypes: z
+    .array(z.enum(['activity', 'note', 'task', 'appointment', 'email', 'call', 'status_change']))
+    .optional(),
   fromDate: z.coerce.date().optional(),
   toDate: z.coerce.date().optional(),
   cursor: z.string().optional(),
@@ -146,10 +146,12 @@ export const contactTimelineEventSchema = z.object({
   timestamp: z.coerce.date(),
   title: z.string(),
   description: z.string().optional(),
-  actor: z.object({
-    id: z.string(),
-    name: z.string(),
-  }).optional(),
+  actor: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+    })
+    .optional(),
   metadata: z.record(z.unknown()).optional(),
 });
 

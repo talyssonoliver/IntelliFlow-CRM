@@ -21,7 +21,7 @@ export function ApplicationForm({ positions }: ApplicationFormProps) {
     setIsSubmitting(true);
 
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 1500));
 
     setIsSubmitting(false);
     setIsSubmitted(true);
@@ -31,7 +31,10 @@ export function ApplicationForm({ positions }: ApplicationFormProps) {
     return (
       <Card className="p-8 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-center">
         <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
-          <span className="material-symbols-outlined text-3xl text-green-600 dark:text-green-400" aria-hidden="true">
+          <span
+            className="material-symbols-outlined text-3xl text-green-600 dark:text-green-400"
+            aria-hidden="true"
+          >
             check_circle
           </span>
         </div>
@@ -39,7 +42,8 @@ export function ApplicationForm({ positions }: ApplicationFormProps) {
           Application Received
         </h3>
         <p className="text-slate-600 dark:text-slate-300">
-          Thank you for your interest in IntelliFlow. We&apos;ll review your application and get back to you within 5 business days.
+          Thank you for your interest in IntelliFlow. We&apos;ll review your application and get
+          back to you within 5 business days.
         </p>
       </Card>
     );
@@ -50,7 +54,10 @@ export function ApplicationForm({ positions }: ApplicationFormProps) {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label
+              htmlFor="firstName"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+            >
               First Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -63,7 +70,10 @@ export function ApplicationForm({ positions }: ApplicationFormProps) {
             />
           </div>
           <div>
-            <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label
+              htmlFor="lastName"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+            >
               Last Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -78,7 +88,10 @@ export function ApplicationForm({ positions }: ApplicationFormProps) {
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+          >
             Email <span className="text-red-500">*</span>
           </label>
           <input
@@ -92,7 +105,10 @@ export function ApplicationForm({ positions }: ApplicationFormProps) {
         </div>
 
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label
+            htmlFor="phone"
+            className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+          >
             Phone
           </label>
           <input
@@ -105,7 +121,10 @@ export function ApplicationForm({ positions }: ApplicationFormProps) {
         </div>
 
         <div>
-          <label htmlFor="position" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label
+            htmlFor="position"
+            className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+          >
             Position <span className="text-red-500">*</span>
           </label>
           <select
@@ -125,7 +144,10 @@ export function ApplicationForm({ positions }: ApplicationFormProps) {
         </div>
 
         <div>
-          <label htmlFor="linkedin" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label
+            htmlFor="linkedin"
+            className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+          >
             LinkedIn Profile
           </label>
           <input
@@ -138,7 +160,10 @@ export function ApplicationForm({ positions }: ApplicationFormProps) {
         </div>
 
         <div>
-          <label htmlFor="portfolio" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label
+            htmlFor="portfolio"
+            className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+          >
             Portfolio / GitHub
           </label>
           <input
@@ -151,7 +176,10 @@ export function ApplicationForm({ positions }: ApplicationFormProps) {
         </div>
 
         <div>
-          <label htmlFor="resume" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label
+            htmlFor="resume"
+            className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+          >
             Resume/CV <span className="text-red-500">*</span>
           </label>
           <div className="relative">
@@ -170,7 +198,10 @@ export function ApplicationForm({ positions }: ApplicationFormProps) {
         </div>
 
         <div>
-          <label htmlFor="coverLetter" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label
+            htmlFor="coverLetter"
+            className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+          >
             Why IntelliFlow?
           </label>
           <textarea

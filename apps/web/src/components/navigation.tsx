@@ -2,20 +2,17 @@
 
 import * as React from 'react';
 import { usePathname } from 'next/navigation';
-import { Logo, MainNav, MobileNav, SearchBar, UserMenu, Notifications, type NavRoute } from './header';
+import {
+  Logo,
+  MainNav,
+  MobileNav,
+  SearchBar,
+  UserMenu,
+  Notifications,
+  type NavRoute,
+} from './header';
 import { useAuth } from '@/lib/auth/AuthContext';
-
-const routes: NavRoute[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: 'dashboard' },
-  { label: 'Leads', href: '/leads', icon: 'group' },
-  { label: 'Contacts', href: '/contacts', icon: 'person' },
-  { label: 'Accounts', href: '/accounts', icon: 'domain' },
-  { label: 'Deals', href: '/deals', icon: 'handshake' },
-  { label: 'Tickets', href: '/tickets', icon: 'confirmation_number' },
-  { label: 'Documents', href: '/documents', icon: 'description' },
-  { label: 'AI & Agents', href: '/agent-approvals', icon: 'smart_toy' }, // AI hub: approvals, review, intelligence, monitoring
-  { label: 'Reports', href: '/analytics', icon: 'bar_chart' },
-];
+import { useEnabledModules } from '@/hooks/useEnabledModules';
 
 // Public routes that should not show the authenticated navigation
 const PUBLIC_ROUTES = [
@@ -29,29 +26,33 @@ const PUBLIC_ROUTES = [
 
 export function Navigation() {
   const [mobileOpen, setMobileOpen] = React.useState(false);
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const pathname = usePathname();
 
-  // IFC-007: Don't show authenticated navigation on public routes or when not authenticated
-  const isPublicRoute = PUBLIC_ROUTES.some(route => pathname?.startsWith(route));
+  // IFC-210: Dynamic module-based navigation
+  const { enabledRoutes, isLoading: modulesLoading } = useEnabledModules();
 
-  // Debug: Log navigation render decision
-  console.log('[Navigation]', {
-    pathname,
-    isAuthenticated,
-    isLoading,
-    isPublicRoute,
-    willRender: !isPublicRoute && isAuthenticated && !isLoading,
-  });
+  // Map domain NavRouteConfig to header NavRoute (compatible shapes)
+  const routes: NavRoute[] = React.useMemo(
+    () =>
+      enabledRoutes.map((r) => ({
+        label: r.label,
+        href: r.href,
+        icon: r.icon,
+      })),
+    [enabledRoutes]
+  );
+
+  // IFC-007: Don't show authenticated navigation on public routes or when not authenticated
+  const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname?.startsWith(route));
 
   // Don't render if on public route or not authenticated
-  // Also don't render while loading to prevent flash
-  if (isPublicRoute || (!isAuthenticated && !isLoading)) {
+  if (isPublicRoute || (!isAuthenticated && !authLoading)) {
     return null;
   }
 
   // Don't render while checking auth status (prevents header flash)
-  if (isLoading) {
+  if (authLoading) {
     return null;
   }
 
@@ -64,7 +65,18 @@ export function Navigation() {
         </div>
 
         {/* Desktop Navigation */}
-        <MainNav routes={routes} />
+        {modulesLoading ? (
+          <nav className="hidden lg:flex items-center gap-1">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-8 w-20 rounded-lg bg-muted animate-pulse"
+              />
+            ))}
+          </nav>
+        ) : (
+          <MainNav routes={routes} />
+        )}
 
         {/* Spacer */}
         <div className="flex-1" />
@@ -86,18 +98,12 @@ export function Navigation() {
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
         >
-          <span className="material-symbols-outlined text-xl">
-            {mobileOpen ? 'close' : 'menu'}
-          </span>
+          <span className="material-symbols-outlined text-xl">{mobileOpen ? 'close' : 'menu'}</span>
         </button>
       </div>
 
       {/* Mobile Navigation */}
-      <MobileNav
-        routes={routes}
-        isOpen={mobileOpen}
-        onClose={() => setMobileOpen(false)}
-      />
+      <MobileNav routes={routes} isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
     </header>
   );
 }

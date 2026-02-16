@@ -139,10 +139,7 @@ describe('PrismaTicketRepository', () => {
       mockPrisma.ticket.findMany.mockResolvedValue([]);
       mockPrisma.ticket.count.mockResolvedValue(50);
 
-      const result = await repo.findMany(
-        { tenantId: 'tenant-123' },
-        { limit: 10, offset: 20 }
-      );
+      const result = await repo.findMany({ tenantId: 'tenant-123' }, { limit: 10, offset: 20 });
 
       expect(result.hasMore).toBe(true);
       expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(
@@ -230,10 +227,7 @@ describe('PrismaTicketRepository', () => {
       mockPrisma.ticket.findMany.mockResolvedValue([]);
       mockPrisma.ticket.count.mockResolvedValue(0);
 
-      await repo.findMany(
-        { tenantId: 'tenant-123' },
-        { activitiesLimit: 10 }
-      );
+      await repo.findMany({ tenantId: 'tenant-123' }, { activitiesLimit: 10 });
 
       expect(mockPrisma.ticket.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -347,10 +341,7 @@ describe('PrismaTicketRepository', () => {
       mockPrisma.ticket.findMany.mockResolvedValue([createMockTicketRecord()]);
       mockPrisma.ticket.count.mockResolvedValue(100);
 
-      const result = await repo.findMany(
-        { tenantId: 'tenant-123' },
-        { limit: 20, offset: 0 }
-      );
+      const result = await repo.findMany({ tenantId: 'tenant-123' }, { limit: 20, offset: 0 });
 
       expect(result.hasMore).toBe(true);
     });
@@ -359,10 +350,7 @@ describe('PrismaTicketRepository', () => {
       mockPrisma.ticket.findMany.mockResolvedValue([createMockTicketRecord()]);
       mockPrisma.ticket.count.mockResolvedValue(21);
 
-      const result = await repo.findMany(
-        { tenantId: 'tenant-123' },
-        { limit: 20, offset: 20 }
-      );
+      const result = await repo.findMany({ tenantId: 'tenant-123' }, { limit: 20, offset: 20 });
 
       expect(result.hasMore).toBe(false);
     });
@@ -777,13 +765,9 @@ describe('PrismaTicketRepository', () => {
     });
 
     it('should call count with breached SLA filter', async () => {
-      mockPrisma.ticket.count
-        .mockResolvedValueOnce(10)
-        .mockResolvedValueOnce(3);
+      mockPrisma.ticket.count.mockResolvedValueOnce(10).mockResolvedValueOnce(3);
 
-      mockPrisma.ticket.groupBy
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([]);
+      mockPrisma.ticket.groupBy.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
       mockPrisma.ticket.findMany.mockResolvedValue([]);
 
@@ -925,9 +909,7 @@ describe('PrismaTicketRepository', () => {
       const createdAt = new Date('2026-02-05T10:00:00Z');
       const firstResponseAt = new Date('2026-02-05T10:30:00Z'); // 30 min later
 
-      mockPrisma.ticket.findMany.mockResolvedValue([
-        { createdAt, firstResponseAt },
-      ]);
+      mockPrisma.ticket.findMany.mockResolvedValue([{ createdAt, firstResponseAt }]);
 
       const result = await repo.getAverageResponseTime('tenant-123');
 

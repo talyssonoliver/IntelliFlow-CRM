@@ -92,13 +92,15 @@ function createMockDbRecord(overrides: Record<string, unknown> = {}) {
 }
 
 // Helper to create a domain CaseDocument
-function createTestDocument(overrides: Partial<{
-  id: string;
-  tenantId: string;
-  status: DocumentStatus;
-  parentVersionId: string;
-  isLatestVersion: boolean;
-}> = {}): CaseDocument {
+function createTestDocument(
+  overrides: Partial<{
+    id: string;
+    tenantId: string;
+    status: DocumentStatus;
+    parentVersionId: string;
+    isLatestVersion: boolean;
+  }> = {}
+): CaseDocument {
   return CaseDocument.create({
     tenantId: overrides.tenantId ?? TENANT_ID,
     metadata: {
@@ -779,18 +781,22 @@ describe('PrismaCaseDocumentRepository', () => {
       mockPrisma.caseDocument.findUnique
         .mockResolvedValueOnce(root) // initial
         .mockResolvedValueOnce(root) // findVersionChain: root
-        .mockResolvedValueOnce(createMockDbRecord({
-          id: DOC_CHILD_ID,
-          version_major: 2,
-          parent_version_id: DOC_ID,
-          acl: [],
-        }))
-        .mockResolvedValueOnce(createMockDbRecord({
-          id: DOC_GRANDCHILD_ID,
-          version_major: 3,
-          parent_version_id: DOC_CHILD_ID,
-          acl: [],
-        }));
+        .mockResolvedValueOnce(
+          createMockDbRecord({
+            id: DOC_CHILD_ID,
+            version_major: 2,
+            parent_version_id: DOC_ID,
+            acl: [],
+          })
+        )
+        .mockResolvedValueOnce(
+          createMockDbRecord({
+            id: DOC_GRANDCHILD_ID,
+            version_major: 3,
+            parent_version_id: DOC_CHILD_ID,
+            acl: [],
+          })
+        );
 
       mockPrisma.caseDocument.findMany
         .mockResolvedValueOnce([{ id: DOC_CHILD_ID }]) // children of root

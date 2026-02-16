@@ -63,9 +63,10 @@ describe('StripeAdapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
-        json: () => Promise.resolve({
-          error: { message: 'Invalid API key' },
-        }),
+        json: () =>
+          Promise.resolve({
+            error: { message: 'Invalid API key' },
+          }),
       });
 
       const result = await adapter.createCustomer({
@@ -83,9 +84,10 @@ describe('StripeAdapter', () => {
         ok: false,
         status: 429,
         headers: new Map([['Retry-After', '30']]) as unknown as Headers,
-        json: () => Promise.resolve({
-          error: { message: 'Rate limited' },
-        }),
+        json: () =>
+          Promise.resolve({
+            error: { message: 'Rate limited' },
+          }),
       });
 
       const result = await adapter.createCustomer({
@@ -128,9 +130,10 @@ describe('StripeAdapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
-        json: () => Promise.resolve({
-          error: { message: 'No such customer' },
-        }),
+        json: () =>
+          Promise.resolve({
+            error: { message: 'No such customer' },
+          }),
       });
 
       const result = await adapter.getCustomer('cus_nonexistent');
@@ -177,12 +180,13 @@ describe('StripeAdapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 402,
-        json: () => Promise.resolve({
-          error: {
-            message: 'Your card was declined',
-            decline_code: 'insufficient_funds',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            error: {
+              message: 'Your card was declined',
+              decline_code: 'insufficient_funds',
+            },
+          }),
       });
 
       const result = await adapter.createPaymentIntent({
@@ -239,11 +243,13 @@ describe('StripeAdapter', () => {
         current_period_end: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60,
         cancel_at_period_end: false,
         items: {
-          data: [{
-            id: 'si_test123',
-            price: { id: 'price_test123' },
-            quantity: 1,
-          }],
+          data: [
+            {
+              id: 'si_test123',
+              price: { id: 'price_test123' },
+              quantity: 1,
+            },
+          ],
         },
       };
 
@@ -272,10 +278,11 @@ describe('StripeAdapter', () => {
     it('should return healthy status when API responds quickly', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          object: 'balance',
-          available: [{ amount: 10000, currency: 'usd' }],
-        }),
+        json: () =>
+          Promise.resolve({
+            object: 'balance',
+            available: [{ amount: 10000, currency: 'usd' }],
+          }),
       });
 
       const result = await adapter.checkConnection();
@@ -291,9 +298,10 @@ describe('StripeAdapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        json: () => Promise.resolve({
-          error: { message: 'Internal server error' },
-        }),
+        json: () =>
+          Promise.resolve({
+            error: { message: 'Internal server error' },
+          }),
       });
 
       const result = await adapter.checkConnection();

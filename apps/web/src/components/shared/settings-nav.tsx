@@ -21,17 +21,11 @@ export function SettingsNav({ searchQuery, className }: SettingsNavProps) {
 
   if (categories.length === 0) {
     return (
-      <div
-        className={`text-center py-12 ${className ?? ''}`}
-        role="status"
-        aria-live="polite"
-      >
+      <div className={`text-center py-12 ${className ?? ''}`} role="status" aria-live="polite">
         <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3 block">
           search_off
         </span>
-        <p className="text-muted-foreground">
-          No settings match your search
-        </p>
+        <p className="text-muted-foreground">No settings match your search</p>
       </div>
     );
   }

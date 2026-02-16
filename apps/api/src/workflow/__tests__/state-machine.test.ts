@@ -161,10 +161,9 @@ describe('WorkflowStateMachine', () => {
 
   describe('Workflow Creation', () => {
     it('should create a workflow with initial state', async () => {
-      const state = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-123' }
-      );
+      const state = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-123',
+      });
 
       expect(state.workflowId).toBeDefined();
       expect(state.workflowName).toBe('lead-qualification');
@@ -176,9 +175,9 @@ describe('WorkflowStateMachine', () => {
     });
 
     it('should throw when creating workflow for unknown definition', async () => {
-      await expect(
-        machine.createWorkflow('unknown-workflow')
-      ).rejects.toThrow('Workflow unknown-workflow is not registered');
+      await expect(machine.createWorkflow('unknown-workflow')).rejects.toThrow(
+        'Workflow unknown-workflow is not registered'
+      );
     });
 
     it('should generate unique workflow IDs', async () => {
@@ -191,15 +190,11 @@ describe('WorkflowStateMachine', () => {
 
   describe('State Transitions', () => {
     it('should transition from start to first action node', async () => {
-      const state = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-123' }
-      );
+      const state = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-123',
+      });
 
-      const result = await machine.transition<LeadQualificationState>(
-        state.workflowId,
-        'next'
-      );
+      const result = await machine.transition<LeadQualificationState>(state.workflowId, 'next');
 
       expect(result.success).toBe(true);
       expect(result.state.currentNode).toBe('score_lead');
@@ -207,19 +202,15 @@ describe('WorkflowStateMachine', () => {
     });
 
     it('should execute action node handler', async () => {
-      const state = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-123' }
-      );
+      const state = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-123',
+      });
 
       // Move to score_lead
       await machine.transition(state.workflowId, 'next');
 
       // Execute score_lead
-      const result = await machine.transition<LeadQualificationState>(
-        state.workflowId,
-        'next'
-      );
+      const result = await machine.transition<LeadQualificationState>(state.workflowId, 'next');
 
       expect(result.success).toBe(true);
       expect(result.state.data.score).not.toBeNull();
@@ -228,10 +219,9 @@ describe('WorkflowStateMachine', () => {
 
     it('should follow decision node conditions', async () => {
       // Create workflow with a specific score
-      const state = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-123' }
-      );
+      const state = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-123',
+      });
 
       // Override the score_lead handler to return a specific score
       const definition = testDefinition;
@@ -245,25 +235,18 @@ describe('WorkflowStateMachine', () => {
       await machine.transition(state.workflowId, 'next'); // start -> score_lead
       await machine.transition(state.workflowId, 'next'); // score_lead -> check_threshold
 
-      const result = await machine.transition<LeadQualificationState>(
-        state.workflowId,
-        'next'
-      ); // check_threshold -> auto_qualify
+      const result = await machine.transition<LeadQualificationState>(state.workflowId, 'next'); // check_threshold -> auto_qualify
 
       expect(result.state.currentNode).toBe('auto_qualify');
     });
 
     it('should record transition history', async () => {
-      const state = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-123' }
-      );
+      const state = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-123',
+      });
 
       await machine.transition(state.workflowId, 'next');
-      const result = await machine.transition<LeadQualificationState>(
-        state.workflowId,
-        'next'
-      );
+      const result = await machine.transition<LeadQualificationState>(state.workflowId, 'next');
 
       expect(result.state.history.length).toBeGreaterThan(0);
       expect(result.state.history[0].fromNode).toBe('start');
@@ -273,10 +256,9 @@ describe('WorkflowStateMachine', () => {
 
   describe('Human-in-the-Loop', () => {
     it('should pause on human review node', async () => {
-      const state = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-123' }
-      );
+      const state = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-123',
+      });
 
       // Override score to trigger human review
       const definition = testDefinition;
@@ -289,10 +271,7 @@ describe('WorkflowStateMachine', () => {
       // Move to human review
       await machine.transition(state.workflowId, 'next'); // start -> score_lead
       await machine.transition(state.workflowId, 'next'); // score_lead -> check_threshold
-      const result = await machine.transition<LeadQualificationState>(
-        state.workflowId,
-        'next'
-      ); // check_threshold -> human_review
+      const result = await machine.transition<LeadQualificationState>(state.workflowId, 'next'); // check_threshold -> human_review
 
       expect(result.state.currentNode).toBe('human_review');
       expect(result.state.isPaused).toBe(true);
@@ -300,10 +279,9 @@ describe('WorkflowStateMachine', () => {
     });
 
     it('should process approve decision', async () => {
-      const state = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-123' }
-      );
+      const state = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-123',
+      });
 
       // Override to trigger human review
       const scoreNode = testDefinition.nodes.get('score_lead')!;
@@ -332,10 +310,9 @@ describe('WorkflowStateMachine', () => {
     });
 
     it('should process reject decision', async () => {
-      const state = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-123' }
-      );
+      const state = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-123',
+      });
 
       // Override to trigger human review
       const scoreNode = testDefinition.nodes.get('score_lead')!;
@@ -362,10 +339,9 @@ describe('WorkflowStateMachine', () => {
     });
 
     it('should process modify decision with modifications', async () => {
-      const state = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-123' }
-      );
+      const state = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-123',
+      });
 
       // Override to trigger human review
       const scoreNode = testDefinition.nodes.get('score_lead')!;
@@ -407,10 +383,9 @@ describe('WorkflowStateMachine', () => {
     });
 
     it('should return error when processing decision at non-human node', async () => {
-      const state = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-123' }
-      );
+      const state = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-123',
+      });
 
       // Workflow is at 'start' node, not a human node
       const decision: HumanDecision = {
@@ -428,10 +403,9 @@ describe('WorkflowStateMachine', () => {
 
   describe('State Persistence', () => {
     it('should retrieve saved workflow state', async () => {
-      const created = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-123' }
-      );
+      const created = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-123',
+      });
 
       const retrieved = await machine.getState<LeadQualificationState>(created.workflowId);
 
@@ -446,10 +420,9 @@ describe('WorkflowStateMachine', () => {
     });
 
     it('should persist state across transitions', async () => {
-      const state = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-123' }
-      );
+      const state = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-123',
+      });
 
       await machine.transition(state.workflowId, 'next');
 
@@ -462,10 +435,9 @@ describe('WorkflowStateMachine', () => {
 
   describe('Workflow Lifecycle', () => {
     it('should mark workflow as complete at end node', async () => {
-      const state = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-123' }
-      );
+      const state = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-123',
+      });
 
       // Override for auto-qualify path
       const scoreNode = testDefinition.nodes.get('score_lead')!;
@@ -480,19 +452,15 @@ describe('WorkflowStateMachine', () => {
       await machine.transition(state.workflowId, 'next'); // check_threshold -> auto_qualify
       await machine.transition(state.workflowId, 'next'); // auto_qualify -> end
 
-      const result = await machine.transition<LeadQualificationState>(
-        state.workflowId,
-        'next'
-      );
+      const result = await machine.transition<LeadQualificationState>(state.workflowId, 'next');
 
       expect(result.isComplete).toBe(true);
     });
 
     it('should pause and resume workflow', async () => {
-      const state = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-123' }
-      );
+      const state = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-123',
+      });
 
       await machine.pauseWorkflow(state.workflowId);
 
@@ -506,10 +474,9 @@ describe('WorkflowStateMachine', () => {
     });
 
     it('should cancel workflow', async () => {
-      const state = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-123' }
-      );
+      const state = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-123',
+      });
 
       await machine.cancelWorkflow(state.workflowId);
 
@@ -531,10 +498,9 @@ describe('WorkflowStateMachine', () => {
     });
 
     it('should list paused workflows', async () => {
-      const state1 = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-1' }
-      );
+      const state1 = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-1',
+      });
       await machine.createWorkflow('lead-qualification', { leadId: 'lead-2' });
 
       await machine.pauseWorkflow(state1.workflowId);
@@ -594,27 +560,20 @@ describe('WorkflowStateMachine', () => {
     });
 
     it('should reject transitions on paused workflows', async () => {
-      const state = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-123' }
-      );
+      const state = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-123',
+      });
 
       await machine.pauseWorkflow(state.workflowId);
 
-      const result = await machine.transition<LeadQualificationState>(
-        state.workflowId,
-        'next'
-      );
+      const result = await machine.transition<LeadQualificationState>(state.workflowId, 'next');
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('paused');
     });
 
     it('should return error for transition on non-existent workflow', async () => {
-      const result = await machine.transition<LeadQualificationState>(
-        'non-existent-id',
-        'next'
-      );
+      const result = await machine.transition<LeadQualificationState>('non-existent-id', 'next');
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('not found');
@@ -641,14 +600,12 @@ describe('WorkflowStateMachine', () => {
 
   describe('Query Filters', () => {
     it('should filter workflows by currentNode', async () => {
-      const state1 = await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-1' }
-      );
-      await machine.createWorkflow<LeadQualificationState>(
-        'lead-qualification',
-        { leadId: 'lead-2' }
-      );
+      const state1 = await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-1',
+      });
+      await machine.createWorkflow<LeadQualificationState>('lead-qualification', {
+        leadId: 'lead-2',
+      });
 
       // Move first workflow to score_lead
       await machine.transition(state1.workflowId, 'next');

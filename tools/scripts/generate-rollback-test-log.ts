@@ -90,14 +90,27 @@ function runTestCase1(): TestCase {
   const startTime = Date.now();
 
   steps.push(simulateTestStep('setup', 'Starting rollback test for SCORING chain'));
-  steps.push(simulateTestStep('identify_current', 'Current active version: v2-scoring-exp (ACTIVE)'));
-  steps.push(simulateTestStep('identify_target', 'Target rollback version: v1-scoring-baseline (DEPRECATED)'));
-  steps.push(simulateTestStep('initiate_rollback', 'Initiating rollback with reason: "Performance regression detected"'));
+  steps.push(
+    simulateTestStep('identify_current', 'Current active version: v2-scoring-exp (ACTIVE)')
+  );
+  steps.push(
+    simulateTestStep('identify_target', 'Target rollback version: v1-scoring-baseline (DEPRECATED)')
+  );
+  steps.push(
+    simulateTestStep(
+      'initiate_rollback',
+      'Initiating rollback with reason: "Performance regression detected"'
+    )
+  );
   steps.push(simulateTestStep('deprecate_current', 'Deprecating current version: v2-scoring-exp'));
-  steps.push(simulateTestStep('activate_previous', 'Activating previous version: v1-scoring-baseline'));
+  steps.push(
+    simulateTestStep('activate_previous', 'Activating previous version: v1-scoring-baseline')
+  );
   steps.push(simulateTestStep('create_audit', 'Creating audit record: ROLLED_BACK'));
   steps.push(simulateTestStep('verify_active', 'Active version is now v1-scoring-baseline'));
-  steps.push(simulateTestStep('verify_deprecated', 'Previous version v2-scoring-exp is DEPRECATED'));
+  steps.push(
+    simulateTestStep('verify_deprecated', 'Previous version v2-scoring-exp is DEPRECATED')
+  );
   steps.push(simulateTestStep('verify_audit', 'Audit log contains rollback entry'));
 
   return {
@@ -149,12 +162,18 @@ function runTestCase3(): TestCase {
   });
   steps.push(simulateTestStep('test_empty_reason', 'Attempting rollback with empty reason...'));
   steps.push({
-    ...simulateTestStep('validate_empty_reason', 'Validation error: Reason must be at least 10 characters'),
+    ...simulateTestStep(
+      'validate_empty_reason',
+      'Validation error: Reason must be at least 10 characters'
+    ),
     details: ['Error correctly thrown for short reason'],
   });
   steps.push(simulateTestStep('test_valid_reason', 'Attempting rollback with valid reason...'));
   steps.push({
-    ...simulateTestStep('success', 'Rollback succeeded with reason: "Accuracy dropped 15% after v2 deployment"'),
+    ...simulateTestStep(
+      'success',
+      'Rollback succeeded with reason: "Accuracy dropped 15% after v2 deployment"'
+    ),
     details: ['Rollback completed with valid reason'],
   });
 
@@ -185,7 +204,9 @@ function runTestCase4(): TestCase {
   steps.push(simulateTestStep('post_prompt', 'Prompt Length: 1102 chars'));
   steps.push(simulateTestStep('post_temp', 'Temperature: 0.7'));
   steps.push(simulateTestStep('post_tokens', 'Max Tokens: 2000'));
-  steps.push(simulateTestStep('verify_previous', 'Audit previousState matches pre-rollback config'));
+  steps.push(
+    simulateTestStep('verify_previous', 'Audit previousState matches pre-rollback config')
+  );
   steps.push(simulateTestStep('verify_new', 'Audit newState matches v1-qual config'));
 
   return {
@@ -398,7 +419,9 @@ async function runRollbackTests(): Promise<RollbackTestResult> {
   }
 }
 
-async function writeTestResult(result: RollbackTestResult): Promise<{ timestampedPath: string | null; latestPath: string; skipped: boolean }> {
+async function writeTestResult(
+  result: RollbackTestResult
+): Promise<{ timestampedPath: string | null; latestPath: string; skipped: boolean }> {
   const dir = path.join(process.cwd(), 'artifacts/logs/rollback-test');
   await fs.promises.mkdir(dir, { recursive: true });
 
@@ -407,7 +430,12 @@ async function writeTestResult(result: RollbackTestResult): Promise<{ timestampe
   // For test results, compare only meaningful data (exclude timing which varies)
   const stripTiming = (r: RollbackTestResult) => ({
     status: r.status,
-    summary: { total: r.summary.total, passed: r.summary.passed, failed: r.summary.failed, skipped: r.summary.skipped },
+    summary: {
+      total: r.summary.total,
+      passed: r.summary.passed,
+      failed: r.summary.failed,
+      skipped: r.summary.skipped,
+    },
     testCases: r.testCases.map((tc) => ({ id: tc.id, name: tc.name, status: tc.status })),
   });
   const newHash = hashContent(JSON.stringify(stripTiming(result)));
@@ -455,7 +483,9 @@ async function main() {
 
   console.log(`\nTest Suite: ${result.metadata.testSuite}`);
   console.log(`Status: ${result.status}`);
-  console.log(`Total: ${result.summary.total} | Passed: ${result.summary.passed} | Failed: ${result.summary.failed}`);
+  console.log(
+    `Total: ${result.summary.total} | Passed: ${result.summary.passed} | Failed: ${result.summary.failed}`
+  );
   console.log(`Duration: ${result.summary.duration_ms}ms`);
 
   if (skipped) {

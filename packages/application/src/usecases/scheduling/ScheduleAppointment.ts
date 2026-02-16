@@ -135,13 +135,10 @@ export class ScheduleAppointmentUseCase {
 
       let existingAppointments: Appointment[];
       try {
-        existingAppointments = await this.appointmentRepository.findForConflictCheck(
-          allAttendees,
-          {
-            startTime: buffer.adjustStartTime(input.startTime),
-            endTime: buffer.adjustEndTime(input.endTime),
-          }
-        );
+        existingAppointments = await this.appointmentRepository.findForConflictCheck(allAttendees, {
+          startTime: buffer.adjustStartTime(input.startTime),
+          endTime: buffer.adjustEndTime(input.endTime),
+        });
       } catch (error) {
         // Wrap repository errors as ConflictDetectionError
         return Result.fail(

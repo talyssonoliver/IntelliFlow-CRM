@@ -23,8 +23,20 @@ vi.mock('next/navigation', () => ({
 
 // Mock next/link - preserve className for styling tests
 vi.mock('next/link', () => ({
-  default: ({ children, href, onClick, className }: { children: React.ReactNode; href: string; onClick?: () => void; className?: string }) => (
-    <a href={href} onClick={onClick} className={className}>{children}</a>
+  default: ({
+    children,
+    href,
+    onClick,
+    className,
+  }: {
+    children: React.ReactNode;
+    href: string;
+    onClick?: () => void;
+    className?: string;
+  }) => (
+    <a href={href} onClick={onClick} className={className}>
+      {children}
+    </a>
   ),
 }));
 

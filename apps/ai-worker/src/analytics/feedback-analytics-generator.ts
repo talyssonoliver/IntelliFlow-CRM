@@ -142,17 +142,12 @@ export class FeedbackAnalyticsGenerator {
   /**
    * Generate analytics from feedback records
    */
-  async generate(
-    records: FeedbackRecord[],
-    periodDays: number = 30
-  ): Promise<FeedbackAnalytics> {
+  async generate(records: FeedbackRecord[], periodDays: number = 30): Promise<FeedbackAnalytics> {
     const endDate = new Date();
     const startDate = new Date(endDate.getTime() - periodDays * 24 * 60 * 60 * 1000);
 
     // Filter to period
-    const periodRecords = records.filter(
-      r => r.createdAt >= startDate && r.createdAt <= endDate
-    );
+    const periodRecords = records.filter((r) => r.createdAt >= startDate && r.createdAt <= endDate);
 
     logger.info(
       { totalRecords: records.length, periodRecords: periodRecords.length, periodDays },
@@ -203,9 +198,9 @@ export class FeedbackAnalyticsGenerator {
    */
   private calculateSummary(records: FeedbackRecord[]): FeedbackSummary {
     const total = records.length;
-    const thumbsUp = records.filter(r => r.feedbackType === 'THUMBS_UP').length;
-    const thumbsDown = records.filter(r => r.feedbackType === 'THUMBS_DOWN').length;
-    const corrections = records.filter(r => r.feedbackType === 'SCORE_CORRECTION').length;
+    const thumbsUp = records.filter((r) => r.feedbackType === 'THUMBS_UP').length;
+    const thumbsDown = records.filter((r) => r.feedbackType === 'THUMBS_DOWN').length;
+    const corrections = records.filter((r) => r.feedbackType === 'SCORE_CORRECTION').length;
 
     return {
       total,
@@ -223,7 +218,7 @@ export class FeedbackAnalyticsGenerator {
    */
   private calculateCorrectionDistribution(records: FeedbackRecord[]): CorrectionDistribution {
     const corrections = records.filter(
-      r => r.feedbackType === 'SCORE_CORRECTION' && r.correctionMagnitude !== null
+      (r) => r.feedbackType === 'SCORE_CORRECTION' && r.correctionMagnitude !== null
     );
 
     if (corrections.length === 0) {
@@ -238,18 +233,20 @@ export class FeedbackAnalyticsGenerator {
       };
     }
 
-    const magnitudes = corrections.map(c => c.correctionMagnitude!);
+    const magnitudes = corrections.map((c) => c.correctionMagnitude!);
     const sortedMagnitudes = [...magnitudes].sort((a, b) => a - b);
 
     // Bucket counts using domain constants
-    const minor = magnitudes.filter(m => m <= CORRECTION_MAGNITUDE_BUCKETS.MINOR_MAX).length;
+    const minor = magnitudes.filter((m) => m <= CORRECTION_MAGNITUDE_BUCKETS.MINOR_MAX).length;
     const moderate = magnitudes.filter(
-      m => m > CORRECTION_MAGNITUDE_BUCKETS.MINOR_MAX && m <= CORRECTION_MAGNITUDE_BUCKETS.MODERATE_MAX
+      (m) =>
+        m > CORRECTION_MAGNITUDE_BUCKETS.MINOR_MAX && m <= CORRECTION_MAGNITUDE_BUCKETS.MODERATE_MAX
     ).length;
     const major = magnitudes.filter(
-      m => m > CORRECTION_MAGNITUDE_BUCKETS.MODERATE_MAX && m <= CORRECTION_MAGNITUDE_BUCKETS.MAJOR_MAX
+      (m) =>
+        m > CORRECTION_MAGNITUDE_BUCKETS.MODERATE_MAX && m <= CORRECTION_MAGNITUDE_BUCKETS.MAJOR_MAX
     ).length;
-    const severe = magnitudes.filter(m => m > CORRECTION_MAGNITUDE_BUCKETS.MAJOR_MAX).length;
+    const severe = magnitudes.filter((m) => m > CORRECTION_MAGNITUDE_BUCKETS.MAJOR_MAX).length;
 
     // Calculate averages
     const averageMagnitude = magnitudes.reduce((a, b) => a + b, 0) / magnitudes.length;
@@ -262,8 +259,8 @@ export class FeedbackAnalyticsGenerator {
 
     // Direction analysis
     const directionalChanges = corrections
-      .filter(c => c.correctedScore !== null)
-      .map(c => c.correctedScore! - c.originalScore);
+      .filter((c) => c.correctedScore !== null)
+      .map((c) => c.correctedScore! - c.originalScore);
 
     const avgDirection =
       directionalChanges.length > 0
@@ -286,7 +283,7 @@ export class FeedbackAnalyticsGenerator {
    */
   private analyzeCategoryDistribution(records: FeedbackRecord[]): CategoryAnalysis[] {
     const corrections = records.filter(
-      r => r.feedbackType === 'SCORE_CORRECTION' && r.correctionCategory !== null
+      (r) => r.feedbackType === 'SCORE_CORRECTION' && r.correctionCategory !== null
     );
 
     if (corrections.length === 0) {
@@ -310,9 +307,9 @@ export class FeedbackAnalyticsGenerator {
         percentage: (catRecords.length / corrections.length) * 100,
         averageMagnitude:
           catRecords
-            .filter(r => r.correctionMagnitude !== null)
+            .filter((r) => r.correctionMagnitude !== null)
             .reduce((sum, r) => sum + r.correctionMagnitude!, 0) /
-            catRecords.filter(r => r.correctionMagnitude !== null).length || 0,
+            catRecords.filter((r) => r.correctionMagnitude !== null).length || 0,
       }))
       .sort((a, b) => b.count - a.count);
   }
@@ -332,8 +329,8 @@ export class FeedbackAnalyticsGenerator {
 
     return Array.from(versionMap.entries())
       .map(([version, versionRecords]) => {
-        const positive = versionRecords.filter(r => r.feedbackType === 'THUMBS_UP').length;
-        const corrections = versionRecords.filter(r => r.feedbackType === 'SCORE_CORRECTION');
+        const positive = versionRecords.filter((r) => r.feedbackType === 'THUMBS_UP').length;
+        const corrections = versionRecords.filter((r) => r.feedbackType === 'SCORE_CORRECTION');
 
         return {
           version,
@@ -343,9 +340,9 @@ export class FeedbackAnalyticsGenerator {
           averageCorrectionMagnitude:
             corrections.length > 0
               ? corrections
-                  .filter(c => c.correctionMagnitude !== null)
+                  .filter((c) => c.correctionMagnitude !== null)
                   .reduce((sum, c) => sum + c.correctionMagnitude!, 0) /
-                corrections.filter(c => c.correctionMagnitude !== null).length
+                corrections.filter((c) => c.correctionMagnitude !== null).length
               : 0,
         };
       })
@@ -358,7 +355,7 @@ export class FeedbackAnalyticsGenerator {
   private evaluateRetrainingNeed(records: FeedbackRecord[]): RetrainingRecommendation {
     const windowMs = RETRAINING_THRESHOLDS.WINDOW_DAYS * 24 * 60 * 60 * 1000;
     const windowStart = new Date(Date.now() - windowMs);
-    const windowRecords = records.filter(r => r.createdAt >= windowStart);
+    const windowRecords = records.filter((r) => r.createdAt >= windowStart);
 
     // Get most recent model version
     const latestVersion =
@@ -368,11 +365,11 @@ export class FeedbackAnalyticsGenerator {
 
     // Calculate metrics
     const feedbackCount = windowRecords.length;
-    const negativeCount = windowRecords.filter(r => r.feedbackType === 'THUMBS_DOWN').length;
+    const negativeCount = windowRecords.filter((r) => r.feedbackType === 'THUMBS_DOWN').length;
     const negativeRatio = feedbackCount > 0 ? negativeCount / feedbackCount : 0;
 
     const corrections = windowRecords.filter(
-      r => r.feedbackType === 'SCORE_CORRECTION' && r.correctionMagnitude !== null
+      (r) => r.feedbackType === 'SCORE_CORRECTION' && r.correctionMagnitude !== null
     );
     const averageCorrection =
       corrections.length > 0
@@ -387,7 +384,9 @@ export class FeedbackAnalyticsGenerator {
       return {
         needed: false,
         urgency: 'none',
-        reasons: [`Insufficient feedback (${feedbackCount}/${RETRAINING_THRESHOLDS.MIN_FEEDBACK_COUNT} required)`],
+        reasons: [
+          `Insufficient feedback (${feedbackCount}/${RETRAINING_THRESHOLDS.MIN_FEEDBACK_COUNT} required)`,
+        ],
         metrics: {
           feedbackCount,
           negativeRatio,
@@ -483,7 +482,7 @@ export class FeedbackAnalyticsGenerator {
 
     // Weekly correction averages
     const corrections = records.filter(
-      r => r.feedbackType === 'SCORE_CORRECTION' && r.correctionMagnitude !== null
+      (r) => r.feedbackType === 'SCORE_CORRECTION' && r.correctionMagnitude !== null
     );
 
     const weeklyCounts = new Map<string, number[]>();

@@ -28,7 +28,9 @@ export function ContactForm() {
     error: null,
   });
 
-  const [formErrors, setFormErrors] = React.useState<Partial<Record<keyof ContactFormInput, string>>>({});
+  const [formErrors, setFormErrors] = React.useState<
+    Partial<Record<keyof ContactFormInput, string>>
+  >({});
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -97,7 +99,10 @@ export function ContactForm() {
           role="alert"
           className="flex items-start gap-3 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg"
         >
-          <span className="material-symbols-outlined text-green-600 dark:text-green-400" aria-hidden="true">
+          <span
+            className="material-symbols-outlined text-green-600 dark:text-green-400"
+            aria-hidden="true"
+          >
             check_circle
           </span>
           <div>
@@ -118,16 +123,15 @@ export function ContactForm() {
           aria-live="assertive"
           className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
         >
-          <span className="material-symbols-outlined text-red-600 dark:text-red-400" aria-hidden="true">
+          <span
+            className="material-symbols-outlined text-red-600 dark:text-red-400"
+            aria-hidden="true"
+          >
             error
           </span>
           <div>
-            <p className="font-medium text-red-800 dark:text-red-300">
-              Failed to send message
-            </p>
-            <p className="text-sm text-red-700 dark:text-red-400">
-              {formState.error}
-            </p>
+            <p className="font-medium text-red-800 dark:text-red-300">Failed to send message</p>
+            <p className="text-sm text-red-700 dark:text-red-400">{formState.error}</p>
           </div>
         </div>
       )}
@@ -162,7 +166,11 @@ export function ContactForm() {
             disabled={formState.isSubmitting}
           />
           {formErrors.name && (
-            <p id="name-error" className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1" role="alert">
+            <p
+              id="name-error"
+              className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1"
+              role="alert"
+            >
               <span className="material-symbols-outlined text-sm" aria-hidden="true">
                 error
               </span>
@@ -201,7 +209,11 @@ export function ContactForm() {
             disabled={formState.isSubmitting}
           />
           {formErrors.email && (
-            <p id="email-error" className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1" role="alert">
+            <p
+              id="email-error"
+              className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1"
+              role="alert"
+            >
               <span className="material-symbols-outlined text-sm" aria-hidden="true">
                 error
               </span>
@@ -234,7 +246,11 @@ export function ContactForm() {
             disabled={formState.isSubmitting}
           />
           {formErrors.phone && (
-            <p id="phone-error" className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1" role="alert">
+            <p
+              id="phone-error"
+              className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1"
+              role="alert"
+            >
               <span className="material-symbols-outlined text-sm" aria-hidden="true">
                 error
               </span>
@@ -320,7 +336,11 @@ export function ContactForm() {
           disabled={formState.isSubmitting}
         />
         {formErrors.message ? (
-          <p id="message-error" className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1" role="alert">
+          <p
+            id="message-error"
+            className="text-sm text-red-600 dark:text-red-400 flex items-center gap-1"
+            role="alert"
+          >
             <span className="material-symbols-outlined text-sm" aria-hidden="true">
               error
             </span>
@@ -388,7 +408,10 @@ export function ContactForm() {
       </button>
 
       <p className="text-xs text-slate-500 dark:text-slate-400">
-        <span className="text-red-500" aria-hidden="true">*</span> Required fields
+        <span className="text-red-500" aria-hidden="true">
+          *
+        </span>{' '}
+        Required fields
       </p>
     </form>
   );

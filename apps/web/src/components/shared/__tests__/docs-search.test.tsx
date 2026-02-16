@@ -10,7 +10,9 @@ describe('DocsSearch', () => {
     onFilter: vi.fn(),
   };
 
-  function renderSearch(props?: Partial<{ categories: DocCategory[]; onFilter: (filtered: DocCategory[]) => void }>) {
+  function renderSearch(
+    props?: Partial<{ categories: DocCategory[]; onFilter: (filtered: DocCategory[]) => void }>
+  ) {
     return render(<DocsSearch {...defaultProps} {...props} />);
   }
 

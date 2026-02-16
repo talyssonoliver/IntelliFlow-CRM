@@ -25,11 +25,7 @@ import {
   ResetEmailSent,
   buildResetEmailPayload,
 } from '@/components/shared/reset-email';
-import {
-  createResetToken,
-  buildResetUrl,
-  checkRateLimit,
-} from '@/lib/shared/reset-token';
+import { createResetToken, buildResetUrl, checkRateLimit } from '@/lib/shared/reset-token';
 
 // ============================================
 // Types
@@ -172,9 +168,7 @@ export default function ForgotPasswordPage() {
           badgeIcon="lock_reset"
           title={state === 'form' ? 'Forgot your password?' : 'Check your email'}
           description={
-            state === 'form'
-              ? "No worries, we'll send you reset instructions."
-              : undefined
+            state === 'form' ? "No worries, we'll send you reset instructions." : undefined
           }
           footer={
             <p className="text-center text-sm text-slate-400">
@@ -227,7 +221,10 @@ export default function ForgotPasswordPage() {
         {/* Security Note */}
         <div className="mt-6 text-center">
           <p className="text-xs text-slate-500">
-            <span className="material-symbols-outlined text-sm align-middle mr-1" aria-hidden="true">
+            <span
+              className="material-symbols-outlined text-sm align-middle mr-1"
+              aria-hidden="true"
+            >
               security
             </span>
             Your password reset link is valid for 1 hour and can only be used once.

@@ -47,8 +47,8 @@ function extractFeedbackFromAttestations(): FeedbackRecord[] {
     if (!existsSync(attestationsDir)) return records;
 
     const taskDirs = readdirSync(attestationsDir, { withFileTypes: true })
-      .filter(d => d.isDirectory())
-      .map(d => d.name);
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name);
 
     for (const taskId of taskDirs) {
       const ackPath = join(attestationsDir, taskId, 'context_ack.json');
@@ -59,7 +59,7 @@ function extractFeedbackFromAttestations(): FeedbackRecord[] {
 
           // Analyze validation results for feedback signals
           if (content.validation) {
-            const allPassed = Object.values(content.validation).every(v => v === true);
+            const allPassed = Object.values(content.validation).every((v) => v === true);
             records.push({
               taskId,
               type: allPassed ? 'positive' : 'negative',
@@ -152,13 +152,13 @@ export async function GET(request: NextRequest) {
       if (!isNaN(days)) {
         const cutoff = new Date();
         cutoff.setDate(cutoff.getDate() - days);
-        allRecords = allRecords.filter(r => new Date(r.timestamp) >= cutoff);
+        allRecords = allRecords.filter((r) => new Date(r.timestamp) >= cutoff);
       }
     }
 
     // Apply category filter
     if (categoryFilter) {
-      allRecords = allRecords.filter(r =>
+      allRecords = allRecords.filter((r) =>
         r.category.toLowerCase().includes(categoryFilter.toLowerCase())
       );
     }
@@ -166,9 +166,9 @@ export async function GET(request: NextRequest) {
     // Calculate summary
     const summary: FeedbackSummary = {
       total: allRecords.length,
-      positive: allRecords.filter(r => r.type === 'positive').length,
-      negative: allRecords.filter(r => r.type === 'negative').length,
-      neutral: allRecords.filter(r => r.type === 'neutral').length,
+      positive: allRecords.filter((r) => r.type === 'positive').length,
+      negative: allRecords.filter((r) => r.type === 'negative').length,
+      neutral: allRecords.filter((r) => r.type === 'neutral').length,
       sentimentScore: 0,
       byCategory: {},
       trend: 'stable',
@@ -190,12 +190,12 @@ export async function GET(request: NextRequest) {
     const midpoint = new Date();
     midpoint.setDate(midpoint.getDate() - 7);
 
-    const recent = allRecords.filter(r => new Date(r.timestamp) >= midpoint);
-    const older = allRecords.filter(r => new Date(r.timestamp) < midpoint);
+    const recent = allRecords.filter((r) => new Date(r.timestamp) >= midpoint);
+    const older = allRecords.filter((r) => new Date(r.timestamp) < midpoint);
 
     if (recent.length >= 3 && older.length >= 3) {
-      const recentPositiveRate = recent.filter(r => r.type === 'positive').length / recent.length;
-      const olderPositiveRate = older.filter(r => r.type === 'positive').length / older.length;
+      const recentPositiveRate = recent.filter((r) => r.type === 'positive').length / recent.length;
+      const olderPositiveRate = older.filter((r) => r.type === 'positive').length / older.length;
 
       if (recentPositiveRate > olderPositiveRate * 1.1) {
         summary.trend = 'improving';

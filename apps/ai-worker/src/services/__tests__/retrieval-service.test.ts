@@ -177,8 +177,15 @@ describe('SearchConfigSchema', () => {
 
   it('should accept all valid source names', () => {
     const allSources = [
-      'leads', 'contacts', 'accounts', 'opportunities',
-      'documents', 'notes', 'conversations', 'messages', 'tickets',
+      'leads',
+      'contacts',
+      'accounts',
+      'opportunities',
+      'documents',
+      'notes',
+      'conversations',
+      'messages',
+      'tickets',
     ];
     const result = SearchConfigSchema.safeParse({
       tenantId: 't',

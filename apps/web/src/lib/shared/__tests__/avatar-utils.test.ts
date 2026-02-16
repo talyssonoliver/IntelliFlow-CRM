@@ -15,7 +15,8 @@ describe('normalizeAvatarSource', () => {
   });
 
   it('proxies googleusercontent avatars', () => {
-    const src = 'https://lh3.googleusercontent.com/a/ACg8ocI1tAWmpksfd_bBrwfQ3yUxXxjaOpMU2BTlBd32zDO0WQIG9IDGWA=s96-c';
+    const src =
+      'https://lh3.googleusercontent.com/a/ACg8ocI1tAWmpksfd_bBrwfQ3yUxXxjaOpMU2BTlBd32zDO0WQIG9IDGWA=s96-c';
     expect(normalizeAvatarSource(src)).toBe(`/api/avatar-proxy?src=${encodeURIComponent(src)}`);
   });
 

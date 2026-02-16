@@ -197,9 +197,7 @@ describe('cleanup-legacy-seed-ids - supplementary', () => {
 
     it('should log deletions only when count > 0', async () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      mockDeleteMany
-        .mockResolvedValueOnce({ count: 0 })
-        .mockResolvedValueOnce({ count: 3 });
+      mockDeleteMany.mockResolvedValueOnce({ count: 0 }).mockResolvedValueOnce({ count: 3 });
 
       const result1 = await mockDeleteMany({});
       if (result1.count > 0) {

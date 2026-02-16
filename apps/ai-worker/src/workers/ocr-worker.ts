@@ -95,11 +95,7 @@ export class OCRWorker extends EventEmitter {
   private readonly retryDelayMs: number;
   private readonly defaultEngine: OCREngine;
 
-  constructor(options?: {
-    maxRetries?: number;
-    retryDelayMs?: number;
-    defaultEngine?: OCREngine;
-  }) {
+  constructor(options?: { maxRetries?: number; retryDelayMs?: number; defaultEngine?: OCREngine }) {
     super();
     this.maxRetries = options?.maxRetries ?? 3;
     this.retryDelayMs = options?.retryDelayMs ?? 1000;
@@ -126,7 +122,12 @@ export class OCRWorker extends EventEmitter {
         this.validateFormat(input.format, documentBuffer);
 
         // Perform OCR based on engine
-        const ocrResult = await this.performOCR(documentBuffer, input.format, engine, input.language);
+        const ocrResult = await this.performOCR(
+          documentBuffer,
+          input.format,
+          engine,
+          input.language
+        );
 
         // Calculate quality metrics
         const quality = this.calculateQualityMetrics(ocrResult);
@@ -199,19 +200,21 @@ export class OCRWorker extends EventEmitter {
    * Normalize extracted text for search and RAG
    */
   normalizeText(text: string): string {
-    return text
-      // Normalize whitespace
-      .replace(/\s+/g, ' ')
-      // Remove control characters
-      // eslint-disable-next-line no-control-regex
-      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
-      // Normalize quotes
-      .replace(/[""]/g, '"')
-      .replace(/['']/g, "'")
-      // Normalize dashes
-      .replace(/[–—]/g, '-')
-      // Trim
-      .trim();
+    return (
+      text
+        // Normalize whitespace
+        .replace(/\s+/g, ' ')
+        // Remove control characters
+        // eslint-disable-next-line no-control-regex
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
+        // Normalize quotes
+        .replace(/[""]/g, '"')
+        .replace(/['']/g, "'")
+        // Normalize dashes
+        .replace(/[–—]/g, '-')
+        // Trim
+        .trim()
+    );
   }
 
   /**
@@ -408,8 +411,7 @@ export class OCRWorker extends EventEmitter {
   }): OCRQualityMetrics {
     const words = ocrResult.text.split(/\s+/).filter((w) => w.length > 0);
     const overallConfidence =
-      ocrResult.pageConfidences.reduce((a, b) => a + b, 0) /
-      ocrResult.pageConfidences.length;
+      ocrResult.pageConfidences.reduce((a, b) => a + b, 0) / ocrResult.pageConfidences.length;
 
     return {
       overallConfidence,

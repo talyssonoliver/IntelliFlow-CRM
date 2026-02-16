@@ -28,7 +28,7 @@ export interface ActivityFeedRepositoryPort {
     tenantId: string,
     limit: number,
     cursor: ActivityFeedCursor | null,
-    filters: ActivityFeedFilters,
+    filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]>;
 
   /**
@@ -45,6 +45,6 @@ export interface ActivityFeedRepositoryPort {
     entityType: string,
     entityId: string,
     limit: number,
-    cursor: ActivityFeedCursor | null,
+    cursor: ActivityFeedCursor | null
   ): Promise<UnifiedActivityItem[]>;
 }

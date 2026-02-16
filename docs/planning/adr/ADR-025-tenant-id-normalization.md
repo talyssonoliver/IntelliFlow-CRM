@@ -6,24 +6,28 @@
 
 **Deciders:** Tech Lead, Security Team, Backend Team
 
-**Technical Story:** Security Gap - Multi-tenancy inconsistency discovered during seed audit
+**Technical Story:** Security Gap - Multi-tenancy inconsistency discovered
+during seed audit
 
 ## Context and Problem Statement
 
-During a seed data audit, we discovered that **many models are missing the `tenantId` column** despite ADR-004 stating: "All multi-tenant tables include a `tenant_id` column."
+During a seed data audit, we discovered that **many models are missing the
+`tenantId` column** despite ADR-004 stating: "All multi-tenant tables include a
+`tenant_id` column."
 
 This creates a **critical security gap**:
+
 1. Supabase RLS policies cannot be applied to tables without `tenantId`
 2. Direct SQL access or injection could expose data across tenants
 3. The Prisma middleware documented in ADR-004 cannot filter these tables
 
 ## Risk Assessment
 
-| Risk | Severity | Impact |
-|------|----------|--------|
+| Risk                                        | Severity     | Impact                    |
+| ------------------------------------------- | ------------ | ------------------------- |
 | Cross-tenant data leakage via SQL injection | **CRITICAL** | Full tenant data exposure |
-| RLS bypass on child tables | **HIGH** | Partial data exposure |
-| Audit trail gaps | **MEDIUM** | Compliance issues |
+| RLS bypass on child tables                  | **HIGH**     | Partial data exposure     |
+| Audit trail gaps                            | **MEDIUM**   | Compliance issues         |
 
 ## Models Inventory
 
@@ -31,117 +35,117 @@ This creates a **critical security gap**:
 
 These tables contain sensitive tenant data but lack `tenantId`:
 
-| Model | Parent Relation | Backfill Source |
-|-------|-----------------|-----------------|
-| `LeadActivity` | `leadId` → Lead | `lead.tenantId` |
-| `LeadFile` | `leadId` → Lead | `lead.tenantId` |
-| `LeadAIInsight` | `leadId` → Lead | `lead.tenantId` |
-| `AIScore` | `leadId` → Lead | `lead.tenantId` |
-| `ContactActivity` | `contactId` → Contact | `contact.tenantId` |
-| `ContactAIInsight` | `contactId` → Contact | `contact.tenantId` |
-| `DealProduct` | `opportunityId` → Opportunity | `opportunity.tenantId` |
-| `DealFile` | `opportunityId` → Opportunity | `opportunity.tenantId` |
-| `ActivityEvent` | `opportunityId` → Opportunity | `opportunity.tenantId` |
-| `AgentAction` | `entityId` (polymorphic) | Requires entity lookup |
+| Model              | Parent Relation               | Backfill Source        |
+| ------------------ | ----------------------------- | ---------------------- |
+| `LeadActivity`     | `leadId` → Lead               | `lead.tenantId`        |
+| `LeadFile`         | `leadId` → Lead               | `lead.tenantId`        |
+| `LeadAIInsight`    | `leadId` → Lead               | `lead.tenantId`        |
+| `AIScore`          | `leadId` → Lead               | `lead.tenantId`        |
+| `ContactActivity`  | `contactId` → Contact         | `contact.tenantId`     |
+| `ContactAIInsight` | `contactId` → Contact         | `contact.tenantId`     |
+| `DealProduct`      | `opportunityId` → Opportunity | `opportunity.tenantId` |
+| `DealFile`         | `opportunityId` → Opportunity | `opportunity.tenantId` |
+| `ActivityEvent`    | `opportunityId` → Opportunity | `opportunity.tenantId` |
+| `AgentAction`      | `entityId` (polymorphic)      | Requires entity lookup |
 
 ### Category 2: MEDIUM PRIORITY - Ticket-related tables
 
-| Model | Parent Relation | Backfill Source |
-|-------|-----------------|-----------------|
-| `SLANotification` | `ticketId` → Ticket | `ticket.tenantId` |
-| `TicketAttachment` | `ticketId` → Ticket | `ticket.tenantId` |
-| `TicketNextStep` | `ticketId` → Ticket | `ticket.tenantId` |
-| `RelatedTicket` | `ticketId` → Ticket | `ticket.tenantId` |
-| `TicketAIInsight` | `ticketId` → Ticket | `ticket.tenantId` |
-| `SLABreach` | `ticketId` → Ticket | Via ticket lookup |
+| Model               | Parent Relation     | Backfill Source   |
+| ------------------- | ------------------- | ----------------- |
+| `SLANotification`   | `ticketId` → Ticket | `ticket.tenantId` |
+| `TicketAttachment`  | `ticketId` → Ticket | `ticket.tenantId` |
+| `TicketNextStep`    | `ticketId` → Ticket | `ticket.tenantId` |
+| `RelatedTicket`     | `ticketId` → Ticket | `ticket.tenantId` |
+| `TicketAIInsight`   | `ticketId` → Ticket | `ticket.tenantId` |
+| `SLABreach`         | `ticketId` → Ticket | Via ticket lookup |
 | `EscalationHistory` | `ticketId` → Ticket | Via ticket lookup |
-| `RoutingAudit` | `ticketId` → Ticket | Via ticket lookup |
+| `RoutingAudit`      | `ticketId` → Ticket | Via ticket lookup |
 
 ### Category 3: MEDIUM PRIORITY - Conversation-related tables
 
-| Model | Parent Relation | Backfill Source |
-|-------|-----------------|-----------------|
-| `MessageRecord` | `conversationId` → ConversationRecord | `conversation.tenantId` |
+| Model            | Parent Relation                       | Backfill Source         |
+| ---------------- | ------------------------------------- | ----------------------- |
+| `MessageRecord`  | `conversationId` → ConversationRecord | `conversation.tenantId` |
 | `ToolCallRecord` | `conversationId` → ConversationRecord | `conversation.tenantId` |
 
 ### Category 4: MEDIUM PRIORITY - Document-related tables
 
-| Model | Parent Relation | Backfill Source |
-|-------|-----------------|-----------------|
-| `Document` | standalone | Needs tenantId added |
-| `DocumentAccessLog` | `documentId` → Document | `document.tenantId` |
-| `DocumentShare` | `documentId` → Document | `document.tenantId` |
+| Model               | Parent Relation         | Backfill Source      |
+| ------------------- | ----------------------- | -------------------- |
+| `Document`          | standalone              | Needs tenantId added |
+| `DocumentAccessLog` | `documentId` → Document | `document.tenantId`  |
+| `DocumentShare`     | `documentId` → Document | `document.tenantId`  |
 
 ### Category 5: MEDIUM PRIORITY - Appointment-related tables
 
-| Model | Parent Relation | Backfill Source |
-|-------|-----------------|-----------------|
+| Model                 | Parent Relation               | Backfill Source        |
+| --------------------- | ----------------------------- | ---------------------- |
 | `AppointmentAttendee` | `appointmentId` → Appointment | `appointment.tenantId` |
-| `AppointmentCase` | `appointmentId` → Appointment | `appointment.tenantId` |
+| `AppointmentCase`     | `appointmentId` → Appointment | `appointment.tenantId` |
 
 ### Category 6: LOW PRIORITY - Analytics & Reporting tables
 
 These may be intentionally tenant-agnostic for cross-tenant analytics:
 
-| Model | Decision |
-|-------|----------|
+| Model              | Decision                                  |
+| ------------------ | ----------------------------------------- |
 | `PipelineSnapshot` | Add tenantId (tenant-specific dashboards) |
-| `TrafficSource` | Add tenantId |
-| `GrowthMetric` | Add tenantId |
-| `DealsWonMetric` | Add tenantId |
-| `SalesPerformance` | Add tenantId |
-| `DashboardConfig` | Add tenantId |
-| `KPIDefinition` | Review - may be global |
-| `ReportDefinition` | Add tenantId |
-| `ReportSchedule` | Add tenantId |
-| `ReportExecution` | Add tenantId |
+| `TrafficSource`    | Add tenantId                              |
+| `GrowthMetric`     | Add tenantId                              |
+| `DealsWonMetric`   | Add tenantId                              |
+| `SalesPerformance` | Add tenantId                              |
+| `DashboardConfig`  | Add tenantId                              |
+| `KPIDefinition`    | Review - may be global                    |
+| `ReportDefinition` | Add tenantId                              |
+| `ReportSchedule`   | Add tenantId                              |
+| `ReportExecution`  | Add tenantId                              |
 
 ### Category 7: LOW PRIORITY - Communication tables
 
-| Model | Decision |
-|-------|----------|
-| `TeamMessage` | Add tenantId |
-| `EmailTemplate` | Add tenantId (tenant-specific templates) |
-| `EmailRecord` | Add tenantId |
-| `EmailAttachment` | Inherit from EmailRecord |
-| `ChatConversation` | Add tenantId |
-| `ChatMessage` | Inherit from ChatConversation |
-| `CallRecord` | Add tenantId |
+| Model              | Decision                                 |
+| ------------------ | ---------------------------------------- |
+| `TeamMessage`      | Add tenantId                             |
+| `EmailTemplate`    | Add tenantId (tenant-specific templates) |
+| `EmailRecord`      | Add tenantId                             |
+| `EmailAttachment`  | Inherit from EmailRecord                 |
+| `ChatConversation` | Add tenantId                             |
+| `ChatMessage`      | Inherit from ChatConversation            |
+| `CallRecord`       | Add tenantId                             |
 
 ### Category 8: LOW PRIORITY - Configuration tables
 
-| Model | Decision |
-|-------|----------|
-| `WorkflowDefinition` | Add tenantId |
-| `WorkflowExecution` | Add tenantId |
-| `BusinessRule` | Add tenantId |
-| `BusinessRuleExecution` | Add tenantId |
-| `RoutingRule` | Add tenantId |
-| `TicketCategory` | Add tenantId or keep global |
-| `WebhookEndpoint` | Add tenantId |
-| `WebhookDelivery` | Add tenantId |
-| `APIKey` | Add tenantId |
-| `APIUsageRecord` | Add tenantId |
+| Model                   | Decision                    |
+| ----------------------- | --------------------------- |
+| `WorkflowDefinition`    | Add tenantId                |
+| `WorkflowExecution`     | Add tenantId                |
+| `BusinessRule`          | Add tenantId                |
+| `BusinessRuleExecution` | Add tenantId                |
+| `RoutingRule`           | Add tenantId                |
+| `TicketCategory`        | Add tenantId or keep global |
+| `WebhookEndpoint`       | Add tenantId                |
+| `WebhookDelivery`       | Add tenantId                |
+| `APIKey`                | Add tenantId                |
+| `APIUsageRecord`        | Add tenantId                |
 
 ### Category 9: GLOBAL - Intentionally shared tables
 
 These should remain without tenantId:
 
-| Model | Reason |
-|-------|--------|
-| `Tenant` | Is the tenant itself |
-| `Permission` | Global RBAC permission definitions |
-| `RBACRole` | Global role definitions |
-| `RolePermission` | Global role-permission mappings |
-| `APIVersion` | System-wide API versions |
-| `HealthCheck` | System monitoring |
-| `PerformanceMetric` | System monitoring |
-| `AlertIncident` | System alerts |
+| Model               | Reason                             |
+| ------------------- | ---------------------------------- |
+| `Tenant`            | Is the tenant itself               |
+| `Permission`        | Global RBAC permission definitions |
+| `RBACRole`          | Global role definitions            |
+| `RolePermission`    | Global role-permission mappings    |
+| `APIVersion`        | System-wide API versions           |
+| `HealthCheck`       | System monitoring                  |
+| `PerformanceMetric` | System monitoring                  |
+| `AlertIncident`     | System alerts                      |
 
 ### Category 10: SPECIAL - SLA Policies
 
-| Model | Decision |
-|-------|----------|
+| Model       | Decision                                                                 |
+| ----------- | ------------------------------------------------------------------------ |
 | `SLAPolicy` | Add `tenantId` (nullable) - null = global default, set = tenant-specific |
 
 ## Migration Strategy
@@ -428,7 +432,8 @@ CREATE INDEX IF NOT EXISTS idx_tool_call_records_tenant ON tool_call_records(ten
 
 ## Prisma Schema Changes
 
-See accompanying file: `packages/db/prisma/migrations/20260203_normalize_tenant_ids/schema-changes.prisma`
+See accompanying file:
+`packages/db/prisma/migrations/20260203_normalize_tenant_ids/schema-changes.prisma`
 
 ## Verification Queries
 
@@ -448,22 +453,25 @@ SELECT 'deal_products', COUNT(*) FROM deal_products WHERE tenant_id IS NULL
 
 If issues arise:
 
-1. **Disable RLS** (if enabled): `ALTER TABLE <table> DISABLE ROW LEVEL SECURITY;`
-2. **Drop constraints**: `ALTER TABLE <table> DROP CONSTRAINT IF EXISTS fk_<table>_tenant;`
-3. **Make nullable**: `ALTER TABLE <table> ALTER COLUMN tenant_id DROP NOT NULL;`
+1. **Disable RLS** (if enabled):
+   `ALTER TABLE <table> DISABLE ROW LEVEL SECURITY;`
+2. **Drop constraints**:
+   `ALTER TABLE <table> DROP CONSTRAINT IF EXISTS fk_<table>_tenant;`
+3. **Make nullable**:
+   `ALTER TABLE <table> ALTER COLUMN tenant_id DROP NOT NULL;`
 4. **Keep data**: Do NOT drop the `tenant_id` column - investigate and fix
 
 ## Timeline
 
-| Phase | Duration | Risk |
-|-------|----------|------|
-| Phase 1: Add columns | 5 minutes | LOW |
-| Phase 2: Backfill | 30 minutes | LOW |
+| Phase                    | Duration   | Risk   |
+| ------------------------ | ---------- | ------ |
+| Phase 1: Add columns     | 5 minutes  | LOW    |
+| Phase 2: Backfill        | 30 minutes | LOW    |
 | Phase 3: Add constraints | 10 minutes | MEDIUM |
-| Phase 4: Add indexes | 15 minutes | LOW |
-| Phase 5: Enable RLS | 30 minutes | HIGH |
-| Phase 6: Update Prisma | 2 hours | MEDIUM |
-| Phase 7: Update code | 4 hours | MEDIUM |
+| Phase 4: Add indexes     | 15 minutes | LOW    |
+| Phase 5: Enable RLS      | 30 minutes | HIGH   |
+| Phase 6: Update Prisma   | 2 hours    | MEDIUM |
+| Phase 7: Update code     | 4 hours    | MEDIUM |
 
 **Total: ~8 hours**
 

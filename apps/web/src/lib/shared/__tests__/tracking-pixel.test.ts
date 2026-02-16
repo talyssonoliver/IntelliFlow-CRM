@@ -258,10 +258,7 @@ describe('tracking-pixel', () => {
       const mockLintrk = vi.fn();
       globalThis.lintrk = mockLintrk;
 
-      trackEvent(
-        { name: 'test', properties: { linkedInConversionId: '12345' } },
-        ['linkedin']
-      );
+      trackEvent({ name: 'test', properties: { linkedInConversionId: '12345' } }, ['linkedin']);
 
       expect(mockLintrk).toHaveBeenCalledWith('track', { conversion_id: '12345' });
     });
@@ -398,4 +395,3 @@ describe('tracking-pixel', () => {
     });
   });
 });
-

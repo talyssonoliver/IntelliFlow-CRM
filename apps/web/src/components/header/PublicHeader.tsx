@@ -78,9 +78,7 @@ export function PublicHeader() {
           aria-label="Toggle menu"
           aria-expanded={mobileOpen}
         >
-          <span className="material-symbols-outlined text-xl">
-            {mobileOpen ? 'close' : 'menu'}
-          </span>
+          <span className="material-symbols-outlined text-xl">{mobileOpen ? 'close' : 'menu'}</span>
         </button>
       </div>
 

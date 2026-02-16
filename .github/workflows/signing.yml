@@ -45,8 +45,8 @@ on:
 permissions:
   contents: read
   packages: write
-  id-token: write  # Required for OIDC keyless signing
-  attestations: write  # Required for GitHub attestations
+  id-token: write # Required for OIDC keyless signing
+  attestations: write # Required for GitHub attestations
 
 env:
   NODE_VERSION: '20'

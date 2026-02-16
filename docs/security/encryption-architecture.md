@@ -4,15 +4,19 @@
 
 ## Overview
 
-IntelliFlow CRM implements a comprehensive encryption architecture to protect sensitive data at rest and in transit. This document describes the encryption mechanisms, key management, and security controls.
+IntelliFlow CRM implements a comprehensive encryption architecture to protect
+sensitive data at rest and in transit. This document describes the encryption
+mechanisms, key management, and security controls.
 
 ## Encryption Strategy
 
 ### Data at Rest
 
-All sensitive data stored in the system is encrypted using AES-256-GCM (Galois/Counter Mode), which provides both confidentiality and authenticity.
+All sensitive data stored in the system is encrypted using AES-256-GCM
+(Galois/Counter Mode), which provides both confidentiality and authenticity.
 
 **Algorithm Details**:
+
 - Cipher: AES-256-GCM
 - Key Length: 256 bits (32 bytes)
 - IV Length: 128 bits (16 bytes)
@@ -21,9 +25,11 @@ All sensitive data stored in the system is encrypted using AES-256-GCM (Galois/C
 
 ### Data in Transit
 
-All network communication is encrypted using TLS 1.2/1.3 with strong cipher suites. Service-to-service communication uses mutual TLS (mTLS).
+All network communication is encrypted using TLS 1.2/1.3 with strong cipher
+suites. Service-to-service communication uses mutual TLS (mTLS).
 
 **Supported Cipher Suites**:
+
 - TLS 1.3: TLS_AES_256_GCM_SHA384, TLS_CHACHA20_POLY1305_SHA256
 - TLS 1.2: ECDHE_ECDSA/RSA with AES_256_GCM_SHA384
 
@@ -31,7 +37,8 @@ All network communication is encrypted using TLS 1.2/1.3 with strong cipher suit
 
 ### 1. Encryption Service
 
-The `EncryptionService` class provides the core encryption/decryption functionality.
+The `EncryptionService` class provides the core encryption/decryption
+functionality.
 
 ```typescript
 import { EncryptionService, getEncryptionService } from './security/encryption';
@@ -47,6 +54,7 @@ const decrypted = await encryption.decrypt(encrypted);
 ```
 
 **Features**:
+
 - AES-256-GCM encryption
 - Additional Authenticated Data (AAD) support
 - Tamper detection via authentication tags
@@ -57,6 +65,7 @@ const decrypted = await encryption.decrypt(encrypted);
 Key providers abstract key storage and retrieval:
 
 #### EnvironmentKeyProvider
+
 For development and testing, derives keys from environment variables.
 
 ```typescript
@@ -68,6 +77,7 @@ const key = await provider.getCurrentKey();
 ```
 
 #### VaultKeyProvider
+
 For production, integrates with HashiCorp Vault Transit backend.
 
 ```typescript
@@ -90,11 +100,14 @@ const rotationService = getKeyRotationService();
 // Check if rotation is needed
 if (await rotationService.isRotationNeeded()) {
   const result = await rotationService.rotateKeys();
-  console.log(`Rotated from v${result.previousVersion} to v${result.newVersion}`);
+  console.log(
+    `Rotated from v${result.previousVersion} to v${result.newVersion}`
+  );
 }
 ```
 
 **Features**:
+
 - Automated rotation scheduling
 - Pre/post rotation validation
 - Key version retention
@@ -106,12 +119,14 @@ if (await rotationService.isRotationNeeded()) {
 HashiCorp Vault provides enterprise-grade secrets management:
 
 **Configuration** (`artifacts/misc/vault-config.yaml`):
+
 - KV v2 secrets engine for credential storage
 - Transit engine for encryption-as-a-service
 - Auto-rotation with configurable intervals
 - Audit logging
 
 **Secret Paths**:
+
 ```yaml
 intelliflow_paths:
   config: secret/data/intelliflow/config
@@ -124,12 +139,14 @@ intelliflow_paths:
 ### 5. TLS/mTLS Configuration
 
 **mTLS Configuration** (`infra/tls/mtls-config.yaml`):
+
 - Service certificate management
 - Client authentication requirements
 - Certificate revocation (CRL/OCSP)
 - Automatic renewal
 
 **Certificate Management** (`infra/tls/cert-manager.yaml`):
+
 - Kubernetes cert-manager integration
 - Self-signed CA for internal services
 - ACME/Let's Encrypt for public endpoints
@@ -138,33 +155,33 @@ intelliflow_paths:
 
 ### Key Security
 
-| Control | Implementation |
-|---------|----------------|
-| Key Length | 256-bit minimum |
-| Key Storage | Vault or KMS (never in code) |
-| Key Rotation | 30-day default interval |
+| Control        | Implementation                             |
+| -------------- | ------------------------------------------ |
+| Key Length     | 256-bit minimum                            |
+| Key Storage    | Vault or KMS (never in code)               |
+| Key Rotation   | 30-day default interval                    |
 | Key Versioning | All encrypted data tagged with key version |
-| Key Derivation | PBKDF2 with 100k iterations |
+| Key Derivation | PBKDF2 with 100k iterations                |
 
 ### Encryption Security
 
-| Control | Implementation |
-|---------|----------------|
-| Algorithm | AES-256-GCM (authenticated) |
-| IV/Nonce | 128-bit random per encryption |
-| Authentication | GCM tag validates integrity |
-| AAD Support | Optional context binding |
-| Timing Attacks | Constant-time comparisons |
+| Control        | Implementation                |
+| -------------- | ----------------------------- |
+| Algorithm      | AES-256-GCM (authenticated)   |
+| IV/Nonce       | 128-bit random per encryption |
+| Authentication | GCM tag validates integrity   |
+| AAD Support    | Optional context binding      |
+| Timing Attacks | Constant-time comparisons     |
 
 ### Certificate Security
 
-| Control | Implementation |
-|---------|----------------|
-| Key Algorithm | ECDSA P-384 (CA), P-256 (services) |
-| Validity | 1 year (services), 10 years (root CA) |
-| Renewal | Automatic at 66% lifetime |
-| Revocation | CRL and OCSP support |
-| mTLS | Strict mode in production |
+| Control       | Implementation                        |
+| ------------- | ------------------------------------- |
+| Key Algorithm | ECDSA P-384 (CA), P-256 (services)    |
+| Validity      | 1 year (services), 10 years (root CA) |
+| Renewal       | Automatic at 66% lifetime             |
+| Revocation    | CRL and OCSP support                  |
+| mTLS          | Strict mode in production             |
 
 ## Data Flow
 
@@ -322,6 +339,7 @@ KEY_ROTATION_WEBHOOK=https://alerts.example.com/key-rotation
 ### Key Events
 
 Monitor these events in the audit log:
+
 - `KEY_ROTATION` - Successful key rotation
 - `KEY_ROTATION_FAILED` - Failed rotation attempt
 - `REENCRYPTION_STARTED` - Batch re-encryption started
@@ -331,6 +349,7 @@ Monitor these events in the audit log:
 ### Metrics
 
 Expose these Prometheus metrics:
+
 - `encryption_operations_total{type="encrypt|decrypt"}`
 - `encryption_errors_total{error_type="..."}`
 - `key_rotation_last_success_timestamp`
@@ -340,6 +359,7 @@ Expose these Prometheus metrics:
 ### Alerts
 
 Configure alerts for:
+
 - Key rotation failures
 - Certificate expiry within 30 days
 - Encryption operation errors

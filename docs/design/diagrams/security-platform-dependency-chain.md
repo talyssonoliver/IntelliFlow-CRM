@@ -1,23 +1,25 @@
 # Security & Platform Infrastructure - Dependency Chain Analysis
 
-**Generated**: 2026-02-03
-**Purpose**: Ensure complete hexagonal architecture implementation with no orphaned tasks
+**Generated**: 2026-02-03 **Purpose**: Ensure complete hexagonal architecture
+implementation with no orphaned tasks
 
 ---
 
 ## Executive Summary
 
-The **Security & Platform** domain covers RBAC, Audit Logging, Encryption, Notifications, Events, and Analytics. Backend infrastructure is **mostly complete**, but several critical routers are **missing or incomplete**.
+The **Security & Platform** domain covers RBAC, Audit Logging, Encryption,
+Notifications, Events, and Analytics. Backend infrastructure is **mostly
+complete**, but several critical routers are **missing or incomplete**.
 
-| Feature | Domain | Application | Adapter | Router | Frontend | Status |
-|---------|--------|-------------|---------|--------|----------|--------|
-| RBAC | IFC-098 | IFC-098 | IFC-098 | Partial | PG-108-111 | PARTIAL |
-| Audit Log | IFC-124 | IFC-124 | IFC-124 | Complete | PG-112 | PARTIAL |
-| Encryption | IFC-113 | IFC-113 | IFC-113 | N/A | PG-120 | PARTIAL |
-| Notifications | IFC-157 | IFC-157 | IFC-170/171 | **MISSING** | PG-116, PG-130 | **BLOCKED** |
-| Events | IFC-150 | IFC-151 | IFC-150 | Complete | N/A | COMPLETE |
-| Home Page | IFC-182 | IFC-182 | IFC-182 | Complete | PG-129 | ROUTER COMPLETE |
-| Analytics | ANALYTICS-001 | IFC-37 | IFC-38 | Missing | Dashboard | ORPHAN |
+| Feature       | Domain        | Application | Adapter     | Router      | Frontend       | Status          |
+| ------------- | ------------- | ----------- | ----------- | ----------- | -------------- | --------------- |
+| RBAC          | IFC-098       | IFC-098     | IFC-098     | Partial     | PG-108-111     | PARTIAL         |
+| Audit Log     | IFC-124       | IFC-124     | IFC-124     | Complete    | PG-112         | PARTIAL         |
+| Encryption    | IFC-113       | IFC-113     | IFC-113     | N/A         | PG-120         | PARTIAL         |
+| Notifications | IFC-157       | IFC-157     | IFC-170/171 | **MISSING** | PG-116, PG-130 | **BLOCKED**     |
+| Events        | IFC-150       | IFC-151     | IFC-150     | Complete    | N/A            | COMPLETE        |
+| Home Page     | IFC-182       | IFC-182     | IFC-182     | Complete    | PG-129         | ROUTER COMPLETE |
+| Analytics     | ANALYTICS-001 | IFC-37      | IFC-38      | Missing     | Dashboard      | ORPHAN          |
 
 ---
 
@@ -313,34 +315,35 @@ The **Security & Platform** domain covers RBAC, Audit Logging, Encryption, Notif
 
 ### Backend Routers (Missing)
 
-| New Task ID | Feature | Description | Dependencies | Sprint | Priority |
-|-------------|---------|-------------|--------------|--------|----------|
-| IFC-183 | Notifications | Notifications tRPC Router | IFC-157, IFC-170, IFC-171 | 13 | **CRITICAL** |
-| IFC-190 | Analytics | Analytics tRPC Router | ANALYTICS-001 | 14 | HIGH |
+| New Task ID | Feature       | Description               | Dependencies              | Sprint | Priority     |
+| ----------- | ------------- | ------------------------- | ------------------------- | ------ | ------------ |
+| IFC-183     | Notifications | Notifications tRPC Router | IFC-157, IFC-170, IFC-171 | 13     | **CRITICAL** |
+| IFC-190     | Analytics     | Analytics tRPC Router     | ANALYTICS-001             | 14     | HIGH         |
 
 ### Frontend Pages (Missing Routers Block Them)
 
-| Task ID | Feature | Description | Blocked By | Sprint |
-|---------|---------|-------------|------------|--------|
-| PG-116 | Notification Prefs | Notification preferences UI | IFC-183 | 27 |
-| PG-130 | Notifications Inbox | Notification list/inbox | IFC-183 | 14 |
+| Task ID | Feature             | Description                 | Blocked By | Sprint |
+| ------- | ------------------- | --------------------------- | ---------- | ------ |
+| PG-116  | Notification Prefs  | Notification preferences UI | IFC-183    | 27     |
+| PG-130  | Notifications Inbox | Notification list/inbox     | IFC-183    | 14     |
 
 ---
 
 ## Orphan Status Summary
 
-| Feature | Backend Complete? | Router Complete? | Frontend Task? | Action Required |
-|---------|-------------------|------------------|----------------|-----------------|
-| RBAC | YES | YES | YES (Backlog) | None |
-| Audit Log | YES | YES | YES (Backlog) | None |
-| Encryption | YES | N/A | YES (Backlog) | None |
-| Tenant Isolation | YES | YES | N/A | None |
-| Domain Events | YES | YES | N/A | None |
-| Notifications | YES | **NO** | YES (Blocked) | **Create IFC-183** |
-| Home Page | YES | 100% | YES (60%) | IFC-182 DONE — PG-129 unblocked |
-| Analytics | YES | **NO** | YES (Backlog) | **Create IFC-190** |
+| Feature          | Backend Complete? | Router Complete? | Frontend Task? | Action Required                 |
+| ---------------- | ----------------- | ---------------- | -------------- | ------------------------------- |
+| RBAC             | YES               | YES              | YES (Backlog)  | None                            |
+| Audit Log        | YES               | YES              | YES (Backlog)  | None                            |
+| Encryption       | YES               | N/A              | YES (Backlog)  | None                            |
+| Tenant Isolation | YES               | YES              | N/A            | None                            |
+| Domain Events    | YES               | YES              | N/A            | None                            |
+| Notifications    | YES               | **NO**           | YES (Blocked)  | **Create IFC-183**              |
+| Home Page        | YES               | 100%             | YES (60%)      | IFC-182 DONE — PG-129 unblocked |
+| Analytics        | YES               | **NO**           | YES (Backlog)  | **Create IFC-190**              |
 
 **Total New Tasks Required: 2**
+
 - 2 Backend Routers (IFC-183, IFC-190)
 - 0 Frontend (already tracked, just blocked)
 

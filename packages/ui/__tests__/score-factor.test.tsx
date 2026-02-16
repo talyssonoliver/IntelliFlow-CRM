@@ -24,11 +24,7 @@ describe('ScoreFactor', () => {
     });
 
     it('should render negative impact with sign', () => {
-      render(
-        <ScoreFactorComponent
-          factor={{ ...defaultFactor, impact: -10 }}
-        />
-      );
+      render(<ScoreFactorComponent factor={{ ...defaultFactor, impact: -10 }} />);
       expect(screen.getByText('-10')).toBeInTheDocument();
     });
   });
@@ -42,10 +38,7 @@ describe('ScoreFactor', () => {
 
     it('should apply destructive color for negative impact', () => {
       render(
-        <ScoreFactorComponent
-          factor={{ ...defaultFactor, impact: -10 }}
-          data-testid="factor"
-        />
+        <ScoreFactorComponent factor={{ ...defaultFactor, impact: -10 }} data-testid="factor" />
       );
       const impact = screen.getByText('-10');
       expect(impact).toHaveClass('text-destructive');
@@ -53,10 +46,7 @@ describe('ScoreFactor', () => {
 
     it('should apply muted color for neutral impact', () => {
       render(
-        <ScoreFactorComponent
-          factor={{ ...defaultFactor, impact: 0 }}
-          data-testid="factor"
-        />
+        <ScoreFactorComponent factor={{ ...defaultFactor, impact: 0 }} data-testid="factor" />
       );
       const impact = screen.getByText('+0');
       expect(impact).toHaveClass('text-muted-foreground');
@@ -81,12 +71,7 @@ describe('ScoreFactor', () => {
     });
 
     it('should show negative impact bar with destructive color', () => {
-      render(
-        <ScoreFactorComponent
-          factor={{ ...defaultFactor, impact: -10 }}
-          showImpactBar
-        />
-      );
+      render(<ScoreFactorComponent factor={{ ...defaultFactor, impact: -10 }} showImpactBar />);
       const bar = screen.getByRole('progressbar');
       expect(bar.querySelector('[data-direction="negative"]')).toBeInTheDocument();
     });
@@ -118,20 +103,14 @@ describe('ScoreFactor', () => {
     });
 
     it('should not show expand button when reasoning is empty', () => {
-      render(
-        <ScoreFactorComponent
-          factor={{ ...defaultFactor, reasoning: '' }}
-        />
-      );
+      render(<ScoreFactorComponent factor={{ ...defaultFactor, reasoning: '' }} />);
       expect(screen.queryByRole('button', { name: /expand/i })).not.toBeInTheDocument();
     });
   });
 
   describe('Props', () => {
     it('should forward HTML attributes', () => {
-      render(
-        <ScoreFactorComponent factor={defaultFactor} data-testid="test-factor" />
-      );
+      render(<ScoreFactorComponent factor={defaultFactor} data-testid="test-factor" />);
       expect(screen.getByTestId('test-factor')).toBeInTheDocument();
     });
 
@@ -149,9 +128,7 @@ describe('ScoreFactor', () => {
 
   describe('Accessibility', () => {
     it('should have no accessibility violations', async () => {
-      const { container } = render(
-        <ScoreFactorComponent factor={defaultFactor} showImpactBar />
-      );
+      const { container } = render(<ScoreFactorComponent factor={defaultFactor} showImpactBar />);
       const results = await axe(container);
       expect(results).toHaveNoViolations();
     });
@@ -176,30 +153,18 @@ describe('ScoreFactor', () => {
     it('should handle very long factor names', () => {
       const longName = 'A'.repeat(100);
       render(
-        <ScoreFactorComponent
-          factor={{ ...defaultFactor, name: longName }}
-          data-testid="factor"
-        />
+        <ScoreFactorComponent factor={{ ...defaultFactor, name: longName }} data-testid="factor" />
       );
       expect(screen.getByTestId('factor')).toBeInTheDocument();
     });
 
     it('should handle zero impact', () => {
-      render(
-        <ScoreFactorComponent
-          factor={{ ...defaultFactor, impact: 0 }}
-        />
-      );
+      render(<ScoreFactorComponent factor={{ ...defaultFactor, impact: 0 }} />);
       expect(screen.getByText('+0')).toBeInTheDocument();
     });
 
     it('should handle large impact values', () => {
-      render(
-        <ScoreFactorComponent
-          factor={{ ...defaultFactor, impact: 50 }}
-          showImpactBar
-        />
-      );
+      render(<ScoreFactorComponent factor={{ ...defaultFactor, impact: 50 }} showImpactBar />);
       expect(screen.getByText('+50')).toBeInTheDocument();
     });
   });

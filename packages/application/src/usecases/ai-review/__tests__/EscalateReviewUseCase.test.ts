@@ -7,12 +7,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { EscalateReviewUseCase, EscalateReviewInput } from '../EscalateReviewUseCase';
-import {
-  AIOutputReview,
-  DomainEvent,
-  ReviewStatus,
-  REVIEW_SLA_CONFIG,
-} from '@intelliflow/domain';
+import { AIOutputReview, DomainEvent, ReviewStatus, REVIEW_SLA_CONFIG } from '@intelliflow/domain';
 import { IAIOutputReviewRepository } from '../../../ports/repositories';
 import { EventBusPort } from '../../../ports/external';
 import crypto from 'crypto';
@@ -92,9 +87,7 @@ const LOCK_TOKEN_SECRET = 'test-secret-key-for-hmac-signing-12345';
 
 function generateLockToken(): string {
   const value = crypto.randomBytes(32).toString('hex');
-  const signature = crypto.createHmac('sha256', LOCK_TOKEN_SECRET)
-    .update(value)
-    .digest('hex');
+  const signature = crypto.createHmac('sha256', LOCK_TOKEN_SECRET).update(value).digest('hex');
   return `${value}.${signature}`;
 }
 
@@ -207,7 +200,8 @@ describe('EscalateReviewUseCase', () => {
       const lockToken = generateLockToken();
       const review = createClaimedReview('user-456', lockToken);
       // Set escalation depth to max
-      (review as unknown as { _escalationDepth: number })._escalationDepth = REVIEW_SLA_CONFIG.MAX_ESCALATION_DEPTH;
+      (review as unknown as { _escalationDepth: number })._escalationDepth =
+        REVIEW_SLA_CONFIG.MAX_ESCALATION_DEPTH;
       review.clearDomainEvents();
       repository.setReview(review);
 

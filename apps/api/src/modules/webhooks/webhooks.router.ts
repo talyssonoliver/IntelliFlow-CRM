@@ -80,33 +80,31 @@ export const webhooksRouter = createTRPCRouter({
    *
    * KPI: Reliability >= 99%, Idempotency >= 100%
    */
-  handleWebhook: publicProcedure
-    .input(webhookPayloadSchema)
-    .mutation(async ({ ctx, input }) => {
-      const service = await getWebhookService(ctx);
+  handleWebhook: publicProcedure.input(webhookPayloadSchema).mutation(async ({ ctx, input }) => {
+    const service = await getWebhookService(ctx);
 
-      try {
-        const result = await service.handleWebhook(
-          input.sourceName,
-          input.rawBody,
-          input.headers,
-          input.ip
-        );
+    try {
+      const result = await service.handleWebhook(
+        input.sourceName,
+        input.rawBody,
+        input.headers,
+        input.ip
+      );
 
-        if (result.isFailure) {
-          // Map domain errors (including DuplicateWebhookError) to TRPC errors
-          throw mapErrorToTRPCError(result.error);
-        }
-
-        return result.value;
-      } catch (error) {
-        // Catch and remap any errors
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-        throw mapErrorToTRPCError(error);
+      if (result.isFailure) {
+        // Map domain errors (including DuplicateWebhookError) to TRPC errors
+        throw mapErrorToTRPCError(result.error);
       }
-    }),
+
+      return result.value;
+    } catch (error) {
+      // Catch and remap any errors
+      if (error instanceof TRPCError) {
+        throw error;
+      }
+      throw mapErrorToTRPCError(error);
+    }
+  }),
 
   /**
    * Register a new webhook source

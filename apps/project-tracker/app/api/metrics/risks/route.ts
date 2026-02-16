@@ -91,8 +91,8 @@ function parseRiskMatrix(): { risks: Risk[]; summary: RiskSummary } {
       if (inRiskTable && headerParsed && trimmed.startsWith('|')) {
         const cells = trimmed
           .split('|')
-          .map(c => c.trim())
-          .filter(c => c !== '');
+          .map((c) => c.trim())
+          .filter((c) => c !== '');
 
         if (cells.length >= 8 && cells[0].match(/^R\d+$/)) {
           risks.push({
@@ -112,13 +112,13 @@ function parseRiskMatrix(): { risks: Risk[]; summary: RiskSummary } {
     // Calculate summary
     const summary: RiskSummary = {
       total: risks.length,
-      critical: risks.filter(r => r.impact === 'Critical').length,
-      high: risks.filter(r => r.impact === 'High').length,
-      medium: risks.filter(r => r.impact === 'Medium').length,
-      low: risks.filter(r => r.impact === 'Low').length,
-      mitigated: risks.filter(r => r.status.toLowerCase() === 'mitigated').length,
-      monitoring: risks.filter(r => r.status.toLowerCase() === 'monitoring').length,
-      accepted: risks.filter(r => r.status.toLowerCase() === 'accepted').length,
+      critical: risks.filter((r) => r.impact === 'Critical').length,
+      high: risks.filter((r) => r.impact === 'High').length,
+      medium: risks.filter((r) => r.impact === 'Medium').length,
+      low: risks.filter((r) => r.impact === 'Low').length,
+      mitigated: risks.filter((r) => r.status.toLowerCase() === 'mitigated').length,
+      monitoring: risks.filter((r) => r.status.toLowerCase() === 'monitoring').length,
+      accepted: risks.filter((r) => r.status.toLowerCase() === 'accepted').length,
     };
 
     return { risks, summary };
@@ -143,15 +143,16 @@ export async function GET() {
     const sortedRisks = [...risks].sort((a, b) => b.score - a.score);
 
     // Add score level to each risk
-    const enrichedRisks = sortedRisks.map(risk => ({
+    const enrichedRisks = sortedRisks.map((risk) => ({
       ...risk,
       scoreLevel: getScoreLevel(risk.score),
     }));
 
     // Calculate overall risk score (weighted average)
-    const overallScore = risks.length > 0
-      ? Math.round(risks.reduce((sum, r) => sum + r.score, 0) / risks.length * 10) / 10
-      : 0;
+    const overallScore =
+      risks.length > 0
+        ? Math.round((risks.reduce((sum, r) => sum + r.score, 0) / risks.length) * 10) / 10
+        : 0;
 
     // Determine overall risk level
     let overallLevel: 'critical' | 'high' | 'medium' | 'low' = 'low';
@@ -159,19 +160,22 @@ export async function GET() {
     else if (summary.high > 2) overallLevel = 'high';
     else if (summary.medium > 3 || summary.high > 0) overallLevel = 'medium';
 
-    return NextResponse.json({
-      timestamp: new Date().toISOString(),
-      risks: enrichedRisks,
-      summary: {
-        ...summary,
-        overallScore,
-        overallLevel,
+    return NextResponse.json(
+      {
+        timestamp: new Date().toISOString(),
+        risks: enrichedRisks,
+        summary: {
+          ...summary,
+          overallScore,
+          overallLevel,
+        },
       },
-    }, {
-      headers: {
-        'Cache-Control': 'no-store, no-cache, max-age=0',
-      },
-    });
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, max-age=0',
+        },
+      }
+    );
   } catch (error) {
     console.error('Error generating risk data:', error);
     return NextResponse.json(

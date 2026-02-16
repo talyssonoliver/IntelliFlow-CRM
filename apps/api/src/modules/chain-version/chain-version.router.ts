@@ -47,18 +47,16 @@ export const chainVersionRouter = createTRPCRouter({
    * Create a new chain version
    * SECURITY: Uses tenantProcedure to enforce tenant isolation
    */
-  create: tenantProcedure
-    .input(createChainVersionSchema)
-    .mutation(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const chainVersionService = getChainVersionService(ctx);
+  create: tenantProcedure.input(createChainVersionSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const chainVersionService = getChainVersionService(ctx);
 
-      return chainVersionService.createVersion(
-        input,
-        typedCtx.tenant.userId,
-        typedCtx.tenant.tenantId,
-      );
-    }),
+    return chainVersionService.createVersion(
+      input,
+      typedCtx.tenant.userId,
+      typedCtx.tenant.tenantId
+    );
+  }),
 
   /**
    * Update chain version (DRAFT only)
@@ -81,17 +79,12 @@ export const chainVersionRouter = createTRPCRouter({
    * Activate a chain version (replaces current active)
    * SECURITY: Uses adminProcedure (elevated access)
    */
-  activate: adminProcedure
-    .input(activateVersionSchema)
-    .mutation(async ({ ctx, input }) => {
-      const chainVersionService = getChainVersionService(ctx);
-      const typedCtx = getTenantContext(ctx);
+  activate: adminProcedure.input(activateVersionSchema).mutation(async ({ ctx, input }) => {
+    const chainVersionService = getChainVersionService(ctx);
+    const typedCtx = getTenantContext(ctx);
 
-      return chainVersionService.activateVersion(
-        input.versionId,
-        typedCtx.tenant.userId
-      );
-    }),
+    return chainVersionService.activateVersion(input.versionId, typedCtx.tenant.userId);
+  }),
 
   /**
    * Deprecate a chain version
@@ -103,10 +96,7 @@ export const chainVersionRouter = createTRPCRouter({
       const chainVersionService = getChainVersionService(ctx);
       const typedCtx = getTenantContext(ctx);
 
-      return chainVersionService.deprecateVersion(
-        input.versionId,
-        typedCtx.tenant.userId
-      );
+      return chainVersionService.deprecateVersion(input.versionId, typedCtx.tenant.userId);
     }),
 
   /**
@@ -119,28 +109,23 @@ export const chainVersionRouter = createTRPCRouter({
       const chainVersionService = getChainVersionService(ctx);
       const typedCtx = getTenantContext(ctx);
 
-      return chainVersionService.archiveVersion(
-        input.versionId,
-        typedCtx.tenant.userId
-      );
+      return chainVersionService.archiveVersion(input.versionId, typedCtx.tenant.userId);
     }),
 
   /**
    * Rollback to a previous version
    * SECURITY: Uses adminProcedure (critical operation)
    */
-  rollback: adminProcedure
-    .input(rollbackVersionSchema)
-    .mutation(async ({ ctx, input }) => {
-      const chainVersionService = getChainVersionService(ctx);
-      const typedCtx = getTenantContext(ctx);
+  rollback: adminProcedure.input(rollbackVersionSchema).mutation(async ({ ctx, input }) => {
+    const chainVersionService = getChainVersionService(ctx);
+    const typedCtx = getTenantContext(ctx);
 
-      return chainVersionService.rollbackToVersion(
-        input.versionId,
-        input.reason,
-        typedCtx.tenant.userId
-      );
-    }),
+    return chainVersionService.rollbackToVersion(
+      input.versionId,
+      input.reason,
+      typedCtx.tenant.userId
+    );
+  }),
 
   // ===========================================================================
   // Queries
@@ -290,10 +275,7 @@ export const chainVersionRouter = createTRPCRouter({
       const chainVersionService = getChainVersionService(ctx);
       const typedCtx = getTenantContext(ctx);
 
-      return chainVersionService.getVersionStats(
-        typedCtx.tenant.tenantId,
-        input.chainType
-      );
+      return chainVersionService.getVersionStats(typedCtx.tenant.tenantId, input.chainType);
     }),
 
   /**
@@ -309,9 +291,6 @@ export const chainVersionRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const chainVersionService = getChainVersionService(ctx);
-      return chainVersionService.compareVersions(
-        input.versionIdA,
-        input.versionIdB
-      );
+      return chainVersionService.compareVersions(input.versionIdA, input.versionIdB);
     }),
 });

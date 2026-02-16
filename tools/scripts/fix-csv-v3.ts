@@ -19,10 +19,7 @@ const CSV_PATH = join(process.cwd(), 'apps/project-tracker/docs/metrics/_global/
 // MANDATORY GOVERNANCE FILES (actual file paths)
 // ============================================================================
 
-const MANDATORY_FILES = [
-  '.specify/memory/Framework.md',
-  'audit-matrix.yml',
-];
+const MANDATORY_FILES = ['.specify/memory/Framework.md', 'audit-matrix.yml'];
 
 // ============================================================================
 // STOA ROLE MAPPING

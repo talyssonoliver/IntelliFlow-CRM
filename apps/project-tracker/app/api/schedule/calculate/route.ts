@@ -34,7 +34,7 @@ interface TaskJsonData {
  */
 function loadTaskJsonData(metricsDir: string, taskId: string): TaskJsonData | null {
   // Search in all sprint directories
-  const sprintDirs = readdirSync(metricsDir).filter(d => d.startsWith('sprint-'));
+  const sprintDirs = readdirSync(metricsDir).filter((d) => d.startsWith('sprint-'));
 
   for (const sprintDir of sprintDirs) {
     const sprintPath = join(metricsDir, sprintDir);
@@ -72,10 +72,11 @@ function loadTaskJsonData(metricsDir: string, taskId: string): TaskJsonData | nu
 function parseDependencyTypes(depsStr: string): ScheduleDependency[] {
   if (!depsStr || depsStr.trim() === '') return [];
 
-  return depsStr.split(',')
-    .map(d => d.trim())
-    .filter(d => d.length > 0)
-    .map(dep => {
+  return depsStr
+    .split(',')
+    .map((d) => d.trim())
+    .filter((d) => d.length > 0)
+    .map((dep) => {
       // Parse format: TASK_ID:TYPE[+/-lag] e.g., "IFC-001:FS+30"
       const match = dep.match(/^([A-Z]+-[A-Z0-9-]+):?(FS|FF|SS|SF)?([+-]\d+)?$/);
       if (!match) {
@@ -99,9 +100,11 @@ function parseDependencyTypes(depsStr: string): ScheduleDependency[] {
 /**
  * Parse three-point estimate from CSV "O/M/P" format (e.g., "30/60/120")
  */
-function parseEstimateString(estimate: string): { optimistic: number; mostLikely: number; pessimistic: number } | null {
+function parseEstimateString(
+  estimate: string
+): { optimistic: number; mostLikely: number; pessimistic: number } | null {
   if (!estimate || estimate.trim() === '') return null;
-  const parts = estimate.split('/').map(p => parseInt(p.trim(), 10));
+  const parts = estimate.split('/').map((p) => parseInt(p.trim(), 10));
   if (parts.length !== 3 || parts.some(isNaN)) return null;
   return {
     optimistic: parts[0],
@@ -113,10 +116,7 @@ function parseEstimateString(estimate: string): { optimistic: number; mostLikely
 /**
  * Convert CSV row + JSON data to TaskScheduleInput
  */
-function createTaskInput(
-  row: TaskRecord,
-  jsonData: TaskJsonData | null
-): TaskScheduleInput {
+function createTaskInput(row: TaskRecord, jsonData: TaskJsonData | null): TaskScheduleInput {
   // FIRST: Try to get three-point estimate from CSV
   const estimateStr = row['Estimate (O/M/P)'] || '';
   const estimate = parseEstimateString(estimateStr);
@@ -231,10 +231,7 @@ export async function GET(request: NextRequest) {
     const csvPath = join(metricsDir, '_global', 'Sprint_plan.csv');
 
     if (!existsSync(csvPath)) {
-      return NextResponse.json(
-        { error: 'Sprint_plan.csv not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Sprint_plan.csv not found' }, { status: 404 });
     }
 
     // Read and parse CSV
@@ -245,9 +242,10 @@ export async function GET(request: NextRequest) {
     });
 
     // Filter by sprint if specified
-    const tasks = sprintNum !== undefined
-      ? data.filter((t) => parseInt(t['Target Sprint'] || '0', 10) === sprintNum)
-      : data;
+    const tasks =
+      sprintNum !== undefined
+        ? data.filter((t) => parseInt(t['Target Sprint'] || '0', 10) === sprintNum)
+        : data;
 
     if (tasks.length === 0) {
       return NextResponse.json(
@@ -291,11 +289,11 @@ export async function GET(request: NextRequest) {
     // Fallback: Try sprint summaries if CSV dates not found
     if (!sprintStart || !sprintEnd) {
       if (isAllSprints) {
-        const sprintNumbers = [...new Set(
-          tasks
-            .map((t) => parseInt(t['Target Sprint'] || '0', 10))
-            .filter((n) => !isNaN(n))
-        )].sort((a, b) => a - b);
+        const sprintNumbers = [
+          ...new Set(
+            tasks.map((t) => parseInt(t['Target Sprint'] || '0', 10)).filter((n) => !isNaN(n))
+          ),
+        ].sort((a, b) => a - b);
 
         // For all sprints: only get the start date from summaries
         // Calculate end date based on max sprint number (summary dates are unreliable)
@@ -337,7 +335,11 @@ export async function GET(request: NextRequest) {
             }
             if (!sprintEnd && summary.schedule?.sprint_end_date) {
               sprintEnd = new Date(summary.schedule.sprint_end_date);
-            } else if (!sprintEnd && summary.target_date && /^\d{4}-\d{2}-\d{2}/.test(summary.target_date)) {
+            } else if (
+              !sprintEnd &&
+              summary.target_date &&
+              /^\d{4}-\d{2}-\d{2}/.test(summary.target_date)
+            ) {
               sprintEnd = new Date(summary.target_date);
             }
           } catch {
@@ -386,7 +388,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Convert to schedule inputs - load actual data from task JSON files
-    const taskInputs: TaskScheduleInput[] = tasks.map(row => {
+    const taskInputs: TaskScheduleInput[] = tasks.map((row) => {
       const jsonData = loadTaskJsonData(metricsDir, row['Task ID']);
       return createTaskInput(row, jsonData);
     });

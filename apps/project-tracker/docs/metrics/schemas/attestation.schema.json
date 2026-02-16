@@ -12,9 +12,7 @@
     "schema_version": {
       "description": "Schema version for backward compatibility",
       "type": "string",
-      "enum": [
-        "1.0.0"
-      ]
+      "enum": ["1.0.0"]
     },
     "task_id": {
       "description": "Unique task identifier (e.g., ENV-002-AI, IFC-001)",
@@ -38,13 +36,7 @@
     "verdict": {
       "description": "Final verdict on task completion",
       "type": "string",
-      "enum": [
-        "COMPLETE",
-        "INCOMPLETE",
-        "PARTIAL",
-        "BLOCKED",
-        "NEEDS_HUMAN"
-      ]
+      "enum": ["COMPLETE", "INCOMPLETE", "PARTIAL", "BLOCKED", "NEEDS_HUMAN"]
     },
     "context_acknowledgment": {
       "description": "Evidence that prerequisite files were read and understood",
@@ -66,10 +58,7 @@
                 "pattern": "^[a-f0-9]{64}$"
               }
             },
-            "required": [
-              "path",
-              "sha256"
-            ],
+            "required": ["path", "sha256"],
             "additionalProperties": false
           }
         },
@@ -196,12 +185,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "command",
-          "exit_code",
-          "passed",
-          "timestamp"
-        ],
+        "required": ["command", "exit_code", "passed", "timestamp"],
         "additionalProperties": false
       }
     },
@@ -237,10 +221,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "gate_id",
-          "passed"
-        ],
+        "required": ["gate_id", "passed"],
         "additionalProperties": false
       }
     },
@@ -267,12 +248,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "kpi",
-          "target",
-          "actual",
-          "met"
-        ],
+        "required": ["kpi", "target", "actual", "met"],
         "additionalProperties": false
       }
     },
@@ -302,10 +278,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "criterion",
-          "met"
-        ],
+        "required": ["criterion", "met"],
         "additionalProperties": false
       }
     },

@@ -338,7 +338,13 @@ export class CaseDocument {
     if (ace.expiresAt && ace.expiresAt < new Date()) return false;
 
     // Check access level hierarchy
-    const levels = [AccessLevel.NONE, AccessLevel.VIEW, AccessLevel.COMMENT, AccessLevel.EDIT, AccessLevel.ADMIN];
+    const levels = [
+      AccessLevel.NONE,
+      AccessLevel.VIEW,
+      AccessLevel.COMMENT,
+      AccessLevel.EDIT,
+      AccessLevel.ADMIN,
+    ];
     const userLevel = levels.indexOf(ace.accessLevel);
     const required = levels.indexOf(requiredLevel);
 
@@ -350,21 +356,33 @@ export class CaseDocument {
   /**
    * Create a new major version (breaking changes)
    */
-  createMajorVersion(updatedBy: string, newStorageKey: string, newContentHash: string): CaseDocument {
+  createMajorVersion(
+    updatedBy: string,
+    newStorageKey: string,
+    newContentHash: string
+  ): CaseDocument {
     return this.createNewVersion(updatedBy, newStorageKey, newContentHash, 'major');
   }
 
   /**
    * Create a new minor version (new features)
    */
-  createMinorVersion(updatedBy: string, newStorageKey: string, newContentHash: string): CaseDocument {
+  createMinorVersion(
+    updatedBy: string,
+    newStorageKey: string,
+    newContentHash: string
+  ): CaseDocument {
     return this.createNewVersion(updatedBy, newStorageKey, newContentHash, 'minor');
   }
 
   /**
    * Create a new patch version (bug fixes)
    */
-  createPatchVersion(updatedBy: string, newStorageKey: string, newContentHash: string): CaseDocument {
+  createPatchVersion(
+    updatedBy: string,
+    newStorageKey: string,
+    newContentHash: string
+  ): CaseDocument {
     return this.createNewVersion(updatedBy, newStorageKey, newContentHash, 'patch');
   }
 

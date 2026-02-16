@@ -89,83 +89,91 @@ export const RelevanceConfigSchema = z.object({
   /**
    * Enable/disable specific scoring features
    */
-  features: z.object({
-    enableTimeDecay: z.boolean().default(true),
-    enableTitleBoost: z.boolean().default(true),
-    enableExactMatchBoost: z.boolean().default(true),
-    enableSemanticSearch: z.boolean().default(true),
-    enableFuzzyMatching: z.boolean().default(true),
-  }).default({}),
+  features: z
+    .object({
+      enableTimeDecay: z.boolean().default(true),
+      enableTitleBoost: z.boolean().default(true),
+      enableExactMatchBoost: z.boolean().default(true),
+      enableSemanticSearch: z.boolean().default(true),
+      enableFuzzyMatching: z.boolean().default(true),
+    })
+    .default({}),
 
   /**
    * Semantic search configuration
    */
-  semantic: z.object({
-    /**
-     * Minimum cosine similarity for vector matches
-     */
-    minSimilarity: z.number().min(0).max(1).default(0.7),
+  semantic: z
+    .object({
+      /**
+       * Minimum cosine similarity for vector matches
+       */
+      minSimilarity: z.number().min(0).max(1).default(0.7),
 
-    /**
-     * Embedding model to use
-     */
-    embeddingModel: z.string().default('text-embedding-3-small'),
+      /**
+       * Embedding model to use
+       */
+      embeddingModel: z.string().default('text-embedding-3-small'),
 
-    /**
-     * Embedding dimension size
-     */
-    embeddingDimension: z.number().default(1536),
+      /**
+       * Embedding dimension size
+       */
+      embeddingDimension: z.number().default(1536),
 
-    /**
-     * Number of nearest neighbors to retrieve
-     */
-    topK: z.number().min(1).max(100).default(50),
-  }).default({}),
+      /**
+       * Number of nearest neighbors to retrieve
+       */
+      topK: z.number().min(1).max(100).default(50),
+    })
+    .default({}),
 
   /**
    * Full-text search configuration
    */
-  fullText: z.object({
-    /**
-     * PostgreSQL text search configuration
-     */
-    searchConfig: z.string().default('english'),
+  fullText: z
+    .object({
+      /**
+       * PostgreSQL text search configuration
+       */
+      searchConfig: z.string().default('english'),
 
-    /**
-     * Enable stemming in text search
-     */
-    enableStemming: z.boolean().default(true),
+      /**
+       * Enable stemming in text search
+       */
+      enableStemming: z.boolean().default(true),
 
-    /**
-     * Enable stop word removal
-     */
-    removeStopWords: z.boolean().default(true),
+      /**
+       * Enable stop word removal
+       */
+      removeStopWords: z.boolean().default(true),
 
-    /**
-     * Fuzzy match distance threshold (Levenshtein)
-     */
-    fuzzyDistance: z.number().min(0).max(5).default(2),
-  }).default({}),
+      /**
+       * Fuzzy match distance threshold (Levenshtein)
+       */
+      fuzzyDistance: z.number().min(0).max(5).default(2),
+    })
+    .default({}),
 
   /**
    * Caching configuration
    */
-  cache: z.object({
-    /**
-     * Enable result caching
-     */
-    enabled: z.boolean().default(true),
+  cache: z
+    .object({
+      /**
+       * Enable result caching
+       */
+      enabled: z.boolean().default(true),
 
-    /**
-     * Cache TTL in seconds
-     */
-    ttlSeconds: z.number().min(0).default(300),
+      /**
+       * Cache TTL in seconds
+       */
+      ttlSeconds: z.number().min(0).default(300),
 
-    /**
-     * Maximum cache entries
-     */
-    maxEntries: z.number().min(0).default(1000),
-  }).default({}),
+      /**
+       * Maximum cache entries
+       */
+      maxEntries: z.number().min(0).default(1000),
+    })
+    .default({}),
 });
 
 export type RelevanceConfig = z.infer<typeof RelevanceConfigSchema>;

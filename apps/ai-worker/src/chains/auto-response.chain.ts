@@ -20,7 +20,11 @@ import { ChatOpenAI } from '@langchain/openai';
 import { aiConfig } from '../config/ai.config';
 import { getOpenAIClientSettings } from '../utils/openai-client';
 import { sanitizeStringField } from '../utils/input-sanitizer';
-import { withMonitoring, createChainMonitor, type MonitoredResult } from '../monitoring/chain-monitor';
+import {
+  withMonitoring,
+  createChainMonitor,
+  type MonitoredResult,
+} from '../monitoring/chain-monitor';
 
 /**
  * Input for auto-response generation
@@ -126,9 +130,8 @@ export class AutoResponseChain {
     const response = await this.llm.invoke(prompt);
 
     // Parse and validate JSON response with fallback for markdown-wrapped JSON
-    const content = typeof response.content === 'string'
-      ? response.content
-      : JSON.stringify(response.content);
+    const content =
+      typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
     const parsed = this.parseResponse(content);
 
     // Build output with length constraints
@@ -153,10 +156,7 @@ export class AutoResponseChain {
   async generateResponseWithMonitoring(
     input: AutoResponseInput
   ): Promise<MonitoredResult<AutoResponseOutput>> {
-    return withMonitoring(
-      () => this.generateResponse(input),
-      this.chainMonitor.getConfig()
-    );
+    return withMonitoring(() => this.generateResponse(input), this.chainMonitor.getConfig());
   }
 
   /**
@@ -230,10 +230,7 @@ export class AutoResponseChain {
     const { triggerType, leadInfo, context, tenantSettings } = input;
 
     // IFC-029: Sanitize all user-provided fields
-    const sanitizedLeadName = sanitizeStringField(
-      leadInfo.name,
-      AutoResponseChain.MAX_NAME_LENGTH
-    );
+    const sanitizedLeadName = sanitizeStringField(leadInfo.name, AutoResponseChain.MAX_NAME_LENGTH);
     const sanitizedCompany = leadInfo.company
       ? sanitizeStringField(leadInfo.company, AutoResponseChain.MAX_COMPANY_LENGTH)
       : 'Not provided';

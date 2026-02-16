@@ -1,9 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import {
-  Deadline,
-  DeadlineAlreadyCompletedError,
-  DeadlineAlreadyWaivedError,
-} from '../Deadline';
+import { Deadline, DeadlineAlreadyCompletedError, DeadlineAlreadyWaivedError } from '../Deadline';
 import { DeadlineId } from '../DeadlineId';
 import { DeadlineRule } from '../DeadlineRule';
 import { CaseId } from '../../cases/CaseId';

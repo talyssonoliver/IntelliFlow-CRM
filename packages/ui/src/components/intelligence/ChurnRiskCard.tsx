@@ -44,8 +44,7 @@ export interface ChurnRiskData {
 }
 
 export interface ChurnRiskCardProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof churnRiskCardVariants> {
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof churnRiskCardVariants> {
   /** Churn risk data to display */
   data: ChurnRiskData;
   /** Card title */
@@ -232,19 +231,33 @@ function ChurnRiskCard({
           </div>
           <div className="flex items-center gap-3">
             <span className={cn('text-3xl font-bold', config.color)}>{data.score}</span>
-            <div className={cn('px-2 py-0.5 rounded-full text-xs font-medium', config.bgColor, config.color)}>
+            <div
+              className={cn(
+                'px-2 py-0.5 rounded-full text-xs font-medium',
+                config.bgColor,
+                config.color
+              )}
+            >
               {config.label}
             </div>
             {trendConfig && (
-              <span className={cn('material-symbols-outlined text-lg', trendConfig.color)} aria-label={`Trend: ${data.trend}`}>
+              <span
+                className={cn('material-symbols-outlined text-lg', trendConfig.color)}
+                aria-label={`Trend: ${data.trend}`}
+              >
                 {trendConfig.icon}
               </span>
             )}
           </div>
           <p className="text-xs text-muted-foreground">{config.description}</p>
         </div>
-        <div className={cn('flex items-center justify-center w-12 h-12 rounded-full', config.bgColor)}>
-          <span className={cn('material-symbols-outlined text-2xl', config.color)} aria-hidden="true">
+        <div
+          className={cn('flex items-center justify-center w-12 h-12 rounded-full', config.bgColor)}
+        >
+          <span
+            className={cn('material-symbols-outlined text-2xl', config.color)}
+            aria-hidden="true"
+          >
             {config.icon}
           </span>
         </div>
@@ -254,7 +267,10 @@ function ChurnRiskCard({
       <div className="mt-4">
         <div className="h-2 bg-muted rounded-full overflow-hidden">
           <div
-            className={cn('h-full rounded-full transition-all duration-500', config.bgColor.replace('/30', ''))}
+            className={cn(
+              'h-full rounded-full transition-all duration-500',
+              config.bgColor.replace('/30', '')
+            )}
             style={{ width: `${data.score}%` }}
           />
         </div>
@@ -265,14 +281,18 @@ function ChurnRiskCard({
         <div className="mt-4 flex items-center gap-4 text-sm">
           {showConfidence && data.confidence !== undefined && (
             <div className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-sm text-muted-foreground">psychology</span>
+              <span className="material-symbols-outlined text-sm text-muted-foreground">
+                psychology
+              </span>
               <span className="text-muted-foreground">Confidence:</span>
               <span className="font-medium">{Math.round(data.confidence * 100)}%</span>
             </div>
           )}
           {showSLA && data.slaHours !== undefined && (
             <div className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-sm text-muted-foreground">schedule</span>
+              <span className="material-symbols-outlined text-sm text-muted-foreground">
+                schedule
+              </span>
               <span className="text-muted-foreground">SLA:</span>
               <span className="font-medium">{formatSLAHours(data.slaHours)}</span>
             </div>
@@ -306,7 +326,8 @@ function ChurnRiskCard({
       {data.assessedAt && (
         <div className="mt-4 pt-4 border-t border-border">
           <p className="text-xs text-muted-foreground">
-            Last assessed: {new Date(data.assessedAt).toLocaleDateString(undefined, {
+            Last assessed:{' '}
+            {new Date(data.assessedAt).toLocaleDateString(undefined, {
               month: 'short',
               day: 'numeric',
               hour: '2-digit',

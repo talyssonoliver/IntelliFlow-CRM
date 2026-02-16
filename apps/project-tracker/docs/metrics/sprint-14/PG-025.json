@@ -13,9 +13,9 @@
       "IFC-198"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-02-15T18:58:15.293Z"
+    "verified_at": "2026-02-16T20:49:51.380Z"
   },
-  "status": "DONE",
+  "status": "BACKLOG",
   "started_at": "2026-02-14T20:00:00.000Z",
   "completed_at": "2026-02-15T00:30:00.000Z",
   "target_duration_minutes": 480,

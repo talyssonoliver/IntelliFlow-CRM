@@ -26,11 +26,7 @@ import { join, resolve } from 'node:path';
 
 function resolveRepoRoot(): string {
   // Try common locations
-  const candidates = [
-    process.cwd(),
-    join(process.cwd(), '../..'),
-    join(__dirname, '../..'),
-  ];
+  const candidates = [process.cwd(), join(process.cwd(), '../..'), join(__dirname, '../..')];
   for (const c of candidates) {
     if (existsSync(join(c, 'pnpm-lock.yaml')) || existsSync(join(c, 'package.json'))) {
       return c;
@@ -41,10 +37,7 @@ function resolveRepoRoot(): string {
 
 const REPO_ROOT = resolveRepoRoot();
 
-const CSV_PATH = join(
-  REPO_ROOT,
-  'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv',
-);
+const CSV_PATH = join(REPO_ROOT, 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv');
 
 // ---------------------------------------------------------------------------
 // CSV Parsing (lightweight — no external dependency)
@@ -65,7 +58,10 @@ function parseCsv(content: string): CsvRow[] {
   let i = 1;
   while (i < lines.length) {
     const line = lines[i].trim();
-    if (!line) { i++; continue; }
+    if (!line) {
+      i++;
+      continue;
+    }
 
     // Handle multi-line quoted fields
     let fullLine = lines[i];
@@ -88,7 +84,9 @@ function parseCsv(content: string): CsvRow[] {
 
 function countQuotes(s: string): number {
   let count = 0;
-  for (const ch of s) { if (ch === '"') count++; }
+  for (const ch of s) {
+    if (ch === '"') count++;
+  }
   return count;
 }
 
@@ -158,7 +156,7 @@ function parseCsvArtifacts(artifactsField: string): string[] {
     path = path.replace(/^[`"']+|[`"']+$/g, '');
 
     // Skip non-path entries (plain text descriptions, etc.)
-    if (!path || path.includes(' ') && !path.includes('/')) continue;
+    if (!path || (path.includes(' ') && !path.includes('/'))) continue;
     // Skip wildcard-only or glob patterns that aren't specific files
     if (path === '*' || path === '**') continue;
 
@@ -245,10 +243,10 @@ interface ReconciliationResult {
   planArtifacts: string[];
   planPath: string | null;
   statuses: ArtifactStatus[];
-  csvOnlyPaths: string[];      // In CSV but not in plan
-  planOnlyPaths: string[];     // In plan but not in CSV
-  missingOnDisk: string[];     // Referenced but not on disk
-  fullyAligned: string[];      // In all three sources
+  csvOnlyPaths: string[]; // In CSV but not in plan
+  planOnlyPaths: string[]; // In plan but not in CSV
+  missingOnDisk: string[]; // Referenced but not on disk
+  fullyAligned: string[]; // In all three sources
   hasMismatches: boolean;
 }
 
@@ -287,25 +285,18 @@ function reconcile(taskId: string): ReconciliationResult {
     };
   });
 
-  const csvOnlyPaths = statuses
-    .filter((s) => s.inCsv && !s.inPlan)
-    .map((s) => s.path);
+  const csvOnlyPaths = statuses.filter((s) => s.inCsv && !s.inPlan).map((s) => s.path);
 
-  const planOnlyPaths = statuses
-    .filter((s) => s.inPlan && !s.inCsv)
-    .map((s) => s.path);
+  const planOnlyPaths = statuses.filter((s) => s.inPlan && !s.inCsv).map((s) => s.path);
 
   const missingOnDisk = statuses
     .filter((s) => !s.onDisk && !s.path.includes('*'))
     .map((s) => s.path);
 
-  const fullyAligned = statuses
-    .filter((s) => s.inCsv && s.inPlan && s.onDisk)
-    .map((s) => s.path);
+  const fullyAligned = statuses.filter((s) => s.inCsv && s.inPlan && s.onDisk).map((s) => s.path);
 
-  const hasMismatches = csvOnlyPaths.length > 0
-    || planOnlyPaths.length > 0
-    || missingOnDisk.length > 0;
+  const hasMismatches =
+    csvOnlyPaths.length > 0 || planOnlyPaths.length > 0 || missingOnDisk.length > 0;
 
   return {
     taskId,
@@ -403,12 +394,10 @@ function printResult(result: ReconciliationResult): void {
   console.log('  | Source | Path | On Disk | In Plan | In CSV |');
   console.log('  |--------|------|---------|---------|--------|');
   for (const s of result.statuses) {
-    const source = s.inCsv && s.inPlan ? 'Both'
-      : s.inCsv ? 'CSV'
-      : 'Plan';
+    const source = s.inCsv && s.inPlan ? 'Both' : s.inCsv ? 'CSV' : 'Plan';
     const disk = s.path.includes('*') ? 'N/A' : s.onDisk ? 'YES' : 'NO';
     console.log(
-      `  | ${source.padEnd(6)} | ${s.path} | ${disk.padEnd(7)} | ${(s.inPlan ? 'YES' : 'NO').padEnd(7)} | ${(s.inCsv ? 'YES' : 'NO').padEnd(6)} |`,
+      `  | ${source.padEnd(6)} | ${s.path} | ${disk.padEnd(7)} | ${(s.inPlan ? 'YES' : 'NO').padEnd(7)} | ${(s.inCsv ? 'YES' : 'NO').padEnd(6)} |`
     );
   }
   console.log('');

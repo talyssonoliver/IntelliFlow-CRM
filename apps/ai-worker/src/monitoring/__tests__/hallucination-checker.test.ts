@@ -217,7 +217,8 @@ describe('HallucinationChecker', () => {
 
       // Low keyword overlap means claim won't be supported
       // Either factual_error (if no keyword match) or unsupported_claim will be set
-      const hasFactualIssue = result.hallucinationTypes.includes('factual_error') ||
+      const hasFactualIssue =
+        result.hallucinationTypes.includes('factual_error') ||
         result.hallucinationTypes.includes('unsupported_claim');
       expect(hasFactualIssue).toBe(true);
     });
@@ -361,7 +362,7 @@ describe('HallucinationChecker', () => {
       });
 
       expect(result.hallucinationTypes).toContain('numerical_error');
-      expect(result.evidence.some(e => e.includes('Numerical error'))).toBe(true);
+      expect(result.evidence.some((e) => e.includes('Numerical error'))).toBe(true);
     });
 
     it('should detect incorrect percentage calculations', async () => {
@@ -815,7 +816,7 @@ describe('HallucinationChecker', () => {
         id: 'edge-4',
         model: 'gpt-4',
         inputContext: 'Test <script>alert("xss")</script>',
-        output: "Response with 'quotes' and \"double quotes\"",
+        output: 'Response with \'quotes\' and "double quotes"',
       });
 
       expect(result).toBeDefined();

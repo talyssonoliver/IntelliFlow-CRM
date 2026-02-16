@@ -85,58 +85,121 @@ vi.mock('../../../../security/tenant-context', () => ({
 
 vi.mock('../../../../trpc', () => ({
   createTRPCRouter: vi.fn().mockImplementation((routes) => routes),
-  tenantProcedure: { input: vi.fn().mockReturnThis(), mutation: vi.fn().mockImplementation((fn) => fn), query: vi.fn().mockImplementation((fn) => fn) },
-  protectedProcedure: { input: vi.fn().mockReturnThis(), query: vi.fn().mockImplementation((fn) => fn) },
+  tenantProcedure: {
+    input: vi.fn().mockReturnThis(),
+    mutation: vi.fn().mockImplementation((fn) => fn),
+    query: vi.fn().mockImplementation((fn) => fn),
+  },
+  protectedProcedure: {
+    input: vi.fn().mockReturnThis(),
+    query: vi.fn().mockImplementation((fn) => fn),
+  },
 }));
 
 describe('create endpoint - CONFLICT', () => {
-  beforeEach(() => { vi.clearAllMocks(); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
   it('should throw when active draft exists', async () => {
     mockRepo.findActiveByLeadAndTrigger.mockResolvedValue(mockDraft);
     const m = await import('../autoresponse.router.js');
     const fn = (m.autoResponseRouter as any).create;
     if (typeof fn !== 'function') return;
     try {
-      await fn({ ctx: { prisma: {} }, input: { leadId: 'l1', triggerType: 'NEW_LEAD', subject: 'T', body: 'B', aiConfidence: 0.9, recipientEmail: 'a@b.com', leadTenantId: 't1', leadStatus: 'NEW' } });
+      await fn({
+        ctx: { prisma: {} },
+        input: {
+          leadId: 'l1',
+          triggerType: 'NEW_LEAD',
+          subject: 'T',
+          body: 'B',
+          aiConfidence: 0.9,
+          recipientEmail: 'a@b.com',
+          leadTenantId: 't1',
+          leadStatus: 'NEW',
+        },
+      });
       expect.unreachable();
-    } catch (e: any) { expect(e.code || e.message).toBeDefined(); }
+    } catch (e: any) {
+      expect(e.code || e.message).toBeDefined();
+    }
   });
 });
 
 describe('create endpoint - save failure', () => {
-  beforeEach(() => { vi.clearAllMocks(); mockRepo.findActiveByLeadAndTrigger.mockResolvedValue(null); mockRepo.save.mockRejectedValue(new Error('DB error')); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRepo.findActiveByLeadAndTrigger.mockResolvedValue(null);
+    mockRepo.save.mockRejectedValue(new Error('DB error'));
+  });
   it('should throw INTERNAL_SERVER_ERROR when save fails', async () => {
     const m = await import('../autoresponse.router.js');
     const fn = (m.autoResponseRouter as any).create;
     if (typeof fn !== 'function') return;
     try {
-      await fn({ ctx: { prisma: {} }, input: { leadId: 'l1', triggerType: 'NEW_LEAD', subject: 'T', body: 'B', aiConfidence: 0.9, recipientEmail: 'a@b.com', leadTenantId: 't1', leadStatus: 'NEW' } });
+      await fn({
+        ctx: { prisma: {} },
+        input: {
+          leadId: 'l1',
+          triggerType: 'NEW_LEAD',
+          subject: 'T',
+          body: 'B',
+          aiConfidence: 0.9,
+          recipientEmail: 'a@b.com',
+          leadTenantId: 't1',
+          leadStatus: 'NEW',
+        },
+      });
       expect.unreachable();
-    } catch (e: any) { expect(e.code || e.message).toBeDefined(); }
+    } catch (e: any) {
+      expect(e.code || e.message).toBeDefined();
+    }
   });
 });
 
 describe('mutation save failures', () => {
-  beforeEach(() => { vi.clearAllMocks(); mockRepo.findById.mockResolvedValue(mockDraft); mockRepo.save.mockRejectedValue(new Error('DB')); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockRepo.findById.mockResolvedValue(mockDraft);
+    mockRepo.save.mockRejectedValue(new Error('DB'));
+  });
 
   it('escalate save failure', async () => {
     const m = await import('../autoresponse.router.js');
     const fn = (m.autoResponseRouter as any).escalate;
     if (typeof fn !== 'function') return;
-    try { await fn({ ctx: { prisma: {} }, input: { draftId: 'd1', escalatedBy: 'u1', escalatedTo: 'u2', reason: 'r' } }); expect.unreachable(); } catch (e: any) { expect(e).toBeDefined(); }
+    try {
+      await fn({
+        ctx: { prisma: {} },
+        input: { draftId: 'd1', escalatedBy: 'u1', escalatedTo: 'u2', reason: 'r' },
+      });
+      expect.unreachable();
+    } catch (e: any) {
+      expect(e).toBeDefined();
+    }
   });
 
   it('markSent save failure', async () => {
     const m = await import('../autoresponse.router.js');
     const fn = (m.autoResponseRouter as any).markSent;
     if (typeof fn !== 'function') return;
-    try { await fn({ ctx: { prisma: {} }, input: { draftId: 'd1', notificationId: 'n1' } }); expect.unreachable(); } catch (e: any) { expect(e).toBeDefined(); }
+    try {
+      await fn({ ctx: { prisma: {} }, input: { draftId: 'd1', notificationId: 'n1' } });
+      expect.unreachable();
+    } catch (e: any) {
+      expect(e).toBeDefined();
+    }
   });
 
   it('markFailed save failure', async () => {
     const m = await import('../autoresponse.router.js');
     const fn = (m.autoResponseRouter as any).markFailed;
     if (typeof fn !== 'function') return;
-    try { await fn({ ctx: { prisma: {} }, input: { draftId: 'd1', error: 'fail' } }); expect.unreachable(); } catch (e: any) { expect(e).toBeDefined(); }
+    try {
+      await fn({ ctx: { prisma: {} }, input: { draftId: 'd1', error: 'fail' } });
+      expect.unreachable();
+    } catch (e: any) {
+      expect(e).toBeDefined();
+    }
   });
 });

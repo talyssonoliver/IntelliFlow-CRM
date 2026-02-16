@@ -74,10 +74,7 @@ export class ReminderSchedulerService {
         `[ReminderSchedulerService] Scheduled reminder ${reminderId} for appointment ${appointment.id.value} at ${triggerTime.toISOString()}`
       );
     } catch (error) {
-      console.error(
-        '[ReminderSchedulerService] Error handling appointment created:',
-        error
-      );
+      console.error('[ReminderSchedulerService] Error handling appointment created:', error);
     }
   }
 
@@ -101,9 +98,7 @@ export class ReminderSchedulerService {
             cancelResult.error
           );
         } else {
-          console.log(
-            `[ReminderSchedulerService] Cancelled old reminder ${reminderId}`
-          );
+          console.log(`[ReminderSchedulerService] Cancelled old reminder ${reminderId}`);
         }
       }
 
@@ -146,10 +141,7 @@ export class ReminderSchedulerService {
         );
       }
     } catch (error) {
-      console.error(
-        '[ReminderSchedulerService] Error handling appointment rescheduled:',
-        error
-      );
+      console.error('[ReminderSchedulerService] Error handling appointment rescheduled:', error);
     }
   }
 
@@ -180,9 +172,7 @@ export class ReminderSchedulerService {
             cancelResult.error
           );
         } else {
-          console.log(
-            `[ReminderSchedulerService] Cancelled reminder ${reminderId}`
-          );
+          console.log(`[ReminderSchedulerService] Cancelled reminder ${reminderId}`);
         }
       }
 
@@ -193,10 +183,7 @@ export class ReminderSchedulerService {
         `[ReminderSchedulerService] Cancelled ${reminderIds.length} reminder(s) for appointment ${appointment.id.value}`
       );
     } catch (error) {
-      console.error(
-        '[ReminderSchedulerService] Error handling appointment cancelled:',
-        error
-      );
+      console.error('[ReminderSchedulerService] Error handling appointment cancelled:', error);
     }
   }
 
@@ -223,10 +210,7 @@ export class ReminderSchedulerService {
   /**
    * Build HTML email body for reminder notification
    */
-  private buildReminderEmailBodyHtml(
-    appointment: Appointment,
-    isRescheduled = false
-  ): string {
+  private buildReminderEmailBodyHtml(appointment: Appointment, isRescheduled = false): string {
     const rescheduledNote = isRescheduled
       ? '<p style="color: #d97706;"><em>Note: This appointment has been rescheduled.</em></p>'
       : '';
@@ -250,10 +234,7 @@ export class ReminderSchedulerService {
   /**
    * Build plain text email body for reminder notification
    */
-  private buildReminderEmailBodyText(
-    appointment: Appointment,
-    isRescheduled = false
-  ): string {
+  private buildReminderEmailBodyText(appointment: Appointment, isRescheduled = false): string {
     let body = `🔔 Reminder: ${appointment.title}\n\n`;
 
     if (isRescheduled) {

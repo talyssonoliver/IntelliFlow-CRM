@@ -7,9 +7,12 @@ export async function GET() {
 
     const summary = {
       total: validations.length,
-      valid: validations.filter(v => v.validation.valid && v.validation.warnings.length === 0).length,
-      withErrors: validations.filter(v => !v.validation.valid).length,
-      withWarnings: validations.filter(v => v.validation.valid && v.validation.warnings.length > 0).length,
+      valid: validations.filter((v) => v.validation.valid && v.validation.warnings.length === 0)
+        .length,
+      withErrors: validations.filter((v) => !v.validation.valid).length,
+      withWarnings: validations.filter(
+        (v) => v.validation.valid && v.validation.warnings.length > 0
+      ).length,
     };
 
     return NextResponse.json({
@@ -21,9 +24,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error('ADR validate error:', error);
-    return NextResponse.json(
-      { success: false, error: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }
 }

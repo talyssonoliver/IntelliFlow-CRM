@@ -120,7 +120,9 @@ describe('VersionComparisonView', () => {
     it('populates version dropdowns with version options', () => {
       render(<VersionComparisonView {...defaultProps} />);
 
-      const versionASelect = screen.getByRole('combobox', { name: /Version A/i }) as HTMLSelectElement;
+      const versionASelect = screen.getByRole('combobox', {
+        name: /Version A/i,
+      }) as HTMLSelectElement;
 
       // Check for the default option
       expect(versionASelect.querySelector('option[value=""]')).toBeInTheDocument();
@@ -128,7 +130,9 @@ describe('VersionComparisonView', () => {
 
       // Check for version options
       expect(versionASelect.querySelector('option[value="v1-uuid"]')).toBeInTheDocument();
-      expect(screen.getAllByRole('option', { name: /SCORING - gpt-4 \(ACTIVE\)/ }).length).toBeGreaterThan(0);
+      expect(
+        screen.getAllByRole('option', { name: /SCORING - gpt-4 \(ACTIVE\)/ }).length
+      ).toBeGreaterThan(0);
     });
   });
 
@@ -159,7 +163,9 @@ describe('VersionComparisonView', () => {
       const user = userEvent.setup();
       render(<VersionComparisonView {...defaultProps} />);
 
-      const versionASelect = screen.getByRole('combobox', { name: /Version A/i }) as HTMLSelectElement;
+      const versionASelect = screen.getByRole('combobox', {
+        name: /Version A/i,
+      }) as HTMLSelectElement;
 
       await user.selectOptions(versionASelect, 'v1-uuid');
 
@@ -170,7 +176,9 @@ describe('VersionComparisonView', () => {
       const user = userEvent.setup();
       render(<VersionComparisonView {...defaultProps} />);
 
-      const versionBSelect = screen.getByRole('combobox', { name: /Version B/i }) as HTMLSelectElement;
+      const versionBSelect = screen.getByRole('combobox', {
+        name: /Version B/i,
+      }) as HTMLSelectElement;
 
       await user.selectOptions(versionBSelect, 'v2-uuid');
 
@@ -181,7 +189,9 @@ describe('VersionComparisonView', () => {
       const user = userEvent.setup();
       // Create a fresh mock (vi.clearAllMocks clears defaultProps.onCompare)
       const onCompare = vi.fn().mockResolvedValue(mockComparison);
-      const { rerender } = render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
+      const { rerender } = render(
+        <VersionComparisonView {...defaultProps} onCompare={onCompare} />
+      );
 
       // Select versions and compare
       await user.selectOptions(screen.getByRole('combobox', { name: /Version A/i }), 'v1-uuid');
@@ -239,7 +249,10 @@ describe('VersionComparisonView', () => {
     it('shows comparing text while comparison is in progress', async () => {
       const user = userEvent.setup();
       const onCompare = vi.fn(
-        () => new Promise<VersionComparison>((resolve) => setTimeout(() => resolve(mockComparison), 100))
+        () =>
+          new Promise<VersionComparison>((resolve) =>
+            setTimeout(() => resolve(mockComparison), 100)
+          )
       );
       render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
 
@@ -253,7 +266,10 @@ describe('VersionComparisonView', () => {
     it('disables compare button while comparison is in progress', async () => {
       const user = userEvent.setup();
       const onCompare = vi.fn(
-        () => new Promise<VersionComparison>((resolve) => setTimeout(() => resolve(mockComparison), 100))
+        () =>
+          new Promise<VersionComparison>((resolve) =>
+            setTimeout(() => resolve(mockComparison), 100)
+          )
       );
       render(<VersionComparisonView {...defaultProps} onCompare={onCompare} />);
 
@@ -315,9 +331,12 @@ describe('VersionComparisonView', () => {
 
       await user.click(compareButton);
 
-      await waitFor(() => {
-        expect(screen.getByText('Differences')).toBeInTheDocument();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(screen.getByText('Differences')).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
     });
 
     it('displays Version A details', () => {
@@ -442,7 +461,9 @@ describe('VersionComparisonView', () => {
     it('handles empty versions array', () => {
       render(<VersionComparisonView {...defaultProps} versions={[]} />);
 
-      const versionASelect = screen.getByRole('combobox', { name: /Version A/i }) as HTMLSelectElement;
+      const versionASelect = screen.getByRole('combobox', {
+        name: /Version A/i,
+      }) as HTMLSelectElement;
       expect(versionASelect.children.length).toBe(1); // Only "Select version..." option
     });
 
@@ -498,8 +519,14 @@ describe('VersionComparisonView', () => {
     it('uses combobox role for version selectors', () => {
       render(<VersionComparisonView {...defaultProps} />);
 
-      expect(screen.getByRole('combobox', { name: /Version A/i })).toHaveAttribute('role', 'combobox');
-      expect(screen.getByRole('combobox', { name: /Version B/i })).toHaveAttribute('role', 'combobox');
+      expect(screen.getByRole('combobox', { name: /Version A/i })).toHaveAttribute(
+        'role',
+        'combobox'
+      );
+      expect(screen.getByRole('combobox', { name: /Version B/i })).toHaveAttribute(
+        'role',
+        'combobox'
+      );
     });
 
     it('has accessible labels for version selectors', () => {

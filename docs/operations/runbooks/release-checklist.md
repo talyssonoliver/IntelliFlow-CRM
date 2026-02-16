@@ -1,8 +1,7 @@
 # Release Checklist
 
-> **Task**: IFC-130 - Release governance: staging auto-deploy, promotion policy, quality/security gates, rollback criteria
-> **Status**: Completed
-> **Sprint**: 5
+> **Task**: IFC-130 - Release governance: staging auto-deploy, promotion policy,
+> quality/security gates, rollback criteria **Status**: Completed **Sprint**: 5
 
 ## Pre-Release Checklist
 
@@ -102,6 +101,7 @@
 ### Automatic Rollback
 
 If any of these conditions are met, automatic rollback triggers:
+
 - Health check failures (3 consecutive)
 - Error rate >1% for 5 minutes
 - Response latency p99 >500ms for 5 minutes
@@ -109,6 +109,7 @@ If any of these conditions are met, automatic rollback triggers:
 ### Manual Rollback Steps
 
 1. **Identify Issue**
+
    ```bash
    # Check recent deployments
    gh run list --workflow=cd.yml
@@ -118,6 +119,7 @@ If any of these conditions are met, automatic rollback triggers:
    ```
 
 2. **Initiate Rollback**
+
    ```bash
    # Via GitHub Actions
    gh workflow run rollback.yml -f version=<previous-version>
@@ -127,6 +129,7 @@ If any of these conditions are met, automatic rollback triggers:
    ```
 
 3. **Verify Rollback**
+
    ```bash
    # Check deployment status
    kubectl rollout status deployment/api
@@ -142,12 +145,12 @@ If any of these conditions are met, automatic rollback triggers:
 
 ## Emergency Contacts
 
-| Role | Contact | Escalation |
-|------|---------|------------|
-| On-Call Engineer | PagerDuty | Automatic |
-| Tech Lead | @tech-lead | Within 15 min |
-| DevOps Lead | @devops-lead | Within 15 min |
-| CTO | @cto | For P0 incidents |
+| Role             | Contact      | Escalation       |
+| ---------------- | ------------ | ---------------- |
+| On-Call Engineer | PagerDuty    | Automatic        |
+| Tech Lead        | @tech-lead   | Within 15 min    |
+| DevOps Lead      | @devops-lead | Within 15 min    |
+| CTO              | @cto         | For P0 incidents |
 
 ## Related Documents
 

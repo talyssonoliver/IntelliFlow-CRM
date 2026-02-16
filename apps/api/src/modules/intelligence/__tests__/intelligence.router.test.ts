@@ -11,11 +11,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { intelligenceRouter } from '../intelligence.router';
-import {
-  prismaMock,
-  createTestContext,
-  TEST_UUIDS,
-} from '../../../test/setup';
+import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 
 // Mock AI insight data
 function createMockLeadAIInsight(overrides: Record<string, any> = {}) {
@@ -106,9 +102,9 @@ describe('intelligenceRouter', () => {
     it('should throw NOT_FOUND when lead does not exist', async () => {
       prismaMock.lead.findUnique.mockResolvedValue(null);
 
-      await expect(
-        caller.getLeadInsights({ leadId: TEST_UUIDS.nonExistent })
-      ).rejects.toThrow(TRPCError);
+      await expect(caller.getLeadInsights({ leadId: TEST_UUIDS.nonExistent })).rejects.toThrow(
+        TRPCError
+      );
 
       try {
         await caller.getLeadInsights({ leadId: TEST_UUIDS.nonExistent });
@@ -640,15 +636,11 @@ describe('intelligenceRouter', () => {
 
   describe('input validation', () => {
     it('should reject invalid UUID for leadId', async () => {
-      await expect(
-        caller.getLeadInsights({ leadId: 'not-a-uuid' })
-      ).rejects.toThrow();
+      await expect(caller.getLeadInsights({ leadId: 'not-a-uuid' })).rejects.toThrow();
     });
 
     it('should reject invalid UUID for contactId', async () => {
-      await expect(
-        caller.getContactInsights({ contactId: 'invalid' })
-      ).rejects.toThrow();
+      await expect(caller.getContactInsights({ contactId: 'invalid' })).rejects.toThrow();
     });
 
     it('should reject invalid entity type for getInsightsSummary', async () => {

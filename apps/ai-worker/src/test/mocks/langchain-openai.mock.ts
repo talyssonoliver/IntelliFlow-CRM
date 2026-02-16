@@ -19,7 +19,8 @@ export const DEFAULT_SCORING_RESPONSE = {
     {
       name: 'Contact Completeness',
       impact: 20,
-      reasoning: 'Complete contact information with corporate email domain indicates a professional lead.',
+      reasoning:
+        'Complete contact information with corporate email domain indicates a professional lead.',
     },
     {
       name: 'Engagement Quality',
@@ -55,7 +56,9 @@ export const DEFAULT_SENTIMENT_RESPONSE = {
  * Default embedding response (1536 dimensions for text-embedding-ada-002)
  */
 export const DEFAULT_EMBEDDING_RESPONSE = {
-  embedding: Array(1536).fill(0).map((_, i) => Math.sin(i / 100)),
+  embedding: Array(1536)
+    .fill(0)
+    .map((_, i) => Math.sin(i / 100)),
 };
 
 /**
@@ -78,7 +81,9 @@ export function createMockChatOpenAI(response: unknown = DEFAULT_SCORING_RESPONS
 /**
  * Create a mock OpenAIEmbeddings instance
  */
-export function createMockOpenAIEmbeddings(embedding: number[] = DEFAULT_EMBEDDING_RESPONSE.embedding) {
+export function createMockOpenAIEmbeddings(
+  embedding: number[] = DEFAULT_EMBEDDING_RESPONSE.embedding
+) {
   const MockOpenAIEmbeddings = function (this: Record<string, unknown>) {
     this.embedQuery = vi.fn().mockResolvedValue(embedding);
     this.embedDocuments = vi.fn().mockImplementation(async (docs: string[]) => {

@@ -5,15 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, Button, Skeleton } from '@intelliflow/ui';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { trpc } from '@/lib/trpc';
 import { EntityHeader } from '@/components/shared';
 
@@ -194,7 +186,9 @@ function ForecastAccuracyCard({
     <Card className="p-5 relative overflow-hidden">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1 z-10">
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Forecast Accuracy</p>
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            Forecast Accuracy
+          </p>
           <div className="flex items-baseline gap-2">
             <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{accuracy}%</h3>
             <span
@@ -253,7 +247,9 @@ function PipelineValueCard({ value, trend }: { value: number; trend: number }) {
     <Card className="p-5">
       <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Pipeline Value</p>
       <div className="flex items-center gap-3 mt-1">
-        <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{formatFullCurrency(value)}</h3>
+        <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
+          {formatFullCurrency(value)}
+        </h3>
       </div>
       <div className="flex items-center gap-1 mt-1">
         {isPositive ? (
@@ -279,7 +275,9 @@ function WeightedForecastCard({ value, trend }: { value: number; trend: number }
     <Card className="p-5">
       <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Weighted Forecast</p>
       <div className="flex items-center gap-3 mt-1">
-        <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{formatFullCurrency(value)}</h3>
+        <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
+          {formatFullCurrency(value)}
+        </h3>
       </div>
       <div className="flex items-center gap-1 mt-1">
         {isPositive ? (
@@ -425,7 +423,9 @@ function OpportunitiesAtRiskTable({ deals }: { deals: ForecastDeal[] }) {
   return (
     <Card className="overflow-hidden">
       <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
-        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Top Opportunities at Risk</h3>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+          Top Opportunities at Risk
+        </h3>
         <Link href="/deals" className="text-sm text-primary font-medium hover:underline">
           View All Deals
         </Link>
@@ -499,7 +499,9 @@ function OpportunitiesAtRiskTable({ deals }: { deals: ForecastDeal[] }) {
                     <div className="size-6 rounded-full bg-slate-200 flex items-center justify-center text-xs font-medium">
                       {deal.owner.avatar}
                     </div>
-                    <span className="text-sm text-slate-600 dark:text-slate-300">{deal.owner.name}</span>
+                    <span className="text-sm text-slate-600 dark:text-slate-300">
+                      {deal.owner.name}
+                    </span>
                   </div>
                 </td>
               </tr>
@@ -510,7 +512,6 @@ function OpportunitiesAtRiskTable({ deals }: { deals: ForecastDeal[] }) {
     </Card>
   );
 }
-
 
 // =============================================================================
 // Loading Skeleton Component
@@ -584,13 +585,15 @@ export default function DealForecastPage() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
 
   // Fetch real forecast data from API
-  const { data: forecastData, isLoading, error } = trpc.opportunity.forecast.useQuery(
-    undefined,
-    { enabled: isAuthenticated && !authLoading }
-  );
+  const {
+    data: forecastData,
+    isLoading,
+    error,
+  } = trpc.opportunity.forecast.useQuery(undefined, { enabled: isAuthenticated && !authLoading });
 
   // Check for auth errors
-  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+  const isAuthError =
+    error?.data?.code === 'UNAUTHORIZED' ||
     error?.message?.toLowerCase().includes('authentication') ||
     error?.message?.toLowerCase().includes('unauthorized');
 
@@ -643,12 +646,14 @@ export default function DealForecastPage() {
     // Add projected months
     const projections: MonthlyProjection[] = [...forecastData.monthlyRevenue];
     const projectedMonths = ['Oct', 'Nov', 'Dec'];
-    const avgRevenue = forecastData.monthlyRevenue.length > 0
-      ? forecastData.monthlyRevenue.reduce((sum, m) => sum + (m.actual || 0), 0) / forecastData.monthlyRevenue.length
-      : 500000;
+    const avgRevenue =
+      forecastData.monthlyRevenue.length > 0
+        ? forecastData.monthlyRevenue.reduce((sum, m) => sum + (m.actual || 0), 0) /
+          forecastData.monthlyRevenue.length
+        : 500000;
 
     projectedMonths.forEach((month, i) => {
-      if (!projections.find(p => p.month === month)) {
+      if (!projections.find((p) => p.month === month)) {
         projections.push({
           month,
           actual: null,
@@ -692,9 +697,7 @@ export default function DealForecastPage() {
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
             Failed to load forecast data
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 mb-4">
-            {error.message}
-          </p>
+          <p className="text-slate-500 dark:text-slate-400 mb-4">{error.message}</p>
           <Button onClick={() => window.location.reload()}>
             <Icon name="refresh" className="text-base mr-2" />
             Retry
@@ -709,14 +712,9 @@ export default function DealForecastPage() {
       <div className="mx-auto flex flex-col gap-6">
         {/* Header using EntityHeader */}
         <EntityHeader
-          breadcrumbs={[
-            { label: 'Deals', href: '/deals' },
-            { label: 'Forecast' },
-          ]}
+          breadcrumbs={[{ label: 'Deals', href: '/deals' }, { label: 'Forecast' }]}
           title="Deal Forecast"
-          badges={[
-            { label: currentQuarter, variant: 'info' },
-          ]}
+          badges={[{ label: currentQuarter, variant: 'info' }]}
           actions={[
             {
               label: 'This Quarter',

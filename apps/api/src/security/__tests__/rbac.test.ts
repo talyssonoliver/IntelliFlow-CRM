@@ -1,11 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import type { PrismaClient } from '@prisma/client';
-import {
-  RBACService,
-  getRBACService,
-  resetRBACService,
-  Permissions,
-} from '../rbac';
+import { RBACService, getRBACService, resetRBACService, Permissions } from '../rbac';
 import { RoleName, ROLE_LEVELS } from '../types';
 
 describe('RBACService', () => {
@@ -644,9 +639,7 @@ describe('RBACService - Database Operations', () => {
     });
 
     it('should handle database errors gracefully', async () => {
-      mockPrisma.permission.findUnique.mockRejectedValue(
-        new Error('Database error')
-      );
+      mockPrisma.permission.findUnique.mockRejectedValue(new Error('Database error'));
 
       const result = await service.can({
         userId: TEST_USER_ID,
@@ -736,9 +729,7 @@ describe('RBACService - Database Operations', () => {
     });
 
     it('should handle database errors gracefully', async () => {
-      mockPrisma.rBACRole.findUnique.mockRejectedValue(
-        new Error('Database error')
-      );
+      mockPrisma.rBACRole.findUnique.mockRejectedValue(new Error('Database error'));
 
       const permissions = await service.getRolePermissionsFromDB('CUSTOM_ROLE');
 
@@ -751,30 +742,20 @@ describe('RBACService - Database Operations', () => {
       mockPrisma.userRoleAssignment.findMany.mockResolvedValue([]);
       mockPrisma.userPermission.findMany.mockResolvedValue([]);
 
-      const permissions = await service.getPermissionsWithDB(
-        TEST_USER_ID,
-        'USER'
-      );
+      const permissions = await service.getPermissionsWithDB(TEST_USER_ID, 'USER');
 
       expect(permissions).toContain('lead:read');
       expect(permissions).toContain('lead:write');
     });
 
     it('should add permissions from database roles', async () => {
-      mockPrisma.userRoleAssignment.findMany.mockResolvedValue([
-        { role: { name: 'ADMIN' } },
-      ]);
+      mockPrisma.userRoleAssignment.findMany.mockResolvedValue([{ role: { name: 'ADMIN' } }]);
       mockPrisma.rBACRole.findUnique.mockResolvedValue({
-        permissions: [
-          { granted: true, permission: { name: 'custom:special' } },
-        ],
+        permissions: [{ granted: true, permission: { name: 'custom:special' } }],
       });
       mockPrisma.userPermission.findMany.mockResolvedValue([]);
 
-      const permissions = await service.getPermissionsWithDB(
-        TEST_USER_ID,
-        'USER'
-      );
+      const permissions = await service.getPermissionsWithDB(TEST_USER_ID, 'USER');
 
       expect(permissions).toContain('custom:special');
     });
@@ -788,10 +769,7 @@ describe('RBACService - Database Operations', () => {
         },
       ]);
 
-      const permissions = await service.getPermissionsWithDB(
-        TEST_USER_ID,
-        'USER'
-      );
+      const permissions = await service.getPermissionsWithDB(TEST_USER_ID, 'USER');
 
       expect(permissions).toContain('lead:admin');
     });
@@ -805,10 +783,7 @@ describe('RBACService - Database Operations', () => {
         },
       ]);
 
-      const permissions = await service.getPermissionsWithDB(
-        TEST_USER_ID,
-        'USER'
-      );
+      const permissions = await service.getPermissionsWithDB(TEST_USER_ID, 'USER');
 
       expect(permissions).not.toContain('lead:write');
       expect(permissions).toContain('lead:read'); // Still has read
@@ -829,14 +804,9 @@ describe('RBACService - Database Operations', () => {
 
     it('should handle user permission query errors', async () => {
       mockPrisma.userRoleAssignment.findMany.mockResolvedValue([]);
-      mockPrisma.userPermission.findMany.mockRejectedValue(
-        new Error('DB error')
-      );
+      mockPrisma.userPermission.findMany.mockRejectedValue(new Error('DB error'));
 
-      const permissions = await service.getPermissionsWithDB(
-        TEST_USER_ID,
-        'USER'
-      );
+      const permissions = await service.getPermissionsWithDB(TEST_USER_ID, 'USER');
 
       // Should still return default permissions
       expect(permissions).toContain('lead:read');

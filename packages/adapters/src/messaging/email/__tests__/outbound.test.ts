@@ -17,9 +17,7 @@ describe('OutboundEmailService', () => {
       const provider = new MockEmailProvider();
       const email: OutboundEmail = {
         from: { email: 'sender@example.com', name: 'Sender', type: 'to' },
-        recipients: [
-          { email: 'recipient@example.com', name: 'Recipient', type: 'to' },
-        ],
+        recipients: [{ email: 'recipient@example.com', name: 'Recipient', type: 'to' }],
         subject: 'Test Email',
         htmlBody: '<p>Hello World</p>',
         textBody: 'Hello World',
@@ -125,7 +123,7 @@ describe('OutboundEmailService', () => {
       await limiter.acquire('example.com');
 
       // Wait for window to reset (simulate)
-      await new Promise(resolve => setTimeout(resolve, 1100));
+      await new Promise((resolve) => setTimeout(resolve, 1100));
 
       const allowed = await limiter.acquire('example.com');
       expect(allowed).toBe(true);
@@ -288,7 +286,7 @@ describe('OutboundEmailService', () => {
       });
 
       expect(results).toHaveLength(10);
-      expect(results.every(r => r.status === 'sent')).toBe(true);
+      expect(results.every((r) => r.status === 'sent')).toBe(true);
     });
 
     it('should check deliverability health', async () => {
@@ -372,7 +370,7 @@ describe('OutboundEmailService', () => {
         expect.objectContaining({
           method: 'POST',
           headers: expect.objectContaining({
-            'Authorization': 'Bearer fake-api-key',
+            Authorization: 'Bearer fake-api-key',
             'Content-Type': 'application/json',
           }),
         })

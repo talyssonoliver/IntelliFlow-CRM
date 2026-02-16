@@ -1,5 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { PrismaAutoResponseDraftRepository, OptimisticLockError } from '../PrismaAutoResponseDraftRepository';
+import {
+  PrismaAutoResponseDraftRepository,
+  OptimisticLockError,
+} from '../PrismaAutoResponseDraftRepository';
 
 vi.mock('@intelliflow/domain', () => ({
   AutoResponseDraft: {
@@ -43,12 +46,22 @@ describe('PrismaAutoResponseDraftRepository', () => {
 
       const draft = {
         id: { toString: () => 'draft_1' },
-        tenantId: 'tenant_1', leadId: 'lead_1', recipientEmail: 'a@b.com',
+        tenantId: 'tenant_1',
+        leadId: 'lead_1',
+        recipientEmail: 'a@b.com',
         content: { toValue: () => ({ subject: 'Sub', body: 'Body' }) },
-        aiConfidence: 0.9, modelVersion: '1.0', triggerType: 'NEW_LEAD',
-        status: 'DRAFT', version: 0, expiresAt: new Date(),
-        statusHistory: [], approvalDecision: null, escalation: null,
-        escalationCount: 0, createdAt: new Date(), updatedAt: new Date(),
+        aiConfidence: 0.9,
+        modelVersion: '1.0',
+        triggerType: 'NEW_LEAD',
+        status: 'DRAFT',
+        version: 0,
+        expiresAt: new Date(),
+        statusHistory: [],
+        approvalDecision: null,
+        escalation: null,
+        escalationCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       await repo.save(draft as any);
@@ -61,12 +74,22 @@ describe('PrismaAutoResponseDraftRepository', () => {
 
       const draft = {
         id: { toString: () => 'draft_1' },
-        tenantId: 'tenant_1', leadId: 'lead_1', recipientEmail: 'a@b.com',
+        tenantId: 'tenant_1',
+        leadId: 'lead_1',
+        recipientEmail: 'a@b.com',
         content: { toValue: () => ({ subject: 'Sub', body: 'Body' }) },
-        aiConfidence: 0.9, modelVersion: '1.0', triggerType: 'NEW_LEAD',
-        status: 'DRAFT', version: 1, expiresAt: new Date(),
-        statusHistory: [], approvalDecision: null, escalation: null,
-        escalationCount: 0, createdAt: new Date(), updatedAt: new Date(),
+        aiConfidence: 0.9,
+        modelVersion: '1.0',
+        triggerType: 'NEW_LEAD',
+        status: 'DRAFT',
+        version: 1,
+        expiresAt: new Date(),
+        statusHistory: [],
+        approvalDecision: null,
+        escalation: null,
+        escalationCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       await repo.save(draft as any);
@@ -79,12 +102,22 @@ describe('PrismaAutoResponseDraftRepository', () => {
 
       const draft = {
         id: { toString: () => 'draft_1' },
-        tenantId: 'tenant_1', leadId: 'lead_1', recipientEmail: 'a@b.com',
+        tenantId: 'tenant_1',
+        leadId: 'lead_1',
+        recipientEmail: 'a@b.com',
         content: { toValue: () => ({ subject: 'Sub', body: 'Body' }) },
-        aiConfidence: 0.9, modelVersion: '1.0', triggerType: 'NEW_LEAD',
-        status: 'DRAFT', version: 1, expiresAt: new Date(),
-        statusHistory: [], approvalDecision: null, escalation: null,
-        escalationCount: 0, createdAt: new Date(), updatedAt: new Date(),
+        aiConfidence: 0.9,
+        modelVersion: '1.0',
+        triggerType: 'NEW_LEAD',
+        status: 'DRAFT',
+        version: 1,
+        expiresAt: new Date(),
+        statusHistory: [],
+        approvalDecision: null,
+        escalation: null,
+        escalationCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       };
 
       await expect(repo.save(draft as any)).rejects.toThrow(OptimisticLockError);
@@ -100,11 +133,24 @@ describe('PrismaAutoResponseDraftRepository', () => {
 
     it('should return domain entity when found', async () => {
       mockPrisma.autoResponseDraft.findUnique.mockResolvedValue({
-        id: 'draft_1', tenantId: 'tenant_1', leadId: 'lead_1', recipientEmail: 'a@b.com',
-        subject: 'Sub', body: 'Body', aiConfidence: 0.9, modelVersion: '1.0',
-        triggerType: 'NEW_LEAD', status: 'DRAFT', version: 0, expiresAt: new Date(),
-        statusHistory: [], approvalDecision: null, escalation: null,
-        escalationCount: 0, createdAt: new Date(), updatedAt: new Date(),
+        id: 'draft_1',
+        tenantId: 'tenant_1',
+        leadId: 'lead_1',
+        recipientEmail: 'a@b.com',
+        subject: 'Sub',
+        body: 'Body',
+        aiConfidence: 0.9,
+        modelVersion: '1.0',
+        triggerType: 'NEW_LEAD',
+        status: 'DRAFT',
+        version: 0,
+        expiresAt: new Date(),
+        statusHistory: [],
+        approvalDecision: null,
+        escalation: null,
+        escalationCount: 0,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
       const result = await repo.findById({ toString: () => 'draft_1' } as any, 'tenant_1');
       expect(result).not.toBeNull();
@@ -114,7 +160,12 @@ describe('PrismaAutoResponseDraftRepository', () => {
   describe('find', () => {
     it('should find with query filters', async () => {
       mockPrisma.autoResponseDraft.findMany.mockResolvedValue([]);
-      const result = await repo.find({ tenantId: 'tenant_1', leadId: 'lead_1', status: 'DRAFT', limit: 10 });
+      const result = await repo.find({
+        tenantId: 'tenant_1',
+        leadId: 'lead_1',
+        status: 'DRAFT',
+        limit: 10,
+      });
       expect(result).toEqual([]);
       expect(mockPrisma.autoResponseDraft.findMany).toHaveBeenCalled();
     });

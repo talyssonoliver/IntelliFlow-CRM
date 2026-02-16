@@ -6,7 +6,12 @@ import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@intelliflow/ui';
 import { useSidebar } from './SidebarContext';
-import type { SidebarConfig, SidebarItem, SidebarSection, SidebarAnnouncement } from './sidebar-types';
+import type {
+  SidebarConfig,
+  SidebarItem,
+  SidebarSection,
+  SidebarAnnouncement,
+} from './sidebar-types';
 import { MODULE_COLORS } from './icon-reference';
 
 type ModuleId = keyof typeof MODULE_COLORS;
@@ -31,7 +36,12 @@ interface AppSidebarProps {
  * - Full dark mode support
  * - Accessible with proper ARIA attributes
  */
-export function AppSidebar({ config, className, announcement, onDismissAnnouncement }: AppSidebarProps) {
+export function AppSidebar({
+  config,
+  className,
+  announcement,
+  onDismissAnnouncement,
+}: AppSidebarProps) {
   const { isExpanded, isPinned, togglePinned, setHovered } = useSidebar();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -87,23 +97,25 @@ export function AppSidebar({ config, className, announcement, onDismissAnnouncem
       aria-expanded={isExpanded}
     >
       {/* Module Header */}
-      <div className={cn(
-        'flex items-center gap-3 px-3 py-4 border-b border-border',
-        !isExpanded && 'justify-center'
-      )}>
-        <div className={cn(
-          'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
-          moduleColor.iconBg
-        )}>
+      <div
+        className={cn(
+          'flex items-center gap-3 px-3 py-4 border-b border-border',
+          !isExpanded && 'justify-center'
+        )}
+      >
+        <div
+          className={cn(
+            'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0',
+            moduleColor.iconBg
+          )}
+        >
           <span className={cn('material-symbols-outlined text-xl', moduleColor.text)}>
             {config.moduleIcon}
           </span>
         </div>
         {isExpanded && (
           <div className="flex-1 min-w-0">
-            <h2 className="text-sm font-bold text-foreground truncate">
-              {config.moduleTitle}
-            </h2>
+            <h2 className="text-sm font-bold text-foreground truncate">{config.moduleTitle}</h2>
           </div>
         )}
         {isExpanded && (
@@ -132,10 +144,12 @@ export function AppSidebar({ config, className, announcement, onDismissAnnouncem
             <React.Fragment key={section.id}>
               {/* Section separator (except for first section) */}
               {index > 0 && (
-                <div className={cn(
-                  'my-3',
-                  isExpanded ? 'mx-3 border-t border-border' : 'mx-2 border-t border-border'
-                )} />
+                <div
+                  className={cn(
+                    'my-3',
+                    isExpanded ? 'mx-3 border-t border-border' : 'mx-2 border-t border-border'
+                  )}
+                />
               )}
               <SidebarSectionComponent
                 section={section}
@@ -150,10 +164,7 @@ export function AppSidebar({ config, className, announcement, onDismissAnnouncem
 
       {/* Announcement Section - Marketing updates or app announcements */}
       {announcement && isExpanded && (
-        <AnnouncementCard
-          announcement={announcement}
-          onDismiss={onDismissAnnouncement}
-        />
+        <AnnouncementCard announcement={announcement} onDismiss={onDismissAnnouncement} />
       )}
 
       {/* Settings Footer */}
@@ -227,7 +238,12 @@ interface SidebarItemComponentProps {
   moduleColor: ModuleColorTheme;
 }
 
-function SidebarItemComponent({ item, isExpanded, isActive, moduleColor }: SidebarItemComponentProps) {
+function SidebarItemComponent({
+  item,
+  isExpanded,
+  isActive,
+  moduleColor,
+}: SidebarItemComponentProps) {
   const isSegment = Boolean(item.color);
 
   return (
@@ -248,24 +264,20 @@ function SidebarItemComponent({ item, isExpanded, isActive, moduleColor }: Sideb
       {/* Segment items: just the colored dot, no background */}
       {isSegment ? (
         <span
-          className={cn(
-            'material-symbols-outlined text-xl transition-colors',
-            item.color
-          )}
+          className={cn('material-symbols-outlined text-xl transition-colors', item.color)}
           aria-hidden="true"
         >
           fiber_manual_record
         </span>
       ) : (
-        <div className={cn(
-          'w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0',
-          moduleColor.iconBg
-        )}>
+        <div
+          className={cn(
+            'w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0',
+            moduleColor.iconBg
+          )}
+        >
           <span
-            className={cn(
-              'material-symbols-outlined text-lg transition-colors',
-              moduleColor.text
-            )}
+            className={cn('material-symbols-outlined text-lg transition-colors', moduleColor.text)}
             aria-hidden="true"
           >
             {item.icon}
@@ -274,10 +286,9 @@ function SidebarItemComponent({ item, isExpanded, isActive, moduleColor }: Sideb
       )}
       {isExpanded && (
         <>
-          <span className={cn(
-            'flex-1 truncate',
-            isActive ? 'text-foreground' : ''
-          )}>{item.label}</span>
+          <span className={cn('flex-1 truncate', isActive ? 'text-foreground' : '')}>
+            {item.label}
+          </span>
           {item.badge !== undefined && item.badge > 0 && (
             <span className="px-1.5 py-0.5 text-xs font-medium bg-primary text-primary-foreground rounded-full">
               {item.badge > 99 ? '99+' : item.badge}
@@ -525,17 +536,17 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className={cn(
-              'w-9 h-9 rounded-lg flex items-center justify-center',
-              moduleColor.iconBg
-            )}>
+            <div
+              className={cn(
+                'w-9 h-9 rounded-lg flex items-center justify-center',
+                moduleColor.iconBg
+              )}
+            >
               <span className={cn('material-symbols-outlined text-xl', moduleColor.text)}>
                 {config.moduleIcon}
               </span>
             </div>
-            <h2 className="text-base font-bold text-foreground">
-              {config.moduleTitle}
-            </h2>
+            <h2 className="text-base font-bold text-foreground">{config.moduleTitle}</h2>
           </div>
           <button
             onClick={closeMobile}
@@ -551,9 +562,7 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
           <div className="flex flex-col gap-1">
             {config.sections.map((section, index) => (
               <React.Fragment key={section.id}>
-                {index > 0 && (
-                  <div className="my-3 mx-3 border-t border-border" />
-                )}
+                {index > 0 && <div className="my-3 mx-3 border-t border-border" />}
                 <div>
                   <div className="px-3 mb-2">
                     <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -579,10 +588,7 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
 
         {/* Announcement */}
         {announcement && (
-          <AnnouncementCard
-            announcement={announcement}
-            onDismiss={onDismissAnnouncement}
-          />
+          <AnnouncementCard announcement={announcement} onDismiss={onDismissAnnouncement} />
         )}
 
         {/* Settings Footer */}
@@ -628,17 +634,16 @@ function MobileSidebarItem({ item, isActive, moduleColor, onClick }: MobileSideb
       )}
     >
       {isSegment ? (
-        <span
-          className={cn('material-symbols-outlined text-xl', item.color)}
-          aria-hidden="true"
-        >
+        <span className={cn('material-symbols-outlined text-xl', item.color)} aria-hidden="true">
           fiber_manual_record
         </span>
       ) : (
-        <div className={cn(
-          'w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0',
-          moduleColor.iconBg
-        )}>
+        <div
+          className={cn(
+            'w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0',
+            moduleColor.iconBg
+          )}
+        >
           <span
             className={cn('material-symbols-outlined text-lg', moduleColor.text)}
             aria-hidden="true"
@@ -647,9 +652,7 @@ function MobileSidebarItem({ item, isActive, moduleColor, onClick }: MobileSideb
           </span>
         </div>
       )}
-      <span className={cn('flex-1', isActive ? 'text-foreground' : '')}>
-        {item.label}
-      </span>
+      <span className={cn('flex-1', isActive ? 'text-foreground' : '')}>{item.label}</span>
       {item.badge !== undefined && item.badge > 0 && (
         <span className="px-2 py-0.5 text-xs font-medium bg-primary text-primary-foreground rounded-full">
           {item.badge > 99 ? '99+' : item.badge}

@@ -20,13 +20,11 @@ export default function FeaturesPage() {
               Powerful Features for Modern Sales Teams
             </h1>
             <p className="text-lg text-slate-600 dark:text-slate-400 mb-8">
-              AI-first CRM with modern automation and governance-grade
-              validation. Everything you need to close more deals, faster.
+              AI-first CRM with modern automation and governance-grade validation. Everything you
+              need to close more deals, faster.
             </p>
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec]/10 dark:bg-[#137fec]/20 rounded-full">
-              <span className="material-symbols-outlined text-[#137fec] text-sm">
-                auto_awesome
-              </span>
+              <span className="material-symbols-outlined text-[#137fec] text-sm">auto_awesome</span>
               <span className="text-sm font-medium text-[#137fec]">
                 {featuresData.metadata.totalFeatures}+ Features
               </span>
@@ -109,9 +107,7 @@ export default function FeaturesPage() {
                       aria-label={`Learn more about ${feature.title}`}
                     >
                       Learn more
-                      <span className="material-symbols-outlined text-base">
-                        arrow_forward
-                      </span>
+                      <span className="material-symbols-outlined text-base">arrow_forward</span>
                     </Link>
                   </Card>
                 ))}
@@ -131,8 +127,8 @@ export default function FeaturesPage() {
             Ready to Transform Your Sales?
           </h2>
           <p className="text-lg text-white/90 mb-8">
-            Join modern sales teams using IntelliFlow CRM to close more deals
-            with AI-powered automation.
+            Join modern sales teams using IntelliFlow CRM to close more deals with AI-powered
+            automation.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button

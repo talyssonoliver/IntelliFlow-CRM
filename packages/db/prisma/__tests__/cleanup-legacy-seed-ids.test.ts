@@ -13,12 +13,23 @@ const mkModel = () => ({ deleteMany: mockDeleteMany, count: mockCount });
 
 vi.mock('@prisma/client', () => ({
   PrismaClient: vi.fn().mockImplementation(() => ({
-    $connect: mockConnect, $disconnect: mockDisconnect,
-    aPIUsageRecord: mkModel(), aPIKey: mkModel(), webhookEndpoint: mkModel(),
-    agentAction: mkModel(), contactActivity: mkModel(),
-    ticketActivity: mkModel(), ticketAttachment: mkModel(), ticket: mkModel(),
-    task: mkModel(), activity: mkModel(), file: mkModel(),
-    opportunity: mkModel(), lead: mkModel(), contact: mkModel(), account: mkModel(),
+    $connect: mockConnect,
+    $disconnect: mockDisconnect,
+    aPIUsageRecord: mkModel(),
+    aPIKey: mkModel(),
+    webhookEndpoint: mkModel(),
+    agentAction: mkModel(),
+    contactActivity: mkModel(),
+    ticketActivity: mkModel(),
+    ticketAttachment: mkModel(),
+    ticket: mkModel(),
+    task: mkModel(),
+    activity: mkModel(),
+    file: mkModel(),
+    opportunity: mkModel(),
+    lead: mkModel(),
+    contact: mkModel(),
+    account: mkModel(),
   })),
 }));
 
@@ -27,14 +38,23 @@ vi.mock('../../src/seed-ids', () => ({ LEGACY_STRING_IDS: {} }));
 const origArgv = process.argv;
 
 describe('cleanup-legacy-seed-ids', () => {
-  beforeEach(() => { vi.clearAllMocks(); process.argv = ['node','script.ts']; });
-  afterAll(() => { process.argv = origArgv; });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.argv = ['node', 'script.ts'];
+  });
+  afterAll(() => {
+    process.argv = origArgv;
+  });
 
   describe('LEGACY_PATTERNS', () => {
     it('defines expected patterns', () => {
-      const P: Record<string,string> = {
-        leads:'seed-lead-', contacts:'seed-contact-', accounts:'seed-account-',
-        opportunities:'seed-opp-', tickets:'seed-ticket-', tasks:'seed-task-',
+      const P: Record<string, string> = {
+        leads: 'seed-lead-',
+        contacts: 'seed-contact-',
+        accounts: 'seed-account-',
+        opportunities: 'seed-opp-',
+        tickets: 'seed-ticket-',
+        tasks: 'seed-task-',
       };
       expect(P.leads).toBe('seed-lead-');
       expect(P.tasks).toBe('seed-task-');
@@ -43,11 +63,11 @@ describe('cleanup-legacy-seed-ids', () => {
 
   describe('cleanup', () => {
     it('filter uses startsWith seed-', () => {
-      expect({ where:{ id:{ startsWith:'seed-' } } }.where.id.startsWith).toBe('seed-');
+      expect({ where: { id: { startsWith: 'seed-' } } }.where.id.startsWith).toBe('seed-');
     });
     it('handles count > 0', async () => {
       mockDeleteMany.mockResolvedValueOnce({ count: 5 });
-      const r = await mockDeleteMany({ where:{ id:{ startsWith:'seed-' } } });
+      const r = await mockDeleteMany({ where: { id: { startsWith: 'seed-' } } });
       expect(r.count).toBe(5);
     });
     it('handles count = 0', async () => {
@@ -57,24 +77,38 @@ describe('cleanup-legacy-seed-ids', () => {
     });
     it('handles table not exist error', async () => {
       mockDeleteMany.mockRejectedValueOnce(new Error('Table does not exist'));
-      try { await mockDeleteMany({}); } catch { /* expected */ }
+      try {
+        await mockDeleteMany({});
+      } catch {
+        /* expected */
+      }
     });
   });
 
   describe('count', () => {
     it('counts seed- prefix records', async () => {
       mockCount.mockResolvedValueOnce(3);
-      expect(await mockCount({ where:{ id:{ startsWith:'seed-' } } })).toBe(3);
+      expect(await mockCount({ where: { id: { startsWith: 'seed-' } } })).toBe(3);
     });
     it('handles count error', async () => {
       mockCount.mockRejectedValueOnce(new Error('no table'));
-      try { await mockCount({}); } catch { /* expected */ }
+      try {
+        await mockCount({});
+      } catch {
+        /* expected */
+      }
     });
   });
 
   describe('main logic', () => {
-    it('connects', () => { mockConnect(); expect(mockConnect).toHaveBeenCalled(); });
-    it('disconnects', () => { mockDisconnect(); expect(mockDisconnect).toHaveBeenCalled(); });
+    it('connects', () => {
+      mockConnect();
+      expect(mockConnect).toHaveBeenCalled();
+    });
+    it('disconnects', () => {
+      mockDisconnect();
+      expect(mockDisconnect).toHaveBeenCalled();
+    });
     it('dry-run detected', () => expect(['--dry-run'].includes('--dry-run')).toBe(true));
     it('no dry-run', () => expect(([] as string[]).includes('--dry-run')).toBe(false));
   });
@@ -82,9 +116,21 @@ describe('cleanup-legacy-seed-ids', () => {
   describe('FK constraint order', () => {
     it('children before parents', () => {
       const order = [
-        'aPIUsageRecord','aPIKey','webhookEndpoint','agentAction','contactActivity',
-        'ticketActivity','ticketAttachment','ticket','task',
-        'activity','file','opportunity','lead','contact','account',
+        'aPIUsageRecord',
+        'aPIKey',
+        'webhookEndpoint',
+        'agentAction',
+        'contactActivity',
+        'ticketActivity',
+        'ticketAttachment',
+        'ticket',
+        'task',
+        'activity',
+        'file',
+        'opportunity',
+        'lead',
+        'contact',
+        'account',
       ];
       expect(order.indexOf('ticketActivity')).toBeLessThan(order.indexOf('ticket'));
       expect(order.indexOf('activity')).toBeLessThan(order.indexOf('opportunity'));

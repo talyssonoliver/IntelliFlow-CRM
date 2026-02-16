@@ -22,16 +22,10 @@ vi.mock('@intelliflow/ui', () => ({
         </thead>
         <tbody>
           {data.map((row: any) => (
-            <tr
-              key={row.id}
-              data-testid={`task-row-${row.id}`}
-              onClick={() => onRowClick?.(row)}
-            >
+            <tr key={row.id} data-testid={`task-row-${row.id}`} onClick={() => onRowClick?.(row)}>
               {columns.map((col: any, i: number) => (
                 <td key={i}>
-                  {col.cell
-                    ? col.cell({ row: { original: row } })
-                    : row[col.accessorKey]}
+                  {col.cell ? col.cell({ row: { original: row } }) : row[col.accessorKey]}
                 </td>
               ))}
             </tr>
@@ -60,20 +54,21 @@ vi.mock('@intelliflow/ui', () => ({
   toast: vi.fn(),
 }));
 
-const createMockTask = (overrides: Partial<TaskListItem> = {}): TaskListItem => ({
-  id: 'task-1',
-  title: 'Test Task',
-  description: 'Task description',
-  dueDate: '2026-03-15T00:00:00.000Z',
-  priority: 'MEDIUM',
-  status: 'PENDING',
-  ownerId: 'user-1',
-  owner: { id: 'user-1', email: 'user@test.com', name: 'Test User' },
-  lead: null,
-  contact: null,
-  opportunity: null,
-  ...overrides,
-} as TaskListItem);
+const createMockTask = (overrides: Partial<TaskListItem> = {}): TaskListItem =>
+  ({
+    id: 'task-1',
+    title: 'Test Task',
+    description: 'Task description',
+    dueDate: '2026-03-15T00:00:00.000Z',
+    priority: 'MEDIUM',
+    status: 'PENDING',
+    ownerId: 'user-1',
+    owner: { id: 'user-1', email: 'user@test.com', name: 'Test User' },
+    lead: null,
+    contact: null,
+    opportunity: null,
+    ...overrides,
+  }) as TaskListItem;
 
 describe('TaskList', () => {
   const defaultProps = {

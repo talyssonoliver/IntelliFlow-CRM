@@ -36,7 +36,16 @@ import {
   type LoginResponse,
   type VerifyEmailResponse,
 } from '@intelliflow/validators';
-import { signIn, signOut, signOutUser, getSession, signInWithOAuth, exchangeCodeForSession, verifyToken, type OAuthProvider } from '../../lib/supabase';
+import {
+  signIn,
+  signOut,
+  signOutUser,
+  getSession,
+  signInWithOAuth,
+  exchangeCodeForSession,
+  verifyToken,
+  type OAuthProvider,
+} from '../../lib/supabase';
 import { getLoginLimiter } from '../../security/login-limiter';
 import { getAuditLogger } from '../../security/audit-logger';
 import { getMfaService } from '../../services/mfa.service';
@@ -81,7 +90,9 @@ export const authRouter = createTRPCRouter({
 
     // Extract IP and user agent from context
     const headers = ctx.req?.headers;
-    const ipAddress = getHeaderFromContext(headers, 'x-forwarded-for') || getHeaderFromContext(headers, 'x-real-ip');
+    const ipAddress =
+      getHeaderFromContext(headers, 'x-forwarded-for') ||
+      getHeaderFromContext(headers, 'x-real-ip');
     const userAgent = getHeaderFromContext(headers, 'user-agent');
 
     try {
@@ -192,19 +203,31 @@ export const authRouter = createTRPCRouter({
    */
   loginWithOAuth: publicProcedure.input(oauthInitSchema).mutation(async ({ input }) => {
     const provider = input.provider as OAuthProvider;
-    console.log('[OAuth] Server: Initiating OAuth for provider:', provider, 'redirectTo:', input.redirectTo);
+    console.log(
+      '[OAuth] Server: Initiating OAuth for provider:',
+      provider,
+      'redirectTo:',
+      input.redirectTo
+    );
 
     const { url, error } = await signInWithOAuth(provider, {
       redirectTo: input.redirectTo,
     });
 
-    console.log('[OAuth] Server: Supabase response - url:', url ? 'received' : 'null', 'error:', error?.message || 'none');
+    console.log(
+      '[OAuth] Server: Supabase response - url:',
+      url ? 'received' : 'null',
+      'error:',
+      error?.message || 'none'
+    );
 
     if (error || !url) {
       console.error('[OAuth] Server: Failed to get OAuth URL:', error?.message);
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: error?.message || 'Failed to initiate OAuth flow. Is the provider configured in Supabase?',
+        message:
+          error?.message ||
+          'Failed to initiate OAuth flow. Is the provider configured in Supabase?',
       });
     }
 
@@ -239,7 +262,9 @@ export const authRouter = createTRPCRouter({
     }
 
     const oauthHeaders = ctx.req?.headers;
-    const ipAddress = getHeaderFromContext(oauthHeaders, 'x-forwarded-for') || getHeaderFromContext(oauthHeaders, 'x-real-ip');
+    const ipAddress =
+      getHeaderFromContext(oauthHeaders, 'x-forwarded-for') ||
+      getHeaderFromContext(oauthHeaders, 'x-real-ip');
     const userAgent = getHeaderFromContext(oauthHeaders, 'user-agent');
 
     // Create application session
@@ -290,7 +315,9 @@ export const authRouter = createTRPCRouter({
     const auditLogger = getAuditLogger(ctx.prisma);
 
     const mfaHeaders = ctx.req?.headers;
-    const ipAddress = getHeaderFromContext(mfaHeaders, 'x-forwarded-for') || getHeaderFromContext(mfaHeaders, 'x-real-ip');
+    const ipAddress =
+      getHeaderFromContext(mfaHeaders, 'x-forwarded-for') ||
+      getHeaderFromContext(mfaHeaders, 'x-real-ip');
     const userAgent = getHeaderFromContext(mfaHeaders, 'user-agent');
 
     // Get challenge info
@@ -376,14 +403,17 @@ export const authRouter = createTRPCRouter({
           : { exists: false, userId: undefined };
 
         // Extract userId safely from challenge info
-        const userId = 'userId' in challengeInfo && challengeInfo.userId
-          ? String(challengeInfo.userId)
-          : 'unknown';
+        const userId =
+          'userId' in challengeInfo && challengeInfo.userId
+            ? String(challengeInfo.userId)
+            : 'unknown';
         const result = await mfaService.sendSmsOtp(input.phone, userId);
 
         return {
           success: result.success,
-          message: result.success ? 'SMS code sent successfully' : (result.error || 'Failed to send SMS'),
+          message: result.success
+            ? 'SMS code sent successfully'
+            : result.error || 'Failed to send SMS',
         };
       }
 
@@ -393,14 +423,17 @@ export const authRouter = createTRPCRouter({
           : { exists: false, userId: undefined };
 
         // Extract userId safely from challenge info
-        const userId = 'userId' in challengeInfo && challengeInfo.userId
-          ? String(challengeInfo.userId)
-          : 'unknown';
+        const userId =
+          'userId' in challengeInfo && challengeInfo.userId
+            ? String(challengeInfo.userId)
+            : 'unknown';
         const result = await mfaService.sendEmailOtp(input.email, userId);
 
         return {
           success: result.success,
-          message: result.success ? 'Email code sent successfully' : (result.error || 'Failed to send email'),
+          message: result.success
+            ? 'Email code sent successfully'
+            : result.error || 'Failed to send email',
         };
       }
 
@@ -695,8 +728,8 @@ export const authRouter = createTRPCRouter({
     console.log('\n>>>>>>>>>> getStatus CALLED <<<<<<<<<<');
 
     // Extract token from Authorization header
-    const authHeader = ctx.req?.headers.get?.('Authorization') ||
-      ctx.req?.headers.get?.('authorization');
+    const authHeader =
+      ctx.req?.headers.get?.('Authorization') || ctx.req?.headers.get?.('authorization');
 
     console.log('[getStatus] Auth header present:', !!authHeader);
 
@@ -814,37 +847,39 @@ export const authRouter = createTRPCRouter({
    * Rate-limited endpoint to resend verification emails.
    * Note: Token generation happens client-side for MVP.
    */
-  resendVerification: publicProcedure.input(resendVerificationSchema).mutation(async ({ ctx, input }) => {
-    const auditLogger = getAuditLogger(ctx.prisma);
+  resendVerification: publicProcedure
+    .input(resendVerificationSchema)
+    .mutation(async ({ ctx, input }) => {
+      const auditLogger = getAuditLogger(ctx.prisma);
 
-    try {
-      // Log resend attempt
-      await auditLogger.log({
-        tenantId: 'system',
-        eventType: 'VerificationEmailResent',
-        action: 'CREATE',
-        actionResult: 'SUCCESS',
-        resourceType: 'user',
-        resourceId: input.email,
-        actorId: 'system',
-        actorEmail: input.email,
-      });
+      try {
+        // Log resend attempt
+        await auditLogger.log({
+          tenantId: 'system',
+          eventType: 'VerificationEmailResent',
+          action: 'CREATE',
+          actionResult: 'SUCCESS',
+          resourceType: 'user',
+          resourceId: input.email,
+          actorId: 'system',
+          actorEmail: input.email,
+        });
 
-      // In production, send email via email service (Resend, SendGrid, etc.)
-      console.log('[Auth] Verification email requested for:', input.email);
+        // In production, send email via email service (Resend, SendGrid, etc.)
+        console.log('[Auth] Verification email requested for:', input.email);
 
-      return {
-        success: true,
-        message: 'If this email is registered, you will receive a verification link shortly.',
-      };
-    } catch (error) {
-      console.error('[Auth] Resend verification error:', error);
+        return {
+          success: true,
+          message: 'If this email is registered, you will receive a verification link shortly.',
+        };
+      } catch (error) {
+        console.error('[Auth] Resend verification error:', error);
 
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to resend verification email. Please try again.',
-        cause: error,
-      });
-    }
-  }),
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to resend verification email. Please try again.',
+          cause: error,
+        });
+      }
+    }),
 });

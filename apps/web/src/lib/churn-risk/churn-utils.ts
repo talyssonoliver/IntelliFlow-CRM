@@ -26,23 +26,35 @@ export function getRiskBadgeClass(level: ChurnRiskLevel): string {
 
 export function getRiskIcon(level: ChurnRiskLevel): string {
   switch (level) {
-    case 'CRITICAL': return 'error';
-    case 'HIGH': return 'warning';
-    case 'MEDIUM': return 'info';
-    case 'LOW': return 'check_circle';
-    case 'MINIMAL': return 'verified';
-    default: return 'help';
+    case 'CRITICAL':
+      return 'error';
+    case 'HIGH':
+      return 'warning';
+    case 'MEDIUM':
+      return 'info';
+    case 'LOW':
+      return 'check_circle';
+    case 'MINIMAL':
+      return 'verified';
+    default:
+      return 'help';
   }
 }
 
 export function getRiskColor(level: ChurnRiskLevel): string {
   switch (level) {
-    case 'CRITICAL': return 'text-destructive';
-    case 'HIGH': return 'text-orange-600 dark:text-orange-400';
-    case 'MEDIUM': return 'text-amber-600 dark:text-amber-400';
-    case 'LOW': return 'text-primary';
-    case 'MINIMAL': return 'text-success';
-    default: return 'text-muted-foreground';
+    case 'CRITICAL':
+      return 'text-destructive';
+    case 'HIGH':
+      return 'text-orange-600 dark:text-orange-400';
+    case 'MEDIUM':
+      return 'text-amber-600 dark:text-amber-400';
+    case 'LOW':
+      return 'text-primary';
+    case 'MINIMAL':
+      return 'text-success';
+    default:
+      return 'text-muted-foreground';
   }
 }
 
@@ -62,7 +74,10 @@ export function formatSlaCountdown(deadline: string): { text: string; isOverdue:
   const diff = new Date(deadline).getTime() - Date.now();
   if (diff <= 0) {
     const overHours = Math.abs(Math.floor(diff / 3600000));
-    return { text: overHours < 24 ? `${overHours}h overdue` : `${Math.floor(overHours / 24)}d overdue`, isOverdue: true };
+    return {
+      text: overHours < 24 ? `${overHours}h overdue` : `${Math.floor(overHours / 24)}d overdue`,
+      isOverdue: true,
+    };
   }
   const hours = Math.floor(diff / 3600000);
   if (hours < 24) return { text: `${hours}h left`, isOverdue: false };

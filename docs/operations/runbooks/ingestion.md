@@ -1,15 +1,15 @@
 # File Ingestion Runbook
 
-**Owner:** Backend Dev + Integration Eng
-**Last Updated:** 2025-12-31
-**Task:** IFC-153
-**On-Call Escalation:** #engineering-oncall
+**Owner:** Backend Dev + Integration Eng **Last Updated:** 2025-12-31 **Task:**
+IFC-153 **On-Call Escalation:** #engineering-oncall
 
 ---
 
 ## Overview
 
-This runbook covers operational procedures for the **File Ingestion Pipeline**, which handles:
+This runbook covers operational procedures for the **File Ingestion Pipeline**,
+which handles:
+
 - Web uploads of case documents
 - Email attachment processing
 - Antivirus scanning
@@ -18,6 +18,7 @@ This runbook covers operational procedures for the **File Ingestion Pipeline**, 
 - Event emission to downstream consumers
 
 **Critical SLAs:**
+
 - Upload latency (p95): <5s
 - AV scan latency (p95): <10s
 - End-to-end ingestion (p95): <15s
@@ -35,6 +36,7 @@ Event Emission → Indexing/Thumbnails/OCR
 ```
 
 **Key Components:**
+
 - **Ingestion API**: `/api/documents/upload` (tRPC)
 - **AV Scanner Worker**: `av-scan-worker` (BullMQ)
 - **Metadata Extractor**: `metadata-extraction-service`
@@ -47,14 +49,14 @@ Event Emission → Indexing/Thumbnails/OCR
 
 ### Key Metrics
 
-| Metric | Dashboard | Alert Threshold | Severity |
-|--------|-----------|-----------------|----------|
-| Ingestion success rate | Grafana: File Ingestion | <95% in 5min | P1 |
-| AV scan queue depth | Grafana: Workers | >100 jobs | P2 |
-| Storage bucket quota | Supabase Dashboard | >80% full | P2 |
-| Dead Letter Queue size | Grafana: DLQ | >10 messages | P3 |
-| Upload latency (p95) | Grafana: API Performance | >10s | P2 |
-| AV scan failures | Grafana: AV Scanner | >5% in 10min | P1 |
+| Metric                 | Dashboard                | Alert Threshold | Severity |
+| ---------------------- | ------------------------ | --------------- | -------- |
+| Ingestion success rate | Grafana: File Ingestion  | <95% in 5min    | P1       |
+| AV scan queue depth    | Grafana: Workers         | >100 jobs       | P2       |
+| Storage bucket quota   | Supabase Dashboard       | >80% full       | P2       |
+| Dead Letter Queue size | Grafana: DLQ             | >10 messages    | P3       |
+| Upload latency (p95)   | Grafana: API Performance | >10s            | P2       |
+| AV scan failures       | Grafana: AV Scanner      | >5% in 10min    | P1       |
 
 ### Alert Channels
 
@@ -82,11 +84,13 @@ curl https://api.intelliflow.com/health/storage
 ### 1. Upload Failures (HTTP 500)
 
 **Symptoms:**
+
 - Users report "Upload failed" errors
 - Logs show `StorageConnectionError` or `TimeoutError`
 - Success rate drops below 95%
 
 **Diagnosis:**
+
 ```bash
 # Check recent upload errors
 tail -f /var/log/intelliflow/api.log | grep "upload.*error"
@@ -99,10 +103,14 @@ npm run cli jobs:failed -- --queue=ingestion --limit=20
 ```
 
 **Resolution:**
-1. **If storage is down**: Check Supabase status page, escalate to infrastructure team
+
+1. **If storage is down**: Check Supabase status page, escalate to
+   infrastructure team
 2. **If quota exceeded**: Free up space or increase quota in Supabase dashboard
-3. **If network timeout**: Restart ingestion service: `pm2 restart ingestion-api`
-4. **If persistent**: Enable debug logging: `export LOG_LEVEL=debug && pm2 restart ingestion-api`
+3. **If network timeout**: Restart ingestion service:
+   `pm2 restart ingestion-api`
+4. **If persistent**: Enable debug logging:
+   `export LOG_LEVEL=debug && pm2 restart ingestion-api`
 
 **Escalation:** If issue persists >15min, escalate to P1 (page on-call)
 
@@ -111,11 +119,13 @@ npm run cli jobs:failed -- --queue=ingestion --limit=20
 ### 2. AV Scanner Backlog
 
 **Symptoms:**
+
 - AV scan queue depth >100 jobs
 - Users see "Processing..." status for >2min
 - Scanned rate drops below expected throughput (20 files/min)
 
 **Diagnosis:**
+
 ```bash
 # Check AV scanner queue
 npm run cli jobs:queue-status -- --queue=av-scan
@@ -128,7 +138,9 @@ pm2 logs av-scan-worker --lines 100
 ```
 
 **Resolution:**
+
 1. **If ClamAV is down**:
+
    ```bash
    sudo systemctl restart clamav-daemon
    sudo systemctl restart clamav-freshclam  # Update virus definitions
@@ -152,11 +164,13 @@ pm2 logs av-scan-worker --lines 100
 ### 3. Infected Files
 
 **Symptoms:**
+
 - Alert: "Virus detected in uploaded file"
 - User notified of rejected upload
 - File deleted from quarantine
 
 **Diagnosis:**
+
 ```bash
 # View recent virus detections
 npm run cli av:recent-infections -- --hours=24
@@ -166,23 +180,27 @@ aws s3 ls s3://case-documents-quarantine/ --recursive | grep infected
 ```
 
 **Actions:**
+
 1. **Log the incident**: Security team must be notified (auto-alert configured)
 2. **Review upload source**: Check if user account is compromised
 3. **Check for patterns**: If multiple infections from same tenant, investigate
 4. **Update virus definitions**: `sudo freshclam && pm2 restart av-scan-worker`
 
-**Escalation:** Single infection = P3 (log only). Multiple infections (>5/hour) = P1 (security incident)
+**Escalation:** Single infection = P3 (log only). Multiple infections (>5/hour)
+= P1 (security incident)
 
 ---
 
 ### 4. Dead Letter Queue (DLQ) Build-up
 
 **Symptoms:**
+
 - DLQ size >10 messages
 - Persistent failures for same file/user
 - Logs show repeated retry exhaustion
 
 **Diagnosis:**
+
 ```bash
 # View DLQ messages
 npm run cli jobs:dlq -- --queue=ingestion --limit=50
@@ -193,21 +211,24 @@ npm run cli jobs:dlq-stats -- --queue=ingestion --group-by=error
 
 **Common Failure Reasons:**
 
-| Error | Cause | Resolution |
-|-------|-------|------------|
-| `StorageQuotaExceeded` | Bucket full | Increase quota or clean up old files |
-| `InvalidMimeType` | User uploaded unsupported file | Update allowed MIME types or reject |
-| `HashCollision` | Duplicate file upload | Idempotency check - return existing document ID |
-| `MetadataExtractionFailed` | Corrupted file | Manual review, potentially re-upload |
-| `ClassificationFailed` | Missing classification rules | Update ADR-007 rules |
+| Error                      | Cause                          | Resolution                                      |
+| -------------------------- | ------------------------------ | ----------------------------------------------- |
+| `StorageQuotaExceeded`     | Bucket full                    | Increase quota or clean up old files            |
+| `InvalidMimeType`          | User uploaded unsupported file | Update allowed MIME types or reject             |
+| `HashCollision`            | Duplicate file upload          | Idempotency check - return existing document ID |
+| `MetadataExtractionFailed` | Corrupted file                 | Manual review, potentially re-upload            |
+| `ClassificationFailed`     | Missing classification rules   | Update ADR-007 rules                            |
 
 **Resolution:**
+
 1. **Review DLQ entries**:
+
    ```bash
    npm run cli jobs:dlq-review -- --interactive
    ```
 
 2. **Retry recoverable failures**:
+
    ```bash
    npm run cli jobs:dlq-retry -- --error-type=StorageTimeout
    ```
@@ -224,11 +245,13 @@ npm run cli jobs:dlq-stats -- --queue=ingestion --group-by=error
 ### 5. Email Attachment Processing Failures
 
 **Symptoms:**
+
 - Email attachments not appearing in system
 - Webhook errors from SendGrid/SES
 - Logs show `EmailProcessingError`
 
 **Diagnosis:**
+
 ```bash
 # Check recent email ingestions
 tail -f /var/log/intelliflow/email-inbound.log
@@ -244,8 +267,10 @@ curl -X POST http://localhost:3000/api/inbound/email \
 ```
 
 **Resolution:**
+
 1. **If webhook is failing**:
-   - Check endpoint accessibility: `curl https://api.intelliflow.com/api/inbound/email`
+   - Check endpoint accessibility:
+     `curl https://api.intelliflow.com/api/inbound/email`
    - Verify webhook signature validation
    - Review SendGrid webhook settings
 
@@ -267,11 +292,13 @@ curl -X POST http://localhost:3000/api/inbound/email \
 ### Daily Tasks
 
 1. **Monitor DLQ**: Check DLQ size and review any entries
+
    ```bash
    npm run cli jobs:dlq-summary -- --daily
    ```
 
 2. **Check AV definitions**: Ensure virus definitions are updated
+
    ```bash
    sudo freshclam --check
    ```
@@ -284,11 +311,13 @@ curl -X POST http://localhost:3000/api/inbound/email \
 ### Weekly Tasks
 
 1. **Clean up quarantine bucket**: Delete scanned files >7 days old
+
    ```bash
    npm run cli storage:cleanup-quarantine -- --days=7
    ```
 
 2. **Review classification accuracy**: Check auto-classification errors
+
    ```bash
    npm run cli documents:classification-audit -- --sample=100
    ```
@@ -300,11 +329,13 @@ curl -X POST http://localhost:3000/api/inbound/email \
 ### Monthly Tasks
 
 1. **Performance tuning**: Review slow uploads and optimize
+
    ```bash
    npm run cli ingestion:performance-report -- --month=current
    ```
 
 2. **Security audit**: Review infected file incidents
+
    ```bash
    npm run cli security:virus-report -- --month=current
    ```
@@ -317,26 +348,29 @@ curl -X POST http://localhost:3000/api/inbound/email \
 
 ### Scaling Guidelines
 
-| Load Level | Ingestion API Instances | AV Workers | Redis Config |
-|------------|-------------------------|------------|--------------|
-| Low (<100 uploads/day) | 1 | 1 | Default |
-| Medium (100-1000/day) | 2 | 2-3 | Increase maxmemory to 2GB |
-| High (1000-5000/day) | 3-4 | 4-6 | Dedicated Redis instance |
-| Very High (>5000/day) | 5+ | 8+ | Redis cluster (3 nodes) |
+| Load Level             | Ingestion API Instances | AV Workers | Redis Config              |
+| ---------------------- | ----------------------- | ---------- | ------------------------- |
+| Low (<100 uploads/day) | 1                       | 1          | Default                   |
+| Medium (100-1000/day)  | 2                       | 2-3        | Increase maxmemory to 2GB |
+| High (1000-5000/day)   | 3-4                     | 4-6        | Dedicated Redis instance  |
+| Very High (>5000/day)  | 5+                      | 8+         | Redis cluster (3 nodes)   |
 
 ### Optimization Tips
 
 1. **Enable caching**: Cache duplicate hash lookups
+
    ```typescript
    // redis.set(`hash:${contentHash}`, documentId, 'EX', 3600);
    ```
 
 2. **Batch AV scans**: Group small files for faster processing
+
    ```typescript
    // If file <1MB, add to batch queue instead of individual scan
    ```
 
 3. **Parallel metadata extraction**: Extract metadata while AV scan runs
+
    ```typescript
    // Promise.all([avScan(file), extractMetadata(file)])
    ```
@@ -355,6 +389,7 @@ curl -X POST http://localhost:3000/api/inbound/email \
 **Definition:** No files being uploaded for >5min OR success rate <50%
 
 **Immediate Actions:**
+
 1. Acknowledge alert in PagerDuty
 2. Check status page: `curl /health/ingestion`
 3. Review recent deployments: `git log --oneline -10`
@@ -362,6 +397,7 @@ curl -X POST http://localhost:3000/api/inbound/email \
 5. If service is down, attempt restart: `pm2 restart ingestion-api`
 
 **Investigation:**
+
 ```bash
 # Check error logs
 tail -f /var/log/intelliflow/api.log | grep ERROR
@@ -375,6 +411,7 @@ redis-cli PING
 ```
 
 **Rollback Plan:**
+
 ```bash
 # If recent deployment caused issue
 git revert HEAD
@@ -383,6 +420,7 @@ pm2 restart ingestion-api
 ```
 
 **Communication:**
+
 - Post in Slack #incidents
 - Update status page if customer-facing
 - Notify stakeholders if >15min downtime
@@ -394,11 +432,13 @@ pm2 restart ingestion-api
 **Definition:** Error rate >5% for >10min
 
 **Immediate Actions:**
+
 1. Identify error type: Check logs for common pattern
 2. If known issue, apply fix from troubleshooting section
 3. If unknown, gather diagnostics and escalate
 
 **Investigation:**
+
 ```bash
 # Group errors by type
 npm run cli logs:error-analysis -- --last=10m
@@ -411,15 +451,15 @@ npm run cli logs:errors-by-tenant -- --last=10m
 
 ## Contact & Escalation
 
-| Issue Type | Primary Contact | Escalation Path |
-|------------|-----------------|-----------------|
-| Ingestion failures | On-call engineer (#oncall-engineering) | → Engineering Manager → VP Engineering |
-| Storage issues | Infrastructure team (#infrastructure) | → Platform Lead → CTO |
-| Security (virus) | Security team (#security) | → Security Lead → CISO |
-| Performance degradation | Backend team (#backend-dev) | → Tech Lead → VP Engineering |
+| Issue Type              | Primary Contact                        | Escalation Path                        |
+| ----------------------- | -------------------------------------- | -------------------------------------- |
+| Ingestion failures      | On-call engineer (#oncall-engineering) | → Engineering Manager → VP Engineering |
+| Storage issues          | Infrastructure team (#infrastructure)  | → Platform Lead → CTO                  |
+| Security (virus)        | Security team (#security)              | → Security Lead → CISO                 |
+| Performance degradation | Backend team (#backend-dev)            | → Tech Lead → VP Engineering           |
 
-**On-Call Rotation:** See PagerDuty schedule
-**Runbook Updates:** PR to `docs/operations/runbooks/ingestion.md`
+**On-Call Rotation:** See PagerDuty schedule **Runbook Updates:** PR to
+`docs/operations/runbooks/ingestion.md`
 
 ---
 
@@ -484,6 +524,5 @@ LOG_LEVEL=info
 
 ---
 
-**Document Version:** 1.0.0
-**Last Reviewed:** 2025-12-31
-**Next Review:** 2026-01-31
+**Document Version:** 1.0.0 **Last Reviewed:** 2025-12-31 **Next Review:**
+2026-01-31

@@ -21,18 +21,12 @@ import {
   Slider,
   cn,
 } from '@intelliflow/ui';
-import {
-  SearchFilterBar,
-  useMultiFilterState,
-} from '@/components/shared/search-filter-bar';
+import { SearchFilterBar, useMultiFilterState } from '@/components/shared/search-filter-bar';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useReviewQueue } from '@/lib/ai-review/hooks';
 import { ReviewCard } from './ReviewCard';
 import type { ReviewListFilter, ReviewResponse } from '@intelliflow/validators/ai-review';
-import {
-  REVIEW_STATUSES,
-  AI_OUTPUT_TYPES,
-} from '@intelliflow/domain';
+import { REVIEW_STATUSES, AI_OUTPUT_TYPES } from '@intelliflow/domain';
 
 // ============================================
 // Stats Card (internal)
@@ -55,16 +49,8 @@ function StatCard({
     <Card>
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              'h-10 w-10 rounded-lg flex items-center justify-center',
-              colorClass,
-            )}
-          >
-            <span
-              className="material-symbols-outlined text-lg"
-              aria-hidden="true"
-            >
+          <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', colorClass)}>
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">
               {icon}
             </span>
           </div>
@@ -142,7 +128,7 @@ export function ReviewQueue() {
     (partial: Partial<ReviewListFilter>) => {
       setFilters((prev: Partial<ReviewListFilter>) => ({ ...prev, ...partial, page: 1 }));
     },
-    [setFilters],
+    [setFilters]
   );
 
   const handleStatusChange = useCallback(
@@ -152,19 +138,17 @@ export function ReviewQueue() {
         status: value ? [value as (typeof REVIEW_STATUSES)[number]] : undefined,
       });
     },
-    [filterState, updateQueryFilters],
+    [filterState, updateQueryFilters]
   );
 
   const handleOutputTypeChange = useCallback(
     (value: string) => {
       filterState.set('outputType', value);
       updateQueryFilters({
-        outputType: value
-          ? [value as (typeof AI_OUTPUT_TYPES)[number]]
-          : undefined,
+        outputType: value ? [value as (typeof AI_OUTPUT_TYPES)[number]] : undefined,
       });
     },
-    [filterState, updateQueryFilters],
+    [filterState, updateQueryFilters]
   );
 
   const handleSortChange = useCallback(
@@ -176,14 +160,14 @@ export function ReviewQueue() {
       ];
       updateQueryFilters({ sortBy, sortOrder });
     },
-    [filterState, updateQueryFilters],
+    [filterState, updateQueryFilters]
   );
 
   const handleSlaBreachedToggle = useCallback(
     (checked: boolean) => {
       updateQueryFilters({ slaBreached: checked || undefined });
     },
-    [updateQueryFilters],
+    [updateQueryFilters]
   );
 
   const handleConfidenceChange = useCallback(
@@ -193,7 +177,7 @@ export function ReviewQueue() {
         maxConfidence: value[1] / 100,
       });
     },
-    [updateQueryFilters],
+    [updateQueryFilters]
   );
 
   const handleLoadMore = useCallback(() => {
@@ -201,24 +185,20 @@ export function ReviewQueue() {
   }, [setFilters]);
 
   // Mutation handlers
-  const handleClaim = useCallback(
-    (reviewId: string) => claim({ reviewId }),
-    [claim],
-  );
+  const handleClaim = useCallback((reviewId: string) => claim({ reviewId }), [claim]);
   const handleApprove = useCallback(
     (reviewId: string, lockToken: string, feedback?: string) =>
       approve({ reviewId, lockToken, feedback }),
-    [approve],
+    [approve]
   );
   const handleReject = useCallback(
-    (reviewId: string, lockToken: string, notes: string) =>
-      reject({ reviewId, lockToken, notes }),
-    [reject],
+    (reviewId: string, lockToken: string, notes: string) => reject({ reviewId, lockToken, notes }),
+    [reject]
   );
   const handleEscalate = useCallback(
     (reviewId: string, lockToken: string, reason: string) =>
       escalate({ reviewId, lockToken, reason }),
-    [escalate],
+    [escalate]
   );
 
   const currentUserId = user?.id ?? '';

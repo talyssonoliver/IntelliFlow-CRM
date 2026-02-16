@@ -116,14 +116,7 @@ describe('Appointments Router - IFC-137', () => {
 
   describe('Procedure Types', () => {
     it('should have expected mutation procedures', () => {
-      const mutations = [
-        'create',
-        'update',
-        'reschedule',
-        'confirm',
-        'complete',
-        'cancel',
-      ];
+      const mutations = ['create', 'update', 'reschedule', 'confirm', 'complete', 'cancel'];
 
       mutations.forEach((name) => {
         expect((appointmentsRouter._def.procedures as Record<string, unknown>)[name]).toBeDefined();
@@ -131,13 +124,7 @@ describe('Appointments Router - IFC-137', () => {
     });
 
     it('should have expected query procedures', () => {
-      const queries = [
-        'getById',
-        'list',
-        'checkConflicts',
-        'checkAvailability',
-        'findNextSlot',
-      ];
+      const queries = ['getById', 'list', 'checkConflicts', 'checkAvailability', 'findNextSlot'];
 
       queries.forEach((name) => {
         expect((appointmentsRouter._def.procedures as Record<string, unknown>)[name]).toBeDefined();
@@ -147,14 +134,7 @@ describe('Appointments Router - IFC-137', () => {
 
   describe('Input Validation', () => {
     it('should validate appointment type enum', () => {
-      const validTypes = [
-        'MEETING',
-        'CALL',
-        'HEARING',
-        'CONSULTATION',
-        'DEPOSITION',
-        'OTHER',
-      ];
+      const validTypes = ['MEETING', 'CALL', 'HEARING', 'CONSULTATION', 'DEPOSITION', 'OTHER'];
 
       validTypes.forEach((type) => {
         expect(validTypes).toContain(type);
@@ -512,7 +492,9 @@ describe('Appointments Router - IFC-137', () => {
       };
 
       // With 15-minute buffer after appointment 1, it effectively ends at 11:15
-      const effectiveEnd1 = new Date(appointment1.endTime.getTime() + appointment1.bufferMinutesAfter * 60000);
+      const effectiveEnd1 = new Date(
+        appointment1.endTime.getTime() + appointment1.bufferMinutesAfter * 60000
+      );
       const hasBufferConflict = effectiveEnd1.getTime() > appointment2.startTime.getTime();
 
       expect(hasBufferConflict).toBe(true);

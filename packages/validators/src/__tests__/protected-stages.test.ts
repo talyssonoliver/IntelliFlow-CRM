@@ -8,10 +8,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  PROTECTED_STAGES,
-  validateStageDeactivation,
-} from '../opportunity';
+import { PROTECTED_STAGES, validateStageDeactivation } from '../opportunity';
 
 describe('Protected Stage Validation', () => {
   describe('PROTECTED_STAGES constant', () => {

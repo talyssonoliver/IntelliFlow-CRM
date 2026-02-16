@@ -6,7 +6,7 @@
  * Test suite for encryption utilities, key rotation, and security compliance.
  */
 
-import { describe, it, expect, beforeEach, afterEach} from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   EncryptionService,
   EncryptionError,
@@ -126,9 +126,9 @@ describe('EncryptionService', () => {
       const plaintext = 'Secret with context';
       const encrypted = await service.encrypt(plaintext, { aad: 'user-id:12345' });
 
-      await expect(
-        service.decrypt(encrypted, { aad: 'user-id:99999' }),
-      ).rejects.toThrow(EncryptionError);
+      await expect(service.decrypt(encrypted, { aad: 'user-id:99999' })).rejects.toThrow(
+        EncryptionError
+      );
     });
   });
 
@@ -205,7 +205,7 @@ describe('EncryptionService', () => {
       // Timing should be similar (within 100% variance for small sample)
       const ratio = Math.max(time1, time2) / Math.min(time1, time2);
       expect(ratio).toBeLessThan(3);
-    }, 30000);  // Extended timeout for slow crypto operations
+    }, 30000); // Extended timeout for slow crypto operations
   });
 
   describe('Token Generation', () => {
@@ -234,9 +234,7 @@ describe('EncryptionService', () => {
     });
 
     it('should throw EncryptionError for invalid encrypted format', async () => {
-      await expect(service.decryptFromString('invalid-data')).rejects.toThrow(
-        EncryptionError,
-      );
+      await expect(service.decryptFromString('invalid-data')).rejects.toThrow(EncryptionError);
     });
   });
 });
@@ -279,27 +277,15 @@ describe('FieldEncryption', () => {
         },
       },
     };
-    const encrypted = await FieldEncryption.encryptField(
-      obj,
-      'user.profile.secret',
-      service,
-    );
-    const decrypted = await FieldEncryption.decryptField(
-      encrypted,
-      'user.profile.secret',
-      service,
-    );
+    const encrypted = await FieldEncryption.encryptField(obj, 'user.profile.secret', service);
+    const decrypted = await FieldEncryption.decryptField(encrypted, 'user.profile.secret', service);
 
     expect(decrypted.user.profile.secret).toBe('sensitive-data');
   });
 
   it('should handle non-existent field paths gracefully', async () => {
     const obj = { name: 'John' };
-    const result = await FieldEncryption.encryptField(
-      obj,
-      'nonexistent.field',
-      service,
-    );
+    const result = await FieldEncryption.encryptField(obj, 'nonexistent.field', service);
 
     expect(result).toEqual(obj);
   });
@@ -327,7 +313,7 @@ describe('KeyRotationService', () => {
         reEncryptionBatchSize: 100,
       },
       versionStore,
-      encryptionService,
+      encryptionService
     );
   });
 
@@ -403,11 +389,7 @@ describe('KeyRotationService', () => {
       }
 
       const dataProvider: DataProvider = {
-        async getRecordsByKeyVersion(
-          _version: number,
-          _limit: number,
-          _offset: number,
-        ) {
+        async getRecordsByKeyVersion(_version: number, _limit: number, _offset: number) {
           return records;
         },
         async updateRecord(id: string, encryptedData: EncryptedData) {
@@ -418,7 +400,11 @@ describe('KeyRotationService', () => {
         },
       };
 
-      function updateRecordById(records: EncryptedRecord[], id: string, encryptedData: EncryptedData) {
+      function updateRecordById(
+        records: EncryptedRecord[],
+        id: string,
+        encryptedData: EncryptedData
+      ) {
         const record = records.find((r) => r.id === id);
         if (record) record.encryptedData = encryptedData;
       }

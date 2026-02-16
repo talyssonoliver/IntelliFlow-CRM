@@ -8,10 +8,7 @@
  */
 
 // Re-export everything for backward compatibility
-export {
-  StripeAdapter,
-  StripeAdapter as default,
-} from './adapter';
+export { StripeAdapter, StripeAdapter as default } from './adapter';
 
 export type { PaymentServicePort } from './adapter';
 

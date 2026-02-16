@@ -14,12 +14,7 @@
 /**
  * Lifecycle statuses for chain versions
  */
-export const CHAIN_VERSION_STATUSES = [
-  'DRAFT',
-  'ACTIVE',
-  'DEPRECATED',
-  'ARCHIVED',
-] as const;
+export const CHAIN_VERSION_STATUSES = ['DRAFT', 'ACTIVE', 'DEPRECATED', 'ARCHIVED'] as const;
 
 export type ChainVersionStatus = (typeof CHAIN_VERSION_STATUSES)[number];
 
@@ -30,12 +25,7 @@ export type ChainVersionStatus = (typeof CHAIN_VERSION_STATUSES)[number];
 /**
  * Types of AI chains/agents that can be versioned
  */
-export const CHAIN_TYPES = [
-  'SCORING',
-  'QUALIFICATION',
-  'EMAIL_WRITER',
-  'FOLLOWUP',
-] as const;
+export const CHAIN_TYPES = ['SCORING', 'QUALIFICATION', 'EMAIL_WRITER', 'FOLLOWUP'] as const;
 
 export type ChainType = (typeof CHAIN_TYPES)[number];
 
@@ -46,11 +36,7 @@ export type ChainType = (typeof CHAIN_TYPES)[number];
 /**
  * Strategies for rolling out new chain versions
  */
-export const VERSION_ROLLOUT_STRATEGIES = [
-  'IMMEDIATE',
-  'PERCENTAGE',
-  'AB_TEST',
-] as const;
+export const VERSION_ROLLOUT_STRATEGIES = ['IMMEDIATE', 'PERCENTAGE', 'AB_TEST'] as const;
 
 export type VersionRolloutStrategy = (typeof VERSION_ROLLOUT_STRATEGIES)[number];
 

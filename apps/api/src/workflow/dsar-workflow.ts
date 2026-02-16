@@ -20,7 +20,14 @@ import { randomBytes } from 'crypto';
 // ============================================
 
 export const dsarRequestSchema = z.object({
-  requestType: z.enum(['access', 'erasure', 'rectification', 'portability', 'restriction', 'objection']),
+  requestType: z.enum([
+    'access',
+    'erasure',
+    'rectification',
+    'portability',
+    'restriction',
+    'objection',
+  ]),
   subjectId: z.string().uuid(),
   subjectEmail: z.string().email(),
   requestDetails: z.string().optional(),
@@ -442,7 +449,9 @@ export class DSARWorkflow {
         AND "tenantId" = ${tenantId}
     `;
 
-    console.log(`[DSAR][IFC-155] Search index purge: ${docResult} docs, ${noteResult} notes for request ${requestId}`);
+    console.log(
+      `[DSAR][IFC-155] Search index purge: ${docResult} docs, ${noteResult} notes for request ${requestId}`
+    );
 
     return {
       documentsPurged: Number(docResult),

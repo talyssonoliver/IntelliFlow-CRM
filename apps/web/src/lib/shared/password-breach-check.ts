@@ -20,7 +20,10 @@ export interface BreachCheckResult {
  */
 function arrayBufferToHex(buffer: ArrayBuffer): string {
   const hashArray = Array.from(new Uint8Array(buffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+  return hashArray
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+    .toUpperCase();
 }
 
 /**
@@ -107,10 +110,7 @@ export async function checkPasswordBreach(password: string): Promise<BreachCheck
 export function createDebouncedBreachCheck(delayMs = 500) {
   let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  return (
-    password: string,
-    callback: (result: BreachCheckResult) => void
-  ): (() => void) => {
+  return (password: string, callback: (result: BreachCheckResult) => void): (() => void) => {
     // Clear previous timeout
     if (timeoutId) {
       clearTimeout(timeoutId);

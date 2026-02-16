@@ -16,12 +16,15 @@ vi.mock('next/link', () => ({
 
 // Mock EntityActionSheet and MoreActionsButton
 vi.mock('@/components/shared/entity-action-sheet', () => ({
-  EntityActionSheet: ({ children, open }: any) => open ? <div data-testid="action-sheet">{children}</div> : null,
+  EntityActionSheet: ({ children, open }: any) =>
+    open ? <div data-testid="action-sheet">{children}</div> : null,
 }));
 
 vi.mock('@/components/shared/more-actions-button', () => ({
   MoreActionsButton: ({ onClick }: any) => (
-    <button data-testid="more-actions" onClick={onClick}>More Actions</button>
+    <button data-testid="more-actions" onClick={onClick}>
+      More Actions
+    </button>
   ),
 }));
 
@@ -30,21 +33,20 @@ vi.mock('@/components/shared/app-avatar', () => ({
 }));
 
 vi.mock('../TicketAssignSidebar', () => ({
-  TicketAssignSidebar: ({ open, onAssign, currentUserId }: any) => (
+  TicketAssignSidebar: ({ open, onAssign, currentUserId }: any) =>
     open ? (
       <div data-testid="assign-sidebar">
         <button onClick={() => onAssign(currentUserId)}>Assign to me</button>
-        <button onClick={() => onAssign('00000000-0000-4000-8000-000000000108')}>Assign teammate</button>
+        <button onClick={() => onAssign('00000000-0000-4000-8000-000000000108')}>
+          Assign teammate
+        </button>
       </div>
-    ) : null
-  ),
+    ) : null,
 }));
 
 // Mock SLAIndicator
 vi.mock('../SLAIndicator', () => ({
-  SLAIndicator: ({ slaStatus }: any) => (
-    <div data-testid="sla-indicator">{slaStatus}</div>
-  ),
+  SLAIndicator: ({ slaStatus }: any) => <div data-testid="sla-indicator">{slaStatus}</div>,
 }));
 
 // Mock EscalationAlert
@@ -179,26 +181,14 @@ describe('TicketDetail', () => {
   });
 
   it('renders ticket header with subject and status badge', () => {
-    render(
-      <TicketDetail
-        ticket={mockTicket}
-        isLoading={false}
-        {...handlers}
-      />
-    );
+    render(<TicketDetail ticket={mockTicket} isLoading={false} {...handlers} />);
 
     expect(screen.getByText(mockTicket.subject)).toBeInTheDocument();
     expect(screen.getByText(/open/i)).toBeInTheDocument();
   });
 
   it('renders customer card with contact info', () => {
-    render(
-      <TicketDetail
-        ticket={mockTicket}
-        isLoading={false}
-        {...handlers}
-      />
-    );
+    render(<TicketDetail ticket={mockTicket} isLoading={false} {...handlers} />);
 
     // Customer name may appear in multiple places (card + activity author)
     expect(screen.getAllByText(mockTicket.customer.name).length).toBeGreaterThanOrEqual(1);
@@ -206,25 +196,13 @@ describe('TicketDetail', () => {
   });
 
   it('renders assignee card', () => {
-    render(
-      <TicketDetail
-        ticket={mockTicket}
-        isLoading={false}
-        {...handlers}
-      />
-    );
+    render(<TicketDetail ticket={mockTicket} isLoading={false} {...handlers} />);
 
     expect(screen.getByText(mockTicket.assigneeInfo!.name)).toBeInTheDocument();
   });
 
   it('renders SLA tracking card', () => {
-    render(
-      <TicketDetail
-        ticket={mockTicket}
-        isLoading={false}
-        {...handlers}
-      />
-    );
+    render(<TicketDetail ticket={mockTicket} isLoading={false} {...handlers} />);
 
     expect(screen.getByText('SLA Tracking')).toBeInTheDocument();
     // "First Response" appears in both overview metrics and SLA sidebar
@@ -245,26 +223,14 @@ describe('TicketDetail', () => {
       },
     };
 
-    render(
-      <TicketDetail
-        ticket={pendingResponseTicket}
-        isLoading={false}
-        {...handlers}
-      />
-    );
+    render(<TicketDetail ticket={pendingResponseTicket} isLoading={false} {...handlers} />);
 
     expect(screen.getAllByText('Pending').length).toBeGreaterThanOrEqual(1);
     expect(screen.queryByText('N/A')).not.toBeInTheDocument();
   });
 
   it('shows EscalationAlert for BREACHED tickets', () => {
-    render(
-      <TicketDetail
-        ticket={mockTicket}
-        isLoading={false}
-        {...handlers}
-      />
-    );
+    render(<TicketDetail ticket={mockTicket} isLoading={false} {...handlers} />);
 
     expect(screen.getByTestId('escalation-alert')).toBeInTheDocument();
   });
@@ -278,25 +244,13 @@ describe('TicketDetail', () => {
       },
     };
 
-    render(
-      <TicketDetail
-        ticket={onTrackTicket}
-        isLoading={false}
-        {...handlers}
-      />
-    );
+    render(<TicketDetail ticket={onTrackTicket} isLoading={false} {...handlers} />);
 
     expect(screen.queryByTestId('escalation-alert')).not.toBeInTheDocument();
   });
 
   it('escalates ticket by setting priority to CRITICAL', () => {
-    render(
-      <TicketDetail
-        ticket={mockTicket}
-        isLoading={false}
-        {...handlers}
-      />
-    );
+    render(<TicketDetail ticket={mockTicket} isLoading={false} {...handlers} />);
 
     const escalationAlert = screen.getByTestId('escalation-alert');
     fireEvent.click(within(escalationAlert).getByRole('button', { name: /escalate/i }));
@@ -359,13 +313,7 @@ describe('TicketDetail', () => {
   });
 
   it('renders all 5 tabs', () => {
-    render(
-      <TicketDetail
-        ticket={mockTicket}
-        isLoading={false}
-        {...handlers}
-      />
-    );
+    render(<TicketDetail ticket={mockTicket} isLoading={false} {...handlers} />);
 
     expect(screen.getByText('Overview')).toBeInTheDocument();
     // Activity tab text might appear with count badge, use getAllByText
@@ -377,25 +325,13 @@ describe('TicketDetail', () => {
   });
 
   it('shows description in overview', () => {
-    render(
-      <TicketDetail
-        ticket={mockTicket}
-        isLoading={false}
-        {...handlers}
-      />
-    );
+    render(<TicketDetail ticket={mockTicket} isLoading={false} {...handlers} />);
 
     expect(screen.getByText(mockTicket.description!)).toBeInTheDocument();
   });
 
   it('renders Next Steps checklist', () => {
-    render(
-      <TicketDetail
-        ticket={mockTicket}
-        isLoading={false}
-        {...handlers}
-      />
-    );
+    render(<TicketDetail ticket={mockTicket} isLoading={false} {...handlers} />);
 
     mockTicket.nextSteps.forEach((step) => {
       expect(screen.getByText(step.title)).toBeInTheDocument();
@@ -403,13 +339,7 @@ describe('TicketDetail', () => {
   });
 
   it('renders Related Tickets', () => {
-    render(
-      <TicketDetail
-        ticket={mockTicket}
-        isLoading={false}
-        {...handlers}
-      />
-    );
+    render(<TicketDetail ticket={mockTicket} isLoading={false} {...handlers} />);
 
     mockTicket.relatedTickets.forEach((related) => {
       expect(screen.getByText(`#${related.id}`)).toBeInTheDocument();

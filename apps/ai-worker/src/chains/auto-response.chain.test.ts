@@ -13,7 +13,7 @@ vi.mock('@langchain/openai', () => {
     }),
   });
 
-  const MockChatOpenAI = function(this: any) {
+  const MockChatOpenAI = function (this: any) {
     this.invoke = mockInvoke;
   };
 
@@ -146,9 +146,7 @@ describe('AutoResponseChain', () => {
           status: 'CONTACTED',
         },
         context: {
-          chatHistory: [
-            { role: 'user', content: 'Is there a free trial?' },
-          ],
+          chatHistory: [{ role: 'user', content: 'Is there a free trial?' }],
         },
         tenantSettings: {
           companyName: 'IntelliFlow',
@@ -306,7 +304,11 @@ describe('AutoResponseChain', () => {
       const validation = chain.validateResponse(response);
 
       expect(validation.valid).toBe(false);
-      expect(validation.issues.some((issue) => issue.toLowerCase().includes('subject') && issue.toLowerCase().includes('long'))).toBe(true);
+      expect(
+        validation.issues.some(
+          (issue) => issue.toLowerCase().includes('subject') && issue.toLowerCase().includes('long')
+        )
+      ).toBe(true);
     });
 
     it('should flag overly long body', () => {
@@ -320,7 +322,11 @@ describe('AutoResponseChain', () => {
       const validation = chain.validateResponse(response);
 
       expect(validation.valid).toBe(false);
-      expect(validation.issues.some((issue) => issue.toLowerCase().includes('body') && issue.toLowerCase().includes('long'))).toBe(true);
+      expect(
+        validation.issues.some(
+          (issue) => issue.toLowerCase().includes('body') && issue.toLowerCase().includes('long')
+        )
+      ).toBe(true);
     });
   });
 

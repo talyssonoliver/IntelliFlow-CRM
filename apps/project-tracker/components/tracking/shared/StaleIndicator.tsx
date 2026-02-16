@@ -15,8 +15,7 @@ export default function StaleIndicator({
   showTime = true,
 }: Readonly<StaleIndicatorProps>) {
   const { isStale, timeAgo, formattedTime } = useMemo(() => {
-    const date =
-      typeof lastUpdated === 'string' ? new Date(lastUpdated) : lastUpdated;
+    const date = typeof lastUpdated === 'string' ? new Date(lastUpdated) : lastUpdated;
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMinutes = Math.floor(diffMs / 60000);
@@ -43,10 +42,7 @@ export default function StaleIndicator({
 
   if (isStale) {
     return (
-      <div
-        className="flex items-center gap-1.5 text-xs"
-        title={`Last updated: ${formattedTime}`}
-      >
+      <div className="flex items-center gap-1.5 text-xs" title={`Last updated: ${formattedTime}`}>
         <Icon name="warning" size="xs" className="text-amber-500" />
         <span className="text-amber-600 font-medium">Stale data</span>
         {showTime && <span className="text-gray-500">({timeAgo})</span>}
@@ -55,10 +51,7 @@ export default function StaleIndicator({
   }
 
   return (
-    <div
-      className="flex items-center gap-1.5 text-xs"
-      title={`Last updated: ${formattedTime}`}
-    >
+    <div className="flex items-center gap-1.5 text-xs" title={`Last updated: ${formattedTime}`}>
       <Icon name="schedule" size="xs" className="text-gray-500" />
       <span className="text-gray-600">Updated {timeAgo}</span>
     </div>

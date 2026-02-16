@@ -47,9 +47,7 @@
     },
     "phase2_infrastructure": {
       "description": "Prisma schema, repository with optimistic locking, and comprehensive tests",
-      "files_modified": [
-        "packages/db/prisma/schema.prisma"
-      ],
+      "files_modified": ["packages/db/prisma/schema.prisma"],
       "files_created": [
         "packages/adapters/src/repositories/PrismaAutoResponseDraftRepository.ts",
         "packages/adapters/src/repositories/__tests__/PrismaAutoResponseDraftRepository.test.ts"
@@ -218,7 +216,13 @@
     "infrastructure_complete": true,
     "application_layer_complete": true,
     "integration_tests_complete": true,
-    "phases_completed": ["domain", "infrastructure", "application", "ai_chain", "integration"],
+    "phases_completed": [
+      "domain",
+      "infrastructure",
+      "application",
+      "ai_chain",
+      "integration"
+    ],
     "phases_deferred": [],
     "notes": "All 5 phases completed with full TDD. Domain (105 tests), Repository (20 tests), Router (26 tests), AI Chain (19 tests), Integration (10 tests). Total: 180 tests passing."
   },

@@ -39,15 +39,20 @@ export type EventMetadataOutput = z.output<typeof eventMetadataSchema>;
  */
 export const baseDomainEventSchema = z.object({
   id: z.string().cuid2().optional(),
-  eventType: z.string().min(1).regex(/^[a-z]+\.[a-z_]+$/, {
-    message: 'Event type must follow pattern: aggregate.action (e.g., lead.created)',
-  }),
+  eventType: z
+    .string()
+    .min(1)
+    .regex(/^[a-z]+\.[a-z_]+$/, {
+      message: 'Event type must follow pattern: aggregate.action (e.g., lead.created)',
+    }),
   aggregateType: z.string().min(1),
   aggregateId: z.string().min(1),
   payload: z.record(z.unknown()),
   metadata: eventMetadataSchema,
   occurredAt: z.coerce.date(),
-  status: z.enum(['PENDING', 'PROCESSING', 'PROCESSED', 'FAILED', 'DEAD_LETTER']).default('PENDING'),
+  status: z
+    .enum(['PENDING', 'PROCESSING', 'PROCESSED', 'FAILED', 'DEAD_LETTER'])
+    .default('PENDING'),
 });
 
 export type BaseDomainEventInput = z.input<typeof baseDomainEventSchema>;
@@ -161,7 +166,9 @@ export type RegisteredEventType = keyof typeof eventPayloadSchemas;
  * @param metadata - The metadata to validate
  * @returns Validation result with parsed data or errors
  */
-export function validateEventMetadata(metadata: unknown): z.SafeParseReturnType<unknown, EventMetadataOutput> {
+export function validateEventMetadata(
+  metadata: unknown
+): z.SafeParseReturnType<unknown, EventMetadataOutput> {
   return eventMetadataSchema.safeParse(metadata);
 }
 
@@ -192,7 +199,9 @@ export function validateEventPayload(
  * @param event - The event to validate
  * @returns Validation result with parsed data or errors
  */
-export function validateOutboxEvent(event: unknown): z.SafeParseReturnType<unknown, OutboxEventOutput> {
+export function validateOutboxEvent(
+  event: unknown
+): z.SafeParseReturnType<unknown, OutboxEventOutput> {
   return outboxEventSchema.safeParse(event);
 }
 

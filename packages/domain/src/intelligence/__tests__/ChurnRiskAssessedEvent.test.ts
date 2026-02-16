@@ -54,10 +54,24 @@ describe('ChurnRiskAssessedEvent', () => {
 
     it('should generate unique event ID', () => {
       const event1 = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', null, 50, 'MEDIUM', 0.7, [], new Date()
+        'acc-1',
+        'tenant-1',
+        null,
+        50,
+        'MEDIUM',
+        0.7,
+        [],
+        new Date()
       );
       const event2 = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', null, 50, 'MEDIUM', 0.7, [], new Date()
+        'acc-1',
+        'tenant-1',
+        null,
+        50,
+        'MEDIUM',
+        0.7,
+        [],
+        new Date()
       );
       expect(event1.eventId).not.toBe(event2.eventId);
     });
@@ -65,7 +79,14 @@ describe('ChurnRiskAssessedEvent', () => {
     it('should set occurredAt automatically', () => {
       const beforeCreation = new Date();
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', null, 50, 'MEDIUM', 0.7, [], new Date()
+        'acc-1',
+        'tenant-1',
+        null,
+        50,
+        'MEDIUM',
+        0.7,
+        [],
+        new Date()
       );
       const afterCreation = new Date();
 
@@ -75,14 +96,28 @@ describe('ChurnRiskAssessedEvent', () => {
 
     it('should accept previousScore as number', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', 30, 50, 'MEDIUM', 0.7, [], new Date()
+        'acc-1',
+        'tenant-1',
+        30,
+        50,
+        'MEDIUM',
+        0.7,
+        [],
+        new Date()
       );
       expect(event.previousScore).toBe(30);
     });
 
     it('should accept previousScore as null', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', null, 50, 'MEDIUM', 0.7, [], new Date()
+        'acc-1',
+        'tenant-1',
+        null,
+        50,
+        'MEDIUM',
+        0.7,
+        [],
+        new Date()
       );
       expect(event.previousScore).toBeNull();
     });
@@ -91,28 +126,56 @@ describe('ChurnRiskAssessedEvent', () => {
   describe('riskIncreased', () => {
     it('should return true when new score is higher', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', 40, 60, 'HIGH', 0.8, [], new Date()
+        'acc-1',
+        'tenant-1',
+        40,
+        60,
+        'HIGH',
+        0.8,
+        [],
+        new Date()
       );
       expect(event.riskIncreased).toBe(true);
     });
 
     it('should return false when new score is lower', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', 60, 40, 'MEDIUM', 0.8, [], new Date()
+        'acc-1',
+        'tenant-1',
+        60,
+        40,
+        'MEDIUM',
+        0.8,
+        [],
+        new Date()
       );
       expect(event.riskIncreased).toBe(false);
     });
 
     it('should return false when scores are equal', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', 50, 50, 'MEDIUM', 0.8, [], new Date()
+        'acc-1',
+        'tenant-1',
+        50,
+        50,
+        'MEDIUM',
+        0.8,
+        [],
+        new Date()
       );
       expect(event.riskIncreased).toBe(false);
     });
 
     it('should return false when no previous score', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', null, 50, 'MEDIUM', 0.8, [], new Date()
+        'acc-1',
+        'tenant-1',
+        null,
+        50,
+        'MEDIUM',
+        0.8,
+        [],
+        new Date()
       );
       expect(event.riskIncreased).toBe(false);
     });
@@ -121,21 +184,42 @@ describe('ChurnRiskAssessedEvent', () => {
   describe('riskDecreased', () => {
     it('should return true when new score is lower', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', 60, 40, 'MEDIUM', 0.8, [], new Date()
+        'acc-1',
+        'tenant-1',
+        60,
+        40,
+        'MEDIUM',
+        0.8,
+        [],
+        new Date()
       );
       expect(event.riskDecreased).toBe(true);
     });
 
     it('should return false when new score is higher', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', 40, 60, 'HIGH', 0.8, [], new Date()
+        'acc-1',
+        'tenant-1',
+        40,
+        60,
+        'HIGH',
+        0.8,
+        [],
+        new Date()
       );
       expect(event.riskDecreased).toBe(false);
     });
 
     it('should return false when no previous score', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', null, 50, 'MEDIUM', 0.8, [], new Date()
+        'acc-1',
+        'tenant-1',
+        null,
+        50,
+        'MEDIUM',
+        0.8,
+        [],
+        new Date()
       );
       expect(event.riskDecreased).toBe(false);
     });
@@ -144,28 +228,56 @@ describe('ChurnRiskAssessedEvent', () => {
   describe('scoreChange', () => {
     it('should return positive change when risk increased', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', 40, 60, 'HIGH', 0.8, [], new Date()
+        'acc-1',
+        'tenant-1',
+        40,
+        60,
+        'HIGH',
+        0.8,
+        [],
+        new Date()
       );
       expect(event.scoreChange).toBe(20);
     });
 
     it('should return negative change when risk decreased', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', 60, 40, 'MEDIUM', 0.8, [], new Date()
+        'acc-1',
+        'tenant-1',
+        60,
+        40,
+        'MEDIUM',
+        0.8,
+        [],
+        new Date()
       );
       expect(event.scoreChange).toBe(-20);
     });
 
     it('should return 0 when scores are equal', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', 50, 50, 'MEDIUM', 0.8, [], new Date()
+        'acc-1',
+        'tenant-1',
+        50,
+        50,
+        'MEDIUM',
+        0.8,
+        [],
+        new Date()
       );
       expect(event.scoreChange).toBe(0);
     });
 
     it('should return null when no previous score', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', null, 50, 'MEDIUM', 0.8, [], new Date()
+        'acc-1',
+        'tenant-1',
+        null,
+        50,
+        'MEDIUM',
+        0.8,
+        [],
+        new Date()
       );
       expect(event.scoreChange).toBeNull();
     });
@@ -174,21 +286,42 @@ describe('ChurnRiskAssessedEvent', () => {
   describe('isFirstAssessment', () => {
     it('should return true when previousScore is null', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', null, 50, 'MEDIUM', 0.8, [], new Date()
+        'acc-1',
+        'tenant-1',
+        null,
+        50,
+        'MEDIUM',
+        0.8,
+        [],
+        new Date()
       );
       expect(event.isFirstAssessment).toBe(true);
     });
 
     it('should return false when previousScore exists', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', 30, 50, 'MEDIUM', 0.8, [], new Date()
+        'acc-1',
+        'tenant-1',
+        30,
+        50,
+        'MEDIUM',
+        0.8,
+        [],
+        new Date()
       );
       expect(event.isFirstAssessment).toBe(false);
     });
 
     it('should return false when previousScore is 0', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', 0, 50, 'MEDIUM', 0.8, [], new Date()
+        'acc-1',
+        'tenant-1',
+        0,
+        50,
+        'MEDIUM',
+        0.8,
+        [],
+        new Date()
       );
       expect(event.isFirstAssessment).toBe(false);
     });
@@ -229,7 +362,14 @@ describe('ChurnRiskAssessedEvent', () => {
 
     it('should handle first assessment correctly', () => {
       const event = new ChurnRiskAssessedEvent(
-        'acc-1', 'tenant-1', null, 50, 'MEDIUM', 0.8, [], new Date()
+        'acc-1',
+        'tenant-1',
+        null,
+        50,
+        'MEDIUM',
+        0.8,
+        [],
+        new Date()
       );
 
       const payload = event.toPayload();

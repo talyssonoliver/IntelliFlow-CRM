@@ -87,7 +87,11 @@ export function TaskCalendar({ tasks, onTaskClick, onCreateWithDate }: TaskCalen
   const monthLabel = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   return (
-    <div role="grid" aria-label="Task calendar" className="border rounded-lg overflow-hidden bg-background">
+    <div
+      role="grid"
+      aria-label="Task calendar"
+      className="border rounded-lg overflow-hidden bg-background"
+    >
       {/* Calendar header */}
       <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
         <div className="flex items-center gap-2">
@@ -97,7 +101,9 @@ export function TaskCalendar({ tasks, onTaskClick, onCreateWithDate }: TaskCalen
             className="p-1 rounded hover:bg-accent"
             aria-label="Previous month"
           >
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">chevron_left</span>
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">
+              chevron_left
+            </span>
           </button>
           <h2 className="text-sm font-semibold text-foreground min-w-[160px] text-center">
             {monthLabel}
@@ -108,7 +114,9 @@ export function TaskCalendar({ tasks, onTaskClick, onCreateWithDate }: TaskCalen
             className="p-1 rounded hover:bg-accent"
             aria-label="Next month"
           >
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">chevron_right</span>
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">
+              chevron_right
+            </span>
           </button>
         </div>
         <button
@@ -123,7 +131,11 @@ export function TaskCalendar({ tasks, onTaskClick, onCreateWithDate }: TaskCalen
       {/* Day headers */}
       <div className="grid grid-cols-7" role="row">
         {DAY_NAMES.map((day) => (
-          <div key={day} role="columnheader" className="px-2 py-2 text-center text-xs font-medium text-muted-foreground border-b">
+          <div
+            key={day}
+            role="columnheader"
+            className="px-2 py-2 text-center text-xs font-medium text-muted-foreground border-b"
+          >
             {day}
           </div>
         ))}
@@ -136,7 +148,8 @@ export function TaskCalendar({ tasks, onTaskClick, onCreateWithDate }: TaskCalen
           const dayTasks = tasksByDate.get(dateKey) ?? [];
           const isCurrentMonth = day.getMonth() === month;
           const isToday = dateKey === todayKey;
-          const overflow = dayTasks.length > MAX_CHIPS_PER_DAY ? dayTasks.length - MAX_CHIPS_PER_DAY : 0;
+          const overflow =
+            dayTasks.length > MAX_CHIPS_PER_DAY ? dayTasks.length - MAX_CHIPS_PER_DAY : 0;
 
           return (
             <div
@@ -155,7 +168,9 @@ export function TaskCalendar({ tasks, onTaskClick, onCreateWithDate }: TaskCalen
               }}
               aria-label={`${day.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}${dayTasks.length > 0 ? `, ${dayTasks.length} tasks` : ''}`}
             >
-              <div className={`text-xs font-medium mb-1 ${isToday ? 'text-primary font-bold' : ''}`}>
+              <div
+                className={`text-xs font-medium mb-1 ${isToday ? 'text-primary font-bold' : ''}`}
+              >
                 {day.getDate()}
               </div>
               <div className="space-y-0.5">
@@ -177,7 +192,10 @@ export function TaskCalendar({ tasks, onTaskClick, onCreateWithDate }: TaskCalen
                   </button>
                 ))}
                 {overflow > 0 && (
-                  <span className="text-[10px] text-muted-foreground px-1" data-testid="overflow-indicator">
+                  <span
+                    className="text-[10px] text-muted-foreground px-1"
+                    data-testid="overflow-indicator"
+                  >
                     +{overflow} more
                   </span>
                 )}

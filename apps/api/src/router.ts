@@ -39,6 +39,9 @@ import { workflowRouter } from './modules/workflow/workflow.router';
 import { webhooksRouter } from './modules/webhooks/webhooks.router';
 import { queuesAdminRouter } from './modules/admin/queues.router';
 import { activityFeedRouter } from './modules/misc/activity-feed.router';
+import { moduleAccessRouter } from './modules/subscription/subscription.router';
+import { experimentRouter } from './modules/experiment';
+import { routingRouter } from './modules/routing';
 
 /**
  * Main application router
@@ -117,6 +120,7 @@ export const appRouter = createTRPCRouter({
   autoResponse: autoResponseRouter, // IFC-029: Auto-Response with Approval Gate
   aiMonitoring: aiMonitoringRouter, // IFC-197: AI Monitoring
   aiReview: aiReviewRouter, // IFC-180: AI Output Review
+  experiment: experimentRouter, // IFC-025: A/B Testing Framework
 
   // Security & Compliance
   audit: auditRouter,
@@ -152,6 +156,12 @@ export const appRouter = createTRPCRouter({
 
   // Activity Feed (IFC-069)
   activityFeed: activityFeedRouter,
+
+  // Module Access (IFC-209)
+  moduleAccess: moduleAccessRouter,
+
+  // Lead Routing (PG-132)
+  routing: routingRouter,
 });
 
 /**

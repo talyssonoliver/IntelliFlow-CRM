@@ -64,9 +64,11 @@ export const zepBudgetRouter = createTRPCRouter({
    */
   getStatus: protectedProcedure
     .input(
-      z.object({
-        tenantId: z.string().optional(),
-      }).optional()
+      z
+        .object({
+          tenantId: z.string().optional(),
+        })
+        .optional()
     )
     .output(budgetStatusSchema)
     .query(async ({ ctx, input }) => {
@@ -98,12 +100,8 @@ export const zepBudgetRouter = createTRPCRouter({
         };
       }
 
-      const warningThreshold = Math.floor(
-        (usage.maxEpisodes * usage.warningPercent) / 100
-      );
-      const limitThreshold = Math.floor(
-        (usage.maxEpisodes * usage.hardLimitPercent) / 100
-      );
+      const warningThreshold = Math.floor((usage.maxEpisodes * usage.warningPercent) / 100);
+      const limitThreshold = Math.floor((usage.maxEpisodes * usage.hardLimitPercent) / 100);
 
       return {
         used: usage.episodesUsed,

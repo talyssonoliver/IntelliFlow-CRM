@@ -162,25 +162,22 @@ Be thorough but concise. Each factor should have a clear impact score and reason
 
       // Wrap LLM call + parsing with monitoring (IFC-117)
       const monitoredConfig = chainMonitor.getConfig();
-      const monitored: MonitoredResult<ScoringResult> = await withMonitoring(
-        async () => {
-          // Call the LLM
-          const response = await this.model.invoke(formattedPrompt);
+      const monitored: MonitoredResult<ScoringResult> = await withMonitoring(async () => {
+        // Call the LLM
+        const response = await this.model.invoke(formattedPrompt);
 
-          // Parse the structured output
-          const result = (await this.parser.parse(response.content as string)) as Omit<
-            ScoringResult,
-            'modelVersion'
-          >;
+        // Parse the structured output
+        const result = (await this.parser.parse(response.content as string)) as Omit<
+          ScoringResult,
+          'modelVersion'
+        >;
 
-          // Add model version
-          return {
-            ...result,
-            modelVersion: `${aiConfig.provider}:${aiConfig.provider === 'openai' ? aiConfig.openai.model : aiConfig.ollama.model}:v1`,
-          };
-        },
-        monitoredConfig,
-      );
+        // Add model version
+        return {
+          ...result,
+          modelVersion: `${aiConfig.provider}:${aiConfig.provider === 'openai' ? aiConfig.openai.model : aiConfig.ollama.model}:v1`,
+        };
+      }, monitoredConfig);
 
       const scoringResult = monitored.result;
       const duration = Date.now() - startTime;

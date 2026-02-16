@@ -142,10 +142,7 @@ export class IdempotencyMiddleware {
   private config: IdempotencyConfig;
   private cleanupTimer?: ReturnType<typeof setInterval>;
 
-  constructor(
-    store?: IdempotencyStore,
-    config?: Partial<IdempotencyConfig>
-  ) {
+  constructor(store?: IdempotencyStore, config?: Partial<IdempotencyConfig>) {
     this.store = store || new InMemoryIdempotencyStore();
     this.config = { ...DEFAULT_CONFIG, ...config };
 
@@ -300,7 +297,9 @@ export class IdempotencyMiddleware {
   wrap<TInput, TOutput>(
     keyGenerator: (input: TInput) => string,
     handler: (input: TInput) => Promise<TOutput>
-  ): (input: TInput) => Promise<{ result: TOutput; fromCache: boolean } | { error: string; fromCache: boolean }> {
+  ): (
+    input: TInput
+  ) => Promise<{ result: TOutput; fromCache: boolean } | { error: string; fromCache: boolean }> {
     return async (input: TInput) => {
       const key = keyGenerator(input);
 
@@ -350,10 +349,7 @@ export class IdempotencyMiddleware {
       const idempotencyKey =
         req.headers['idempotency-key'] ||
         req.headers['x-idempotency-key'] ||
-        createHash('sha256')
-          .update(JSON.stringify(req.body))
-          .digest('hex')
-          .slice(0, 32);
+        createHash('sha256').update(JSON.stringify(req.body)).digest('hex').slice(0, 32);
 
       const key = `${this.config.keyPrefix}${idempotencyKey}`;
 

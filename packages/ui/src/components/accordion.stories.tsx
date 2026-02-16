@@ -15,9 +15,7 @@ export const Default: Story = {
     <Accordion type="single" collapsible className="w-full">
       <AccordionItem value="item-1">
         <AccordionTrigger>Is it accessible?</AccordionTrigger>
-        <AccordionContent>
-          Yes. It adheres to the WAI-ARIA design pattern.
-        </AccordionContent>
+        <AccordionContent>Yes. It adheres to the WAI-ARIA design pattern.</AccordionContent>
       </AccordionItem>
       <AccordionItem value="item-2">
         <AccordionTrigger>Is it styled?</AccordionTrigger>
@@ -65,15 +63,11 @@ export const DefaultOpen: Story = {
     <Accordion type="single" collapsible defaultValue="item-2" className="w-full">
       <AccordionItem value="item-1">
         <AccordionTrigger>First Item</AccordionTrigger>
-        <AccordionContent>
-          This is closed by default.
-        </AccordionContent>
+        <AccordionContent>This is closed by default.</AccordionContent>
       </AccordionItem>
       <AccordionItem value="item-2">
         <AccordionTrigger>Second Item (Default Open)</AccordionTrigger>
-        <AccordionContent>
-          This is open by default.
-        </AccordionContent>
+        <AccordionContent>This is open by default.</AccordionContent>
       </AccordionItem>
     </Accordion>
   ),
@@ -84,15 +78,11 @@ export const Disabled: Story = {
     <Accordion type="single" collapsible className="w-full">
       <AccordionItem value="item-1">
         <AccordionTrigger>Active Item</AccordionTrigger>
-        <AccordionContent>
-          This item can be expanded.
-        </AccordionContent>
+        <AccordionContent>This item can be expanded.</AccordionContent>
       </AccordionItem>
       <AccordionItem value="item-2" disabled>
         <AccordionTrigger>Disabled Item</AccordionTrigger>
-        <AccordionContent>
-          You should not be able to see this.
-        </AccordionContent>
+        <AccordionContent>You should not be able to see this.</AccordionContent>
       </AccordionItem>
     </Accordion>
   ),
@@ -106,29 +96,29 @@ export const FAQ: Story = {
         <AccordionItem value="item-1">
           <AccordionTrigger>What payment methods do you accept?</AccordionTrigger>
           <AccordionContent>
-            We accept all major credit cards (Visa, MasterCard, American Express),
-            PayPal, and bank transfers for enterprise customers.
+            We accept all major credit cards (Visa, MasterCard, American Express), PayPal, and bank
+            transfers for enterprise customers.
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-2">
           <AccordionTrigger>How do I cancel my subscription?</AccordionTrigger>
           <AccordionContent>
-            You can cancel your subscription at any time from your account settings.
-            Navigate to Settings &gt; Billing &gt; Cancel Subscription.
+            You can cancel your subscription at any time from your account settings. Navigate to
+            Settings &gt; Billing &gt; Cancel Subscription.
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-3">
           <AccordionTrigger>Do you offer a free trial?</AccordionTrigger>
           <AccordionContent>
-            Yes! We offer a 14-day free trial with full access to all features.
-            No credit card required to start.
+            Yes! We offer a 14-day free trial with full access to all features. No credit card
+            required to start.
           </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-4">
           <AccordionTrigger>How can I contact support?</AccordionTrigger>
           <AccordionContent>
-            You can reach our support team via email at support@example.com,
-            through the in-app chat, or by calling 1-800-EXAMPLE.
+            You can reach our support team via email at support@example.com, through the in-app
+            chat, or by calling 1-800-EXAMPLE.
           </AccordionContent>
         </AccordionItem>
       </Accordion>

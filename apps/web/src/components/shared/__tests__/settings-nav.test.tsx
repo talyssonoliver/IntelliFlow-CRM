@@ -36,9 +36,7 @@ describe('SettingsNav', () => {
       render(<SettingsNav />);
       for (const item of SETTINGS_ITEMS) {
         // Find the link by href directly
-        const link = screen.getAllByRole('link').find(
-          (a) => a.getAttribute('href') === item.href
-        );
+        const link = screen.getAllByRole('link').find((a) => a.getAttribute('href') === item.href);
         expect(link).toBeTruthy();
       }
     });
@@ -82,9 +80,7 @@ describe('SettingsNav', () => {
 
     it('shows empty state when no items match', () => {
       render(<SettingsNav searchQuery="zzzznonexistent" />);
-      expect(
-        screen.getByText('No settings match your search')
-      ).toBeInTheDocument();
+      expect(screen.getByText('No settings match your search')).toBeInTheDocument();
     });
   });
 

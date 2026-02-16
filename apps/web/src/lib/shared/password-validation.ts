@@ -93,9 +93,7 @@ export function calculatePasswordStrength(password: string): PasswordStrengthRes
       strength: 'weak',
       score: 0,
       percentage: 0,
-      feedback: PASSWORD_REQUIREMENTS.filter((r) => r.id !== 'longLength').map(
-        (r) => r.label
-      ),
+      feedback: PASSWORD_REQUIREMENTS.filter((r) => r.id !== 'longLength').map((r) => r.label),
       meetsMinimum: false,
     };
   }
@@ -148,9 +146,7 @@ export function validatePassword(password: string): PasswordValidationResult {
 
   const strength = calculatePasswordStrength(password);
   if (!strength.meetsMinimum) {
-    errors.push(
-      'Password is too weak. Add uppercase, numbers, or special characters.'
-    );
+    errors.push('Password is too weak. Add uppercase, numbers, or special characters.');
   }
 
   return { valid: errors.length === 0, errors };
@@ -177,10 +173,7 @@ export function validatePasswordMatch(
 /**
  * Check if a specific requirement is met
  */
-export function checkRequirement(
-  password: string,
-  requirementId: string
-): boolean {
+export function checkRequirement(password: string, requirementId: string): boolean {
   const requirement = PASSWORD_REQUIREMENTS.find((r) => r.id === requirementId);
   if (!requirement) return false;
   return requirement.test(password);
@@ -194,9 +187,7 @@ export function getUnmetRequirements(password: string): PasswordRequirement[] {
     return PASSWORD_REQUIREMENTS.filter((r) => r.id !== 'longLength');
   }
 
-  return PASSWORD_REQUIREMENTS.filter(
-    (r) => !r.test(password) && r.id !== 'longLength'
-  );
+  return PASSWORD_REQUIREMENTS.filter((r) => !r.test(password) && r.id !== 'longLength');
 }
 
 // ============================================

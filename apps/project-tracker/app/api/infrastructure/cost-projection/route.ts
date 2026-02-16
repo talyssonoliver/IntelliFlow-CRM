@@ -37,7 +37,15 @@ function getProjectRoot(): string {
 // Load Sprint_plan.csv to find investment gates
 function loadInvestmentGates(): InvestmentGate[] {
   const projectRoot = getProjectRoot();
-  const csvPath = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+  const csvPath = join(
+    projectRoot,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    '_global',
+    'Sprint_plan.csv'
+  );
   const gates: InvestmentGate[] = [];
 
   try {
@@ -48,7 +56,7 @@ function loadInvestmentGates(): InvestmentGate[] {
       // Known investment gate tasks
       const gateTaskIds = ['IFC-019', 'IFC-027', 'IFC-034', 'IFC-049'];
       const gateAmounts: Record<string, number> = {
-        'IFC-019': 500,  // Gate 1: £500
+        'IFC-019': 500, // Gate 1: £500
         'IFC-027': 2000, // Gate 2: £2000
         'IFC-034': 3000, // Gate 3: £3000
         'IFC-049': 5000, // Gate 4: £5000
@@ -63,8 +71,12 @@ function loadInvestmentGates(): InvestmentGate[] {
             sprint: parseInt(String(row['Target Sprint'] ?? '0')) || 0,
             amount: gateAmounts[taskId] || 0,
             description: row['Description'] || '',
-            status: status === 'completed' || status === 'done' ? 'completed' :
-                    status === 'in progress' ? 'approved' : 'pending',
+            status:
+              status === 'completed' || status === 'done'
+                ? 'completed'
+                : status === 'in progress'
+                  ? 'approved'
+                  : 'pending',
           });
         }
       }
@@ -144,22 +156,25 @@ export async function GET(_request: NextRequest) {
     // Investment tracking
     const totalInvestment = investmentGates.reduce((sum, g) => sum + g.amount, 0);
     const completedInvestment = investmentGates
-      .filter(g => g.status === 'completed')
+      .filter((g) => g.status === 'completed')
       .reduce((sum, g) => sum + g.amount, 0);
     const pendingInvestment = totalInvestment - completedInvestment;
 
     // Project cost by category
-    const byCategory = currentCosts.reduce((acc, c) => {
-      acc[c.category] = (acc[c.category] || 0) + c.monthlyCost;
-      return acc;
-    }, {} as Record<string, number>);
+    const byCategory = currentCosts.reduce(
+      (acc, c) => {
+        acc[c.category] = (acc[c.category] || 0) + c.monthlyCost;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     // Production projection (when scaling)
     const productionProjection = {
       monthly: {
-        supabase: 25,  // Pro plan
-        vercel: 20,    // Pro plan
-        openai: 100,   // Increased usage
+        supabase: 25, // Pro plan
+        vercel: 20, // Pro plan
+        openai: 100, // Increased usage
         monitoring: 29, // Better observability
         other: 10,
       },
@@ -202,9 +217,10 @@ export async function GET(_request: NextRequest) {
           monthlyBurn: monthlyTotal,
           monthsRemaining: monthlyTotal > 0 ? Math.floor(500 / monthlyTotal) : 'unlimited',
         },
-        recommendation: monthlyTotal < 50
-          ? 'Costs optimized - within development budget'
-          : 'Consider optimizing AI API usage',
+        recommendation:
+          monthlyTotal < 50
+            ? 'Costs optimized - within development budget'
+            : 'Consider optimizing AI API usage',
       },
       {
         headers: {

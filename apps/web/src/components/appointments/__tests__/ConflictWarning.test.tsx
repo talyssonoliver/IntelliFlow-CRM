@@ -5,39 +5,22 @@ import { mockConflict1, mockConflict2, mockConflict3 } from '@/test/fixtures/app
 
 describe('ConflictWarning', () => {
   it('renders nothing when no conflicts', () => {
-    const { container } = render(
-      <ConflictWarning conflicts={[]} onViewConflict={vi.fn()} />
-    );
+    const { container } = render(<ConflictWarning conflicts={[]} onViewConflict={vi.fn()} />);
     expect(container.firstChild).toBeNull();
   });
 
   it('renders conflict alert with role="alert"', () => {
-    render(
-      <ConflictWarning
-        conflicts={[mockConflict1]}
-        onViewConflict={vi.fn()}
-      />
-    );
+    render(<ConflictWarning conflicts={[mockConflict1]} onViewConflict={vi.fn()} />);
     expect(screen.getByRole('alert')).toBeInTheDocument();
   });
 
   it('displays conflict count', () => {
-    render(
-      <ConflictWarning
-        conflicts={[mockConflict1, mockConflict2]}
-        onViewConflict={vi.fn()}
-      />
-    );
+    render(<ConflictWarning conflicts={[mockConflict1, mockConflict2]} onViewConflict={vi.fn()} />);
     expect(screen.getByText(/2/)).toBeInTheDocument();
   });
 
   it('displays conflict titles', () => {
-    render(
-      <ConflictWarning
-        conflicts={[mockConflict1, mockConflict2]}
-        onViewConflict={vi.fn()}
-      />
-    );
+    render(<ConflictWarning conflicts={[mockConflict1, mockConflict2]} onViewConflict={vi.fn()} />);
     expect(screen.getByText(/Team Standup/)).toBeInTheDocument();
     expect(screen.getByText(/Client Call/)).toBeInTheDocument();
   });
@@ -56,12 +39,7 @@ describe('ConflictWarning', () => {
 
   it('calls onViewConflict when view link clicked', () => {
     const onView = vi.fn();
-    render(
-      <ConflictWarning
-        conflicts={[mockConflict1]}
-        onViewConflict={onView}
-      />
-    );
+    render(<ConflictWarning conflicts={[mockConflict1]} onViewConflict={onView} />);
     const viewLinks = screen.getAllByRole('button', { name: /view/i });
     fireEvent.click(viewLinks[0]);
     expect(onView).toHaveBeenCalledWith('conflict-1');
@@ -83,22 +61,12 @@ describe('ConflictWarning', () => {
   });
 
   it('does not render override checkbox when onOverride not provided', () => {
-    render(
-      <ConflictWarning
-        conflicts={[mockConflict1]}
-        onViewConflict={vi.fn()}
-      />
-    );
+    render(<ConflictWarning conflicts={[mockConflict1]} onViewConflict={vi.fn()} />);
     expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
   });
 
   it('shows overlap minutes', () => {
-    render(
-      <ConflictWarning
-        conflicts={[mockConflict1]}
-        onViewConflict={vi.fn()}
-      />
-    );
+    render(<ConflictWarning conflicts={[mockConflict1]} onViewConflict={vi.fn()} />);
     expect(screen.getByText(/30/)).toBeInTheDocument();
   });
 });

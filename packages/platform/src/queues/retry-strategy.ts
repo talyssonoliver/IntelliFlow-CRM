@@ -61,7 +61,9 @@ export function calculateBackoffDelay(attemptNumber: number, config: RetryBackof
  *
  * This creates the custom function variant for advanced control.
  */
-export function createBackoffStrategy(config: RetryBackoffConfig): (attemptsMade: number) => number {
+export function createBackoffStrategy(
+  config: RetryBackoffConfig
+): (attemptsMade: number) => number {
   return (attemptsMade: number): number => {
     return calculateBackoffDelay(attemptsMade, config);
   };
@@ -107,17 +109,31 @@ export function categorizeError(error: Error): ErrorCategory {
   }
 
   // Rate limiting
-  if (message.includes('rate limit') || message.includes('too many requests') || message.includes('429')) {
+  if (
+    message.includes('rate limit') ||
+    message.includes('too many requests') ||
+    message.includes('429')
+  ) {
     return ErrorCategory.RATE_LIMITED;
   }
 
   // Client errors (4xx) - usually should not retry
-  if (message.includes('400') || message.includes('401') || message.includes('403') || message.includes('404')) {
+  if (
+    message.includes('400') ||
+    message.includes('401') ||
+    message.includes('403') ||
+    message.includes('404')
+  ) {
     return ErrorCategory.CLIENT_ERROR;
   }
 
   // Server errors (5xx) - may retry
-  if (message.includes('500') || message.includes('502') || message.includes('503') || message.includes('504')) {
+  if (
+    message.includes('500') ||
+    message.includes('502') ||
+    message.includes('503') ||
+    message.includes('504')
+  ) {
     return ErrorCategory.SERVER_ERROR;
   }
 

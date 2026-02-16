@@ -64,12 +64,16 @@ export const nbaContextSchema = z.object({
   daysSinceLastContact: z.number().optional(),
 
   // Recent communications
-  recentMessages: z.array(z.object({
-    content: z.string(),
-    direction: z.enum(['inbound', 'outbound']),
-    timestamp: z.string().datetime(),
-    channel: z.enum(['email', 'call', 'meeting', 'chat', 'other']),
-  })).optional(),
+  recentMessages: z
+    .array(
+      z.object({
+        content: z.string(),
+        direction: z.enum(['inbound', 'outbound']),
+        timestamp: z.string().datetime(),
+        channel: z.enum(['email', 'call', 'meeting', 'chat', 'other']),
+      })
+    )
+    .optional(),
 
   // Optional overrides
   urgencyOverride: z.enum(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']).optional(),
@@ -100,12 +104,16 @@ export const recommendedActionSchema = z.object({
   templateId: z.string().optional(),
 
   // Related data
-  relatedLeads: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-    outcome: z.enum(['WON', 'LOST', 'PENDING']),
-    similarity: z.number().min(0).max(1),
-  })).optional(),
+  relatedLeads: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        outcome: z.enum(['WON', 'LOST', 'PENDING']),
+        similarity: z.number().min(0).max(1),
+      })
+    )
+    .optional(),
 
   // Confidence
   confidence: z.number().min(0).max(1),
@@ -119,11 +127,13 @@ export type RecommendedAction = z.infer<typeof recommendedActionSchema>;
 export const nbaResultSchema = z.object({
   recommendations: z.array(recommendedActionSchema),
   entitySummary: z.string(),
-  sentimentAnalysis: z.object({
-    sentiment: z.string(),
-    urgency: z.string(),
-    primaryEmotion: z.string(),
-  }).optional(),
+  sentimentAnalysis: z
+    .object({
+      sentiment: z.string(),
+      urgency: z.string(),
+      primaryEmotion: z.string(),
+    })
+    .optional(),
   ragContextUsed: z.boolean(),
   executionTimeMs: z.number(),
   modelVersion: z.string(),
@@ -160,10 +170,7 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
   private ragChain: RAGContextChain;
   private sentimentChain: SentimentAnalysisChain | null = null;
 
-  constructor(
-    customRagChain?: RAGContextChain,
-    customSentimentChain?: SentimentAnalysisChain
-  ) {
+  constructor(customRagChain?: RAGContextChain, customSentimentChain?: SentimentAnalysisChain) {
     super(NBA_AGENT_CONFIG);
     this.ragChain = customRagChain || ragContextChain;
     if (customSentimentChain) {
@@ -228,8 +235,12 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
         const latestMessage = context.recentMessages[0];
         const sentimentResult = await this.sentimentChain.analyze({
           text: latestMessage.content,
-          source: latestMessage.channel === 'email' ? 'email' :
-                  latestMessage.channel === 'chat' ? 'chat' : 'other',
+          source:
+            latestMessage.channel === 'email'
+              ? 'email'
+              : latestMessage.channel === 'chat'
+                ? 'chat'
+                : 'other',
         });
 
         sentimentAnalysis = {
@@ -310,10 +321,7 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
     const systemPrompt = this.generateSystemPrompt();
     const humanPrompt = this.buildRecommendationPrompt(context, ragContent, sentimentAnalysis);
 
-    const messages = [
-      this.createSystemMessage(systemPrompt),
-      this.createHumanMessage(humanPrompt),
-    ];
+    const messages = [this.createSystemMessage(systemPrompt), this.createHumanMessage(humanPrompt)];
 
     try {
       const response = await this.invokeLLM(messages);
@@ -397,10 +405,7 @@ Valid ACTION_TYPES: ${ACTION_TYPES.join(', ')}
   /**
    * Parse LLM response into recommendations
    */
-  private parseRecommendations(
-    response: string,
-    context: NBAContext
-  ): RecommendedAction[] {
+  private parseRecommendations(response: string, context: NBAContext): RecommendedAction[] {
     try {
       // Try to extract JSON from response
       const jsonMatch = response.match(/\[[\s\S]*\]/);
@@ -453,7 +458,8 @@ Valid ACTION_TYPES: ${ACTION_TYPES.join(', ')}
         successProbability: 0.75,
         title: 'Personal outreach call',
         description: 'Make a direct phone call to address concerns and build relationship.',
-        reasoning: 'High urgency or negative sentiment detected - personal contact builds trust faster.',
+        reasoning:
+          'High urgency or negative sentiment detected - personal contact builds trust faster.',
         suggestedTiming: 'Within the next 4 hours',
         contentSuggestion: 'Open with empathy, acknowledge their concerns, focus on solutions.',
         confidence: 0.8,
@@ -491,8 +497,11 @@ Valid ACTION_TYPES: ${ACTION_TYPES.join(', ')}
     }
 
     // Opportunity in late stage - close action
-    if (context.entityType === 'opportunity' && context.stage &&
-        ['NEGOTIATION', 'PROPOSAL_SENT', 'CONTRACT_REVIEW'].includes(context.stage.toUpperCase())) {
+    if (
+      context.entityType === 'opportunity' &&
+      context.stage &&
+      ['NEGOTIATION', 'PROPOSAL_SENT', 'CONTRACT_REVIEW'].includes(context.stage.toUpperCase())
+    ) {
       recommendations.push({
         action: 'CLOSE_DEAL',
         priority: 'HIGH',
@@ -606,9 +615,7 @@ export function createNBAAgent(
 /**
  * Convenience function to get recommendations
  */
-export async function getNextBestActions(
-  context: NBAContext
-): Promise<AgentResult<NBAResult>> {
+export async function getNextBestActions(context: NBAContext): Promise<AgentResult<NBAResult>> {
   const agent = createNBAAgent();
   return agent.execute({
     id: `nba-${context.entityId}`,

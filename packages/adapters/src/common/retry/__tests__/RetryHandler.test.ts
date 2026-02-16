@@ -67,9 +67,9 @@ describe('RetryHandler', () => {
     it('should merge partial config with defaults', () => {
       const h = new RetryHandler('test', { maxRetries: 5 });
       // Verify by checking behavior: 5 retries + 1 initial = 6 calls
-      const operation = vi.fn().mockResolvedValue(
-        Result.fail(new TestDomainError('RATE_LIMIT_EXCEEDED', 'rate limited'))
-      );
+      const operation = vi
+        .fn()
+        .mockResolvedValue(Result.fail(new TestDomainError('RATE_LIMIT_EXCEEDED', 'rate limited')));
 
       const resultPromise = h.executeWithRetry(operation);
       vi.runAllTimersAsync().then(() => {});
@@ -414,7 +414,10 @@ describe('RetryHandler', () => {
       });
 
       const retryableError = new TestDomainError('CUSTOM_RETRYABLE', 'retryable');
-      const nonRetryableError = new TestDomainError('ECONNRESET', 'not retryable with custom config');
+      const nonRetryableError = new TestDomainError(
+        'ECONNRESET',
+        'not retryable with custom config'
+      );
 
       expect(customHandler.isRetryable(retryableError)).toBe(true);
       // ECONNRESET is only in default config, not custom

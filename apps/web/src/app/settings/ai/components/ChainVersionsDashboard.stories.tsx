@@ -14,7 +14,10 @@ const baseVersion: ChainVersionSummary = {
   createdBy: 'admin@intelliflow.com',
 };
 
-const mockAllActive: Record<'SCORING' | 'QUALIFICATION' | 'EMAIL_WRITER' | 'FOLLOWUP', ChainVersionSummary | null> = {
+const mockAllActive: Record<
+  'SCORING' | 'QUALIFICATION' | 'EMAIL_WRITER' | 'FOLLOWUP',
+  ChainVersionSummary | null
+> = {
   SCORING: {
     ...baseVersion,
     id: 'v1',
@@ -44,14 +47,20 @@ const mockAllActive: Record<'SCORING' | 'QUALIFICATION' | 'EMAIL_WRITER' | 'FOLL
   },
 };
 
-const mockPartialActive: Record<'SCORING' | 'QUALIFICATION' | 'EMAIL_WRITER' | 'FOLLOWUP', ChainVersionSummary | null> = {
+const mockPartialActive: Record<
+  'SCORING' | 'QUALIFICATION' | 'EMAIL_WRITER' | 'FOLLOWUP',
+  ChainVersionSummary | null
+> = {
   SCORING: mockAllActive.SCORING,
   QUALIFICATION: null,
   EMAIL_WRITER: mockAllActive.EMAIL_WRITER,
   FOLLOWUP: null,
 };
 
-const mockNoneActive: Record<'SCORING' | 'QUALIFICATION' | 'EMAIL_WRITER' | 'FOLLOWUP', ChainVersionSummary | null> = {
+const mockNoneActive: Record<
+  'SCORING' | 'QUALIFICATION' | 'EMAIL_WRITER' | 'FOLLOWUP',
+  ChainVersionSummary | null
+> = {
   SCORING: null,
   QUALIFICATION: null,
   EMAIL_WRITER: null,

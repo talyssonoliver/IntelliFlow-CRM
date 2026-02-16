@@ -11,9 +11,7 @@ import { createMockTicketList } from './ticket-test-utils';
 
 // Mock SLAIndicator
 vi.mock('../SLAIndicator', () => ({
-  SLAIndicator: ({ slaStatus }: any) => (
-    <div data-testid="sla-badge">{slaStatus}</div>
-  ),
+  SLAIndicator: ({ slaStatus }: any) => <div data-testid="sla-badge">{slaStatus}</div>,
 }));
 
 // Mock Card from @intelliflow/ui
@@ -81,13 +79,7 @@ describe('TicketCard', () => {
   });
 
   it('calls onQuickAction with resolve', () => {
-    render(
-      <TicketCard
-        ticket={mockTicket}
-        onClick={onClick}
-        onQuickAction={onQuickAction}
-      />
-    );
+    render(<TicketCard ticket={mockTicket} onClick={onClick} onQuickAction={onQuickAction} />);
 
     const resolveButton = screen.getByRole('button', { name: /resolve ticket/i });
     fireEvent.click(resolveButton);
@@ -96,13 +88,7 @@ describe('TicketCard', () => {
   });
 
   it('calls onQuickAction with escalate', () => {
-    render(
-      <TicketCard
-        ticket={mockTicket}
-        onClick={onClick}
-        onQuickAction={onQuickAction}
-      />
-    );
+    render(<TicketCard ticket={mockTicket} onClick={onClick} onQuickAction={onQuickAction} />);
 
     const escalateButton = screen.getByRole('button', { name: /escalate ticket/i });
     fireEvent.click(escalateButton);
@@ -124,7 +110,10 @@ describe('TicketCard', () => {
 
     const card = screen.getByRole('article');
     expect(card).toBeInTheDocument();
-    expect(card).toHaveAttribute('aria-label', `Ticket ${mockTicket.ticketNumber}: ${mockTicket.subject}`);
+    expect(card).toHaveAttribute(
+      'aria-label',
+      `Ticket ${mockTicket.ticketNumber}: ${mockTicket.subject}`
+    );
   });
 
   it('displays ticket number', () => {

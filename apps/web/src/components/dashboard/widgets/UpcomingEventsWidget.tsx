@@ -9,6 +9,7 @@ export function UpcomingEventsWidget(_props: WidgetProps) {
       title="Upcoming Events"
       maxItems={3}
       viewAllHref="/calendar"
+      standalone={false}
     />
   );
 }

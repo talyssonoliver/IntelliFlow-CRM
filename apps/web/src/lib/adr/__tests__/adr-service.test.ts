@@ -167,7 +167,13 @@ describe('adr-service', () => {
 
   describe('VALID_STATUSES', () => {
     it('should contain all expected ADR statuses', () => {
-      expect(VALID_STATUSES).toEqual(['Proposed', 'Accepted', 'Rejected', 'Deprecated', 'Superseded']);
+      expect(VALID_STATUSES).toEqual([
+        'Proposed',
+        'Accepted',
+        'Rejected',
+        'Deprecated',
+        'Superseded',
+      ]);
     });
   });
 
@@ -192,7 +198,9 @@ describe('adr-service', () => {
     });
 
     it('should extract ID from title when present', () => {
-      readFileSync.mockReturnValue('# ADR-005: Some Decision\n\n**Status:** Proposed\n**Date:** 2025-01-01');
+      readFileSync.mockReturnValue(
+        '# ADR-005: Some Decision\n\n**Status:** Proposed\n**Date:** 2025-01-01'
+      );
 
       const result = parseADR('/project/docs/planning/adr/ADR-005-some-decision.md');
 
@@ -201,7 +209,9 @@ describe('adr-service', () => {
     });
 
     it('should extract ID from filename when not in title', () => {
-      readFileSync.mockReturnValue('# Some Decision Without ID\n\n**Status:** Proposed\n**Date:** 2025-01-01');
+      readFileSync.mockReturnValue(
+        '# Some Decision Without ID\n\n**Status:** Proposed\n**Date:** 2025-01-01'
+      );
 
       const result = parseADR('/project/docs/planning/adr/ADR-010-some-decision.md');
 
@@ -696,7 +706,8 @@ describe('adr-service', () => {
       readFileSync.mockImplementation((filePath: string) => {
         const p = String(filePath);
         if (p.includes('template')) return SAMPLE_TEMPLATE_CONTENT;
-        if (p.includes('ADR-005')) return '# ADR-005: Existing\n\n**Status:** Accepted\n**Date:** 2025-01-01';
+        if (p.includes('ADR-005'))
+          return '# ADR-005: Existing\n\n**Status:** Accepted\n**Date:** 2025-01-01';
         return '';
       });
       readdirSync.mockImplementation((dirPath: string) => {
@@ -780,10 +791,7 @@ describe('adr-service', () => {
 
       createADR('Test Decision');
 
-      expect(mkdirSync).toHaveBeenCalledWith(
-        expect.any(String),
-        { recursive: true }
-      );
+      expect(mkdirSync).toHaveBeenCalledWith(expect.any(String), { recursive: true });
     });
 
     it('should handle write errors gracefully', () => {
@@ -972,8 +980,8 @@ describe('adr-service', () => {
       expect(stats.validationSummary).toHaveProperty('withWarnings');
       expect(
         stats.validationSummary.valid +
-        stats.validationSummary.withErrors +
-        stats.validationSummary.withWarnings
+          stats.validationSummary.withErrors +
+          stats.validationSummary.withWarnings
       ).toBe(stats.total);
     });
   });
@@ -1081,10 +1089,7 @@ describe('adr-service', () => {
 
       writeADRIndex();
 
-      expect(mkdirSync).toHaveBeenCalledWith(
-        expect.any(String),
-        { recursive: true }
-      );
+      expect(mkdirSync).toHaveBeenCalledWith(expect.any(String), { recursive: true });
     });
 
     it('should handle write errors gracefully', () => {

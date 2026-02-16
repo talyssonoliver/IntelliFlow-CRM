@@ -57,7 +57,9 @@ export function WidgetLibrary({
   };
 
   return (
-    <aside className={`w-80 bg-surface-light dark:bg-surface-dark border-l border-border-light dark:border-border-dark flex flex-col shrink-0 z-20 shadow-xl shadow-slate-200/50 dark:shadow-none ${className}`}>
+    <aside
+      className={`w-80 bg-surface-light dark:bg-surface-dark border-l border-border-light dark:border-border-dark flex flex-col shrink-0 z-20 shadow-xl shadow-slate-200/50 dark:shadow-none ${className}`}
+    >
       <div className="p-4 border-b border-border-light dark:border-border-dark">
         <h3 className="font-bold text-slate-900 dark:text-white mb-3">Widget Library</h3>
         <div className="relative">
@@ -135,7 +137,11 @@ interface WidgetLibraryItemProps {
   isDragging?: boolean;
 }
 
-export function WidgetLibraryItem({ template, onClick, isDragging = false }: WidgetLibraryItemProps) {
+export function WidgetLibraryItem({
+  template,
+  onClick,
+  isDragging = false,
+}: WidgetLibraryItemProps) {
   return (
     <div
       onClick={onClick}

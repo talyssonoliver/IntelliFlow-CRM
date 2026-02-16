@@ -32,15 +32,45 @@ export function getPriorityConfig(priority: string): {
 } {
   switch (priority) {
     case 'URGENT':
-      return { label: 'Urgent', color: 'text-red-700', bgColor: 'bg-red-100', dotColor: 'bg-red-600', textColor: 'text-red-600' };
+      return {
+        label: 'Urgent',
+        color: 'text-red-700',
+        bgColor: 'bg-red-100',
+        dotColor: 'bg-red-600',
+        textColor: 'text-red-600',
+      };
     case 'HIGH':
-      return { label: 'High', color: 'text-red-700', bgColor: 'bg-red-100', dotColor: 'bg-red-600', textColor: 'text-red-600' };
+      return {
+        label: 'High',
+        color: 'text-red-700',
+        bgColor: 'bg-red-100',
+        dotColor: 'bg-red-600',
+        textColor: 'text-red-600',
+      };
     case 'MEDIUM':
-      return { label: 'Medium', color: 'text-amber-700', bgColor: 'bg-amber-100', dotColor: 'bg-amber-500', textColor: 'text-amber-600' };
+      return {
+        label: 'Medium',
+        color: 'text-amber-700',
+        bgColor: 'bg-amber-100',
+        dotColor: 'bg-amber-500',
+        textColor: 'text-amber-600',
+      };
     case 'LOW':
-      return { label: 'Low', color: 'text-blue-700', bgColor: 'bg-blue-100', dotColor: 'bg-blue-500', textColor: 'text-blue-600' };
+      return {
+        label: 'Low',
+        color: 'text-blue-700',
+        bgColor: 'bg-blue-100',
+        dotColor: 'bg-blue-500',
+        textColor: 'text-blue-600',
+      };
     default:
-      return { label: priority, color: 'text-gray-700', bgColor: 'bg-gray-100', dotColor: 'bg-gray-400', textColor: 'text-slate-500' };
+      return {
+        label: priority,
+        color: 'text-gray-700',
+        bgColor: 'bg-gray-100',
+        dotColor: 'bg-gray-400',
+        textColor: 'text-slate-500',
+      };
   }
 }
 
@@ -65,7 +95,9 @@ export function formatDeadline(deadline: Date | string | null): string {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export function formatDeadlineShort(deadline: Date | string | null): { month: string; day: string } | null {
+export function formatDeadlineShort(
+  deadline: Date | string | null
+): { month: string; day: string } | null {
   if (!deadline) return null;
   const d = new Date(deadline);
   return {

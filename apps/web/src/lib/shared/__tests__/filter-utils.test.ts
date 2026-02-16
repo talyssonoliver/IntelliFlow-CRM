@@ -6,9 +6,25 @@ import { describe, it, expect, vi } from 'vitest';
  * - @/components/shared: provides FilterOption and FilterChip types (type-only, no mock needed)
  */
 vi.mock('@intelliflow/domain', () => ({
-  LEAD_STATUSES: ['NEW', 'CONTACTED', 'QUALIFIED', 'NEGOTIATING', 'UNQUALIFIED', 'CONVERTED', 'LOST'] as const,
+  LEAD_STATUSES: [
+    'NEW',
+    'CONTACTED',
+    'QUALIFIED',
+    'NEGOTIATING',
+    'UNQUALIFIED',
+    'CONVERTED',
+    'LOST',
+  ] as const,
   LEAD_SOURCES: ['WEBSITE', 'REFERRAL', 'SOCIAL', 'EMAIL', 'COLD_CALL', 'EVENT', 'OTHER'] as const,
-  TICKET_STATUSES: ['OPEN', 'IN_PROGRESS', 'PENDING', 'WAITING_ON_CUSTOMER', 'WAITING_ON_THIRD_PARTY', 'RESOLVED', 'CLOSED'] as const,
+  TICKET_STATUSES: [
+    'OPEN',
+    'IN_PROGRESS',
+    'PENDING',
+    'WAITING_ON_CUSTOMER',
+    'WAITING_ON_THIRD_PARTY',
+    'RESOLVED',
+    'CLOSED',
+  ] as const,
   TICKET_PRIORITIES: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const,
   SLA_STATUSES: ['ON_TRACK', 'AT_RISK', 'BREACHED', 'MET', 'PAUSED'] as const,
   CASE_STATUSES: ['OPEN', 'IN_PROGRESS', 'ON_HOLD', 'CLOSED', 'CANCELLED'] as const,

@@ -12,7 +12,15 @@ import { join } from 'path';
 import Papa from 'papaparse';
 
 const projectRoot = join(__dirname, '..', '..');
-const csvPath = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+const csvPath = join(
+  projectRoot,
+  'apps',
+  'project-tracker',
+  'docs',
+  'metrics',
+  '_global',
+  'Sprint_plan.csv'
+);
 
 interface CsvRow {
   'Task ID': string;
@@ -36,12 +44,9 @@ function updateArtifactPaths(artifacts: string, taskId: string, sprintNumber: nu
 
   // Replace old attestation paths with new sprint-based paths
   // Pattern: artifacts/attestations/{TASK-ID}/... -> .specify/sprints/sprint-{N}/attestations/{TASK-ID}/...
-  result = result.replace(
-    /artifacts\/attestations\/([^/;,]+)\//g,
-    (match, capturedTaskId) => {
-      return `.specify/sprints/sprint-${sprintNumber}/attestations/${capturedTaskId}/`;
-    }
-  );
+  result = result.replace(/artifacts\/attestations\/([^/;,]+)\//g, (match, capturedTaskId) => {
+    return `.specify/sprints/sprint-${sprintNumber}/attestations/${capturedTaskId}/`;
+  });
 
   // Replace old SPEC paths with new sprint-based paths
   // Pattern: SPEC:.specify/specifications/{TASK-ID}.md -> SPEC:.specify/sprints/sprint-{N}/specifications/{TASK-ID}-spec.md
@@ -54,12 +59,9 @@ function updateArtifactPaths(artifacts: string, taskId: string, sprintNumber: nu
 
   // Replace old PLAN paths with new sprint-based paths
   // Pattern: PLAN:.specify/planning/{TASK-ID}.md -> PLAN:.specify/sprints/sprint-{N}/planning/{TASK-ID}-plan.md
-  result = result.replace(
-    /PLAN:\.specify\/planning\/([^;,\s]+)\.md/g,
-    (match, capturedTaskId) => {
-      return `PLAN:.specify/sprints/sprint-${sprintNumber}/planning/${capturedTaskId}-plan.md`;
-    }
-  );
+  result = result.replace(/PLAN:\.specify\/planning\/([^;,\s]+)\.md/g, (match, capturedTaskId) => {
+    return `PLAN:.specify/sprints/sprint-${sprintNumber}/planning/${capturedTaskId}-plan.md`;
+  });
 
   return result;
 }
@@ -82,11 +84,11 @@ async function main() {
     const targetSprint = row['Target Sprint'];
     const artifacts = row['Artifacts To Track'];
 
-    const needsUpdate = artifacts && (
-      artifacts.includes('artifacts/attestations') ||
-      artifacts.includes('SPEC:.specify/specifications/') ||
-      artifacts.includes('PLAN:.specify/planning/')
-    );
+    const needsUpdate =
+      artifacts &&
+      (artifacts.includes('artifacts/attestations') ||
+        artifacts.includes('SPEC:.specify/specifications/') ||
+        artifacts.includes('PLAN:.specify/planning/'));
 
     if (needsUpdate) {
       const sprintNumber = getSprintNumber(targetSprint);

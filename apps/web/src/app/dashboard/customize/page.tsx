@@ -66,14 +66,9 @@ function SortableWidget({
   onSettings?: (widget: Widget) => void;
   onResize?: (id: string, colSpan: 1 | 2 | 3 | 4, rowSpan: 1 | 2) => void;
 }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: widget.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: widget.id,
+  });
 
   // Grid column span classes - must be on the direct grid child
   const colSpanClasses: Record<number, string> = {
@@ -191,9 +186,7 @@ export default function CustomizeDashboardPage() {
   }, []);
 
   const handleResizeWidget = useCallback((id: string, colSpan: 1 | 2 | 3 | 4, rowSpan: 1 | 2) => {
-    setWidgets((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, colSpan, rowSpan } : w))
-    );
+    setWidgets((prev) => prev.map((w) => (w.id === id ? { ...w, colSpan, rowSpan } : w)));
   }, []);
 
   const handleSave = useCallback(() => {
@@ -220,11 +213,7 @@ export default function CustomizeDashboardPage() {
   const activeWidget = activeId ? widgets.find((w) => w.id === activeId) : null;
 
   return (
-    <LayoutBuilderProvider
-      initialWidgets={widgets}
-      onSave={handleSave}
-      onCancel={handleCancel}
-    >
+    <LayoutBuilderProvider initialWidgets={widgets} onSave={handleSave} onCancel={handleCancel}>
       <div className="min-h-[calc(100vh-4rem)] bg-background-light dark:bg-background-dark flex">
         {/* Left Sidebar - Dashboard Navigation */}
         <DashboardSidebar
@@ -286,10 +275,7 @@ export default function CustomizeDashboardPage() {
               >
                 {/* Grid Area */}
                 <div className="flex-1 overflow-y-auto p-6 md:p-8 relative grid-bg">
-                  <SortableContext
-                    items={widgets.map((w) => w.id)}
-                    strategy={rectSortingStrategy}
-                  >
+                  <SortableContext items={widgets.map((w) => w.id)} strategy={rectSortingStrategy}>
                     <LayoutBuilderGrid>
                       {widgets.map((widget) => {
                         const WidgetComponent = widgetRegistry[widget.type];
@@ -350,9 +336,7 @@ export default function CustomizeDashboardPage() {
                         {WidgetComponent ? (
                           <WidgetComponent config={widget.config} />
                         ) : (
-                          <div className="p-5 text-slate-400">
-                            Unknown widget: {widget.type}
-                          </div>
+                          <div className="p-5 text-slate-400">Unknown widget: {widget.type}</div>
                         )}
                       </WidgetCard>
                     );

@@ -18,7 +18,9 @@ import { z } from 'zod';
 const SearchConfigSchema = z.object({
   query: z.string().min(1),
   sources: z
-    .array(z.enum(['leads', 'contacts', 'accounts', 'opportunities', 'tickets', 'documents', 'notes']))
+    .array(
+      z.enum(['leads', 'contacts', 'accounts', 'opportunities', 'tickets', 'documents', 'notes'])
+    )
     .default(['leads', 'contacts']),
   limit: z.number().min(1).max(100).default(20),
   offset: z.number().min(0).default(0),
@@ -87,7 +89,11 @@ const createMockPrisma = () => ({
 class MockRetrievalService {
   constructor(private prisma: ReturnType<typeof createMockPrisma>) {}
 
-  async searchDocumentsFTS(query: string, aclContext: ACLContext, config: Partial<SearchConfig>): Promise<SearchResponse> {
+  async searchDocumentsFTS(
+    query: string,
+    aclContext: ACLContext,
+    config: Partial<SearchConfig>
+  ): Promise<SearchResponse> {
     const startTime = performance.now();
 
     // Simulate FTS query
@@ -124,7 +130,11 @@ class MockRetrievalService {
     };
   }
 
-  async searchDocumentsSemantic(query: string, aclContext: ACLContext, config: Partial<SearchConfig>): Promise<SearchResponse> {
+  async searchDocumentsSemantic(
+    query: string,
+    aclContext: ACLContext,
+    config: Partial<SearchConfig>
+  ): Promise<SearchResponse> {
     const startTime = performance.now();
 
     // Simulate vector query (mock embedding)
@@ -163,7 +173,11 @@ class MockRetrievalService {
     };
   }
 
-  async searchDocumentsHybrid(query: string, aclContext: ACLContext, config: Partial<SearchConfig>): Promise<SearchResponse> {
+  async searchDocumentsHybrid(
+    query: string,
+    aclContext: ACLContext,
+    config: Partial<SearchConfig>
+  ): Promise<SearchResponse> {
     const startTime = performance.now();
 
     // Run FTS and semantic in parallel
@@ -253,8 +267,18 @@ describe('RetrievalService - Search Functions (IFC-155)', () => {
   describe('Full-Text Search (FTS)', () => {
     it('should search documents using PostgreSQL tsvector', async () => {
       const mockFTSResults = [
-        { id: 'doc-1', title: 'Contract Agreement', description: 'Legal contract for services', rank: 0.95 },
-        { id: 'doc-2', title: 'Contract Amendment', description: 'Amendment to existing contract', rank: 0.85 },
+        {
+          id: 'doc-1',
+          title: 'Contract Agreement',
+          description: 'Legal contract for services',
+          rank: 0.95,
+        },
+        {
+          id: 'doc-2',
+          title: 'Contract Amendment',
+          description: 'Amendment to existing contract',
+          rank: 0.85,
+        },
       ];
       mockPrisma.$queryRaw.mockResolvedValue(mockFTSResults);
 
@@ -280,7 +304,8 @@ describe('RetrievalService - Search Functions (IFC-155)', () => {
         {
           id: 'doc-1',
           title: 'Document Title',
-          description: 'This is a document about contracts and legal agreements with important terms.',
+          description:
+            'This is a document about contracts and legal agreements with important terms.',
           rank: 0.9,
         },
       ];
@@ -305,7 +330,12 @@ describe('RetrievalService - Search Functions (IFC-155)', () => {
   describe('Semantic Search (Vector)', () => {
     it('should search documents using vector similarity', async () => {
       const mockVectorResults = [
-        { id: 'doc-1', title: 'Legal Agreement', description: 'Contract details', similarity: 0.92 },
+        {
+          id: 'doc-1',
+          title: 'Legal Agreement',
+          description: 'Contract details',
+          similarity: 0.92,
+        },
         { id: 'doc-2', title: 'Service Terms', description: 'Terms of service', similarity: 0.78 },
       ];
       mockPrisma.$queryRaw.mockResolvedValue(mockVectorResults);
@@ -370,7 +400,9 @@ describe('RetrievalService - Search Functions (IFC-155)', () => {
       // Same document in both results
       mockPrisma.$queryRaw
         .mockResolvedValueOnce([{ id: 'doc-shared', title: 'Shared', description: '', rank: 0.9 }])
-        .mockResolvedValueOnce([{ id: 'doc-shared', title: 'Shared', description: '', similarity: 0.85 }]);
+        .mockResolvedValueOnce([
+          { id: 'doc-shared', title: 'Shared', description: '', similarity: 0.85 },
+        ]);
 
       const response = await service.searchDocumentsHybrid('test', aclContext, {});
 
@@ -435,7 +467,9 @@ describe('RetrievalService - Search Functions (IFC-155)', () => {
         permissions: ['read:documents'],
       };
 
-      mockPrisma.$queryRaw.mockResolvedValue([{ id: 'doc-tenant-a', title: 'Tenant A Doc', description: '', rank: 0.9 }]);
+      mockPrisma.$queryRaw.mockResolvedValue([
+        { id: 'doc-tenant-a', title: 'Tenant A Doc', description: '', rank: 0.9 },
+      ]);
 
       const response = await service.searchDocumentsFTS('document', tenantAContext, {});
 
@@ -525,7 +559,9 @@ describe('RetrievalService - Search Functions (IFC-155)', () => {
 
   describe('Performance', () => {
     it('should track query time in response', async () => {
-      mockPrisma.$queryRaw.mockResolvedValue([{ id: 'doc-1', title: 'Test', description: '', rank: 0.9 }]);
+      mockPrisma.$queryRaw.mockResolvedValue([
+        { id: 'doc-1', title: 'Test', description: '', rank: 0.9 },
+      ]);
 
       const response = await service.searchDocumentsFTS('test', aclContext, {});
 
@@ -622,7 +658,8 @@ describe('RetrievalService - EmbeddingChain Integration (IFC-020)', () => {
     // Fallback to FTS should only happen on actual errors, not by default
 
     const mockEmbeddingChain = {
-      generateEmbedding: vi.fn()
+      generateEmbedding: vi
+        .fn()
         .mockResolvedValueOnce({
           vector: Array.from({ length: 1536 }, () => 0.5),
           dimensions: 1536,
@@ -637,8 +674,9 @@ describe('RetrievalService - EmbeddingChain Integration (IFC-020)', () => {
     expect(result1.vector).not.toBeNull();
 
     // Second call: should fail, triggering fallback
-    await expect(mockEmbeddingChain.generateEmbedding({ text: 'rate limited query' }))
-      .rejects.toThrow('API rate limit exceeded');
+    await expect(
+      mockEmbeddingChain.generateEmbedding({ text: 'rate limited query' })
+    ).rejects.toThrow('API rate limit exceeded');
 
     // Verify both calls were made
     expect(mockEmbeddingChain.generateEmbedding).toHaveBeenCalledTimes(2);

@@ -11,23 +11,19 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // Hoisted mocks (must be before vi.mock calls)
 // ============================================
 
-const {
-  mockSetupMfa,
-  mockConfirmMfa,
-  mockGetBackupCodes,
-  mockPush,
-  mutationState,
-} = vi.hoisted(() => ({
-  mockSetupMfa: vi.fn(),
-  mockConfirmMfa: vi.fn(),
-  mockGetBackupCodes: vi.fn(),
-  mockPush: vi.fn(),
-  mutationState: {
-    setupPending: false,
-    confirmPending: false,
-    backupPending: false,
-  },
-}));
+const { mockSetupMfa, mockConfirmMfa, mockGetBackupCodes, mockPush, mutationState } = vi.hoisted(
+  () => ({
+    mockSetupMfa: vi.fn(),
+    mockConfirmMfa: vi.fn(),
+    mockGetBackupCodes: vi.fn(),
+    mockPush: vi.fn(),
+    mutationState: {
+      setupPending: false,
+      confirmPending: false,
+      backupPending: false,
+    },
+  })
+);
 
 // ============================================
 // Module mocks
@@ -85,7 +81,13 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 }));
 
 vi.mock('@/components/shared/page-header', () => ({
-  PageHeader: ({ title, breadcrumbs }: { title: string; breadcrumbs?: Array<{ label: string; href?: string }> }) => (
+  PageHeader: ({
+    title,
+    breadcrumbs,
+  }: {
+    title: string;
+    breadcrumbs?: Array<{ label: string; href?: string }>;
+  }) => (
     <div data-testid="page-header">
       <h1>{title}</h1>
       <nav aria-label="Breadcrumb">
@@ -98,26 +100,44 @@ vi.mock('@/components/shared/page-header', () => ({
 }));
 
 vi.mock('@/components/shared/mfa-qr-generator', () => ({
-  MfaQrGenerator: ({ otpauthUrl, secret, accountName, onConfirm }: {
-    otpauthUrl: string; secret: string; accountName: string; onConfirm: () => void;
+  MfaQrGenerator: ({
+    otpauthUrl,
+    secret,
+    accountName,
+    onConfirm,
+  }: {
+    otpauthUrl: string;
+    secret: string;
+    accountName: string;
+    onConfirm: () => void;
   }) => (
     <div data-testid="mfa-qr-generator">
       <span data-testid="qr-url">{otpauthUrl}</span>
       <span data-testid="qr-secret">{secret}</span>
       <span data-testid="qr-account">{accountName}</span>
-      <button onClick={onConfirm} data-testid="qr-confirm">Confirm QR Setup</button>
+      <button onClick={onConfirm} data-testid="qr-confirm">
+        Confirm QR Setup
+      </button>
     </div>
   ),
 }));
 
 vi.mock('@/components/shared/backup-codes-display', () => ({
-  BackupCodesDisplay: ({ codes, email, onAcknowledge }: {
-    codes: string[]; email: string; onAcknowledge: () => void;
+  BackupCodesDisplay: ({
+    codes,
+    email,
+    onAcknowledge,
+  }: {
+    codes: string[];
+    email: string;
+    onAcknowledge: () => void;
   }) => (
     <div data-testid="backup-codes-display">
       <span data-testid="backup-codes-count">{codes?.length}</span>
       <span data-testid="backup-email">{email}</span>
-      <button onClick={onAcknowledge} data-testid="backup-acknowledge">Acknowledge Codes</button>
+      <button onClick={onAcknowledge} data-testid="backup-acknowledge">
+        Acknowledge Codes
+      </button>
     </div>
   ),
 }));
@@ -154,8 +174,18 @@ const EMAIL_RESPONSE = {
 const CONFIRM_RESPONSE = { success: true };
 
 const BACKUP_CODES_RESPONSE = {
-  codes: ['abc12345', 'def67890', 'ghi11111', 'jkl22222', 'mno33333',
-          'pqr44444', 'stu55555', 'vwx66666', 'yza77777', 'bcd88888'],
+  codes: [
+    'abc12345',
+    'def67890',
+    'ghi11111',
+    'jkl22222',
+    'mno33333',
+    'pqr44444',
+    'stu55555',
+    'vwx66666',
+    'yza77777',
+    'bcd88888',
+  ],
   generatedAt: '2026-01-15T10:00:00Z',
 };
 
@@ -213,24 +243,28 @@ describe('MfaSetupPage', () => {
   // Rendering (5 tests) — AC1, AC2, AC8, AC10
   // ------------------------------------------
   describe('Rendering', () => {
-    it('renders method selection step by default', () => {                    // AC1
+    it('renders method selection step by default', () => {
+      // AC1
       render(<MfaSetupPage />);
       expect(screen.getByText(/choose authentication method/i)).toBeInTheDocument();
     });
 
-    it('renders 3 method options: TOTP, SMS, Email', () => {                 // AC2
+    it('renders 3 method options: TOTP, SMS, Email', () => {
+      // AC2
       render(<MfaSetupPage />);
       expect(screen.getByText('Authenticator App')).toBeInTheDocument();
       expect(screen.getByText('SMS Code')).toBeInTheDocument();
       expect(screen.getByText('Email Code')).toBeInTheDocument();
     });
 
-    it('shows TOTP as recommended', () => {                                  // AC2
+    it('shows TOTP as recommended', () => {
+      // AC2
       render(<MfaSetupPage />);
       expect(screen.getByText('Recommended')).toBeInTheDocument();
     });
 
-    it('renders 5-step progress indicator', () => {                          // AC8
+    it('renders 5-step progress indicator', () => {
+      // AC8
       render(<MfaSetupPage />);
       // 5 step circles: numbered 1-5 (step 1 is active, 2-5 show numbers)
       expect(screen.getByText('2')).toBeInTheDocument();
@@ -239,7 +273,8 @@ describe('MfaSetupPage', () => {
       expect(screen.getByText('5')).toBeInTheDocument();
     });
 
-    it('renders cancel link to /settings/account', () => {                   // AC10
+    it('renders cancel link to /settings/account', () => {
+      // AC10
       render(<MfaSetupPage />);
       const cancelLink = screen.getByText(/cancel and return to settings/i);
       expect(cancelLink).toBeInTheDocument();
@@ -251,7 +286,8 @@ describe('MfaSetupPage', () => {
   // Wizard State Machine (12 tests) — AC2-AC5, AC7-AC10
   // ------------------------------------------
   describe('Wizard State Machine', () => {
-    it('transitions method → setup after setupMfa succeeds (TOTP)', async () => {  // AC3
+    it('transitions method → setup after setupMfa succeeds (TOTP)', async () => {
+      // AC3
       mockSetupMfa.mockResolvedValue(TOTP_RESPONSE);
       render(<MfaSetupPage />);
       fireEvent.click(screen.getByRole('button', { name: /continue with/i }));
@@ -260,7 +296,8 @@ describe('MfaSetupPage', () => {
       });
     });
 
-    it('transitions method → setup after setupMfa succeeds (SMS)', async () => {   // AC2
+    it('transitions method → setup after setupMfa succeeds (SMS)', async () => {
+      // AC2
       mockSetupMfa.mockResolvedValue(SMS_RESPONSE);
       render(<MfaSetupPage />);
       // Select SMS method
@@ -274,7 +311,8 @@ describe('MfaSetupPage', () => {
       });
     });
 
-    it('transitions method → setup after setupMfa succeeds (Email)', async () => { // AC2
+    it('transitions method → setup after setupMfa succeeds (Email)', async () => {
+      // AC2
       mockSetupMfa.mockResolvedValue(EMAIL_RESPONSE);
       render(<MfaSetupPage />);
       fireEvent.click(screen.getByText('Email Code'));
@@ -284,7 +322,8 @@ describe('MfaSetupPage', () => {
       });
     });
 
-    it('transitions setup → verify after QR confirm', async () => {                // AC4
+    it('transitions setup → verify after QR confirm', async () => {
+      // AC4
       await advanceToSetup();
       fireEvent.click(screen.getByTestId('qr-confirm'));
       await waitFor(() => {
@@ -292,7 +331,8 @@ describe('MfaSetupPage', () => {
       });
     });
 
-    it('transitions verify → backup after confirmMfa succeeds', async () => {      // AC5
+    it('transitions verify → backup after confirmMfa succeeds', async () => {
+      // AC5
       mockConfirmMfa.mockResolvedValue(CONFIRM_RESPONSE);
       mockGetBackupCodes.mockResolvedValue(BACKUP_CODES_RESPONSE);
       await advanceToVerify();
@@ -304,7 +344,8 @@ describe('MfaSetupPage', () => {
       });
     });
 
-    it('transitions backup → complete after acknowledgment', async () => {         // AC7
+    it('transitions backup → complete after acknowledgment', async () => {
+      // AC7
       await advanceToBackup();
       fireEvent.click(screen.getByTestId('backup-acknowledge'));
       await waitFor(() => {
@@ -312,13 +353,15 @@ describe('MfaSetupPage', () => {
       });
     });
 
-    it('navigates to /settings/account on complete', async () => {                 // AC10
+    it('navigates to /settings/account on complete', async () => {
+      // AC10
       await advanceToComplete();
       fireEvent.click(screen.getByRole('button', { name: /return to account settings/i }));
       expect(mockPush).toHaveBeenCalledWith('/settings/account');
     });
 
-    it('stays on method step if setupMfa fails', async () => {                     // AC9
+    it('stays on method step if setupMfa fails', async () => {
+      // AC9
       mockSetupMfa.mockRejectedValue(new Error('Setup failed'));
       render(<MfaSetupPage />);
       fireEvent.click(screen.getByRole('button', { name: /continue with/i }));
@@ -329,7 +372,8 @@ describe('MfaSetupPage', () => {
       expect(screen.getByText(/choose authentication method/i)).toBeInTheDocument();
     });
 
-    it('stays on verify step if confirmMfa fails', async () => {                   // AC9
+    it('stays on verify step if confirmMfa fails', async () => {
+      // AC9
       mockConfirmMfa.mockRejectedValue(new Error('Invalid code'));
       await advanceToVerify();
       const input = screen.getByLabelText(/verification code/i);
@@ -342,7 +386,8 @@ describe('MfaSetupPage', () => {
       expect(screen.getByLabelText(/verification code/i)).toBeInTheDocument();
     });
 
-    it('updates progress indicator on each step', async () => {                    // AC8
+    it('updates progress indicator on each step', async () => {
+      // AC8
       mockSetupMfa.mockResolvedValue(TOTP_RESPONSE);
       render(<MfaSetupPage />);
       // On step 1: steps 2-5 should show their numbers
@@ -367,7 +412,8 @@ describe('MfaSetupPage', () => {
       expect(screen.queryByText('Authenticator App')).not.toBeInTheDocument();
     });
 
-    it('clears error when retrying', async () => {                                // AC9
+    it('clears error when retrying', async () => {
+      // AC9
       mockSetupMfa.mockRejectedValueOnce(new Error('Network error'));
       mockSetupMfa.mockResolvedValueOnce(TOTP_RESPONSE);
       render(<MfaSetupPage />);
@@ -389,7 +435,8 @@ describe('MfaSetupPage', () => {
   // tRPC Integration (8 tests) — AC2-AC5
   // ------------------------------------------
   describe('tRPC Integration', () => {
-    it('calls setupMfa with TOTP method', async () => {                            // AC3
+    it('calls setupMfa with TOTP method', async () => {
+      // AC3
       mockSetupMfa.mockResolvedValue(TOTP_RESPONSE);
       render(<MfaSetupPage />);
       fireEvent.click(screen.getByRole('button', { name: /continue with/i }));
@@ -398,7 +445,8 @@ describe('MfaSetupPage', () => {
       });
     });
 
-    it('calls setupMfa with SMS method and phone number', async () => {            // AC2
+    it('calls setupMfa with SMS method and phone number', async () => {
+      // AC2
       mockSetupMfa.mockResolvedValue(SMS_RESPONSE);
       render(<MfaSetupPage />);
       fireEvent.click(screen.getByText('SMS Code'));
@@ -410,7 +458,8 @@ describe('MfaSetupPage', () => {
       });
     });
 
-    it('calls setupMfa with Email method', async () => {                           // AC2
+    it('calls setupMfa with Email method', async () => {
+      // AC2
       mockSetupMfa.mockResolvedValue(EMAIL_RESPONSE);
       render(<MfaSetupPage />);
       fireEvent.click(screen.getByText('Email Code'));
@@ -420,7 +469,8 @@ describe('MfaSetupPage', () => {
       });
     });
 
-    it('handles TOTP response: passes secret+qrCodeUrl to QR component', async () => { // AC3
+    it('handles TOTP response: passes secret+qrCodeUrl to QR component', async () => {
+      // AC3
       mockSetupMfa.mockResolvedValue(TOTP_RESPONSE);
       render(<MfaSetupPage />);
       fireEvent.click(screen.getByRole('button', { name: /continue with/i }));
@@ -430,7 +480,8 @@ describe('MfaSetupPage', () => {
       });
     });
 
-    it('handles SMS/Email response: shows code sent message', async () => {        // AC2
+    it('handles SMS/Email response: shows code sent message', async () => {
+      // AC2
       mockSetupMfa.mockResolvedValue(SMS_RESPONSE);
       render(<MfaSetupPage />);
       fireEvent.click(screen.getByText('SMS Code'));
@@ -443,7 +494,8 @@ describe('MfaSetupPage', () => {
       });
     });
 
-    it('calls confirmMfa with verification code', async () => {                    // AC4
+    it('calls confirmMfa with verification code', async () => {
+      // AC4
       mockConfirmMfa.mockResolvedValue(CONFIRM_RESPONSE);
       mockGetBackupCodes.mockResolvedValue(BACKUP_CODES_RESPONSE);
       await advanceToVerify();
@@ -455,7 +507,8 @@ describe('MfaSetupPage', () => {
       });
     });
 
-    it('calls getBackupCodes after confirmMfa succeeds', async () => {             // AC5
+    it('calls getBackupCodes after confirmMfa succeeds', async () => {
+      // AC5
       mockConfirmMfa.mockResolvedValue(CONFIRM_RESPONSE);
       mockGetBackupCodes.mockResolvedValue(BACKUP_CODES_RESPONSE);
       await advanceToVerify();
@@ -467,7 +520,8 @@ describe('MfaSetupPage', () => {
       });
     });
 
-    it('chains confirmMfa → getBackupCodes correctly', async () => {               // AC5
+    it('chains confirmMfa → getBackupCodes correctly', async () => {
+      // AC5
       const callOrder: string[] = [];
       mockConfirmMfa.mockImplementation(async () => {
         callOrder.push('confirmMfa');
@@ -491,25 +545,29 @@ describe('MfaSetupPage', () => {
   // Component Integration (4 tests) — AC3, AC4, AC6, AC12
   // ------------------------------------------
   describe('Component Integration', () => {
-    it('passes qrCodeUrl and secret to MfaQrGenerator', async () => {              // AC3
+    it('passes qrCodeUrl and secret to MfaQrGenerator', async () => {
+      // AC3
       await advanceToSetup();
       expect(screen.getByTestId('qr-url')).toHaveTextContent(TOTP_RESPONSE.qrCodeUrl);
       expect(screen.getByTestId('qr-secret')).toHaveTextContent(TOTP_RESPONSE.secret);
     });
 
-    it('passes backupCodes to BackupCodesDisplay', async () => {                   // AC6
+    it('passes backupCodes to BackupCodesDisplay', async () => {
+      // AC6
       await advanceToBackup();
       expect(screen.getByTestId('backup-codes-count')).toHaveTextContent('10');
     });
 
-    it('passes verificationCode to VerificationInput', async () => {               // AC4
+    it('passes verificationCode to VerificationInput', async () => {
+      // AC4
       await advanceToVerify();
       const input = screen.getByLabelText(/verification code/i) as HTMLInputElement;
       fireEvent.change(input, { target: { value: '789012' } });
       expect(input.value).toBe('789012');
     });
 
-    it('displays user email from AuthContext', async () => {                        // AC12
+    it('displays user email from AuthContext', async () => {
+      // AC12
       await advanceToSetup();
       expect(screen.getByTestId('qr-account')).toHaveTextContent('test@example.com');
     });
@@ -519,20 +577,23 @@ describe('MfaSetupPage', () => {
   // Loading States (3 tests) — AC11
   // ------------------------------------------
   describe('Loading States', () => {
-    it('shows loading during setupMfa mutation', () => {                            // AC11
+    it('shows loading during setupMfa mutation', () => {
+      // AC11
       mutationState.setupPending = true;
       render(<MfaSetupPage />);
       expect(screen.getByText(/setting up/i)).toBeInTheDocument();
     });
 
-    it('shows loading during confirmMfa mutation', async () => {                    // AC11
+    it('shows loading during confirmMfa mutation', async () => {
+      // AC11
       mutationState.confirmPending = true;
       await advanceToVerify();
       // The verify button shows "Verifying..." when pending
       expect(screen.getByText(/verifying/i)).toBeInTheDocument();
     });
 
-    it('disables buttons during mutations', () => {                                // AC11
+    it('disables buttons during mutations', () => {
+      // AC11
       mutationState.setupPending = true;
       render(<MfaSetupPage />);
       const continueBtn = screen.getByRole('button', { name: /setting up/i });
@@ -579,7 +640,8 @@ describe('MfaSetupPage', () => {
   // Error Handling (3 tests) — AC9
   // ------------------------------------------
   describe('Error Handling', () => {
-    it('shows error banner when setupMfa fails', async () => {                     // AC9
+    it('shows error banner when setupMfa fails', async () => {
+      // AC9
       mockSetupMfa.mockRejectedValue(new Error('Service unavailable'));
       render(<MfaSetupPage />);
       fireEvent.click(screen.getByRole('button', { name: /continue with/i }));
@@ -588,7 +650,8 @@ describe('MfaSetupPage', () => {
       });
     });
 
-    it('shows error below verification input on confirmMfa fail', async () => {    // AC9
+    it('shows error below verification input on confirmMfa fail', async () => {
+      // AC9
       mockConfirmMfa.mockRejectedValue(new Error('Invalid verification code'));
       await advanceToVerify();
       const input = screen.getByLabelText(/verification code/i);
@@ -599,7 +662,8 @@ describe('MfaSetupPage', () => {
       });
     });
 
-    it('logs errors to console.error', async () => {                               // AC9
+    it('logs errors to console.error', async () => {
+      // AC9
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockSetupMfa.mockRejectedValue(new Error('Test error'));
       render(<MfaSetupPage />);
@@ -615,7 +679,8 @@ describe('MfaSetupPage', () => {
   // Accessibility (3 tests) — AC12
   // ------------------------------------------
   describe('Accessibility', () => {
-    it('renders breadcrumbs with correct navigation', () => {                      // AC12
+    it('renders breadcrumbs with correct navigation', () => {
+      // AC12
       render(<MfaSetupPage />);
       const nav = screen.getByRole('navigation', { name: /breadcrumb/i });
       expect(nav).toBeInTheDocument();
@@ -624,14 +689,16 @@ describe('MfaSetupPage', () => {
       expect(screen.getByText('MFA Setup')).toBeInTheDocument();
     });
 
-    it('cancel link is keyboard accessible', () => {                               // AC12
+    it('cancel link is keyboard accessible', () => {
+      // AC12
       render(<MfaSetupPage />);
       const cancelLink = screen.getByText(/cancel and return to settings/i);
       expect(cancelLink.tagName).toBe('A');
       expect(cancelLink).toHaveAttribute('href', '/settings/account');
     });
 
-    it('provides sr-only text for progress indicator state', () => {               // AC12
+    it('provides sr-only text for progress indicator state', () => {
+      // AC12
       const { container } = render(<MfaSetupPage />);
       // Progress indicator uses aria-hidden on icons and visible step numbers
       const ariaHiddenIcons = container.querySelectorAll('[aria-hidden="true"]');

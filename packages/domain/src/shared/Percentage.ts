@@ -23,7 +23,9 @@ export class InvalidPercentageError extends DomainError {
   readonly code = 'INVALID_PERCENTAGE';
 
   constructor(value: number, reason?: string) {
-    const message = reason ? `Invalid percentage: ${value} (${reason})` : `Invalid percentage: ${value}`;
+    const message = reason
+      ? `Invalid percentage: ${value} (${reason})`
+      : `Invalid percentage: ${value}`;
     super(message);
   }
 }
@@ -64,15 +66,11 @@ export class Percentage extends ValueObject<PercentageProps> {
     }
 
     if (value < this.MIN_VALUE) {
-      return Result.fail(
-        new InvalidPercentageError(value, `value must be >= ${this.MIN_VALUE}`)
-      );
+      return Result.fail(new InvalidPercentageError(value, `value must be >= ${this.MIN_VALUE}`));
     }
 
     if (value > this.MAX_VALUE) {
-      return Result.fail(
-        new InvalidPercentageError(value, `value must be <= ${this.MAX_VALUE}`)
-      );
+      return Result.fail(new InvalidPercentageError(value, `value must be <= ${this.MAX_VALUE}`));
     }
 
     // Round to precision
@@ -109,15 +107,11 @@ export class Percentage extends ValueObject<PercentageProps> {
     denominator: number
   ): Result<Percentage, InvalidPercentageError> {
     if (denominator === 0) {
-      return Result.fail(
-        new InvalidPercentageError(0, 'denominator cannot be zero')
-      );
+      return Result.fail(new InvalidPercentageError(0, 'denominator cannot be zero'));
     }
 
     if (denominator < 0) {
-      return Result.fail(
-        new InvalidPercentageError(0, 'denominator must be positive')
-      );
+      return Result.fail(new InvalidPercentageError(0, 'denominator must be positive'));
     }
 
     const percentage = (numerator / denominator) * 100;

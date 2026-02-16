@@ -199,11 +199,14 @@ export interface EmailServicePort {
    * Check deliverability health
    */
   checkDeliverability(): Promise<
-    Result<{
-      healthy: boolean;
-      stats: DeliverabilityStats;
-      provider: string;
-    }, DomainError>
+    Result<
+      {
+        healthy: boolean;
+        stats: DeliverabilityStats;
+        provider: string;
+      },
+      DomainError
+    >
   >;
 
   /**
@@ -214,10 +217,7 @@ export interface EmailServicePort {
   /**
    * Register email template
    */
-  registerTemplate(
-    name: string,
-    template: { subject: string; html: string; text?: string }
-  ): void;
+  registerTemplate(name: string, template: { subject: string; html: string; text?: string }): void;
 
   /**
    * Validate email address format

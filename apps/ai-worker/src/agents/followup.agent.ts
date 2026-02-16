@@ -165,7 +165,7 @@ the specific context of each lead. You excel at balancing persistence with profe
       'LEAD INFORMATION:',
       `ID: ${input.leadId}`,
       `Name: ${input.leadName}`,
-      `Email: ${input.leadEmail}`
+      `Email: ${input.leadEmail}`,
     ];
     if (input.leadCompany) leadInfo.push(`Company: ${input.leadCompany}`);
     if (input.leadTitle) leadInfo.push(`Title: ${input.leadTitle}`);
@@ -177,7 +177,7 @@ the specific context of each lead. You excel at balancing persistence with profe
       `Pipeline Stage: ${input.currentStatus}`,
       `Qualification Level: ${input.qualificationLevel}`,
       `Lead Score: ${input.leadScore}/100`,
-      `Days Since Last Contact: ${input.daysSinceLastContact}`
+      `Days Since Last Contact: ${input.daysSinceLastContact}`,
     ];
     if (input.assignedSalesRep) currentStatus.push(`Assigned To: ${input.assignedSalesRep}`);
     if (input.dealValue) currentStatus.push(`Deal Value: $${input.dealValue.toLocaleString()}`);
@@ -193,7 +193,7 @@ the specific context of each lead. You excel at balancing persistence with profe
         const interaction = input.interactionHistory[i];
         const interactionLines = [
           `\n${i + 1}. ${interaction.type} (${interaction.timestamp})`,
-          `   Description: ${interaction.description}`
+          `   Description: ${interaction.description}`,
         ];
         if (interaction.outcome) interactionLines.push(`   Outcome: ${interaction.outcome}`);
         interactionHistory.push(...interactionLines);
@@ -212,7 +212,7 @@ the specific context of each lead. You excel at balancing persistence with profe
       '5. Communication channel preference - What worked before?',
       '6. Timing optimization - Best days/times for this type of lead',
       '7. Risk factors - What could cause this deal to slip?',
-      '8. Opportunity signals - What positive signs exist?'
+      '8. Opportunity signals - What positive signs exist?',
     ];
     sections.push(...analysisGuidelines);
 
@@ -223,14 +223,14 @@ the specific context of each lead. You excel at balancing persistence with profe
       '- HIGH: Should contact within 24 hours',
       '- MEDIUM: Contact within 2-3 days',
       '- LOW: Can wait up to a week',
-      '- DEFER: Put in nurture campaign, revisit later'
+      '- DEFER: Put in nurture campaign, revisit later',
     ];
     sections.push(...decisionCriteria);
 
     // Output format
     const outputFormat: string[] = [
       '\n=== REQUIRED OUTPUT ===\n',
-      this.parser.getFormatInstructions()
+      this.parser.getFormatInstructions(),
     ];
     sections.push(...outputFormat);
 

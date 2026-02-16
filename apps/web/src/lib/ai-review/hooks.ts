@@ -45,10 +45,7 @@ export function useReviewQueue(initialFilters?: Partial<ReviewListFilter>) {
   const listQuery = api.aiReview.list.useQuery(filters as ReviewListFilter, {
     refetchInterval: 30_000,
   });
-  const statsQuery = api.aiReview.stats.useQuery(
-    {},
-    { refetchInterval: 60_000 },
-  );
+  const statsQuery = api.aiReview.stats.useQuery({}, { refetchInterval: 60_000 });
 
   // Common invalidation helper
   const invalidateAll = useCallback(() => {
@@ -128,9 +125,8 @@ export function useReviewQueue(initialFilters?: Partial<ReviewListFilter>) {
 
   // Helpers
   const getLockToken = useCallback(
-    (reviewId: string): string | null =>
-      lockTokens.current.get(reviewId)?.token ?? null,
-    [],
+    (reviewId: string): string | null => lockTokens.current.get(reviewId)?.token ?? null,
+    []
   );
 
   return {
@@ -156,6 +152,37 @@ export function useReviewQueue(initialFilters?: Partial<ReviewListFilter>) {
       escalateMutation.isPending,
     // Lock management
     getLockToken,
+  };
+}
+
+// ============================================
+// useReviewHistory — read-only history hook (PG-150)
+// ============================================
+
+export function useReviewHistory(initialFilters?: Partial<ReviewListFilter>) {
+  const [filters, setFilters] = useState<Partial<ReviewListFilter>>({
+    status: ['APPROVED', 'REJECTED', 'EXPIRED'] as ReviewListFilter['status'],
+    page: 1,
+    limit: 20,
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+    ...initialFilters,
+  });
+
+  const listQuery = api.aiReview.list.useQuery(filters as ReviewListFilter, {
+    refetchInterval: 60_000,
+  });
+  const statsQuery = api.aiReview.stats.useQuery({}, { refetchInterval: 120_000 });
+
+  return {
+    reviews: listQuery.data?.data ?? [],
+    total: listQuery.data?.total ?? 0,
+    hasMore: listQuery.data?.hasMore ?? false,
+    stats: statsQuery.data,
+    isLoading: listQuery.isLoading,
+    isStatsLoading: statsQuery.isLoading,
+    filters,
+    setFilters,
   };
 }
 

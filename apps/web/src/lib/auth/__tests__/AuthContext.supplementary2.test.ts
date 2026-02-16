@@ -327,7 +327,12 @@ describe('AuthContext Supplementary - State Transitions', () => {
       expect(state.isAuthenticated).toBe(false);
 
       // Step 3: MFA verified, login complete
-      const user: AuthUser = { id: 'u-1', email: 'user@test.com', name: 'Test User', role: 'ADMIN' };
+      const user: AuthUser = {
+        id: 'u-1',
+        email: 'user@test.com',
+        name: 'Test User',
+        role: 'ADMIN',
+      };
       const session: AuthSession = {
         accessToken: 'tok-123',
         refreshToken: 'ref-456',
@@ -517,10 +522,13 @@ describe('AuthContext Supplementary - State Transitions', () => {
         user: { id: 'u-3', email: 'c@d.com', name: null, role: 'USER' },
       };
 
-      const session = 'expiresAt' in data ? {
-        accessToken: '',
-        expiresAt: new Date((data as any).expiresAt),
-      } : null;
+      const session =
+        'expiresAt' in data
+          ? {
+              accessToken: '',
+              expiresAt: new Date((data as any).expiresAt),
+            }
+          : null;
 
       setState((prev) => ({
         ...prev,

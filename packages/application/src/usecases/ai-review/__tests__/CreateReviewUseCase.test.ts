@@ -7,11 +7,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { CreateReviewUseCase, CreateReviewInput } from '../CreateReviewUseCase';
-import {
-  AIOutputReview,
-  DomainEvent,
-  ReviewStatus,
-} from '@intelliflow/domain';
+import { AIOutputReview, DomainEvent, ReviewStatus } from '@intelliflow/domain';
 import { IAIOutputReviewRepository } from '../../../ports/repositories';
 import { EventBusPort } from '../../../ports/external';
 
@@ -84,10 +80,7 @@ describe('CreateReviewUseCase', () => {
   beforeEach(() => {
     repository = new MockAIOutputReviewRepository();
     eventBus = new MockEventBus();
-    useCase = new CreateReviewUseCase(
-      repository as unknown as IAIOutputReviewRepository,
-      eventBus
-    );
+    useCase = new CreateReviewUseCase(repository as unknown as IAIOutputReviewRepository, eventBus);
   });
 
   describe('Happy Path', () => {
@@ -125,8 +118,12 @@ describe('CreateReviewUseCase', () => {
       const expectedMinDeadline = new Date(beforeCreate.getTime() + 24 * 60 * 60 * 1000);
       const expectedMaxDeadline = new Date(afterCreate.getTime() + 24 * 60 * 60 * 1000);
 
-      expect(result.value.slaDeadline.getTime()).toBeGreaterThanOrEqual(expectedMinDeadline.getTime() - 1000);
-      expect(result.value.slaDeadline.getTime()).toBeLessThanOrEqual(expectedMaxDeadline.getTime() + 1000);
+      expect(result.value.slaDeadline.getTime()).toBeGreaterThanOrEqual(
+        expectedMinDeadline.getTime() - 1000
+      );
+      expect(result.value.slaDeadline.getTime()).toBeLessThanOrEqual(
+        expectedMaxDeadline.getTime() + 1000
+      );
     });
 
     it('should publish ReviewCreatedEvent', async () => {

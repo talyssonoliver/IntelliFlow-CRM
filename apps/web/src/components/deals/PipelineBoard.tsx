@@ -50,10 +50,7 @@ const STAGE_TRANSITION_RULES: Record<OpportunityStage, OpportunityStage[]> = {
   CLOSED_LOST: ['PROSPECTING'],
 };
 
-function isValidTransition(
-  from: OpportunityStage,
-  to: OpportunityStage,
-): boolean {
+function isValidTransition(from: OpportunityStage, to: OpportunityStage): boolean {
   return STAGE_TRANSITION_RULES[from]?.includes(to) ?? false;
 }
 
@@ -66,18 +63,19 @@ export const PipelineBoard = React.memo(function PipelineBoard({
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 10, tolerance: 5 },
+      activationConstraint: { distance: 8 },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    }),
+    })
   );
 
   // Group deals by stage (AC-32: uses OPPORTUNITY_STAGES from domain)
   const dealsByStage = useMemo(() => {
-    const grouped = Object.fromEntries(
-      OPPORTUNITY_STAGES.map((s) => [s, [] as Deal[]]),
-    ) as Record<OpportunityStage, Deal[]>;
+    const grouped = Object.fromEntries(OPPORTUNITY_STAGES.map((s) => [s, [] as Deal[]])) as Record<
+      OpportunityStage,
+      Deal[]
+    >;
 
     for (const deal of deals) {
       if (grouped[deal.stage]) {
@@ -93,7 +91,7 @@ export const PipelineBoard = React.memo(function PipelineBoard({
       const deal = deals.find((d) => d.id === String(id));
       return deal?.name ?? 'Unknown deal';
     },
-    [deals],
+    [deals]
   );
 
   // Get stage label for announcements
@@ -107,7 +105,7 @@ export const PipelineBoard = React.memo(function PipelineBoard({
       const deal = deals.find((d) => d.id === String(event.active.id));
       if (deal) setActiveDeal(deal);
     },
-    [deals],
+    [deals]
   );
 
   const handleDragEnd = useCallback(
@@ -126,8 +124,7 @@ export const PipelineBoard = React.memo(function PipelineBoard({
       if (!draggedDeal) return;
 
       // Determine target stage: either directly a stage ID, or the stage of the deal being dropped on
-      let targetStage: OpportunityStage | undefined =
-        OPPORTUNITY_STAGES.find((s) => s === overId);
+      let targetStage: OpportunityStage | undefined = OPPORTUNITY_STAGES.find((s) => s === overId);
 
       if (!targetStage) {
         const overDeal = deals.find((d) => d.id === overId);
@@ -143,7 +140,7 @@ export const PipelineBoard = React.memo(function PipelineBoard({
 
       onStageChange(activeId, targetStage);
     },
-    [deals, onStageChange],
+    [deals, onStageChange]
   );
 
   const handleDragCancel = useCallback(() => {
@@ -160,8 +157,7 @@ export const PipelineBoard = React.memo(function PipelineBoard({
         onDragCancel={handleDragCancel}
         accessibility={{
           announcements: {
-            onDragStart: ({ active }) =>
-              `Picked up deal: ${getDealName(active.id)}`,
+            onDragStart: ({ active }) => `Picked up deal: ${getDealName(active.id)}`,
             onDragOver: ({ active, over }) =>
               over
                 ? `Deal ${getDealName(active.id)} is over ${getStageLabel(over.id)}`

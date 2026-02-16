@@ -203,7 +203,9 @@ export function getTaskGates(assignment: StoaAssignment): {
 /**
  * Determine status update based on MATOP verdict
  */
-export function getStatusFromVerdict(verdict: MatopVerdict): 'Completed' | 'In Progress' | 'Failed' | 'Needs Human' {
+export function getStatusFromVerdict(
+  verdict: MatopVerdict
+): 'Completed' | 'In Progress' | 'Failed' | 'Needs Human' {
   switch (verdict) {
     case 'PASS':
       return 'Completed';

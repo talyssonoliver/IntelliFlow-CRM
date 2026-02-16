@@ -57,7 +57,7 @@ export function RelatedTasksCard({
   const queryEntityType = entityType === 'account' ? undefined : entityType;
   const { data, isLoading, error } = api.task.getByEntity.useQuery(
     { entityType: queryEntityType as 'lead' | 'contact' | 'opportunity', entityId },
-    { enabled: !!queryEntityType && !!entityId },
+    { enabled: !!queryEntityType && !!entityId }
   );
 
   const utils = api.useUtils();
@@ -86,11 +86,15 @@ export function RelatedTasksCard({
     return (
       <Card className={compact ? 'p-4' : 'p-5'}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className={`font-bold text-slate-900 dark:text-white ${compact ? 'text-sm' : 'text-base'}`}>
+          <h3
+            className={`font-bold text-slate-900 dark:text-white ${compact ? 'text-sm' : 'text-base'}`}
+          >
             {title}
           </h3>
         </div>
-        <p className="text-sm text-muted-foreground text-center py-2">No tasks linked to this account</p>
+        <p className="text-sm text-muted-foreground text-center py-2">
+          No tasks linked to this account
+        </p>
       </Card>
     );
   }
@@ -99,17 +103,23 @@ export function RelatedTasksCard({
     <>
       <Card className={compact ? 'p-4' : 'p-5'}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className={`font-bold text-slate-900 dark:text-white ${compact ? 'text-sm' : 'text-base'}`}>
+          <h3
+            className={`font-bold text-slate-900 dark:text-white ${compact ? 'text-sm' : 'text-base'}`}
+          >
             {title}
           </h3>
           <div className="flex items-center gap-2">
-            {(onViewAll || viewAllHref) && hasMore && (
-              viewAllHref ? (
-                <a href={viewAllHref} className="text-xs text-primary hover:underline">View All</a>
+            {(onViewAll || viewAllHref) &&
+              hasMore &&
+              (viewAllHref ? (
+                <a href={viewAllHref} className="text-xs text-primary hover:underline">
+                  View All
+                </a>
               ) : (
-                <button onClick={onViewAll} className="text-xs text-primary hover:underline">View All</button>
-              )
-            )}
+                <button onClick={onViewAll} className="text-xs text-primary hover:underline">
+                  View All
+                </button>
+              ))}
             {showAddButton && (
               <button
                 onClick={() => setCreateOpen(true)}
@@ -130,9 +140,7 @@ export function RelatedTasksCard({
           </div>
         )}
 
-        {error && (
-          <p className="text-sm text-destructive text-center py-2">Failed to load tasks</p>
-        )}
+        {error && <p className="text-sm text-destructive text-center py-2">Failed to load tasks</p>}
 
         {!isLoading && !error && displayTasks.length === 0 && (
           <div className="text-center py-4">
@@ -163,7 +171,9 @@ export function RelatedTasksCard({
                   aria-label={`Complete task: ${task.title}`}
                 />
                 <div className="flex-1 min-w-0">
-                  <p className={`font-medium text-slate-700 dark:text-slate-200 group-hover:text-primary transition-colors truncate ${compact ? 'text-xs' : 'text-sm'}`}>
+                  <p
+                    className={`font-medium text-slate-700 dark:text-slate-200 group-hover:text-primary transition-colors truncate ${compact ? 'text-xs' : 'text-sm'}`}
+                  >
                     {task.title}
                   </p>
                   <div className="flex items-center gap-2 mt-0.5">
@@ -172,7 +182,9 @@ export function RelatedTasksCard({
                         {formatDueDate(task.dueDate)}
                       </span>
                     )}
-                    <span className={`text-xs ${PRIORITY_COLORS[task.priority] ?? 'text-muted-foreground'}`}>
+                    <span
+                      className={`text-xs ${PRIORITY_COLORS[task.priority] ?? 'text-muted-foreground'}`}
+                    >
                       {task.priority?.charAt(0) + task.priority?.slice(1).toLowerCase()}
                     </span>
                   </div>

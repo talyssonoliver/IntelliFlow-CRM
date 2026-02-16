@@ -88,7 +88,9 @@ export function ZepBudgetGauge({ className }: ZepBudgetGaugeProps) {
 
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className={`relative inline-flex items-center justify-center rounded-full p-2 ${getBackgroundColor()}`}>
+            <div
+              className={`relative inline-flex items-center justify-center rounded-full p-2 ${getBackgroundColor()}`}
+            >
               {/* Background circle */}
               <svg width={size} height={size} className="transform -rotate-90">
                 <circle
@@ -144,9 +146,7 @@ export function ZepBudgetGauge({ className }: ZepBudgetGaugeProps) {
             {budget.used.toLocaleString()} / {budget.total.toLocaleString()} episodes
           </p>
           {budgetStatus === 'warning' && (
-            <p className="text-xs text-yellow-600 mt-1">
-              Approaching limit - consider upgrading
-            </p>
+            <p className="text-xs text-yellow-600 mt-1">Approaching limit - consider upgrading</p>
           )}
           {budgetStatus === 'critical' && (
             <p className="text-xs text-red-600 mt-1">
@@ -158,7 +158,9 @@ export function ZepBudgetGauge({ className }: ZepBudgetGaugeProps) {
         {/* Budget tier indicator */}
         <div className="mt-4 pt-4 border-t border-border">
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <span className={`w-2 h-2 rounded-full ${budget.isPersisted ? 'bg-green-500' : 'bg-gray-400'}`} />
+            <span
+              className={`w-2 h-2 rounded-full ${budget.isPersisted ? 'bg-green-500' : 'bg-gray-400'}`}
+            />
             <span>{budget.isPersisted ? 'Persisted Storage' : 'Free Tier'}</span>
           </div>
         </div>

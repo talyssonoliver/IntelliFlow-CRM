@@ -61,53 +61,97 @@ const mockEscalateUseCase = { execute: vi.fn().mockResolvedValue(mockEscalateRes
 
 // Mock application module with use case constructors
 vi.mock('@intelliflow/application', () => ({
-  ClaimReviewUseCase: function ClaimReviewUseCase() { return mockClaimUseCase; },
-  ApproveReviewUseCase: function ApproveReviewUseCase() { return mockApproveUseCase; },
-  RejectReviewUseCase: function RejectReviewUseCase() { return mockRejectUseCase; },
-  EscalateReviewUseCase: function EscalateReviewUseCase() { return mockEscalateUseCase; },
+  ClaimReviewUseCase: function ClaimReviewUseCase() {
+    return mockClaimUseCase;
+  },
+  ApproveReviewUseCase: function ApproveReviewUseCase() {
+    return mockApproveUseCase;
+  },
+  RejectReviewUseCase: function RejectReviewUseCase() {
+    return mockRejectUseCase;
+  },
+  EscalateReviewUseCase: function EscalateReviewUseCase() {
+    return mockEscalateUseCase;
+  },
   // Error classes needed by mapDomainErrorToTRPCError
   ReviewNotFoundError: class extends Error {
     code = 'REVIEW_NOT_FOUND';
-    constructor() { super('Review not found'); }
+    constructor() {
+      super('Review not found');
+    }
   },
   ReviewAlreadyClaimedError: class extends Error {
     code = 'REVIEW_ALREADY_CLAIMED';
-    constructor() { super('Review already claimed'); }
+    constructor() {
+      super('Review already claimed');
+    }
   },
   InvalidReviewStateError: class extends Error {
     code = 'INVALID_REVIEW_STATE';
-    constructor(state: string) { super(`Invalid review state: ${state}`); }
+    constructor(state: string) {
+      super(`Invalid review state: ${state}`);
+    }
   },
   ConcurrentModificationError: class extends Error {
     code = 'CONCURRENT_MODIFICATION';
-    constructor() { super('Concurrent modification'); }
+    constructor() {
+      super('Concurrent modification');
+    }
   },
   InvalidLockTokenError: class extends Error {
     code = 'INVALID_LOCK_TOKEN';
-    constructor() { super('Invalid lock token'); }
+    constructor() {
+      super('Invalid lock token');
+    }
   },
   LockExpiredError: class extends Error {
     code = 'LOCK_EXPIRED';
-    constructor() { super('Lock expired'); }
+    constructor() {
+      super('Lock expired');
+    }
   },
   NotLockHolderError: class extends Error {
     code = 'NOT_LOCK_HOLDER';
-    constructor() { super('Not lock holder'); }
+    constructor() {
+      super('Not lock holder');
+    }
   },
   MaxEscalationReachedError: class extends Error {
     code = 'MAX_ESCALATION_REACHED';
-    constructor(max: number) { super(`Max escalation depth reached: ${max}`); }
+    constructor(max: number) {
+      super(`Max escalation depth reached: ${max}`);
+    }
   },
   Result: {
     ok: (value: any) => ({ isFailure: false, value }),
     fail: (error: any) => ({ isFailure: true, error }),
   },
   // Error classes required by shared/error-mapper.ts instanceof checks
-  ExternalServiceError: class extends Error { constructor(msg?: string) { super(msg); } },
-  AuthorizationError: class extends Error { constructor(msg?: string) { super(msg); } },
-  NotificationDeliveryError: class extends Error { constructor(msg?: string) { super(msg); } },
-  NotificationSchedulingError: class extends Error { constructor(msg?: string) { super(msg); } },
-  DuplicateWebhookError: class extends Error { constructor(msg?: string) { super(msg); } },
+  ExternalServiceError: class extends Error {
+    constructor(msg?: string) {
+      super(msg);
+    }
+  },
+  AuthorizationError: class extends Error {
+    constructor(msg?: string) {
+      super(msg);
+    }
+  },
+  NotificationDeliveryError: class extends Error {
+    constructor(msg?: string) {
+      super(msg);
+    }
+  },
+  NotificationSchedulingError: class extends Error {
+    constructor(msg?: string) {
+      super(msg);
+    }
+  },
+  DuplicateWebhookError: class extends Error {
+    constructor(msg?: string) {
+      super(msg);
+    }
+  },
 }));
 
 import { aiReviewRouter } from '../ai-review.router';
@@ -393,9 +437,7 @@ describe('aiReviewRouter (caller tests)', () => {
     it('should throw NOT_FOUND when review does not exist', async () => {
       mockRepository.findById.mockResolvedValue(null);
 
-      await expect(
-        caller.get({ reviewId: TEST_REVIEW_ID })
-      ).rejects.toThrow(TRPCError);
+      await expect(caller.get({ reviewId: TEST_REVIEW_ID })).rejects.toThrow(TRPCError);
 
       try {
         await caller.get({ reviewId: TEST_REVIEW_ID });
@@ -409,10 +451,7 @@ describe('aiReviewRouter (caller tests)', () => {
 
       await caller.get({ reviewId: TEST_REVIEW_ID });
 
-      expect(mockRepository.findById).toHaveBeenCalledWith(
-        TEST_REVIEW_ID,
-        TEST_TENANT_ID
-      );
+      expect(mockRepository.findById).toHaveBeenCalledWith(TEST_REVIEW_ID, TEST_TENANT_ID);
     });
 
     it('should return null for lock fields on unclaimed review', async () => {
@@ -516,9 +555,7 @@ describe('aiReviewRouter (caller tests)', () => {
         error: { code: 'REVIEW_NOT_FOUND', message: 'Review not found' },
       });
 
-      await expect(
-        caller.claim({ reviewId: TEST_REVIEW_ID })
-      ).rejects.toThrow(TRPCError);
+      await expect(caller.claim({ reviewId: TEST_REVIEW_ID })).rejects.toThrow(TRPCError);
     });
 
     it('should return updated review after claim', async () => {

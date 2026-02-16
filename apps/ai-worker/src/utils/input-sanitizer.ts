@@ -39,14 +39,16 @@ export const predictionInputSchema = z.object({
   predictionType: z.enum(PREDICTION_TYPES, {
     errorMap: () => ({ message: 'Invalid prediction type' }),
   }),
-  context: z.object({
-    tenantId: z.string().refine(validateEntityId, {
-      message: 'tenantId is required and must be valid UUID',
-    }),
-    userId: z.string().refine(validateEntityId, {
-      message: 'userId is required and must be valid UUID',
-    }),
-  }).passthrough(),
+  context: z
+    .object({
+      tenantId: z.string().refine(validateEntityId, {
+        message: 'tenantId is required and must be valid UUID',
+      }),
+      userId: z.string().refine(validateEntityId, {
+        message: 'userId is required and must be valid UUID',
+      }),
+    })
+    .passthrough(),
   correlationId: z.string().optional(),
   priority: z.number().min(1).max(10).default(5),
 });
@@ -61,7 +63,7 @@ export function sanitizePredictionInput(input: unknown): SanitizedPredictionInpu
   const result = predictionInputSchema.safeParse(input);
 
   if (!result.success) {
-    const errors = result.error.errors.map(e => `${e.path.join('.')}: ${e.message}`).join(', ');
+    const errors = result.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ');
     logger.warn({ errors, input }, 'Prediction input validation failed');
     throw new Error(`Invalid prediction input: ${errors}`);
   }
@@ -101,11 +103,13 @@ export function validateTenantContext(context: Record<string, unknown> | undefin
  * Sanitize string field - trim, truncate, remove control characters
  */
 export function sanitizeStringField(value: string, maxLength = 500): string {
-  return value
-    .trim()
-    // eslint-disable-next-line no-control-regex -- Intentional: sanitizing control characters from user input
-    .replace(/[\x00-\x1F\x7F]/g, '')
-    .slice(0, maxLength);
+  return (
+    value
+      .trim()
+      // eslint-disable-next-line no-control-regex -- Intentional: sanitizing control characters from user input
+      .replace(/[\x00-\x1F\x7F]/g, '')
+      .slice(0, maxLength)
+  );
 }
 
 /**

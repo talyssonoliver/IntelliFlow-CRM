@@ -341,7 +341,9 @@ describe('Circuit Breaker', () => {
       vi.advanceTimersByTime(1001);
 
       // Start calls that will be in HALF_OPEN
-      mockFn.mockImplementation(() => new Promise((resolve) => setTimeout(() => resolve('ok'), 100)));
+      mockFn.mockImplementation(
+        () => new Promise((resolve) => setTimeout(() => resolve('ok'), 100))
+      );
 
       // First two calls should be allowed (halfOpenMaxCalls = 2)
       const promise1 = breaker.execute(mockFn);
@@ -603,9 +605,9 @@ describe('Retry Policy', () => {
 
       const mockFn = vi.fn().mockRejectedValue(new RetryableError('Always fails'));
 
-      await expect(
-        withRetry(mockFn, { maxRetries: 2, initialDelayMs: 10 })
-      ).rejects.toThrow(MaxRetriesExceededError);
+      await expect(withRetry(mockFn, { maxRetries: 2, initialDelayMs: 10 })).rejects.toThrow(
+        MaxRetriesExceededError
+      );
       expect(mockFn).toHaveBeenCalledTimes(3); // 1 initial + 2 retries
 
       vi.useFakeTimers();
@@ -637,11 +639,7 @@ describe('Retry Policy', () => {
       const mockFn = vi.fn().mockRejectedValue(new Error('Custom error'));
       const shouldRetry = vi.fn().mockReturnValue(true);
 
-      const promise = withRetry(
-        mockFn,
-        { maxRetries: 1, initialDelayMs: 10 },
-        { shouldRetry }
-      );
+      const promise = withRetry(mockFn, { maxRetries: 1, initialDelayMs: 10 }, { shouldRetry });
 
       await expect(promise).rejects.toThrow();
 
@@ -670,11 +668,7 @@ describe('Retry Policy', () => {
       const mockFn = vi.fn().mockRejectedValue(new RetryableError('Fail'));
       const fallback = vi.fn().mockReturnValue('computed-fallback');
 
-      const promise = withRetry(
-        mockFn,
-        { maxRetries: 1, initialDelayMs: 100 },
-        { fallback }
-      );
+      const promise = withRetry(mockFn, { maxRetries: 1, initialDelayMs: 100 }, { fallback });
 
       await vi.advanceTimersByTimeAsync(500);
 

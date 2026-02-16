@@ -37,13 +37,7 @@ import {
 
 describe('CONVERSATION_STATUSES', () => {
   it('should contain all expected statuses', () => {
-    expect(CONVERSATION_STATUSES).toEqual([
-      'ACTIVE',
-      'PAUSED',
-      'ENDED',
-      'ARCHIVED',
-      'DELETED',
-    ]);
+    expect(CONVERSATION_STATUSES).toEqual(['ACTIVE', 'PAUSED', 'ENDED', 'ARCHIVED', 'DELETED']);
   });
 
   it('should be a const tuple (readonly at type level)', () => {
@@ -122,12 +116,7 @@ describe('TOOL_CALL_STATUSES', () => {
 
 describe('APPROVAL_STATUSES', () => {
   it('should contain all expected statuses', () => {
-    expect(APPROVAL_STATUSES).toEqual([
-      'PENDING',
-      'APPROVED',
-      'REJECTED',
-      'EXPIRED',
-    ]);
+    expect(APPROVAL_STATUSES).toEqual(['PENDING', 'APPROVED', 'REJECTED', 'EXPIRED']);
   });
 
   it('should have 4 values', () => {

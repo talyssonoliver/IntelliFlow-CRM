@@ -11,9 +11,7 @@ const Icon = ({ name, className = '' }: { name: string; className?: string }) =>
   </span>
 );
 // IFC-149 Integration: Use barrel export for cleaner imports
-import {
-  type ApprovalMetrics,
-} from '@/lib/agent';
+import { type ApprovalMetrics } from '@/lib/agent';
 
 // Import types used by mock data and functions
 import type { AgentAction, ActionStatus } from '@/lib/agent';
@@ -50,10 +48,12 @@ const MOCK_ACTIONS: AgentAction[] = [
       score: 72,
       status: 'Qualified',
       nextFollowUp: '2025-01-05',
-      notes: 'Initial inquiry via website form. AI Analysis: High engagement, enterprise company, decision-maker role.',
+      notes:
+        'Initial inquiry via website form. AI Analysis: High engagement, enterprise company, decision-maker role.',
     },
     description: 'Update lead score and status based on engagement analysis',
-    aiReasoning: 'Lead opened 5 emails (100% open rate), visited pricing page 3 times, and downloaded enterprise whitepaper. Company size (500+ employees) matches ideal customer profile.',
+    aiReasoning:
+      'Lead opened 5 emails (100% open rate), visited pricing page 3 times, and downloaded enterprise whitepaper. Company size (500+ employees) matches ideal customer profile.',
     confidenceScore: 85,
     status: 'pending',
     agentId: 'scoring-agent-v1',
@@ -80,7 +80,8 @@ const MOCK_ACTIONS: AgentAction[] = [
       },
     },
     description: 'Send personalized follow-up email based on demo engagement',
-    aiReasoning: 'Contact attended 45-minute demo, asked 8 questions about API integrations, and requested pricing information. Optimal follow-up timing is 5 days post-demo based on historical conversion data.',
+    aiReasoning:
+      'Contact attended 45-minute demo, asked 8 questions about API integrations, and requested pricing information. Optimal follow-up timing is 5 days post-demo based on historical conversion data.',
     confidenceScore: 78,
     status: 'pending',
     agentId: 'outreach-agent-v1',
@@ -106,7 +107,8 @@ const MOCK_ACTIONS: AgentAction[] = [
       notes: 'Verbal agreement on terms. Awaiting legal review.',
     },
     description: 'Advance deal to negotiation stage with updated probability',
-    aiReasoning: 'Prospect verbally agreed to terms in last meeting (sentiment analysis: positive). Legal team CC\'d on latest email suggests contract review in progress. Similar deals at this stage have 75% close rate.',
+    aiReasoning:
+      "Prospect verbally agreed to terms in last meeting (sentiment analysis: positive). Legal team CC'd on latest email suggests contract review in progress. Similar deals at this stage have 75% close rate.",
     confidenceScore: 92,
     status: 'pending',
     agentId: 'pipeline-agent-v1',
@@ -134,7 +136,8 @@ const MOCK_ACTIONS: AgentAction[] = [
       ],
     },
     description: 'Create follow-up task for high-intent lead',
-    aiReasoning: 'Lead visited pricing page 5 times in last 24 hours and spent 12 minutes on comparison chart. Urgency signals suggest ready for sales conversation.',
+    aiReasoning:
+      'Lead visited pricing page 5 times in last 24 hours and spent 12 minutes on comparison chart. Urgency signals suggest ready for sales conversation.',
     confidenceScore: 68,
     status: 'pending',
     agentId: 'task-agent-v1',
@@ -301,9 +304,7 @@ function DiffView({ previousState, proposedState }: DiffViewProps) {
 
   if (changes.length === 0) {
     return (
-      <div className="text-sm text-slate-500 dark:text-slate-400 italic">
-        No changes detected
-      </div>
+      <div className="text-sm text-slate-500 dark:text-slate-400 italic">No changes detected</div>
     );
   }
 
@@ -327,17 +328,13 @@ function DiffView({ previousState, proposedState }: DiffViewProps) {
           </div>
           <div className="grid grid-cols-2 gap-4 text-xs">
             <div>
-              <span className="text-slate-500 dark:text-slate-400 block mb-1">
-                Before
-              </span>
+              <span className="text-slate-500 dark:text-slate-400 block mb-1">Before</span>
               <pre className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded p-2 overflow-x-auto text-red-800 dark:text-red-300">
                 {formatValue(change.oldValue)}
               </pre>
             </div>
             <div>
-              <span className="text-slate-500 dark:text-slate-400 block mb-1">
-                After
-              </span>
+              <span className="text-slate-500 dark:text-slate-400 block mb-1">After</span>
               <pre className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded p-2 overflow-x-auto text-green-800 dark:text-green-300">
                 {formatValue(change.newValue)}
               </pre>
@@ -392,7 +389,6 @@ function ActionCard({
   };
 
   return (
-    
     <Card className="overflow-hidden">
       {/* Header */}
       <button
@@ -432,7 +428,10 @@ function ActionCard({
                   {formatTimeAgo(action.createdAt)}
                 </span>
                 {isPending && (
-                  <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400" data-testid="expires-time">
+                  <span
+                    className="flex items-center gap-1 text-amber-600 dark:text-amber-400"
+                    data-testid="expires-time"
+                  >
                     <Icon name="warning" className="text-sm" />
                     Expires in {formatTimeRemaining(action.expiresAt)}
                   </span>
@@ -475,14 +474,23 @@ function ActionCard({
       {isExpanded && (
         <div className="border-t border-slate-200 dark:border-slate-700">
           {/* AI Reasoning */}
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border-b border-slate-200 dark:border-slate-700" data-testid="action-card-expanded">
+          <div
+            className="p-4 bg-blue-50 dark:bg-blue-900/20 border-b border-slate-200 dark:border-slate-700"
+            data-testid="action-card-expanded"
+          >
             <div className="flex items-start gap-2">
-              <Icon name="shield" className="text-base text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+              <Icon
+                name="shield"
+                className="text-base text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0"
+              />
               <div>
                 <h4 className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-1">
                   AI Reasoning
                 </h4>
-                <p className="text-sm text-blue-800 dark:text-blue-300" data-testid="ai-reasoning-content">
+                <p
+                  className="text-sm text-blue-800 dark:text-blue-300"
+                  data-testid="ai-reasoning-content"
+                >
                   {action.aiReasoning}
                 </p>
               </div>
@@ -495,10 +503,7 @@ function ActionCard({
               <Icon name="visibility" className="text-base" />
               Proposed Changes
             </h4>
-            <DiffView
-              previousState={action.previousState}
-              proposedState={action.proposedState}
-            />
+            <DiffView previousState={action.previousState} proposedState={action.proposedState} />
           </div>
 
           {/* Action Buttons */}
@@ -584,8 +589,7 @@ function ActionCard({
                   Rollback
                 </Button>
                 <span className="text-sm text-slate-500 dark:text-slate-400">
-                  Action was approved{' '}
-                  {action.reviewedAt && formatTimeAgo(action.reviewedAt)}
+                  Action was approved {action.reviewedAt && formatTimeAgo(action.reviewedAt)}
                 </span>
               </div>
             )}
@@ -631,12 +635,8 @@ function ActionCard({
               action.status === 'modified') &&
               action.feedback && (
                 <div className="text-sm">
-                  <span className="text-slate-500 dark:text-slate-400">
-                    Feedback:{' '}
-                  </span>
-                  <span className="text-slate-700 dark:text-slate-300">
-                    {action.feedback}
-                  </span>
+                  <span className="text-slate-500 dark:text-slate-400">Feedback: </span>
+                  <span className="text-slate-700 dark:text-slate-300">{action.feedback}</span>
                 </div>
               )}
 
@@ -660,18 +660,17 @@ function MetricsCard({ metrics }: MetricsCardProps) {
   return (
     <div className="grid gap-4 md:grid-cols-5" data-testid="metrics-dashboard">
       <Card className="p-4" data-testid="metric-total">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-          Total Actions
-        </div>
-        <div className="text-2xl font-bold text-slate-900 dark:text-white" data-testid="metric-value">
+        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Total Actions</div>
+        <div
+          className="text-2xl font-bold text-slate-900 dark:text-white"
+          data-testid="metric-value"
+        >
           {metrics.totalActions}
         </div>
       </Card>
 
       <Card className="p-4" data-testid="metric-approved">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-          Approved
-        </div>
+        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Approved</div>
         <div className="text-2xl font-bold text-green-600" data-testid="metric-value">
           {metrics.approved}
         </div>
@@ -681,26 +680,25 @@ function MetricsCard({ metrics }: MetricsCardProps) {
       </Card>
 
       <Card className="p-4" data-testid="metric-rejected">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-          Rejected
+        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Rejected</div>
+        <div className="text-2xl font-bold text-red-600" data-testid="metric-value">
+          {metrics.rejected}
         </div>
-        <div className="text-2xl font-bold text-red-600" data-testid="metric-value">{metrics.rejected}</div>
       </Card>
 
       <Card className="p-4" data-testid="metric-rolledback">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-          Rolled Back
-        </div>
+        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Rolled Back</div>
         <div className="text-2xl font-bold text-purple-600" data-testid="metric-value">
           {metrics.rolledBack}
         </div>
       </Card>
 
       <Card className="p-4" data-testid="metric-avgtime">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-          Avg Review Time
-        </div>
-        <div className="text-2xl font-bold text-slate-900 dark:text-white" data-testid="metric-value">
+        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Avg Review Time</div>
+        <div
+          className="text-2xl font-bold text-slate-900 dark:text-white"
+          data-testid="metric-value"
+        >
           {metrics.avgReviewTimeMs > 60000
             ? `${Math.round(metrics.avgReviewTimeMs / 60000)}m`
             : `${Math.round(metrics.avgReviewTimeMs / 1000)}s`}
@@ -793,83 +791,73 @@ function AgentApprovalsPreviewContent() {
       setMetrics((prev) => ({
         ...prev,
         approved: prev.approved + 1,
-        approvalRate: Math.round(
-          ((prev.approved + 1) / (prev.approved + prev.rejected + 1)) * 100
-        ),
+        approvalRate: Math.round(((prev.approved + 1) / (prev.approved + prev.rejected + 1)) * 100),
       }));
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const handleReject = useCallback(
-    async (actionId: string, feedback: string) => {
-      setIsLoading(true);
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+  const handleReject = useCallback(async (actionId: string, feedback: string) => {
+    setIsLoading(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-        setActions((prev) =>
-          prev.map((action) =>
-            action.id === actionId
-              ? {
-                  ...action,
-                  status: 'rejected' as ActionStatus,
-                  reviewedAt: new Date(),
-                  reviewedBy: 'current-user',
-                  feedback,
-                }
-              : action
-          )
-        );
+      setActions((prev) =>
+        prev.map((action) =>
+          action.id === actionId
+            ? {
+                ...action,
+                status: 'rejected' as ActionStatus,
+                reviewedAt: new Date(),
+                reviewedBy: 'current-user',
+                feedback,
+              }
+            : action
+        )
+      );
 
-        setMetrics((prev) => ({
-          ...prev,
-          rejected: prev.rejected + 1,
-          approvalRate: Math.round(
-            (prev.approved / (prev.approved + prev.rejected + 1)) * 100
-          ),
-        }));
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
-  );
+      setMetrics((prev) => ({
+        ...prev,
+        rejected: prev.rejected + 1,
+        approvalRate: Math.round((prev.approved / (prev.approved + prev.rejected + 1)) * 100),
+      }));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  const handleRollback = useCallback(
-    async (actionId: string, reason: string) => {
-      setIsLoading(true);
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 500));
+  const handleRollback = useCallback(async (actionId: string, reason: string) => {
+    setIsLoading(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-        setActions((prev) =>
-          prev.map((action) =>
-            action.id === actionId
-              ? {
-                  ...action,
-                  status: 'rolled_back' as ActionStatus,
-                  feedback: reason,
-                  rollbackInfo: {
-                    rolledBackAt: new Date(),
-                    rolledBackBy: 'current-user',
-                    reason,
-                    restoredState: action.previousState,
-                  },
-                }
-              : action
-          )
-        );
+      setActions((prev) =>
+        prev.map((action) =>
+          action.id === actionId
+            ? {
+                ...action,
+                status: 'rolled_back' as ActionStatus,
+                feedback: reason,
+                rollbackInfo: {
+                  rolledBackAt: new Date(),
+                  rolledBackBy: 'current-user',
+                  reason,
+                  restoredState: action.previousState,
+                },
+              }
+            : action
+        )
+      );
 
-        setMetrics((prev) => ({
-          ...prev,
-          rolledBack: prev.rolledBack + 1,
-        }));
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    []
-  );
+      setMetrics((prev) => ({
+        ...prev,
+        rolledBack: prev.rolledBack + 1,
+      }));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   const handleRefresh = useCallback(async () => {
     setIsLoading(true);
@@ -926,12 +914,7 @@ function AgentApprovalsPreviewContent() {
               {pendingCount} pending
             </span>
           )}
-          <Button
-            variant="outline"
-            onClick={handleRefresh}
-            disabled={isLoading}
-            className="gap-2"
-          >
+          <Button variant="outline" onClick={handleRefresh} disabled={isLoading} className="gap-2">
             <Icon name="refresh" className={`text-base ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
@@ -946,37 +929,27 @@ function AgentApprovalsPreviewContent() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Icon name="filter_list" className="text-base text-slate-400" />
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Filter:
-            </span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Filter:</span>
           </div>
           <div className="flex flex-wrap gap-2" data-testid="filter-buttons">
-            {(
-              [
-                'all',
-                'pending',
-                'approved',
-                'rejected',
-                'rolled_back',
-                'expired',
-              ] as const
-            ).map((status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => setFilterStatus(status)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  filterStatus === status
-                    ? 'bg-[#137fec] text-white'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                {status === 'all'
-                  ? 'All'
-                  : status.charAt(0).toUpperCase() +
-                    status.slice(1).replace('_', ' ')}
-              </button>
-            ))}
+            {(['all', 'pending', 'approved', 'rejected', 'rolled_back', 'expired'] as const).map(
+              (status) => (
+                <button
+                  key={status}
+                  type="button"
+                  onClick={() => setFilterStatus(status)}
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    filterStatus === status
+                      ? 'bg-[#137fec] text-white'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {status === 'all'
+                    ? 'All'
+                    : status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
+                </button>
+              )
+            )}
           </div>
         </div>
       </Card>
@@ -1019,9 +992,7 @@ function AgentApprovalsPreviewContent() {
                 onRollback={handleRollback}
                 isExpanded={expandedActionId === action.id}
                 onToggleExpand={() =>
-                  setExpandedActionId(
-                    expandedActionId === action.id ? null : action.id
-                  )
+                  setExpandedActionId(expandedActionId === action.id ? null : action.id)
                 }
               />
             </div>
@@ -1035,9 +1006,7 @@ function AgentApprovalsPreviewContent() {
           <div className="flex items-center gap-3">
             <Icon name="history" className="text-xl text-slate-400" />
             <div>
-              <h3 className="text-sm font-medium text-slate-900 dark:text-white">
-                Action History
-              </h3>
+              <h3 className="text-sm font-medium text-slate-900 dark:text-white">Action History</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 View full audit log of all agent actions and decisions
               </p>

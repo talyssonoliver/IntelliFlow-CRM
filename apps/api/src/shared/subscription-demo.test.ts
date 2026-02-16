@@ -246,7 +246,8 @@ describe('Subscription Demo', () => {
 
   describe('Subscription Handler Integration', () => {
     it('should emit and receive lead scored events', async () => {
-      const events: Array<{ leadId: string; score: number; confidence: number; timestamp: Date }> = [];
+      const events: Array<{ leadId: string; score: number; confidence: number; timestamp: Date }> =
+        [];
 
       // Get the event emitter via emit function
       // Emit an event to verify the chain works
@@ -299,7 +300,7 @@ describe('Subscription Demo', () => {
     it('should handle multiple concurrent lead score events', async () => {
       const events = [
         { leadId: 'lead-a', score: 80, confidence: 0.85, timestamp: new Date() },
-        { leadId: 'lead-b', score: 45, confidence: 0.60, timestamp: new Date() },
+        { leadId: 'lead-b', score: 45, confidence: 0.6, timestamp: new Date() },
         { leadId: 'lead-c', score: 92, confidence: 0.95, timestamp: new Date() },
       ];
 

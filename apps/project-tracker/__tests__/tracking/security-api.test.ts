@@ -649,10 +649,9 @@ describe('Security API Route', () => {
 
       await POST(request);
 
-      expect(mockFs.mkdir).toHaveBeenCalledWith(
-        expect.stringContaining('security'),
-        { recursive: true }
-      );
+      expect(mockFs.mkdir).toHaveBeenCalledWith(expect.stringContaining('security'), {
+        recursive: true,
+      });
     });
   });
 
@@ -864,10 +863,12 @@ describe('Security API Route', () => {
       expect(data1.scanId).toBeDefined();
 
       // Second request should see running state
-      mockFs.readFile.mockResolvedValueOnce(JSON.stringify({
-        ...SAMPLE_SCAN_STATE_RUNNING,
-        scanId: data1.scanId,
-      }));
+      mockFs.readFile.mockResolvedValueOnce(
+        JSON.stringify({
+          ...SAMPLE_SCAN_STATE_RUNNING,
+          scanId: data1.scanId,
+        })
+      );
 
       const request2 = new NextRequest('http://localhost:3002/api/tracking/security', {
         method: 'POST',

@@ -171,10 +171,7 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
               some: {
                 principal_id: userId,
                 access_level: { not: 'NONE' },
-                OR: [
-                  { expires_at: null },
-                  { expires_at: { gt: now } },
-                ],
+                OR: [{ expires_at: null }, { expires_at: { gt: now } }],
               },
             },
           },

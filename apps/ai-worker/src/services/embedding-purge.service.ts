@@ -63,7 +63,9 @@ export class EmbeddingPurgeService {
   ): Promise<EmbeddingPurgeResult> {
     // Check for legal hold before proceeding
     // NOTE: Uses raw SQL since LegalHold model may not be in schema yet
-    const legalHolds = await this.prisma.$queryRaw<Array<{ id: string; retention_until: Date | null }>>`
+    const legalHolds = await this.prisma.$queryRaw<
+      Array<{ id: string; retention_until: Date | null }>
+    >`
       SELECT id, retention_until
       FROM legal_holds
       WHERE subject_id = ${subjectId}::text
@@ -143,7 +145,10 @@ export class EmbeddingPurgeService {
    * Verify that purge was successful by checking for remaining searchable data.
    * Used for GDPR compliance verification.
    */
-  async verifyPurge(subjectId: string, tenantId: string): Promise<{
+  async verifyPurge(
+    subjectId: string,
+    tenantId: string
+  ): Promise<{
     documentsRemaining: number;
     notesRemaining: number;
     isPurged: boolean;

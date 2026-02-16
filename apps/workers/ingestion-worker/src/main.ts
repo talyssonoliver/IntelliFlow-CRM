@@ -102,10 +102,7 @@ export class IngestionWorker extends BaseWorker<IngestionJobData, IngestionJobRe
    * Cleanup worker resources
    */
   protected async onStop(): Promise<void> {
-    this.logger.info(
-      { processedByType: this.processedByType },
-      'Stopping ingestion worker'
-    );
+    this.logger.info({ processedByType: this.processedByType }, 'Stopping ingestion worker');
   }
 
   /**
@@ -114,10 +111,7 @@ export class IngestionWorker extends BaseWorker<IngestionJobData, IngestionJobRe
   protected async processJob(job: Job<IngestionJobData>): Promise<IngestionJobResult> {
     const queueName = job.queueName;
 
-    this.logger.debug(
-      { jobId: job.id, queue: queueName },
-      'Processing ingestion job'
-    );
+    this.logger.debug({ jobId: job.id, queue: queueName }, 'Processing ingestion job');
 
     switch (queueName) {
       case QUEUE_NAMES.TEXT_EXTRACTION:
@@ -253,7 +247,8 @@ if (require.main === module) {
     .then(() => {
       logger.info('Ingestion worker is running. Press Ctrl+C to stop.');
     })
-    .catch((error: Error) => { // NOSONAR: S7785
+    .catch((error: Error) => {
+      // NOSONAR: S7785
       logger.error({ error: error.message }, 'Failed to start ingestion worker');
       process.exit(1);
     });

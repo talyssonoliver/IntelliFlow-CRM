@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { ConflictResolver, mergeAppointmentChanges, ConflictInfo } from '../shared/ConflictResolver';
+import {
+  ConflictResolver,
+  mergeAppointmentChanges,
+  ConflictInfo,
+} from '../shared/ConflictResolver';
 import { Appointment, AppointmentId, TimeSlot } from '@intelliflow/domain';
 import { ExternalCalendarEvent } from '@intelliflow/application';
 
@@ -8,15 +12,17 @@ describe('ConflictResolver', () => {
   let baseAppointment: Appointment;
   let baseRemoteEvent: ExternalCalendarEvent;
 
-  function createAppointment(overrides: Partial<{
-    title: string;
-    description?: string;
-    startTime: Date;
-    endTime: Date;
-    location?: string;
-    isCancelled: boolean;
-    updatedAt: Date;
-  }> = {}): Appointment {
+  function createAppointment(
+    overrides: Partial<{
+      title: string;
+      description?: string;
+      startTime: Date;
+      endTime: Date;
+      location?: string;
+      isCancelled: boolean;
+      updatedAt: Date;
+    }> = {}
+  ): Appointment {
     const startTime = overrides.startTime ?? new Date(2025, 0, 20, 10, 0, 0);
     const endTime = overrides.endTime ?? new Date(2025, 0, 20, 11, 0, 0);
     const timeSlot = TimeSlot.reconstitute(startTime, endTime);
@@ -43,15 +49,17 @@ describe('ConflictResolver', () => {
     return apt;
   }
 
-  function createRemoteEvent(overrides: Partial<{
-    title: string;
-    description?: string;
-    startTime: Date;
-    endTime: Date;
-    location?: string;
-    status: 'confirmed' | 'tentative' | 'cancelled';
-    lastModified: Date;
-  }> = {}): ExternalCalendarEvent {
+  function createRemoteEvent(
+    overrides: Partial<{
+      title: string;
+      description?: string;
+      startTime: Date;
+      endTime: Date;
+      location?: string;
+      status: 'confirmed' | 'tentative' | 'cancelled';
+      lastModified: Date;
+    }> = {}
+  ): ExternalCalendarEvent {
     return {
       externalId: 'ext-123',
       provider: 'google',
@@ -368,13 +376,15 @@ describe('mergeAppointmentChanges', () => {
   let localAppointment: Appointment;
   let remoteEvent: ExternalCalendarEvent;
 
-  function createAppointment(overrides: Partial<{
-    title: string;
-    description?: string;
-    startTime: Date;
-    endTime: Date;
-    location?: string;
-  }> = {}): Appointment {
+  function createAppointment(
+    overrides: Partial<{
+      title: string;
+      description?: string;
+      startTime: Date;
+      endTime: Date;
+      location?: string;
+    }> = {}
+  ): Appointment {
     const startTime = overrides.startTime ?? new Date(2025, 0, 20, 10, 0, 0);
     const endTime = overrides.endTime ?? new Date(2025, 0, 20, 11, 0, 0);
     const timeSlot = TimeSlot.reconstitute(startTime, endTime);
@@ -400,13 +410,15 @@ describe('mergeAppointmentChanges', () => {
     });
   }
 
-  function createRemoteEvent(overrides: Partial<{
-    title: string;
-    description?: string;
-    startTime: Date;
-    endTime: Date;
-    location?: string;
-  }> = {}): ExternalCalendarEvent {
+  function createRemoteEvent(
+    overrides: Partial<{
+      title: string;
+      description?: string;
+      startTime: Date;
+      endTime: Date;
+      location?: string;
+    }> = {}
+  ): ExternalCalendarEvent {
     return {
       externalId: 'ext-123',
       provider: 'google',

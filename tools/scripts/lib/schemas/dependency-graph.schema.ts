@@ -13,7 +13,17 @@ import { z } from 'zod';
 const versionPattern = /^\d+\.\d+\.\d+$/;
 
 // Node status
-export const nodeStatusSchema = z.enum(['DONE', 'IN_PROGRESS', 'BLOCKED', 'PLANNED', 'FAILED', 'BACKLOG', 'VALIDATING', 'NEEDS_HUMAN', 'IN_REVIEW']);
+export const nodeStatusSchema = z.enum([
+  'DONE',
+  'IN_PROGRESS',
+  'BLOCKED',
+  'PLANNED',
+  'FAILED',
+  'BACKLOG',
+  'VALIDATING',
+  'NEEDS_HUMAN',
+  'IN_REVIEW',
+]);
 
 // Dependency type
 export const dependencyTypeSchema = z.enum(['REQUIRED', 'OPTIONAL', 'BLOCKED_BY']);
@@ -64,7 +74,9 @@ export const dependencyGraphSchema = z.object({
   blocked_tasks: z.array(z.string()).optional(),
   ready_to_start: z.array(z.string()),
   dependency_violations: z.array(dependencyViolationSchema).optional(),
-  parallel_execution_groups: z.record(z.string(), z.record(z.string(), z.array(z.string()))).optional(),
+  parallel_execution_groups: z
+    .record(z.string(), z.record(z.string(), z.array(z.string())))
+    .optional(),
 });
 
 // Export TypeScript types inferred from Zod schema

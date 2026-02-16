@@ -68,17 +68,41 @@ export function getSLAConfig(status: SLAStatus) {
 export function getStatusConfig(status: TicketStatus) {
   switch (status) {
     case 'OPEN':
-      return { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-700 dark:text-blue-400', label: 'Open' };
+      return {
+        bg: 'bg-blue-100 dark:bg-blue-900/30',
+        text: 'text-blue-700 dark:text-blue-400',
+        label: 'Open',
+      };
     case 'IN_PROGRESS':
-      return { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-400', label: 'In Progress' };
+      return {
+        bg: 'bg-amber-100 dark:bg-amber-900/30',
+        text: 'text-amber-700 dark:text-amber-400',
+        label: 'In Progress',
+      };
     case 'WAITING_ON_CUSTOMER':
-      return { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400', label: 'Waiting on Customer' };
+      return {
+        bg: 'bg-purple-100 dark:bg-purple-900/30',
+        text: 'text-purple-700 dark:text-purple-400',
+        label: 'Waiting on Customer',
+      };
     case 'WAITING_ON_THIRD_PARTY':
-      return { bg: 'bg-indigo-100 dark:bg-indigo-900/30', text: 'text-indigo-700 dark:text-indigo-400', label: 'Waiting on Third Party' };
+      return {
+        bg: 'bg-indigo-100 dark:bg-indigo-900/30',
+        text: 'text-indigo-700 dark:text-indigo-400',
+        label: 'Waiting on Third Party',
+      };
     case 'RESOLVED':
-      return { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', label: 'Resolved' };
+      return {
+        bg: 'bg-green-100 dark:bg-green-900/30',
+        text: 'text-green-700 dark:text-green-400',
+        label: 'Resolved',
+      };
     case 'CLOSED':
-      return { bg: 'bg-slate-100 dark:bg-slate-800', text: 'text-slate-500 dark:text-slate-400', label: 'Closed' };
+      return {
+        bg: 'bg-slate-100 dark:bg-slate-800',
+        text: 'text-slate-500 dark:text-slate-400',
+        label: 'Closed',
+      };
   }
 }
 
@@ -87,13 +111,33 @@ export function getStatusConfig(status: TicketStatus) {
 export function getPriorityConfig(priority: TicketPriority) {
   switch (priority) {
     case 'CRITICAL':
-      return { bg: 'bg-red-50 dark:bg-red-900/20', text: 'text-red-600 dark:text-red-400', icon: 'priority_high', label: 'Critical' };
+      return {
+        bg: 'bg-red-50 dark:bg-red-900/20',
+        text: 'text-red-600 dark:text-red-400',
+        icon: 'priority_high',
+        label: 'Critical',
+      };
     case 'HIGH':
-      return { bg: 'bg-orange-50 dark:bg-orange-900/20', text: 'text-orange-600 dark:text-orange-400', icon: 'arrow_upward', label: 'High' };
+      return {
+        bg: 'bg-orange-50 dark:bg-orange-900/20',
+        text: 'text-orange-600 dark:text-orange-400',
+        icon: 'arrow_upward',
+        label: 'High',
+      };
     case 'MEDIUM':
-      return { bg: 'bg-slate-50 dark:bg-slate-800', text: 'text-slate-600 dark:text-slate-400', icon: 'remove', label: 'Medium' };
+      return {
+        bg: 'bg-slate-50 dark:bg-slate-800',
+        text: 'text-slate-600 dark:text-slate-400',
+        icon: 'remove',
+        label: 'Medium',
+      };
     case 'LOW':
-      return { bg: 'bg-slate-50 dark:bg-slate-800', text: 'text-slate-500 dark:text-slate-400', icon: 'arrow_downward', label: 'Low' };
+      return {
+        bg: 'bg-slate-50 dark:bg-slate-800',
+        text: 'text-slate-500 dark:text-slate-400',
+        icon: 'arrow_downward',
+        label: 'Low',
+      };
   }
 }
 
@@ -101,10 +145,15 @@ export function getPriorityConfig(priority: TicketPriority) {
 
 export function getChannelIcon(channel: string) {
   switch (channel) {
-    case 'email': return 'mail';
-    case 'phone': return 'call';
-    case 'chat': return 'chat';
-    case 'portal': return 'language';
-    default: return 'help';
+    case 'email':
+      return 'mail';
+    case 'phone':
+      return 'call';
+    case 'chat':
+      return 'chat';
+    case 'portal':
+      return 'language';
+    default:
+      return 'help';
   }
 }

@@ -1,6 +1,7 @@
 # @intelliflow/sdk
 
-> Official TypeScript SDK for IntelliFlow CRM - Full end-to-end type safety with tRPC
+> Official TypeScript SDK for IntelliFlow CRM - Full end-to-end type safety with
+> tRPC
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
 [![tRPC](https://img.shields.io/badge/tRPC-11.8.0-purple.svg)](https://trpc.io/)
@@ -9,15 +10,23 @@
 
 ## Overview
 
-The IntelliFlow SDK provides fully-typed API clients for the IntelliFlow CRM platform. Built on top of [tRPC](https://trpc.io/), it offers **zero code generation** type safety - types flow automatically from the backend to your frontend code.
+The IntelliFlow SDK provides fully-typed API clients for the IntelliFlow CRM
+platform. Built on top of [tRPC](https://trpc.io/), it offers **zero code
+generation** type safety - types flow automatically from the backend to your
+frontend code.
 
 ### Key Features
 
-- **End-to-End Type Safety**: Full TypeScript inference from API to client without code generation
-- **React Query Integration**: Automatic caching, refetching, optimistic updates, and suspense support
-- **Vanilla Client**: For server-side rendering, API routes, testing, or non-React applications
-- **Complete CRM APIs**: Leads, Contacts, Accounts, Opportunities, Tasks, Tickets, and more
-- **AI Integration**: Built-in support for AI-powered lead scoring and agent tools
+- **End-to-End Type Safety**: Full TypeScript inference from API to client
+  without code generation
+- **React Query Integration**: Automatic caching, refetching, optimistic
+  updates, and suspense support
+- **Vanilla Client**: For server-side rendering, API routes, testing, or
+  non-React applications
+- **Complete CRM APIs**: Leads, Contacts, Accounts, Opportunities, Tasks,
+  Tickets, and more
+- **AI Integration**: Built-in support for AI-powered lead scoring and agent
+  tools
 - **Real-time Updates**: WebSocket subscriptions for live data synchronization
 
 ## Installation
@@ -140,7 +149,7 @@ await createLead.mutateAsync({
   company: 'Acme Corp',
   source: 'WEBSITE',
   phone: '+1234567890', // Optional
-  title: 'CTO',         // Optional
+  title: 'CTO', // Optional
   notes: 'Met at conference', // Optional
 });
 
@@ -381,7 +390,7 @@ await createTask.mutateAsync({
   priority: 'HIGH',
   dueDate: new Date('2024-02-15'),
   assigneeId: 'user_123',
-  leadId: 'lead_123',       // Optional - link to lead
+  leadId: 'lead_123', // Optional - link to lead
   contactId: 'contact_123', // Optional - link to contact
   opportunityId: 'opp_123', // Optional - link to opportunity
 });
@@ -786,7 +795,8 @@ import type {
 
 ## Autocomplete Experience
 
-The SDK provides full IntelliSense support in VS Code and other TypeScript-enabled editors:
+The SDK provides full IntelliSense support in VS Code and other
+TypeScript-enabled editors:
 
 ```
 trpc.lead.     →  Shows: create, getById, list, update, delete, qualify, convert...
@@ -798,6 +808,7 @@ trpc.lead.list.useQuery({
 ```
 
 This works because:
+
 1. tRPC infers types from the backend router definitions
 2. Zod schemas provide runtime validation AND TypeScript types
 3. No code generation needed - types are always in sync

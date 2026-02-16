@@ -432,7 +432,12 @@ describe('analyticsRouter', () => {
     it('should return recent activity feed', async () => {
       const mockActivities = [
         { id: '1', icon: 'user-plus', description: 'New lead: John Doe', time: '2 minutes ago' },
-        { id: '2', icon: 'check-circle', description: 'Deal won: Acme Corp', time: '15 minutes ago' },
+        {
+          id: '2',
+          icon: 'check-circle',
+          description: 'Deal won: Acme Corp',
+          time: '15 minutes ago',
+        },
         { id: '3', icon: 'star', description: 'Lead qualified: Jane Smith', time: '1 hour ago' },
       ];
 

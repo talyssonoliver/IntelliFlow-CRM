@@ -18,7 +18,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 vi.mock('@intelliflow/domain', () => {
   class MockCaseId {
     value: string;
-    constructor(v: string) { this.value = v; }
+    constructor(v: string) {
+      this.value = v;
+    }
     static create(v: string) {
       if (!v || typeof v !== 'string' || v === 'invalid') {
         return { isFailure: true, value: undefined };
@@ -26,7 +28,9 @@ vi.mock('@intelliflow/domain', () => {
       return { isFailure: false, value: new MockCaseId(v) };
     }
   }
-  class MockEvent { constructor(..._args: any[]) {} }
+  class MockEvent {
+    constructor(..._args: any[]) {}
+  }
   return {
     CaseId: MockCaseId,
     CaseWorkflowStartedEvent: MockEvent,
@@ -61,7 +65,13 @@ import { getCaseEventWorkflowEngine, getRulesEngine } from '@intelliflow/platfor
 const UUID = '550e8400-e29b-41d4-a716-446655440000';
 
 function ctx(ov: Partial<EventContext> = {}): EventContext {
-  return { eventId: 'evt-b11', eventType: 'case.created', occurredAt: new Date(), userId: 'u1', ...ov };
+  return {
+    eventId: 'evt-b11',
+    eventType: 'case.created',
+    occurredAt: new Date(),
+    userId: 'u1',
+    ...ov,
+  };
 }
 function pay(ov: Partial<CaseEventPayload> = {}): CaseEventPayload {
   return { caseId: UUID, title: 'T', clientId: 'c1', assignedTo: 'u1', priority: 'MEDIUM', ...ov };
@@ -162,7 +172,7 @@ describe('Case Handler b11 - uncovered branches', () => {
       const handler = new CaseStatusChangedHandler();
       const result = await handler.handle(
         pay({ previousStatus: 'OPEN', newStatus: 'IN_PROGRESS', changedBy: undefined }),
-        ctx({ userId: undefined }),
+        ctx({ userId: undefined })
       );
 
       expect(result.success).toBe(true);
@@ -172,10 +182,7 @@ describe('Case Handler b11 - uncovered branches', () => {
   describe('CaseApprovalRequiredHandler - no userId', () => {
     it('should use system as userId fallback', async () => {
       const handler = new CaseApprovalRequiredHandler();
-      const result = await handler.handle(
-        pay(),
-        ctx({ userId: undefined }),
-      );
+      const result = await handler.handle(pay(), ctx({ userId: undefined }));
 
       expect(result.success).toBe(true);
     });
@@ -187,7 +194,7 @@ describe('Case Handler b11 - uncovered branches', () => {
       const handler = new CaseClosedHandler();
       const result = await handler.handle(
         pay({ changedBy: undefined }),
-        ctx({ userId: undefined }),
+        ctx({ userId: undefined })
       );
 
       expect(result.success).toBe(true);

@@ -82,35 +82,40 @@ export function UpcomingTasksWidget(_props: WidgetProps) {
             <p className="text-sm text-slate-500 dark:text-slate-400">No upcoming tasks</p>
           </div>
         )}
-        {!isLoading && tasks.map((task: any) => (
-          <Link
-            key={task.id}
-            href={`/tasks/${task.id}`}
-            className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <input
-              type="checkbox"
-              className="mt-1 rounded border-slate-300 dark:border-slate-600 cursor-pointer"
-              checked={false}
-              title="Mark as complete"
-              onChange={() => completeMutation.mutate({ taskId: task.id })}
-              onClick={(e) => e.stopPropagation()}
-              onKeyDown={(e) => e.stopPropagation()}
-              aria-label={`Complete task: ${task.title}`}
-            />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{task.title}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className={`text-xs font-medium ${priorityColors[task.priority] ?? 'text-slate-500'}`}>
-                  {task.priority?.charAt(0) + task.priority?.slice(1).toLowerCase()}
-                </span>
-                <span className={`text-xs ${getDueDateColor(task.dueDate)}`}>
-                  {formatDueDate(task.dueDate)}
-                </span>
+        {!isLoading &&
+          tasks.map((task: any) => (
+            <Link
+              key={task.id}
+              href={`/tasks/${task.id}`}
+              className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <input
+                type="checkbox"
+                className="mt-1 rounded border-slate-300 dark:border-slate-600 cursor-pointer"
+                checked={false}
+                title="Mark as complete"
+                onChange={() => completeMutation.mutate({ taskId: task.id })}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
+                aria-label={`Complete task: ${task.title}`}
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                  {task.title}
+                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span
+                    className={`text-xs font-medium ${priorityColors[task.priority] ?? 'text-slate-500'}`}
+                  >
+                    {task.priority?.charAt(0) + task.priority?.slice(1).toLowerCase()}
+                  </span>
+                  <span className={`text-xs ${getDueDateColor(task.dueDate)}`}>
+                    {formatDueDate(task.dueDate)}
+                  </span>
+                </div>
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          ))}
       </div>
 
       <button

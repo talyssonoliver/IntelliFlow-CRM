@@ -141,4 +141,3 @@ export function findTaskFile(taskId: string, baseDir: string): string | null {
 
   return search(baseDir);
 }
-

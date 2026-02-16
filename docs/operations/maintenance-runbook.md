@@ -2,30 +2,32 @@
 
 ## Quick Commands
 
-| Command | Description | When to Use |
-|---------|-------------|-------------|
-| `pnpm disk:check` | Check available disk space | Daily / Before large operations |
-| `pnpm clean:build` | Remove build artifacts (.next, dist, .turbo) | After builds, before commits |
-| `pnpm clean:full` | Full cleanup (build + caches) | Weekly / When disk is low |
-| `pnpm maintenance` | Complete maintenance routine | Weekly / Monthly |
+| Command            | Description                                  | When to Use                     |
+| ------------------ | -------------------------------------------- | ------------------------------- |
+| `pnpm disk:check`  | Check available disk space                   | Daily / Before large operations |
+| `pnpm clean:build` | Remove build artifacts (.next, dist, .turbo) | After builds, before commits    |
+| `pnpm clean:full`  | Full cleanup (build + caches)                | Weekly / When disk is low       |
+| `pnpm maintenance` | Complete maintenance routine                 | Weekly / Monthly                |
 
 ## Automated Protections
 
 ### Pre-commit Hook
+
 The pre-commit hook automatically checks disk space:
+
 - **Blocks commit** if <1GB free (critical)
 - **Warns** if <5GB free (caution)
 
 ### What Gets Cleaned
 
-| Target | Size Impact | Command |
-|--------|-------------|---------|
-| pnpm store | 1-10GB | `pnpm store prune` |
-| npm cache | 0.5-2GB | `npm cache clean --force` |
-| .next folders | 0.5-2GB | `pnpm clean:build` |
-| .turbo cache | 0.5-5GB | `pnpm clean:build` |
-| dist folders | 0.1-0.5GB | `pnpm clean:build` |
-| Git objects | 0.1-1GB | `git gc --prune=now` |
+| Target        | Size Impact | Command                   |
+| ------------- | ----------- | ------------------------- |
+| pnpm store    | 1-10GB      | `pnpm store prune`        |
+| npm cache     | 0.5-2GB     | `npm cache clean --force` |
+| .next folders | 0.5-2GB     | `pnpm clean:build`        |
+| .turbo cache  | 0.5-5GB     | `pnpm clean:build`        |
+| dist folders  | 0.1-0.5GB   | `pnpm clean:build`        |
+| Git objects   | 0.1-1GB     | `git gc --prune=now`      |
 
 ## Weekly Maintenance Schedule
 
@@ -65,12 +67,12 @@ git gc --aggressive --prune=now
 
 ## Monitoring Thresholds
 
-| Level | Free Space | Action |
-|-------|------------|--------|
-| OK | >10GB | No action needed |
-| Caution | 5-10GB | Run `pnpm clean:build` |
-| Warning | 1-5GB | Run `pnpm clean:full` |
-| Critical | <1GB | Run emergency cleanup |
+| Level    | Free Space | Action                 |
+| -------- | ---------- | ---------------------- |
+| OK       | >10GB      | No action needed       |
+| Caution  | 5-10GB     | Run `pnpm clean:build` |
+| Warning  | 1-5GB      | Run `pnpm clean:full`  |
+| Critical | <1GB       | Run emergency cleanup  |
 
 ## Common Space Hogs
 

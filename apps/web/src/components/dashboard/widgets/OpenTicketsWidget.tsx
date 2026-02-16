@@ -45,7 +45,9 @@ export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-start justify-between">
         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-          <span className="material-symbols-outlined text-2xl text-primary">confirmation_number</span>
+          <span className="material-symbols-outlined text-2xl text-primary">
+            confirmation_number
+          </span>
         </div>
         <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-destructive-muted text-destructive">
           {metrics.urgent} Urgent

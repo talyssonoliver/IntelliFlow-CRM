@@ -173,7 +173,9 @@ describe('WebhookFramework - b11', () => {
         loggingEnabled: false,
       });
       dlFw.registerSource(makeSource({ name: 's' }));
-      dlFw.on('dl.evt', async () => { throw new Error('always fail'); });
+      dlFw.on('dl.evt', async () => {
+        throw new Error('always fail');
+      });
 
       const body = JSON.stringify({ id: 'dl-evt', type: 'dl.evt' });
       const sig = sign(body, 'secret123');

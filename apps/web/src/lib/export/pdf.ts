@@ -20,15 +20,8 @@ export interface ReportSection {
 /**
  * Generate HTML content for PDF export
  */
-function generatePDFHTML(
-  sections: ReportSection[],
-  options: PDFExportOptions = {}
-): string {
-  const {
-    title = 'Analytics Report',
-    subtitle = '',
-    includeTimestamp = true,
-  } = options;
+function generatePDFHTML(sections: ReportSection[], options: PDFExportOptions = {}): string {
+  const { title = 'Analytics Report', subtitle = '', includeTimestamp = true } = options;
 
   const timestamp = new Date().toLocaleString();
 
@@ -144,54 +137,64 @@ function generatePDFHTML(
     </div>
   `;
 
-  const sectionsHTML = sections.map(section => {
-    let contentHTML = '';
+  const sectionsHTML = sections
+    .map((section) => {
+      let contentHTML = '';
 
-    if (section.type === 'metrics' && Array.isArray(section.data)) {
-      const metrics = section.data as Array<{
-        name: string;
-        value: string | number;
-        trend?: string;
-      }>;
-      contentHTML = `
+      if (section.type === 'metrics' && Array.isArray(section.data)) {
+        const metrics = section.data as Array<{
+          name: string;
+          value: string | number;
+          trend?: string;
+        }>;
+        contentHTML = `
         <div class="metrics-grid">
-          ${metrics.map(m => `
+          ${metrics
+            .map(
+              (m) => `
             <div class="metric-card">
               <div class="label">${escapeHTML(m.name)}</div>
               <div class="value">${escapeHTML(String(m.value))}</div>
               ${m.trend ? `<div class="trend ${m.trend.startsWith('+') ? 'positive' : 'negative'}">${escapeHTML(m.trend)}</div>` : ''}
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
         </div>
       `;
-    } else if (section.type === 'table' && Array.isArray(section.data)) {
-      const rows = section.data as Array<Record<string, unknown>>;
-      if (rows.length > 0) {
-        const headers = Object.keys(rows[0]);
-        contentHTML = `
+      } else if (section.type === 'table' && Array.isArray(section.data)) {
+        const rows = section.data as Array<Record<string, unknown>>;
+        if (rows.length > 0) {
+          const headers = Object.keys(rows[0]);
+          contentHTML = `
           <table>
             <thead>
-              <tr>${headers.map(h => `<th>${escapeHTML(h)}</th>`).join('')}</tr>
+              <tr>${headers.map((h) => `<th>${escapeHTML(h)}</th>`).join('')}</tr>
             </thead>
             <tbody>
-              ${rows.map(row => `
-                <tr>${headers.map(h => `<td>${escapeHTML(String(row[h] ?? ''))}</td>`).join('')}</tr>
-              `).join('')}
+              ${rows
+                .map(
+                  (row) => `
+                <tr>${headers.map((h) => `<td>${escapeHTML(String(row[h] ?? ''))}</td>`).join('')}</tr>
+              `
+                )
+                .join('')}
             </tbody>
           </table>
         `;
+        }
+      } else if (section.type === 'text') {
+        contentHTML = `<div class="text-content">${escapeHTML(String(section.data))}</div>`;
       }
-    } else if (section.type === 'text') {
-      contentHTML = `<div class="text-content">${escapeHTML(String(section.data))}</div>`;
-    }
 
-    return `
+      return `
       <div class="section">
         <h2 class="section-title">${escapeHTML(section.title)}</h2>
         ${contentHTML}
       </div>
     `;
-  }).join('');
+    })
+    .join('');
 
   const footerHTML = `
     <div class="footer">
@@ -227,16 +230,13 @@ function escapeHTML(str: string): string {
     '"': '&quot;',
     "'": '&#39;',
   };
-  return str.replace(/[&<>"']/g, char => htmlEntities[char]);
+  return str.replace(/[&<>"']/g, (char) => htmlEntities[char]);
 }
 
 /**
  * Export report to PDF using browser print dialog
  */
-export function exportToPDF(
-  sections: ReportSection[],
-  options: PDFExportOptions = {}
-): void {
+export function exportToPDF(sections: ReportSection[], options: PDFExportOptions = {}): void {
   const html = generatePDFHTML(sections, options);
 
   // Open in new window for printing
@@ -280,7 +280,7 @@ export function exportAnalyticsToPDF(
     {
       title: 'Pipeline Overview',
       type: 'table',
-      data: data.pipeline.map(p => ({
+      data: data.pipeline.map((p) => ({
         Stage: p.stage,
         Value: p.value,
         Deals: p.deals,

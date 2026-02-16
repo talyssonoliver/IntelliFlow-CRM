@@ -328,7 +328,13 @@ describe('pgvector Helper Module - Additional Coverage', () => {
     it('should query database and map results', async () => {
       const embedding = Array(1536).fill(0.1);
       mockPrismaQueryRaw.mockResolvedValueOnce([
-        { id: 'contact-1', email: 'c1@test.com', first_name: 'John', last_name: 'Doe', similarity: 0.88 },
+        {
+          id: 'contact-1',
+          email: 'c1@test.com',
+          first_name: 'John',
+          last_name: 'Doe',
+          similarity: 0.88,
+        },
       ]);
 
       const results = await findSimilarContacts(embedding, { threshold: 0.7, limit: 5 });
@@ -420,7 +426,8 @@ describe('pgvector Helper Module - Additional Coverage', () => {
       mockPrismaQueryRaw.mockResolvedValueOnce([
         {
           indexname: 'leads_embedding_hnsw_idx',
-          indexdef: 'CREATE INDEX leads_embedding_hnsw_idx ON leads USING hnsw (embedding vector_cosine_ops)',
+          indexdef:
+            'CREATE INDEX leads_embedding_hnsw_idx ON leads USING hnsw (embedding vector_cosine_ops)',
         },
       ]);
 

@@ -30,9 +30,12 @@ export default function NewAppointmentPage() {
     },
   }) ?? { mutateAsync: async () => {}, isPending: false };
 
-  const handleSubmit = useCallback(async (data: AppointmentFormData) => {
-    await createMutation.mutateAsync(data);
-  }, [createMutation]);
+  const handleSubmit = useCallback(
+    async (data: AppointmentFormData) => {
+      await createMutation.mutateAsync(data);
+    },
+    [createMutation]
+  );
 
   const handleCancel = useCallback(() => {
     router.push('/calendar');

@@ -14,7 +14,9 @@ import { z } from 'zod';
  */
 
 // Node environment
-const nodeEnvSchema = z.enum(['development', 'test', 'staging', 'production']).default('development');
+const nodeEnvSchema = z
+  .enum(['development', 'test', 'staging', 'production'])
+  .default('development');
 
 // Database configuration
 const databaseUrlSchema = z.string().url().startsWith('postgresql://');
@@ -148,10 +150,9 @@ export const prodEnvSchema = envSchema.extend({
   JWT_SECRET: z.string().min(32),
   SESSION_SECRET: z.string().min(32),
   SENTRY_DSN: z.string().url(), // Required in production
-  CORS_ORIGIN: z.string().refine(
-    (val) => val !== '*',
-    'CORS_ORIGIN must be specific in production (not *)'
-  ),
+  CORS_ORIGIN: z
+    .string()
+    .refine((val) => val !== '*', 'CORS_ORIGIN must be specific in production (not *)'),
 });
 
 /**

@@ -18,8 +18,18 @@ import { createMockContactDetail, createMockHandlers, resetAllMocks } from './co
 
 // Mock next/link
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -28,7 +38,11 @@ vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <div className={className}>{children}</div>
   ),
-  Tabs: ({ children, value, onValueChange }: {
+  Tabs: ({
+    children,
+    value,
+    onValueChange,
+  }: {
     children: React.ReactNode;
     value: string;
     onValueChange: (v: string) => void;
@@ -37,27 +51,45 @@ vi.mock('@intelliflow/ui', () => ({
       {children}
     </div>
   ),
-  TabsList: ({ children, className, 'aria-label': ariaLabel }: {
+  TabsList: ({
+    children,
+    className,
+    'aria-label': ariaLabel,
+  }: {
     children: React.ReactNode;
     className?: string;
     'aria-label'?: string;
   }) => (
-    <div className={className} role="tablist" aria-label={ariaLabel}>{children}</div>
+    <div className={className} role="tablist" aria-label={ariaLabel}>
+      {children}
+    </div>
   ),
-  TabsTrigger: ({ children, value, className }: {
+  TabsTrigger: ({
+    children,
+    value,
+    className,
+  }: {
     children: React.ReactNode;
     value: string;
     className?: string;
   }) => (
-    <button role="tab" data-value={value} className={className}>{children}</button>
+    <button role="tab" data-value={value} className={className}>
+      {children}
+    </button>
   ),
-  TabsContent: ({ children, value, className }: {
+  TabsContent: ({
+    children,
+    value,
+    className,
+  }: {
     children: React.ReactNode;
     value: string;
     className?: string;
   }) => (
     // Always render all tab panels - real component uses CSS to hide inactive ones
-    <div role="tabpanel" data-value={value} className={className}>{children}</div>
+    <div role="tabpanel" data-value={value} className={className}>
+      {children}
+    </div>
   ),
   ChurnRiskCard: ({ data, title }: { data: unknown; title: string }) => (
     <div data-testid="churn-risk-card">{title}</div>
@@ -317,13 +349,13 @@ describe('ContactDetail', () => {
 
       // Query tabs by role to avoid conflicts with other text on page
       const tabs = screen.getAllByRole('tab');
-      expect(tabs.some(tab => tab.textContent?.includes('Overview'))).toBe(true);
-      expect(tabs.some(tab => tab.textContent?.includes('Activity'))).toBe(true);
-      expect(tabs.some(tab => tab.textContent?.includes('Deals'))).toBe(true);
-      expect(tabs.some(tab => tab.textContent?.includes('Tickets'))).toBe(true);
-      expect(tabs.some(tab => tab.textContent?.includes('Documents'))).toBe(true);
-      expect(tabs.some(tab => tab.textContent?.includes('Notes'))).toBe(true);
-      expect(tabs.some(tab => tab.textContent?.includes('AI Insights'))).toBe(true);
+      expect(tabs.some((tab) => tab.textContent?.includes('Overview'))).toBe(true);
+      expect(tabs.some((tab) => tab.textContent?.includes('Activity'))).toBe(true);
+      expect(tabs.some((tab) => tab.textContent?.includes('Deals'))).toBe(true);
+      expect(tabs.some((tab) => tab.textContent?.includes('Tickets'))).toBe(true);
+      expect(tabs.some((tab) => tab.textContent?.includes('Documents'))).toBe(true);
+      expect(tabs.some((tab) => tab.textContent?.includes('Notes'))).toBe(true);
+      expect(tabs.some((tab) => tab.textContent?.includes('AI Insights'))).toBe(true);
     });
 
     it('shows tab counts when provided', () => {
@@ -341,8 +373,8 @@ describe('ContactDetail', () => {
 
       // Tab counts appear as badges next to tab labels
       const tabs = screen.getAllByRole('tab');
-      const dealsTab = tabs.find(tab => tab.textContent?.includes('Deals'));
-      const ticketsTab = tabs.find(tab => tab.textContent?.includes('Tickets'));
+      const dealsTab = tabs.find((tab) => tab.textContent?.includes('Deals'));
+      const ticketsTab = tabs.find((tab) => tab.textContent?.includes('Tickets'));
 
       expect(dealsTab?.textContent).toContain('5');
       expect(ticketsTab?.textContent).toContain('3');
@@ -362,7 +394,7 @@ describe('ContactDetail', () => {
       );
 
       const tabs = screen.getAllByRole('tab');
-      const dealsTab = tabs.find(tab => tab.textContent?.includes('Deals'));
+      const dealsTab = tabs.find((tab) => tab.textContent?.includes('Deals'));
 
       // Should not show "0" badge
       expect(dealsTab?.textContent).not.toMatch(/\b0\b/);
@@ -406,7 +438,9 @@ describe('ContactDetail', () => {
       // Component: lifetimeValue / 100000 = 250000 / 100000 = 2.5 → toFixed(0) = "2" → "$2k"
       // Search in the entire document for any dollar amounts
       const dollarAmounts = container.querySelectorAll('p');
-      const ltv = Array.from(dollarAmounts).find(p => p.textContent?.includes('$') && p.textContent?.includes('k'));
+      const ltv = Array.from(dollarAmounts).find(
+        (p) => p.textContent?.includes('$') && p.textContent?.includes('k')
+      );
       expect(ltv).toBeTruthy();
       expect(screen.getByText('Est. Lifetime Value')).toBeInTheDocument();
 
@@ -513,7 +547,10 @@ describe('ContactDetail', () => {
         />
       );
 
-      expect(screen.getByRole('tablist')).toHaveAttribute('aria-label', 'Contact information sections');
+      expect(screen.getByRole('tablist')).toHaveAttribute(
+        'aria-label',
+        'Contact information sections'
+      );
     });
 
     it('has accessible button labels', () => {

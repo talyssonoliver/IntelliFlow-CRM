@@ -21,30 +21,30 @@ import { MONOREPO_ROOT } from './paths';
  */
 export type FileCategory =
   // Source code
-  | 'app-source'      // apps/**/*.ts(x)
-  | 'package-source'  // packages/**/*.ts(x)
-  | 'test-source'     // **/*.test.ts, tests/**
+  | 'app-source' // apps/**/*.ts(x)
+  | 'package-source' // packages/**/*.ts(x)
+  | 'test-source' // **/*.test.ts, tests/**
   // Generated/Build outputs
-  | 'attestation'     // artifacts/attestations/**
-  | 'benchmark'       // artifacts/benchmarks/**
-  | 'coverage'        // artifacts/coverage/**
-  | 'report'          // artifacts/reports/**
-  | 'metric'          // artifacts/metrics/**
-  | 'log'             // artifacts/logs/**
-  | 'generated'       // Other generated files
+  | 'attestation' // artifacts/attestations/**
+  | 'benchmark' // artifacts/benchmarks/**
+  | 'coverage' // artifacts/coverage/**
+  | 'report' // artifacts/reports/**
+  | 'metric' // artifacts/metrics/**
+  | 'log' // artifacts/logs/**
+  | 'generated' // Other generated files
   // Configuration
-  | 'ci-config'       // .github/workflows/**
-  | 'infra-config'    // infra/**
-  | 'tool-config'     // Root config files (*.json, *.yml)
-  | 'claude-config'   // .claude/**
+  | 'ci-config' // .github/workflows/**
+  | 'infra-config' // infra/**
+  | 'tool-config' // Root config files (*.json, *.yml)
+  | 'claude-config' // .claude/**
   // Documentation
-  | 'docs'            // docs/**
-  | 'readme'          // README.md, *.md in root
+  | 'docs' // docs/**
+  | 'readme' // README.md, *.md in root
   // Tools/Scripts
-  | 'tool'            // tools/**
-  | 'script'          // scripts/**
+  | 'tool' // tools/**
+  | 'script' // scripts/**
   // Other
-  | 'misc';           // Everything else
+  | 'misc'; // Everything else
 
 /**
  * Top-level directory types
@@ -64,26 +64,26 @@ export type DirectoryType =
   | 'root';
 
 export interface FileEntry {
-  path: string;           // Relative to monorepo root
+  path: string; // Relative to monorepo root
   absolutePath: string;
   exists: boolean;
   type: 'file' | 'directory';
   size: number;
-  lastModified: string;   // ISO timestamp
-  linkedTasks: string[];  // Task IDs referencing this file
-  isOrphan: boolean;      // Not linked to any task
+  lastModified: string; // ISO timestamp
+  linkedTasks: string[]; // Task IDs referencing this file
+  isOrphan: boolean; // Not linked to any task
   category: FileCategory;
   directory: DirectoryType;
   extension: string;
   isTestFile: boolean;
-  hasTest: boolean;       // For source files, whether a test exists
+  hasTest: boolean; // For source files, whether a test exists
   // Git history metadata (populated by enrichWithGitHistory)
   gitHistory?: {
-    createdAt: string | null;        // ISO timestamp from git
-    createdBy: string | null;        // Git author name
-    createdCommit: string | null;    // Commit hash
-    createdPurpose: string | null;   // Commit message (why it was created)
-    createdTaskId: string | null;    // Extracted task ID from commit
+    createdAt: string | null; // ISO timestamp from git
+    createdBy: string | null; // Git author name
+    createdCommit: string | null; // Commit hash
+    createdPurpose: string | null; // Commit message (why it was created)
+    createdTaskId: string | null; // Extracted task ID from commit
     lastModifiedBy: string | null;
     lastModifiedCommit: string | null;
     lastModifiedMessage: string | null;
@@ -100,7 +100,7 @@ export interface DirectorySummary {
   linkedCount: number;
   orphanCount: number;
   byExtension: Record<string, number>;
-  testCoverage?: number;  // Percentage of source files with tests
+  testCoverage?: number; // Percentage of source files with tests
 }
 
 export interface CodebaseHealth {
@@ -109,8 +109,8 @@ export interface CodebaseHealth {
   linkedFiles: number;
   orphanFiles: number;
   missingFiles: number;
-  documentationCoverage: number;  // % of packages with README
-  testCoverage: number;           // % of source files with tests
+  documentationCoverage: number; // % of packages with README
+  testCoverage: number; // % of source files with tests
   byDirectory: DirectorySummary[];
   byCategory: Record<FileCategory, number>;
   byExtension: Record<string, number>;
@@ -137,12 +137,12 @@ export interface CleanupSuggestion {
 // =============================================================================
 
 export type ContentIssueType =
-  | 'placeholder'      // File explicitly says it's a placeholder
-  | 'mock_data'        // Data labeled as mock/fake/dummy
-  | 'wrong_format'     // Expected .mp4 but got .md, etc.
-  | 'empty_stub'       // File exists but has no real content
-  | 'pending_status'   // Content indicates pending/incomplete status
-  | 'fabricated';      // Generated test data with no real execution
+  | 'placeholder' // File explicitly says it's a placeholder
+  | 'mock_data' // Data labeled as mock/fake/dummy
+  | 'wrong_format' // Expected .mp4 but got .md, etc.
+  | 'empty_stub' // File exists but has no real content
+  | 'pending_status' // Content indicates pending/incomplete status
+  | 'fabricated'; // Generated test data with no real execution
 
 export interface ContentValidationResult {
   path: string;
@@ -150,7 +150,7 @@ export interface ContentValidationResult {
   issues: Array<{
     type: ContentIssueType;
     message: string;
-    evidence: string;  // Line or pattern that triggered the issue
+    evidence: string; // Line or pattern that triggered the issue
   }>;
 }
 
@@ -213,7 +213,8 @@ const CONTENT_ISSUE_PATTERNS: Array<{
   },
   {
     type: 'fabricated',
-    pattern: /"passed"\s*:\s*true[\s\S]*?"passed"\s*:\s*true[\s\S]*?"passed"\s*:\s*true[\s\S]*?"passed"\s*:\s*true[\s\S]*?"passed"\s*:\s*true/gi,
+    pattern:
+      /"passed"\s*:\s*true[\s\S]*?"passed"\s*:\s*true[\s\S]*?"passed"\s*:\s*true[\s\S]*?"passed"\s*:\s*true[\s\S]*?"passed"\s*:\s*true/gi,
     message: 'All tests passed with no failures - verify actual execution',
   },
   // Simulated/mock data detection (IFC-085, IFC-099, etc.)
@@ -302,11 +303,11 @@ const CONTENT_ISSUE_PATTERNS: Array<{
  * File format validation - detect wrong file types
  */
 const FORMAT_EXPECTATIONS: Record<string, string[]> = {
-  '.mp4': ['.md', '.txt', '.json'],   // Video expected, got text/json
-  '.pdf': ['.md', '.txt'],            // PDF expected, got text
-  '.xlsx': ['.json', '.csv'],         // Excel expected, got data file
-  '.png': ['.md', '.txt', '.svg'],    // Image expected, got text
-  '.jpg': ['.md', '.txt', '.svg'],    // Image expected, got text
+  '.mp4': ['.md', '.txt', '.json'], // Video expected, got text/json
+  '.pdf': ['.md', '.txt'], // PDF expected, got text
+  '.xlsx': ['.json', '.csv'], // Excel expected, got data file
+  '.png': ['.md', '.txt', '.svg'], // Image expected, got text
+  '.jpg': ['.md', '.txt', '.svg'], // Image expected, got text
 };
 
 /**
@@ -388,10 +389,10 @@ function validateFilesContent(
 function isLikelyFabricated(content: string): boolean {
   // Check for common fabrication indicators
   const fabricationIndicators = [
-    /mock:.*:v\d/i,                      // Mock version strings
-    /PLACEHOLDER/i,                       // Explicit placeholder
+    /mock:.*:v\d/i, // Mock version strings
+    /PLACEHOLDER/i, // Explicit placeholder
     /pending|will be (recorded|created)/i, // Future tense
-    /"passed"\s*:\s*true/g,              // Count passed tests
+    /"passed"\s*:\s*true/g, // Count passed tests
   ];
 
   let suspiciousCount = 0;
@@ -428,11 +429,7 @@ const SKIP_DIRS = new Set([
   '.cache',
 ]);
 
-const SKIP_FILES = new Set([
-  '.DS_Store',
-  'Thumbs.db',
-  '.gitkeep',
-]);
+const SKIP_FILES = new Set(['.DS_Store', 'Thumbs.db', '.gitkeep']);
 
 // =============================================================================
 // CATEGORY DETECTION
@@ -466,10 +463,16 @@ function detectCategory(relativePath: string, extension: string): FileCategory {
   }
 
   // Source code
-  if (dir === 'apps' && (extension === '.ts' || extension === '.tsx' || extension === '.js' || extension === '.jsx')) {
+  if (
+    dir === 'apps' &&
+    (extension === '.ts' || extension === '.tsx' || extension === '.js' || extension === '.jsx')
+  ) {
     return 'app-source';
   }
-  if (dir === 'packages' && (extension === '.ts' || extension === '.tsx' || extension === '.js' || extension === '.jsx')) {
+  if (
+    dir === 'packages' &&
+    (extension === '.ts' || extension === '.tsx' || extension === '.js' || extension === '.jsx')
+  ) {
     return 'package-source';
   }
 
@@ -488,7 +491,10 @@ function detectCategory(relativePath: string, extension: string): FileCategory {
   if (dir === '.github') return 'ci-config';
   if (dir === 'infra') return 'infra-config';
   if (dir === '.claude') return 'claude-config';
-  if (dir === 'root' && (extension === '.json' || extension === '.yml' || extension === '.yaml' || extension === '.js')) {
+  if (
+    dir === 'root' &&
+    (extension === '.json' || extension === '.yml' || extension === '.yaml' || extension === '.js')
+  ) {
     return 'tool-config';
   }
 
@@ -512,10 +518,7 @@ function isTestFile(path: string): boolean {
 // FILE SCANNING
 // =============================================================================
 
-function scanDirectoryRecursive(
-  dir: string,
-  basePath: string = ''
-): FileEntry[] {
+function scanDirectoryRecursive(dir: string, basePath: string = ''): FileEntry[] {
   const entries: FileEntry[] = [];
 
   if (!existsSync(dir)) {
@@ -582,7 +585,7 @@ export function scanAllFiles(): FileEntry[] {
  */
 function scanAllArtifacts(): FileEntry[] {
   const allFiles = scanAllFiles();
-  return allFiles.filter(f => f.directory === 'artifacts');
+  return allFiles.filter((f) => f.directory === 'artifacts');
 }
 
 // =============================================================================
@@ -625,7 +628,12 @@ export function parseTaskFileRefs(
         plan.push(trimmed.replace('PLAN:', '').trim());
       } else if (trimmed.startsWith('SPEC:')) {
         spec.push(trimmed.replace('SPEC:', '').trim());
-      } else if (trimmed && !trimmed.startsWith('VALIDATE:') && !trimmed.startsWith('GATE:') && !trimmed.startsWith('AUDIT:')) {
+      } else if (
+        trimmed &&
+        !trimmed.startsWith('VALIDATE:') &&
+        !trimmed.startsWith('GATE:') &&
+        !trimmed.startsWith('AUDIT:')
+      ) {
         artifacts.push(trimmed);
       }
     }
@@ -673,14 +681,16 @@ export interface TaskFileMap {
   };
 }
 
-export function buildTaskFileMap(tasks: Array<{
-  id: string;
-  artifacts: string[];
-  prerequisites: string;
-  validation: string;
-  status: string;
-  section: string;
-}>): TaskFileMap {
+export function buildTaskFileMap(
+  tasks: Array<{
+    id: string;
+    artifacts: string[];
+    prerequisites: string;
+    validation: string;
+    status: string;
+    section: string;
+  }>
+): TaskFileMap {
   const map: TaskFileMap = {};
 
   for (const task of tasks) {
@@ -705,10 +715,7 @@ export function buildTaskFileMap(tasks: Array<{
   return map;
 }
 
-export function linkFilesToTasks(
-  files: FileEntry[],
-  taskMap: TaskFileMap
-): FileEntry[] {
+export function linkFilesToTasks(files: FileEntry[], taskMap: TaskFileMap): FileEntry[] {
   const pathToTasks: Record<string, string[]> = {};
 
   for (const [taskId, data] of Object.entries(taskMap)) {
@@ -771,8 +778,8 @@ export function linkFilesToTasks(
 function addTestCoverage(files: FileEntry[]): FileEntry[] {
   const testFiles = new Set(
     files
-      .filter(f => f.isTestFile)
-      .map(f => {
+      .filter((f) => f.isTestFile)
+      .map((f) => {
         // Convert test path to source path
         return f.path
           .replace('.test.ts', '.ts')
@@ -784,10 +791,11 @@ function addTestCoverage(files: FileEntry[]): FileEntry[] {
       })
   );
 
-  return files.map(file => {
+  return files.map((file) => {
     if (file.category === 'app-source' || file.category === 'package-source') {
-      const hasTest = testFiles.has(file.path.toLowerCase()) ||
-                      testFiles.has(file.path.replace(/\\/g, '/').toLowerCase());
+      const hasTest =
+        testFiles.has(file.path.toLowerCase()) ||
+        testFiles.has(file.path.replace(/\\/g, '/').toLowerCase());
       return { ...file, hasTest };
     }
     return file;
@@ -798,12 +806,9 @@ function addTestCoverage(files: FileEntry[]): FileEntry[] {
 // MISSING FILE DETECTION
 // =============================================================================
 
-export function findMissingFiles(
-  files: FileEntry[],
-  taskMap: TaskFileMap
-): MissingFile[] {
+export function findMissingFiles(files: FileEntry[], taskMap: TaskFileMap): MissingFile[] {
   const missing: MissingFile[] = [];
-  const existingPaths = new Set(files.map(f => f.path.toLowerCase()));
+  const existingPaths = new Set(files.map((f) => f.path.toLowerCase()));
 
   for (const [taskId, data] of Object.entries(taskMap)) {
     if (!['Completed', 'In Progress', 'Validating'].includes(data.status)) {
@@ -826,7 +831,7 @@ export function findMissingFiles(
         const normalizedPath = expectedPath.replace(/\\/g, '/').toLowerCase();
 
         if (!existingPaths.has(normalizedPath)) {
-          const existing = missing.find(m => m.path.toLowerCase() === normalizedPath);
+          const existing = missing.find((m) => m.path.toLowerCase() === normalizedPath);
           if (existing) {
             if (!existing.expectedBy.includes(taskId)) {
               existing.expectedBy.push(taskId);
@@ -1038,10 +1043,7 @@ function getGitHistoryForFile(
  * Enrich file entries with git history metadata
  * Note: This is expensive - use sparingly (e.g., on filtered results)
  */
-export function enrichWithGitHistory(
-  files: FileEntry[],
-  staleDays: number = 30
-): FileEntry[] {
+export function enrichWithGitHistory(files: FileEntry[], staleDays: number = 30): FileEntry[] {
   return files.map((file) => ({
     ...file,
     gitHistory: getGitHistoryForFile(file.path, staleDays),
@@ -1061,20 +1063,14 @@ function enrichWithGitHistoryBatch(
   const enriched = enrichWithGitHistory(toEnrich, staleDays);
 
   // Return enriched files + remaining without history
-  return [
-    ...enriched,
-    ...files.slice(maxFiles),
-  ];
+  return [...enriched, ...files.slice(maxFiles)];
 }
 
 // =============================================================================
 // HEALTH METRICS
 // =============================================================================
 
-export function generateCodebaseHealth(
-  files: FileEntry[],
-  missing: MissingFile[]
-): CodebaseHealth {
+export function generateCodebaseHealth(files: FileEntry[], missing: MissingFile[]): CodebaseHealth {
   const byDirectory: Map<DirectoryType, DirectorySummary> = new Map();
   const byCategory: Record<FileCategory, number> = {} as Record<FileCategory, number>;
   const byExtension: Record<string, number> = {};
@@ -1085,10 +1081,25 @@ export function generateCodebaseHealth(
 
   // Initialize categories
   const allCategories: FileCategory[] = [
-    'app-source', 'package-source', 'test-source',
-    'attestation', 'benchmark', 'coverage', 'report', 'metric', 'log', 'generated',
-    'ci-config', 'infra-config', 'tool-config', 'claude-config',
-    'docs', 'readme', 'tool', 'script', 'misc'
+    'app-source',
+    'package-source',
+    'test-source',
+    'attestation',
+    'benchmark',
+    'coverage',
+    'report',
+    'metric',
+    'log',
+    'generated',
+    'ci-config',
+    'infra-config',
+    'tool-config',
+    'claude-config',
+    'docs',
+    'readme',
+    'tool',
+    'script',
+    'misc',
   ];
   for (const cat of allCategories) {
     byCategory[cat] = 0;
@@ -1131,26 +1142,24 @@ export function generateCodebaseHealth(
   }
 
   // Calculate test coverage
-  const sourceFiles = files.filter(f =>
-    f.category === 'app-source' || f.category === 'package-source'
+  const sourceFiles = files.filter(
+    (f) => f.category === 'app-source' || f.category === 'package-source'
   );
-  const filesWithTests = sourceFiles.filter(f => f.hasTest);
-  const testCoverage = sourceFiles.length > 0
-    ? (filesWithTests.length / sourceFiles.length) * 100
-    : 0;
+  const filesWithTests = sourceFiles.filter((f) => f.hasTest);
+  const testCoverage =
+    sourceFiles.length > 0 ? (filesWithTests.length / sourceFiles.length) * 100 : 0;
 
   // Calculate documentation coverage (packages with README)
   const packageDirs = new Set(
     files
-      .filter(f => f.directory === 'packages')
-      .map(f => f.path.split('/').slice(0, 2).join('/'))
+      .filter((f) => f.directory === 'packages')
+      .map((f) => f.path.split('/').slice(0, 2).join('/'))
   );
   const packageReadmes = files.filter(
-    f => f.directory === 'packages' && f.path.toLowerCase().includes('readme.md')
+    (f) => f.directory === 'packages' && f.path.toLowerCase().includes('readme.md')
   );
-  const documentationCoverage = packageDirs.size > 0
-    ? (packageReadmes.length / packageDirs.size) * 100
-    : 0;
+  const documentationCoverage =
+    packageDirs.size > 0 ? (packageReadmes.length / packageDirs.size) * 100 : 0;
 
   return {
     totalFiles: files.length,
@@ -1190,14 +1199,16 @@ export interface ArtifactRegistryResult {
   summary: CodebaseHealth;
 }
 
-export function scanFullRegistry(tasks: Array<{
-  id: string;
-  artifacts: string[];
-  prerequisites: string;
-  validation: string;
-  status: string;
-  section: string;
-}>): FullRegistryResult {
+export function scanFullRegistry(
+  tasks: Array<{
+    id: string;
+    artifacts: string[];
+    prerequisites: string;
+    validation: string;
+    status: string;
+    section: string;
+  }>
+): FullRegistryResult {
   // 1. Scan all files
   const rawFiles = scanAllFiles();
 
@@ -1230,22 +1241,24 @@ export function scanFullRegistry(tasks: Array<{
 /**
  * Backward compatible function for artifact-only scanning
  */
-export function scanArtifactRegistry(tasks: Array<{
-  id: string;
-  artifacts: string[];
-  prerequisites: string;
-  validation: string;
-  status: string;
-  section: string;
-}>): ArtifactRegistryResult {
+export function scanArtifactRegistry(
+  tasks: Array<{
+    id: string;
+    artifacts: string[];
+    prerequisites: string;
+    validation: string;
+    status: string;
+    section: string;
+  }>
+): ArtifactRegistryResult {
   const full = scanFullRegistry(tasks);
 
   // Filter to artifacts only for backward compatibility
-  const artifactFiles = full.files.filter(f => f.directory === 'artifacts');
+  const artifactFiles = full.files.filter((f) => f.directory === 'artifacts');
 
   return {
     artifacts: artifactFiles,
-    missing: full.missing.filter(m => m.path.startsWith('artifacts/')),
+    missing: full.missing.filter((m) => m.path.startsWith('artifacts/')),
     summary: full.health,
   };
 }
@@ -1260,13 +1273,8 @@ function getTaskArtifacts(
   const files = 'files' in registryResult ? registryResult.files : registryResult.artifacts;
   const missing = registryResult.missing;
 
-  const linked = files.filter(f => f.linkedTasks.includes(taskId));
-  const missingForTask = missing.filter(m => m.expectedBy.includes(taskId));
+  const linked = files.filter((f) => f.linkedTasks.includes(taskId));
+  const missingForTask = missing.filter((m) => m.expectedBy.includes(taskId));
 
   return { linked, missing: missingForTask };
 }
-
-
-
-
-

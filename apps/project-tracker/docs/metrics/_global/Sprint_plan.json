@@ -94,7 +94,7 @@
       "Definition of Done": "Prompt sanitization, output redaction, bias detection metrics; incidents logged; artifacts: prompt-sanitizer.ts, bias-metrics.csv, ai-guardrails-report.md; targets: zero errors; verified by: pnpm test; GuardrailsAIService must have audit logger integration completed, not deferred with TODO",
       "Status": "Completed",
       "KPIs": "Zero prompt injection incidents; bias score below threshold",
-      "Target Sprint": "11",
+      "Target Sprint": "6",
       "Artifacts To Track": "SPEC:.specify/sprints/sprint-11/specifications/IFC-125-spec.md;PLAN:.specify/sprints/sprint-11/planning/IFC-125-plan.md;EVIDENCE:.specify/sprints/sprint-11/attestations/IFC-125/context_pack.md;EVIDENCE:.specify/sprints/sprint-11/attestations/IFC-125/context_ack.json;ARTIFACT:apps/api/src/shared/prompt-sanitizer.ts;ARTIFACT:artifacts/metrics/bias-metrics.csv;ARTIFACT:docs/shared/ai-guardrails-report.md",
       "Validation Method": "VALIDATE:pnpm test;GATE:no-deferred-audit-logging"
     },
@@ -876,7 +876,7 @@
       "Definition of Done": "Lead management UI with RSC, optimistic updates; Next.js 16.0.10 App Router uses Turbopack FS caching and Cache Components; proxy replaces middleware where required; targets: >=100%",
       "Status": "Completed",
       "KPIs": "Core Web Vitals green, accessibility 100%",
-      "Target Sprint": "7",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:artifacts/reports/web-vitals-report.json;ARTIFACT:artifacts/misc/axe-audit-results.json;ARTIFACT:apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md;ARTIFACT:apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md;EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-014/context_ack.json",
       "Validation Method": "AUDIT:manual-review"
     },
@@ -890,7 +890,7 @@
       "Definition of Done": "Async job processing for AI scoring, retry logic; artifacts: bull-board-screenshot.png, job-metrics.json, context_ack.json; verified by: pnpm test",
       "Status": "Completed",
       "KPIs": "Jobs processing reliably, dashboard active",
-      "Target Sprint": "7",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:artifacts/misc/bull-board-screenshot.png;ARTIFACT:artifacts/metrics/job-metrics.json;ARTIFACT:packages/platform/src/queues/queue-factory.ts;ARTIFACT:packages/platform/src/queues/retry-strategy.ts;EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-015/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test"
     },
@@ -904,7 +904,7 @@
       "Definition of Done": "Live updates for lead scores and activities; P95 latency 60ms; 27 tests passing; artifacts: use-subscription.ts, websocket-test-results.json; verified by: pnpm test; gates: latency-check PASSED",
       "Status": "Completed",
       "KPIs": "<100ms latency (60ms actual), connection stable",
-      "Target Sprint": "7",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:apps/web/hooks/use-subscription.ts;ARTIFACT:apps/web/hooks/use-subscription.test.ts;ARTIFACT:artifacts/misc/websocket-test-results.json;EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-016/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:latency-check"
     },
@@ -932,7 +932,7 @@
       "Definition of Done": "157 test files, 4711 tests passing; coverage thresholds: 90% statements, 80% branches; gates: coverage-gte-80 PASSED, coverage-gte-90 PASSED",
       "Status": "Completed",
       "KPIs": "All critical paths tested (4711 tests), CI green",
-      "Target Sprint": "7",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:vitest.config.ts;ARTIFACT:artifacts/reports/test-report.html;ARTIFACT:artifacts/misc/ci-test-results.xml;EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-018/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:coverage-gte-80;GATE:coverage-gte-90"
     }
@@ -948,7 +948,7 @@
       "Definition of Done": "Continue/pivot decision based on MVP success; artifacts: investment-gate-1-deck.md, week-1-metrics.csv, roi-projection.md, cfo-approval.md",
       "Status": "Completed",
       "KPIs": "ROI projection validated, budget approved",
-      "Target Sprint": "8",
+      "Target Sprint": "6",
       "Artifacts To Track": "SPEC:.specify/sprints/sprint-8/specifications/IFC-019-spec.md;PLAN:.specify/sprints/sprint-8/planning/IFC-019-plan.md;ARTIFACT:artifacts/misc/investment-gate-1-deck.md;ARTIFACT:artifacts/metrics/week-1-metrics.csv;ARTIFACT:artifacts/reports/roi-projection.md;ARTIFACT:artifacts/misc/cfo-approval.md;EVIDENCE:.specify/sprints/sprint-8/attestations/IFC-019/context_ack.json",
       "Validation Method": "AUDIT:manual-review"
     },
@@ -1006,7 +1006,7 @@
       "Definition of Done": "Modular AI pipeline with memory (Zep), tools defined; artifacts: ai-architecture.md, langchain-flow-diagram.mermaid, context_ack.json; RetrievalService must return actual pgvector search results, not null fallback to FTS",
       "Status": "Completed",
       "KPIs": "Pipeline architecture documented, extensible",
-      "Target Sprint": "12",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:docs/ai-architecture.md;ARTIFACT:docs/architecture/diagrams/langchain-flow-diagram.mermaid;EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-020/context_ack.json",
       "Validation Method": "AUDIT:manual-review;GATE:no-null-fallback"
     },
@@ -1020,7 +1020,7 @@
       "Definition of Done": "Lead qualifier, email writer, follow-up agents; artifacts: crew-config.yaml, agent-interaction-logs.json, orchestration.test.ts; verified by: pnpm test",
       "Status": "Completed",
       "KPIs": "Agents cooperating, tasks orchestrated",
-      "Target Sprint": "13",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:artifacts/misc/crew-config.yaml;ARTIFACT:artifacts/logs/agent-interaction-logs.json;ARTIFACT:apps/api/src/agent/orchestration.test.ts;EVIDENCE:.specify/sprints/sprint-13/attestations/IFC-021/IFC-021-context_ack.json",
       "Validation Method": "VALIDATE:pnpm test"
     },
@@ -1034,7 +1034,7 @@
       "Definition of Done": "AI responses validated, confidence scores included; artifacts: output-validation.test.ts, confidence-calibration.json, context_ack.json; targets: >=100%",
       "Status": "Completed",
       "KPIs": "100% structured outputs, type-safe",
-      "Target Sprint": "13",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:apps/api/src/shared/output-validation.test.ts;ARTIFACT:artifacts/misc/confidence-calibration.json;EVIDENCE:.specify/sprints/sprint-13/attestations/IFC-022/IFC-022-context_ack.json",
       "Validation Method": "AUDIT:manual-review"
     },
@@ -1048,7 +1048,7 @@
       "Definition of Done": "Score explanations visible, factors breakdown shown; artifacts: user-test-results.pdf, context_ack.json",
       "Status": "Completed",
       "KPIs": "Users understand AI decisions, trust >4/5",
-      "Target Sprint": "13",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:packages/ui/src/components/score/ScoreCard.tsx;ARTIFACT:packages/ui/src/components/score/ScoreFactorList.tsx;ARTIFACT:packages/ui/src/components/score/ScoreFactor.tsx;ARTIFACT:packages/ui/src/components/score/ConfidenceIndicator.tsx;ARTIFACT:packages/ui/src/components/score/ModelInfo.tsx;ARTIFACT:packages/ui/src/components/score/ScoreBadge.tsx;ARTIFACT:packages/ui/__tests__/score-card.test.tsx;EVIDENCE:.specify/sprints/sprint-13/attestations/IFC-023/IFC-023-context_ack.json",
       "Validation Method": "AUDIT:manual-review"
     },
@@ -1076,7 +1076,7 @@
       "Definition of Done": "AI vs manual scoring comparison, statistical analysis; artifacts: ab-test-config.json, statistical-analysis.ipynb, experiment-dashboard.png",
       "Status": "Completed",
       "KPIs": "Experiments trackable, significance calculable",
-      "Target Sprint": "14",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:packages/validators/src/experiment.ts;ARTIFACT:apps/ai-worker/src/analytics/statistical-analysis.ts;ARTIFACT:packages/application/src/services/ExperimentService.ts;ARTIFACT:apps/api/src/modules/experiment/experiment.router.ts;ARTIFACT:packages/ui/src/components/experiment/ExperimentDashboard.tsx;ARTIFACT:artifacts/misc/ab-test-config.json;EVIDENCE:.specify/sprints/sprint-14/attestations/IFC-025/context_ack.json",
       "Validation Method": "AUDIT:manual-review"
     },
@@ -1188,10 +1188,10 @@
       "Dependencies": "IFC-030",
       "Pre-requisites": "FILE:artifacts/misc/routing-rules-config.yaml;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/design/UI_DEVELOPMENT_PROMPT.md;FILE:docs/company/brand/DESIGN_SYSTEM_LLM_INDEX.md",
       "Definition of Done": "Response <500ms, Lighthouse >=90; RoutingRulesEditor, AssignmentDashboard, SLAMonitor, LeadQueueView, AgentWorkload components; drag-drop rule priority; real-time assignment view; verified by: pnpm test",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Rules editor intuitive; assignments visible in real-time; SLA breaches highlighted; Lighthouse >=90",
       "Target Sprint": "18",
-      "Artifacts To Track": "ARTIFACT:apps/web/src/app/(settings)/settings/routing/page.tsx;ARTIFACT:apps/web/src/components/routing/RoutingRulesEditor.tsx;ARTIFACT:apps/web/src/components/routing/AssignmentDashboard.tsx;ARTIFACT:apps/web/src/components/routing/SLAMonitor.tsx;ARTIFACT:apps/web/src/components/routing/LeadQueueView.tsx;ARTIFACT:apps/web/src/components/routing/AgentWorkload.tsx;EVIDENCE:.specify/sprints/sprint-18/attestations/PG-132/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:apps/web/src/app/settings/routing/page.tsx;ARTIFACT:apps/web/src/components/routing/RoutingRulesEditor.tsx;ARTIFACT:apps/web/src/components/routing/AssignmentDashboard.tsx;ARTIFACT:apps/web/src/components/routing/SLAMonitor.tsx;ARTIFACT:apps/web/src/components/routing/LeadQueueView.tsx;ARTIFACT:apps/web/src/components/routing/AgentWorkload.tsx;EVIDENCE:.specify/sprints/sprint-18/attestations/PG-132/attestation.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90;AUDIT:manual-review"
     }
   ],
@@ -1262,7 +1262,7 @@
       "Definition of Done": "RAG for context, sentiment analysis, next best action; artifacts: embeddings-quality-test.json, sentiment-accuracy.csv, nba-demo.md",
       "Status": "Completed",
       "KPIs": "AI features demonstrating clear value",
-      "Target Sprint": "23",
+      "Target Sprint": "6",
       "Artifacts To Track": "PLAN:.specify/sprints/sprint-23/planning/IFC-039-plan.md;CONTEXT:.specify/sprints/sprint-23/context/IFC-039/hydrated-context.md;SPEC:.specify/sprints/sprint-23/specifications/IFC-039-spec.md;ARTIFACT:artifacts/misc/embeddings-quality-test.json;ARTIFACT:artifacts/metrics/sentiment-accuracy.csv;ARTIFACT:artifacts/misc/nba-demo.md;EVIDENCE:.specify/sprints/sprint-23/attestations/IFC-039/context_ack.json;ARTIFACT:docs/planning/adr/ADR-022-ai-features-quality.md;ARTIFACT:docs/planning/prd-ai-output-quality.md",
       "Validation Method": "AUDIT:manual-review"
     },
@@ -1418,7 +1418,7 @@
       "Definition of Done": "All significant design decisions captured via ADRs; developer guide updated per sprint; targets: >=100%, >=80%",
       "Status": "Completed",
       "KPIs": "ADR coverage 100%; developer satisfaction >80%",
-      "Target Sprint": "12",
+      "Target Sprint": "7",
       "Artifacts To Track": "ARTIFACT:docs/dev-guide.md;ARTIFACT:artifacts/misc/adr-index.csv;EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-126/context_ack.json",
       "Validation Method": "AUDIT:code-review;GATE:coverage-gte-80"
     },
@@ -1962,7 +1962,7 @@
       "Definition of Done": "Contracts signed electronically, preview inline; artifacts: e-signature-test.pdf, context_ack.json",
       "Status": "Completed",
       "KPIs": "Contracts signed electronically, preview inline (actual: e-signature functional)",
-      "Target Sprint": "8",
+      "Target Sprint": "6",
       "Artifacts To Track": "SPEC:.specify/sprints/sprint-8/specifications/IFC-094-spec.md;PLAN:.specify/sprints/sprint-8/planning/IFC-094-plan.md;EVIDENCE:.specify/sprints/sprint-8/attestations/IFC-094/context_pack.md;EVIDENCE:.specify/sprints/sprint-8/attestations/IFC-094/context_ack.json;ARTIFACT:artifacts/reports/e-signature-test.pdf;ARTIFACT:docs/planning/adr/ADR-019-core-crm-foundation.md;ARTIFACT:docs/planning/prd-core-crm.md",
       "Validation Method": "AUDIT:code-review"
     },
@@ -2772,10 +2772,10 @@
       "Dependencies": "IFC-186",
       "Pre-requisites": "FILE:apps/api/src/modules/opportunity/opportunity.router.ts;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/design/UI_DEVELOPMENT_PROMPT.md;DESIGN:docs/design/mockups/deal-pipeline.png",
       "Definition of Done": "Response <500ms, Lighthouse >=90; PipelineBoard, StageColumn, DealCard, DealFilters, ValueSummary, DealQuickView components; drag-drop stage changes; verified by: pnpm test",
-      "Status": "Plan Complete",
+      "Status": "Completed",
       "KPIs": "Pipeline loads <500ms; drag-drop works; value totals accurate; Lighthouse >=90",
       "Target Sprint": "6",
-      "Artifacts To Track": "ARTIFACT:apps/web/src/app/deals/page.tsx;ARTIFACT:apps/web/src/components/deals/PipelineBoard.tsx;ARTIFACT:apps/web/src/components/deals/StageColumn.tsx;ARTIFACT:apps/web/src/components/deals/DealCard.tsx;ARTIFACT:apps/web/src/components/deals/DealFilters.tsx;ARTIFACT:apps/web/src/components/deals/ValueSummary.tsx;EVIDENCE:.specify/sprints/sprint-6/attestations/PG-135/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:apps/web/src/app/deals/(list)/page.tsx;ARTIFACT:apps/web/src/components/deals/PipelineBoard.tsx;ARTIFACT:apps/web/src/components/deals/StageColumn.tsx;ARTIFACT:apps/web/src/components/deals/DealCard.tsx;ARTIFACT:apps/web/src/components/deals/DealFilters.tsx;ARTIFACT:apps/web/src/components/deals/ValueSummary.tsx;EVIDENCE:.specify/sprints/sprint-6/attestations/PG-135/attestation.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90"
     },
     {
@@ -2786,7 +2786,7 @@
       "Dependencies": "IFC-187",
       "Pre-requisites": "FILE:apps/api/src/modules/task/task.router.ts;FILE:docs/company/brand/visual-identity.md;FILE:docs/company/brand/style-guide.md;FILE:docs/design/UI_DEVELOPMENT_PROMPT.md;DESIGN:docs/design/mockups/task-list.png",
       "Definition of Done": "Response <500ms, Lighthouse >=90; TaskList, TaskCard, TaskCalendar, TaskDetail, TaskForm, ReminderConfig components; calendar and list views; verified by: pnpm test",
-      "Status": "Completed",
+      "Status": "In Progress",
       "KPIs": "List/calendar loads <500ms; reminders work; entity links navigable; Lighthouse >=90",
       "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:apps/web/src/app/tasks/(list)/page.tsx;ARTIFACT:apps/web/src/app/tasks/(list)/layout.tsx;ARTIFACT:apps/web/src/app/tasks/[id]/page.tsx;ARTIFACT:apps/web/src/components/tasks/TaskList.tsx;ARTIFACT:apps/web/src/components/tasks/TaskCard.tsx;ARTIFACT:apps/web/src/components/tasks/TaskCalendar.tsx;ARTIFACT:apps/web/src/components/tasks/TaskForm.tsx;ARTIFACT:apps/web/src/components/tasks/TaskDetail.tsx;ARTIFACT:apps/web/src/components/tasks/ReminderConfig.tsx;ARTIFACT:apps/web/src/components/sidebar/configs/tasks.ts;EVIDENCE:.specify/sprints/sprint-6/attestations/PG-136/context_ack.json",
@@ -2803,7 +2803,7 @@
       "Status": "Completed",
       "KPIs": "List loads <500ms; SLA indicators accurate; escalation alerts visible; Lighthouse >=90",
       "Target Sprint": "6",
-      "Artifacts To Track": "ARTIFACT:apps/web/src/app/tickets/page.tsx;ARTIFACT:apps/web/src/app/tickets/[id]/page.tsx;ARTIFACT:apps/web/src/components/tickets/TicketList.tsx;ARTIFACT:apps/web/src/components/tickets/TicketCard.tsx;ARTIFACT:apps/web/src/components/tickets/TicketDetail.tsx;ARTIFACT:apps/web/src/components/tickets/SLAIndicator.tsx;EVIDENCE:.specify/sprints/sprint-6/attestations/PG-137/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:apps/web/src/app/tickets/(list)/page.tsx;ARTIFACT:apps/web/src/app/tickets/[id]/page.tsx;ARTIFACT:apps/web/src/components/tickets/TicketList.tsx;ARTIFACT:apps/web/src/components/tickets/TicketCard.tsx;ARTIFACT:apps/web/src/components/tickets/TicketDetail.tsx;ARTIFACT:apps/web/src/components/tickets/SLAIndicator.tsx;EVIDENCE:.specify/sprints/sprint-6/attestations/PG-137/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90"
     },
     {
@@ -2898,7 +2898,7 @@
       "Dependencies": "IFC-189",
       "Pre-requisites": "FILE:packages/validators/src/ticket.ts;FILE:apps/api/src/services/TicketService.ts;FILE:apps/api/src/modules/ticket/ticket.router.ts",
       "Definition of Done": "search param added to ticketQuerySchema; TicketService filters by subject ticketNumber contactName using ILIKE; search response <500ms; test coverage >=90%; verified by: pnpm test",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Search response <500ms; results match subject/ticketNumber/contactName; test coverage >=90%",
       "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:packages/validators/src/ticket.ts;ARTIFACT:apps/api/src/services/TicketService.ts;ARTIFACT:apps/api/src/modules/ticket/__tests__/ticket-search.test.ts;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-205/attestation.json",
@@ -2912,7 +2912,7 @@
       "Dependencies": "IFC-189",
       "Pre-requisites": "FILE:packages/validators/src/ticket.ts;FILE:apps/api/src/modules/ticket/ticket.router.ts;FILE:apps/api/src/services/TicketService.ts",
       "Definition of Done": "ticket.stats returns SLA status breakdown counts; ticketQuerySchema supports sortBy and sortOrder params; time window filtering for stats (24h 7d 30d); test coverage >=90%; verified by: pnpm test",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Stats response <200ms; SLA breakdown counts accurate; sort params functional; test coverage >=90%",
       "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:apps/api/src/modules/ticket/ticket.router.ts;ARTIFACT:apps/api/src/modules/ticket/__tests__/ticket-stats.test.ts;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-206/attestation.json",
@@ -2926,7 +2926,7 @@
       "Dependencies": "IFC-189",
       "Pre-requisites": "FILE:apps/api/src/modules/ticket/ticket.router.ts",
       "Definition of Done": "queryDurationMs field added to ticket list and stats responses; measured via performance.now() wrapping Prisma queries; p95 overhead <5ms; unit tests verify timing field present; verified by: pnpm test",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "p95 overhead <5ms; queryDurationMs present in responses; test coverage >=90%",
       "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:apps/api/src/modules/ticket/ticket.router.ts;ARTIFACT:apps/api/src/modules/ticket/__tests__/ticket-perf.test.ts;EVIDENCE:.specify/sprints/sprint-6/attestations/IFC-207/attestation.json",
@@ -3198,7 +3198,7 @@
       "Definition of Done": "Analytics repository adapters and export pipeline implemented, metrics router uses real data sources; artifacts: PrismaAnalyticsRepository.ts, AnalyticsAggregationService.ts, analytics.router.ts; verified by: pnpm test",
       "Status": "Backlog",
       "KPIs": "p95 analytics query latency <300ms, 100% export endpoints use non-mock sources, 0 schema drift failures in analytics tests",
-      "Target Sprint": "29",
+      "Target Sprint": "13",
       "Artifacts To Track": "ARTIFACT:packages/adapters/src/repositories/PrismaAnalyticsRepository.ts;ARTIFACT:packages/application/src/services/AnalyticsAggregationService.ts;ARTIFACT:apps/api/src/modules/analytics/analytics.router.ts;ARTIFACT:apps/api/src/modules/analytics/__tests__/analytics.router.test.ts;EVIDENCE:.specify/sprints/sprint-29/attestations/IFC-200/context_ack.json;ARTIFACT:docs/planning/prd-analytics-adapter.md",
       "Validation Method": "VALIDATE:pnpm test;GATE:real-data-check;AUDIT:code-review"
     }
@@ -3372,7 +3372,7 @@
       "Definition of Done": "Row‑level security policies applied; tenant context enforced in services; per‑tenant resource limits; artifacts: rls-policies.sql, tenant-context.ts, context_ack.json; verified by: pnpm test",
       "Status": "Completed",
       "KPIs": "No cross‑tenant data access; isolation tests pass",
-      "Target Sprint": "10",
+      "Target Sprint": "5",
       "Artifacts To Track": "SPEC:.specify/sprints/sprint-10/specifications/IFC-127-spec.md;PLAN:.specify/sprints/sprint-10/planning/IFC-127-plan.md;EVIDENCE:.specify/sprints/sprint-10/attestations/IFC-127/context_pack.md;EVIDENCE:.specify/sprints/sprint-10/attestations/IFC-127/context_ack.json;ARTIFACT:infra/supabase/migrations/20250124000000_rls_policies.sql;ARTIFACT:infra/supabase/migrations/20260103000000_add_tenant_isolation.sql;ARTIFACT:apps/api/src/security/tenant-context.ts",
       "Validation Method": "VALIDATE:pnpm test;AUDIT:security-review"
     },
@@ -3716,7 +3716,7 @@
       "Definition of Done": "Event contract catalogue created (schema + versioning); transactional outbox implemented; idempotency keys enforced; publisher emits metrics/traces; unit/integration tests; targets: >=100%, <200ms; performance-benchmark.json must contain real execution data, not 'simulated' entries",
       "Status": "Completed",
       "KPIs": "0 lost events, p95 <200ms (pending migration), 100% schema-validated (24 unit tests pass)",
-      "Target Sprint": "8",
+      "Target Sprint": "5",
       "Artifacts To Track": "ARTIFACT:docs/events/contracts-v1.yaml;ARTIFACT:docs/planning/adr/ADR-011-domain-events.md;EVIDENCE:.specify/sprints/sprint-8/attestations/IFC-150/context_ack.json;SPEC:.specify/sprints/sprint-8/specifications/IFC-150-spec.md;PLAN:.specify/sprints/sprint-8/planning/IFC-150-plan.md;ARTIFACT:packages/adapters/src/repositories/PrismaOutboxRepository.ts;ARTIFACT:packages/adapters/src/events/OutboxEventBusAdapter.ts;ARTIFACT:packages/validators/src/events.ts",
       "Validation Method": "VALIDATE:pnpm test;VALIDATE:pnpm test:integration;GATE:real-benchmark-data"
     },
@@ -3730,7 +3730,7 @@
       "Definition of Done": "Consumer SDK supports retries/backoff; DLQ storage/triage workflow; idempotent handlers; poison-message handling; metrics and alerts; chaos tests; artifacts: dlq-triage.md, context_ack.json; targets: >=95%, >=90%, <30 min",
       "Status": "Completed",
       "KPIs": "DLQ drain success >95%; retry success >90%; MTTR <30 min (comprehensive runbook created)",
-      "Target Sprint": "9",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:docs/operations/runbooks/dlq-triage.md;EVIDENCE:.specify/sprints/sprint-9/attestations/IFC-151/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test"
     },
@@ -3932,7 +3932,7 @@
       "Definition of Done": "AI predictions <2s, accuracy >80%; artifacts: model-evaluation.ipynb, context_ack.json; processChurnRisk/processNextBestAction/processQualification must call real AI chains, not return hardcoded mock values",
       "Status": "Completed",
       "KPIs": "AI predictions <2s (actual: 1.2s), accuracy >80% (actual: 85.2%), full-stack integration complete (API router, UI components, 360 views)",
-      "Target Sprint": "8",
+      "Target Sprint": "6",
       "Artifacts To Track": "SPEC:.specify/sprints/sprint-8/specifications/IFC-095-spec.md;PLAN:.specify/sprints/sprint-8/planning/IFC-095-plan.md;ARTIFACT:artifacts/misc/model-evaluation.ipynb;ARTIFACT:apps/api/src/modules/intelligence/intelligence.router.ts;ARTIFACT:packages/ui/src/components/intelligence/ChurnRiskCard.tsx;ARTIFACT:packages/ui/src/components/intelligence/NextBestActionCard.tsx;EVIDENCE:.specify/sprints/sprint-8/attestations/IFC-095/context_ack.json;ARTIFACT:docs/planning/adr/ADR-022-ai-features-quality.md;ARTIFACT:docs/planning/prd-ai-output-quality.md",
       "Validation Method": "AUDIT:manual-review;GATE:no-hardcoded-predictions"
     },
@@ -3946,7 +3946,7 @@
       "Definition of Done": "Metrics collected for AI models; dashboards show drift/hallucination; alerts configured; targets: >=5%; AI metrics must be collected by actual code paths and pushed to dashboards",
       "Status": "Completed",
       "KPIs": "Drift detected within 1 day, hallucination rate <5%, ROI tracked",
-      "Target Sprint": "10",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:artifacts/metrics/ai-metrics.json;ARTIFACT:artifacts/misc/drift-dashboard.md;ARTIFACT:artifacts/misc/alerts-config.yaml;ARTIFACT:infra/monitoring/ai-grafana-dashboard.json;ARTIFACT:infra/monitoring/ai-prometheus-rules.yaml;EVIDENCE:.specify/sprints/sprint-10/attestations/IFC-117/context_ack.json",
       "Validation Method": "AUDIT:manual-review;GATE:integration-wired"
     }
@@ -4010,7 +4010,7 @@
       "Definition of Done": "ADR repo active, compliance docs ready; artifacts: adr-index.md, compliance-dashboard-mockup.md, context_ack.json",
       "Status": "Completed",
       "KPIs": "ADR repo active, compliance docs ready",
-      "Target Sprint": "10",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:docs/shared/adr-index.md;ARTIFACT:artifacts/misc/compliance-dashboard-mockup.md;EVIDENCE:.specify/sprints/sprint-10/attestations/IFC-100/context_ack.json",
       "Validation Method": "AUDIT:manual-review"
     }
@@ -4436,7 +4436,7 @@
       "Dependencies": "IFC-099,IFC-198",
       "Pre-requisites": "IMPLEMENTS:FLOW-048;FILE:docs/planning/prd-billing-portal.md;FILE:docs/planning/adr/ADR-029-billing-architecture.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Stripe integration;ENV:subscription management;FILE:artifacts/misc/connector-status-dashboard.json",
       "Definition of Done": "Response <200ms, Lighthouse ≥90, billing functional; artifacts: page.tsx, billing-portal.tsx, stripe-portal.ts; Stripe integration must be wired to real API (test mode), not mock client",
-      "Status": "Completed",
+      "Status": "Backlog",
       "KPIs": "Portal working, subscriptions managed, invoices shown",
       "Target Sprint": "14",
       "Artifacts To Track": "ARTIFACT:apps/web/src/app/(billing)/billing/page.tsx;ARTIFACT:apps/web/src/components/billing/billing-portal.tsx;ARTIFACT:apps/web/src/lib/billing/stripe-portal.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/PG-025/context_ack.json",
@@ -4536,7 +4536,7 @@
       "Definition of Done": "Invoice and receipt domain models implemented with invariant checks, payment/refund lifecycle rules exposed via application services; artifacts: Invoice.ts, Receipt.ts, BillingDomainService.ts; verified by: pnpm test",
       "Status": "Completed",
       "KPIs": "100% billing state transitions validated, 0 invalid status transitions in tests, p95 billing rule evaluation <50ms",
-      "Target Sprint": "29",
+      "Target Sprint": "13",
       "Artifacts To Track": "ARTIFACT:packages/domain/src/crm/billing/Invoice.ts;ARTIFACT:packages/domain/src/crm/billing/Receipt.ts;ARTIFACT:packages/application/src/services/BillingDomainService.ts;ARTIFACT:packages/application/src/services/__tests__/BillingDomainService.test.ts;EVIDENCE:.specify/sprints/sprint-29/attestations/IFC-198/context_ack.json;ARTIFACT:docs/planning/prd-billing-domain.md",
       "Validation Method": "VALIDATE:pnpm test;AUDIT:design-review;GATE:billing-invariants-pass"
     }
@@ -4564,7 +4564,7 @@
       "Dependencies": "PG-032",
       "Pre-requisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:API reference;ENV:interactive examples;FILE:apps/web/src/app/(developer)/docs/page.tsx",
       "Definition of Done": "Response <200ms, Lighthouse ≥90, examples runnable; artifacts: page.tsx, api-reference.tsx, api-playground.tsx",
-      "Status": "Completed",
+      "Status": "Backlog",
       "KPIs": "API documented, examples working, playground active",
       "Target Sprint": "15",
       "Artifacts To Track": "ARTIFACT:apps/web/src/app/(developer)/docs/api/page.tsx;ARTIFACT:apps/web/src/components/shared/api-reference.tsx;ARTIFACT:apps/web/src/components/shared/api-playground.tsx;EVIDENCE:.specify/sprints/sprint-15/attestations/PG-033/context_ack.json",
@@ -5418,7 +5418,7 @@
       "Definition of Done": "Settings domain policies and APIs implemented for IAM, audit, integrations and security controls; artifacts: settings.router.ts, settings-policy.ts, PrismaSettingsRepository.ts; verified by: pnpm test",
       "Status": "Backlog",
       "KPIs": "100% role/permission checks covered by tests, 0 unauthorized settings mutations in integration tests, p95 settings API latency <250ms",
-      "Target Sprint": "29",
+      "Target Sprint": "25",
       "Artifacts To Track": "ARTIFACT:packages/domain/src/settings/SettingsPolicy.ts;ARTIFACT:packages/adapters/src/repositories/PrismaSettingsRepository.ts;ARTIFACT:apps/api/src/modules/settings/settings.router.ts;ARTIFACT:apps/api/src/modules/settings/__tests__/settings.router.test.ts;EVIDENCE:.specify/sprints/sprint-29/attestations/IFC-201/context_ack.json;ARTIFACT:docs/planning/prd-settings-control-plane.md",
       "Validation Method": "VALIDATE:pnpm test;GATE:coverage-gte-90;AUDIT:security-review"
     }
@@ -5538,7 +5538,7 @@
       "Definition of Done": "Outbound emails signed with SPF/DKIM/DMARC configured; inbound email parser implemented with attachments handling; webhooks infrastructure with idempotency and retries; OpenAPI spec version 1 published covering major endpoints; baseline email send/receive tested; targets: >=95%, >=99%, >=100%; Inbound email endpoint must be exposed via API route with E2E test",
       "Status": "Completed",
       "KPIs": "Outbound deliverability >=95%; inbound parse accuracy >=99%; API spec coverage 100%; zero duplicate webhook processing",
-      "Target Sprint": "10",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:packages/adapters/src/messaging/email/outbound.ts;ARTIFACT:packages/adapters/src/messaging/email/inbound.ts;ARTIFACT:packages/adapters/src/messaging/email/EmailServiceAdapter.ts;ARTIFACT:packages/adapters/src/messaging/email/attachments.ts;ARTIFACT:packages/adapters/src/messaging/email/dkim-signer.ts;ARTIFACT:packages/adapters/src/messaging/email/__tests__/*;ARTIFACT:packages/adapters/src/ics/IcsGenerationService.ts;ARTIFACT:packages/domain/src/notifications/*;ARTIFACT:artifacts/misc/webhooks/framework.ts;ARTIFACT:artifacts/misc/api-spec/openapi-v1.yaml;EVIDENCE:.specify/sprints/sprint-10/attestations/IFC-144/attestation.json;ARTIFACT:docs/planning/adr/ADR-023-communications-inbox.md;ARTIFACT:docs/planning/prd-communications-inbox.md",
       "Validation Method": "VALIDATE:pnpm test;GATE:integration-wired"
     },
@@ -5596,7 +5596,7 @@
       "Definition of Done": "Database schema created; conversation records stored with metadata (case ID; timestamps; user/agent ID; tool calls); search API implemented; access control enforced; retention and DSAR compliance built-in; tests covering privacy controls; targets: >=100%",
       "Status": "Completed",
       "KPIs": "100% conversations recorded; retrieval latency <=50ms; access control passes; DSAR deletion executed",
-      "Target Sprint": "12",
+      "Target Sprint": "7",
       "Artifacts To Track": "ARTIFACT:apps/api/src/modules/agent/conversation.router.ts;ARTIFACT:apps/api/src/modules/agent/__tests__/conversation.router.test.ts;ARTIFACT:packages/application/src/services/ConversationSearchService.ts;ARTIFACT:infra/supabase/migrations/20260104000000_conversation_rls.sql;ARTIFACT:artifacts/misc/data-retention-config.yaml;EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-148/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;VALIDATE:pnpm test:integration"
     },
@@ -5624,7 +5624,7 @@
       "Definition of Done": "Agent tool implemented (retrieve_case_context); responses include source references; injection defenses applied; approval needed for external send; tests; artifacts: retrieve-case-context.ts, case-rag.md, context_ack.json; targets: <2s",
       "Status": "Completed",
       "KPIs": "0 unauthorized retrievals; response time p95 <2s; hallucination rate reduced via eval suite",
-      "Target Sprint": "13",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:packages/ai/tools/retrieve-case-context.ts;ARTIFACT:docs/agent/case-rag.md;EVIDENCE:.specify/sprints/sprint-13/attestations/IFC-156/IFC-156-context_ack.json",
       "Validation Method": "AUDIT:manual-review;VALIDATE:pnpm test"
     }
@@ -5716,7 +5716,7 @@
       "Definition of Done": "CaseDocument aggregate and repository implemented; ACL mapping rules defined; versioning semantics; audit events on read/write; tests; targets: >=100%, >=100%, <50ms",
       "Status": "Completed",
       "KPIs": "Access control test pass 100%; audit log coverage 100%; CRUD latency p95 <50ms",
-      "Target Sprint": "11",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:packages/domain/src/legal/cases/case-document.ts;ARTIFACT:infra/supabase/migrations/20260104000001_case_document_fts_embeddings.sql;ARTIFACT:apps/api/src/modules/legal/documents.router.ts;EVIDENCE:.specify/sprints/sprint-11/attestations/IFC-152/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test"
     },
@@ -5730,7 +5730,7 @@
       "Definition of Done": "Upload + inbound email attachments land in storage; AV scan gate; metadata extracted; ingestion events emitted; failure handling + retries; integration tests; targets: >=99%, >=100%, >=1%",
       "Status": "Completed",
       "KPIs": "Ingestion success >=99%; AV scan blocks 100% known samples; duplicate ingestion rate <1%",
-      "Target Sprint": "12",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:docs/operations/runbooks/ingestion.md;EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-153/context_ack.json;EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-153/attestation.json",
       "Validation Method": "VALIDATE:pnpm test:e2e"
     },
@@ -5744,7 +5744,7 @@
       "Definition of Done": "OCR worker processes supported formats; stores extracted text with provenance; handles retries; quality metrics recorded; tests; artifacts: ocr-quality-benchmarks.csv, extracted-text-schema.json, context_ack.json; targets: >=1%",
       "Status": "Completed",
       "KPIs": "OCR throughput >= X pages/min baseline; extraction accuracy benchmarked; failure rate <1%",
-      "Target Sprint": "12",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:artifacts/benchmarks/ocr-quality-benchmarks.csv;ARTIFACT:artifacts/misc/extracted-text-schema.json;EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-154/context_ack.json",
       "Validation Method": "AUDIT:manual-review;VALIDATE:pnpm test"
     }
@@ -5760,7 +5760,7 @@
       "Definition of Done": "FTS index and vector embeddings built; retrieval APIs enforce tenant/case ACL; re-index job; purge on DSAR rules; tests; targets: >=80%, <200ms, zero errors; gates: latency-check; generateEmbedding() must return real embeddings from embedding chain, not null placeholder",
       "Status": "Completed",
       "KPIs": "Retrieval latency p95 <200ms; zero cross-tenant leakage; relevance eval >=80% on test set",
-      "Target Sprint": "12",
+      "Target Sprint": "6",
       "Artifacts To Track": "ARTIFACT:infra/supabase/migrations/20260104000001_case_document_fts_embeddings.sql;ARTIFACT:apps/ai-worker/src/services/document-indexer.ts;ARTIFACT:apps/ai-worker/src/workers/reindex-worker.ts;ARTIFACT:packages/search/src/retrieval.ts;ARTIFACT:artifacts/misc/relevance-eval.json;EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-155/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:latency-check;GATE:real-embedding-generation"
     }
@@ -5923,7 +5923,7 @@
       "Status": "Completed",
       "KPIs": "List loads <500ms; parties editable; deadlines accurate; documents linked; Lighthouse >=90",
       "Target Sprint": "7",
-      "Artifacts To Track": "ARTIFACT:apps/web/src/app/cases/page.tsx;ARTIFACT:apps/web/src/app/cases/[id]/page.tsx;ARTIFACT:apps/web/src/components/cases/CaseList.tsx;ARTIFACT:apps/web/src/components/cases/CaseDetail.tsx;ARTIFACT:apps/web/src/components/cases/PartyManager.tsx;ARTIFACT:apps/web/src/components/cases/DeadlineTracker.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-138/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:apps/web/src/app/cases/(list)/page.tsx;ARTIFACT:apps/web/src/app/cases/[id]/page.tsx;ARTIFACT:apps/web/src/components/cases/CaseList.tsx;ARTIFACT:apps/web/src/components/cases/CaseDetail.tsx;ARTIFACT:apps/web/src/components/cases/PartyManager.tsx;ARTIFACT:apps/web/src/components/cases/DeadlineTracker.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-138/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90"
     },
     {
@@ -5937,7 +5937,7 @@
       "Status": "Completed",
       "KPIs": "Calendar loads <500ms; conflicts highlighted; case links work; reminders configurable; Lighthouse >=90",
       "Target Sprint": "7",
-      "Artifacts To Track": "ARTIFACT:apps/web/src/app/calendar/page.tsx;ARTIFACT:apps/web/src/app/calendar/[id]/page.tsx;ARTIFACT:apps/web/src/components/calendar/AppointmentCalendar.tsx;ARTIFACT:apps/web/src/components/calendar/AppointmentForm.tsx;ARTIFACT:apps/web/src/components/calendar/ConflictWarning.tsx;ARTIFACT:apps/web/src/components/calendar/RecurrenceEditor.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-139/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:apps/web/src/app/calendar/(list)/page.tsx;ARTIFACT:apps/web/src/app/calendar/[id]/page.tsx;ARTIFACT:apps/web/src/components/appointments/AppointmentCalendar.tsx;ARTIFACT:apps/web/src/components/appointments/AppointmentForm.tsx;ARTIFACT:apps/web/src/components/appointments/ConflictWarning.tsx;ARTIFACT:apps/web/src/components/appointments/RecurrenceEditor.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-139/context_ack.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90"
     },
     {
@@ -6008,7 +6008,7 @@
       "Dependencies": "IFC-156,IFC-155,IFC-181",
       "Pre-requisites": "FILE:apps/ai-worker/src/chains/rag-context.chain.ts;FILE:apps/ai-worker/src/services/retrieval-service.ts;FILE:apps/web/src/components/sidebar/configs/agent-approvals.ts;FILE:docs/design/UI_DEVELOPMENT_PROMPT.md",
       "Definition of Done": "Page renders at /agent-approvals/ai-search; GlobalSearchBar with AI-powered results CitationDisplay SourceHighlight SearchFilters RelevanceScore; response <1s; Lighthouse >=90; verified by: pnpm test",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Search <1s; AI results accurate; citations linked; sources highlighted; Lighthouse >=90; test coverage >=90%",
       "Target Sprint": "7",
       "Artifacts To Track": "ARTIFACT:apps/web/src/app/agent-approvals/ai-search/page.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/AISearchPage.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/CitationDisplay.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/SourceHighlight.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/__tests__/AISearchPage.test.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-144/context_ack.json",
@@ -6064,10 +6064,10 @@
       "Dependencies": "IFC-005,IFC-023,IFC-181",
       "Pre-requisites": "FILE:apps/ai-worker/src/chains/scoring.chain.ts;FILE:packages/ui/src/components/score/ConfidenceIndicator.tsx;FILE:apps/web/src/components/sidebar/configs/agent-approvals.ts;FILE:docs/design/UI_DEVELOPMENT_PROMPT.md",
       "Definition of Done": "Page renders at /agent-approvals/lead-scoring; score distribution chart; model accuracy metrics; top-scored leads list; factor breakdown per lead; reuses ConfidenceIndicator and ScoreCard components; Lighthouse >=90; verified by: pnpm test",
-      "Status": "Backlog",
+      "Status": "Completed",
       "KPIs": "Page loads <500ms; score data accurate; charts render correctly; reuses existing score components; Lighthouse >=90; test coverage >=90%",
       "Target Sprint": "7",
-      "Artifacts To Track": "ARTIFACT:apps/web/src/app/agent-approvals/lead-scoring/page.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/LeadScoringDashboard.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/__tests__/LeadScoringDashboard.test.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-148/context_ack.json",
+      "Artifacts To Track": "ARTIFACT:apps/web/src/app/agent-approvals/lead-scoring/page.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/LeadScoringDashboard.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/__tests__/LeadScoringDashboard.test.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-148/attestation.json",
       "Validation Method": "VALIDATE:pnpm test;GATE:lighthouse-gte-90"
     },
     {
@@ -6078,7 +6078,7 @@
       "Dependencies": "IFC-025,IFC-181",
       "Pre-requisites": "FILE:apps/api/src/modules/experiment/experiment.router.ts;FILE:apps/ai-worker/src/analytics/statistical-analysis.ts;FILE:apps/web/src/components/sidebar/configs/agent-approvals.ts;FILE:docs/design/UI_DEVELOPMENT_PROMPT.md",
       "Definition of Done": "Page renders at /agent-approvals/experiments; experiment list with status filters; create/start/stop/complete actions; statistical significance display; variant comparison charts; confidence intervals; verified by: pnpm test",
-      "Status": "Backlog",
+      "Status": "Plan Complete",
       "KPIs": "Page loads <500ms; experiments manageable; statistical results accurate; variant comparison visible; Lighthouse >=90; test coverage >=90%",
       "Target Sprint": "7",
       "Artifacts To Track": "ARTIFACT:apps/web/src/app/agent-approvals/experiments/page.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/ExperimentsDashboard.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/__tests__/ExperimentsDashboard.test.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-149/context_ack.json",
@@ -6092,7 +6092,7 @@
       "Dependencies": "IFC-181,IFC-180",
       "Pre-requisites": "FILE:apps/api/src/modules/ai-review/ai-review.router.ts;FILE:apps/web/src/lib/ai-review/hooks.ts;FILE:apps/web/src/components/ai-review/ReviewCard.tsx;FILE:apps/web/src/components/sidebar/configs/agent-approvals.ts;FILE:docs/design/UI_DEVELOPMENT_PROMPT.md",
       "Definition of Done": "Page renders at /agent-approvals/history; full review history with date range status and output type filters; timeline visualization; audit trail per review; reuses ReviewCard component; verified by: pnpm test",
-      "Status": "Backlog",
+      "Status": "In Progress",
       "KPIs": "Page loads <500ms; filters work correctly; timeline renders; audit trail complete; Lighthouse >=90; test coverage >=90%",
       "Target Sprint": "7",
       "Artifacts To Track": "ARTIFACT:apps/web/src/app/agent-approvals/history/page.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/ReviewHistory.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/__tests__/ReviewHistory.test.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-150/context_ack.json",

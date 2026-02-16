@@ -86,13 +86,7 @@ describe('ModelInfo', () => {
     });
 
     it('should apply custom className', () => {
-      render(
-        <ModelInfo
-          modelVersion="v2.1"
-          className="custom-class"
-          data-testid="model-info"
-        />
-      );
+      render(<ModelInfo modelVersion="v2.1" className="custom-class" data-testid="model-info" />);
       expect(screen.getByTestId('model-info')).toHaveClass('custom-class');
     });
   });
@@ -131,13 +125,7 @@ describe('ModelInfo', () => {
     });
 
     it('should handle invalid timestamp gracefully', () => {
-      render(
-        <ModelInfo
-          modelVersion="v2.1"
-          scoredAt="invalid-date"
-          showTimestamp
-        />
-      );
+      render(<ModelInfo modelVersion="v2.1" scoredAt="invalid-date" showTimestamp />);
       // Should not crash
       expect(screen.getByText('v2.1')).toBeInTheDocument();
     });

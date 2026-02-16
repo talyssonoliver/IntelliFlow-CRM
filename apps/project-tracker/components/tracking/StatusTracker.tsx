@@ -86,10 +86,7 @@ export default function StatusTracker() {
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
         </div>
-        <button
-          onClick={fetchData}
-          className="mt-2 text-sm underline hover:no-underline"
-        >
+        <button onClick={fetchData} className="mt-2 text-sm underline hover:no-underline">
           Try again
         </button>
       </div>
@@ -104,9 +101,8 @@ export default function StatusTracker() {
     backlog: 0,
     blocked: 0,
   };
-  const completionRate = summary.total > 0
-    ? Math.round((summary.completed / summary.total) * 100)
-    : 0;
+  const completionRate =
+    summary.total > 0 ? Math.round((summary.completed / summary.total) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -117,29 +113,16 @@ export default function StatusTracker() {
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Status Snapshot</h3>
             {data?.lastUpdated && (
-              <StaleIndicator
-                lastUpdated={data.lastUpdated}
-                thresholdMinutes={60}
-                showTime
-              />
+              <StaleIndicator lastUpdated={data.lastUpdated} thresholdMinutes={60} showTime />
             )}
           </div>
         </div>
-        <RefreshButton
-          onRefresh={handleRefresh}
-          label="Regenerate"
-          disabled={loading}
-        />
+        <RefreshButton onRefresh={handleRefresh} label="Regenerate" disabled={loading} />
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <MetricCard
-          title="Total Tasks"
-          value={summary.total}
-          icon="view_list"
-          variant="info"
-        />
+        <MetricCard title="Total Tasks" value={summary.total} icon="view_list" variant="info" />
         <MetricCard
           title="Completed"
           value={summary.completed}
@@ -159,12 +142,7 @@ export default function StatusTracker() {
           icon="calendar_today"
           variant="default"
         />
-        <MetricCard
-          title="Backlog"
-          value={summary.backlog}
-          icon="inbox"
-          variant="default"
-        />
+        <MetricCard title="Backlog" value={summary.backlog} icon="inbox" variant="default" />
         <MetricCard
           title="Blocked"
           value={summary.blocked}
@@ -196,17 +174,12 @@ export default function StatusTracker() {
               .sort(([a], [b]) => parseInt(a) - parseInt(b))
               .slice(0, 6)
               .map(([sprint, stats]) => {
-                const pct = stats.total > 0
-                  ? Math.round((stats.completed / stats.total) * 100)
-                  : 0;
+                const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
                 return (
                   <div key={sprint} className="flex items-center gap-3">
                     <span className="text-xs text-gray-500 w-16">Sprint {sprint}</span>
                     <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-blue-500"
-                        style={{ width: `${pct}%` }}
-                      />
+                      <div className="h-full bg-blue-500" style={{ width: `${pct}%` }} />
                     </div>
                     <span className="text-xs text-gray-500 w-12 text-right">
                       {stats.completed}/{stats.total}
@@ -224,15 +197,10 @@ export default function StatusTracker() {
           <h4 className="text-sm font-medium text-gray-700 mb-3">Recent Completions</h4>
           <div className="space-y-2">
             {data.recent_completions.slice(0, 5).map((item) => (
-              <div
-                key={item.task_id}
-                className="flex items-center gap-3 text-sm"
-              >
+              <div key={item.task_id} className="flex items-center gap-3 text-sm">
                 <Icon name="check_circle" className="text-green-600" size="base" />
                 <span className="font-mono text-blue-600">{item.task_id}</span>
-                <span className="text-gray-500 truncate flex-1">
-                  {item.description}
-                </span>
+                <span className="text-gray-500 truncate flex-1">{item.description}</span>
               </div>
             ))}
           </div>

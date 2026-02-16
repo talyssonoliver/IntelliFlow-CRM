@@ -190,7 +190,7 @@ describe('SLANotificationManager (b11 coverage)', () => {
         expect.objectContaining({
           alert: mockAlert,
           priority: 'urgent',
-        }),
+        })
       );
     });
 
@@ -277,7 +277,9 @@ describe('SLANotificationManager (b11 coverage)', () => {
       } as any;
 
       let capturedNotification: any = null;
-      manager.onNotification((n) => { capturedNotification = n; });
+      manager.onNotification((n) => {
+        capturedNotification = n;
+      });
       manager.initialize(mockService);
 
       breachCallback!({

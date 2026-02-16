@@ -28,7 +28,7 @@ import { type Context } from '../../context';
 import {
   getTenantContext,
   createTenantWhereClause,
-  type TenantAwareContext
+  type TenantAwareContext,
 } from '../../security/tenant-context';
 import { TaskNotInProgressError } from '@intelliflow/domain';
 
@@ -64,7 +64,12 @@ export const taskRouter = createTRPCRouter({
       const message = result.error.message;
       if (errorCode === 'VALIDATION_ERROR') {
         // Check if it's an entity not found error
-        if (message.includes('not found') || message.includes('Lead') || message.includes('Contact') || message.includes('Opportunity')) {
+        if (
+          message.includes('not found') ||
+          message.includes('Lead') ||
+          message.includes('Contact') ||
+          message.includes('Opportunity')
+        ) {
           throw new TRPCError({
             code: 'NOT_FOUND',
             message,
@@ -255,9 +260,13 @@ export const taskRouter = createTRPCRouter({
     }
 
     // If only title/description, use service
-    if ((title !== undefined || description !== undefined) &&
-        leadId === undefined && contactId === undefined && opportunityId === undefined &&
-        Object.keys(otherData).length === 0) {
+    if (
+      (title !== undefined || description !== undefined) &&
+      leadId === undefined &&
+      contactId === undefined &&
+      opportunityId === undefined &&
+      Object.keys(otherData).length === 0
+    ) {
       const result = await taskService.updateTaskInfo(id, { title, description });
       if (result.isFailure) {
         const errorCode = result.error.code;
@@ -439,7 +448,7 @@ export const taskRouter = createTRPCRouter({
    * Get task statistics
    */
   stats: tenantProcedure.query(async ({ ctx }) => {
-   const typedCtx = getTenantContext(ctx);
+    const typedCtx = getTenantContext(ctx);
     const [total, byStatus, byPriority, overdue, dueToday] = await Promise.all([
       typedCtx.prismaWithTenant.task.count(),
       typedCtx.prismaWithTenant.task.groupBy({
@@ -498,13 +507,25 @@ export const taskRouter = createTRPCRouter({
     let result;
     switch (input.entityType) {
       case 'lead':
-        result = await taskService.assignToLead(input.taskId, input.entityId, typedCtx.tenant.userId);
+        result = await taskService.assignToLead(
+          input.taskId,
+          input.entityId,
+          typedCtx.tenant.userId
+        );
         break;
       case 'contact':
-        result = await taskService.assignToContact(input.taskId, input.entityId, typedCtx.tenant.userId);
+        result = await taskService.assignToContact(
+          input.taskId,
+          input.entityId,
+          typedCtx.tenant.userId
+        );
         break;
       case 'opportunity':
-        result = await taskService.assignToOpportunity(input.taskId, input.entityId, typedCtx.tenant.userId);
+        result = await taskService.assignToOpportunity(
+          input.taskId,
+          input.entityId,
+          typedCtx.tenant.userId
+        );
         break;
     }
 
@@ -526,7 +547,11 @@ export const taskRouter = createTRPCRouter({
     const typedCtx = getTenantContext(ctx);
     const taskService = getTaskService(ctx);
 
-    const result = await taskService.updateDueDate(input.taskId, input.newDueDate, typedCtx.tenant.userId);
+    const result = await taskService.updateDueDate(
+      input.taskId,
+      input.newDueDate,
+      typedCtx.tenant.userId
+    );
 
     if (result.isFailure) {
       const message = result.error.message;
@@ -567,11 +592,12 @@ export const taskRouter = createTRPCRouter({
   getByEntity: tenantProcedure.input(getByEntitySchema).query(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
 
-    const entityFilter = input.entityType === 'lead'
-      ? { leadId: input.entityId }
-      : input.entityType === 'contact'
-        ? { contactId: input.entityId }
-        : { opportunityId: input.entityId };
+    const entityFilter =
+      input.entityType === 'lead'
+        ? { leadId: input.entityId }
+        : input.entityType === 'contact'
+          ? { contactId: input.entityId }
+          : { opportunityId: input.entityId };
 
     const where = createTenantWhereClause(typedCtx.tenant, entityFilter);
     const tasks = await typedCtx.prismaWithTenant.task.findMany({

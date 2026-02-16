@@ -185,13 +185,15 @@ export function sanitizeOutput(output: string, userId: string): SanitizedOutput 
             const domain = match.slice(atIndex);
             const domainParts = domain.split('.');
             const tld = domainParts[domainParts.length - 1];
-            const maskedLocal = localPart.slice(0, 2) + '*'.repeat(Math.max(localPart.length - 2, 0));
+            const maskedLocal =
+              localPart.slice(0, 2) + '*'.repeat(Math.max(localPart.length - 2, 0));
             const maskedDomain = domainParts.length > 1 ? '***.' + tld : '***';
             return maskedLocal + '@' + maskedDomain;
           }
         }
         // For other PII, show first 2 and last 2 chars
-        const masked = match.slice(0, 2) + '*'.repeat(Math.max(match.length - 4, 0)) + match.slice(-2);
+        const masked =
+          match.slice(0, 2) + '*'.repeat(Math.max(match.length - 4, 0)) + match.slice(-2);
         logger.warn(
           {
             userId,
@@ -218,7 +220,8 @@ export function sanitizeOutput(output: string, userId: string): SanitizedOutput 
 
       // Return safe error message instead
       return {
-        content: 'The AI response was blocked due to security concerns. Please try rephrasing your question.',
+        content:
+          'The AI response was blocked due to security concerns. Please try rephrasing your question.',
         redactedFields: ['entire_response'],
         containsPII: false,
         safe: false,
@@ -238,10 +241,7 @@ export function sanitizeOutput(output: string, userId: string): SanitizedOutput 
  * Rate limiting per user
  * Prevents abuse and excessive AI costs
  */
-const rateLimitMap = new Map<
-  string,
-  { count: number; resetAt: number }
->();
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 
 export function checkRateLimit(userId: string, maxRequestsPerMinute = 10): boolean {
   const now = Date.now();

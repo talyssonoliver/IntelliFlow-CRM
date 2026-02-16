@@ -38,21 +38,42 @@ export const fileReadSchema = z.object({
 
 // Context acknowledgment
 export const contextAcknowledgmentSchema = z.object({
-  files_read: z.array(fileReadSchema).optional().describe('List of prerequisite files that were read'),
-  invariants_acknowledged: z.array(z.string()).optional().describe('List of invariants/constraints that were acknowledged'),
+  files_read: z
+    .array(fileReadSchema)
+    .optional()
+    .describe('List of prerequisite files that were read'),
+  invariants_acknowledged: z
+    .array(z.string())
+    .optional()
+    .describe('List of invariants/constraints that were acknowledged'),
   acknowledged_at: lenientDatetime().optional().describe('When context was acknowledged'),
 });
 
 // Evidence summary
 export const evidenceSummarySchema = z.object({
   artifacts_verified: z.number().int().min(0).optional().describe('Number of artifacts verified'),
-  validations_passed: z.number().int().min(0).optional().describe('Number of validations that passed'),
-  validations_failed: z.number().int().min(0).optional().describe('Number of validations that failed'),
+  validations_passed: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe('Number of validations that passed'),
+  validations_failed: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe('Number of validations that failed'),
   gates_passed: z.number().int().min(0).optional().describe('Number of gates that passed'),
   gates_failed: z.number().int().min(0).optional().describe('Number of gates that failed'),
   kpis_met: z.number().int().min(0).optional().describe('Number of KPIs met'),
   kpis_missed: z.number().int().min(0).optional().describe('Number of KPIs missed'),
-  placeholders_found: z.number().int().min(0).optional().describe('Number of placeholder values found (should be 0)'),
+  placeholders_found: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe('Number of placeholder values found (should be 0)'),
 });
 
 // Validation result
@@ -113,33 +134,73 @@ const taskIdPattern = /^[A-Z]+-[A-Z0-9-]+$/;
 // Main attestation schema
 export const attestationSchema = z.object({
   $schema: z.string().optional().describe('Schema reference for validation'),
-  schema_version: schemaVersionSchema.optional().describe('Schema version for backward compatibility'),
-  task_id: z.string().regex(taskIdPattern).describe('Unique task identifier (e.g., ENV-002-AI, IFC-001)'),
+  schema_version: schemaVersionSchema
+    .optional()
+    .describe('Schema version for backward compatibility'),
+  task_id: z
+    .string()
+    .regex(taskIdPattern)
+    .describe('Unique task identifier (e.g., ENV-002-AI, IFC-001)'),
   run_id: z.string().optional().describe('Execution run identifier (e.g., 20251225-181500)'),
-  attestor: z.string().optional().describe("Entity that created the attestation (e.g., 'Claude Code - Task Integrity Validator')"),
-  attestation_timestamp: lenientDatetime().optional().describe('ISO 8601 timestamp when attestation was created'),
+  attestor: z
+    .string()
+    .optional()
+    .describe(
+      "Entity that created the attestation (e.g., 'Claude Code - Task Integrity Validator')"
+    ),
+  attestation_timestamp: lenientDatetime()
+    .optional()
+    .describe('ISO 8601 timestamp when attestation was created'),
   verdict: verdictSchema.optional().describe('Final verdict on task completion'),
-  consensus_verdict: z.string().optional().describe('Alternative verdict field used by some attestation formats'),
-  context_acknowledgment: contextAcknowledgmentSchema.optional().describe('Evidence that prerequisite files were read and understood'),
-  evidence_summary: evidenceSummarySchema.optional().describe('Summary counts of verification evidence'),
-  artifact_hashes: z.record(z.string(), z.string().regex(sha256Pattern)).optional().describe('Map of artifact paths to their SHA256 hashes'),
-  validation_results: z.array(validationResultSchema).optional().describe('Results from validation commands'),
+  consensus_verdict: z
+    .string()
+    .optional()
+    .describe('Alternative verdict field used by some attestation formats'),
+  context_acknowledgment: contextAcknowledgmentSchema
+    .optional()
+    .describe('Evidence that prerequisite files were read and understood'),
+  evidence_summary: evidenceSummarySchema
+    .optional()
+    .describe('Summary counts of verification evidence'),
+  artifact_hashes: z
+    .record(z.string(), z.string().regex(sha256Pattern))
+    .optional()
+    .describe('Map of artifact paths to their SHA256 hashes'),
+  validation_results: z
+    .array(validationResultSchema)
+    .optional()
+    .describe('Results from validation commands'),
   gate_results: z.array(gateResultSchema).optional().describe('Results from audit-matrix gates'),
   kpi_results: z.array(kpiResultSchema).optional().describe('KPI verification results'),
   // dependencies_verified accepts both array (legacy) and object (new detailed format)
-  dependencies_verified: z.union([
-    z.array(z.string()),
-    z.record(z.string(), z.object({
-      status: z.string().optional(),
-      verified_at: z.string().optional(),
-      description: z.string().optional(),
-      verified: z.boolean().optional(),
-      verification_method: z.string().optional(),
-    }).passthrough()),
-  ]).optional().describe('Dependency verification - array of IDs or detailed object'),
-  definition_of_done_items: z.array(dodItemSchema).optional().describe('Definition of Done verification'),
-  manual_verification: manualVerificationSchema.optional().describe('Results from manual audit/review'),
-  environment: environmentSchema.optional().describe('Environment details where attestation was generated'),
+  dependencies_verified: z
+    .union([
+      z.array(z.string()),
+      z.record(
+        z.string(),
+        z
+          .object({
+            status: z.string().optional(),
+            verified_at: z.string().optional(),
+            description: z.string().optional(),
+            verified: z.boolean().optional(),
+            verification_method: z.string().optional(),
+          })
+          .passthrough()
+      ),
+    ])
+    .optional()
+    .describe('Dependency verification - array of IDs or detailed object'),
+  definition_of_done_items: z
+    .array(dodItemSchema)
+    .optional()
+    .describe('Definition of Done verification'),
+  manual_verification: manualVerificationSchema
+    .optional()
+    .describe('Results from manual audit/review'),
+  environment: environmentSchema
+    .optional()
+    .describe('Environment details where attestation was generated'),
   notes: z.string().optional().describe('Additional notes or context'),
 });
 

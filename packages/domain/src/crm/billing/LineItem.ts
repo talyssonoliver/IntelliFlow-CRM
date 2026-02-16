@@ -51,23 +51,33 @@ export class LineItem extends ValueObject<LineItemProps> {
     }
 
     if (props.quantity <= 0) {
-      return Result.fail(new InvalidLineItemError(`Line item quantity must be > 0, got ${props.quantity}`));
+      return Result.fail(
+        new InvalidLineItemError(`Line item quantity must be > 0, got ${props.quantity}`)
+      );
     }
 
     if (props.unitPriceCents < 0) {
-      return Result.fail(new InvalidLineItemError(`Line item unit price cannot be negative, got ${props.unitPriceCents}`));
+      return Result.fail(
+        new InvalidLineItemError(
+          `Line item unit price cannot be negative, got ${props.unitPriceCents}`
+        )
+      );
     }
 
     const currency = props.currency ?? 'USD';
     const unitPriceResult = Money.fromCents(props.unitPriceCents, currency);
     if (unitPriceResult.isFailure) {
-      return Result.fail(new InvalidLineItemError(`Invalid unit price: ${unitPriceResult.error.message}`));
+      return Result.fail(
+        new InvalidLineItemError(`Invalid unit price: ${unitPriceResult.error.message}`)
+      );
     }
 
     const unitPrice = unitPriceResult.value;
     const totalResult = unitPrice.multiply(props.quantity);
     if (totalResult.isFailure) {
-      return Result.fail(new InvalidLineItemError(`Failed to calculate total: ${totalResult.error.message}`));
+      return Result.fail(
+        new InvalidLineItemError(`Failed to calculate total: ${totalResult.error.message}`)
+      );
     }
 
     return Result.ok(

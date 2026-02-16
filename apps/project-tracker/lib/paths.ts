@@ -255,6 +255,3 @@ export function sanitizeTaskId(taskId: string): string | null {
   // Since we've already validated the pattern, this is just an extra safety layer
   return taskId.replace(/[^A-Z0-9-]/g, '');
 }
-
-
-

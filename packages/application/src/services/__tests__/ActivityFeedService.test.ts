@@ -8,7 +8,9 @@ import type { UnifiedActivityItem } from '@intelliflow/domain';
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeItem(overrides: Partial<UnifiedActivityItem> & { id: string; timestamp: Date }): UnifiedActivityItem {
+function makeItem(
+  overrides: Partial<UnifiedActivityItem> & { id: string; timestamp: Date }
+): UnifiedActivityItem {
   return {
     source: 'LEAD_ACTIVITY',
     type: 'EMAIL',
@@ -90,7 +92,7 @@ describe('ActivityFeedService', () => {
         tenantId,
         21, // limit + 1
         null,
-        {},
+        {}
       );
     });
 
@@ -104,12 +106,7 @@ describe('ActivityFeedService', () => {
         before: new Date('2026-02-01'),
       };
       await service.getUnifiedFeed(tenantId, 20, null, filters);
-      expect(mockRepo.getUnifiedFeed).toHaveBeenCalledWith(
-        tenantId,
-        21,
-        null,
-        filters,
-      );
+      expect(mockRepo.getUnifiedFeed).toHaveBeenCalledWith(tenantId, 21, null, filters);
     });
 
     // -----------------------------------------------------------------------
@@ -136,7 +133,7 @@ describe('ActivityFeedService', () => {
     it('sets hasMore=true when more items than limit', async () => {
       // Return limit+1 items to trigger hasMore
       const items = Array.from({ length: 21 }, (_, i) =>
-        makeItem({ id: `lead_${i}`, timestamp: new Date(2026, 0, 21 - i) }),
+        makeItem({ id: `lead_${i}`, timestamp: new Date(2026, 0, 21 - i) })
       );
       vi.mocked(mockRepo.getUnifiedFeed).mockResolvedValue(items);
 
@@ -147,9 +144,7 @@ describe('ActivityFeedService', () => {
     });
 
     it('sets hasMore=false when fewer items than limit', async () => {
-      const items = [
-        makeItem({ id: 'lead_1', timestamp: new Date('2026-01-01') }),
-      ];
+      const items = [makeItem({ id: 'lead_1', timestamp: new Date('2026-01-01') })];
       vi.mocked(mockRepo.getUnifiedFeed).mockResolvedValue(items);
 
       const result = await service.getUnifiedFeed(tenantId, 20, null, {});
@@ -160,7 +155,7 @@ describe('ActivityFeedService', () => {
 
     it('generates valid cursor from last item', async () => {
       const items = Array.from({ length: 21 }, (_, i) =>
-        makeItem({ id: `lead_${i}`, timestamp: new Date(2026, 0, 21 - i) }),
+        makeItem({ id: `lead_${i}`, timestamp: new Date(2026, 0, 21 - i) })
       );
       vi.mocked(mockRepo.getUnifiedFeed).mockResolvedValue(items);
 
@@ -184,14 +179,14 @@ describe('ActivityFeedService', () => {
         tenantId,
         21,
         { timestamp: ts, id: 'lead_5' },
-        {},
+        {}
       );
     });
 
     it('throws on invalid cursor', async () => {
-      await expect(
-        service.getUnifiedFeed(tenantId, 20, 'not-valid-base64!!!', {}),
-      ).rejects.toThrow('Invalid activity feed cursor');
+      await expect(service.getUnifiedFeed(tenantId, 20, 'not-valid-base64!!!', {})).rejects.toThrow(
+        'Invalid activity feed cursor'
+      );
     });
 
     it('respects custom limit', async () => {
@@ -205,11 +200,17 @@ describe('ActivityFeedService', () => {
 
     it('checks cache for first page with no filters', async () => {
       await service.getUnifiedFeed(tenantId, 20, null, {});
-      expect(mockCache.get).toHaveBeenCalledWith(expect.stringContaining(`activity-feed:${tenantId}`));
+      expect(mockCache.get).toHaveBeenCalledWith(
+        expect.stringContaining(`activity-feed:${tenantId}`)
+      );
     });
 
     it('returns cached result when cache hit', async () => {
-      const cached = { items: [makeItem({ id: 'cached_1', timestamp: new Date() })], nextCursor: null, hasMore: false };
+      const cached = {
+        items: [makeItem({ id: 'cached_1', timestamp: new Date() })],
+        nextCursor: null,
+        hasMore: false,
+      };
       vi.mocked(mockCache.get).mockResolvedValue(cached);
 
       const result = await service.getUnifiedFeed(tenantId, 20, null, {});
@@ -226,7 +227,7 @@ describe('ActivityFeedService', () => {
       expect(mockCache.set).toHaveBeenCalledWith(
         expect.stringContaining(`activity-feed:${tenantId}`),
         expect.objectContaining({ items: expect.any(Array) }),
-        30, // TTL
+        30 // TTL
       );
     });
 
@@ -247,12 +248,7 @@ describe('ActivityFeedService', () => {
 
     it('passes tenantId to repository', async () => {
       await service.getUnifiedFeed('tenant-abc', 20, null, {});
-      expect(mockRepo.getUnifiedFeed).toHaveBeenCalledWith(
-        'tenant-abc',
-        21,
-        null,
-        {},
-      );
+      expect(mockRepo.getUnifiedFeed).toHaveBeenCalledWith('tenant-abc', 21, null, {});
     });
   });
 
@@ -274,7 +270,7 @@ describe('ActivityFeedService', () => {
         'CONTACT',
         'contact-abc',
         11, // limit + 1
-        null,
+        null
       );
     });
 
@@ -296,18 +292,15 @@ describe('ActivityFeedService', () => {
       const cursorStr = encodeCursor(ts, 'lead_5');
 
       await service.getEntityFeed(tenantId, 'LEAD', 'lead-1', 20, cursorStr);
-      expect(mockRepo.getEntityFeed).toHaveBeenCalledWith(
-        tenantId,
-        'LEAD',
-        'lead-1',
-        21,
-        { timestamp: ts, id: 'lead_5' },
-      );
+      expect(mockRepo.getEntityFeed).toHaveBeenCalledWith(tenantId, 'LEAD', 'lead-1', 21, {
+        timestamp: ts,
+        id: 'lead_5',
+      });
     });
 
     it('returns hasMore and nextCursor when more results exist', async () => {
       const items = Array.from({ length: 21 }, (_, i) =>
-        makeItem({ id: `lead_${i}`, timestamp: new Date(2026, 0, 21 - i) }),
+        makeItem({ id: `lead_${i}`, timestamp: new Date(2026, 0, 21 - i) })
       );
       vi.mocked(mockRepo.getEntityFeed).mockResolvedValue(items);
 

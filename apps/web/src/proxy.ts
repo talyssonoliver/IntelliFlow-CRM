@@ -27,7 +27,10 @@ export function proxy(request: NextRequest) {
 
   // Debug: Log all cookies received
   const allCookies = request.cookies.getAll();
-  console.log(`[Proxy] Path: ${path}, Cookies:`, allCookies.map(c => c.name).join(', ') || 'none');
+  console.log(
+    `[Proxy] Path: ${path}, Cookies:`,
+    allCookies.map((c) => c.name).join(', ') || 'none'
+  );
   console.log(
     `[Proxy] Has accessToken: ${!!accessToken}, hasSession: ${!!sessionCookie}, hasValidSession: ${hasValidSession}`
   );
@@ -35,7 +38,7 @@ export function proxy(request: NextRequest) {
   // If user has a valid session and is on login/signup, redirect to dashboard
   // But not if they just logged out (has logged_out param)
   if (hasValidSession && !request.nextUrl.searchParams.has('logged_out')) {
-    if (authPages.some(page => path === page || path.startsWith(page + '/'))) {
+    if (authPages.some((page) => path === page || path.startsWith(page + '/'))) {
       console.log(`[Proxy] Authenticated user on auth page, redirecting to dashboard`);
       return NextResponse.redirect(new URL('/dashboard', request.nextUrl));
     }

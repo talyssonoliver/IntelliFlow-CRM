@@ -24,9 +24,7 @@ export function WidgetDropZone({ isOver = false, onClick, className = '' }: Widg
       `}
     >
       <span className="material-symbols-outlined text-3xl mb-2">add_circle</span>
-      <span className="text-sm font-medium">
-        {isOver ? 'Drop Widget Here' : 'Add Widget'}
-      </span>
+      <span className="text-sm font-medium">{isOver ? 'Drop Widget Here' : 'Add Widget'}</span>
     </div>
   );
 }

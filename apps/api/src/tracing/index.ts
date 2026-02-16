@@ -56,7 +56,4 @@ export {
 } from './correlation';
 
 // tRPC Middleware
-export {
-  tracingMiddleware,
-  metricsMiddleware,
-} from './middleware';
+export { tracingMiddleware, metricsMiddleware } from './middleware';

@@ -16,10 +16,7 @@ export async function GET(
     const state = getRunState(runId);
 
     if (!state) {
-      return NextResponse.json(
-        { success: false, error: 'Test run not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: 'Test run not found' }, { status: 404 });
     }
 
     return NextResponse.json({

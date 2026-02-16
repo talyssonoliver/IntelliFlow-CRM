@@ -59,7 +59,7 @@ describe('PricingPage', () => {
       render(<PricingPage />);
 
       const tierHeadings = screen.getAllByRole('heading', { level: 3 });
-      const tierNames = tierHeadings.map(h => h.textContent);
+      const tierNames = tierHeadings.map((h) => h.textContent);
 
       expect(tierNames).toContain('Starter');
       expect(tierNames).toContain('Professional');
@@ -141,7 +141,7 @@ describe('PricingPage', () => {
       render(<PricingPage />);
 
       // Each tier should have at least 5 features
-      pricingData.tiers.forEach(tier => {
+      pricingData.tiers.forEach((tier) => {
         expect(tier.features.length).toBeGreaterThanOrEqual(5);
       });
     });
@@ -195,7 +195,7 @@ describe('PricingPage', () => {
       render(<PricingPage />);
 
       // Should have at least 8 FAQs
-      pricingData.faqs.forEach(faq => {
+      pricingData.faqs.forEach((faq) => {
         expect(screen.getByText(faq.question)).toBeInTheDocument();
       });
     });
@@ -249,7 +249,7 @@ describe('PricingPage', () => {
 
       const links = screen.getAllByRole('link');
 
-      links.forEach(link => {
+      links.forEach((link) => {
         const hasTextContent = link.textContent && link.textContent.trim().length > 0;
         const hasAriaLabel = link.getAttribute('aria-label') !== null;
 
@@ -262,7 +262,7 @@ describe('PricingPage', () => {
 
       const interactiveElements = screen.getAllByRole('button');
 
-      interactiveElements.forEach(element => {
+      interactiveElements.forEach((element) => {
         expect(element.getAttribute('tabindex')).not.toBe('-1');
       });
     });
@@ -272,7 +272,7 @@ describe('PricingPage', () => {
 
       const textElements = container.querySelectorAll('p, h1, h2, h3');
 
-      textElements.forEach(element => {
+      textElements.forEach((element) => {
         const classes = element.className;
         const hasProperTextColor =
           classes.includes('text-slate-') ||
@@ -290,12 +290,10 @@ describe('PricingPage', () => {
 
       const grids = container.querySelectorAll('[class*="grid"]');
 
-      grids.forEach(grid => {
+      grids.forEach((grid) => {
         const classes = grid.className;
         const hasResponsiveClasses =
-          classes.includes('md:') ||
-          classes.includes('lg:') ||
-          classes.includes('sm:');
+          classes.includes('md:') || classes.includes('lg:') || classes.includes('sm:');
 
         expect(hasResponsiveClasses).toBe(true);
       });
@@ -316,7 +314,7 @@ describe('PricingPage', () => {
       const sections = container.querySelectorAll('section, div[class*="bg-"]');
 
       let hasDarkVariants = false;
-      sections.forEach(section => {
+      sections.forEach((section) => {
         if (section.className.includes('dark:')) {
           hasDarkVariants = true;
         }
@@ -331,7 +329,7 @@ describe('PricingPage', () => {
       const textElements = container.querySelectorAll('p, h1, h2, h3, span');
 
       let hasDarkTextVariants = false;
-      textElements.forEach(element => {
+      textElements.forEach((element) => {
         if (element.className.includes('dark:text-')) {
           hasDarkTextVariants = true;
         }

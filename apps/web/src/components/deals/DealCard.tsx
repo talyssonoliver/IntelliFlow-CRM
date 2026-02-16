@@ -57,18 +57,18 @@ export const DealCard = React.memo(function DealCard({ deal, onNavigate }: DealC
       tabIndex={0}
       className={cn(
         'bg-card rounded-lg border border-border text-left w-full',
-        'p-3 sm:p-4 cursor-pointer transition-all duration-200 touch-pan-y',
+        'p-3 sm:p-4 cursor-pointer touch-pan-y',
         'hover:border-primary hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary',
-        isDragging && 'opacity-50 shadow-lg ring-2 ring-primary',
+        isDragging
+          ? 'opacity-50 shadow-lg ring-2 ring-primary'
+          : 'transition-[border-color,box-shadow] duration-200'
       )}
       onClick={onNavigate}
       onKeyDown={handleKeyDown}
       aria-label={`View deal: ${deal.name}`}
     >
       <div className="flex items-start justify-between gap-2 mb-2 sm:mb-3">
-        <h4 className="font-medium text-foreground text-xs sm:text-sm line-clamp-2">
-          {deal.name}
-        </h4>
+        <h4 className="font-medium text-foreground text-xs sm:text-sm line-clamp-2">{deal.name}</h4>
         <button
           type="button"
           aria-label="Drag to move deal"
@@ -97,7 +97,9 @@ export const DealCard = React.memo(function DealCard({ deal, onNavigate }: DealC
 
       <div className="flex items-center justify-between mt-3 sm:mt-4 pt-2 sm:pt-3 border-t border-border">
         <div className="flex items-center gap-1">
-          <span className="material-symbols-outlined text-base sm:text-lg text-success">payments</span>
+          <span className="material-symbols-outlined text-base sm:text-lg text-success">
+            payments
+          </span>
           <span className="font-semibold text-foreground text-xs sm:text-sm">
             {formatCurrencyFull(deal.value)}
           </span>

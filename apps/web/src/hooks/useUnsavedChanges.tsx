@@ -30,14 +30,7 @@
 
 'use client';
 
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useMemo,
-  ReactNode,
-} from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 
 // ============================================
 // Types
@@ -60,9 +53,7 @@ interface UnsavedChangesContextValue {
 // Context
 // ============================================
 
-const UnsavedChangesContext = createContext<UnsavedChangesContextValue | null>(
-  null
-);
+const UnsavedChangesContext = createContext<UnsavedChangesContextValue | null>(null);
 
 // ============================================
 // Provider
@@ -76,9 +67,7 @@ interface UnsavedChangesProviderProps {
  * Provider component for unsaved changes tracking.
  * Wrap your app or authenticated layout with this provider.
  */
-export function UnsavedChangesProvider({
-  children,
-}: UnsavedChangesProviderProps) {
+export function UnsavedChangesProvider({ children }: UnsavedChangesProviderProps) {
   const [dirtyFormsSet, setDirtyFormsSet] = useState<Set<string>>(new Set());
 
   const register = useCallback((formName: string) => {
@@ -114,11 +103,7 @@ export function UnsavedChangesProvider({
     [register, unregister, dirtyFormsSet, clearAll]
   );
 
-  return (
-    <UnsavedChangesContext.Provider value={value}>
-      {children}
-    </UnsavedChangesContext.Provider>
-  );
+  return <UnsavedChangesContext.Provider value={value}>{children}</UnsavedChangesContext.Provider>;
 }
 
 // ============================================
@@ -134,9 +119,7 @@ export function useUnsavedChanges(): UnsavedChangesContextValue {
   const context = useContext(UnsavedChangesContext);
 
   if (!context) {
-    throw new Error(
-      'useUnsavedChanges must be used within an UnsavedChangesProvider'
-    );
+    throw new Error('useUnsavedChanges must be used within an UnsavedChangesProvider');
   }
 
   return context;
@@ -166,10 +149,7 @@ interface UseFormUnsavedChangesOptions {
  * });
  * ```
  */
-export function useFormUnsavedChanges({
-  formName,
-  isDirty,
-}: UseFormUnsavedChangesOptions): void {
+export function useFormUnsavedChanges({ formName, isDirty }: UseFormUnsavedChangesOptions): void {
   const { register, unregister } = useUnsavedChanges();
 
   // Register/unregister based on dirty state

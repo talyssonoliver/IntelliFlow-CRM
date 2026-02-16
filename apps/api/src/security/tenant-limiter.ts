@@ -438,7 +438,9 @@ export function concurrentRequestMiddleware(options: RateLimitOptions = {}) {
     if (usage.isAtLimit) {
       throw new TRPCError({
         code: 'TOO_MANY_REQUESTS',
-        message: errorMessage ?? 'Too many concurrent requests. Please wait for pending requests to complete.',
+        message:
+          errorMessage ??
+          'Too many concurrent requests. Please wait for pending requests to complete.',
       });
     }
 

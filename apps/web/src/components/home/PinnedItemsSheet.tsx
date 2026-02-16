@@ -2,12 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetDescription,
-} from '@intelliflow/ui';
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@intelliflow/ui';
 
 // =============================================================================
 // All available quick actions (superset of what can appear on home)
@@ -227,11 +222,15 @@ export function EditQuickActionsSheet({ open, onOpenChange, onSave }: EditQuickA
               className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
             >
               <div className="flex items-center gap-4">
-                <div className={`size-10 ${action.iconBg} ${action.iconColor} rounded-lg flex items-center justify-center`}>
+                <div
+                  className={`size-10 ${action.iconBg} ${action.iconColor} rounded-lg flex items-center justify-center`}
+                >
                   <span className="material-symbols-outlined">{action.icon}</span>
                 </div>
                 <div>
-                  <p className="font-medium text-slate-900 dark:text-slate-200 text-sm">{action.label}</p>
+                  <p className="font-medium text-slate-900 dark:text-slate-200 text-sm">
+                    {action.label}
+                  </p>
                   <p className="text-xs text-slate-500">{action.description}</p>
                 </div>
               </div>
@@ -280,16 +279,40 @@ interface IconStyle {
 }
 
 const PINNED_ICON_MAP: Record<string, IconStyle> = {
-  document: { icon: 'folder_special', iconBg: 'bg-orange-100 dark:bg-orange-900/30', iconColor: 'text-orange-600' },
-  contact: { icon: 'contacts', iconBg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: 'text-blue-600' },
+  document: {
+    icon: 'folder_special',
+    iconBg: 'bg-orange-100 dark:bg-orange-900/30',
+    iconColor: 'text-orange-600',
+  },
+  contact: {
+    icon: 'contacts',
+    iconBg: 'bg-blue-100 dark:bg-blue-900/30',
+    iconColor: 'text-blue-600',
+  },
   list: { icon: 'contacts', iconBg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: 'text-blue-600' },
   lead: { icon: 'person', iconBg: 'bg-cyan-100 dark:bg-cyan-900/30', iconColor: 'text-cyan-600' },
-  opportunity: { icon: 'attach_money', iconBg: 'bg-green-100 dark:bg-green-900/30', iconColor: 'text-green-600' },
-  report: { icon: 'assessment', iconBg: 'bg-purple-100 dark:bg-purple-900/30', iconColor: 'text-purple-600' },
-  ticket: { icon: 'confirmation_number', iconBg: 'bg-amber-100 dark:bg-amber-900/30', iconColor: 'text-amber-600' },
+  opportunity: {
+    icon: 'attach_money',
+    iconBg: 'bg-green-100 dark:bg-green-900/30',
+    iconColor: 'text-green-600',
+  },
+  report: {
+    icon: 'assessment',
+    iconBg: 'bg-purple-100 dark:bg-purple-900/30',
+    iconColor: 'text-purple-600',
+  },
+  ticket: {
+    icon: 'confirmation_number',
+    iconBg: 'bg-amber-100 dark:bg-amber-900/30',
+    iconColor: 'text-amber-600',
+  },
 };
 
-const DEFAULT_ICON: IconStyle = { icon: 'push_pin', iconBg: 'bg-slate-100 dark:bg-slate-800', iconColor: 'text-slate-600' };
+const DEFAULT_ICON: IconStyle = {
+  icon: 'push_pin',
+  iconBg: 'bg-slate-100 dark:bg-slate-800',
+  iconColor: 'text-slate-600',
+};
 
 function getPinnedIcon(entityType: string): IconStyle {
   return PINNED_ICON_MAP[entityType] || DEFAULT_ICON;
@@ -429,7 +452,13 @@ const STAR_FILLED_STYLE: React.CSSProperties = {
   fontVariationSettings: "'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24",
 };
 
-export function EditPinnedNavigationSheet({ open, onOpenChange, onSave, pinnedItems, onUnpin }: EditPinnedNavigationSheetProps) {
+export function EditPinnedNavigationSheet({
+  open,
+  onOpenChange,
+  onSave,
+  pinnedItems,
+  onUnpin,
+}: EditPinnedNavigationSheetProps) {
   const [draft, setDraft] = useState<Set<string>>(() => loadPinnedGroups());
   const draftRef = useRef(draft);
   draftRef.current = draft;
@@ -494,11 +523,15 @@ export function EditPinnedNavigationSheet({ open, onOpenChange, onSave, pinnedIt
                   className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`size-10 ${group.iconBg} ${group.iconColor} rounded-lg flex items-center justify-center`}>
+                    <div
+                      className={`size-10 ${group.iconBg} ${group.iconColor} rounded-lg flex items-center justify-center`}
+                    >
                       <span className="material-symbols-outlined">{group.icon}</span>
                     </div>
                     <div>
-                      <p className="font-medium text-slate-900 dark:text-slate-200 text-sm">{group.label}</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-200 text-sm">
+                        {group.label}
+                      </p>
                       <p className="text-xs text-slate-500">{group.description}</p>
                     </div>
                   </div>
@@ -537,12 +570,18 @@ export function EditPinnedNavigationSheet({ open, onOpenChange, onSave, pinnedIt
                       className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                     >
                       <div className="flex items-center gap-4 flex-1 min-w-0">
-                        <div className={`size-10 ${iconStyle.iconBg} ${iconStyle.iconColor} rounded-lg flex items-center justify-center shrink-0`}>
+                        <div
+                          className={`size-10 ${iconStyle.iconBg} ${iconStyle.iconColor} rounded-lg flex items-center justify-center shrink-0`}
+                        >
                           <span className="material-symbols-outlined">{iconStyle.icon}</span>
                         </div>
                         <div className="min-w-0">
-                          <p className="font-medium text-slate-900 dark:text-slate-200 text-sm truncate">{item.title}</p>
-                          {item.subtitle && <p className="text-xs text-slate-500 truncate">{item.subtitle}</p>}
+                          <p className="font-medium text-slate-900 dark:text-slate-200 text-sm truncate">
+                            {item.title}
+                          </p>
+                          {item.subtitle && (
+                            <p className="text-xs text-slate-500 truncate">{item.subtitle}</p>
+                          )}
                         </div>
                       </div>
                       <button

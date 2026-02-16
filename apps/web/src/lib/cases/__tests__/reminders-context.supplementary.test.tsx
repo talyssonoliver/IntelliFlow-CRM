@@ -81,28 +81,38 @@ function RemindersConsumer() {
       <span data-testid="unread-count">{ctx.unreadCount}</span>
       <span data-testid="is-running">{String(ctx.isRunning)}</span>
       <span data-testid="recent-count">{ctx.recentNotifications.length}</span>
-      <button data-testid="btn-start" onClick={ctx.start}>Start</button>
-      <button data-testid="btn-stop" onClick={ctx.stop}>Stop</button>
-      <button data-testid="btn-snooze" onClick={() => ctx.snoozeReminder('r1', 15)}>Snooze</button>
-      <button data-testid="btn-dismiss" onClick={() => ctx.dismissReminder('r1')}>Dismiss</button>
-      <button data-testid="btn-mark-all-read" onClick={ctx.markAllAsRead}>Mark All Read</button>
-      <button data-testid="btn-mark-read" onClick={() => ctx.markAsRead('r1')}>Mark Read</button>
+      <button data-testid="btn-start" onClick={ctx.start}>
+        Start
+      </button>
+      <button data-testid="btn-stop" onClick={ctx.stop}>
+        Stop
+      </button>
+      <button data-testid="btn-snooze" onClick={() => ctx.snoozeReminder('r1', 15)}>
+        Snooze
+      </button>
+      <button data-testid="btn-dismiss" onClick={() => ctx.dismissReminder('r1')}>
+        Dismiss
+      </button>
+      <button data-testid="btn-mark-all-read" onClick={ctx.markAllAsRead}>
+        Mark All Read
+      </button>
+      <button data-testid="btn-mark-read" onClick={() => ctx.markAsRead('r1')}>
+        Mark Read
+      </button>
     </div>
   );
 }
 
 function OptionalConsumer() {
   const ctx = useRemindersOptional();
-  return (
-    <div data-testid="optional-result">{ctx === null ? 'null' : 'has-context'}</div>
-  );
+  return <div data-testid="optional-result">{ctx === null ? 'null' : 'has-context'}</div>;
 }
 
 function renderWithProvider(props: { autoStart?: boolean; checkInterval?: number } = {}) {
   return render(
     <RemindersProvider autoStart={props.autoStart} checkInterval={props.checkInterval}>
       <RemindersConsumer />
-    </RemindersProvider>,
+    </RemindersProvider>
   );
 }
 
@@ -379,7 +389,7 @@ describe('RemindersContext - Provider and Hooks (supplementary)', () => {
       render(
         <RemindersProvider autoStart={false}>
           <OptionalConsumer />
-        </RemindersProvider>,
+        </RemindersProvider>
       );
       expect(screen.getByTestId('optional-result').textContent).toBe('has-context');
     });

@@ -195,7 +195,9 @@ export const mockStats: AppointmentStats = {
   overdue: 3,
 };
 
-export function createMockAppointment(overrides: Partial<CalendarAppointment> = {}): CalendarAppointment {
+export function createMockAppointment(
+  overrides: Partial<CalendarAppointment> = {}
+): CalendarAppointment {
   return { ...mockAppointment1, ...overrides };
 }
 

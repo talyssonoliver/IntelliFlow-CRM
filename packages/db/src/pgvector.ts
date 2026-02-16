@@ -9,7 +9,13 @@
  * @module @intelliflow/db/pgvector
  */
 
-import { prisma, Prisma, VectorEmbedding, VectorSearchResult, executeRawWithTiming } from './client';
+import {
+  prisma,
+  Prisma,
+  VectorEmbedding,
+  VectorSearchResult,
+  executeRawWithTiming,
+} from './client';
 
 /**
  * OpenAI embedding dimensions
@@ -134,8 +140,15 @@ export function l2Distance(a: VectorEmbedding, b: VectorEmbedding): number {
 export async function findSimilarLeads(
   embedding: VectorEmbedding,
   options: SimilaritySearchOptions = {}
-): Promise<VectorSearchResult<{ id: string; email: string; company: string | null; score: number }>[]> {
-  const { metric = 'cosine', threshold = 0.7, limit = 10, dimensions = EMBEDDING_DIMENSIONS.ADA_002 } = options;
+): Promise<
+  VectorSearchResult<{ id: string; email: string; company: string | null; score: number }>[]
+> {
+  const {
+    metric = 'cosine',
+    threshold = 0.7,
+    limit = 10,
+    dimensions = EMBEDDING_DIMENSIONS.ADA_002,
+  } = options;
 
   if (!validateEmbedding(embedding, dimensions)) {
     throw new Error(`Invalid embedding: expected ${dimensions} dimensions`);
@@ -180,8 +193,15 @@ export async function findSimilarLeads(
 export async function findSimilarContacts(
   embedding: VectorEmbedding,
   options: SimilaritySearchOptions = {}
-): Promise<VectorSearchResult<{ id: string; email: string; firstName: string; lastName: string }>[]> {
-  const { metric = 'cosine', threshold = 0.7, limit = 10, dimensions = EMBEDDING_DIMENSIONS.ADA_002 } = options;
+): Promise<
+  VectorSearchResult<{ id: string; email: string; firstName: string; lastName: string }>[]
+> {
+  const {
+    metric = 'cosine',
+    threshold = 0.7,
+    limit = 10,
+    dimensions = EMBEDDING_DIMENSIONS.ADA_002,
+  } = options;
 
   if (!validateEmbedding(embedding, dimensions)) {
     throw new Error(`Invalid embedding: expected ${dimensions} dimensions`);
@@ -220,7 +240,10 @@ export async function findSimilarContacts(
 /**
  * Update lead embedding
  */
-export async function updateLeadEmbedding(leadId: string, embedding: VectorEmbedding): Promise<void> {
+export async function updateLeadEmbedding(
+  leadId: string,
+  embedding: VectorEmbedding
+): Promise<void> {
   if (!validateEmbedding(embedding)) {
     throw new Error(`Invalid embedding: expected ${EMBEDDING_DIMENSIONS.ADA_002} dimensions`);
   }
@@ -237,7 +260,10 @@ export async function updateLeadEmbedding(leadId: string, embedding: VectorEmbed
 /**
  * Update contact embedding
  */
-export async function updateContactEmbedding(contactId: string, embedding: VectorEmbedding): Promise<void> {
+export async function updateContactEmbedding(
+  contactId: string,
+  embedding: VectorEmbedding
+): Promise<void> {
   if (!validateEmbedding(embedding)) {
     throw new Error(`Invalid embedding: expected ${EMBEDDING_DIMENSIONS.ADA_002} dimensions`);
   }
@@ -286,7 +312,11 @@ export async function getEmbeddingIndexStatus(): Promise<{
     }
 
     const indexDef = result[0].indexdef;
-    const indexType = indexDef.includes('hnsw') ? 'HNSW' : indexDef.includes('ivfflat') ? 'IVFFlat' : 'Unknown';
+    const indexType = indexDef.includes('hnsw')
+      ? 'HNSW'
+      : indexDef.includes('ivfflat')
+        ? 'IVFFlat'
+        : 'Unknown';
 
     return {
       indexExists: true,

@@ -17,7 +17,14 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Hoist mock functions to ensure they're available before vi.mock runs
-const { mockValidateToken, mockMarkVerified, mockCheckRateLimit, mockCreateToken, mockPush, mockReplace } = vi.hoisted(() => ({
+const {
+  mockValidateToken,
+  mockMarkVerified,
+  mockCheckRateLimit,
+  mockCreateToken,
+  mockPush,
+  mockReplace,
+} = vi.hoisted(() => ({
   mockValidateToken: vi.fn(),
   mockMarkVerified: vi.fn(),
   mockCheckRateLimit: vi.fn(),
@@ -76,7 +83,9 @@ describe('EmailVerification', () => {
     it('renders verification container', () => {
       render(<EmailVerification {...defaultProps} />);
 
-      expect(screen.getByRole('main') || screen.getByTestId('email-verification')).toBeInTheDocument();
+      expect(
+        screen.getByRole('main') || screen.getByTestId('email-verification')
+      ).toBeInTheDocument();
     });
 
     it.skip('shows loading state initially', () => {
@@ -290,7 +299,10 @@ describe('EmailVerification', () => {
       render(<EmailVerification {...defaultProps} redirectUrl="/onboarding" />);
 
       await waitFor(() => {
-        expect(screen.getByRole('link', { name: /continue/i })).toHaveAttribute('href', '/onboarding');
+        expect(screen.getByRole('link', { name: /continue/i })).toHaveAttribute(
+          'href',
+          '/onboarding'
+        );
       });
     });
   });

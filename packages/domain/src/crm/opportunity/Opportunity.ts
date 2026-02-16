@@ -162,7 +162,9 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     if (typeof props.value === 'number') {
       // Opportunity value must be greater than 0
       if (props.value <= 0) {
-        return Result.fail(new InvalidOpportunityValueError('Opportunity value must be greater than zero'));
+        return Result.fail(
+          new InvalidOpportunityValueError('Opportunity value must be greater than zero')
+        );
       }
       const moneyResult = Money.create(props.value, props.currency || 'USD');
       if (moneyResult.isFailure) {
@@ -172,7 +174,9 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     } else {
       // When Money object is provided, check its amount
       if (props.value.amount <= 0) {
-        return Result.fail(new InvalidOpportunityValueError('Opportunity value must be greater than zero'));
+        return Result.fail(
+          new InvalidOpportunityValueError('Opportunity value must be greater than zero')
+        );
       }
       moneyValue = props.value;
     }
@@ -220,10 +224,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
   }
 
   // Commands
-  changeStage(
-    newStage: OpportunityStage,
-    changedBy: string
-  ): Result<void, DomainError> {
+  changeStage(newStage: OpportunityStage, changedBy: string): Result<void, DomainError> {
     if (this.isClosed) {
       return Result.fail(new OpportunityAlreadyClosedError());
     }
@@ -256,7 +257,9 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     if (typeof newValue === 'number') {
       // Opportunity value must be greater than 0
       if (newValue <= 0) {
-        return Result.fail(new InvalidOpportunityValueError('Opportunity value must be greater than zero'));
+        return Result.fail(
+          new InvalidOpportunityValueError('Opportunity value must be greater than zero')
+        );
       }
       const moneyResult = Money.create(newValue, this.props.value.currency);
       if (moneyResult.isFailure) {
@@ -266,7 +269,9 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     } else {
       // When Money object is provided, check its amount
       if (newValue.amount <= 0) {
-        return Result.fail(new InvalidOpportunityValueError('Opportunity value must be greater than zero'));
+        return Result.fail(
+          new InvalidOpportunityValueError('Opportunity value must be greater than zero')
+        );
       }
       moneyValue = newValue;
     }
@@ -282,7 +287,10 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     return Result.ok(undefined);
   }
 
-  updateProbability(newProbability: number | Percentage, updatedBy: string): Result<void, DomainError> {
+  updateProbability(
+    newProbability: number | Percentage,
+    updatedBy: string
+  ): Result<void, DomainError> {
     if (this.isClosed) {
       return Result.fail(new OpportunityAlreadyClosedError());
     }

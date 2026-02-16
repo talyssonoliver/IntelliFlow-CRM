@@ -17,6 +17,8 @@
 
 import { z } from 'zod';
 import { createTRPCRouter, publicProcedure, adminProcedure } from '../../trpc';
+import { InMemoryFeatureFlagProvider } from '@intelliflow/platform';
+import { loadFeatureFlagsConfig, FLAG_KEY_TO_FEATURE } from '../../config/feature-flags.config';
 
 /**
  * API version information
@@ -83,30 +85,14 @@ export const systemRouter = createTRPCRouter({
    * }
    */
   features: publicProcedure.query(() => {
-    // Feature flags - can be driven by environment variables in production
-    const features = {
-      // Core features (always enabled in foundation phase)
-      leadManagement: true,
-      contactManagement: true,
-      accountManagement: true,
-      opportunityManagement: true,
-      taskManagement: true,
+    const config = loadFeatureFlagsConfig();
+    const provider = InMemoryFeatureFlagProvider.fromConfig(config);
 
-      // AI features (placeholder - will be enabled when implemented)
-      aiScoring: process.env.ENABLE_AI_SCORING === 'true',
-      aiEmailGeneration: process.env.ENABLE_AI_EMAIL === 'true',
-      aiWorkflows: process.env.ENABLE_AI_WORKFLOWS === 'true',
-
-      // Advanced features (future sprints)
-      analytics: false,
-      reporting: false,
-      customDashboards: false,
-      apiIntegrations: false,
-
-      // Real-time features
-      subscriptions: process.env.ENABLE_SUBSCRIPTIONS === 'true',
-      notifications: false,
-    };
+    const features: Record<string, boolean> = {};
+    for (const flag of config.flags) {
+      const camelKey = FLAG_KEY_TO_FEATURE[flag.key] ?? flag.key;
+      features[camelKey] = provider.isEnabled(flag.key);
+    }
 
     return {
       features,

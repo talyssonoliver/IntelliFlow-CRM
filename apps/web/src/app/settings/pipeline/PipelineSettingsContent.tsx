@@ -60,7 +60,8 @@ export default function PipelineSettingsContent() {
   } = usePipelineConfig();
 
   // Check for auth errors
-  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+  const isAuthError =
+    error?.data?.code === 'UNAUTHORIZED' ||
     error?.message?.toLowerCase().includes('authentication') ||
     error?.message?.toLowerCase().includes('unauthorized');
 
@@ -99,16 +100,11 @@ export default function PipelineSettingsContent() {
   }, [localStages, apiStages]);
 
   // Update local stage
-  const handleUpdateStage = useCallback(
-    (stageKey: string, updates: Partial<PipelineStage>) => {
-      setLocalStages((prev) =>
-        prev.map((stage) =>
-          stage.stageKey === stageKey ? { ...stage, ...updates } : stage
-        )
-      );
-    },
-    []
-  );
+  const handleUpdateStage = useCallback((stageKey: string, updates: Partial<PipelineStage>) => {
+    setLocalStages((prev) =>
+      prev.map((stage) => (stage.stageKey === stageKey ? { ...stage, ...updates } : stage))
+    );
+  }, []);
 
   // Save all changes
   const handleSave = useCallback(() => {
@@ -176,7 +172,9 @@ export default function PipelineSettingsContent() {
       <div className="settings_pipeline_page">
         <div className="max-w-3xl">
           <Card className="p-6 flex items-center gap-3">
-            <span className="material-symbols-outlined text-slate-400 animate-spin">progress_activity</span>
+            <span className="material-symbols-outlined text-slate-400 animate-spin">
+              progress_activity
+            </span>
             <p className="text-muted-foreground">Redirecting to login...</p>
           </Card>
         </div>
@@ -190,14 +188,8 @@ export default function PipelineSettingsContent() {
       <div className="settings_pipeline_page">
         <div className="max-w-3xl">
           <Card className="p-6 border-destructive">
-            <p className="text-destructive">
-              Failed to load pipeline settings: {error.message}
-            </p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => window.location.reload()}
-            >
+            <p className="text-destructive">Failed to load pipeline settings: {error.message}</p>
+            <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
               Retry
             </Button>
           </Card>
@@ -226,17 +218,10 @@ export default function PipelineSettingsContent() {
               </p>
             </div>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={handleReset}
-                disabled={isSaving || isResetting}
-              >
+              <Button variant="outline" onClick={handleReset} disabled={isSaving || isResetting}>
                 {isResetting ? 'Resetting...' : 'Reset'}
               </Button>
-              <Button
-                onClick={handleSave}
-                disabled={!hasChanges || isSaving}
-              >
+              <Button onClick={handleSave} disabled={!hasChanges || isSaving}>
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
@@ -411,9 +396,7 @@ export default function PipelineSettingsContent() {
                           key={color}
                           onClick={() => handleUpdateStage(stage.stageKey, { color })}
                           className={`w-5 h-5 rounded-full transition-transform hover:scale-110 ${
-                            stage.color === color
-                              ? 'ring-2 ring-offset-2 ring-primary'
-                              : ''
+                            stage.color === color ? 'ring-2 ring-offset-2 ring-primary' : ''
                           }`}
                           style={{ backgroundColor: color }}
                           aria-label={`Select color ${color}`}
@@ -437,8 +420,7 @@ export default function PipelineSettingsContent() {
             <li>Default probability is auto-assigned when deals enter a stage</li>
             <li>Inactive stages are hidden from the pipeline view</li>
             <li>
-              <strong>Protected stages</strong> (Closed Won, Closed Lost) cannot be
-              deactivated
+              <strong>Protected stages</strong> (Closed Won, Closed Lost) cannot be deactivated
             </li>
           </ul>
         </div>

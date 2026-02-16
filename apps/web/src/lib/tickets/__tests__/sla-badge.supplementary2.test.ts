@@ -333,11 +333,7 @@ describe('sla-badge logic supplementary2', () => {
     const policy = DEFAULT_SLA_POLICY;
 
     it('returns PAUSED for WAITING_ON_CUSTOMER', () => {
-      const result = slaService.calculateSLATimer(
-        new Date(),
-        policy,
-        'WAITING_ON_CUSTOMER' as any
-      );
+      const result = slaService.calculateSLATimer(new Date(), policy, 'WAITING_ON_CUSTOMER' as any);
       expect(result.status).toBe('PAUSED');
       expect(result.isBreached).toBe(false);
       expect(result.isAtRisk).toBe(false);

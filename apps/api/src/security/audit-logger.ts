@@ -8,12 +8,6 @@
  */
 
 // Re-export everything for backward compatibility
-export {
-  AuditLogger,
-  getAuditLogger,
-  resetAuditLogger,
-} from './audit';
+export { AuditLogger, getAuditLogger, resetAuditLogger } from './audit';
 
-export type {
-  AuditLoggerConfig,
-} from './audit';
+export type { AuditLoggerConfig } from './audit';

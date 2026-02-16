@@ -74,27 +74,15 @@ export const Sizes: Story = {
     <div className="space-y-6">
       <div>
         <p className="text-sm text-muted-foreground mb-2">Small</p>
-        <ErrorState
-          size="sm"
-          message="Failed to load data."
-          onRetry={() => console.log('Retry')}
-        />
+        <ErrorState size="sm" message="Failed to load data." onRetry={() => console.log('Retry')} />
       </div>
       <div>
         <p className="text-sm text-muted-foreground mb-2">Medium (default)</p>
-        <ErrorState
-          size="md"
-          message="Failed to load data."
-          onRetry={() => console.log('Retry')}
-        />
+        <ErrorState size="md" message="Failed to load data." onRetry={() => console.log('Retry')} />
       </div>
       <div>
         <p className="text-sm text-muted-foreground mb-2">Large</p>
-        <ErrorState
-          size="lg"
-          message="Failed to load data."
-          onRetry={() => console.log('Retry')}
-        />
+        <ErrorState size="lg" message="Failed to load data." onRetry={() => console.log('Retry')} />
       </div>
     </div>
   ),
@@ -244,7 +232,7 @@ export const FormSubmissionError: Story = {
   args: {
     size: 'sm',
     title: 'Submission Failed',
-    message: 'We couldn\'t save your changes. Please check your input and try again.',
+    message: "We couldn't save your changes. Please check your input and try again.",
     variant: 'error',
     onRetry: () => console.log('Retry clicked'),
     retryLabel: 'Retry Submission',

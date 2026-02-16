@@ -32,7 +32,12 @@ interface TaskEntry {
 
 interface CleanupResult {
   orphanedJsonFiles: string[];
-  statusMismatches: Array<{ taskId: string; csvStatus: string; jsonStatus: string; jsonPath: string }>;
+  statusMismatches: Array<{
+    taskId: string;
+    csvStatus: string;
+    jsonStatus: string;
+    jsonPath: string;
+  }>;
   invalidJsonFiles: Array<{ path: string; error: string }>;
   totalJsonFiles: number;
   totalCsvTasks: number;
@@ -102,7 +107,10 @@ function parseCSVLine(line: string): string[] {
   return fields;
 }
 
-function findJsonFiles(dir: string, sprintFilter?: number): Array<{ path: string; taskId: string }> {
+function findJsonFiles(
+  dir: string,
+  sprintFilter?: number
+): Array<{ path: string; taskId: string }> {
   const results: Array<{ path: string; taskId: string }> = [];
 
   if (!fs.existsSync(dir)) return results;

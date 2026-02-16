@@ -26,12 +26,15 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@intelliflow/ui', () => ({
   Sheet: ({ children, open }: { children: React.ReactNode; open: boolean }) =>
     open ? <div data-testid="sheet">{children}</div> : null,
-  SheetContent: ({ children }: { children: React.ReactNode }) =>
-    <div data-testid="sheet-content">{children}</div>,
-  SheetTitle: ({ children, className }: { children: React.ReactNode; className?: string }) =>
-    <h2 data-testid="sheet-title">{children}</h2>,
-  SheetDescription: ({ children }: { children: React.ReactNode }) =>
-    <p data-testid="sheet-description">{children}</p>,
+  SheetContent: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="sheet-content">{children}</div>
+  ),
+  SheetTitle: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+    <h2 data-testid="sheet-title">{children}</h2>
+  ),
+  SheetDescription: ({ children }: { children: React.ReactNode }) => (
+    <p data-testid="sheet-description">{children}</p>
+  ),
 }));
 
 // ============================================================
@@ -109,7 +112,10 @@ describe('PinnedItemsSheet (supplementary)', () => {
     });
 
     it('returns stored set from localStorage', () => {
-      localStorage.setItem('intelliflow:quick-actions', JSON.stringify(['action-call', 'action-lead']));
+      localStorage.setItem(
+        'intelliflow:quick-actions',
+        JSON.stringify(['action-call', 'action-lead'])
+      );
       const result = loadEnabledActions();
       expect(result.has('action-call')).toBe(true);
       expect(result.has('action-lead')).toBe(true);
@@ -174,9 +180,7 @@ describe('PinnedItemsSheet (supplementary)', () => {
       const onOpenChange = vi.fn();
       const onSave = vi.fn();
 
-      render(
-        <EditQuickActionsSheet open={false} onOpenChange={onOpenChange} onSave={onSave} />,
-      );
+      render(<EditQuickActionsSheet open={false} onOpenChange={onOpenChange} onSave={onSave} />);
 
       expect(screen.queryByTestId('sheet')).not.toBeInTheDocument();
     });
@@ -185,9 +189,7 @@ describe('PinnedItemsSheet (supplementary)', () => {
       const onOpenChange = vi.fn();
       const onSave = vi.fn();
 
-      render(
-        <EditQuickActionsSheet open={true} onOpenChange={onOpenChange} onSave={onSave} />,
-      );
+      render(<EditQuickActionsSheet open={true} onOpenChange={onOpenChange} onSave={onSave} />);
 
       expect(screen.getByText('Edit Quick Actions')).toBeInTheDocument();
       expect(screen.getByText(/Select and pin actions/)).toBeInTheDocument();
@@ -197,9 +199,7 @@ describe('PinnedItemsSheet (supplementary)', () => {
       const onOpenChange = vi.fn();
       const onSave = vi.fn();
 
-      render(
-        <EditQuickActionsSheet open={true} onOpenChange={onOpenChange} onSave={onSave} />,
-      );
+      render(<EditQuickActionsSheet open={true} onOpenChange={onOpenChange} onSave={onSave} />);
 
       for (const action of ALL_QUICK_ACTIONS) {
         expect(screen.getByText(action.label)).toBeInTheDocument();
@@ -210,9 +210,7 @@ describe('PinnedItemsSheet (supplementary)', () => {
       const onOpenChange = vi.fn();
       const onSave = vi.fn();
 
-      render(
-        <EditQuickActionsSheet open={true} onOpenChange={onOpenChange} onSave={onSave} />,
-      );
+      render(<EditQuickActionsSheet open={true} onOpenChange={onOpenChange} onSave={onSave} />);
 
       expect(screen.getByText('Save Changes')).toBeInTheDocument();
       expect(screen.getByText('Cancel')).toBeInTheDocument();
@@ -222,9 +220,7 @@ describe('PinnedItemsSheet (supplementary)', () => {
       const onOpenChange = vi.fn();
       const onSave = vi.fn();
 
-      render(
-        <EditQuickActionsSheet open={true} onOpenChange={onOpenChange} onSave={onSave} />,
-      );
+      render(<EditQuickActionsSheet open={true} onOpenChange={onOpenChange} onSave={onSave} />);
 
       fireEvent.click(screen.getByText('Cancel'));
       expect(onOpenChange).toHaveBeenCalledWith(false);
@@ -234,9 +230,7 @@ describe('PinnedItemsSheet (supplementary)', () => {
       const onOpenChange = vi.fn();
       const onSave = vi.fn();
 
-      render(
-        <EditQuickActionsSheet open={true} onOpenChange={onOpenChange} onSave={onSave} />,
-      );
+      render(<EditQuickActionsSheet open={true} onOpenChange={onOpenChange} onSave={onSave} />);
 
       fireEvent.click(screen.getByText('Save Changes'));
 
@@ -248,9 +242,7 @@ describe('PinnedItemsSheet (supplementary)', () => {
       const onOpenChange = vi.fn();
       const onSave = vi.fn();
 
-      render(
-        <EditQuickActionsSheet open={true} onOpenChange={onOpenChange} onSave={onSave} />,
-      );
+      render(<EditQuickActionsSheet open={true} onOpenChange={onOpenChange} onSave={onSave} />);
 
       const checkboxes = screen.getAllByRole('checkbox');
       expect(checkboxes.length).toBe(ALL_QUICK_ACTIONS.length);
@@ -260,9 +252,7 @@ describe('PinnedItemsSheet (supplementary)', () => {
       const onOpenChange = vi.fn();
       const onSave = vi.fn();
 
-      render(
-        <EditQuickActionsSheet open={true} onOpenChange={onOpenChange} onSave={onSave} />,
-      );
+      render(<EditQuickActionsSheet open={true} onOpenChange={onOpenChange} onSave={onSave} />);
 
       const checkboxes = screen.getAllByRole('checkbox');
       // Click first checkbox to toggle it
@@ -279,7 +269,12 @@ describe('PinnedItemsSheet (supplementary)', () => {
       const onSave = vi.fn();
 
       render(
-        <EditPinnedNavigationSheet open={false} onOpenChange={onOpenChange} onSave={onSave} onUnpin={vi.fn()} />,
+        <EditPinnedNavigationSheet
+          open={false}
+          onOpenChange={onOpenChange}
+          onSave={onSave}
+          onUnpin={vi.fn()}
+        />
       );
 
       expect(screen.queryByTestId('sheet')).not.toBeInTheDocument();
@@ -290,7 +285,12 @@ describe('PinnedItemsSheet (supplementary)', () => {
       const onSave = vi.fn();
 
       render(
-        <EditPinnedNavigationSheet open={true} onOpenChange={onOpenChange} onSave={onSave} onUnpin={vi.fn()} />,
+        <EditPinnedNavigationSheet
+          open={true}
+          onOpenChange={onOpenChange}
+          onSave={onSave}
+          onUnpin={vi.fn()}
+        />
       );
 
       expect(screen.getByText('Edit Pinned Navigation')).toBeInTheDocument();
@@ -302,7 +302,12 @@ describe('PinnedItemsSheet (supplementary)', () => {
       const onSave = vi.fn();
 
       render(
-        <EditPinnedNavigationSheet open={true} onOpenChange={onOpenChange} onSave={onSave} onUnpin={vi.fn()} />,
+        <EditPinnedNavigationSheet
+          open={true}
+          onOpenChange={onOpenChange}
+          onSave={onSave}
+          onUnpin={vi.fn()}
+        />
       );
 
       for (const group of ALL_PINNED_NAV_GROUPS) {
@@ -315,13 +320,18 @@ describe('PinnedItemsSheet (supplementary)', () => {
       const onSave = vi.fn();
 
       render(
-        <EditPinnedNavigationSheet open={true} onOpenChange={onOpenChange} onSave={onSave} onUnpin={vi.fn()} />,
+        <EditPinnedNavigationSheet
+          open={true}
+          onOpenChange={onOpenChange}
+          onSave={onSave}
+          onUnpin={vi.fn()}
+        />
       );
 
       // Each group has a star button
-      const starButtons = screen.getAllByRole('button').filter(
-        (btn) => btn.textContent?.includes('star'),
-      );
+      const starButtons = screen
+        .getAllByRole('button')
+        .filter((btn) => btn.textContent?.includes('star'));
       expect(starButtons.length).toBe(ALL_PINNED_NAV_GROUPS.length);
     });
 
@@ -330,12 +340,17 @@ describe('PinnedItemsSheet (supplementary)', () => {
       const onSave = vi.fn();
 
       render(
-        <EditPinnedNavigationSheet open={true} onOpenChange={onOpenChange} onSave={onSave} onUnpin={vi.fn()} />,
+        <EditPinnedNavigationSheet
+          open={true}
+          onOpenChange={onOpenChange}
+          onSave={onSave}
+          onUnpin={vi.fn()}
+        />
       );
 
-      const starButtons = screen.getAllByRole('button').filter(
-        (btn) => btn.textContent?.includes('star'),
-      );
+      const starButtons = screen
+        .getAllByRole('button')
+        .filter((btn) => btn.textContent?.includes('star'));
 
       // Click first star to toggle
       fireEvent.click(starButtons[0]);
@@ -347,7 +362,12 @@ describe('PinnedItemsSheet (supplementary)', () => {
       const onSave = vi.fn();
 
       render(
-        <EditPinnedNavigationSheet open={true} onOpenChange={onOpenChange} onSave={onSave} onUnpin={vi.fn()} />,
+        <EditPinnedNavigationSheet
+          open={true}
+          onOpenChange={onOpenChange}
+          onSave={onSave}
+          onUnpin={vi.fn()}
+        />
       );
 
       fireEvent.click(screen.getByText('Save Changes'));
@@ -361,7 +381,12 @@ describe('PinnedItemsSheet (supplementary)', () => {
       const onSave = vi.fn();
 
       render(
-        <EditPinnedNavigationSheet open={true} onOpenChange={onOpenChange} onSave={onSave} onUnpin={vi.fn()} />,
+        <EditPinnedNavigationSheet
+          open={true}
+          onOpenChange={onOpenChange}
+          onSave={onSave}
+          onUnpin={vi.fn()}
+        />
       );
 
       fireEvent.click(screen.getByText('Cancel'));

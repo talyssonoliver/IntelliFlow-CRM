@@ -10,10 +10,7 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '../popover';
-import {
-  getScoreTierConfig,
-  formatConfidence,
-} from './utils';
+import { getScoreTierConfig, formatConfidence } from './utils';
 import type { ScoreFactor, ScoreBadgeMode, ComponentSize } from './types';
 
 const scoreBadgeVariants = cva(
@@ -45,7 +42,8 @@ const scoreBadgeVariants = cva(
 );
 
 export interface ScoreBadgeProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onClick'>,
+  extends
+    Omit<React.HTMLAttributes<HTMLDivElement>, 'onClick'>,
     VariantProps<typeof scoreBadgeVariants> {
   /** Score value (0-100) */
   score: number;
@@ -70,10 +68,7 @@ export interface ScoreBadgeProps
  */
 function MaterialIcon({ name, className }: { name: string; className?: string }) {
   return (
-    <span
-      className={cn('material-symbols-outlined', className)}
-      aria-hidden="true"
-    >
+    <span className={cn('material-symbols-outlined', className)} aria-hidden="true">
       {name}
     </span>
   );
@@ -133,10 +128,7 @@ function ScoreBadge({
         <PopoverTrigger asChild>
           <button
             type="button"
-            className={cn(
-              scoreBadgeVariants({ tier: tierConfig.tier, size, mode }),
-              className
-            )}
+            className={cn(scoreBadgeVariants({ tier: tierConfig.tier, size, mode }), className)}
             aria-label={ariaLabel}
             onClick={onClick}
             {...(props as React.ButtonHTMLAttributes<HTMLButtonElement>)}
@@ -148,9 +140,7 @@ function ScoreBadge({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Score Breakdown</span>
-              <span className={cn('text-lg font-bold', tierConfig.color)}>
-                {score}
-              </span>
+              <span className={cn('text-lg font-bold', tierConfig.color)}>{score}</span>
             </div>
             {confidence !== undefined && (
               <div className="text-xs text-muted-foreground">
@@ -189,10 +179,7 @@ function ScoreBadge({
   // Compact and inline modes
   return (
     <div
-      className={cn(
-        scoreBadgeVariants({ tier: tierConfig.tier, size, mode }),
-        className
-      )}
+      className={cn(scoreBadgeVariants({ tier: tierConfig.tier, size, mode }), className)}
       aria-label={ariaLabel}
       {...props}
     >

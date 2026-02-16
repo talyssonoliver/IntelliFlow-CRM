@@ -7,19 +7,13 @@ export async function POST(request: NextRequest) {
     const { title, technicalStory } = body;
 
     if (!title || typeof title !== 'string') {
-      return NextResponse.json(
-        { success: false, error: 'Title is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: 'Title is required' }, { status: 400 });
     }
 
     const result = createADR(title, technicalStory);
 
     if (!result.success) {
-      return NextResponse.json(
-        { success: false, error: result.error },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: result.error }, { status: 400 });
     }
 
     return NextResponse.json({
@@ -28,9 +22,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('ADR create error:', error);
-    return NextResponse.json(
-      { success: false, error: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }
 }

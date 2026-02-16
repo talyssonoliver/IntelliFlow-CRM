@@ -47,7 +47,10 @@ export const phaseSummarySchema = z.object({
   phase: z.string().regex(phasePattern).describe('Phase identifier (e.g., phase-2-parallel)'),
   sprint: z.string().regex(sprintPattern).describe('Sprint identifier'),
   description: z.string().describe('Phase description'),
-  streams: z.array(streamSchema).optional().describe('Parallel execution streams within this phase'),
+  streams: z
+    .array(streamSchema)
+    .optional()
+    .describe('Parallel execution streams within this phase'),
   aggregated_metrics: aggregatedMetricsSchema,
   started_at: z.string().datetime().nullable().optional(),
   completed_at: z.string().datetime().nullable().optional(),

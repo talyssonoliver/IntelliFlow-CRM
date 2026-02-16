@@ -28,13 +28,17 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }: any) => (
-    <a href={href} {...props}>{children}</a>
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
 // Mock Recharts to avoid SVG rendering issues in happy-dom
 vi.mock('recharts', () => ({
-  ResponsiveContainer: ({ children }: any) => <div data-testid="responsive-container">{children}</div>,
+  ResponsiveContainer: ({ children }: any) => (
+    <div data-testid="responsive-container">{children}</div>
+  ),
   AreaChart: ({ children }: any) => <div data-testid="area-chart">{children}</div>,
   Area: () => <div data-testid="area" />,
   XAxis: () => null,
@@ -100,7 +104,9 @@ describe('SentimentDashboard', () => {
 
     it('renders page description', () => {
       render(<SentimentDashboard />);
-      expect(screen.getByText('AI-powered sentiment insights across leads and contacts.')).toBeInTheDocument();
+      expect(
+        screen.getByText('AI-powered sentiment insights across leads and contacts.')
+      ).toBeInTheDocument();
     });
 
     it('renders 5 stat cards with correct labels', () => {
@@ -131,7 +137,13 @@ describe('SentimentDashboard', () => {
     });
 
     it('renders loading skeleton when isLoading', () => {
-      setMockHook({ isLoading: true, stats: null, recentAnalyses: [], trends: [], distribution: null });
+      setMockHook({
+        isLoading: true,
+        stats: null,
+        recentAnalyses: [],
+        trends: [],
+        distribution: null,
+      });
       render(<SentimentDashboard />);
       // When loading, stat cards show skeleton and list shows skeleton blocks
       const skeletons = document.querySelectorAll('[class*="animate-pulse"], [class*="skeleton"]');
@@ -151,7 +163,12 @@ describe('SentimentDashboard', () => {
     });
 
     it('renders error state when query fails', () => {
-      setMockHook({ error: new Error('Network error') as any, stats: null, recentAnalyses: [], trends: [] });
+      setMockHook({
+        error: new Error('Network error') as any,
+        stats: null,
+        recentAnalyses: [],
+        trends: [],
+      });
       render(<SentimentDashboard />);
       expect(screen.getByText('Failed to load sentiment data')).toBeInTheDocument();
       expect(screen.getByText('Try again')).toBeInTheDocument();
@@ -166,10 +183,10 @@ describe('SentimentDashboard', () => {
     it('stats cards show correct counts from mock data', () => {
       render(<SentimentDashboard />);
       expect(screen.getByText('156')).toBeInTheDocument(); // total
-      expect(screen.getByText('89')).toBeInTheDocument();  // positive
-      expect(screen.getByText('25')).toBeInTheDocument();  // negative
-      expect(screen.getByText('42')).toBeInTheDocument();  // neutral
-      expect(screen.getByText('8')).toBeInTheDocument();   // urgent
+      expect(screen.getByText('89')).toBeInTheDocument(); // positive
+      expect(screen.getByText('25')).toBeInTheDocument(); // negative
+      expect(screen.getByText('42')).toBeInTheDocument(); // neutral
+      expect(screen.getByText('8')).toBeInTheDocument(); // urgent
     });
 
     it('VERY_POSITIVE badge renders with emerald styling', () => {
@@ -222,10 +239,11 @@ describe('SentimentDashboard', () => {
     it('filter by sentiment level updates query', async () => {
       render(<SentimentDashboard />);
       // Find and interact with the sentiment filter dropdown
-      const sentimentSelect = screen.getAllByRole('combobox').find(el => {
-        const options = within(el).queryAllByRole('option');
-        return options.some(o => o.textContent?.includes('Sentiments'));
-      }) ?? screen.getAllByRole('combobox')[1];
+      const sentimentSelect =
+        screen.getAllByRole('combobox').find((el) => {
+          const options = within(el).queryAllByRole('option');
+          return options.some((o) => o.textContent?.includes('Sentiments'));
+        }) ?? screen.getAllByRole('combobox')[1];
 
       if (sentimentSelect) {
         fireEvent.change(sentimentSelect, { target: { value: 'POSITIVE' } });
@@ -324,7 +342,8 @@ describe('SentimentDashboard', () => {
       render(<SentimentDashboard />);
       // Should display top 3 emotions
       const bobCard = screen.getByText('Bob Johnson');
-      const card = bobCard.closest('[class*="card"]') ?? bobCard.parentElement?.parentElement?.parentElement;
+      const card =
+        bobCard.closest('[class*="card"]') ?? bobCard.parentElement?.parentElement?.parentElement;
       expect(card).toBeTruthy();
       // Verify emotion badges are present
       if (card) {

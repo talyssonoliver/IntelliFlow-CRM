@@ -57,7 +57,7 @@ const jobListings: Record<string, JobListing> = {
     location: 'Remote (Global)',
     type: 'Full-time',
     description:
-      'Join our AI team to design and implement intelligent features that power IntelliFlow\'s AI-first CRM. You will work on lead scoring, predictive analytics, RAG-based assistants, and other ML-powered features. We prioritize responsible AI with human oversight built into every system.',
+      "Join our AI team to design and implement intelligent features that power IntelliFlow's AI-first CRM. You will work on lead scoring, predictive analytics, RAG-based assistants, and other ML-powered features. We prioritize responsible AI with human oversight built into every system.",
     responsibilities: [
       'Design and implement AI features including lead scoring and predictive analytics',
       'Build and maintain RAG-based AI assistants using LangChain',
@@ -101,7 +101,7 @@ const jobListings: Record<string, JobListing> = {
     location: 'London, UK',
     type: 'Full-time',
     description:
-      'We\'re looking for a Product Designer to shape the user experience of our AI-first CRM. You will balance automation with human oversight, ensuring users stay in control while benefiting from AI assistance. This role involves end-to-end design work from research to production handoff.',
+      "We're looking for a Product Designer to shape the user experience of our AI-first CRM. You will balance automation with human oversight, ensuring users stay in control while benefiting from AI assistance. This role involves end-to-end design work from research to production handoff.",
     responsibilities: [
       'Lead end-to-end design for new features and product areas',
       'Conduct user research and usability testing',
@@ -264,7 +264,7 @@ export async function generateMetadata({
 // Get related jobs (same department or type)
 function getRelatedJobs(currentId: string, department: string): JobListing[] {
   return Object.values(jobListings)
-    .filter(job => job.id !== currentId && job.department === department)
+    .filter((job) => job.id !== currentId && job.department === department)
     .slice(0, 3);
 }
 
@@ -281,7 +281,7 @@ export default async function CareerDetailPage({
   }
 
   const relatedJobs = getRelatedJobs(id, job.department);
-  const allPositions = Object.values(jobListings).map(j => ({
+  const allPositions = Object.values(jobListings).map((j) => ({
     id: j.id,
     title: j.title,
   }));
@@ -298,15 +298,12 @@ export default async function CareerDetailPage({
         className="py-16 bg-white dark:bg-slate-900"
       >
         <div className="container px-4 lg:px-6 mx-auto max-w-3xl">
-          <h2
-            id="apply-heading"
-            className="text-2xl font-bold text-slate-900 dark:text-white mb-2"
-          >
+          <h2 id="apply-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
             Apply for {job.title}
           </h2>
           <p className="text-slate-600 dark:text-slate-300 mb-8">
-            Ready to join IntelliFlow? Submit your application below and we&apos;ll
-            be in touch within 5 business days.
+            Ready to join IntelliFlow? Submit your application below and we&apos;ll be in touch
+            within 5 business days.
           </p>
           <ApplicationForm positions={allPositions} />
         </div>
@@ -319,10 +316,9 @@ export default async function CareerDetailPage({
             Equal Opportunity Employer
           </h3>
           <p className="text-sm text-slate-600 dark:text-slate-300">
-            IntelliFlow is committed to creating a diverse and inclusive workplace.
-            We welcome applications from all qualified candidates regardless of race,
-            color, religion, gender, sexual orientation, national origin, age,
-            disability, or veteran status.
+            IntelliFlow is committed to creating a diverse and inclusive workplace. We welcome
+            applications from all qualified candidates regardless of race, color, religion, gender,
+            sexual orientation, national origin, age, disability, or veteran status.
           </p>
         </div>
       </section>

@@ -32,13 +32,7 @@ const ConversationChannelSchema = z.enum([
   'VOICE',
 ]);
 
-const ConversationStatusSchema = z.enum([
-  'ACTIVE',
-  'PAUSED',
-  'ENDED',
-  'ARCHIVED',
-  'DELETED',
-]);
+const ConversationStatusSchema = z.enum(['ACTIVE', 'PAUSED', 'ENDED', 'ARCHIVED', 'DELETED']);
 
 const MessageRoleSchema = z.enum(['USER', 'ASSISTANT', 'SYSTEM', 'TOOL']);
 
@@ -61,12 +55,7 @@ const ToolCallStatusSchema = z.enum([
   'TIMEOUT',
 ]);
 
-const ApprovalStatusSchema = z.enum([
-  'PENDING',
-  'APPROVED',
-  'REJECTED',
-  'EXPIRED',
-]);
+const ApprovalStatusSchema = z.enum(['PENDING', 'APPROVED', 'REJECTED', 'EXPIRED']);
 
 const CreateConversationSchema = z.object({
   sessionId: z.string().optional(), // Auto-generated if not provided
@@ -146,72 +135,69 @@ export const conversationRouter = createTRPCRouter({
   /**
    * Start a new conversation
    */
-  create: protectedProcedure
-    .input(CreateConversationSchema)
-    .mutation(async ({ ctx, input }) => {
-      const sessionId = input.sessionId || `conv_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+  create: protectedProcedure.input(CreateConversationSchema).mutation(async ({ ctx, input }) => {
+    const sessionId =
+      input.sessionId || `conv_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
 
-      // Extract IP address and user agent from request headers
-      const ipAddress = ctx.req?.headers?.get('x-forwarded-for') || undefined;
-      const userAgent = ctx.req?.headers?.get('user-agent') || undefined;
+    // Extract IP address and user agent from request headers
+    const ipAddress = ctx.req?.headers?.get('x-forwarded-for') || undefined;
+    const userAgent = ctx.req?.headers?.get('user-agent') || undefined;
 
-      const conversation = await ctx.prisma.conversationRecord.create({
-        data: {
-          tenantId: ctx.user.tenantId,
-          sessionId,
-          userId: ctx.user.userId,
-          userName: ctx.user.email,
-          title: input.title,
-          agentId: input.agentId,
-          agentName: input.agentName,
-          agentModel: input.agentModel,
-          contextType: input.contextType,
-          contextId: input.contextId,
-          contextName: input.contextName,
-          channel: input.channel,
-          status: 'ACTIVE',
-          ipAddress,
-          userAgent,
-        },
-      });
+    const conversation = await ctx.prisma.conversationRecord.create({
+      data: {
+        tenantId: ctx.user.tenantId,
+        sessionId,
+        userId: ctx.user.userId,
+        userName: ctx.user.email,
+        title: input.title,
+        agentId: input.agentId,
+        agentName: input.agentName,
+        agentModel: input.agentModel,
+        contextType: input.contextType,
+        contextId: input.contextId,
+        contextName: input.contextName,
+        channel: input.channel,
+        status: 'ACTIVE',
+        ipAddress,
+        userAgent,
+      },
+    });
 
-      return conversation;
-    }),
+    return conversation;
+  }),
 
   /**
    * Get a conversation by ID with messages and tool calls
    */
-  getById: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ ctx, input }) => {
-      const conversation = await ctx.prisma.conversationRecord.findFirst({
-        where: {
-          id: input.id,
-          tenantId: ctx.user.tenantId,
-          status: { not: 'DELETED' },
-        },
-        include: {
-          messages: {
-            orderBy: { createdAt: 'asc' },
-            include: {
-              toolCalls: true,
-            },
-          },
-          toolCalls: {
-            orderBy: { startedAt: 'desc' },
+  getById: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    const conversation = await ctx.prisma.conversationRecord.findFirst({
+      where: {
+        id: input.id,
+        tenantId: ctx.user.tenantId,
+        status: { not: 'DELETED' },
+      },
+      include: {
+        messages: {
+          orderBy: { createdAt: 'asc' },
+          include: {
+            toolCalls: true,
           },
         },
+        toolCalls: {
+          orderBy: { startedAt: 'desc' },
+        },
+      },
+    });
+
+    if (!conversation) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Conversation not found',
       });
+    }
 
-      if (!conversation) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Conversation not found',
-        });
-      }
-
-      return conversation;
-    }),
+    return conversation;
+  }),
 
   /**
    * Get a conversation by session ID
@@ -241,133 +227,127 @@ export const conversationRouter = createTRPCRouter({
   /**
    * Search conversations with filters
    */
-  search: protectedProcedure
-    .input(SearchConversationsSchema)
-    .query(async ({ ctx, input }) => {
-      const where: Record<string, unknown> = {
-        tenantId: ctx.user.tenantId,
-        status: input.status || { not: 'DELETED' },
-      };
+  search: protectedProcedure.input(SearchConversationsSchema).query(async ({ ctx, input }) => {
+    const where: Record<string, unknown> = {
+      tenantId: ctx.user.tenantId,
+      status: input.status || { not: 'DELETED' },
+    };
 
-      if (input.userId) where.userId = input.userId;
-      if (input.agentId) where.agentId = input.agentId;
-      if (input.contextType) where.contextType = input.contextType;
-      if (input.contextId) where.contextId = input.contextId;
-      if (input.channel) where.channel = input.channel;
+    if (input.userId) where.userId = input.userId;
+    if (input.agentId) where.agentId = input.agentId;
+    if (input.contextType) where.contextType = input.contextType;
+    if (input.contextId) where.contextId = input.contextId;
+    if (input.channel) where.channel = input.channel;
 
-      if (input.startDate || input.endDate) {
-        where.startedAt = {};
-        if (input.startDate) (where.startedAt as Record<string, Date>).gte = input.startDate;
-        if (input.endDate) (where.startedAt as Record<string, Date>).lte = input.endDate;
-      }
+    if (input.startDate || input.endDate) {
+      where.startedAt = {};
+      if (input.startDate) (where.startedAt as Record<string, Date>).gte = input.startDate;
+      if (input.endDate) (where.startedAt as Record<string, Date>).lte = input.endDate;
+    }
 
-      if (input.searchQuery) {
-        where.OR = [
-          { title: { contains: input.searchQuery, mode: 'insensitive' } },
-          { summary: { contains: input.searchQuery, mode: 'insensitive' } },
-          { contextName: { contains: input.searchQuery, mode: 'insensitive' } },
-        ];
-      }
+    if (input.searchQuery) {
+      where.OR = [
+        { title: { contains: input.searchQuery, mode: 'insensitive' } },
+        { summary: { contains: input.searchQuery, mode: 'insensitive' } },
+        { contextName: { contains: input.searchQuery, mode: 'insensitive' } },
+      ];
+    }
 
-      const [conversations, total] = await Promise.all([
-        ctx.prisma.conversationRecord.findMany({
-          where,
-          orderBy: { startedAt: 'desc' },
-          take: input.limit,
-          skip: input.offset,
-          select: {
-            id: true,
-            sessionId: true,
-            title: true,
-            summary: true,
-            userId: true,
-            userName: true,
-            agentId: true,
-            agentName: true,
-            contextType: true,
-            contextId: true,
-            contextName: true,
-            channel: true,
-            status: true,
-            messageCount: true,
-            toolCallCount: true,
-            userRating: true,
-            wasEscalated: true,
-            startedAt: true,
-            lastMessageAt: true,
-            endedAt: true,
-          },
-        }),
-        ctx.prisma.conversationRecord.count({ where }),
-      ]);
+    const [conversations, total] = await Promise.all([
+      ctx.prisma.conversationRecord.findMany({
+        where,
+        orderBy: { startedAt: 'desc' },
+        take: input.limit,
+        skip: input.offset,
+        select: {
+          id: true,
+          sessionId: true,
+          title: true,
+          summary: true,
+          userId: true,
+          userName: true,
+          agentId: true,
+          agentName: true,
+          contextType: true,
+          contextId: true,
+          contextName: true,
+          channel: true,
+          status: true,
+          messageCount: true,
+          toolCallCount: true,
+          userRating: true,
+          wasEscalated: true,
+          startedAt: true,
+          lastMessageAt: true,
+          endedAt: true,
+        },
+      }),
+      ctx.prisma.conversationRecord.count({ where }),
+    ]);
 
-      return {
-        conversations,
-        total,
-        limit: input.limit,
-        offset: input.offset,
-        hasMore: input.offset + conversations.length < total,
-      };
-    }),
+    return {
+      conversations,
+      total,
+      limit: input.limit,
+      offset: input.offset,
+      hasMore: input.offset + conversations.length < total,
+    };
+  }),
 
   /**
    * Add a message to a conversation
    */
-  addMessage: protectedProcedure
-    .input(AddMessageSchema)
-    .mutation(async ({ ctx, input }) => {
-      // Verify conversation exists and belongs to tenant
-      const conversation = await ctx.prisma.conversationRecord.findFirst({
-        where: {
-          id: input.conversationId,
-          tenantId: ctx.user.tenantId,
-          status: 'ACTIVE',
-        },
+  addMessage: protectedProcedure.input(AddMessageSchema).mutation(async ({ ctx, input }) => {
+    // Verify conversation exists and belongs to tenant
+    const conversation = await ctx.prisma.conversationRecord.findFirst({
+      where: {
+        id: input.conversationId,
+        tenantId: ctx.user.tenantId,
+        status: 'ACTIVE',
+      },
+    });
+
+    if (!conversation) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Active conversation not found',
       });
+    }
 
-      if (!conversation) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Active conversation not found',
-        });
-      }
+    const [message] = await ctx.prisma.$transaction([
+      // Create message
+      ctx.prisma.messageRecord.create({
+        data: {
+          tenantId: ctx.user.tenantId,
+          conversationId: input.conversationId,
+          role: input.role,
+          content: input.content,
+          contentType: input.contentType,
+          modelUsed: input.modelUsed,
+          finishReason: input.finishReason,
+          tokenCount: input.tokenCount,
+          promptTokens: input.promptTokens,
+          completionTokens: input.completionTokens,
+          confidence: input.confidence,
+          attachments: input.attachments,
+        },
+      }),
+      // Update conversation metrics
+      ctx.prisma.conversationRecord.update({
+        where: { id: input.conversationId },
+        data: {
+          messageCount: { increment: 1 },
+          lastMessageAt: new Date(),
+          tokenCountInput: input.promptTokens ? { increment: input.promptTokens } : undefined,
+          tokenCountOutput: input.completionTokens
+            ? { increment: input.completionTokens }
+            : undefined,
+        },
+      }),
+    ]);
 
-      const [message] = await ctx.prisma.$transaction([
-        // Create message
-        ctx.prisma.messageRecord.create({
-          data: {
-            tenantId: ctx.user.tenantId,
-            conversationId: input.conversationId,
-            role: input.role,
-            content: input.content,
-            contentType: input.contentType,
-            modelUsed: input.modelUsed,
-            finishReason: input.finishReason,
-            tokenCount: input.tokenCount,
-            promptTokens: input.promptTokens,
-            completionTokens: input.completionTokens,
-            confidence: input.confidence,
-            attachments: input.attachments,
-          },
-        }),
-        // Update conversation metrics
-        ctx.prisma.conversationRecord.update({
-          where: { id: input.conversationId },
-          data: {
-            messageCount: { increment: 1 },
-            lastMessageAt: new Date(),
-            tokenCountInput: input.promptTokens
-              ? { increment: input.promptTokens }
-              : undefined,
-            tokenCountOutput: input.completionTokens
-              ? { increment: input.completionTokens }
-              : undefined,
-          },
-        }),
-      ]);
-
-      return message;
-    }),
+    return message;
+  }),
 
   /**
    * Record a tool call
@@ -405,9 +385,10 @@ export const conversationRouter = createTRPCRouter({
             approvalStatus: input.requiresApproval ? 'PENDING' : null,
             affectedEntityType: input.affectedEntityType,
             affectedEntityId: input.affectedEntityId,
-            affectedEntity: input.affectedEntityType && input.affectedEntityId
-              ? `${input.affectedEntityType}:${input.affectedEntityId}`
-              : null,
+            affectedEntity:
+              input.affectedEntityType && input.affectedEntityId
+                ? `${input.affectedEntityType}:${input.affectedEntityId}`
+                : null,
             changeDescription: input.changeDescription,
             isReversible: input.isReversible,
             rollbackData: input.rollbackData as object | undefined,
@@ -450,9 +431,10 @@ export const conversationRouter = createTRPCRouter({
           errorMessage: input.errorMessage,
           errorCode: input.errorCode,
           durationMs: input.durationMs,
-          completedAt: input.status && ['SUCCESS', 'FAILED', 'CANCELLED', 'TIMEOUT'].includes(input.status)
-            ? new Date()
-            : undefined,
+          completedAt:
+            input.status && ['SUCCESS', 'FAILED', 'CANCELLED', 'TIMEOUT'].includes(input.status)
+              ? new Date()
+              : undefined,
         },
       });
 
@@ -499,12 +481,14 @@ export const conversationRouter = createTRPCRouter({
    * End a conversation
    */
   endConversation: protectedProcedure
-    .input(z.object({
-      id: z.string(),
-      reason: z.string().optional(),
-      userRating: z.number().min(1).max(5).optional(),
-      feedbackText: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        id: z.string(),
+        reason: z.string().optional(),
+        userRating: z.number().min(1).max(5).optional(),
+        feedbackText: z.string().optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const conversation = await ctx.prisma.conversationRecord.findFirst({
         where: {
@@ -539,11 +523,13 @@ export const conversationRouter = createTRPCRouter({
    * Escalate a conversation to human support
    */
   escalate: protectedProcedure
-    .input(z.object({
-      id: z.string(),
-      escalateTo: z.string(),
-      reason: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        id: z.string(),
+        escalateTo: z.string(),
+        reason: z.string().optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const conversation = await ctx.prisma.conversationRecord.findFirst({
         where: {
@@ -577,9 +563,11 @@ export const conversationRouter = createTRPCRouter({
    * Get pending tool calls requiring approval
    */
   getPendingApprovals: protectedProcedure
-    .input(z.object({
-      limit: z.number().min(1).max(50).optional().default(10),
-    }))
+    .input(
+      z.object({
+        limit: z.number().min(1).max(50).optional().default(10),
+      })
+    )
     .query(async ({ ctx, input }) => {
       const pendingCalls = await ctx.prisma.toolCallRecord.findMany({
         where: {
@@ -612,10 +600,12 @@ export const conversationRouter = createTRPCRouter({
    * Get conversation analytics (admin only)
    */
   getAnalytics: adminProcedure
-    .input(z.object({
-      startDate: z.date().optional(),
-      endDate: z.date().optional(),
-    }))
+    .input(
+      z.object({
+        startDate: z.date().optional(),
+        endDate: z.date().optional(),
+      })
+    )
     .query(async ({ ctx, input }) => {
       const where: Record<string, unknown> = {
         tenantId: ctx.user.tenantId,
@@ -659,12 +649,11 @@ export const conversationRouter = createTRPCRouter({
         totalConversations,
         activeConversations,
         escalatedConversations,
-        escalationRate: totalConversations > 0
-          ? (escalatedConversations / totalConversations) * 100
-          : 0,
+        escalationRate:
+          totalConversations > 0 ? (escalatedConversations / totalConversations) * 100 : 0,
         avgMessagesPerConversation: avgMessagesPerConversation._avg.messageCount || 0,
         avgRating: avgRating._avg.userRating || null,
-        toolCallsByType: toolCallsByType.map(t => ({
+        toolCallsByType: toolCallsByType.map((t) => ({
           type: t.toolType,
           count: t._count,
         })),
@@ -675,9 +664,11 @@ export const conversationRouter = createTRPCRouter({
    * Archive old conversations (admin only)
    */
   archiveOld: adminProcedure
-    .input(z.object({
-      olderThanDays: z.number().min(1).max(365).default(90),
-    }))
+    .input(
+      z.object({
+        olderThanDays: z.number().min(1).max(365).default(90),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - input.olderThanDays);

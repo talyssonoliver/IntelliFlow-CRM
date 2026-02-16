@@ -280,13 +280,7 @@ export class Ticket extends AggregateRoot<TicketId> {
     });
 
     ticket.addDomainEvent(
-      new TicketCreatedEvent(
-        ticketId,
-        ticketNumber,
-        props.subject,
-        ticket.priority,
-        props.tenantId
-      )
+      new TicketCreatedEvent(ticketId, ticketNumber, props.subject, ticket.priority, props.tenantId)
     );
 
     return Result.ok(ticket);
@@ -348,11 +342,7 @@ export class Ticket extends AggregateRoot<TicketId> {
   /**
    * Pauses SLA tracking
    */
-  pauseSla(
-    reason: string,
-    pausedBy: string,
-    now: Date = new Date()
-  ): Result<void, DomainError> {
+  pauseSla(reason: string, pausedBy: string, now: Date = new Date()): Result<void, DomainError> {
     if (this.isSlaPaused) {
       return Result.fail(new TicketSlaAlreadyPausedError());
     }
@@ -390,10 +380,7 @@ export class Ticket extends AggregateRoot<TicketId> {
   /**
    * Records the first response time
    */
-  recordFirstResponse(
-    respondedBy: string,
-    now: Date = new Date()
-  ): Result<void, DomainError> {
+  recordFirstResponse(respondedBy: string, now: Date = new Date()): Result<void, DomainError> {
     if (this.props.firstResponseAt) {
       return Result.fail(new TicketFirstResponseAlreadyRecordedError());
     }
@@ -438,10 +425,7 @@ export class Ticket extends AggregateRoot<TicketId> {
   /**
    * Changes the ticket status
    */
-  changeStatus(
-    newStatus: TicketStatus,
-    changedBy: string
-  ): Result<void, DomainError> {
+  changeStatus(newStatus: TicketStatus, changedBy: string): Result<void, DomainError> {
     if (isTerminalStatus(this.props.status)) {
       return Result.fail(new TicketAlreadyClosedError());
     }
@@ -549,9 +533,7 @@ export class Ticket extends AggregateRoot<TicketId> {
     this.props.assigneeId = undefined;
     this.props.updatedAt = new Date();
 
-    this.addDomainEvent(
-      new TicketUnassignedEvent(this.id, previousAssigneeId, unassignedBy)
-    );
+    this.addDomainEvent(new TicketUnassignedEvent(this.id, previousAssigneeId, unassignedBy));
   }
 
   // ==================== Update Methods ====================
@@ -559,10 +541,7 @@ export class Ticket extends AggregateRoot<TicketId> {
   /**
    * Changes the ticket priority
    */
-  changePriority(
-    newPriority: TicketPriority,
-    changedBy: string
-  ): Result<void, DomainError> {
+  changePriority(newPriority: TicketPriority, changedBy: string): Result<void, DomainError> {
     if (this.isClosed) {
       return Result.fail(new TicketAlreadyClosedError());
     }

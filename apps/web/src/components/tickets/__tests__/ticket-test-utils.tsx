@@ -144,8 +144,18 @@ export function createMockTicketDetail(overrides?: Partial<TicketDetailData>): T
     },
     activities: createMockActivityList(4),
     nextSteps: [
-      { id: '1', title: 'Verify DB cluster fix deployment', dueDate: 'Due in 1 hour', completed: false },
-      { id: '2', title: 'Confirm with customer resolution', dueDate: 'Due Today', completed: false },
+      {
+        id: '1',
+        title: 'Verify DB cluster fix deployment',
+        dueDate: 'Due in 1 hour',
+        completed: false,
+      },
+      {
+        id: '2',
+        title: 'Confirm with customer resolution',
+        dueDate: 'Due Today',
+        completed: false,
+      },
       { id: '3', title: 'Document root cause', dueDate: 'Tomorrow', completed: false },
     ] as TicketNextStep[],
     relatedTickets: [
@@ -157,7 +167,10 @@ export function createMockTicketDetail(overrides?: Partial<TicketDetailData>): T
       resolution: { target: 240, remaining: -134, status: 'BREACHED' },
     } as TicketSLA,
     aiInsights: {
-      suggestedSolutions: ['Check DB cluster replication status', 'Verify load balancer health checks'],
+      suggestedSolutions: [
+        'Check DB cluster replication status',
+        'Verify load balancer health checks',
+      ],
       sentiment: 'negative',
       predictedResolutionTime: '2-4 hours',
       similarResolvedTickets: 8,
@@ -184,9 +197,18 @@ export function createMockStats(overrides?: Partial<TicketStats>): TicketStats {
   };
 }
 
-export function createMockFilterOptions(overrides?: Partial<TicketFilterOptions>): TicketFilterOptions {
+export function createMockFilterOptions(
+  overrides?: Partial<TicketFilterOptions>
+): TicketFilterOptions {
   return {
-    statuses: ['OPEN', 'IN_PROGRESS', 'WAITING_ON_CUSTOMER', 'WAITING_ON_THIRD_PARTY', 'RESOLVED', 'CLOSED'],
+    statuses: [
+      'OPEN',
+      'IN_PROGRESS',
+      'WAITING_ON_CUSTOMER',
+      'WAITING_ON_THIRD_PARTY',
+      'RESOLVED',
+      'CLOSED',
+    ],
     priorities: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'],
     slaStatuses: ['ON_TRACK', 'AT_RISK', 'BREACHED', 'MET', 'PAUSED'],
     assignees: [

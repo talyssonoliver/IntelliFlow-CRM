@@ -25,8 +25,7 @@ const modelInfoVariants = cva('flex items-center gap-1.5 text-muted-foreground',
 });
 
 export interface ModelInfoProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof modelInfoVariants> {
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof modelInfoVariants> {
   /** AI model version string */
   modelVersion: string;
   /** Timestamp when score was calculated */
@@ -121,10 +120,7 @@ function ModelInfo({
       {...props}
     >
       {showIcon && (
-        <span
-          className={cn('material-symbols-outlined', iconSize)}
-          aria-hidden="true"
-        >
+        <span className={cn('material-symbols-outlined', iconSize)} aria-hidden="true">
           smart_toy
         </span>
       )}

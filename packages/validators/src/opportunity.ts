@@ -12,12 +12,20 @@ export type OpportunityStage = z.infer<typeof opportunityStageSchema>;
 
 // Base opportunity fields schema (DRY - used by create and update)
 const baseOpportunityFieldsSchema = z.object({
-  name: z.string().min(1).max(200).transform(val => val.trim()), // Opportunity names can be longer
+  name: z
+    .string()
+    .min(1)
+    .max(200)
+    .transform((val) => val.trim()), // Opportunity names can be longer
   value: moneySchema, // Uses Money Value Object transformer
   stage: opportunityStageSchema,
   probability: percentageSchema, // Uses Percentage Value Object transformer
   expectedCloseDate: z.coerce.date().optional(),
-  description: z.string().max(1000).transform(val => val.trim()).optional(),
+  description: z
+    .string()
+    .max(1000)
+    .transform((val) => val.trim())
+    .optional(),
   accountId: idSchema,
   contactId: idSchema.optional(),
 });
@@ -31,13 +39,11 @@ export const createOpportunitySchema = baseOpportunityFieldsSchema.extend({
 export type CreateOpportunityInput = z.infer<typeof createOpportunitySchema>;
 
 // Update Opportunity Schema - all fields optional except id
-export const updateOpportunitySchema = baseOpportunityFieldsSchema
-  .partial()
-  .extend({
-    id: idSchema,
-    expectedCloseDate: z.coerce.date().optional().nullable(),
-    contactId: idSchema.optional().nullable(),
-  });
+export const updateOpportunitySchema = baseOpportunityFieldsSchema.partial().extend({
+  id: idSchema,
+  expectedCloseDate: z.coerce.date().optional().nullable(),
+  contactId: idSchema.optional().nullable(),
+});
 
 export type UpdateOpportunityInput = z.infer<typeof updateOpportunitySchema>;
 
@@ -111,10 +117,11 @@ export const opportunityHistoryQuerySchema = z.object({
   opportunityId: idSchema,
   limit: z.number().int().min(1).max(100).default(20),
   cursor: z.string().datetime().optional(),
-  types: z.array(z.enum([
-    'EMAIL', 'CALL', 'MEETING', 'NOTE', 'TASK',
-    'STAGE_CHANGE', 'AGENT_ACTION', 'SYSTEM',
-  ])).optional(),
+  types: z
+    .array(
+      z.enum(['EMAIL', 'CALL', 'MEETING', 'NOTE', 'TASK', 'STAGE_CHANGE', 'AGENT_ACTION', 'SYSTEM'])
+    )
+    .optional(),
 });
 
 export type OpportunityHistoryQueryInput = z.infer<typeof opportunityHistoryQuerySchema>;
@@ -214,7 +221,10 @@ export function validateStageDeactivation(stageKey: string, isActive: boolean): 
 export const updatePipelineStageConfigSchema = z.object({
   stage: opportunityStageSchema,
   displayName: z.string().min(1).max(50).optional(),
-  color: z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Must be a valid hex color').optional(),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, 'Must be a valid hex color')
+    .optional(),
   probability: z.number().int().min(0).max(100).optional(),
   isActive: z.boolean().optional(),
   sortOrder: z.number().int().min(0).optional(),

@@ -3,7 +3,12 @@ import * as React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect } from 'vitest';
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from '../src/components/tooltip';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from '../src/components/tooltip';
 import { Button } from '../src/components/button';
 
 describe('Tooltip', () => {

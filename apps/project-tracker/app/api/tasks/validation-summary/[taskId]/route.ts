@@ -12,6 +12,7 @@ import type {
   DODItemResult,
   DocumentPreview,
   EnhancedContextData,
+  ContextAckStatus,
   PlanDeliverable,
   PlanDeliverablesVerification,
   PlanCheckboxItem,
@@ -28,11 +29,23 @@ function getRepoRoot(): string {
 // Get sprint number for a task from CSV
 async function getTaskSprintNumber(taskId: string): Promise<number> {
   const repoRoot = getRepoRoot();
-  const csvPath = join(repoRoot, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+  const csvPath = join(
+    repoRoot,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    '_global',
+    'Sprint_plan.csv'
+  );
 
   try {
     const csvContent = await readFile(csvPath, 'utf-8');
-    const records = parse(csvContent, { columns: true, skip_empty_lines: true, bom: true }) as Array<Record<string, string>>;
+    const records = parse(csvContent, {
+      columns: true,
+      skip_empty_lines: true,
+      bom: true,
+    }) as Array<Record<string, string>>;
     const task = records.find((r) => r['Task ID'] === taskId);
     return parseInt(task?.['Target Sprint'] || '0', 10);
   } catch {
@@ -172,13 +185,32 @@ function getTaskPackages(taskId: string): string[] {
 /**
  * Load attestation data from sprint-based location
  */
-async function loadAttestation(taskId: string, sprintNumber: number): Promise<RawAttestation | null> {
+async function loadAttestation(
+  taskId: string,
+  sprintNumber: number
+): Promise<RawAttestation | null> {
   const repoRoot = getRepoRoot();
 
   // Try multiple paths
   const possiblePaths = [
-    join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId, 'attestation.json'),
-    join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId, `${taskId}-attestation.json`),
+    join(
+      repoRoot,
+      '.specify',
+      'sprints',
+      `sprint-${sprintNumber}`,
+      'attestations',
+      taskId,
+      'attestation.json'
+    ),
+    join(
+      repoRoot,
+      '.specify',
+      'sprints',
+      `sprint-${sprintNumber}`,
+      'attestations',
+      taskId,
+      `${taskId}-attestation.json`
+    ),
     join(repoRoot, 'artifacts', 'attestations', taskId, 'attestation.json'),
     join(repoRoot, 'artifacts', 'attestations', taskId, `${taskId}-attestation.json`),
   ];
@@ -194,6 +226,51 @@ async function loadAttestation(taskId: string, sprintNumber: number): Promise<Ra
     }
   }
   return null;
+}
+
+/**
+ * Load context_ack.json status from sprint-based attestation directory
+ */
+async function loadContextAck(taskId: string, sprintNumber: number): Promise<ContextAckStatus> {
+  const repoRoot = getRepoRoot();
+
+  const possiblePaths = [
+    join(
+      repoRoot,
+      '.specify',
+      'sprints',
+      `sprint-${sprintNumber}`,
+      'attestations',
+      taskId,
+      'context_ack.json'
+    ),
+    join(repoRoot, 'artifacts', 'attestations', taskId, 'context_ack.json'),
+  ];
+
+  for (const path of possiblePaths) {
+    if (existsSync(path)) {
+      try {
+        const content = await readFile(path, 'utf-8');
+        const data = JSON.parse(content) as {
+          files_read?: unknown[];
+          invariants_acknowledged?: unknown[];
+        };
+        const relativePath = relative(repoRoot, path).replace(/\\/g, '/');
+        return {
+          exists: true,
+          path: relativePath,
+          filesRead: Array.isArray(data.files_read) ? data.files_read.length : 0,
+          invariantsCount: Array.isArray(data.invariants_acknowledged)
+            ? data.invariants_acknowledged.length
+            : 0,
+        };
+      } catch {
+        // Continue to next path
+      }
+    }
+  }
+
+  return { exists: false, path: null, filesRead: 0, invariantsCount: 0 };
 }
 
 /**
@@ -293,8 +370,7 @@ async function loadCoverageSummary(taskId: string): Promise<CoverageMetrics | nu
     if (metrics) {
       (metrics as CoverageMetrics & { package?: string; fileCount?: number }).package =
         taskPackages.join(', ');
-      (metrics as CoverageMetrics & { package?: string; fileCount?: number }).fileCount =
-        fileCount;
+      (metrics as CoverageMetrics & { package?: string; fileCount?: number }).fileCount = fileCount;
     }
 
     return metrics;
@@ -420,7 +496,14 @@ async function parsePlanDeliverables(
 
   // Find plan file
   const possiblePaths = [
-    join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'planning', `${taskId}-plan.md`),
+    join(
+      repoRoot,
+      '.specify',
+      'sprints',
+      `sprint-${sprintNumber}`,
+      'planning',
+      `${taskId}-plan.md`
+    ),
     join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'planning', `${taskId}.md`),
   ];
 
@@ -515,6 +598,50 @@ async function parsePlanDeliverables(
     }
   }
 
+  // Extract files from "Test Files:" sections
+  const testFilesPattern = /\*\*Test Files:\*\*\s*\n((?:- `[^`]+`\n?)+)/g;
+  let testMatch;
+  while ((testMatch = testFilesPattern.exec(planContent)) !== null) {
+    const fileListBlock = testMatch[1];
+    const fileMatches = fileListBlock.match(/- `([^`]+)`/g);
+    if (fileMatches) {
+      for (const fm of fileMatches) {
+        const filePath = fm.match(/- `([^`]+)`/)?.[1];
+        if (filePath && !deliverables.some((d) => d.path === filePath)) {
+          const fullPath = join(repoRoot, filePath);
+          const fileExists = existsSync(fullPath);
+          deliverables.push({
+            path: filePath,
+            type: 'file',
+            status: fileExists ? 'exists' : 'missing',
+            fromSection: 'Implementation Steps',
+          });
+        }
+      }
+    }
+  }
+
+  // Extract files from checkbox items: - [x] Create `path/to/file.ts`
+  // and numbered steps: 1. Create `path/to/file.ts`
+  // and any backtick-wrapped file path with / and extension
+  const inlineFilePattern = /`((?:[\w@.-]+\/)+[\w.-]+\.(?:ts|tsx|json|md|js|jsx|css|yaml|yml))`/g;
+  let inlineMatch;
+  while ((inlineMatch = inlineFilePattern.exec(planContent)) !== null) {
+    const filePath = inlineMatch[1];
+    // Skip paths that are clearly not project files (e.g., npm package names)
+    if (filePath.startsWith('node_modules/') || filePath.startsWith('http')) continue;
+    if (!deliverables.some((d) => d.path === filePath)) {
+      const fullPath = join(repoRoot, filePath);
+      const fileExists = existsSync(fullPath);
+      deliverables.push({
+        path: filePath,
+        type: 'file',
+        status: fileExists ? 'exists' : 'missing',
+        fromSection: 'Implementation Steps',
+      });
+    }
+  }
+
   // Extract checkboxes from the plan
   const checkboxItems: PlanCheckboxItem[] = [];
   const lines = planContent.split('\n');
@@ -592,9 +719,19 @@ async function parsePlanDeliverables(
 /**
  * Load MATOP execution summary (if available)
  */
-async function loadMATOPSummary(taskId: string, sprintNumber: number): Promise<MATOPExecutionSummary | null> {
+async function loadMATOPSummary(
+  taskId: string,
+  sprintNumber: number
+): Promise<MATOPExecutionSummary | null> {
   const repoRoot = getRepoRoot();
-  const executionDir = join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'execution', taskId);
+  const executionDir = join(
+    repoRoot,
+    '.specify',
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'execution',
+    taskId
+  );
 
   if (!existsSync(executionDir)) {
     return null;
@@ -629,11 +766,14 @@ async function loadMATOPSummary(taskId: string, sprintNumber: number): Promise<M
       const deliveryContent = await readFile(deliveryPath, 'utf-8');
       // Extract basic info from delivery if available
       // Match both "Consensus Verdict:** PASS" and "**Consensus: 4/4 PASS**"
-      const consensusMatch = deliveryContent.match(/\*?\*?Consensus(?:\s+Verdict)?:.*?\b(PASS|WARN|FAIL)\b/i);
+      const consensusMatch = deliveryContent.match(
+        /\*?\*?Consensus(?:\s+Verdict)?:.*?\b(PASS|WARN|FAIL)\b/i
+      );
       if (consensusMatch) {
         // Extract STOA results from delivery table (| STOA | Verdict | Notes |)
         const stoaResults: Record<string, import('@/lib/types').STOAVerdict> = {};
-        const stoaRowRegex = /\|\s*(Foundation|Security|Quality|Domain|Intelligence)\s*\|\s*(PASS|WARN|FAIL)\s*\|\s*([^|]*)\|/gi;
+        const stoaRowRegex =
+          /\|\s*(Foundation|Security|Quality|Domain|Intelligence)\s*\|\s*(PASS|WARN|FAIL)\s*\|\s*([^|]*)\|/gi;
         let stoaMatch;
         let stoaPassed = 0;
         let stoaTotal = 0;
@@ -650,7 +790,12 @@ async function loadMATOPSummary(taskId: string, sprintNumber: number): Promise<M
           timestamp: new Date().toISOString(),
           consensusVerdict: consensusMatch[1].toUpperCase() as 'PASS' | 'WARN' | 'FAIL',
           stoaResults,
-          gatesExecuted: { total: stoaTotal, passed: stoaPassed, warned: 0, failed: stoaTotal - stoaPassed },
+          gatesExecuted: {
+            total: stoaTotal,
+            passed: stoaPassed,
+            warned: 0,
+            failed: stoaTotal - stoaPassed,
+          },
         };
       }
     }
@@ -679,9 +824,10 @@ function buildValidationItems(attestation: RawAttestation | null): BuildValidati
   // Map validation results to build validation items (with null safety)
   // Match by name first, then fall back to command for schema-compliant attestations without name
   const matchValidation = (namePattern: string, commandPattern: string) =>
-    attestation.validation_results!.find((r) =>
-      (r.name && r.name.toLowerCase().includes(namePattern)) ||
-      (!r.name && r.command && r.command.toLowerCase().includes(commandPattern))
+    attestation.validation_results!.find(
+      (r) =>
+        (r.name && r.name.toLowerCase().includes(namePattern)) ||
+        (!r.name && r.command && r.command.toLowerCase().includes(commandPattern))
     );
   const typecheck = matchValidation('type', 'typecheck');
   const tests = matchValidation('test', 'vitest');
@@ -735,10 +881,35 @@ function buildCompletionGates(
   validationItems: BuildValidationItem[],
   planDeliverables: PlanDeliverablesVerification | null,
   matop: MATOPExecutionSummary | null,
-  attestation: RawAttestation | null
+  attestation: RawAttestation | null,
+  spec: DocumentPreview,
+  plan: DocumentPreview,
+  contextAckExists: boolean
 ): CompletionGatesStatus {
   const gates: CompletionGate[] = [];
   const blockingReasons: string[] = [];
+
+  // Gate 0: Lifecycle Flow (spec + plan + context_ack + attestation must exist)
+  const lifecycleMissing: string[] = [];
+  if (!spec.exists) lifecycleMissing.push('spec');
+  if (!plan.exists) lifecycleMissing.push('plan');
+  if (!contextAckExists) lifecycleMissing.push('context_ack.json');
+  if (!attestation) lifecycleMissing.push('attestation');
+
+  const lifecycleStatus: 'pass' | 'blocked' = lifecycleMissing.length === 0 ? 'pass' : 'blocked';
+  if (lifecycleMissing.length > 0) {
+    blockingReasons.push(`Lifecycle files missing: ${lifecycleMissing.join(', ')}`);
+  }
+
+  gates.push({
+    name: 'Lifecycle Flow',
+    status: lifecycleStatus,
+    details:
+      lifecycleMissing.length === 0
+        ? 'spec, plan, context_ack, attestation all present'
+        : `Missing: ${lifecycleMissing.join(', ')}`,
+    required: true,
+  });
 
   // Gate 1: Plan Checkboxes
   const checkboxTotal = planDeliverables?.checkboxes?.total ?? 0;
@@ -754,7 +925,9 @@ function buildCompletionGates(
     checkboxStatus = 'warn';
   } else {
     checkboxStatus = 'blocked';
-    blockingReasons.push(`Plan checkboxes incomplete: ${checkboxChecked}/${checkboxTotal} (${checkboxPct}%)`);
+    blockingReasons.push(
+      `Plan checkboxes incomplete: ${checkboxChecked}/${checkboxTotal} (${checkboxPct}%)`
+    );
   }
 
   gates.push({
@@ -804,7 +977,7 @@ function buildCompletionGates(
 
   let buildStatus: 'pass' | 'warn' | 'blocked' | 'pending' = 'pending';
   if (allBuildPending) {
-    buildStatus = 'pending';
+    buildStatus = 'blocked';
     blockingReasons.push('Build validation not executed');
   } else if (buildValidationPassed) {
     buildStatus = 'pass';
@@ -867,7 +1040,10 @@ function buildCompletionGates(
 /**
  * Build enhanced context data from attestation
  */
-function buildEnhancedContext(attestation: RawAttestation | null, taskId: string): EnhancedContextData | null {
+function buildEnhancedContext(
+  attestation: RawAttestation | null,
+  taskId: string
+): EnhancedContextData | null {
   if (!attestation?.context_acknowledgment) {
     return null;
   }
@@ -899,14 +1075,16 @@ export async function GET(request: Request, { params }: Params) {
     const sprintNumber = await getTaskSprintNumber(taskId);
 
     // Load all data in parallel
-    const [attestation, coverage, spec, plan, matop, planDeliverables] = await Promise.all([
-      loadAttestation(taskId, sprintNumber),
-      loadCoverageSummary(taskId),
-      loadDocumentPreview(taskId, sprintNumber, 'spec'),
-      loadDocumentPreview(taskId, sprintNumber, 'plan'),
-      loadMATOPSummary(taskId, sprintNumber),
-      parsePlanDeliverables(taskId, sprintNumber),
-    ]);
+    const [attestation, coverage, spec, plan, matop, planDeliverables, contextAck] =
+      await Promise.all([
+        loadAttestation(taskId, sprintNumber),
+        loadCoverageSummary(taskId),
+        loadDocumentPreview(taskId, sprintNumber, 'spec'),
+        loadDocumentPreview(taskId, sprintNumber, 'plan'),
+        loadMATOPSummary(taskId, sprintNumber),
+        parsePlanDeliverables(taskId, sprintNumber),
+        loadContextAck(taskId, sprintNumber),
+      ]);
 
     // Build validation items from attestation
     const validationItems = buildValidationItems(attestation);
@@ -933,7 +1111,15 @@ export async function GET(request: Request, { params }: Params) {
     const context = buildEnhancedContext(attestation, taskId);
 
     // Build completion gates status for enforcement
-    const completionGates = buildCompletionGates(validationItems, planDeliverables, matop, attestation);
+    const completionGates = buildCompletionGates(
+      validationItems,
+      planDeliverables,
+      matop,
+      attestation,
+      spec,
+      plan,
+      contextAck.exists
+    );
 
     const result: TaskValidationSummary & { completionGates: CompletionGatesStatus } = {
       taskId,
@@ -978,6 +1164,9 @@ export async function GET(request: Request, { params }: Params) {
         gatesPassed: attestation?.evidence_summary?.gates_passed,
       },
 
+      // Context ack status
+      contextAck,
+
       // Completion gates enforcement status
       completionGates,
     };
@@ -991,9 +1180,6 @@ export async function GET(request: Request, { params }: Params) {
     });
   } catch (error) {
     console.error('Error loading validation summary:', error);
-    return NextResponse.json(
-      { error: 'Failed to load validation summary' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to load validation summary' }, { status: 500 });
   }
 }

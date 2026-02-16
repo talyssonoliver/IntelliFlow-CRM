@@ -10,11 +10,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  remindersService,
-  type Reminder,
-  type ReminderNotification,
-} from './reminders-service';
+import { remindersService, type Reminder, type ReminderNotification } from './reminders-service';
 
 // Re-export types for consumers
 export type { Reminder, ReminderNotification } from './reminders-service';
@@ -85,13 +81,19 @@ export function RemindersProvider({
   }, []);
 
   // Handle incoming notifications
-  const handleNotification = React.useCallback((notification: ReminderNotification) => {
-    setRecentNotifications((prev) => {
-      const updated = [notification, ...prev.filter((n) => n.reminderId !== notification.reminderId)];
-      return updated.slice(0, 10); // Keep last 10
-    });
-    syncReminders();
-  }, [syncReminders]);
+  const handleNotification = React.useCallback(
+    (notification: ReminderNotification) => {
+      setRecentNotifications((prev) => {
+        const updated = [
+          notification,
+          ...prev.filter((n) => n.reminderId !== notification.reminderId),
+        ];
+        return updated.slice(0, 10); // Keep last 10
+      });
+      syncReminders();
+    },
+    [syncReminders]
+  );
 
   // Start the service
   const start = React.useCallback(() => {
@@ -108,34 +110,45 @@ export function RemindersProvider({
   }, []);
 
   // Create reminders from timeline events
-  const createFromTimelineEvents = React.useCallback((events: TimelineEvent[]): Reminder[] => {
-    // Transform TimelineEvent to the format expected by reminders service
-    const transformedEvents = events.map((event) => ({
-      id: event.id,
-      type: event.type,
-      title: event.title,
-      description: event.description,
-      timestamp: event.timestamp,
-      priority: event.priority || 'medium',
-    }));
+  const createFromTimelineEvents = React.useCallback(
+    (events: TimelineEvent[]): Reminder[] => {
+      // Transform TimelineEvent to the format expected by reminders service
+      const transformedEvents = events.map((event) => ({
+        id: event.id,
+        type: event.type,
+        title: event.title,
+        description: event.description,
+        timestamp: event.timestamp,
+        priority: event.priority || 'medium',
+      }));
 
-    const reminders = remindersService.createFromTimelineEvents(transformedEvents as Parameters<typeof remindersService.createFromTimelineEvents>[0]);
-    syncReminders();
-    return reminders;
-  }, [syncReminders]);
+      const reminders = remindersService.createFromTimelineEvents(
+        transformedEvents as Parameters<typeof remindersService.createFromTimelineEvents>[0]
+      );
+      syncReminders();
+      return reminders;
+    },
+    [syncReminders]
+  );
 
   // Snooze a reminder
-  const snoozeReminder = React.useCallback((reminderId: string, minutes: number) => {
-    remindersService.snoozeReminder(reminderId, minutes);
-    syncReminders();
-  }, [syncReminders]);
+  const snoozeReminder = React.useCallback(
+    (reminderId: string, minutes: number) => {
+      remindersService.snoozeReminder(reminderId, minutes);
+      syncReminders();
+    },
+    [syncReminders]
+  );
 
   // Dismiss a reminder
-  const dismissReminder = React.useCallback((reminderId: string) => {
-    remindersService.dismissReminder(reminderId);
-    setRecentNotifications((prev) => prev.filter((n) => n.reminderId !== reminderId));
-    syncReminders();
-  }, [syncReminders]);
+  const dismissReminder = React.useCallback(
+    (reminderId: string) => {
+      remindersService.dismissReminder(reminderId);
+      setRecentNotifications((prev) => prev.filter((n) => n.reminderId !== reminderId));
+      syncReminders();
+    },
+    [syncReminders]
+  );
 
   // Mark all as read
   const markAllAsRead = React.useCallback(() => {
@@ -201,11 +214,7 @@ export function RemindersProvider({
     ]
   );
 
-  return (
-    <RemindersContext.Provider value={value}>
-      {children}
-    </RemindersContext.Provider>
-  );
+  return <RemindersContext.Provider value={value}>{children}</RemindersContext.Provider>;
 }
 
 // =============================================================================

@@ -35,6 +35,7 @@ docs/design/
 ## Page Registry
 
 See `page-registry.md` for the complete list of all UI pages including:
+
 - Route paths and KPIs
 - Code file locations (correct paths)
 - Task mappings
@@ -75,17 +76,17 @@ Pipeline Kanban). Root cause analysis revealed:
 
 ## Design Mockup Mapping
 
-| Mockup | Tasks | Description |
-|--------|-------|-------------|
-| `contact-360-view.png` | IFC-090 | Contact detail page with tabs, AI insights, tasks |
-| `contact-list.png` | IFC-092 | Contact list view with search, filters, and bulk actions |
-| `dashboard-overview.png` | IFC-091, IFC-096 | Dashboard with pipeline stages, charts |
-| `deal-forecast.png` | IFC-093 | Deal forecasting dashboard with predictive analytics |
-| `deals-detail.png` | IFC-094 | Individual deal detail page with stages, activities, and notes |
-| `deals-kanban.png` | IFC-095 | Deals displayed in Kanban board format by pipeline stages |
-| `lead-new.png` | IFC-096 | New lead creation form with qualification fields |
-| `lead_list.png` | IFC-097 | Lead list view with conversion tracking and scoring |
-| `tickets-sla.png` | IFC-098 | Support tickets with SLA monitoring and escalation alerts |
+| Mockup                   | Tasks            | Description                                                    |
+| ------------------------ | ---------------- | -------------------------------------------------------------- |
+| `contact-360-view.png`   | IFC-090          | Contact detail page with tabs, AI insights, tasks              |
+| `contact-list.png`       | IFC-092          | Contact list view with search, filters, and bulk actions       |
+| `dashboard-overview.png` | IFC-091, IFC-096 | Dashboard with pipeline stages, charts                         |
+| `deal-forecast.png`      | IFC-093          | Deal forecasting dashboard with predictive analytics           |
+| `deals-detail.png`       | IFC-094          | Individual deal detail page with stages, activities, and notes |
+| `deals-kanban.png`       | IFC-095          | Deals displayed in Kanban board format by pipeline stages      |
+| `lead-new.png`           | IFC-096          | New lead creation form with qualification fields               |
+| `lead_list.png`          | IFC-097          | Lead list view with conversion tracking and scoring            |
+| `tickets-sla.png`        | IFC-098          | Support tickets with SLA monitoring and escalation alerts      |
 
 ## UI Components Required (from designs)
 
@@ -94,7 +95,8 @@ Pipeline Kanban). Root cause analysis revealed:
 - [ ] Contact header (photo, name, company, role)
 - [ ] Key metrics (Revenue Won, Conversion Probability)
 - [ ] Action buttons (+New Deal, +New Ticket)
-- [ ] Tab navigation (Overview, Activity Timeline, Deals, Tickets, Documents, AI Insights)
+- [ ] Tab navigation (Overview, Activity Timeline, Deals, Tickets, Documents, AI
+      Insights)
 - [ ] Activity timeline with dates
 - [ ] Deals list with stage/value/date
 - [ ] Tasks checklist with due dates
@@ -104,7 +106,8 @@ Pipeline Kanban). Root cause analysis revealed:
 ### Dashboard Overview (`dashboard-overview.png`)
 
 - [ ] Left sidebar navigation (Dashboard, Contacts, Deals, Reports, Settings)
-- [ ] Pipeline stages (Qualification → Needs Analysis → Proposal → Negotiation → Closed)
+- [ ] Pipeline stages (Qualification → Needs Analysis → Proposal → Negotiation →
+      Closed)
 - [ ] Contact card with activity
 - [ ] Deals by Stage pie chart
 - [ ] Revenue bar chart
@@ -140,7 +143,8 @@ Pipeline Kanban). Root cause analysis revealed:
 
 ### Deals Kanban (`deals-kanban.png`)
 
-- [ ] Pipeline stage columns (Prospect, Qualification, Proposal, Negotiation, Closed Won/Lost)
+- [ ] Pipeline stage columns (Prospect, Qualification, Proposal, Negotiation,
+      Closed Won/Lost)
 - [ ] Deal cards with value, company, contact, days in stage
 - [ ] Drag and drop functionality between stages
 - [ ] Stage limits and warnings

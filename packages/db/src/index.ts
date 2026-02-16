@@ -56,7 +56,12 @@ export {
 } from './client';
 
 // Re-export types for pgvector operations
-export type { QueryMetrics, VectorSearchResult, VectorEmbedding, TransactionClient } from './client';
+export type {
+  QueryMetrics,
+  VectorSearchResult,
+  VectorEmbedding,
+  TransactionClient,
+} from './client';
 
 // pgvector utilities for AI embeddings
 export {

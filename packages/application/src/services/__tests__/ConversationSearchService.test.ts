@@ -42,7 +42,9 @@ function createMockEmbeddingService(): Record<string, any> {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeConversationDetails(overrides: Partial<ConversationWithDetails> = {}): ConversationWithDetails {
+function makeConversationDetails(
+  overrides: Partial<ConversationWithDetails> = {}
+): ConversationWithDetails {
   return {
     id: 'conv-1',
     sessionId: 'session-1',
@@ -78,7 +80,9 @@ function makeConversationDetails(overrides: Partial<ConversationWithDetails> = {
   };
 }
 
-function makeSearchResult(overrides: Partial<ConversationSearchResult> = {}): ConversationSearchResult {
+function makeSearchResult(
+  overrides: Partial<ConversationSearchResult> = {}
+): ConversationSearchResult {
   return {
     conversationId: 'conv-1',
     sessionId: 'session-1',
@@ -118,7 +122,7 @@ describe('ConversationSearchService', () => {
 
     service = new ConversationSearchService(
       conversationRepo as ConversationRepositoryPort,
-      embeddingService as EmbeddingServicePort,
+      embeddingService as EmbeddingServicePort
     );
   });
 
@@ -233,11 +237,15 @@ describe('ConversationSearchService', () => {
 
     it('should detect hasMore correctly', async () => {
       const searchResults = Array.from({ length: 20 }, (_, i) =>
-        makeSearchResult({ conversationId: `conv-${i}` }),
+        makeSearchResult({ conversationId: `conv-${i}` })
       );
       conversationRepo.search.mockResolvedValue({ conversations: searchResults, total: 50 });
 
-      const result = await service.searchConversations({ tenantId: 'tenant-1', limit: 20, offset: 0 });
+      const result = await service.searchConversations({
+        tenantId: 'tenant-1',
+        limit: 20,
+        offset: 0,
+      });
 
       expect(result.value.hasMore).toBe(true);
     });
@@ -321,7 +329,7 @@ describe('ConversationSearchService', () => {
           limit: 20,
           offset: 0,
           minSimilarity: 0.5,
-        }),
+        })
       );
     });
 
@@ -340,13 +348,13 @@ describe('ConversationSearchService', () => {
           limit: 10,
           offset: 5,
           minSimilarity: 0.8,
-        }),
+        })
       );
     });
 
     it('should return failure when embedding service is not configured', async () => {
       const serviceWithoutEmbedding = new ConversationSearchService(
-        conversationRepo as ConversationRepositoryPort,
+        conversationRepo as ConversationRepositoryPort
         // no embedding service
       );
 
@@ -391,7 +399,7 @@ describe('ConversationSearchService', () => {
     it('should detect hasMore when results equal limit', async () => {
       embeddingService.generateEmbedding.mockResolvedValue([0.1]);
       const results = Array.from({ length: 10 }, (_, i) =>
-        makeSearchResult({ conversationId: `conv-${i}` }),
+        makeSearchResult({ conversationId: `conv-${i}` })
       );
       conversationRepo.searchByEmbedding.mockResolvedValue(results);
 
@@ -521,7 +529,9 @@ describe('ConversationSearchService', () => {
       const result = await service.getConversationStats('tenant-1');
 
       expect(result.isFailure).toBe(true);
-      expect(result.error.message).toContain('Statistics endpoint should be implemented in repository');
+      expect(result.error.message).toContain(
+        'Statistics endpoint should be implemented in repository'
+      );
     });
 
     it('should accept optional options', async () => {

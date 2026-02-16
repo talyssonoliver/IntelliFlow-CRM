@@ -127,7 +127,7 @@ export class HallucinationChecker {
       const factCheck = this.checkFactualAccuracy(params.output, params.groundTruth);
       if (factCheck.errors.length > 0) {
         hallucinationTypes.push('factual_error');
-        evidence.push(...factCheck.errors.map(e => `Factual error: ${e}`));
+        evidence.push(...factCheck.errors.map((e) => `Factual error: ${e}`));
         totalScore += factCheck.score;
       }
       checksPerformed++;
@@ -138,7 +138,7 @@ export class HallucinationChecker {
       const logicCheck = this.checkLogicalConsistency(params.output);
       if (!logicCheck.consistent) {
         hallucinationTypes.push('inconsistent_logic');
-        evidence.push(...logicCheck.contradictions.map(c => `Contradiction: ${c}`));
+        evidence.push(...logicCheck.contradictions.map((c) => `Contradiction: ${c}`));
         totalScore += logicCheck.score;
       }
       checksPerformed++;
@@ -148,7 +148,7 @@ export class HallucinationChecker {
     const claimCheck = this.checkClaimSupport(params.output, params.inputContext);
     if (claimCheck.unsupportedClaims.length > 0) {
       hallucinationTypes.push('unsupported_claim');
-      evidence.push(...claimCheck.unsupportedClaims.map(c => `Unsupported: ${c}`));
+      evidence.push(...claimCheck.unsupportedClaims.map((c) => `Unsupported: ${c}`));
       totalScore += claimCheck.score;
     }
     checksPerformed++;
@@ -166,7 +166,7 @@ export class HallucinationChecker {
     const numCheck = this.checkNumericalAccuracy(params.output);
     if (numCheck.errors.length > 0) {
       hallucinationTypes.push('numerical_error');
-      evidence.push(...numCheck.errors.map(e => `Numerical error: ${e}`));
+      evidence.push(...numCheck.errors.map((e) => `Numerical error: ${e}`));
       totalScore += numCheck.score;
     }
     checksPerformed++;
@@ -227,12 +227,10 @@ export class HallucinationChecker {
     const start = startTime ?? new Date(Date.now() - 24 * 60 * 60 * 1000);
     const end = endTime ?? new Date();
 
-    const filteredResults = this.results.filter(
-      r => r.timestamp >= start && r.timestamp <= end
-    );
+    const filteredResults = this.results.filter((r) => r.timestamp >= start && r.timestamp <= end);
 
     const totalChecks = filteredResults.length;
-    const hallucinationsDetected = filteredResults.filter(r => r.hallucinated).length;
+    const hallucinationsDetected = filteredResults.filter((r) => r.hallucinated).length;
     const hallucinationRate = totalChecks > 0 ? hallucinationsDetected / totalChecks : 0;
 
     // Count by type
@@ -266,15 +264,15 @@ export class HallucinationChecker {
     }
 
     for (const model of Object.keys(byModel)) {
-      byModel[model].rate = byModel[model].total > 0
-        ? byModel[model].hallucinated / byModel[model].total
-        : 0;
+      byModel[model].rate =
+        byModel[model].total > 0 ? byModel[model].hallucinated / byModel[model].total : 0;
     }
 
     // Average confidence
-    const avgConfidence = filteredResults.length > 0
-      ? filteredResults.reduce((sum, r) => sum + r.confidence, 0) / filteredResults.length
-      : 0;
+    const avgConfidence =
+      filteredResults.length > 0
+        ? filteredResults.reduce((sum, r) => sum + r.confidence, 0) / filteredResults.length
+        : 0;
 
     return {
       totalChecks,
@@ -402,7 +400,7 @@ export class HallucinationChecker {
     const contradictions: string[] = [];
 
     // Split into sentences
-    const sentences = output.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const sentences = output.split(/[.!?]+/).filter((s) => s.trim().length > 0);
 
     // Check for contradictory pairs
     for (let i = 0; i < sentences.length; i++) {
@@ -458,20 +456,16 @@ export class HallucinationChecker {
 
     // Check overlap
     const contextSet = new Set(contextTopics);
-    const overlap = outputTopics.filter(t => contextSet.has(t));
+    const overlap = outputTopics.filter((t) => contextSet.has(t));
 
-    const overlapRatio = outputTopics.length > 0
-      ? overlap.length / outputTopics.length
-      : 1;
+    const overlapRatio = outputTopics.length > 0 ? overlap.length / outputTopics.length : 1;
 
     const drifted = overlapRatio < 0.3; // Less than 30% topic overlap
     const score = drifted ? 1 - overlapRatio : 0;
 
     return {
       drifted,
-      reason: drifted
-        ? `Only ${(overlapRatio * 100).toFixed(1)}% topic overlap with context`
-        : '',
+      reason: drifted ? `Only ${(overlapRatio * 100).toFixed(1)}% topic overlap with context` : '',
       score,
     };
   }
@@ -497,11 +491,20 @@ export class HallucinationChecker {
 
       let expected: number;
       switch (operator) {
-        case '+': expected = num1 + num2; break;
-        case '-': expected = num1 - num2; break;
-        case '*': expected = num1 * num2; break;
-        case '/': expected = num2 !== 0 ? num1 / num2 : NaN; break;
-        default: continue;
+        case '+':
+          expected = num1 + num2;
+          break;
+        case '-':
+          expected = num1 - num2;
+          break;
+        case '*':
+          expected = num1 * num2;
+          break;
+        case '/':
+          expected = num2 !== 0 ? num1 / num2 : NaN;
+          break;
+        default:
+          continue;
       }
 
       if (!isNaN(expected) && Math.abs(expected - result) > 0.001) {
@@ -510,7 +513,8 @@ export class HallucinationChecker {
     }
 
     // Check percentage claims
-    const percentPattern = /(\d+(?:\.\d+)?)\s*%\s*of\s*(\d+(?:\.\d+)?)\s*(?:is|=)\s*(\d+(?:\.\d+)?)/gi;
+    const percentPattern =
+      /(\d+(?:\.\d+)?)\s*%\s*of\s*(\d+(?:\.\d+)?)\s*(?:is|=)\s*(\d+(?:\.\d+)?)/gi;
     while ((match = percentPattern.exec(output)) !== null) {
       const percent = parseFloat(match[1]) / 100;
       const total = parseFloat(match[2]);
@@ -533,8 +537,8 @@ export class HallucinationChecker {
    */
   private extractClaims(text: string): string[] {
     // Split into sentences and filter for factual claims
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
-    return sentences.map(s => s.trim());
+    const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 10);
+    return sentences.map((s) => s.trim());
   }
 
   /**
@@ -543,10 +547,13 @@ export class HallucinationChecker {
   private claimSupportedBySource(claim: string, source: string): boolean {
     // Simple keyword overlap check
     // In production, use semantic similarity via embeddings
-    const claimWords = claim.toLowerCase().split(/\s+/).filter(w => w.length > 4);
+    const claimWords = claim
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length > 4);
     const sourceWords = new Set(source.toLowerCase().split(/\s+/));
 
-    const matchCount = claimWords.filter(w => sourceWords.has(w)).length;
+    const matchCount = claimWords.filter((w) => sourceWords.has(w)).length;
     const matchRatio = claimWords.length > 0 ? matchCount / claimWords.length : 0;
 
     return matchRatio > 0.5; // >50% keyword overlap
@@ -564,7 +571,7 @@ export class HallucinationChecker {
       /\$[\d,]+/,
     ];
 
-    return factualPatterns.some(p => p.test(text));
+    return factualPatterns.some((p) => p.test(text));
   }
 
   /**
@@ -590,7 +597,7 @@ export class HallucinationChecker {
     ];
 
     for (const [pos, neg] of negationPairs) {
-      if (s1.includes(pos) && s2.includes(neg) || s1.includes(neg) && s2.includes(pos)) {
+      if ((s1.includes(pos) && s2.includes(neg)) || (s1.includes(neg) && s2.includes(pos))) {
         // Check if they're about the same subject
         const subjectWords = s1.split(/\s+/).slice(0, 3).join(' ');
         if (s2.includes(subjectWords)) {
@@ -610,8 +617,8 @@ export class HallucinationChecker {
     const words = text
       .toLowerCase()
       .split(/\s+/)
-      .filter(w => w.length > 4)
-      .filter(w => !this.isStopWord(w));
+      .filter((w) => w.length > 4)
+      .filter((w) => !this.isStopWord(w));
 
     // Get unique topics
     return [...new Set(words)];
@@ -622,11 +629,39 @@ export class HallucinationChecker {
    */
   private isStopWord(word: string): boolean {
     const stopWords = new Set([
-      'about', 'after', 'before', 'being', 'between', 'could', 'during',
-      'every', 'first', 'found', 'great', 'going', 'having', 'never',
-      'other', 'really', 'should', 'since', 'still', 'their', 'there',
-      'these', 'thing', 'think', 'those', 'through', 'under', 'using',
-      'where', 'which', 'while', 'would', 'years',
+      'about',
+      'after',
+      'before',
+      'being',
+      'between',
+      'could',
+      'during',
+      'every',
+      'first',
+      'found',
+      'great',
+      'going',
+      'having',
+      'never',
+      'other',
+      'really',
+      'should',
+      'since',
+      'still',
+      'their',
+      'there',
+      'these',
+      'thing',
+      'think',
+      'those',
+      'through',
+      'under',
+      'using',
+      'where',
+      'which',
+      'while',
+      'would',
+      'years',
     ]);
     return stopWords.has(word);
   }
@@ -637,9 +672,23 @@ export class HallucinationChecker {
   private initializeKnownEntities(): void {
     // Add common entities
     const commonEntities = [
-      'Google', 'Microsoft', 'Amazon', 'Apple', 'Meta', 'OpenAI', 'Anthropic',
-      'New York', 'London', 'Paris', 'Tokyo', 'Berlin', 'San Francisco',
-      'Harvard University', 'MIT', 'Stanford University', 'Oxford University',
+      'Google',
+      'Microsoft',
+      'Amazon',
+      'Apple',
+      'Meta',
+      'OpenAI',
+      'Anthropic',
+      'New York',
+      'London',
+      'Paris',
+      'Tokyo',
+      'Berlin',
+      'San Francisco',
+      'Harvard University',
+      'MIT',
+      'Stanford University',
+      'Oxford University',
     ];
 
     for (const entity of commonEntities) {
@@ -653,7 +702,7 @@ export class HallucinationChecker {
   pruneResults(maxAgeDays: number = 30): number {
     const cutoff = new Date(Date.now() - maxAgeDays * 24 * 60 * 60 * 1000);
     const originalCount = this.results.length;
-    this.results = this.results.filter(r => r.timestamp > cutoff);
+    this.results = this.results.filter((r) => r.timestamp > cutoff);
     return originalCount - this.results.length;
   }
 }

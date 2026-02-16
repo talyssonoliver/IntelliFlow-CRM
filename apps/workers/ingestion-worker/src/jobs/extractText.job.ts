@@ -271,19 +271,21 @@ export class TextExtractionProcessor {
    * Normalize text for search and RAG
    */
   private normalizeText(text: string): string {
-    return text
-      // Normalize whitespace
-      .replace(/\s+/g, ' ')
-      // Remove control characters
-      // eslint-disable-next-line no-control-regex
-      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
-      // Normalize quotes
-      .replace(/[""]/g, '"')
-      .replace(/['']/g, "'")
-      // Normalize dashes
-      .replace(/[–—]/g, '-')
-      // Trim
-      .trim();
+    return (
+      text
+        // Normalize whitespace
+        .replace(/\s+/g, ' ')
+        // Remove control characters
+        // eslint-disable-next-line no-control-regex
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
+        // Normalize quotes
+        .replace(/[""]/g, '"')
+        .replace(/['']/g, "'")
+        // Normalize dashes
+        .replace(/[–—]/g, '-')
+        // Trim
+        .trim()
+    );
   }
 
   /**

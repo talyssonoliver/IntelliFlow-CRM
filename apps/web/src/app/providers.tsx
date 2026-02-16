@@ -177,9 +177,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
           onError: (error, query) => {
             // Skip auth status query - it's expected to fail when not authenticated
             const queryKey = query.queryKey as unknown[];
-            const isAuthStatusQuery = Array.isArray(queryKey) &&
-              queryKey.some(k =>
-                Array.isArray(k) && k.includes('auth') && k.includes('getStatus')
+            const isAuthStatusQuery =
+              Array.isArray(queryKey) &&
+              queryKey.some(
+                (k) => Array.isArray(k) && k.includes('auth') && k.includes('getStatus')
               );
 
             if (isAuthError(error) && !isAuthStatusQuery) {

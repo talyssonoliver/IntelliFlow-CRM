@@ -42,7 +42,13 @@ describe('incident-tracker', () => {
     it('should initialize services with provided data', () => {
       initializeServices([
         { id: 'api', name: 'API', description: 'API Service', status: 'operational', uptime: 99.9 },
-        { id: 'web', name: 'Web App', description: 'Web Application', status: 'operational', uptime: 99.95 },
+        {
+          id: 'web',
+          name: 'Web App',
+          description: 'Web Application',
+          status: 'operational',
+          uptime: 99.95,
+        },
       ]);
 
       const result = getAllServices();
@@ -73,7 +79,13 @@ describe('incident-tracker', () => {
 
     it('should return all initialized services', () => {
       initializeServices([
-        { id: 'svc1', name: 'Service 1', description: 'Desc 1', status: 'operational', uptime: 99.9 },
+        {
+          id: 'svc1',
+          name: 'Service 1',
+          description: 'Desc 1',
+          status: 'operational',
+          uptime: 99.9,
+        },
         { id: 'svc2', name: 'Service 2', description: 'Desc 2', status: 'degraded', uptime: 99.5 },
       ]);
 
@@ -195,7 +207,12 @@ describe('incident-tracker', () => {
     });
 
     it('should create incident with correct fields', () => {
-      const incident = createIncident('API Degradation', 'minor', ['api'], 'Investigating slow response times');
+      const incident = createIncident(
+        'API Degradation',
+        'minor',
+        ['api'],
+        'Investigating slow response times'
+      );
 
       expect(incident.id).toMatch(/^inc-\d+$/);
       expect(incident.title).toBe('API Degradation');

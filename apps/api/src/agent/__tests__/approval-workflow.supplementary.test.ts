@@ -63,9 +63,7 @@ const createTestPendingAction = (overrides: Partial<PendingAction> = {}): Pendin
     input: { title: 'Test Case', clientId: 'client-1', priority: 'MEDIUM' },
     preview: {
       summary: 'Create new case: "Test Case"',
-      changes: [
-        { field: 'title', previousValue: null, newValue: 'Test Case', changeType: 'ADD' },
-      ],
+      changes: [{ field: 'title', previousValue: null, newValue: 'Test Case', changeType: 'ADD' }],
       affectedEntities: [{ type: 'CASE', id: 'NEW', name: 'Test Case', action: 'CREATE' }],
       estimatedImpact: 'MEDIUM',
     },

@@ -645,12 +645,7 @@ describe('RetryManager', () => {
 
   describe('processEntry', () => {
     it('should process entry successfully', async () => {
-      const entry = await manager.scheduleRetry(
-        'test',
-        'evt-1',
-        'test.event',
-        {}
-      );
+      const entry = await manager.scheduleRetry('test', 'evt-1', 'test.event', {});
 
       const onSuccess = vi.fn();
       const result = await manager.processEntry(entry, {
@@ -677,7 +672,9 @@ describe('RetryManager', () => {
       const onFailure = vi.fn();
 
       const result = await manager.processEntry(entry, {
-        handler: async () => { throw new Error('Always fails'); },
+        handler: async () => {
+          throw new Error('Always fails');
+        },
         onDeadLetter,
         onFailure,
       });
@@ -688,15 +685,12 @@ describe('RetryManager', () => {
     });
 
     it('should schedule retry for retryable errors', async () => {
-      const entry = await manager.scheduleRetry(
-        'test',
-        'evt-1',
-        'test.event',
-        {}
-      );
+      const entry = await manager.scheduleRetry('test', 'evt-1', 'test.event', {});
 
       const result = await manager.processEntry(entry, {
-        handler: async () => { throw new Error('ECONNREFUSED'); },
+        handler: async () => {
+          throw new Error('ECONNREFUSED');
+        },
       });
 
       expect(result.success).toBe(false);
@@ -705,17 +699,14 @@ describe('RetryManager', () => {
     });
 
     it('should move to dead letter for non-retryable errors', async () => {
-      const entry = await manager.scheduleRetry(
-        'test',
-        'evt-1',
-        'test.event',
-        {}
-      );
+      const entry = await manager.scheduleRetry('test', 'evt-1', 'test.event', {});
 
       const onDeadLetter = vi.fn();
 
       await manager.processEntry(entry, {
-        handler: async () => { throw new Error('Invalid payload format'); },
+        handler: async () => {
+          throw new Error('Invalid payload format');
+        },
         onDeadLetter,
       });
 
@@ -723,15 +714,12 @@ describe('RetryManager', () => {
     });
 
     it('should handle non-Error exceptions', async () => {
-      const entry = await manager.scheduleRetry(
-        'test',
-        'evt-1',
-        'test.event',
-        {}
-      );
+      const entry = await manager.scheduleRetry('test', 'evt-1', 'test.event', {});
 
       const result = await manager.processEntry(entry, {
-        handler: async () => { throw 'string error'; },
+        handler: async () => {
+          throw 'string error';
+        },
       });
 
       expect(result.success).toBe(false);
@@ -741,7 +729,12 @@ describe('RetryManager', () => {
 
   describe('processEntry with circuit breaker', () => {
     it('should block processing when circuit is open', async () => {
-      const cb = new CircuitBreaker({ failureThreshold: 1, successThreshold: 1, openDurationMs: 60000, halfOpenMaxRequests: 1 });
+      const cb = new CircuitBreaker({
+        failureThreshold: 1,
+        successThreshold: 1,
+        openDurationMs: 60000,
+        halfOpenMaxRequests: 1,
+      });
       const managerWithCb = new RetryManager(queue, undefined, cb);
 
       const entry = await managerWithCb.scheduleRetry('test', 'evt-1', 'test.event', {});
@@ -821,10 +814,7 @@ describe('RetryManager', () => {
         });
       }
 
-      const result = await manager.processPending(
-        { handler: async () => 'ok' },
-        3
-      );
+      const result = await manager.processPending({ handler: async () => 'ok' }, 3);
 
       expect(result.processed).toBe(3);
     });
@@ -844,7 +834,9 @@ describe('RetryManager', () => {
       });
 
       const result = await manager.processPending({
-        handler: async () => { throw new Error('fail'); },
+        handler: async () => {
+          throw new Error('fail');
+        },
       });
 
       expect(result.processed).toBe(1);

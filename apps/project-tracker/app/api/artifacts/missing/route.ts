@@ -64,7 +64,10 @@ function loadTasks(): Array<{
 
       const artifactsField = cols[colIndex['Artifacts To Track']]?.trim() || '';
       const artifacts = artifactsField
-        ? artifactsField.split(/[,;\n]/).map((a) => a.trim()).filter(Boolean)
+        ? artifactsField
+            .split(/[,;\n]/)
+            .map((a) => a.trim())
+            .filter(Boolean)
         : [];
 
       tasks.push({

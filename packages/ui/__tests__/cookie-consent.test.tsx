@@ -101,9 +101,7 @@ describe('Cookie Utility Functions', () => {
     });
 
     it('should return null for cookie without required fields', () => {
-      mockCookies['intelliflow_consent'] = encodeURIComponent(
-        JSON.stringify({ necessary: true })
-      );
+      mockCookies['intelliflow_consent'] = encodeURIComponent(JSON.stringify({ necessary: true }));
 
       const consent = getStoredConsent();
       expect(consent).toBeNull();
@@ -158,12 +156,8 @@ describe('Cookie Utility Functions', () => {
       clearNonNecessaryCookies(['analytics']);
 
       // _ga and _gid should be cleared (analytics category)
-      expect(mockCookieSetter).toHaveBeenCalledWith(
-        expect.stringContaining('_ga=')
-      );
-      expect(mockCookieSetter).toHaveBeenCalledWith(
-        expect.stringContaining('_gid=')
-      );
+      expect(mockCookieSetter).toHaveBeenCalledWith(expect.stringContaining('_ga='));
+      expect(mockCookieSetter).toHaveBeenCalledWith(expect.stringContaining('_gid='));
     });
 
     it('should not clear necessary cookies', () => {
@@ -269,12 +263,7 @@ describe('CookieConsentBanner Component', () => {
     });
 
     it('should display privacy and cookie policy links', () => {
-      render(
-        <CookieConsentBanner
-          privacyPolicyUrl="/privacy"
-          cookiePolicyUrl="/cookies"
-        />
-      );
+      render(<CookieConsentBanner privacyPolicyUrl="/privacy" cookiePolicyUrl="/cookies" />);
 
       expect(screen.getByText('Privacy Policy')).toHaveAttribute('href', '/privacy');
       expect(screen.getByText('Cookie Policy')).toHaveAttribute('href', '/cookies');
@@ -343,9 +332,7 @@ describe('CookieConsentBanner Component', () => {
       await user.click(screen.getByTestId('reject-all-btn'));
 
       // Verify clear was called for analytics cookies
-      expect(mockCookieSetter).toHaveBeenCalledWith(
-        expect.stringContaining('_ga=;')
-      );
+      expect(mockCookieSetter).toHaveBeenCalledWith(expect.stringContaining('_ga=;'));
     });
   });
 
@@ -478,9 +465,7 @@ describe('Accessibility', () => {
 
 describe('Cookie Inventory', () => {
   it('should have necessary cookies defined', () => {
-    const necessaryCookies = COOKIE_INVENTORY.filter(
-      (c) => c.category === 'necessary'
-    );
+    const necessaryCookies = COOKIE_INVENTORY.filter((c) => c.category === 'necessary');
 
     expect(necessaryCookies.length).toBeGreaterThan(0);
     expect(necessaryCookies.map((c) => c.name)).toContain('session_token');

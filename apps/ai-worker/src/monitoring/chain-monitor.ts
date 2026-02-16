@@ -153,9 +153,10 @@ export async function withMonitoring<T>(
       tokenCost: 0, // Would be populated by token callback
       driftScore,
       hallucinationFlags: [] as string[],
-      confidenceScore: result && typeof result === 'object' && 'confidence' in result
-        ? (result as { confidence: number }).confidence
-        : 1.0,
+      confidenceScore:
+        result && typeof result === 'object' && 'confidence' in result
+          ? (result as { confidence: number }).confidence
+          : 1.0,
     };
 
     logger.info(

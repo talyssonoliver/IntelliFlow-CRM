@@ -1,8 +1,7 @@
 # Workflow Engine Training Guide
 
-**Module**: IFC-141 Workflow Engine Implementation
-**Version**: 1.0
-**Date**: 2025-12-29
+**Module**: IFC-141 Workflow Engine Implementation **Version**: 1.0 **Date**:
+2025-12-29
 
 ---
 
@@ -24,14 +23,15 @@
 
 ## Introduction
 
-IntelliFlow CRM uses a hybrid workflow architecture combining three complementary engines:
+IntelliFlow CRM uses a hybrid workflow architecture combining three
+complementary engines:
 
-| Engine | Use Case | Characteristics |
-|--------|----------|-----------------|
-| **Temporal** | Durable business workflows | Long-running, reliable, saga support |
-| **LangGraph** | AI agent orchestration | AI-native, state management |
-| **BullMQ** | Background jobs | Fast, simple, Redis-based |
-| **Rules Engine** | Real-time decisions | Low-latency, synchronous |
+| Engine           | Use Case                   | Characteristics                      |
+| ---------------- | -------------------------- | ------------------------------------ |
+| **Temporal**     | Durable business workflows | Long-running, reliable, saga support |
+| **LangGraph**    | AI agent orchestration     | AI-native, state management          |
+| **BullMQ**       | Background jobs            | Fast, simple, Redis-based            |
+| **Rules Engine** | Real-time decisions        | Low-latency, synchronous             |
 
 This guide covers the implementation, usage, and best practices for each engine.
 
@@ -64,13 +64,13 @@ This guide covers the implementation, usage, and best practices for each engine.
 
 ### Component Locations
 
-| Component | Path |
-|-----------|------|
-| Workflow Engine | `packages/platform/src/workflow/engine.ts` |
-| Rules Engine | `packages/platform/src/workflow/rules-engine.ts` |
-| Case Events | `packages/domain/src/events/case-events.ts` |
-| Event Handlers | `apps/api/src/workflow/handlers/` |
-| Tests | `tests/integration/workflow/` |
+| Component       | Path                                             |
+| --------------- | ------------------------------------------------ |
+| Workflow Engine | `packages/platform/src/workflow/engine.ts`       |
+| Rules Engine    | `packages/platform/src/workflow/rules-engine.ts` |
+| Case Events     | `packages/domain/src/events/case-events.ts`      |
+| Event Handlers  | `apps/api/src/workflow/handlers/`                |
+| Tests           | `tests/integration/workflow/`                    |
 
 ---
 
@@ -81,6 +81,7 @@ This guide covers the implementation, usage, and best practices for each engine.
 #### Temporal (Durable Workflows)
 
 Use for processes that:
+
 - Must not lose state on crashes
 - Span multiple days/weeks/months
 - Require saga pattern (compensation on failure)
@@ -88,6 +89,7 @@ Use for processes that:
 - Involve complex state machines
 
 **Examples**:
+
 - Case lifecycle management
 - Order processing with payments
 - Multi-step approval flows
@@ -96,12 +98,14 @@ Use for processes that:
 #### BullMQ (Background Jobs)
 
 Use for tasks that:
+
 - Are fire-and-forget
 - Need simple retry logic
 - Don't require complex state
 - Should run asynchronously
 
 **Examples**:
+
 - Sending emails/notifications
 - Data synchronization
 - Cleanup tasks
@@ -110,12 +114,14 @@ Use for tasks that:
 #### Rules Engine (Real-time Decisions)
 
 Use for:
+
 - Fast, synchronous evaluations
 - Simple conditional logic
 - Triggering actions based on field values
 - Low-latency requirements
 
 **Examples**:
+
 - Priority escalation rules
 - SLA breach detection
 - Field validation triggers
@@ -162,7 +168,12 @@ console.log('Temporal healthy:', health.healthy);
 
 ```typescript
 // apps/ai-worker/src/workflows/case-lifecycle.workflow.ts
-import { proxyActivities, sleep, defineSignal, setHandler } from '@temporalio/workflow';
+import {
+  proxyActivities,
+  sleep,
+  defineSignal,
+  setHandler,
+} from '@temporalio/workflow';
 import type { CaseActivities } from '../activities/case-activities';
 
 // Proxy activities
@@ -172,7 +183,8 @@ const activities = proxyActivities<CaseActivities>({
 });
 
 // Define signals for human interaction
-export const approvalSignal = defineSignal<[{ approved: boolean; by: string }]>('approval');
+export const approvalSignal =
+  defineSignal<[{ approved: boolean; by: string }]>('approval');
 
 // Main workflow function
 export async function caseLifecycleWorkflow(input: {
@@ -226,7 +238,10 @@ export interface CaseActivities {
   validateCase(caseId: string): Promise<void>;
   assignCase(caseId: string, priority: string): Promise<{ assignee: string }>;
   escalateCase(caseId: string): Promise<void>;
-  closeCase(caseId: string, approval: { approved: boolean; by: string }): Promise<string>;
+  closeCase(
+    caseId: string,
+    approval: { approved: boolean; by: string }
+  ): Promise<string>;
 }
 
 export function createCaseActivities(repo: CaseRepository): CaseActivities {
@@ -238,7 +253,10 @@ export function createCaseActivities(repo: CaseRepository): CaseActivities {
       }
     },
 
-    async assignCase(caseId: string, priority: string): Promise<{ assignee: string }> {
+    async assignCase(
+      caseId: string,
+      priority: string
+    ): Promise<{ assignee: string }> {
       // Assignment logic based on priority and availability
       const assignee = await getAvailableAssignee(priority);
       await repo.updateAssignment(caseId, assignee);
@@ -250,7 +268,10 @@ export function createCaseActivities(repo: CaseRepository): CaseActivities {
       // Notify escalation team
     },
 
-    async closeCase(caseId: string, approval: { approved: boolean; by: string }): Promise<string> {
+    async closeCase(
+      caseId: string,
+      approval: { approved: boolean; by: string }
+    ): Promise<string> {
       const resolution = approval.approved
         ? 'Completed successfully'
         : 'Closed without approval';
@@ -267,7 +288,9 @@ export function createCaseActivities(repo: CaseRepository): CaseActivities {
 import { TemporalWorkflowEngine } from '@intelliflow/platform/workflow';
 
 async function startCaseWorkflow(caseId: string): Promise<string> {
-  const engine = WorkflowEngineFactory.getEngine('temporal') as TemporalWorkflowEngine;
+  const engine = WorkflowEngineFactory.getEngine(
+    'temporal'
+  ) as TemporalWorkflowEngine;
 
   const handle = await engine.startWorkflow(
     `case-${caseId}`,
@@ -292,7 +315,9 @@ async function startCaseWorkflow(caseId: string): Promise<string> {
 
 ```typescript
 async function approveCase(workflowId: string, userId: string): Promise<void> {
-  const engine = WorkflowEngineFactory.getEngine('temporal') as TemporalWorkflowEngine;
+  const engine = WorkflowEngineFactory.getEngine(
+    'temporal'
+  ) as TemporalWorkflowEngine;
   const handle = await engine.getWorkflowHandle(workflowId);
 
   if (!handle) {
@@ -373,7 +398,9 @@ const results = await rulesEngine.evaluate({
 
 // Check results
 for (const result of results) {
-  console.log(`Rule ${result.ruleId}: matched=${result.matched}, actions=${result.actionsExecuted}`);
+  console.log(
+    `Rule ${result.ruleId}: matched=${result.matched}, actions=${result.actionsExecuted}`
+  );
 }
 ```
 
@@ -421,7 +448,12 @@ const taskRule = createTaskAssignmentRule({
 
 ```typescript
 // apps/api/src/workflow/handlers/custom-handler.ts
-import { ICaseEventHandler, CaseEventPayload, EventContext, HandlerResult } from './case-handler';
+import {
+  ICaseEventHandler,
+  CaseEventPayload,
+  EventContext,
+  HandlerResult,
+} from './case-handler';
 
 export class CustomCaseHandler implements ICaseEventHandler {
   readonly eventType = 'case.custom_event';
@@ -581,6 +613,7 @@ describe('Case Lifecycle Workflow', () => {
 ### Temporal Web UI
 
 Access Temporal UI at `http://localhost:8080` to:
+
 - View running workflows
 - Inspect workflow history
 - Debug failed workflows
@@ -658,7 +691,9 @@ const complexRule: RuleDefinition = {
       },
     ],
   },
-  actions: [/* ... */],
+  actions: [
+    /* ... */
+  ],
 };
 ```
 
@@ -668,23 +703,28 @@ const complexRule: RuleDefinition = {
 
 ### Q: When should I use Temporal vs BullMQ?
 
-**A**: Use Temporal when you need guaranteed execution, saga patterns, or long-running processes. Use BullMQ for simple async jobs like sending emails.
+**A**: Use Temporal when you need guaranteed execution, saga patterns, or
+long-running processes. Use BullMQ for simple async jobs like sending emails.
 
 ### Q: How do I handle workflow failures?
 
-**A**: Temporal automatically retries activities based on retry policy. For permanent failures, use compensation logic in the workflow.
+**A**: Temporal automatically retries activities based on retry policy. For
+permanent failures, use compensation logic in the workflow.
 
 ### Q: Can I update a running workflow?
 
-**A**: Use Temporal signals to send updates to running workflows. The workflow can then react to the signal.
+**A**: Use Temporal signals to send updates to running workflows. The workflow
+can then react to the signal.
 
 ### Q: How do I test workflows without Temporal?
 
-**A**: Use mock implementations of the workflow engine interface. See `tests/integration/workflow/workflow.test.ts` for examples.
+**A**: Use mock implementations of the workflow engine interface. See
+`tests/integration/workflow/workflow.test.ts` for examples.
 
 ### Q: What happens if Temporal is down?
 
-**A**: Workflows pause and resume when Temporal comes back. No data is lost due to durable execution.
+**A**: Workflows pause and resume when Temporal comes back. No data is lost due
+to durable execution.
 
 ---
 
@@ -697,4 +737,4 @@ const complexRule: RuleDefinition = {
 
 ---
 
-*Training Version: 1.0 | Last Updated: 2025-12-29*
+_Training Version: 1.0 | Last Updated: 2025-12-29_

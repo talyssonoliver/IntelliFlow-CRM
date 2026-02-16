@@ -44,9 +44,7 @@ export function DealsWonWidget(_props: WidgetProps) {
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-foreground">
-          Deals Won (Last 6 Months)
-        </h3>
+        <h3 className="text-lg font-semibold text-foreground">Deals Won (Last 6 Months)</h3>
         <select className="px-2 py-1 text-sm border border-border rounded bg-card text-foreground">
           <option>Last 6 Months</option>
           <option>Last 12 Months</option>

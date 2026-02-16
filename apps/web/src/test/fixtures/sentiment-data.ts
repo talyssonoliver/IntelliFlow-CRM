@@ -80,9 +80,7 @@ export const mockSentimentAnalyses: SentimentAnalysis[] = [
     ],
     primaryEmotion: 'NEUTRAL',
     urgency: 'LOW',
-    keyPhrases: [
-      { phrase: 'looking for options', sentiment: 'neutral' },
-    ],
+    keyPhrases: [{ phrase: 'looking for options', sentiment: 'neutral' }],
     confidence: 0.72,
     analyzedAt: '2026-02-12T16:45:00Z',
   },
@@ -104,7 +102,11 @@ export const mockSentimentAnalyses: SentimentAnalysis[] = [
     keyPhrases: [
       { phrase: 'unacceptable service', sentiment: 'negative' },
       { phrase: 'cancelling contract', sentiment: 'negative' },
-      { phrase: 'This is a very long key phrase that should be truncated with ellipsis when displayed', sentiment: 'negative' },
+      {
+        phrase:
+          'This is a very long key phrase that should be truncated with ellipsis when displayed',
+        sentiment: 'negative',
+      },
     ],
     confidence: 0.97,
     analyzedAt: '2026-02-13T08:00:00Z',
@@ -122,9 +124,7 @@ export const mockSentimentAnalyses: SentimentAnalysis[] = [
     ],
     primaryEmotion: 'TRUST',
     urgency: 'MEDIUM',
-    keyPhrases: [
-      { phrase: 'interested in demo', sentiment: 'positive' },
-    ],
+    keyPhrases: [{ phrase: 'interested in demo', sentiment: 'positive' }],
     confidence: 0.25,
     analyzedAt: '2026-02-11T14:20:00Z',
   },

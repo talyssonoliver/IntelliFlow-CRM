@@ -133,9 +133,7 @@ describe('Experiment Router', () => {
       });
       const callerNoServices = experimentRouter.createCaller(ctxNoServices);
 
-      await expect(
-        callerNoServices.list()
-      ).rejects.toMatchObject({
+      await expect(callerNoServices.list()).rejects.toMatchObject({
         code: 'INTERNAL_SERVER_ERROR',
       });
     });
@@ -183,10 +181,9 @@ describe('Experiment Router', () => {
       });
 
       expect(result).toEqual(mockResult);
-      expect(mockExperimentService.updateExperiment).toHaveBeenCalledWith(
-        CUID_1,
-        { name: 'Updated Name' }
-      );
+      expect(mockExperimentService.updateExperiment).toHaveBeenCalledWith(CUID_1, {
+        name: 'Updated Name',
+      });
     });
   });
 
@@ -468,9 +465,7 @@ describe('Experiment Router', () => {
 
   describe('input validation', () => {
     it('should reject invalid CUID for experimentId', async () => {
-      await expect(
-        caller.start({ experimentId: 'not-a-cuid' })
-      ).rejects.toThrow();
+      await expect(caller.start({ experimentId: 'not-a-cuid' })).rejects.toThrow();
     });
 
     it('should reject invalid CUID for leadId in assignVariant', async () => {

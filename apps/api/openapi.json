@@ -72,9 +72,7 @@
   "paths": {
     "/trpc/lead.create": {
       "post": {
-        "tags": [
-          "Leads"
-        ],
+        "tags": ["Leads"],
         "summary": "Create a new lead",
         "operationId": "createLead",
         "security": [
@@ -127,9 +125,7 @@
     },
     "/trpc/lead.list": {
       "get": {
-        "tags": [
-          "Leads"
-        ],
+        "tags": ["Leads"],
         "summary": "List leads with filtering and pagination",
         "operationId": "listLeads",
         "security": [
@@ -172,9 +168,7 @@
     },
     "/trpc/lead.getById": {
       "get": {
-        "tags": [
-          "Leads"
-        ],
+        "tags": ["Leads"],
         "summary": "Get a lead by ID",
         "operationId": "getLeadById",
         "security": [
@@ -217,9 +211,7 @@
     },
     "/trpc/lead.update": {
       "post": {
-        "tags": [
-          "Leads"
-        ],
+        "tags": ["Leads"],
         "summary": "Update a lead",
         "operationId": "updateLead",
         "security": [
@@ -272,9 +264,7 @@
     },
     "/trpc/lead.delete": {
       "post": {
-        "tags": [
-          "Leads"
-        ],
+        "tags": ["Leads"],
         "summary": "Delete a lead",
         "operationId": "deleteLead",
         "security": [
@@ -317,9 +307,7 @@
     },
     "/trpc/lead.qualify": {
       "post": {
-        "tags": [
-          "Leads"
-        ],
+        "tags": ["Leads"],
         "summary": "Qualify a lead",
         "operationId": "qualifyLead",
         "security": [
@@ -362,9 +350,7 @@
     },
     "/trpc/lead.convert": {
       "post": {
-        "tags": [
-          "Leads"
-        ],
+        "tags": ["Leads"],
         "summary": "Convert lead to contact",
         "operationId": "convertLead",
         "security": [
@@ -407,9 +393,7 @@
     },
     "/trpc/lead.scoreWithAI": {
       "post": {
-        "tags": [
-          "Leads"
-        ],
+        "tags": ["Leads"],
         "summary": "Score lead with AI",
         "operationId": "scoreLeadWithAI",
         "security": [
@@ -452,9 +436,7 @@
     },
     "/trpc/lead.stats": {
       "get": {
-        "tags": [
-          "Leads"
-        ],
+        "tags": ["Leads"],
         "summary": "Get lead statistics",
         "operationId": "getLeadStats",
         "security": [
@@ -497,9 +479,7 @@
     },
     "/trpc/lead.bulkConvert": {
       "post": {
-        "tags": [
-          "Leads"
-        ],
+        "tags": ["Leads"],
         "summary": "Bulk convert leads to contacts",
         "operationId": "bulkConvertLeads",
         "security": [
@@ -542,9 +522,7 @@
     },
     "/trpc/contact.create": {
       "post": {
-        "tags": [
-          "Contacts & Accounts"
-        ],
+        "tags": ["Contacts & Accounts"],
         "summary": "Create a new contact",
         "operationId": "createContact",
         "security": [
@@ -597,9 +575,7 @@
     },
     "/trpc/contact.list": {
       "get": {
-        "tags": [
-          "Contacts & Accounts"
-        ],
+        "tags": ["Contacts & Accounts"],
         "summary": "List contacts with filtering",
         "operationId": "listContacts",
         "security": [
@@ -642,9 +618,7 @@
     },
     "/trpc/contact.getById": {
       "get": {
-        "tags": [
-          "Contacts & Accounts"
-        ],
+        "tags": ["Contacts & Accounts"],
         "summary": "Get a contact by ID",
         "operationId": "getContactById",
         "security": [
@@ -687,9 +661,7 @@
     },
     "/trpc/contact.update": {
       "post": {
-        "tags": [
-          "Contacts & Accounts"
-        ],
+        "tags": ["Contacts & Accounts"],
         "summary": "Update a contact",
         "operationId": "updateContact",
         "security": [
@@ -732,9 +704,7 @@
     },
     "/trpc/account.create": {
       "post": {
-        "tags": [
-          "Contacts & Accounts"
-        ],
+        "tags": ["Contacts & Accounts"],
         "summary": "Create a new account",
         "operationId": "createAccount",
         "security": [
@@ -777,9 +747,7 @@
     },
     "/trpc/account.list": {
       "get": {
-        "tags": [
-          "Contacts & Accounts"
-        ],
+        "tags": ["Contacts & Accounts"],
         "summary": "List accounts",
         "operationId": "listAccounts",
         "security": [
@@ -822,9 +790,7 @@
     },
     "/trpc/account.getById": {
       "get": {
-        "tags": [
-          "Contacts & Accounts"
-        ],
+        "tags": ["Contacts & Accounts"],
         "summary": "Get an account by ID",
         "operationId": "getAccountById",
         "security": [
@@ -867,9 +833,7 @@
     },
     "/trpc/opportunity.create": {
       "post": {
-        "tags": [
-          "Opportunities"
-        ],
+        "tags": ["Opportunities"],
         "summary": "Create a new opportunity",
         "operationId": "createOpportunity",
         "security": [
@@ -912,9 +876,7 @@
     },
     "/trpc/opportunity.list": {
       "get": {
-        "tags": [
-          "Opportunities"
-        ],
+        "tags": ["Opportunities"],
         "summary": "List opportunities",
         "operationId": "listOpportunities",
         "security": [
@@ -957,9 +919,7 @@
     },
     "/trpc/opportunity.getById": {
       "get": {
-        "tags": [
-          "Opportunities"
-        ],
+        "tags": ["Opportunities"],
         "summary": "Get an opportunity by ID",
         "operationId": "getOpportunityById",
         "security": [
@@ -1002,9 +962,7 @@
     },
     "/trpc/opportunity.moveStage": {
       "post": {
-        "tags": [
-          "Opportunities"
-        ],
+        "tags": ["Opportunities"],
         "summary": "Move opportunity to a different stage",
         "operationId": "moveOpportunityStage",
         "security": [
@@ -1047,9 +1005,7 @@
     },
     "/trpc/pipelineConfig.get": {
       "get": {
-        "tags": [
-          "Opportunities"
-        ],
+        "tags": ["Opportunities"],
         "summary": "Get pipeline configuration",
         "operationId": "getPipelineConfig",
         "security": [
@@ -1092,9 +1048,7 @@
     },
     "/trpc/pipelineConfig.update": {
       "post": {
-        "tags": [
-          "Opportunities"
-        ],
+        "tags": ["Opportunities"],
         "summary": "Update pipeline configuration",
         "operationId": "updatePipelineConfig",
         "security": [
@@ -1137,9 +1091,7 @@
     },
     "/trpc/task.create": {
       "post": {
-        "tags": [
-          "Tasks & Activities"
-        ],
+        "tags": ["Tasks & Activities"],
         "summary": "Create a new task",
         "operationId": "createTask",
         "security": [
@@ -1182,9 +1134,7 @@
     },
     "/trpc/task.list": {
       "get": {
-        "tags": [
-          "Tasks & Activities"
-        ],
+        "tags": ["Tasks & Activities"],
         "summary": "List tasks",
         "operationId": "listTasks",
         "security": [
@@ -1227,9 +1177,7 @@
     },
     "/trpc/task.getById": {
       "get": {
-        "tags": [
-          "Tasks & Activities"
-        ],
+        "tags": ["Tasks & Activities"],
         "summary": "Get a task by ID",
         "operationId": "getTaskById",
         "security": [
@@ -1272,9 +1220,7 @@
     },
     "/trpc/task.update": {
       "post": {
-        "tags": [
-          "Tasks & Activities"
-        ],
+        "tags": ["Tasks & Activities"],
         "summary": "Update a task",
         "operationId": "updateTask",
         "security": [
@@ -1317,9 +1263,7 @@
     },
     "/trpc/timeline.getForEntity": {
       "get": {
-        "tags": [
-          "Tasks & Activities"
-        ],
+        "tags": ["Tasks & Activities"],
         "summary": "Get timeline for an entity",
         "operationId": "getEntityTimeline",
         "security": [
@@ -1362,9 +1306,7 @@
     },
     "/trpc/activityFeed.get": {
       "get": {
-        "tags": [
-          "Tasks & Activities"
-        ],
+        "tags": ["Tasks & Activities"],
         "summary": "Get activity feed",
         "operationId": "getActivityFeed",
         "security": [
@@ -1407,9 +1349,7 @@
     },
     "/trpc/ticket.create": {
       "post": {
-        "tags": [
-          "Support & Tickets"
-        ],
+        "tags": ["Support & Tickets"],
         "summary": "Create a support ticket",
         "operationId": "createTicket",
         "security": [
@@ -1452,9 +1392,7 @@
     },
     "/trpc/ticket.list": {
       "get": {
-        "tags": [
-          "Support & Tickets"
-        ],
+        "tags": ["Support & Tickets"],
         "summary": "List tickets",
         "operationId": "listTickets",
         "security": [
@@ -1497,9 +1435,7 @@
     },
     "/trpc/ticket.getById": {
       "get": {
-        "tags": [
-          "Support & Tickets"
-        ],
+        "tags": ["Support & Tickets"],
         "summary": "Get a ticket by ID",
         "operationId": "getTicketById",
         "security": [
@@ -1542,9 +1478,7 @@
     },
     "/trpc/ticket.addResponse": {
       "post": {
-        "tags": [
-          "Support & Tickets"
-        ],
+        "tags": ["Support & Tickets"],
         "summary": "Add a response to a ticket",
         "operationId": "addTicketResponse",
         "security": [
@@ -1587,9 +1521,7 @@
     },
     "/trpc/intelligence.triggerPrediction": {
       "post": {
-        "tags": [
-          "AI Intelligence"
-        ],
+        "tags": ["AI Intelligence"],
         "summary": "Trigger AI prediction",
         "operationId": "triggerPrediction",
         "security": [
@@ -1632,9 +1564,7 @@
     },
     "/trpc/intelligence.getInsights": {
       "get": {
-        "tags": [
-          "AI Intelligence"
-        ],
+        "tags": ["AI Intelligence"],
         "summary": "Get AI insights for an entity",
         "operationId": "getInsights",
         "security": [
@@ -1677,9 +1607,7 @@
     },
     "/trpc/aiReview.list": {
       "get": {
-        "tags": [
-          "AI Intelligence"
-        ],
+        "tags": ["AI Intelligence"],
         "summary": "List AI output reviews",
         "operationId": "listAIReviews",
         "security": [
@@ -1722,9 +1650,7 @@
     },
     "/trpc/aiReview.approve": {
       "post": {
-        "tags": [
-          "AI Intelligence"
-        ],
+        "tags": ["AI Intelligence"],
         "summary": "Approve AI output",
         "operationId": "approveAIOutput",
         "security": [
@@ -1767,9 +1693,7 @@
     },
     "/trpc/aiReview.reject": {
       "post": {
-        "tags": [
-          "AI Intelligence"
-        ],
+        "tags": ["AI Intelligence"],
         "summary": "Reject AI output",
         "operationId": "rejectAIOutput",
         "security": [
@@ -1812,9 +1736,7 @@
     },
     "/trpc/agent.listPending": {
       "get": {
-        "tags": [
-          "AI Intelligence"
-        ],
+        "tags": ["AI Intelligence"],
         "summary": "List pending AI approvals",
         "operationId": "listPendingApprovals",
         "security": [
@@ -1857,9 +1779,7 @@
     },
     "/trpc/agent.approve": {
       "post": {
-        "tags": [
-          "AI Intelligence"
-        ],
+        "tags": ["AI Intelligence"],
         "summary": "Approve AI agent action",
         "operationId": "approveAgentAction",
         "security": [
@@ -1902,9 +1822,7 @@
     },
     "/trpc/autoResponse.list": {
       "get": {
-        "tags": [
-          "AI Intelligence"
-        ],
+        "tags": ["AI Intelligence"],
         "summary": "List auto-response drafts",
         "operationId": "listAutoResponses",
         "security": [
@@ -1947,9 +1865,7 @@
     },
     "/trpc/autoResponse.approve": {
       "post": {
-        "tags": [
-          "AI Intelligence"
-        ],
+        "tags": ["AI Intelligence"],
         "summary": "Approve auto-response draft",
         "operationId": "approveAutoResponse",
         "security": [
@@ -1992,9 +1908,7 @@
     },
     "/trpc/aiMonitoring.getMetrics": {
       "get": {
-        "tags": [
-          "AI Intelligence"
-        ],
+        "tags": ["AI Intelligence"],
         "summary": "Get AI monitoring metrics",
         "operationId": "getAIMetrics",
         "security": [
@@ -2037,9 +1951,7 @@
     },
     "/trpc/chainVersion.list": {
       "get": {
-        "tags": [
-          "AI Operations"
-        ],
+        "tags": ["AI Operations"],
         "summary": "List chain versions",
         "operationId": "listChainVersions",
         "security": [
@@ -2082,9 +1994,7 @@
     },
     "/trpc/chainVersion.create": {
       "post": {
-        "tags": [
-          "AI Operations"
-        ],
+        "tags": ["AI Operations"],
         "summary": "Create chain version",
         "operationId": "createChainVersion",
         "security": [
@@ -2127,9 +2037,7 @@
     },
     "/trpc/zepBudget.get": {
       "get": {
-        "tags": [
-          "AI Operations"
-        ],
+        "tags": ["AI Operations"],
         "summary": "Get Zep budget status",
         "operationId": "getZepBudget",
         "security": [
@@ -2172,9 +2080,7 @@
     },
     "/trpc/cases.create": {
       "post": {
-        "tags": [
-          "Legal Operations"
-        ],
+        "tags": ["Legal Operations"],
         "summary": "Create a case",
         "operationId": "createCase",
         "security": [
@@ -2217,9 +2123,7 @@
     },
     "/trpc/cases.list": {
       "get": {
-        "tags": [
-          "Legal Operations"
-        ],
+        "tags": ["Legal Operations"],
         "summary": "List cases",
         "operationId": "listCases",
         "security": [
@@ -2262,9 +2166,7 @@
     },
     "/trpc/appointments.create": {
       "post": {
-        "tags": [
-          "Legal Operations"
-        ],
+        "tags": ["Legal Operations"],
         "summary": "Create an appointment",
         "operationId": "createAppointment",
         "security": [
@@ -2307,9 +2209,7 @@
     },
     "/trpc/appointments.list": {
       "get": {
-        "tags": [
-          "Legal Operations"
-        ],
+        "tags": ["Legal Operations"],
         "summary": "List appointments",
         "operationId": "listAppointments",
         "security": [
@@ -2352,9 +2252,7 @@
     },
     "/trpc/documents.upload": {
       "post": {
-        "tags": [
-          "Legal Operations"
-        ],
+        "tags": ["Legal Operations"],
         "summary": "Upload a document",
         "operationId": "uploadDocument",
         "security": [
@@ -2397,9 +2295,7 @@
     },
     "/trpc/documents.list": {
       "get": {
-        "tags": [
-          "Legal Operations"
-        ],
+        "tags": ["Legal Operations"],
         "summary": "List documents",
         "operationId": "listDocuments",
         "security": [
@@ -2442,9 +2338,7 @@
     },
     "/trpc/auth.login": {
       "post": {
-        "tags": [
-          "Platform & System"
-        ],
+        "tags": ["Platform & System"],
         "summary": "Authenticate user",
         "operationId": "login",
         "security": [
@@ -2487,9 +2381,7 @@
     },
     "/trpc/auth.me": {
       "get": {
-        "tags": [
-          "Platform & System"
-        ],
+        "tags": ["Platform & System"],
         "summary": "Get current user",
         "operationId": "getCurrentUser",
         "security": [
@@ -2532,9 +2424,7 @@
     },
     "/trpc/billing.getSubscription": {
       "get": {
-        "tags": [
-          "Platform & System"
-        ],
+        "tags": ["Platform & System"],
         "summary": "Get subscription details",
         "operationId": "getSubscription",
         "security": [
@@ -2577,9 +2467,7 @@
     },
     "/trpc/notifications.list": {
       "get": {
-        "tags": [
-          "Platform & System"
-        ],
+        "tags": ["Platform & System"],
         "summary": "List notifications",
         "operationId": "listNotifications",
         "security": [
@@ -2622,9 +2510,7 @@
     },
     "/trpc/notifications.markRead": {
       "post": {
-        "tags": [
-          "Platform & System"
-        ],
+        "tags": ["Platform & System"],
         "summary": "Mark notification as read",
         "operationId": "markNotificationRead",
         "security": [
@@ -2667,9 +2553,7 @@
     },
     "/trpc/health.check": {
       "get": {
-        "tags": [
-          "Platform & System"
-        ],
+        "tags": ["Platform & System"],
         "summary": "Health check",
         "operationId": "healthCheck",
         "security": [
@@ -2712,9 +2596,7 @@
     },
     "/trpc/home.getDashboard": {
       "get": {
-        "tags": [
-          "Platform & System"
-        ],
+        "tags": ["Platform & System"],
         "summary": "Get home dashboard data",
         "operationId": "getHomeDashboard",
         "security": [
@@ -2757,9 +2639,7 @@
     },
     "/trpc/audit.list": {
       "get": {
-        "tags": [
-          "Security & Compliance"
-        ],
+        "tags": ["Security & Compliance"],
         "summary": "List audit events",
         "operationId": "listAuditEvents",
         "security": [
@@ -2802,9 +2682,7 @@
     },
     "/trpc/audit.getById": {
       "get": {
-        "tags": [
-          "Security & Compliance"
-        ],
+        "tags": ["Security & Compliance"],
         "summary": "Get audit event by ID",
         "operationId": "getAuditEventById",
         "security": [
@@ -2857,11 +2735,7 @@
     "schemas": {
       "CreateLeadInput": {
         "type": "object",
-        "required": [
-          "email",
-          "firstName",
-          "lastName"
-        ],
+        "required": ["email", "firstName", "lastName"],
         "properties": {
           "email": {
             "type": "string",
@@ -2891,9 +2765,7 @@
       },
       "UpdateLeadInput": {
         "type": "object",
-        "required": [
-          "id"
-        ],
+        "required": ["id"],
         "properties": {
           "id": {
             "type": "string",
@@ -2943,11 +2815,7 @@
       },
       "CreateContactInput": {
         "type": "object",
-        "required": [
-          "email",
-          "firstName",
-          "lastName"
-        ],
+        "required": ["email", "firstName", "lastName"],
         "properties": {
           "email": {
             "type": "string",
@@ -2970,9 +2838,7 @@
       },
       "CreateAccountInput": {
         "type": "object",
-        "required": [
-          "name"
-        ],
+        "required": ["name"],
         "properties": {
           "name": {
             "type": "string"
@@ -2991,10 +2857,7 @@
       },
       "CreateOpportunityInput": {
         "type": "object",
-        "required": [
-          "name",
-          "amount"
-        ],
+        "required": ["name", "amount"],
         "properties": {
           "name": {
             "type": "string"
@@ -3017,9 +2880,7 @@
       },
       "CreateTaskInput": {
         "type": "object",
-        "required": [
-          "title"
-        ],
+        "required": ["title"],
         "properties": {
           "title": {
             "type": "string"
@@ -3033,12 +2894,7 @@
           },
           "priority": {
             "type": "string",
-            "enum": [
-              "LOW",
-              "MEDIUM",
-              "HIGH",
-              "URGENT"
-            ]
+            "enum": ["LOW", "MEDIUM", "HIGH", "URGENT"]
           }
         }
       },
@@ -3098,9 +2954,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "UNAUTHORIZED"
-                      ]
+                      "enum": ["UNAUTHORIZED"]
                     }
                   }
                 }
@@ -3124,9 +2978,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "FORBIDDEN"
-                      ]
+                      "enum": ["FORBIDDEN"]
                     }
                   }
                 }
@@ -3150,9 +3002,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "NOT_FOUND"
-                      ]
+                      "enum": ["NOT_FOUND"]
                     }
                   }
                 }
@@ -3176,9 +3026,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "TOO_MANY_REQUESTS"
-                      ]
+                      "enum": ["TOO_MANY_REQUESTS"]
                     }
                   }
                 }
@@ -3202,9 +3050,7 @@
                     },
                     "code": {
                       "type": "string",
-                      "enum": [
-                        "INTERNAL_SERVER_ERROR"
-                      ]
+                      "enum": ["INTERNAL_SERVER_ERROR"]
                     }
                   }
                 }

@@ -64,8 +64,9 @@ function getStatusColor(status: string): string {
  * Filters risks based on filter type
  */
 function filterRisks(risks: Risk[], filter: 'all' | 'open' | 'high'): Risk[] {
-  if (filter === 'open') return risks.filter(r => r.status === 'Open' || r.status === 'In Progress');
-  if (filter === 'high') return risks.filter(r => r.score >= 15);
+  if (filter === 'open')
+    return risks.filter((r) => r.status === 'Open' || r.status === 'In Progress');
+  if (filter === 'high') return risks.filter((r) => r.score >= 15);
   return risks;
 }
 
@@ -84,13 +85,13 @@ function calculateSummary(risks: Risk[]): {
 } {
   return {
     total: risks.length,
-    open: risks.filter(r => r.status === 'Open').length,
-    mitigated: risks.filter(r => r.status === 'Mitigated').length,
-    monitoring: risks.filter(r => r.status === 'Monitoring' || r.status === 'Monitored').length,
-    closed: risks.filter(r => r.status === 'Closed').length,
-    highRisk: risks.filter(r => r.score >= 15).length,
-    mediumRisk: risks.filter(r => r.score >= 6 && r.score < 15).length,
-    lowRisk: risks.filter(r => r.score < 6).length,
+    open: risks.filter((r) => r.status === 'Open').length,
+    mitigated: risks.filter((r) => r.status === 'Mitigated').length,
+    monitoring: risks.filter((r) => r.status === 'Monitoring' || r.status === 'Monitored').length,
+    closed: risks.filter((r) => r.status === 'Closed').length,
+    highRisk: risks.filter((r) => r.score >= 15).length,
+    mediumRisk: risks.filter((r) => r.score >= 6 && r.score < 15).length,
+    lowRisk: risks.filter((r) => r.score < 6).length,
   };
 }
 
@@ -155,10 +156,54 @@ describe('RiskRegister Component Logic', () => {
 
   describe('filterRisks', () => {
     const mockRisks: Risk[] = [
-      { id: 'RISK-001', category: 'Tech', description: 'Risk 1', impact: 'High', likelihood: 'High', score: 16, status: 'Open', owner: 'A', mitigation: '', lastReviewed: '' },
-      { id: 'RISK-002', category: 'Tech', description: 'Risk 2', impact: 'Medium', likelihood: 'Medium', score: 9, status: 'Mitigated', owner: 'B', mitigation: '', lastReviewed: '' },
-      { id: 'RISK-003', category: 'Tech', description: 'Risk 3', impact: 'Low', likelihood: 'Low', score: 4, status: 'Closed', owner: 'C', mitigation: '', lastReviewed: '' },
-      { id: 'RISK-004', category: 'Tech', description: 'Risk 4', impact: 'High', likelihood: 'High', score: 20, status: 'In Progress', owner: 'D', mitigation: '', lastReviewed: '' },
+      {
+        id: 'RISK-001',
+        category: 'Tech',
+        description: 'Risk 1',
+        impact: 'High',
+        likelihood: 'High',
+        score: 16,
+        status: 'Open',
+        owner: 'A',
+        mitigation: '',
+        lastReviewed: '',
+      },
+      {
+        id: 'RISK-002',
+        category: 'Tech',
+        description: 'Risk 2',
+        impact: 'Medium',
+        likelihood: 'Medium',
+        score: 9,
+        status: 'Mitigated',
+        owner: 'B',
+        mitigation: '',
+        lastReviewed: '',
+      },
+      {
+        id: 'RISK-003',
+        category: 'Tech',
+        description: 'Risk 3',
+        impact: 'Low',
+        likelihood: 'Low',
+        score: 4,
+        status: 'Closed',
+        owner: 'C',
+        mitigation: '',
+        lastReviewed: '',
+      },
+      {
+        id: 'RISK-004',
+        category: 'Tech',
+        description: 'Risk 4',
+        impact: 'High',
+        likelihood: 'High',
+        score: 20,
+        status: 'In Progress',
+        owner: 'D',
+        mitigation: '',
+        lastReviewed: '',
+      },
     ];
 
     it('returns all risks when filter is "all"', () => {
@@ -169,23 +214,78 @@ describe('RiskRegister Component Logic', () => {
     it('returns only Open and In Progress risks when filter is "open"', () => {
       const result = filterRisks(mockRisks, 'open');
       expect(result.length).toBe(2);
-      expect(result.every(r => r.status === 'Open' || r.status === 'In Progress')).toBe(true);
+      expect(result.every((r) => r.status === 'Open' || r.status === 'In Progress')).toBe(true);
     });
 
     it('returns only high-score risks when filter is "high"', () => {
       const result = filterRisks(mockRisks, 'high');
       expect(result.length).toBe(2);
-      expect(result.every(r => r.score >= 15)).toBe(true);
+      expect(result.every((r) => r.score >= 15)).toBe(true);
     });
   });
 
   describe('calculateSummary', () => {
     const mockRisks: Risk[] = [
-      { id: 'RISK-001', category: 'Tech', description: 'Risk 1', impact: 'High', likelihood: 'High', score: 16, status: 'Open', owner: 'A', mitigation: '', lastReviewed: '' },
-      { id: 'RISK-002', category: 'Tech', description: 'Risk 2', impact: 'Medium', likelihood: 'Medium', score: 9, status: 'Mitigated', owner: 'B', mitigation: '', lastReviewed: '' },
-      { id: 'RISK-003', category: 'Tech', description: 'Risk 3', impact: 'Low', likelihood: 'Low', score: 4, status: 'Mitigated', owner: 'C', mitigation: '', lastReviewed: '' },
-      { id: 'RISK-004', category: 'Tech', description: 'Risk 4', impact: 'High', likelihood: 'High', score: 20, status: 'Monitoring', owner: 'D', mitigation: '', lastReviewed: '' },
-      { id: 'RISK-005', category: 'Tech', description: 'Risk 5', impact: 'Low', likelihood: 'Low', score: 2, status: 'Closed', owner: 'E', mitigation: '', lastReviewed: '' },
+      {
+        id: 'RISK-001',
+        category: 'Tech',
+        description: 'Risk 1',
+        impact: 'High',
+        likelihood: 'High',
+        score: 16,
+        status: 'Open',
+        owner: 'A',
+        mitigation: '',
+        lastReviewed: '',
+      },
+      {
+        id: 'RISK-002',
+        category: 'Tech',
+        description: 'Risk 2',
+        impact: 'Medium',
+        likelihood: 'Medium',
+        score: 9,
+        status: 'Mitigated',
+        owner: 'B',
+        mitigation: '',
+        lastReviewed: '',
+      },
+      {
+        id: 'RISK-003',
+        category: 'Tech',
+        description: 'Risk 3',
+        impact: 'Low',
+        likelihood: 'Low',
+        score: 4,
+        status: 'Mitigated',
+        owner: 'C',
+        mitigation: '',
+        lastReviewed: '',
+      },
+      {
+        id: 'RISK-004',
+        category: 'Tech',
+        description: 'Risk 4',
+        impact: 'High',
+        likelihood: 'High',
+        score: 20,
+        status: 'Monitoring',
+        owner: 'D',
+        mitigation: '',
+        lastReviewed: '',
+      },
+      {
+        id: 'RISK-005',
+        category: 'Tech',
+        description: 'Risk 5',
+        impact: 'Low',
+        likelihood: 'Low',
+        score: 2,
+        status: 'Closed',
+        owner: 'E',
+        mitigation: '',
+        lastReviewed: '',
+      },
     ];
 
     it('calculates total correctly', () => {
@@ -203,9 +303,9 @@ describe('RiskRegister Component Logic', () => {
 
     it('calculates risk level counts correctly', () => {
       const summary = calculateSummary(mockRisks);
-      expect(summary.highRisk).toBe(2);   // score >= 15
+      expect(summary.highRisk).toBe(2); // score >= 15
       expect(summary.mediumRisk).toBe(1); // 6 <= score < 15
-      expect(summary.lowRisk).toBe(2);    // score < 6
+      expect(summary.lowRisk).toBe(2); // score < 6
     });
 
     it('handles empty array', () => {
@@ -251,7 +351,7 @@ describe('RiskRegister Component Logic', () => {
         'Monitored',
       ];
 
-      validStatuses.forEach(status => {
+      validStatuses.forEach((status) => {
         const risk: Risk = {
           id: 'RISK-001',
           category: 'Tech',
@@ -276,8 +376,8 @@ describe('RiskRegister Component Logic', () => {
       expect(5 * 5).toBe(25); // Max score
       expect(4 * 4).toBe(16); // High risk
       expect(3 * 4).toBe(12); // Medium-high
-      expect(2 * 3).toBe(6);  // Medium
-      expect(1 * 1).toBe(1);  // Min score
+      expect(2 * 3).toBe(6); // Medium
+      expect(1 * 1).toBe(1); // Min score
     });
 
     it('classifies risk levels based on score', () => {

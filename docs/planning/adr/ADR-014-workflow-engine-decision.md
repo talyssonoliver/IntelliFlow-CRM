@@ -6,20 +6,24 @@
 
 **Deciders:** Engineering Team, Tech Lead, Product Manager
 
-**Technical Story:** IFC-141 - Evaluate workflow engines and implement selected engine
+**Technical Story:** IFC-141 - Evaluate workflow engines and implement selected
+engine
 
 ---
 
 ## Context and Problem Statement
 
 IntelliFlow CRM requires workflow automation for:
+
 - Case management lifecycle (open -> in-progress -> closed)
 - Lead nurturing sequences
 - Approval workflows (human-in-the-loop)
 - Long-running business processes (spanning days/weeks)
 - Event-driven automation from domain events
 
-We need to select the appropriate workflow engine(s) to handle these requirements while integrating with our existing LangGraph (AI workflows) and BullMQ (background jobs) infrastructure per ADR-005.
+We need to select the appropriate workflow engine(s) to handle these
+requirements while integrating with our existing LangGraph (AI workflows) and
+BullMQ (background jobs) infrastructure per ADR-005.
 
 ## Decision Drivers
 
@@ -38,11 +42,13 @@ We need to select the appropriate workflow engine(s) to handle these requirement
 Visual workflow automation with 400+ integrations.
 
 **Pros:**
+
 - Visual workflow builder
 - Many pre-built integrations
 - Quick to prototype
 
 **Cons:**
+
 - Not designed for durable execution
 - Poor AI/LangChain integration
 - Limited TypeScript support
@@ -55,6 +61,7 @@ Visual workflow automation with 400+ integrations.
 Enterprise-grade workflow orchestration with guaranteed execution.
 
 **Pros:**
+
 - Guaranteed workflow completion
 - Exactly-once semantics
 - Full TypeScript SDK
@@ -64,6 +71,7 @@ Enterprise-grade workflow orchestration with guaranteed execution.
 - Time-travel debugging
 
 **Cons:**
+
 - Requires Temporal Server
 - Steeper learning curve
 - Not AI-native (but integrates via activities)
@@ -75,11 +83,13 @@ Enterprise-grade workflow orchestration with guaranteed execution.
 Build on top of existing domain events and BullMQ.
 
 **Pros:**
+
 - Full control
 - No external dependencies
 - Direct domain model integration
 
 **Cons:**
+
 - Significant development effort (4-6 weeks)
 - Must build reliability features ourselves
 - Higher maintenance burden
@@ -93,12 +103,12 @@ Build on top of existing domain events and BullMQ.
 
 We adopt a hybrid architecture:
 
-| Workflow Type | Engine | Rationale |
-|---------------|--------|-----------|
-| AI Orchestration | LangGraph | AI-native, state management, human-in-loop |
-| Durable Business Processes | Temporal | Guaranteed execution, saga support |
-| Background Jobs | BullMQ | Simple, existing infrastructure |
-| Real-time Rules | Custom Rules Engine | Low-latency, domain-specific |
+| Workflow Type              | Engine              | Rationale                                  |
+| -------------------------- | ------------------- | ------------------------------------------ |
+| AI Orchestration           | LangGraph           | AI-native, state management, human-in-loop |
+| Durable Business Processes | Temporal            | Guaranteed execution, saga support         |
+| Background Jobs            | BullMQ              | Simple, existing infrastructure            |
+| Real-time Rules            | Custom Rules Engine | Low-latency, domain-specific               |
 
 ### Architecture Overview
 
@@ -116,29 +126,35 @@ Domain Events --> Event Router --> Workflow Dispatcher
 
 ### Why This Approach
 
-1. **Temporal for reliability**: Business processes like case management cannot fail silently
+1. **Temporal for reliability**: Business processes like case management cannot
+   fail silently
 2. **LangGraph for AI**: Purpose-built for AI agent orchestration (per ADR-005)
 3. **BullMQ for simplicity**: Existing infrastructure for simple background jobs
-4. **Rules engine for speed**: Low-latency rule evaluation without workflow overhead
+4. **Rules engine for speed**: Low-latency rule evaluation without workflow
+   overhead
 
 ## Implementation Plan
 
 ### Phase 1: Infrastructure (Week 1)
+
 - Set up Temporal Server via Docker Compose
 - Configure Temporal TypeScript SDK
 - Create workflow engine wrapper
 
 ### Phase 2: Core Workflows (Week 2)
+
 - Implement case lifecycle workflow
 - Add domain event triggers
 - Build activity implementations
 
 ### Phase 3: Rules Engine (Week 3)
+
 - Implement rules engine for simple automations
 - Configure rule definitions
 - Add rule evaluation to event handlers
 
 ### Phase 4: Integration (Week 4)
+
 - Connect to existing event bus
 - Add observability (metrics, tracing)
 - Document and train team
@@ -162,12 +178,12 @@ Domain Events --> Event Router --> Workflow Dispatcher
 
 ### Risks and Mitigations
 
-| Risk | Mitigation |
-|------|------------|
-| Temporal complexity | Start with simple workflows, gradually increase |
+| Risk                    | Mitigation                                         |
+| ----------------------- | -------------------------------------------------- |
+| Temporal complexity     | Start with simple workflows, gradually increase    |
 | Infrastructure overhead | Use Docker Compose initially, Temporal Cloud later |
-| Team learning curve | Training materials, runbooks, pair programming |
-| Routing complexity | Clear documentation on when to use each engine |
+| Team learning curve     | Training materials, runbooks, pair programming     |
+| Routing complexity      | Clear documentation on when to use each engine     |
 
 ## Validation Criteria
 
@@ -193,5 +209,4 @@ Domain Events --> Event Router --> Workflow Dispatcher
 
 ---
 
-*Document Version: 1.0*
-*Last Updated: 2025-12-29*
+_Document Version: 1.0_ _Last Updated: 2025-12-29_

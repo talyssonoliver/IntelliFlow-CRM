@@ -91,7 +91,9 @@ describe('autoResponseRouter', () => {
   describe('create', () => {
     it('should reject if active draft already exists for lead and trigger', async () => {
       const existingDraft = createMockDraft();
-      (mockRepository.findActiveByLeadAndTrigger as ReturnType<typeof vi.fn>).mockResolvedValue(existingDraft);
+      (mockRepository.findActiveByLeadAndTrigger as ReturnType<typeof vi.fn>).mockResolvedValue(
+        existingDraft
+      );
 
       // This test verifies the conflict detection logic
       // In a real integration test, we would call the actual procedure
@@ -265,7 +267,9 @@ describe('autoResponseRouter', () => {
         createMockDraft({ status: 'PENDING_APPROVAL' }),
         createMockDraft({ status: 'PENDING_APPROVAL' }),
       ];
-      (mockRepository.findPendingForApprover as ReturnType<typeof vi.fn>).mockResolvedValue(pendingDrafts);
+      (mockRepository.findPendingForApprover as ReturnType<typeof vi.fn>).mockResolvedValue(
+        pendingDrafts
+      );
 
       const result = await mockRepository.findPendingForApprover?.(TEST_USER_ID, TEST_TENANT_ID);
       expect(result).toHaveLength(2);
@@ -275,13 +279,13 @@ describe('autoResponseRouter', () => {
   describe('getStatsByStatus', () => {
     it('should return count for each status', async () => {
       (mockRepository.countByStatus as ReturnType<typeof vi.fn>)
-        .mockResolvedValueOnce(5)  // DRAFT
-        .mockResolvedValueOnce(3)  // PENDING_APPROVAL
+        .mockResolvedValueOnce(5) // DRAFT
+        .mockResolvedValueOnce(3) // PENDING_APPROVAL
         .mockResolvedValueOnce(10) // APPROVED
-        .mockResolvedValueOnce(2)  // REJECTED
-        .mockResolvedValueOnce(1)  // ESCALATED
-        .mockResolvedValueOnce(8)  // SENT
-        .mockResolvedValueOnce(1)  // FAILED
+        .mockResolvedValueOnce(2) // REJECTED
+        .mockResolvedValueOnce(1) // ESCALATED
+        .mockResolvedValueOnce(8) // SENT
+        .mockResolvedValueOnce(1) // FAILED
         .mockResolvedValueOnce(0); // INVALIDATED
 
       const draftCount = await mockRepository.countByStatus?.(TEST_TENANT_ID, 'DRAFT');

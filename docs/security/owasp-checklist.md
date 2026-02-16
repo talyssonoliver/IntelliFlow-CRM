@@ -314,9 +314,11 @@ production deployment and reviewed quarterly.
 - [x] **Rate limiting on all public APIs**
   - Location: `apps/api/src/middleware/rate-limit.ts`
   - Implementation: In-memory with Redis fallback (Upstash)
-  - Limits: 100 req/min per IP, 1000 req/min per authenticated user, 10 req/min for AI, 5 req/min for auth
+  - Limits: 100 req/min per IP, 1000 req/min per authenticated user, 10 req/min
+    for AI, 5 req/min for auth
   - Status: ✅ Implemented (IFC-114, Sprint 7)
-  - Features: Tiered limits, burst detection, DDoS protection, automatic blocking
+  - Features: Tiered limits, burst detection, DDoS protection, automatic
+    blocking
 
 - [ ] **Resource quotas enforced**
   - Upload limits: Max 10MB per file

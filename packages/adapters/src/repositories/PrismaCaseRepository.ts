@@ -179,7 +179,18 @@ export class PrismaCaseRepository implements CaseRepository, CaseQueryService {
   // ─── CaseQueryService ─────────────────────────────────────────────────
 
   async search(params: CaseSearchParams): Promise<CaseSearchResult> {
-    const { page = 1, limit = 20, query, status, priority, clientId, assignedTo, deadlineFrom, deadlineTo, overdue } = params;
+    const {
+      page = 1,
+      limit = 20,
+      query,
+      status,
+      priority,
+      clientId,
+      assignedTo,
+      deadlineFrom,
+      deadlineTo,
+      overdue,
+    } = params;
     const offset = (page - 1) * limit;
     const where: Record<string, unknown> = {};
 
@@ -237,8 +248,12 @@ export class PrismaCaseRepository implements CaseRepository, CaseQueryService {
     const [statusGroups, priorityGroups, overdueCount, closedThisMonth, total] = await Promise.all([
       this.prisma.case.groupBy({ by: ['status'], where, _count: true }),
       this.prisma.case.groupBy({ by: ['priority'], where, _count: true }),
-      this.prisma.case.count({ where: { ...where, deadline: { lt: now }, status: { notIn: ['CLOSED', 'CANCELLED'] } } }),
-      this.prisma.case.count({ where: { ...where, status: 'CLOSED', closedAt: { gte: startOfMonth } } }),
+      this.prisma.case.count({
+        where: { ...where, deadline: { lt: now }, status: { notIn: ['CLOSED', 'CANCELLED'] } },
+      }),
+      this.prisma.case.count({
+        where: { ...where, status: 'CLOSED', closedAt: { gte: startOfMonth } },
+      }),
       this.prisma.case.count({ where }),
     ]);
 
@@ -252,7 +267,14 @@ export class PrismaCaseRepository implements CaseRepository, CaseQueryService {
       byPriority[g.priority as CasePriority] = g._count;
     }
 
-    return { total, byStatus, byPriority, overdue: overdueCount, closedThisMonth, averageTaskCompletion: 0 };
+    return {
+      total,
+      byStatus,
+      byPriority,
+      overdue: overdueCount,
+      closedThisMonth,
+      averageTaskCompletion: 0,
+    };
   }
 
   async getWorkloadMetrics(dateRange: DateRange): Promise<WorkloadMetrics> {

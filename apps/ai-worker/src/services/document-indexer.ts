@@ -27,7 +27,9 @@ import { REINDEX_QUEUE_NAME } from '../workers/reindex-worker';
 
 export const IndexerConfigSchema = z.object({
   batchSize: z.number().min(1).max(100).default(10),
-  embeddingModel: z.enum(['text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large']).default('text-embedding-3-small'),
+  embeddingModel: z
+    .enum(['text-embedding-ada-002', 'text-embedding-3-small', 'text-embedding-3-large'])
+    .default('text-embedding-3-small'),
   maxConcurrent: z.number().min(1).max(10).default(3),
   retryAttempts: z.number().min(0).max(5).default(3),
   retryDelayMs: z.number().min(100).max(10000).default(1000),
@@ -121,10 +123,8 @@ export class EmbeddingChainAdapter implements IEmbeddingProvider {
   }
 
   async generateBatchEmbeddings(texts: string[]): Promise<EmbeddingResult[]> {
-    const result = await this.chain.generateBatchEmbeddings(
-      texts.map(text => ({ text }))
-    );
-    return result.embeddings.map(emb => ({
+    const result = await this.chain.generateBatchEmbeddings(texts.map((text) => ({ text })));
+    return result.embeddings.map((emb) => ({
       vector: emb.vector,
       dimensions: emb.dimensions,
       model: emb.model,
@@ -140,7 +140,7 @@ function simpleHash(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash;
   }
   return Math.abs(hash);
@@ -208,9 +208,7 @@ export class DocumentIndexer {
    */
   private mockEmbedding(text: string): EmbeddingResult {
     const hash = simpleHash(text);
-    const vector = Array.from({ length: 1536 }, (_, i) =>
-      Math.sin(hash + i) * 0.5 + 0.5
-    );
+    const vector = Array.from({ length: 1536 }, (_, i) => Math.sin(hash + i) * 0.5 + 0.5);
     return {
       vector,
       model: 'text-embedding-3-small',
@@ -362,9 +360,7 @@ export class DocumentIndexer {
     // Process in chunks to respect rate limits
     for (let i = 0; i < documentIds.length; i += this.config.maxConcurrent) {
       const chunk = documentIds.slice(i, i + this.config.maxConcurrent);
-      const chunkResults = await Promise.all(
-        chunk.map(id => this.indexDocument(id))
-      );
+      const chunkResults = await Promise.all(chunk.map((id) => this.indexDocument(id)));
       results.push(...chunkResults);
 
       // Small delay between chunks to avoid rate limiting
@@ -373,8 +369,8 @@ export class DocumentIndexer {
       }
     }
 
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
+    const successful = results.filter((r) => r.success).length;
+    const failed = results.filter((r) => !r.success).length;
 
     return {
       total: documentIds.length,
@@ -394,9 +390,7 @@ export class DocumentIndexer {
 
     for (let i = 0; i < noteIds.length; i += this.config.maxConcurrent) {
       const chunk = noteIds.slice(i, i + this.config.maxConcurrent);
-      const chunkResults = await Promise.all(
-        chunk.map(id => this.indexNote(id))
-      );
+      const chunkResults = await Promise.all(chunk.map((id) => this.indexNote(id)));
       results.push(...chunkResults);
 
       if (i + this.config.maxConcurrent < noteIds.length) {
@@ -404,8 +398,8 @@ export class DocumentIndexer {
       }
     }
 
-    const successful = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
+    const successful = results.filter((r) => r.success).length;
+    const failed = results.filter((r) => !r.success).length;
 
     return {
       total: noteIds.length,
@@ -429,9 +423,7 @@ export class DocumentIndexer {
     const allResults: IndexResult[] = [];
 
     // Get total count
-    const whereClause = tenantId
-      ? { tenant_id: tenantId, deleted_at: null }
-      : { deleted_at: null };
+    const whereClause = tenantId ? { tenant_id: tenantId, deleted_at: null } : { deleted_at: null };
 
     const totalCount = await this.prisma.caseDocument.count({
       where: whereClause,
@@ -452,7 +444,7 @@ export class DocumentIndexer {
         orderBy: { created_at: 'asc' },
       });
 
-      const batchResult = await this.indexBatch(documents.map(d => d.id));
+      const batchResult = await this.indexBatch(documents.map((d) => d.id));
       allResults.push(...batchResult.results);
 
       processed += batchResult.total;
@@ -566,10 +558,7 @@ export class DocumentIndexer {
   /**
    * Get documents that need indexing (no embedding)
    */
-  async getUnindexedDocuments(
-    tenantId?: string,
-    limit: number = 100
-  ): Promise<string[]> {
+  async getUnindexedDocuments(tenantId?: string, limit: number = 100): Promise<string[]> {
     let documents: Array<{ id: string }>;
     if (tenantId) {
       documents = await this.prisma.$queryRaw<Array<{ id: string }>>`
@@ -585,16 +574,13 @@ export class DocumentIndexer {
       `;
     }
 
-    return documents.map(d => d.id);
+    return documents.map((d) => d.id);
   }
 
   /**
    * Get notes that need indexing (no embedding)
    */
-  async getUnindexedNotes(
-    tenantId?: string,
-    limit: number = 100
-  ): Promise<string[]> {
+  async getUnindexedNotes(tenantId?: string, limit: number = 100): Promise<string[]> {
     let notes: Array<{ id: string }>;
     if (tenantId) {
       notes = await this.prisma.$queryRaw<Array<{ id: string }>>`
@@ -610,7 +596,7 @@ export class DocumentIndexer {
       `;
     }
 
-    return notes.map(n => n.id);
+    return notes.map((n) => n.id);
   }
 
   /**
@@ -699,7 +685,7 @@ export class DocumentIndexer {
    * Delay helper for rate limiting
    */
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 

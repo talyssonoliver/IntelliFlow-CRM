@@ -95,12 +95,7 @@ describe('OnboardingFlow', () => {
 
   it('calls onStepComplete when step is completed', async () => {
     const user = userEvent.setup();
-    render(
-      <OnboardingFlow
-        onStepComplete={mockOnStepComplete}
-        currentStep={0}
-      />
-    );
+    render(<OnboardingFlow onStepComplete={mockOnStepComplete} currentStep={0} />);
 
     // Click the "Resend email" button (first step action with no href)
     await user.click(screen.getByRole('button', { name: /resend email/i }));
@@ -147,7 +142,8 @@ describe('OnboardingFlow', () => {
     render(<OnboardingFlow variant="horizontal" />);
 
     // Check that the grid layout is applied
-    const stepsContainer = screen.getByRole('navigation', { name: /onboarding steps/i })
+    const stepsContainer = screen
+      .getByRole('navigation', { name: /onboarding steps/i })
       .querySelector('.grid');
     expect(stepsContainer).toBeInTheDocument();
   });
@@ -156,7 +152,8 @@ describe('OnboardingFlow', () => {
     render(<OnboardingFlow />);
 
     // Vertical variant should not have grid class
-    const stepsContainer = screen.getByRole('navigation', { name: /onboarding steps/i })
+    const stepsContainer = screen
+      .getByRole('navigation', { name: /onboarding steps/i })
       .querySelector('.space-y-0');
     expect(stepsContainer).toBeInTheDocument();
   });

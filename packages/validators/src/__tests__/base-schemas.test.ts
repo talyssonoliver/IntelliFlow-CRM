@@ -528,7 +528,9 @@ describe('Base Schemas', () => {
       if (result.success) {
         expect(result.data.timestamp).toBeInstanceOf(Date);
         // Timestamp should be close to now
-        expect(result.data.timestamp.getTime()).toBeGreaterThanOrEqual(beforeParse.getTime() - 1000);
+        expect(result.data.timestamp.getTime()).toBeGreaterThanOrEqual(
+          beforeParse.getTime() - 1000
+        );
       }
     });
 
@@ -563,9 +565,7 @@ describe('Base Schemas', () => {
     });
 
     it('should work with object data schemas', () => {
-      const objectSuccessSchema = apiSuccessSchema(
-        z.object({ id: z.string(), name: z.string() })
-      );
+      const objectSuccessSchema = apiSuccessSchema(z.object({ id: z.string(), name: z.string() }));
 
       const result = objectSuccessSchema.safeParse({
         success: true,

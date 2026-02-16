@@ -159,9 +159,7 @@ export class AutoResponseService {
       });
     } catch (error) {
       return Result.fail(
-        new ValidationError(
-          error instanceof Error ? error.message : 'Invalid response content'
-        )
+        new ValidationError(error instanceof Error ? error.message : 'Invalid response content')
       );
     }
 
@@ -292,11 +290,7 @@ export class AutoResponseService {
       return Result.fail(new NotFoundError(`Draft not found: ${props.draftId}`));
     }
 
-    const approveResult = draft.approve(
-      props.approvedBy,
-      props.modifications,
-      props.reason
-    );
+    const approveResult = draft.approve(props.approvedBy, props.modifications, props.reason);
 
     if (approveResult.isFailure) {
       return Result.fail(approveResult.error);
@@ -363,12 +357,7 @@ export class AutoResponseService {
       return Result.fail(new NotFoundError(`Draft not found: ${draftId}`));
     }
 
-    const escalateResult = draft.escalate(
-      escalatedBy,
-      escalatedTo,
-      reason,
-      escalationExpiryHours
-    );
+    const escalateResult = draft.escalate(escalatedBy, escalatedTo, reason, escalationExpiryHours);
 
     if (escalateResult.isFailure) {
       return Result.fail(escalateResult.error);
@@ -493,11 +482,7 @@ export class AutoResponseService {
   /**
    * Invalidate all pending drafts for a lead (e.g., when lead status changes)
    */
-  async invalidatePendingByLead(
-    leadId: string,
-    tenantId: string,
-    reason: string
-  ): Promise<number> {
+  async invalidatePendingByLead(leadId: string, tenantId: string, reason: string): Promise<number> {
     const drafts = await this.draftRepository.findPendingByLeadId(leadId, tenantId);
     let count = 0;
 

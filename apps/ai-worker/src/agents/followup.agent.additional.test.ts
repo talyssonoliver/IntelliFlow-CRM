@@ -38,9 +38,7 @@ vi.mock('@langchain/openai', () => ({
           objectionsToAnticipate: ['Budget concerns'],
           closingStatement: 'Available for a 30-min demo next week?',
         },
-        nextSteps: [
-          { action: 'Call lead', deadline: 'Tuesday 10 AM', owner: 'Sales Rep' },
-        ],
+        nextSteps: [{ action: 'Call lead', deadline: 'Tuesday 10 AM', owner: 'Sales Rep' }],
         riskFactors: ['Long sales cycle'],
         opportunitySignals: ['High engagement', 'Urgent timeline'],
       }),

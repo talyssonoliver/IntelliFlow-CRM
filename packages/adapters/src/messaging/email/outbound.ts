@@ -155,7 +155,12 @@ export class EmailRateLimiter {
   }
 
   async acquire(key: string): Promise<boolean> {
-    const windows: Array<'second' | 'minute' | 'hour' | 'day'> = ['second', 'minute', 'hour', 'day'];
+    const windows: Array<'second' | 'minute' | 'hour' | 'day'> = [
+      'second',
+      'minute',
+      'hour',
+      'day',
+    ];
 
     for (const window of windows) {
       const allowed = await this.checkLimit(key, window);
@@ -174,10 +179,7 @@ export class EmailRateLimiter {
 export class EmailTemplateRenderer {
   private templates: Map<string, { subject: string; html: string; text?: string }> = new Map();
 
-  registerTemplate(
-    name: string,
-    template: { subject: string; html: string; text?: string }
-  ): void {
+  registerTemplate(name: string, template: { subject: string; html: string; text?: string }): void {
     this.templates.set(name, template);
   }
 
@@ -210,7 +212,9 @@ export class MockEmailProvider implements EmailProvider {
   private sentEmails: Array<{ email: OutboundEmail; result: EmailSendResult }> = [];
 
   async send(email: OutboundEmail): Promise<EmailSendResult> {
-    const messageId = email.messageId || `mock-${createHash('sha256').update(JSON.stringify(email)).digest('hex').slice(0, 16)}`;
+    const messageId =
+      email.messageId ||
+      `mock-${createHash('sha256').update(JSON.stringify(email)).digest('hex').slice(0, 16)}`;
 
     const result: EmailSendResult = {
       messageId,
@@ -226,7 +230,9 @@ export class MockEmailProvider implements EmailProvider {
     this.sentEmails.push({ email, result });
 
     // Simulate async delivery
-    console.log(`[MockEmailProvider] Email sent to ${email.recipients.map(r => r.email).join(', ')}`);
+    console.log(
+      `[MockEmailProvider] Email sent to ${email.recipients.map((r) => r.email).join(', ')}`
+    );
 
     return result;
   }
@@ -280,14 +286,14 @@ export class SendGridProvider implements EmailProvider {
       personalizations: [
         {
           to: email.recipients
-            .filter(r => r.type === 'to')
-            .map(r => ({ email: r.email, name: r.name })),
+            .filter((r) => r.type === 'to')
+            .map((r) => ({ email: r.email, name: r.name })),
           cc: email.recipients
-            .filter(r => r.type === 'cc')
-            .map(r => ({ email: r.email, name: r.name })),
+            .filter((r) => r.type === 'cc')
+            .map((r) => ({ email: r.email, name: r.name })),
           bcc: email.recipients
-            .filter(r => r.type === 'bcc')
-            .map(r => ({ email: r.email, name: r.name })),
+            .filter((r) => r.type === 'bcc')
+            .map((r) => ({ email: r.email, name: r.name })),
         },
       ],
       from: { email: email.from.email, name: email.from.name },
@@ -299,7 +305,7 @@ export class SendGridProvider implements EmailProvider {
         email.textBody ? { type: 'text/plain', value: email.textBody } : null,
         email.htmlBody ? { type: 'text/html', value: email.htmlBody } : null,
       ].filter(Boolean),
-      attachments: email.attachments?.map(a => ({
+      attachments: email.attachments?.map((a) => ({
         content: Buffer.isBuffer(a.content)
           ? a.content.toString('base64')
           : Buffer.from(a.content).toString('base64'),
@@ -321,7 +327,7 @@ export class SendGridProvider implements EmailProvider {
       const response = await fetch(`${this.baseUrl}/mail/send`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload),
@@ -466,11 +472,11 @@ export class OutboundEmailService {
 
     for (let i = 0; i < emails.length; i += concurrency) {
       const batch = emails.slice(i, i + concurrency);
-      const batchResults = await Promise.all(batch.map(email => this.sendEmail(email)));
+      const batchResults = await Promise.all(batch.map((email) => this.sendEmail(email)));
       results.push(...batchResults);
 
       if (i + concurrency < emails.length) {
-        await new Promise(resolve => setTimeout(resolve, delayMs));
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     }
 
@@ -492,10 +498,7 @@ export class OutboundEmailService {
     };
   }
 
-  registerTemplate(
-    name: string,
-    template: { subject: string; html: string; text?: string }
-  ): void {
+  registerTemplate(name: string, template: { subject: string; html: string; text?: string }): void {
     this.templateRenderer.registerTemplate(name, template);
   }
 }

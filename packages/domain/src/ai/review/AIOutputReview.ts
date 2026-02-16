@@ -309,12 +309,7 @@ export class AIOutputReview extends AggregateRoot<ReviewId> {
     this._updatedAt = new Date();
 
     this.addDomainEvent(
-      new ReviewApprovedEvent(
-        this.id.toValue(),
-        this._tenantId,
-        reviewerId,
-        notes
-      )
+      new ReviewApprovedEvent(this.id.toValue(), this._tenantId, reviewerId, notes)
     );
 
     return Result.ok(undefined);
@@ -323,11 +318,7 @@ export class AIOutputReview extends AggregateRoot<ReviewId> {
   /**
    * Reject the AI output review
    */
-  reject(
-    reviewerId: string,
-    decision: ReviewDecision,
-    notes: string
-  ): Result<void, string> {
+  reject(reviewerId: string, decision: ReviewDecision, notes: string): Result<void, string> {
     if (!notes || notes.trim() === '') {
       return Result.fail('Rejection notes are required');
     }
@@ -346,13 +337,7 @@ export class AIOutputReview extends AggregateRoot<ReviewId> {
     this._updatedAt = new Date();
 
     this.addDomainEvent(
-      new ReviewRejectedEvent(
-        this.id.toValue(),
-        this._tenantId,
-        reviewerId,
-        decision,
-        notes
-      )
+      new ReviewRejectedEvent(this.id.toValue(), this._tenantId, reviewerId, decision, notes)
     );
 
     return Result.ok(undefined);
@@ -368,10 +353,7 @@ export class AIOutputReview extends AggregateRoot<ReviewId> {
       );
     }
 
-    if (
-      this._status !== ReviewStatus.PENDING &&
-      this._status !== ReviewStatus.ESCALATED
-    ) {
+    if (this._status !== ReviewStatus.PENDING && this._status !== ReviewStatus.ESCALATED) {
       return Result.fail(`Cannot escalate review in ${this._status} status`);
     }
 
@@ -380,12 +362,7 @@ export class AIOutputReview extends AggregateRoot<ReviewId> {
     this._updatedAt = new Date();
 
     this.addDomainEvent(
-      new ReviewEscalatedEvent(
-        this.id.toValue(),
-        this._tenantId,
-        this._escalationDepth,
-        reason
-      )
+      new ReviewEscalatedEvent(this.id.toValue(), this._tenantId, this._escalationDepth, reason)
     );
 
     return Result.ok(undefined);
@@ -397,8 +374,7 @@ export class AIOutputReview extends AggregateRoot<ReviewId> {
   canEscalate(): boolean {
     return (
       this._escalationDepth < REVIEW_SLA_CONFIG.MAX_ESCALATION_DEPTH &&
-      (this._status === ReviewStatus.PENDING ||
-        this._status === ReviewStatus.ESCALATED)
+      (this._status === ReviewStatus.PENDING || this._status === ReviewStatus.ESCALATED)
     );
   }
 

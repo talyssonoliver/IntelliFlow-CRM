@@ -134,7 +134,12 @@ describe('SLATrackingService', () => {
 
     it('should return PAUSED for WAITING_ON_CUSTOMER', () => {
       const dueTime = new Date(now.getTime() + 60 * 60 * 1000);
-      const result = service.calculateSLATimer(dueTime, DEFAULT_SLA_POLICY, 'WAITING_ON_CUSTOMER', now);
+      const result = service.calculateSLATimer(
+        dueTime,
+        DEFAULT_SLA_POLICY,
+        'WAITING_ON_CUSTOMER',
+        now
+      );
 
       expect(result.status).toBe('PAUSED');
       expect(result.remainingFormatted).toBe('Paused');
@@ -143,7 +148,12 @@ describe('SLATrackingService', () => {
 
     it('should return PAUSED for WAITING_ON_THIRD_PARTY', () => {
       const dueTime = new Date(now.getTime() + 60 * 60 * 1000);
-      const result = service.calculateSLATimer(dueTime, DEFAULT_SLA_POLICY, 'WAITING_ON_THIRD_PARTY', now);
+      const result = service.calculateSLATimer(
+        dueTime,
+        DEFAULT_SLA_POLICY,
+        'WAITING_ON_THIRD_PARTY',
+        now
+      );
 
       expect(result.status).toBe('PAUSED');
     });

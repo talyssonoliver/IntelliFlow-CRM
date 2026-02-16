@@ -79,9 +79,20 @@ function formatDueDate(date: Date | string | null): string {
 }
 
 function getEntityInfo(task: TaskListItem): { type: string; name: string; href: string } | null {
-  if (task.lead) return { type: 'lead', name: `${task.lead.firstName} ${task.lead.lastName}`, href: `/leads/${task.lead.id}` };
-  if (task.contact) return { type: 'contact', name: `${task.contact.firstName} ${task.contact.lastName}`, href: `/contacts/${task.contact.id}` };
-  if (task.opportunity) return { type: 'deal', name: task.opportunity.name, href: `/deals/${task.opportunity.id}` };
+  if (task.lead)
+    return {
+      type: 'lead',
+      name: `${task.lead.firstName} ${task.lead.lastName}`,
+      href: `/leads/${task.lead.id}`,
+    };
+  if (task.contact)
+    return {
+      type: 'contact',
+      name: `${task.contact.firstName} ${task.contact.lastName}`,
+      href: `/contacts/${task.contact.id}`,
+    };
+  if (task.opportunity)
+    return { type: 'deal', name: task.opportunity.name, href: `/deals/${task.opportunity.id}` };
   return null;
 }
 
@@ -115,7 +126,9 @@ function createColumns(handlers: {
       cell: ({ row }) => {
         const style = STATUS_STYLES[row.original.status] ?? STATUS_STYLES.PENDING;
         return (
-          <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${style}`}>
+          <span
+            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${style}`}
+          >
             {row.original.status.replace('_', ' ')}
           </span>
         );
@@ -129,7 +142,9 @@ function createColumns(handlers: {
         const p = PRIORITY_STYLES[row.original.priority] ?? PRIORITY_STYLES.MEDIUM;
         return (
           <span className={`inline-flex items-center gap-1 text-xs font-medium ${p.color}`}>
-            <span className="material-symbols-outlined text-sm" aria-hidden="true">{p.icon}</span>
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">
+              {p.icon}
+            </span>
             {row.original.priority}
           </span>
         );
@@ -141,9 +156,12 @@ function createColumns(handlers: {
       size: 120,
       cell: ({ row }) => {
         const status = getDueDateStatus(row.original.dueDate);
-        const colorClass = status === 'overdue' ? 'text-red-600 dark:text-red-400' :
-          status === 'today' ? 'text-amber-600 dark:text-amber-400' :
-          'text-muted-foreground';
+        const colorClass =
+          status === 'overdue'
+            ? 'text-red-600 dark:text-red-400'
+            : status === 'today'
+              ? 'text-amber-600 dark:text-amber-400'
+              : 'text-muted-foreground';
         return (
           <span className={`text-sm ${colorClass}`} data-testid={`due-${status}`}>
             {formatDueDate(row.original.dueDate)}
@@ -164,7 +182,9 @@ function createColumns(handlers: {
             onClick={(e) => e.stopPropagation()}
             className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
           >
-            <span className="material-symbols-outlined text-sm" aria-hidden="true">{ENTITY_ICONS[entity.type]}</span>
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">
+              {ENTITY_ICONS[entity.type]}
+            </span>
             <span className="truncate">{entity.name}</span>
           </a>
         );
@@ -205,9 +225,22 @@ function createColumns(handlers: {
             dropdownActions={[
               { icon: 'edit', label: 'Edit', onClick: () => handlers.onEdit(task) },
               ...(task.status === 'COMPLETED' || task.status === 'CANCELLED'
-                ? [{ icon: 'archive', label: 'Archive', onClick: () => handlers.onArchive(task.id) }]
+                ? [
+                    {
+                      icon: 'archive',
+                      label: 'Archive',
+                      onClick: () => handlers.onArchive(task.id),
+                    },
+                  ]
                 : task.status !== 'ARCHIVED'
-                  ? [{ icon: 'delete', label: 'Delete', onClick: () => handlers.onDelete(task.id), variant: 'destructive' as const }]
+                  ? [
+                      {
+                        icon: 'delete',
+                        label: 'Delete',
+                        onClick: () => handlers.onDelete(task.id),
+                        variant: 'destructive' as const,
+                      },
+                    ]
                   : []),
             ]}
           />
@@ -229,26 +262,45 @@ export function TaskList({
   onBulkDelete,
   onBulkArchive,
 }: TaskListProps) {
-  const columns = useMemo(() => createColumns({ onComplete, onEdit, onDelete, onArchive }), [onComplete, onEdit, onDelete, onArchive]);
+  const columns = useMemo(
+    () => createColumns({ onComplete, onEdit, onDelete, onArchive }),
+    [onComplete, onEdit, onDelete, onArchive]
+  );
 
-  const bulkActions: BulkAction<TaskListItem>[] = useMemo(() => [
-    {
-      label: 'Mark Complete',
-      icon: 'check_circle',
-      onExecute: (selected) => onBulkComplete(selected.map((t) => t.id)),
-    },
-    {
-      label: 'Archive',
-      icon: 'archive',
-      onExecute: (selected) => onBulkArchive(selected.filter((t) => t.status === 'COMPLETED' || t.status === 'CANCELLED').map((t) => t.id)),
-    },
-    {
-      label: 'Delete',
-      icon: 'delete',
-      variant: 'destructive' as const,
-      onExecute: (selected) => onBulkDelete(selected.filter((t) => t.status !== 'COMPLETED' && t.status !== 'CANCELLED' && t.status !== 'ARCHIVED').map((t) => t.id)),
-    },
-  ], [onBulkComplete, onBulkDelete, onBulkArchive]);
+  const bulkActions: BulkAction<TaskListItem>[] = useMemo(
+    () => [
+      {
+        label: 'Mark Complete',
+        icon: 'check_circle',
+        onExecute: (selected) => onBulkComplete(selected.map((t) => t.id)),
+      },
+      {
+        label: 'Archive',
+        icon: 'archive',
+        onExecute: (selected) =>
+          onBulkArchive(
+            selected
+              .filter((t) => t.status === 'COMPLETED' || t.status === 'CANCELLED')
+              .map((t) => t.id)
+          ),
+      },
+      {
+        label: 'Delete',
+        icon: 'delete',
+        variant: 'destructive' as const,
+        onExecute: (selected) =>
+          onBulkDelete(
+            selected
+              .filter(
+                (t) =>
+                  t.status !== 'COMPLETED' && t.status !== 'CANCELLED' && t.status !== 'ARCHIVED'
+              )
+              .map((t) => t.id)
+          ),
+      },
+    ],
+    [onBulkComplete, onBulkDelete, onBulkArchive]
+  );
 
   if (isLoading) {
     return (
@@ -262,12 +314,20 @@ export function TaskList({
 
   if (tasks.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 text-center" data-testid="task-list-empty">
-        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2" aria-hidden="true">
+      <div
+        className="flex flex-col items-center justify-center py-12 text-center"
+        data-testid="task-list-empty"
+      >
+        <span
+          className="material-symbols-outlined text-4xl text-muted-foreground mb-2"
+          aria-hidden="true"
+        >
           task_alt
         </span>
         <p className="text-muted-foreground">No tasks found</p>
-        <p className="text-sm text-muted-foreground mt-1">Try adjusting your filters or create a new task</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Try adjusting your filters or create a new task
+        </p>
       </div>
     );
   }

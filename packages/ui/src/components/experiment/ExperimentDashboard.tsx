@@ -79,10 +79,22 @@ interface StatusBadgeProps {
 function StatusBadge({ status, className }: StatusBadgeProps) {
   const statusConfig: Record<ExperimentStatus, { label: string; variant: string }> = {
     DRAFT: { label: 'Draft', variant: 'bg-muted text-muted-foreground' },
-    RUNNING: { label: 'Running', variant: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-    PAUSED: { label: 'Paused', variant: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' },
-    COMPLETED: { label: 'Completed', variant: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-    ARCHIVED: { label: 'Archived', variant: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400' },
+    RUNNING: {
+      label: 'Running',
+      variant: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    },
+    PAUSED: {
+      label: 'Paused',
+      variant: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+    },
+    COMPLETED: {
+      label: 'Completed',
+      variant: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+    },
+    ARCHIVED: {
+      label: 'Archived',
+      variant: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+    },
   };
 
   const config = statusConfig[status];
@@ -124,9 +136,10 @@ function WinnerBadge({ winner, isSignificant, className }: WinnerBadgeProps) {
     );
   }
 
-  const variant = winner === 'treatment'
-    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-    : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
+  const variant =
+    winner === 'treatment'
+      ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+      : 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
 
   const label = winner === 'treatment' ? 'AI wins' : 'Manual wins';
 
@@ -168,7 +181,11 @@ function ProgressBar({ percent, label, className }: ProgressBarProps) {
         <div
           className={cn(
             'h-full rounded-full transition-all duration-300',
-            clampedPercent < 50 ? 'bg-amber-500' : clampedPercent < 100 ? 'bg-blue-500' : 'bg-green-500'
+            clampedPercent < 50
+              ? 'bg-amber-500'
+              : clampedPercent < 100
+                ? 'bg-blue-500'
+                : 'bg-green-500'
           )}
           style={{ width: `${clampedPercent}%` }}
         />
@@ -212,9 +229,7 @@ function ExperimentCard({
       <div className="flex items-start justify-between mb-3">
         <div className="space-y-1">
           <h3 className="font-semibold text-sm">{experiment.name}</h3>
-          <p className="text-xs text-muted-foreground line-clamp-1">
-            {experiment.hypothesis}
-          </p>
+          <p className="text-xs text-muted-foreground line-clamp-1">{experiment.hypothesis}</p>
         </div>
         <StatusBadge status={experiment.status} />
       </div>
@@ -293,17 +308,18 @@ function ExperimentCard({
             Resume
           </button>
         )}
-        {(experiment.status === 'RUNNING' || experiment.status === 'PAUSED') && experiment.progressPercent >= 100 && (
-          <button
-            className="flex-1 text-xs py-1.5 px-3 rounded bg-primary text-primary-foreground hover:bg-primary/90"
-            onClick={(e) => {
-              e.stopPropagation();
-              onComplete?.();
-            }}
-          >
-            Complete
-          </button>
-        )}
+        {(experiment.status === 'RUNNING' || experiment.status === 'PAUSED') &&
+          experiment.progressPercent >= 100 && (
+            <button
+              className="flex-1 text-xs py-1.5 px-3 rounded bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={(e) => {
+                e.stopPropagation();
+                onComplete?.();
+              }}
+            >
+              Complete
+            </button>
+          )}
       </div>
     </div>
   );
@@ -319,13 +335,14 @@ interface ResultsPanelProps {
 }
 
 function ResultsPanel({ experiment, result }: ResultsPanelProps) {
-  const effectSizeLabel = Math.abs(result.effectSize) < 0.2
-    ? 'Negligible'
-    : Math.abs(result.effectSize) < 0.5
-      ? 'Small'
-      : Math.abs(result.effectSize) < 0.8
-        ? 'Medium'
-        : 'Large';
+  const effectSizeLabel =
+    Math.abs(result.effectSize) < 0.2
+      ? 'Negligible'
+      : Math.abs(result.effectSize) < 0.5
+        ? 'Small'
+        : Math.abs(result.effectSize) < 0.8
+          ? 'Medium'
+          : 'Large';
 
   return (
     <div className="rounded-lg border p-4 bg-card">
@@ -341,9 +358,7 @@ function ResultsPanel({ experiment, result }: ResultsPanelProps) {
         <div className="p-3 rounded bg-muted/50">
           <div className="text-xs text-muted-foreground mb-1">Control (Manual)</div>
           <div className="text-lg font-semibold">{result.controlMean.toFixed(1)}</div>
-          <div className="text-xs text-muted-foreground">
-            σ = {result.controlStdDev.toFixed(2)}
-          </div>
+          <div className="text-xs text-muted-foreground">σ = {result.controlStdDev.toFixed(2)}</div>
         </div>
         <div className="p-3 rounded bg-muted/50">
           <div className="text-xs text-muted-foreground mb-1">Treatment (AI)</div>
@@ -358,10 +373,14 @@ function ResultsPanel({ experiment, result }: ResultsPanelProps) {
       <div className="space-y-2 mb-4">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">p-value</span>
-          <span className={cn(
-            'font-medium',
-            result.pValue < experiment.significanceLevel ? 'text-green-600' : 'text-muted-foreground'
-          )}>
+          <span
+            className={cn(
+              'font-medium',
+              result.pValue < experiment.significanceLevel
+                ? 'text-green-600'
+                : 'text-muted-foreground'
+            )}
+          >
             {result.pValue < 0.001 ? '< 0.001' : result.pValue.toFixed(4)}
           </span>
         </div>
@@ -432,7 +451,9 @@ export function ExperimentDashboard({
         {experiments.length === 0 ? (
           <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
             <p>No experiments yet</p>
-            <p className="text-sm mt-1">Create your first A/B test to compare AI vs manual scoring</p>
+            <p className="text-sm mt-1">
+              Create your first A/B test to compare AI vs manual scoring
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

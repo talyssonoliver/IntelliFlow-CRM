@@ -49,7 +49,9 @@ export function ExportReportButton({ className }: ExportReportButtonProps) {
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(128, 128, 128);
-      doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth / 2, yPos, { align: 'center' });
+      doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth / 2, yPos, {
+        align: 'center',
+      });
       yPos += 15;
 
       // Reset text color
@@ -142,7 +144,9 @@ export function ExportReportButton({ className }: ExportReportButtonProps) {
         yPos += 10;
 
         // Risks requiring action
-        const requiresAction = risks.filter((r: { status: string }) => r.status === 'requires_action');
+        const requiresAction = risks.filter(
+          (r: { status: string }) => r.status === 'requires_action'
+        );
         if (requiresAction.length > 0) {
           checkNewPage(30 + requiresAction.length * 15);
           doc.setFontSize(12);
@@ -180,7 +184,10 @@ export function ExportReportButton({ className }: ExportReportButtonProps) {
 
       if (timelineData.success && timelineData.data) {
         const upcomingEvents = timelineData.data.events
-          .filter((e: { status: string; date: string }) => e.status === 'scheduled' && new Date(e.date) >= new Date())
+          .filter(
+            (e: { status: string; date: string }) =>
+              e.status === 'scheduled' && new Date(e.date) >= new Date()
+          )
           .sort((a: { date: string }, b: { date: string }) => a.date.localeCompare(b.date))
           .slice(0, 10);
 
@@ -234,11 +241,7 @@ export function ExportReportButton({ className }: ExportReportButtonProps) {
   };
 
   return (
-    <Button
-      onClick={handleExport}
-      disabled={exporting}
-      className={className}
-    >
+    <Button onClick={handleExport} disabled={exporting} className={className}>
       <span className="material-symbols-outlined text-lg mr-2">
         {exporting ? 'progress_activity' : 'download'}
       </span>

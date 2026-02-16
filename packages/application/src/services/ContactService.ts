@@ -532,14 +532,7 @@ export class ContactService {
    * List contacts with filtering and pagination
    */
   async listContacts(params: ContactSearchParams): Promise<ContactSearchResult> {
-    const {
-      query,
-      accountId,
-      department,
-      ownerId,
-      page = 1,
-      limit = 20,
-    } = params;
+    const { query, accountId, department, ownerId, page = 1, limit = 20 } = params;
 
     // Get contacts based on filters
     let contacts: Contact[];
@@ -568,8 +561,8 @@ export class ContactService {
     }
 
     if (department) {
-      filteredContacts = filteredContacts.filter(
-        (c) => c.department?.toLowerCase().includes(department.toLowerCase())
+      filteredContacts = filteredContacts.filter((c) =>
+        c.department?.toLowerCase().includes(department.toLowerCase())
       );
     }
 

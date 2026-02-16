@@ -251,7 +251,7 @@ describe('LatencyMonitor', () => {
       });
 
       const alerts = monitor.getAlerts();
-      expect(alerts.some(a => a.severity === 'warning')).toBe(true);
+      expect(alerts.some((a) => a.severity === 'warning')).toBe(true);
     });
 
     it('should generate critical alert for very slow operations', () => {
@@ -265,7 +265,7 @@ describe('LatencyMonitor', () => {
       });
 
       const alerts = monitor.getAlerts();
-      expect(alerts.some(a => a.severity === 'critical')).toBe(true);
+      expect(alerts.some((a) => a.severity === 'critical')).toBe(true);
     });
 
     it('should limit alert results', () => {

@@ -9,10 +9,7 @@
 
 import { z } from 'zod';
 import { leadScoreSchema } from '@intelliflow/validators';
-import {
-  SENTIMENT_LABELS,
-  type SentimentLabel,
-} from '@intelliflow/domain';
+import { SENTIMENT_LABELS, type SentimentLabel } from '@intelliflow/domain';
 
 // =============================================================================
 // Lead Scoring Utilities
@@ -217,10 +214,13 @@ export function aggregateSentiment(results: SentimentResultForAggregation[]): {
   }
 
   // Calculate distribution
-  const distribution = SENTIMENT_LABELS.reduce((acc, label) => {
-    acc[label] = results.filter(r => r.sentiment === label).length;
-    return acc;
-  }, {} as Record<SentimentLabel, number>);
+  const distribution = SENTIMENT_LABELS.reduce(
+    (acc, label) => {
+      acc[label] = results.filter((r) => r.sentiment === label).length;
+      return acc;
+    },
+    {} as Record<SentimentLabel, number>
+  );
 
   // Calculate averages
   const avgScore = results.reduce((sum, r) => sum + r.sentimentScore, 0) / results.length;

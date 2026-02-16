@@ -3,7 +3,7 @@ import { LeadScoringChain, LeadInput } from './scoring.chain';
 
 // Mock the LangChain OpenAI module
 vi.mock('@langchain/openai', () => {
-  const MockChatOpenAI = function(this: any) {
+  const MockChatOpenAI = function (this: any) {
     this.invoke = vi.fn().mockResolvedValue({
       content: JSON.stringify({
         score: 75,
@@ -12,7 +12,8 @@ vi.mock('@langchain/openai', () => {
           {
             name: 'Contact Completeness',
             impact: 20,
-            reasoning: 'Complete contact information with corporate email domain indicates a professional lead.',
+            reasoning:
+              'Complete contact information with corporate email domain indicates a professional lead.',
           },
           {
             name: 'Engagement Quality',
@@ -22,7 +23,8 @@ vi.mock('@langchain/openai', () => {
           {
             name: 'Qualification Signals',
             impact: 25,
-            reasoning: 'VP-level title indicates decision-making authority within the organization.',
+            reasoning:
+              'VP-level title indicates decision-making authority within the organization.',
           },
           {
             name: 'Data Quality',

@@ -17,20 +17,22 @@ export function ReminderConfig({ overdueCount, dueTodayCount, onFilter }: Remind
           onClick={() => onFilter('overdue')}
           className="inline-flex items-center gap-1 text-destructive hover:underline font-medium"
         >
-          <span className="material-symbols-outlined text-base" aria-hidden="true">warning</span>
+          <span className="material-symbols-outlined text-base" aria-hidden="true">
+            warning
+          </span>
           {overdueCount} overdue
         </button>
       )}
-      {overdueCount > 0 && dueTodayCount > 0 && (
-        <span className="text-muted-foreground">|</span>
-      )}
+      {overdueCount > 0 && dueTodayCount > 0 && <span className="text-muted-foreground">|</span>}
       {dueTodayCount > 0 && (
         <button
           type="button"
           onClick={() => onFilter('today')}
           className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 hover:underline font-medium"
         >
-          <span className="material-symbols-outlined text-base" aria-hidden="true">today</span>
+          <span className="material-symbols-outlined text-base" aria-hidden="true">
+            today
+          </span>
           {dueTodayCount} due today
         </button>
       )}

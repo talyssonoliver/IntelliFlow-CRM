@@ -24,12 +24,16 @@ A quick reference guide for maintaining consistency across the application.
 
 ```html
 <!-- Hard-coded colors -->
-<button class="bg-blue-600">Save</button>  <!-- Wrong blue! -->
-<button class="bg-[#2563eb]">Save</button> <!-- Old incorrect value -->
+<button class="bg-blue-600">Save</button>
+<!-- Wrong blue! -->
+<button class="bg-[#2563eb]">Save</button>
+<!-- Old incorrect value -->
 
 <!-- Random color choices -->
-<span class="text-purple-600">Success</span> <!-- Purple for success? -->
-<div class="bg-pink-500">Warning</div>       <!-- Pink for warning? -->
+<span class="text-purple-600">Success</span>
+<!-- Purple for success? -->
+<div class="bg-pink-500">Warning</div>
+<!-- Pink for warning? -->
 ```
 
 - Don't use `blue-600` - use `primary` or `#137fec`
@@ -62,14 +66,18 @@ A quick reference guide for maintaining consistency across the application.
 ```html
 <!-- Inconsistent sizing -->
 <h1 class="text-4xl">Title</h1>
-<h2 class="text-3xl">Also Title?</h2>  <!-- Too close in size -->
+<h2 class="text-3xl">Also Title?</h2>
+<!-- Too close in size -->
 
 <!-- Wrong font -->
-<p style="font-family: Arial">Text</p>  <!-- Not Inter! -->
+<p style="font-family: Arial">Text</p>
+<!-- Not Inter! -->
 
 <!-- Random weights -->
-<span class="font-black">Label</span>   <!-- Too heavy for label -->
-<h1 class="font-normal">Title</h1>      <!-- Too light for title -->
+<span class="font-black">Label</span>
+<!-- Too heavy for label -->
+<h1 class="font-normal">Title</h1>
+<!-- Too light for title -->
 ```
 
 - Don't skip heading levels (h1 → h3)
@@ -105,8 +113,10 @@ A quick reference guide for maintaining consistency across the application.
 
 <!-- Inconsistent spacing -->
 <div class="p-4">Card 1</div>
-<div class="p-6">Card 2</div>  <!-- Same type, different padding! -->
-<div class="p-3">Card 3</div>  <!-- More inconsistency -->
+<div class="p-6">Card 2</div>
+<!-- Same type, different padding! -->
+<div class="p-3">Card 3</div>
+<!-- More inconsistency -->
 ```
 
 - Don't use arbitrary pixel values
@@ -122,20 +132,26 @@ A quick reference guide for maintaining consistency across the application.
 
 ```html
 <!-- Primary action -->
-<button class="bg-primary text-white px-4 py-2 rounded font-medium
-               hover:bg-primary-hover transition-colors">
+<button
+  class="bg-primary text-white px-4 py-2 rounded font-medium
+               hover:bg-primary-hover transition-colors"
+>
   Save Changes
 </button>
 
 <!-- Secondary action -->
-<button class="bg-slate-100 text-slate-700 px-4 py-2 rounded font-medium
-               hover:bg-slate-200">
+<button
+  class="bg-slate-100 text-slate-700 px-4 py-2 rounded font-medium
+               hover:bg-slate-200"
+>
   Cancel
 </button>
 
 <!-- Destructive action -->
-<button class="bg-red-600 text-white px-4 py-2 rounded font-medium
-               hover:bg-red-700">
+<button
+  class="bg-red-600 text-white px-4 py-2 rounded font-medium
+               hover:bg-red-700"
+>
   Delete
 </button>
 ```
@@ -150,16 +166,21 @@ A quick reference guide for maintaining consistency across the application.
 ```html
 <!-- Multiple primary buttons -->
 <button class="bg-primary">Save</button>
-<button class="bg-primary">Submit</button>  <!-- Two primaries! -->
-<button class="bg-primary">Continue</button> <!-- Three?! -->
+<button class="bg-primary">Submit</button>
+<!-- Two primaries! -->
+<button class="bg-primary">Continue</button>
+<!-- Three?! -->
 
 <!-- Missing states -->
-<button class="bg-primary">Save</button>  <!-- No hover state -->
+<button class="bg-primary">Save</button>
+<!-- No hover state -->
 
 <!-- Inconsistent styling -->
 <button class="rounded-full">Action 1</button>
-<button class="rounded-lg">Action 2</button>  <!-- Different radius -->
-<button class="rounded-none">Action 3</button> <!-- More variation -->
+<button class="rounded-lg">Action 2</button>
+<!-- Different radius -->
+<button class="rounded-none">Action 3</button>
+<!-- More variation -->
 ```
 
 - Don't have multiple primary CTAs competing
@@ -186,7 +207,7 @@ A quick reference guide for maintaining consistency across the application.
     class="w-full px-3 py-2 border border-slate-300 rounded-lg
            focus:ring-2 focus:ring-primary focus:border-transparent"
     placeholder="you@example.com"
-  >
+  />
   <p class="text-xs text-slate-500">We'll never share your email.</p>
 </div>
 ```
@@ -201,15 +222,20 @@ A quick reference guide for maintaining consistency across the application.
 
 ```html
 <!-- No label -->
-<input type="email" placeholder="Email">  <!-- Placeholder ≠ Label! -->
+<input type="email" placeholder="Email" />
+<!-- Placeholder ≠ Label! -->
 
 <!-- No error indication -->
-<input type="email" value="bad-email">  <!-- How do I know it's wrong? -->
+<input type="email" value="bad-email" />
+<!-- How do I know it's wrong? -->
 
 <!-- Inconsistent styling -->
-<input class="rounded-full border-2">
-<input class="rounded border">  <!-- Different from above -->
-<select class="rounded-lg">     <!-- Yet another style -->
+<input class="rounded-full border-2" />
+<input class="rounded border" />
+<!-- Different from above -->
+<select class="rounded-lg">
+  <!-- Yet another style -->
+</select>
 ```
 
 - Don't use placeholder as the only label
@@ -225,8 +251,10 @@ A quick reference guide for maintaining consistency across the application.
 
 ```html
 <!-- Consistent card structure -->
-<div class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200
-            dark:border-slate-800 p-6">
+<div
+  class="bg-white dark:bg-slate-900 rounded-lg border border-slate-200
+            dark:border-slate-800 p-6"
+>
   <h3 class="text-lg font-semibold mb-4">Card Title</h3>
   <p class="text-slate-600 dark:text-slate-400">Content here.</p>
 </div>
@@ -288,7 +316,8 @@ A quick reference guide for maintaining consistency across the application.
 ```html
 <!-- Mixed icon libraries -->
 <span class="material-symbols-outlined">add</span>
-<i class="fas fa-user"></i>  <!-- FontAwesome mixed in! -->
+<i class="fas fa-user"></i>
+<!-- FontAwesome mixed in! -->
 <svg><!-- Random SVG --></svg>
 
 <!-- Wrong sizing -->
@@ -314,8 +343,10 @@ A quick reference guide for maintaining consistency across the application.
 <table class="w-full">
   <thead>
     <tr class="bg-slate-50 dark:bg-slate-800/50">
-      <th class="px-4 py-3 text-left text-xs font-medium text-slate-500
-                 uppercase tracking-wider">
+      <th
+        class="px-4 py-3 text-left text-xs font-medium text-slate-500
+                 uppercase tracking-wider"
+      >
         Name
       </th>
     </tr>
@@ -341,11 +372,15 @@ A quick reference guide for maintaining consistency across the application.
 <div>John | john@... | Active</div>
 
 <!-- Inconsistent alignment -->
-<td class="text-left">$1,234</td>   <!-- Numbers should be right-aligned -->
-<td class="text-center">$567</td>   <!-- Inconsistent! -->
+<td class="text-left">$1,234</td>
+<!-- Numbers should be right-aligned -->
+<td class="text-center">$567</td>
+<!-- Inconsistent! -->
 
 <!-- Missing states -->
-<tr><!-- No hover, no zebra striping, nothing --></tr>
+<tr>
+  <!-- No hover, no zebra striping, nothing -->
+</tr>
 ```
 
 - Don't use divs instead of tables for tabular data
@@ -361,9 +396,11 @@ A quick reference guide for maintaining consistency across the application.
 
 ```html
 <!-- Proper dark mode implementation -->
-<div class="bg-white dark:bg-slate-900
+<div
+  class="bg-white dark:bg-slate-900
             text-slate-900 dark:text-white
-            border-slate-200 dark:border-slate-800">
+            border-slate-200 dark:border-slate-800"
+>
   Content
 </div>
 ```
@@ -382,8 +419,10 @@ A quick reference guide for maintaining consistency across the application.
 </div>
 
 <!-- Wrong dark colors -->
-<div class="dark:bg-black">  <!-- Too dark, use slate-900 -->
-<div class="dark:text-gray-100">  <!-- Use slate palette -->
+<div class="dark:bg-black">
+  <!-- Too dark, use slate-900 -->
+  <div class="dark:text-gray-100"><!-- Use slate palette --></div>
+</div>
 ```
 
 - Don't forget dark: variants
@@ -399,8 +438,10 @@ A quick reference guide for maintaining consistency across the application.
 
 ```html
 <!-- Proper focus states -->
-<button class="focus:outline-none focus:ring-2 focus:ring-primary
-               focus:ring-offset-2">
+<button
+  class="focus:outline-none focus:ring-2 focus:ring-primary
+               focus:ring-offset-2"
+>
   Action
 </button>
 
@@ -490,15 +531,15 @@ A quick reference guide for maintaining consistency across the application.
 
 ## Quick Reference Card
 
-| Category | DO | DON'T |
-|----------|-----|-------|
-| Colors | Use `#137fec` for primary | Use `blue-600` or other blues |
-| Typography | Inter font, follow type scale | Mix fonts, skip heading levels |
-| Spacing | Use 4px base scale (4,8,12,16,24,32) | Arbitrary pixel values |
-| Buttons | One primary CTA per view | Multiple competing primaries |
-| Forms | Labels + placeholders + help text | Placeholder-only labels |
-| Cards | `rounded-lg`, subtle borders | Heavy shadows, mixed radii |
-| Icons | Material Symbols Outlined only | Mixed icon libraries |
-| Dark Mode | Always pair `dark:` variants | Forget dark mode styles |
-| A11y | Focus rings, ARIA labels, contrast | Remove focus, low contrast |
-| Responsive | Mobile-first, test all sizes | Fixed widths, desktop-only |
+| Category   | DO                                   | DON'T                          |
+| ---------- | ------------------------------------ | ------------------------------ |
+| Colors     | Use `#137fec` for primary            | Use `blue-600` or other blues  |
+| Typography | Inter font, follow type scale        | Mix fonts, skip heading levels |
+| Spacing    | Use 4px base scale (4,8,12,16,24,32) | Arbitrary pixel values         |
+| Buttons    | One primary CTA per view             | Multiple competing primaries   |
+| Forms      | Labels + placeholders + help text    | Placeholder-only labels        |
+| Cards      | `rounded-lg`, subtle borders         | Heavy shadows, mixed radii     |
+| Icons      | Material Symbols Outlined only       | Mixed icon libraries           |
+| Dark Mode  | Always pair `dark:` variants         | Forget dark mode styles        |
+| A11y       | Focus rings, ARIA labels, contrast   | Remove focus, low contrast     |
+| Responsive | Mobile-first, test all sizes         | Fixed widths, desktop-only     |

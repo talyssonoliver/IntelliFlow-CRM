@@ -28,7 +28,8 @@ const sampleComments: Comment[] = [
   {
     id: '1',
     author: { name: 'Alex Thompson' },
-    content: 'Great article! The section on human oversight really resonated with our team\'s approach to AI implementation.',
+    content:
+      "Great article! The section on human oversight really resonated with our team's approach to AI implementation.",
     createdAt: '2025-12-29T10:30:00Z',
     likes: 12,
     isLiked: false,
@@ -36,7 +37,8 @@ const sampleComments: Comment[] = [
       {
         id: '1-1',
         author: { name: 'Sarah Chen' },
-        content: 'Thanks Alex! We\'ve found that explicit approval workflows make a huge difference in building trust with the sales team.',
+        content:
+          "Thanks Alex! We've found that explicit approval workflows make a huge difference in building trust with the sales team.",
         createdAt: '2025-12-29T11:15:00Z',
         likes: 5,
       },
@@ -45,7 +47,8 @@ const sampleComments: Comment[] = [
   {
     id: '2',
     author: { name: 'Maria Garcia' },
-    content: 'Would love to see a follow-up post on how to measure the ROI of AI-assisted lead scoring. We\'re currently evaluating IntelliFlow for our mid-market sales team.',
+    content:
+      "Would love to see a follow-up post on how to measure the ROI of AI-assisted lead scoring. We're currently evaluating IntelliFlow for our mid-market sales team.",
     createdAt: '2025-12-28T16:45:00Z',
     likes: 8,
   },
@@ -65,7 +68,7 @@ export function CommentsWidget({ postSlug: _postSlug, className }: CommentsWidge
     setIsSubmitting(true);
 
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     const comment: Comment = {
       id: `temp-${Date.now()}`,
@@ -75,7 +78,7 @@ export function CommentsWidget({ postSlug: _postSlug, className }: CommentsWidge
       likes: 0,
     };
 
-    setComments(prev => [comment, ...prev]);
+    setComments((prev) => [comment, ...prev]);
     setNewComment('');
     setIsSubmitting(false);
   };
@@ -86,7 +89,7 @@ export function CommentsWidget({ postSlug: _postSlug, className }: CommentsWidge
     setIsSubmitting(true);
 
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
     const reply: Comment = {
       id: `temp-${Date.now()}`,
@@ -96,8 +99,8 @@ export function CommentsWidget({ postSlug: _postSlug, className }: CommentsWidge
       likes: 0,
     };
 
-    setComments(prev =>
-      prev.map(c => {
+    setComments((prev) =>
+      prev.map((c) => {
         if (c.id === parentId) {
           return { ...c, replies: [...(c.replies || []), reply] };
         }
@@ -111,12 +114,12 @@ export function CommentsWidget({ postSlug: _postSlug, className }: CommentsWidge
   };
 
   const handleLike = (commentId: string, isReply?: boolean, parentId?: string) => {
-    setComments(prev =>
-      prev.map(c => {
+    setComments((prev) =>
+      prev.map((c) => {
         if (isReply && parentId && c.id === parentId) {
           return {
             ...c,
-            replies: c.replies?.map(r =>
+            replies: c.replies?.map((r) =>
               r.id === commentId
                 ? { ...r, likes: r.isLiked ? r.likes - 1 : r.likes + 1, isLiked: !r.isLiked }
                 : r
@@ -149,7 +152,7 @@ export function CommentsWidget({ postSlug: _postSlug, className }: CommentsWidge
           <textarea
             id="new-comment"
             value={newComment}
-            onChange={e => setNewComment(e.target.value)}
+            onChange={(e) => setNewComment(e.target.value)}
             placeholder="Share your thoughts..."
             rows={3}
             className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white bg-white dark:bg-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent resize-none"
@@ -171,12 +174,12 @@ export function CommentsWidget({ postSlug: _postSlug, className }: CommentsWidge
 
       {/* Comments List */}
       <div className="space-y-6">
-        {comments.map(comment => (
+        {comments.map((comment) => (
           <CommentCard
             key={comment.id}
             comment={comment}
             onLike={handleLike}
-            onReply={id => setReplyingTo(id)}
+            onReply={(id) => setReplyingTo(id)}
             isReplying={replyingTo === comment.id}
             replyContent={replyContent}
             onReplyContentChange={setReplyContent}
@@ -192,7 +195,10 @@ export function CommentsWidget({ postSlug: _postSlug, className }: CommentsWidge
 
       {comments.length === 0 && (
         <div className="text-center py-12">
-          <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-3" aria-hidden="true">
+          <span
+            className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-3"
+            aria-hidden="true"
+          >
             chat_bubble_outline
           </span>
           <p className="text-slate-500 dark:text-slate-400">
@@ -250,9 +256,7 @@ function CommentCard({
             <span className="font-medium text-slate-900 dark:text-white">
               {comment.author.name}
             </span>
-            <span className="text-sm text-slate-500 dark:text-slate-400">
-              {formattedDate}
-            </span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">{formattedDate}</span>
           </div>
           <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
             {comment.content}
@@ -294,7 +298,7 @@ function CommentCard({
               <textarea
                 id={`reply-${comment.id}`}
                 value={replyContent}
-                onChange={e => onReplyContentChange(e.target.value)}
+                onChange={(e) => onReplyContentChange(e.target.value)}
                 placeholder="Write a reply..."
                 rows={2}
                 className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white bg-white dark:bg-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent resize-none text-sm"
@@ -308,12 +312,7 @@ function CommentCard({
                 >
                   {isSubmitting ? 'Posting...' : 'Reply'}
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={onCancelReply}
-                  className="text-xs"
-                >
+                <Button size="sm" variant="outline" onClick={onCancelReply} className="text-xs">
                   Cancel
                 </Button>
               </div>
@@ -323,13 +322,13 @@ function CommentCard({
           {/* Replies */}
           {comment.replies && comment.replies.length > 0 && (
             <div className="mt-4 space-y-4 pl-4 border-l-2 border-slate-200 dark:border-slate-700">
-              {comment.replies.map(reply => (
+              {comment.replies.map((reply) => (
                 <div key={reply.id} className="flex gap-3">
                   <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
                     <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
                       {reply.author.name
                         .split(' ')
-                        .map(n => n[0])
+                        .map((n) => n[0])
                         .join('')
                         .slice(0, 2)}
                     </span>

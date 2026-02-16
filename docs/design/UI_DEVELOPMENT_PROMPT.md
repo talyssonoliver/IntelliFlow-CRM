@@ -1,21 +1,25 @@
 # IntelliFlow CRM - UI Development Session Prompt
 
-> **Purpose**: Standardized prompt for Claude Code sessions focused on UI development
-> **Version**: 1.0
-> **Last Updated**: 2025-12-31
+> **Purpose**: Standardized prompt for Claude Code sessions focused on UI
+> development **Version**: 1.0 **Last Updated**: 2025-12-31
+
 ---
 
 ## 🎯 SESSION OBJECTIVE
 
-You are working on **IntelliFlow CRM**, a production-grade AI-first CRM system with governance-first architecture. Your role is to implement UI features that are:
+You are working on **IntelliFlow CRM**, a production-grade AI-first CRM system
+with governance-first architecture. Your role is to implement UI features that
+are:
 
 - ✅ **Consistent** with the established design system
 - ✅ **Production-ready** (no placeholders, drafts, or TODOs)
 - ✅ **Fully tested** (90%+ coverage, passing TypeScript, no errors)
-- ✅ **Properly documented** (Storybook stories, attestations, Sprint_plan.csv updates)
+- ✅ **Properly documented** (Storybook stories, attestations, Sprint_plan.csv
+  updates)
 - ✅ **Integrated** with existing codebase (no scattered code)
 
-**CRITICAL**: No drift from existing patterns. No placeholders. No "TODO" comments. No errors tolerated.
+**CRITICAL**: No drift from existing patterns. No placeholders. No "TODO"
+comments. No errors tolerated.
 
 ---
 
@@ -71,7 +75,8 @@ intelliFlow-CRM/
 ### Technology Stack
 
 - **Frontend**: Next.js 16.0.10 (App Router), React 19, TypeScript (strict mode)
-- **UI Library**: Radix UI primitives + shadcn/ui patterns (encapsulated in `@intelliflow/ui`)
+- **UI Library**: Radix UI primitives + shadcn/ui patterns (encapsulated in
+  `@intelliflow/ui`)
 - **Styling**: Tailwind CSS 3.4.17 + CSS variables for theming
 - **Forms**: React Hook Form + Zod validation
 - **Icons**: Material Symbols Outlined (414 occurrences)
@@ -86,7 +91,8 @@ intelliFlow-CRM/
 
 ### Color System - Two Approaches
 
-IntelliFlow uses **two complementary color approaches** for maximum design control:
+IntelliFlow uses **two complementary color approaches** for maximum design
+control:
 
 1. **CSS Variables** - For semantic colors (primary, destructive, success)
 2. **Explicit Slate Colors** - For visual hierarchy and layering
@@ -139,17 +145,17 @@ Use explicit slate colors for **visual layering** and **subtle backgrounds**:
 
 #### When to Use Each Approach
 
-| Use Case | Approach | Example |
-|----------|----------|---------|
-| Buttons (brand) | CSS Variables | `bg-primary text-primary-foreground` |
-| Error states | CSS Variables | `text-destructive border-destructive` |
-| Success badges | CSS Variables | `bg-success text-white` |
-| Card backgrounds | Explicit Slate | `bg-white dark:bg-slate-800` |
-| Filter bar background | Explicit Slate | `bg-slate-50 dark:bg-slate-800/50` |
-| Table headers | Explicit Slate | `bg-slate-50 dark:bg-slate-800/50` |
-| Hover effects | Explicit Slate | `hover:bg-slate-50 dark:hover:bg-slate-800/50` |
-| Borders | Explicit Slate | `border-slate-200 dark:border-slate-700` |
-| Text hierarchy | Explicit Slate | `text-slate-900 dark:text-white` |
+| Use Case              | Approach       | Example                                        |
+| --------------------- | -------------- | ---------------------------------------------- |
+| Buttons (brand)       | CSS Variables  | `bg-primary text-primary-foreground`           |
+| Error states          | CSS Variables  | `text-destructive border-destructive`          |
+| Success badges        | CSS Variables  | `bg-success text-white`                        |
+| Card backgrounds      | Explicit Slate | `bg-white dark:bg-slate-800`                   |
+| Filter bar background | Explicit Slate | `bg-slate-50 dark:bg-slate-800/50`             |
+| Table headers         | Explicit Slate | `bg-slate-50 dark:bg-slate-800/50`             |
+| Hover effects         | Explicit Slate | `hover:bg-slate-50 dark:hover:bg-slate-800/50` |
+| Borders               | Explicit Slate | `border-slate-200 dark:border-slate-700`       |
+| Text hierarchy        | Explicit Slate | `text-slate-900 dark:text-white`               |
 
 ---
 
@@ -173,55 +179,59 @@ Use explicit slate colors for **visual layering** and **subtle backgrounds**:
 
 ```css
 /* Light mode (default) */
---background: #f6f7f8;           /* Page background */
---foreground: #0f172a;           /* Primary text */
---primary: #137fec;              /* Brand blue */
---primary-foreground: #ffffff;   /* Text on primary */
---secondary: #64748b;            /* Secondary actions */
---accent: #7cc4ff;               /* Highlights */
---muted: #f1f5f9;                /* Subtle backgrounds */
---border: #e2e8f0;               /* Borders */
---card: #ffffff;                 /* Card backgrounds */
---card-foreground: #0f172a;      /* Text on cards */
---destructive: #ef4444;          /* Error/danger */
---success: #10b981;              /* Success states */
+--background: #f6f7f8; /* Page background */
+--foreground: #0f172a; /* Primary text */
+--primary: #137fec; /* Brand blue */
+--primary-foreground: #ffffff; /* Text on primary */
+--secondary: #64748b; /* Secondary actions */
+--accent: #7cc4ff; /* Highlights */
+--muted: #f1f5f9; /* Subtle backgrounds */
+--border: #e2e8f0; /* Borders */
+--card: #ffffff; /* Card backgrounds */
+--card-foreground: #0f172a; /* Text on cards */
+--destructive: #ef4444; /* Error/danger */
+--success: #10b981; /* Success states */
 
 /* Dark mode (auto-switches with .dark class) */
 .dark {
   --background: #101922;
   --foreground: #f8fafc;
-  --primary: #137fec;            /* Same brand blue */
+  --primary: #137fec; /* Same brand blue */
   --card: #1e2936;
   --border: #334155;
 }
 ```
 
 **Usage in Tailwind**:
+
 ```tsx
-className="bg-background text-foreground"
-className="bg-card text-card-foreground border-border"
-className="bg-primary text-primary-foreground"
-className="bg-destructive text-destructive-foreground"
-className="bg-muted text-muted-foreground"
+className = 'bg-background text-foreground';
+className = 'bg-card text-card-foreground border-border';
+className = 'bg-primary text-primary-foreground';
+className = 'bg-destructive text-destructive-foreground';
+className = 'bg-muted text-muted-foreground';
 ```
 
 ### Component Import Pattern
 
 **✅ CORRECT**:
+
 ```tsx
 import { Card, Button, Input, Toast } from '@intelliflow/ui';
 import { cn } from '@intelliflow/ui';
 ```
 
 **❌ NEVER**:
+
 ```tsx
-import { Dialog } from '@radix-ui/react-dialog';  // ❌ Bypass encapsulation
-import { Button } from '@/components/ui/button';  // ❌ Wrong path
+import { Dialog } from '@radix-ui/react-dialog'; // ❌ Bypass encapsulation
+import { Button } from '@/components/ui/button'; // ❌ Wrong path
 ```
 
 ### Icon Pattern
 
 **✅ CORRECT** (Material Symbols Outlined):
+
 ```tsx
 <span className="material-symbols-outlined text-xl" aria-hidden="true">
   check_circle
@@ -229,8 +239,9 @@ import { Button } from '@/components/ui/button';  // ❌ Wrong path
 ```
 
 **❌ AVOID** (Lucide - only 5 occurrences, being phased out):
+
 ```tsx
-import { CheckCircle } from 'lucide-react';  // ❌ Inconsistent
+import { CheckCircle } from 'lucide-react'; // ❌ Inconsistent
 ```
 
 ### Component Patterns
@@ -246,6 +257,7 @@ import { CheckCircle } from 'lucide-react';  // ❌ Inconsistent
 7. **Layout Builder**: Widget system (7 files) - **USE THIS** for dashboards
 
 **Reference implementations**:
+
 - Simple component: `packages/ui/src/components/button.tsx`
 - Complex component: `packages/ui/src/components/data-table.tsx`
 - Form integration: `packages/ui/src/components/form.tsx`
@@ -258,6 +270,7 @@ import { CheckCircle } from 'lucide-react';  // ❌ Inconsistent
 ### TypeScript Validation
 
 **Run before committing**:
+
 ```bash
 pnpm run typecheck        # All packages
 pnpm --filter web typecheck
@@ -265,6 +278,7 @@ pnpm --filter @intelliflow/ui typecheck
 ```
 
 **Requirements**:
+
 - ✅ No `any` types (use strict mode)
 - ✅ No `@ts-ignore` comments
 - ✅ All props properly typed
@@ -274,6 +288,7 @@ pnpm --filter @intelliflow/ui typecheck
 ### Test Coverage
 
 **Run tests**:
+
 ```bash
 pnpm run test             # All tests
 pnpm --filter @intelliflow/ui test
@@ -281,6 +296,7 @@ pnpm run test:coverage    # Coverage report
 ```
 
 **Requirements**:
+
 - ✅ 90%+ coverage (enforced in CI)
 - ✅ All component variants tested
 - ✅ Accessibility tests with vitest-axe
@@ -288,6 +304,7 @@ pnpm run test:coverage    # Coverage report
 - ✅ Error state tests
 
 **Test Template** (`packages/ui/__tests__/[component].test.tsx`):
+
 ```tsx
 import { render, screen } from '@testing-library/react';
 import { axe } from 'vitest-axe';
@@ -318,6 +335,7 @@ pnpm run format           # Prettier
 ```
 
 **Requirements**:
+
 - ✅ No ESLint errors (warnings acceptable)
 - ✅ Prettier formatted
 - ✅ No console.log statements (use proper logging)
@@ -331,6 +349,7 @@ pnpm --filter @intelliflow/ui build
 ```
 
 **Requirements**:
+
 - ✅ No build errors
 - ✅ No missing dependencies
 - ✅ Bundle size within limits
@@ -341,11 +360,13 @@ pnpm --filter @intelliflow/ui build
 
 ### 1. Storybook Story
 
-**Every component** in `packages/ui/src/components/` must have a Storybook story.
+**Every component** in `packages/ui/src/components/` must have a Storybook
+story.
 
 **Location**: `packages/ui/src/components/[component].stories.tsx`
 
 **Template**:
+
 ```tsx
 import type { Meta, StoryObj } from '@storybook/react';
 import { ComponentName } from './component-name';
@@ -381,6 +402,7 @@ export const Destructive: Story = {
 ```
 
 **Run Storybook**:
+
 ```bash
 pnpm --filter @intelliflow/ui storybook
 ```
@@ -392,6 +414,7 @@ pnpm --filter @intelliflow/ui storybook
 **Location**: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
 
 **Steps**:
+
 1. Find your task row by Task ID (e.g., `IFC-090`, `PG-015`)
 2. Update `Status` column: `"Planned"` → `"Completed"`
 3. Verify `Artifacts To Track` column lists what you created
@@ -404,9 +427,11 @@ pnpm --filter @intelliflow/ui storybook
 
 ### 3. Attestation File
 
-**For completed tasks**, create attestation in `artifacts/attestations/[TASK-ID]/`.
+**For completed tasks**, create attestation in
+`artifacts/attestations/[TASK-ID]/`.
 
 **Required files**:
+
 ```
 artifacts/attestations/IFC-XXX/
 ├── attestation.json          # Completion proof with SHA256 hashes
@@ -415,6 +440,7 @@ artifacts/attestations/IFC-XXX/
 ```
 
 **attestation.json template**:
+
 ```json
 {
   "task_id": "IFC-XXX",
@@ -430,18 +456,32 @@ artifacts/attestations/IFC-XXX/
     ]
   },
   "validations": {
-    "typecheck": { "command": "pnpm typecheck", "exit_code": 0, "passed": true },
-    "tests": { "command": "pnpm test", "exit_code": 0, "passed": true, "coverage": "95%" },
+    "typecheck": {
+      "command": "pnpm typecheck",
+      "exit_code": 0,
+      "passed": true
+    },
+    "tests": {
+      "command": "pnpm test",
+      "exit_code": 0,
+      "passed": true,
+      "coverage": "95%"
+    },
     "build": { "command": "pnpm build", "exit_code": 0, "passed": true }
   },
   "kpis": {
     "test_coverage": { "target": ">90%", "actual": "95%", "met": true },
-    "accessibility": { "target": "WCAG 2.1 AA", "actual": "Passed", "met": true }
+    "accessibility": {
+      "target": "WCAG 2.1 AA",
+      "actual": "Passed",
+      "met": true
+    }
   }
 }
 ```
 
 **Generate attestation**:
+
 ```bash
 # TODO: Add attestation generation script
 # For now, create manually following the template
@@ -454,6 +494,7 @@ artifacts/attestations/IFC-XXX/
 ### Code Quality
 
 ❌ **No placeholders**:
+
 ```tsx
 // TODO: Implement this later  ❌
 const handleSubmit = () => {
@@ -462,6 +503,7 @@ const handleSubmit = () => {
 ```
 
 ✅ **Full implementation**:
+
 ```tsx
 const handleSubmit = async () => {
   if (!validateForm()) return;
@@ -473,20 +515,23 @@ const handleSubmit = async () => {
 ---
 
 ❌ **No drift from existing patterns**:
+
 ```tsx
 // Creating custom button when Button component exists  ❌
 <button className="px-4 py-2 bg-blue-500">Click</button>
 ```
 
 ✅ **Use existing components**:
+
 ```tsx
 import { Button } from '@intelliflow/ui';
-<Button variant="default">Click</Button>
+<Button variant="default">Click</Button>;
 ```
 
 ---
 
 ❌ **No scattered code**:
+
 ```tsx
 // Creating component in apps/web when it should be in packages/ui  ❌
 // apps/web/src/components/custom-button.tsx
@@ -494,6 +539,7 @@ export function CustomButton() { ... }
 ```
 
 ✅ **Proper location**:
+
 ```tsx
 // packages/ui/src/components/button.tsx (if reusable)
 // OR apps/web/src/components/header/login-button.tsx (if app-specific)
@@ -502,15 +548,17 @@ export function CustomButton() { ... }
 ---
 
 ❌ **No hardcoded data in widgets**:
+
 ```tsx
 // Dashboard widget with fake data  ❌
 export function RevenueWidget() {
-  const revenue = 125000;  // Hardcoded!
+  const revenue = 125000; // Hardcoded!
   return <Card>{revenue}</Card>;
 }
 ```
 
 ✅ **Use Widget interface**:
+
 ```tsx
 import { Widget, WidgetProps } from '@intelliflow/ui';
 
@@ -523,12 +571,14 @@ export function RevenueWidget({ config }: WidgetProps<RevenueConfig>) {
 ---
 
 ❌ **No inline styles for theme values**:
+
 ```tsx
 <div style={{ color: '#137fec' }}>  ❌
 <div style={{ backgroundColor: '#0f172a' }}>  ❌
 ```
 
 ✅ **Use Tailwind classes**:
+
 ```tsx
 <div className="text-primary">  ✅          // Semantic (brand blue)
 <div className="text-slate-900 dark:text-white">  ✅  // Visual hierarchy
@@ -538,11 +588,13 @@ export function RevenueWidget({ config }: WidgetProps<RevenueConfig>) {
 ### Testing
 
 ❌ **No skipped tests**:
+
 ```tsx
 it.skip('should handle error', () => { ... });  ❌
 ```
 
 ✅ **All tests enabled**:
+
 ```tsx
 it('should handle error', () => { ... });  ✅
 ```
@@ -550,6 +602,7 @@ it('should handle error', () => { ... });  ✅
 ---
 
 ❌ **No missing accessibility tests**:
+
 ```tsx
 // Test file without axe check  ❌
 describe('Button', () => {
@@ -558,6 +611,7 @@ describe('Button', () => {
 ```
 
 ✅ **Include accessibility**:
+
 ```tsx
 import { axe } from 'vitest-axe';
 
@@ -572,11 +626,13 @@ describe('Button', () => {
 ### Documentation
 
 ❌ **No missing Storybook stories**:
+
 ```tsx
 // Component exists but no .stories.tsx file  ❌
 ```
 
 ✅ **Every component has a story**:
+
 ```tsx
 // component.stories.tsx with all variants documented  ✅
 ```
@@ -584,11 +640,13 @@ describe('Button', () => {
 ---
 
 ❌ **No outdated Sprint_plan.csv**:
+
 ```csv
 IFC-090,Core CRM,Contact 360,...,Planned  ❌ (if actually completed)
 ```
 
 ✅ **Update status immediately**:
+
 ```csv
 IFC-090,Core CRM,Contact 360,...,Completed  ✅
 ```
@@ -602,18 +660,21 @@ IFC-090,Core CRM,Contact 360,...,Completed  ✅
 Use the `Task` tool to spawn specialized sub-agents for:
 
 1. **Code Search** (Explore agent):
+
    ```
    "Find all components using hardcoded slate-900 color"
    "Locate widget implementations in dashboard folder"
    ```
 
 2. **Small Validation Tasks**:
+
    ```
    "Run typecheck on packages/ui and report errors"
    "Generate test coverage report for new component"
    ```
 
 3. **Documentation Updates**:
+
    ```
    "Update Sprint_plan.csv status for IFC-090 to Completed"
    "Generate attestation.json for IFC-090 with SHA256 hashes"
@@ -628,18 +689,21 @@ Use the `Task` tool to spawn specialized sub-agents for:
 ### Sub-Agent Best Practices
 
 ✅ **Clear, specific tasks**:
+
 ```
 Good: "Find all .tsx files in apps/web/src/components/dashboard/widgets/ that import Card from @intelliflow/ui"
 Bad: "Check widgets"
 ```
 
 ✅ **Validation-focused**:
+
 ```
 Good: "Run pnpm typecheck and return only error count and first 3 errors"
 Bad: "Check if code is good"
 ```
 
 ✅ **One task per agent**:
+
 ```
 Good: Spawn 3 agents for typecheck, test, build
 Bad: Single agent for "check everything"
@@ -652,14 +716,17 @@ Bad: Single agent for "check everything"
 ### Before Starting
 
 - [ ] Read `docs/design/UI_CONSOLIDATION_PLAN.md`
-- [ ] Check `Sprint_plan.csv` for task details (Task ID, Dependencies, Pre-requisites)
-- [ ] Review mockup if exists (check `Pre-requisites` column for `DESIGN:` prefix)
+- [ ] Check `Sprint_plan.csv` for task details (Task ID, Dependencies,
+      Pre-requisites)
+- [ ] Review mockup if exists (check `Pre-requisites` column for `DESIGN:`
+      prefix)
 - [ ] Verify dependencies are completed
 - [ ] Check existing component patterns in `packages/ui/src/components/`
 
 ### During Development
 
-- [ ] Use correct color approach: CSS variables for semantic, slate for hierarchy
+- [ ] Use correct color approach: CSS variables for semantic, slate for
+      hierarchy
 - [ ] Import from `@intelliflow/ui` (no direct Radix imports)
 - [ ] Follow existing component patterns (CVA for variants, cn() for classes)
 - [ ] Use Material Symbols Outlined for icons
@@ -712,17 +779,20 @@ When you receive a task, follow this structure:
 ## Task: [TASK-ID] - [Description]
 
 ### Context Review
+
 - [ ] Read task from Sprint_plan.csv
 - [ ] Dependencies: [list prerequisite tasks]
 - [ ] Design mockup: [path if exists]
 - [ ] Related components: [existing components to reference]
 
 ### Implementation Plan
+
 1. [Step 1]
 2. [Step 2]
 3. [Step 3]
 
 ### Validation Criteria
+
 - TypeCheck: Pass
 - Tests: >90% coverage
 - Build: Success
@@ -757,11 +827,13 @@ pnpm typecheck && pnpm test && pnpm build
 ## Completion Report: [TASK-ID]
 
 ### Files Created/Modified
+
 - `packages/ui/src/components/new-component.tsx` (245 lines)
 - `packages/ui/__tests__/new-component.test.tsx` (180 lines, 95% coverage)
 - `packages/ui/src/components/new-component.stories.tsx` (85 lines)
 
 ### Validations
+
 - ✅ TypeCheck: 0 errors
 - ✅ Tests: 95% coverage (45/47 lines)
 - ✅ Build: Success
@@ -769,10 +841,12 @@ pnpm typecheck && pnpm test && pnpm build
 - ✅ Dark mode: Verified
 
 ### Sprint_plan.csv
+
 - Updated status: Planned → Completed
 - Artifacts verified: All created
 
 ### Attestation
+
 - Created: `artifacts/attestations/IFC-XXX/attestation.json`
 - SHA256 hashes: Verified
 - Validation results: All passed
@@ -794,26 +868,31 @@ pnpm typecheck && pnpm test && pnpm build
 ### Color Patterns Reference
 
 **Container with border (cards, tables, panels)**:
+
 ```tsx
 <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
 ```
 
 **Subtle background (filter bars, headers)**:
+
 ```tsx
 <div className="bg-slate-50 dark:bg-slate-800/50">
 ```
 
 **Interactive row with hover**:
+
 ```tsx
 <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer">
 ```
 
 **Primary action button**:
+
 ```tsx
 <button className="bg-primary text-primary-foreground hover:bg-primary/90">
 ```
 
 **Status badges** (use semantic CSS variables):
+
 ```tsx
 <span className="bg-success/10 text-success">Active</span>
 <span className="bg-destructive/10 text-destructive">Failed</span>
@@ -822,6 +901,7 @@ pnpm typecheck && pnpm test && pnpm build
 ### Integrating Widget with Layout Builder
 
 **Old pattern** (hardcoded):
+
 ```tsx
 export function RevenueWidget() {
   return <Card>$125,000</Card>;
@@ -829,6 +909,7 @@ export function RevenueWidget() {
 ```
 
 **New pattern** (using Widget interface):
+
 ```tsx
 import { Widget, WidgetProps } from '@intelliflow/ui';
 
@@ -840,11 +921,7 @@ export function RevenueWidget({ config }: WidgetProps<RevenueConfig>) {
   const { data } = useRevenueData(config.period);
 
   return (
-    <Widget
-      title="Revenue"
-      icon="payments"
-      isLoading={!data}
-    >
+    <Widget title="Revenue" icon="payments" isLoading={!data}>
       <p className="text-2xl font-bold text-foreground">
         ${data?.revenue.toLocaleString()}
       </p>
@@ -856,12 +933,14 @@ export function RevenueWidget({ config }: WidgetProps<RevenueConfig>) {
 ### Adding Design Mockup Reference
 
 **Sprint_plan.csv entry**:
+
 ```csv
 Task ID,Section,Description,...,Pre-requisites
 IFC-090,Core CRM,Contact 360 Page,...,DESIGN:docs/design/mockups/contact-360-view.png;FILE:...
 ```
 
 **Implementation**:
+
 1. Open mockup: `docs/design/mockups/contact-360-view.png`
 2. Match layout, spacing, colors, typography
 3. Verify all components from mockup are present
@@ -874,6 +953,7 @@ All pages with sidebar navigation **MUST** use the unified `AppSidebar` pattern.
 **Location**: `apps/web/src/components/sidebar/`
 
 **Components**:
+
 - `AppSidebar` - Collapsible sidebar with expand-on-hover
 - `SidebarProvider` - Context for sidebar state (pinned/expanded)
 - `SidebarInset` - Content wrapper that adjusts for sidebar width
@@ -881,6 +961,7 @@ All pages with sidebar navigation **MUST** use the unified `AppSidebar` pattern.
 - `SidebarConfig` - Type for sidebar configuration
 
 **✅ CORRECT Pattern** (use for ALL modules):
+
 ```tsx
 'use client';
 
@@ -889,10 +970,14 @@ import {
   AppSidebar,
   SidebarInset,
   SidebarTrigger,
-  leadsSidebarConfig,  // Import the module's config
+  leadsSidebarConfig, // Import the module's config
 } from '@/components/sidebar';
 
-export default function LeadsLayout({ children }: { children: React.ReactNode }) {
+export default function LeadsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">
@@ -915,6 +1000,7 @@ export default function LeadsLayout({ children }: { children: React.ReactNode })
 ```
 
 **❌ NEVER create custom sidebars**:
+
 ```tsx
 // ❌ DON'T create custom sidebar components per module
 export function NotificationSidebar() { ... }  // WRONG
@@ -930,6 +1016,7 @@ export function SettingsSidebar() { ... }      // WRONG
 4. Use CSS variables for colors (`text-primary`, `text-destructive`, etc.)
 
 **Config template**:
+
 ```tsx
 import type { SidebarConfig } from '../sidebar-types';
 import { MODULE_ICONS, VIEW_ICONS } from '../icon-reference';
@@ -945,8 +1032,18 @@ export const moduleSidebarConfig: SidebarConfig = {
       id: 'views',
       title: 'Views',
       items: [
-        { id: 'all', label: 'All Items', icon: VIEW_ICONS.all, href: '/module' },
-        { id: 'my', label: 'My Items', icon: VIEW_ICONS.my, href: '/module?view=my' },
+        {
+          id: 'all',
+          label: 'All Items',
+          icon: VIEW_ICONS.all,
+          href: '/module',
+        },
+        {
+          id: 'my',
+          label: 'My Items',
+          icon: VIEW_ICONS.my,
+          href: '/module?view=my',
+        },
       ],
     },
   ],
@@ -954,6 +1051,7 @@ export const moduleSidebarConfig: SidebarConfig = {
 ```
 
 **Available sidebar configs**:
+
 - `leadsSidebarConfig`
 - `contactsSidebarConfig`
 - `documentsSidebarConfig`
@@ -969,15 +1067,19 @@ export const moduleSidebarConfig: SidebarConfig = {
 
 ### PageHeader Pattern (MANDATORY)
 
-All pages **MUST** use the unified `PageHeader` component for consistent page titles, breadcrumbs, and actions.
+All pages **MUST** use the unified `PageHeader` component for consistent page
+titles, breadcrumbs, and actions.
 
 **Location**: `apps/web/src/components/shared/page-header.tsx`
 
 **Components**:
-- `PageHeader` - Main page header with title, breadcrumbs, description, and actions
+
+- `PageHeader` - Main page header with title, breadcrumbs, description, and
+  actions
 - `Breadcrumbs` - Standalone breadcrumb navigation component
 
 **✅ CORRECT Pattern**:
+
 ```tsx
 import { PageHeader } from '@/components/shared';
 
@@ -1015,6 +1117,7 @@ export default function LeadsPage() {
 ```
 
 **❌ NEVER create custom page headers**:
+
 ```tsx
 // ❌ DON'T create inline headers
 <div className="flex justify-between">
@@ -1026,26 +1129,20 @@ export default function LeadsPage() {
 </div>
 ```
 
-**PageHeader Props**:
-| Prop | Type | Description |
-|------|------|-------------|
-| `breadcrumbs` | `BreadcrumbItem[]` | Navigation breadcrumbs |
-| `title` | `string` | Page title (h1) |
-| `description` | `string?` | Optional description |
-| `actions` | `PageAction[]` | Action buttons (primary/secondary) |
-| `children` | `ReactNode?` | Additional content below description |
+**PageHeader Props**: | Prop | Type | Description |
+|------|------|-------------| | `breadcrumbs` | `BreadcrumbItem[]` | Navigation
+breadcrumbs | | `title` | `string` | Page title (h1) | | `description` |
+`string?` | Optional description | | `actions` | `PageAction[]` | Action buttons
+(primary/secondary) | | `children` | `ReactNode?` | Additional content below
+description |
 
-**PageAction Props**:
-| Prop | Type | Description |
-|------|------|-------------|
-| `label` | `string` | Button text |
-| `icon` | `string?` | Material Symbols icon name |
-| `variant` | `'primary' \| 'secondary'` | Button style |
-| `onClick` | `function?` | Click handler |
-| `href` | `string?` | Link destination |
-| `hideOnMobile` | `boolean?` | Hide label on small screens |
-| `disabled` | `boolean?` | Disabled state |
-| `loading` | `boolean?` | Loading state |
+**PageAction Props**: | Prop | Type | Description |
+|------|------|-------------| | `label` | `string` | Button text | | `icon` |
+`string?` | Material Symbols icon name | | `variant` |
+`'primary' \| 'secondary'` | Button style | | `onClick` | `function?` | Click
+handler | | `href` | `string?` | Link destination | | `hideOnMobile` |
+`boolean?` | Hide label on small screens | | `disabled` | `boolean?` | Disabled
+state | | `loading` | `boolean?` | Loading state |
 
 ---
 
@@ -1108,7 +1205,8 @@ pnpm --filter @intelliflow/ui storybook
 
 ## 📞 GETTING HELP
 
-1. **Check existing patterns**: Look at similar components in `packages/ui/src/components/`
+1. **Check existing patterns**: Look at similar components in
+   `packages/ui/src/components/`
 2. **Read consolidation plan**: `docs/design/UI_CONSOLIDATION_PLAN.md`
 3. **Review style guide**: `docs/company/brand/style-guide.md`
 4. **Use sub-agents**: Spawn Explore agent to search codebase
@@ -1122,8 +1220,10 @@ At the end of this session, you should have:
 
 - [ ] **Zero errors**: TypeCheck, tests, build all passing
 - [ ] **90%+ test coverage**: All new code tested
-- [ ] **Documentation complete**: Storybook story, Sprint_plan.csv updated, attestation created
-- [ ] **Consistent patterns**: CSS variables, @intelliflow/ui imports, Material Symbols icons
+- [ ] **Documentation complete**: Storybook story, Sprint_plan.csv updated,
+      attestation created
+- [ ] **Consistent patterns**: CSS variables, @intelliflow/ui imports, Material
+      Symbols icons
 - [ ] **No drift**: Code in correct locations, following existing patterns
 - [ ] **Production-ready**: No TODOs, placeholders, or console.logs
 - [ ] **Integrated**: Works with existing codebase, no scattered code

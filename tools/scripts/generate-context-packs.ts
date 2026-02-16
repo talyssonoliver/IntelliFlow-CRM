@@ -21,7 +21,10 @@ const REPO_ROOT = process.cwd();
 // OLD location (deprecated) - reading from here for migration purposes
 const OLD_ATTESTATIONS_DIR = join(REPO_ROOT, 'artifacts', 'attestations');
 // Sprint plan for looking up task sprint numbers
-const SPRINT_PLAN_PATH = join(REPO_ROOT, 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv');
+const SPRINT_PLAN_PATH = join(
+  REPO_ROOT,
+  'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv'
+);
 
 /**
  * Load sprint plan and create task-to-sprint mapping
@@ -173,7 +176,9 @@ ${invariants.map((i) => `- ${i}`).join('\n') || '- All definition of done items 
       await writeFile(join(contextTaskDir, 'context_pack.md'), contextPackMd);
 
       processed++;
-      console.log(`  [OK] ${taskId}: Generated context pack (${files.length} files) -> sprint-${sprintNumber}`);
+      console.log(
+        `  [OK] ${taskId}: Generated context pack (${files.length} files) -> sprint-${sprintNumber}`
+      );
     } catch (error) {
       failed++;
       console.error(`  [ERROR] ${taskId}:`, error);

@@ -361,7 +361,10 @@ describe('Lead Router', () => {
       });
 
       await expect(
-        callerWithService.qualify({ leadId: TEST_UUIDS.nonExistent, reason: 'Good fit for our product' })
+        callerWithService.qualify({
+          leadId: TEST_UUIDS.nonExistent,
+          reason: 'Good fit for our product',
+        })
       ).rejects.toThrow(
         expect.objectContaining({
           code: 'NOT_FOUND',
@@ -509,7 +512,9 @@ describe('Lead Router', () => {
         error: { message: 'Lead not found' },
       });
 
-      await expect(callerWithService.scoreWithAI({ leadId: TEST_UUIDS.nonExistent })).rejects.toThrow(
+      await expect(
+        callerWithService.scoreWithAI({ leadId: TEST_UUIDS.nonExistent })
+      ).rejects.toThrow(
         expect.objectContaining({
           code: 'NOT_FOUND',
         })
@@ -527,9 +532,14 @@ describe('Lead Router', () => {
         { status: 'CONVERTED', _count: 20 },
       ] as any);
       prismaMock.lead.findMany.mockResolvedValue([
-        { score: 80 }, { score: 75 }, { score: 70 }, // 3 hot leads (>=70)
-        { score: 60 }, { score: 50 }, { score: 45 }, // 3 warm leads (40-69)
-        { score: 30 }, { score: 20 }, // 2 cold leads (<40)
+        { score: 80 },
+        { score: 75 },
+        { score: 70 }, // 3 hot leads (>=70)
+        { score: 60 },
+        { score: 50 },
+        { score: 45 }, // 3 warm leads (40-69)
+        { score: 30 },
+        { score: 20 }, // 2 cold leads (<40)
       ] as any);
 
       const ctx = createTestContext();
@@ -669,7 +679,10 @@ describe('Lead Router', () => {
 
       expect(result.successful).toEqual([TEST_UUIDS.lead1, TEST_UUIDS.lead2]);
       expect(result.failed).toEqual([]);
-      expect(ctx.services!.lead!.bulkScoreLeads).toHaveBeenCalledWith([TEST_UUIDS.lead1, TEST_UUIDS.lead2]);
+      expect(ctx.services!.lead!.bulkScoreLeads).toHaveBeenCalledWith([
+        TEST_UUIDS.lead1,
+        TEST_UUIDS.lead2,
+      ]);
     });
   });
 
@@ -684,9 +697,7 @@ describe('Lead Router', () => {
           { source: 'WEBSITE', _count: 8 },
           { source: 'REFERRAL', _count: 7 },
         ])
-        .mockResolvedValueOnce([
-          { ownerId: TEST_UUIDS.user1, _count: 15 },
-        ]);
+        .mockResolvedValueOnce([{ ownerId: TEST_UUIDS.user1, _count: 15 }]);
 
       prismaMock.user.findMany.mockResolvedValue([
         { id: TEST_UUIDS.user1, name: 'John Doe', email: 'john@example.com' },

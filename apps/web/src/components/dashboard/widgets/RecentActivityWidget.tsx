@@ -100,7 +100,11 @@ const sampleActivities: ActivityRecord[] = [
 
 export function RecentActivityWidget(_props: WidgetProps) {
   // Real-time subscription for activities (gracefully handles missing table)
-  const { activities: realtimeActivities, status, metrics } = useActivitySubscription({
+  const {
+    activities: realtimeActivities,
+    status,
+    metrics,
+  } = useActivitySubscription({
     onActivity: (activity) => {
       // Could trigger a toast notification here for new activities
       console.log('[RecentActivity] New activity:', activity.title);
@@ -111,9 +115,8 @@ export function RecentActivityWidget(_props: WidgetProps) {
   const { isHealthy, latency } = useRealtimeHealth();
 
   // Don't show error status if we're using fallback data (table doesn't exist yet)
-  const displayStatus = realtimeActivities.length === 0 && status === 'error'
-    ? 'disconnected'
-    : status;
+  const displayStatus =
+    realtimeActivities.length === 0 && status === 'error' ? 'disconnected' : status;
 
   // Use realtime activities if available, otherwise show sample data
   const displayActivities = useMemo(() => {
@@ -151,9 +154,7 @@ export function RecentActivityWidget(_props: WidgetProps) {
                 <p className="text-sm text-foreground">
                   <span className="font-semibold">{activity.title}</span>
                   {activity.description && (
-                    <span className="text-muted-foreground">
-                      {' '}- {activity.description}
-                    </span>
+                    <span className="text-muted-foreground"> - {activity.description}</span>
                   )}
                 </p>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -161,9 +162,7 @@ export function RecentActivityWidget(_props: WidgetProps) {
                     {activity.dateLabel || formatRelativeTime(activity.timestamp)}
                   </p>
                   {activity.agentName && (
-                    <span className="text-xs text-chart-4">
-                      by {activity.agentName}
-                    </span>
+                    <span className="text-xs text-chart-4">by {activity.agentName}</span>
                   )}
                 </div>
               </div>

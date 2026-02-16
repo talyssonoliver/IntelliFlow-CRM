@@ -51,10 +51,23 @@ function getDueDateStatus(date: Date | string | null): 'overdue' | 'today' | 'no
   return 'normal';
 }
 
-function getEntityInfo(task: TaskCardProps['task']): { type: string; name: string; href: string } | null {
-  if (task.lead) return { type: 'lead', name: `${task.lead.firstName} ${task.lead.lastName}`, href: `/leads/${task.lead.id}` };
-  if (task.contact) return { type: 'contact', name: `${task.contact.firstName} ${task.contact.lastName}`, href: `/contacts/${task.contact.id}` };
-  if (task.opportunity) return { type: 'deal', name: task.opportunity.name, href: `/deals/${task.opportunity.id}` };
+function getEntityInfo(
+  task: TaskCardProps['task']
+): { type: string; name: string; href: string } | null {
+  if (task.lead)
+    return {
+      type: 'lead',
+      name: `${task.lead.firstName} ${task.lead.lastName}`,
+      href: `/leads/${task.lead.id}`,
+    };
+  if (task.contact)
+    return {
+      type: 'contact',
+      name: `${task.contact.firstName} ${task.contact.lastName}`,
+      href: `/contacts/${task.contact.id}`,
+    };
+  if (task.opportunity)
+    return { type: 'deal', name: task.opportunity.name, href: `/deals/${task.opportunity.id}` };
   return null;
 }
 
@@ -71,9 +84,12 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
   const dueStatus = getDueDateStatus(task.dueDate);
   const entity = getEntityInfo(task);
 
-  const dueDateColor = dueStatus === 'overdue' ? 'text-red-600 dark:text-red-400' :
-    dueStatus === 'today' ? 'text-amber-600 dark:text-amber-400' :
-    'text-muted-foreground';
+  const dueDateColor =
+    dueStatus === 'overdue'
+      ? 'text-red-600 dark:text-red-400'
+      : dueStatus === 'today'
+        ? 'text-amber-600 dark:text-amber-400'
+        : 'text-muted-foreground';
 
   return (
     <Card
@@ -90,7 +106,10 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
       aria-label={`View task: ${task.title}`}
     >
       <div className="flex items-start gap-2">
-        <span className={`material-symbols-outlined text-base ${priority.color}`} aria-hidden="true">
+        <span
+          className={`material-symbols-outlined text-base ${priority.color}`}
+          aria-hidden="true"
+        >
           {priority.icon}
         </span>
         <div className="flex-1 min-w-0">
@@ -99,18 +118,19 @@ export function TaskCard({ task, onClick }: TaskCardProps) {
             <p className="text-xs text-muted-foreground truncate mt-0.5">{task.description}</p>
           )}
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-            {dueDisplay && (
-              <span className={`text-xs ${dueDateColor}`}>
-                Due: {dueDisplay}
-              </span>
-            )}
-            <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusStyle}`}>
+            {dueDisplay && <span className={`text-xs ${dueDateColor}`}>Due: {dueDisplay}</span>}
+            <span
+              className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${statusStyle}`}
+            >
               {task.status.replace('_', ' ')}
             </span>
           </div>
           {entity && (
             <div className="flex items-center gap-1 mt-1">
-              <span className="material-symbols-outlined text-xs text-muted-foreground" aria-hidden="true">
+              <span
+                className="material-symbols-outlined text-xs text-muted-foreground"
+                aria-hidden="true"
+              >
                 {ENTITY_ICONS[entity.type]}
               </span>
               <a

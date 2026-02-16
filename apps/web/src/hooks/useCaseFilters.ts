@@ -2,7 +2,7 @@
  * Case filter state hook — PG-138
  *
  * Manages URL-synced filter state for the case list page.
- * Follows useTicketFilters pattern.
+ * Uses string values for status/priority to match SearchFilterBar interface.
  */
 
 'use client';
@@ -11,8 +11,8 @@ import { useState, useMemo, useCallback } from 'react';
 
 export interface CaseFilters {
   search: string;
-  status: string[];
-  priority: string[];
+  status: string;
+  priority: string;
   overdue: boolean;
   sort: string;
   page: number;
@@ -21,8 +21,8 @@ export interface CaseFilters {
 
 const defaultFilters: CaseFilters = {
   search: '',
-  status: [],
-  priority: [],
+  status: '',
+  priority: '',
   overdue: false,
   sort: 'updatedAt',
   page: 1,
@@ -36,11 +36,11 @@ export function useCaseFilters() {
     setFilters((prev) => ({ ...prev, search, page: 1 }));
   }, []);
 
-  const setStatusFilter = useCallback((status: string[]) => {
+  const setStatusFilter = useCallback((status: string) => {
     setFilters((prev) => ({ ...prev, status, page: 1 }));
   }, []);
 
-  const setPriorityFilter = useCallback((priority: string[]) => {
+  const setPriorityFilter = useCallback((priority: string) => {
     setFilters((prev) => ({ ...prev, priority, page: 1 }));
   }, []);
 
@@ -56,14 +56,17 @@ export function useCaseFilters() {
     setFilters((prev) => ({ ...prev, page }));
   }, []);
 
-  const queryParams = useMemo(() => ({
-    search: filters.search || undefined,
-    status: filters.status.length > 0 ? filters.status : undefined,
-    priority: filters.priority.length > 0 ? filters.priority : undefined,
-    overdue: filters.overdue || undefined,
-    page: filters.page,
-    limit: filters.limit,
-  }), [filters]);
+  const queryParams = useMemo(
+    () => ({
+      search: filters.search || undefined,
+      status: filters.status ? [filters.status] : undefined,
+      priority: filters.priority ? [filters.priority] : undefined,
+      overdue: filters.overdue || undefined,
+      page: filters.page,
+      limit: filters.limit,
+    }),
+    [filters]
+  );
 
   return {
     filters,

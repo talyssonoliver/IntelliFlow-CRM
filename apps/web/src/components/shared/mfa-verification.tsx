@@ -195,8 +195,7 @@ export function MfaVerification({
         setError('Verification failed. Please try again.');
         return false;
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : 'Verification failed';
+        const message = err instanceof Error ? err.message : 'Verification failed';
 
         // Handle specific error types
         if (message.includes('expired')) {
@@ -219,28 +218,22 @@ export function MfaVerification({
   /**
    * Handle resend code request
    */
-  const handleResend = useCallback(
-    async (_method: 'sms' | 'email'): Promise<boolean> => {
-      try {
-        // TODO: Call auth.resendMfaCode with _method when implemented
-        // For now, simulate success
-        return true;
-      } catch {
-        setError('Failed to resend code. Please try again.');
-        return false;
-      }
-    },
-    []
-  );
+  const handleResend = useCallback(async (_method: 'sms' | 'email'): Promise<boolean> => {
+    try {
+      // TODO: Call auth.resendMfaCode with _method when implemented
+      // For now, simulate success
+      return true;
+    } catch {
+      setError('Failed to resend code. Please try again.');
+      return false;
+    }
+  }, []);
 
   // Render expired state
   if (isExpired) {
     return (
       <div className={cn('text-center py-8', className)}>
-        <span
-          className="material-symbols-outlined text-6xl text-amber-500 mb-4"
-          aria-hidden="true"
-        >
+        <span className="material-symbols-outlined text-6xl text-amber-500 mb-4" aria-hidden="true">
           schedule
         </span>
         <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
@@ -303,12 +296,8 @@ export function MfaVerification({
       {/* Email display */}
       {effectiveEmail && (
         <div className="mb-6 text-center">
-          <p className="text-sm text-slate-600 dark:text-slate-400">
-            Verifying for
-          </p>
-          <p className="font-medium text-slate-900 dark:text-white">
-            {effectiveEmail}
-          </p>
+          <p className="text-sm text-slate-600 dark:text-slate-400">Verifying for</p>
+          <p className="font-medium text-slate-900 dark:text-white">{effectiveEmail}</p>
         </div>
       )}
 

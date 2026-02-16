@@ -61,13 +61,22 @@ export async function writeEntry(
       try {
         const encryptor = getAuditEncryption();
         if (beforeState) {
-          beforeState = { _encrypted: true, ...encryptor.encryptAuditLog(beforeState as Record<string, unknown>) };
+          beforeState = {
+            _encrypted: true,
+            ...encryptor.encryptAuditLog(beforeState as Record<string, unknown>),
+          };
         }
         if (afterState) {
-          afterState = { _encrypted: true, ...encryptor.encryptAuditLog(afterState as Record<string, unknown>) };
+          afterState = {
+            _encrypted: true,
+            ...encryptor.encryptAuditLog(afterState as Record<string, unknown>),
+          };
         }
         if (metadata) {
-          metadata = { _encrypted: true, ...encryptor.encryptAuditLog(metadata as Record<string, unknown>) };
+          metadata = {
+            _encrypted: true,
+            ...encryptor.encryptAuditLog(metadata as Record<string, unknown>),
+          };
         }
       } catch (encError) {
         console.warn('[AUDIT] Encryption failed, writing plaintext:', encError);

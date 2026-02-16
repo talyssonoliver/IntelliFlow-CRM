@@ -220,7 +220,10 @@ export const createWSContext = async (authHeader?: string): Promise<BaseContext>
   };
 };
 
-export const createContext = async (opts?: { req?: Request; res?: Response }): Promise<BaseContext> => {
+export const createContext = async (opts?: {
+  req?: Request;
+  res?: Response;
+}): Promise<BaseContext> => {
   let user: UserSession | null = null;
   const hadBearerToken = Boolean(opts?.req && extractBearerToken(opts?.req));
 
@@ -278,15 +281,15 @@ export const createContext = async (opts?: { req?: Request; res?: Response }): P
             }
 
             // Extract name from user metadata
-            const userName = supabaseUser.user_metadata?.name ||
+            const userName =
+              supabaseUser.user_metadata?.name ||
               supabaseUser.user_metadata?.full_name ||
               supabaseUser.email?.split('@')[0] ||
               'User';
 
             // Extract avatar URL
-            const avatarUrl = supabaseUser.user_metadata?.avatar_url ||
-              supabaseUser.user_metadata?.picture ||
-              null;
+            const avatarUrl =
+              supabaseUser.user_metadata?.avatar_url || supabaseUser.user_metadata?.picture || null;
 
             // Create the user in the database
             const newUser = await apiPrisma.user.create({

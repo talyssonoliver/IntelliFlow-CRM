@@ -65,10 +65,7 @@ export function isDoNotTrackEnabled(): boolean {
   if (globalThis.window === undefined) return false;
 
   const nav = navigator as NavigatorWithMsDoNotTrack;
-  const dnt =
-    navigator.doNotTrack ||
-    globalThis.doNotTrack ||
-    nav.msDoNotTrack;
+  const dnt = navigator.doNotTrack || globalThis.doNotTrack || nav.msDoNotTrack;
 
   return dnt === '1' || dnt === 'yes';
 }
@@ -320,10 +317,7 @@ export function trackSignupComplete(options: {
 /**
  * Track email verification event
  */
-export function trackEmailVerified(options: {
-  userId?: string;
-  timeToVerify?: number;
-}): void {
+export function trackEmailVerified(options: { userId?: string; timeToVerify?: number }): void {
   trackEvent({
     name: 'email_verified',
     category: 'registration',
@@ -380,11 +374,7 @@ export function trackOnboardingComplete(options: {
 /**
  * Track page view
  */
-export function trackPageView(options: {
-  path: string;
-  title?: string;
-  referrer?: string;
-}): void {
+export function trackPageView(options: { path: string; title?: string; referrer?: string }): void {
   trackEvent({
     name: 'page_view',
     category: 'navigation',

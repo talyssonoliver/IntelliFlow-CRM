@@ -37,7 +37,7 @@ vi.mock('@intelliflow/ui', async () => {
   const actual = await vi.importActual('@intelliflow/ui');
   return {
     ...(actual as any),
-    Sheet: ({ children, open }: any) => open ? <div data-testid="sheet">{children}</div> : null,
+    Sheet: ({ children, open }: any) => (open ? <div data-testid="sheet">{children}</div> : null),
     SheetContent: ({ children }: any) => <div data-testid="sheet-content">{children}</div>,
     SheetTitle: ({ children }: any) => <h2>{children}</h2>,
     SheetDescription: ({ children }: any) => <p>{children}</p>,

@@ -2,22 +2,25 @@
 
 ## Overview
 
-This project uses **real seeded database data** for integration tests instead of mocks. This approach:
+This project uses **real seeded database data** for integration tests instead of
+mocks. This approach:
 
-✅ **Prevents regressions** - Tests automatically catch schema changes (like adding `tenantId`)
-✅ **No duplication** - Single source of truth in `seed.ts`
+✅ **Prevents regressions** - Tests automatically catch schema changes (like
+adding `tenantId`) ✅ **No duplication** - Single source of truth in `seed.ts`
 ✅ **Tests real scenarios** - Uses actual database relationships and constraints
 ✅ **Less maintenance** - No need to update mocks when schema changes
 
 ## Test Types
 
 ### Unit Tests (use mocks)
+
 - Test isolated business logic
 - Mock external dependencies
 - Fast, deterministic
 - Location: `*.test.ts`
 
 ### Integration Tests (use real DB)
+
 - Test against real seeded database
 - Query actual records
 - Test relationships and constraints
@@ -156,35 +159,35 @@ All seed IDs are available via `SEED_IDS` object:
 
 ```typescript
 // Users
-SEED_IDS.users.admin
-SEED_IDS.users.sarahJohnson
-SEED_IDS.users.mikeDavis
+SEED_IDS.users.admin;
+SEED_IDS.users.sarahJohnson;
+SEED_IDS.users.mikeDavis;
 // ... and more
 
 // Leads
-SEED_IDS.leads.sarahMiller
-SEED_IDS.leads.davidChen
-SEED_IDS.leads.amandaSmith
+SEED_IDS.leads.sarahMiller;
+SEED_IDS.leads.davidChen;
+SEED_IDS.leads.amandaSmith;
 // ... and more
 
 // Contacts
-SEED_IDS.contacts.sarahMiller
-SEED_IDS.contacts.davidChen
+SEED_IDS.contacts.sarahMiller;
+SEED_IDS.contacts.davidChen;
 // ... and more
 
 // Accounts
-SEED_IDS.accounts.techCorp
-SEED_IDS.accounts.designCo
+SEED_IDS.accounts.techCorp;
+SEED_IDS.accounts.designCo;
 // ... and more
 
 // Opportunities
-SEED_IDS.opportunities.enterpriseLicenseAcme
-SEED_IDS.opportunities.annualSubscriptionTechStart
+SEED_IDS.opportunities.enterpriseLicenseAcme;
+SEED_IDS.opportunities.annualSubscriptionTechStart;
 // ... and more
 
 // Tasks
-SEED_IDS.tasks.followUpSarah
-SEED_IDS.tasks.callDavid
+SEED_IDS.tasks.followUpSarah;
+SEED_IDS.tasks.callDavid;
 // ... and more
 ```
 
@@ -193,30 +196,39 @@ See `packages/db/prisma/seed.ts` for the complete list.
 ## Helper Functions
 
 ### `verifySeedData()`
+
 Throws error if seed data is missing. Call in `beforeAll()`.
 
 ### `getSeedData.lead(id)`
+
 Returns lead with owner and contact relations.
 
 ### `getSeedData.contact(id)`
+
 Returns contact with owner and account relations.
 
 ### `getSeedData.account(id)`
+
 Returns account with owner and counts.
 
 ### `getSeedData.opportunity(id)`
+
 Returns opportunity with all relations.
 
 ### `getSeedData.task(id)`
+
 Returns task with all relations.
 
 ### `getSeedData.user(id)`
+
 Returns user by seed ID.
 
 ### `createIntegrationTestContext()`
+
 Creates test context with real Prisma client and services.
 
 ### `createIntegrationAdminContext()`
+
 Creates admin context for testing admin procedures.
 
 ## Migration Guide
@@ -259,11 +271,14 @@ it('should return lead', async () => {
 ## Benefits
 
 ### 1. Auto-Catches Schema Changes
+
 When `tenantId` was added to the schema:
+
 - **Mocks**: All tests broke with TypeScript errors (needed manual updates)
 - **Seed Data**: Tests passed automatically (seed data already had tenantId)
 
 ### 2. Tests Real Constraints
+
 ```typescript
 it('should enforce unique email', async () => {
   // This actually tests the database constraint
@@ -279,6 +294,7 @@ it('should enforce unique email', async () => {
 ```
 
 ### 3. Tests Tenant Isolation
+
 ```typescript
 it('should only return leads for tenant', async () => {
   const ctx = await createIntegrationTestContext();
@@ -293,6 +309,7 @@ it('should only return leads for tenant', async () => {
 ```
 
 ### 4. Single Source of Truth
+
 - Schema changes → Update `schema.prisma` → Run migration → Re-seed
 - Tests automatically use new schema
 - No manual mock updates needed
@@ -323,18 +340,22 @@ pnpm --filter @intelliflow/db seed
 ## Examples
 
 See these files for complete examples:
+
 - `modules/lead/__tests__/lead.router.integration.test.ts`
 - `__tests__/contract/lead.contract.integration.test.ts`
 
 ## Troubleshooting
 
 ### "No seed data found" Error
+
 Run: `pnpm --filter @intelliflow/db seed`
 
 ### "Lead not found in seed data" Error
+
 Check that SEED_ID matches actual seed data in `packages/db/prisma/seed.ts`
 
 ### Tests Failing After Schema Change
+
 1. Update `schema.prisma`
 2. Run migration: `pnpm run db:migrate`
 3. Re-seed: `pnpm --filter @intelliflow/db seed`

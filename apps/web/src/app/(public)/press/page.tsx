@@ -79,8 +79,8 @@ export default function PressPage() {
             </h1>
 
             <p className="text-lg text-slate-200 max-w-2xl mx-auto mb-8">
-              Stay up to date with the latest news, product announcements, and company updates
-              from IntelliFlow CRM.
+              Stay up to date with the latest news, product announcements, and company updates from
+              IntelliFlow CRM.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -205,9 +205,7 @@ export default function PressPage() {
                   {release.title}
                 </h3>
 
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                  {release.summary}
-                </p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{release.summary}</p>
 
                 <Link
                   href={`/press/${release.id}`}

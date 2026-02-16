@@ -29,7 +29,7 @@ describe('Features Content Data', () => {
     });
 
     it('should have required category fields', () => {
-      featuresData.categories.forEach(category => {
+      featuresData.categories.forEach((category) => {
         expect(category.id).toBeDefined();
         expect(category.name).toBeDefined();
         expect(category.description).toBeDefined();
@@ -40,13 +40,13 @@ describe('Features Content Data', () => {
     });
 
     it('should have unique category IDs', () => {
-      const ids = featuresData.categories.map(c => c.id);
+      const ids = featuresData.categories.map((c) => c.id);
       const uniqueIds = new Set(ids);
       expect(uniqueIds.size).toBe(ids.length);
     });
 
     it('should have the expected category names', () => {
-      const categoryNames = featuresData.categories.map(c => c.name);
+      const categoryNames = featuresData.categories.map((c) => c.name);
       expect(categoryNames).toContain('Core CRM');
       expect(categoryNames).toContain('AI & Intelligence');
       expect(categoryNames).toContain('Security & Governance');
@@ -63,14 +63,14 @@ describe('Features Content Data', () => {
     });
 
     it('should have 4 features per category', () => {
-      featuresData.categories.forEach(category => {
+      featuresData.categories.forEach((category) => {
         expect(category.features).toHaveLength(4);
       });
     });
 
     it('should have required feature fields', () => {
-      featuresData.categories.forEach(category => {
-        category.features.forEach(feature => {
+      featuresData.categories.forEach((category) => {
+        category.features.forEach((feature) => {
           expect(feature.id).toBeDefined();
           expect(feature.title).toBeDefined();
           expect(feature.description).toBeDefined();
@@ -91,8 +91,8 @@ describe('Features Content Data', () => {
     it('should have unique feature IDs across all categories', () => {
       const allFeatureIds: string[] = [];
 
-      featuresData.categories.forEach(category => {
-        category.features.forEach(feature => {
+      featuresData.categories.forEach((category) => {
+        category.features.forEach((feature) => {
           allFeatureIds.push(feature.id);
         });
       });
@@ -102,32 +102,32 @@ describe('Features Content Data', () => {
     });
 
     it('should have non-empty feature titles', () => {
-      featuresData.categories.forEach(category => {
-        category.features.forEach(feature => {
+      featuresData.categories.forEach((category) => {
+        category.features.forEach((feature) => {
           expect(feature.title.trim().length).toBeGreaterThan(0);
         });
       });
     });
 
     it('should have descriptive feature descriptions (min 50 chars)', () => {
-      featuresData.categories.forEach(category => {
-        category.features.forEach(feature => {
+      featuresData.categories.forEach((category) => {
+        category.features.forEach((feature) => {
           expect(feature.description.length).toBeGreaterThan(50);
         });
       });
     });
 
     it('should have at least 2 benefits per feature', () => {
-      featuresData.categories.forEach(category => {
-        category.features.forEach(feature => {
+      featuresData.categories.forEach((category) => {
+        category.features.forEach((feature) => {
           expect(feature.benefits.length).toBeGreaterThanOrEqual(2);
         });
       });
     });
 
     it('should have valid learn more URLs', () => {
-      featuresData.categories.forEach(category => {
-        category.features.forEach(feature => {
+      featuresData.categories.forEach((category) => {
+        category.features.forEach((feature) => {
           expect(feature.learnMoreUrl).toMatch(/^\/features\//);
         });
       });
@@ -138,10 +138,10 @@ describe('Features Content Data', () => {
     it('should use valid Material Symbols icon names', () => {
       const validIconPattern = /^[a-z_]+$/;
 
-      featuresData.categories.forEach(category => {
+      featuresData.categories.forEach((category) => {
         expect(category.icon).toMatch(validIconPattern);
 
-        category.features.forEach(feature => {
+        category.features.forEach((feature) => {
           expect(feature.icon).toMatch(validIconPattern);
         });
       });
@@ -150,16 +150,14 @@ describe('Features Content Data', () => {
 
   describe('Content Quality', () => {
     it('should have AI-related features in AI category', () => {
-      const aiCategory = featuresData.categories.find(
-        c => c.id === 'ai-intelligence'
-      );
+      const aiCategory = featuresData.categories.find((c) => c.id === 'ai-intelligence');
 
       expect(aiCategory).toBeDefined();
       expect(aiCategory!.features.length).toBeGreaterThan(0);
 
       // Check that features mention AI or intelligence
       const hasAIContent = aiCategory!.features.some(
-        feature =>
+        (feature) =>
           feature.title.toLowerCase().includes('ai') ||
           feature.description.toLowerCase().includes('ai') ||
           feature.description.toLowerCase().includes('intelligence')
@@ -169,16 +167,14 @@ describe('Features Content Data', () => {
     });
 
     it('should have security-related features in security category', () => {
-      const securityCategory = featuresData.categories.find(
-        c => c.id === 'security-governance'
-      );
+      const securityCategory = featuresData.categories.find((c) => c.id === 'security-governance');
 
       expect(securityCategory).toBeDefined();
       expect(securityCategory!.features.length).toBeGreaterThan(0);
 
       // Check that features mention security or compliance
       const hasSecurityContent = securityCategory!.features.some(
-        feature =>
+        (feature) =>
           feature.title.toLowerCase().includes('security') ||
           feature.title.toLowerCase().includes('compliance') ||
           feature.description.toLowerCase().includes('security')

@@ -25,11 +25,7 @@ export type IdpStatus = (typeof IDP_STATUSES)[number];
 /**
  * Types of deployments in the self-service pipeline
  */
-export const DEPLOYMENT_TYPES = [
-  'preview',
-  'staging',
-  'production',
-] as const;
+export const DEPLOYMENT_TYPES = ['preview', 'staging', 'production'] as const;
 
 export type DeploymentType = (typeof DEPLOYMENT_TYPES)[number];
 
@@ -40,13 +36,7 @@ export type DeploymentType = (typeof DEPLOYMENT_TYPES)[number];
 /**
  * Supported deployment providers
  */
-export const DEPLOYMENT_PROVIDERS = [
-  'Vercel',
-  'Railway',
-  'Easypanel',
-  'Docker',
-  'Manual',
-] as const;
+export const DEPLOYMENT_PROVIDERS = ['Vercel', 'Railway', 'Easypanel', 'Docker', 'Manual'] as const;
 
 export type DeploymentProvider = (typeof DEPLOYMENT_PROVIDERS)[number];
 
@@ -92,13 +82,7 @@ export type GoldenPathType = (typeof GOLDEN_PATH_TYPES)[number];
 /**
  * CI pipeline stages
  */
-export const CI_STAGES = [
-  'typecheck',
-  'lint',
-  'test',
-  'build',
-  'security-scan',
-] as const;
+export const CI_STAGES = ['typecheck', 'lint', 'test', 'build', 'security-scan'] as const;
 
 export type CiStage = (typeof CI_STAGES)[number];
 

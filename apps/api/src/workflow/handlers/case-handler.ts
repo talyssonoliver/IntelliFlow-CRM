@@ -72,15 +72,9 @@ export const caseEventPayloadSchema = z.object({
   clientId: z.string().optional(),
   assignedTo: z.string().optional(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'URGENT']).optional(),
-  status: z
-    .enum(['OPEN', 'IN_PROGRESS', 'ON_HOLD', 'CLOSED', 'CANCELLED'])
-    .optional(),
-  previousStatus: z
-    .enum(['OPEN', 'IN_PROGRESS', 'ON_HOLD', 'CLOSED', 'CANCELLED'])
-    .optional(),
-  newStatus: z
-    .enum(['OPEN', 'IN_PROGRESS', 'ON_HOLD', 'CLOSED', 'CANCELLED'])
-    .optional(),
+  status: z.enum(['OPEN', 'IN_PROGRESS', 'ON_HOLD', 'CLOSED', 'CANCELLED']).optional(),
+  previousStatus: z.enum(['OPEN', 'IN_PROGRESS', 'ON_HOLD', 'CLOSED', 'CANCELLED']).optional(),
+  newStatus: z.enum(['OPEN', 'IN_PROGRESS', 'ON_HOLD', 'CLOSED', 'CANCELLED']).optional(),
   changedBy: z.string().optional(),
   deadline: z.string().datetime().optional(),
   previousDeadline: z.string().datetime().nullable().optional(),
@@ -179,7 +173,8 @@ abstract class BaseCaseEventHandler implements ICaseEventHandler {
       // Lazily initialize Temporal engine with default config if not set up
       if (!workflowEngine && engine === 'temporal') {
         try {
-          const temporalEngine = await WorkflowEngineFactory.createTemporalEngine(DEFAULT_TEMPORAL_CONFIG);
+          const temporalEngine =
+            await WorkflowEngineFactory.createTemporalEngine(DEFAULT_TEMPORAL_CONFIG);
           workflowEngine = temporalEngine;
         } catch {
           // Temporal not available — fall through to simulation
@@ -898,9 +893,7 @@ export class CaseEventHandlerRegistry {
     const handler = this.handlers.get(eventType);
 
     if (!handler) {
-      console.warn(
-        `[CaseEventHandlerRegistry] No handler registered for event type: ${eventType}`
-      );
+      console.warn(`[CaseEventHandlerRegistry] No handler registered for event type: ${eventType}`);
       return {
         success: false,
         error: `No handler for event type: ${eventType}`,
@@ -946,8 +939,8 @@ let registry: CaseEventHandlerRegistry | null = null;
  * Get the global case event handler registry
  */
 export function getCaseEventHandlerRegistry(): CaseEventHandlerRegistry {
-    registry ??= new CaseEventHandlerRegistry();
-    return registry;
+  registry ??= new CaseEventHandlerRegistry();
+  return registry;
 }
 
 /**

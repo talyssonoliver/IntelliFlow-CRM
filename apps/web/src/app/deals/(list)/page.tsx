@@ -1,17 +1,18 @@
 'use client';
 
 /**
- * Deals Pipeline Page (PG-135 — Refactored)
+ * Deals Page (PG-135 + Deal List View)
  *
- * Orchestrates data fetching, auth, and layout.
- * Component rendering is delegated to @/components/deals/*.
+ * Supports two views controlled by ?view= query param:
+ * - Pipeline (kanban board with DnD) — ?view=pipeline
+ * - List (DataTable with search/filters) — default (no param)
  *
  * @module DealsPage
  */
 
 import * as React from 'react';
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, Skeleton } from '@intelliflow/ui';
 import { OPPORTUNITY_STAGES, type OpportunityStage } from '@intelliflow/domain';
 import { PageHeader } from '@/components/shared';
@@ -31,11 +32,7 @@ import {
   Legend,
 } from 'recharts';
 
-import {
-  PipelineBoard,
-  ValueSummary,
-  DealFilters,
-} from '@/components/deals';
+import { PipelineBoard, ValueSummary, DealFilters, DealListView } from '@/components/deals';
 import {
   type Deal,
   type DealFiltersValue,
@@ -44,6 +41,33 @@ import {
   calculateStats,
   formatCurrencyCompact,
 } from '@/components/deals/types';
+
+// =============================================================================
+// View Mode
+// =============================================================================
+
+type ViewMode = 'kanban' | 'list';
+
+function useViewMode(): [ViewMode, (mode: ViewMode) => void] {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const viewParam = searchParams.get('view');
+
+  const viewMode: ViewMode = viewParam === 'pipeline' ? 'kanban' : 'list';
+
+  const setViewMode = useCallback(
+    (mode: ViewMode) => {
+      if (mode === 'kanban') {
+        router.push('/deals?view=pipeline');
+      } else {
+        router.push('/deals');
+      }
+    },
+    [router]
+  );
+
+  return [viewMode, setViewMode];
+}
 
 // =============================================================================
 // Loading Skeleton Components
@@ -85,7 +109,7 @@ function KanbanColumnSkeleton() {
   );
 }
 
-function DealsPageSkeleton() {
+function PipelineSkeleton() {
   return (
     <>
       <div className="flex flex-col gap-1 mb-6">
@@ -108,6 +132,34 @@ function DealsPageSkeleton() {
           ))}
         </div>
       </Card>
+    </>
+  );
+}
+
+function ListSkeleton() {
+  return (
+    <>
+      <div className="flex flex-col gap-1 mb-6">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-64" />
+      </div>
+      <Skeleton className="h-10 w-full mb-4" />
+      <div className="space-y-3">
+        {[...Array(5)].map((_, i) => (
+          <div
+            key={`list-skel-${i}`}
+            className="flex items-center gap-4 p-4 bg-card rounded-lg border border-border"
+          >
+            <Skeleton className="size-9 rounded-lg" />
+            <div className="flex-1 space-y-2">
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-3 w-1/4" />
+            </div>
+            <Skeleton className="h-6 w-20" />
+            <Skeleton className="h-6 w-24" />
+          </div>
+        ))}
+      </div>
     </>
   );
 }
@@ -150,13 +202,14 @@ function ErrorDisplay({ message, onRetry }: Readonly<ErrorDisplayProps>) {
 
 export default function DealsPage() {
   const router = useRouter();
+  const [viewMode, setViewMode] = useViewMode();
   const [deals, setDeals] = useState<Deal[]>([]);
   const [filters, setFilters] = useState<DealFiltersValue>({});
 
   // Require authentication
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
 
-  // Fetch opportunities from API
+  // Fetch opportunities from API (only for pipeline view — list view fetches its own data)
   const {
     data: opportunitiesData,
     isLoading,
@@ -169,7 +222,7 @@ export default function DealsPage() {
       sortBy: 'createdAt',
       sortOrder: 'desc',
     },
-    { enabled: isAuthenticated && !authLoading },
+    { enabled: isAuthenticated && !authLoading && viewMode === 'kanban' }
   );
 
   // Auth error detection
@@ -202,19 +255,17 @@ export default function DealsPage() {
   // Handler: stage change from PipelineBoard (optimistic update + persist)
   const handleStageChange = useCallback(
     (dealId: string, newStage: OpportunityStage) => {
-      setDeals((prev) =>
-        prev.map((d) => (d.id === dealId ? { ...d, stage: newStage } : d)),
-      );
+      setDeals((prev) => prev.map((d) => (d.id === dealId ? { ...d, stage: newStage } : d)));
       updateOpportunity.mutate({ id: dealId, stage: newStage });
     },
-    [updateOpportunity],
+    [updateOpportunity]
   );
 
   const handleDealNavigate = useCallback(
     (dealId: string) => {
       router.push(`/deals/${dealId}`);
     },
-    [router],
+    [router]
   );
 
   // Compute stats
@@ -222,9 +273,10 @@ export default function DealsPage() {
 
   // Deals grouped by stage for charts
   const dealsByStage = useMemo(() => {
-    const grouped = Object.fromEntries(
-      OPPORTUNITY_STAGES.map((s) => [s, [] as Deal[]]),
-    ) as Record<OpportunityStage, Deal[]>;
+    const grouped = Object.fromEntries(OPPORTUNITY_STAGES.map((s) => [s, [] as Deal[]])) as Record<
+      OpportunityStage,
+      Deal[]
+    >;
 
     for (const deal of deals) {
       if (grouped[deal.stage]) grouped[deal.stage].push(deal);
@@ -235,14 +287,14 @@ export default function DealsPage() {
   // Chart data
   const pieChartData = useMemo(
     () =>
-      OPPORTUNITY_STAGES.filter(
-        (stage) => !['CLOSED_WON', 'CLOSED_LOST'].includes(stage),
-      ).map((stage) => ({
-        name: PIPELINE_STAGE_CONFIG[stage].label,
-        value: dealsByStage[stage].length,
-        color: PIPELINE_STAGE_CONFIG[stage].color,
-      })),
-    [dealsByStage],
+      OPPORTUNITY_STAGES.filter((stage) => !['CLOSED_WON', 'CLOSED_LOST'].includes(stage)).map(
+        (stage) => ({
+          name: PIPELINE_STAGE_CONFIG[stage].label,
+          value: dealsByStage[stage].length,
+          color: PIPELINE_STAGE_CONFIG[stage].color,
+        })
+      ),
+    [dealsByStage]
   );
 
   const barChartData = useMemo(
@@ -252,12 +304,20 @@ export default function DealsPage() {
         revenue: dealsByStage[stage].reduce((sum, deal) => sum + deal.value, 0),
         color: PIPELINE_STAGE_CONFIG[stage].color,
       })),
-    [dealsByStage],
+    [dealsByStage]
   );
 
-  // Loading
-  if (isLoading || authLoading) {
-    return <DealsPageSkeleton />;
+  // Header config adapts to view mode
+  const headerTitle = viewMode === 'kanban' ? 'Deals Pipeline' : 'Deal List';
+  const headerDescription =
+    viewMode === 'kanban'
+      ? 'Manage your sales pipeline with drag-and-drop'
+      : 'Browse and manage all your deals';
+
+  // ─── Loading ───────────────────────────────────────────────────────────────
+
+  if (authLoading || (isLoading && viewMode === 'kanban')) {
+    return viewMode === 'kanban' ? <PipelineSkeleton /> : <ListSkeleton />;
   }
 
   // Auth error redirect
@@ -274,8 +334,8 @@ export default function DealsPage() {
     );
   }
 
-  // Error
-  if (isError && !isAuthError) {
+  // Error (pipeline view only — list handles its own errors)
+  if (isError && !isAuthError && viewMode === 'kanban') {
     return (
       <ErrorDisplay
         message={error?.message ?? 'An unexpected error occurred'}
@@ -284,17 +344,54 @@ export default function DealsPage() {
     );
   }
 
+  // ─── List View ─────────────────────────────────────────────────────────────
+
+  if (viewMode === 'list') {
+    return (
+      <div className="flex flex-col gap-6">
+        <PageHeader
+          breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Deals' }]}
+          title={headerTitle}
+          description={headerDescription}
+          actions={[
+            {
+              label: 'Pipeline',
+              icon: 'view_kanban',
+              variant: 'secondary',
+              onClick: () => setViewMode('kanban'),
+              hideOnMobile: true,
+            },
+            {
+              label: 'New Deal',
+              icon: 'add',
+              variant: 'primary',
+              href: '/deals/new',
+            },
+          ]}
+        />
+
+        <DealListView />
+      </div>
+    );
+  }
+
+  // ─── Pipeline View ─────────────────────────────────────────────────────────
+
   return (
     <>
       {/* Header */}
       <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Deals' },
-        ]}
-        title="Deals Pipeline"
-        description="Manage your sales pipeline with drag-and-drop"
+        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Deals' }]}
+        title={headerTitle}
+        description={headerDescription}
         actions={[
+          {
+            label: 'List',
+            icon: 'view_list',
+            variant: 'secondary',
+            onClick: () => setViewMode('list'),
+            hideOnMobile: true,
+          },
           {
             label: 'Forecast',
             icon: 'insights',
@@ -312,7 +409,12 @@ export default function DealsPage() {
       />
 
       {/* Filters (AC-9) */}
-      <DealFilters value={filters} onChange={setFilters} />
+      <DealFilters
+        value={filters}
+        onChange={setFilters}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+      />
 
       {/* Stats Cards (AC-7, AC-24) */}
       <ValueSummary stats={pipelineStats} />
@@ -347,7 +449,10 @@ export default function DealsPage() {
           {/* SR-only data table for chart accessibility (AC-23) */}
           <table className="sr-only" aria-label="Deals by Stage data">
             <thead>
-              <tr><th>Stage</th><th>Count</th></tr>
+              <tr>
+                <th>Stage</th>
+                <th>Count</th>
+              </tr>
             </thead>
             <tbody>
               {pieChartData.map((entry) => (
@@ -390,7 +495,10 @@ export default function DealsPage() {
           {/* SR-only data table for chart accessibility (AC-23) */}
           <table className="sr-only" aria-label="Revenue by Stage data">
             <thead>
-              <tr><th>Stage</th><th>Revenue</th></tr>
+              <tr>
+                <th>Stage</th>
+                <th>Revenue</th>
+              </tr>
             </thead>
             <tbody>
               {barChartData.map((entry) => (

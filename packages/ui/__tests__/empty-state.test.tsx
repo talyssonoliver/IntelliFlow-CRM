@@ -14,12 +14,11 @@ describe('EmptyState', () => {
 
     it('should render with description', () => {
       render(
-        <EmptyState
-          title="No leads"
-          description="Start by adding your first lead to the system."
-        />
+        <EmptyState title="No leads" description="Start by adding your first lead to the system." />
       );
-      expect(screen.getByText('Start by adding your first lead to the system.')).toBeInTheDocument();
+      expect(
+        screen.getByText('Start by adding your first lead to the system.')
+      ).toBeInTheDocument();
     });
 
     it('should render default icon', () => {
@@ -41,48 +40,28 @@ describe('EmptyState', () => {
 
   describe('Actions', () => {
     it('should render primary action button', () => {
-      render(
-        <EmptyState
-          title="No leads"
-          action={{ label: 'Add Lead' }}
-        />
-      );
+      render(<EmptyState title="No leads" action={{ label: 'Add Lead' }} />);
       expect(screen.getByRole('button', { name: 'Add Lead' })).toBeInTheDocument();
     });
 
     it('should call onClick when primary action is clicked', async () => {
       const onClick = vi.fn();
       const user = userEvent.setup();
-      render(
-        <EmptyState
-          title="No leads"
-          action={{ label: 'Add Lead', onClick }}
-        />
-      );
+      render(<EmptyState title="No leads" action={{ label: 'Add Lead', onClick }} />);
 
       await user.click(screen.getByRole('button', { name: 'Add Lead' }));
       expect(onClick).toHaveBeenCalledTimes(1);
     });
 
     it('should render action as link when href is provided', () => {
-      render(
-        <EmptyState
-          title="No leads"
-          action={{ label: 'Go to Leads', href: '/leads' }}
-        />
-      );
+      render(<EmptyState title="No leads" action={{ label: 'Go to Leads', href: '/leads' }} />);
       const link = screen.getByRole('link', { name: 'Go to Leads' });
       expect(link).toBeInTheDocument();
       expect(link).toHaveAttribute('href', '/leads');
     });
 
     it('should render action with icon', () => {
-      render(
-        <EmptyState
-          title="No leads"
-          action={{ label: 'Add Lead', icon: 'add' }}
-        />
-      );
+      render(<EmptyState title="No leads" action={{ label: 'Add Lead', icon: 'add' }} />);
       expect(screen.getByText('add')).toBeInTheDocument();
     });
 
@@ -172,7 +151,13 @@ describe('EmptyState', () => {
   describe('Styling', () => {
     it('should center content', () => {
       const { container } = render(<EmptyState title="Empty" />);
-      expect(container.firstChild).toHaveClass('flex', 'flex-col', 'items-center', 'justify-center', 'text-center');
+      expect(container.firstChild).toHaveClass(
+        'flex',
+        'flex-col',
+        'items-center',
+        'justify-center',
+        'text-center'
+      );
     });
 
     it('should accept custom className', () => {

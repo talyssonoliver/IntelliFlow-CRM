@@ -18,7 +18,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('react', async () => {
   const actual = await vi.importActual('react');
   return {
-    ...actual as any,
+    ...(actual as any),
     useState: vi.fn(),
     useEffect: vi.fn(),
     useCallback: vi.fn((fn: any) => fn),
@@ -81,44 +81,75 @@ describe('TestRunnerModal - logic tests', () => {
 
   describe('progressPercent calculation', () => {
     it('should calculate 0 when no tests run', () => {
-      const progress = { testsRun: 0, testsPassed: 0, testsFailed: 0, testsSkipped: 0, currentTest: '' };
-      const progressPercent = progress.testsRun > 0
-        ? Math.round((progress.testsPassed / progress.testsRun) * 100)
-        : 0;
+      const progress = {
+        testsRun: 0,
+        testsPassed: 0,
+        testsFailed: 0,
+        testsSkipped: 0,
+        currentTest: '',
+      };
+      const progressPercent =
+        progress.testsRun > 0 ? Math.round((progress.testsPassed / progress.testsRun) * 100) : 0;
       expect(progressPercent).toBe(0);
     });
 
     it('should calculate 100 when all tests pass', () => {
-      const progress = { testsRun: 10, testsPassed: 10, testsFailed: 0, testsSkipped: 0, currentTest: '' };
-      const progressPercent = progress.testsRun > 0
-        ? Math.round((progress.testsPassed / progress.testsRun) * 100)
-        : 0;
+      const progress = {
+        testsRun: 10,
+        testsPassed: 10,
+        testsFailed: 0,
+        testsSkipped: 0,
+        currentTest: '',
+      };
+      const progressPercent =
+        progress.testsRun > 0 ? Math.round((progress.testsPassed / progress.testsRun) * 100) : 0;
       expect(progressPercent).toBe(100);
     });
 
     it('should calculate correct percent when some fail', () => {
-      const progress = { testsRun: 10, testsPassed: 7, testsFailed: 3, testsSkipped: 0, currentTest: '' };
-      const progressPercent = progress.testsRun > 0
-        ? Math.round((progress.testsPassed / progress.testsRun) * 100)
-        : 0;
+      const progress = {
+        testsRun: 10,
+        testsPassed: 7,
+        testsFailed: 3,
+        testsSkipped: 0,
+        currentTest: '',
+      };
+      const progressPercent =
+        progress.testsRun > 0 ? Math.round((progress.testsPassed / progress.testsRun) * 100) : 0;
       expect(progressPercent).toBe(70);
     });
 
     it('should round correctly', () => {
-      const progress = { testsRun: 3, testsPassed: 1, testsFailed: 2, testsSkipped: 0, currentTest: '' };
-      const progressPercent = progress.testsRun > 0
-        ? Math.round((progress.testsPassed / progress.testsRun) * 100)
-        : 0;
+      const progress = {
+        testsRun: 3,
+        testsPassed: 1,
+        testsFailed: 2,
+        testsSkipped: 0,
+        currentTest: '',
+      };
+      const progressPercent =
+        progress.testsRun > 0 ? Math.round((progress.testsPassed / progress.testsRun) * 100) : 0;
       expect(progressPercent).toBe(33);
     });
   });
 
   describe('handleProgressEvent - test_pass logic', () => {
     it('should increment testsRun and testsPassed for test_pass', () => {
-      let progress = { testsRun: 0, testsPassed: 0, testsFailed: 0, testsSkipped: 0, currentTest: '' };
+      let progress = {
+        testsRun: 0,
+        testsPassed: 0,
+        testsFailed: 0,
+        testsSkipped: 0,
+        currentTest: '',
+      };
 
       // Simulate test_pass handler
-      const data = { type: 'test_pass', runId: 'run-1', timestamp: new Date().toISOString(), data: { testName: 'should work' } };
+      const data = {
+        type: 'test_pass',
+        runId: 'run-1',
+        timestamp: new Date().toISOString(),
+        data: { testName: 'should work' },
+      };
       if (data.type === 'test_pass') {
         progress = {
           ...progress,
@@ -136,9 +167,20 @@ describe('TestRunnerModal - logic tests', () => {
 
   describe('handleProgressEvent - test_fail logic', () => {
     it('should increment testsRun and testsFailed for test_fail', () => {
-      let progress = { testsRun: 5, testsPassed: 4, testsFailed: 0, testsSkipped: 1, currentTest: '' };
+      let progress = {
+        testsRun: 5,
+        testsPassed: 4,
+        testsFailed: 0,
+        testsSkipped: 1,
+        currentTest: '',
+      };
 
-      const data = { type: 'test_fail', runId: 'run-1', timestamp: new Date().toISOString(), data: { testName: 'should not fail' } };
+      const data = {
+        type: 'test_fail',
+        runId: 'run-1',
+        timestamp: new Date().toISOString(),
+        data: { testName: 'should not fail' },
+      };
       if (data.type === 'test_fail') {
         progress = {
           ...progress,
@@ -156,9 +198,20 @@ describe('TestRunnerModal - logic tests', () => {
 
   describe('handleProgressEvent - test_skip logic', () => {
     it('should increment testsRun and testsSkipped for test_skip', () => {
-      let progress = { testsRun: 2, testsPassed: 2, testsFailed: 0, testsSkipped: 0, currentTest: '' };
+      let progress = {
+        testsRun: 2,
+        testsPassed: 2,
+        testsFailed: 0,
+        testsSkipped: 0,
+        currentTest: '',
+      };
 
-      const data = { type: 'test_skip', runId: 'run-1', timestamp: new Date().toISOString(), data: { testName: 'pending test' } };
+      const data = {
+        type: 'test_skip',
+        runId: 'run-1',
+        timestamp: new Date().toISOString(),
+        data: { testName: 'pending test' },
+      };
       if (data.type === 'test_skip') {
         progress = {
           ...progress,
@@ -184,7 +237,10 @@ describe('TestRunnerModal - logic tests', () => {
       };
 
       if (data.type === 'suite_start' && data.data?.file) {
-        logs.push({ type: 'info', text: `Running: ${(data.data as any)?.suiteName || data.data?.file}` });
+        logs.push({
+          type: 'info',
+          text: `Running: ${(data.data as any)?.suiteName || data.data?.file}`,
+        });
       }
 
       expect(logs).toHaveLength(1);
@@ -201,7 +257,10 @@ describe('TestRunnerModal - logic tests', () => {
       };
 
       if (data.type === 'suite_start' && data.data?.file) {
-        logs.push({ type: 'info', text: `Running: ${(data.data as any)?.suiteName || data.data?.file}` });
+        logs.push({
+          type: 'info',
+          text: `Running: ${(data.data as any)?.suiteName || data.data?.file}`,
+        });
       }
 
       expect(logs[0].text).toBe('Running: src/test.ts');
@@ -245,7 +304,13 @@ describe('TestRunnerModal - logic tests', () => {
 
   describe('handleProgressEvent - complete logic', () => {
     it('should set final counts from complete event data', () => {
-      let progress = { testsRun: 0, testsPassed: 0, testsFailed: 0, testsSkipped: 0, currentTest: '' };
+      let progress = {
+        testsRun: 0,
+        testsPassed: 0,
+        testsFailed: 0,
+        testsSkipped: 0,
+        currentTest: '',
+      };
 
       const data = {
         type: 'complete',

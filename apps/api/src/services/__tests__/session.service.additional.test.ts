@@ -304,9 +304,7 @@ describe('SessionService - Additional Coverage', () => {
     });
 
     it('should handle user agent with no recognizable browser', () => {
-      const info = service.parseDeviceInfo(
-        'curl/7.64.1'
-      );
+      const info = service.parseDeviceInfo('curl/7.64.1');
       expect(info.browser).toBeUndefined();
       expect(info.os).toBeUndefined();
       expect(info.isMobile).toBe(false);
@@ -314,33 +312,25 @@ describe('SessionService - Additional Coverage', () => {
     });
 
     it('should detect Chrome without version match', () => {
-      const info = service.parseDeviceInfo(
-        'Mozilla/5.0 Chrome'
-      );
+      const info = service.parseDeviceInfo('Mozilla/5.0 Chrome');
       expect(info.browser).toBe('Chrome');
       expect(info.browserVersion).toBeUndefined();
     });
 
     it('should detect Firefox without version match', () => {
-      const info = service.parseDeviceInfo(
-        'Mozilla/5.0 Firefox'
-      );
+      const info = service.parseDeviceInfo('Mozilla/5.0 Firefox');
       expect(info.browser).toBe('Firefox');
       expect(info.browserVersion).toBeUndefined();
     });
 
     it('should detect Safari without version match', () => {
-      const info = service.parseDeviceInfo(
-        'Mozilla/5.0 (Macintosh) Safari/605.1.15'
-      );
+      const info = service.parseDeviceInfo('Mozilla/5.0 (Macintosh) Safari/605.1.15');
       expect(info.browser).toBe('Safari');
       expect(info.browserVersion).toBeUndefined();
     });
 
     it('should detect Edge without version match', () => {
-      const info = service.parseDeviceInfo(
-        'Mozilla/5.0 Chrome/120 Edg'
-      );
+      const info = service.parseDeviceInfo('Mozilla/5.0 Chrome/120 Edg');
       expect(info.browser).toBe('Edge');
       expect(info.browserVersion).toBeUndefined();
     });

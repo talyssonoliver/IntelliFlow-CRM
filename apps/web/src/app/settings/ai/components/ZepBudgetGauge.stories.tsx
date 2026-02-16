@@ -9,7 +9,8 @@ const meta: Meta<typeof ZepBudgetGauge> = {
     layout: 'centered',
     docs: {
       description: {
-        component: 'Circular gauge component displaying Zep memory budget usage with color-coded thresholds.',
+        component:
+          'Circular gauge component displaying Zep memory budget usage with color-coded thresholds.',
       },
     },
   },

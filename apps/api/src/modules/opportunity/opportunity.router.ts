@@ -31,7 +31,7 @@ import { type Context } from '../../context';
 import {
   getTenantContext,
   createTenantWhereClause,
-  type TenantAwareContext
+  type TenantAwareContext,
 } from '../../security/tenant-context';
 
 /**
@@ -296,9 +296,17 @@ export const opportunityRouter = createTRPCRouter({
     if (input.targetStage === 'CLOSED_WON') {
       result = await opportunityService.markAsWon(input.id, typedCtx.tenant.userId);
     } else if (input.targetStage === 'CLOSED_LOST') {
-      result = await opportunityService.markAsLost(input.id, input.reason || '', typedCtx.tenant.userId);
+      result = await opportunityService.markAsLost(
+        input.id,
+        input.reason || '',
+        typedCtx.tenant.userId
+      );
     } else {
-      result = await opportunityService.changeStage(input.id, input.targetStage, typedCtx.tenant.userId);
+      result = await opportunityService.changeStage(
+        input.id,
+        input.targetStage,
+        typedCtx.tenant.userId
+      );
     }
 
     if (result.isFailure) {
@@ -347,75 +355,79 @@ export const opportunityRouter = createTRPCRouter({
    * Get deal products (line items) for an opportunity
    * DealProduct tenant isolation via parent opportunity FK
    */
-  getProducts: tenantProcedure.input(opportunityProductsQuerySchema).query(async ({ ctx, input }) => {
-    const typedCtx = getTenantContext(ctx);
+  getProducts: tenantProcedure
+    .input(opportunityProductsQuerySchema)
+    .query(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
 
-    const products = await typedCtx.prismaWithTenant.dealProduct.findMany({
-      where: { opportunityId: input.opportunityId },
-      orderBy: { createdAt: 'asc' },
-    });
+      const products = await typedCtx.prismaWithTenant.dealProduct.findMany({
+        where: { opportunityId: input.opportunityId },
+        orderBy: { createdAt: 'asc' },
+      });
 
-    const totalValue = products.reduce(
-      (sum, p) => sum + Number(p.totalPrice),
-      0
-    );
+      const totalValue = products.reduce((sum, p) => sum + Number(p.totalPrice), 0);
 
-    return { products, totalValue };
-  }),
+      return { products, totalValue };
+    }),
 
   /**
    * Get pipeline visualization data
    * Combines stage configuration with opportunity aggregation
    */
-  getPipeline: tenantProcedure.input(opportunityPipelineQuerySchema).query(async ({ ctx, input }) => {
-    const typedCtx = getTenantContext(ctx);
+  getPipeline: tenantProcedure
+    .input(opportunityPipelineQuerySchema)
+    .query(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
 
-    const [stageConfigs, byStage] = await Promise.all([
-      typedCtx.prismaWithTenant.pipelineStageConfig.findMany({
-        where: { tenantId: typedCtx.tenant.tenantId },
-        orderBy: { order: 'asc' },
-      }),
-      typedCtx.prismaWithTenant.opportunity.groupBy({
-        by: ['stage'],
-        _count: true,
-        _sum: { value: true },
-        _avg: { probability: true },
-      }),
-    ]);
+      const [stageConfigs, byStage] = await Promise.all([
+        typedCtx.prismaWithTenant.pipelineStageConfig.findMany({
+          where: { tenantId: typedCtx.tenant.tenantId },
+          orderBy: { order: 'asc' },
+        }),
+        typedCtx.prismaWithTenant.opportunity.groupBy({
+          by: ['stage'],
+          _count: true,
+          _sum: { value: true },
+          _avg: { probability: true },
+        }),
+      ]);
 
-    const configMap = new Map(stageConfigs.map(c => [c.stageKey, c]));
+      const configMap = new Map(stageConfigs.map((c) => [c.stageKey, c]));
 
-    const stages = OPPORTUNITY_STAGES
-      .filter(stage => input.includeClosedStages || !['CLOSED_WON', 'CLOSED_LOST'].includes(stage))
-      .map((stageKey, index) => {
-        const config = configMap.get(stageKey);
-        const data = byStage.find(s => s.stage === stageKey);
-        return {
-          stageKey,
-          displayName: config?.displayName || DEFAULT_STAGE_NAMES[stageKey] || stageKey,
-          color: config?.color || DEFAULT_STAGE_COLORS[stageKey] || '#6366f1',
-          order: config?.order ?? index,
-          count: data?._count ?? 0,
-          totalValue: data?._sum?.value?.toString() || '0',
-          weightedValue: data
-            ? Math.round(Number(data._sum?.value || 0) * (data._avg?.probability || 0) / 100).toString()
-            : '0',
-          probability: config?.probability ?? DEFAULT_STAGE_PROBABILITIES[stageKey] ?? 0,
-        };
-      })
-      .sort((a, b) => a.order - b.order);
+      const stages = OPPORTUNITY_STAGES.filter(
+        (stage) => input.includeClosedStages || !['CLOSED_WON', 'CLOSED_LOST'].includes(stage)
+      )
+        .map((stageKey, index) => {
+          const config = configMap.get(stageKey);
+          const data = byStage.find((s) => s.stage === stageKey);
+          return {
+            stageKey,
+            displayName: config?.displayName || DEFAULT_STAGE_NAMES[stageKey] || stageKey,
+            color: config?.color || DEFAULT_STAGE_COLORS[stageKey] || '#6366f1',
+            order: config?.order ?? index,
+            count: data?._count ?? 0,
+            totalValue: data?._sum?.value?.toString() || '0',
+            weightedValue: data
+              ? Math.round(
+                  (Number(data._sum?.value || 0) * (data._avg?.probability || 0)) / 100
+                ).toString()
+              : '0',
+            probability: config?.probability ?? DEFAULT_STAGE_PROBABILITIES[stageKey] ?? 0,
+          };
+        })
+        .sort((a, b) => a.order - b.order);
 
-    const totalOpportunities = byStage.reduce((sum, s) => sum + s._count, 0);
-    const totalPipelineValue = byStage.reduce((sum, s) => sum + Number(s._sum?.value || 0), 0);
+      const totalOpportunities = byStage.reduce((sum, s) => sum + s._count, 0);
+      const totalPipelineValue = byStage.reduce((sum, s) => sum + Number(s._sum?.value || 0), 0);
 
-    return { stages, totalOpportunities, totalPipelineValue: totalPipelineValue.toString() };
-  }),
+      return { stages, totalOpportunities, totalPipelineValue: totalPipelineValue.toString() };
+    }),
 
   /**
    * Get opportunity statistics and pipeline analytics
    */
   stats: tenantProcedure.query(async ({ ctx }) => {
-   const typedCtx = getTenantContext(ctx);
+    const typedCtx = getTenantContext(ctx);
     const [total, byStage, totalValue, avgProbability] = await Promise.all([
       typedCtx.prismaWithTenant.opportunity.count(),
       typedCtx.prismaWithTenant.opportunity.groupBy({
@@ -515,7 +527,10 @@ export const opportunityRouter = createTRPCRouter({
     }, 0);
 
     // Calculate stage breakdown
-    const stageBreakdown: Record<string, { count: number; totalValue: number; weightedValue: number }> = {};
+    const stageBreakdown: Record<
+      string,
+      { count: number; totalValue: number; weightedValue: number }
+    > = {};
     for (const opp of activeOpportunities) {
       if (!stageBreakdown[opp.stage]) {
         stageBreakdown[opp.stage] = { count: 0, totalValue: 0, weightedValue: 0 };
@@ -526,24 +541,28 @@ export const opportunityRouter = createTRPCRouter({
     }
 
     // Calculate win rate
-    const wonDeals = closedDeals.filter(d => d.stage === 'CLOSED_WON');
-    const lostDeals = closedDeals.filter(d => d.stage === 'CLOSED_LOST');
+    const wonDeals = closedDeals.filter((d) => d.stage === 'CLOSED_WON');
+    const lostDeals = closedDeals.filter((d) => d.stage === 'CLOSED_LOST');
     const totalClosed = wonDeals.length + lostDeals.length;
     const winRate = totalClosed > 0 ? Math.round((wonDeals.length / totalClosed) * 100) : 0;
 
     // Calculate average deal size (from won deals)
-    const avgDealSize = wonDeals.length > 0
-      ? wonDeals.reduce((sum, d) => sum + Number(d.value), 0) / wonDeals.length
-      : 0;
+    const avgDealSize =
+      wonDeals.length > 0
+        ? wonDeals.reduce((sum, d) => sum + Number(d.value), 0) / wonDeals.length
+        : 0;
 
     // Calculate average sales cycle (days from created to closed)
-    const avgSalesCycle = wonDeals.length > 0
-      ? Math.round(wonDeals.reduce((sum, d) => {
-          const created = new Date(d.createdAt);
-          const closed = new Date(d.closedAt!);
-          return sum + (closed.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
-        }, 0) / wonDeals.length)
-      : 0;
+    const avgSalesCycle =
+      wonDeals.length > 0
+        ? Math.round(
+            wonDeals.reduce((sum, d) => {
+              const created = new Date(d.createdAt);
+              const closed = new Date(d.closedAt!);
+              return sum + (closed.getTime() - created.getTime()) / (1000 * 60 * 60 * 24);
+            }, 0) / wonDeals.length
+          )
+        : 0;
 
     // Group closed deals by month for historical data
     const monthlyRevenue: Record<string, { actual: number; deals: number }> = {};
@@ -560,11 +579,11 @@ export const opportunityRouter = createTRPCRouter({
     const winRateTrend: { month: string; rate: number; isProjected: boolean }[] = [];
     const months = ['May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct'];
     for (const month of months) {
-      const monthDeals = closedDeals.filter(d => {
+      const monthDeals = closedDeals.filter((d) => {
         const dealMonth = new Date(d.closedAt!).toLocaleString('en-US', { month: 'short' });
         return dealMonth === month;
       });
-      const monthWon = monthDeals.filter(d => d.stage === 'CLOSED_WON').length;
+      const monthWon = monthDeals.filter((d) => d.stage === 'CLOSED_WON').length;
       const rate = monthDeals.length > 0 ? Math.round((monthWon / monthDeals.length) * 100) : 0;
       winRateTrend.push({ month, rate: rate || winRate, isProjected: monthDeals.length === 0 });
     }
@@ -577,16 +596,26 @@ export const opportunityRouter = createTRPCRouter({
     };
 
     // Map opportunities to forecast deals format
-    const forecastDeals = activeOpportunities.map(opp => ({
+    const forecastDeals = activeOpportunities.map((opp) => ({
       id: opp.id,
       name: opp.name,
-      stage: opp.stage as 'PROSPECTING' | 'QUALIFICATION' | 'NEEDS_ANALYSIS' | 'PROPOSAL' | 'NEGOTIATION',
+      stage: opp.stage as
+        | 'PROSPECTING'
+        | 'QUALIFICATION'
+        | 'NEEDS_ANALYSIS'
+        | 'PROPOSAL'
+        | 'NEGOTIATION',
       value: Number(opp.value),
       probability: opp.probability,
       expectedCloseDate: opp.expectedCloseDate?.toISOString().split('T')[0] || '',
       owner: {
         name: opp.owner?.name || 'Unassigned',
-        avatar: opp.owner?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'NA',
+        avatar:
+          opp.owner?.name
+            ?.split(' ')
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase() || 'NA',
       },
       riskLevel: getRiskLevel(opp.probability, Number(opp.value)),
       accountName: opp.account?.name || null,

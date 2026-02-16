@@ -24,7 +24,10 @@ const RadioGroupItem = React.forwardRef<
       {...props}
     >
       <RadioGroupPrimitive.Indicator className="flex items-center justify-center">
-        <span className="material-symbols-outlined text-[10px] fill-current text-current" aria-hidden="true">
+        <span
+          className="material-symbols-outlined text-[10px] fill-current text-current"
+          aria-hidden="true"
+        >
           fiber_manual_record
         </span>
       </RadioGroupPrimitive.Indicator>

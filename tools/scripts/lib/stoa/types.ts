@@ -361,7 +361,15 @@ export interface ProjectKnowledge {
  * Source of hydration data for traceability
  */
 export interface HydrationSource {
-  type: 'csv' | 'file' | 'grep' | 'glob' | 'task_metadata' | 'dependency_artifact' | 'codebase_pattern' | 'project_knowledge';
+  type:
+    | 'csv'
+    | 'file'
+    | 'grep'
+    | 'glob'
+    | 'task_metadata'
+    | 'dependency_artifact'
+    | 'codebase_pattern'
+    | 'project_knowledge';
   path?: string;
   query?: string;
   timestamp?: string;

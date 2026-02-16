@@ -58,9 +58,7 @@ describe('Inbound Email Parser', () => {
     });
 
     it('should handle commas within quoted names', () => {
-      const result = parseEmailAddresses(
-        '"Doe, John" <john@example.com>, jane@example.com'
-      );
+      const result = parseEmailAddresses('"Doe, John" <john@example.com>, jane@example.com');
       expect(result).toHaveLength(2);
       expect(result[0].name).toBe('Doe, John');
     });
@@ -73,16 +71,12 @@ describe('Inbound Email Parser', () => {
 
   describe('parseMimeBoundary', () => {
     it('should extract boundary from content-type', () => {
-      const boundary = parseMimeBoundary(
-        'multipart/mixed; boundary="----=_Part_1234"'
-      );
+      const boundary = parseMimeBoundary('multipart/mixed; boundary="----=_Part_1234"');
       expect(boundary).toBe('----=_Part_1234');
     });
 
     it('should handle boundary without quotes', () => {
-      const boundary = parseMimeBoundary(
-        'multipart/alternative; boundary=simple_boundary'
-      );
+      const boundary = parseMimeBoundary('multipart/alternative; boundary=simple_boundary');
       expect(boundary).toBe('simple_boundary');
     });
 
@@ -335,7 +329,7 @@ PDF content here
 --boundary456--`;
 
       const parts = parseMimeParts(raw, 'boundary456');
-      const attachment = parts.find(p => p.isAttachment);
+      const attachment = parts.find((p) => p.isAttachment);
       expect(attachment).toBeDefined();
       expect(attachment?.filename).toBe('document.pdf');
     });

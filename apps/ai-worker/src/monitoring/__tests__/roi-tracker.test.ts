@@ -1032,7 +1032,7 @@ describe('ROITracker', () => {
       const roi = lowROITracker.calculateROI();
 
       expect(roi.recommendations.length).toBeGreaterThan(0);
-      expect(roi.recommendations.some(r => r.toLowerCase().includes('roi'))).toBe(true);
+      expect(roi.recommendations.some((r) => r.toLowerCase().includes('roi'))).toBe(true);
     });
 
     it('should recommend cheaper models for high-cost models', () => {
@@ -1049,7 +1049,7 @@ describe('ROITracker', () => {
 
       const roi = highCostTracker.calculateROI();
 
-      expect(roi.recommendations.some(r => r.toLowerCase().includes('model'))).toBe(true);
+      expect(roi.recommendations.some((r) => r.toLowerCase().includes('model'))).toBe(true);
     });
   });
 
@@ -1233,7 +1233,7 @@ describe('ROITracker', () => {
 
       const roi = tracker.calculateROI();
 
-      expect(roi.recommendations.some(r => r.includes('no recorded value'))).toBe(true);
+      expect(roi.recommendations.some((r) => r.includes('no recorded value'))).toBe(true);
     });
   });
 

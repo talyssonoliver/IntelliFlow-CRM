@@ -206,9 +206,7 @@ describe('Contact Router - Coverage Tests', () => {
       });
 
       // Simulate slow queries by delaying response
-      prismaMock.task.findMany.mockImplementation(
-        () => delayedPrismaResult([] as any[], 1100)
-      );
+      prismaMock.task.findMany.mockImplementation(() => delayedPrismaResult([] as any[], 1100));
 
       prismaMock.$queryRaw.mockResolvedValue([]);
 
@@ -321,9 +319,7 @@ describe('Contact Router - Coverage Tests', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       // Simulate slow query by delaying response
-      prismaMock.contact.findMany.mockImplementation(
-        () => delayedPrismaResult([] as any[], 250)
-      );
+      prismaMock.contact.findMany.mockImplementation(() => delayedPrismaResult([] as any[], 250));
 
       const result = await caller.search({ query: 'test' });
 
@@ -347,9 +343,7 @@ describe('Contact Router - Coverage Tests', () => {
           { department: null, _count: 10 },
           { department: null, _count: 5 },
         ])
-        .mockResolvedValueOnce([
-          { accountId: TEST_UUIDS.account1, _count: 8 },
-        ]);
+        .mockResolvedValueOnce([{ accountId: TEST_UUIDS.account1, _count: 8 }]);
 
       prismaMock.account.findMany.mockResolvedValue([
         { id: TEST_UUIDS.account1, name: 'Acme Corp' },
@@ -367,9 +361,7 @@ describe('Contact Router - Coverage Tests', () => {
       const caller = contactRouter.createCaller(ctx);
 
       (prismaMock.contact.groupBy as any)
-        .mockResolvedValueOnce([
-          { department: 'Engineering', _count: 5 },
-        ])
+        .mockResolvedValueOnce([{ department: 'Engineering', _count: 5 }])
         .mockResolvedValueOnce([
           { accountId: null, _count: 10 },
           { accountId: null, _count: 5 },
@@ -388,12 +380,10 @@ describe('Contact Router - Coverage Tests', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      (prismaMock.contact.groupBy as any)
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([
-          { accountId: TEST_UUIDS.account1, _count: 5 },
-          { accountId: TEST_UUIDS.account2, _count: 3 },
-        ]);
+      (prismaMock.contact.groupBy as any).mockResolvedValueOnce([]).mockResolvedValueOnce([
+        { accountId: TEST_UUIDS.account1, _count: 5 },
+        { accountId: TEST_UUIDS.account2, _count: 3 },
+      ]);
 
       // Only return one account (account2 is missing)
       prismaMock.account.findMany.mockResolvedValue([
@@ -480,7 +470,9 @@ describe('Contact Router - Coverage Tests', () => {
 
       expect(result.count).toBe(2);
       expect(result.data).toContain('"john@example.com","John","Doe","Engineer","","Tech",""');
-      expect(result.data).toContain('"jane@example.com","Jane","Smith","","+1234567890","","TechCorp"');
+      expect(result.data).toContain(
+        '"jane@example.com","Jane","Smith","","+1234567890","","TechCorp"'
+      );
     });
   });
 

@@ -219,7 +219,9 @@ describe('ContactCard', () => {
 
     it('stops propagation when quick action clicked', () => {
       const contact = createMockContact();
-      render(<ContactCard contact={contact} onClick={handlers.onClick} onEmail={handlers.onEmail} />);
+      render(
+        <ContactCard contact={contact} onClick={handlers.onClick} onEmail={handlers.onEmail} />
+      );
 
       const emailButton = screen.getByLabelText(/Send email to John Doe/i);
       fireEvent.click(emailButton);
@@ -276,13 +278,7 @@ describe('ContactCard', () => {
 
     it('has accessible button labels', () => {
       const contact = createMockContact({ firstName: 'Sarah', lastName: 'Connor' });
-      render(
-        <ContactCard
-          contact={contact}
-          onEmail={handlers.onEmail}
-          onCall={handlers.onCall}
-        />
-      );
+      render(<ContactCard contact={contact} onEmail={handlers.onEmail} onCall={handlers.onCall} />);
 
       expect(screen.getByLabelText(/Send email to Sarah Connor/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Call Sarah Connor/i)).toBeInTheDocument();

@@ -50,7 +50,13 @@ interface ActionButtonProps {
   'aria-label': string;
 }
 
-function ActionButton({ icon, label, onClick, success, 'aria-label': ariaLabel }: ActionButtonProps) {
+function ActionButton({
+  icon,
+  label,
+  onClick,
+  success,
+  'aria-label': ariaLabel,
+}: ActionButtonProps) {
   return (
     <button
       type="button"
@@ -121,10 +127,7 @@ export function BackupCodesDisplay({
   return (
     <div className={cn('space-y-6', className)}>
       {/* Warning Banner */}
-      <div
-        className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4"
-        role="alert"
-      >
+      <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4" role="alert">
         <div className="flex gap-3">
           <span
             className="material-symbols-outlined text-amber-400 text-xl flex-shrink-0"
@@ -133,13 +136,11 @@ export function BackupCodesDisplay({
             warning
           </span>
           <div className="space-y-1">
-            <h4 className="font-medium text-amber-300 text-sm">
-              Save your backup codes
-            </h4>
+            <h4 className="font-medium text-amber-300 text-sm">Save your backup codes</h4>
             <p className="text-xs text-amber-200/80">
-              These codes are the only way to access your account if you lose your
-              authenticator device. Each code can only be used <strong>once</strong>.
-              Store them in a secure location.
+              These codes are the only way to access your account if you lose your authenticator
+              device. Each code can only be used <strong>once</strong>. Store them in a secure
+              location.
             </p>
           </div>
         </div>
@@ -148,9 +149,7 @@ export function BackupCodesDisplay({
       {/* Backup Codes Grid */}
       <div className="bg-slate-800/50 rounded-lg p-4">
         <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-medium text-slate-300">
-            Your backup codes
-          </h4>
+          <h4 className="text-sm font-medium text-slate-300">Your backup codes</h4>
           <span className="text-xs text-slate-500">
             Generated {generatedAt.toLocaleDateString()}
           </span>
@@ -163,10 +162,7 @@ export function BackupCodesDisplay({
           {/* Left Column */}
           <div className="space-y-2">
             {leftColumn.map(({ index, code }) => (
-              <div
-                key={index}
-                className="flex items-center gap-3 font-mono text-sm"
-              >
+              <div key={index} className="flex items-center gap-3 font-mono text-sm">
                 <span className="text-slate-500 w-4 text-right">{index}.</span>
                 <span className="text-[#7cc4ff]">{code}</span>
               </div>
@@ -176,10 +172,7 @@ export function BackupCodesDisplay({
           {/* Right Column */}
           <div className="space-y-2">
             {rightColumn.map(({ index, code }) => (
-              <div
-                key={index}
-                className="flex items-center gap-3 font-mono text-sm"
-              >
+              <div key={index} className="flex items-center gap-3 font-mono text-sm">
                 <span className="text-slate-500 w-4 text-right">{index}.</span>
                 <span className="text-[#7cc4ff]">{code}</span>
               </div>
@@ -228,8 +221,8 @@ export function BackupCodesDisplay({
             aria-describedby="acknowledge-description"
           />
           <span id="acknowledge-description" className="text-sm text-slate-300">
-            I have saved my backup codes in a secure location. I understand that
-            I won&apos;t be able to see these codes again.
+            I have saved my backup codes in a secure location. I understand that I won&apos;t be
+            able to see these codes again.
           </span>
         </label>
       </div>

@@ -16,16 +16,12 @@ const AUTH_PAGES_NO_FOOTER = [
   '/verify-email',
 ];
 
-export default function PublicLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { isAuthenticated, isLoading } = useAuth();
 
   // IFC-007: Don't show footer on auth pages (they use AuthBackground full-screen layout)
-  const isAuthPage = AUTH_PAGES_NO_FOOTER.some(page => pathname?.startsWith(page));
+  const isAuthPage = AUTH_PAGES_NO_FOOTER.some((page) => pathname?.startsWith(page));
 
   // Show PublicHeader if:
   // 1. On auth pages (login, signup, etc.) - ALWAYS show header, redirect will handle auth users
@@ -49,9 +45,7 @@ export default function PublicLayout({
       {isAuthPage ? (
         children
       ) : (
-        <main className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">
-          {children}
-        </main>
+        <main className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">{children}</main>
       )}
       {!isAuthPage && !isAuthenticated && <PublicFooter />}
     </>

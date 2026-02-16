@@ -193,7 +193,12 @@ describe('ChurnRiskChain', () => {
     });
 
     it('should handle all entity types', async () => {
-      const entityTypes: ChurnRiskInput['entityType'][] = ['lead', 'contact', 'opportunity', 'account'];
+      const entityTypes: ChurnRiskInput['entityType'][] = [
+        'lead',
+        'contact',
+        'opportunity',
+        'account',
+      ];
 
       for (const entityType of entityTypes) {
         const result = await chain.predictChurnRisk({

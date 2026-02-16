@@ -52,7 +52,11 @@ describe('Case Workflow Events', () => {
     it('should generate correct payload', () => {
       const caseId = CaseId.generate();
       const event = new CaseWorkflowStartedEvent(
-        caseId, 'wf-002', 'Approval Flow', 'langgraph', 'user-456'
+        caseId,
+        'wf-002',
+        'Approval Flow',
+        'langgraph',
+        'user-456'
       );
 
       const payload = event.toPayload();
@@ -69,9 +73,7 @@ describe('Case Workflow Events', () => {
     it('should create event with correct properties', () => {
       const caseId = CaseId.generate();
       const result = { outcome: 'approved', score: 95 };
-      const event = new CaseWorkflowCompletedEvent(
-        caseId, 'wf-001', 'Review Flow', result, 5000
-      );
+      const event = new CaseWorkflowCompletedEvent(caseId, 'wf-001', 'Review Flow', result, 5000);
 
       expect(event.eventType).toBe('case.workflow_completed');
       expect(event.caseId).toBe(caseId);
@@ -84,9 +86,7 @@ describe('Case Workflow Events', () => {
     it('should generate correct payload', () => {
       const caseId = CaseId.generate();
       const result = { status: 'done' };
-      const event = new CaseWorkflowCompletedEvent(
-        caseId, 'wf-003', 'Processing', result, 1200
-      );
+      const event = new CaseWorkflowCompletedEvent(caseId, 'wf-003', 'Processing', result, 1200);
 
       const payload = event.toPayload();
 
@@ -101,7 +101,12 @@ describe('Case Workflow Events', () => {
     it('should create event with correct properties', () => {
       const caseId = CaseId.generate();
       const event = new CaseWorkflowFailedEvent(
-        caseId, 'wf-001', 'Review Flow', 'Timeout exceeded', true, 2
+        caseId,
+        'wf-001',
+        'Review Flow',
+        'Timeout exceeded',
+        true,
+        2
       );
 
       expect(event.eventType).toBe('case.workflow_failed');
@@ -114,7 +119,12 @@ describe('Case Workflow Events', () => {
     it('should generate correct payload', () => {
       const caseId = CaseId.generate();
       const event = new CaseWorkflowFailedEvent(
-        caseId, 'wf-010', 'Escalation', 'Not found', false, 1
+        caseId,
+        'wf-010',
+        'Escalation',
+        'Not found',
+        false,
+        1
       );
 
       const payload = event.toPayload();
@@ -150,7 +160,12 @@ describe('Case Workflow Events', () => {
     it('should handle null deadline', () => {
       const caseId = CaseId.generate();
       const event = new CaseApprovalRequiredEvent(
-        caseId, 'wf-002', 'review', ['approver-1'], 'Review needed', null
+        caseId,
+        'wf-002',
+        'review',
+        ['approver-1'],
+        'Review needed',
+        null
       );
 
       const payload = event.toPayload();
@@ -162,7 +177,12 @@ describe('Case Workflow Events', () => {
       const caseId = CaseId.generate();
       const deadline = new Date('2025-07-15');
       const event = new CaseApprovalRequiredEvent(
-        caseId, 'wf-005', 'escalate', ['admin'], 'High priority', deadline
+        caseId,
+        'wf-005',
+        'escalate',
+        ['admin'],
+        'High priority',
+        deadline
       );
 
       const payload = event.toPayload();
@@ -179,7 +199,12 @@ describe('Case Workflow Events', () => {
     it('should create event with correct properties', () => {
       const caseId = CaseId.generate();
       const event = new CaseApprovalReceivedEvent(
-        caseId, 'wf-001', 'proceed', 'manager-1', true, 'Looks good'
+        caseId,
+        'wf-001',
+        'proceed',
+        'manager-1',
+        true,
+        'Looks good'
       );
 
       expect(event.eventType).toBe('case.approval_received');
@@ -190,9 +215,7 @@ describe('Case Workflow Events', () => {
 
     it('should handle null comments', () => {
       const caseId = CaseId.generate();
-      const event = new CaseApprovalReceivedEvent(
-        caseId, 'wf-002', 'review', 'admin', false, null
-      );
+      const event = new CaseApprovalReceivedEvent(caseId, 'wf-002', 'review', 'admin', false, null);
 
       const payload = event.toPayload();
 
@@ -203,7 +226,12 @@ describe('Case Workflow Events', () => {
     it('should generate correct payload', () => {
       const caseId = CaseId.generate();
       const event = new CaseApprovalReceivedEvent(
-        caseId, 'wf-003', 'close', 'user-1', true, 'Approved'
+        caseId,
+        'wf-003',
+        'close',
+        'user-1',
+        true,
+        'Approved'
       );
 
       const payload = event.toPayload();
@@ -218,9 +246,7 @@ describe('Case Workflow Events', () => {
   describe('CaseEscalatedEvent', () => {
     it('should create event with correct properties', () => {
       const caseId = CaseId.generate();
-      const event = new CaseEscalatedEvent(
-        caseId, 2, 'junior-1', 'senior-1', 'SLA risk', 'system'
-      );
+      const event = new CaseEscalatedEvent(caseId, 2, 'junior-1', 'senior-1', 'SLA risk', 'system');
 
       expect(event.eventType).toBe('case.escalated');
       expect(event.escalationLevel).toBe(2);
@@ -233,7 +259,12 @@ describe('Case Workflow Events', () => {
     it('should generate correct payload', () => {
       const caseId = CaseId.generate();
       const event = new CaseEscalatedEvent(
-        caseId, 3, 'user-a', 'user-b', 'Urgent matter', 'manager-1'
+        caseId,
+        3,
+        'user-a',
+        'user-b',
+        'Urgent matter',
+        'manager-1'
       );
 
       const payload = event.toPayload();
@@ -253,9 +284,7 @@ describe('Case Workflow Events', () => {
       const targetTime = new Date('2025-01-15T10:00:00Z');
       const breachedAt = new Date('2025-01-15T12:00:00Z');
 
-      const event = new CaseSLABreachedEvent(
-        caseId, 'response', targetTime, breachedAt, 120
-      );
+      const event = new CaseSLABreachedEvent(caseId, 'response', targetTime, breachedAt, 120);
 
       expect(event.eventType).toBe('case.sla_breached');
       expect(event.slaType).toBe('response');
@@ -269,9 +298,7 @@ describe('Case Workflow Events', () => {
       const targetTime = new Date('2025-03-01T09:00:00Z');
       const breachedAt = new Date('2025-03-01T11:30:00Z');
 
-      const event = new CaseSLABreachedEvent(
-        caseId, 'resolution', targetTime, breachedAt, 150
-      );
+      const event = new CaseSLABreachedEvent(caseId, 'resolution', targetTime, breachedAt, 150);
 
       const payload = event.toPayload();
 
@@ -287,7 +314,11 @@ describe('Case Workflow Events', () => {
     it('should create event with correct properties', () => {
       const caseId = CaseId.generate();
       const event = new CaseAssignedEvent(
-        caseId, 'old-user', 'new-user', 'admin-1', 'Workload rebalancing'
+        caseId,
+        'old-user',
+        'new-user',
+        'admin-1',
+        'Workload rebalancing'
       );
 
       expect(event.eventType).toBe('case.assigned');
@@ -299,9 +330,7 @@ describe('Case Workflow Events', () => {
 
     it('should handle null previous assignee', () => {
       const caseId = CaseId.generate();
-      const event = new CaseAssignedEvent(
-        caseId, null, 'user-1', 'system', null
-      );
+      const event = new CaseAssignedEvent(caseId, null, 'user-1', 'system', null);
 
       const payload = event.toPayload();
 
@@ -312,7 +341,11 @@ describe('Case Workflow Events', () => {
     it('should generate correct payload', () => {
       const caseId = CaseId.generate();
       const event = new CaseAssignedEvent(
-        caseId, 'user-a', 'user-b', 'manager', 'Specialization match'
+        caseId,
+        'user-a',
+        'user-b',
+        'manager',
+        'Specialization match'
       );
 
       const payload = event.toPayload();
@@ -329,7 +362,11 @@ describe('Case Workflow Events', () => {
     it('should create event with correct properties', () => {
       const caseId = CaseId.generate();
       const event = new CaseNoteAddedEvent(
-        caseId, 'note-001', 'Client called about update', false, 'user-1'
+        caseId,
+        'note-001',
+        'Client called about update',
+        false,
+        'user-1'
       );
 
       expect(event.eventType).toBe('case.note_added');
@@ -342,7 +379,11 @@ describe('Case Workflow Events', () => {
     it('should generate correct payload', () => {
       const caseId = CaseId.generate();
       const event = new CaseNoteAddedEvent(
-        caseId, 'note-002', 'Internal strategy note', true, 'lawyer-1'
+        caseId,
+        'note-002',
+        'Internal strategy note',
+        true,
+        'lawyer-1'
       );
 
       const payload = event.toPayload();
@@ -359,7 +400,12 @@ describe('Case Workflow Events', () => {
     it('should create event with correct properties', () => {
       const caseId = CaseId.generate();
       const event = new CaseDocumentAttachedEvent(
-        caseId, 'doc-001', 'contract.pdf', 'application/pdf', 524288, 'user-1'
+        caseId,
+        'doc-001',
+        'contract.pdf',
+        'application/pdf',
+        524288,
+        'user-1'
       );
 
       expect(event.eventType).toBe('case.document_attached');
@@ -373,7 +419,12 @@ describe('Case Workflow Events', () => {
     it('should generate correct payload', () => {
       const caseId = CaseId.generate();
       const event = new CaseDocumentAttachedEvent(
-        caseId, 'doc-002', 'evidence.jpg', 'image/jpeg', 1048576, 'paralegal-1'
+        caseId,
+        'doc-002',
+        'evidence.jpg',
+        'image/jpeg',
+        1048576,
+        'paralegal-1'
       );
 
       const payload = event.toPayload();
@@ -391,9 +442,7 @@ describe('Case Workflow Events', () => {
     it('should create event with correct properties', () => {
       const caseId = CaseId.generate();
       const closeDate = new Date('2025-01-10');
-      const event = new CaseReopenedEvent(
-        caseId, closeDate, 'New evidence discovered', 'user-1'
-      );
+      const event = new CaseReopenedEvent(caseId, closeDate, 'New evidence discovered', 'user-1');
 
       expect(event.eventType).toBe('case.reopened');
       expect(event.originalCloseDate).toEqual(closeDate);
@@ -404,9 +453,7 @@ describe('Case Workflow Events', () => {
     it('should generate correct payload with ISO date', () => {
       const caseId = CaseId.generate();
       const closeDate = new Date('2025-02-20T15:30:00Z');
-      const event = new CaseReopenedEvent(
-        caseId, closeDate, 'Client appeal', 'manager-1'
-      );
+      const event = new CaseReopenedEvent(caseId, closeDate, 'Client appeal', 'manager-1');
 
       const payload = event.toPayload();
 
@@ -421,9 +468,7 @@ describe('Case Workflow Events', () => {
     it('should create event with correct properties', () => {
       const caseId = CaseId.generate();
       const startedAt = new Date('2025-01-15T09:00:00Z');
-      const event = new CaseTimerStartedEvent(
-        caseId, 'response', 60, startedAt
-      );
+      const event = new CaseTimerStartedEvent(caseId, 'response', 60, startedAt);
 
       expect(event.eventType).toBe('case.timer_started');
       expect(event.timerType).toBe('response');
@@ -434,9 +479,7 @@ describe('Case Workflow Events', () => {
     it('should generate correct payload', () => {
       const caseId = CaseId.generate();
       const startedAt = new Date('2025-03-10T14:00:00Z');
-      const event = new CaseTimerStartedEvent(
-        caseId, 'resolution', 480, startedAt
-      );
+      const event = new CaseTimerStartedEvent(caseId, 'resolution', 480, startedAt);
 
       const payload = event.toPayload();
 
@@ -450,9 +493,7 @@ describe('Case Workflow Events', () => {
   describe('CaseTimerPausedEvent', () => {
     it('should create event with correct properties', () => {
       const caseId = CaseId.generate();
-      const event = new CaseTimerPausedEvent(
-        caseId, 'response', 30, 'Waiting for client'
-      );
+      const event = new CaseTimerPausedEvent(caseId, 'response', 30, 'Waiting for client');
 
       expect(event.eventType).toBe('case.timer_paused');
       expect(event.timerType).toBe('response');
@@ -462,9 +503,7 @@ describe('Case Workflow Events', () => {
 
     it('should generate correct payload', () => {
       const caseId = CaseId.generate();
-      const event = new CaseTimerPausedEvent(
-        caseId, 'update', 120, 'Holiday period'
-      );
+      const event = new CaseTimerPausedEvent(caseId, 'update', 120, 'Holiday period');
 
       const payload = event.toPayload();
 
@@ -478,12 +517,8 @@ describe('Case Workflow Events', () => {
   describe('Common Event Properties', () => {
     it('should generate unique event IDs for different events', () => {
       const caseId = CaseId.generate();
-      const event1 = new CaseWorkflowStartedEvent(
-        caseId, 'wf-1', 'Flow A', 'temporal', 'user-1'
-      );
-      const event2 = new CaseWorkflowStartedEvent(
-        caseId, 'wf-2', 'Flow B', 'temporal', 'user-2'
-      );
+      const event1 = new CaseWorkflowStartedEvent(caseId, 'wf-1', 'Flow A', 'temporal', 'user-1');
+      const event2 = new CaseWorkflowStartedEvent(caseId, 'wf-2', 'Flow B', 'temporal', 'user-2');
 
       expect(event1.eventId).not.toBe(event2.eventId);
     });
@@ -491,9 +526,7 @@ describe('Case Workflow Events', () => {
     it('should set occurredAt timestamp on creation', () => {
       const beforeCreate = new Date();
       const caseId = CaseId.generate();
-      const event = new CaseEscalatedEvent(
-        caseId, 1, 'user-a', 'user-b', 'test', 'system'
-      );
+      const event = new CaseEscalatedEvent(caseId, 1, 'user-a', 'user-b', 'test', 'system');
       const afterCreate = new Date();
 
       expect(event.occurredAt.getTime()).toBeGreaterThanOrEqual(beforeCreate.getTime());

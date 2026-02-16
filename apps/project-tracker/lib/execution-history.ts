@@ -106,7 +106,9 @@ export function loadExecutionHistory(
   // Also include system-audit (MATOP) summaries
   if (existsSync(systemAuditDir)) {
     try {
-      const auditDirs = readdirSync(systemAuditDir, { withFileTypes: true }).filter((d) => d.isDirectory());
+      const auditDirs = readdirSync(systemAuditDir, { withFileTypes: true }).filter((d) =>
+        d.isDirectory()
+      );
       for (const dir of auditDirs) {
         const summaryFinal = join(systemAuditDir, dir.name, 'summary-final.json');
         const summary = join(systemAuditDir, dir.name, 'summary.json');
@@ -193,7 +195,11 @@ export function loadExecutionHistory(
 /**
  * Parse raw execution run data into typed structure
  */
-function parseExecutionRun(data: any, filename: string, taskSprintMap?: Map<string, number>): ExecutionRun {
+function parseExecutionRun(
+  data: any,
+  filename: string,
+  taskSprintMap?: Map<string, number>
+): ExecutionRun {
   // Handle both MATOP format and Sprint Orchestrator format
   const isMATOPFormat = 'results' in data && typeof data.results === 'object';
   const isSystemAuditFormat = 'consensus' in data && 'aggregate_metrics' in data;
@@ -304,7 +310,9 @@ function buildTaskSprintMap(projectRoot: string): Map<string, number> {
     const csvPath = join(projectRoot, 'docs', 'metrics', '_global', 'Sprint_plan.csv');
     if (!existsSync(csvPath)) return map;
     const content = readFileSync(csvPath, 'utf-8');
-    const records = parse(content, { columns: true, skip_empty_lines: true, bom: true }) as Array<Record<string, string>>;
+    const records = parse(content, { columns: true, skip_empty_lines: true, bom: true }) as Array<
+      Record<string, string>
+    >;
     for (const row of records) {
       const id = row['Task ID'];
       if (id) {
@@ -354,11 +362,7 @@ export function formatDuration(ms: number): string {
 /**
  * Get execution runs for a date range
  */
-function getRunsByDateRange(
-  projectRoot: string,
-  startDate: Date,
-  endDate: Date
-): ExecutionRun[] {
+function getRunsByDateRange(projectRoot: string, startDate: Date, endDate: Date): ExecutionRun[] {
   const history = loadExecutionHistory(projectRoot, { includeDetails: false });
 
   return history.runs.filter((run) => {
@@ -422,4 +426,3 @@ export function getSprintExecutionStats(
     trend,
   };
 }
-

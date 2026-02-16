@@ -80,7 +80,10 @@ export class IngestionOrchestrator {
     pattern: RegExp;
     classification: DocumentClassification;
   }> = [
-    { pattern: /privilege|attorney|legal/i, classification: 'PRIVILEGED' as DocumentClassification },
+    {
+      pattern: /privilege|attorney|legal/i,
+      classification: 'PRIVILEGED' as DocumentClassification,
+    },
     { pattern: /confidential|private/i, classification: 'CONFIDENTIAL' as DocumentClassification },
     { pattern: /internal/i, classification: 'INTERNAL' as DocumentClassification },
   ];
@@ -111,7 +114,11 @@ export class IngestionOrchestrator {
       }
 
       // Step 2: Extract metadata and calculate hash
-      const extractedMetadata = await this.extractMetadata(file, metadata.filename, metadata.mimeType);
+      const extractedMetadata = await this.extractMetadata(
+        file,
+        metadata.filename,
+        metadata.mimeType
+      );
 
       // Step 3: Check for duplicates (idempotency)
       const duplicate = await this.checkDuplicate(extractedMetadata.contentHash, metadata.tenantId);
@@ -260,7 +267,15 @@ export class IngestionOrchestrator {
    */
   private inferDocumentType(
     mimeType: string
-  ): 'CONTRACT' | 'AGREEMENT' | 'EVIDENCE' | 'CORRESPONDENCE' | 'COURT_FILING' | 'MEMO' | 'REPORT' | 'OTHER' {
+  ):
+    | 'CONTRACT'
+    | 'AGREEMENT'
+    | 'EVIDENCE'
+    | 'CORRESPONDENCE'
+    | 'COURT_FILING'
+    | 'MEMO'
+    | 'REPORT'
+    | 'OTHER' {
     // Infer based on MIME type - more sophisticated logic can be added
     if (mimeType === 'application/pdf') return 'REPORT';
     if (mimeType.includes('word')) return 'MEMO';

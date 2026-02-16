@@ -203,8 +203,8 @@ describe('Query Performance KPI Validation', () => {
 
     // Simulate realistic query times
     const queryTimes = [
-      2.3, 3.1, 4.8, 5.2, 6.1, 7.3, 8.2, 9.1, 10.4, 11.2,
-      2.1, 3.4, 4.2, 5.8, 6.4, 7.1, 8.9, 9.6, 10.1, 11.8,
+      2.3, 3.1, 4.8, 5.2, 6.1, 7.3, 8.2, 9.1, 10.4, 11.2, 2.1, 3.4, 4.2, 5.8, 6.4, 7.1, 8.9, 9.6,
+      10.1, 11.8,
     ];
 
     queryTimes.forEach((time, i) => {

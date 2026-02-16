@@ -23,16 +23,7 @@ import userEvent from '@testing-library/user-event';
 // ============================================
 
 vi.mock('../password-input', () => ({
-  PasswordInput: ({
-    id,
-    label,
-    value,
-    onChange,
-    onBlur,
-    error,
-    disabled,
-    placeholder,
-  }: any) => (
+  PasswordInput: ({ id, label, value, onChange, onBlur, error, disabled, placeholder }: any) => (
     <div>
       <label htmlFor={id}>{label}</label>
       <input
@@ -52,7 +43,12 @@ vi.mock('../password-input', () => ({
 
 vi.mock('@/lib/shared/password-validation', () => ({
   calculatePasswordStrength: (password: string) => {
-    if (password.length >= 12 && /[A-Z]/.test(password) && /\d/.test(password) && /[!@#$]/.test(password)) {
+    if (
+      password.length >= 12 &&
+      /[A-Z]/.test(password) &&
+      /\d/.test(password) &&
+      /[!@#$]/.test(password)
+    ) {
       return { strength: 'strong', percentage: 100, feedback: [] };
     }
     if (password.length >= 8) {
@@ -62,7 +58,8 @@ vi.mock('@/lib/shared/password-validation', () => ({
   },
   validatePassword: (password: string) => {
     if (!password) return { valid: false, errors: ['Password is required'] };
-    if (password.length < 8) return { valid: false, errors: ['Password must be at least 8 characters'] };
+    if (password.length < 8)
+      return { valid: false, errors: ['Password must be at least 8 characters'] };
     return { valid: true, errors: [] };
   },
   validatePasswordMatch: (password: string, confirm: string) => {
@@ -72,8 +69,18 @@ vi.mock('@/lib/shared/password-validation', () => ({
   },
   STRENGTH_CONFIG: {
     weak: { label: 'Weak', color: 'bg-red-500', textColor: 'text-red-400', width: 'w-1/4' },
-    medium: { label: 'Medium', color: 'bg-yellow-500', textColor: 'text-yellow-400', width: 'w-2/4' },
-    strong: { label: 'Strong', color: 'bg-green-500', textColor: 'text-green-400', width: 'w-full' },
+    medium: {
+      label: 'Medium',
+      color: 'bg-yellow-500',
+      textColor: 'text-yellow-400',
+      width: 'w-2/4',
+    },
+    strong: {
+      label: 'Strong',
+      color: 'bg-green-500',
+      textColor: 'text-green-400',
+      width: 'w-full',
+    },
   },
 }));
 
@@ -198,7 +205,9 @@ describe('ResetSuccess', () => {
     render(<ResetSuccess onContinue={onContinue} />);
 
     // Advance 5 seconds
-    act(() => { vi.advanceTimersByTime(5000); });
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
 
     expect(onContinue).toHaveBeenCalledTimes(1);
   });
@@ -334,11 +343,7 @@ describe('PasswordResetForm', () => {
     // This test verifies the catch block. We need to make the promise reject.
     // The component has a simulated API call, so we can't easily trigger a rejection.
     // Instead, test that the general error area renders when set.
-    render(
-      <PasswordResetForm
-        {...formProps}
-      />
-    );
+    render(<PasswordResetForm {...formProps} />);
 
     // Verify the form renders correctly (general error is initially absent)
     expect(screen.queryByText(/failed to reset password/i)).not.toBeInTheDocument();

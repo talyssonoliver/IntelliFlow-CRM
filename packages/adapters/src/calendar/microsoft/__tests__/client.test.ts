@@ -154,11 +154,7 @@ describe('MicrosoftCalendarAdapter', () => {
         }),
       });
 
-      const result = await adapter.createEvent(
-        mockTokens,
-        mockAppointment,
-        'idempotency-key-123'
-      );
+      const result = await adapter.createEvent(mockTokens, mockAppointment, 'idempotency-key-123');
 
       expect(result.isSuccess).toBe(true);
       expect(result.value?.externalId).toBe('event-123');
@@ -184,11 +180,7 @@ describe('MicrosoftCalendarAdapter', () => {
         .mockResolvedValueOnce(rateLimitResponse)
         .mockResolvedValueOnce(rateLimitResponse);
 
-      const result = await adapter.createEvent(
-        mockTokens,
-        mockAppointment,
-        'idempotency-key-123'
-      );
+      const result = await adapter.createEvent(mockTokens, mockAppointment, 'idempotency-key-123');
 
       expect(result.isFailure).toBe(true);
     }, 30000); // Increase timeout to allow for retries
@@ -313,7 +305,8 @@ describe('MicrosoftCalendarAdapter', () => {
               isCancelled: true,
             },
           ],
-          '@odata.deltaLink': 'https://graph.microsoft.com/v1.0/me/calendar/events/delta?$deltatoken=xxx',
+          '@odata.deltaLink':
+            'https://graph.microsoft.com/v1.0/me/calendar/events/delta?$deltatoken=xxx',
         }),
       });
 
@@ -339,10 +332,7 @@ describe('MicrosoftCalendarAdapter', () => {
         }),
       });
 
-      const result = await adapter.registerWebhook(
-        mockTokens,
-        'https://example.com/webhook'
-      );
+      const result = await adapter.registerWebhook(mockTokens, 'https://example.com/webhook');
 
       expect(result.isSuccess).toBe(true);
       expect(result.value?.id).toBe('subscription-123');

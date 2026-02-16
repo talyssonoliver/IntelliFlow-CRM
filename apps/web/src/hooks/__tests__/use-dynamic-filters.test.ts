@@ -200,9 +200,7 @@ describe('useContactFilterOptions', () => {
     });
 
     const result = useContactFilterOptions();
-    expect(result.departmentOptions).toEqual([
-      { value: 'ENGINEERING', label: 'Engineering (3)' },
-    ]);
+    expect(result.departmentOptions).toEqual([{ value: 'ENGINEERING', label: 'Engineering (3)' }]);
   });
 
   it('uses custom label when provided in option', () => {
@@ -215,9 +213,7 @@ describe('useContactFilterOptions', () => {
     });
 
     const result = useContactFilterOptions();
-    expect(result.accountOptions).toEqual([
-      { value: 'acc-1', label: 'Acme Corp (7)' },
-    ]);
+    expect(result.accountOptions).toEqual([{ value: 'acc-1', label: 'Acme Corp (7)' }]);
   });
 
   it('reflects loading state', () => {
@@ -249,13 +245,10 @@ describe('useContactFilterOptions', () => {
       refetchOnWindowFocus: true,
     });
 
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      undefined,
-      {
-        staleTime: 10_000,
-        refetchOnWindowFocus: true,
-      }
-    );
+    expect(mockUseQuery).toHaveBeenCalledWith(undefined, {
+      staleTime: 10_000,
+      refetchOnWindowFocus: true,
+    });
   });
 
   it('calls useQuery with undefined when no filters provided', () => {
@@ -323,9 +316,7 @@ describe('useLeadFilterOptions', () => {
     });
 
     const result = useLeadFilterOptions();
-    expect(result.statusOptions).toEqual([
-      { value: 'NEW', label: 'New (20)' },
-    ]);
+    expect(result.statusOptions).toEqual([{ value: 'NEW', label: 'New (20)' }]);
   });
 
   it('transforms source options', () => {
@@ -340,9 +331,7 @@ describe('useLeadFilterOptions', () => {
     });
 
     const result = useLeadFilterOptions();
-    expect(result.sourceOptions).toEqual([
-      { value: 'COLD_CALL', label: 'Cold Call (8)' },
-    ]);
+    expect(result.sourceOptions).toEqual([{ value: 'COLD_CALL', label: 'Cold Call (8)' }]);
   });
 
   it('transforms owner options with custom label', () => {
@@ -357,9 +346,7 @@ describe('useLeadFilterOptions', () => {
     });
 
     const result = useLeadFilterOptions();
-    expect(result.ownerOptions).toEqual([
-      { value: 'user-1', label: 'John Doe (12)' },
-    ]);
+    expect(result.ownerOptions).toEqual([{ value: 'user-1', label: 'John Doe (12)' }]);
   });
 });
 
@@ -430,9 +417,7 @@ describe('useTicketFilterOptions', () => {
     });
 
     const result = useTicketFilterOptions();
-    expect(result.statusOptions).toEqual([
-      { value: 'IN_PROGRESS', label: 'In Progress (15)' },
-    ]);
+    expect(result.statusOptions).toEqual([{ value: 'IN_PROGRESS', label: 'In Progress (15)' }]);
   });
 
   it('transforms priority options', () => {
@@ -464,9 +449,7 @@ describe('useTicketFilterOptions', () => {
     });
 
     const result = useTicketFilterOptions();
-    expect(result.slaStatusOptions).toEqual([
-      { value: 'AT_RISK', label: 'At Risk (2)' },
-    ]);
+    expect(result.slaStatusOptions).toEqual([{ value: 'AT_RISK', label: 'At Risk (2)' }]);
   });
 });
 
@@ -480,9 +463,7 @@ describe('useFilterValidation', () => {
   });
 
   it('returns true for empty value', () => {
-    const validator = useFilterValidation([
-      { value: 'ACTIVE', label: 'Active' },
-    ]);
+    const validator = useFilterValidation([{ value: 'ACTIVE', label: 'Active' }]);
     expect(validator('')).toBe(true);
   });
 
@@ -501,16 +482,12 @@ describe('useFilterValidation', () => {
   });
 
   it('returns false when value is not in options', () => {
-    const validator = useFilterValidation([
-      { value: 'ACTIVE', label: 'Active' },
-    ]);
+    const validator = useFilterValidation([{ value: 'ACTIVE', label: 'Active' }]);
     expect(validator('DELETED')).toBe(false);
   });
 
   it('is case-sensitive', () => {
-    const validator = useFilterValidation([
-      { value: 'ACTIVE', label: 'Active' },
-    ]);
+    const validator = useFilterValidation([{ value: 'ACTIVE', label: 'Active' }]);
     expect(validator('active')).toBe(false);
   });
 });

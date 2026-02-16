@@ -1,7 +1,6 @@
 # IntelliFlow CRM UI - Quick Reference Card
 
-> **Purpose**: Quick lookup for common patterns and standards
-> **Version**: 1.0
+> **Purpose**: Quick lookup for common patterns and standards **Version**: 1.0
 > **Last Updated**: 2025-12-31
 
 ---
@@ -30,19 +29,19 @@ className="bg-primary" style={{ opacity: 0.5 }}     // Dynamic opacity
 
 ### Available Variables
 
-| Variable | Light Mode | Dark Mode | Usage |
-|----------|-----------|-----------|-------|
-| `--background` | #f6f7f8 | #101922 | Page background |
-| `--foreground` | #0f172a | #f8fafc | Primary text |
-| `--primary` | #137fec | #137fec | Brand blue (same) |
-| `--primary-foreground` | #ffffff | #ffffff | Text on primary |
-| `--card` | #ffffff | #1e2936 | Card backgrounds |
-| `--card-foreground` | #0f172a | #f8fafc | Text on cards |
-| `--border` | #e2e8f0 | #334155 | Borders |
-| `--muted` | #f1f5f9 | #1e293b | Subtle bg |
-| `--accent` | #7cc4ff | #7cc4ff | Highlights |
-| `--destructive` | #ef4444 | #ef4444 | Errors |
-| `--success` | #10b981 | #10b981 | Success |
+| Variable               | Light Mode | Dark Mode | Usage             |
+| ---------------------- | ---------- | --------- | ----------------- |
+| `--background`         | #f6f7f8    | #101922   | Page background   |
+| `--foreground`         | #0f172a    | #f8fafc   | Primary text      |
+| `--primary`            | #137fec    | #137fec   | Brand blue (same) |
+| `--primary-foreground` | #ffffff    | #ffffff   | Text on primary   |
+| `--card`               | #ffffff    | #1e2936   | Card backgrounds  |
+| `--card-foreground`    | #0f172a    | #f8fafc   | Text on cards     |
+| `--border`             | #e2e8f0    | #334155   | Borders           |
+| `--muted`              | #f1f5f9    | #1e293b   | Subtle bg         |
+| `--accent`             | #7cc4ff    | #7cc4ff   | Highlights        |
+| `--destructive`        | #ef4444    | #ef4444   | Errors            |
+| `--success`            | #10b981    | #10b981   | Success           |
 
 ---
 
@@ -58,8 +57,8 @@ import { cn } from '@intelliflow/ui';
 ### ❌ NEVER
 
 ```tsx
-import { Dialog } from '@radix-ui/react-dialog';   // ❌ Bypass
-import { Button } from '@/components/ui/button';   // ❌ Wrong path
+import { Dialog } from '@radix-ui/react-dialog'; // ❌ Bypass
+import { Button } from '@/components/ui/button'; // ❌ Wrong path
 ```
 
 ---
@@ -77,7 +76,7 @@ import { Button } from '@/components/ui/button';   // ❌ Wrong path
 ### ❌ AVOID (Lucide - being phased out)
 
 ```tsx
-import { CheckCircle } from 'lucide-react';  // ❌
+import { CheckCircle } from 'lucide-react'; // ❌
 ```
 
 ---
@@ -143,7 +142,7 @@ export const Default: Story = {
 
 ```tsx
 export function RevenueWidget() {
-  const revenue = 125000;  // Hardcoded!
+  const revenue = 125000; // Hardcoded!
   return <Card>{revenue}</Card>;
 }
 ```
@@ -182,16 +181,16 @@ export function RevenueWidget({ config }: WidgetProps<RevenueConfig>) {
 
 ## 🚫 Common Mistakes
 
-| ❌ Don't | ✅ Do |
-|---------|------|
-| `console.log()` | Remove or use proper logging |
-| `// TODO:` | Complete implementation |
-| `@ts-ignore` | Fix the type error |
-| `any` types | Use proper TypeScript types |
-| Hardcoded colors | Use CSS variables |
-| Skip tests | Write tests (90%+ coverage) |
-| Skip Storybook | Add story for component |
-| Forget Sprint_plan.csv | Update status |
+| ❌ Don't               | ✅ Do                        |
+| ---------------------- | ---------------------------- |
+| `console.log()`        | Remove or use proper logging |
+| `// TODO:`             | Complete implementation      |
+| `@ts-ignore`           | Fix the type error           |
+| `any` types            | Use proper TypeScript types  |
+| Hardcoded colors       | Use CSS variables            |
+| Skip tests             | Write tests (90%+ coverage)  |
+| Skip Storybook         | Add story for component      |
+| Forget Sprint_plan.csv | Update status                |
 
 ---
 
@@ -223,17 +222,17 @@ pnpm --filter api test
 
 ## 📁 File Locations
 
-| What | Where |
-|------|-------|
-| Reusable components | `packages/ui/src/components/` |
-| Component tests | `packages/ui/__tests__/` |
-| Storybook stories | `packages/ui/src/components/*.stories.tsx` |
-| App-specific components | `apps/web/src/components/` |
-| Design tokens | `docs/company/brand/*.tokens.json` |
-| Style guide | `docs/company/brand/style-guide.md` |
-| Design mockups | `docs/design/mockups/` |
-| Sprint plan | `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` |
-| Attestations | `artifacts/attestations/[TASK-ID]/` |
+| What                    | Where                                                       |
+| ----------------------- | ----------------------------------------------------------- |
+| Reusable components     | `packages/ui/src/components/`                               |
+| Component tests         | `packages/ui/__tests__/`                                    |
+| Storybook stories       | `packages/ui/src/components/*.stories.tsx`                  |
+| App-specific components | `apps/web/src/components/`                                  |
+| Design tokens           | `docs/company/brand/*.tokens.json`                          |
+| Style guide             | `docs/company/brand/style-guide.md`                         |
+| Design mockups          | `docs/design/mockups/`                                      |
+| Sprint plan             | `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` |
+| Attestations            | `artifacts/attestations/[TASK-ID]/`                         |
 
 ---
 

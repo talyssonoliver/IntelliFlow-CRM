@@ -69,13 +69,9 @@ export function PublicFooter() {
           <div className="col-span-2 md:col-span-4 lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-8 h-8 rounded bg-[#137fec] flex items-center justify-center flex-shrink-0">
-                <span className="material-symbols-outlined text-white text-xl">
-                  grid_view
-                </span>
+                <span className="material-symbols-outlined text-white text-xl">grid_view</span>
               </div>
-              <span className="text-lg font-bold text-foreground">
-                IntelliFlow CRM
-              </span>
+              <span className="text-lg font-bold text-foreground">IntelliFlow CRM</span>
             </div>
             <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
               AI-powered CRM with modern automation and governance-grade validation
@@ -100,9 +96,7 @@ export function PublicFooter() {
           {/* Link Columns */}
           {footerSections.map((section) => (
             <div key={section.title}>
-              <h3 className="text-sm font-semibold text-foreground mb-4">
-                {section.title}
-              </h3>
+              <h3 className="text-sm font-semibold text-foreground mb-4">{section.title}</h3>
               <ul className="space-y-3">
                 {section.links.map((link) => (
                   <li key={link.href}>

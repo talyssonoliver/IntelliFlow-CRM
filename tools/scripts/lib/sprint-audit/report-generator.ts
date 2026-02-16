@@ -9,11 +9,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type {
-  SprintAuditReport,
-  TaskAuditResult,
-  AuditOutputPaths,
-} from './types';
+import type { SprintAuditReport, TaskAuditResult, AuditOutputPaths } from './types';
 
 // =============================================================================
 // Output Path Generation
@@ -126,11 +122,21 @@ export function generateMarkdownReport(report: SprintAuditReport): string {
   lines.push('');
   lines.push('| Category | Found | Issues |');
   lines.push('|----------|-------|--------|');
-  lines.push(`| Artifacts | ${report.evidence_summary.artifactsVerified} ✓ | ${report.evidence_summary.artifactsMissing} missing, ${report.evidence_summary.artifactsEmpty} empty |`);
-  lines.push(`| Validations | ${report.evidence_summary.validationsPassed} passed | ${report.evidence_summary.validationsFailed} failed |`);
-  lines.push(`| KPIs | ${report.evidence_summary.kpisMet} met | ${report.evidence_summary.kpisMissed} missed |`);
-  lines.push(`| Placeholders (in task artifacts) | - | ${report.evidence_summary.placeholdersFound} found |`);
-  lines.push(`| Placeholders (codebase total) | - | ${report.evidence_summary.totalCodebasePlaceholders} found |`);
+  lines.push(
+    `| Artifacts | ${report.evidence_summary.artifactsVerified} ✓ | ${report.evidence_summary.artifactsMissing} missing, ${report.evidence_summary.artifactsEmpty} empty |`
+  );
+  lines.push(
+    `| Validations | ${report.evidence_summary.validationsPassed} passed | ${report.evidence_summary.validationsFailed} failed |`
+  );
+  lines.push(
+    `| KPIs | ${report.evidence_summary.kpisMet} met | ${report.evidence_summary.kpisMissed} missed |`
+  );
+  lines.push(
+    `| Placeholders (in task artifacts) | - | ${report.evidence_summary.placeholdersFound} found |`
+  );
+  lines.push(
+    `| Placeholders (codebase total) | - | ${report.evidence_summary.totalCodebasePlaceholders} found |`
+  );
   lines.push('');
 
   // Blocking Issues
@@ -428,7 +434,11 @@ export async function createLatestLink(
   sprintNumber: number,
   repoRoot: string
 ): Promise<void> {
-  const latestDir = path.join(repoRoot, 'artifacts/reports/sprint-audit', `sprint-${sprintNumber}-latest`);
+  const latestDir = path.join(
+    repoRoot,
+    'artifacts/reports/sprint-audit',
+    `sprint-${sprintNumber}-latest`
+  );
 
   try {
     // Remove existing latest directory

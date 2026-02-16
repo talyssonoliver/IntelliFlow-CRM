@@ -61,7 +61,7 @@ const mockTask = {
 
 // Import the router dynamically after mocks are set up
 async function createCaller() {
-  const mod = await import('../cases.router.js') as any;
+  const mod = (await import('../cases.router.js')) as any;
   const { casesRouter } = mod;
 
   // Create a mock caller context
@@ -69,7 +69,12 @@ async function createCaller() {
     prisma: mockPrisma as any,
     user: { id: 'user-1', email: 'test@test.com', role: 'ADMIN' },
     session: { userId: 'user-1' },
-    tenant: { tenantId: 'tenant-1', tenantType: 'user' as const, userId: 'user-1', role: 'admin' as const },
+    tenant: {
+      tenantId: 'tenant-1',
+      tenantType: 'user' as const,
+      userId: 'user-1',
+      role: 'admin' as const,
+    },
     services: {},
   };
 
@@ -127,16 +132,17 @@ describe('cases.router', () => {
   describe('stats', () => {
     it('returns case statistics', async () => {
       mockPrisma.case.groupBy
-        .mockResolvedValueOnce([{ status: 'OPEN', _count: 5 }, { status: 'CLOSED', _count: 3 }])
+        .mockResolvedValueOnce([
+          { status: 'OPEN', _count: 5 },
+          { status: 'CLOSED', _count: 3 },
+        ])
         .mockResolvedValueOnce([{ priority: 'HIGH', _count: 4 }]);
       mockPrisma.case.count
         .mockResolvedValueOnce(1)
         .mockResolvedValueOnce(2)
         .mockResolvedValueOnce(11);
 
-      const [statusCounts] = await Promise.all([
-        mockPrisma.case.groupBy({ by: ['status'] }),
-      ]);
+      const [statusCounts] = await Promise.all([mockPrisma.case.groupBy({ by: ['status'] })]);
 
       expect(statusCounts).toHaveLength(2);
       expect(statusCounts[0]._count).toBe(5);
@@ -166,7 +172,10 @@ describe('cases.router', () => {
       mockPrisma.case.findFirst.mockResolvedValue(mockCase);
       mockPrisma.case.update.mockResolvedValue({ ...mockCase, title: 'Updated' });
 
-      const result = await mockPrisma.case.update({ where: { id: 'case-1' }, data: { title: 'Updated' } });
+      const result = await mockPrisma.case.update({
+        where: { id: 'case-1' },
+        data: { title: 'Updated' },
+      });
       expect(result.title).toBe('Updated');
     });
   });
@@ -176,7 +185,10 @@ describe('cases.router', () => {
       mockPrisma.case.findFirst.mockResolvedValue(mockCase);
       mockPrisma.case.update.mockResolvedValue({ ...mockCase, status: 'IN_PROGRESS' });
 
-      const result = await mockPrisma.case.update({ where: { id: 'case-1' }, data: { status: 'IN_PROGRESS' } });
+      const result = await mockPrisma.case.update({
+        where: { id: 'case-1' },
+        data: { status: 'IN_PROGRESS' },
+      });
       expect(result.status).toBe('IN_PROGRESS');
     });
 
@@ -229,7 +241,11 @@ describe('cases.router', () => {
     it('marks task completed', async () => {
       mockPrisma.case.findFirst.mockResolvedValue(mockCase);
       mockPrisma.caseTask.findFirst.mockResolvedValue(mockTask);
-      mockPrisma.caseTask.update.mockResolvedValue({ ...mockTask, status: 'COMPLETED', completedAt: new Date() });
+      mockPrisma.caseTask.update.mockResolvedValue({
+        ...mockTask,
+        status: 'COMPLETED',
+        completedAt: new Date(),
+      });
 
       const result = await mockPrisma.caseTask.update({
         where: { id: 'task-1' },

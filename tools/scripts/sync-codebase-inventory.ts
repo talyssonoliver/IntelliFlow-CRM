@@ -177,12 +177,10 @@ function extractDatabaseInventory(schemaPath: string): DatabaseInventory {
     const modelBody = match[2];
 
     // Count fields (lines that don't start with @@ and aren't empty)
-    const fieldLines = modelBody
-      .split('\n')
-      .filter((line) => {
-        const trimmed = line.trim();
-        return trimmed && !trimmed.startsWith('@@') && !trimmed.startsWith('//');
-      });
+    const fieldLines = modelBody.split('\n').filter((line) => {
+      const trimmed = line.trim();
+      return trimmed && !trimmed.startsWith('@@') && !trimmed.startsWith('//');
+    });
     const fields = fieldLines.length;
 
     // Count indexes (@@index, @@unique, @unique, @id)
@@ -255,7 +253,11 @@ function extractMiddlewareInventory(middlewareDir: string): MiddlewareInventory 
           if (name.includes('Middleware') || name.includes('middleware')) {
             let type: MiddlewareInfo['type'] = 'other';
             if (name.toLowerCase().includes('auth')) type = 'auth';
-            else if (name.toLowerCase().includes('log') || name.toLowerCase().includes('performance')) type = 'logging';
+            else if (
+              name.toLowerCase().includes('log') ||
+              name.toLowerCase().includes('performance')
+            )
+              type = 'logging';
             else if (name.toLowerCase().includes('rate')) type = 'rate-limit';
             else if (name.toLowerCase().includes('valid')) type = 'validation';
             else if (name.toLowerCase().includes('error')) type = 'error';
@@ -336,14 +338,18 @@ function extractWorkersInventory(workersDir: string): WorkersInventory {
     // Also check for outbox patterns
     const outboxDir = join(workerPath, 'src', 'outbox');
     if (existsSync(outboxDir)) {
-      const outboxFiles = readdirSync(outboxDir).filter((f) => f.endsWith('.ts') && !f.includes('.test'));
+      const outboxFiles = readdirSync(outboxDir).filter(
+        (f) => f.endsWith('.ts') && !f.includes('.test')
+      );
       jobs.push(...outboxFiles.map((f) => f.replace('.ts', '')));
     }
 
     // Check channels for notification worker
     const channelsDir = join(workerPath, 'src', 'channels');
     if (existsSync(channelsDir)) {
-      const channelFiles = readdirSync(channelsDir).filter((f) => f.endsWith('.ts') && !f.includes('.test'));
+      const channelFiles = readdirSync(channelsDir).filter(
+        (f) => f.endsWith('.ts') && !f.includes('.test')
+      );
       jobs.push(...channelFiles.map((f) => `channel:${f.replace('.ts', '')}`));
     }
 
@@ -383,7 +389,11 @@ function extractIntegrationsInventory(adaptersDir: string): IntegrationsInventor
   }
 
   // Define integration categories and their paths
-  const integrationPaths: Array<{ path: string; category: IntegrationInfo['category']; provider: string }> = [
+  const integrationPaths: Array<{
+    path: string;
+    category: IntegrationInfo['category'];
+    provider: string;
+  }> = [
     { path: 'calendar/google', category: 'calendar', provider: 'Google Calendar' },
     { path: 'calendar/microsoft', category: 'calendar', provider: 'Microsoft Outlook' },
     { path: 'email/gmail', category: 'email', provider: 'Gmail' },
@@ -461,7 +471,8 @@ function extractDomainEventsInventory(eventsDir: string): DomainEventsInventory 
     if (!existsSync(eventPath)) continue;
 
     const files = readdirSync(eventPath).filter(
-      (f) => (f.includes('Event') || f.includes('event')) && f.endsWith('.ts') && !f.includes('.test')
+      (f) =>
+        (f.includes('Event') || f.includes('event')) && f.endsWith('.ts') && !f.includes('.test')
     );
 
     for (const file of files) {
@@ -476,7 +487,9 @@ function extractDomainEventsInventory(eventsDir: string): DomainEventsInventory 
         const eventName = match[1];
 
         // Try to find eventType
-        const typeMatch = content.match(new RegExp(`${eventName}[\\s\\S]*?eventType\\s*=\\s*['"]([^'"]+)['"]`));
+        const typeMatch = content.match(
+          new RegExp(`${eventName}[\\s\\S]*?eventType\\s*=\\s*['"]([^'"]+)['"]`)
+        );
         const eventType = typeMatch?.[1] ?? eventName;
 
         // Determine aggregate from event type or file name
@@ -507,7 +520,9 @@ function extractDomainEventsInventory(eventsDir: string): DomainEventsInventory 
     if (routingMatch) {
       const routingContent = routingMatch[1];
       for (const event of events) {
-        const engineMatch = routingContent.match(new RegExp(`'${event.eventType}'\\s*:\\s*'(\\w+)'`));
+        const engineMatch = routingContent.match(
+          new RegExp(`'${event.eventType}'\\s*:\\s*'(\\w+)'`)
+        );
         if (engineMatch) {
           event.workflowEngine = engineMatch[1];
         }
@@ -687,8 +702,12 @@ async function main() {
 
   // 1. Database Schema
   console.log('1. Extracting Database Schema Inventory...');
-  const database = extractDatabaseInventory(join(baseDir, 'packages', 'db', 'prisma', 'schema.prisma'));
-  console.log(`   Tables: ${database.total_tables}, Fields: ${database.total_fields}, Indexes: ${database.total_indexes}`);
+  const database = extractDatabaseInventory(
+    join(baseDir, 'packages', 'db', 'prisma', 'schema.prisma')
+  );
+  console.log(
+    `   Tables: ${database.total_tables}, Fields: ${database.total_fields}, Indexes: ${database.total_indexes}`
+  );
 
   // 2. Middleware Stack
   console.log('2. Extracting Middleware Stack...');
@@ -707,13 +726,17 @@ async function main() {
 
   // 5. Domain Events
   console.log('5. Extracting Domain Events...');
-  const domainEvents = extractDomainEventsInventory(join(baseDir, 'packages', 'domain', 'src', 'events'));
+  const domainEvents = extractDomainEventsInventory(
+    join(baseDir, 'packages', 'domain', 'src', 'events')
+  );
   console.log(`   Events: ${domainEvents.total_events}`);
 
   // 6. Validation Schemas
   console.log('6. Extracting Validation Schemas...');
   const validators = extractValidatorsInventory(join(baseDir, 'packages', 'validators'));
-  console.log(`   Validators: ${validators.total_validators}, Schemas: ${validators.total_schemas}`);
+  console.log(
+    `   Validators: ${validators.total_validators}, Schemas: ${validators.total_schemas}`
+  );
 
   // 7. Cache Configuration
   console.log('7. Extracting Cache Configuration...');
@@ -745,12 +768,18 @@ async function main() {
   console.log('='.repeat(60));
   console.log();
   console.log('Summary:');
-  console.log(`  Database:     ${database.total_tables} tables, ${database.total_fields} fields, ${database.enums} enums`);
-  console.log(`  Middleware:   ${middleware.total_middleware} (${middleware.middleware.filter((m) => m.enabled).length} enabled)`);
+  console.log(
+    `  Database:     ${database.total_tables} tables, ${database.total_fields} fields, ${database.enums} enums`
+  );
+  console.log(
+    `  Middleware:   ${middleware.total_middleware} (${middleware.middleware.filter((m) => m.enabled).length} enabled)`
+  );
   console.log(`  Workers:      ${workers.total_workers} workers, ${workers.total_jobs} jobs`);
   console.log(`  Integrations: ${integrations.total_integrations} external services`);
   console.log(`  Events:       ${domainEvents.total_events} domain events`);
-  console.log(`  Validators:   ${validators.total_validators} files, ${validators.total_schemas} schemas`);
+  console.log(
+    `  Validators:   ${validators.total_validators} files, ${validators.total_schemas} schemas`
+  );
   console.log(`  Cache:        ${cache.enabled ? 'Enabled' : 'Disabled'} (${cache.provider})`);
 }
 

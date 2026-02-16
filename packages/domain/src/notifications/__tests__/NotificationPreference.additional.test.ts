@@ -3,17 +3,39 @@ import { NotificationPreference } from '../NotificationPreference';
 
 describe('NotificationPreference - Additional Coverage', () => {
   let prefs: NotificationPreference;
-  beforeEach(() => { prefs = NotificationPreference.createDefault('t1', 'u1'); });
+  beforeEach(() => {
+    prefs = NotificationPreference.createDefault('t1', 'u1');
+  });
 
   describe('reconstitute', () => {
     it('should reconstitute from persistence', () => {
       const now = new Date();
       const p = NotificationPreference.reconstitute('pref-u1', {
-        tenantId: 't1', userId: 'u1',
-        channels: { in_app: { enabled: true, frequency: 'realtime' }, email: { enabled: false, frequency: 'daily_digest' }, sms: { enabled: false, frequency: 'realtime' }, push: { enabled: true, frequency: 'hourly' }, webhook: { enabled: false, frequency: 'realtime' } },
-        categories: { system: true, transactional: true, reminders: false, alerts: true, updates: true, marketing: false, social: true },
-        quietHoursStart: '23:00', quietHoursEnd: '07:00', quietHoursEnabled: false,
-        timezone: 'Europe/London', doNotDisturb: true, createdAt: now, updatedAt: now,
+        tenantId: 't1',
+        userId: 'u1',
+        channels: {
+          in_app: { enabled: true, frequency: 'realtime' },
+          email: { enabled: false, frequency: 'daily_digest' },
+          sms: { enabled: false, frequency: 'realtime' },
+          push: { enabled: true, frequency: 'hourly' },
+          webhook: { enabled: false, frequency: 'realtime' },
+        },
+        categories: {
+          system: true,
+          transactional: true,
+          reminders: false,
+          alerts: true,
+          updates: true,
+          marketing: false,
+          social: true,
+        },
+        quietHoursStart: '23:00',
+        quietHoursEnd: '07:00',
+        quietHoursEnabled: false,
+        timezone: 'Europe/London',
+        doNotDisturb: true,
+        createdAt: now,
+        updatedAt: now,
       });
       expect(p.tenantId).toBe('t1');
       expect(p.userId).toBe('u1');
@@ -43,7 +65,9 @@ describe('NotificationPreference - Additional Coverage', () => {
       expect(() => prefs.setCategoryEnabled('system', false)).toThrow('Cannot disable system');
     });
     it('should throw when disabling transactional', () => {
-      expect(() => prefs.setCategoryEnabled('transactional', false)).toThrow('Cannot disable transactional');
+      expect(() => prefs.setCategoryEnabled('transactional', false)).toThrow(
+        'Cannot disable transactional'
+      );
     });
     it('should allow enabling system (no-op)', () => {
       prefs.setCategoryEnabled('system', true);
@@ -97,13 +121,16 @@ describe('NotificationPreference - Additional Coverage', () => {
   describe('isInQuietHours', () => {
     it('returns false when disabled', () => {
       prefs.setQuietHoursEnabled(false);
-      const time = new Date(); time.setHours(23, 0, 0, 0);
+      const time = new Date();
+      time.setHours(23, 0, 0, 0);
       expect(prefs.isInQuietHours(time)).toBe(false);
     });
     it('handles same-day range correctly', () => {
       prefs.setQuietHours('09:00', '17:00');
-      const inRange = new Date(); inRange.setHours(12, 0, 0, 0);
-      const outRange = new Date(); outRange.setHours(18, 0, 0, 0);
+      const inRange = new Date();
+      inRange.setHours(12, 0, 0, 0);
+      const outRange = new Date();
+      outRange.setHours(18, 0, 0, 0);
       expect(prefs.isInQuietHours(inRange)).toBe(true);
       expect(prefs.isInQuietHours(outRange)).toBe(false);
     });

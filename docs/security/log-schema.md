@@ -1,6 +1,8 @@
 # Structured Log Schema
 
-IntelliFlow CRM uses structured logging (JSON format) throughout all services to enable efficient aggregation, filtering, and analysis via Loki and the observability stack.
+IntelliFlow CRM uses structured logging (JSON format) throughout all services to
+enable efficient aggregation, filtering, and analysis via Loki and the
+observability stack.
 
 ## Log Record Fields
 
@@ -8,89 +10,94 @@ IntelliFlow CRM uses structured logging (JSON format) throughout all services to
 
 These fields MUST be present in every log record:
 
-| Field | Type | Description | Example |
-|-------|------|-------------|---------|
-| `timestamp` | ISO 8601 | Log event time in UTC | `2025-12-29T15:30:45.123Z` |
-| `level` | string | Log level | `info`, `warn`, `error`, `debug`, `trace` |
-| `service` | string | Service name | `intelliflow-api`, `intelliflow-web`, `ai-worker` |
-| `trace_id` | string | Distributed trace identifier (W3C format) | `4bf92f3577b34da6a3ce929d0e0e4736` |
-| `span_id` | string | Current span identifier | `00f067aa0ba902b7` |
-| `message` | string | Human-readable message | `User created successfully` |
+| Field       | Type     | Description                               | Example                                           |
+| ----------- | -------- | ----------------------------------------- | ------------------------------------------------- |
+| `timestamp` | ISO 8601 | Log event time in UTC                     | `2025-12-29T15:30:45.123Z`                        |
+| `level`     | string   | Log level                                 | `info`, `warn`, `error`, `debug`, `trace`         |
+| `service`   | string   | Service name                              | `intelliflow-api`, `intelliflow-web`, `ai-worker` |
+| `trace_id`  | string   | Distributed trace identifier (W3C format) | `4bf92f3577b34da6a3ce929d0e0e4736`                |
+| `span_id`   | string   | Current span identifier                   | `00f067aa0ba902b7`                                |
+| `message`   | string   | Human-readable message                    | `User created successfully`                       |
 
 ### Context Fields (Recommended)
 
 These fields provide additional context for correlation and filtering:
 
-| Field | Type | Description | Example |
-|-------|------|-------------|---------|
-| `correlation_id` | string | Business correlation ID | `order-123`, `lead-456` |
-| `user_id` | string | User identifier (redacted if sensitive) | `user-789` |
-| `request_id` | string | HTTP request ID | `req-123456` |
-| `environment` | string | Deployment environment | `development`, `staging`, `production` |
-| `version` | string | Service version | `1.2.3` |
+| Field            | Type   | Description                             | Example                                |
+| ---------------- | ------ | --------------------------------------- | -------------------------------------- |
+| `correlation_id` | string | Business correlation ID                 | `order-123`, `lead-456`                |
+| `user_id`        | string | User identifier (redacted if sensitive) | `user-789`                             |
+| `request_id`     | string | HTTP request ID                         | `req-123456`                           |
+| `environment`    | string | Deployment environment                  | `development`, `staging`, `production` |
+| `version`        | string | Service version                         | `1.2.3`                                |
 
 ### Performance Fields (For performance logs)
 
-| Field | Type | Description | Example |
-|-------|------|-------------|---------|
-| `duration_ms` | number | Operation duration | `145` |
-| `http.status_code` | number | HTTP response code | `200`, `404` |
-| `http.method` | string | HTTP method | `GET`, `POST` |
-| `http.url` | string | Request URL (PII-safe) | `/api/leads` |
-| `db.query_time_ms` | number | Database query duration | `23` |
+| Field              | Type   | Description             | Example       |
+| ------------------ | ------ | ----------------------- | ------------- |
+| `duration_ms`      | number | Operation duration      | `145`         |
+| `http.status_code` | number | HTTP response code      | `200`, `404`  |
+| `http.method`      | string | HTTP method             | `GET`, `POST` |
+| `http.url`         | string | Request URL (PII-safe)  | `/api/leads`  |
+| `db.query_time_ms` | number | Database query duration | `23`          |
 
 ### Business Context Fields
 
-| Field | Type | Description | Example |
-|-------|------|-------------|---------|
-| `entity_type` | string | Business entity type | `lead`, `contact`, `opportunity` |
-| `entity_id` | string | Entity identifier | `lead-123` |
-| `action` | string | Business action | `create`, `update`, `delete`, `score` |
+| Field         | Type   | Description          | Example                               |
+| ------------- | ------ | -------------------- | ------------------------------------- |
+| `entity_type` | string | Business entity type | `lead`, `contact`, `opportunity`      |
+| `entity_id`   | string | Entity identifier    | `lead-123`                            |
+| `action`      | string | Business action      | `create`, `update`, `delete`, `score` |
 
 ### Error Fields (For error logs)
 
-| Field | Type | Description | Example |
-|-------|------|-------------|---------|
-| `error.type` | string | Error class/type | `ValidationError`, `DatabaseError` |
-| `error.message` | string | Error message | `Invalid email format` |
-| `error.stack` | string | Stack trace (debug mode only) | `at leadService.create (...)` |
-| `error.code` | string | Error code | `LEAD_VALIDATION_FAILED` |
+| Field           | Type   | Description                   | Example                            |
+| --------------- | ------ | ----------------------------- | ---------------------------------- |
+| `error.type`    | string | Error class/type              | `ValidationError`, `DatabaseError` |
+| `error.message` | string | Error message                 | `Invalid email format`             |
+| `error.stack`   | string | Stack trace (debug mode only) | `at leadService.create (...)`      |
+| `error.code`    | string | Error code                    | `LEAD_VALIDATION_FAILED`           |
 
 ### Security Fields (For security-relevant logs)
 
-| Field | Type | Description | Example |
-|-------|------|-------------|---------|
-| `security.event` | string | Security event type | `auth_success`, `auth_failure`, `rate_limit` |
-| `security.risk_level` | string | Risk level | `low`, `medium`, `high` |
-| `security.action_taken` | string | Action taken | `blocked`, `logged`, `escalated` |
+| Field                   | Type   | Description         | Example                                      |
+| ----------------------- | ------ | ------------------- | -------------------------------------------- |
+| `security.event`        | string | Security event type | `auth_success`, `auth_failure`, `rate_limit` |
+| `security.risk_level`   | string | Risk level          | `low`, `medium`, `high`                      |
+| `security.action_taken` | string | Action taken        | `blocked`, `logged`, `escalated`             |
 
 ## Log Levels and Usage
 
 ### INFO
+
 - User actions (create, update, delete)
 - Service startup/shutdown
 - Significant state changes
 - Business events
 
 ### WARN
+
 - Deprecated API usage
 - Recoverable errors
 - Rate limit approaching
 - Configuration issues
 
 ### ERROR
+
 - Failed operations
 - Exceptions with stack traces
 - API errors
 - Data validation failures
 
 ### DEBUG
+
 - Function entry/exit
 - Variable values
 - Detailed operation steps
 - Only enabled in development
 
 ### TRACE
+
 - Low-level system details
 - Verbose performance data
 - Only enabled for diagnostics
@@ -109,6 +116,7 @@ All logs are automatically processed through this pipeline:
 ## Example Log Records
 
 ### Successful API Request
+
 ```json
 {
   "timestamp": "2025-12-29T15:30:45.123Z",
@@ -130,6 +138,7 @@ All logs are automatically processed through this pipeline:
 ```
 
 ### AI Scoring Operation
+
 ```json
 {
   "timestamp": "2025-12-29T15:30:46.456Z",
@@ -150,6 +159,7 @@ All logs are automatically processed through this pipeline:
 ```
 
 ### Error with Context
+
 ```json
 {
   "timestamp": "2025-12-29T15:30:47.789Z",
@@ -183,6 +193,7 @@ All Personally Identifiable Information (PII) is redacted before logging:
 ### Sensitive Field Filtering
 
 These fields are automatically removed by the collector:
+
 - `http.request.header.authorization`
 - `http.request.header.cookie`
 - `http.request.header.x-api-key`
@@ -190,6 +201,7 @@ These fields are automatically removed by the collector:
 ### Access Control
 
 Log access is controlled via:
+
 - Role-based access (Grafana RBAC)
 - Service mesh mTLS (all services authenticated)
 - Audit trails (who queried what logs when)
@@ -214,6 +226,7 @@ Key metrics to watch:
 ## Integration Examples
 
 ### Node.js/Next.js
+
 ```typescript
 import pino from 'pino';
 
@@ -234,6 +247,7 @@ logger.info({
 ```
 
 ### Python (if used)
+
 ```python
 import logging
 from opentelemetry import trace

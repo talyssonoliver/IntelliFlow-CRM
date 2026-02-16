@@ -29,9 +29,5 @@ export async function resilientCall<T>(
   fallback?: FallbackFn<T>,
   retryOptions?: RetryOptions<T>
 ): Promise<T> {
-  return withRetry(
-    () => breaker.execute(fn, fallback),
-    retryConfig,
-    retryOptions
-  );
+  return withRetry(() => breaker.execute(fn, fallback), retryConfig, retryOptions);
 }

@@ -147,7 +147,13 @@ interface TenantContextMiddlewareOptions {
 export function tenantContextMiddleware(options: TenantContextMiddlewareOptions = {}) {
   const { requireAuth = true, allowServiceRole = false } = options;
 
-  return async ({ ctx, next }: { ctx: Context; next: (opts?: { ctx: unknown }) => Promise<unknown> }) => {
+  return async ({
+    ctx,
+    next,
+  }: {
+    ctx: Context;
+    next: (opts?: { ctx: unknown }) => Promise<unknown>;
+  }) => {
     // Check if service role bypass is allowed
     if (allowServiceRole && isServiceRole(ctx)) {
       return next({
@@ -326,10 +332,7 @@ export function validateTenantOperation(
  * Current implementation: managers can access all non-admin users
  * Future: implement proper team hierarchy
  */
-export async function getTeamMemberIds(
-  prisma: PrismaClient,
-  managerId: string
-): Promise<string[]> {
+export async function getTeamMemberIds(prisma: PrismaClient, managerId: string): Promise<string[]> {
   // Check if user is a manager
   const manager = await prisma.user.findUnique({
     where: { id: managerId },

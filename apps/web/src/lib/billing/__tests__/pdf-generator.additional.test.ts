@@ -24,10 +24,17 @@ function setupGlobals() {
   (globalThis as any).URL = class MockURL {
     protocol: string;
     constructor(url: string) {
-      if (!url || (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('ftp://'))) {
+      if (
+        !url ||
+        (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('ftp://'))
+      ) {
         throw new TypeError('Invalid URL');
       }
-      this.protocol = url.startsWith('https') ? 'https:' : url.startsWith('http') ? 'http:' : 'ftp:';
+      this.protocol = url.startsWith('https')
+        ? 'https:'
+        : url.startsWith('http')
+          ? 'http:'
+          : 'ftp:';
     }
     static createObjectURL = mocks.createObjectURL;
     static revokeObjectURL = mocks.revokeObjectURL;
@@ -91,7 +98,11 @@ describe('pdf-generator additional', () => {
   describe('openInvoicePdf', () => {
     it('opens valid URL', () => {
       openInvoicePdf('https://x.com/a.pdf');
-      expect(mocks.windowOpen).toHaveBeenCalledWith('https://x.com/a.pdf', '_blank', 'noopener,noreferrer');
+      expect(mocks.windowOpen).toHaveBeenCalledWith(
+        'https://x.com/a.pdf',
+        '_blank',
+        'noopener,noreferrer'
+      );
     });
     it('warns for invalid URL', () => {
       const w = vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -158,8 +169,10 @@ describe('pdf-generator additional', () => {
   });
 
   describe('getBestViewUrl', () => {
-    it('prefers pdf', () => expect(getBestViewUrl('https://x.com/p', 'https://x.com/h')).toBe('https://x.com/p'));
-    it('falls back to hosted', () => expect(getBestViewUrl(null, 'https://x.com/h')).toBe('https://x.com/h'));
+    it('prefers pdf', () =>
+      expect(getBestViewUrl('https://x.com/p', 'https://x.com/h')).toBe('https://x.com/p'));
+    it('falls back to hosted', () =>
+      expect(getBestViewUrl(null, 'https://x.com/h')).toBe('https://x.com/h'));
     it('null for both null', () => expect(getBestViewUrl(null, null)).toBeNull());
     it('null for no args', () => expect(getBestViewUrl()).toBeNull());
     it('null for both undefined', () => expect(getBestViewUrl(undefined, undefined)).toBeNull());

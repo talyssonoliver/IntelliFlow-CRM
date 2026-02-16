@@ -198,6 +198,39 @@ export interface SprintBottleneckDetail {
 }
 
 /**
+ * Context gap detail — missing context pack or acknowledgment
+ */
+export interface ContextGapDetail {
+  task_id: string;
+  description: string;
+  missing_pack: boolean;
+  missing_ack: boolean;
+}
+
+/**
+ * Plan gap detail — plan deliverables not all present on disk
+ */
+export interface PlanGapDetail {
+  task_id: string;
+  description: string;
+  plan_path: string;
+  total_files: number;
+  verified_files: number;
+  missing_files: string[];
+}
+
+/**
+ * Hash mismatch detail — file hashes differ between manifest and acknowledgment
+ */
+export interface HashMismatchDetail {
+  task_id: string;
+  description: string;
+  mismatched_files: string[];
+  total_files: number;
+  matched_count: number;
+}
+
+/**
  * Executive metrics response - all snake_case
  */
 export interface ExecutiveMetricsResponse {
@@ -224,6 +257,12 @@ export interface ExecutiveMetricsResponse {
   forward_dependencies_details: ForwardDependencyDetail[];
   sprint_bottlenecks: string;
   sprint_bottlenecks_details: SprintBottleneckDetail[];
+  missing_context_tasks: number;
+  missing_context_tasks_details: ContextGapDetail[];
+  incomplete_plan_deliverables: number;
+  incomplete_plan_deliverables_details: PlanGapDetail[];
+  context_hash_mismatches: number;
+  context_hash_mismatches_details: HashMismatchDetail[];
   generated_at: string;
 }
 
@@ -327,5 +366,3 @@ export const NO_CACHE_HEADERS = {
   Pragma: 'no-cache',
   Expires: '0',
 } as const;
-
-

@@ -54,7 +54,10 @@ function convertDependenciesToTypes(dependencies: string): string {
   if (!dependencies || dependencies.trim() === '') return '';
 
   // Split dependencies and add default FS type
-  const deps = dependencies.split(',').map((d) => d.trim()).filter(Boolean);
+  const deps = dependencies
+    .split(',')
+    .map((d) => d.trim())
+    .filter(Boolean);
   return deps.map((dep) => `${dep}:FS`).join(',');
 }
 
@@ -100,8 +103,8 @@ async function migrate() {
   const migratedRows = rows.map((row) => ({
     ...row,
     'Estimate (O/M/P)': '', // Will be filled during planning
-    'Planned Start': '',    // Will be calculated
-    'Planned Finish': '',   // Will be calculated
+    'Planned Start': '', // Will be calculated
+    'Planned Finish': '', // Will be calculated
     'Percent Complete': getPercentComplete(row.Status),
     'Dependency Types': convertDependenciesToTypes(row.Dependencies),
   }));

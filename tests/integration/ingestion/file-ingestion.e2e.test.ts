@@ -3,7 +3,11 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { PrismaClient } from '../../../packages/db/src';
 import { IngestionOrchestrator } from '../../../packages/application/src';
 import { PrismaCaseDocumentRepository } from '../../../packages/adapters/src';
-import { InMemoryEventBus, SupabaseStorageAdapter, MockAVScanner } from '../../../packages/adapters/src';
+import {
+  InMemoryEventBus,
+  SupabaseStorageAdapter,
+  MockAVScanner,
+} from '../../../packages/adapters/src';
 import { CaseDocument } from '../../../packages/domain/src';
 import { createHash } from 'crypto';
 
@@ -39,7 +43,10 @@ async function isInfrastructureAvailable(): Promise<{ available: boolean; reason
   const dbUrl = process.env.DATABASE_TEST_URL || process.env.DATABASE_URL;
 
   if (!supabaseUrl || !serviceKey) {
-    return { available: false, reason: 'Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY' };
+    return {
+      available: false,
+      reason: 'Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY',
+    };
   }
 
   if (!dbUrl) {
@@ -49,11 +56,14 @@ async function isInfrastructureAvailable(): Promise<{ available: boolean; reason
   try {
     // Check Supabase storage is accessible
     const response = await fetch(`${supabaseUrl}/storage/v1/bucket`, {
-      headers: { 'Authorization': `Bearer ${serviceKey}` },
+      headers: { Authorization: `Bearer ${serviceKey}` },
     });
 
     if (!response.ok) {
-      return { available: false, reason: `Supabase storage not accessible: ${response.status} ${response.statusText}` };
+      return {
+        available: false,
+        reason: `Supabase storage not accessible: ${response.status} ${response.statusText}`,
+      };
     }
 
     // Check required buckets exist (must match SupabaseStorageAdapter bucket names)
@@ -143,9 +153,11 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
     if (!infrastructureStatus.available || !prisma) return;
     try {
       // Clean up test documents created during this suite
-      await prisma.caseDocument.deleteMany({
-        where: { tenantId: { in: ['tenant-1', 'tenant-2'] } },
-      }).catch(() => {});
+      await prisma.caseDocument
+        .deleteMany({
+          where: { tenantId: { in: ['tenant-1', 'tenant-2'] } },
+        })
+        .catch(() => {});
     } finally {
       await prisma.$disconnect();
     }
@@ -274,8 +286,7 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
         return;
       }
 
-      const eicarString =
-        'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*';
+      const eicarString = 'X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*';
 
       const result = await orchestrator.ingestFile(Buffer.from(eicarString), {
         tenantId: 'tenant-1',

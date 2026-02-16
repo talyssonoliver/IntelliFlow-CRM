@@ -88,19 +88,13 @@ const DEFAULT_RETRY_CONFIG: RetryConfig = {
  * Audit logger interface for decoupling
  */
 export interface NotificationAuditLogger {
-  logNotificationSent(
-    notification: Notification,
-    providerMessageId: string
-  ): Promise<void>;
+  logNotificationSent(notification: Notification, providerMessageId: string): Promise<void>;
   logNotificationFailed(
     notification: Notification,
     error: string,
     retryCount: number
   ): Promise<void>;
-  logNotificationMovedToDLQ(
-    notification: Notification,
-    error: string
-  ): Promise<void>;
+  logNotificationMovedToDLQ(notification: Notification, error: string): Promise<void>;
   logPreferenceUpdated(
     preference: NotificationPreference,
     changes: Record<string, unknown>
@@ -225,16 +219,13 @@ export class NotificationService {
   getTemplates(channel?: NotificationChannel): NotificationTemplate[] {
     const all = Array.from(this.templates.values());
     if (!channel) return all;
-    return all.filter(t => t.channel === channel);
+    return all.filter((t) => t.channel === channel);
   }
 
   /**
    * Get user notification preferences
    */
-  async getPreferences(
-    tenantId: string,
-    userId: string
-  ): Promise<NotificationPreference> {
+  async getPreferences(tenantId: string, userId: string): Promise<NotificationPreference> {
     return this.preferenceRepo.findOrCreateDefault(tenantId, userId);
   }
 
@@ -252,10 +243,7 @@ export class NotificationService {
       doNotDisturb?: boolean;
     }
   ): Promise<NotificationPreference> {
-    const preference = await this.preferenceRepo.findOrCreateDefault(
-      tenantId,
-      userId
-    );
+    const preference = await this.preferenceRepo.findOrCreateDefault(tenantId, userId);
 
     if (updates.channel) {
       preference.setChannelEnabled(updates.channel.channel, updates.channel.enabled);
@@ -306,12 +294,7 @@ export class NotificationService {
     channel: NotificationChannel = 'in_app',
     limit: number = 50
   ): Promise<Notification[]> {
-    return this.notificationRepo.getRecentForRecipient(
-      tenantId,
-      userId,
-      channel,
-      limit
-    );
+    return this.notificationRepo.getRecentForRecipient(tenantId, userId, channel, limit);
   }
 
   /**
@@ -397,9 +380,7 @@ export class NotificationService {
 
   // Private methods
 
-  private async deliverNotification(
-    notification: Notification
-  ): Promise<SendNotificationResult> {
+  private async deliverNotification(notification: Notification): Promise<SendNotificationResult> {
     try {
       let result: NotificationResult;
 
@@ -578,10 +559,7 @@ export class NotificationService {
     }
   }
 
-  private renderTemplate(
-    template: string,
-    variables: Record<string, string>
-  ): string {
+  private renderTemplate(template: string, variables: Record<string, string>): string {
     let result = template;
     for (const [key, value] of Object.entries(variables)) {
       result = result.replace(new RegExp(`{{${key}}}`, 'g'), value);

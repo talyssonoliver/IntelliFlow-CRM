@@ -108,10 +108,7 @@ export function GoogleSignInButton({
     >
       {isLoading ? (
         <>
-          <span
-            className="material-symbols-outlined animate-spin text-xl"
-            aria-hidden="true"
-          >
+          <span className="material-symbols-outlined animate-spin text-xl" aria-hidden="true">
             progress_activity
           </span>
           <span className="text-sm">Connecting...</span>
@@ -181,10 +178,7 @@ export function MicrosoftSignInButton({
     >
       {isLoading ? (
         <>
-          <span
-            className="material-symbols-outlined animate-spin text-xl"
-            aria-hidden="true"
-          >
+          <span className="material-symbols-outlined animate-spin text-xl" aria-hidden="true">
             progress_activity
           </span>
           <span className="text-sm">Connecting...</span>
@@ -245,16 +239,8 @@ export function SocialLoginGrid({
 }: Readonly<SocialLoginGridProps>) {
   return (
     <div className="grid grid-cols-2 gap-3">
-      <GoogleSignInButton
-        onLogin={onGoogleLogin}
-        onError={onError}
-        disabled={disabled}
-      />
-      <MicrosoftSignInButton
-        onLogin={onMicrosoftLogin}
-        onError={onError}
-        disabled={disabled}
-      />
+      <GoogleSignInButton onLogin={onGoogleLogin} onError={onError} disabled={disabled} />
+      <MicrosoftSignInButton onLogin={onMicrosoftLogin} onError={onError} disabled={disabled} />
     </div>
   );
 }

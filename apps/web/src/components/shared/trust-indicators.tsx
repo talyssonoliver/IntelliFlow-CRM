@@ -83,12 +83,7 @@ export function TrustIndicators({
   }
 
   return (
-    <div
-      className={cn(
-        'flex items-center justify-center gap-4 text-xs text-slate-400',
-        className
-      )}
-    >
+    <div className={cn('flex items-center justify-center gap-4 text-xs text-slate-400', className)}>
       {items.map((item, index) => (
         <React.Fragment key={index}>
           <div className="flex items-center gap-1">

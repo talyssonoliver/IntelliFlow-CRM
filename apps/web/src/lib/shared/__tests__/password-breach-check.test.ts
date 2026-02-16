@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { checkPasswordBreach, createDebouncedBreachCheck, formatBreachCount } from '../password-breach-check';
+import {
+  checkPasswordBreach,
+  createDebouncedBreachCheck,
+  formatBreachCount,
+} from '../password-breach-check';
 
 describe('password-breach-check', () => {
   beforeEach(() => {
@@ -22,7 +26,11 @@ describe('password-breach-check', () => {
       // Mock the fetch to return a matching suffix
       const mockFetch = vi.fn().mockResolvedValue({
         ok: true,
-        text: vi.fn().mockResolvedValue('003D68EB55068C33ACE09247EE4C639306B:3\r\n1E4C9B93F3F0682250B6CF8331B7EE68FD8:9545824\r\nZZZZZ:0'),
+        text: vi
+          .fn()
+          .mockResolvedValue(
+            '003D68EB55068C33ACE09247EE4C639306B:3\r\n1E4C9B93F3F0682250B6CF8331B7EE68FD8:9545824\r\nZZZZZ:0'
+          ),
       });
       globalThis.fetch = mockFetch;
 
@@ -73,7 +81,7 @@ describe('password-breach-check', () => {
         expect.stringMatching(/^https:\/\/api\.pwnedpasswords\.com\/range\/[A-F0-9]{5}$/),
         expect.objectContaining({
           headers: expect.objectContaining({ 'Add-Padding': 'true' }),
-        }),
+        })
       );
     });
 
@@ -88,8 +96,12 @@ describe('password-breach-check', () => {
   });
 
   describe('createDebouncedBreachCheck', () => {
-    beforeEach(() => { vi.useFakeTimers(); });
-    afterEach(() => { vi.useRealTimers(); });
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
 
     it('returns a function', () => {
       const fn = createDebouncedBreachCheck();

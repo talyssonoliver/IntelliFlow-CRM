@@ -16,9 +16,7 @@ export default function SubscriptionsPage() {
       <header className="mb-8">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#137fec]/10">
-            <span className="material-symbols-outlined text-2xl text-[#137fec]">
-              subscriptions
-            </span>
+            <span className="material-symbols-outlined text-2xl text-[#137fec]">subscriptions</span>
           </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">

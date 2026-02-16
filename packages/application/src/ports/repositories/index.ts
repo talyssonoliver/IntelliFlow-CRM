@@ -15,3 +15,4 @@ export * from './LeadConversionAuditRepositoryPort';
 export * from './AIOutputReviewRepositoryPort';
 export * from './ActivityFeedRepositoryPort';
 export * from './BillingRepositoryPort';
+export * from './ModuleAccessPort';

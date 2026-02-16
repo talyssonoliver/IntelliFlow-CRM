@@ -155,26 +155,50 @@ export interface ERPServicePort {
 
   // Customer Operations
   getCustomer(customerNumber: string): Promise<Result<SAPCustomer | null, DomainError>>;
-  createCustomer(customer: Omit<SAPCustomer, 'customerNumber'>): Promise<Result<SAPCustomer, DomainError>>;
-  updateCustomer(customerNumber: string, updates: Partial<SAPCustomer>): Promise<Result<SAPCustomer, DomainError>>;
-  syncCustomers(syncToken?: string, pageSize?: number): Promise<Result<SAPSyncResult<SAPCustomer[]>, DomainError>>;
+  createCustomer(
+    customer: Omit<SAPCustomer, 'customerNumber'>
+  ): Promise<Result<SAPCustomer, DomainError>>;
+  updateCustomer(
+    customerNumber: string,
+    updates: Partial<SAPCustomer>
+  ): Promise<Result<SAPCustomer, DomainError>>;
+  syncCustomers(
+    syncToken?: string,
+    pageSize?: number
+  ): Promise<Result<SAPSyncResult<SAPCustomer[]>, DomainError>>;
 
   // Sales Order Operations
   getSalesOrder(orderNumber: string): Promise<Result<SAPSalesOrder | null, DomainError>>;
-  createSalesOrder(order: Omit<SAPSalesOrder, 'orderNumber' | 'status'>): Promise<Result<SAPSalesOrder, DomainError>>;
-  updateSalesOrderStatus(orderNumber: string, status: SAPSalesOrder['status']): Promise<Result<SAPSalesOrder, DomainError>>;
-  syncSalesOrders(syncToken?: string, pageSize?: number): Promise<Result<SAPSyncResult<SAPSalesOrder[]>, DomainError>>;
+  createSalesOrder(
+    order: Omit<SAPSalesOrder, 'orderNumber' | 'status'>
+  ): Promise<Result<SAPSalesOrder, DomainError>>;
+  updateSalesOrderStatus(
+    orderNumber: string,
+    status: SAPSalesOrder['status']
+  ): Promise<Result<SAPSalesOrder, DomainError>>;
+  syncSalesOrders(
+    syncToken?: string,
+    pageSize?: number
+  ): Promise<Result<SAPSyncResult<SAPSalesOrder[]>, DomainError>>;
 
   // Invoice Operations
   getInvoice(invoiceNumber: string): Promise<Result<SAPInvoice | null, DomainError>>;
-  syncInvoices(syncToken?: string, pageSize?: number): Promise<Result<SAPSyncResult<SAPInvoice[]>, DomainError>>;
+  syncInvoices(
+    syncToken?: string,
+    pageSize?: number
+  ): Promise<Result<SAPSyncResult<SAPInvoice[]>, DomainError>>;
 
   // Material/Product Operations
   getMaterial(materialNumber: string): Promise<Result<SAPMaterial | null, DomainError>>;
-  syncMaterials(syncToken?: string, pageSize?: number): Promise<Result<SAPSyncResult<SAPMaterial[]>, DomainError>>;
+  syncMaterials(
+    syncToken?: string,
+    pageSize?: number
+  ): Promise<Result<SAPSyncResult<SAPMaterial[]>, DomainError>>;
 
   // Health Check
-  checkConnection(): Promise<Result<{ status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number }, DomainError>>;
+  checkConnection(): Promise<
+    Result<{ status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number }, DomainError>
+  >;
 }
 
 // ==================== Adapter Implementation ====================
@@ -195,14 +219,17 @@ export class SAPAdapter implements ERPServicePort {
 
   async authenticate(): Promise<Result<SAPAuthTokens, DomainError>> {
     try {
-      const response = await fetch(`${this.config.baseUrl}/sap/opu/odata/sap/API_BUSINESS_PARTNER/`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Basic ${Buffer.from(`${this.config.username}:${this.config.password}`).toString('base64')}`,
-          'x-csrf-token': 'Fetch',
-          'Accept': 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${this.config.baseUrl}/sap/opu/odata/sap/API_BUSINESS_PARTNER/`,
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Basic ${Buffer.from(`${this.config.username}:${this.config.password}`).toString('base64')}`,
+            'x-csrf-token': 'Fetch',
+            Accept: 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
         if (response.status === 401) {
@@ -260,7 +287,7 @@ export class SAPAdapter implements ERPServicePort {
         return this.handleErrorResponse(response);
       }
 
-      const data = await response.json() as { d: Record<string, unknown> };
+      const data = (await response.json()) as { d: Record<string, unknown> };
       return Result.ok(this.mapToCustomer(data.d));
     } catch (error) {
       return Result.fail(
@@ -292,7 +319,7 @@ export class SAPAdapter implements ERPServicePort {
         return this.handleErrorResponse(response);
       }
 
-      const data = await response.json() as { d: Record<string, unknown> };
+      const data = (await response.json()) as { d: Record<string, unknown> };
       return Result.ok(this.mapToCustomer(data.d));
     } catch (error) {
       return Result.fail(
@@ -343,8 +370,8 @@ export class SAPAdapter implements ERPServicePort {
 
     try {
       const params = new URLSearchParams({
-        '$top': pageSize.toString(),
-        '$format': 'json',
+        $top: pageSize.toString(),
+        $format: 'json',
       });
 
       if (syncToken) {
@@ -363,8 +390,10 @@ export class SAPAdapter implements ERPServicePort {
         return this.handleErrorResponse(response);
       }
 
-      const data = await response.json() as { d: { results?: unknown[]; __next?: string } };
-      const customers = (data.d?.results ?? []).map((c: unknown) => this.mapToCustomer(c as Record<string, unknown>));
+      const data = (await response.json()) as { d: { results?: unknown[]; __next?: string } };
+      const customers = (data.d?.results ?? []).map((c: unknown) =>
+        this.mapToCustomer(c as Record<string, unknown>)
+      );
       const nextLink = data.d?.__next;
 
       return Result.ok({
@@ -404,7 +433,7 @@ export class SAPAdapter implements ERPServicePort {
         return this.handleErrorResponse(response);
       }
 
-      const data = await response.json() as { d: Record<string, unknown> };
+      const data = (await response.json()) as { d: Record<string, unknown> };
       return Result.ok(this.mapToSalesOrder(data.d));
     } catch (error) {
       return Result.fail(
@@ -436,7 +465,7 @@ export class SAPAdapter implements ERPServicePort {
         return this.handleErrorResponse(response);
       }
 
-      const data = await response.json() as { d: Record<string, unknown> };
+      const data = (await response.json()) as { d: Record<string, unknown> };
       return Result.ok(this.mapToSalesOrder(data.d));
     } catch (error) {
       return Result.fail(
@@ -487,9 +516,9 @@ export class SAPAdapter implements ERPServicePort {
 
     try {
       const params = new URLSearchParams({
-        '$top': pageSize.toString(),
-        '$expand': 'to_Item',
-        '$format': 'json',
+        $top: pageSize.toString(),
+        $expand: 'to_Item',
+        $format: 'json',
       });
 
       if (syncToken) {
@@ -508,8 +537,10 @@ export class SAPAdapter implements ERPServicePort {
         return this.handleErrorResponse(response);
       }
 
-      const data = await response.json() as { d: { results?: unknown[]; __next?: string } };
-      const orders = (data.d?.results ?? []).map((o: unknown) => this.mapToSalesOrder(o as Record<string, unknown>));
+      const data = (await response.json()) as { d: { results?: unknown[]; __next?: string } };
+      const orders = (data.d?.results ?? []).map((o: unknown) =>
+        this.mapToSalesOrder(o as Record<string, unknown>)
+      );
       const nextLink = data.d?.__next;
 
       return Result.ok({
@@ -567,8 +598,8 @@ export class SAPAdapter implements ERPServicePort {
 
     try {
       const params = new URLSearchParams({
-        '$top': pageSize.toString(),
-        '$format': 'json',
+        $top: pageSize.toString(),
+        $format: 'json',
       });
 
       if (syncToken) {
@@ -587,8 +618,12 @@ export class SAPAdapter implements ERPServicePort {
         return this.handleErrorResponse(response);
       }
 
-      const data = (await response.json()) as { d?: { results?: Record<string, unknown>[]; __next?: string } };
-      const invoices = (data.d?.results ?? []).map((i) => this.mapToInvoice(i as Record<string, unknown>));
+      const data = (await response.json()) as {
+        d?: { results?: Record<string, unknown>[]; __next?: string };
+      };
+      const invoices = (data.d?.results ?? []).map((i) =>
+        this.mapToInvoice(i as Record<string, unknown>)
+      );
       const nextLink = data.d?.__next;
 
       return Result.ok({
@@ -646,8 +681,8 @@ export class SAPAdapter implements ERPServicePort {
 
     try {
       const params = new URLSearchParams({
-        '$top': pageSize.toString(),
-        '$format': 'json',
+        $top: pageSize.toString(),
+        $format: 'json',
       });
 
       if (syncToken) {
@@ -666,8 +701,12 @@ export class SAPAdapter implements ERPServicePort {
         return this.handleErrorResponse(response);
       }
 
-      const data = (await response.json()) as { d?: { results?: Record<string, unknown>[]; __next?: string } };
-      const materials = (data.d?.results ?? []).map((m) => this.mapToMaterial(m as Record<string, unknown>));
+      const data = (await response.json()) as {
+        d?: { results?: Record<string, unknown>[]; __next?: string };
+      };
+      const materials = (data.d?.results ?? []).map((m) =>
+        this.mapToMaterial(m as Record<string, unknown>)
+      );
       const nextLink = data.d?.__next;
 
       return Result.ok({
@@ -692,12 +731,15 @@ export class SAPAdapter implements ERPServicePort {
     const start = Date.now();
 
     try {
-      const response = await fetch(`${this.config.baseUrl}/sap/opu/odata/sap/API_BUSINESS_PARTNER/$metadata`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/xml',
-        },
-      });
+      const response = await fetch(
+        `${this.config.baseUrl}/sap/opu/odata/sap/API_BUSINESS_PARTNER/$metadata`,
+        {
+          method: 'GET',
+          headers: {
+            Accept: 'application/xml',
+          },
+        }
+      );
 
       const latencyMs = Date.now() - start;
 
@@ -734,10 +776,10 @@ export class SAPAdapter implements ERPServicePort {
 
   private getHeaders(): Record<string, string> {
     return {
-      'Authorization': `Basic ${Buffer.from(`${this.config.username}:${this.config.password}`).toString('base64')}`,
+      Authorization: `Basic ${Buffer.from(`${this.config.username}:${this.config.password}`).toString('base64')}`,
       'x-csrf-token': this.tokens?.accessToken ?? '',
-      'Cookie': this.tokens?.sessionId ?? '',
-      'Accept': 'application/json',
+      Cookie: this.tokens?.sessionId ?? '',
+      Accept: 'application/json',
     };
   }
 
@@ -828,7 +870,9 @@ export class SAPAdapter implements ERPServicePort {
     };
   }
 
-  private mapToSAPSalesOrder(order: Omit<SAPSalesOrder, 'orderNumber' | 'status'>): Record<string, unknown> {
+  private mapToSAPSalesOrder(
+    order: Omit<SAPSalesOrder, 'orderNumber' | 'status'>
+  ): Record<string, unknown> {
     return {
       SoldToParty: order.customerNumber,
       SalesOrderDate: order.orderDate.toISOString().split('T')[0],

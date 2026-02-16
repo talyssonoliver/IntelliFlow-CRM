@@ -23,28 +23,7 @@ import {
   removeCaseTaskSchema,
   idSchema,
 } from '@intelliflow/validators/case';
-import { type Context } from '../../context';
-import {
-  assertTenantContext,
-} from '../../security/tenant-context';
-
-/**
- * Helper to get tenant ID from context
- */
-async function getTenantId(ctx: Context): Promise<string> {
-  const tenant = await ctx.prisma.tenant.findUnique({
-    where: { slug: 'default' },
-  });
-
-  if (!tenant) {
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Default tenant not found',
-    });
-  }
-
-  return tenant.id;
-}
+import { assertTenantContext } from '../../security/tenant-context';
 
 function getAssigneeTitle(role?: string | null): string {
   switch (role) {
@@ -66,9 +45,20 @@ export const casesRouter = createTRPCRouter({
    */
   list: tenantProcedure.input(caseQuerySchema).query(async ({ ctx, input }) => {
     assertTenantContext(ctx);
-    const tenantId = await getTenantId(ctx);
+    const tenantId = ctx.user!.tenantId;
 
-    const { page = 1, limit = 20, search, status, priority, clientId, assignedTo, deadlineFrom, deadlineTo, overdue } = input;
+    const {
+      page = 1,
+      limit = 20,
+      search,
+      status,
+      priority,
+      clientId,
+      assignedTo,
+      deadlineFrom,
+      deadlineTo,
+      overdue,
+    } = input;
     const offset = (page - 1) * limit;
 
     const where: Record<string, unknown> = { tenantId };
@@ -127,12 +117,24 @@ export const casesRouter = createTRPCRouter({
 
     return {
       cases: cases.map((c: Record<string, unknown>) => {
-        const tasks = c.tasks as Array<{ status: string; dueDate: Date | null; completedAt: Date | null; id: string; title: string; description: string | null; assignee: string | null; caseId: string; createdAt: Date; updatedAt: Date }>;
+        const tasks = c.tasks as Array<{
+          status: string;
+          dueDate: Date | null;
+          completedAt: Date | null;
+          id: string;
+          title: string;
+          description: string | null;
+          assignee: string | null;
+          caseId: string;
+          createdAt: Date;
+          updatedAt: Date;
+        }>;
         const completedCount = tasks.filter((t) => t.status === 'COMPLETED').length;
         const totalTasks = tasks.length;
         const deadline = c.deadline as Date | null;
         const status = c.status as string;
-        const isOverdue = deadline !== null && deadline < now && status !== 'CLOSED' && status !== 'CANCELLED';
+        const isOverdue =
+          deadline !== null && deadline < now && status !== 'CLOSED' && status !== 'CANCELLED';
 
         return {
           id: c.id,
@@ -152,7 +154,11 @@ export const casesRouter = createTRPCRouter({
             dueDate: t.dueDate,
             status: t.status,
             assignee: t.assignee,
-            isOverdue: t.dueDate !== null && t.dueDate < now && t.status !== 'COMPLETED' && t.status !== 'CANCELLED',
+            isOverdue:
+              t.dueDate !== null &&
+              t.dueDate < now &&
+              t.status !== 'COMPLETED' &&
+              t.status !== 'CANCELLED',
             createdAt: t.createdAt,
             updatedAt: t.updatedAt,
             completedAt: t.completedAt,
@@ -179,7 +185,7 @@ export const casesRouter = createTRPCRouter({
    */
   getById: tenantProcedure.input(z.object({ id: idSchema })).query(async ({ ctx, input }) => {
     assertTenantContext(ctx);
-    const tenantId = await getTenantId(ctx);
+    const tenantId = ctx.user!.tenantId;
 
     const caseData = await ctx.prisma.case.findFirst({
       where: { id: input.id, tenantId },
@@ -188,7 +194,11 @@ export const casesRouter = createTRPCRouter({
         client: { select: { id: true, name: true } },
         assignee: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
         appointments: {
-          include: { appointment: { select: { id: true, title: true, startTime: true, endTime: true, status: true } } },
+          include: {
+            appointment: {
+              select: { id: true, title: true, startTime: true, endTime: true, status: true },
+            },
+          },
         },
       },
     });
@@ -198,7 +208,18 @@ export const casesRouter = createTRPCRouter({
     }
 
     const now = new Date();
-    const tasks = caseData.tasks as Array<{ status: string; dueDate: Date | null; completedAt: Date | null; id: string; title: string; description: string | null; assignee: string | null; caseId: string; createdAt: Date; updatedAt: Date }>;
+    const tasks = caseData.tasks as Array<{
+      status: string;
+      dueDate: Date | null;
+      completedAt: Date | null;
+      id: string;
+      title: string;
+      description: string | null;
+      assignee: string | null;
+      caseId: string;
+      createdAt: Date;
+      updatedAt: Date;
+    }>;
     const completedCount = tasks.filter((t) => t.status === 'COMPLETED').length;
     const totalTasks = tasks.length;
 
@@ -221,7 +242,11 @@ export const casesRouter = createTRPCRouter({
         dueDate: t.dueDate,
         status: t.status,
         assignee: t.assignee,
-        isOverdue: t.dueDate !== null && t.dueDate < now && t.status !== 'COMPLETED' && t.status !== 'CANCELLED',
+        isOverdue:
+          t.dueDate !== null &&
+          t.dueDate < now &&
+          t.status !== 'COMPLETED' &&
+          t.status !== 'CANCELLED',
         createdAt: t.createdAt,
         updatedAt: t.updatedAt,
         completedAt: t.completedAt,
@@ -229,9 +254,15 @@ export const casesRouter = createTRPCRouter({
       taskProgress: totalTasks === 0 ? 0 : Math.round((completedCount / totalTasks) * 100),
       pendingTaskCount: totalTasks - completedCount,
       completedTaskCount: completedCount,
-      isOverdue: caseData.deadline !== null && caseData.deadline < now && caseData.status !== 'CLOSED' && caseData.status !== 'CANCELLED',
+      isOverdue:
+        caseData.deadline !== null &&
+        caseData.deadline < now &&
+        caseData.status !== 'CLOSED' &&
+        caseData.status !== 'CANCELLED',
       resolution: caseData.resolution,
-      appointments: caseData.appointments.map((a: Record<string, unknown>) => (a as { appointment: unknown }).appointment),
+      appointments: caseData.appointments.map(
+        (a: Record<string, unknown>) => (a as { appointment: unknown }).appointment
+      ),
       createdAt: caseData.createdAt,
       updatedAt: caseData.updatedAt,
       closedAt: caseData.closedAt,
@@ -243,38 +274,39 @@ export const casesRouter = createTRPCRouter({
    */
   stats: tenantProcedure.query(async ({ ctx }) => {
     assertTenantContext(ctx);
-    const tenantId = await getTenantId(ctx);
+    const tenantId = ctx.user!.tenantId;
 
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [statusCounts, priorityCounts, overdueCount, closedThisMonth, allCases] = await Promise.all([
-      ctx.prisma.case.groupBy({
-        by: ['status'],
-        where: { tenantId },
-        _count: true,
-      }),
-      ctx.prisma.case.groupBy({
-        by: ['priority'],
-        where: { tenantId },
-        _count: true,
-      }),
-      ctx.prisma.case.count({
-        where: {
-          tenantId,
-          deadline: { lt: now },
-          status: { notIn: ['CLOSED', 'CANCELLED'] },
-        },
-      }),
-      ctx.prisma.case.count({
-        where: {
-          tenantId,
-          status: 'CLOSED',
-          closedAt: { gte: startOfMonth },
-        },
-      }),
-      ctx.prisma.case.count({ where: { tenantId } }),
-    ]);
+    const [statusCounts, priorityCounts, overdueCount, closedThisMonth, allCases] =
+      await Promise.all([
+        ctx.prisma.case.groupBy({
+          by: ['status'],
+          where: { tenantId },
+          _count: true,
+        }),
+        ctx.prisma.case.groupBy({
+          by: ['priority'],
+          where: { tenantId },
+          _count: true,
+        }),
+        ctx.prisma.case.count({
+          where: {
+            tenantId,
+            deadline: { lt: now },
+            status: { notIn: ['CLOSED', 'CANCELLED'] },
+          },
+        }),
+        ctx.prisma.case.count({
+          where: {
+            tenantId,
+            status: 'CLOSED',
+            closedAt: { gte: startOfMonth },
+          },
+        }),
+        ctx.prisma.case.count({ where: { tenantId } }),
+      ]);
 
     const byStatus: Record<string, number> = {};
     for (const s of statusCounts) {
@@ -301,7 +333,7 @@ export const casesRouter = createTRPCRouter({
    */
   create: tenantProcedure.input(createCaseSchema).mutation(async ({ ctx, input }) => {
     assertTenantContext(ctx);
-    const tenantId = await getTenantId(ctx);
+    const tenantId = ctx.user!.tenantId;
 
     const userId = (ctx.user as { id?: string })?.id;
     const assignedTo = input.assignedTo ?? userId;
@@ -335,7 +367,7 @@ export const casesRouter = createTRPCRouter({
    */
   update: tenantProcedure.input(updateCaseSchema).mutation(async ({ ctx, input }) => {
     assertTenantContext(ctx);
-    const tenantId = await getTenantId(ctx);
+    const tenantId = ctx.user!.tenantId;
 
     const existing = await ctx.prisma.case.findFirst({
       where: { id: input.id, tenantId },
@@ -365,7 +397,7 @@ export const casesRouter = createTRPCRouter({
    */
   changeStatus: tenantProcedure.input(changeCaseStatusSchema).mutation(async ({ ctx, input }) => {
     assertTenantContext(ctx);
-    const tenantId = await getTenantId(ctx);
+    const tenantId = ctx.user!.tenantId;
 
     const existing = await ctx.prisma.case.findFirst({
       where: { id: input.caseId, tenantId },
@@ -408,7 +440,7 @@ export const casesRouter = createTRPCRouter({
    */
   close: tenantProcedure.input(closeCaseSchema).mutation(async ({ ctx, input }) => {
     assertTenantContext(ctx);
-    const tenantId = await getTenantId(ctx);
+    const tenantId = ctx.user!.tenantId;
 
     const existing = await ctx.prisma.case.findFirst({
       where: { id: input.caseId, tenantId },
@@ -439,7 +471,7 @@ export const casesRouter = createTRPCRouter({
    */
   addTask: tenantProcedure.input(addCaseTaskSchema).mutation(async ({ ctx, input }) => {
     assertTenantContext(ctx);
-    const tenantId = await getTenantId(ctx);
+    const tenantId = ctx.user!.tenantId;
 
     const existing = await ctx.prisma.case.findFirst({
       where: { id: input.caseId, tenantId },
@@ -450,7 +482,10 @@ export const casesRouter = createTRPCRouter({
     }
 
     if (existing.status === 'CLOSED' || existing.status === 'CANCELLED') {
-      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot add tasks to a closed or cancelled case' });
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Cannot add tasks to a closed or cancelled case',
+      });
     }
 
     const task = await ctx.prisma.caseTask.create({
@@ -472,7 +507,7 @@ export const casesRouter = createTRPCRouter({
    */
   completeTask: tenantProcedure.input(completeCaseTaskSchema).mutation(async ({ ctx, input }) => {
     assertTenantContext(ctx);
-    const tenantId = await getTenantId(ctx);
+    const tenantId = ctx.user!.tenantId;
 
     const caseData = await ctx.prisma.case.findFirst({
       where: { id: input.caseId, tenantId },
@@ -503,7 +538,7 @@ export const casesRouter = createTRPCRouter({
    */
   removeTask: tenantProcedure.input(removeCaseTaskSchema).mutation(async ({ ctx, input }) => {
     assertTenantContext(ctx);
-    const tenantId = await getTenantId(ctx);
+    const tenantId = ctx.user!.tenantId;
 
     const caseData = await ctx.prisma.case.findFirst({
       where: { id: input.caseId, tenantId },
@@ -525,7 +560,7 @@ export const casesRouter = createTRPCRouter({
    */
   filterOptions: tenantProcedure.query(async ({ ctx }) => {
     assertTenantContext(ctx);
-    const tenantId = await getTenantId(ctx);
+    const tenantId = ctx.user!.tenantId;
 
     const [statusCounts, priorityCounts] = await Promise.all([
       ctx.prisma.case.groupBy({
@@ -559,7 +594,7 @@ export const casesRouter = createTRPCRouter({
    */
   assignees: tenantProcedure.query(async ({ ctx }) => {
     assertTenantContext(ctx);
-    const tenantId = await getTenantId(ctx);
+    const tenantId = ctx.user!.tenantId;
 
     const users = await ctx.prisma.user.findMany({
       where: { tenantId },

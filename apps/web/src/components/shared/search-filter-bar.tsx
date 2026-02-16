@@ -166,11 +166,7 @@ export function SearchFilterBar({
 
             {/* Sort Dropdown */}
             {sort && (
-              <SortDropdown
-                options={sort.options}
-                value={sort.value}
-                onChange={sort.onChange}
-              />
+              <SortDropdown options={sort.options} value={sort.value} onChange={sort.onChange} />
             )}
           </div>
         )}
@@ -336,12 +332,7 @@ function FilterChipButton({ chip, isActive, onClick }: FilterChipButtonProps) {
       )}
       aria-pressed={isActive}
     >
-      {chip.color && (
-        <span
-          className={cn('size-2 rounded-full', chip.color)}
-          aria-hidden="true"
-        />
-      )}
+      {chip.color && <span className={cn('size-2 rounded-full', chip.color)} aria-hidden="true" />}
       {chip.label}
     </button>
   );
@@ -386,9 +377,7 @@ export function useFilterState<T>(initialValue: T) {
  * // filters.values.status, filters.set('status', 'active'), filters.reset()
  * ```
  */
-export function useMultiFilterState<T extends Record<string, string>>(
-  initialValues: T
-) {
+export function useMultiFilterState<T extends Record<string, string>>(initialValues: T) {
   const [values, setValues] = useState<T>(initialValues);
 
   const set = useCallback(<K extends keyof T>(key: K, value: T[K]) => {
@@ -399,9 +388,12 @@ export function useMultiFilterState<T extends Record<string, string>>(
     setValues(initialValues);
   }, [initialValues]);
 
-  const resetKey = useCallback(<K extends keyof T>(key: K) => {
-    setValues((prev) => ({ ...prev, [key]: initialValues[key] }));
-  }, [initialValues]);
+  const resetKey = useCallback(
+    <K extends keyof T>(key: K) => {
+      setValues((prev) => ({ ...prev, [key]: initialValues[key] }));
+    },
+    [initialValues]
+  );
 
   return { values, set, reset, resetKey };
 }

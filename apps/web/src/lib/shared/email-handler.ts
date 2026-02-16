@@ -32,9 +32,7 @@ export function buildContactEmailPayload(formData: ContactFormInput): ContactEma
   const recipientEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'contact@intelliflow-crm.com';
 
   // Build subject line
-  const emailSubject = subject
-    ? `Contact Form: ${subject}`
-    : 'Contact Form: New inquiry';
+  const emailSubject = subject ? `Contact Form: ${subject}` : 'Contact Form: New inquiry';
 
   // Build HTML email body
   const htmlBody = `
@@ -107,26 +105,38 @@ export function buildContactEmailPayload(formData: ContactFormInput): ContactEma
       <div class="value"><a href="mailto:${email}">${email}</a></div>
     </div>
 
-    ${phone ? `
+    ${
+      phone
+        ? `
     <div class="field">
       <div class="label">Phone</div>
       <div class="value">${escapeHtml(String(phone))}</div>
     </div>
-    ` : ''}
+    `
+        : ''
+    }
 
-    ${company ? `
+    ${
+      company
+        ? `
     <div class="field">
       <div class="label">Company</div>
       <div class="value">${escapeHtml(company)}</div>
     </div>
-    ` : ''}
+    `
+        : ''
+    }
 
-    ${subject ? `
+    ${
+      subject
+        ? `
     <div class="field">
       <div class="label">Subject</div>
       <div class="value">${escapeHtml(subject)}</div>
     </div>
-    ` : ''}
+    `
+        : ''
+    }
 
     <div class="field">
       <div class="label">Message</div>

@@ -26,7 +26,7 @@ const mocks = vi.hoisted(() => ({
   mockGenerateReport: vi.fn().mockReturnValue('Cost Report: $0.00'),
   mockGetStatistics: vi.fn().mockReturnValue({
     totalOperations: 10,
-    totalCost: 1.50,
+    totalCost: 1.5,
     totalInputTokens: 5000,
     totalOutputTokens: 2000,
   }),
@@ -109,7 +109,7 @@ describe('AIWorker', () => {
     mocks.mockProcessPredictionJob.mockResolvedValue({ prediction: 'high' });
     mocks.mockGetStatistics.mockReturnValue({
       totalOperations: 10,
-      totalCost: 1.50,
+      totalCost: 1.5,
       totalInputTokens: 5000,
       totalOutputTokens: 2000,
     });
@@ -152,7 +152,7 @@ describe('AIWorker', () => {
           costTrackingEnabled: true,
           cacheEnabled: true,
         }),
-        'AI configuration loaded',
+        'AI configuration loaded'
       );
     });
 
@@ -169,7 +169,7 @@ describe('AIWorker', () => {
         expect.objectContaining({
           queues: ['ai-scoring', 'ai-prediction'],
         }),
-        'AI Worker ready to process jobs',
+        'AI Worker ready to process jobs'
       );
     });
   });
@@ -197,9 +197,7 @@ describe('AIWorker', () => {
       mocks.mockLoggerInfo.mockClear();
       await worker.stop();
 
-      expect(mocks.mockLoggerInfo).toHaveBeenCalledWith(
-        expect.stringContaining('Cost Report'),
-      );
+      expect(mocks.mockLoggerInfo).toHaveBeenCalledWith(expect.stringContaining('Cost Report'));
     });
   });
 
@@ -230,9 +228,7 @@ describe('AIWorker', () => {
       const worker = new AIWorker();
       const job = { queueName: 'unknown-queue', data: {} } as any;
 
-      await expect((worker as any).processJob(job)).rejects.toThrow(
-        'Unknown queue: unknown-queue',
-      );
+      await expect((worker as any).processJob(job)).rejects.toThrow('Unknown queue: unknown-queue');
     });
   });
 

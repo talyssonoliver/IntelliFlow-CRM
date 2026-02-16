@@ -387,7 +387,9 @@ describe('DataTable', () => {
 
     it('should show correct selection count with pagination', async () => {
       const testData = createTestData(15);
-      render(<DataTable columns={selectableColumns} data={testData} pageSize={10} enableRowSelection />);
+      render(
+        <DataTable columns={selectableColumns} data={testData} pageSize={10} enableRowSelection />
+      );
 
       // Select first row on page 1
       const firstRowCheckbox = screen.getByTestId('select-row-0');
@@ -494,7 +496,9 @@ describe('DataTable', () => {
   describe('Integration', () => {
     it('should maintain selection when navigating pages', async () => {
       const testData = createTestData(15);
-      render(<DataTable columns={selectableColumns} data={testData} pageSize={10} enableRowSelection />);
+      render(
+        <DataTable columns={selectableColumns} data={testData} pageSize={10} enableRowSelection />
+      );
 
       // Select first row on page 1
       const firstRowCheckbox = screen.getByTestId('select-row-0');
@@ -520,7 +524,9 @@ describe('DataTable', () => {
 
     it('should show correct selection count across pages', async () => {
       const testData = createTestData(25);
-      render(<DataTable columns={selectableColumns} data={testData} pageSize={10} enableRowSelection />);
+      render(
+        <DataTable columns={selectableColumns} data={testData} pageSize={10} enableRowSelection />
+      );
 
       // Select all on page 1
       const selectAll = screen.getByTestId('select-all');

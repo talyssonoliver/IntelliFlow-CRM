@@ -37,7 +37,12 @@ vi.mock('@opentelemetry/api', () => ({
   trace: {
     getTracer: () => ({
       startActiveSpan: (_name: string, _opts: unknown, fn: (span: unknown) => unknown) => {
-        const mockSpan = { setAttribute: vi.fn(), setStatus: vi.fn(), recordException: vi.fn(), end: vi.fn() };
+        const mockSpan = {
+          setAttribute: vi.fn(),
+          setStatus: vi.fn(),
+          recordException: vi.fn(),
+          end: vi.fn(),
+        };
         return fn(mockSpan);
       },
     }),
@@ -66,7 +71,10 @@ vi.mock('../tracing/otel', () => ({
  * vitest-mock-extended's mockDeep handles this for mockResolvedValue,
  * but mockImplementation needs a manual wrapper for delayed returns.
  */
-export function delayedPrismaResult<T>(value: T, delayMs: number): PrismaNamespace.PrismaPromise<T> {
+export function delayedPrismaResult<T>(
+  value: T,
+  delayMs: number
+): PrismaNamespace.PrismaPromise<T> {
   const promise = new Promise<T>((resolve) => {
     setTimeout(() => resolve(value), delayMs);
   });
@@ -87,11 +95,11 @@ export const prismaMock = mockDeep<PrismaClient>() as DeepMockProxy<PrismaClient
 beforeEach(() => {
   mockReset(prismaMock);
   // Reset mockServices - prevents call history accumulation
-  Object.values(mockServices).forEach(mock => mockReset(mock));
+  Object.values(mockServices).forEach((mock) => mockReset(mock));
   // Reset mockSecurityServices
-  Object.values(mockSecurityServices).forEach(mock => mockReset(mock));
+  Object.values(mockSecurityServices).forEach((mock) => mockReset(mock));
   // Reset mockAdapters
-  Object.values(mockAdapters).forEach(mock => mockReset(mock));
+  Object.values(mockAdapters).forEach((mock) => mockReset(mock));
 });
 
 /**
@@ -153,6 +161,8 @@ export const mockAdapters = {
   eventBus: mockDeep<any>(),
   aiService: mockDeep<any>(),
   cache: mockDeep<any>(),
+  featureFlagProvider: mockDeep<any>(),
+  featureFlagAdapter: mockDeep<any>(),
 };
 
 /**
@@ -502,7 +512,10 @@ export function createMockTimelineEvents(
 /**
  * Create mock task with contact association for timeline tests
  */
-export function createMockTaskForContact(contactId: string, overrides: Partial<typeof mockTask> = {}) {
+export function createMockTaskForContact(
+  contactId: string,
+  overrides: Partial<typeof mockTask> = {}
+) {
   return {
     ...mockTask,
     id: generateTestUUID(`task-${Date.now()}`),

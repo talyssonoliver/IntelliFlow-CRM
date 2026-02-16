@@ -85,7 +85,11 @@ export function getPlanningDir(specifyDir: string, sprintNumber: number): string
  * Get the attestations directory for a task within its sprint
  * Contains: {TASK_ID}-context_ack.json, {TASK_ID}-context_pack.md, etc.
  */
-export function getAttestationsDir(specifyDir: string, sprintNumber: number, taskId: string): string {
+export function getAttestationsDir(
+  specifyDir: string,
+  sprintNumber: number,
+  taskId: string
+): string {
   return join(specifyDir, 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId);
 }
 
@@ -126,14 +130,30 @@ export function getConstitutionPath(specifyDir: string): string {
  * Get path to the specification file
  */
 export function getSpecPath(specifyDir: string, sprintNumber: number, taskId: string): string {
-  return join(specifyDir, 'sprints', `sprint-${sprintNumber}`, 'specifications', `${taskId}-spec.md`);
+  return join(
+    specifyDir,
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'specifications',
+    `${taskId}-spec.md`
+  );
 }
 
 /**
  * Get path to the discussion log file
  */
-export function getDiscussionPath(specifyDir: string, sprintNumber: number, taskId: string): string {
-  return join(specifyDir, 'sprints', `sprint-${sprintNumber}`, 'specifications', `${taskId}-discussion.md`);
+export function getDiscussionPath(
+  specifyDir: string,
+  sprintNumber: number,
+  taskId: string
+): string {
+  return join(
+    specifyDir,
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'specifications',
+    `${taskId}-discussion.md`
+  );
 }
 
 /**
@@ -146,85 +166,217 @@ export function getPlanPath(specifyDir: string, sprintNumber: number, taskId: st
 /**
  * Get path to the hydrated context markdown file
  */
-export function getHydratedContextMdPath(specifyDir: string, sprintNumber: number, taskId: string): string {
-  return join(specifyDir, 'sprints', `sprint-${sprintNumber}`, 'context', taskId, `${taskId}-hydrated-context.md`);
+export function getHydratedContextMdPath(
+  specifyDir: string,
+  sprintNumber: number,
+  taskId: string
+): string {
+  return join(
+    specifyDir,
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'context',
+    taskId,
+    `${taskId}-hydrated-context.md`
+  );
 }
 
 /**
  * Get path to the hydrated context JSON file
  */
-export function getHydratedContextJsonPath(specifyDir: string, sprintNumber: number, taskId: string): string {
-  return join(specifyDir, 'sprints', `sprint-${sprintNumber}`, 'context', taskId, `${taskId}-hydrated-context.json`);
+export function getHydratedContextJsonPath(
+  specifyDir: string,
+  sprintNumber: number,
+  taskId: string
+): string {
+  return join(
+    specifyDir,
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'context',
+    taskId,
+    `${taskId}-hydrated-context.json`
+  );
 }
 
 /**
  * Get path to the agent selection file
  */
-export function getAgentSelectionPath(specifyDir: string, sprintNumber: number, taskId: string): string {
-  return join(specifyDir, 'sprints', `sprint-${sprintNumber}`, 'context', taskId, `${taskId}-agent-selection.json`);
+export function getAgentSelectionPath(
+  specifyDir: string,
+  sprintNumber: number,
+  taskId: string
+): string {
+  return join(
+    specifyDir,
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'context',
+    taskId,
+    `${taskId}-agent-selection.json`
+  );
 }
 
 /**
  * Get path to the plan session file
  */
-export function getPlanSessionPath(specifyDir: string, sprintNumber: number, taskId: string): string {
-  return join(specifyDir, 'sprints', `sprint-${sprintNumber}`, 'context', taskId, `${taskId}-plan-session.json`);
+export function getPlanSessionPath(
+  specifyDir: string,
+  sprintNumber: number,
+  taskId: string
+): string {
+  return join(
+    specifyDir,
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'context',
+    taskId,
+    `${taskId}-plan-session.json`
+  );
 }
 
 /**
  * Get path to the context acknowledgment file
  */
-export function getContextAckPath(specifyDir: string, sprintNumber: number, taskId: string): string {
-  return join(specifyDir, 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId, `${taskId}-context_ack.json`);
+export function getContextAckPath(
+  specifyDir: string,
+  sprintNumber: number,
+  taskId: string
+): string {
+  return join(
+    specifyDir,
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'attestations',
+    taskId,
+    `${taskId}-context_ack.json`
+  );
 }
 
 /**
  * Get path to the context pack markdown file
  */
-export function getContextPackMdPath(specifyDir: string, sprintNumber: number, taskId: string): string {
-  return join(specifyDir, 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId, `${taskId}-context_pack.md`);
+export function getContextPackMdPath(
+  specifyDir: string,
+  sprintNumber: number,
+  taskId: string
+): string {
+  return join(
+    specifyDir,
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'attestations',
+    taskId,
+    `${taskId}-context_pack.md`
+  );
 }
 
 /**
  * Get path to the context pack manifest file
  */
-export function getContextPackManifestPath(specifyDir: string, sprintNumber: number, taskId: string): string {
-  return join(specifyDir, 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId, `${taskId}-context_pack.manifest.json`);
+export function getContextPackManifestPath(
+  specifyDir: string,
+  sprintNumber: number,
+  taskId: string
+): string {
+  return join(
+    specifyDir,
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'attestations',
+    taskId,
+    `${taskId}-context_pack.manifest.json`
+  );
 }
 
 /**
  * Get path to the attestation file
  */
-export function getAttestationPath(specifyDir: string, sprintNumber: number, taskId: string): string {
-  return join(specifyDir, 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId, `${taskId}-attestation.json`);
+export function getAttestationPath(
+  specifyDir: string,
+  sprintNumber: number,
+  taskId: string
+): string {
+  return join(
+    specifyDir,
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'attestations',
+    taskId,
+    `${taskId}-attestation.json`
+  );
 }
 
 /**
  * Get path to the validation file
  */
-export function getValidationPath(specifyDir: string, sprintNumber: number, taskId: string): string {
-  return join(specifyDir, 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId, `${taskId}-validation.json`);
+export function getValidationPath(
+  specifyDir: string,
+  sprintNumber: number,
+  taskId: string
+): string {
+  return join(
+    specifyDir,
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'attestations',
+    taskId,
+    `${taskId}-validation.json`
+  );
 }
 
 /**
  * Get path to the evidence summary JSON file
  */
-export function getEvidenceSummaryJsonPath(specifyDir: string, sprintNumber: number, taskId: string): string {
-  return join(specifyDir, 'sprints', `sprint-${sprintNumber}`, 'evidence', taskId, `${taskId}-summary.json`);
+export function getEvidenceSummaryJsonPath(
+  specifyDir: string,
+  sprintNumber: number,
+  taskId: string
+): string {
+  return join(
+    specifyDir,
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'evidence',
+    taskId,
+    `${taskId}-summary.json`
+  );
 }
 
 /**
  * Get path to the evidence summary markdown file
  */
-export function getEvidenceSummaryMdPath(specifyDir: string, sprintNumber: number, taskId: string): string {
-  return join(specifyDir, 'sprints', `sprint-${sprintNumber}`, 'evidence', taskId, `${taskId}-summary.md`);
+export function getEvidenceSummaryMdPath(
+  specifyDir: string,
+  sprintNumber: number,
+  taskId: string
+): string {
+  return join(
+    specifyDir,
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'evidence',
+    taskId,
+    `${taskId}-summary.md`
+  );
 }
 
 /**
  * Get path to the evidence hashes file
  */
-export function getEvidenceHashesPath(specifyDir: string, sprintNumber: number, taskId: string): string {
-  return join(specifyDir, 'sprints', `sprint-${sprintNumber}`, 'evidence', taskId, `${taskId}-evidence-hashes.txt`);
+export function getEvidenceHashesPath(
+  specifyDir: string,
+  sprintNumber: number,
+  taskId: string
+): string {
+  return join(
+    specifyDir,
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'evidence',
+    taskId,
+    `${taskId}-evidence-hashes.txt`
+  );
 }
 
 /**
@@ -237,7 +389,11 @@ export function getGatesDir(specifyDir: string, sprintNumber: number, taskId: st
 /**
  * Get path to the STOA verdicts subdirectory
  */
-export function getStoaVerdictsDir(specifyDir: string, sprintNumber: number, taskId: string): string {
+export function getStoaVerdictsDir(
+  specifyDir: string,
+  sprintNumber: number,
+  taskId: string
+): string {
   return join(specifyDir, 'sprints', `sprint-${sprintNumber}`, 'evidence', taskId, 'stoa-verdicts');
 }
 

@@ -5,7 +5,11 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { GmailAdapter, GmailConfig, GmailOAuthTokens } from '../../../packages/adapters/src/email/gmail/client';
+import {
+  GmailAdapter,
+  GmailConfig,
+  GmailOAuthTokens,
+} from '../../../packages/adapters/src/email/gmail/client';
 
 // Mock global fetch
 const mockFetch = vi.fn();

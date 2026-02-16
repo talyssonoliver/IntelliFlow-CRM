@@ -116,7 +116,16 @@ export interface AuditFindings {
  * Determines attestation verdict based on findings and waiver status
  */
 export function determineVerdict(findings: AuditFindings): AttestationVerdict {
-  const { artifacts, validations, kpis, placeholders, dependencies, hasWaiver, waiverExpired, debtAllowed } = findings;
+  const {
+    artifacts,
+    validations,
+    kpis,
+    placeholders,
+    dependencies,
+    hasWaiver,
+    waiverExpired,
+    debtAllowed,
+  } = findings;
 
   // Count critical issues
   const missingArtifacts = artifacts.filter((a) => a.status === 'missing').length;
@@ -138,7 +147,8 @@ export function determineVerdict(findings: AuditFindings): AttestationVerdict {
   }
 
   // Check if issues are covered by waiver
-  const hasIssues = stubArtifacts > 0 || emptyArtifacts > 0 || missedKpis > 0 || placeholderCount > 0;
+  const hasIssues =
+    stubArtifacts > 0 || emptyArtifacts > 0 || missedKpis > 0 || placeholderCount > 0;
 
   if (hasIssues) {
     // If waiver exists and not expired, and debt is allowed
@@ -256,14 +266,29 @@ export function generateAttestation(
 /**
  * Gets the attestation directory for a task (sprint-based structure)
  */
-export function getAttestationDir(repoRoot: string, taskId: string, sprintNumber: number = 0): string {
-  return path.join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId);
+export function getAttestationDir(
+  repoRoot: string,
+  taskId: string,
+  sprintNumber: number = 0
+): string {
+  return path.join(
+    repoRoot,
+    '.specify',
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'attestations',
+    taskId
+  );
 }
 
 /**
  * Gets the latest attestation file path for a task
  */
-export function getAttestationPath(repoRoot: string, taskId: string, sprintNumber: number = 0): string {
+export function getAttestationPath(
+  repoRoot: string,
+  taskId: string,
+  sprintNumber: number = 0
+): string {
   return path.join(getAttestationDir(repoRoot, taskId, sprintNumber), 'attestation-latest.json');
 }
 
@@ -313,7 +338,10 @@ export async function readAttestation(
   taskId: string,
   sprintNumber: number = 0
 ): Promise<TaskAttestation | null> {
-  const latestPath = path.join(getAttestationDir(repoRoot, taskId, sprintNumber), 'attestation-latest.json');
+  const latestPath = path.join(
+    getAttestationDir(repoRoot, taskId, sprintNumber),
+    'attestation-latest.json'
+  );
 
   if (fs.existsSync(latestPath)) {
     const content = await fs.promises.readFile(latestPath, 'utf-8');
@@ -321,7 +349,10 @@ export async function readAttestation(
   }
 
   // Fallback: try attestation.json in the same sprint-based directory
-  const attestationPath = path.join(getAttestationDir(repoRoot, taskId, sprintNumber), 'attestation.json');
+  const attestationPath = path.join(
+    getAttestationDir(repoRoot, taskId, sprintNumber),
+    'attestation.json'
+  );
   if (fs.existsSync(attestationPath)) {
     const content = await fs.promises.readFile(attestationPath, 'utf-8');
     return JSON.parse(content) as TaskAttestation;
@@ -349,7 +380,11 @@ export async function listAttestationHistory(
 
   for (const file of files) {
     // Match timestamped files like attestation-20251229-103000.json
-    if (file.startsWith('attestation-') && file.endsWith('.json') && file !== 'attestation-latest.json') {
+    if (
+      file.startsWith('attestation-') &&
+      file.endsWith('.json') &&
+      file !== 'attestation-latest.json'
+    ) {
       try {
         const content = await fs.promises.readFile(path.join(dir, file), 'utf-8');
         history.push(JSON.parse(content) as TaskAttestation);
@@ -360,9 +395,7 @@ export async function listAttestationHistory(
   }
 
   // Sort by timestamp (newest first)
-  return history.sort((a, b) =>
-    b.attestation_timestamp.localeCompare(a.attestation_timestamp)
-  );
+  return history.sort((a, b) => b.attestation_timestamp.localeCompare(a.attestation_timestamp));
 }
 
 /**

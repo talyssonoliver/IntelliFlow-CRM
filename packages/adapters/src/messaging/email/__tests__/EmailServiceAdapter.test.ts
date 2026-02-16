@@ -83,10 +83,7 @@ vi.mock('@intelliflow/application', () => ({
   },
 }));
 
-import {
-  EmailServiceAdapter,
-  createEmailServiceAdapter,
-} from '../EmailServiceAdapter';
+import { EmailServiceAdapter, createEmailServiceAdapter } from '../EmailServiceAdapter';
 
 describe('EmailServiceAdapter', () => {
   let adapter: EmailServiceAdapter;
@@ -419,9 +416,7 @@ describe('EmailServiceAdapter', () => {
     });
 
     it('should catch exceptions', async () => {
-      mockOutboundService.sendTemplatedEmail.mockRejectedValue(
-        new Error('Template not found')
-      );
+      mockOutboundService.sendTemplatedEmail.mockRejectedValue(new Error('Template not found'));
 
       const result = await adapter.sendTemplatedEmail(templateOptions, emailOptions);
 
@@ -475,10 +470,10 @@ describe('EmailServiceAdapter', () => {
 
       await adapter.sendBulkEmails([], { concurrency: 10, delayMs: 200 });
 
-      expect(mockOutboundService.sendBulkEmails).toHaveBeenCalledWith(
-        expect.any(Array),
-        { concurrency: 10, delayMs: 200 }
-      );
+      expect(mockOutboundService.sendBulkEmails).toHaveBeenCalledWith(expect.any(Array), {
+        concurrency: 10,
+        delayMs: 200,
+      });
     });
 
     it('should catch exceptions and return EmailSendError', async () => {
@@ -682,9 +677,7 @@ describe('EmailServiceAdapter', () => {
     });
 
     it('should catch exceptions and return DeliverabilityError', async () => {
-      mockOutboundService.checkDeliverability.mockRejectedValue(
-        new Error('Provider unreachable')
-      );
+      mockOutboundService.checkDeliverability.mockRejectedValue(new Error('Provider unreachable'));
 
       const result = await adapter.checkDeliverability();
 
@@ -720,14 +713,11 @@ describe('EmailServiceAdapter', () => {
         text: 'Hello {{name}}',
       });
 
-      expect(mockOutboundService.registerTemplate).toHaveBeenCalledWith(
-        'welcome',
-        {
-          subject: 'Welcome {{name}}',
-          html: '<h1>Hello {{name}}</h1>',
-          text: 'Hello {{name}}',
-        }
-      );
+      expect(mockOutboundService.registerTemplate).toHaveBeenCalledWith('welcome', {
+        subject: 'Welcome {{name}}',
+        html: '<h1>Hello {{name}}</h1>',
+        text: 'Hello {{name}}',
+      });
     });
   });
 

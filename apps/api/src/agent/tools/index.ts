@@ -8,8 +8,19 @@
  */
 
 // Search tools (read-only, no approval required)
-export { searchTools, searchLeadsTool, searchContactsTool, searchOpportunitiesTool, combinedSearchTool } from './search';
-export type { LeadSearchResult, ContactSearchResult, OpportunitySearchResult, CombinedSearchInput } from './search';
+export {
+  searchTools,
+  searchLeadsTool,
+  searchContactsTool,
+  searchOpportunitiesTool,
+  combinedSearchTool,
+} from './search';
+export type {
+  LeadSearchResult,
+  ContactSearchResult,
+  OpportunitySearchResult,
+  CombinedSearchInput,
+} from './search';
 
 // Create tools (require approval)
 export { createTools, createCaseTool, createAppointmentTool } from './create';
@@ -24,7 +35,12 @@ export { draftMessageTools, draftMessageTool } from './draft-message';
 export type { DraftedMessageResult } from './draft-message';
 
 import { AgentToolDefinition } from '../types';
-import { searchLeadsTool, searchContactsTool, searchOpportunitiesTool, combinedSearchTool } from './search';
+import {
+  searchLeadsTool,
+  searchContactsTool,
+  searchOpportunitiesTool,
+  combinedSearchTool,
+} from './search';
 import { createCaseTool, createAppointmentTool } from './create';
 import { updateCaseTool, updateAppointmentTool } from './update';
 import { draftMessageTool } from './draft-message';
@@ -69,22 +85,24 @@ export function getAvailableToolNames(): string[] {
 /**
  * Get tools by action type
  */
-export function getToolsByActionType(actionType: 'SEARCH' | 'CREATE' | 'UPDATE' | 'DELETE' | 'DRAFT'): AgentToolDefinition<unknown, unknown>[] {
-  return Array.from(agentToolRegistry.values()).filter(tool => tool.actionType === actionType);
+export function getToolsByActionType(
+  actionType: 'SEARCH' | 'CREATE' | 'UPDATE' | 'DELETE' | 'DRAFT'
+): AgentToolDefinition<unknown, unknown>[] {
+  return Array.from(agentToolRegistry.values()).filter((tool) => tool.actionType === actionType);
 }
 
 /**
  * Get tools that require approval
  */
 export function getToolsRequiringApproval(): AgentToolDefinition<unknown, unknown>[] {
-  return Array.from(agentToolRegistry.values()).filter(tool => tool.requiresApproval);
+  return Array.from(agentToolRegistry.values()).filter((tool) => tool.requiresApproval);
 }
 
 /**
  * Get tools that don't require approval
  */
 export function getToolsNotRequiringApproval(): AgentToolDefinition<unknown, unknown>[] {
-  return Array.from(agentToolRegistry.values()).filter(tool => !tool.requiresApproval);
+  return Array.from(agentToolRegistry.values()).filter((tool) => !tool.requiresApproval);
 }
 
 /**

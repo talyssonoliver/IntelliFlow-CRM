@@ -250,11 +250,7 @@ export function CheckoutForm({
   // ============================================
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className={cn('space-y-6', className)}
-      aria-label="Checkout form"
-    >
+    <form onSubmit={handleSubmit} className={cn('space-y-6', className)} aria-label="Checkout form">
       {/* Order Summary */}
       <div className="rounded-lg border border-border bg-muted/50 p-4">
         <h3 className="text-sm font-medium text-muted-foreground">Order Summary</h3>
@@ -308,9 +304,7 @@ export function CheckoutForm({
               'placeholder:text-muted-foreground',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
               'disabled:cursor-not-allowed disabled:opacity-50',
-              touched.cardNumber && errors.cardNumber
-                ? 'border-destructive'
-                : 'border-input'
+              touched.cardNumber && errors.cardNumber ? 'border-destructive' : 'border-input'
             )}
           />
           <div
@@ -324,11 +318,7 @@ export function CheckoutForm({
           </div>
         </div>
         {touched.cardNumber && errors.cardNumber && (
-          <p
-            id={`${formId}-card-number-error`}
-            className="text-sm text-destructive"
-            role="alert"
-          >
+          <p id={`${formId}-card-number-error`} className="text-sm text-destructive" role="alert">
             {errors.cardNumber}
           </p>
         )}
@@ -365,11 +355,7 @@ export function CheckoutForm({
             )}
           />
           {touched.expiry && errors.expiry && (
-            <p
-              id={`${formId}-expiry-error`}
-              className="text-sm text-destructive"
-              role="alert"
-            >
+            <p id={`${formId}-expiry-error`} className="text-sm text-destructive" role="alert">
               {errors.expiry}
             </p>
           )}
@@ -458,10 +444,7 @@ export function CheckoutForm({
       >
         {isSubmitting ? (
           <>
-            <span
-              className="material-symbols-outlined animate-spin text-lg"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined animate-spin text-lg" aria-hidden="true">
               progress_activity
             </span>
             Processing...

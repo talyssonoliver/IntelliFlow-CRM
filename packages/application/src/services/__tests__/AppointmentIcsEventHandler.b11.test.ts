@@ -343,11 +343,7 @@ describe('AppointmentIcsEventHandler - b11', () => {
     it('should handle ICS cancellation generation failure', async () => {
       handler['sequenceStore'].set(appointment.id.value, 1);
 
-      const event = new AppointmentCancelledEvent(
-        appointment.id,
-        'user-123',
-        'Not needed'
-      );
+      const event = new AppointmentCancelledEvent(appointment.id, 'user-123', 'Not needed');
 
       vi.mocked(mockIcsService.generateCancellation).mockReturnValue(
         Result.fail(new DomainError('ICS cancel gen failed'))
@@ -366,11 +362,7 @@ describe('AppointmentIcsEventHandler - b11', () => {
     it('should handle email send failure in cancellation', async () => {
       handler['sequenceStore'].set(appointment.id.value, 1);
 
-      const event = new AppointmentCancelledEvent(
-        appointment.id,
-        'user-123',
-        'Not needed'
-      );
+      const event = new AppointmentCancelledEvent(appointment.id, 'user-123', 'Not needed');
 
       const mockIcs: GeneratedIcs = {
         content: 'BEGIN:VCALENDAR...',
@@ -400,11 +392,7 @@ describe('AppointmentIcsEventHandler - b11', () => {
     it('should handle exception in handleAppointmentCancelled', async () => {
       handler['sequenceStore'].set(appointment.id.value, 1);
 
-      const event = new AppointmentCancelledEvent(
-        appointment.id,
-        'user-123',
-        'reason'
-      );
+      const event = new AppointmentCancelledEvent(appointment.id, 'user-123', 'reason');
 
       vi.mocked(mockIcsService.generateCancellation).mockImplementation(() => {
         throw new Error('Unexpected');

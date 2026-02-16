@@ -131,7 +131,10 @@ export function LogoutButton({
       >
         {isLoggingOut ? (
           <>
-            <span className="material-symbols-outlined mr-2 h-4 w-4 animate-spin text-base" aria-hidden="true">
+            <span
+              className="material-symbols-outlined mr-2 h-4 w-4 animate-spin text-base"
+              aria-hidden="true"
+            >
               progress_activity
             </span>
             <span>Signing out...</span>

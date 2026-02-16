@@ -1,24 +1,26 @@
 # Auth & Public Pages - Dependency Chain Analysis
 
-**Generated**: 2026-02-03
-**Purpose**: Ensure complete authentication flows and public pages with no orphaned tasks
+**Generated**: 2026-02-03 **Purpose**: Ensure complete authentication flows and
+public pages with no orphaned tasks
 
 ---
 
 ## Executive Summary
 
-The **Auth & Public Pages** domain covers authentication flows, public marketing pages, and onboarding. Most auth infrastructure is complete but some flows need verification.
+The **Auth & Public Pages** domain covers authentication flows, public marketing
+pages, and onboarding. Most auth infrastructure is complete but some flows need
+verification.
 
-| Feature | Backend | Frontend | Status |
-|---------|---------|----------|--------|
-| Sign In | IFC-006 | PG-015 | COMPLETE |
-| Sign Up | IFC-006 | PG-016 | COMPLETE |
-| Logout | IFC-006 | PG-017 | COMPLETE |
-| Password Reset | IFC-006 | PG-018-021 | COMPLETE |
-| MFA/2FA | IFC-098 | PG-022-023 | PARTIAL |
-| Email Verification | IFC-006 | PG-024 | COMPLETE |
-| Public Pages | N/A | PG-001-014 | COMPLETE |
-| Onboarding | IFC-076 | PG-126 | BACKLOG |
+| Feature            | Backend | Frontend   | Status   |
+| ------------------ | ------- | ---------- | -------- |
+| Sign In            | IFC-006 | PG-015     | COMPLETE |
+| Sign Up            | IFC-006 | PG-016     | COMPLETE |
+| Logout             | IFC-006 | PG-017     | COMPLETE |
+| Password Reset     | IFC-006 | PG-018-021 | COMPLETE |
+| MFA/2FA            | IFC-098 | PG-022-023 | PARTIAL  |
+| Email Verification | IFC-006 | PG-024     | COMPLETE |
+| Public Pages       | N/A     | PG-001-014 | COMPLETE |
+| Onboarding         | IFC-076 | PG-126     | BACKLOG  |
 
 ---
 
@@ -302,12 +304,13 @@ The **Auth & Public Pages** domain covers authentication flows, public marketing
 
 No new tasks required for Auth domain - all chains are tracked:
 
-| Feature | Backend | Frontend | Status |
-|---------|---------|----------|--------|
-| MFA | IFC-098 ✅ | PG-022-023 (Backlog) | Tracked |
-| Onboarding | IFC-076 (Backlog) | PG-126 (Backlog) | Tracked |
-| Billing | Partial | PG-025 ✅, PG-026-031 (Backlog) | Tracked |
+| Feature    | Backend           | Frontend                        | Status  |
+| ---------- | ----------------- | ------------------------------- | ------- |
+| MFA        | IFC-098 ✅        | PG-022-023 (Backlog)            | Tracked |
+| Onboarding | IFC-076 (Backlog) | PG-126 (Backlog)                | Tracked |
+| Billing    | Partial           | PG-025 ✅, PG-026-031 (Backlog) | Tracked |
 
 **Total New Tasks Required: 0**
+
 - All auth/public page chains are already tracked
 - Backlog items have proper dependencies

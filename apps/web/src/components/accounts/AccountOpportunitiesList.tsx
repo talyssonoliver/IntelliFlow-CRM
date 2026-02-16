@@ -60,7 +60,9 @@ export function AccountOpportunitiesList({ accountId }: AccountOpportunitiesList
   if (opportunities.length === 0 && !stageFilter) {
     return (
       <div className="text-center py-12">
-        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3">trending_up</span>
+        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3">
+          trending_up
+        </span>
         <p className="text-muted-foreground">No opportunities for this account</p>
         <Button variant="outline" size="sm" className="mt-3">
           <span className="material-symbols-outlined text-base mr-1">add</span>
@@ -76,11 +78,15 @@ export function AccountOpportunitiesList({ accountId }: AccountOpportunitiesList
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <Card className="p-4">
             <p className="text-xs text-muted-foreground">Total Pipeline</p>
-            <p className="text-lg font-semibold text-foreground">{formatCurrency(summary.totalValue)}</p>
+            <p className="text-lg font-semibold text-foreground">
+              {formatCurrency(summary.totalValue)}
+            </p>
           </Card>
           <Card className="p-4">
             <p className="text-xs text-muted-foreground">Weighted Value</p>
-            <p className="text-lg font-semibold text-foreground">{formatCurrency(summary.weightedValue)}</p>
+            <p className="text-lg font-semibold text-foreground">
+              {formatCurrency(summary.weightedValue)}
+            </p>
           </Card>
           <Card className="p-4">
             <p className="text-xs text-muted-foreground">Opportunities</p>
@@ -134,11 +140,7 @@ export function AccountOpportunitiesList({ accountId }: AccountOpportunitiesList
 
       {data?.nextCursor && (
         <div className="flex justify-center pt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCursor(data.nextCursor)}
-          >
+          <Button variant="outline" size="sm" onClick={() => setCursor(data.nextCursor)}>
             Load More
           </Button>
         </div>

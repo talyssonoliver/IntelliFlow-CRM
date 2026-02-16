@@ -58,7 +58,9 @@ function createTokens(): GmailOAuthTokens {
   };
 }
 
-function createComposeParams(overrides: Partial<GmailComposeEmailParams> = {}): GmailComposeEmailParams {
+function createComposeParams(
+  overrides: Partial<GmailComposeEmailParams> = {}
+): GmailComposeEmailParams {
   return {
     to: ['recipient@example.com'],
     subject: 'Test Subject',
@@ -67,7 +69,9 @@ function createComposeParams(overrides: Partial<GmailComposeEmailParams> = {}): 
   };
 }
 
-function createMessageApiResponse(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+function createMessageApiResponse(
+  overrides: Record<string, unknown> = {}
+): Record<string, unknown> {
   return {
     id: 'msg-123',
     threadId: 'thread-456',
@@ -569,8 +573,12 @@ describe('GmailAdapter', () => {
       );
 
       // Second and third calls: get full messages
-      mockFetch.mockResolvedValueOnce(createMockResponse(200, createMessageApiResponse({ id: 'msg-1' })));
-      mockFetch.mockResolvedValueOnce(createMockResponse(200, createMessageApiResponse({ id: 'msg-2' })));
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse(200, createMessageApiResponse({ id: 'msg-1' }))
+      );
+      mockFetch.mockResolvedValueOnce(
+        createMockResponse(200, createMessageApiResponse({ id: 'msg-2' }))
+      );
 
       const result = await adapter.searchMessages(tokens, { query: 'from:test@example.com' });
 
@@ -1359,9 +1367,7 @@ describe('GmailAdapter', () => {
     });
 
     it('should handle 404 as not found error', async () => {
-      mockFetch.mockResolvedValueOnce(
-        createMockResponse(404, { error: { message: 'msg-1' } })
-      );
+      mockFetch.mockResolvedValueOnce(createMockResponse(404, { error: { message: 'msg-1' } }));
 
       const result = await adapter.deleteMessage(tokens, 'msg-1');
 

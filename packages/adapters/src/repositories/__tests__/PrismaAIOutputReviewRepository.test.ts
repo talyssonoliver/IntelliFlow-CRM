@@ -10,13 +10,11 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PrismaClient } from '@intelliflow/db';
-import { PrismaAIOutputReviewRepository, OptimisticLockError } from '../PrismaAIOutputReviewRepository';
 import {
-  AIOutputReview,
-  ReviewStatus,
-  ReviewDecision,
-  AIOutputType,
-} from '@intelliflow/domain';
+  PrismaAIOutputReviewRepository,
+  OptimisticLockError,
+} from '../PrismaAIOutputReviewRepository';
+import { AIOutputReview, ReviewStatus, ReviewDecision, AIOutputType } from '@intelliflow/domain';
 import { randomUUID } from 'crypto';
 
 // Generate valid UUIDs for tests
@@ -172,7 +170,9 @@ describe('PrismaAIOutputReviewRepository', () => {
     it('should create new review with version 0', async () => {
       const review = createMockReview();
       vi.mocked(mockPrisma.aIOutputReview.findUnique).mockResolvedValue(null);
-      vi.mocked(mockPrisma.aIOutputReview.create).mockResolvedValue(createMockReviewData() as never);
+      vi.mocked(mockPrisma.aIOutputReview.create).mockResolvedValue(
+        createMockReviewData() as never
+      );
 
       await repository.save(review);
 
@@ -232,7 +232,9 @@ describe('PrismaAIOutputReviewRepository', () => {
         escalationDepth: 1,
       });
       vi.mocked(mockPrisma.aIOutputReview.findUnique).mockResolvedValue(null);
-      vi.mocked(mockPrisma.aIOutputReview.create).mockResolvedValue(createMockReviewData() as never);
+      vi.mocked(mockPrisma.aIOutputReview.create).mockResolvedValue(
+        createMockReviewData() as never
+      );
 
       await repository.save(review);
 
@@ -344,10 +346,12 @@ describe('PrismaAIOutputReviewRepository', () => {
     });
 
     it('should reconstitute domain aggregate from raw query', async () => {
-      const mockData = [createMockReviewData({
-        status: 'ESCALATED',
-        escalationDepth: 2,
-      })];
+      const mockData = [
+        createMockReviewData({
+          status: 'ESCALATED',
+          escalationDepth: 2,
+        }),
+      ];
       vi.mocked(mockPrisma.$queryRaw).mockResolvedValue(mockData as never);
 
       const result = await repository.findByIdForUpdate(REVIEW_ID_1, TENANT_ID);

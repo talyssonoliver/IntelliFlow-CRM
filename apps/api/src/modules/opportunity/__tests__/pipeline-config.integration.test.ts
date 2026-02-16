@@ -11,13 +11,8 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { pipelineConfigRouter } from '../pipeline-config.router';
-import {
-  prismaMock,
-  createTestContext,
-} from '../../../test/setup';
-import {
-  PROTECTED_STAGES,
-} from '@intelliflow/validators/opportunity';
+import { prismaMock, createTestContext } from '../../../test/setup';
+import { PROTECTED_STAGES } from '@intelliflow/validators/opportunity';
 import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
 
 // Mock pipeline stage config
@@ -25,7 +20,10 @@ const createMockPipelineConfig = (stageKey: string, overrides: Record<string, un
   id: `config-${stageKey}`,
   tenantId: 'test-tenant-id',
   stageKey,
-  displayName: stageKey.replace('_', ' ').toLowerCase().replace(/^\w/, (c) => c.toUpperCase()),
+  displayName: stageKey
+    .replace('_', ' ')
+    .toLowerCase()
+    .replace(/^\w/, (c) => c.toUpperCase()),
   color: '#6366f1',
   order: OPPORTUNITY_STAGES.indexOf(stageKey as any),
   probability: 50,

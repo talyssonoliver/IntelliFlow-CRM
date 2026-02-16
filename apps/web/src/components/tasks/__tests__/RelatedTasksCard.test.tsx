@@ -47,7 +47,7 @@ vi.mock('@intelliflow/ui', async () => {
   const actual = await vi.importActual('@intelliflow/ui');
   return {
     ...(actual as any),
-    Sheet: ({ children, open }: any) => open ? <div data-testid="sheet">{children}</div> : null,
+    Sheet: ({ children, open }: any) => (open ? <div data-testid="sheet">{children}</div> : null),
     SheetContent: ({ children }: any) => <div>{children}</div>,
     SheetTitle: ({ children }: any) => <h2>{children}</h2>,
     SheetDescription: ({ children }: any) => <p>{children}</p>,
@@ -62,9 +62,21 @@ describe('RelatedTasksCard', () => {
 
   const sampleTasks = [
     { id: '1', title: 'Call client', status: 'PENDING', priority: 'HIGH', dueDate: '2026-03-01' },
-    { id: '2', title: 'Send proposal', status: 'PENDING', priority: 'MEDIUM', dueDate: '2026-03-05' },
+    {
+      id: '2',
+      title: 'Send proposal',
+      status: 'PENDING',
+      priority: 'MEDIUM',
+      dueDate: '2026-03-05',
+    },
     { id: '3', title: 'Follow up', status: 'COMPLETED', priority: 'LOW', dueDate: null },
-    { id: '4', title: 'Review contract', status: 'PENDING', priority: 'URGENT', dueDate: '2026-03-10' },
+    {
+      id: '4',
+      title: 'Review contract',
+      status: 'PENDING',
+      priority: 'URGENT',
+      dueDate: '2026-03-10',
+    },
     { id: '5', title: 'Schedule demo', status: 'PENDING', priority: 'LOW', dueDate: '2026-03-15' },
   ];
 
@@ -95,7 +107,11 @@ describe('RelatedTasksCard', () => {
   });
 
   it('shows error message on error', () => {
-    mockGetByEntity.mockReturnValue({ data: undefined, isLoading: false, error: new Error('fail') });
+    mockGetByEntity.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: new Error('fail'),
+    });
     render(<RelatedTasksCard {...defaultProps} />);
     expect(screen.getByText('Failed to load tasks')).toBeInTheDocument();
   });

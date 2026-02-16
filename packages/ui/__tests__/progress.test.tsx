@@ -53,7 +53,14 @@ describe('Progress', () => {
     it('should have base progress styles', () => {
       render(<Progress aria-label="Progress" />);
       const progress = screen.getByRole('progressbar');
-      expect(progress).toHaveClass('relative', 'h-4', 'w-full', 'overflow-hidden', 'rounded-full', 'bg-secondary');
+      expect(progress).toHaveClass(
+        'relative',
+        'h-4',
+        'w-full',
+        'overflow-hidden',
+        'rounded-full',
+        'bg-secondary'
+      );
     });
   });
 

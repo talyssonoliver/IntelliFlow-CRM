@@ -16,10 +16,7 @@ export default function BillingPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        breadcrumbs={[
-          { label: 'Settings', href: '/settings' },
-          { label: 'Billing Portal' },
-        ]}
+        breadcrumbs={[{ label: 'Settings', href: '/settings' }, { label: 'Billing Portal' }]}
         title="Billing Portal"
         description="Manage your enterprise plan, payment methods, and invoice history."
         actions={[

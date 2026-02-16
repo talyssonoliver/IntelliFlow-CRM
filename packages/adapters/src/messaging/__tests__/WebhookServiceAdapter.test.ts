@@ -72,10 +72,7 @@ vi.mock('@intelliflow/domain', () => ({
 }));
 
 import { createWebhookFramework } from '@intelliflow/webhooks';
-import {
-  WebhookServiceAdapter,
-  createWebhookServiceAdapter,
-} from '../WebhookServiceAdapter';
+import { WebhookServiceAdapter, createWebhookServiceAdapter } from '../WebhookServiceAdapter';
 
 describe('WebhookServiceAdapter', () => {
   let adapter: WebhookServiceAdapter;
@@ -278,11 +275,7 @@ describe('WebhookServiceAdapter', () => {
         message: 'Source not found',
       });
 
-      const result = await adapter.handleWebhook(
-        'unknown-source',
-        '{}',
-        {}
-      );
+      const result = await adapter.handleWebhook('unknown-source', '{}', {});
 
       expect(result.isFailure).toBe(true);
       expect(result.error.name).toBe('WebhookSourceNotFoundError');
@@ -295,11 +288,7 @@ describe('WebhookServiceAdapter', () => {
         message: 'Signature mismatch',
       });
 
-      const result = await adapter.handleWebhook(
-        'stripe',
-        '{}',
-        { 'stripe-signature': 'invalid' }
-      );
+      const result = await adapter.handleWebhook('stripe', '{}', { 'stripe-signature': 'invalid' });
 
       expect(result.isFailure).toBe(true);
       expect(result.error.name).toBe('WebhookVerificationError');
@@ -312,11 +301,7 @@ describe('WebhookServiceAdapter', () => {
         message: 'Internal processing error',
       });
 
-      const result = await adapter.handleWebhook(
-        'stripe',
-        '{"bad": "data"}',
-        {}
-      );
+      const result = await adapter.handleWebhook('stripe', '{"bad": "data"}', {});
 
       expect(result.isFailure).toBe(true);
       expect(result.error.name).toBe('WebhookProcessingError');
@@ -361,12 +346,7 @@ describe('WebhookServiceAdapter', () => {
       const result = await adapter.handleWebhook('stripe', '{}', {});
 
       expect(result.isSuccess).toBe(true);
-      expect(mockFramework.handle).toHaveBeenCalledWith(
-        'stripe',
-        '{}',
-        {},
-        undefined
-      );
+      expect(mockFramework.handle).toHaveBeenCalledWith('stripe', '{}', {}, undefined);
     });
   });
 

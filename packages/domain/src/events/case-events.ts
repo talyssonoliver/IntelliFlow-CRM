@@ -13,11 +13,7 @@ import { CaseId } from '../legal/cases/CaseId';
 import { CaseTaskId } from '../legal/cases/CaseTaskId';
 
 // Re-export core case types for convenience
-export type {
-  CaseStatus,
-  CasePriority,
-  CaseTaskStatus,
-} from '../legal/cases/CaseEvents';
+export type { CaseStatus, CasePriority, CaseTaskStatus } from '../legal/cases/CaseEvents';
 
 // Re-export core case events
 export {

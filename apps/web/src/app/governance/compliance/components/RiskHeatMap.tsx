@@ -2,7 +2,13 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Card } from '@intelliflow/ui';
-import type { Risk, RiskHeatMapResponse, RiskProbability, RiskImpact, RiskStatus } from '@/app/api/compliance/types';
+import type {
+  Risk,
+  RiskHeatMapResponse,
+  RiskProbability,
+  RiskImpact,
+  RiskStatus,
+} from '@/app/api/compliance/types';
 
 // Risk symbols for different statuses
 const RISK_SYMBOLS: Record<RiskStatus, string> = {
@@ -101,20 +107,13 @@ function RiskDetailTooltip({ risks, onClose }: RiskDetailTooltipProps) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <button
-        className="absolute inset-0 bg-black/50"
-        onClick={onClose}
-        aria-label="Close"
-      />
+      <button className="absolute inset-0 bg-black/50" onClick={onClose} aria-label="Close" />
       <Card className="relative z-10 w-full max-w-md p-4 m-4 max-h-[80vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-foreground">
             {risks.length} Risk{risks.length > 1 ? 's' : ''} in this cell
           </h3>
-          <button
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
-          >
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
@@ -126,8 +125,8 @@ function RiskDetailTooltip({ risks, onClose }: RiskDetailTooltipProps) {
                 risk.status === 'requires_action'
                   ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
                   : risk.status === 'mitigated'
-                  ? 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20'
-                  : 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20'
+                    ? 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20'
+                    : 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20'
               }`}
             >
               <div className="flex items-start justify-between">
@@ -142,9 +141,7 @@ function RiskDetailTooltip({ risks, onClose }: RiskDetailTooltipProps) {
                 </span>
               </div>
               {risk.mitigationPlan && (
-                <p className="text-sm text-muted-foreground mt-2">
-                  {risk.mitigationPlan}
-                </p>
+                <p className="text-sm text-muted-foreground mt-2">{risk.mitigationPlan}</p>
               )}
               {risk.dueDate && (
                 <p className="text-xs text-muted-foreground mt-1">
@@ -184,9 +181,7 @@ export function RiskHeatMap() {
 
   const getRisksForCell = (probability: RiskProbability, impact: RiskImpact): Risk[] => {
     if (!data?.risks) return [];
-    return data.risks.filter(
-      (risk) => risk.probability === probability && risk.impact === impact
-    );
+    return data.risks.filter((risk) => risk.probability === probability && risk.impact === impact);
   };
 
   const probabilities: RiskProbability[] = ['high', 'medium', 'low'];
@@ -240,15 +235,21 @@ export function RiskHeatMap() {
       <div className="flex flex-wrap gap-4 mb-4 text-xs">
         <div className="flex items-center gap-1">
           <span className="text-emerald-600 dark:text-emerald-400">○</span>
-          <span className="text-muted-foreground">Accepted ({data?.summary.byStatus.accepted || 0})</span>
+          <span className="text-muted-foreground">
+            Accepted ({data?.summary.byStatus.accepted || 0})
+          </span>
         </div>
         <div className="flex items-center gap-1">
           <span className="text-amber-600 dark:text-amber-400">△</span>
-          <span className="text-muted-foreground">Mitigated ({data?.summary.byStatus.mitigated || 0})</span>
+          <span className="text-muted-foreground">
+            Mitigated ({data?.summary.byStatus.mitigated || 0})
+          </span>
         </div>
         <div className="flex items-center gap-1">
           <span className="text-red-600 dark:text-red-400">□</span>
-          <span className="text-muted-foreground">Requires Action ({data?.summary.byStatus.requires_action || 0})</span>
+          <span className="text-muted-foreground">
+            Requires Action ({data?.summary.byStatus.requires_action || 0})
+          </span>
         </div>
       </div>
 
@@ -300,10 +301,7 @@ export function RiskHeatMap() {
 
       {/* Risk Detail Tooltip */}
       {selectedRisks.length > 0 && (
-        <RiskDetailTooltip
-          risks={selectedRisks}
-          onClose={() => setSelectedRisks([])}
-        />
+        <RiskDetailTooltip risks={selectedRisks} onClose={() => setSelectedRisks([])} />
       )}
     </Card>
   );

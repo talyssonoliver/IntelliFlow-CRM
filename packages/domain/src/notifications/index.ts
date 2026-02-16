@@ -8,11 +8,7 @@ export { NotificationId } from './NotificationId';
 
 // Entities
 export { Notification } from './Notification';
-export type {
-  NotificationChannel,
-  NotificationStatus,
-  NotificationPriority,
-} from './Notification';
+export type { NotificationChannel, NotificationStatus, NotificationPriority } from './Notification';
 export {
   NOTIFICATION_CHANNELS,
   NOTIFICATION_STATUSES,

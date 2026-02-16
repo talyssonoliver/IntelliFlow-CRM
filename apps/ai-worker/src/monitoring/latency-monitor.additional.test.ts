@@ -132,11 +132,11 @@ describe('LatencyMonitor - Additional Coverage', () => {
       expect(measurements.length).toBe(5);
 
       // Total should be 700ms
-      const total = measurements.find(m => m.phase === 'total');
+      const total = measurements.find((m) => m.phase === 'total');
       expect(total!.durationMs).toBe(700);
 
       // Phase IDs should be correct
-      const phaseIds = measurements.map(m => m.id);
+      const phaseIds = measurements.map((m) => m.id);
       expect(phaseIds).toContain('phased-op-total');
       expect(phaseIds).toContain('phased-op-queue_wait');
       expect(phaseIds).toContain('phased-op-preprocessing');
@@ -187,7 +187,7 @@ describe('LatencyMonitor - Additional Coverage', () => {
       });
 
       const alerts = monitor.getAlerts();
-      expect(alerts.some(a => a.severity === 'critical')).toBe(true);
+      expect(alerts.some((a) => a.severity === 'critical')).toBe(true);
 
       vi.useRealTimers();
     });
@@ -245,7 +245,7 @@ describe('LatencyMonitor - Additional Coverage', () => {
       });
 
       const alerts = monitor.getAlerts();
-      expect(alerts.some(a => a.severity === 'critical')).toBe(true);
+      expect(alerts.some((a) => a.severity === 'critical')).toBe(true);
     });
   });
 
@@ -694,9 +694,7 @@ describe('LatencyMonitor - Additional Coverage', () => {
       const alerts = monitor.getAlerts();
       expect(alerts.length).toBe(2);
       // Most recent should be first
-      expect(alerts[0].timestamp.getTime()).toBeGreaterThanOrEqual(
-        alerts[1].timestamp.getTime()
-      );
+      expect(alerts[0].timestamp.getTime()).toBeGreaterThanOrEqual(alerts[1].timestamp.getTime());
 
       vi.useRealTimers();
     });
@@ -819,14 +817,9 @@ describe('getLatencyMetrics', () => {
 
 describe('withLatencyTracking', () => {
   it('should track successful async operation', async () => {
-    const result = await withLatencyTracking(
-      'tracking-test-1',
-      'gpt-4',
-      'scoring',
-      async () => {
-        return { score: 85 };
-      }
-    );
+    const result = await withLatencyTracking('tracking-test-1', 'gpt-4', 'scoring', async () => {
+      return { score: 85 };
+    });
 
     expect(result).toEqual({ score: 85 });
   });
@@ -835,27 +828,17 @@ describe('withLatencyTracking', () => {
     const testError = new TypeError('Invalid input');
 
     await expect(
-      withLatencyTracking(
-        'tracking-test-2',
-        'gpt-4',
-        'scoring',
-        async () => {
-          throw testError;
-        }
-      )
+      withLatencyTracking('tracking-test-2', 'gpt-4', 'scoring', async () => {
+        throw testError;
+      })
     ).rejects.toThrow('Invalid input');
   });
 
   it('should record error type when operation fails', async () => {
     try {
-      await withLatencyTracking(
-        'tracking-test-3',
-        'gpt-4',
-        'scoring',
-        async () => {
-          throw new RangeError('Out of range');
-        }
-      );
+      await withLatencyTracking('tracking-test-3', 'gpt-4', 'scoring', async () => {
+        throw new RangeError('Out of range');
+      });
     } catch {
       // Expected to throw
     }
@@ -868,14 +851,9 @@ describe('withLatencyTracking', () => {
 
   it('should handle non-Error thrown values', async () => {
     try {
-      await withLatencyTracking(
-        'tracking-test-4',
-        'gpt-4',
-        'scoring',
-        async () => {
-          throw 'string error'; // Non-Error type thrown
-        }
-      );
+      await withLatencyTracking('tracking-test-4', 'gpt-4', 'scoring', async () => {
+        throw 'string error'; // Non-Error type thrown
+      });
     } catch (e) {
       expect(e).toBe('string error');
     }

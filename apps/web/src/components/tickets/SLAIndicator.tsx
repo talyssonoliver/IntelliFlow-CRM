@@ -45,14 +45,19 @@ export function SLAIndicator({
   }, [slaTimeRemaining, slaStatus]);
 
   const updateTimer = useCallback(() => {
-    setRemaining(prev => {
+    setRemaining((prev) => {
       const newVal = prev - 1;
       // Transition from ON_TRACK to AT_RISK at 30 minutes
       if (newVal <= 30 && newVal > 0 && currentStatus === 'ON_TRACK') {
         setCurrentStatus('AT_RISK');
       }
       // Transition to BREACHED
-      if (newVal <= 0 && currentStatus !== 'BREACHED' && currentStatus !== 'MET' && currentStatus !== 'PAUSED') {
+      if (
+        newVal <= 0 &&
+        currentStatus !== 'BREACHED' &&
+        currentStatus !== 'MET' &&
+        currentStatus !== 'PAUSED'
+      ) {
         setCurrentStatus('BREACHED');
       }
       return newVal;
@@ -110,9 +115,7 @@ export function SLAIndicator({
           role="status"
           aria-label={`SLA ${config.label}: ${formatSLATime(remaining)} remaining`}
         >
-          <span className={`material-symbols-outlined ${iconSizes[size]}`}>
-            {config.icon}
-          </span>
+          <span className={`material-symbols-outlined ${iconSizes[size]}`}>{config.icon}</span>
           {formatSLATime(remaining)}
         </div>
       )}
@@ -133,13 +136,19 @@ export function SLAIndicator({
         <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
           <div
             className={`h-full transition-all ${
-              currentStatus === 'BREACHED' ? 'bg-red-500' :
-              currentStatus === 'AT_RISK' ? 'bg-yellow-500' :
-              currentStatus === 'MET' ? 'bg-green-500' :
-              currentStatus === 'PAUSED' ? 'bg-slate-400' :
-              'bg-emerald-500'
+              currentStatus === 'BREACHED'
+                ? 'bg-red-500'
+                : currentStatus === 'AT_RISK'
+                  ? 'bg-yellow-500'
+                  : currentStatus === 'MET'
+                    ? 'bg-green-500'
+                    : currentStatus === 'PAUSED'
+                      ? 'bg-slate-400'
+                      : 'bg-emerald-500'
             }`}
-            style={{ width: `${Math.max(0, Math.min(100, (remaining / Math.max(remaining, 1)) * 100))}%` }}
+            style={{
+              width: `${Math.max(0, Math.min(100, (remaining / Math.max(remaining, 1)) * 100))}%`,
+            }}
           />
         </div>
       )}

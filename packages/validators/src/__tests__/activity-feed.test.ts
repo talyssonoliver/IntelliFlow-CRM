@@ -194,16 +194,20 @@ describe('Activity Feed Validators', () => {
     });
 
     it('enforces limit bounds', () => {
-      expect(() => entityFeedQuerySchema.parse({
-        entityType: 'LEAD',
-        entityId: 'id',
-        limit: 0,
-      })).toThrow();
-      expect(() => entityFeedQuerySchema.parse({
-        entityType: 'LEAD',
-        entityId: 'id',
-        limit: 101,
-      })).toThrow();
+      expect(() =>
+        entityFeedQuerySchema.parse({
+          entityType: 'LEAD',
+          entityId: 'id',
+          limit: 0,
+        })
+      ).toThrow();
+      expect(() =>
+        entityFeedQuerySchema.parse({
+          entityType: 'LEAD',
+          entityId: 'id',
+          limit: 101,
+        })
+      ).toThrow();
     });
   });
 
@@ -249,11 +253,13 @@ describe('Activity Feed Validators', () => {
     });
 
     it('rejects invalid entity type', () => {
-      expect(() => activityEntitySchema.parse({
-        id: 'x',
-        type: 'INVALID',
-        name: 'test',
-      })).toThrow();
+      expect(() =>
+        activityEntitySchema.parse({
+          id: 'x',
+          type: 'INVALID',
+          name: 'test',
+        })
+      ).toThrow();
     });
 
     it('requires all fields', () => {
@@ -301,34 +307,40 @@ describe('Activity Feed Validators', () => {
     });
 
     it('rejects invalid source', () => {
-      expect(() => unifiedActivityItemSchema.parse({
-        ...validItem,
-        source: 'INVALID',
-      })).toThrow();
+      expect(() =>
+        unifiedActivityItemSchema.parse({
+          ...validItem,
+          source: 'INVALID',
+        })
+      ).toThrow();
     });
 
     it('rejects invalid type', () => {
-      expect(() => unifiedActivityItemSchema.parse({
-        ...validItem,
-        type: 'INVALID',
-      })).toThrow();
+      expect(() =>
+        unifiedActivityItemSchema.parse({
+          ...validItem,
+          type: 'INVALID',
+        })
+      ).toThrow();
     });
   });
 
   describe('unifiedFeedPageSchema', () => {
     it('accepts valid page with items', () => {
       const page = {
-        items: [{
-          id: 'lead_1',
-          source: 'LEAD_ACTIVITY',
-          type: 'EMAIL',
-          title: 'Test',
-          description: null,
-          timestamp: new Date(),
-          actor: null,
-          entity: null,
-          metadata: null,
-        }],
+        items: [
+          {
+            id: 'lead_1',
+            source: 'LEAD_ACTIVITY',
+            type: 'EMAIL',
+            title: 'Test',
+            description: null,
+            timestamp: new Date(),
+            actor: null,
+            entity: null,
+            metadata: null,
+          },
+        ],
         nextCursor: 'abc123',
         hasMore: true,
       };

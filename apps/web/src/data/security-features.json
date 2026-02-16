@@ -41,7 +41,11 @@
       "title": "End-to-End Encryption",
       "description": "All data is encrypted at rest using AES-256 and in transit using TLS 1.3. Customer encryption keys are managed securely in dedicated HSMs.",
       "icon": "lock",
-      "highlights": ["AES-256 encryption at rest", "TLS 1.3 in transit", "Customer-managed keys option"]
+      "highlights": [
+        "AES-256 encryption at rest",
+        "TLS 1.3 in transit",
+        "Customer-managed keys option"
+      ]
     },
     {
       "id": "zero-trust",
@@ -49,7 +53,11 @@
       "title": "Zero Trust Architecture",
       "description": "Every request is authenticated and authorized, regardless of source. No implicit trust based on network location or previous authentication.",
       "icon": "security",
-      "highlights": ["Continuous verification", "Least privilege access", "Micro-segmentation"]
+      "highlights": [
+        "Continuous verification",
+        "Least privilege access",
+        "Micro-segmentation"
+      ]
     },
     {
       "id": "rls",
@@ -57,7 +65,11 @@
       "title": "Row-Level Security",
       "description": "Database-enforced tenant isolation ensures customers can only access their own data. Policies are enforced at the database level, not application level.",
       "icon": "table_rows",
-      "highlights": ["Database-enforced isolation", "Multi-tenant security", "No data leakage"]
+      "highlights": [
+        "Database-enforced isolation",
+        "Multi-tenant security",
+        "No data leakage"
+      ]
     },
     {
       "id": "audit-logging",
@@ -65,7 +77,11 @@
       "title": "Comprehensive Audit Logging",
       "description": "Every action is logged with immutable audit trails. Logs include user identity, timestamp, action, and affected resources for full traceability.",
       "icon": "history",
-      "highlights": ["Immutable audit trails", "7-year retention", "Real-time alerting"]
+      "highlights": [
+        "Immutable audit trails",
+        "7-year retention",
+        "Real-time alerting"
+      ]
     },
     {
       "id": "sso",
@@ -81,7 +97,11 @@
       "title": "Role-Based Access Control",
       "description": "Granular permissions system allows fine-grained control over who can access what. Custom roles can be created to match your organization's structure.",
       "icon": "admin_panel_settings",
-      "highlights": ["Granular permissions", "Custom roles", "Department-level access"]
+      "highlights": [
+        "Granular permissions",
+        "Custom roles",
+        "Department-level access"
+      ]
     },
     {
       "id": "vulnerability",
@@ -97,7 +117,11 @@
       "title": "Regular Penetration Testing",
       "description": "Third-party security firms conduct annual penetration tests. Findings are remediated and verified before the next assessment.",
       "icon": "pest_control",
-      "highlights": ["Annual third-party tests", "Remediation tracking", "Executive reports available"]
+      "highlights": [
+        "Annual third-party tests",
+        "Remediation tracking",
+        "Executive reports available"
+      ]
     },
     {
       "id": "backup",
@@ -105,7 +129,11 @@
       "title": "Automated Backups & Recovery",
       "description": "Continuous backups with point-in-time recovery. Data is replicated across multiple geographic regions for disaster resilience.",
       "icon": "backup",
-      "highlights": ["Continuous backups", "Cross-region replication", "30-day retention"]
+      "highlights": [
+        "Continuous backups",
+        "Cross-region replication",
+        "30-day retention"
+      ]
     },
     {
       "id": "incident",
@@ -113,7 +141,11 @@
       "title": "24/7 Security Monitoring",
       "description": "Our security operations center monitors for threats around the clock. Automated detection and response systems provide rapid incident containment.",
       "icon": "monitoring",
-      "highlights": ["24/7 SOC coverage", "SIEM integration", "Incident response SLAs"]
+      "highlights": [
+        "24/7 SOC coverage",
+        "SIEM integration",
+        "Incident response SLAs"
+      ]
     },
     {
       "id": "privacy",
@@ -121,7 +153,11 @@
       "title": "Privacy by Design",
       "description": "Privacy considerations are built into every feature from the start. Data minimization, purpose limitation, and user consent are core principles.",
       "icon": "privacy_tip",
-      "highlights": ["Data minimization", "Consent management", "Right to deletion"]
+      "highlights": [
+        "Data minimization",
+        "Consent management",
+        "Right to deletion"
+      ]
     },
     {
       "id": "ai-security",

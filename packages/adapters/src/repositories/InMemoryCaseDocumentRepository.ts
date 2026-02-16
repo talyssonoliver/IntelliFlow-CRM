@@ -1,8 +1,4 @@
-import {
-  CaseDocument,
-  CaseDocumentRepository,
-  AccessLevel,
-} from '@intelliflow/domain';
+import { CaseDocument, CaseDocumentRepository, AccessLevel } from '@intelliflow/domain';
 
 /**
  * In-Memory Case Document Repository
@@ -82,11 +78,7 @@ export class InMemoryCaseDocumentRepository implements CaseDocumentRepository {
   async findByCaseId(caseId: string): Promise<CaseDocument[]> {
     return Array.from(this.documents.values()).filter((doc) => {
       const data = doc.toJSON();
-      return (
-        data.metadata.relatedCaseId === caseId &&
-        !data.deletedAt &&
-        data.isLatestVersion
-      );
+      return data.metadata.relatedCaseId === caseId && !data.deletedAt && data.isLatestVersion;
     });
   }
 

@@ -140,10 +140,7 @@ function useFilterOptionsTransform<T extends FilterOptionsResponse>(
     [data?.departments]
   );
 
-  const accountOptions = useMemo(
-    () => transformOptions(data?.accounts),
-    [data?.accounts]
-  );
+  const accountOptions = useMemo(() => transformOptions(data?.accounts), [data?.accounts]);
 
   const sourceOptions = useMemo(
     () => transformOptions(data?.sources, capitalizeWords),
@@ -160,10 +157,7 @@ function useFilterOptionsTransform<T extends FilterOptionsResponse>(
     [data?.slaStatuses]
   );
 
-  const ownerOptions = useMemo(
-    () => transformOptions(data?.owners),
-    [data?.owners]
-  );
+  const ownerOptions = useMemo(() => transformOptions(data?.owners), [data?.owners]);
 
   return {
     statusOptions,
@@ -234,10 +228,7 @@ export function useAccountFilterOptions(
     [data?.industries]
   );
 
-  const ownerOptions = useMemo(
-    () => transformOptions(data?.owners),
-    [data?.owners]
-  );
+  const ownerOptions = useMemo(() => transformOptions(data?.owners), [data?.owners]);
 
   return {
     industryOptions,

@@ -5,11 +5,7 @@
  * Refactored to use domain model and repository pattern following hexagonal architecture.
  */
 
-import {
-  CaseDocument,
-  AccessLevel,
-  DocumentClassification,
-} from '@intelliflow/domain';
+import { CaseDocument, AccessLevel, DocumentClassification } from '@intelliflow/domain';
 import {
   bulkDownloadDocumentsSchema,
   bulkArchiveDocumentsSchema,
@@ -120,76 +116,80 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Create a new version of the document
    */
-  createVersion: protectedProcedure.input(createVersionInputSchema).mutation(async ({ ctx, input }) => {
-    const userId = ctx.user?.userId;
-    if (!userId) {
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-    }
+  createVersion: protectedProcedure
+    .input(createVersionInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.userId;
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+      }
 
-    const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
 
-    // Find document
-    const document = await documentRepo.findById(input.documentId);
-    if (!document) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-    }
+      // Find document
+      const document = await documentRepo.findById(input.documentId);
+      if (!document) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+      }
 
-    // Check access (user must have EDIT or ADMIN)
-    if (!document.hasAccess(userId, AccessLevel.EDIT)) {
-      throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
-    }
+      // Check access (user must have EDIT or ADMIN)
+      if (!document.hasAccess(userId, AccessLevel.EDIT)) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
+      }
 
-    // Create new version using domain method
-    let newVersion: CaseDocument;
-    switch (input.versionType) {
-      case 'major':
-        newVersion = document.createMajorVersion(userId, input.storageKey, input.contentHash);
-        break;
-      case 'minor':
-        newVersion = document.createMinorVersion(userId, input.storageKey, input.contentHash);
-        break;
-      case 'patch':
-        newVersion = document.createPatchVersion(userId, input.storageKey, input.contentHash);
-        break;
-      default:
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid version type' });
-    }
+      // Create new version using domain method
+      let newVersion: CaseDocument;
+      switch (input.versionType) {
+        case 'major':
+          newVersion = document.createMajorVersion(userId, input.storageKey, input.contentHash);
+          break;
+        case 'minor':
+          newVersion = document.createMinorVersion(userId, input.storageKey, input.contentHash);
+          break;
+        case 'patch':
+          newVersion = document.createPatchVersion(userId, input.storageKey, input.contentHash);
+          break;
+        default:
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid version type' });
+      }
 
-    // Save both old (now superseded) and new version
-    await documentRepo.save(document);
-    await documentRepo.save(newVersion);
+      // Save both old (now superseded) and new version
+      await documentRepo.save(document);
+      await documentRepo.save(newVersion);
 
-    return newVersion.toJSON();
-  }),
+      return newVersion.toJSON();
+    }),
 
   /**
    * Get document by ID
    */
-  getById: protectedProcedure.input(z.object({ id: z.string().uuid() })).query(async ({ ctx, input }) => {
-    const userId = ctx.user?.userId;
-    if (!userId) {
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-    }
+  getById: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.user?.userId;
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+      }
 
-    const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
 
-    const document = await documentRepo.findById(input.id);
-    if (!document) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-    }
+      const document = await documentRepo.findById(input.id);
+      if (!document) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+      }
 
-    // Check if deleted
-    if (document.isDeleted) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-    }
+      // Check if deleted
+      if (document.isDeleted) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+      }
 
-    // Check access
-    if (!document.hasAccess(userId, AccessLevel.VIEW) && document.toJSON().createdBy !== userId) {
-      throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
-    }
+      // Check access
+      if (!document.hasAccess(userId, AccessLevel.VIEW) && document.toJSON().createdBy !== userId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
+      }
 
-    return document.toJSON();
-  }),
+      return document.toJSON();
+    }),
 
   /**
    * List documents accessible by current user
@@ -199,7 +199,9 @@ export const documentsRouter = createTRPCRouter({
       z
         .object({
           caseId: z.string().uuid().optional(),
-          status: z.enum(['DRAFT', 'UNDER_REVIEW', 'APPROVED', 'SIGNED', 'ARCHIVED', 'SUPERSEDED']).optional(),
+          status: z
+            .enum(['DRAFT', 'UNDER_REVIEW', 'APPROVED', 'SIGNED', 'ARCHIVED', 'SUPERSEDED'])
+            .optional(),
           classification: z.enum(['PUBLIC', 'INTERNAL', 'CONFIDENTIAL', 'PRIVILEGED']).optional(),
           limit: z.number().int().min(1).max(100).default(20),
           offset: z.number().int().min(0).default(0),
@@ -301,7 +303,10 @@ export const documentsRouter = createTRPCRouter({
       }
 
       // Check ADMIN access
-      if (!document.hasAccess(userId, AccessLevel.ADMIN) && document.toJSON().createdBy !== userId) {
+      if (
+        !document.hasAccess(userId, AccessLevel.ADMIN) &&
+        document.toJSON().createdBy !== userId
+      ) {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
       }
 
@@ -316,64 +321,71 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Submit document for review
    */
-  submitForReview: protectedProcedure.input(z.object({ documentId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
-    const userId = ctx.user?.userId;
-    if (!userId) {
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-    }
+  submitForReview: protectedProcedure
+    .input(z.object({ documentId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.userId;
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+      }
 
-    const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
 
-    const document = await documentRepo.findById(input.documentId);
-    if (!document) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-    }
+      const document = await documentRepo.findById(input.documentId);
+      if (!document) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+      }
 
-    // Check access
-    if (!document.hasAccess(userId, AccessLevel.EDIT) && document.toJSON().createdBy !== userId) {
-      throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
-    }
+      // Check access
+      if (!document.hasAccess(userId, AccessLevel.EDIT) && document.toJSON().createdBy !== userId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
+      }
 
-    // Submit for review using domain method
-    try {
-      document.submitForReview(userId);
-      await documentRepo.save(document);
-      return { success: true };
-    } catch (error) {
-      throw new TRPCError({ code: 'BAD_REQUEST', message: (error as Error).message });
-    }
-  }),
+      // Submit for review using domain method
+      try {
+        document.submitForReview(userId);
+        await documentRepo.save(document);
+        return { success: true };
+      } catch (error) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: (error as Error).message });
+      }
+    }),
 
   /**
    * Approve document
    */
-  approve: protectedProcedure.input(z.object({ documentId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
-    const userId = ctx.user?.userId;
-    if (!userId) {
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-    }
+  approve: protectedProcedure
+    .input(z.object({ documentId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.userId;
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+      }
 
-    const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
 
-    const document = await documentRepo.findById(input.documentId);
-    if (!document) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-    }
+      const document = await documentRepo.findById(input.documentId);
+      if (!document) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+      }
 
-    // Check ADMIN access
-    if (!document.hasAccess(userId, AccessLevel.ADMIN) && document.toJSON().createdBy !== userId) {
-      throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
-    }
+      // Check ADMIN access
+      if (
+        !document.hasAccess(userId, AccessLevel.ADMIN) &&
+        document.toJSON().createdBy !== userId
+      ) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
+      }
 
-    // Approve using domain method
-    try {
-      document.approve(userId);
-      await documentRepo.save(document);
-      return { success: true };
-    } catch (error) {
-      throw new TRPCError({ code: 'BAD_REQUEST', message: (error as Error).message });
-    }
-  }),
+      // Approve using domain method
+      try {
+        document.approve(userId);
+        await documentRepo.save(document);
+        return { success: true };
+      } catch (error) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: (error as Error).message });
+      }
+    }),
 
   /**
    * Sign document with e-signature
@@ -415,121 +427,137 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Archive document
    */
-  archive: protectedProcedure.input(z.object({ documentId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
-    const userId = ctx.user?.userId;
-    if (!userId) {
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-    }
+  archive: protectedProcedure
+    .input(z.object({ documentId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.userId;
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+      }
 
-    const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
 
-    const document = await documentRepo.findById(input.documentId);
-    if (!document) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-    }
+      const document = await documentRepo.findById(input.documentId);
+      if (!document) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+      }
 
-    // Archive using domain method
-    try {
-      document.archive(userId);
-      await documentRepo.save(document);
-      return { success: true };
-    } catch (error) {
-      throw new TRPCError({ code: 'BAD_REQUEST', message: (error as Error).message });
-    }
-  }),
+      // Archive using domain method
+      try {
+        document.archive(userId);
+        await documentRepo.save(document);
+        return { success: true };
+      } catch (error) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: (error as Error).message });
+      }
+    }),
 
   /**
    * Place legal hold on document
    */
-  placeLegalHold: protectedProcedure.input(placeLegalHoldInputSchema).mutation(async ({ ctx, input }) => {
-    const userId = ctx.user?.userId;
-    const userRole = ctx.user?.role;
+  placeLegalHold: protectedProcedure
+    .input(placeLegalHoldInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.userId;
+      const userRole = ctx.user?.role;
 
-    if (!userId || (userRole !== 'ADMIN' && userRole !== 'LEGAL')) {
-      throw new TRPCError({ code: 'FORBIDDEN', message: 'Only admins and legal team can place legal holds' });
-    }
+      if (!userId || (userRole !== 'ADMIN' && userRole !== 'LEGAL')) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Only admins and legal team can place legal holds',
+        });
+      }
 
-    const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
 
-    const document = await documentRepo.findById(input.documentId);
-    if (!document) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-    }
+      const document = await documentRepo.findById(input.documentId);
+      if (!document) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+      }
 
-    // Place legal hold using domain method
-    document.placeLegalHold(input.retentionUntil, userId);
-    await documentRepo.save(document);
+      // Place legal hold using domain method
+      document.placeLegalHold(input.retentionUntil, userId);
+      await documentRepo.save(document);
 
-    return { success: true };
-  }),
+      return { success: true };
+    }),
 
   /**
    * Release legal hold
    */
-  releaseLegalHold: protectedProcedure.input(z.object({ documentId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
-    const userId = ctx.user?.userId;
-    const userRole = ctx.user?.role;
+  releaseLegalHold: protectedProcedure
+    .input(z.object({ documentId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.userId;
+      const userRole = ctx.user?.role;
 
-    if (!userId || (userRole !== 'ADMIN' && userRole !== 'LEGAL')) {
-      throw new TRPCError({ code: 'FORBIDDEN', message: 'Only admins and legal team can release legal holds' });
-    }
+      if (!userId || (userRole !== 'ADMIN' && userRole !== 'LEGAL')) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Only admins and legal team can release legal holds',
+        });
+      }
 
-    const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
 
-    const document = await documentRepo.findById(input.documentId);
-    if (!document) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-    }
+      const document = await documentRepo.findById(input.documentId);
+      if (!document) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+      }
 
-    // Release legal hold using domain method
-    document.releaseLegalHold(userId);
-    await documentRepo.save(document);
+      // Release legal hold using domain method
+      document.releaseLegalHold(userId);
+      await documentRepo.save(document);
 
-    return { success: true };
-  }),
+      return { success: true };
+    }),
 
   /**
    * Soft delete document
    */
-  delete: protectedProcedure.input(z.object({ documentId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
-    const userId = ctx.user?.userId;
-    if (!userId) {
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-    }
+  delete: protectedProcedure
+    .input(z.object({ documentId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.user?.userId;
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+      }
 
-    const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
 
-    const document = await documentRepo.findById(input.documentId);
-    if (!document) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-    }
+      const document = await documentRepo.findById(input.documentId);
+      if (!document) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+      }
 
-    // Soft delete using domain method (checks legal hold)
-    try {
-      document.delete(userId);
-      await documentRepo.save(document);
-      return { success: true };
-    } catch (error) {
-      throw new TRPCError({ code: 'FORBIDDEN', message: (error as Error).message });
-    }
-  }),
+      // Soft delete using domain method (checks legal hold)
+      try {
+        document.delete(userId);
+        await documentRepo.save(document);
+        return { success: true };
+      } catch (error) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: (error as Error).message });
+      }
+    }),
 
   /**
    * Get audit trail for document
    */
-  getAuditTrail: protectedProcedure.input(z.object({ documentId: z.string().uuid() })).query(async ({ ctx, input }) => {
-    const userId = ctx.user?.userId;
-    if (!userId) {
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-    }
+  getAuditTrail: protectedProcedure
+    .input(z.object({ documentId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.user?.userId;
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+      }
 
-    const auditLogs = await ctx.prisma.caseDocumentAudit.findMany({
-      where: { document_id: input.documentId },
-      orderBy: { created_at: 'desc' },
-    });
+      const auditLogs = await ctx.prisma.caseDocumentAudit.findMany({
+        where: { document_id: input.documentId },
+        orderBy: { created_at: 'desc' },
+      });
 
-    return auditLogs;
-  }),
+      return auditLogs;
+    }),
 
   /**
    * Bulk download documents - returns storage keys
@@ -572,7 +600,7 @@ export const documentsRouter = createTRPCRouter({
         } catch (error) {
           failed.push({
             id: docId,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : 'Unknown error',
           });
         }
       }
@@ -611,7 +639,7 @@ export const documentsRouter = createTRPCRouter({
         } catch (error) {
           failed.push({
             id: docId,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : 'Unknown error',
           });
         }
       }
@@ -650,7 +678,7 @@ export const documentsRouter = createTRPCRouter({
         } catch (error) {
           failed.push({
             id: docId,
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: error instanceof Error ? error.message : 'Unknown error',
           });
         }
       }

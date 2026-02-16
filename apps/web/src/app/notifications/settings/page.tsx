@@ -101,7 +101,9 @@ function ToggleSwitch({
   disabled?: boolean;
 }>) {
   return (
-    <label className={`relative inline-flex items-center ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+    <label
+      className={`relative inline-flex items-center ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+    >
       <input
         type="checkbox"
         checked={checked}
@@ -142,9 +144,7 @@ export default function NotificationSettingsPage() {
   ) => {
     setNotificationTypes((prev) =>
       prev.map((type) =>
-        type.id === typeId
-          ? { ...type, channels: { ...type.channels, [channel]: value } }
-          : type
+        type.id === typeId ? { ...type, channels: { ...type.channels, [channel]: value } } : type
       )
     );
   };

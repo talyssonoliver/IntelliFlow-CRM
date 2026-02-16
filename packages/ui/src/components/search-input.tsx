@@ -3,8 +3,10 @@
 import * as React from 'react';
 import { cn } from '../lib/utils';
 
-export interface SearchInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
+export interface SearchInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  'type'
+> {
   /** Material Symbols icon name (default: "search") */
   icon?: string;
   /** Whether to show clear button when input has value */
@@ -49,10 +51,7 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     }, [onClear, onChange]);
 
     return (
-      <div
-        className={cn('relative flex-1', containerClassName)}
-        role="search"
-      >
+      <div className={cn('relative flex-1', containerClassName)} role="search">
         {/* Search/Loading Icon */}
         <span
           className={cn(

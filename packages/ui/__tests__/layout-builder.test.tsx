@@ -177,7 +177,13 @@ describe('LayoutBuilder primitives', () => {
     const onResize = vi.fn();
 
     render(
-      <WidgetCard widget={baseWidget} isEditing onDelete={onDelete} onSettings={onSettings} onResize={onResize}>
+      <WidgetCard
+        widget={baseWidget}
+        isEditing
+        onDelete={onDelete}
+        onSettings={onSettings}
+        onResize={onResize}
+      >
         <div>Widget content</div>
       </WidgetCard>
     );

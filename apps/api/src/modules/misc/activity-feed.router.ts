@@ -12,10 +12,7 @@
 
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '../../trpc';
-import {
-  unifiedFeedQuerySchema,
-  entityFeedQuerySchema,
-} from '@intelliflow/validators';
+import { unifiedFeedQuerySchema, entityFeedQuerySchema } from '@intelliflow/validators';
 
 /**
  * Extract tenantId from context user session.
@@ -36,74 +33,65 @@ export const activityFeedRouter = createTRPCRouter({
    * Get unified activity feed across all CRM entity types.
    * Supports cursor-based infinite scrolling with optional type/source filters.
    */
-  getUnifiedFeed: protectedProcedure
-    .input(unifiedFeedQuerySchema)
-    .query(async ({ ctx, input }) => {
-      const startTime = performance.now();
-      const tenantId = getTenantId(ctx);
+  getUnifiedFeed: protectedProcedure.input(unifiedFeedQuerySchema).query(async ({ ctx, input }) => {
+    const startTime = performance.now();
+    const tenantId = getTenantId(ctx);
 
-      const activityFeedService = ctx.container?.activityFeedService;
-      if (!activityFeedService) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'ActivityFeedService not available in container',
-        });
-      }
+    const activityFeedService = ctx.container?.activityFeedService;
+    if (!activityFeedService) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'ActivityFeedService not available in container',
+      });
+    }
 
-      const result = await activityFeedService.getUnifiedFeed(
-        tenantId,
-        input.limit,
-        input.cursor,
-        {
-          types: input.types,
-          sources: input.sources,
-          entityType: input.entityType,
-          entityId: input.entityId,
-          after: input.after,
-          before: input.before,
-        },
-      );
+    const result = await activityFeedService.getUnifiedFeed(tenantId, input.limit, input.cursor, {
+      types: input.types,
+      sources: input.sources,
+      entityType: input.entityType,
+      entityId: input.entityId,
+      after: input.after,
+      before: input.before,
+    });
 
-      const duration = performance.now() - startTime;
-      if (duration > 500) {
-        console.warn(`[activityFeed.getUnifiedFeed] SLOW: ${duration.toFixed(2)}ms (target: <500ms)`);
-      }
+    const duration = performance.now() - startTime;
+    if (duration > 500) {
+      console.warn(`[activityFeed.getUnifiedFeed] SLOW: ${duration.toFixed(2)}ms (target: <500ms)`);
+    }
 
-      return result;
-    }),
+    return result;
+  }),
 
   /**
    * Get activity feed for a specific entity (lead, contact, opportunity, ticket).
    * Queries only the relevant source tables for that entity type.
    */
-  getEntityFeed: protectedProcedure
-    .input(entityFeedQuerySchema)
-    .query(async ({ ctx, input }) => {
-      const startTime = performance.now();
-      const tenantId = getTenantId(ctx);
+  getEntityFeed: protectedProcedure.input(entityFeedQuerySchema).query(async ({ ctx, input }) => {
+    const startTime = performance.now();
+    const tenantId = getTenantId(ctx);
 
-      const activityFeedService = ctx.container?.activityFeedService;
-      if (!activityFeedService) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'ActivityFeedService not available in container',
-        });
-      }
+    const activityFeedService = ctx.container?.activityFeedService;
+    if (!activityFeedService) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'ActivityFeedService not available in container',
+      });
+    }
 
-      const result = await activityFeedService.getEntityFeed(
-        tenantId,
-        input.entityType,
-        input.entityId,
-        input.limit,
-        input.cursor,
-        input.types,
-      );
+    const result = await activityFeedService.getEntityFeed(
+      tenantId,
+      input.entityType,
+      input.entityId,
+      input.limit,
+      input.cursor,
+      input.types
+    );
 
-      const duration = performance.now() - startTime;
-      if (duration > 500) {
-        console.warn(`[activityFeed.getEntityFeed] SLOW: ${duration.toFixed(2)}ms (target: <500ms)`);
-      }
+    const duration = performance.now() - startTime;
+    if (duration > 500) {
+      console.warn(`[activityFeed.getEntityFeed] SLOW: ${duration.toFixed(2)}ms (target: <500ms)`);
+    }
 
-      return result;
-    }),
+    return result;
+  }),
 });

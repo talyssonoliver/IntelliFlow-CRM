@@ -206,11 +206,7 @@ export class PayPalAdapter implements PayPalServicePort {
     if (authCheck.isFailure) return Result.fail(authCheck.error);
 
     try {
-      const response = await this.makeRequest(
-        'POST',
-        `/v2/checkout/orders/${orderId}/capture`,
-        {}
-      );
+      const response = await this.makeRequest('POST', `/v2/checkout/orders/${orderId}/capture`, {});
       if (response.isFailure) return Result.fail(response.error);
       return Result.ok(mapToOrder(response.value));
     } catch (error) {
@@ -366,7 +362,10 @@ export class PayPalAdapter implements PayPalServicePort {
       if (params.subscriber) {
         body.subscriber = {
           name: params.subscriber.name
-            ? { given_name: params.subscriber.name.givenName, surname: params.subscriber.name.surname }
+            ? {
+                given_name: params.subscriber.name.givenName,
+                surname: params.subscriber.name.surname,
+              }
             : undefined,
           email_address: params.subscriber.emailAddress,
         };

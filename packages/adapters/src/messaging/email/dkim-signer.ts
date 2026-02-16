@@ -20,10 +20,12 @@ export const DkimConfigSchema = z.object({
   privateKey: z.string().min(1),
   keyId: z.string().optional(),
   algorithm: z.enum(['rsa-sha256', 'rsa-sha1', 'ed25519-sha256']).default('rsa-sha256'),
-  canonicalization: z.object({
-    header: z.enum(['relaxed', 'simple']).default('relaxed'),
-    body: z.enum(['relaxed', 'simple']).default('relaxed'),
-  }).default({ header: 'relaxed', body: 'relaxed' }),
+  canonicalization: z
+    .object({
+      header: z.enum(['relaxed', 'simple']).default('relaxed'),
+      body: z.enum(['relaxed', 'simple']).default('relaxed'),
+    })
+    .default({ header: 'relaxed', body: 'relaxed' }),
   headersToSign: z.array(z.string()).optional(),
   bodyLengthLimit: z.number().optional(),
   expirationSeconds: z.number().optional(),
@@ -110,7 +112,7 @@ export function canonicalizeBodyRelaxed(body: string): string {
   const lines = body.split(/\r?\n/);
 
   // Process each line
-  const processedLines = lines.map(line => {
+  const processedLines = lines.map((line) => {
     // Reduce whitespace to single space
     let processed = line.replace(/[\t ]+/g, ' ');
     // Remove trailing whitespace
@@ -170,7 +172,9 @@ export function parseEmailParts(rawEmail: string): { headers: string; body: stri
 /**
  * Parse headers into array of { name, value } objects
  */
-export function parseHeaderLines(headers: string): Array<{ name: string; value: string; raw: string }> {
+export function parseHeaderLines(
+  headers: string
+): Array<{ name: string; value: string; raw: string }> {
   const result: Array<{ name: string; value: string; raw: string }> = [];
   const lines = headers.split(/\r?\n/);
 
@@ -237,7 +241,9 @@ export class DkimSigner {
         format: 'pem',
       });
     } catch (error) {
-      throw new Error(`Invalid DKIM private key: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      throw new Error(
+        `Invalid DKIM private key: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
@@ -250,9 +256,10 @@ export class DkimSigner {
     const canonicalization = this.config.canonicalization;
 
     // Canonicalize body
-    const canonicalizedBody = canonicalization.body === 'relaxed'
-      ? canonicalizeBodyRelaxed(body)
-      : canonicalizeBodySimple(body);
+    const canonicalizedBody =
+      canonicalization.body === 'relaxed'
+        ? canonicalizeBodyRelaxed(body)
+        : canonicalizeBodySimple(body);
 
     // Apply body length limit if specified
     const bodyToHash = this.config.bodyLengthLimit
@@ -260,9 +267,7 @@ export class DkimSigner {
       : canonicalizedBody;
 
     // Compute body hash
-    const bodyHash = createHash('sha256')
-      .update(bodyToHash)
-      .digest('base64');
+    const bodyHash = createHash('sha256').update(bodyToHash).digest('base64');
 
     // Determine which headers to sign
     const headersToSign = this.config.headersToSign || DEFAULT_HEADERS_TO_SIGN;
@@ -272,13 +277,14 @@ export class DkimSigner {
     // Find and canonicalize headers to sign
     for (const headerName of headersToSign) {
       const headerLower = headerName.toLowerCase();
-      const found = headerList.find(h => h.name.toLowerCase() === headerLower);
+      const found = headerList.find((h) => h.name.toLowerCase() === headerLower);
 
       if (found) {
         signedHeaderNames.push(found.name.toLowerCase());
-        const canonicalized = canonicalization.header === 'relaxed'
-          ? canonicalizeHeaderRelaxed(`${found.name}:${found.value}`)
-          : canonicalizeHeaderSimple(`${found.name}:${found.value}`);
+        const canonicalized =
+          canonicalization.header === 'relaxed'
+            ? canonicalizeHeaderRelaxed(`${found.name}:${found.value}`)
+            : canonicalizeHeaderSimple(`${found.name}:${found.value}`);
         canonicalizedHeaders.push(canonicalized);
       }
     }
@@ -315,9 +321,10 @@ export class DkimSigner {
     const dkimHeaderForSigning = `dkim-signature:${dkimHeaderValue}`;
 
     // Canonicalize DKIM-Signature header
-    const canonicalizedDkimHeader = canonicalization.header === 'relaxed'
-      ? canonicalizeHeaderRelaxed(dkimHeaderForSigning)
-      : canonicalizeHeaderSimple(dkimHeaderForSigning);
+    const canonicalizedDkimHeader =
+      canonicalization.header === 'relaxed'
+        ? canonicalizeHeaderRelaxed(dkimHeaderForSigning)
+        : canonicalizeHeaderSimple(dkimHeaderForSigning);
 
     // Build signing input
     const signingInput = [...canonicalizedHeaders, canonicalizedDkimHeader].join('\r\n');
@@ -453,13 +460,16 @@ export class DkimKeyManager {
 /**
  * Generate DKIM DNS record value
  */
-export function generateDkimDnsRecord(publicKey: string, options?: {
-  version?: string;
-  keyType?: string;
-  hashAlgorithms?: string[];
-  serviceType?: string;
-  flags?: string[];
-}): string {
+export function generateDkimDnsRecord(
+  publicKey: string,
+  options?: {
+    version?: string;
+    keyType?: string;
+    hashAlgorithms?: string[];
+    serviceType?: string;
+    flags?: string[];
+  }
+): string {
   const parts: string[] = [];
 
   // Version (optional, defaults to DKIM1)
@@ -520,9 +530,7 @@ export function parseDkimSignature(header: string): {
   const result: Record<string, string | number | string[]> = {};
 
   // Remove header name and unfold
-  const value = header
-    .replace(/^DKIM-Signature:\s*/i, '')
-    .replace(/\r?\n[\t ]+/g, ' ');
+  const value = header.replace(/^DKIM-Signature:\s*/i, '').replace(/\r?\n[\t ]+/g, ' ');
 
   // Parse tag=value pairs
   const pairs = value.split(/\s*;\s*/);

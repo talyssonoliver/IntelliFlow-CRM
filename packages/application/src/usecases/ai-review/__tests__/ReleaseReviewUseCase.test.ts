@@ -7,11 +7,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { ReleaseReviewUseCase, ReleaseReviewInput } from '../ReleaseReviewUseCase';
-import {
-  AIOutputReview,
-  DomainEvent,
-  ReviewStatus,
-} from '@intelliflow/domain';
+import { AIOutputReview, DomainEvent, ReviewStatus } from '@intelliflow/domain';
 import { IAIOutputReviewRepository } from '../../../ports/repositories';
 import { EventBusPort } from '../../../ports/external';
 import crypto from 'crypto';
@@ -91,9 +87,7 @@ const LOCK_TOKEN_SECRET = 'test-secret-key-for-hmac-signing-12345';
 
 function generateLockToken(): string {
   const value = crypto.randomBytes(32).toString('hex');
-  const signature = crypto.createHmac('sha256', LOCK_TOKEN_SECRET)
-    .update(value)
-    .digest('hex');
+  const signature = crypto.createHmac('sha256', LOCK_TOKEN_SECRET).update(value).digest('hex');
   return `${value}.${signature}`;
 }
 

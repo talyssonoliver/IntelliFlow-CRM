@@ -66,7 +66,7 @@ function loadBenchmarkResults(): ProfilingReport | null {
             met: b.target ? (b.p95Time || b.meanTime) <= b.target : true,
           }));
 
-          const passing = benchmarks.filter(b => b.met).length;
+          const passing = benchmarks.filter((b) => b.met).length;
 
           return {
             timestamp: content.timestamp || stats.mtime.toISOString(),
@@ -76,9 +76,8 @@ function loadBenchmarkResults(): ProfilingReport | null {
               totalBenchmarks: benchmarks.length,
               passing,
               failing: benchmarks.length - passing,
-              overallScore: benchmarks.length > 0
-                ? Math.round((passing / benchmarks.length) * 100)
-                : 0,
+              overallScore:
+                benchmarks.length > 0 ? Math.round((passing / benchmarks.length) * 100) : 0,
             },
           };
         }
@@ -96,7 +95,7 @@ function loadBenchmarkResults(): ProfilingReport | null {
             met: p.duration <= (p.target || 100),
           }));
 
-          const passing = benchmarks.filter(b => b.met).length;
+          const passing = benchmarks.filter((b) => b.met).length;
 
           return {
             timestamp: content.timestamp || stats.mtime.toISOString(),
@@ -106,9 +105,8 @@ function loadBenchmarkResults(): ProfilingReport | null {
               totalBenchmarks: benchmarks.length,
               passing,
               failing: benchmarks.length - passing,
-              overallScore: benchmarks.length > 0
-                ? Math.round((passing / benchmarks.length) * 100)
-                : 0,
+              overallScore:
+                benchmarks.length > 0 ? Math.round((passing / benchmarks.length) * 100) : 0,
             },
           };
         }
@@ -135,15 +133,17 @@ function generateSyntheticBenchmarks(): BenchmarkResult[] {
     try {
       if (existsSync(apiDir)) {
         const routes = readdirSync(apiDir, { recursive: true })
-          .filter(f => String(f).endsWith('route.ts'))
+          .filter((f) => String(f).endsWith('route.ts'))
           .slice(0, 20); // Limit to 20 routes
 
         for (const route of routes) {
-          const routePath = String(route).replace(/[\\/]route\.ts$/, '').replace(/[\\/]/g, '/');
+          const routePath = String(route)
+            .replace(/[\\/]route\.ts$/, '')
+            .replace(/[\\/]/g, '/');
           endpoints.push({
             operation: `API: ${routePath}`,
             meanTime: Math.random() * 50 + 10, // Synthetic: 10-60ms
-            p95Time: Math.random() * 80 + 20,  // Synthetic: 20-100ms
+            p95Time: Math.random() * 80 + 20, // Synthetic: 20-100ms
             p99Time: Math.random() * 120 + 30, // Synthetic: 30-150ms
             opsPerSecond: Math.random() * 100 + 50,
             target: 100,
@@ -171,7 +171,7 @@ export async function GET(request: NextRequest) {
     // If no real data, generate synthetic
     if (!report && includesSynthetic) {
       const syntheticBenchmarks = generateSyntheticBenchmarks();
-      const passing = syntheticBenchmarks.filter(b => b.met).length;
+      const passing = syntheticBenchmarks.filter((b) => b.met).length;
 
       report = {
         timestamp: new Date().toISOString(),
@@ -181,9 +181,10 @@ export async function GET(request: NextRequest) {
           totalBenchmarks: syntheticBenchmarks.length,
           passing,
           failing: syntheticBenchmarks.length - passing,
-          overallScore: syntheticBenchmarks.length > 0
-            ? Math.round((passing / syntheticBenchmarks.length) * 100)
-            : 0,
+          overallScore:
+            syntheticBenchmarks.length > 0
+              ? Math.round((passing / syntheticBenchmarks.length) * 100)
+              : 0,
         },
       };
     }
@@ -194,7 +195,8 @@ export async function GET(request: NextRequest) {
           source: 'unavailable',
           timestamp: new Date().toISOString(),
           pattern: 'RSI',
-          message: 'No profiling data available. Run benchmarks to generate data, or use ?synthetic=true for synthetic data.',
+          message:
+            'No profiling data available. Run benchmarks to generate data, or use ?synthetic=true for synthetic data.',
           placeholder: {
             benchmarks: [],
             summary: {
@@ -216,17 +218,16 @@ export async function GET(request: NextRequest) {
 
     // Apply operation filter
     if (operationFilter) {
-      report.benchmarks = report.benchmarks.filter(b =>
+      report.benchmarks = report.benchmarks.filter((b) =>
         b.operation.toLowerCase().includes(operationFilter.toLowerCase())
       );
-      const passing = report.benchmarks.filter(b => b.met).length;
+      const passing = report.benchmarks.filter((b) => b.met).length;
       report.summary = {
         totalBenchmarks: report.benchmarks.length,
         passing,
         failing: report.benchmarks.length - passing,
-        overallScore: report.benchmarks.length > 0
-          ? Math.round((passing / report.benchmarks.length) * 100)
-          : 0,
+        overallScore:
+          report.benchmarks.length > 0 ? Math.round((passing / report.benchmarks.length) * 100) : 0,
       };
     }
 
@@ -249,8 +250,12 @@ export async function GET(request: NextRequest) {
         },
         report,
         targets,
-        status: report.summary.overallScore >= 90 ? 'passing' :
-                report.summary.overallScore >= 70 ? 'warning' : 'failing',
+        status:
+          report.summary.overallScore >= 90
+            ? 'passing'
+            : report.summary.overallScore >= 70
+              ? 'warning'
+              : 'failing',
       },
       {
         headers: {

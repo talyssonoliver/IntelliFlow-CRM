@@ -87,36 +87,96 @@ function computeMaturity(
 
   // Silver criteria: production-ready
   const silverCriteria: MaturityCriterion[] = [
-    { id: 'deploy_95', name: 'Deploy success rate >= 95%', passed: (deploy.success_rate_percent ?? 0) >= 95 },
+    {
+      id: 'deploy_95',
+      name: 'Deploy success rate >= 95%',
+      passed: (deploy.success_rate_percent ?? 0) >= 95,
+    },
     { id: 'ci_pass_90', name: 'CI pass rate >= 90%', passed: (ci.pass_rate_percent ?? 0) >= 90 },
     { id: 'provenance_fresh', name: 'Metrics not stale', passed: provenanceFresh },
-    { id: 'golden_paths_verified', name: 'All golden path docs verified', passed: goldenPaths.every((g) => g.contentVerified) },
+    {
+      id: 'golden_paths_verified',
+      name: 'All golden path docs verified',
+      passed: goldenPaths.every((g) => g.contentVerified),
+    },
     { id: 'cache_enabled', name: 'Build cache enabled', passed: !!turbo.cache_enabled },
   ];
 
   // Gold criteria: SRE excellence
   const goldCriteria: MaturityCriterion[] = [
-    { id: 'deploy_98', name: 'Deploy success rate >= 98%', passed: (deploy.success_rate_percent ?? 0) >= 98 },
-    { id: 'cache_hit_80', name: 'Cache hit rate >= 80%', passed: (turbo.cache_hit_rate_percent ?? 0) >= 80 },
+    {
+      id: 'deploy_98',
+      name: 'Deploy success rate >= 98%',
+      passed: (deploy.success_rate_percent ?? 0) >= 98,
+    },
+    {
+      id: 'cache_hit_80',
+      name: 'Cache hit rate >= 80%',
+      passed: (turbo.cache_hit_rate_percent ?? 0) >= 80,
+    },
     { id: 'ci_pass_95', name: 'CI pass rate >= 95%', passed: (ci.pass_rate_percent ?? 0) >= 95 },
-    { id: 'test_coverage_80', name: 'Test coverage >= 80%', passed: (codebase.test_coverage_pct ?? 0) >= 80 },
-    { id: 'all_evidence', name: 'All evidence checks pass', passed: evidencePassed === evidenceTotal },
+    {
+      id: 'test_coverage_80',
+      name: 'Test coverage >= 80%',
+      passed: (codebase.test_coverage_pct ?? 0) >= 80,
+    },
+    {
+      id: 'all_evidence',
+      name: 'All evidence checks pass',
+      passed: evidencePassed === evidenceTotal,
+    },
   ];
 
   // Platinum criteria: world class
   const platinumCriteria: MaturityCriterion[] = [
-    { id: 'deploy_99', name: 'Deploy success rate >= 99%', passed: (deploy.success_rate_percent ?? 0) >= 99 },
-    { id: 'cache_hit_90', name: 'Cache hit rate >= 90%', passed: (turbo.cache_hit_rate_percent ?? 0) >= 90 },
+    {
+      id: 'deploy_99',
+      name: 'Deploy success rate >= 99%',
+      passed: (deploy.success_rate_percent ?? 0) >= 99,
+    },
+    {
+      id: 'cache_hit_90',
+      name: 'Cache hit rate >= 90%',
+      passed: (turbo.cache_hit_rate_percent ?? 0) >= 90,
+    },
     { id: 'ci_pass_98', name: 'CI pass rate >= 98%', passed: (ci.pass_rate_percent ?? 0) >= 98 },
-    { id: 'test_coverage_90', name: 'Test coverage >= 90%', passed: (codebase.test_coverage_pct ?? 0) >= 90 },
-    { id: 'auto_provenance', name: 'Automated provenance collection', passed: metrics.provenance?.collection_method === 'automated_scan' },
+    {
+      id: 'test_coverage_90',
+      name: 'Test coverage >= 90%',
+      passed: (codebase.test_coverage_pct ?? 0) >= 90,
+    },
+    {
+      id: 'auto_provenance',
+      name: 'Automated provenance collection',
+      passed: metrics.provenance?.collection_method === 'automated_scan',
+    },
   ];
 
   const levels = [
-    { level: 'BRONZE' as const, name: 'Bronze - Basic Operations', color: '#CD7F32', criteria: bronzeCriteria },
-    { level: 'SILVER' as const, name: 'Silver - Production Ready', color: '#C0C0C0', criteria: silverCriteria },
-    { level: 'GOLD' as const, name: 'Gold - SRE Excellence', color: '#FFD700', criteria: goldCriteria },
-    { level: 'PLATINUM' as const, name: 'Platinum - World Class', color: '#E5E4E2', criteria: platinumCriteria },
+    {
+      level: 'BRONZE' as const,
+      name: 'Bronze - Basic Operations',
+      color: '#CD7F32',
+      criteria: bronzeCriteria,
+    },
+    {
+      level: 'SILVER' as const,
+      name: 'Silver - Production Ready',
+      color: '#C0C0C0',
+      criteria: silverCriteria,
+    },
+    {
+      level: 'GOLD' as const,
+      name: 'Gold - SRE Excellence',
+      color: '#FFD700',
+      criteria: goldCriteria,
+    },
+    {
+      level: 'PLATINUM' as const,
+      name: 'Platinum - World Class',
+      color: '#E5E4E2',
+      criteria: platinumCriteria,
+    },
   ];
 
   // Find the highest level where all criteria pass
@@ -198,7 +258,8 @@ function buildRecommendations(
   if (ciMissing) {
     recs.push({
       title: 'Create CI workflow file',
-      description: 'The CI workflow file (.github/workflows/ci.yml) is missing. This is required for Bronze maturity.',
+      description:
+        'The CI workflow file (.github/workflows/ci.yml) is missing. This is required for Bronze maturity.',
       severity: 'high',
       estimatedTime: '~30 minutes',
       action: 'ci',
@@ -221,7 +282,8 @@ function buildRecommendations(
   if (!metrics.codebase_health?.test_coverage_pct) {
     recs.push({
       title: 'Generate test coverage report',
-      description: 'No test coverage data available. Run `pnpm run test:coverage` to generate artifacts/coverage/coverage-summary.json.',
+      description:
+        'No test coverage data available. Run `pnpm run test:coverage` to generate artifacts/coverage/coverage-summary.json.',
       severity: 'medium',
       estimatedTime: '~5 minutes',
       action: 'coverage',
@@ -361,7 +423,12 @@ export async function GET() {
           }
         }
 
-        goldenPaths.push({ name: path.name, entrypoint: path.entry_point, docExists, contentVerified });
+        goldenPaths.push({
+          name: path.name,
+          entrypoint: path.entry_point,
+          docExists,
+          contentVerified,
+        });
       }
     }
 
@@ -404,7 +471,9 @@ export async function GET() {
       evidenceChecks.push({
         name: 'env_documentation',
         passed: found,
-        detail: found ? `${envDoc} found in codebase` : `${envDoc} not found (checked common locations)`,
+        detail: found
+          ? `${envDoc} found in codebase`
+          : `${envDoc} not found (checked common locations)`,
       });
     }
 
@@ -521,7 +590,13 @@ export async function GET() {
     }
 
     // --- Maturity level ---
-    const maturity = computeMaturity(metrics, goldenPaths, provenanceFresh, evidencePassed, evidenceChecks.length);
+    const maturity = computeMaturity(
+      metrics,
+      goldenPaths,
+      provenanceFresh,
+      evidencePassed,
+      evidenceChecks.length
+    );
 
     // --- Recommendations ---
     const recommendations = buildRecommendations(
@@ -548,9 +623,22 @@ export async function GET() {
         summary: {
           schema: schemaStatus,
           kpis: { total: kpiEntries.length, met: kpisMet, allMet: allKpisMet },
-          evidence: { total: evidenceChecks.length, passed: evidencePassed, warnings: evidenceWarnings },
-          provenance: { fresh: provenanceFresh, daysSinceCollection, threshold: metrics.provenance?.staleness_threshold_days ?? 90, nextDue },
-          consistency: { total: consistencyChecks.length, passed: consistencyPassed, failures: consistencyFailures },
+          evidence: {
+            total: evidenceChecks.length,
+            passed: evidencePassed,
+            warnings: evidenceWarnings,
+          },
+          provenance: {
+            fresh: provenanceFresh,
+            daysSinceCollection,
+            threshold: metrics.provenance?.staleness_threshold_days ?? 90,
+            nextDue,
+          },
+          consistency: {
+            total: consistencyChecks.length,
+            passed: consistencyPassed,
+            failures: consistencyFailures,
+          },
         },
         maturity,
         recommendations,
@@ -577,7 +665,14 @@ export async function GET() {
   } catch (error) {
     console.error('Error in platform-health API:', error);
     return NextResponse.json(
-      { source: 'error', timestamp, pattern: 'RSI', status: 'failing', error: 'Failed to validate platform health', details: String(error) },
+      {
+        source: 'error',
+        timestamp,
+        pattern: 'RSI',
+        status: 'failing',
+        error: 'Failed to validate platform health',
+        details: String(error),
+      },
       { status: 500, headers: { 'Cache-Control': 'no-store, no-cache, max-age=0' } }
     );
   }

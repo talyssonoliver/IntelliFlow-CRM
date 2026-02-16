@@ -134,15 +134,17 @@ export const notificationsRouter = createTRPCRouter({
    * Handles NotificationDeliveryError from NotificationServicePort
    */
   sendEmail: protectedProcedure
-    .input(z.object({
-      to: z.array(z.string().email()).min(1),
-      cc: z.array(z.string().email()).optional(),
-      bcc: z.array(z.string().email()).optional(),
-      subject: z.string().min(1).max(200),
-      htmlBody: z.string().optional(),
-      textBody: z.string().optional(),
-      replyTo: z.string().email().optional(),
-    }))
+    .input(
+      z.object({
+        to: z.array(z.string().email()).min(1),
+        cc: z.array(z.string().email()).optional(),
+        bcc: z.array(z.string().email()).optional(),
+        subject: z.string().min(1).max(200),
+        htmlBody: z.string().optional(),
+        textBody: z.string().optional(),
+        replyTo: z.string().email().optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         // Lazy load notification service
@@ -178,11 +180,13 @@ export const notificationsRouter = createTRPCRouter({
    * Handles NotificationDeliveryError from NotificationServicePort
    */
   sendSms: protectedProcedure
-    .input(z.object({
-      to: z.string().min(1),
-      message: z.string().min(1).max(1600),
-      from: z.string().optional(),
-    }))
+    .input(
+      z.object({
+        to: z.string().min(1),
+        message: z.string().min(1).max(1600),
+        from: z.string().optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         const adapters = await import('@intelliflow/adapters');
@@ -217,28 +221,30 @@ export const notificationsRouter = createTRPCRouter({
    * Handles NotificationSchedulingError from NotificationServicePort
    */
   scheduleNotification: protectedProcedure
-    .input(z.object({
-      channel: z.enum(['email', 'sms', 'push', 'webhook', 'in_app']),
-      scheduledAt: z.date(),
-      priority: z.enum(['high', 'normal', 'low']).optional(),
-      options: z.union([
-        z.object({
-          to: z.array(z.string().email()),
-          subject: z.string(),
-          htmlBody: z.string().optional(),
-          textBody: z.string().optional(),
-        }),
-        z.object({
-          to: z.string(),
-          message: z.string(),
-        }),
-        z.object({
-          userId: z.string(),
-          title: z.string(),
-          body: z.string(),
-        }),
-      ]),
-    }))
+    .input(
+      z.object({
+        channel: z.enum(['email', 'sms', 'push', 'webhook', 'in_app']),
+        scheduledAt: z.date(),
+        priority: z.enum(['high', 'normal', 'low']).optional(),
+        options: z.union([
+          z.object({
+            to: z.array(z.string().email()),
+            subject: z.string(),
+            htmlBody: z.string().optional(),
+            textBody: z.string().optional(),
+          }),
+          z.object({
+            to: z.string(),
+            message: z.string(),
+          }),
+          z.object({
+            userId: z.string(),
+            title: z.string(),
+            body: z.string(),
+          }),
+        ]),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         const adapters = await import('@intelliflow/adapters');
@@ -277,9 +283,11 @@ export const notificationsRouter = createTRPCRouter({
    * Cancel scheduled notification
    */
   cancelScheduled: protectedProcedure
-    .input(z.object({
-      notificationId: z.string().min(1),
-    }))
+    .input(
+      z.object({
+        notificationId: z.string().min(1),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       try {
         const adapters = await import('@intelliflow/adapters');
@@ -472,7 +480,9 @@ export const notificationsRouter = createTRPCRouter({
 
     const duration = performance.now() - startTime;
     if (duration > 200) {
-      console.warn(`[notifications.getUnreadCount] SLOW: ${duration.toFixed(2)}ms (target: <200ms)`);
+      console.warn(
+        `[notifications.getUnreadCount] SLOW: ${duration.toFixed(2)}ms (target: <200ms)`
+      );
     }
 
     return {

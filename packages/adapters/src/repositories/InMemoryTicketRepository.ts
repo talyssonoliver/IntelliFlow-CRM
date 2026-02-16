@@ -27,10 +27,7 @@ export class InMemoryTicketRepository implements TicketRepository {
   /**
    * Find tickets with filters, pagination, and optional relations
    */
-  async findMany(
-    filters: TicketFilters,
-    options?: TicketQueryOptions
-  ): Promise<TicketListResult> {
+  async findMany(filters: TicketFilters, options?: TicketQueryOptions): Promise<TicketListResult> {
     let tickets = Array.from(this.tickets.values());
 
     // Apply filters
@@ -66,7 +63,8 @@ export class InMemoryTicketRepository implements TicketRepository {
               MEDIUM: 2,
               LOW: 3,
             };
-            comparison = priorityOrder[aVal as TicketPriority] - priorityOrder[bVal as TicketPriority];
+            comparison =
+              priorityOrder[aVal as TicketPriority] - priorityOrder[bVal as TicketPriority];
           } else if (aVal instanceof Date && bVal instanceof Date) {
             comparison = aVal.getTime() - bVal.getTime();
           }
@@ -194,9 +192,7 @@ export class InMemoryTicketRepository implements TicketRepository {
    * Get ticket statistics for a tenant
    */
   async getStats(tenantId: string): Promise<TicketStats> {
-    const tenantTickets = Array.from(this.tickets.values()).filter(
-      (t) => t.tenantId === tenantId
-    );
+    const tenantTickets = Array.from(this.tickets.values()).filter((t) => t.tenantId === tenantId);
 
     // Initialize counts
     const byStatus = {} as Record<TicketStatus, number>;

@@ -14,11 +14,7 @@ export {
   type PageAction,
 } from './page-header';
 
-export {
-  EntityHeader,
-  type EntityHeaderProps,
-  type EntityBadge,
-} from './entity-header';
+export { EntityHeader, type EntityHeaderProps, type EntityBadge } from './entity-header';
 
 // Form Components
 export { ContactForm } from './contact-form';
@@ -109,11 +105,7 @@ export {
 } from './email-verification';
 
 // OAuth Callback Components (PG-024)
-export {
-  OAuthCallback,
-  type OAuthCallbackProps,
-  type OAuthCallbackStatus,
-} from './oauth-callback';
+export { OAuthCallback, type OAuthCallbackProps, type OAuthCallbackStatus } from './oauth-callback';
 
 // Settings Navigation (PG-104)
 export { SettingsNav, type SettingsNavProps } from './settings-nav';

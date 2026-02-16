@@ -8,7 +8,11 @@ vi.mock('@/lib/api', () => ({
   api: {
     appointments: {
       list: {
-        useQuery: () => ({ data: { appointments: [], total: 0, page: 1, limit: 20, hasMore: false }, isLoading: false, error: null }),
+        useQuery: () => ({
+          data: { appointments: [], total: 0, page: 1, limit: 20, hasMore: false },
+          isLoading: false,
+          error: null,
+        }),
       },
     },
   },

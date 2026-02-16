@@ -7,7 +7,15 @@ import { Card } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 
 // Document types from domain model (matching API schema)
-type DocumentType = 'CONTRACT' | 'AGREEMENT' | 'EVIDENCE' | 'CORRESPONDENCE' | 'COURT_FILING' | 'MEMO' | 'REPORT' | 'OTHER';
+type DocumentType =
+  | 'CONTRACT'
+  | 'AGREEMENT'
+  | 'EVIDENCE'
+  | 'CORRESPONDENCE'
+  | 'COURT_FILING'
+  | 'MEMO'
+  | 'REPORT'
+  | 'OTHER';
 type DocumentClassification = 'PUBLIC' | 'INTERNAL' | 'CONFIDENTIAL' | 'PRIVILEGED';
 
 // Form data structure
@@ -60,9 +68,21 @@ const classificationOptions = [
 
 // Predefined tags
 const availableTags = [
-  'Legal', 'HR', 'Finance', 'Sales', 'Marketing', 'Operations',
-  'Contract', 'Agreement', 'NDA', 'Employment', 'Compliance',
-  'Litigation', 'Discovery', 'Due Diligence', 'Real Estate',
+  'Legal',
+  'HR',
+  'Finance',
+  'Sales',
+  'Marketing',
+  'Operations',
+  'Contract',
+  'Agreement',
+  'NDA',
+  'Employment',
+  'Compliance',
+  'Litigation',
+  'Discovery',
+  'Due Diligence',
+  'Real Estate',
 ];
 
 export default function UploadDocumentPage() {
@@ -79,11 +99,14 @@ export default function UploadDocumentPage() {
   const createDocument = trpc.documents.create.useMutation();
 
   // Update form field
-  const updateField = (field: keyof DocumentFormData, value: DocumentFormData[keyof DocumentFormData]) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const updateField = (
+    field: keyof DocumentFormData,
+    value: DocumentFormData[keyof DocumentFormData]
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user types
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
@@ -103,12 +126,15 @@ export default function UploadDocumentPage() {
     ];
 
     if (file.size > maxSize) {
-      setErrors(prev => ({ ...prev, file: 'File size must be less than 50MB' }));
+      setErrors((prev) => ({ ...prev, file: 'File size must be less than 50MB' }));
       return;
     }
 
     if (!allowedTypes.includes(file.type)) {
-      setErrors(prev => ({ ...prev, file: 'File type not supported. Please upload PDF, Word, Excel, Text, or Image files.' }));
+      setErrors((prev) => ({
+        ...prev,
+        file: 'File type not supported. Please upload PDF, Word, Excel, Text, or Image files.',
+      }));
       return;
     }
 
@@ -168,7 +194,10 @@ export default function UploadDocumentPage() {
 
   // Remove tag
   const handleRemoveTag = (tag: string) => {
-    updateField('tags', formData.tags.filter(t => t !== tag));
+    updateField(
+      'tags',
+      formData.tags.filter((t) => t !== tag)
+    );
   };
 
   // Handle tag input key press
@@ -184,7 +213,7 @@ export default function UploadDocumentPage() {
     const buffer = await file.arrayBuffer();
     const hashBuffer = await crypto.subtle.digest('SHA-256', buffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
     return hashHex;
   };
 
@@ -219,7 +248,7 @@ export default function UploadDocumentPage() {
     try {
       // Simulate upload progress
       const progressInterval = setInterval(() => {
-        setUploadProgress(prev => {
+        setUploadProgress((prev) => {
           if (prev >= 90) {
             clearInterval(progressInterval);
             return 90;
@@ -270,7 +299,8 @@ export default function UploadDocumentPage() {
       }, 500);
     } catch (error) {
       console.error('Failed to upload document:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to upload document. Please try again.';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Failed to upload document. Please try again.';
       alert(errorMessage);
       setIsSubmitting(false);
       setUploadProgress(0);
@@ -332,7 +362,9 @@ export default function UploadDocumentPage() {
                     : 'border-slate-300 dark:border-slate-700 hover:border-[#137fec] hover:bg-slate-50 dark:hover:bg-slate-800/50'
                 }`}
               >
-                <span className="material-symbols-outlined text-[64px] text-slate-400 mb-4 block">cloud_upload</span>
+                <span className="material-symbols-outlined text-[64px] text-slate-400 mb-4 block">
+                  cloud_upload
+                </span>
                 <p className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
                   Drop your file here, or click to browse
                 </p>
@@ -363,8 +395,12 @@ export default function UploadDocumentPage() {
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-900 dark:text-white truncate">{formData.file.name}</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{formatFileSize(formData.file.size)}</p>
+                    <p className="font-medium text-slate-900 dark:text-white truncate">
+                      {formData.file.name}
+                    </p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      {formatFileSize(formData.file.size)}
+                    </p>
                     {uploadProgress > 0 && uploadProgress < 100 && (
                       <div className="mt-2">
                         <div className="flex items-center justify-between text-xs text-slate-500 mb-1">
@@ -408,7 +444,9 @@ export default function UploadDocumentPage() {
         {/* Document Metadata */}
         <Card className="mb-6 bg-white dark:bg-[#1e2936] border-[#e2e8f0] dark:border-[#334155]">
           <div className="p-6">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Document Information</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
+              Document Information
+            </h2>
 
             <div className="space-y-4">
               {/* Title */}
@@ -455,7 +493,9 @@ export default function UploadDocumentPage() {
                     value={formData.documentType}
                     onChange={(e) => updateField('documentType', e.target.value)}
                     className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] transition-colors ${
-                      errors.documentType ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
+                      errors.documentType
+                        ? 'border-red-500'
+                        : 'border-slate-300 dark:border-slate-700'
                     }`}
                   >
                     {documentTypeOptions.map((option) => (
@@ -465,7 +505,9 @@ export default function UploadDocumentPage() {
                     ))}
                   </select>
                   {errors.documentType && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.documentType}</p>
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.documentType}
+                    </p>
                   )}
                 </div>
 
@@ -537,9 +579,11 @@ export default function UploadDocumentPage() {
 
                   {/* Suggested Tags */}
                   <div className="flex flex-wrap gap-2">
-                    <span className="text-xs text-slate-500 dark:text-slate-400 mr-2">Suggested:</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 mr-2">
+                      Suggested:
+                    </span>
                     {availableTags
-                      .filter(tag => !formData.tags.includes(tag))
+                      .filter((tag) => !formData.tags.includes(tag))
                       .slice(0, 8)
                       .map((tag) => (
                         <button
@@ -561,7 +605,9 @@ export default function UploadDocumentPage() {
         {/* Related Items (Optional) */}
         <Card className="mb-6 bg-white dark:bg-[#1e2936] border-[#e2e8f0] dark:border-[#334155]">
           <div className="p-6">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">Related Items (Optional)</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4">
+              Related Items (Optional)
+            </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Related Case */}
@@ -616,7 +662,9 @@ export default function UploadDocumentPage() {
           >
             {isSubmitting ? (
               <>
-                <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                <span className="material-symbols-outlined text-[18px] animate-spin">
+                  progress_activity
+                </span>
                 Uploading...
               </>
             ) : (

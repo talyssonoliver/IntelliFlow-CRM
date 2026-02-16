@@ -18,7 +18,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('react', async () => {
   const actual = await vi.importActual('react');
   return {
-    ...actual as any,
+    ...(actual as any),
     useState: vi.fn((init: any) => [init, vi.fn()]),
     useEffect: vi.fn(),
     useCallback: vi.fn((fn: any) => fn),
@@ -149,7 +149,7 @@ describe('AppSidebar - logic tests', () => {
     it('should match items with query parameters', () => {
       const pathname = '/leads';
       const searchParams = {
-        get: (k: string) => k === 'view' ? 'pipeline' : null,
+        get: (k: string) => (k === 'view' ? 'pipeline' : null),
         toString: () => 'view=pipeline',
       };
 
@@ -313,7 +313,13 @@ describe('AppSidebar - logic tests', () => {
 
   describe('Segment item detection', () => {
     it('should detect segment items by color property', () => {
-      const item = { id: 'seg-1', label: 'Segment', icon: 'circle', href: '/seg', color: 'text-success' };
+      const item = {
+        id: 'seg-1',
+        label: 'Segment',
+        icon: 'circle',
+        href: '/seg',
+        color: 'text-success',
+      };
       const isSegment = Boolean(item.color);
       expect(isSegment).toBe(true);
     });

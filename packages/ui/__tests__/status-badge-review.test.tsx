@@ -34,9 +34,7 @@ describe('StatusBadge with type="review"', () => {
   });
 
   it('renders correct icons when showIcon=true', () => {
-    const { container } = render(
-      <StatusBadge status="APPROVED" type="review" showIcon />,
-    );
+    const { container } = render(<StatusBadge status="APPROVED" type="review" showIcon />);
     const iconSpan = container.querySelector('.material-symbols-outlined');
     expect(iconSpan?.textContent).toBe('check_circle');
   });

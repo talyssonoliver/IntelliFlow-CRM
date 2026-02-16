@@ -124,17 +124,23 @@ export class ReindexWorker {
     );
 
     // Setup event handlers
-    this.worker.on('completed', (job: Job<ReindexJobData, ReindexJobResult>, result: ReindexJobResult) => {
-      console.log(`[ReindexWorker] Job ${job.id} completed:`, {
-        documents: result.documents?.total || 0,
-        notes: result.notes?.total || 0,
-        timeMs: result.totalTimeMs,
-      });
-    });
+    this.worker.on(
+      'completed',
+      (job: Job<ReindexJobData, ReindexJobResult>, result: ReindexJobResult) => {
+        console.log(`[ReindexWorker] Job ${job.id} completed:`, {
+          documents: result.documents?.total || 0,
+          notes: result.notes?.total || 0,
+          timeMs: result.totalTimeMs,
+        });
+      }
+    );
 
-    this.worker.on('failed', (job: Job<ReindexJobData, ReindexJobResult> | undefined, err: Error) => {
-      console.error(`[ReindexWorker] Job ${job?.id} failed:`, err.message);
-    });
+    this.worker.on(
+      'failed',
+      (job: Job<ReindexJobData, ReindexJobResult> | undefined, err: Error) => {
+        console.error(`[ReindexWorker] Job ${job?.id} failed:`, err.message);
+      }
+    );
 
     this.worker.on('progress', (job: Job<ReindexJobData, ReindexJobResult>, progress: unknown) => {
       console.log(`[ReindexWorker] Job ${job.id} progress:`, progress);
@@ -191,20 +197,18 @@ export class ReindexWorker {
         documentsResult = await this.indexer.indexBatch(data.documentIds);
       } else {
         // Reindex all documents for tenant
-        documentsResult = await this.indexer.reindexAll(
-          data.tenantId,
-          (progress) => {
-            const overallProgress = data.indexType === 'all'
+        documentsResult = await this.indexer.reindexAll(data.tenantId, (progress) => {
+          const overallProgress =
+            data.indexType === 'all'
               ? (progress.processed / progress.total) * 50
               : (progress.processed / progress.total) * 100;
 
-            job.updateProgress({
-              stage: 'documents',
-              documents: progress,
-              overallProgress,
-            } as ReindexJobProgress);
-          }
-        );
+          job.updateProgress({
+            stage: 'documents',
+            documents: progress,
+            overallProgress,
+          } as ReindexJobProgress);
+        });
       }
     }
 
@@ -220,19 +224,16 @@ export class ReindexWorker {
         notesResult = await this.indexer.indexNotesBatch(data.noteIds);
       } else {
         // Reindex all notes for tenant
-        notesResult = await this.indexer.reindexAllNotes(
-          data.tenantId,
-          (progress) => {
-            const baseProgress = data.indexType === 'all' ? 50 : 0;
-            const overallProgress = baseProgress + (progress.processed / progress.total) * 50;
+        notesResult = await this.indexer.reindexAllNotes(data.tenantId, (progress) => {
+          const baseProgress = data.indexType === 'all' ? 50 : 0;
+          const overallProgress = baseProgress + (progress.processed / progress.total) * 50;
 
-            job.updateProgress({
-              stage: 'notes',
-              notes: progress,
-              overallProgress,
-            } as ReindexJobProgress);
-          }
-        );
+          job.updateProgress({
+            stage: 'notes',
+            notes: progress,
+            overallProgress,
+          } as ReindexJobProgress);
+        });
       }
     }
 

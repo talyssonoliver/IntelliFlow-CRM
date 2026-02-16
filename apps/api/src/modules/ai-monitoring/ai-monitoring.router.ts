@@ -133,74 +133,70 @@ export const aiMonitoringRouter = createTRPCRouter({
   /**
    * Drift detection metrics: current status and history.
    */
-  getDriftMetrics: tenantProcedure
-    .input(driftQuerySchema)
-    .query(async ({ input }) => {
-      try {
-        const { driftDetector } = await loadAIMonitoringModule();
-        const status = driftDetector.getStatus();
-        const history = driftDetector.getHistory(input.limit);
+  getDriftMetrics: tenantProcedure.input(driftQuerySchema).query(async ({ input }) => {
+    try {
+      const { driftDetector } = await loadAIMonitoringModule();
+      const status = driftDetector.getStatus();
+      const history = driftDetector.getHistory(input.limit);
 
-        return {
-          status: {
-            trackedMetrics: status.trackedMetrics,
-            totalSamples: status.totalSamples,
-            driftDetected: status.driftDetected,
-            highSeverityCount: status.highSeverityCount,
-            lastCheck: status.lastCheck?.toISOString() ?? null,
-          },
-          history: history.map((h) => ({
-            detected: h.detected,
-            severity: h.severity,
-            metric: h.metric,
-            pValue: h.pValue,
-            driftScore: h.driftScore,
-            timestamp: h.timestamp.toISOString(),
-            recommendations: h.recommendations,
-          })),
-        };
-      } catch (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to retrieve drift metrics',
-          cause: error,
-        });
-      }
-    }),
+      return {
+        status: {
+          trackedMetrics: status.trackedMetrics,
+          totalSamples: status.totalSamples,
+          driftDetected: status.driftDetected,
+          highSeverityCount: status.highSeverityCount,
+          lastCheck: status.lastCheck?.toISOString() ?? null,
+        },
+        history: history.map((h) => ({
+          detected: h.detected,
+          severity: h.severity,
+          metric: h.metric,
+          pValue: h.pValue,
+          driftScore: h.driftScore,
+          timestamp: h.timestamp.toISOString(),
+          recommendations: h.recommendations,
+        })),
+      };
+    } catch (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to retrieve drift metrics',
+        cause: error,
+      });
+    }
+  }),
 
   /**
    * Latency percentiles, SLO compliance, and alerts.
    */
-  getLatencyMetrics: tenantProcedure
-    .input(latencyQuerySchema)
-    .query(async ({ input }) => {
-      try {
-        const { latencyMonitor } = await loadAIMonitoringModule();
-        const stats = latencyMonitor.getStats(input.startTime, input.endTime);
-        const alerts = latencyMonitor.getAlerts();
+  getLatencyMetrics: tenantProcedure.input(latencyQuerySchema).query(async ({ input }) => {
+    try {
+      const { latencyMonitor } = await loadAIMonitoringModule();
+      const stats = latencyMonitor.getStats(input.startTime, input.endTime);
+      const alerts = latencyMonitor.getAlerts();
 
-        return {
-          sampleCount: stats.sampleCount,
-          percentiles: stats.percentiles,
-          sloCompliance: stats.sloCompliance,
-          byModel: stats.byModel,
-          byOperation: stats.byOperation,
-          alerts: alerts.map((a) => ({
-            severity: a.severity,
-            message: a.message,
-            timestamp: a.timestamp.toISOString(),
-            model: a.model,
-            operationType: a.operationType,
-          })),
-        };
-      } catch (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to retrieve latency metrics',
-          cause: error,
-        });
-      }
-    }),
+      return {
+        sampleCount: stats.sampleCount,
+        percentiles: stats.percentiles,
+        sloCompliance: stats.sloCompliance,
+        byModel: stats.byModel,
+        byOperation: stats.byOperation,
+        alerts: alerts.map((a) => ({
+          severity: a.severity,
+          message: a.message,
+          timestamp: a.timestamp.toISOString(),
+          model: a.model,
+          operationType: a.operationType,
+        })),
+      };
+    } catch (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to retrieve latency metrics',
+        cause: error,
+      });
+    }
+  }),
 
   /**
    * Hallucination detection stats: rate, type breakdown, KPI compliance.
@@ -210,13 +206,8 @@ export const aiMonitoringRouter = createTRPCRouter({
     .query(async ({ input }) => {
       try {
         const { hallucinationChecker } = await loadAIMonitoringModule();
-        const stats = hallucinationChecker.getStats(
-          input.startTime,
-          input.endTime
-        );
-        const recentResults = hallucinationChecker.getRecentResults(
-          input.limit
-        );
+        const stats = hallucinationChecker.getStats(input.startTime, input.endTime);
+        const recentResults = hallucinationChecker.getRecentResults(input.limit);
 
         return {
           totalChecks: stats.totalChecks,
@@ -245,34 +236,32 @@ export const aiMonitoringRouter = createTRPCRouter({
   /**
    * ROI metrics: costs, values, ROI %, trend direction, recommendations.
    */
-  getROIMetrics: tenantProcedure
-    .input(timeRangeSchema)
-    .query(async ({ input }) => {
-      try {
-        const { roiTracker } = await loadAIMonitoringModule();
-        const roi = roiTracker.calculateROI(input.startTime, input.endTime);
-        const stats = roiTracker.getStats();
+  getROIMetrics: tenantProcedure.input(timeRangeSchema).query(async ({ input }) => {
+    try {
+      const { roiTracker } = await loadAIMonitoringModule();
+      const roi = roiTracker.calculateROI(input.startTime, input.endTime);
+      const stats = roiTracker.getStats();
 
-        return {
-          totalCost: roi.totalCost,
-          totalValue: roi.totalValue,
-          netValue: roi.netValue,
-          roi: roi.roi,
-          efficiency: roi.efficiency,
-          trendDirection: roi.trendDirection,
-          costBreakdown: roi.costBreakdown,
-          valueBreakdown: roi.valueBreakdown,
-          recommendations: roi.recommendations,
-          topPerformingOperations: stats.topPerformingOperations,
-        };
-      } catch (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to retrieve ROI metrics',
-          cause: error,
-        });
-      }
-    }),
+      return {
+        totalCost: roi.totalCost,
+        totalValue: roi.totalValue,
+        netValue: roi.netValue,
+        roi: roi.roi,
+        efficiency: roi.efficiency,
+        trendDirection: roi.trendDirection,
+        costBreakdown: roi.costBreakdown,
+        valueBreakdown: roi.valueBreakdown,
+        recommendations: roi.recommendations,
+        topPerformingOperations: stats.topPerformingOperations,
+      };
+    } catch (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to retrieve ROI metrics',
+        cause: error,
+      });
+    }
+  }),
 
   /**
    * Active AI agents (from ConversationRecord DB, tenant-scoped).
@@ -324,77 +313,75 @@ export const aiMonitoringRouter = createTRPCRouter({
    * Agent conversation logs (from ConversationRecord DB, tenant-scoped).
    * Supports optional agentId filter and pagination.
    */
-  getAgentLogs: tenantProcedure
-    .input(agentLogsQuerySchema)
-    .query(async ({ ctx, input }) => {
-      try {
-        const tenantId = ctx.tenant.tenantId;
+  getAgentLogs: tenantProcedure.input(agentLogsQuerySchema).query(async ({ ctx, input }) => {
+    try {
+      const tenantId = ctx.tenant.tenantId;
 
-        const where: Record<string, unknown> = { tenantId };
-        if (input.agentId) {
-          where.agentId = input.agentId;
-        }
-
-        const [conversations, total] = await Promise.all([
-          ctx.prismaWithTenant.conversationRecord.findMany({
-            where,
-            include: {
-              messages: {
-                select: {
-                  id: true,
-                  role: true,
-                  content: true,
-                  createdAt: true,
-                },
-                orderBy: { createdAt: 'asc' },
-              },
-              toolCalls: {
-                select: {
-                  id: true,
-                  toolName: true,
-                  toolInput: true,
-                  toolOutput: true,
-                  status: true,
-                  createdAt: true,
-                },
-                orderBy: { createdAt: 'asc' },
-              },
-            },
-            orderBy: { startedAt: 'desc' },
-            take: input.limit,
-            skip: input.offset,
-          }),
-          ctx.prismaWithTenant.conversationRecord.count({ where }),
-        ]);
-
-        return {
-          logs: conversations.map((c) => ({
-            id: c.id,
-            agentId: c.agentId ?? '',
-            agentType: c.agentName ?? 'unknown',
-            messages: c.messages.map((m) => ({
-              role: m.role,
-              content: m.content,
-              timestamp: m.createdAt.toISOString(),
-            })),
-            toolCalls: c.toolCalls.map((t) => ({
-              name: t.toolName,
-              input: t.toolInput,
-              output: t.toolOutput,
-              status: t.status,
-              timestamp: t.createdAt.toISOString(),
-            })),
-            createdAt: c.startedAt.toISOString(),
-          })),
-          total,
-          hasMore: input.offset + input.limit < total,
-        };
-      } catch (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to retrieve agent logs',
-          cause: error,
-        });
+      const where: Record<string, unknown> = { tenantId };
+      if (input.agentId) {
+        where.agentId = input.agentId;
       }
-    }),
+
+      const [conversations, total] = await Promise.all([
+        ctx.prismaWithTenant.conversationRecord.findMany({
+          where,
+          include: {
+            messages: {
+              select: {
+                id: true,
+                role: true,
+                content: true,
+                createdAt: true,
+              },
+              orderBy: { createdAt: 'asc' },
+            },
+            toolCalls: {
+              select: {
+                id: true,
+                toolName: true,
+                toolInput: true,
+                toolOutput: true,
+                status: true,
+                createdAt: true,
+              },
+              orderBy: { createdAt: 'asc' },
+            },
+          },
+          orderBy: { startedAt: 'desc' },
+          take: input.limit,
+          skip: input.offset,
+        }),
+        ctx.prismaWithTenant.conversationRecord.count({ where }),
+      ]);
+
+      return {
+        logs: conversations.map((c) => ({
+          id: c.id,
+          agentId: c.agentId ?? '',
+          agentType: c.agentName ?? 'unknown',
+          messages: c.messages.map((m) => ({
+            role: m.role,
+            content: m.content,
+            timestamp: m.createdAt.toISOString(),
+          })),
+          toolCalls: c.toolCalls.map((t) => ({
+            name: t.toolName,
+            input: t.toolInput,
+            output: t.toolOutput,
+            status: t.status,
+            timestamp: t.createdAt.toISOString(),
+          })),
+          createdAt: c.startedAt.toISOString(),
+        })),
+        total,
+        hasMore: input.offset + input.limit < total,
+      };
+    } catch (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to retrieve agent logs',
+        cause: error,
+      });
+    }
+  }),
 });

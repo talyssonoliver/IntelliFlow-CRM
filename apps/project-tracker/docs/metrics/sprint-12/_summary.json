@@ -13,8 +13,8 @@
     }
   ],
   "task_summary": {
-    "total": 19,
-    "done": 19,
+    "total": 13,
+    "done": 13,
     "in_progress": 0,
     "blocked": 0,
     "not_started": 0,
@@ -129,16 +129,16 @@
     },
     {
       "task_id": "IFC-170",
-      "completed_at": "2026-02-15T16:58:55.386Z",
+      "completed_at": "2026-02-16T20:49:51.431Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-171",
-      "completed_at": "2026-02-15T16:58:55.386Z",
+      "completed_at": "2026-02-16T20:49:51.431Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "19/19 tasks DONE (100%). Last synced: 2026-02-15T16:58:55.386Z",
+  "notes": "13/13 tasks DONE (100%). Last synced: 2026-02-16T20:49:51.431Z",
   "section": "Public Pages",
   "dependencies": {
     "all_satisfied": true,
@@ -182,12 +182,11 @@
     "working_days_per_week": 5,
     "critical_path": {
       "task_ids": [
-        "PG-014",
-        "IFC-153",
-        "IFC-154",
-        "IFC-155"
+        "PG-009",
+        "PG-010",
+        "PG-014"
       ],
-      "total_duration_minutes": 1170,
+      "total_duration_minutes": 390,
       "completion_percentage": 100,
       "bottleneck_task_id": null
     },
@@ -196,6 +195,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-02-15T16:58:55.438Z"
+    "calculated_at": "2026-02-16T20:50:01.312Z"
   }
 }

@@ -1,22 +1,30 @@
 ### FLOW-045: AI Chain Versioning Admin UI
 
-**Implements**: PG-128 (Chain Versioning Admin Page)
-**Depends on**: IFC-086 (Model Versioning with Zep - Backend)
+**Implements**: PG-128 (Chain Versioning Admin Page) **Depends on**: IFC-086
+(Model Versioning with Zep - Backend)
 
 ---
 
 ## 1. Flow Overview
 
-The Chain Versioning Admin UI provides a centralized interface for managing AI chain/prompt versions, monitoring Zep episode usage, configuring A/B tests, and viewing audit logs.
+The Chain Versioning Admin UI provides a centralized interface for managing AI
+chain/prompt versions, monitoring Zep episode usage, configuring A/B tests, and
+viewing audit logs.
 
 ### 1.1 User Stories
 
-- **As an Admin**, I want to view all chain versions and their statuses so I can understand what's active in production
-- **As an Admin**, I want to create new chain versions with custom prompts so I can test improvements
-- **As an Admin**, I want to compare two versions side-by-side so I can understand differences
-- **As an Admin**, I want to activate/deprecate/rollback versions so I can manage production chains
-- **As an Admin**, I want to monitor Zep episode budget so I don't exceed the free tier
-- **As an Admin**, I want to configure A/B tests so I can measure version performance
+- **As an Admin**, I want to view all chain versions and their statuses so I can
+  understand what's active in production
+- **As an Admin**, I want to create new chain versions with custom prompts so I
+  can test improvements
+- **As an Admin**, I want to compare two versions side-by-side so I can
+  understand differences
+- **As an Admin**, I want to activate/deprecate/rollback versions so I can
+  manage production chains
+- **As an Admin**, I want to monitor Zep episode budget so I don't exceed the
+  free tier
+- **As an Admin**, I want to configure A/B tests so I can measure version
+  performance
 - **As an Admin**, I want to view audit logs so I have full traceability
 
 ---
@@ -88,21 +96,21 @@ apps/web/src/app/(settings)/settings/ai/
 
 ### 3.1 tRPC Endpoints (from IFC-086)
 
-| Endpoint | Type | Access | UI Usage |
-|----------|------|--------|----------|
-| `chainVersion.list` | Query | Tenant | Versions table |
-| `chainVersion.getById` | Query | Tenant | Version detail |
-| `chainVersion.getActive` | Query | Tenant | Dashboard summary |
-| `chainVersion.getStats` | Query | Tenant | Overview metrics |
-| `chainVersion.getHistory` | Query | Tenant | Version timeline |
-| `chainVersion.compare` | Query | Tenant | Comparison view |
-| `chainVersion.getAuditLog` | Query | Admin | Audit log tab |
-| `chainVersion.create` | Mutation | Tenant | Create version |
-| `chainVersion.update` | Mutation | Tenant | Edit draft |
-| `chainVersion.activate` | Mutation | Admin | Activate button |
-| `chainVersion.deprecate` | Mutation | Admin | Deprecate button |
-| `chainVersion.archive` | Mutation | Admin | Archive button |
-| `chainVersion.rollback` | Mutation | Admin | Rollback dialog |
+| Endpoint                   | Type     | Access | UI Usage          |
+| -------------------------- | -------- | ------ | ----------------- |
+| `chainVersion.list`        | Query    | Tenant | Versions table    |
+| `chainVersion.getById`     | Query    | Tenant | Version detail    |
+| `chainVersion.getActive`   | Query    | Tenant | Dashboard summary |
+| `chainVersion.getStats`    | Query    | Tenant | Overview metrics  |
+| `chainVersion.getHistory`  | Query    | Tenant | Version timeline  |
+| `chainVersion.compare`     | Query    | Tenant | Comparison view   |
+| `chainVersion.getAuditLog` | Query    | Admin  | Audit log tab     |
+| `chainVersion.create`      | Mutation | Tenant | Create version    |
+| `chainVersion.update`      | Mutation | Tenant | Edit draft        |
+| `chainVersion.activate`    | Mutation | Admin  | Activate button   |
+| `chainVersion.deprecate`   | Mutation | Admin  | Deprecate button  |
+| `chainVersion.archive`     | Mutation | Admin  | Archive button    |
+| `chainVersion.rollback`    | Mutation | Admin  | Rollback dialog   |
 
 ### 3.2 State Management
 
@@ -159,24 +167,25 @@ ZepBudgetGauge (Frontend Component)
 
 ### 4.1 Version Status Badges
 
-| Status | Color | Icon |
-|--------|-------|------|
-| DRAFT | Gray | Pencil |
-| ACTIVE | Green | CheckCircle |
-| DEPRECATED | Yellow | Clock |
-| ARCHIVED | Gray (faded) | Archive |
+| Status     | Color        | Icon        |
+| ---------- | ------------ | ----------- |
+| DRAFT      | Gray         | Pencil      |
+| ACTIVE     | Green        | CheckCircle |
+| DEPRECATED | Yellow       | Clock       |
+| ARCHIVED   | Gray (faded) | Archive     |
 
 ### 4.2 Rollout Strategy Indicators
 
-| Strategy | Display | Description |
-|----------|---------|-------------|
-| IMMEDIATE | "100% Rollout" | Full deployment |
-| PERCENTAGE | "X% Rollout" | Gradual rollout |
-| AB_TEST | "A/B Test: {experimentId}" | Experiment link |
+| Strategy   | Display                    | Description     |
+| ---------- | -------------------------- | --------------- |
+| IMMEDIATE  | "100% Rollout"             | Full deployment |
+| PERCENTAGE | "X% Rollout"               | Gradual rollout |
+| AB_TEST    | "A/B Test: {experimentId}" | Experiment link |
 
 ### 4.3 Confirmation Dialogs
 
 **Activate Version:**
+
 ```
 Title: Activate Version v{version}?
 Body: This will:
@@ -186,6 +195,7 @@ Action: Activate | Cancel
 ```
 
 **Rollback Version:**
+
 ```
 Title: Rollback to Version v{version}?
 Body: This will:
@@ -202,17 +212,18 @@ Action: Rollback | Cancel
 
 ### 5.1 Access Control
 
-| Action | Required Role |
-|--------|---------------|
-| View versions | Tenant member |
-| Create/update draft | Tenant member |
-| Activate/deprecate/archive | Admin only |
-| Rollback | Admin only |
-| View audit log | Admin only |
+| Action                     | Required Role |
+| -------------------------- | ------------- |
+| View versions              | Tenant member |
+| Create/update draft        | Tenant member |
+| Activate/deprecate/archive | Admin only    |
+| Rollback                   | Admin only    |
+| View audit log             | Admin only    |
 
 ### 5.2 Audit Trail
 
 All actions are logged in `ChainVersionAudit` with:
+
 - Timestamp (ISO 8601)
 - User ID
 - Action type
@@ -224,24 +235,24 @@ All actions are logged in `ChainVersionAudit` with:
 
 ## 6. Error Handling
 
-| Error | User Message | Action |
-|-------|--------------|--------|
-| Version not found | "Version no longer exists" | Refresh list |
-| Cannot activate non-draft | "Only draft versions can be activated" | Show status |
-| No active version for rollback | "No active version to rollback from" | Disable button |
-| Zep API unavailable | "Cloud sync unavailable, using local data" | Show warning |
+| Error                          | User Message                               | Action         |
+| ------------------------------ | ------------------------------------------ | -------------- |
+| Version not found              | "Version no longer exists"                 | Refresh list   |
+| Cannot activate non-draft      | "Only draft versions can be activated"     | Show status    |
+| No active version for rollback | "No active version to rollback from"       | Disable button |
+| Zep API unavailable            | "Cloud sync unavailable, using local data" | Show warning   |
 
 ---
 
 ## 7. Performance Targets
 
-| Metric | Target |
-|--------|--------|
-| Page load | < 500ms |
+| Metric             | Target  |
+| ------------------ | ------- |
+| Page load          | < 500ms |
 | Version list query | < 200ms |
 | Version comparison | < 300ms |
-| Activate/Rollback | < 1s |
-| Lighthouse score | >= 90 |
+| Activate/Rollback  | < 1s    |
+| Lighthouse score   | >= 90   |
 
 ---
 
@@ -249,7 +260,8 @@ All actions are logged in `ChainVersionAudit` with:
 
 1. **List Versions**: Filter by chain type, filter by status, pagination
 2. **Create Version**: Create draft, edit draft, validate prompts
-3. **Activate Version**: Confirm dialog, previous version deprecated, success toast
+3. **Activate Version**: Confirm dialog, previous version deprecated, success
+   toast
 4. **Rollback Version**: Require reason, create new version, success toast
 5. **Compare Versions**: Select two versions, view diff
 6. **Zep Budget**: Display gauge, warning at 80%, alert at 95%
@@ -260,6 +272,7 @@ All actions are logged in `ChainVersionAudit` with:
 ## 9. Related Files
 
 ### Backend (IFC-086 - Completed)
+
 - `apps/api/src/modules/chain-version/chain-version.router.ts`
 - `packages/application/src/services/ChainVersionService.ts`
 - `packages/domain/src/ai/ChainVersionConstants.ts`
@@ -267,10 +280,12 @@ All actions are logged in `ChainVersionAudit` with:
 - `packages/adapters/src/memory/zep/zep-client.ts`
 
 ### Frontend (PG-128 - To Be Created)
+
 - `apps/web/src/app/(settings)/settings/ai/page.tsx`
 - `apps/web/src/app/(settings)/settings/ai/components/*.tsx`
 - `apps/web/src/app/(settings)/settings/ai/hooks/*.ts`
 
 ### Artifacts
+
 - `artifacts/misc/prompt-versions/prompt-versions-latest.json`
 - `artifacts/misc/ab-test-config.yaml`

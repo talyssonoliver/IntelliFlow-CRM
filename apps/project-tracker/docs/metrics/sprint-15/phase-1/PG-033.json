@@ -11,11 +11,11 @@
     "required": [
       "PG-032"
     ],
-    "verified_at": "2026-02-15T18:58:15.300Z",
+    "verified_at": "2026-02-16T20:49:51.391Z",
     "all_satisfied": true,
     "notes": "PG-032 verified complete — docs index page, search, navigation components all exist. Attestation checked."
   },
-  "status": "DONE",
+  "status": "BACKLOG",
   "started_at": "2026-02-12T12:00:00.000Z",
   "completed_at": "2026-02-12T23:00:00.000Z",
   "target_duration_minutes": 180,

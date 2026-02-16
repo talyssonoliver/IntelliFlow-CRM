@@ -50,11 +50,7 @@ export function generateCodeReviewRunId(): string {
  * // => /repo/.specify/sprints/sprint-0/reports/code-review/20260125-143022-abc123/
  * ```
  */
-export function getCodeReviewDir(
-  repoRoot: string,
-  sprintNumber: number,
-  runId: string
-): string {
+export function getCodeReviewDir(repoRoot: string, sprintNumber: number, runId: string): string {
   return join(
     repoRoot,
     '.specify',
@@ -314,9 +310,10 @@ export function getReportFilePath(
   runId: string,
   filename: keyof typeof CODE_REVIEW_FILES | string
 ): string {
-  const file = typeof filename === 'string' && filename in CODE_REVIEW_FILES
-    ? CODE_REVIEW_FILES[filename as keyof typeof CODE_REVIEW_FILES]
-    : filename;
+  const file =
+    typeof filename === 'string' && filename in CODE_REVIEW_FILES
+      ? CODE_REVIEW_FILES[filename as keyof typeof CODE_REVIEW_FILES]
+      : filename;
   return join(getCodeReviewDir(repoRoot, sprintNumber, runId), file);
 }
 

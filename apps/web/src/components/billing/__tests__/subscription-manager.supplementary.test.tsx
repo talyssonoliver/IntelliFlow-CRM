@@ -87,15 +87,60 @@ vi.mock('@/lib/billing/stripe-portal', () => ({
   },
   getPlanById: (id: string) => {
     const plans: Record<string, any> = {
-      starter: { id: 'starter', name: 'Starter', description: 'Basic plan', priceId: 'price_starter_monthly', currency: 'gbp', features: [], popular: false },
-      professional: { id: 'professional', name: 'Professional', description: 'Advanced plan', priceId: 'price_pro_monthly', currency: 'gbp', features: [{ name: 'AI Scoring', included: true }], popular: true },
-      enterprise: { id: 'enterprise', name: 'Enterprise', description: 'Full plan', priceId: 'price_ent_monthly', currency: 'gbp', features: [{ name: 'AI Scoring', included: true }, { name: 'Custom Reports', included: true }], popular: false },
+      starter: {
+        id: 'starter',
+        name: 'Starter',
+        description: 'Basic plan',
+        priceId: 'price_starter_monthly',
+        currency: 'gbp',
+        features: [],
+        popular: false,
+      },
+      professional: {
+        id: 'professional',
+        name: 'Professional',
+        description: 'Advanced plan',
+        priceId: 'price_pro_monthly',
+        currency: 'gbp',
+        features: [{ name: 'AI Scoring', included: true }],
+        popular: true,
+      },
+      enterprise: {
+        id: 'enterprise',
+        name: 'Enterprise',
+        description: 'Full plan',
+        priceId: 'price_ent_monthly',
+        currency: 'gbp',
+        features: [
+          { name: 'AI Scoring', included: true },
+          { name: 'Custom Reports', included: true },
+        ],
+        popular: false,
+      },
     };
     return plans[id] ?? null;
   },
   getPlanByPriceId: (priceId: string) => {
-    if (priceId.includes('pro')) return { id: 'professional', name: 'Professional', description: 'Advanced plan', priceId, currency: 'gbp', features: [], popular: true };
-    if (priceId.includes('starter')) return { id: 'starter', name: 'Starter', description: 'Basic plan', priceId, currency: 'gbp', features: [], popular: false };
+    if (priceId.includes('pro'))
+      return {
+        id: 'professional',
+        name: 'Professional',
+        description: 'Advanced plan',
+        priceId,
+        currency: 'gbp',
+        features: [],
+        popular: true,
+      };
+    if (priceId.includes('starter'))
+      return {
+        id: 'starter',
+        name: 'Starter',
+        description: 'Basic plan',
+        priceId,
+        currency: 'gbp',
+        features: [],
+        popular: false,
+      };
     return null;
   },
   getAnnualSavingsPercent: () => 20,
@@ -107,9 +152,7 @@ vi.mock('@/lib/billing/plan-changes', () => ({
     return {
       direction: 'upgrade' as const,
       priceDifference: 2000,
-      featureChanges: [
-        { name: 'AI Scoring', change: 'gained' },
-      ],
+      featureChanges: [{ name: 'AI Scoring', change: 'gained' }],
     };
   },
   getPlanChangeDirectionDisplay: (direction: string) => ({
@@ -130,11 +173,42 @@ vi.mock('@/lib/billing/plan-changes', () => ({
     effectiveDate: periodEnd.toISOString(),
     retentionOffer: { description: 'Get 50% off for 3 months' },
   }),
-  formatCancellationMessage: (_date: Date, _active: boolean) => 'Your subscription will end on the next billing date.',
+  formatCancellationMessage: (_date: Date, _active: boolean) =>
+    'Your subscription will end on the next billing date.',
   getPlansWithSelectionState: (currentId: string | null) => [
-    { id: 'starter', name: 'Starter', description: 'Basic', priceId: 'price_starter_monthly', currency: 'gbp', features: [{ name: 'Basic CRM', included: true }], popular: false, isCurrent: currentId === 'starter', changeDirection: currentId === 'starter' ? 'current' : 'downgrade' },
-    { id: 'professional', name: 'Professional', description: 'Advanced', priceId: 'price_pro_monthly', currency: 'gbp', features: [{ name: 'AI Scoring', included: true }], popular: true, isCurrent: currentId === 'professional', changeDirection: currentId === 'professional' ? 'current' : 'upgrade' },
-    { id: 'enterprise', name: 'Enterprise', description: 'Full', priceId: 'price_ent_monthly', currency: 'gbp', features: [{ name: 'Custom Reports', included: true }], popular: false, isCurrent: currentId === 'enterprise', changeDirection: currentId === 'enterprise' ? 'current' : 'upgrade' },
+    {
+      id: 'starter',
+      name: 'Starter',
+      description: 'Basic',
+      priceId: 'price_starter_monthly',
+      currency: 'gbp',
+      features: [{ name: 'Basic CRM', included: true }],
+      popular: false,
+      isCurrent: currentId === 'starter',
+      changeDirection: currentId === 'starter' ? 'current' : 'downgrade',
+    },
+    {
+      id: 'professional',
+      name: 'Professional',
+      description: 'Advanced',
+      priceId: 'price_pro_monthly',
+      currency: 'gbp',
+      features: [{ name: 'AI Scoring', included: true }],
+      popular: true,
+      isCurrent: currentId === 'professional',
+      changeDirection: currentId === 'professional' ? 'current' : 'upgrade',
+    },
+    {
+      id: 'enterprise',
+      name: 'Enterprise',
+      description: 'Full',
+      priceId: 'price_ent_monthly',
+      currency: 'gbp',
+      features: [{ name: 'Custom Reports', included: true }],
+      popular: false,
+      isCurrent: currentId === 'enterprise',
+      changeDirection: currentId === 'enterprise' ? 'current' : 'upgrade',
+    },
   ],
   getBillingIntervals: () => [
     { id: 'monthly' as const, label: 'Monthly' },
@@ -252,7 +326,9 @@ describe('SubscriptionManager', () => {
 
       expect(screen.getByText('Subscription Ending')).toBeInTheDocument();
       // Cancel button should be hidden
-      expect(screen.queryByRole('button', { name: /cancel subscription/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /cancel subscription/i })
+      ).not.toBeInTheDocument();
     });
   });
 

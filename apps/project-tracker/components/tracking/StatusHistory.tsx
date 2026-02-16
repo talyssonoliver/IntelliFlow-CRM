@@ -88,15 +88,21 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
   const renderDelta = (value: number, label: string) => {
     if (value === 0) return null;
     const isPositive = value > 0;
-    const colorClass = label === 'completed'
-      ? (isPositive ? 'text-green-600' : 'text-red-600')
-      : label === 'blocked'
-        ? (isPositive ? 'text-red-600' : 'text-green-600')
-        : 'text-gray-500';
+    const colorClass =
+      label === 'completed'
+        ? isPositive
+          ? 'text-green-600'
+          : 'text-red-600'
+        : label === 'blocked'
+          ? isPositive
+            ? 'text-red-600'
+            : 'text-green-600'
+          : 'text-gray-500';
 
     return (
       <span className={`text-xs font-medium ${colorClass}`}>
-        {isPositive ? '+' : ''}{value}
+        {isPositive ? '+' : ''}
+        {value}
       </span>
     );
   };
@@ -116,10 +122,7 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
         </div>
-        <button
-          onClick={fetchHistory}
-          className="mt-2 text-sm underline hover:no-underline"
-        >
+        <button onClick={fetchHistory} className="mt-2 text-sm underline hover:no-underline">
           Try again
         </button>
       </div>
@@ -162,13 +165,27 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
         <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
           <div className="flex items-center gap-3">
             <Icon
-              name={trend.direction === 'up' ? 'trending_up' : trend.direction === 'down' ? 'trending_down' : 'remove'}
+              name={
+                trend.direction === 'up'
+                  ? 'trending_up'
+                  : trend.direction === 'down'
+                    ? 'trending_down'
+                    : 'remove'
+              }
               size="xl"
-              className={trend.direction === 'up' ? 'text-green-600' : trend.direction === 'down' ? 'text-red-600' : 'text-gray-500'}
+              className={
+                trend.direction === 'up'
+                  ? 'text-green-600'
+                  : trend.direction === 'down'
+                    ? 'text-red-600'
+                    : 'text-gray-500'
+              }
             />
             <div>
               <p className="text-sm text-gray-500">Recent Trend</p>
-              <p className={`text-lg font-semibold ${trend.direction === 'up' ? 'text-green-600' : trend.direction === 'down' ? 'text-red-600' : 'text-gray-700'}`}>
+              <p
+                className={`text-lg font-semibold ${trend.direction === 'up' ? 'text-green-600' : trend.direction === 'down' ? 'text-red-600' : 'text-gray-700'}`}
+              >
                 {trend.direction === 'stable'
                   ? 'No change'
                   : `${trend.value} task${trend.value !== 1 ? 's' : ''} ${trend.direction === 'up' ? 'completed' : 'regressed'}`}
@@ -194,10 +211,7 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
           </div>
           <div className="divide-y divide-gray-200">
             {entries.map((entry, index) => (
-              <div
-                key={entry.timestamp}
-                className={`px-4 py-3 ${index === 0 ? 'bg-blue-50' : ''}`}
-              >
+              <div key={entry.timestamp} className={`px-4 py-3 ${index === 0 ? 'bg-blue-50' : ''}`}>
                 <div className="flex items-start justify-between gap-4">
                   {/* Timestamp */}
                   <div className="flex items-center gap-2 min-w-[120px]">
@@ -206,7 +220,9 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
                       size="sm"
                       className={index === 0 ? 'text-blue-600' : 'text-gray-600'}
                     />
-                    <span className={`text-sm ${index === 0 ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
+                    <span
+                      className={`text-sm ${index === 0 ? 'text-blue-600 font-medium' : 'text-gray-500'}`}
+                    >
                       {formatTimestamp(entry.timestamp)}
                     </span>
                   </div>

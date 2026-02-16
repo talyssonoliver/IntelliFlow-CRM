@@ -146,11 +146,17 @@ describe('Audit Logger', () => {
 
   describe('Permission Denial Logging', () => {
     it('should log permission denied events', async () => {
-      const id = await auditLogger.logPermissionDenied('lead', 'lead-123', 'lead:delete', TEST_TENANT_ID, {
-        actorId: 'user-1',
-        actorRole: 'VIEWER',
-        reason: 'Viewers cannot delete leads',
-      });
+      const id = await auditLogger.logPermissionDenied(
+        'lead',
+        'lead-123',
+        'lead:delete',
+        TEST_TENANT_ID,
+        {
+          actorId: 'user-1',
+          actorRole: 'VIEWER',
+          reason: 'Viewers cannot delete leads',
+        }
+      );
 
       expect(id).toBeDefined();
       expect(mockPrisma.auditLog.create).toHaveBeenCalled();

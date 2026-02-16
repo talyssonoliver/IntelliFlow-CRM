@@ -45,10 +45,7 @@ function getBashPath(): string {
   return 'bash';
 }
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ taskId: string }> }
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ taskId: string }> }) {
   try {
     const { taskId: rawTaskId } = await params;
 

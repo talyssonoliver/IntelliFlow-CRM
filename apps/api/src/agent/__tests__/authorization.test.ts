@@ -215,12 +215,7 @@ describe('Agent Authorization', () => {
       const user = { userId: 'user-1', role: 'MANAGER' };
       const input = { query: 'test leads', limit: 20, offset: 0 };
 
-      const result = await authorizeAgentAction(
-        searchLeadsTool,
-        input,
-        user,
-        testSessionId
-      );
+      const result = await authorizeAgentAction(searchLeadsTool, input, user, testSessionId);
 
       expect(result.authorized).toBe(true);
       expect(result.context).toBeDefined();

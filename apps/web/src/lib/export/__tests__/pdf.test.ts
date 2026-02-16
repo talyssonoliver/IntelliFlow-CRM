@@ -82,9 +82,7 @@ describe('exportToPDF', () => {
 
     exportToPDF([]);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'Could not open print window. Please allow popups.'
-    );
+    expect(consoleSpy).toHaveBeenCalledWith('Could not open print window. Please allow popups.');
     consoleSpy.mockRestore();
   });
 
@@ -240,9 +238,7 @@ describe('exportToPDF', () => {
     });
 
     it('renders empty content for empty table data', () => {
-      const sections: ReportSection[] = [
-        { title: 'Empty Table', type: 'table', data: [] },
-      ];
+      const sections: ReportSection[] = [{ title: 'Empty Table', type: 'table', data: [] }];
 
       exportToPDF(sections);
       const html = mockPrintWindow.document.write.mock.calls[0][0] as string;
@@ -381,12 +377,8 @@ describe('exportAnalyticsToPDF', () => {
 
   it('exports analytics data with metrics and pipeline sections', () => {
     const data: AnalyticsReportData = {
-      metrics: [
-        { name: 'Revenue', value: '$50,000', trend: '+10%' },
-      ],
-      pipeline: [
-        { stage: 'Prospecting', value: 10000, deals: 5, percentage: 25 },
-      ],
+      metrics: [{ name: 'Revenue', value: '$50,000', trend: '+10%' }],
+      pipeline: [{ stage: 'Prospecting', value: 10000, deals: 5, percentage: 25 }],
       period: 'Q1 2026',
     };
 
@@ -406,9 +398,7 @@ describe('exportAnalyticsToPDF', () => {
   it('maps pipeline data to table format with correct column names', () => {
     const data: AnalyticsReportData = {
       metrics: [],
-      pipeline: [
-        { stage: 'Closing', value: 50000, deals: 3, percentage: 75 },
-      ],
+      pipeline: [{ stage: 'Closing', value: 50000, deals: 3, percentage: 75 }],
       period: 'Q2 2026',
     };
 

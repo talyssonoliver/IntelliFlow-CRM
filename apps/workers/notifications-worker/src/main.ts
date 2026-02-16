@@ -246,7 +246,11 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
 
     return {
       email: {
-        status: this.emailChannel ? emailStats?.circuitState === 'OPEN' ? 'degraded' : 'ok' : 'degraded',
+        status: this.emailChannel
+          ? emailStats?.circuitState === 'OPEN'
+            ? 'degraded'
+            : 'ok'
+          : 'degraded',
         message: this.emailChannel
           ? `Sent: ${emailStats?.sent || 0}, Failed: ${emailStats?.failed || 0}, Circuit: ${emailStats?.circuitState || 'N/A'}`
           : 'Email channel disabled',

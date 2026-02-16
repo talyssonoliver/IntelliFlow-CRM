@@ -12,10 +12,7 @@ export interface AuthLogOptions {
 /**
  * Create audit log input for successful login
  */
-export function createLoginSuccessEntry(
-  tenantId: string,
-  options: AuthLogOptions
-): AuditLogInput {
+export function createLoginSuccessEntry(tenantId: string, options: AuthLogOptions): AuditLogInput {
   return {
     tenantId,
     eventType: 'UserLogin',
@@ -53,10 +50,7 @@ export function createLoginSuccessSecurityEvent(
 /**
  * Create audit log input for failed login
  */
-export function createLoginFailureEntry(
-  tenantId: string,
-  options: AuthLogOptions
-): AuditLogInput {
+export function createLoginFailureEntry(tenantId: string, options: AuthLogOptions): AuditLogInput {
   return {
     tenantId,
     eventType: 'UserLoginFailed',

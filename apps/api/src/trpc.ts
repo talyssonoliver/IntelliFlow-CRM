@@ -112,7 +112,10 @@ const rateLimitMiddleware = t.middleware(async (opts) => {
   return opts.next();
 });
 
-export const protectedProcedure = t.procedure.use(isAuthed).use(tracingMiddleware).use(rateLimitMiddleware);
+export const protectedProcedure = t.procedure
+  .use(isAuthed)
+  .use(tracingMiddleware)
+  .use(rateLimitMiddleware);
 
 /**
  * Logged procedure - includes performance monitoring

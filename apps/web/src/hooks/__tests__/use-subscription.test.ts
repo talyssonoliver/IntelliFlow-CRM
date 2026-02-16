@@ -68,7 +68,7 @@ describe('use-subscription - latency tracking logic', () => {
 describe('use-subscription - connection status', () => {
   it('isConnected is true only when connected', () => {
     const statuses = ['disconnected', 'connecting', 'connected', 'error'];
-    const connected = statuses.filter(s => s === 'connected');
+    const connected = statuses.filter((s) => s === 'connected');
     expect(connected).toHaveLength(1);
   });
 });

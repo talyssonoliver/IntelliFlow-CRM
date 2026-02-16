@@ -39,10 +39,7 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
-          { label: 'Settings' },
-        ]}
+        breadcrumbs={[{ label: 'Dashboard', href: '/' }, { label: 'Settings' }]}
         title="Settings"
         description="Manage your account, team, and application settings"
       />
@@ -58,9 +55,7 @@ export default function SettingsPage() {
           aria-label="Search settings"
         />
         <div aria-live="polite" className="sr-only">
-          {debouncedQuery
-            ? `${filteredCount} setting${filteredCount !== 1 ? 's' : ''} found`
-            : ''}
+          {debouncedQuery ? `${filteredCount} setting${filteredCount !== 1 ? 's' : ''} found` : ''}
         </div>
       </div>
 
@@ -72,9 +67,7 @@ export default function SettingsPage() {
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
           Recent Changes
         </h2>
-        <p className="text-sm text-muted-foreground">
-          No recent changes
-        </p>
+        <p className="text-sm text-muted-foreground">No recent changes</p>
       </div>
     </div>
   );

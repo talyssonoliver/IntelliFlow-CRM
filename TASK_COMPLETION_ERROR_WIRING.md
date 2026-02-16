@@ -1,34 +1,42 @@
 # Task Completion: Wire Unused Application Error Classes
 
-**Task**: Wire unused application error classes into their proper API catch blocks.
+**Task**: Wire unused application error classes into their proper API catch
+blocks.
 
 **Status**: ✅ Completed
 
 ## Summary
 
-Successfully wired all 5 unused error classes from `@intelliflow/application` into appropriate API handlers with proper error mapping to tRPC errors.
+Successfully wired all 5 unused error classes from `@intelliflow/application`
+into appropriate API handlers with proper error mapping to tRPC errors.
 
 ## Errors Wired
 
 ### 1. DuplicateWebhookError ✅
+
 - **Source**: `packages/application/src/ports/external/WebhookServicePort.ts`
 - **Consumer**: `apps/api/src/modules/webhooks/webhooks.router.ts` (NEW)
 - **Mapping**: `DUPLICATE_WEBHOOK` → `CONFLICT` (409)
 - **Usage**: Webhook idempotency checks
 
 ### 2. NotificationDeliveryError ✅
-- **Source**: `packages/application/src/ports/external/NotificationServicePort.ts`
+
+- **Source**:
+  `packages/application/src/ports/external/NotificationServicePort.ts`
 - **Consumer**: `apps/api/src/modules/notifications/notifications.router.ts`
 - **Mapping**: `NOTIFICATION_DELIVERY_ERROR` → `INTERNAL_SERVER_ERROR` (500)
 - **Usage**: Email/SMS delivery failures
 
 ### 3. NotificationSchedulingError ✅
-- **Source**: `packages/application/src/ports/external/NotificationServicePort.ts`
+
+- **Source**:
+  `packages/application/src/ports/external/NotificationServicePort.ts`
 - **Consumer**: `apps/api/src/modules/notifications/notifications.router.ts`
 - **Mapping**: `NOTIFICATION_SCHEDULING_ERROR` → `BAD_REQUEST` (400)
 - **Usage**: Invalid notification scheduling
 
 ### 4. ExternalServiceError ✅
+
 - **Source**: `packages/application/src/errors/ApplicationErrors.ts`
 - **Consumers**:
   - `apps/api/src/shared/external-service-wrapper.ts` (NEW - utility functions)
@@ -37,6 +45,7 @@ Successfully wired all 5 unused error classes from `@intelliflow/application` in
 - **Usage**: External API failures (Stripe, OpenAI, SendGrid, Twilio)
 
 ### 5. AuthorizationError ✅
+
 - **Source**: `packages/application/src/errors/ApplicationErrors.ts`
 - **Consumer**: `apps/api/src/middleware/auth.ts`
 - **Mapping**: `AUTHORIZATION_ERROR` → `FORBIDDEN` (403)
@@ -81,7 +90,8 @@ Successfully wired all 5 unused error classes from `@intelliflow/application` in
    - Uses centralized error mapper
 
 2. **`apps/api/src/modules/notifications/notifications.router.ts`**
-   - Added 4 new endpoints: sendEmail, sendSms, scheduleNotification, cancelScheduled
+   - Added 4 new endpoints: sendEmail, sendSms, scheduleNotification,
+     cancelScheduled
    - Handles NotificationDeliveryError and NotificationSchedulingError
    - Uses centralized error mapper
 
@@ -100,22 +110,26 @@ Successfully wired all 5 unused error classes from `@intelliflow/application` in
 ## Architecture Improvements
 
 ### 1. Centralized Error Handling
+
 - Single source of truth for error mappings
 - Consistent error responses across all endpoints
 - Easy to maintain and extend
 
 ### 2. External Service Utilities
+
 - Reusable wrappers for external API calls
 - Timeout protection (10s-60s depending on service)
 - Retry logic with exponential backoff
 - Pre-configured for common services
 
 ### 3. Type Safety
+
 - Full TypeScript support
 - Type guards for domain errors
 - Compile-time error code validation
 
 ### 4. Test Coverage
+
 - 23 comprehensive tests
 - All error mappings verified
 - Edge cases covered
@@ -132,6 +146,7 @@ Duration    376ms
 ```
 
 ### Test Breakdown
+
 - Webhook errors: 4 tests
 - Notification errors: 2 tests
 - Application errors: 5 tests
@@ -142,12 +157,14 @@ Duration    376ms
 ## Impact Analysis
 
 ### Before
+
 - 5 unused error classes flagged by Knip
 - No centralized error handling
 - Inconsistent error responses
 - No webhook infrastructure
 
 ### After
+
 - ✅ All 5 error classes properly wired
 - ✅ Centralized error mapping system
 - ✅ Consistent error responses across all endpoints
@@ -159,6 +176,7 @@ Duration    376ms
 ## Usage Examples
 
 ### 1. Webhook Error Handling
+
 ```typescript
 const result = await webhookService.handleWebhook(
   'stripe',
@@ -174,6 +192,7 @@ if (result.isFailure) {
 ```
 
 ### 2. Notification Error Handling
+
 ```typescript
 const result = await notificationService.sendEmail(options);
 
@@ -184,6 +203,7 @@ if (result.isFailure) {
 ```
 
 ### 3. External Service Error Handling
+
 ```typescript
 const subscription = await callStripeAPI(() =>
   stripe.createSubscription(customerId, priceId)
@@ -192,6 +212,7 @@ const subscription = await callStripeAPI(() =>
 ```
 
 ### 4. Authorization Error Handling
+
 ```typescript
 if (!hasPermission(user)) {
   throw new AuthorizationError('Admin access required');

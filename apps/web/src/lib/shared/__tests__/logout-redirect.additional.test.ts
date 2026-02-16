@@ -5,10 +5,15 @@
 import { describe, it, expect } from 'vitest';
 
 // Re-implement to test uncovered logic
-function performLogoutRedirectFn(options: {
-  reason?: string; returnUrl?: string; delay?: number;
-  ssoLogout?: boolean; ssoProvider?: string;
-} = {}): { url: string; delayed: boolean; ssoRedirect: boolean } {
+function performLogoutRedirectFn(
+  options: {
+    reason?: string;
+    returnUrl?: string;
+    delay?: number;
+    ssoLogout?: boolean;
+    ssoProvider?: string;
+  } = {}
+): { url: string; delayed: boolean; ssoRedirect: boolean } {
   const delay = options.delay ?? 0;
   const requiresSso = options.ssoLogout === true && !!options.ssoProvider;
   return { url: 'vitest', delayed: delay > 0, ssoRedirect: requiresSso };
@@ -55,16 +60,22 @@ describe('logout-redirect - getLogoutMessage', () => {
     expect(getLogoutMessageFn(undefined)).toBe('You have been logged out successfully.');
   });
   it('returns session expired message', () => {
-    expect(getLogoutMessageFn('session_expired')).toBe('Your session has expired. Please log in again.');
+    expect(getLogoutMessageFn('session_expired')).toBe(
+      'Your session has expired. Please log in again.'
+    );
   });
   it('returns security violation message', () => {
-    expect(getLogoutMessageFn('security_violation')).toBe('You have been logged out for security reasons.');
+    expect(getLogoutMessageFn('security_violation')).toBe(
+      'You have been logged out for security reasons.'
+    );
   });
   it('returns account disabled message', () => {
     expect(getLogoutMessageFn('account_disabled')).toBe('Your account has been disabled.');
   });
   it('returns password changed message', () => {
-    expect(getLogoutMessageFn('password_changed')).toBe('Your password was changed. Please log in with your new password.');
+    expect(getLogoutMessageFn('password_changed')).toBe(
+      'Your password was changed. Please log in with your new password.'
+    );
   });
   it('returns default for unknown reason', () => {
     expect(getLogoutMessageFn('unknown_reason')).toBe('You have been logged out successfully.');

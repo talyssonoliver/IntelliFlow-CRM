@@ -212,28 +212,63 @@ export interface EmailServicePort {
   validateTokens(tokens: GmailOAuthTokens): boolean;
 
   // Message Operations
-  getMessage(tokens: GmailOAuthTokens, messageId: string): Promise<Result<ParsedEmail | null, DomainError>>;
-  searchMessages(tokens: GmailOAuthTokens, params: GmailSearchEmailsParams): Promise<Result<GmailSearchEmailsResult, DomainError>>;
-  sendMessage(tokens: GmailOAuthTokens, params: GmailComposeEmailParams): Promise<Result<GmailSendResult, DomainError>>;
-  replyToMessage(tokens: GmailOAuthTokens, messageId: string, params: GmailComposeEmailParams): Promise<Result<GmailSendResult, DomainError>>;
-  forwardMessage(tokens: GmailOAuthTokens, messageId: string, to: string[]): Promise<Result<GmailSendResult, DomainError>>;
+  getMessage(
+    tokens: GmailOAuthTokens,
+    messageId: string
+  ): Promise<Result<ParsedEmail | null, DomainError>>;
+  searchMessages(
+    tokens: GmailOAuthTokens,
+    params: GmailSearchEmailsParams
+  ): Promise<Result<GmailSearchEmailsResult, DomainError>>;
+  sendMessage(
+    tokens: GmailOAuthTokens,
+    params: GmailComposeEmailParams
+  ): Promise<Result<GmailSendResult, DomainError>>;
+  replyToMessage(
+    tokens: GmailOAuthTokens,
+    messageId: string,
+    params: GmailComposeEmailParams
+  ): Promise<Result<GmailSendResult, DomainError>>;
+  forwardMessage(
+    tokens: GmailOAuthTokens,
+    messageId: string,
+    to: string[]
+  ): Promise<Result<GmailSendResult, DomainError>>;
   deleteMessage(tokens: GmailOAuthTokens, messageId: string): Promise<Result<void, DomainError>>;
   trashMessage(tokens: GmailOAuthTokens, messageId: string): Promise<Result<void, DomainError>>;
   untrashMessage(tokens: GmailOAuthTokens, messageId: string): Promise<Result<void, DomainError>>;
-  modifyLabels(tokens: GmailOAuthTokens, messageId: string, addLabels: string[], removeLabels: string[]): Promise<Result<void, DomainError>>;
+  modifyLabels(
+    tokens: GmailOAuthTokens,
+    messageId: string,
+    addLabels: string[],
+    removeLabels: string[]
+  ): Promise<Result<void, DomainError>>;
   markAsRead(tokens: GmailOAuthTokens, messageId: string): Promise<Result<void, DomainError>>;
   markAsUnread(tokens: GmailOAuthTokens, messageId: string): Promise<Result<void, DomainError>>;
 
   // Thread Operations
-  getThread(tokens: GmailOAuthTokens, threadId: string): Promise<Result<GmailThread | null, DomainError>>;
+  getThread(
+    tokens: GmailOAuthTokens,
+    threadId: string
+  ): Promise<Result<GmailThread | null, DomainError>>;
   deleteThread(tokens: GmailOAuthTokens, threadId: string): Promise<Result<void, DomainError>>;
   trashThread(tokens: GmailOAuthTokens, threadId: string): Promise<Result<void, DomainError>>;
 
   // Draft Operations
-  createDraft(tokens: GmailOAuthTokens, params: GmailComposeEmailParams): Promise<Result<GmailDraft, DomainError>>;
-  updateDraft(tokens: GmailOAuthTokens, draftId: string, params: GmailComposeEmailParams): Promise<Result<GmailDraft, DomainError>>;
+  createDraft(
+    tokens: GmailOAuthTokens,
+    params: GmailComposeEmailParams
+  ): Promise<Result<GmailDraft, DomainError>>;
+  updateDraft(
+    tokens: GmailOAuthTokens,
+    draftId: string,
+    params: GmailComposeEmailParams
+  ): Promise<Result<GmailDraft, DomainError>>;
   deleteDraft(tokens: GmailOAuthTokens, draftId: string): Promise<Result<void, DomainError>>;
-  sendDraft(tokens: GmailOAuthTokens, draftId: string): Promise<Result<GmailSendResult, DomainError>>;
+  sendDraft(
+    tokens: GmailOAuthTokens,
+    draftId: string
+  ): Promise<Result<GmailSendResult, DomainError>>;
   listDrafts(tokens: GmailOAuthTokens): Promise<Result<GmailDraft[], DomainError>>;
 
   // Label Operations
@@ -242,10 +277,18 @@ export interface EmailServicePort {
   deleteLabel(tokens: GmailOAuthTokens, labelId: string): Promise<Result<void, DomainError>>;
 
   // Attachment Operations
-  getAttachment(tokens: GmailOAuthTokens, messageId: string, attachmentId: string): Promise<Result<{ data: string; size: number }, DomainError>>;
+  getAttachment(
+    tokens: GmailOAuthTokens,
+    messageId: string,
+    attachmentId: string
+  ): Promise<Result<{ data: string; size: number }, DomainError>>;
 
   // Health Check
-  checkConnection(tokens: GmailOAuthTokens): Promise<Result<{ status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number }, DomainError>>;
+  checkConnection(
+    tokens: GmailOAuthTokens
+  ): Promise<
+    Result<{ status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number }, DomainError>
+  >;
 }
 
 // ==================== Adapter Implementation ====================
@@ -422,11 +465,7 @@ export class GmailAdapter implements EmailServicePort {
       if (params.labelIds) params.labelIds.forEach((id) => queryParams.append('labelIds', id));
       if (params.includeSpamTrash) queryParams.set('includeSpamTrash', 'true');
 
-      const response = await this.makeRequest(
-        tokens,
-        'GET',
-        `/users/me/messages?${queryParams}`
-      );
+      const response = await this.makeRequest(tokens, 'GET', `/users/me/messages?${queryParams}`);
 
       if (response.isFailure) return Result.fail(response.error);
 
@@ -540,11 +579,7 @@ ${original.body.text ?? original.body.html ?? ''}
     messageId: string
   ): Promise<Result<void, DomainError>> {
     try {
-      const response = await this.makeRequest(
-        tokens,
-        'DELETE',
-        `/users/me/messages/${messageId}`
-      );
+      const response = await this.makeRequest(tokens, 'DELETE', `/users/me/messages/${messageId}`);
 
       if (response.isFailure) return Result.fail(response.error);
 
@@ -680,11 +715,7 @@ ${original.body.text ?? original.body.html ?? ''}
     threadId: string
   ): Promise<Result<void, DomainError>> {
     try {
-      const response = await this.makeRequest(
-        tokens,
-        'DELETE',
-        `/users/me/threads/${threadId}`
-      );
+      const response = await this.makeRequest(tokens, 'DELETE', `/users/me/threads/${threadId}`);
 
       if (response.isFailure) return Result.fail(response.error);
 
@@ -762,10 +793,7 @@ ${original.body.text ?? original.body.html ?? ''}
     }
   }
 
-  async deleteDraft(
-    tokens: GmailOAuthTokens,
-    draftId: string
-  ): Promise<Result<void, DomainError>> {
+  async deleteDraft(tokens: GmailOAuthTokens, draftId: string): Promise<Result<void, DomainError>> {
     try {
       const response = await this.makeRequest(tokens, 'DELETE', `/users/me/drafts/${draftId}`);
 
@@ -859,10 +887,7 @@ ${original.body.text ?? original.body.html ?? ''}
     }
   }
 
-  async deleteLabel(
-    tokens: GmailOAuthTokens,
-    labelId: string
-  ): Promise<Result<void, DomainError>> {
+  async deleteLabel(tokens: GmailOAuthTokens, labelId: string): Promise<Result<void, DomainError>> {
     try {
       const response = await this.makeRequest(tokens, 'DELETE', `/users/me/labels/${labelId}`);
 
@@ -907,7 +932,9 @@ ${original.body.text ?? original.body.html ?? ''}
 
   async checkConnection(
     tokens: GmailOAuthTokens
-  ): Promise<Result<{ status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number }, DomainError>> {
+  ): Promise<
+    Result<{ status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number }, DomainError>
+  > {
     const start = Date.now();
 
     try {
@@ -944,7 +971,7 @@ ${original.body.text ?? original.body.html ?? ''}
     const response = await fetch(`${this.apiBaseUrl}${endpoint}`, {
       method,
       headers: {
-        'Authorization': `Bearer ${tokens.accessToken}`,
+        Authorization: `Bearer ${tokens.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: body ? JSON.stringify(body) : undefined,
@@ -970,7 +997,9 @@ ${original.body.text ?? original.body.html ?? ''}
 
     switch (response.status) {
       case 401:
-        return Result.fail(new GmailAuthenticationError(error.message ?? 'Token expired or invalid'));
+        return Result.fail(
+          new GmailAuthenticationError(error.message ?? 'Token expired or invalid')
+        );
       case 404:
         return Result.fail(new GmailNotFoundError('Resource', error.message ?? 'unknown'));
       case 429: {
@@ -1035,9 +1064,7 @@ ${original.body.text ?? original.body.html ?? ''}
       return header?.value ?? '';
     };
 
-    const parseEmailAddress = (
-      value: string
-    ): { name?: string; email: string } => {
+    const parseEmailAddress = (value: string): { name?: string; email: string } => {
       // Check if the email has angle brackets (e.g., "Name" <email@example.com>)
       if (value.includes('<') && value.includes('>')) {
         const match = value.match(/^"?([^"<]*)"?\s*<([^>]+)>$/);
@@ -1052,9 +1079,7 @@ ${original.body.text ?? original.body.html ?? ''}
       return { email: value.trim() };
     };
 
-    const parseEmailAddresses = (
-      value: string
-    ): Array<{ name?: string; email: string }> => {
+    const parseEmailAddresses = (value: string): Array<{ name?: string; email: string }> => {
       return value
         .split(',')
         .map((addr) => parseEmailAddress(addr.trim()))

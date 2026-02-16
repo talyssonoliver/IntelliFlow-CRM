@@ -113,83 +113,8 @@ describeIntegration('Home Router - Integration Tests', () => {
   });
 
   // =============================================================================
-  // getActivityFeed Integration Tests
-  // =============================================================================
-  describe('getActivityFeed', () => {
-    it('should return activity feed with pagination', async () => {
-      const ctx = await createIntegrationTestContext();
-      const caller = homeRouter.createCaller(ctx);
-
-      const result = await caller.getActivityFeed({ limit: 5 });
-
-      // Should return activity feed structure
-      expect(Array.isArray(result.items)).toBe(true);
-      expect(typeof result.hasMore).toBe('boolean');
-
-      // Each item should have required fields
-      for (const item of result.items) {
-        expect(item.id).toBeDefined();
-        expect(['mention', 'call', 'email', 'task', 'deal', 'lead', 'system', 'ai']).toContain(item.type);
-        expect(item.title).toBeDefined();
-        expect(item.description).toBeDefined();
-        expect(item.timestamp).toBeInstanceOf(Date);
-        expect(item.relativeTime).toBeDefined();
-      }
-    });
-
-    it('should support cursor-based pagination', async () => {
-      const ctx = await createIntegrationTestContext();
-      const caller = homeRouter.createCaller(ctx);
-
-      // Get first page
-      const page1 = await caller.getActivityFeed({ limit: 2 });
-
-      if (page1.hasMore && page1.nextCursor) {
-        // Get second page using cursor
-        const page2 = await caller.getActivityFeed({ limit: 2, cursor: page1.nextCursor });
-
-        // Items should be different
-        const page1Ids = page1.items.map(i => i.id);
-        const page2Ids = page2.items.map(i => i.id);
-        expect(page1Ids.some(id => page2Ids.includes(id))).toBe(false);
-      }
-    });
-
-    it('should respond within 200ms performance target', async () => {
-      const ctx = await createIntegrationTestContext();
-      const caller = homeRouter.createCaller(ctx);
-
-      const start = performance.now();
-      await caller.getActivityFeed({ limit: 10 });
-      const duration = performance.now() - start;
-
-      expect(duration).toBeLessThan(500);
-    });
-
-    it('should filter activity feed by types parameter', async () => {
-      const ctx = await createIntegrationTestContext();
-      const caller = homeRouter.createCaller(ctx);
-
-      const result = await caller.getActivityFeed({ limit: 10, types: ['lead'] });
-
-      // Should return feed items structure (may be empty if no lead events)
-      expect(Array.isArray(result.items)).toBe(true);
-      expect(typeof result.hasMore).toBe('boolean');
-    });
-
-    it('should return empty feed when filtering by unused type', async () => {
-      const ctx = await createIntegrationTestContext();
-      const caller = homeRouter.createCaller(ctx);
-
-      // Filter by 'mention' which is unlikely to have data in seed
-      const result = await caller.getActivityFeed({ limit: 10, types: ['mention'] });
-
-      expect(Array.isArray(result.items)).toBe(true);
-    });
-  });
-
-  // =============================================================================
   // getDailyGoal Integration Tests
+  // Note: Activity feed tests removed — use activityFeed.getUnifiedFeed (IFC-069)
   // =============================================================================
   describe('getDailyGoal', () => {
     it('should return daily goal with progress', async () => {
@@ -272,7 +197,7 @@ describeIntegration('Home Router - Integration Tests', () => {
       // Verify it's pinned
       const pinnedItems = await caller.getPinnedItems();
       const found = pinnedItems.items.find(
-        i => i.entityType === testItem.entityType && i.entityId === testItem.entityId
+        (i) => i.entityType === testItem.entityType && i.entityId === testItem.entityId
       );
       expect(found).toBeDefined();
 
@@ -286,7 +211,7 @@ describeIntegration('Home Router - Integration Tests', () => {
       // Verify it's unpinned
       const afterUnpin = await caller.getPinnedItems();
       const stillFound = afterUnpin.items.find(
-        i => i.entityType === testItem.entityType && i.entityId === testItem.entityId
+        (i) => i.entityType === testItem.entityType && i.entityId === testItem.entityId
       );
       expect(stillFound).toBeUndefined();
     });
@@ -299,8 +224,18 @@ describeIntegration('Home Router - Integration Tests', () => {
 
       // Pin two items
       const items = [
-        { entityType: 'lead' as const, entityId: 'reorder-test-1-' + Date.now(), title: 'First', url: '/leads/1' },
-        { entityType: 'contact' as const, entityId: 'reorder-test-2-' + Date.now(), title: 'Second', url: '/contacts/2' },
+        {
+          entityType: 'lead' as const,
+          entityId: 'reorder-test-1-' + Date.now(),
+          title: 'First',
+          url: '/leads/1',
+        },
+        {
+          entityType: 'contact' as const,
+          entityId: 'reorder-test-2-' + Date.now(),
+          title: 'Second',
+          url: '/contacts/2',
+        },
       ];
 
       for (const item of items) {
@@ -405,10 +340,9 @@ describeIntegration('Home Router - Integration Tests', () => {
       const start = performance.now();
 
       // Fetch all data in parallel (as the frontend does)
-      const [welcomeData, insightsData, feedData, goalData, pinnedData] = await Promise.all([
+      const [welcomeData, insightsData, goalData, pinnedData] = await Promise.all([
         caller.getWelcomeSummary(),
         caller.getAIInsights(),
-        caller.getActivityFeed({ limit: 5 }),
         caller.getDailyGoal(),
         caller.getPinnedItems(),
       ]);
@@ -418,12 +352,11 @@ describeIntegration('Home Router - Integration Tests', () => {
       // All should succeed
       expect(welcomeData.userName).toBeDefined();
       expect(insightsData.insights).toBeDefined();
-      expect(feedData.items).toBeDefined();
       expect(goalData.goal).toBeDefined();
       expect(pinnedData.items).toBeDefined();
 
-      // Total time should be reasonable (not 5x individual times)
-      // Target: <500ms for all 5 parallel queries
+      // Total time should be reasonable (not 4x individual times)
+      // Target: <500ms for all 4 parallel queries
       expect(duration).toBeLessThan(1000);
     });
   });

@@ -10,20 +10,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
-// Mock fs module with default export
-vi.mock('fs', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('fs')>();
-  return {
-    ...actual,
-    default: {
-      ...actual,
-      existsSync: vi.fn(() => true),
-      readFileSync: vi.fn(),
-    },
+// Mock fs module — do not use importOriginal (Node builtins fail in JSDOM)
+vi.mock('fs', () => ({
+  default: {
     existsSync: vi.fn(() => true),
     readFileSync: vi.fn(),
-  };
-});
+  },
+  existsSync: vi.fn(() => true),
+  readFileSync: vi.fn(),
+}));
 
 import * as fs from 'fs';
 
@@ -187,7 +182,9 @@ describe('Compliance API Routes', () => {
 
       expect(data.success).toBe(true);
       // Only January 2026 events
-      expect(data.data.events.every((e: { date: string }) => e.date.startsWith('2026-01'))).toBe(true);
+      expect(data.data.events.every((e: { date: string }) => e.date.startsWith('2026-01'))).toBe(
+        true
+      );
     });
 
     it.skip('should return currentMonth in response', async () => {
@@ -263,7 +260,9 @@ describe('Compliance API Routes', () => {
     it('should return 404 for unknown standard', async () => {
       const { GET } = await import('../[standardId]/route');
       const request = new NextRequest('http://localhost/api/compliance/unknown-standard');
-      const response = await GET(request, { params: Promise.resolve({ standardId: 'unknown-standard' }) });
+      const response = await GET(request, {
+        params: Promise.resolve({ standardId: 'unknown-standard' }),
+      });
       const data = await response.json();
 
       expect(response.status).toBe(404);

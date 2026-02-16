@@ -47,31 +47,32 @@ export function useTicketFilters(defaults?: Partial<TicketFilters>) {
   }, [filters.search]);
 
   const setSearch = useCallback((search: string) => {
-    setFilters(prev => ({ ...prev, search, page: 1 }));
+    setFilters((prev) => ({ ...prev, search, page: 1 }));
   }, []);
 
   const setStatusFilter = useCallback((status: TicketStatus | '') => {
-    setFilters(prev => ({ ...prev, status, page: 1 }));
+    setFilters((prev) => ({ ...prev, status, page: 1 }));
   }, []);
 
   const setPriorityFilter = useCallback((priority: TicketPriority | '') => {
-    setFilters(prev => ({ ...prev, priority, page: 1 }));
+    setFilters((prev) => ({ ...prev, priority, page: 1 }));
   }, []);
 
   const setSLAFilter = useCallback((slaStatus: SLAStatus | 'all') => {
-    setFilters(prev => ({ ...prev, slaStatus, page: 1 }));
+    setFilters((prev) => ({ ...prev, slaStatus, page: 1 }));
   }, []);
 
   const setSort = useCallback((sortBy: string, sortOrder?: 'asc' | 'desc') => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
       sortBy,
-      sortOrder: sortOrder ?? (prev.sortBy === sortBy && prev.sortOrder === 'desc' ? 'asc' : 'desc'),
+      sortOrder:
+        sortOrder ?? (prev.sortBy === sortBy && prev.sortOrder === 'desc' ? 'asc' : 'desc'),
     }));
   }, []);
 
   const setPage = useCallback((page: number) => {
-    setFilters(prev => ({ ...prev, page }));
+    setFilters((prev) => ({ ...prev, page }));
   }, []);
 
   const resetFilters = useCallback(() => {

@@ -40,7 +40,13 @@ const CHANNEL_OPTIONS = [
   { value: 'OTHER', label: 'Other' },
 ];
 
-export function TicketForm({ initialData, onSubmit, onCancel, isSubmitting, mode }: TicketFormProps) {
+export function TicketForm({
+  initialData,
+  onSubmit,
+  onCancel,
+  isSubmitting,
+  mode,
+}: TicketFormProps) {
   const [formData, setFormData] = useState<TicketFormData>({
     subject: initialData?.subject ?? '',
     description: initialData?.description ?? '',
@@ -98,9 +104,9 @@ export function TicketForm({ initialData, onSubmit, onCancel, isSubmitting, mode
   };
 
   const updateField = <K extends keyof TicketFormData>(field: K, value: TicketFormData[K]) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
@@ -124,7 +130,9 @@ export function TicketForm({ initialData, onSubmit, onCancel, isSubmitting, mode
           aria-describedby={errors.subject ? 'subject-error' : undefined}
         />
         {errors.subject && (
-          <p id="subject-error" className="text-xs text-destructive mt-1">{errors.subject}</p>
+          <p id="subject-error" className="text-xs text-destructive mt-1">
+            {errors.subject}
+          </p>
         )}
       </div>
 
@@ -161,7 +169,9 @@ export function TicketForm({ initialData, onSubmit, onCancel, isSubmitting, mode
             aria-describedby={errors.contactName ? 'contactName-error' : undefined}
           />
           {errors.contactName && (
-            <p id="contactName-error" className="text-xs text-destructive mt-1">{errors.contactName}</p>
+            <p id="contactName-error" className="text-xs text-destructive mt-1">
+              {errors.contactName}
+            </p>
           )}
         </div>
         <div>
@@ -181,7 +191,9 @@ export function TicketForm({ initialData, onSubmit, onCancel, isSubmitting, mode
             aria-describedby={errors.contactEmail ? 'contactEmail-error' : undefined}
           />
           {errors.contactEmail && (
-            <p id="contactEmail-error" className="text-xs text-destructive mt-1">{errors.contactEmail}</p>
+            <p id="contactEmail-error" className="text-xs text-destructive mt-1">
+              {errors.contactEmail}
+            </p>
           )}
         </div>
       </div>
@@ -201,7 +213,9 @@ export function TicketForm({ initialData, onSubmit, onCancel, isSubmitting, mode
             {TICKET_PRIORITIES.map((p) => {
               const config = getPriorityConfig(p);
               return (
-                <option key={p} value={p}>{config.label}</option>
+                <option key={p} value={p}>
+                  {config.label}
+                </option>
               );
             })}
           </select>
@@ -218,7 +232,9 @@ export function TicketForm({ initialData, onSubmit, onCancel, isSubmitting, mode
           >
             <option value="">Select category...</option>
             {TICKET_CATEGORIES.map((c) => (
-              <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>
+              <option key={c} value={c}>
+                {c.replace(/_/g, ' ')}
+              </option>
             ))}
           </select>
         </div>
@@ -236,7 +252,9 @@ export function TicketForm({ initialData, onSubmit, onCancel, isSubmitting, mode
           className="w-full px-3 py-2 rounded-lg border border-border text-sm bg-background focus:outline-none focus:ring-2 focus:ring-primary/50"
         >
           {CHANNEL_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
           ))}
         </select>
       </div>
@@ -272,7 +290,9 @@ export function TicketForm({ initialData, onSubmit, onCancel, isSubmitting, mode
           className="px-6 py-2 bg-primary text-primary-foreground text-sm font-bold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {isSubmitting && (
-            <span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+            <span className="material-symbols-outlined text-[16px] animate-spin">
+              progress_activity
+            </span>
           )}
           {mode === 'create' ? 'Create Ticket' : 'Save Changes'}
         </button>

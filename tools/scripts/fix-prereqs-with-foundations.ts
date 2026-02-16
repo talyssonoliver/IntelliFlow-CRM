@@ -19,10 +19,7 @@ import { join } from 'node:path';
 const CSV_PATH = join(process.cwd(), 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv');
 
 // Mandatory governance files
-const GOVERNANCE_FILES = [
-  '.specify/memory/Framework.md',
-  'audit-matrix.yml',
-];
+const GOVERNANCE_FILES = ['.specify/memory/Framework.md', 'audit-matrix.yml'];
 
 // Maximum files to avoid overflow
 const MAX_PREREQ_FILES = 20;

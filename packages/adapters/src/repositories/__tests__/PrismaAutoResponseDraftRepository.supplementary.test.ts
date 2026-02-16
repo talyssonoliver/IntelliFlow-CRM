@@ -40,7 +40,10 @@ vi.mock('@intelliflow/db', () => ({
   PrismaClient: vi.fn(),
 }));
 
-import { PrismaAutoResponseDraftRepository, OptimisticLockError } from '../PrismaAutoResponseDraftRepository';
+import {
+  PrismaAutoResponseDraftRepository,
+  OptimisticLockError,
+} from '../PrismaAutoResponseDraftRepository';
 import { Prisma } from '@intelliflow/db';
 
 const mockPrisma = {
@@ -86,7 +89,12 @@ describe('PrismaAutoResponseDraftRepository - supplementary', () => {
         version: 0,
         expiresAt: new Date(),
         statusHistory: JSON.stringify([
-          { status: 'DRAFT', changedAt: '2025-01-15T10:00:00Z', changedBy: 'user-1', reason: 'initial' },
+          {
+            status: 'DRAFT',
+            changedAt: '2025-01-15T10:00:00Z',
+            changedBy: 'user-1',
+            reason: 'initial',
+          },
         ]),
         approvalDecision: null,
         escalation: null,

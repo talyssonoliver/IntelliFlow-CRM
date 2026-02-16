@@ -111,7 +111,9 @@ describe('Contact Page', () => {
 
       // Responsive classes are on child containers, not main element
       const main = screen.getByRole('main');
-      const responsiveElements = main.querySelectorAll('[class*="lg:"], [class*="md:"], [class*="sm:"]');
+      const responsiveElements = main.querySelectorAll(
+        '[class*="lg:"], [class*="md:"], [class*="sm:"]'
+      );
       expect(responsiveElements.length).toBeGreaterThan(0);
     });
   });

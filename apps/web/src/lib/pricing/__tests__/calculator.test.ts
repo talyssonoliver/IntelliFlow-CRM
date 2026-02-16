@@ -10,8 +10,8 @@ import pricingData from '@/data/pricing-data.json';
  */
 
 describe('Pricing Calculator', () => {
-  const starterTier = pricingData.tiers.find(t => t.id === 'starter')!;
-  const professionalTier = pricingData.tiers.find(t => t.id === 'professional')!;
+  const starterTier = pricingData.tiers.find((t) => t.id === 'starter')!;
+  const professionalTier = pricingData.tiers.find((t) => t.id === 'professional')!;
 
   describe('calculatePrice', () => {
     it('should calculate monthly price correctly', () => {
@@ -64,7 +64,7 @@ describe('Pricing Calculator', () => {
     });
 
     it('should return zero for custom tier (no fixed price)', () => {
-      const customTier = pricingData.tiers.find(t => t.id === 'custom')!;
+      const customTier = pricingData.tiers.find((t) => t.id === 'custom')!;
       const result = calculatePrice(customTier, 10, 'monthly');
 
       expect(result.pricePerUser).toBe(0);
@@ -117,8 +117,8 @@ describe('Pricing Calculator', () => {
       const tiers = ['starter', 'professional', 'enterprise'];
       const billings: Array<'monthly' | 'annual'> = ['monthly', 'annual'];
 
-      tiers.forEach(tier => {
-        billings.forEach(billing => {
+      tiers.forEach((tier) => {
+        billings.forEach((billing) => {
           const priceId = getStripePriceId(tier, billing);
           expect(priceId).toBe(`price_${tier}_${billing}`);
         });

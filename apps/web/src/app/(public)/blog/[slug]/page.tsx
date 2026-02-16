@@ -2,7 +2,11 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Card } from '@intelliflow/ui';
-import { MarkdownRenderer, ReadingProgress, TableOfContents } from '@/components/blog/markdown-renderer';
+import {
+  MarkdownRenderer,
+  ReadingProgress,
+  TableOfContents,
+} from '@/components/blog/markdown-renderer';
 import { CommentsWidget } from '@/components/blog/comments-widget';
 import { ShareButtons } from '@/components/blog/share-buttons';
 import { AppAvatar } from '@/components/shared/app-avatar';
@@ -34,7 +38,8 @@ const blogPosts: Record<string, BlogPost> = {
     id: '1',
     slug: 'ai-lead-scoring-best-practices',
     title: 'AI Lead Scoring: Best Practices for Modern Sales Teams',
-    excerpt: 'Learn how to implement AI-powered lead scoring that improves conversion rates while maintaining human oversight.',
+    excerpt:
+      'Learn how to implement AI-powered lead scoring that improves conversion rates while maintaining human oversight.',
     category: 'AI & Automation',
     author: {
       name: 'Sarah Chen',
@@ -148,7 +153,8 @@ AI lead scoring, when implemented thoughtfully, becomes a force multiplier for s
     id: '2',
     slug: 'governance-ready-automation',
     title: 'Building Governance-Ready Automation Workflows',
-    excerpt: 'How to design automation workflows that satisfy compliance requirements without slowing down your team.',
+    excerpt:
+      'How to design automation workflows that satisfy compliance requirements without slowing down your team.',
     category: 'Governance & Compliance',
     author: {
       name: 'Michael Torres',
@@ -306,7 +312,7 @@ function formatDate(dateString: string): string {
 // Related posts (simple implementation - would be smarter in production)
 function getRelatedPosts(currentSlug: string, category: string): BlogPost[] {
   return Object.values(blogPosts)
-    .filter(post => post.slug !== currentSlug && post.category === category)
+    .filter((post) => post.slug !== currentSlug && post.category === category)
     .slice(0, 3);
 }
 
@@ -367,9 +373,7 @@ export default async function BlogPostPage({
             </h1>
 
             {/* Excerpt */}
-            <p className="text-lg text-slate-200 mb-8 max-w-3xl">
-              {post.excerpt}
-            </p>
+            <p className="text-lg text-slate-200 mb-8 max-w-3xl">{post.excerpt}</p>
 
             {/* Author Info */}
             <div className="flex items-center gap-4">
@@ -410,7 +414,7 @@ export default async function BlogPostPage({
                   Topics
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {post.tags.map(tag => (
+                  {post.tags.map((tag) => (
                     <Link
                       key={tag}
                       href={`/blog?tag=${encodeURIComponent(tag.toLowerCase())}`}
@@ -427,7 +431,10 @@ export default async function BlogPostPage({
                 <Card className="mt-8 p-6 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                   <div className="flex gap-4">
                     <div className="w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
-                      <span className="material-symbols-outlined text-2xl text-slate-500 dark:text-slate-300" aria-hidden="true">
+                      <span
+                        className="material-symbols-outlined text-2xl text-slate-500 dark:text-slate-300"
+                        aria-hidden="true"
+                      >
                         person
                       </span>
                     </div>
@@ -457,13 +464,19 @@ export default async function BlogPostPage({
 
         {/* Related Posts */}
         {relatedPosts.length > 0 && (
-          <section aria-labelledby="related-heading" className="bg-slate-50 dark:bg-slate-800 py-16">
+          <section
+            aria-labelledby="related-heading"
+            className="bg-slate-50 dark:bg-slate-800 py-16"
+          >
             <div className="container px-4 lg:px-6 mx-auto max-w-auto">
-              <h2 id="related-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-8">
+              <h2
+                id="related-heading"
+                className="text-2xl font-bold text-slate-900 dark:text-white mb-8"
+              >
                 Related Articles
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {relatedPosts.map(relatedPost => (
+                {relatedPosts.map((relatedPost) => (
                   <Card
                     key={relatedPost.id}
                     className="p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-[#137fec] transition-colors group"
@@ -496,7 +509,8 @@ export default async function BlogPostPage({
               Ready to transform your sales process?
             </h2>
             <p className="text-white/90 mb-6 max-w-2xl mx-auto">
-              See how IntelliFlow's AI-powered CRM can help your team close more deals with governance-ready automation.
+              See how IntelliFlow's AI-powered CRM can help your team close more deals with
+              governance-ready automation.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link

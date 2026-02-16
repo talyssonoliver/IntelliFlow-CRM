@@ -20,7 +20,10 @@ import type { BillingCycle } from '@intelliflow/validators';
 function CheckoutLoading() {
   return (
     <div className="flex min-h-[400px] items-center justify-center">
-      <span className="material-symbols-outlined animate-spin text-4xl text-primary" aria-hidden="true">
+      <span
+        className="material-symbols-outlined animate-spin text-4xl text-primary"
+        aria-hidden="true"
+      >
         progress_activity
       </span>
     </div>
@@ -38,9 +41,14 @@ function CheckoutContent() {
   if (!plan) {
     return (
       <div className="mx-auto max-w-md py-12 text-center">
-        <span className="material-symbols-outlined text-4xl text-destructive" aria-hidden="true">error</span>
+        <span className="material-symbols-outlined text-4xl text-destructive" aria-hidden="true">
+          error
+        </span>
         <h2 className="mt-4 text-xl font-semibold">Plan not found</h2>
-        <button onClick={() => router.push('/pricing')} className="mt-4 text-primary hover:underline">
+        <button
+          onClick={() => router.push('/pricing')}
+          className="mt-4 text-primary hover:underline"
+        >
           Back to Plans
         </button>
       </div>
@@ -48,7 +56,8 @@ function CheckoutContent() {
   }
 
   const annualSavings = getAnnualSavingsPercent(plan);
-  const handleSuccess = (subId: string) => router.push(`/billing?subscription=${subId}&success=true`);
+  const handleSuccess = (subId: string) =>
+    router.push(`/billing?subscription=${subId}&success=true`);
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
@@ -63,7 +72,9 @@ function CheckoutContent() {
                 <p className="font-medium">{plan.name}</p>
               </div>
               {plan.popular && (
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">Popular</span>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                  Popular
+                </span>
               )}
             </div>
             <div>
@@ -80,26 +91,42 @@ function CheckoutContent() {
                 <span className="text-sm text-muted-foreground">Total</span>
                 <div className="text-right">
                   <span className="text-2xl font-bold">
-                    £{((cycle === 'monthly' ? plan.priceMonthly : plan.priceAnnual) / 100).toFixed(0)}
+                    £
+                    {((cycle === 'monthly' ? plan.priceMonthly : plan.priceAnnual) / 100).toFixed(
+                      0
+                    )}
                   </span>
-                  <span className="text-muted-foreground">/{cycle === 'monthly' ? 'month' : 'year'}</span>
+                  <span className="text-muted-foreground">
+                    /{cycle === 'monthly' ? 'month' : 'year'}
+                  </span>
                 </div>
               </div>
             </div>
             <div className="border-t border-border pt-4">
               <span className="text-sm text-muted-foreground">Includes</span>
               <ul className="mt-2 space-y-2">
-                {plan.features.filter((f) => f.included).slice(0, 5).map((feature, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-sm">
-                    <span className="material-symbols-outlined text-base text-green-500" aria-hidden="true">check</span>
-                    {feature.name}
-                  </li>
-                ))}
+                {plan.features
+                  .filter((f) => f.included)
+                  .slice(0, 5)
+                  .map((feature, idx) => (
+                    <li key={idx} className="flex items-center gap-2 text-sm">
+                      <span
+                        className="material-symbols-outlined text-base text-green-500"
+                        aria-hidden="true"
+                      >
+                        check
+                      </span>
+                      {feature.name}
+                    </li>
+                  ))}
               </ul>
             </div>
           </div>
           <div className="mt-6 border-t border-border pt-4">
-            <button onClick={() => router.push('/pricing')} className="text-sm text-primary hover:underline">
+            <button
+              onClick={() => router.push('/pricing')}
+              className="text-sm text-primary hover:underline"
+            >
               Change plan
             </button>
           </div>
@@ -120,7 +147,9 @@ function CheckoutContent() {
           />
         </div>
         <div className="mt-4 flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-4">
-          <span className="material-symbols-outlined text-muted-foreground" aria-hidden="true">security</span>
+          <span className="material-symbols-outlined text-muted-foreground" aria-hidden="true">
+            security
+          </span>
           <div className="text-sm text-muted-foreground">
             <p className="font-medium text-foreground">Secure Payment</p>
             <p className="mt-0.5">Your payment is encrypted and secure.</p>

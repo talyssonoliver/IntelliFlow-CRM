@@ -195,10 +195,12 @@ export function extractThreadInfo(headers: EmailHeaders): ThreadInfo {
 
   if (!inReplyTo && references.length === 0) {
     // This is an original message
-    const threadId = headers.messageId || createHash('sha256')
-      .update(`${headers.from.address}:${headers.subject}:${headers.date?.toISOString() || ''}`)
-      .digest('hex')
-      .slice(0, 16);
+    const threadId =
+      headers.messageId ||
+      createHash('sha256')
+        .update(`${headers.from.address}:${headers.subject}:${headers.date?.toISOString() || ''}`)
+        .digest('hex')
+        .slice(0, 16);
 
     return {
       threadId,
@@ -208,10 +210,13 @@ export function extractThreadInfo(headers: EmailHeaders): ThreadInfo {
   }
 
   // This is a reply
-  const threadId = references[0] || inReplyTo || createHash('sha256')
-    .update(headers.subject.replace(/^(Re|Fwd|Fw):\s*/gi, ''))
-    .digest('hex')
-    .slice(0, 16);
+  const threadId =
+    references[0] ||
+    inReplyTo ||
+    createHash('sha256')
+      .update(headers.subject.replace(/^(Re|Fwd|Fw):\s*/gi, ''))
+      .digest('hex')
+      .slice(0, 16);
 
   return {
     threadId,
@@ -225,14 +230,9 @@ export function extractThreadInfo(headers: EmailHeaders): ThreadInfo {
  * Detect if message is a forward
  */
 export function isForwardedMessage(subject: string, body?: string): boolean {
-  const forwardPatterns = [
-    /^Fwd?:/i,
-    /^Fw:/i,
-    /^Forwarded:/i,
-    /^\[Fwd:/i,
-  ];
+  const forwardPatterns = [/^Fwd?:/i, /^Fw:/i, /^Forwarded:/i, /^\[Fwd:/i];
 
-  if (forwardPatterns.some(p => p.test(subject))) {
+  if (forwardPatterns.some((p) => p.test(subject))) {
     return true;
   }
 
@@ -243,7 +243,7 @@ export function isForwardedMessage(subject: string, body?: string): boolean {
       'Begin forwarded message:',
       '> From:',
     ];
-    return forwardIndicators.some(indicator => body.includes(indicator));
+    return forwardIndicators.some((indicator) => body.includes(indicator));
   }
 
   return false;
@@ -260,7 +260,7 @@ export function isReplyMessage(subject: string, headers: EmailHeaders): boolean 
     /^SV:/i, // Scandinavian
   ];
 
-  if (replyPatterns.some(p => p.test(subject))) {
+  if (replyPatterns.some((p) => p.test(subject))) {
     return true;
   }
 
@@ -284,13 +284,7 @@ export class SpamAnalyzer {
     /lottery.*winner/i,
   ];
 
-  private suspiciousLinkPatterns = [
-    /bit\.ly/i,
-    /tinyurl/i,
-    /goo\.gl/i,
-    /t\.co/i,
-    /ow\.ly/i,
-  ];
+  private suspiciousLinkPatterns = [/bit\.ly/i, /tinyurl/i, /goo\.gl/i, /t\.co/i, /ow\.ly/i];
 
   analyze(email: ParsedEmail): SpamAnalysis {
     const reasons: string[] = [];
@@ -389,13 +383,15 @@ export function parseMimeParts(raw: string, boundary?: string): MimePart[] {
     const headers = parseHeaders(headerSection);
     const body = bodyParts.join('\n\n');
 
-    return [{
-      headers,
-      body,
-      contentType: headers['content-type'] || 'text/plain',
-      contentTransferEncoding: headers['content-transfer-encoding'],
-      isAttachment: false,
-    }];
+    return [
+      {
+        headers,
+        body,
+        contentType: headers['content-type'] || 'text/plain',
+        contentTransferEncoding: headers['content-transfer-encoding'],
+        isAttachment: false,
+      },
+    ];
   }
 
   const parts: MimePart[] = [];
@@ -417,7 +413,8 @@ export function parseMimeParts(raw: string, boundary?: string): MimePart[] {
     const contentType = headers['content-type'] || 'text/plain';
     const contentDisposition = headers['content-disposition'] || '';
 
-    const isAttachment = contentDisposition.includes('attachment') ||
+    const isAttachment =
+      contentDisposition.includes('attachment') ||
       (contentDisposition.includes('filename') && !contentDisposition.includes('inline'));
 
     const filenameMatch = contentDisposition.match(/filename=["']?([^"';\s]+)["']?/i);
@@ -514,7 +511,9 @@ export class InboundEmailParser {
       const to = parseEmailAddresses(rawHeaders['to'] || '');
       const cc = parseEmailAddresses(rawHeaders['cc'] || '');
       const bcc = parseEmailAddresses(rawHeaders['bcc'] || '');
-      const replyTo = rawHeaders['reply-to'] ? parseEmailAddress(rawHeaders['reply-to']) : undefined;
+      const replyTo = rawHeaders['reply-to']
+        ? parseEmailAddress(rawHeaders['reply-to'])
+        : undefined;
 
       // Parse date
       let date: Date | undefined;
@@ -593,10 +592,12 @@ export class InboundEmailParser {
       const isForward = isForwardedMessage(headers.subject, textBody);
 
       // Generate email ID
-      const id = headers.messageId || createHash('sha256')
-        .update(`${from.address}:${headers.subject}:${date?.toISOString() || Date.now()}`)
-        .digest('hex')
-        .slice(0, 32);
+      const id =
+        headers.messageId ||
+        createHash('sha256')
+          .update(`${from.address}:${headers.subject}:${date?.toISOString() || Date.now()}`)
+          .digest('hex')
+          .slice(0, 32);
 
       const email: ParsedEmail = {
         id,
@@ -654,7 +655,9 @@ export class InboundEmailParser {
     return undefined;
   }
 
-  private parseSpfResult(authResults?: string): 'pass' | 'fail' | 'softfail' | 'neutral' | 'none' | undefined {
+  private parseSpfResult(
+    authResults?: string
+  ): 'pass' | 'fail' | 'softfail' | 'neutral' | 'none' | undefined {
     if (!authResults) return undefined;
     if (/spf=pass/i.test(authResults)) return 'pass';
     if (/spf=fail/i.test(authResults)) return 'fail';

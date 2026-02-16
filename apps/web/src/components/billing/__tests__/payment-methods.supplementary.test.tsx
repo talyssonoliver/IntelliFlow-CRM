@@ -125,14 +125,19 @@ vi.mock('@/lib/billing/card-manager', () => ({
       isDefault: pm.isDefault,
     };
   },
-  sortPaymentMethods: (methods: any[]) => [...methods].sort((a: any, b: any) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0)),
+  sortPaymentMethods: (methods: any[]) =>
+    [...methods].sort((a: any, b: any) => (b.isDefault ? 1 : 0) - (a.isDefault ? 1 : 0)),
   canRemoveCard: (_id: string, _methods: any[]) => ({ allowed: true, reason: undefined }),
   formatCardDisplayString: (brand: string, last4: string) => `${brand} ending in ${last4}`,
   formatMaskedCardNumber: (last4: string) => `**** **** **** ${last4}`,
 }));
 
 vi.mock('@/lib/billing/payment-processor', () => ({
-  formatCardNumber: (v: string) => v.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim(),
+  formatCardNumber: (v: string) =>
+    v
+      .replace(/\D/g, '')
+      .replace(/(.{4})/g, '$1 ')
+      .trim(),
   formatExpiry: (v: string) => {
     const clean = v.replace(/\D/g, '');
     if (clean.length >= 3) return clean.slice(0, 2) + '/' + clean.slice(2, 4);
@@ -141,7 +146,8 @@ vi.mock('@/lib/billing/payment-processor', () => ({
   detectCardBrand: (_v: string) => 'visa' as const,
   validateCardDetails: (details: any) => {
     const errors: Record<string, string | undefined> = {};
-    if (!details.number || details.number.replace(/\s/g, '').length < 13) errors.number = 'Invalid card number';
+    if (!details.number || details.number.replace(/\s/g, '').length < 13)
+      errors.number = 'Invalid card number';
     if (!details.expiry) errors.expiry = 'Expiry required';
     if (!details.cvc) errors.cvc = 'CVC required';
     if (!details.name) errors.name = 'Name required';

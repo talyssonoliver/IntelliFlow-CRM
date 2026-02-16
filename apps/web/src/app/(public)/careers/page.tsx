@@ -5,10 +5,12 @@ import { ApplicationForm } from '@/components/shared/application-form';
 
 export const metadata: Metadata = {
   title: 'Careers | IntelliFlow CRM',
-  description: 'Join the team building the future of AI-powered CRM. Explore open positions at IntelliFlow.',
+  description:
+    'Join the team building the future of AI-powered CRM. Explore open positions at IntelliFlow.',
   openGraph: {
     title: 'Careers at IntelliFlow CRM',
-    description: 'Build the future of AI-first customer relationship management. View open positions.',
+    description:
+      'Build the future of AI-first customer relationship management. View open positions.',
     type: 'website',
   },
 };
@@ -21,7 +23,8 @@ const jobListings = [
     department: 'Engineering',
     location: 'Remote (UK/EU)',
     type: 'Full-time',
-    description: 'Build and scale our Next.js/tRPC platform with a focus on type safety, performance, and AI integration.',
+    description:
+      'Build and scale our Next.js/tRPC platform with a focus on type safety, performance, and AI integration.',
     requirements: [
       '5+ years full-stack experience',
       'Strong TypeScript/React expertise',
@@ -35,7 +38,8 @@ const jobListings = [
     department: 'AI & Intelligence',
     location: 'Remote (Global)',
     type: 'Full-time',
-    description: 'Design and implement AI features including lead scoring, predictive analytics, and RAG-based assistants.',
+    description:
+      'Design and implement AI features including lead scoring, predictive analytics, and RAG-based assistants.',
     requirements: [
       '3+ years ML/AI experience',
       'Experience with LangChain, OpenAI, or similar',
@@ -49,7 +53,8 @@ const jobListings = [
     department: 'Design',
     location: 'London, UK',
     type: 'Full-time',
-    description: 'Shape the user experience of our AI-first CRM, balancing automation with human oversight.',
+    description:
+      'Shape the user experience of our AI-first CRM, balancing automation with human oversight.',
     requirements: [
       '4+ years product design experience',
       'Strong Figma and prototyping skills',
@@ -63,7 +68,8 @@ const jobListings = [
     department: 'Developer Experience',
     location: 'Remote (US/EU)',
     type: 'Full-time',
-    description: 'Build developer community, create technical content, and improve our API documentation.',
+    description:
+      'Build developer community, create technical content, and improve our API documentation.',
     requirements: [
       '3+ years in DevRel or software engineering',
       'Strong technical writing skills',
@@ -77,7 +83,8 @@ const jobListings = [
     department: 'Platform',
     location: 'Remote (UK/EU)',
     type: 'Full-time',
-    description: 'Ensure our platform meets enterprise security standards with focus on zero-trust architecture.',
+    description:
+      'Ensure our platform meets enterprise security standards with focus on zero-trust architecture.',
     requirements: [
       '4+ years security engineering',
       'Experience with cloud security (AWS/GCP)',
@@ -123,15 +130,17 @@ const benefits = [
 const values = [
   {
     title: 'Ship with evidence',
-    description: 'We believe in governance-ready releases. Every feature ships with audit trails, tests, and performance proof.',
+    description:
+      'We believe in governance-ready releases. Every feature ships with audit trails, tests, and performance proof.',
   },
   {
     title: 'Automation with safeguards',
-    description: 'AI is powerful but needs oversight. We build automation that keeps humans in control.',
+    description:
+      'AI is powerful but needs oversight. We build automation that keeps humans in control.',
   },
   {
     title: 'Accessible by default',
-    description: 'WCAG compliance isn\'t an afterthought. We design for everyone from day one.',
+    description: "WCAG compliance isn't an afterthought. We design for everyone from day one.",
   },
 ];
 
@@ -143,15 +152,18 @@ export default function CareersPage() {
         <div className="container px-4 lg:px-6 mx-auto max-w-auto">
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur mb-6">
-              <span className="material-symbols-outlined text-base" aria-hidden="true">groups</span>
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                groups
+              </span>
               <span>We&apos;re hiring</span>
             </div>
             <h1 className="text-4xl lg:text-5xl font-bold mb-4">
               Build the future of AI-first CRM
             </h1>
             <p className="text-lg text-slate-200">
-              Join a team that believes automation should be governed, accessible, and human-centered.
-              We&apos;re solving hard problems at the intersection of AI, sales, and enterprise software.
+              Join a team that believes automation should be governed, accessible, and
+              human-centered. We&apos;re solving hard problems at the intersection of AI, sales, and
+              enterprise software.
             </p>
           </div>
         </div>
@@ -160,7 +172,10 @@ export default function CareersPage() {
       {/* Values Section */}
       <section aria-labelledby="values-heading" className="py-16 bg-white dark:bg-slate-800">
         <div className="container px-4 lg:px-6 mx-auto max-w-auto">
-          <h2 id="values-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-8">
+          <h2
+            id="values-heading"
+            className="text-2xl font-bold text-slate-900 dark:text-white mb-8"
+          >
             What we believe
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -169,9 +184,7 @@ export default function CareersPage() {
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                   {value.title}
                 </h3>
-                <p className="text-slate-600 dark:text-slate-300 text-sm">
-                  {value.description}
-                </p>
+                <p className="text-slate-600 dark:text-slate-300 text-sm">{value.description}</p>
               </div>
             ))}
           </div>
@@ -181,7 +194,10 @@ export default function CareersPage() {
       {/* Open Positions */}
       <section aria-labelledby="positions-heading" className="py-16">
         <div className="container px-4 lg:px-6 mx-auto max-w-auto">
-          <h2 id="positions-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+          <h2
+            id="positions-heading"
+            className="text-2xl font-bold text-slate-900 dark:text-white mb-2"
+          >
             Open Positions
           </h2>
           <p className="text-slate-600 dark:text-slate-300 mb-8">
@@ -204,16 +220,18 @@ export default function CareersPage() {
                         {job.department}
                       </span>
                     </div>
-                    <p className="text-slate-600 dark:text-slate-300 text-sm">
-                      {job.description}
-                    </p>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm">{job.description}</p>
                     <div className="flex flex-wrap gap-3 text-sm text-slate-500 dark:text-slate-400">
                       <span className="inline-flex items-center gap-1">
-                        <span className="material-symbols-outlined text-base" aria-hidden="true">location_on</span>
+                        <span className="material-symbols-outlined text-base" aria-hidden="true">
+                          location_on
+                        </span>
                         <span>{job.location}</span>
                       </span>
                       <span className="inline-flex items-center gap-1">
-                        <span className="material-symbols-outlined text-base" aria-hidden="true">schedule</span>
+                        <span className="material-symbols-outlined text-base" aria-hidden="true">
+                          schedule
+                        </span>
                         <span>{job.type}</span>
                       </span>
                     </div>
@@ -224,7 +242,9 @@ export default function CareersPage() {
                       className="inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg bg-[#137fec] text-white font-medium hover:bg-[#0e6ac7] transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2"
                     >
                       <span>Apply Now</span>
-                      <span className="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
+                      <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                        arrow_forward
+                      </span>
                     </Link>
                   </div>
                 </div>
@@ -236,7 +256,12 @@ export default function CareersPage() {
                   <ul className="mt-3 space-y-1 text-sm text-slate-600 dark:text-slate-300">
                     {job.requirements.map((req) => (
                       <li key={req} className="flex items-start gap-2">
-                        <span className="material-symbols-outlined text-base text-[#137fec] mt-0.5" aria-hidden="true">check_circle</span>
+                        <span
+                          className="material-symbols-outlined text-base text-[#137fec] mt-0.5"
+                          aria-hidden="true"
+                        >
+                          check_circle
+                        </span>
                         <span>{req}</span>
                       </li>
                     ))}
@@ -251,7 +276,10 @@ export default function CareersPage() {
       {/* Benefits Section */}
       <section aria-labelledby="benefits-heading" className="py-16 bg-white dark:bg-slate-800">
         <div className="container px-4 lg:px-6 mx-auto max-w-auto">
-          <h2 id="benefits-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-8">
+          <h2
+            id="benefits-heading"
+            className="text-2xl font-bold text-slate-900 dark:text-white mb-8"
+          >
             Benefits & Perks
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -261,12 +289,15 @@ export default function CareersPage() {
                 className="flex items-start gap-4 p-4 rounded-lg bg-slate-50 dark:bg-slate-900"
               >
                 <div className="w-10 h-10 rounded-lg bg-[#137fec]/10 flex items-center justify-center flex-shrink-0">
-                  <span className="material-symbols-outlined text-xl text-[#137fec]" aria-hidden="true">{benefit.icon}</span>
+                  <span
+                    className="material-symbols-outlined text-xl text-[#137fec]"
+                    aria-hidden="true"
+                  >
+                    {benefit.icon}
+                  </span>
                 </div>
                 <div>
-                  <h3 className="font-semibold text-slate-900 dark:text-white">
-                    {benefit.title}
-                  </h3>
+                  <h3 className="font-semibold text-slate-900 dark:text-white">{benefit.title}</h3>
                   <p className="text-sm text-slate-600 dark:text-slate-300">
                     {benefit.description}
                   </p>
@@ -284,10 +315,10 @@ export default function CareersPage() {
             Apply to IntelliFlow
           </h2>
           <p className="text-slate-600 dark:text-slate-300 mb-8">
-            Don&apos;t see the perfect role? We&apos;re always looking for exceptional talent.
-            Send us your details and we&apos;ll be in touch.
+            Don&apos;t see the perfect role? We&apos;re always looking for exceptional talent. Send
+            us your details and we&apos;ll be in touch.
           </p>
-          <ApplicationForm positions={jobListings.map(j => ({ id: j.id, title: j.title }))} />
+          <ApplicationForm positions={jobListings.map((j) => ({ id: j.id, title: j.title }))} />
         </div>
       </section>
     </main>

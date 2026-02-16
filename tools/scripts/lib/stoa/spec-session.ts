@@ -29,11 +29,7 @@ import type {
   CodebasePattern,
 } from './types.js';
 import { AGENT_POOL } from './agent-selection.js';
-import {
-  getSpecificationsDir,
-  getSpecPath,
-  getDiscussionPath,
-} from './paths.js';
+import { getSpecificationsDir, getSpecPath, getDiscussionPath } from './paths.js';
 import { resolveAgentMode } from './agent-mode.js';
 import type { AgentMode } from './agent-mode.js';
 
@@ -190,21 +186,23 @@ export function buildAgentPrompt(
   prompt += `## Context Summary
 
 ### Dependencies
-${session.hydratedContext.dependencyArtifacts.length > 0
+${
+  session.hydratedContext.dependencyArtifacts.length > 0
     ? session.hydratedContext.dependencyArtifacts
         .map((d: DependencyArtifact) => `- ${d.taskId}: ${d.status || 'Unknown'}`)
         .join('\n')
     : 'No dependencies.'
-  }
+}
 
 ### Relevant Patterns Found
-${session.hydratedContext.codebasePatterns.length > 0
+${
+  session.hydratedContext.codebasePatterns.length > 0
     ? session.hydratedContext.codebasePatterns
         .slice(0, 5)
         .map((p: CodebasePattern) => `- ${p.filePath}:${p.lineNumber} (${p.keyword})`)
         .join('\n')
     : 'No patterns found.'
-  }
+}
 
 `;
 
@@ -511,7 +509,9 @@ export function shouldContinueSession(session: SpecSession): boolean {
   const lastRound = session.rounds[session.rounds.length - 1];
   if (lastRound?.roundType === 'CONSENSUS' && !lastRound.consensusReached) {
     // Allow up to 3 consensus attempts
-    const consensusRounds = session.rounds.filter((r: SpecSessionRound) => r.roundType === 'CONSENSUS');
+    const consensusRounds = session.rounds.filter(
+      (r: SpecSessionRound) => r.roundType === 'CONSENSUS'
+    );
     if (consensusRounds.length >= 3) {
       return false;
     }
@@ -584,7 +584,10 @@ function buildOverview(task: any, session: SpecSession): string {
   return task.description || 'No overview available.';
 }
 
-function buildTechnicalApproach(proposals: AgentContribution[], consensus: AgentContribution[]): string {
+function buildTechnicalApproach(
+  proposals: AgentContribution[],
+  consensus: AgentContribution[]
+): string {
   const approaches: string[] = [];
 
   for (const c of proposals) {
@@ -670,7 +673,10 @@ function extractAcceptanceCriteria(task: any, consensus: AgentContribution[]): s
 
   // Start with DoD items
   if (task.definitionOfDone) {
-    const dodItems = task.definitionOfDone.split(';').map((d: string) => d.trim()).filter(Boolean);
+    const dodItems = task.definitionOfDone
+      .split(';')
+      .map((d: string) => d.trim())
+      .filter(Boolean);
     criteria.push(...dodItems.map((d: string) => `[ ] ${d}`));
   }
 
@@ -871,7 +877,9 @@ ${spec.risks.map((r: SpecRisk) => `| ${r.risk} | ${r.mitigation} |`).join('\n')}
 
 ## Agent Sign-offs
 
-${Object.entries(spec.agentSignoffs).map(([agent, approved]) => `- [${approved ? 'x' : ' '}] ${agent}`).join('\n')}
+${Object.entries(spec.agentSignoffs)
+  .map(([agent, approved]) => `- [${approved ? 'x' : ' '}] ${agent}`)
+  .join('\n')}
 
 ---
 
@@ -921,10 +929,13 @@ ${session.selectedAgents.selectedAgents.map((a: string) => `- ${a}`).join('\n')}
 
 `;
       if (contrib.interpretation) md += `**Interpretation:** ${contrib.interpretation}\n\n`;
-      if (contrib.questions?.length) md += `**Questions:**\n${contrib.questions.map((q: string) => `- ${q}`).join('\n')}\n\n`;
-      if (contrib.concerns?.length) md += `**Concerns:**\n${contrib.concerns.map((c: string) => `- ${c}`).join('\n')}\n\n`;
+      if (contrib.questions?.length)
+        md += `**Questions:**\n${contrib.questions.map((q: string) => `- ${q}`).join('\n')}\n\n`;
+      if (contrib.concerns?.length)
+        md += `**Concerns:**\n${contrib.concerns.map((c: string) => `- ${c}`).join('\n')}\n\n`;
       if (contrib.proposal) md += `**Proposal:** ${contrib.proposal}\n\n`;
-      if (contrib.challenges?.length) md += `**Challenges:**\n${contrib.challenges.map((c: string) => `- ${c}`).join('\n')}\n\n`;
+      if (contrib.challenges?.length)
+        md += `**Challenges:**\n${contrib.challenges.map((c: string) => `- ${c}`).join('\n')}\n\n`;
       if (contrib.consensus) md += `**Consensus:** ${contrib.consensus}\n\n`;
     }
 

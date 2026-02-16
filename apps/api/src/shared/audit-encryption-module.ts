@@ -21,7 +21,14 @@
  * ```
  */
 
-import { createCipheriv, createDecipheriv, randomBytes, createHmac, CipherGCM, DecipherGCM } from 'crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  randomBytes,
+  createHmac,
+  CipherGCM,
+  DecipherGCM,
+} from 'crypto';
 
 /**
  * Audit log encryption configuration

@@ -31,7 +31,13 @@ import {
   logSecurityEventToDb,
   createBulkOperationEntry,
 } from './handlers';
-import type { CrudLogOptions, BulkAction, BulkLogOptions, AuthLogOptions, PermissionDeniedOptions } from './handlers';
+import type {
+  CrudLogOptions,
+  BulkAction,
+  BulkLogOptions,
+  AuthLogOptions,
+  PermissionDeniedOptions,
+} from './handlers';
 import {
   queryComprehensive,
   queryBasic,

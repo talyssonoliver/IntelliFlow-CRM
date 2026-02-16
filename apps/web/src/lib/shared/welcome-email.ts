@@ -239,7 +239,9 @@ export function buildWelcomeEmailPayload(data: WelcomeEmailData): WelcomeEmailPa
         ${verificationUrl ? 'Please verify your email address to get started.' : 'Your account is ready to use.'}
       </p>
 
-      ${verificationUrl ? `
+      ${
+        verificationUrl
+          ? `
       <div style="text-align: center;">
         <a href="${verificationUrl}" class="cta-button">Verify Email Address</a>
       </div>
@@ -247,11 +249,13 @@ export function buildWelcomeEmailPayload(data: WelcomeEmailData): WelcomeEmailPa
         Or copy and paste this link into your browser:<br>
         <a href="${verificationUrl}" style="color: #137fec; word-break: break-all;">${verificationUrl}</a>
       </p>
-      ` : `
+      `
+          : `
       <div style="text-align: center;">
         <a href="${APP_URL}/dashboard" class="cta-button">Go to Dashboard</a>
       </div>
-      `}
+      `
+      }
 
       <div class="features">
         <h3>What you can do with ${APP_NAME}:</h3>
@@ -320,7 +324,8 @@ Hi ${firstName},
 
 Thank you for creating your ${APP_NAME} account! We're excited to have you on board.
 
-${verificationUrl
+${
+  verificationUrl
     ? `Please verify your email address to get started:
 ${verificationUrl}`
     : `Your account is ready to use. Go to your dashboard:

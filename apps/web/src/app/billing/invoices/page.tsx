@@ -27,13 +27,10 @@ export default function InvoicesPage() {
   const prevDataRef = useRef<typeof data>(undefined);
 
   // Fetch invoices with pagination
-  const {
-    data,
-    isLoading,
-    isFetching,
-  } = trpc.billing.listInvoices.useQuery(
-    { page, limit: INVOICES_PER_PAGE }
-  );
+  const { data, isLoading, isFetching } = trpc.billing.listInvoices.useQuery({
+    page,
+    limit: INVOICES_PER_PAGE,
+  });
 
   // Handle data updates with useEffect (TanStack Query v5 pattern)
   useEffect(() => {
@@ -45,9 +42,7 @@ export default function InvoicesPage() {
         setAllInvoices((prev) => {
           // Avoid duplicates
           const existingIds = new Set(prev.map((inv) => inv.id));
-          const newInvoices = data.invoices.filter(
-            (inv) => !existingIds.has(inv.id)
-          );
+          const newInvoices = data.invoices.filter((inv) => !existingIds.has(inv.id));
           return [...prev, ...newInvoices];
         });
       }
@@ -70,9 +65,7 @@ export default function InvoicesPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            Invoices
-          </h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Invoices</h1>
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             View and download your billing history
           </p>

@@ -106,32 +106,84 @@ export class Invoice extends AggregateRoot<InvoiceId> {
 
   // ── Getters ──
 
-  get invoiceNumber(): string { return this.props.invoiceNumber; }
-  get customerId(): string { return this.props.customerId; }
-  get tenantId(): string { return this.props.tenantId; }
-  get status(): InvoiceStatus { return this.props.status; }
-  get paymentStatus(): PaymentStatus { return this.props.paymentStatus; }
-  get lineItems(): ReadonlyArray<LineItem> { return [...this.props.lineItems]; }
-  get subtotal(): Money { return this.props.subtotal; }
-  get totalTax(): Money { return this.props.totalTax; }
-  get totalAmount(): Money { return this.props.totalAmount; }
-  get amountPaid(): Money { return this.props.amountPaid; }
-  get amountDue(): Money { return this.props.amountDue; }
-  get amountRefunded(): Money { return this.props.amountRefunded; }
-  get currency(): string { return this.props.currency; }
-  get taxRate(): TaxRate { return this.props.taxRate; }
-  get paymentTerms(): PaymentTerms { return this.props.paymentTerms; }
-  get issueDate(): Date { return this.props.issueDate; }
-  get dueDate(): Date { return this.props.dueDate; }
-  get paidAt(): Date | undefined { return this.props.paidAt; }
-  get voidedAt(): Date | undefined { return this.props.voidedAt; }
-  get billingEmail(): string { return this.props.billingEmail; }
-  get billingAddress(): BillingAddress | undefined { return this.props.billingAddress; }
-  get subscriptionId(): string | undefined { return this.props.subscriptionId; }
-  get stripeInvoiceId(): string | undefined { return this.props.stripeInvoiceId; }
-  get notes(): string | undefined { return this.props.notes; }
-  get createdAt(): Date { return this.props.createdAt; }
-  get updatedAt(): Date { return this.props.updatedAt; }
+  get invoiceNumber(): string {
+    return this.props.invoiceNumber;
+  }
+  get customerId(): string {
+    return this.props.customerId;
+  }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get status(): InvoiceStatus {
+    return this.props.status;
+  }
+  get paymentStatus(): PaymentStatus {
+    return this.props.paymentStatus;
+  }
+  get lineItems(): ReadonlyArray<LineItem> {
+    return [...this.props.lineItems];
+  }
+  get subtotal(): Money {
+    return this.props.subtotal;
+  }
+  get totalTax(): Money {
+    return this.props.totalTax;
+  }
+  get totalAmount(): Money {
+    return this.props.totalAmount;
+  }
+  get amountPaid(): Money {
+    return this.props.amountPaid;
+  }
+  get amountDue(): Money {
+    return this.props.amountDue;
+  }
+  get amountRefunded(): Money {
+    return this.props.amountRefunded;
+  }
+  get currency(): string {
+    return this.props.currency;
+  }
+  get taxRate(): TaxRate {
+    return this.props.taxRate;
+  }
+  get paymentTerms(): PaymentTerms {
+    return this.props.paymentTerms;
+  }
+  get issueDate(): Date {
+    return this.props.issueDate;
+  }
+  get dueDate(): Date {
+    return this.props.dueDate;
+  }
+  get paidAt(): Date | undefined {
+    return this.props.paidAt;
+  }
+  get voidedAt(): Date | undefined {
+    return this.props.voidedAt;
+  }
+  get billingEmail(): string {
+    return this.props.billingEmail;
+  }
+  get billingAddress(): BillingAddress | undefined {
+    return this.props.billingAddress;
+  }
+  get subscriptionId(): string | undefined {
+    return this.props.subscriptionId;
+  }
+  get stripeInvoiceId(): string | undefined {
+    return this.props.stripeInvoiceId;
+  }
+  get notes(): string | undefined {
+    return this.props.notes;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt;
+  }
+  get updatedAt(): Date {
+    return this.props.updatedAt;
+  }
 
   // ── Computed properties ──
 
@@ -144,7 +196,11 @@ export class Invoice extends AggregateRoot<InvoiceId> {
   }
 
   get isOverdue(): boolean {
-    return this.props.status === 'OPEN' && this.props.dueDate < new Date() && this.props.amountDue.cents > 0;
+    return (
+      this.props.status === 'OPEN' &&
+      this.props.dueDate < new Date() &&
+      this.props.amountDue.cents > 0
+    );
   }
 
   get outstandingBalance(): Money {
@@ -179,7 +235,9 @@ export class Invoice extends AggregateRoot<InvoiceId> {
     for (const itemProps of props.lineItems) {
       const itemResult = LineItem.create({ ...itemProps, currency });
       if (itemResult.isFailure) {
-        return Result.fail(new InvalidInvoiceError(`Invalid line item: ${itemResult.error.message}`));
+        return Result.fail(
+          new InvalidInvoiceError(`Invalid line item: ${itemResult.error.message}`)
+        );
       }
       lineItems.push(itemResult.value);
     }
@@ -199,7 +257,9 @@ export class Invoice extends AggregateRoot<InvoiceId> {
     const taxType = props.taxType ?? 'NONE';
     const taxRateResult = TaxRate.create(taxRateValue, taxType, props.taxJurisdiction);
     if (taxRateResult.isFailure) {
-      return Result.fail(new InvalidInvoiceError(`Invalid tax rate: ${taxRateResult.error.message}`));
+      return Result.fail(
+        new InvalidInvoiceError(`Invalid tax rate: ${taxRateResult.error.message}`)
+      );
     }
     const taxRate = taxRateResult.value;
     const totalTax = taxRate.calculate(subtotal);
@@ -222,10 +282,13 @@ export class Invoice extends AggregateRoot<InvoiceId> {
         return Result.fail(new InvalidInvoiceError('Due date cannot be before issue date'));
       }
       const daysDiff = Math.ceil((dueDate.getTime() - issueDate.getTime()) / (1000 * 60 * 60 * 24));
-      const termsDesc = props.paymentTermsDescription ?? (daysDiff === 0 ? 'Due on Receipt' : `Net ${daysDiff}`);
+      const termsDesc =
+        props.paymentTermsDescription ?? (daysDiff === 0 ? 'Due on Receipt' : `Net ${daysDiff}`);
       const termsResult = PaymentTerms.create(daysDiff, termsDesc);
       if (termsResult.isFailure) {
-        return Result.fail(new InvalidInvoiceError(`Invalid payment terms: ${termsResult.error.message}`));
+        return Result.fail(
+          new InvalidInvoiceError(`Invalid payment terms: ${termsResult.error.message}`)
+        );
       }
       paymentTerms = termsResult.value;
     } else {
@@ -233,7 +296,9 @@ export class Invoice extends AggregateRoot<InvoiceId> {
       const desc = props.paymentTermsDescription ?? (days === 0 ? 'Due on Receipt' : `Net ${days}`);
       const termsResult = PaymentTerms.create(days, desc);
       if (termsResult.isFailure) {
-        return Result.fail(new InvalidInvoiceError(`Invalid payment terms: ${termsResult.error.message}`));
+        return Result.fail(
+          new InvalidInvoiceError(`Invalid payment terms: ${termsResult.error.message}`)
+        );
       }
       paymentTerms = termsResult.value;
       dueDate = paymentTerms.calculateDueDate(issueDate);
@@ -313,10 +378,15 @@ export class Invoice extends AggregateRoot<InvoiceId> {
   recordPayment(
     amount: Money,
     transactionId?: string
-  ): Result<void, InvalidPaymentAmountError | InvalidInvoiceTransitionError | BillingCurrencyMismatchError> {
+  ): Result<
+    void,
+    InvalidPaymentAmountError | InvalidInvoiceTransitionError | BillingCurrencyMismatchError
+  > {
     if (this.props.status !== 'OPEN') {
       return Result.fail(
-        new InvalidPaymentAmountError(`Cannot record payment on invoice with status ${this.props.status}. Invoice must be OPEN.`)
+        new InvalidPaymentAmountError(
+          `Cannot record payment on invoice with status ${this.props.status}. Invoice must be OPEN.`
+        )
       );
     }
 
@@ -397,7 +467,9 @@ export class Invoice extends AggregateRoot<InvoiceId> {
   ): Result<void, InvalidRefundAmountError | BillingCurrencyMismatchError> {
     if (isTerminalInvoiceStatus(this.props.status) && this.props.status !== 'PAID') {
       return Result.fail(
-        new InvalidRefundAmountError(`Cannot process refund on invoice with status ${this.props.status}`)
+        new InvalidRefundAmountError(
+          `Cannot process refund on invoice with status ${this.props.status}`
+        )
       );
     }
 
@@ -455,12 +527,7 @@ export class Invoice extends AggregateRoot<InvoiceId> {
     this.props.updatedAt = new Date();
 
     this.addDomainEvent(
-      new InvoiceRefundedEvent(
-        this.id.value,
-        amount.cents,
-        reason,
-        this.props.tenantId
-      )
+      new InvoiceRefundedEvent(this.id.value, amount.cents, reason, this.props.tenantId)
     );
 
     return Result.ok(undefined);
@@ -484,9 +551,7 @@ export class Invoice extends AggregateRoot<InvoiceId> {
     this.props.voidedAt = now;
     this.props.updatedAt = now;
 
-    this.addDomainEvent(
-      new InvoiceVoidedEvent(this.id.value, reason, now, this.props.tenantId)
-    );
+    this.addDomainEvent(new InvoiceVoidedEvent(this.id.value, reason, now, this.props.tenantId));
 
     return Result.ok(undefined);
   }
@@ -500,17 +565,15 @@ export class Invoice extends AggregateRoot<InvoiceId> {
     this.props.updatedAt = new Date();
 
     this.addDomainEvent(
-      new InvoiceUncollectibleEvent(
-        this.id.value,
-        this.props.amountDue.cents,
-        this.props.tenantId
-      )
+      new InvoiceUncollectibleEvent(this.id.value, this.props.amountDue.cents, this.props.tenantId)
     );
 
     return Result.ok(undefined);
   }
 
-  addLineItem(itemProps: CreateLineItemProps): Result<void, InvoiceNotEditableError | InvalidInvoiceError> {
+  addLineItem(
+    itemProps: CreateLineItemProps
+  ): Result<void, InvoiceNotEditableError | InvalidInvoiceError> {
     if (!this.isEditable) {
       return Result.fail(new InvoiceNotEditableError(this.props.status));
     }

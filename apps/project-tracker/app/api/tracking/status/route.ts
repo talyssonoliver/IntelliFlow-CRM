@@ -22,13 +22,7 @@ interface StatusSnapshot {
 export async function GET(_request?: NextRequest) {
   try {
     // Always generate fresh data from CSV to ensure accuracy
-    const csvPath = path.join(
-      process.cwd(),
-      'docs',
-      'metrics',
-      '_global',
-      'Sprint_plan.csv'
-    );
+    const csvPath = path.join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
 
     let statusData: StatusSnapshot | null = null;
     let lastUpdated: string | null = null;
@@ -51,19 +45,21 @@ export async function GET(_request?: NextRequest) {
     }
 
     // Transform to the format the component expects
-    const snapshot = statusData ? {
-      summary: {
-        total: statusData.total ?? 0,
-        completed: statusData.completed ?? 0,
-        in_progress: statusData.in_progress ?? 0,
-        planned: 0, // Not tracked separately
-        backlog: statusData.backlog ?? 0,
-        blocked: statusData.blocked ?? 0,
-      },
-      by_sprint: calculateBySprint(statusData.tasks ?? {}),
-      by_section: calculateBySection(statusData.tasks ?? {}),
-      recent_completions: getRecentCompletions(statusData.tasks ?? {}),
-    } : null;
+    const snapshot = statusData
+      ? {
+          summary: {
+            total: statusData.total ?? 0,
+            completed: statusData.completed ?? 0,
+            in_progress: statusData.in_progress ?? 0,
+            planned: 0, // Not tracked separately
+            backlog: statusData.backlog ?? 0,
+            blocked: statusData.blocked ?? 0,
+          },
+          by_sprint: calculateBySprint(statusData.tasks ?? {}),
+          by_section: calculateBySection(statusData.tasks ?? {}),
+          recent_completions: getRecentCompletions(statusData.tasks ?? {}),
+        }
+      : null;
 
     return NextResponse.json({
       status: 'ok',
@@ -72,27 +68,35 @@ export async function GET(_request?: NextRequest) {
     });
   } catch (error) {
     console.error('Error reading status snapshot:', error);
-    return NextResponse.json(
-      { status: 'error', message: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ status: 'error', message: String(error) }, { status: 500 });
   }
 }
 
 function parseCSVToSnapshot(csvContent: string): StatusSnapshot {
-  const lines = csvContent.split('\n').filter(line => line.trim());
+  const lines = csvContent.split('\n').filter((line) => line.trim());
   if (lines.length < 2) {
-    return { generated_at: new Date().toISOString(), total: 0, completed: 0, in_progress: 0, blocked: 0, backlog: 0, tasks: {} };
+    return {
+      generated_at: new Date().toISOString(),
+      total: 0,
+      completed: 0,
+      in_progress: 0,
+      blocked: 0,
+      backlog: 0,
+      tasks: {},
+    };
   }
 
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-  const statusIndex = headers.findIndex(h => h === 'status');
-  const taskIdIndex = headers.findIndex(h => h.includes('task'));
-  const sectionIndex = headers.findIndex(h => h === 'section');
-  const sprintIndex = headers.findIndex(h => h.includes('sprint'));
+  const headers = lines[0].split(',').map((h) => h.trim().toLowerCase());
+  const statusIndex = headers.findIndex((h) => h === 'status');
+  const taskIdIndex = headers.findIndex((h) => h.includes('task'));
+  const sectionIndex = headers.findIndex((h) => h === 'section');
+  const sprintIndex = headers.findIndex((h) => h.includes('sprint'));
 
   const tasks: Record<string, { status: string; section: string; sprint: string }> = {};
-  let completed = 0, inProgress = 0, blocked = 0, backlog = 0;
+  let completed = 0,
+    inProgress = 0,
+    blocked = 0,
+    backlog = 0;
 
   for (let i = 1; i < lines.length; i++) {
     const values = lines[i].split(',');
@@ -111,10 +115,20 @@ function parseCSVToSnapshot(csvContent: string): StatusSnapshot {
     }
   }
 
-  return { generated_at: new Date().toISOString(), total: Object.keys(tasks).length, completed, in_progress: inProgress, blocked, backlog, tasks };
+  return {
+    generated_at: new Date().toISOString(),
+    total: Object.keys(tasks).length,
+    completed,
+    in_progress: inProgress,
+    blocked,
+    backlog,
+    tasks,
+  };
 }
 
-function calculateBySprint(tasks: Record<string, { status: string; section: string; sprint: string }>): Record<string, { total: number; completed: number }> {
+function calculateBySprint(
+  tasks: Record<string, { status: string; section: string; sprint: string }>
+): Record<string, { total: number; completed: number }> {
   const result: Record<string, { total: number; completed: number }> = {};
   for (const [, task] of Object.entries(tasks)) {
     const sprint = task.sprint || 'Unknown';
@@ -127,7 +141,9 @@ function calculateBySprint(tasks: Record<string, { status: string; section: stri
   return result;
 }
 
-function calculateBySection(tasks: Record<string, { status: string; section: string; sprint: string }>): Record<string, { total: number; completed: number }> {
+function calculateBySection(
+  tasks: Record<string, { status: string; section: string; sprint: string }>
+): Record<string, { total: number; completed: number }> {
   const result: Record<string, { total: number; completed: number }> = {};
   for (const [, task] of Object.entries(tasks)) {
     const section = task.section || 'Unknown';
@@ -140,9 +156,14 @@ function calculateBySection(tasks: Record<string, { status: string; section: str
   return result;
 }
 
-function getRecentCompletions(tasks: Record<string, { status: string; section: string; sprint: string }>): Array<{ task_id: string; description: string; completed_at: string }> {
+function getRecentCompletions(
+  tasks: Record<string, { status: string; section: string; sprint: string }>
+): Array<{ task_id: string; description: string; completed_at: string }> {
   return Object.entries(tasks)
-    .filter(([, task]) => task.status.toLowerCase() === 'completed' || task.status.toLowerCase() === 'done')
+    .filter(
+      ([, task]) =>
+        task.status.toLowerCase() === 'completed' || task.status.toLowerCase() === 'done'
+    )
     .slice(0, 10)
     .map(([taskId, task]) => ({
       task_id: taskId,
@@ -157,34 +178,25 @@ export async function POST(_request?: NextRequest) {
     return await generateStatusFromCSV();
   } catch (error) {
     console.error('Error regenerating status snapshot:', error);
-    return NextResponse.json(
-      { status: 'error', message: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ status: 'error', message: String(error) }, { status: 500 });
   }
 }
 
 async function generateStatusFromCSV(): Promise<NextResponse> {
   try {
-    const csvPath = path.join(
-      process.cwd(),
-      'docs',
-      'metrics',
-      '_global',
-      'Sprint_plan.csv'
-    );
+    const csvPath = path.join(process.cwd(), 'docs', 'metrics', '_global', 'Sprint_plan.csv');
     const csvContent = await fs.readFile(csvPath, 'utf-8');
-    const lines = csvContent.split('\n').filter(line => line.trim());
+    const lines = csvContent.split('\n').filter((line) => line.trim());
 
     if (lines.length < 2) {
       throw new Error('CSV file is empty or has no data rows');
     }
 
     const headers = lines[0].split(',');
-    const statusIndex = headers.findIndex(h => h.toLowerCase() === 'status');
-    const taskIdIndex = headers.findIndex(h => h.toLowerCase().includes('task'));
-    const sectionIndex = headers.findIndex(h => h.toLowerCase() === 'section');
-    const sprintIndex = headers.findIndex(h => h.toLowerCase().includes('sprint'));
+    const statusIndex = headers.findIndex((h) => h.toLowerCase() === 'status');
+    const taskIdIndex = headers.findIndex((h) => h.toLowerCase().includes('task'));
+    const sectionIndex = headers.findIndex((h) => h.toLowerCase() === 'section');
+    const sprintIndex = headers.findIndex((h) => h.toLowerCase().includes('sprint'));
 
     const tasks: Record<string, { status: string; section: string; sprint: string }> = {};
     let completed = 0;

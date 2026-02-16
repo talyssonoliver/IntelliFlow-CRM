@@ -19,13 +19,7 @@
 import { PrismaClient } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { AuditLogger, getAuditLogger } from './audit-logger';
-import {
-  AuditAction,
-  ActorType,
-  DataClassification,
-  ResourceType,
-  ActionResult,
-} from './types';
+import { AuditAction, ActorType, DataClassification, ResourceType, ActionResult } from './types';
 import { getAIEventSeverity } from '@intelliflow/domain';
 
 // ============================================================================
@@ -92,41 +86,41 @@ export interface AuditEventResult {
  */
 const EVENT_AUDIT_MAPPINGS: Record<string, EventAuditMapping> = {
   // Lead events
-  'LeadCreated': {
+  LeadCreated: {
     action: 'CREATE',
     resourceType: 'lead',
     dataClassification: 'CONFIDENTIAL',
     extractAfterState: (p) => p.lead as Record<string, unknown>,
     extractResourceName: (p) => (p.lead as Record<string, unknown>)?.email as string,
   },
-  'LeadUpdated': {
+  LeadUpdated: {
     action: 'UPDATE',
     resourceType: 'lead',
     dataClassification: 'CONFIDENTIAL',
     extractBeforeState: (p) => p.before as Record<string, unknown>,
     extractAfterState: (p) => p.after as Record<string, unknown>,
-    extractChangedFields: (p) => p.changedFields as string[] ?? [],
+    extractChangedFields: (p) => (p.changedFields as string[]) ?? [],
   },
-  'LeadScored': {
+  LeadScored: {
     action: 'AI_SCORE',
     resourceType: 'lead',
     dataClassification: 'INTERNAL',
     actorType: 'AI_AGENT',
     extractAfterState: (p) => ({ score: p.score, confidence: p.confidence, factors: p.factors }),
   },
-  'LeadQualified': {
+  LeadQualified: {
     action: 'QUALIFY',
     resourceType: 'lead',
     dataClassification: 'CONFIDENTIAL',
     extractAfterState: (p) => ({ qualified: true, qualifiedBy: p.qualifiedBy }),
   },
-  'LeadConverted': {
+  LeadConverted: {
     action: 'CONVERT',
     resourceType: 'lead',
     dataClassification: 'CONFIDENTIAL',
     extractAfterState: (p) => ({ contactId: p.contactId, accountId: p.accountId }),
   },
-  'LeadDeleted': {
+  LeadDeleted: {
     action: 'DELETE',
     resourceType: 'lead',
     dataClassification: 'CONFIDENTIAL',
@@ -134,7 +128,7 @@ const EVENT_AUDIT_MAPPINGS: Record<string, EventAuditMapping> = {
   },
 
   // Contact events
-  'ContactCreated': {
+  ContactCreated: {
     action: 'CREATE',
     resourceType: 'contact',
     dataClassification: 'CONFIDENTIAL',
@@ -144,59 +138,59 @@ const EVENT_AUDIT_MAPPINGS: Record<string, EventAuditMapping> = {
       return `${contact?.firstName} ${contact?.lastName}`;
     },
   },
-  'ContactUpdated': {
+  ContactUpdated: {
     action: 'UPDATE',
     resourceType: 'contact',
     dataClassification: 'CONFIDENTIAL',
     extractBeforeState: (p) => p.before as Record<string, unknown>,
     extractAfterState: (p) => p.after as Record<string, unknown>,
-    extractChangedFields: (p) => p.changedFields as string[] ?? [],
+    extractChangedFields: (p) => (p.changedFields as string[]) ?? [],
   },
-  'ContactDeleted': {
+  ContactDeleted: {
     action: 'DELETE',
     resourceType: 'contact',
     dataClassification: 'CONFIDENTIAL',
   },
 
   // Account events
-  'AccountCreated': {
+  AccountCreated: {
     action: 'CREATE',
     resourceType: 'account',
     dataClassification: 'CONFIDENTIAL',
     extractAfterState: (p) => p.account as Record<string, unknown>,
     extractResourceName: (p) => (p.account as Record<string, unknown>)?.name as string,
   },
-  'AccountUpdated': {
+  AccountUpdated: {
     action: 'UPDATE',
     resourceType: 'account',
     dataClassification: 'CONFIDENTIAL',
     extractBeforeState: (p) => p.before as Record<string, unknown>,
     extractAfterState: (p) => p.after as Record<string, unknown>,
-    extractChangedFields: (p) => p.changedFields as string[] ?? [],
+    extractChangedFields: (p) => (p.changedFields as string[]) ?? [],
   },
-  'AccountDeleted': {
+  AccountDeleted: {
     action: 'DELETE',
     resourceType: 'account',
     dataClassification: 'CONFIDENTIAL',
   },
 
   // Opportunity events
-  'OpportunityCreated': {
+  OpportunityCreated: {
     action: 'CREATE',
     resourceType: 'opportunity',
     dataClassification: 'CONFIDENTIAL',
     extractAfterState: (p) => p.opportunity as Record<string, unknown>,
     extractResourceName: (p) => (p.opportunity as Record<string, unknown>)?.name as string,
   },
-  'OpportunityUpdated': {
+  OpportunityUpdated: {
     action: 'UPDATE',
     resourceType: 'opportunity',
     dataClassification: 'CONFIDENTIAL',
     extractBeforeState: (p) => p.before as Record<string, unknown>,
     extractAfterState: (p) => p.after as Record<string, unknown>,
-    extractChangedFields: (p) => p.changedFields as string[] ?? [],
+    extractChangedFields: (p) => (p.changedFields as string[]) ?? [],
   },
-  'OpportunityStageChanged': {
+  OpportunityStageChanged: {
     action: 'UPDATE',
     resourceType: 'opportunity',
     dataClassification: 'CONFIDENTIAL',
@@ -204,63 +198,63 @@ const EVENT_AUDIT_MAPPINGS: Record<string, EventAuditMapping> = {
     extractAfterState: (p) => ({ stage: p.newStage }),
     extractChangedFields: () => ['stage'],
   },
-  'OpportunityClosed': {
+  OpportunityClosed: {
     action: 'UPDATE',
     resourceType: 'opportunity',
     dataClassification: 'CONFIDENTIAL',
     extractAfterState: (p) => ({ status: 'closed', closedAt: p.closedAt, outcome: p.outcome }),
   },
-  'OpportunityDeleted': {
+  OpportunityDeleted: {
     action: 'DELETE',
     resourceType: 'opportunity',
     dataClassification: 'CONFIDENTIAL',
   },
 
   // Task events
-  'TaskCreated': {
+  TaskCreated: {
     action: 'CREATE',
     resourceType: 'task',
     dataClassification: 'INTERNAL',
     extractAfterState: (p) => p.task as Record<string, unknown>,
     extractResourceName: (p) => (p.task as Record<string, unknown>)?.title as string,
   },
-  'TaskUpdated': {
+  TaskUpdated: {
     action: 'UPDATE',
     resourceType: 'task',
     dataClassification: 'INTERNAL',
     extractBeforeState: (p) => p.before as Record<string, unknown>,
     extractAfterState: (p) => p.after as Record<string, unknown>,
-    extractChangedFields: (p) => p.changedFields as string[] ?? [],
+    extractChangedFields: (p) => (p.changedFields as string[]) ?? [],
   },
-  'TaskCompleted': {
+  TaskCompleted: {
     action: 'UPDATE',
     resourceType: 'task',
     dataClassification: 'INTERNAL',
     extractAfterState: (p) => ({ status: 'COMPLETED', completedAt: p.completedAt }),
     extractChangedFields: () => ['status', 'completedAt'],
   },
-  'TaskAssigned': {
+  TaskAssigned: {
     action: 'ASSIGN',
     resourceType: 'task',
     dataClassification: 'INTERNAL',
     extractAfterState: (p) => ({ assignedTo: p.assignedTo }),
     extractChangedFields: () => ['assignedTo'],
   },
-  'TaskDeleted': {
+  TaskDeleted: {
     action: 'DELETE',
     resourceType: 'task',
     dataClassification: 'INTERNAL',
   },
 
   // Appointment events
-  'AppointmentCreated': {
+  AppointmentCreated: {
     action: 'CREATE',
     resourceType: 'appointment',
     dataClassification: 'CONFIDENTIAL',
     extractAfterState: (p) => p.appointment as Record<string, unknown>,
     extractResourceName: (p) => (p.appointment as Record<string, unknown>)?.title as string,
   },
-  'AppointmentRescheduled': {
+  AppointmentRescheduled: {
     action: 'UPDATE',
     resourceType: 'appointment',
     dataClassification: 'CONFIDENTIAL',
@@ -268,27 +262,27 @@ const EVENT_AUDIT_MAPPINGS: Record<string, EventAuditMapping> = {
     extractAfterState: (p) => ({ startTime: p.newStartTime, endTime: p.newEndTime }),
     extractChangedFields: () => ['startTime', 'endTime'],
   },
-  'AppointmentCancelled': {
+  AppointmentCancelled: {
     action: 'UPDATE',
     resourceType: 'appointment',
     dataClassification: 'CONFIDENTIAL',
     extractAfterState: (p) => ({ status: 'CANCELLED', reason: p.reason }),
   },
-  'AppointmentDeleted': {
+  AppointmentDeleted: {
     action: 'DELETE',
     resourceType: 'appointment',
     dataClassification: 'CONFIDENTIAL',
   },
 
   // AI events
-  'AIPrediction': {
+  AIPrediction: {
     action: 'AI_PREDICT',
     resourceType: 'ai_score',
     dataClassification: 'INTERNAL',
     actorType: 'AI_AGENT',
     extractAfterState: (p) => {
       const prediction = p.prediction as Record<string, unknown>;
-      const eventType = p.eventType as string || 'PREDICTION';
+      const eventType = (p.eventType as string) || 'PREDICTION';
       const severity = getAIEventSeverity(eventType);
       return {
         ...prediction,
@@ -296,13 +290,13 @@ const EVENT_AUDIT_MAPPINGS: Record<string, EventAuditMapping> = {
       };
     },
   },
-  'AIGeneration': {
+  AIGeneration: {
     action: 'AI_GENERATE',
     resourceType: 'ai_score',
     dataClassification: 'INTERNAL',
     actorType: 'AI_AGENT',
     extractAfterState: (p) => {
-      const eventType = p.eventType as string || 'GENERATION';
+      const eventType = (p.eventType as string) || 'GENERATION';
       const severity = getAIEventSeverity(eventType);
       return {
         generatedContent: p.content,
@@ -313,29 +307,29 @@ const EVENT_AUDIT_MAPPINGS: Record<string, EventAuditMapping> = {
   },
 
   // User/Auth events
-  'UserLoggedIn': {
+  UserLoggedIn: {
     action: 'LOGIN',
     resourceType: 'user',
     dataClassification: 'PRIVILEGED',
     extractAfterState: (p) => ({ mfaUsed: p.mfaUsed, loginMethod: p.loginMethod }),
   },
-  'UserLoggedOut': {
+  UserLoggedOut: {
     action: 'LOGOUT',
     resourceType: 'user',
     dataClassification: 'INTERNAL',
   },
-  'UserLoginFailed': {
+  UserLoginFailed: {
     action: 'LOGIN_FAILED',
     resourceType: 'user',
     dataClassification: 'PRIVILEGED',
     extractAfterState: (p) => ({ reason: p.reason, attemptCount: p.attemptCount }),
   },
-  'PasswordReset': {
+  PasswordReset: {
     action: 'PASSWORD_RESET',
     resourceType: 'user',
     dataClassification: 'PRIVILEGED',
   },
-  'PermissionDenied': {
+  PermissionDenied: {
     action: 'PERMISSION_DENIED',
     resourceType: 'system',
     dataClassification: 'PRIVILEGED',
@@ -346,7 +340,7 @@ const EVENT_AUDIT_MAPPINGS: Record<string, EventAuditMapping> = {
   },
 
   // Bulk operations
-  'BulkUpdate': {
+  BulkUpdate: {
     action: 'BULK_UPDATE',
     resourceType: 'system',
     dataClassification: 'CONFIDENTIAL',
@@ -356,7 +350,7 @@ const EVENT_AUDIT_MAPPINGS: Record<string, EventAuditMapping> = {
       failureCount: p.failureCount,
     }),
   },
-  'BulkDelete': {
+  BulkDelete: {
     action: 'BULK_DELETE',
     resourceType: 'system',
     dataClassification: 'CONFIDENTIAL',
@@ -366,7 +360,7 @@ const EVENT_AUDIT_MAPPINGS: Record<string, EventAuditMapping> = {
       failureCount: p.failureCount,
     }),
   },
-  'DataImport': {
+  DataImport: {
     action: 'IMPORT',
     resourceType: 'system',
     dataClassification: 'CONFIDENTIAL',
@@ -376,7 +370,7 @@ const EVENT_AUDIT_MAPPINGS: Record<string, EventAuditMapping> = {
       successCount: p.successCount,
     }),
   },
-  'DataExport': {
+  DataExport: {
     action: 'EXPORT',
     resourceType: 'system',
     dataClassification: 'PRIVILEGED',
@@ -422,8 +416,8 @@ export class AuditEventHandler {
       }
 
       // For AI events, include severity from domain utility
-      const isAIEvent = event.eventType.toLowerCase().includes('ai') ||
-        mapping.actorType === 'AI_AGENT';
+      const isAIEvent =
+        event.eventType.toLowerCase().includes('ai') || mapping.actorType === 'AI_AGENT';
       const aiSeverity = isAIEvent ? getAIEventSeverity(event.eventType) : undefined;
 
       const auditLogId = await this.auditLogger.log({

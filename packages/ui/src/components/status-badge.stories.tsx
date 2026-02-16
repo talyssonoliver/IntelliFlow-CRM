@@ -181,25 +181,41 @@ export const InTableContext: Story = {
         <thead className="bg-muted">
           <tr>
             <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">Name</th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">Status</th>
-            <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">Priority</th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">
+              Status
+            </th>
+            <th className="px-4 py-2 text-left text-sm font-medium text-muted-foreground">
+              Priority
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
           <tr>
             <td className="px-4 py-3 text-sm text-foreground">John Doe</td>
-            <td className="px-4 py-3"><StatusBadge status="QUALIFIED" type="lead" showIcon /></td>
-            <td className="px-4 py-3"><StatusBadge status="IN_PROGRESS" type="task" showIcon /></td>
+            <td className="px-4 py-3">
+              <StatusBadge status="QUALIFIED" type="lead" showIcon />
+            </td>
+            <td className="px-4 py-3">
+              <StatusBadge status="IN_PROGRESS" type="task" showIcon />
+            </td>
           </tr>
           <tr>
             <td className="px-4 py-3 text-sm text-foreground">Jane Smith</td>
-            <td className="px-4 py-3"><StatusBadge status="CONVERTED" type="lead" showIcon /></td>
-            <td className="px-4 py-3"><StatusBadge status="COMPLETED" type="task" showIcon /></td>
+            <td className="px-4 py-3">
+              <StatusBadge status="CONVERTED" type="lead" showIcon />
+            </td>
+            <td className="px-4 py-3">
+              <StatusBadge status="COMPLETED" type="task" showIcon />
+            </td>
           </tr>
           <tr>
             <td className="px-4 py-3 text-sm text-foreground">Bob Wilson</td>
-            <td className="px-4 py-3"><StatusBadge status="CONTACTED" type="lead" showIcon /></td>
-            <td className="px-4 py-3"><StatusBadge status="BLOCKED" type="task" showIcon /></td>
+            <td className="px-4 py-3">
+              <StatusBadge status="CONTACTED" type="lead" showIcon />
+            </td>
+            <td className="px-4 py-3">
+              <StatusBadge status="BLOCKED" type="task" showIcon />
+            </td>
           </tr>
         </tbody>
       </table>

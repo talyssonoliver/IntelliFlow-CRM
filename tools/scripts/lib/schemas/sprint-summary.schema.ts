@@ -34,20 +34,22 @@ export const kpiStatusSchema = z.enum([
 ]);
 
 // Phase entry in sprint
-export const sprintPhaseSchema = z.object({
-  id: z.string().regex(phasePattern),
-  status: phaseStatusSchema,
-  started_at: lenientDatetime().nullable().optional(),
-  completed_at: lenientDatetime().nullable().optional(),
-  // Extra fields allowed for backward compatibility
-  phase_id: z.string().optional(),
-  phase_name: z.string().optional(),
-  name: z.string().optional(),
-  phase: z.number().optional(),  // Phase index
-  tasks: z.union([z.array(z.string()), z.number()]).optional(),  // Task list or count
-  task_ids: z.array(z.string()).optional(),  // Alternative field for task list
-  completed: z.number().optional(),  // Completed count
-}).passthrough();
+export const sprintPhaseSchema = z
+  .object({
+    id: z.string().regex(phasePattern),
+    status: phaseStatusSchema,
+    started_at: lenientDatetime().nullable().optional(),
+    completed_at: lenientDatetime().nullable().optional(),
+    // Extra fields allowed for backward compatibility
+    phase_id: z.string().optional(),
+    phase_name: z.string().optional(),
+    name: z.string().optional(),
+    phase: z.number().optional(), // Phase index
+    tasks: z.union([z.array(z.string()), z.number()]).optional(), // Task list or count
+    task_ids: z.array(z.string()).optional(), // Alternative field for task list
+    completed: z.number().optional(), // Completed count
+  })
+  .passthrough();
 
 // Task summary counts
 export const taskSummarySchema = z.object({
@@ -63,7 +65,7 @@ export const taskSummarySchema = z.object({
 export const kpiSummaryEntrySchema = z.object({
   target: z.union([z.string(), z.number(), z.boolean(), z.null()]),
   actual: z.union([z.string(), z.number(), z.boolean(), z.null()]),
-  current: z.union([z.string(), z.number(), z.boolean(), z.null()]).optional(),  // Alias for actual
+  current: z.union([z.string(), z.number(), z.boolean(), z.null()]).optional(), // Alias for actual
   status: kpiStatusSchema,
   unit: z.string().optional(),
 });
@@ -83,17 +85,23 @@ export const sprintBlockerSchema = z.object({
 
 // Schedule health status
 export const scheduleHealthStatusSchema = z.enum([
-  'ahead',      // SPI > 1.1
-  'on_track',   // SPI 0.95-1.1
-  'behind',     // SPI 0.8-0.95
-  'critical',   // SPI < 0.8
+  'ahead', // SPI > 1.1
+  'on_track', // SPI 0.95-1.1
+  'behind', // SPI 0.8-0.95
+  'critical', // SPI < 0.8
 ]);
 
 // Critical path summary
 export const criticalPathSummarySchema = z.object({
   task_ids: z.array(z.string()).describe('Task IDs on the critical path'),
   total_duration_minutes: z.number().nullable().optional().describe('Total critical path duration'),
-  completion_percentage: z.number().min(0).max(100).nullable().optional().describe('Critical path completion %'),
+  completion_percentage: z
+    .number()
+    .min(0)
+    .max(100)
+    .nullable()
+    .optional()
+    .describe('Critical path completion %'),
   bottleneck_task_id: z.string().nullable().optional().describe('Current bottleneck task'),
 });
 
@@ -119,14 +127,20 @@ export const sprintScheduleSchema = z.object({
   schedule_variance: scheduleVarianceSummarySchema.optional().describe('Schedule variance metrics'),
 
   // Computed at
-  calculated_at: lenientDatetime().nullable().optional().describe('When schedule was last calculated'),
+  calculated_at: lenientDatetime()
+    .nullable()
+    .optional()
+    .describe('When schedule was last calculated'),
 });
 
 // Main sprint summary schema
 export const sprintSummarySchema = z.object({
   sprint: z.string().regex(sprintPattern).describe('Sprint identifier (e.g., sprint-0)'),
   name: z.string().describe('Sprint name/title'),
-  target_date: z.string().nullable().describe('Target completion date (YYYY-MM-DD) or null for unscheduled sprints'),
+  target_date: z
+    .string()
+    .nullable()
+    .describe('Target completion date (YYYY-MM-DD) or null for unscheduled sprints'),
   started_at: lenientDatetime().nullable().optional(),
   completed_at: lenientDatetime().nullable().optional(),
   phases: z.array(sprintPhaseSchema).describe('Status of each phase in the sprint'),
@@ -135,7 +149,9 @@ export const sprintSummarySchema = z.object({
   blockers: z.array(sprintBlockerSchema).optional().describe('Active blockers in the sprint'),
 
   // PMBOK Schedule Management
-  schedule: sprintScheduleSchema.optional().describe('PMBOK schedule data (critical path, EVM metrics)'),
+  schedule: sprintScheduleSchema
+    .optional()
+    .describe('PMBOK schedule data (critical path, EVM metrics)'),
 });
 
 // Export TypeScript types inferred from Zod schema

@@ -13,7 +13,15 @@
 interface MockSubscription {
   id: string;
   customerId: string;
-  status: 'incomplete' | 'incomplete_expired' | 'trialing' | 'active' | 'past_due' | 'canceled' | 'unpaid' | 'paused';
+  status:
+    | 'incomplete'
+    | 'incomplete_expired'
+    | 'trialing'
+    | 'active'
+    | 'past_due'
+    | 'canceled'
+    | 'unpaid'
+    | 'paused';
   priceId: string;
   quantity: number;
   currency: string;
@@ -124,7 +132,9 @@ export function createMockInvoice(overrides?: Partial<MockInvoice>): MockInvoice
   };
 }
 
-export function createMockBillingInformation(overrides?: Partial<MockBillingInformation>): MockBillingInformation {
+export function createMockBillingInformation(
+  overrides?: Partial<MockBillingInformation>
+): MockBillingInformation {
   return {
     organization: 'Acme Corp',
     email: 'billing@acme.com',

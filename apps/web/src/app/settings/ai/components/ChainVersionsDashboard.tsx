@@ -24,12 +24,15 @@ interface ChainVersionsDashboardProps {
 }
 
 // Chain type configuration
-const CHAIN_TYPE_CONFIG: Record<ChainType, {
-  label: string;
-  icon: string;
-  description: string;
-  color: string;
-}> = {
+const CHAIN_TYPE_CONFIG: Record<
+  ChainType,
+  {
+    label: string;
+    icon: string;
+    description: string;
+    color: string;
+  }
+> = {
   SCORING: {
     label: 'Lead Scoring',
     icon: '📊',
@@ -145,9 +148,7 @@ export function ChainVersionsDashboard({
             ) : (
               <div className="py-4 text-center">
                 <p className="text-sm text-muted-foreground">No active version</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Create a draft and activate it
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">Create a draft and activate it</p>
               </div>
             )}
           </Card>

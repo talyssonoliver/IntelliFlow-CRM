@@ -14,8 +14,18 @@ export const contactsSidebarConfig: SidebarConfig = {
       items: [
         { id: 'all', label: 'All Contacts', icon: VIEW_ICONS.all, href: '/contacts' },
         { id: 'my', label: 'My Contacts', icon: VIEW_ICONS.my, href: '/contacts?view=my' },
-        { id: 'recent-added', label: 'Recently Added', icon: VIEW_ICONS.recent, href: '/contacts?view=recent-added' },
-        { id: 'recent-viewed', label: 'Recently Viewed', icon: VIEW_ICONS.recentViewed, href: '/contacts?view=recent-viewed' },
+        {
+          id: 'recent-added',
+          label: 'Recently Added',
+          icon: VIEW_ICONS.recent,
+          href: '/contacts?view=recent-added',
+        },
+        {
+          id: 'recent-viewed',
+          label: 'Recently Viewed',
+          icon: VIEW_ICONS.recentViewed,
+          href: '/contacts?view=recent-viewed',
+        },
       ],
     },
     {

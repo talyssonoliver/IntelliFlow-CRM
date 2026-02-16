@@ -20,7 +20,8 @@ const meta: Meta<typeof ChainVersionCard> = {
     layout: 'centered',
     docs: {
       description: {
-        component: 'Card component displaying chain version information with status badge and actions.',
+        component:
+          'Card component displaying chain version information with status badge and actions.',
       },
     },
   },
@@ -147,11 +148,7 @@ export const Selected: Story = {
 export const AllStatuses: Story = {
   render: () => (
     <div className="flex flex-col gap-4">
-      <ChainVersionCard
-        {...baseArgs}
-        status="ACTIVE"
-        onSelect={() => {}}
-      />
+      <ChainVersionCard {...baseArgs} status="ACTIVE" onSelect={() => {}} />
       <ChainVersionCard
         {...baseArgs}
         id="v2-draft"

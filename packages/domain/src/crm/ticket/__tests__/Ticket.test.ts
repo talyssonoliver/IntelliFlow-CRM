@@ -106,9 +106,7 @@ describe('Ticket Aggregate', () => {
     });
 
     it('should default priority to MEDIUM when not specified', () => {
-      const result = Ticket.create(
-        createDefaultTicketProps({ priority: undefined })
-      );
+      const result = Ticket.create(createDefaultTicketProps({ priority: undefined }));
 
       expect(result.value.priority).toBe('MEDIUM');
     });
@@ -126,9 +124,7 @@ describe('Ticket Aggregate', () => {
     });
 
     it('should emit TicketCreatedEvent on creation', () => {
-      const result = Ticket.create(
-        createDefaultTicketProps({ priority: 'CRITICAL' })
-      );
+      const result = Ticket.create(createDefaultTicketProps({ priority: 'CRITICAL' }));
 
       const ticket = result.value;
       const events = ticket.getDomainEvents();
@@ -176,10 +172,7 @@ describe('Ticket Aggregate', () => {
       });
 
       it('should transition from OPEN to WAITING_ON_THIRD_PARTY', () => {
-        const result = ticket.changeStatus(
-          'WAITING_ON_THIRD_PARTY',
-          'agent-123'
-        );
+        const result = ticket.changeStatus('WAITING_ON_THIRD_PARTY', 'agent-123');
 
         expect(result.isSuccess).toBe(true);
         expect(ticket.status).toBe('WAITING_ON_THIRD_PARTY');
@@ -316,9 +309,7 @@ describe('Ticket Aggregate', () => {
       it('should return AT_RISK when near deadline', () => {
         // Create ticket with SLA due in 30 minutes (within AT_RISK threshold)
         const slaResponseDue = new Date(Date.now() + 30 * 60 * 1000); // 30 min
-        const result = Ticket.create(
-          createDefaultTicketProps({ slaResponseDue })
-        );
+        const result = Ticket.create(createDefaultTicketProps({ slaResponseDue }));
         const atRiskTicket = result.value;
 
         // Check at a time that's 25 minutes before deadline
@@ -330,9 +321,7 @@ describe('Ticket Aggregate', () => {
 
       it('should return BREACHED when past deadline', () => {
         // Set now to after the SLA response deadline
-        const now = new Date(
-          ticket.slaResponseDue!.getTime() + 60 * 60 * 1000
-        );
+        const now = new Date(ticket.slaResponseDue!.getTime() + 60 * 60 * 1000);
         const status = ticket.checkSlaStatus(now);
 
         expect(status).toBe('BREACHED');
@@ -352,17 +341,13 @@ describe('Ticket Aggregate', () => {
       });
 
       it('should return true after response SLA deadline', () => {
-        const now = new Date(
-          ticket.slaResponseDue!.getTime() + 60 * 60 * 1000
-        );
+        const now = new Date(ticket.slaResponseDue!.getTime() + 60 * 60 * 1000);
         expect(ticket.isResponseSlaBreached(now)).toBe(true);
       });
 
       it('should return false when first response already recorded', () => {
         ticket.recordFirstResponse('agent-123');
-        const now = new Date(
-          ticket.slaResponseDue!.getTime() + 60 * 60 * 1000
-        );
+        const now = new Date(ticket.slaResponseDue!.getTime() + 60 * 60 * 1000);
         expect(ticket.isResponseSlaBreached(now)).toBe(false);
       });
     });
@@ -374,9 +359,7 @@ describe('Ticket Aggregate', () => {
       });
 
       it('should return true after resolution SLA deadline', () => {
-        const now = new Date(
-          ticket.slaResolutionDue!.getTime() + 60 * 60 * 1000
-        );
+        const now = new Date(ticket.slaResolutionDue!.getTime() + 60 * 60 * 1000);
         expect(ticket.isResolutionSlaBreached(now)).toBe(true);
       });
     });
@@ -437,9 +420,7 @@ describe('Ticket Aggregate', () => {
         ticket.resumeSla('agent-456', now);
 
         const events = ticket.getDomainEvents();
-        expect(events.some((e) => e instanceof TicketSlaResumedEvent)).toBe(
-          true
-        );
+        expect(events.some((e) => e instanceof TicketSlaResumedEvent)).toBe(true);
       });
 
       it('should accumulate pausedDuration', () => {
@@ -488,9 +469,7 @@ describe('Ticket Aggregate', () => {
         const result = ticket.recordFirstResponse('agent-456');
 
         expect(result.isFailure).toBe(true);
-        expect(result.error).toBeInstanceOf(
-          TicketFirstResponseAlreadyRecordedError
-        );
+        expect(result.error).toBeInstanceOf(TicketFirstResponseAlreadyRecordedError);
         expect(result.error.code).toBe('TICKET_FIRST_RESPONSE_ALREADY_RECORDED');
       });
     });
@@ -501,9 +480,7 @@ describe('Ticket Aggregate', () => {
         ticket.breachSla('RESPONSE', now);
 
         const events = ticket.getDomainEvents();
-        expect(
-          events.some((e) => e instanceof TicketResponseSlaBreachedEvent)
-        ).toBe(true);
+        expect(events.some((e) => e instanceof TicketResponseSlaBreachedEvent)).toBe(true);
       });
 
       it('should emit TicketResolutionSlaBreachedEvent for RESOLUTION type', () => {
@@ -511,9 +488,7 @@ describe('Ticket Aggregate', () => {
         ticket.breachSla('RESOLUTION', now);
 
         const events = ticket.getDomainEvents();
-        expect(
-          events.some((e) => e instanceof TicketResolutionSlaBreachedEvent)
-        ).toBe(true);
+        expect(events.some((e) => e instanceof TicketResolutionSlaBreachedEvent)).toBe(true);
       });
 
       it('should set slaStatus to BREACHED', () => {
@@ -544,10 +519,7 @@ describe('Ticket Aggregate', () => {
 
     describe('waitOnCustomer()', () => {
       it('should transition to WAITING_ON_CUSTOMER', () => {
-        const result = ticket.waitOnCustomer(
-          'Awaiting clarification',
-          'agent-123'
-        );
+        const result = ticket.waitOnCustomer('Awaiting clarification', 'agent-123');
 
         expect(result.isSuccess).toBe(true);
         expect(ticket.status).toBe('WAITING_ON_CUSTOMER');
@@ -684,9 +656,7 @@ describe('Ticket Aggregate', () => {
         expect(ticket.assigneeId).toBeUndefined();
 
         const events = ticket.getDomainEvents();
-        expect(events.some((e) => e instanceof TicketUnassignedEvent)).toBe(
-          true
-        );
+        expect(events.some((e) => e instanceof TicketUnassignedEvent)).toBe(true);
 
         const unassignedEvent = events.find(
           (e) => e instanceof TicketUnassignedEvent
@@ -714,9 +684,7 @@ describe('Ticket Aggregate', () => {
         expect(ticket.priority).toBe('CRITICAL');
 
         const events = ticket.getDomainEvents();
-        expect(events.some((e) => e instanceof TicketPriorityChangedEvent)).toBe(
-          true
-        );
+        expect(events.some((e) => e instanceof TicketPriorityChangedEvent)).toBe(true);
       });
 
       it('should fail when closed', () => {

@@ -259,7 +259,9 @@ export function listGitIgnoredOrUntrackedFiles(
   if (untracked.error) return { files: [], error: untracked.error };
 
   const merged = [...ignored.files, ...untracked.files];
-  const uniq = Array.from(new Set(merged.map(normalizeRepoPath))).sort((a, b) => a.localeCompare(b));
+  const uniq = Array.from(new Set(merged.map(normalizeRepoPath))).sort((a, b) =>
+    a.localeCompare(b)
+  );
   return { files: uniq };
 }
 
@@ -457,7 +459,11 @@ export function getHygieneAllowlist(repoRoot: string): string[] {
     let entries: unknown = null;
     if (Array.isArray(parsed)) {
       entries = parsed;
-    } else if (parsed && typeof parsed === 'object' && 'allowlist' in (parsed as Record<string, unknown>)) {
+    } else if (
+      parsed &&
+      typeof parsed === 'object' &&
+      'allowlist' in (parsed as Record<string, unknown>)
+    ) {
       entries = (parsed as { allowlist: unknown }).allowlist;
     }
 
@@ -527,7 +533,9 @@ export function findIgnoredRuntimeArtifacts(
 
   const all = [...tracked.files, ...notTracked.files];
   const matches = matchForbiddenDocsRuntimeArtifacts(all, forbiddenPatterns);
-  const uniq = Array.from(new Set(matches.map(normalizeRepoPath))).sort((a, b) => a.localeCompare(b));
+  const uniq = Array.from(new Set(matches.map(normalizeRepoPath))).sort((a, b) =>
+    a.localeCompare(b)
+  );
   return { files: uniq };
 }
 
@@ -810,7 +818,10 @@ const YAML_PATTERNS = {
  * Parse a single line of YAML and update the current tool.
  * Returns a new tool if an id line is matched, otherwise updates the current tool in place.
  */
-function parseYamlToolLine(line: string, currentTool: Partial<AuditTool> | null): {
+function parseYamlToolLine(
+  line: string,
+  currentTool: Partial<AuditTool> | null
+): {
   tool: Partial<AuditTool> | null;
   finishedTool: AuditTool | null;
 } {

@@ -70,13 +70,7 @@ describe('PasswordInput', () => {
 
   it('displays error message', () => {
     const onChange = vi.fn();
-    render(
-      <PasswordInput
-        value=""
-        onChange={onChange}
-        error="Password is required"
-      />
-    );
+    render(<PasswordInput value="" onChange={onChange} error="Password is required" />);
 
     expect(screen.getByText('Password is required')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toBeInTheDocument();
@@ -84,13 +78,7 @@ describe('PasswordInput', () => {
 
   it('applies error styling when error prop is provided', () => {
     const onChange = vi.fn();
-    render(
-      <PasswordInput
-        value=""
-        onChange={onChange}
-        error="Error"
-      />
-    );
+    render(<PasswordInput value="" onChange={onChange} error="Error" />);
 
     const input = screen.getByPlaceholderText('Enter your password');
     expect(input).toHaveClass('border-red-500/50');
@@ -109,13 +97,7 @@ describe('PasswordInput', () => {
 
   it('sets correct autocomplete attribute', () => {
     const onChange = vi.fn();
-    render(
-      <PasswordInput
-        value=""
-        onChange={onChange}
-        autoComplete="new-password"
-      />
-    );
+    render(<PasswordInput value="" onChange={onChange} autoComplete="new-password" />);
 
     const input = screen.getByPlaceholderText('Enter your password');
     expect(input).toHaveAttribute('autocomplete', 'new-password');
@@ -123,26 +105,14 @@ describe('PasswordInput', () => {
 
   it('uses custom placeholder', () => {
     const onChange = vi.fn();
-    render(
-      <PasswordInput
-        value=""
-        onChange={onChange}
-        placeholder="Custom placeholder"
-      />
-    );
+    render(<PasswordInput value="" onChange={onChange} placeholder="Custom placeholder" />);
 
     expect(screen.getByPlaceholderText('Custom placeholder')).toBeInTheDocument();
   });
 
   it('sets aria-invalid when error is present', () => {
     const onChange = vi.fn();
-    render(
-      <PasswordInput
-        value=""
-        onChange={onChange}
-        error="Error message"
-      />
-    );
+    render(<PasswordInput value="" onChange={onChange} error="Error message" />);
 
     const input = screen.getByPlaceholderText('Enter your password');
     expect(input).toHaveAttribute('aria-invalid', 'true');
@@ -150,14 +120,7 @@ describe('PasswordInput', () => {
 
   it('sets aria-describedby for error messages', () => {
     const onChange = vi.fn();
-    render(
-      <PasswordInput
-        id="password"
-        value=""
-        onChange={onChange}
-        error="Error message"
-      />
-    );
+    render(<PasswordInput id="password" value="" onChange={onChange} error="Error message" />);
 
     const input = screen.getByPlaceholderText('Enter your password');
     expect(input).toHaveAttribute('aria-describedby', 'password-error');

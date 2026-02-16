@@ -51,7 +51,7 @@ export function InterventionAlerts({ customers }: InterventionAlertsProps) {
                     'flex items-center justify-between p-3 rounded-lg border',
                     sla.isOverdue
                       ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
-                      : 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20',
+                      : 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20'
                   )}
                   data-testid="intervention-alert"
                 >
@@ -62,7 +62,7 @@ export function InterventionAlerts({ customers }: InterventionAlertsProps) {
                         <span
                           className={cn(
                             'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium',
-                            getRiskBadgeClass(customer.riskLevel),
+                            getRiskBadgeClass(customer.riskLevel)
                           )}
                         >
                           {customer.riskLevel}
@@ -70,7 +70,9 @@ export function InterventionAlerts({ customers }: InterventionAlertsProps) {
                         <span
                           className={cn(
                             'text-xs font-medium',
-                            sla.isOverdue ? 'text-red-600 dark:text-red-400' : 'text-amber-600 dark:text-amber-400',
+                            sla.isOverdue
+                              ? 'text-red-600 dark:text-red-400'
+                              : 'text-amber-600 dark:text-amber-400'
                           )}
                           data-testid="sla-countdown"
                         >

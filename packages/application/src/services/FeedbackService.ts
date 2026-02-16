@@ -15,10 +15,7 @@ import {
   TrainingDataExportedEvent,
   FeedbackAnalyticsGeneratedEvent,
 } from '@intelliflow/domain';
-import type {
-  FeedbackType,
-  FeedbackCategory,
-} from '@intelliflow/domain';
+import type { FeedbackType, FeedbackCategory } from '@intelliflow/domain';
 import type {
   SubmitSimpleFeedbackInput,
   SubmitScoreCorrectionInput,
@@ -55,10 +52,24 @@ export interface FeedbackRepositoryPort {
 
   findById(id: string): Promise<FeedbackRecord | null>;
   findByLeadId(leadId: string): Promise<FeedbackRecord[]>;
-  findByModelVersion(modelVersion: string, dateFrom?: Date, dateTo?: Date): Promise<FeedbackRecord[]>;
+  findByModelVersion(
+    modelVersion: string,
+    dateFrom?: Date,
+    dateTo?: Date
+  ): Promise<FeedbackRecord[]>;
   findByTenantId(tenantId: string, dateFrom?: Date, dateTo?: Date): Promise<FeedbackRecord[]>;
-  findAll(params: { dateFrom?: Date; dateTo?: Date; modelVersion?: string; tenantId?: string }): Promise<FeedbackRecord[]>;
-  countByType(feedbackType: FeedbackType, modelVersion?: string, dateFrom?: Date, dateTo?: Date): Promise<number>;
+  findAll(params: {
+    dateFrom?: Date;
+    dateTo?: Date;
+    modelVersion?: string;
+    tenantId?: string;
+  }): Promise<FeedbackRecord[]>;
+  countByType(
+    feedbackType: FeedbackType,
+    modelVersion?: string,
+    dateFrom?: Date,
+    dateTo?: Date
+  ): Promise<number>;
 }
 
 /**
@@ -212,9 +223,9 @@ export class FeedbackService {
     });
 
     // Calculate summary counts
-    const positiveCount = feedback.filter(f => f.feedbackType === 'THUMBS_UP').length;
-    const negativeCount = feedback.filter(f => f.feedbackType === 'THUMBS_DOWN').length;
-    const corrections = feedback.filter(f => f.feedbackType === 'SCORE_CORRECTION');
+    const positiveCount = feedback.filter((f) => f.feedbackType === 'THUMBS_UP').length;
+    const negativeCount = feedback.filter((f) => f.feedbackType === 'THUMBS_DOWN').length;
+    const corrections = feedback.filter((f) => f.feedbackType === 'SCORE_CORRECTION');
     const correctionCount = corrections.length;
     const totalFeedback = feedback.length;
 
@@ -223,13 +234,8 @@ export class FeedbackService {
     const negativeRatio = totalFeedback > 0 ? negativeCount / totalFeedback : 0;
 
     // Calculate average correction magnitude
-    const totalMagnitude = corrections.reduce(
-      (sum, f) => sum + (f.correctionMagnitude ?? 0),
-      0
-    );
-    const averageCorrectionMagnitude = correctionCount > 0
-      ? totalMagnitude / correctionCount
-      : 0;
+    const totalMagnitude = corrections.reduce((sum, f) => sum + (f.correctionMagnitude ?? 0), 0);
+    const averageCorrectionMagnitude = correctionCount > 0 ? totalMagnitude / correctionCount : 0;
 
     // Calculate correction distribution
     const correctionDistribution = this.calculateCorrectionDistribution(corrections);
@@ -312,7 +318,7 @@ export class FeedbackService {
     );
 
     const trainingCorrections = corrections.filter(
-      f => f.feedbackType === 'SCORE_CORRECTION' && f.correctedScore !== null
+      (f) => f.feedbackType === 'SCORE_CORRECTION' && f.correctedScore !== null
     );
 
     const trainingData: TrainingDataExport['corrections'] = [];
@@ -331,13 +337,7 @@ export class FeedbackService {
 
     // Publish export event
     await this.eventBus.publish(
-      new TrainingDataExportedEvent(
-        modelVersion,
-        trainingData.length,
-        dateFrom,
-        dateTo,
-        exportedBy
-      )
+      new TrainingDataExportedEvent(modelVersion, trainingData.length, dateFrom, dateTo, exportedBy)
     );
 
     return {
@@ -352,9 +352,7 @@ export class FeedbackService {
   // Private Helper Methods
   // ==========================================================================
 
-  private calculateCorrectionDistribution(
-    corrections: FeedbackRecord[]
-  ): CorrectionDistribution {
+  private calculateCorrectionDistribution(corrections: FeedbackRecord[]): CorrectionDistribution {
     const distribution: CorrectionDistribution = {
       minor: 0,
       moderate: 0,
@@ -372,9 +370,7 @@ export class FeedbackService {
     return distribution;
   }
 
-  private calculateCategoryBreakdown(
-    corrections: FeedbackRecord[]
-  ): Record<string, number> {
+  private calculateCategoryBreakdown(corrections: FeedbackRecord[]): Record<string, number> {
     const breakdown: Record<string, number> = {};
 
     for (const correction of corrections) {
@@ -414,17 +410,17 @@ export class FeedbackService {
       dayStart.setHours(0, 0, 0, 0);
       const dayEnd = new Date(dayStart.getTime() + dayMs);
 
-      const dayFeedback = feedback.filter(f => {
+      const dayFeedback = feedback.filter((f) => {
         const feedbackDate = new Date(f.createdAt);
         return feedbackDate >= dayStart && feedbackDate < dayEnd;
       });
 
-      const corrections = dayFeedback.filter(f => f.feedbackType === 'SCORE_CORRECTION');
+      const corrections = dayFeedback.filter((f) => f.feedbackType === 'SCORE_CORRECTION');
 
       trend.push({
         date: dayStart.toISOString().split('T')[0],
-        positive: dayFeedback.filter(f => f.feedbackType === 'THUMBS_UP').length,
-        negative: dayFeedback.filter(f => f.feedbackType === 'THUMBS_DOWN').length,
+        positive: dayFeedback.filter((f) => f.feedbackType === 'THUMBS_UP').length,
+        negative: dayFeedback.filter((f) => f.feedbackType === 'THUMBS_DOWN').length,
         corrections: corrections.length,
         avgMagnitude: this.calculateAvgCorrectionMagnitude(corrections),
       });
@@ -435,27 +431,24 @@ export class FeedbackService {
 
   private calculatePositiveRatio(feedback: FeedbackRecord[]): number {
     if (feedback.length === 0) return 0;
-    const positiveCount = feedback.filter(f => f.feedbackType === 'THUMBS_UP').length;
+    const positiveCount = feedback.filter((f) => f.feedbackType === 'THUMBS_UP').length;
     return positiveCount / feedback.length;
   }
 
   private calculateNegativeRatio(feedback: FeedbackRecord[]): number {
     if (feedback.length === 0) return 0;
-    const negativeCount = feedback.filter(f => f.feedbackType === 'THUMBS_DOWN').length;
+    const negativeCount = feedback.filter((f) => f.feedbackType === 'THUMBS_DOWN').length;
     return negativeCount / feedback.length;
   }
 
   private calculateAvgCorrectionMagnitude(feedback: FeedbackRecord[]): number {
     const corrections = feedback.filter(
-      f => f.feedbackType === 'SCORE_CORRECTION' && f.correctionMagnitude !== null
+      (f) => f.feedbackType === 'SCORE_CORRECTION' && f.correctionMagnitude !== null
     );
 
     if (corrections.length === 0) return 0;
 
-    const totalMagnitude = corrections.reduce(
-      (sum, f) => sum + (f.correctionMagnitude ?? 0),
-      0
-    );
+    const totalMagnitude = corrections.reduce((sum, f) => sum + (f.correctionMagnitude ?? 0), 0);
 
     return totalMagnitude / corrections.length;
   }

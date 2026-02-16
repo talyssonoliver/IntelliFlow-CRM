@@ -91,13 +91,7 @@ describe('DeadlineApproachingEvent', () => {
     const caseId = CaseId.generate();
     const dueDate = new Date(2025, 0, 22);
 
-    const event = new DeadlineApproachingEvent(
-      deadlineId,
-      caseId,
-      'Motion Response',
-      dueDate,
-      3
-    );
+    const event = new DeadlineApproachingEvent(deadlineId, caseId, 'Motion Response', dueDate, 3);
 
     expect(event.eventType).toBe('deadline.approaching');
     expect(event.deadlineId).toBe(deadlineId);
@@ -113,13 +107,7 @@ describe('DeadlineApproachingEvent', () => {
     const caseId = CaseId.generate();
     const dueDate = new Date(2025, 0, 22);
 
-    const event = new DeadlineApproachingEvent(
-      deadlineId,
-      caseId,
-      'Motion Response',
-      dueDate,
-      2
-    );
+    const event = new DeadlineApproachingEvent(deadlineId, caseId, 'Motion Response', dueDate, 2);
 
     const payload = event.toPayload();
 
@@ -165,13 +153,7 @@ describe('DeadlineOverdueEvent', () => {
     const caseId = CaseId.generate();
     const dueDate = new Date(2025, 0, 15);
 
-    const event = new DeadlineOverdueEvent(
-      deadlineId,
-      caseId,
-      'Filing Deadline',
-      dueDate,
-      5
-    );
+    const event = new DeadlineOverdueEvent(deadlineId, caseId, 'Filing Deadline', dueDate, 5);
 
     expect(event.eventType).toBe('deadline.overdue');
     expect(event.deadlineId).toBe(deadlineId);
@@ -187,13 +169,7 @@ describe('DeadlineOverdueEvent', () => {
     const caseId = CaseId.generate();
     const dueDate = new Date(2025, 0, 15);
 
-    const event = new DeadlineOverdueEvent(
-      deadlineId,
-      caseId,
-      'Filing Deadline',
-      dueDate,
-      3
-    );
+    const event = new DeadlineOverdueEvent(deadlineId, caseId, 'Filing Deadline', dueDate, 3);
 
     const payload = event.toPayload();
 
@@ -249,12 +225,7 @@ describe('DeadlineWaivedEvent', () => {
     const deadlineId = DeadlineId.generate();
     const caseId = CaseId.generate();
 
-    const event = new DeadlineWaivedEvent(
-      deadlineId,
-      caseId,
-      'user-123',
-      'Settlement reached'
-    );
+    const event = new DeadlineWaivedEvent(deadlineId, caseId, 'user-123', 'Settlement reached');
 
     expect(event.eventType).toBe('deadline.waived');
     expect(event.deadlineId).toBe(deadlineId);
@@ -268,12 +239,7 @@ describe('DeadlineWaivedEvent', () => {
     const deadlineId = DeadlineId.generate();
     const caseId = CaseId.generate();
 
-    const event = new DeadlineWaivedEvent(
-      deadlineId,
-      caseId,
-      'admin-789',
-      'Case dismissed'
-    );
+    const event = new DeadlineWaivedEvent(deadlineId, caseId, 'admin-789', 'Case dismissed');
 
     const payload = event.toPayload();
 
@@ -290,12 +256,7 @@ describe('DeadlineExtendedEvent', () => {
     const previousDueDate = new Date(2025, 0, 22);
     const newDueDate = new Date(2025, 1, 15);
 
-    const event = new DeadlineExtendedEvent(
-      deadlineId,
-      previousDueDate,
-      newDueDate,
-      'user-123'
-    );
+    const event = new DeadlineExtendedEvent(deadlineId, previousDueDate, newDueDate, 'user-123');
 
     expect(event.eventType).toBe('deadline.extended');
     expect(event.deadlineId).toBe(deadlineId);
@@ -310,12 +271,7 @@ describe('DeadlineExtendedEvent', () => {
     const previousDueDate = new Date(2025, 0, 22);
     const newDueDate = new Date(2025, 1, 15);
 
-    const event = new DeadlineExtendedEvent(
-      deadlineId,
-      previousDueDate,
-      newDueDate,
-      'judge-001'
-    );
+    const event = new DeadlineExtendedEvent(deadlineId, previousDueDate, newDueDate, 'judge-001');
 
     const payload = event.toPayload();
 
@@ -331,13 +287,7 @@ describe('DeadlineReminderSentEvent', () => {
     const deadlineId = DeadlineId.generate();
     const caseId = CaseId.generate();
 
-    const event = new DeadlineReminderSentEvent(
-      deadlineId,
-      caseId,
-      'user-123',
-      'EMAIL',
-      3
-    );
+    const event = new DeadlineReminderSentEvent(deadlineId, caseId, 'user-123', 'EMAIL', 3);
 
     expect(event.eventType).toBe('deadline.reminder_sent');
     expect(event.deadlineId).toBe(deadlineId);
@@ -352,31 +302,13 @@ describe('DeadlineReminderSentEvent', () => {
     const deadlineId = DeadlineId.generate();
     const caseId = CaseId.generate();
 
-    const emailEvent = new DeadlineReminderSentEvent(
-      deadlineId,
-      caseId,
-      'user-1',
-      'EMAIL',
-      7
-    );
+    const emailEvent = new DeadlineReminderSentEvent(deadlineId, caseId, 'user-1', 'EMAIL', 7);
     expect(emailEvent.reminderType).toBe('EMAIL');
 
-    const inAppEvent = new DeadlineReminderSentEvent(
-      deadlineId,
-      caseId,
-      'user-2',
-      'IN_APP',
-      3
-    );
+    const inAppEvent = new DeadlineReminderSentEvent(deadlineId, caseId, 'user-2', 'IN_APP', 3);
     expect(inAppEvent.reminderType).toBe('IN_APP');
 
-    const smsEvent = new DeadlineReminderSentEvent(
-      deadlineId,
-      caseId,
-      'user-3',
-      'SMS',
-      1
-    );
+    const smsEvent = new DeadlineReminderSentEvent(deadlineId, caseId, 'user-3', 'SMS', 1);
     expect(smsEvent.reminderType).toBe('SMS');
   });
 
@@ -384,13 +316,7 @@ describe('DeadlineReminderSentEvent', () => {
     const deadlineId = DeadlineId.generate();
     const caseId = CaseId.generate();
 
-    const event = new DeadlineReminderSentEvent(
-      deadlineId,
-      caseId,
-      'attorney-456',
-      'IN_APP',
-      1
-    );
+    const event = new DeadlineReminderSentEvent(deadlineId, caseId, 'attorney-456', 'IN_APP', 1);
 
     const payload = event.toPayload();
 

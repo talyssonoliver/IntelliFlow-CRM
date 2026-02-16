@@ -131,12 +131,7 @@ describe('ConflictDetector - b11 branch coverage', () => {
       const timeSlot = TimeSlot.create(startTime, endTime).value;
       const buffer = Buffer.none();
 
-      const result = ConflictDetector.checkTimeSlotConflicts(
-        timeSlot,
-        buffer,
-        [apt],
-        apt.id
-      );
+      const result = ConflictDetector.checkTimeSlotConflicts(timeSlot, buffer, [apt], apt.id);
       expect(result.hasConflicts).toBe(false);
     });
 
@@ -149,11 +144,7 @@ describe('ConflictDetector - b11 branch coverage', () => {
       const timeSlot = TimeSlot.create(startTime, endTime).value;
       const buffer = Buffer.none();
 
-      const result = ConflictDetector.checkTimeSlotConflicts(
-        timeSlot,
-        buffer,
-        [apt]
-      );
+      const result = ConflictDetector.checkTimeSlotConflicts(timeSlot, buffer, [apt]);
       expect(result.hasConflicts).toBe(false);
     });
 
@@ -165,11 +156,7 @@ describe('ConflictDetector - b11 branch coverage', () => {
       const timeSlot = TimeSlot.create(startTime, endTime).value;
       const buffer = Buffer.none();
 
-      const result = ConflictDetector.checkTimeSlotConflicts(
-        timeSlot,
-        buffer,
-        [],
-      );
+      const result = ConflictDetector.checkTimeSlotConflicts(timeSlot, buffer, []);
       expect(result.hasConflicts).toBe(false);
       expect(result.conflicts).toEqual([]);
     });
@@ -255,12 +242,7 @@ describe('ConflictDetector - b11 branch coverage', () => {
     it('should skip weekends', () => {
       // 2030-01-19 is Saturday, 2030-01-20 is Sunday
       const saturday = new Date('2030-01-19T10:00:00');
-      const slot = ConflictDetector.findNextAvailableSlot(
-        'user-1',
-        saturday,
-        60,
-        [],
-      );
+      const slot = ConflictDetector.findNextAvailableSlot('user-1', saturday, 60, []);
 
       expect(slot).not.toBeNull();
       if (slot) {
@@ -272,13 +254,10 @@ describe('ConflictDetector - b11 branch coverage', () => {
 
     it('should advance to next day when after working hours', () => {
       const lateEvening = new Date('2030-01-15T20:00:00');
-      const slot = ConflictDetector.findNextAvailableSlot(
-        'user-1',
-        lateEvening,
-        60,
-        [],
-        { workingHoursStart: 9, workingHoursEnd: 17 },
-      );
+      const slot = ConflictDetector.findNextAvailableSlot('user-1', lateEvening, 60, [], {
+        workingHoursStart: 9,
+        workingHoursEnd: 17,
+      });
 
       expect(slot).not.toBeNull();
       if (slot) {
@@ -288,13 +267,10 @@ describe('ConflictDetector - b11 branch coverage', () => {
 
     it('should adjust to working hours start when before working hours', () => {
       const earlyMorning = new Date('2030-01-15T05:00:00');
-      const slot = ConflictDetector.findNextAvailableSlot(
-        'user-1',
-        earlyMorning,
-        60,
-        [],
-        { workingHoursStart: 9, workingHoursEnd: 17 },
-      );
+      const slot = ConflictDetector.findNextAvailableSlot('user-1', earlyMorning, 60, [], {
+        workingHoursStart: 9,
+        workingHoursEnd: 17,
+      });
 
       expect(slot).not.toBeNull();
       if (slot) {
@@ -309,7 +285,7 @@ describe('ConflictDetector - b11 branch coverage', () => {
         new Date('2030-01-15T09:00:00'),
         60,
         [],
-        { buffer },
+        { buffer }
       );
 
       expect(slot).not.toBeNull();

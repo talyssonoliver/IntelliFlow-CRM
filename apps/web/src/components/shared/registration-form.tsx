@@ -156,12 +156,14 @@ function PasswordStrengthIndicator({ password, className }: PasswordStrengthIndi
     <div className={cn('mt-2', className)} aria-live="polite">
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs text-slate-400">Password strength</span>
-        <span className={cn('text-xs font-medium', {
-          'text-red-400': strength === 'weak',
-          'text-yellow-400': strength === 'fair',
-          'text-blue-400': strength === 'good',
-          'text-green-400': strength === 'strong',
-        })}>
+        <span
+          className={cn('text-xs font-medium', {
+            'text-red-400': strength === 'weak',
+            'text-yellow-400': strength === 'fair',
+            'text-blue-400': strength === 'good',
+            'text-green-400': strength === 'strong',
+          })}
+        >
           {strengthLabels[strength]}
         </span>
       </div>
@@ -180,9 +182,7 @@ function PasswordStrengthIndicator({ password, className }: PasswordStrengthIndi
         />
       </div>
       {feedback.length > 0 && strength !== 'strong' && (
-        <p className="text-xs text-slate-400 mt-1">
-          Add: {feedback.slice(0, 2).join(', ')}
-        </p>
+        <p className="text-xs text-slate-400 mt-1">Add: {feedback.slice(0, 2).join(', ')}</p>
       )}
     </div>
   );
@@ -264,45 +264,48 @@ export function RegistrationForm({
   }, []);
 
   // Validation
-  const validateField = useCallback((name: keyof RegistrationFormData, value: string | boolean): string | undefined => {
-    switch (name) {
-      case 'fullName':
-        if (!value || (typeof value === 'string' && value.trim().length < 2)) {
-          return 'Full name is required (at least 2 characters)';
-        }
-        break;
-      case 'email':
-        if (!value || typeof value !== 'string') {
-          return 'Email is required';
-        }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-          return 'Please enter a valid email address';
-        }
-        break;
-      case 'password':
-        if (!value || typeof value !== 'string') {
-          return 'Password is required';
-        }
-        if (value.length < 8) {
-          return 'Password must be at least 8 characters';
-        }
-        break;
-      case 'confirmPassword':
-        if (!value || typeof value !== 'string') {
-          return 'Please confirm your password';
-        }
-        if (value !== formData.password) {
-          return 'Passwords do not match';
-        }
-        break;
-      case 'acceptTerms':
-        if (!value) {
-          return 'You must accept the terms and conditions';
-        }
-        break;
-    }
-    return undefined;
-  }, [formData.password]);
+  const validateField = useCallback(
+    (name: keyof RegistrationFormData, value: string | boolean): string | undefined => {
+      switch (name) {
+        case 'fullName':
+          if (!value || (typeof value === 'string' && value.trim().length < 2)) {
+            return 'Full name is required (at least 2 characters)';
+          }
+          break;
+        case 'email':
+          if (!value || typeof value !== 'string') {
+            return 'Email is required';
+          }
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+            return 'Please enter a valid email address';
+          }
+          break;
+        case 'password':
+          if (!value || typeof value !== 'string') {
+            return 'Password is required';
+          }
+          if (value.length < 8) {
+            return 'Password must be at least 8 characters';
+          }
+          break;
+        case 'confirmPassword':
+          if (!value || typeof value !== 'string') {
+            return 'Please confirm your password';
+          }
+          if (value !== formData.password) {
+            return 'Passwords do not match';
+          }
+          break;
+        case 'acceptTerms':
+          if (!value) {
+            return 'You must accept the terms and conditions';
+          }
+          break;
+      }
+      return undefined;
+    },
+    [formData.password]
+  );
 
   const validateForm = useCallback((): boolean => {
     const newErrors: RegistrationFormErrors = {};
@@ -321,69 +324,85 @@ export function RegistrationForm({
   }, [formData, validateField]);
 
   // Event handlers
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    const newValue = type === 'checkbox' ? checked : value;
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value, type, checked } = e.target;
+      const newValue = type === 'checkbox' ? checked : value;
 
-    setFormData((prev) => ({ ...prev, [name]: newValue }));
+      setFormData((prev) => ({ ...prev, [name]: newValue }));
 
-    // Clear error on change if field was touched
-    if (touched[name]) {
-      const error = validateField(name as keyof RegistrationFormData, newValue);
+      // Clear error on change if field was touched
+      if (touched[name]) {
+        const error = validateField(name as keyof RegistrationFormData, newValue);
+        setErrors((prev) => ({ ...prev, [name]: error }));
+      }
+    },
+    [touched, validateField]
+  );
+
+  const handlePasswordChange = useCallback(
+    (value: string) => {
+      setFormData((prev) => ({ ...prev, password: value }));
+      if (touched.password) {
+        const error = validateField('password', value);
+        setErrors((prev) => ({ ...prev, password: error }));
+      }
+      // Also revalidate confirm password if it was touched
+      if (touched.confirmPassword && formData.confirmPassword) {
+        const confirmError =
+          formData.confirmPassword !== value ? 'Passwords do not match' : undefined;
+        setErrors((prev) => ({ ...prev, confirmPassword: confirmError }));
+      }
+      // Trigger debounced breach check
+      debouncedBreachCheck(value);
+    },
+    [touched, validateField, formData.confirmPassword, debouncedBreachCheck]
+  );
+
+  const handleConfirmPasswordChange = useCallback(
+    (value: string) => {
+      setFormData((prev) => ({ ...prev, confirmPassword: value }));
+      if (touched.confirmPassword) {
+        const error = value !== formData.password ? 'Passwords do not match' : undefined;
+        setErrors((prev) => ({ ...prev, confirmPassword: error }));
+      }
+    },
+    [touched, formData.password]
+  );
+
+  const handleBlur = useCallback(
+    (e: React.FocusEvent<HTMLInputElement>) => {
+      const { name, value, type, checked } = e.target;
+      const fieldValue = type === 'checkbox' ? checked : value;
+
+      setTouched((prev) => ({ ...prev, [name]: true }));
+      const error = validateField(name as keyof RegistrationFormData, fieldValue);
       setErrors((prev) => ({ ...prev, [name]: error }));
-    }
-  }, [touched, validateField]);
+    },
+    [validateField]
+  );
 
-  const handlePasswordChange = useCallback((value: string) => {
-    setFormData((prev) => ({ ...prev, password: value }));
-    if (touched.password) {
-      const error = validateField('password', value);
-      setErrors((prev) => ({ ...prev, password: error }));
-    }
-    // Also revalidate confirm password if it was touched
-    if (touched.confirmPassword && formData.confirmPassword) {
-      const confirmError = formData.confirmPassword !== value ? 'Passwords do not match' : undefined;
-      setErrors((prev) => ({ ...prev, confirmPassword: confirmError }));
-    }
-    // Trigger debounced breach check
-    debouncedBreachCheck(value);
-  }, [touched, validateField, formData.confirmPassword, debouncedBreachCheck]);
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
 
-  const handleConfirmPasswordChange = useCallback((value: string) => {
-    setFormData((prev) => ({ ...prev, confirmPassword: value }));
-    if (touched.confirmPassword) {
-      const error = value !== formData.password ? 'Passwords do not match' : undefined;
-      setErrors((prev) => ({ ...prev, confirmPassword: error }));
-    }
-  }, [touched, formData.password]);
+      // Mark all fields as touched
+      setTouched({
+        fullName: true,
+        email: true,
+        password: true,
+        confirmPassword: true,
+        acceptTerms: true,
+      });
 
-  const handleBlur = useCallback((e: React.FocusEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    const fieldValue = type === 'checkbox' ? checked : value;
+      if (!validateForm()) {
+        return;
+      }
 
-    setTouched((prev) => ({ ...prev, [name]: true }));
-    const error = validateField(name as keyof RegistrationFormData, fieldValue);
-    setErrors((prev) => ({ ...prev, [name]: error }));
-  }, [validateField]);
-
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Mark all fields as touched
-    setTouched({
-      fullName: true,
-      email: true,
-      password: true,
-      confirmPassword: true,
-      acceptTerms: true,
-    });
-
-    if (!validateForm()) {
-      return;
-    }
-
-    await onSubmit(formData);
-  }, [formData, validateForm, onSubmit]);
+      await onSubmit(formData);
+    },
+    [formData, validateForm, onSubmit]
+  );
 
   return (
     <form
@@ -532,9 +551,8 @@ export function RegistrationForm({
           onChange={handleConfirmPasswordChange}
           onBlur={() => {
             setTouched((prev) => ({ ...prev, confirmPassword: true }));
-            const error = formData.confirmPassword !== formData.password
-              ? 'Passwords do not match'
-              : undefined;
+            const error =
+              formData.confirmPassword !== formData.password ? 'Passwords do not match' : undefined;
             setErrors((prev) => ({ ...prev, confirmPassword: error }));
           }}
           error={errors.confirmPassword}
@@ -563,10 +581,7 @@ export function RegistrationForm({
           )}
         />
         <div className="flex-1">
-          <label
-            htmlFor={`${formId}-acceptTerms`}
-            className="text-sm text-slate-300"
-          >
+          <label htmlFor={`${formId}-acceptTerms`} className="text-sm text-slate-300">
             I agree to the{' '}
             <Link
               href="/terms"
@@ -615,10 +630,7 @@ export function RegistrationForm({
       >
         {isLoading ? (
           <>
-            <span
-              className="material-symbols-outlined animate-spin text-xl"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined animate-spin text-xl" aria-hidden="true">
               progress_activity
             </span>
             Creating account...

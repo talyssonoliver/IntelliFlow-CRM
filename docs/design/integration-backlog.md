@@ -1,9 +1,9 @@
 # IntelliFlow CRM - Integration Backlog
 
-> **Location**: `docs/design/integration-backlog.md`
-> **Last Updated**: 2026-02-02
-> **Purpose**: Track backend integration tasks with detailed page specifications
-> **Cross-referenced with**: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
+> **Location**: `docs/design/integration-backlog.md` **Last Updated**:
+> 2026-02-02 **Purpose**: Track backend integration tasks with detailed page
+> specifications **Cross-referenced with**:
+> `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
 
 ---
 
@@ -13,44 +13,45 @@ This section maps integration tasks to existing Sprint Plan entries.
 
 ### Tasks Found in Sprint_plan.csv
 
-| Integration Task | Sprint Plan ID | Sprint | Status | Description |
-|-----------------|---------------|--------|--------|-------------|
-| Billing Portal | PG-025 | 14 | Backlog | Billing portal with Stripe |
-| Billing Checkout | PG-026 | 14 | Backlog | Payment checkout page |
-| Billing Invoices | PG-027 | 14 | Backlog | Invoice list page |
-| Billing Invoice Detail | PG-028 | 14 | Backlog | Invoice detail page |
-| Billing Payment Methods | PG-029 | 14 | Backlog | Payment methods management |
-| Billing Subscriptions | PG-030 | 14 | Backlog | Subscription management |
-| Billing Receipts | PG-031 | 14 | **Completed** | Receipt list |
-| Dashboard | PG-058 | 18 | Backlog | Main dashboard with KPIs |
-| Reports List | PG-101 | 25 | Backlog | Report library |
-| Custom Reports | PG-102 | 25 | Backlog | Report builder |
-| Report Schedules | PG-103 | 25 | Backlog | Scheduled reports |
-| Settings > Notifications | PG-116 | 27 | Backlog | Notification preferences |
-| Settings > Integrations | PG-115 | 27 | Backlog | Integration catalog |
-| Accounts List | PG-069 | 19 | Backlog | Accounts list page |
-| Account Detail | PG-070 | 20 | Backlog | Account 360 view |
-| Account Edit | PG-071 | 20 | Backlog | Account editor |
-| Account Import | PG-072 | 20 | Backlog | Account import |
-| Calendar | PG-083 | 22 | Backlog | Calendar view |
-| Workflow Builder | IFC-031 | 17 | Backlog | Visual workflow builder |
-| Activity Feed | IFC-069 | 14 | Backlog | Unified activity feed service |
-| Analytics Dashboard | IFC-037 | 21 | Backlog | Analytics dashboard design |
-| Analytics Implementation | IFC-038 | 22 | Backlog | Analytics with real-time |
+| Integration Task         | Sprint Plan ID | Sprint | Status        | Description                   |
+| ------------------------ | -------------- | ------ | ------------- | ----------------------------- |
+| Billing Portal           | PG-025         | 14     | Backlog       | Billing portal with Stripe    |
+| Billing Checkout         | PG-026         | 14     | Backlog       | Payment checkout page         |
+| Billing Invoices         | PG-027         | 14     | Backlog       | Invoice list page             |
+| Billing Invoice Detail   | PG-028         | 14     | Backlog       | Invoice detail page           |
+| Billing Payment Methods  | PG-029         | 14     | Backlog       | Payment methods management    |
+| Billing Subscriptions    | PG-030         | 14     | Backlog       | Subscription management       |
+| Billing Receipts         | PG-031         | 14     | **Completed** | Receipt list                  |
+| Dashboard                | PG-058         | 18     | Backlog       | Main dashboard with KPIs      |
+| Reports List             | PG-101         | 25     | Backlog       | Report library                |
+| Custom Reports           | PG-102         | 25     | Backlog       | Report builder                |
+| Report Schedules         | PG-103         | 25     | Backlog       | Scheduled reports             |
+| Settings > Notifications | PG-116         | 27     | Backlog       | Notification preferences      |
+| Settings > Integrations  | PG-115         | 27     | Backlog       | Integration catalog           |
+| Accounts List            | PG-069         | 19     | Backlog       | Accounts list page            |
+| Account Detail           | PG-070         | 20     | Backlog       | Account 360 view              |
+| Account Edit             | PG-071         | 20     | Backlog       | Account editor                |
+| Account Import           | PG-072         | 20     | Backlog       | Account import                |
+| Calendar                 | PG-083         | 22     | Backlog       | Calendar view                 |
+| Workflow Builder         | IFC-031        | 17     | Backlog       | Visual workflow builder       |
+| Activity Feed            | IFC-069        | 14     | Backlog       | Unified activity feed service |
+| Analytics Dashboard      | IFC-037        | 21     | Backlog       | Analytics dashboard design    |
+| Analytics Implementation | IFC-038        | 22     | Backlog       | Analytics with real-time      |
 
 ### Tasks ADDED to Sprint_plan.csv ✅
 
 The following integration tasks have been added to the Sprint Plan:
 
-| Task ID | Description | Sprint | Dependencies | Status |
-|---------|-------------|--------|--------------|--------|
-| **IFC-182** | Dashboard tRPC Router (welcome, feed, widgets, pins, goals) | 13 | IFC-003, IFC-089 | Backlog |
-| **IFC-183** | Notifications tRPC Router (list, read, preferences, subscription) | 13 | IFC-003 | Backlog |
-| **PG-129** | Authenticated Home Page (`/` route) | 14 | IFC-182, IFC-069, IFC-095 | Backlog |
-| **PG-130** | Notifications Inbox (`/notifications`) | 14 | IFC-183 | Backlog |
-| **PG-131** | Deal Forecast UI (`/deals/[id]/forecast`, `/deals/forecast`) | 14 | IFC-092, IFC-095 | Backlog |
+| Task ID     | Description                                                       | Sprint | Dependencies              | Status  |
+| ----------- | ----------------------------------------------------------------- | ------ | ------------------------- | ------- |
+| **IFC-182** | Dashboard tRPC Router (welcome, feed, widgets, pins, goals)       | 13     | IFC-003, IFC-089          | Backlog |
+| **IFC-183** | Notifications tRPC Router (list, read, preferences, subscription) | 13     | IFC-003                   | Backlog |
+| **PG-129**  | Authenticated Home Page (`/` route)                               | 14     | IFC-182, IFC-069, IFC-095 | Backlog |
+| **PG-130**  | Notifications Inbox (`/notifications`)                            | 14     | IFC-183                   | Backlog |
+| **PG-131**  | Deal Forecast UI (`/deals/[id]/forecast`, `/deals/forecast`)      | 14     | IFC-092, IFC-095          | Backlog |
 
 **Dependency Order** (no forward dependencies):
+
 1. Sprint 13: Backend routers (IFC-182, IFC-183)
 2. Sprint 14: Frontend pages (PG-129, PG-130, PG-131)
 
@@ -58,11 +59,11 @@ The following integration tasks have been added to the Sprint Plan:
 
 ## Integration Status Summary
 
-| Priority | Symbol | Count | In Sprint Plan |
-|----------|--------|-------|----------------|
-| Critical | 🔴 | 6 | ✅ All 6 in Sprint Plan |
-| Partial | 🟡 | 6 | 4 found, 2 partial |
-| Planned | ⏳ | 11 | ✅ All 11 in Sprint Plan |
+| Priority | Symbol | Count | In Sprint Plan           |
+| -------- | ------ | ----- | ------------------------ |
+| Critical | 🔴     | 6     | ✅ All 6 in Sprint Plan  |
+| Partial  | 🟡     | 6     | 4 found, 2 partial       |
+| Planned  | ⏳     | 11    | ✅ All 11 in Sprint Plan |
 
 ---
 
@@ -89,6 +90,7 @@ Artifacts: apps/web/src/app/(authenticated)/page.tsx;apps/api/src/modules/dashbo
 ```
 
 **Required New APIs:**
+
 - `dashboard.getWelcomeSummary` - Query
 - `dashboard.getActivityFeed` - Query (paginated)
 - `dashboard.getPinnedItems` - Query
@@ -117,6 +119,7 @@ Artifacts: apps/web/src/app/notifications/page.tsx;apps/api/src/modules/notifica
 ```
 
 **Required New APIs:**
+
 - `notifications.list` - Query (paginated)
 - `notifications.getUnreadCount` - Query
 - `notifications.markAsRead` - Mutation
@@ -144,7 +147,8 @@ Target Sprint: 14
 Artifacts: apps/web/src/app/deals/[id]/forecast/page.tsx;apps/web/src/app/deals/forecast/page.tsx
 ```
 
-**Note**: Backend APIs exist in `intelligence.*` router but need to be connected to UI.
+**Note**: Backend APIs exist in `intelligence.*` router but need to be connected
+to UI.
 
 ---
 
@@ -192,78 +196,78 @@ Artifacts: apps/api/src/modules/notifications/notifications.router.ts;packages/v
 
 ### Billing Pages (Sprint 14)
 
-| Task ID | Page | Status | Notes |
-|---------|------|--------|-------|
-| PG-025 | `/billing` | Backlog | Billing Portal - depends on IFC-099 |
-| PG-026 | `/billing/checkout` | Backlog | Checkout with Stripe Elements |
-| PG-027 | `/billing/invoices` | Backlog | Invoice list |
-| PG-028 | `/billing/invoices/[id]` | Backlog | Invoice detail |
-| PG-029 | `/billing/settings` | Backlog | Payment methods |
-| PG-030 | `/billing/subscriptions` | Backlog | Subscription management |
-| PG-031 | `/billing/receipts` | **Completed** | ✅ Receipt list |
+| Task ID | Page                     | Status        | Notes                               |
+| ------- | ------------------------ | ------------- | ----------------------------------- |
+| PG-025  | `/billing`               | Backlog       | Billing Portal - depends on IFC-099 |
+| PG-026  | `/billing/checkout`      | Backlog       | Checkout with Stripe Elements       |
+| PG-027  | `/billing/invoices`      | Backlog       | Invoice list                        |
+| PG-028  | `/billing/invoices/[id]` | Backlog       | Invoice detail                      |
+| PG-029  | `/billing/settings`      | Backlog       | Payment methods                     |
+| PG-030  | `/billing/subscriptions` | Backlog       | Subscription management             |
+| PG-031  | `/billing/receipts`      | **Completed** | ✅ Receipt list                     |
 
 ---
 
 ### Dashboard & Analytics (Sprint 18-22)
 
-| Task ID | Page | Status | Notes |
-|---------|------|--------|-------|
-| PG-058 | `/dashboard` | Backlog | Main dashboard - Sprint 18 |
-| IFC-037 | Analytics Design | Backlog | Analytics dashboard design - Sprint 21 |
-| IFC-038 | Analytics Implementation | Backlog | Analytics with real-time - Sprint 22 |
+| Task ID | Page                     | Status  | Notes                                  |
+| ------- | ------------------------ | ------- | -------------------------------------- |
+| PG-058  | `/dashboard`             | Backlog | Main dashboard - Sprint 18             |
+| IFC-037 | Analytics Design         | Backlog | Analytics dashboard design - Sprint 21 |
+| IFC-038 | Analytics Implementation | Backlog | Analytics with real-time - Sprint 22   |
 
 ---
 
 ### Reports (Sprint 25)
 
-| Task ID | Page | Status | Notes |
-|---------|------|--------|-------|
-| PG-101 | `/reports` | Backlog | Report library |
-| PG-102 | `/reports/custom` | Backlog | Report builder |
-| PG-103 | `/reports/schedules` | Backlog | Scheduled reports |
+| Task ID | Page                 | Status  | Notes             |
+| ------- | -------------------- | ------- | ----------------- |
+| PG-101  | `/reports`           | Backlog | Report library    |
+| PG-102  | `/reports/custom`    | Backlog | Report builder    |
+| PG-103  | `/reports/schedules` | Backlog | Scheduled reports |
 
 ---
 
 ### Settings Pages (Sprint 27)
 
-| Task ID | Page | Status | Notes |
-|---------|------|--------|-------|
-| PG-116 | `/settings/notifications` | Backlog | Notification preferences |
-| PG-115 | `/settings/integrations` | Backlog | Integration catalog |
+| Task ID | Page                      | Status  | Notes                    |
+| ------- | ------------------------- | ------- | ------------------------ |
+| PG-116  | `/settings/notifications` | Backlog | Notification preferences |
+| PG-115  | `/settings/integrations`  | Backlog | Integration catalog      |
 
 ---
 
 ### Accounts (Sprint 19-20)
 
-| Task ID | Page | Status | Notes |
-|---------|------|--------|-------|
-| PG-069 | `/accounts` | Backlog | Accounts list - Sprint 19 |
-| PG-070 | `/accounts/[id]` | Backlog | Account detail - Sprint 20 |
-| PG-071 | `/accounts/[id]/edit` | Backlog | Account editor - Sprint 20 |
-| PG-072 | `/accounts/import` | Backlog | Account import - Sprint 20 |
+| Task ID | Page                  | Status  | Notes                      |
+| ------- | --------------------- | ------- | -------------------------- |
+| PG-069  | `/accounts`           | Backlog | Accounts list - Sprint 19  |
+| PG-070  | `/accounts/[id]`      | Backlog | Account detail - Sprint 20 |
+| PG-071  | `/accounts/[id]/edit` | Backlog | Account editor - Sprint 20 |
+| PG-072  | `/accounts/import`    | Backlog | Account import - Sprint 20 |
 
 ---
 
 ### Calendar (Sprint 22)
 
-| Task ID | Page | Status | Notes |
-|---------|------|--------|-------|
-| PG-083 | `/calendar` | Backlog | Calendar view - depends on PG-080 |
+| Task ID | Page        | Status  | Notes                             |
+| ------- | ----------- | ------- | --------------------------------- |
+| PG-083  | `/calendar` | Backlog | Calendar view - depends on PG-080 |
 
 ---
 
 ### Workflow Automation (Sprint 17)
 
-| Task ID | Page | Status | Notes |
-|---------|------|--------|-------|
+| Task ID | Page             | Status  | Notes                                   |
+| ------- | ---------------- | ------- | --------------------------------------- |
 | IFC-031 | Workflow Builder | Backlog | Visual workflow builder with React Flow |
 
 ---
 
 ### Activity Feed (Sprint 14)
 
-| Task ID | Feature | Status | Notes |
-|---------|---------|--------|-------|
+| Task ID | Feature               | Status  | Notes                         |
+| ------- | --------------------- | ------- | ----------------------------- |
 | IFC-069 | Unified Activity Feed | Backlog | Feed service for all entities |
 
 ---
@@ -273,15 +277,14 @@ Artifacts: apps/api/src/modules/notifications/notifications.router.ts;packages/v
 ### Phase 1: Sprint 13-14 - Critical Integration Tasks ✅
 
 Backend routers in Sprint 13 (no forward dependencies):
+
 1. **IFC-182** - Dashboard Router ✅ Added
 2. **IFC-183** - Notifications Router ✅ Added
 
-Frontend pages in Sprint 14 (depend on Sprint 13 routers):
-3. **PG-129** - Authenticated Home Page ✅ Added
-4. **PG-130** - Notifications Inbox ✅ Added
-5. **PG-131** - Deal Forecast UI ✅ Added
-6. PG-025 to PG-030 - Billing Pages (existing)
-7. IFC-069 - Activity Feed (existing)
+Frontend pages in Sprint 14 (depend on Sprint 13 routers): 3. **PG-129** -
+Authenticated Home Page ✅ Added 4. **PG-130** - Notifications Inbox ✅ Added 5.
+**PG-131** - Deal Forecast UI ✅ Added 6. PG-025 to PG-030 - Billing Pages
+(existing) 7. IFC-069 - Activity Feed (existing)
 
 ### Phase 2: Sprint 17-18
 
@@ -307,41 +310,41 @@ Frontend pages in Sprint 14 (depend on Sprint 13 routers):
 
 All routers listed in `apps/api/src/router.ts`:
 
-| Router | Namespace | Status | Procedures |
-|--------|-----------|--------|------------|
-| auth | `auth.*` | ✅ Active | Auth flows |
-| billing | `billing.*` | ✅ Active | Stripe integration |
-| lead | `lead.*` | ✅ Active | Lead CRUD |
-| contact | `contact.*` | ✅ Active | Contact CRUD |
-| account | `account.*` | ✅ Active | Account CRUD |
-| opportunity | `opportunity.*` | ✅ Active | Deal CRUD |
-| pipelineConfig | `pipelineConfig.*` | ✅ Active | Pipeline stages |
-| task | `task.*` | ✅ Active | Task CRUD |
-| ticket | `ticket.*` | ✅ Active | Ticket CRUD |
-| analytics | `analytics.*` | ✅ Active | Analytics queries |
-| appointments | `appointments.*` | ✅ Active | Calendar appointments |
-| documents | `documents.*` | ✅ Active | Document management |
-| agent | `agent.*` | ✅ Active | AI agent tools |
-| chainVersion | `chainVersion.*` | ✅ Active | AI chain versions |
-| zepBudget | `zepBudget.*` | ✅ Active | Zep memory budget |
-| intelligence | `intelligence.*` | ✅ Active | AI predictions |
-| autoResponse | `autoResponse.*` | ✅ Active | Auto-response |
-| audit | `audit.*` | ✅ Active | Audit logs |
-| health | `health.*` | ✅ Active | Health checks |
-| system | `system.*` | ✅ Active | System info |
-| timeline | `timeline.*` | ✅ Active | Timeline entries |
-| subscriptions | `subscriptions.*` | ✅ Active | WebSocket |
-| integrations | `integrations.*` | ✅ Active | External integrations |
-| email | `email.*` | ✅ Active | Inbound email |
+| Router         | Namespace          | Status    | Procedures            |
+| -------------- | ------------------ | --------- | --------------------- |
+| auth           | `auth.*`           | ✅ Active | Auth flows            |
+| billing        | `billing.*`        | ✅ Active | Stripe integration    |
+| lead           | `lead.*`           | ✅ Active | Lead CRUD             |
+| contact        | `contact.*`        | ✅ Active | Contact CRUD          |
+| account        | `account.*`        | ✅ Active | Account CRUD          |
+| opportunity    | `opportunity.*`    | ✅ Active | Deal CRUD             |
+| pipelineConfig | `pipelineConfig.*` | ✅ Active | Pipeline stages       |
+| task           | `task.*`           | ✅ Active | Task CRUD             |
+| ticket         | `ticket.*`         | ✅ Active | Ticket CRUD           |
+| analytics      | `analytics.*`      | ✅ Active | Analytics queries     |
+| appointments   | `appointments.*`   | ✅ Active | Calendar appointments |
+| documents      | `documents.*`      | ✅ Active | Document management   |
+| agent          | `agent.*`          | ✅ Active | AI agent tools        |
+| chainVersion   | `chainVersion.*`   | ✅ Active | AI chain versions     |
+| zepBudget      | `zepBudget.*`      | ✅ Active | Zep memory budget     |
+| intelligence   | `intelligence.*`   | ✅ Active | AI predictions        |
+| autoResponse   | `autoResponse.*`   | ✅ Active | Auto-response         |
+| audit          | `audit.*`          | ✅ Active | Audit logs            |
+| health         | `health.*`         | ✅ Active | Health checks         |
+| system         | `system.*`         | ✅ Active | System info           |
+| timeline       | `timeline.*`       | ✅ Active | Timeline entries      |
+| subscriptions  | `subscriptions.*`  | ✅ Active | WebSocket             |
+| integrations   | `integrations.*`   | ✅ Active | External integrations |
+| email          | `email.*`          | ✅ Active | Inbound email         |
 
 ### Routers to Create
 
-| Router | Namespace | Task ID | Sprint | Status |
-|--------|-----------|---------|--------|--------|
-| Dashboard | `dashboard.*` | **IFC-182** | 13 | ✅ Added |
-| Notifications | `notifications.*` | **IFC-183** | 13 | ✅ Added |
-| Workflow | `workflow.*` | - | 17 | ⏳ Future |
-| Admin | `admin.*` | - | 15+ | ⏳ Future |
+| Router        | Namespace         | Task ID     | Sprint | Status    |
+| ------------- | ----------------- | ----------- | ------ | --------- |
+| Dashboard     | `dashboard.*`     | **IFC-182** | 13     | ✅ Added  |
+| Notifications | `notifications.*` | **IFC-183** | 13     | ✅ Added  |
+| Workflow      | `workflow.*`      | -           | 17     | ⏳ Future |
+| Admin         | `admin.*`         | -           | 15+    | ⏳ Future |
 
 ---
 
@@ -365,19 +368,19 @@ All routers listed in `apps/api/src/router.ts`:
 
 ## Related Documents
 
-| Document | Location | Purpose |
-|----------|----------|---------|
-| Sprint Plan | `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` | Task tracking |
-| UI Flow Mapping | `docs/design/ui-flow-mapping.md` | Route → Flow mapping |
-| Sitemap | `docs/design/sitemap.md` | Complete route structure |
-| tRPC Routes | `docs/api/trpc-routes.md` | API inventory |
+| Document        | Location                                                    | Purpose                  |
+| --------------- | ----------------------------------------------------------- | ------------------------ |
+| Sprint Plan     | `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` | Task tracking            |
+| UI Flow Mapping | `docs/design/ui-flow-mapping.md`                            | Route → Flow mapping     |
+| Sitemap         | `docs/design/sitemap.md`                                    | Complete route structure |
+| tRPC Routes     | `docs/api/trpc-routes.md`                                   | API inventory            |
 
 ---
 
 ## Version History
 
-| Date | Version | Changes |
-|------|---------|---------|
-| 2026-02-02 | 3.0.0 | Added 5 missing tasks to Sprint_plan.csv (IFC-182, IFC-183, PG-129, PG-130, PG-131) |
-| 2026-02-02 | 2.0.0 | Cross-referenced with Sprint_plan.csv, identified 5 missing tasks |
-| 2026-02-02 | 1.0.0 | Initial integration backlog |
+| Date       | Version | Changes                                                                             |
+| ---------- | ------- | ----------------------------------------------------------------------------------- |
+| 2026-02-02 | 3.0.0   | Added 5 missing tasks to Sprint_plan.csv (IFC-182, IFC-183, PG-129, PG-130, PG-131) |
+| 2026-02-02 | 2.0.0   | Cross-referenced with Sprint_plan.csv, identified 5 missing tasks                   |
+| 2026-02-02 | 1.0.0   | Initial integration backlog                                                         |

@@ -364,7 +364,11 @@ function TierCard({
               />
             </div>
           </div>
-          {isExpanded ? <Icon name="expand_less" size="lg" /> : <Icon name="expand_more" size="lg" />}
+          {isExpanded ? (
+            <Icon name="expand_less" size="lg" />
+          ) : (
+            <Icon name="expand_more" size="lg" />
+          )}
         </div>
       </button>
       {isExpanded && tasks && (
@@ -424,7 +428,9 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [isRegenerating, setIsRegenerating] = useState(false);
-  const [regenResult, setRegenResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [regenResult, setRegenResult] = useState<{ success: boolean; message: string } | null>(
+    null
+  );
   const [filesExist, setFilesExist] = useState({
     planOverrides: false,
     reviewQueue: false,
@@ -1388,7 +1394,8 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                         {platformHealth.status.toUpperCase()}
                       </span>
                       <span className="text-sm text-gray-500">
-                        Task: {platformHealth.metrics.taskId} | Sprint {platformHealth.metrics.sprint}
+                        Task: {platformHealth.metrics.taskId} | Sprint{' '}
+                        {platformHealth.metrics.sprint}
                       </span>
                     </div>
                     <button
@@ -1435,18 +1442,30 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                   {platformHealth.summary.provenance &&
                     !platformHealth.summary.provenance.fresh && (
                       <div className="bg-amber-50 border border-amber-300 rounded-lg p-4 flex items-start gap-3">
-                        <Icon name="warning" size="lg" className="text-amber-500 flex-shrink-0 mt-0.5" />
+                        <Icon
+                          name="warning"
+                          size="lg"
+                          className="text-amber-500 flex-shrink-0 mt-0.5"
+                        />
                         <div className="flex-1">
                           <p className="font-semibold text-amber-800">Metrics are stale</p>
                           <p className="text-sm text-amber-700">
-                            Last collected {platformHealth.summary.provenance.daysSinceCollection} days
-                            ago (threshold: {platformHealth.summary.provenance.threshold} days).
+                            Last collected {platformHealth.summary.provenance.daysSinceCollection}{' '}
+                            days ago (threshold: {platformHealth.summary.provenance.threshold}{' '}
+                            days).
                             {platformHealth.summary.provenance.nextDue && (
-                              <> Next collection was due: {new Date(platformHealth.summary.provenance.nextDue).toLocaleDateString()}</>
+                              <>
+                                {' '}
+                                Next collection was due:{' '}
+                                {new Date(
+                                  platformHealth.summary.provenance.nextDue
+                                ).toLocaleDateString()}
+                              </>
                             )}
                           </p>
                           <p className="text-xs text-amber-600 mt-1">
-                            Click &quot;Regenerate Metrics&quot; above to auto-collect fresh data from the codebase.
+                            Click &quot;Regenerate Metrics&quot; above to auto-collect fresh data
+                            from the codebase.
                           </p>
                         </div>
                       </div>
@@ -1464,23 +1483,30 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                             {platformHealth.maturity.score}
                           </div>
                           <div>
-                            <h3 className="text-lg font-bold text-gray-800">{platformHealth.maturity.name}</h3>
+                            <h3 className="text-lg font-bold text-gray-800">
+                              {platformHealth.maturity.name}
+                            </h3>
                             <p className="text-sm text-gray-500">
                               {platformHealth.maturity.criteria.filter((c) => c.passed).length}/
-                              {platformHealth.maturity.criteria.length} criteria met across all levels
+                              {platformHealth.maturity.criteria.length} criteria met across all
+                              levels
                             </p>
                           </div>
                         </div>
                         {platformHealth.maturity.nextLevel && (
                           <div className="text-right min-w-[200px]">
-                            <p className="text-xs text-gray-500 mb-1">Progress to {platformHealth.maturity.nextLevel}</p>
+                            <p className="text-xs text-gray-500 mb-1">
+                              Progress to {platformHealth.maturity.nextLevel}
+                            </p>
                             <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
                               <div
                                 className="h-full bg-blue-500 rounded-full transition-all"
                                 style={{ width: `${platformHealth.maturity.progressToNext}%` }}
                               />
                             </div>
-                            <p className="text-xs text-gray-400 mt-1">{platformHealth.maturity.progressToNext}%</p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {platformHealth.maturity.progressToNext}%
+                            </p>
                           </div>
                         )}
                       </div>
@@ -1493,7 +1519,10 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                           </p>
                           <div className="flex flex-wrap gap-2">
                             {platformHealth.maturity.nextRequirements.map((req) => (
-                              <span key={req} className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                              <span
+                                key={req}
+                                className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs"
+                              >
                                 {req}
                               </span>
                             ))}
@@ -1514,7 +1543,9 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                         )}
                         <p className="text-sm font-medium text-gray-600">Schema</p>
                       </div>
-                      <p className={`text-2xl font-bold ${platformHealth.summary.schema === 'PASS' ? 'text-green-700' : 'text-red-700'}`}>
+                      <p
+                        className={`text-2xl font-bold ${platformHealth.summary.schema === 'PASS' ? 'text-green-700' : 'text-red-700'}`}
+                      >
                         {platformHealth.summary.schema}
                       </p>
                     </div>
@@ -1528,7 +1559,9 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                         )}
                         <p className="text-sm font-medium text-gray-600">KPIs</p>
                       </div>
-                      <p className={`text-2xl font-bold ${platformHealth.summary.kpis.allMet ? 'text-green-700' : 'text-red-700'}`}>
+                      <p
+                        className={`text-2xl font-bold ${platformHealth.summary.kpis.allMet ? 'text-green-700' : 'text-red-700'}`}
+                      >
                         {platformHealth.summary.kpis.met}/{platformHealth.summary.kpis.total}
                       </p>
                       <p className="text-xs text-gray-500">met</p>
@@ -1536,15 +1569,19 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
 
                     <div className="p-4 bg-white rounded-lg border border-gray-200">
                       <div className="flex items-center gap-2 mb-2">
-                        {platformHealth.summary.evidence.passed === platformHealth.summary.evidence.total ? (
+                        {platformHealth.summary.evidence.passed ===
+                        platformHealth.summary.evidence.total ? (
                           <Icon name="check_circle" size="lg" className="text-green-500" />
                         ) : (
                           <Icon name="warning" size="lg" className="text-yellow-500" />
                         )}
                         <p className="text-sm font-medium text-gray-600">Evidence</p>
                       </div>
-                      <p className={`text-2xl font-bold ${platformHealth.summary.evidence.passed === platformHealth.summary.evidence.total ? 'text-green-700' : 'text-yellow-700'}`}>
-                        {platformHealth.summary.evidence.passed}/{platformHealth.summary.evidence.total}
+                      <p
+                        className={`text-2xl font-bold ${platformHealth.summary.evidence.passed === platformHealth.summary.evidence.total ? 'text-green-700' : 'text-yellow-700'}`}
+                      >
+                        {platformHealth.summary.evidence.passed}/
+                        {platformHealth.summary.evidence.total}
                       </p>
                       <p className="text-xs text-gray-500">verified</p>
                     </div>
@@ -1558,7 +1595,9 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                         )}
                         <p className="text-sm font-medium text-gray-600">Provenance</p>
                       </div>
-                      <p className={`text-2xl font-bold ${platformHealth.summary.provenance.fresh ? 'text-green-700' : 'text-yellow-700'}`}>
+                      <p
+                        className={`text-2xl font-bold ${platformHealth.summary.provenance.fresh ? 'text-green-700' : 'text-yellow-700'}`}
+                      >
                         {platformHealth.summary.provenance.fresh ? 'Fresh' : 'Stale'}
                       </p>
                       <p className="text-xs text-gray-500">
@@ -1590,19 +1629,23 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-1">
                                   <p className="font-medium text-gray-800">{rec.title}</p>
-                                  <span className={`px-2 py-0.5 text-xs rounded-full font-medium ${
-                                    rec.severity === 'high'
-                                      ? 'bg-red-100 text-red-700'
-                                      : rec.severity === 'medium'
-                                        ? 'bg-amber-100 text-amber-700'
-                                        : 'bg-blue-100 text-blue-700'
-                                  }`}>
+                                  <span
+                                    className={`px-2 py-0.5 text-xs rounded-full font-medium ${
+                                      rec.severity === 'high'
+                                        ? 'bg-red-100 text-red-700'
+                                        : rec.severity === 'medium'
+                                          ? 'bg-amber-100 text-amber-700'
+                                          : 'bg-blue-100 text-blue-700'
+                                    }`}
+                                  >
                                     {rec.severity}
                                   </span>
                                 </div>
                                 <p className="text-sm text-gray-600">{rec.description}</p>
                               </div>
-                              <span className="text-xs text-gray-400 whitespace-nowrap">{rec.estimatedTime}</span>
+                              <span className="text-xs text-gray-400 whitespace-nowrap">
+                                {rec.estimatedTime}
+                              </span>
                             </div>
                             {rec.action === 'regenerate' && (
                               <button
@@ -1680,11 +1723,35 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                         </div>
                       </div>
                       <div className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500 border-t pt-3">
-                        <span>Tracked files: <strong>{platformHealth.codebaseHealth.total_tracked_files.toLocaleString()}</strong></span>
-                        <span>Root scripts: <strong>{platformHealth.codebaseHealth.root_scripts}</strong></span>
-                        <span>Env docs: <strong>{platformHealth.codebaseHealth.env_files_documented}/{platformHealth.codebaseHealth.env_files_expected}</strong></span>
-                        <span>Branches: <strong>{platformHealth.codebaseHealth.git_velocity.branches}</strong></span>
-                        <span>Golden paths: <strong>{platformHealth.codebaseHealth.golden_paths_verified}/{platformHealth.codebaseHealth.golden_paths_total}</strong> verified</span>
+                        <span>
+                          Tracked files:{' '}
+                          <strong>
+                            {platformHealth.codebaseHealth.total_tracked_files.toLocaleString()}
+                          </strong>
+                        </span>
+                        <span>
+                          Root scripts:{' '}
+                          <strong>{platformHealth.codebaseHealth.root_scripts}</strong>
+                        </span>
+                        <span>
+                          Env docs:{' '}
+                          <strong>
+                            {platformHealth.codebaseHealth.env_files_documented}/
+                            {platformHealth.codebaseHealth.env_files_expected}
+                          </strong>
+                        </span>
+                        <span>
+                          Branches:{' '}
+                          <strong>{platformHealth.codebaseHealth.git_velocity.branches}</strong>
+                        </span>
+                        <span>
+                          Golden paths:{' '}
+                          <strong>
+                            {platformHealth.codebaseHealth.golden_paths_verified}/
+                            {platformHealth.codebaseHealth.golden_paths_total}
+                          </strong>{' '}
+                          verified
+                        </span>
                       </div>
                     </div>
                   )}
@@ -1701,8 +1768,12 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                           <tr className="border-b bg-gray-50">
                             <th className="text-left p-3 font-medium text-gray-600">Name</th>
                             <th className="text-left p-3 font-medium text-gray-600">Entrypoint</th>
-                            <th className="text-center p-3 font-medium text-gray-600">Doc Exists</th>
-                            <th className="text-center p-3 font-medium text-gray-600">Content Verified</th>
+                            <th className="text-center p-3 font-medium text-gray-600">
+                              Doc Exists
+                            </th>
+                            <th className="text-center p-3 font-medium text-gray-600">
+                              Content Verified
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
@@ -1710,18 +1781,28 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                             <tr key={gp.name} className="border-b hover:bg-gray-50">
                               <td className="p-3 font-medium">{gp.name}</td>
                               <td className="p-3">
-                                <code className="bg-gray-100 px-2 py-0.5 rounded text-xs">{gp.entrypoint}</code>
+                                <code className="bg-gray-100 px-2 py-0.5 rounded text-xs">
+                                  {gp.entrypoint}
+                                </code>
                               </td>
                               <td className="p-3 text-center">
                                 {gp.docExists ? (
-                                  <Icon name="check_circle" size="sm" className="text-green-500 inline" />
+                                  <Icon
+                                    name="check_circle"
+                                    size="sm"
+                                    className="text-green-500 inline"
+                                  />
                                 ) : (
                                   <Icon name="cancel" size="sm" className="text-red-500 inline" />
                                 )}
                               </td>
                               <td className="p-3 text-center">
                                 {gp.contentVerified ? (
-                                  <Icon name="check_circle" size="sm" className="text-green-500 inline" />
+                                  <Icon
+                                    name="check_circle"
+                                    size="sm"
+                                    className="text-green-500 inline"
+                                  />
                                 ) : (
                                   <Icon name="cancel" size="sm" className="text-red-500 inline" />
                                 )}
@@ -1789,12 +1870,16 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                       >
                         <div className="flex items-center gap-3">
                           <span className="font-medium">Evidence Checks</span>
-                          <span className={`px-2 py-0.5 text-xs rounded-full ${
-                            platformHealth.summary.evidence.passed === platformHealth.summary.evidence.total
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-yellow-100 text-yellow-700'
-                          }`}>
-                            {platformHealth.summary.evidence.passed}/{platformHealth.summary.evidence.total} passed
+                          <span
+                            className={`px-2 py-0.5 text-xs rounded-full ${
+                              platformHealth.summary.evidence.passed ===
+                              platformHealth.summary.evidence.total
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-yellow-100 text-yellow-700'
+                            }`}
+                          >
+                            {platformHealth.summary.evidence.passed}/
+                            {platformHealth.summary.evidence.total} passed
                           </span>
                         </div>
                         {expandedSections.has('evidence') ? (
@@ -1806,9 +1891,16 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                       {expandedSections.has('evidence') && (
                         <div className="border-t p-4 space-y-2">
                           {platformHealth.evidenceChecks.map((check) => (
-                            <div key={check.name} className="flex items-start gap-3 p-2 rounded hover:bg-gray-50">
+                            <div
+                              key={check.name}
+                              className="flex items-start gap-3 p-2 rounded hover:bg-gray-50"
+                            >
                               {check.passed ? (
-                                <Icon name="check_circle" size="sm" className="text-green-500 mt-0.5" />
+                                <Icon
+                                  name="check_circle"
+                                  size="sm"
+                                  className="text-green-500 mt-0.5"
+                                />
                               ) : (
                                 <Icon name="warning" size="sm" className="text-yellow-500 mt-0.5" />
                               )}
@@ -1831,12 +1923,15 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                       >
                         <div className="flex items-center gap-3">
                           <span className="font-medium">Provenance Checks</span>
-                          <span className={`px-2 py-0.5 text-xs rounded-full ${
-                            platformHealth.provenanceChecks.every((c) => c.passed)
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-yellow-100 text-yellow-700'
-                          }`}>
-                            {platformHealth.provenanceChecks.filter((c) => c.passed).length}/{platformHealth.provenanceChecks.length} passed
+                          <span
+                            className={`px-2 py-0.5 text-xs rounded-full ${
+                              platformHealth.provenanceChecks.every((c) => c.passed)
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-yellow-100 text-yellow-700'
+                            }`}
+                          >
+                            {platformHealth.provenanceChecks.filter((c) => c.passed).length}/
+                            {platformHealth.provenanceChecks.length} passed
                           </span>
                         </div>
                         {expandedSections.has('provenance') ? (
@@ -1848,9 +1943,16 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                       {expandedSections.has('provenance') && (
                         <div className="border-t p-4 space-y-2">
                           {platformHealth.provenanceChecks.map((check) => (
-                            <div key={check.name} className="flex items-start gap-3 p-2 rounded hover:bg-gray-50">
+                            <div
+                              key={check.name}
+                              className="flex items-start gap-3 p-2 rounded hover:bg-gray-50"
+                            >
                               {check.passed ? (
-                                <Icon name="check_circle" size="sm" className="text-green-500 mt-0.5" />
+                                <Icon
+                                  name="check_circle"
+                                  size="sm"
+                                  className="text-green-500 mt-0.5"
+                                />
                               ) : (
                                 <Icon name="warning" size="sm" className="text-yellow-500 mt-0.5" />
                               )}
@@ -1873,12 +1975,16 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                       >
                         <div className="flex items-center gap-3">
                           <span className="font-medium">Consistency Checks</span>
-                          <span className={`px-2 py-0.5 text-xs rounded-full ${
-                            platformHealth.summary.consistency.passed === platformHealth.summary.consistency.total
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-red-100 text-red-700'
-                          }`}>
-                            {platformHealth.summary.consistency.passed}/{platformHealth.summary.consistency.total} passed
+                          <span
+                            className={`px-2 py-0.5 text-xs rounded-full ${
+                              platformHealth.summary.consistency.passed ===
+                              platformHealth.summary.consistency.total
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-red-100 text-red-700'
+                            }`}
+                          >
+                            {platformHealth.summary.consistency.passed}/
+                            {platformHealth.summary.consistency.total} passed
                           </span>
                         </div>
                         {expandedSections.has('consistency') ? (
@@ -1890,9 +1996,16 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                       {expandedSections.has('consistency') && (
                         <div className="border-t p-4 space-y-2">
                           {platformHealth.consistencyChecks.map((check) => (
-                            <div key={check.name} className="flex items-start gap-3 p-2 rounded hover:bg-gray-50">
+                            <div
+                              key={check.name}
+                              className="flex items-start gap-3 p-2 rounded hover:bg-gray-50"
+                            >
                               {check.passed ? (
-                                <Icon name="check_circle" size="sm" className="text-green-500 mt-0.5" />
+                                <Icon
+                                  name="check_circle"
+                                  size="sm"
+                                  className="text-green-500 mt-0.5"
+                                />
                               ) : (
                                 <Icon name="cancel" size="sm" className="text-red-500 mt-0.5" />
                               )}
@@ -1910,13 +2023,24 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                   {/* Quick Stats Footer */}
                   <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
                     <div className="flex flex-wrap gap-x-6 gap-y-1">
-                      <span>IDP: <strong>{platformHealth.metrics.idpStatus}</strong></span>
-                      <span>Deploy Success: <strong>{platformHealth.metrics.deploySuccessRate}%</strong></span>
-                      <span>Total Deploys: <strong>{platformHealth.metrics.totalDeploys}</strong></span>
-                      <span>Cache Hit Rate: <strong>{platformHealth.metrics.cacheHitRate}%</strong></span>
-                      <span>CI Pass Rate: <strong>{platformHealth.metrics.ciPassRate}%</strong></span>
+                      <span>
+                        IDP: <strong>{platformHealth.metrics.idpStatus}</strong>
+                      </span>
+                      <span>
+                        Deploy Success: <strong>{platformHealth.metrics.deploySuccessRate}%</strong>
+                      </span>
+                      <span>
+                        Total Deploys: <strong>{platformHealth.metrics.totalDeploys}</strong>
+                      </span>
+                      <span>
+                        Cache Hit Rate: <strong>{platformHealth.metrics.cacheHitRate}%</strong>
+                      </span>
+                      <span>
+                        CI Pass Rate: <strong>{platformHealth.metrics.ciPassRate}%</strong>
+                      </span>
                       <span className="text-gray-400">
-                        Last generated: {new Date(platformHealth.metrics.generatedAt).toLocaleString()}
+                        Last generated:{' '}
+                        {new Date(platformHealth.metrics.generatedAt).toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -1926,7 +2050,11 @@ export default function GovernanceView({ selectedSprint }: GovernanceViewProps) 
                   <Icon name="developer_board" size="2xl" className="mx-auto mb-4 text-gray-400" />
                   <p className="text-gray-500 mb-2">No platform health data available.</p>
                   <p className="text-sm text-gray-400 mb-4">
-                    Ensure <code className="bg-gray-100 px-1 rounded">artifacts/metrics/self-service-metrics.json</code> exists.
+                    Ensure{' '}
+                    <code className="bg-gray-100 px-1 rounded">
+                      artifacts/metrics/self-service-metrics.json
+                    </code>{' '}
+                    exists.
                   </p>
                   <button
                     type="button"

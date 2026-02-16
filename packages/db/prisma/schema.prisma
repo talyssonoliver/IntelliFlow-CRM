@@ -64,6 +64,7 @@ model Tenant {
   reportDefinitions    ReportDefinition[]
   aiInsights           AIInsight[]
   performanceMetrics   PerformanceMetric[]
+  modules              TenantModule[]
 
   @@index([slug])
   @@index([status])
@@ -74,6 +75,40 @@ enum TenantStatus {
   ACTIVE
   SUSPENDED
   TRIAL
+}
+
+// IFC-208: Plan Tiers & Module Registry
+enum PlanTier {
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+  CUSTOM
+}
+
+enum CRMModule {
+  CORE_CRM
+  LEGAL
+  SUPPORT
+  AI_INTELLIGENCE
+  ANALYTICS
+  COMMERCE
+}
+
+/// Tracks which modules are enabled for each tenant.
+/// Modules can be enabled via plan tier or à la carte purchase.
+model TenantModule {
+  id         String     @id @default(cuid())
+  tenantId   String
+  moduleId   CRMModule
+  enabled    Boolean    @default(true)
+  enabledAt  DateTime   @default(now())
+  disabledAt DateTime?
+
+  tenant     Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, moduleId])
+  @@index([tenantId])
+  @@map("tenant_modules")
 }
 
 // ============================================
@@ -2125,7 +2160,7 @@ model Workspace {
   logoUrl     String?
   industry    String?
   size        String?  // 'startup', 'small', 'medium', 'enterprise'
-  plan        String   @default("free") // 'free', 'starter', 'professional', 'enterprise'
+  plan        PlanTier @default(STARTER)
   isActive    Boolean  @default(true)
   settings    Json?    // Workspace-specific configurations
   createdAt   DateTime @default(now())
@@ -2249,7 +2284,7 @@ model EmailRecord {
   createdAt    DateTime @default(now())
 
   // IFC-069: Tenant isolation for unified activity feed
-  tenantId     String?
+  tenantId     String
 
   attachments  EmailAttachment[]
 
@@ -2350,7 +2385,7 @@ model ChatMessage {
   createdAt      DateTime @default(now())
 
   // IFC-069: Tenant isolation for unified activity feed
-  tenantId       String?
+  tenantId       String
 
   @@index([conversationId])
   @@index([createdAt])
@@ -2389,7 +2424,7 @@ model CallRecord {
   createdAt     DateTime @default(now())
 
   // IFC-069: Tenant isolation for unified activity feed
-  tenantId      String?
+  tenantId      String
 
   @@index([contactId])
   @@index([userId])
@@ -2640,6 +2675,7 @@ model AgentSkill {
 /// Agent availability status
 model AgentAvailability {
   id          String   @id @default(cuid())
+  tenantId    String
   userId      String   @unique
   userName    String
   status      AgentStatus @default(OFFLINE)
@@ -2653,6 +2689,7 @@ model AgentAvailability {
 
   @@index([status])
   @@index([currentCapacity])
+  @@index([tenantId])
   @@map("agent_availability")
 }
 
@@ -2667,6 +2704,7 @@ enum AgentStatus {
 /// Ticket routing rule
 model RoutingRule {
   id          String   @id @default(cuid())
+  tenantId    String
   name        String
   description String?
   priority    Int      @default(0) // Higher = evaluated first
@@ -2679,12 +2717,14 @@ model RoutingRule {
 
   @@index([isActive])
   @@index([priority])
+  @@index([tenantId])
   @@map("routing_rules")
 }
 
 /// Routing audit log
 model RoutingAudit {
   id          String   @id @default(cuid())
+  tenantId    String
   ticketId    String
   ruleId      String?
   ruleName    String?
@@ -2699,6 +2739,7 @@ model RoutingAudit {
   @@index([ticketId])
   @@index([toUserId])
   @@index([createdAt])
+  @@index([tenantId])
   @@map("routing_audits")
 }
 

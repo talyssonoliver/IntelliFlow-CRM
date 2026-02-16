@@ -14,10 +14,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { conversationRouter } from '../conversation.router';
-import {
-  prismaMock,
-  createTestContext,
-} from '../../../test/setup';
+import { prismaMock, createTestContext } from '../../../test/setup';
 
 // Test UUIDs for consistent testing
 const TEST_CONVERSATION_ID = 'conv-test-123';
@@ -235,13 +232,9 @@ describe('Conversation Router', () => {
     it('should throw NOT_FOUND for non-existent conversation', async () => {
       prismaMock.conversationRecord.findFirst.mockResolvedValue(null);
 
-      await expect(
-        caller.getById({ id: 'non-existent' })
-      ).rejects.toThrow(TRPCError);
+      await expect(caller.getById({ id: 'non-existent' })).rejects.toThrow(TRPCError);
 
-      await expect(
-        caller.getById({ id: 'non-existent' })
-      ).rejects.toMatchObject({
+      await expect(caller.getById({ id: 'non-existent' })).rejects.toMatchObject({
         code: 'NOT_FOUND',
       });
     });
@@ -667,9 +660,7 @@ describe('Conversation Router', () => {
     it('should throw NOT_FOUND for inactive conversation', async () => {
       prismaMock.conversationRecord.findFirst.mockResolvedValue(null);
 
-      await expect(
-        caller.endConversation({ id: TEST_CONVERSATION_ID })
-      ).rejects.toThrow(TRPCError);
+      await expect(caller.endConversation({ id: TEST_CONVERSATION_ID })).rejects.toThrow(TRPCError);
     });
   });
 
@@ -751,8 +742,8 @@ describe('Conversation Router', () => {
 
       prismaMock.conversationRecord.count
         .mockResolvedValueOnce(100) // total
-        .mockResolvedValueOnce(10)  // active
-        .mockResolvedValueOnce(5);  // escalated
+        .mockResolvedValueOnce(10) // active
+        .mockResolvedValueOnce(5); // escalated
 
       (prismaMock.conversationRecord.aggregate as any)
         .mockResolvedValueOnce({ _avg: { messageCount: 15 } })
@@ -832,9 +823,7 @@ describe('Conversation Router', () => {
       // Mock returns empty because tenant filter excludes other tenant's data
       prismaMock.conversationRecord.findFirst.mockResolvedValue(null);
 
-      await expect(
-        caller.getById({ id: TEST_CONVERSATION_ID })
-      ).rejects.toThrow(TRPCError);
+      await expect(caller.getById({ id: TEST_CONVERSATION_ID })).rejects.toThrow(TRPCError);
 
       // Verify tenant filter was applied
       expect(prismaMock.conversationRecord.findFirst).toHaveBeenCalledWith(

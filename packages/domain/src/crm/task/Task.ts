@@ -242,7 +242,9 @@ export class Task extends AggregateRoot<TaskId> {
     this.props.status = 'ARCHIVED';
     this.props.updatedAt = new Date();
 
-    this.addDomainEvent(new TaskStatusChangedEvent(this.id, previousStatus, 'ARCHIVED', archivedBy));
+    this.addDomainEvent(
+      new TaskStatusChangedEvent(this.id, previousStatus, 'ARCHIVED', archivedBy)
+    );
 
     return Result.ok(undefined);
   }

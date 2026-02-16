@@ -8,7 +8,13 @@
 import { NextResponse } from 'next/server';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
-import { PATHS, getHeartbeatPath, getSwarmLogPath, isValidTaskId, sanitizeTaskId } from '@/lib/paths';
+import {
+  PATHS,
+  getHeartbeatPath,
+  getSwarmLogPath,
+  isValidTaskId,
+  sanitizeTaskId,
+} from '@/lib/paths';
 import { getTask } from '@/lib/csv-status';
 
 export const dynamic = 'force-dynamic';
@@ -126,7 +132,9 @@ function parseLogForStatus(logContent: string): {
   }
 
   // Find last message
-  const infoLine = [...lines].reverse().find((line) => line.includes('[INFO]') || line.includes('[SUCCESS]'));
+  const infoLine = [...lines]
+    .reverse()
+    .find((line) => line.includes('[INFO]') || line.includes('[SUCCESS]'));
   let lastMessage = '';
   if (infoLine) {
     const msgMatch = /- (.+)$/.exec(infoLine);
@@ -139,7 +147,9 @@ function parseLogForStatus(logContent: string): {
 
   // Extract recent activity
   const meaningfulTags = ['[INFO]', '[SUCCESS]', '[PHASE]', '[ERROR]', '[WARN]', '[HUMAN]'];
-  const meaningfulLines = lines.filter((line) => meaningfulTags.some((tag) => line.includes(tag))).slice(-10);
+  const meaningfulLines = lines
+    .filter((line) => meaningfulTags.some((tag) => line.includes(tag)))
+    .slice(-10);
 
   const recentActivity = meaningfulLines
     .map((line) => {
@@ -184,10 +194,7 @@ export async function GET(request: Request) {
 
     // Validate and sanitize taskId
     if (!isValidTaskId(rawTaskId)) {
-      return NextResponse.json(
-        { error: 'Invalid taskId format' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid taskId format' }, { status: 400 });
     }
 
     const taskId = sanitizeTaskId(rawTaskId);
@@ -198,7 +205,10 @@ export async function GET(request: Request) {
     // Get task from CSV for baseline status
     const csvTask = await getTask(taskId);
     if (!csvTask) {
-      return NextResponse.json({ error: `Task ${taskId} not found in Sprint_plan.csv` }, { status: 404 });
+      return NextResponse.json(
+        { error: `Task ${taskId} not found in Sprint_plan.csv` },
+        { status: 404 }
+      );
     }
 
     // Check if task has active lock (running in swarm)

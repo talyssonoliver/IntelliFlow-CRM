@@ -8,7 +8,11 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import type { AppointmentFilters, AppointmentStatus, AppointmentType } from '@/components/appointments/types';
+import type {
+  AppointmentFilters,
+  AppointmentStatus,
+  AppointmentType,
+} from '@/components/appointments/types';
 
 export const defaultAppointmentFilters: AppointmentFilters = {
   search: '',
@@ -66,9 +70,12 @@ export function useAppointmentFilters() {
     setFilters((prev) => ({ ...prev, caseId, page: 1 }));
   }, []);
 
-  const setSort = useCallback((sortBy: AppointmentFilters['sortBy'], sortOrder?: AppointmentFilters['sortOrder']) => {
-    setFilters((prev) => ({ ...prev, sortBy, sortOrder: sortOrder ?? prev.sortOrder }));
-  }, []);
+  const setSort = useCallback(
+    (sortBy: AppointmentFilters['sortBy'], sortOrder?: AppointmentFilters['sortOrder']) => {
+      setFilters((prev) => ({ ...prev, sortBy, sortOrder: sortOrder ?? prev.sortOrder }));
+    },
+    []
+  );
 
   const setPage = useCallback((page: number) => {
     setFilters((prev) => ({ ...prev, page }));
@@ -82,18 +89,21 @@ export function useAppointmentFilters() {
     setFilters((prev) => ({ ...prev, calendarView }));
   }, []);
 
-  const queryParams = useMemo(() => ({
-    search: filters.search || undefined,
-    status: filters.status || undefined,
-    appointmentType: filters.appointmentType || undefined,
-    startTimeFrom: filters.startTimeFrom?.toISOString(),
-    startTimeTo: filters.startTimeTo?.toISOString(),
-    caseId: filters.caseId || undefined,
-    sortBy: filters.sortBy,
-    sortOrder: filters.sortOrder,
-    page: filters.page,
-    limit: filters.limit,
-  }), [filters]);
+  const queryParams = useMemo(
+    () => ({
+      search: filters.search || undefined,
+      status: filters.status || undefined,
+      appointmentType: filters.appointmentType || undefined,
+      startTimeFrom: filters.startTimeFrom?.toISOString(),
+      startTimeTo: filters.startTimeTo?.toISOString(),
+      caseId: filters.caseId || undefined,
+      sortBy: filters.sortBy,
+      sortOrder: filters.sortOrder,
+      page: filters.page,
+      limit: filters.limit,
+    }),
+    [filters]
+  );
 
   return {
     filters,

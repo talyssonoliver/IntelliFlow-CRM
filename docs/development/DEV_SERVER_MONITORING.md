@@ -17,6 +17,7 @@ netstat -ano | findstr ":3000 :3001 :4000"
 ### Monitor Logs Without Killing Servers
 
 #### Option 1: Run Typecheck (Fastest)
+
 ```bash
 # Check for type errors without starting server
 pnpm --filter @intelliflow/web typecheck
@@ -25,12 +26,14 @@ pnpm run typecheck:all  # Check all packages
 ```
 
 #### Option 2: Use Monitor Script
+
 ```bash
 # Run comprehensive health check
 pnpm run dev:check
 ```
 
 #### Option 3: Start Fresh Dev Server
+
 ```bash
 # Kill existing server first
 taskkill //F //PID <PID>  # Get PID from dev:status
@@ -40,6 +43,7 @@ pnpm run dev:web
 ```
 
 #### Option 4: Use Separate Terminal
+
 - Keep one terminal running the dev server
 - Use another terminal for checks/commands
 - View dev server output in real-time in its terminal
@@ -47,6 +51,7 @@ pnpm run dev:web
 ## Understanding the Output
 
 ### Port Mapping
+
 - **3000** - Next.js web app (primary)
 - **3001** - Next.js web app (fallback if 3000 is busy)
 - **3002** - Project tracker dashboard
@@ -80,12 +85,14 @@ pnpm run dev:web
 ### 2. **Continuous Monitoring** (Multiple Terminals)
 
 Terminal 1:
+
 ```bash
 # Run dev server and watch output
 pnpm run dev:web
 ```
 
 Terminal 2:
+
 ```bash
 # Run checks periodically
 pnpm run typecheck:all
@@ -146,15 +153,18 @@ taskkill //F //IM node.exe
 ## Best Practices
 
 ### ✅ DO:
+
 - Keep dev server running in a visible terminal
 - Use `typecheck` to check for errors without restarting
 - Use `dev:status` to see what's running before starting new servers
 - Use multiple terminals for parallel work
 
 ### ❌ DON'T:
+
 - Start multiple dev servers on the same port
 - Kill processes without checking what they are
-- Run `taskkill //F //IM node.exe` unless you know what you're doing (kills ALL Node processes)
+- Run `taskkill //F //IM node.exe` unless you know what you're doing (kills ALL
+  Node processes)
 
 ## Troubleshooting
 
@@ -163,6 +173,7 @@ taskkill //F //IM node.exe
 **Problem**: Dev server running but can't see output
 
 **Solutions**:
+
 1. Find the terminal where it's running (check taskbar)
 2. Run `typecheck` instead for quick error checking
 3. Restart dev server in a visible terminal
@@ -173,6 +184,7 @@ taskkill //F //IM node.exe
 **Problem**: `.next/dev/lock` file exists
 
 **Solution**:
+
 ```bash
 # Remove lock file
 rm apps/web/.next/dev/lock
@@ -189,6 +201,7 @@ taskkill //F //PID <PID>
 **Cause**: Development uses stricter type checking
 
 **Solution**:
+
 ```bash
 # This is expected! Fix the type errors:
 pnpm --filter @intelliflow/web typecheck
@@ -214,7 +227,8 @@ The same commands work in CI:
 
 ## Summary
 
-**Key Takeaway**: You almost never need to kill a dev server to check for errors. Use `typecheck`, `lint`, and `dev:status` instead.
+**Key Takeaway**: You almost never need to kill a dev server to check for
+errors. Use `typecheck`, `lint`, and `dev:status` instead.
 
 ```bash
 # Quick reference:

@@ -408,9 +408,7 @@ const DEFAULT_OPTIONS: CleanupOptions = {
  * });
  * ```
  */
-export async function cleanupSession(
-  options: CleanupOptions = {}
-): Promise<CleanupResult> {
+export async function cleanupSession(options: CleanupOptions = {}): Promise<CleanupResult> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   const result: CleanupResult = {
     success: true,

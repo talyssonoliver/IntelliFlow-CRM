@@ -192,10 +192,7 @@ export class Crew {
    * Execute agents in parallel
    * All agents work on the same input simultaneously
    */
-  private async executeParallel(
-    task: CrewTask,
-    results: Map<string, AgentResult>
-  ): Promise<void> {
+  private async executeParallel(task: CrewTask, results: Map<string, AgentResult>): Promise<void> {
     logger.info('Executing agents in parallel');
 
     const promises = this.config.agents.map(async (agent) => {

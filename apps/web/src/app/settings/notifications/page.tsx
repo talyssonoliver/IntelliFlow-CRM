@@ -4,17 +4,39 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 
 const notificationSettings = [
-  { category: 'Email Notifications', items: [
-    { label: 'New lead assignments', description: 'Get notified when a lead is assigned to you', enabled: true },
-    { label: 'Deal updates', description: 'Notifications about deal stage changes', enabled: true },
-    { label: 'Task reminders', description: 'Daily digest of upcoming tasks', enabled: false },
-    { label: 'Weekly reports', description: 'Summary of your weekly performance', enabled: true },
-  ]},
-  { category: 'Push Notifications', items: [
-    { label: 'Urgent alerts', description: 'Critical notifications that need immediate attention', enabled: true },
-    { label: 'Mentions', description: 'When someone mentions you in a comment', enabled: true },
-    { label: 'AI insights', description: 'AI-generated insights and recommendations', enabled: false },
-  ]},
+  {
+    category: 'Email Notifications',
+    items: [
+      {
+        label: 'New lead assignments',
+        description: 'Get notified when a lead is assigned to you',
+        enabled: true,
+      },
+      {
+        label: 'Deal updates',
+        description: 'Notifications about deal stage changes',
+        enabled: true,
+      },
+      { label: 'Task reminders', description: 'Daily digest of upcoming tasks', enabled: false },
+      { label: 'Weekly reports', description: 'Summary of your weekly performance', enabled: true },
+    ],
+  },
+  {
+    category: 'Push Notifications',
+    items: [
+      {
+        label: 'Urgent alerts',
+        description: 'Critical notifications that need immediate attention',
+        enabled: true,
+      },
+      { label: 'Mentions', description: 'When someone mentions you in a comment', enabled: true },
+      {
+        label: 'AI insights',
+        description: 'AI-generated insights and recommendations',
+        enabled: false,
+      },
+    ],
+  },
 ];
 
 export default function NotificationsPage() {
@@ -31,9 +53,7 @@ export default function NotificationsPage() {
             <span className="text-foreground font-medium">Notifications</span>
           </nav>
           <h1 className="text-2xl font-bold text-foreground">Notifications</h1>
-          <p className="text-muted-foreground mt-1">
-            Configure your notification preferences
-          </p>
+          <p className="text-muted-foreground mt-1">Configure your notification preferences</p>
         </div>
 
         {/* Notification Settings */}

@@ -46,7 +46,7 @@ describe('ConfidenceScore', () => {
     });
 
     it('should return true when score is above threshold', () => {
-      const score = ConfidenceScore.create(0.90);
+      const score = ConfidenceScore.create(0.9);
       expect(score.isAboveThreshold(0.85)).toBe(true);
     });
 

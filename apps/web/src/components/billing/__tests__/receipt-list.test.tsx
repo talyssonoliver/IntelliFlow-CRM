@@ -92,9 +92,7 @@ describe('ReceiptList', () => {
       render(<ReceiptList {...defaultProps} receipts={[]} total={0} />);
 
       expect(screen.getByText(/no receipts yet/i)).toBeInTheDocument();
-      expect(
-        screen.getByText(/when you make payments/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/when you make payments/i)).toBeInTheDocument();
     });
   });
 
@@ -163,9 +161,9 @@ describe('ReceiptList', () => {
 
     it('disables email button while sending', async () => {
       // Create a slow mock
-      const onSendEmail = vi.fn().mockImplementation(
-        () => new Promise((resolve) => setTimeout(resolve, 100))
-      );
+      const onSendEmail = vi
+        .fn()
+        .mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
 
       render(<ReceiptList {...defaultProps} onSendEmail={onSendEmail} />);
 
@@ -183,33 +181,25 @@ describe('ReceiptList', () => {
     it('shows load more button when hasMore is true', () => {
       render(<ReceiptList {...defaultProps} hasMore={true} />);
 
-      expect(
-        screen.getByRole('button', { name: /load more/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /load more/i })).toBeInTheDocument();
     });
 
     it('hides load more button when hasMore is false', () => {
       render(<ReceiptList {...defaultProps} hasMore={false} />);
 
-      expect(
-        screen.queryByRole('button', { name: /load more/i })
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /load more/i })).not.toBeInTheDocument();
     });
 
     it('calls onLoadMore when load more is clicked', () => {
       const onLoadMore = vi.fn();
-      render(
-        <ReceiptList {...defaultProps} hasMore={true} onLoadMore={onLoadMore} />
-      );
+      render(<ReceiptList {...defaultProps} hasMore={true} onLoadMore={onLoadMore} />);
 
       fireEvent.click(screen.getByRole('button', { name: /load more/i }));
       expect(onLoadMore).toHaveBeenCalled();
     });
 
     it('disables load more button when isLoadingMore', () => {
-      render(
-        <ReceiptList {...defaultProps} hasMore={true} isLoadingMore={true} />
-      );
+      render(<ReceiptList {...defaultProps} hasMore={true} isLoadingMore={true} />);
 
       const button = screen.getByRole('button', { name: /loading/i });
       expect(button).toBeDisabled();
@@ -220,12 +210,8 @@ describe('ReceiptList', () => {
     it('has accessible button labels', () => {
       render(<ReceiptList {...defaultProps} />);
 
-      expect(
-        screen.getByLabelText(/download receipt RCP-2026-0001/i)
-      ).toBeInTheDocument();
-      expect(
-        screen.getByLabelText(/email receipt RCP-2026-0001/i)
-      ).toBeInTheDocument();
+      expect(screen.getByLabelText(/download receipt RCP-2026-0001/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/email receipt RCP-2026-0001/i)).toBeInTheDocument();
     });
   });
 });

@@ -133,26 +133,33 @@ export function scoreBusinessValue(
   taskId: string,
   section: string,
   dependentCount: number,
-  isCriticalPath: boolean,
+  isCriticalPath: boolean
 ): number {
   // Derive governance tier inline (same logic as governance.ts)
   let tierScore: number;
   const lcSection = section.toLowerCase();
 
   if (
-    taskId.includes('SEC') || lcSection.includes('security') ||
+    taskId.includes('SEC') ||
+    lcSection.includes('security') ||
     (taskId.startsWith('IFC-0') && parseInt(taskId.replace('IFC-', ''), 10) <= 10) ||
     dependentCount >= 5 ||
     taskId.startsWith('EXC-') ||
-    lcSection.includes('planning') || lcSection.includes('strategy') ||
-    taskId.startsWith('DOC-001') || taskId.startsWith('BRAND-001') ||
-    taskId.startsWith('GTM-') || taskId.startsWith('ANALYTICS-001')
+    lcSection.includes('planning') ||
+    lcSection.includes('strategy') ||
+    taskId.startsWith('DOC-001') ||
+    taskId.startsWith('BRAND-001') ||
+    taskId.startsWith('GTM-') ||
+    taskId.startsWith('ANALYTICS-001')
   ) {
     tierScore = 0.85; // Tier A → Fibonacci 8-13
   } else if (
-    taskId.startsWith('ENV-') || taskId.startsWith('AI-SETUP-') ||
-    taskId.startsWith('AUTOMATION-') || dependentCount >= 2 ||
-    taskId.startsWith('ENG-OPS-') || taskId.startsWith('PM-OPS-')
+    taskId.startsWith('ENV-') ||
+    taskId.startsWith('AI-SETUP-') ||
+    taskId.startsWith('AUTOMATION-') ||
+    dependentCount >= 2 ||
+    taskId.startsWith('ENG-OPS-') ||
+    taskId.startsWith('PM-OPS-')
   ) {
     tierScore = 0.5; // Tier B → Fibonacci 3-5
   } else {
@@ -186,7 +193,7 @@ export function scoreTimeCriticality(
   taskId: string,
   scheduleTaskMap: Map<string, ScheduleTaskInfo>,
   taskSprint: number | string,
-  currentSprint: number,
+  currentSprint: number
 ): number {
   let floatScore = 0;
 
@@ -244,10 +251,7 @@ export function scoreTimeCriticality(
  * From SAFe: "highlight jobs that may not bring revenue immediately
  * but benefit the long-run" — a high fan-out task is exactly that.
  */
-export function scoreRiskReduction(
-  dependentCount: number,
-  phaseProgress: PhaseProgress[],
-): number {
+export function scoreRiskReduction(dependentCount: number, phaseProgress: PhaseProgress[]): number {
   // Fan-out: 0 deps → 0, 1 → 0.15, 2 → 0.3, 3 → 0.5, 4 → 0.7, 5+ → 0.9
   const fanOutScore = Math.min(dependentCount / 5.5, 1.0);
 
@@ -305,7 +309,7 @@ function buildReason(
   factors: PriorityFactors,
   dependentCount: number,
   isCriticalPath: boolean,
-  totalFloat: number | undefined,
+  totalFloat: number | undefined
 ): string {
   const parts: string[] = [];
 
@@ -396,16 +400,14 @@ export function computePriorityScores(
   scheduleTaskMap: Map<string, ScheduleTaskInfo>,
   phaseProgress: PhaseProgress[],
   currentSprint?: number,
-  parallelGroups?: ParallelGroup[],
+  parallelGroups?: ParallelGroup[]
 ): ScoredTask[] {
   // Infer current sprint from the lowest sprint number in ready tasks
   const effectiveSprint =
     currentSprint ??
     Math.min(
-      ...readyTasks
-        .filter((t) => typeof t.sprint === 'number')
-        .map((t) => t.sprint as number),
-      0,
+      ...readyTasks.filter((t) => typeof t.sprint === 'number').map((t) => t.sprint as number),
+      0
     );
 
   // Build taskId → groupId lookup from parallel execution groups
@@ -426,15 +428,14 @@ export function computePriorityScores(
     const scheduleInfo = scheduleTaskMap.get(task.id);
 
     // --- WSJF numerator: Cost of Delay ---
-    const businessValue = scoreBusinessValue(
-      task.id, task.section, dependentCount, isCriticalPath,
-    );
+    const businessValue = scoreBusinessValue(task.id, task.section, dependentCount, isCriticalPath);
     const timeCriticality = scoreTimeCriticality(
-      task.id, scheduleTaskMap, task.sprint, effectiveSprint,
+      task.id,
+      scheduleTaskMap,
+      task.sprint,
+      effectiveSprint
     );
-    const riskReductionOpportunity = scoreRiskReduction(
-      dependentCount, phaseProgress,
-    );
+    const riskReductionOpportunity = scoreRiskReduction(dependentCount, phaseProgress);
 
     // --- WSJF denominator ---
     const jobSizeProxy = computeJobSizeProxy(session);

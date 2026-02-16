@@ -105,13 +105,10 @@ function StatusBadge({ status }: { status: string }) {
   const { label, variant } = getInvoiceStatusDisplay(status);
 
   const variantClasses: Record<StatusVariant, string> = {
-    success:
-      'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    warning:
-      'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+    success: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+    warning: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
     error: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-    default:
-      'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300',
+    default: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300',
   };
 
   return (
@@ -153,9 +150,7 @@ function ActionButton({
       disabled={disabled || loading}
       className="gap-2"
     >
-      <span
-        className={`material-symbols-outlined text-lg ${loading ? 'animate-spin' : ''}`}
-      >
+      <span className={`material-symbols-outlined text-lg ${loading ? 'animate-spin' : ''}`}>
         {loading ? 'progress_activity' : icon}
       </span>
       {label}
@@ -230,9 +225,7 @@ function ErrorState({ error }: { error: string }) {
           <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-white">
             Error Loading Invoice
           </h3>
-          <p className="max-w-sm text-sm text-slate-500 dark:text-slate-400">
-            {error}
-          </p>
+          <p className="max-w-sm text-sm text-slate-500 dark:text-slate-400">{error}</p>
           <Link href="/billing/invoices" className="mt-4">
             <Button variant="outline">Back to Invoices</Button>
           </Link>
@@ -252,16 +245,14 @@ function NotFoundState() {
       <CardContent className="py-12">
         <div className="flex flex-col items-center justify-center text-center">
           <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-            <span className="material-symbols-outlined text-3xl text-slate-400">
-              receipt_long
-            </span>
+            <span className="material-symbols-outlined text-3xl text-slate-400">receipt_long</span>
           </div>
           <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-white">
             Invoice Not Found
           </h3>
           <p className="max-w-sm text-sm text-slate-500 dark:text-slate-400">
-            The invoice you&apos;re looking for doesn&apos;t exist or you
-            don&apos;t have permission to view it.
+            The invoice you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission
+            to view it.
           </p>
           <Link href="/billing/invoices" className="mt-4">
             <Button variant="outline">Back to Invoices</Button>
@@ -276,13 +267,7 @@ function NotFoundState() {
 // Line Items Table
 // ============================================
 
-function LineItemsTable({
-  items,
-  currency,
-}: {
-  items: InvoiceLineItem[];
-  currency: string;
-}) {
+function LineItemsTable({ items, currency }: { items: InvoiceLineItem[]; currency: string }) {
   if (items.length === 0) {
     return (
       <div className="py-8 text-center text-sm text-slate-500 dark:text-slate-400">
@@ -304,13 +289,8 @@ function LineItemsTable({
         </TableHeader>
         <TableBody>
           {items.map((item) => (
-            <TableRow
-              key={item.id}
-              className="hover:bg-slate-50 dark:hover:bg-slate-800/30"
-            >
-              <TableCell className="text-slate-900 dark:text-white">
-                {item.description}
-              </TableCell>
+            <TableRow key={item.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30">
+              <TableCell className="text-slate-900 dark:text-white">{item.description}</TableCell>
               <TableCell className="text-right text-slate-600 dark:text-slate-400">
                 {item.quantity}
               </TableCell>
@@ -332,11 +312,7 @@ function LineItemsTable({
 // Totals Section
 // ============================================
 
-function TotalsSection({
-  invoice,
-}: {
-  invoice: InvoiceDetailData;
-}) {
+function TotalsSection({ invoice }: { invoice: InvoiceDetailData }) {
   const { currency, subtotal, tax, discount, amountDue, amountPaid } = invoice;
 
   return (
@@ -362,9 +338,7 @@ function TotalsSection({
       {tax !== undefined && (
         <div className="flex justify-between text-sm">
           <span className="text-slate-500 dark:text-slate-400">Tax</span>
-          <span className="text-slate-900 dark:text-white">
-            {formatCurrency(tax, currency)}
-          </span>
+          <span className="text-slate-900 dark:text-white">{formatCurrency(tax, currency)}</span>
         </div>
       )}
 
@@ -378,17 +352,13 @@ function TotalsSection({
       {amountPaid > 0 && amountPaid !== amountDue && (
         <>
           <div className="flex justify-between text-sm">
-            <span className="text-slate-500 dark:text-slate-400">
-              Amount Paid
-            </span>
+            <span className="text-slate-500 dark:text-slate-400">Amount Paid</span>
             <span className="text-green-600 dark:text-green-400">
               -{formatCurrency(amountPaid, currency)}
             </span>
           </div>
           <div className="flex justify-between text-base font-semibold">
-            <span className="text-slate-900 dark:text-white">
-              Balance Due
-            </span>
+            <span className="text-slate-900 dark:text-white">Balance Due</span>
             <span className="text-slate-900 dark:text-white">
               {formatCurrency(amountDue - amountPaid, currency)}
             </span>
@@ -410,13 +380,10 @@ export function InvoiceDetail({ invoice, isLoading, error }: InvoiceDetailProps)
     text: string;
   } | null>(null);
 
-  const showMessage = useCallback(
-    (type: 'success' | 'error', text: string) => {
-      setActionMessage({ type, text });
-      setTimeout(() => setActionMessage(null), 3000);
-    },
-    []
-  );
+  const showMessage = useCallback((type: 'success' | 'error', text: string) => {
+    setActionMessage({ type, text });
+    setTimeout(() => setActionMessage(null), 3000);
+  }, []);
 
   const handleDownload = useCallback(async () => {
     if (!invoice) return;
@@ -525,9 +492,7 @@ export function InvoiceDetail({ invoice, isLoading, error }: InvoiceDetailProps)
           {/* Invoice Summary */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
             <div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Invoice Date
-              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Invoice Date</p>
               <p className="text-base font-medium text-slate-900 dark:text-white mt-1">
                 {formatBillingDate(invoice.created)}
               </p>
@@ -535,9 +500,7 @@ export function InvoiceDetail({ invoice, isLoading, error }: InvoiceDetailProps)
 
             {invoice.dueDate && (
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Due Date
-                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Due Date</p>
                 <p className="text-base font-medium text-slate-900 dark:text-white mt-1">
                   {formatBillingDate(invoice.dueDate)}
                 </p>
@@ -546,9 +509,7 @@ export function InvoiceDetail({ invoice, isLoading, error }: InvoiceDetailProps)
 
             {invoice.paidAt && (
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Paid Date
-                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Paid Date</p>
                 <p className="text-base font-medium text-green-600 dark:text-green-400 mt-1">
                   {formatBillingDate(invoice.paidAt)}
                 </p>
@@ -556,9 +517,7 @@ export function InvoiceDetail({ invoice, isLoading, error }: InvoiceDetailProps)
             )}
 
             <div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Amount
-              </p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Amount</p>
               <p className="text-base font-semibold text-slate-900 dark:text-white mt-1">
                 {formatCurrency(invoice.amountPaid || invoice.amountDue, invoice.currency)}
               </p>
@@ -581,12 +540,7 @@ export function InvoiceDetail({ invoice, isLoading, error }: InvoiceDetailProps)
                   onClick={handleView}
                   variant="ghost"
                 />
-                <ActionButton
-                  icon="print"
-                  label="Print"
-                  onClick={handlePrint}
-                  variant="ghost"
-                />
+                <ActionButton icon="print" label="Print" onClick={handlePrint} variant="ghost" />
                 <ActionButton
                   icon="link"
                   label="Copy Link"
@@ -596,12 +550,7 @@ export function InvoiceDetail({ invoice, isLoading, error }: InvoiceDetailProps)
                 />
               </>
             )}
-            <ActionButton
-              icon="mail"
-              label="Email"
-              onClick={handleEmail}
-              variant="ghost"
-            />
+            <ActionButton icon="mail" label="Email" onClick={handleEmail} variant="ghost" />
           </div>
         </CardContent>
       </Card>
@@ -616,9 +565,7 @@ export function InvoiceDetail({ invoice, isLoading, error }: InvoiceDetailProps)
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Customer Info */}
               <div>
-                <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
-                  Customer
-                </p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">Customer</p>
                 {invoice.customerName && (
                   <p className="text-slate-900 dark:text-white font-medium">
                     {invoice.customerName}
@@ -634,9 +581,7 @@ export function InvoiceDetail({ invoice, isLoading, error }: InvoiceDetailProps)
               {/* Billing Address */}
               {invoice.billingAddress && (
                 <div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">
-                    Billing Address
-                  </p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-2">Billing Address</p>
                   <address className="not-italic text-sm text-slate-600 dark:text-slate-400">
                     {invoice.billingAddress.line1 && (
                       <span className="block">{invoice.billingAddress.line1}</span>
@@ -644,7 +589,9 @@ export function InvoiceDetail({ invoice, isLoading, error }: InvoiceDetailProps)
                     {invoice.billingAddress.line2 && (
                       <span className="block">{invoice.billingAddress.line2}</span>
                     )}
-                    {(invoice.billingAddress.city || invoice.billingAddress.state || invoice.billingAddress.postalCode) && (
+                    {(invoice.billingAddress.city ||
+                      invoice.billingAddress.state ||
+                      invoice.billingAddress.postalCode) && (
                       <span className="block">
                         {[
                           invoice.billingAddress.city,
@@ -672,10 +619,7 @@ export function InvoiceDetail({ invoice, isLoading, error }: InvoiceDetailProps)
           <CardTitle className="text-lg">Line Items</CardTitle>
         </CardHeader>
         <CardContent>
-          <LineItemsTable
-            items={invoice.lineItems || []}
-            currency={invoice.currency}
-          />
+          <LineItemsTable items={invoice.lineItems || []} currency={invoice.currency} />
           <div className="mt-6 max-w-sm ml-auto">
             <TotalsSection invoice={invoice} />
           </div>

@@ -3,7 +3,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { ChurnRiskScore, InvalidChurnRiskScoreError, InvalidConfidenceError } from '../ChurnRiskScore';
+import {
+  ChurnRiskScore,
+  InvalidChurnRiskScoreError,
+  InvalidConfidenceError,
+} from '../ChurnRiskScore';
 import { CHURN_RISK_LEVELS } from '../../ai/AIConstants';
 
 describe('ChurnRiskScore', () => {
@@ -76,16 +80,16 @@ describe('ChurnRiskScore', () => {
 
   describe('slaHours', () => {
     it.each([
-      [85, 24],   // CRITICAL
-      [80, 24],   // CRITICAL boundary
-      [65, 48],   // HIGH
-      [60, 48],   // HIGH boundary
-      [45, 168],  // MEDIUM
-      [40, 168],  // MEDIUM boundary
-      [25, 336],  // LOW
-      [20, 336],  // LOW boundary
-      [10, 720],  // MINIMAL
-      [0, 720],   // MINIMAL boundary
+      [85, 24], // CRITICAL
+      [80, 24], // CRITICAL boundary
+      [65, 48], // HIGH
+      [60, 48], // HIGH boundary
+      [45, 168], // MEDIUM
+      [40, 168], // MEDIUM boundary
+      [25, 336], // LOW
+      [20, 336], // LOW boundary
+      [10, 720], // MINIMAL
+      [0, 720], // MINIMAL boundary
     ])('should return %d hours for score %d', (score, expectedHours) => {
       expect(ChurnRiskScore.create(score, 0.8).slaHours).toBe(expectedHours);
     });

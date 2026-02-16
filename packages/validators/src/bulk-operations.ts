@@ -9,7 +9,10 @@ import { TICKET_STATUSES, TICKET_PRIORITIES } from '@intelliflow/domain';
 
 /** Base schema for bulk operations - array of IDs */
 export const bulkIdsSchema = z.object({
-  ids: z.array(idSchema).min(1, 'At least one item must be selected').max(100, 'Maximum 100 items per operation'),
+  ids: z
+    .array(idSchema)
+    .min(1, 'At least one item must be selected')
+    .max(100, 'Maximum 100 items per operation'),
 });
 
 export type BulkIdsInput = z.infer<typeof bulkIdsSchema>;

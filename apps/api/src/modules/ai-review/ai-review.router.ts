@@ -17,12 +17,13 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
-import {
-  reviewListFilterSchema,
-  aiOutputTypeSchema,
-  idSchema,
-} from '@intelliflow/validators';
-import type { IAIOutputReviewRepository, AIOutputReview, DomainError, DomainEvent } from '@intelliflow/domain';
+import { reviewListFilterSchema, aiOutputTypeSchema, idSchema } from '@intelliflow/validators';
+import type {
+  IAIOutputReviewRepository,
+  AIOutputReview,
+  DomainError,
+  DomainEvent,
+} from '@intelliflow/domain';
 import type { Context } from '../../context';
 import { getTenantContext } from '../../security/tenant-context';
 import { mapErrorToTRPCError as centralizedErrorMapper } from '../../shared/error-mapper';
@@ -84,7 +85,9 @@ const eventBus: EventBusPort = {
     console.log('[AIReview] Event:', event.constructor?.name || 'DomainEvent');
   },
   publishAll: async (events: DomainEvent[]) => {
-    events.forEach((e: DomainEvent) => console.log('[AIReview] Event:', e.constructor?.name || 'DomainEvent'));
+    events.forEach((e: DomainEvent) =>
+      console.log('[AIReview] Event:', e.constructor?.name || 'DomainEvent')
+    );
   },
   subscribe: async () => {
     // No-op for fire-and-forget bus
@@ -118,11 +121,17 @@ export function mapDomainErrorToTRPCError(error: DomainError): TRPCError {
  */
 export function mapReviewToResponse(review: AIOutputReview) {
   return {
-    id: typeof review.id === 'object' && review.id !== null ? (review.id as any).toString() : String(review.id),
+    id:
+      typeof review.id === 'object' && review.id !== null
+        ? (review.id as any).toString()
+        : String(review.id),
     tenantId: review.tenantId,
     outputType: review.outputType,
     outputPayload: review.outputPayload,
-    confidence: typeof review.confidence === 'object' ? (review.confidence as any).value ?? review.confidence : review.confidence,
+    confidence:
+      typeof review.confidence === 'object'
+        ? ((review.confidence as any).value ?? review.confidence)
+        : review.confidence,
     status: review.status,
     slaDeadline: review.slaDeadline,
     escalationDepth: review.escalationDepth,
@@ -171,105 +180,100 @@ export const aiReviewRouter = createTRPCRouter({
    * List reviews with filtering and pagination
    * Uses direct Prisma query for full status filtering
    */
-  list: tenantProcedure
-    .input(reviewListFilterSchema)
-    .query(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const tenantId = typedCtx.tenant.tenantId;
+  list: tenantProcedure.input(reviewListFilterSchema).query(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const tenantId = typedCtx.tenant.tenantId;
 
-      const page = input.page ?? 1;
-      const limit = input.limit ?? 20;
-      const offset = (page - 1) * limit;
+    const page = input.page ?? 1;
+    const limit = input.limit ?? 20;
+    const offset = (page - 1) * limit;
 
-      // Build where clause with all filters
-      const where: Record<string, unknown> = { tenantId };
+    // Build where clause with all filters
+    const where: Record<string, unknown> = { tenantId };
 
-      if (input.status?.length) {
-        where.status = { in: input.status };
+    if (input.status?.length) {
+      where.status = { in: input.status };
+    }
+    if (input.outputType?.length) {
+      where.outputType = { in: input.outputType };
+    }
+    if (input.minConfidence !== undefined || input.maxConfidence !== undefined) {
+      where.confidence = {};
+      if (input.minConfidence !== undefined) {
+        (where.confidence as any).gte = input.minConfidence;
       }
-      if (input.outputType?.length) {
-        where.outputType = { in: input.outputType };
+      if (input.maxConfidence !== undefined) {
+        (where.confidence as any).lte = input.maxConfidence;
       }
-      if (input.minConfidence !== undefined || input.maxConfidence !== undefined) {
-        where.confidence = {};
-        if (input.minConfidence !== undefined) {
-          (where.confidence as any).gte = input.minConfidence;
-        }
-        if (input.maxConfidence !== undefined) {
-          (where.confidence as any).lte = input.maxConfidence;
-        }
+    }
+    if (input.slaBreached === true) {
+      where.slaDeadline = { lt: new Date() };
+      if (!where.status) {
+        where.status = { in: ['PENDING', 'IN_REVIEW', 'ESCALATED'] };
       }
-      if (input.slaBreached === true) {
-        where.slaDeadline = { lt: new Date() };
-        if (!where.status) {
-          where.status = { in: ['PENDING', 'IN_REVIEW', 'ESCALATED'] };
-        }
-      }
-      if (input.escalationDepth !== undefined) {
-        where.escalationDepth = input.escalationDepth;
-      }
-      if (input.reviewerId) {
-        where.reviewerId = input.reviewerId;
-      }
+    }
+    if (input.escalationDepth !== undefined) {
+      where.escalationDepth = input.escalationDepth;
+    }
+    if (input.reviewerId) {
+      where.reviewerId = input.reviewerId;
+    }
 
-      // Sorting
-      const sortBy = input.sortBy ?? 'createdAt';
-      const sortOrder = input.sortOrder ?? 'desc';
-      const orderBy = { [sortBy]: sortOrder };
+    // Sorting
+    const sortBy = input.sortBy ?? 'createdAt';
+    const sortOrder = input.sortOrder ?? 'desc';
+    const orderBy = { [sortBy]: sortOrder };
 
-      // Execute queries in parallel
-      const [rows, total] = await Promise.all([
-        (ctx.prisma as any).aIOutputReview.findMany({
-          where,
-          orderBy,
-          skip: offset,
-          take: limit,
-        }),
-        (ctx.prisma as any).aIOutputReview.count({ where }),
-      ]);
+    // Execute queries in parallel
+    const [rows, total] = await Promise.all([
+      (ctx.prisma as any).aIOutputReview.findMany({
+        where,
+        orderBy,
+        skip: offset,
+        take: limit,
+      }),
+      (ctx.prisma as any).aIOutputReview.count({ where }),
+    ]);
 
-      return {
-        data: rows.map(mapPrismaRowToResponse),
-        total,
-        page,
-        limit,
-        hasMore: offset + rows.length < total,
-      };
-    }),
+    return {
+      data: rows.map(mapPrismaRowToResponse),
+      total,
+      page,
+      limit,
+      hasMore: offset + rows.length < total,
+    };
+  }),
 
   /**
    * Get a single review by ID
    */
-  get: tenantProcedure
-    .input(z.object({ reviewId: idSchema }))
-    .query(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const repository = await getRepository(ctx);
+  get: tenantProcedure.input(z.object({ reviewId: idSchema })).query(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const repository = await getRepository(ctx);
 
-      const review = await repository.findById(
-        input.reviewId,
-        typedCtx.tenant.tenantId
-      );
+    const review = await repository.findById(input.reviewId, typedCtx.tenant.tenantId);
 
-      if (!review) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Review not found',
-        });
-      }
+    if (!review) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'Review not found',
+      });
+    }
 
-      return mapReviewToResponse(review);
-    }),
+    return mapReviewToResponse(review);
+  }),
 
   /**
    * Claim a pending review for assessment
    * Acquires exclusive lock with HMAC-SHA256 token
    */
   claim: tenantProcedure
-    .input(z.object({
-      reviewId: idSchema,
-      lockDurationMinutes: z.number().int().min(1).max(60).default(5),
-    }))
+    .input(
+      z.object({
+        reviewId: idSchema,
+        lockDurationMinutes: z.number().int().min(1).max(60).default(5),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const repository = await getRepository(ctx);
@@ -288,10 +292,7 @@ export const aiReviewRouter = createTRPCRouter({
       }
 
       // Fetch updated review for response
-      const updatedReview = await repository.findById(
-        input.reviewId,
-        typedCtx.tenant.tenantId
-      );
+      const updatedReview = await repository.findById(input.reviewId, typedCtx.tenant.tenantId);
 
       return {
         success: result.value.success,
@@ -306,11 +307,13 @@ export const aiReviewRouter = createTRPCRouter({
    * Requires valid lock token
    */
   approve: tenantProcedure
-    .input(z.object({
-      reviewId: idSchema,
-      lockToken: z.string().min(1),
-      feedback: z.string().max(2000).optional(),
-    }))
+    .input(
+      z.object({
+        reviewId: idSchema,
+        lockToken: z.string().min(1),
+        feedback: z.string().max(2000).optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const repository = await getRepository(ctx);
@@ -330,10 +333,7 @@ export const aiReviewRouter = createTRPCRouter({
       }
 
       // Fetch updated review for response
-      const updatedReview = await repository.findById(
-        input.reviewId,
-        typedCtx.tenant.tenantId
-      );
+      const updatedReview = await repository.findById(input.reviewId, typedCtx.tenant.tenantId);
 
       return {
         success: true,
@@ -345,11 +345,13 @@ export const aiReviewRouter = createTRPCRouter({
    * Reject a claimed review with mandatory notes
    */
   reject: tenantProcedure
-    .input(z.object({
-      reviewId: idSchema,
-      lockToken: z.string().min(1),
-      notes: z.string().min(1).max(2000),
-    }))
+    .input(
+      z.object({
+        reviewId: idSchema,
+        lockToken: z.string().min(1),
+        notes: z.string().min(1).max(2000),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const repository = await getRepository(ctx);
@@ -369,10 +371,7 @@ export const aiReviewRouter = createTRPCRouter({
       }
 
       // Fetch updated review for response
-      const updatedReview = await repository.findById(
-        input.reviewId,
-        typedCtx.tenant.tenantId
-      );
+      const updatedReview = await repository.findById(input.reviewId, typedCtx.tenant.tenantId);
 
       return {
         success: true,
@@ -385,12 +384,14 @@ export const aiReviewRouter = createTRPCRouter({
    * Max escalation depth: 3
    */
   escalate: tenantProcedure
-    .input(z.object({
-      reviewId: idSchema,
-      lockToken: z.string().min(1),
-      reason: z.string().min(1).max(2000),
-      targetUserId: idSchema.optional(),
-    }))
+    .input(
+      z.object({
+        reviewId: idSchema,
+        lockToken: z.string().min(1),
+        reason: z.string().min(1).max(2000),
+        targetUserId: idSchema.optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const repository = await getRepository(ctx);
@@ -411,10 +412,7 @@ export const aiReviewRouter = createTRPCRouter({
       }
 
       // Fetch updated review for response
-      const updatedReview = await repository.findById(
-        input.reviewId,
-        typedCtx.tenant.tenantId
-      );
+      const updatedReview = await repository.findById(input.reviewId, typedCtx.tenant.tenantId);
 
       return {
         success: true,
@@ -428,9 +426,11 @@ export const aiReviewRouter = createTRPCRouter({
    * Uses direct Prisma groupBy for efficient aggregation
    */
   stats: tenantProcedure
-    .input(z.object({
-      outputType: aiOutputTypeSchema.optional(),
-    }))
+    .input(
+      z.object({
+        outputType: aiOutputTypeSchema.optional(),
+      })
+    )
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const tenantId = typedCtx.tenant.tenantId;

@@ -806,9 +806,7 @@ describe('AppointmentDomainService', () => {
     });
 
     it('should return lower accuracy for missed conflicts', () => {
-      const detectedConflicts = [
-        createMockConflict('apt-1', 'conflict-1', 'PARTIAL'),
-      ];
+      const detectedConflicts = [createMockConflict('apt-1', 'conflict-1', 'PARTIAL')];
       const actualConflicts = [
         createMockConflict('apt-1', 'conflict-1', 'PARTIAL'),
         createMockConflict('apt-1', 'conflict-2', 'EXACT'),

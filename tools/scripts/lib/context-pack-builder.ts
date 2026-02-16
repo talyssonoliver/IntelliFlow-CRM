@@ -242,7 +242,14 @@ export function buildContextPack(
 
   // Create output directory - sprint-based structure: .specify/sprints/sprint-{N}/attestations/{taskId}/
   const sprintNumber = parseInt(task['Target Sprint'] || '0', 10);
-  const outputDir = join(root, '.specify', 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId);
+  const outputDir = join(
+    root,
+    '.specify',
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'attestations',
+    taskId
+  );
   mkdirSync(outputDir, { recursive: true });
 
   const packPath = join(outputDir, 'context_pack.md');

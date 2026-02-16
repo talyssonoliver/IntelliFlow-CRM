@@ -179,7 +179,7 @@ describe('RAGContextChain', () => {
 
       const result = await chain.retrieveContext(input);
 
-      result.context.forEach(item => {
+      result.context.forEach((item) => {
         expect(item.relevanceScore).toBeGreaterThanOrEqual(0.9);
       });
     });
@@ -373,7 +373,8 @@ describe('RAGContextChain', () => {
       const result = await chain.retrieveContext(input);
 
       if (result.context.length > 0) {
-        const manualAvg = result.context.reduce((sum, c) => sum + c.relevanceScore, 0) / result.context.length;
+        const manualAvg =
+          result.context.reduce((sum, c) => sum + c.relevanceScore, 0) / result.context.length;
         expect(result.avgRelevance).toBeCloseTo(manualAvg, 2);
       }
     });

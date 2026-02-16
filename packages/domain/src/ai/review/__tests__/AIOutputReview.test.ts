@@ -99,9 +99,7 @@ describe('AIOutputReview', () => {
       const review = AIOutputReview.create(defaultProps);
       review.claim('reviewer-123');
       // Simulate expired lock
-      (review as unknown as { _lockExpiresAt: Date })._lockExpiresAt = new Date(
-        Date.now() - 1000
-      );
+      (review as unknown as { _lockExpiresAt: Date })._lockExpiresAt = new Date(Date.now() - 1000);
       const result = review.claim('reviewer-456');
       expect(result.isSuccess).toBe(true);
       expect(review.lockedBy).toBe('reviewer-456');
@@ -272,9 +270,7 @@ describe('AIOutputReview', () => {
     it('should transition to EXPIRED when SLA deadline passed', () => {
       const review = AIOutputReview.create(defaultProps);
       // Simulate past deadline
-      (review as unknown as { _slaDeadline: Date })._slaDeadline = new Date(
-        Date.now() - 1000
-      );
+      (review as unknown as { _slaDeadline: Date })._slaDeadline = new Date(Date.now() - 1000);
       const result = review.expire();
       expect(result.isSuccess).toBe(true);
       expect(review.status).toBe(ReviewStatus.EXPIRED);
@@ -308,9 +304,7 @@ describe('AIOutputReview', () => {
 
     it('should not allow transition from EXPIRED to any state', () => {
       const review = AIOutputReview.create(defaultProps);
-      (review as unknown as { _slaDeadline: Date })._slaDeadline = new Date(
-        Date.now() - 1000
-      );
+      (review as unknown as { _slaDeadline: Date })._slaDeadline = new Date(Date.now() - 1000);
       review.expire();
 
       expect(review.approve('r').isFailure).toBe(true);

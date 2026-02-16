@@ -2,18 +2,20 @@
 
 ## Overview
 
-| Property | Value |
-|----------|-------|
-| **Flow ID** | FLOW-040 |
-| **Name** | DSAR Data Erasure / Right to be Forgotten |
-| **Category** | Seguranca e Compliance |
-| **Priority** | Critical |
-| **Sprint** | 11-12 |
-| **Related Tasks** | IFC-140, IFC-155 |
+| Property          | Value                                     |
+| ----------------- | ----------------------------------------- |
+| **Flow ID**       | FLOW-040                                  |
+| **Name**          | DSAR Data Erasure / Right to be Forgotten |
+| **Category**      | Seguranca e Compliance                    |
+| **Priority**      | Critical                                  |
+| **Sprint**        | 11-12                                     |
+| **Related Tasks** | IFC-140, IFC-155                          |
 
 ## Description
 
-Handles Data Subject Access Requests (DSAR) for erasure under GDPR Article 17 ("Right to be Forgotten"). Atomically purges all personal data including search indexes, embeddings, and content while respecting legal hold constraints.
+Handles Data Subject Access Requests (DSAR) for erasure under GDPR Article 17
+("Right to be Forgotten"). Atomically purges all personal data including search
+indexes, embeddings, and content while respecting legal hold constraints.
 
 ---
 
@@ -110,9 +112,16 @@ Handles Data Subject Access Requests (DSAR) for erasure under GDPR Article 17 ("
 **Trigger**: Data subject submits erasure request via form or email
 
 **Input**:
+
 ```typescript
 interface DSARRequest {
-  type: 'ACCESS' | 'ERASURE' | 'RECTIFICATION' | 'PORTABILITY' | 'RESTRICTION' | 'OBJECTION';
+  type:
+    | 'ACCESS'
+    | 'ERASURE'
+    | 'RECTIFICATION'
+    | 'PORTABILITY'
+    | 'RESTRICTION'
+    | 'OBJECTION';
   subjectEmail: string;
   subjectName: string;
   verificationMethod: 'EMAIL' | 'ID_DOCUMENT' | 'AUTH_SESSION';
@@ -125,6 +134,7 @@ interface DSARRequest {
 ```
 
 **Validation**:
+
 - Email format valid
 - Request type supported
 - Not duplicate of pending request
@@ -135,11 +145,11 @@ interface DSARRequest {
 
 **Methods**:
 
-| Method | Process | Security Level |
-|--------|---------|----------------|
-| EMAIL | Confirmation link with token (24h expiry) | Medium |
-| ID_DOCUMENT | Upload + manual review by Privacy Officer | High |
-| AUTH_SESSION | User logged in with valid session | High |
+| Method       | Process                                   | Security Level |
+| ------------ | ----------------------------------------- | -------------- |
+| EMAIL        | Confirmation link with token (24h expiry) | Medium         |
+| ID_DOCUMENT  | Upload + manual review by Privacy Officer | High           |
+| AUTH_SESSION | User logged in with valid session         | High           |
 
 **Output**: Verified DSAR record with `verifiedAt` timestamp
 
@@ -159,11 +169,14 @@ const legalHolds = await prisma.$queryRaw<LegalHold[]>`
 `;
 
 if (legalHolds.length > 0) {
-  throw new LegalHoldError(`Subject under legal hold until ${legalHolds[0].retention_until}`);
+  throw new LegalHoldError(
+    `Subject under legal hold until ${legalHolds[0].retention_until}`
+  );
 }
 ```
 
 **Outcome**:
+
 - **No Hold**: Proceed with erasure
 - **Active Hold**: Reject with explanation and retention date
 
@@ -175,10 +188,10 @@ if (legalHolds.length > 0) {
 
 **Purged Fields**:
 
-| Table | Fields | Replacement |
-|-------|--------|-------------|
+| Table            | Fields                                   | Replacement                     |
+| ---------------- | ---------------------------------------- | ------------------------------- |
 | `case_documents` | embedding, search_vector, extracted_text | NULL, NULL, '[REDACTED - GDPR]' |
-| `contact_notes` | embedding, search_vector, content | NULL, NULL, '[REDACTED - GDPR]' |
+| `contact_notes`  | embedding, search_vector, content        | NULL, NULL, '[REDACTED - GDPR]' |
 
 **Atomicity**: All purge operations wrapped in `prisma.$transaction`
 
@@ -211,18 +224,19 @@ return await this.prisma.$transaction(async (tx) => {
 
 **Anonymized Entities**:
 
-| Entity | Fields | Method |
-|--------|--------|--------|
-| Lead | name, email, phone, company | Hash + timestamp |
-| Contact | firstName, lastName, email, phone | Hash + timestamp |
-| Account | name, billingAddress | Hash + timestamp |
-| Activity | notes (if contains PII) | '[REDACTED]' |
+| Entity   | Fields                            | Method           |
+| -------- | --------------------------------- | ---------------- |
+| Lead     | name, email, phone, company       | Hash + timestamp |
+| Contact  | firstName, lastName, email, phone | Hash + timestamp |
+| Account  | name, billingAddress              | Hash + timestamp |
+| Activity | notes (if contains PII)           | '[REDACTED]'     |
 
 ---
 
 ### Step 6: Audit Logging
 
 **Audit Entry**:
+
 ```typescript
 interface ErasureAuditEntry {
   eventType: 'GDPR_ERASURE';
@@ -234,7 +248,7 @@ interface ErasureAuditEntry {
   documentsPurged: number;
   notesPurged: number;
   executedAt: Date;
-  executedBy: 'SYSTEM' | string;  // Privacy Officer ID if manual
+  executedBy: 'SYSTEM' | string; // Privacy Officer ID if manual
   verificationMethod: string;
   certificateId: string;
 }
@@ -245,6 +259,7 @@ interface ErasureAuditEntry {
 ### Step 7: Confirmation
 
 **Outputs**:
+
 1. **Email to Data Subject**: Confirmation of erasure completion
 2. **Erasure Certificate**: PDF with audit reference
 3. **Internal Notification**: Privacy Officer notified
@@ -253,14 +268,14 @@ interface ErasureAuditEntry {
 
 ## Edge Cases
 
-| Scenario | Handling |
-|----------|----------|
-| Legal hold active | Reject with retention date; notify Privacy Officer |
-| Subject not found | Return "No data found" (don't confirm existence) |
-| Partial erasure (shared data) | Anonymize subject's portion only |
-| Request timeout (>30 days) | Auto-escalate to Privacy Officer |
-| Duplicate request | Link to existing request status |
-| Unverified identity | Hold for 7 days, then auto-reject |
+| Scenario                      | Handling                                           |
+| ----------------------------- | -------------------------------------------------- |
+| Legal hold active             | Reject with retention date; notify Privacy Officer |
+| Subject not found             | Return "No data found" (don't confirm existence)   |
+| Partial erasure (shared data) | Anonymize subject's portion only                   |
+| Request timeout (>30 days)    | Auto-escalate to Privacy Officer                   |
+| Duplicate request             | Link to existing request status                    |
+| Unverified identity           | Hold for 7 days, then auto-reject                  |
 
 ---
 
@@ -268,59 +283,59 @@ interface ErasureAuditEntry {
 
 ### Backend (IMPLEMENTED)
 
-| Artifact | Path | Status |
-|----------|------|--------|
-| DSAR Workflow | `apps/api/src/workflow/dsar-workflow.ts` | COMPLETE |
-| Embedding Purge | `apps/ai-worker/src/services/embedding-purge.service.ts` | COMPLETE |
-| Purge Tests | `apps/ai-worker/src/services/__tests__/embedding-purge.service.test.ts` | COMPLETE |
+| Artifact        | Path                                                                    | Status   |
+| --------------- | ----------------------------------------------------------------------- | -------- |
+| DSAR Workflow   | `apps/api/src/workflow/dsar-workflow.ts`                                | COMPLETE |
+| Embedding Purge | `apps/ai-worker/src/services/embedding-purge.service.ts`                | COMPLETE |
+| Purge Tests     | `apps/ai-worker/src/services/__tests__/embedding-purge.service.test.ts` | COMPLETE |
 
 ### API Layer (GAP)
 
-| Artifact | Path | Status |
-|----------|------|--------|
-| Privacy Router | `apps/api/src/modules/privacy/dsar.router.ts` | **NOT IMPLEMENTED** |
-| DSAR Validators | `packages/validators/src/dsar.ts` | **NOT IMPLEMENTED** |
+| Artifact        | Path                                          | Status              |
+| --------------- | --------------------------------------------- | ------------------- |
+| Privacy Router  | `apps/api/src/modules/privacy/dsar.router.ts` | **NOT IMPLEMENTED** |
+| DSAR Validators | `packages/validators/src/dsar.ts`             | **NOT IMPLEMENTED** |
 
 ### Frontend (GAP)
 
-| Artifact | Path | Status |
-|----------|------|--------|
-| DSAR Form | `apps/web/src/app/privacy/dsar/page.tsx` | **NOT IMPLEMENTED** |
-| Request Status | `apps/web/src/app/privacy/dsar/[requestId]/page.tsx` | **NOT IMPLEMENTED** |
-| Consent Manager | `apps/web/src/components/gdpr/ConsentManager.tsx` | **NOT IMPLEMENTED** |
+| Artifact        | Path                                                 | Status              |
+| --------------- | ---------------------------------------------------- | ------------------- |
+| DSAR Form       | `apps/web/src/app/privacy/dsar/page.tsx`             | **NOT IMPLEMENTED** |
+| Request Status  | `apps/web/src/app/privacy/dsar/[requestId]/page.tsx` | **NOT IMPLEMENTED** |
+| Consent Manager | `apps/web/src/components/gdpr/ConsentManager.tsx`    | **NOT IMPLEMENTED** |
 
 ---
 
 ## Compliance Requirements
 
-| Regulation | Requirement | Implementation |
-|------------|-------------|----------------|
-| GDPR Art. 17 | Right to erasure | DSARWorkflow.handleErasureRequest() |
-| GDPR Art. 12 | Response within 30 days | SLA tracking in DSAR record |
-| GDPR Art. 17(3) | Legal hold exception | LegalHold check before purge |
-| GDPR Art. 30 | Records of processing | Audit log entries |
+| Regulation      | Requirement             | Implementation                      |
+| --------------- | ----------------------- | ----------------------------------- |
+| GDPR Art. 17    | Right to erasure        | DSARWorkflow.handleErasureRequest() |
+| GDPR Art. 12    | Response within 30 days | SLA tracking in DSAR record         |
+| GDPR Art. 17(3) | Legal hold exception    | LegalHold check before purge        |
+| GDPR Art. 30    | Records of processing   | Audit log entries                   |
 
 ---
 
 ## SLA Requirements
 
-| Metric | Target |
-|--------|--------|
-| Request acknowledgment | <24 hours |
-| Identity verification | <48 hours |
-| Erasure completion | <30 days (GDPR deadline) |
-| Confirmation delivery | <24 hours after erasure |
+| Metric                 | Target                   |
+| ---------------------- | ------------------------ |
+| Request acknowledgment | <24 hours                |
+| Identity verification  | <48 hours                |
+| Erasure completion     | <30 days (GDPR deadline) |
+| Confirmation delivery  | <24 hours after erasure  |
 
 ---
 
 ## Success Metrics
 
-| KPI | Target |
-|-----|--------|
-| DSAR completion rate | 100% within SLA |
-| Legal hold enforcement | 100% (no violations) |
-| Audit trail completeness | 100% of erasures logged |
-| Data subject satisfaction | >90% (survey) |
+| KPI                       | Target                  |
+| ------------------------- | ----------------------- |
+| DSAR completion rate      | 100% within SLA         |
+| Legal hold enforcement    | 100% (no violations)    |
+| Audit trail completeness  | 100% of erasures logged |
+| Data subject satisfaction | >90% (survey)           |
 
 ---
 
@@ -334,14 +349,13 @@ interface ErasureAuditEntry {
 
 ## Implementation Tasks
 
-| Task | Sprint | Status |
-|------|--------|--------|
-| IFC-140 | 11 | IN PROGRESS |
-| IFC-155 (purge) | 12 | COMPLETED |
-| **Privacy Router** | TBD | NOT STARTED |
-| **DSAR UI** | TBD | NOT STARTED |
+| Task               | Sprint | Status      |
+| ------------------ | ------ | ----------- |
+| IFC-140            | 11     | IN PROGRESS |
+| IFC-155 (purge)    | 12     | COMPLETED   |
+| **Privacy Router** | TBD    | NOT STARTED |
+| **DSAR UI**        | TBD    | NOT STARTED |
 
 ---
 
-*Flow documented: 2026-01-31*
-*Last updated: 2026-01-31*
+_Flow documented: 2026-01-31_ _Last updated: 2026-01-31_

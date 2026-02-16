@@ -50,24 +50,14 @@ describe('SearchFilterBar', () => {
   });
 
   it('renders custom placeholder', () => {
-    render(
-      <SearchFilterBar
-        {...defaultProps}
-        searchPlaceholder="Search contacts..."
-      />
-    );
+    render(<SearchFilterBar {...defaultProps} searchPlaceholder="Search contacts..." />);
 
     const input = screen.getByRole('searchbox');
     expect(input.getAttribute('placeholder')).toBe('Search contacts...');
   });
 
   it('renders custom ARIA label for search input', () => {
-    render(
-      <SearchFilterBar
-        {...defaultProps}
-        searchAriaLabel="Search leads"
-      />
-    );
+    render(<SearchFilterBar {...defaultProps} searchAriaLabel="Search leads" />);
 
     expect(screen.getByLabelText('Search leads')).toBeDefined();
   });
@@ -244,9 +234,7 @@ describe('SearchFilterBar', () => {
   });
 
   it('renders chip color dot when color is provided', () => {
-    const chips: FilterChip[] = [
-      { id: 'active', label: 'Active', color: 'bg-green-500' },
-    ];
+    const chips: FilterChip[] = [{ id: 'active', label: 'Active', color: 'bg-green-500' }];
 
     const { container } = render(
       <SearchFilterBar
@@ -347,9 +335,7 @@ describe('SearchFilterBar', () => {
   });
 
   it('applies custom className', () => {
-    const { container } = render(
-      <SearchFilterBar {...defaultProps} className="my-custom-class" />
-    );
+    const { container } = render(<SearchFilterBar {...defaultProps} className="my-custom-class" />);
 
     expect(container.firstElementChild?.className).toContain('my-custom-class');
   });
@@ -366,9 +352,7 @@ describe('SearchFilterBar', () => {
       },
     ];
 
-    const { container } = render(
-      <SearchFilterBar {...defaultProps} filters={filters} />
-    );
+    const { container } = render(<SearchFilterBar {...defaultProps} filters={filters} />);
 
     // The filter container should have 'hidden sm:block' classes
     expect(container.innerHTML).toContain('hidden sm:block');
@@ -456,9 +440,7 @@ describe('useMultiFilterState', () => {
   });
 
   it('sets individual filter values', () => {
-    const { result } = renderHook(() =>
-      useMultiFilterState({ status: '', priority: '' })
-    );
+    const { result } = renderHook(() => useMultiFilterState({ status: '', priority: '' }));
 
     act(() => {
       result.current.set('status', 'active');
@@ -492,9 +474,7 @@ describe('useMultiFilterState', () => {
   });
 
   it('resets individual key to initial value', () => {
-    const { result } = renderHook(() =>
-      useMultiFilterState({ status: 'all', priority: 'normal' })
-    );
+    const { result } = renderHook(() => useMultiFilterState({ status: 'all', priority: 'normal' }));
 
     act(() => {
       result.current.set('status', 'active');

@@ -1,12 +1,13 @@
 # Authentication Architecture
 
-**Status:** Implemented
-**Last Updated:** 2026-02-04
-**Related Tasks:** FLOW-001, PG-015, PG-024
+**Status:** Implemented **Last Updated:** 2026-02-04 **Related Tasks:**
+FLOW-001, PG-015, PG-024
 
 ## Overview
 
-IntelliFlow CRM uses a JWT-based authentication system with Supabase Auth as the identity provider. This document describes the complete authentication flow, token management, and automatic refresh mechanism.
+IntelliFlow CRM uses a JWT-based authentication system with Supabase Auth as the
+identity provider. This document describes the complete authentication flow,
+token management, and automatic refresh mechanism.
 
 ## Architecture Diagram
 
@@ -72,14 +73,17 @@ IntelliFlow CRM uses a JWT-based authentication system with Supabase Auth as the
 ## Token Storage
 
 ### localStorage
+
 - **accessToken**: JWT access token (short-lived, ~1 hour)
 - **refreshToken**: Refresh token (long-lived, ~1 week)
 
 ### Cookies
+
 - **accessToken**: Synced from localStorage for middleware/proxy access
 - **session**: JSON object with session data (for server-side checks)
 
 ### Why Both?
+
 - **localStorage**: Persists across tabs, accessible to JavaScript
 - **Cookies**: Accessible to Next.js proxy/middleware (server-side)
 
@@ -122,6 +126,7 @@ User clicks "Sign in with Google"
 ```
 
 **Key Files:**
+
 - `apps/web/src/app/auth/callback/page.tsx`
 - `apps/web/src/lib/shared/token-exchange.ts`
 
@@ -157,6 +162,7 @@ User submits email + password
 ```
 
 **Key Files:**
+
 - `apps/web/src/lib/auth/AuthContext.tsx` (login method)
 - `apps/api/src/modules/auth/auth.router.ts` (login procedure)
 
@@ -210,6 +216,7 @@ await refreshSession(); // Forces token refresh
 ```
 
 **Key Files:**
+
 - `apps/web/src/lib/auth/AuthContext.tsx`
 - `apps/web/src/lib/supabase-browser.ts`
 
@@ -341,16 +348,19 @@ export async function cleanupSession() {
 ## Security Considerations
 
 ### Token Security
+
 - Access tokens are short-lived (~1 hour)
 - Refresh tokens are long-lived but rotated on use
 - Tokens stored in localStorage (XSS considerations mitigated by CSP)
 - Cookies are SameSite=Lax (CSRF protection)
 
 ### Development Mode
+
 - FALLBACK_USER used when no token provided (dev convenience)
 - Disabled in production (`NODE_ENV !== 'production'`)
 
 ### Error Handling
+
 - Auth errors don't retry (prevents loops)
 - Single redirect on auth failure (no spam)
 - Invalid tokens auto-cleared
@@ -358,18 +368,20 @@ export async function cleanupSession() {
 ## Configuration
 
 ### Supabase Browser Client
+
 ```typescript
 // supabase-browser.ts
 createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
-    autoRefreshToken: true,      // Supabase auto-refreshes
-    persistSession: false,       // We manage session in localStorage
-    detectSessionInUrl: false,   // We handle OAuth callback manually
+    autoRefreshToken: true, // Supabase auto-refreshes
+    persistSession: false, // We manage session in localStorage
+    detectSessionInUrl: false, // We handle OAuth callback manually
   },
 });
 ```
 
 ### Environment Variables
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
@@ -378,17 +390,20 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 ## Troubleshooting
 
 ### Token Not Refreshing
+
 1. Check `refreshToken` exists in localStorage
 2. Verify Supabase client is initialized
 3. Check console for `[AuthContext]` logs
 4. Verify token isn't expired beyond refresh window
 
 ### 401 Errors in Console
+
 1. Token may be expired - should auto-redirect to login
 2. Check if `isTokenValid()` is clearing expired tokens
 3. Verify global error handler is redirecting
 
 ### Infinite Redirect Loop
+
 1. Check proxy.ts isn't conflicting with client-side redirect
 2. Verify `logged_out` query param is respected
 3. Clear all cookies and localStorage, retry
@@ -396,13 +411,14 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
 ## Related Documentation
 
 - [SECURITY.md](./SECURITY.md) - Security policies and practices
-- [ADR-020](../planning/adr/ADR-020-public-site-auth.md) - Public site auth decision
+- [ADR-020](../planning/adr/ADR-020-public-site-auth.md) - Public site auth
+  decision
 - [zero-trust-design.md](./zero-trust-design.md) - Zero trust architecture
 - [rls-design.md](./rls-design.md) - Row Level Security
 
 ## Changelog
 
-| Date | Change | Author |
-|------|--------|--------|
-| 2026-02-04 | Initial documentation | Claude |
+| Date       | Change                        | Author |
+| ---------- | ----------------------------- | ------ |
+| 2026-02-04 | Initial documentation         | Claude |
 | 2026-02-04 | Added token refresh mechanism | Claude |

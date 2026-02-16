@@ -30,7 +30,7 @@ describe('Pricing Content Data', () => {
     });
 
     it('should have required tier fields', () => {
-      pricingData.tiers.forEach(tier => {
+      pricingData.tiers.forEach((tier) => {
         expect(tier.id).toBeDefined();
         expect(tier.name).toBeDefined();
         expect(tier.description).toBeDefined();
@@ -44,13 +44,13 @@ describe('Pricing Content Data', () => {
     });
 
     it('should have unique tier IDs', () => {
-      const ids = pricingData.tiers.map(t => t.id);
+      const ids = pricingData.tiers.map((t) => t.id);
       const uniqueIds = new Set(ids);
       expect(uniqueIds.size).toBe(ids.length);
     });
 
     it('should have the expected tier names', () => {
-      const tierNames = pricingData.tiers.map(t => t.name);
+      const tierNames = pricingData.tiers.map((t) => t.name);
       expect(tierNames).toContain('Starter');
       expect(tierNames).toContain('Professional');
       expect(tierNames).toContain('Enterprise');
@@ -58,7 +58,7 @@ describe('Pricing Content Data', () => {
     });
 
     it('should have exactly one "Most Popular" tier', () => {
-      const popularTiers = pricingData.tiers.filter(t => t.mostPopular);
+      const popularTiers = pricingData.tiers.filter((t) => t.mostPopular);
       expect(popularTiers).toHaveLength(1);
       expect(popularTiers[0].name).toBe('Professional');
     });
@@ -66,20 +66,20 @@ describe('Pricing Content Data', () => {
 
   describe('Pricing Values', () => {
     it('should have valid monthly prices for paid tiers', () => {
-      const paidTiers = pricingData.tiers.filter(t => !t.price.custom);
+      const paidTiers = pricingData.tiers.filter((t) => !t.price.custom);
 
-      paidTiers.forEach(tier => {
+      paidTiers.forEach((tier) => {
         expect(tier.price.monthly).toBeGreaterThan(0);
         expect(typeof tier.price.monthly).toBe('number');
       });
     });
 
     it('should have annual discount of approximately 17% for all paid tiers', () => {
-      const paidTiers = pricingData.tiers.filter(t => !t.price.custom);
+      const paidTiers = pricingData.tiers.filter((t) => !t.price.custom);
 
-      paidTiers.forEach(tier => {
+      paidTiers.forEach((tier) => {
         if (tier.price.monthly && tier.price.annual) {
-          const discount = 1 - (tier.price.annual / tier.price.monthly);
+          const discount = 1 - tier.price.annual / tier.price.monthly;
           const discountPercent = discount * 100;
           // Allow ±1% for rounding (17% target)
           expect(discountPercent).toBeGreaterThanOrEqual(16);
@@ -89,7 +89,7 @@ describe('Pricing Content Data', () => {
     });
 
     it('should have custom pricing for Custom tier', () => {
-      const customTier = pricingData.tiers.find(t => t.id === 'custom');
+      const customTier = pricingData.tiers.find((t) => t.id === 'custom');
       expect(customTier).toBeDefined();
       expect(customTier!.price.custom).toBe(true);
       expect(customTier!.price.label).toBe('Contact Sales');
@@ -98,21 +98,21 @@ describe('Pricing Content Data', () => {
 
   describe('Features Structure', () => {
     it('should have at least 5 features per tier', () => {
-      pricingData.tiers.forEach(tier => {
+      pricingData.tiers.forEach((tier) => {
         expect(tier.features.length).toBeGreaterThanOrEqual(5);
       });
     });
 
     it('should have non-empty feature descriptions', () => {
-      pricingData.tiers.forEach(tier => {
-        tier.features.forEach(feature => {
+      pricingData.tiers.forEach((tier) => {
+        tier.features.forEach((feature) => {
           expect(feature.trim().length).toBeGreaterThan(0);
         });
       });
     });
 
     it('should have valid CTA links', () => {
-      pricingData.tiers.forEach(tier => {
+      pricingData.tiers.forEach((tier) => {
         // CTA links point to /signup or /contact with optional query params
         expect(tier.ctaLink).toMatch(/^\/(signup|contact)/);
       });
@@ -130,12 +130,12 @@ describe('Pricing Content Data', () => {
     });
 
     it('should have required fields for each comparison feature', () => {
-      pricingData.comparisonFeatures.forEach(category => {
+      pricingData.comparisonFeatures.forEach((category) => {
         expect(category.category).toBeDefined();
         expect(category.features).toBeDefined();
         expect(Array.isArray(category.features)).toBe(true);
 
-        category.features.forEach(feature => {
+        category.features.forEach((feature) => {
           expect(feature.name).toBeDefined();
           expect(feature.starter).toBeDefined();
           expect(feature.professional).toBeDefined();
@@ -152,7 +152,7 @@ describe('Pricing Content Data', () => {
     });
 
     it('should have question and answer for each FAQ', () => {
-      pricingData.faqs.forEach(faq => {
+      pricingData.faqs.forEach((faq) => {
         expect(faq.question).toBeDefined();
         expect(faq.answer).toBeDefined();
         expect(faq.question.length).toBeGreaterThan(0);
@@ -161,7 +161,7 @@ describe('Pricing Content Data', () => {
     });
 
     it('should have descriptive answers (min 50 chars)', () => {
-      pricingData.faqs.forEach(faq => {
+      pricingData.faqs.forEach((faq) => {
         expect(faq.answer.length).toBeGreaterThan(50);
       });
     });
@@ -171,7 +171,7 @@ describe('Pricing Content Data', () => {
     it('should use valid Material Symbols icon names', () => {
       const validIconPattern = /^[a-z_]+$/;
 
-      pricingData.tiers.forEach(tier => {
+      pricingData.tiers.forEach((tier) => {
         expect(tier.icon).toMatch(validIconPattern);
       });
     });

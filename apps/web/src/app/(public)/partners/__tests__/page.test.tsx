@@ -6,7 +6,15 @@ import partnerData from '@/data/partner-benefits.json';
 
 // Mock Next.js Link component
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
+  default: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+    [key: string]: unknown;
+  }) => (
     <a href={href} {...props}>
       {children}
     </a>
@@ -94,7 +102,9 @@ describe('PartnersPage', () => {
 
     it('should render correct number of partner cards', () => {
       render(<PartnersPage />);
-      const partnerCards = screen.getAllByText(/Slack|Gmail|Google Calendar|HubSpot|Salesforce|Stripe|Zendesk|Intercom|Zapier|Segment|Mixpanel|DocuSign/);
+      const partnerCards = screen.getAllByText(
+        /Slack|Gmail|Google Calendar|HubSpot|Salesforce|Stripe|Zendesk|Intercom|Zapier|Segment|Mixpanel|DocuSign/
+      );
       expect(partnerCards.length).toBeGreaterThanOrEqual(partnerData.partners.length);
     });
   });

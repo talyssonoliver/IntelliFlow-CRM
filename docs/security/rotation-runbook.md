@@ -2,21 +2,22 @@
 
 ## Overview
 
-This runbook describes procedures for rotating secrets in the IntelliFlow CRM system.
+This runbook describes procedures for rotating secrets in the IntelliFlow CRM
+system.
 
-**Task**: IFC-121 - Secret Rotation & Vulnerability Updates
-**Created**: 2025-12-29
+**Task**: IFC-121 - Secret Rotation & Vulnerability Updates **Created**:
+2025-12-29
 
 ---
 
 ## Quick Reference
 
-| Secret Type | Rotation Interval | Method | Downtime |
-|-------------|-------------------|--------|----------|
-| Database credentials | 30 days | Rolling update | None |
-| API keys | 90 days | Dual-key rotation | None |
-| JWT signing keys | 7 days | Key versioning | None |
-| Encryption keys | 365 days | Envelope rotation | Planned |
+| Secret Type          | Rotation Interval | Method            | Downtime |
+| -------------------- | ----------------- | ----------------- | -------- |
+| Database credentials | 30 days           | Rolling update    | None     |
+| API keys             | 90 days           | Dual-key rotation | None     |
+| JWT signing keys     | 7 days            | Key versioning    | None     |
+| Encryption keys      | 365 days          | Envelope rotation | Planned  |
 
 ---
 
@@ -34,8 +35,7 @@ This runbook describes procedures for rotating secrets in the IntelliFlow CRM sy
 
 ### 1. Database Credentials
 
-**Frequency**: Every 30 days
-**Impact**: None (rolling update)
+**Frequency**: Every 30 days **Impact**: None (rolling update)
 
 ```bash
 # 1. Generate new password
@@ -65,8 +65,7 @@ psql -h $DB_HOST -U postgres -c "DROP USER intelliflow_old;"
 
 ### 2. API Keys (OpenAI, Stripe, etc.)
 
-**Frequency**: Every 90 days
-**Impact**: None (dual-key rotation)
+**Frequency**: Every 90 days **Impact**: None (dual-key rotation)
 
 ```bash
 # 1. Generate new API key from provider dashboard
@@ -95,8 +94,7 @@ vault kv put secret/intelliflow/openai \
 
 ### 3. JWT Signing Keys
 
-**Frequency**: Every 7 days
-**Impact**: None (key versioning)
+**Frequency**: Every 7 days **Impact**: None (key versioning)
 
 ```bash
 # 1. Generate new key pair
@@ -122,8 +120,7 @@ rm jwt-new.pem jwt-new.pub
 
 ### 4. Encryption Keys
 
-**Frequency**: Every 365 days
-**Impact**: Scheduled maintenance window required
+**Frequency**: Every 365 days **Impact**: Scheduled maintenance window required
 
 ```bash
 # 1. Schedule maintenance window
@@ -186,22 +183,22 @@ pnpm test:integration
 
 ## Monitoring & Alerts
 
-| Alert | Threshold | Action |
-|-------|-----------|--------|
+| Alert                   | Threshold             | Action                    |
+| ----------------------- | --------------------- | ------------------------- |
 | Secret rotation overdue | >7 days past schedule | Trigger rotation workflow |
-| Rotation failure | Any | Investigate immediately |
-| High secret access rate | >1000/min | Check for compromise |
+| Rotation failure        | Any                   | Investigate immediately   |
+| High secret access rate | >1000/min             | Check for compromise      |
 
 ---
 
 ## Contact Information
 
-| Role | Contact | Escalation |
-|------|---------|------------|
-| Security Engineer | security@intelliflow.com | PagerDuty |
-| DevOps | devops@intelliflow.com | Slack #ops |
-| CTO | cto@intelliflow.com | Phone |
+| Role              | Contact                  | Escalation |
+| ----------------- | ------------------------ | ---------- |
+| Security Engineer | security@intelliflow.com | PagerDuty  |
+| DevOps            | devops@intelliflow.com   | Slack #ops |
+| CTO               | cto@intelliflow.com      | Phone      |
 
 ---
 
-*Last Updated: 2025-12-29*
+_Last Updated: 2025-12-29_

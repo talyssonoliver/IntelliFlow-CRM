@@ -121,7 +121,8 @@ describe('Search Agent Tools', () => {
 
       it('should generate preview with status filter', async () => {
         const context = createMockContext();
-        const status: ('NEW' | 'CONTACTED' | 'QUALIFIED' | 'UNQUALIFIED' | 'CONVERTED' | 'LOST')[] = ['NEW', 'CONTACTED'];
+        const status: ('NEW' | 'CONTACTED' | 'QUALIFIED' | 'UNQUALIFIED' | 'CONVERTED' | 'LOST')[] =
+          ['NEW', 'CONTACTED'];
         const input = { status, limit: 10, offset: 0 };
 
         const preview = await searchLeadsTool.generatePreview(input, context);
@@ -131,7 +132,15 @@ describe('Search Agent Tools', () => {
 
       it('should generate preview with source filter', async () => {
         const context = createMockContext();
-        const source: ('EMAIL' | 'WEBSITE' | 'REFERRAL' | 'SOCIAL' | 'COLD_CALL' | 'EVENT' | 'OTHER')[] = ['WEBSITE', 'REFERRAL'];
+        const source: (
+          | 'EMAIL'
+          | 'WEBSITE'
+          | 'REFERRAL'
+          | 'SOCIAL'
+          | 'COLD_CALL'
+          | 'EVENT'
+          | 'OTHER'
+        )[] = ['WEBSITE', 'REFERRAL'];
         const input = { source, limit: 10, offset: 0 };
 
         const preview = await searchLeadsTool.generatePreview(input, context);
@@ -362,7 +371,14 @@ describe('Search Agent Tools', () => {
 
       it('should generate preview with stage filter', async () => {
         const context = createMockContext();
-        const stage: ('PROSPECTING' | 'QUALIFICATION' | 'PROPOSAL' | 'NEGOTIATION' | 'CLOSED_WON' | 'CLOSED_LOST')[] = ['NEGOTIATION', 'CLOSED_WON'];
+        const stage: (
+          | 'PROSPECTING'
+          | 'QUALIFICATION'
+          | 'PROPOSAL'
+          | 'NEGOTIATION'
+          | 'CLOSED_WON'
+          | 'CLOSED_LOST'
+        )[] = ['NEGOTIATION', 'CLOSED_WON'];
         const input = { stage, limit: 10, offset: 0 };
 
         const preview = await searchOpportunitiesTool.generatePreview(input, context);
@@ -449,7 +465,11 @@ describe('Search Agent Tools', () => {
     describe('execute', () => {
       it('should search across multiple entity types', async () => {
         const context = createMockContext();
-        const entityTypes: ('LEAD' | 'CONTACT' | 'OPPORTUNITY')[] = ['LEAD', 'CONTACT', 'OPPORTUNITY'];
+        const entityTypes: ('LEAD' | 'CONTACT' | 'OPPORTUNITY')[] = [
+          'LEAD',
+          'CONTACT',
+          'OPPORTUNITY',
+        ];
         const input = { entityTypes, query: 'test', limit: 20 };
 
         const result = await combinedSearchTool.execute(input, context);
@@ -549,7 +569,11 @@ describe('Search Agent Tools', () => {
 
       it('should generate preview for all entity types', async () => {
         const context = createMockContext();
-        const entityTypes: ('LEAD' | 'CONTACT' | 'OPPORTUNITY')[] = ['LEAD', 'CONTACT', 'OPPORTUNITY'];
+        const entityTypes: ('LEAD' | 'CONTACT' | 'OPPORTUNITY')[] = [
+          'LEAD',
+          'CONTACT',
+          'OPPORTUNITY',
+        ];
         const input = { entityTypes, query: 'search all', limit: 20 };
 
         const preview = await combinedSearchTool.generatePreview(input, context);

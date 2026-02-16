@@ -351,13 +351,13 @@ export default function LoginPage() {
             {/* Branding header */}
             <div className="text-center mb-8 space-y-2">
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur-sm text-sm mb-4">
-                <span className="material-symbols-outlined text-base" aria-hidden="true">security</span>
+                <span className="material-symbols-outlined text-base" aria-hidden="true">
+                  security
+                </span>
                 <span>Verification Required</span>
               </div>
               <h1 className="text-3xl font-bold text-white">Two-Factor Authentication</h1>
-              <p className="text-slate-300 text-sm">
-                Enter the verification code to continue
-              </p>
+              <p className="text-slate-300 text-sm">Enter the verification code to continue</p>
             </div>
 
             <MfaChallenge
@@ -500,12 +500,16 @@ export default function LoginPage() {
                   <span
                     className="material-symbols-outlined animate-spin text-xl"
                     aria-hidden="true"
-                  >progress_activity</span>
+                  >
+                    progress_activity
+                  </span>
                   <span>Signing in...</span>
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined text-xl" aria-hidden="true">login</span>
+                  <span className="material-symbols-outlined text-xl" aria-hidden="true">
+                    login
+                  </span>
                   <span>Sign in</span>
                 </>
               )}

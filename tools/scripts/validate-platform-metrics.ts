@@ -23,10 +23,7 @@ import {
 
 import type { SelfServiceMetrics } from '../../packages/validators/src/platform-metrics';
 
-const METRICS_FILE = resolve(
-  process.cwd(),
-  'artifacts/metrics/self-service-metrics.json'
-);
+const METRICS_FILE = resolve(process.cwd(), 'artifacts/metrics/self-service-metrics.json');
 
 const ROOT = process.cwd();
 
@@ -53,11 +50,12 @@ function checkEvidenceSources(metrics: SelfServiceMetrics): EvidenceCheckResult[
 
   // For each unique doc file, check existence AND content coverage
   for (const [absPath, pathNames] of docPathMap) {
-    const relPath = pathNames.length > 0
-      ? metrics.platform_engineering_foundation.golden_paths.paths.find(
-          (p) => resolve(ROOT, p.documentation) === absPath
-        )?.documentation ?? absPath
-      : absPath;
+    const relPath =
+      pathNames.length > 0
+        ? (metrics.platform_engineering_foundation.golden_paths.paths.find(
+            (p) => resolve(ROOT, p.documentation) === absPath
+          )?.documentation ?? absPath)
+        : absPath;
 
     if (!existsSync(absPath)) {
       for (const name of pathNames) {
@@ -76,12 +74,12 @@ function checkEvidenceSources(metrics: SelfServiceMetrics): EvidenceCheckResult[
       // Check the doc actually mentions this golden path (by name or key terms)
       const searchTerms = name.split('-'); // e.g. "web-app-development" -> ["web","app","development"]
       const hasSubstantiveContent =
-        content.includes(name) ||
-        searchTerms.every((term) => content.includes(term));
+        content.includes(name) || searchTerms.every((term) => content.includes(term));
 
       // Also check the doc has the entrypoint command for this path
-      const entryPoint = metrics.platform_engineering_foundation.golden_paths.paths
-        .find((p) => p.name === name)?.entry_point ?? '';
+      const entryPoint =
+        metrics.platform_engineering_foundation.golden_paths.paths.find((p) => p.name === name)
+          ?.entry_point ?? '';
       const hasEntryPoint = entryPoint ? content.includes(entryPoint.toLowerCase()) : true;
 
       const passed = hasSubstantiveContent && hasEntryPoint;
@@ -158,9 +156,7 @@ function checkProvenance(metrics: SelfServiceMetrics): EvidenceCheckResult[] {
 
   // Check that next_collection_due is in the future or reasonable past
   const nextDue = new Date(prov.next_collection_due);
-  const overdueDays = Math.floor(
-    (now.getTime() - nextDue.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  const overdueDays = Math.floor((now.getTime() - nextDue.getTime()) / (1000 * 60 * 60 * 24));
   results.push({
     name: 'collection_schedule',
     passed: overdueDays <= 30,
@@ -212,8 +208,7 @@ function checkMetricConsistency(metrics: SelfServiceMetrics): EvidenceCheckResul
     deploy.total_self_service_deploys > 0
       ? (deploy.successful_deploys / deploy.total_self_service_deploys) * 100
       : 0;
-  const rateMatch =
-    Math.abs(deploy.success_rate_percent - computedRate) < 0.2;
+  const rateMatch = Math.abs(deploy.success_rate_percent - computedRate) < 0.2;
   results.push({
     name: 'deploy_rate_consistency',
     passed: rateMatch,

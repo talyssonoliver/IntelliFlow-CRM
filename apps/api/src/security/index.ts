@@ -95,12 +95,7 @@ export {
   getEncryptionService,
   resetEncryptionService,
 } from './encryption';
-export type {
-  EncryptedData,
-  EncryptionOptions,
-  KeyMetadata,
-  KeyProvider,
-} from './encryption';
+export type { EncryptedData, EncryptionOptions, KeyMetadata, KeyProvider } from './encryption';
 
 // Key Rotation Service (IFC-113)
 export {

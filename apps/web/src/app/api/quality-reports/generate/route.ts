@@ -32,13 +32,17 @@ async function getProjectRoot(): Promise<string> {
   return possibleRoots[0];
 }
 
-async function generateCoverageReport(projectRoot: string, scope: string = 'standard'): Promise<GenerateResult> {
+async function generateCoverageReport(
+  projectRoot: string,
+  scope: string = 'standard'
+): Promise<GenerateResult> {
   const start = Date.now();
   const fs = await import('fs');
 
   // Determine test command based on scope
   const testCommands: Record<string, string> = {
-    quick: 'vitest run --reporter=verbose --passWithNoTests packages/validators packages/domain --coverage',
+    quick:
+      'vitest run --reporter=verbose --passWithNoTests packages/validators packages/domain --coverage',
     standard: 'vitest run --reporter=verbose --passWithNoTests --coverage',
     comprehensive: 'vitest run --reporter=verbose --coverage',
   };
@@ -94,7 +98,9 @@ async function generateCoverageReport(projectRoot: string, scope: string = 'stan
     }
 
     // Parse coverage from output if available
-    const coverageMatch = testOutput.match(/All files\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)/);
+    const coverageMatch = testOutput.match(
+      /All files\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)/
+    );
 
     // Try to generate HTML report if the script exists
     const reportScriptPath = path.join(projectRoot, 'scripts', 'ci', 'generate-coverage-report.js');
@@ -146,7 +152,8 @@ async function generateCoverageReport(projectRoot: string, scope: string = 'stan
     return {
       report: 'coverage',
       success: false,
-      message: 'Coverage generation failed. Try running "pnpm test" locally to diagnose test issues.',
+      message:
+        'Coverage generation failed. Try running "pnpm test" locally to diagnose test issues.',
       duration: Date.now() - start,
     };
   } catch (error) {
@@ -160,7 +167,11 @@ async function generateCoverageReport(projectRoot: string, scope: string = 'stan
   }
 }
 
-async function generateLighthouseReport(projectRoot: string, url: string, _scope: string = 'standard'): Promise<GenerateResult> {
+async function generateLighthouseReport(
+  projectRoot: string,
+  url: string,
+  _scope: string = 'standard'
+): Promise<GenerateResult> {
   const start = Date.now();
   const fs = await import('fs');
 
@@ -190,7 +201,8 @@ async function generateLighthouseReport(projectRoot: string, url: string, _scope
         message: 'Lighthouse not installed or Chrome not available',
         scores: { performance: 0, accessibility: 0, bestPractices: 0, seo: 0 },
         passed: false,
-        instructions: 'Install Lighthouse: npm install -g lighthouse. Ensure Chrome/Chromium is installed.',
+        instructions:
+          'Install Lighthouse: npm install -g lighthouse. Ensure Chrome/Chromium is installed.',
       };
 
       fs.writeFileSync(
@@ -273,7 +285,9 @@ async function generateLighthouseReport(projectRoot: string, url: string, _scope
           bestPractices: Math.round((categories['best-practices']?.score || 0) * 100),
           seo: Math.round((categories.seo?.score || 0) * 100),
         },
-        passed: Object.values(categories as Record<string, { score?: number }>).every((c) => (c.score || 0) >= 0.9),
+        passed: Object.values(categories as Record<string, { score?: number }>).every(
+          (c) => (c.score || 0) >= 0.9
+        ),
       };
 
       fs.writeFileSync(
@@ -289,7 +303,11 @@ async function generateLighthouseReport(projectRoot: string, url: string, _scope
       }
 
       const avgScore = Math.round(
-        (summary.scores.performance + summary.scores.accessibility + summary.scores.bestPractices + summary.scores.seo) / 4
+        (summary.scores.performance +
+          summary.scores.accessibility +
+          summary.scores.bestPractices +
+          summary.scores.seo) /
+          4
       );
 
       return {
@@ -310,11 +328,16 @@ async function generateLighthouseReport(projectRoot: string, url: string, _scope
     const errorMsg = error instanceof Error ? error.message : String(error);
 
     // Check for common Chrome-related errors
-    if (errorMsg.includes('Chrome') || errorMsg.includes('chromium') || errorMsg.includes('ENOENT')) {
+    if (
+      errorMsg.includes('Chrome') ||
+      errorMsg.includes('chromium') ||
+      errorMsg.includes('ENOENT')
+    ) {
       return {
         report: 'lighthouse',
         success: false,
-        message: 'Chrome/Chromium not found. Install Chrome or set CHROME_PATH environment variable.',
+        message:
+          'Chrome/Chromium not found. Install Chrome or set CHROME_PATH environment variable.',
         duration: Date.now() - start,
       };
     }
@@ -328,7 +351,10 @@ async function generateLighthouseReport(projectRoot: string, url: string, _scope
   }
 }
 
-async function generatePerformanceReport(projectRoot: string, _scope: string = 'standard'): Promise<GenerateResult> {
+async function generatePerformanceReport(
+  projectRoot: string,
+  _scope: string = 'standard'
+): Promise<GenerateResult> {
   const start = Date.now();
   const fs = await import('fs');
 
@@ -371,7 +397,9 @@ async function generatePerformanceReport(projectRoot: string, _scope: string = '
       generatedAt: new Date().toISOString(),
       source: 'local',
       type: 'synthetic',
-      message: hasK6 ? 'k6 script not found - synthetic benchmark generated' : 'k6 not installed - synthetic benchmark generated',
+      message: hasK6
+        ? 'k6 script not found - synthetic benchmark generated'
+        : 'k6 not installed - synthetic benchmark generated',
       benchmarks: [
         {
           operation: 'JSON parse (1KB)',
@@ -405,7 +433,9 @@ async function generatePerformanceReport(projectRoot: string, _scope: string = '
     };
 
     // Benchmark 1: JSON parsing
-    const testJson = JSON.stringify({ data: Array(100).fill({ id: 1, name: 'test', value: Math.random() }) });
+    const testJson = JSON.stringify({
+      data: Array(100).fill({ id: 1, name: 'test', value: Math.random() }),
+    });
     const jsonTimes = runBenchmark(() => JSON.parse(testJson), 10000);
     benchmarkResults.benchmarks[0].p50Time = jsonTimes[Math.floor(jsonTimes.length * 0.5)];
     benchmarkResults.benchmarks[0].p95Time = jsonTimes[Math.floor(jsonTimes.length * 0.95)];
@@ -425,7 +455,9 @@ async function generatePerformanceReport(projectRoot: string, _scope: string = '
       benchmarkResults.benchmarks[0].p95Time < 1 && benchmarkResults.benchmarks[1].p95Time < 5;
 
     // Calculate overall score
-    const avgP95 = benchmarkResults.benchmarks.reduce((sum, b) => sum + b.p95Time, 0) / benchmarkResults.benchmarks.length;
+    const avgP95 =
+      benchmarkResults.benchmarks.reduce((sum, b) => sum + b.p95Time, 0) /
+      benchmarkResults.benchmarks.length;
     const score = Math.max(0, Math.min(100, 100 - avgP95 * 10));
 
     const summary = {
@@ -566,7 +598,8 @@ export async function POST(request: NextRequest) {
     const results: GenerateResult[] = [];
 
     // Import job storage for progress updates (if jobId provided)
-    let updateProgress: ((updates: { currentReport?: string; progress?: number }) => void) | null = null;
+    let updateProgress: ((updates: { currentReport?: string; progress?: number }) => void) | null =
+      null;
     if (jobId) {
       try {
         const { setJob, updateJobProgress } = await import('../job-storage');

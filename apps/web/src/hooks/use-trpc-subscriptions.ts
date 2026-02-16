@@ -204,9 +204,10 @@ export function useLeadScoredSubscription(options: UseLeadScoredSubscriptionOpti
         startConnection();
       },
       onData: (event: LeadScoredEvent) => {
-        const timestamp = typeof event.timestamp === 'string'
-          ? new Date(event.timestamp).getTime()
-          : event.timestamp.getTime();
+        const timestamp =
+          typeof event.timestamp === 'string'
+            ? new Date(event.timestamp).getTime()
+            : event.timestamp.getTime();
         const latency = Date.now() - timestamp;
         log('Received event', { ...event, latency });
 

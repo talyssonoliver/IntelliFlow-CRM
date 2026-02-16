@@ -90,7 +90,13 @@ const initialFormData: ContactFormData = {
 
 // ─── Component ──────────────────────────────────────────────────────────────────
 
-export function ContactForm({ mode, contact, onSubmit, onCancel, isSubmitting = false }: ContactFormProps) {
+export function ContactForm({
+  mode,
+  contact,
+  onSubmit,
+  onCancel,
+  isSubmitting = false,
+}: ContactFormProps) {
   const [currentStep, setCurrentStep] = useState<StepId>('personal');
   const [formData, setFormData] = useState<ContactFormData>({
     ...initialFormData,
@@ -146,12 +152,15 @@ export function ContactForm({ mode, contact, onSubmit, onCancel, isSubmitting = 
     }
   }, [currentStepIndex]);
 
-  const handleStepClick = useCallback((step: Step) => {
-    const targetIndex = steps.findIndex((s) => s.id === step.id);
-    if (targetIndex <= currentStepIndex) {
-      setCurrentStep(step.id);
-    }
-  }, [currentStepIndex]);
+  const handleStepClick = useCallback(
+    (step: Step) => {
+      const targetIndex = steps.findIndex((s) => s.id === step.id);
+      if (targetIndex <= currentStepIndex) {
+        setCurrentStep(step.id);
+      }
+    },
+    [currentStepIndex]
+  );
 
   const handleSubmit = useCallback(async () => {
     if (!validateStep()) return;
@@ -170,7 +179,10 @@ export function ContactForm({ mode, contact, onSubmit, onCancel, isSubmitting = 
   return (
     <Card className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
       {/* Step Indicator */}
-      <nav aria-label="Form progress" className="px-8 pt-8 pb-6 border-b border-slate-200 dark:border-slate-700">
+      <nav
+        aria-label="Form progress"
+        className="px-8 pt-8 pb-6 border-b border-slate-200 dark:border-slate-700"
+      >
         <div
           role="progressbar"
           aria-valuenow={currentStepIndex + 1}
@@ -179,7 +191,10 @@ export function ContactForm({ mode, contact, onSubmit, onCancel, isSubmitting = 
           aria-label={`Step ${currentStepIndex + 1} of ${steps.length}`}
           className="relative flex items-center justify-between w-full max-w-2xl mx-auto"
         >
-          <div className="absolute left-0 top-5 w-full h-0.5 bg-slate-100 dark:bg-slate-700 -z-10" aria-hidden="true" />
+          <div
+            className="absolute left-0 top-5 w-full h-0.5 bg-slate-100 dark:bg-slate-700 -z-10"
+            aria-hidden="true"
+          />
           {steps.map((step) => {
             const status = getStepStatus(step);
             const isClickable = status === 'completed' || status === 'current';
@@ -192,16 +207,26 @@ export function ContactForm({ mode, contact, onSubmit, onCancel, isSubmitting = 
                 aria-current={status === 'current' ? 'step' : undefined}
                 className={`flex flex-col items-center gap-2 ${isClickable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
               >
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all ${
-                  status === 'current' ? 'bg-primary text-white'
-                    : status === 'completed' ? 'bg-primary text-white hover:bg-blue-600'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-2 border-slate-200 dark:border-slate-700'
-                }`}>
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all ${
+                    status === 'current'
+                      ? 'bg-primary text-white'
+                      : status === 'completed'
+                        ? 'bg-primary text-white hover:bg-blue-600'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-2 border-slate-200 dark:border-slate-700'
+                  }`}
+                >
                   {status === 'completed' ? (
-                    <span className="material-symbols-outlined text-lg" aria-hidden="true">check</span>
-                  ) : step.number}
+                    <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                      check
+                    </span>
+                  ) : (
+                    step.number
+                  )}
                 </div>
-                <span className={`text-sm font-medium ${status !== 'upcoming' ? 'font-bold text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+                <span
+                  className={`text-sm font-medium ${status !== 'upcoming' ? 'font-bold text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}
+                >
                   {step.label}
                 </span>
               </button>
@@ -221,11 +246,13 @@ export function ContactForm({ mode, contact, onSubmit, onCancel, isSubmitting = 
               role="alert"
               className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
             >
-              <p className="text-sm font-semibold text-red-800 dark:text-red-300">Please fix the following errors:</p>
+              <p className="text-sm font-semibold text-red-800 dark:text-red-300">
+                Please fix the following errors:
+              </p>
               <ul className="mt-2 list-disc list-inside text-sm text-red-700 dark:text-red-400">
-                {Object.entries(errors).map(([field, message]) => message && (
-                  <li key={field}>{message}</li>
-                ))}
+                {Object.entries(errors).map(
+                  ([field, message]) => message && <li key={field}>{message}</li>
+                )}
               </ul>
             </div>
           )}
@@ -233,7 +260,9 @@ export function ContactForm({ mode, contact, onSubmit, onCancel, isSubmitting = 
           {/* Step 1: Personal Details */}
           {currentStep === 'personal' && (
             <div className="flex flex-col gap-6">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Contact Information</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                Contact Information
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField label="First Name" id="firstName" required error={errors.firstName}>
                   <input
@@ -296,18 +325,48 @@ export function ContactForm({ mode, contact, onSubmit, onCancel, isSubmitting = 
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">Company & Role</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField label="Company Name" id="company">
-                  <input type="text" id="company" value={formData.company} onChange={(e) => updateField('company', e.target.value)} placeholder="e.g. Acme Corporation" className={fieldClassName()} />
+                  <input
+                    type="text"
+                    id="company"
+                    value={formData.company}
+                    onChange={(e) => updateField('company', e.target.value)}
+                    placeholder="e.g. Acme Corporation"
+                    className={fieldClassName()}
+                  />
                 </FormField>
                 <FormField label="Job Title" id="jobTitle">
-                  <input type="text" id="jobTitle" value={formData.jobTitle} onChange={(e) => updateField('jobTitle', e.target.value)} placeholder="e.g. VP of Marketing" className={fieldClassName()} />
+                  <input
+                    type="text"
+                    id="jobTitle"
+                    value={formData.jobTitle}
+                    onChange={(e) => updateField('jobTitle', e.target.value)}
+                    placeholder="e.g. VP of Marketing"
+                    className={fieldClassName()}
+                  />
                 </FormField>
                 <FormField label="Department" id="department">
-                  <select id="department" value={formData.department} onChange={(e) => updateField('department', e.target.value)} className={fieldClassName()}>
-                    {departmentOptions.map((o) => <option key={o.value} value={o.value} disabled={o.value === ''}>{o.label}</option>)}
+                  <select
+                    id="department"
+                    value={formData.department}
+                    onChange={(e) => updateField('department', e.target.value)}
+                    className={fieldClassName()}
+                  >
+                    {departmentOptions.map((o) => (
+                      <option key={o.value} value={o.value} disabled={o.value === ''}>
+                        {o.label}
+                      </option>
+                    ))}
                   </select>
                 </FormField>
                 <FormField label="LinkedIn Profile" id="linkedIn">
-                  <input type="url" id="linkedIn" value={formData.linkedIn} onChange={(e) => updateField('linkedIn', e.target.value)} placeholder="https://linkedin.com/in/username" className={fieldClassName()} />
+                  <input
+                    type="url"
+                    id="linkedIn"
+                    value={formData.linkedIn}
+                    onChange={(e) => updateField('linkedIn', e.target.value)}
+                    placeholder="https://linkedin.com/in/username"
+                    className={fieldClassName()}
+                  />
                 </FormField>
               </div>
             </div>
@@ -316,13 +375,20 @@ export function ContactForm({ mode, contact, onSubmit, onCancel, isSubmitting = 
           {/* Step 3: Additional Info */}
           {currentStep === 'additional' && (
             <div className="flex flex-col gap-6">
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white">Additional Information</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                Additional Information
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <fieldset>
-                  <legend className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Status</legend>
+                  <legend className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                    Status
+                  </legend>
                   <div role="radiogroup" aria-label="Contact status" className="space-y-2">
                     {statusOptions.map((opt) => (
-                      <label key={opt.value} className="flex items-start gap-3 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+                      <label
+                        key={opt.value}
+                        className="flex items-start gap-3 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
+                      >
                         <input
                           type="radio"
                           role="radio"
@@ -334,7 +400,9 @@ export function ContactForm({ mode, contact, onSubmit, onCancel, isSubmitting = 
                           className="mt-1 text-primary focus:ring-primary"
                         />
                         <div>
-                          <span className="text-sm font-medium text-slate-900 dark:text-white">{opt.label}</span>
+                          <span className="text-sm font-medium text-slate-900 dark:text-white">
+                            {opt.label}
+                          </span>
                           <p className="text-xs text-slate-500">{opt.description}</p>
                         </div>
                       </label>
@@ -343,10 +411,24 @@ export function ContactForm({ mode, contact, onSubmit, onCancel, isSubmitting = 
                 </fieldset>
                 <div className="space-y-6">
                   <FormField label="Tags" id="tags">
-                    <input type="text" id="tags" value={formData.tags} onChange={(e) => updateField('tags', e.target.value)} placeholder="e.g. VIP, Decision Maker" className={fieldClassName()} />
+                    <input
+                      type="text"
+                      id="tags"
+                      value={formData.tags}
+                      onChange={(e) => updateField('tags', e.target.value)}
+                      placeholder="e.g. VIP, Decision Maker"
+                      className={fieldClassName()}
+                    />
                   </FormField>
                   <FormField label="Notes" id="notes">
-                    <textarea id="notes" value={formData.notes} onChange={(e) => updateField('notes', e.target.value)} placeholder="Add any notes..." rows={4} className={fieldClassName() + ' resize-none'} />
+                    <textarea
+                      id="notes"
+                      value={formData.notes}
+                      onChange={(e) => updateField('notes', e.target.value)}
+                      placeholder="Add any notes..."
+                      rows={4}
+                      className={fieldClassName() + ' resize-none'}
+                    />
                   </FormField>
                 </div>
               </div>
@@ -370,7 +452,9 @@ export function ContactForm({ mode, contact, onSubmit, onCancel, isSubmitting = 
                 className="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg transition-all"
               >
                 Next Step
-                <span className="material-symbols-outlined text-lg" aria-hidden="true">arrow_forward</span>
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                  arrow_forward
+                </span>
               </button>
             ) : (
               <button
@@ -380,8 +464,16 @@ export function ContactForm({ mode, contact, onSubmit, onCancel, isSubmitting = 
                 aria-busy={isSubmitting}
                 className="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? 'Creating...' : mode === 'create' ? 'Create Contact' : 'Save Changes'}
-                {!isSubmitting && <span className="material-symbols-outlined text-lg" aria-hidden="true">check</span>}
+                {isSubmitting
+                  ? 'Creating...'
+                  : mode === 'create'
+                    ? 'Create Contact'
+                    : 'Save Changes'}
+                {!isSubmitting && (
+                  <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                    check
+                  </span>
+                )}
               </button>
             )}
           </div>
@@ -408,7 +500,10 @@ function FormField({
 }) {
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
+      <label
+        htmlFor={id}
+        className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
+      >
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       {children}

@@ -46,12 +46,15 @@ export default defineConfig({
 
     // Handle worker exit errors gracefully
     onUnhandledError(error): boolean | void {
-      const msg = typeof error === 'object' && error !== null && 'message' in error
-        ? String((error as { message?: unknown }).message)
-        : '';
-      if (msg.includes('Worker exited unexpectedly') ||
-          msg.includes('vitest-pool') ||
-          msg.includes('[vitest-pool]')) {
+      const msg =
+        typeof error === 'object' && error !== null && 'message' in error
+          ? String((error as { message?: unknown }).message)
+          : '';
+      if (
+        msg.includes('Worker exited unexpectedly') ||
+        msg.includes('vitest-pool') ||
+        msg.includes('[vitest-pool]')
+      ) {
         return false;
       }
     },

@@ -1003,8 +1003,7 @@ describe('RateLimitMiddleware', () => {
     });
 
     it('should create AI rate limit middleware with strict limits', async () => {
-      const { createAIRateLimitMiddleware, RATE_LIMIT_TIERS } =
-        await import('../rate-limit.js');
+      const { createAIRateLimitMiddleware, RATE_LIMIT_TIERS } = await import('../rate-limit.js');
       const aiMiddleware = createAIRateLimitMiddleware();
       const mockNext = vi.fn(async () => ({ success: true }));
 
@@ -1023,9 +1022,7 @@ describe('RateLimitMiddleware', () => {
       }
 
       // 11th request should be rate limited
-      await expect(aiMiddleware({ ctx, next: mockNext })).rejects.toThrow(
-        /Rate limit exceeded/
-      );
+      await expect(aiMiddleware({ ctx, next: mockNext })).rejects.toThrow(/Rate limit exceeded/);
 
       expect(mockNext).toHaveBeenCalledTimes(10);
     });
@@ -1044,9 +1041,7 @@ describe('RateLimitMiddleware', () => {
       }
 
       // 6th request should be rate limited
-      await expect(authMiddleware({ ctx, next: mockNext })).rejects.toThrow(
-        /Rate limit exceeded/
-      );
+      await expect(authMiddleware({ ctx, next: mockNext })).rejects.toThrow(/Rate limit exceeded/);
 
       expect(mockNext).toHaveBeenCalledTimes(5);
     });

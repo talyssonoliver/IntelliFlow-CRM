@@ -92,6 +92,9 @@ export * from './ai/AIConstants';
 // AI Domain - Feedback Events
 export * from './ai/FeedbackEvents';
 
+// AI Domain - Chain Version Events (IFC-086)
+export * from './ai/ChainVersionEvents';
+
 // AI Domain - Output Review (IFC-128)
 export * from './ai/review';
 
@@ -124,3 +127,6 @@ export * from './activity-feed';
 
 // CRM Domain - Billing (IFC-198)
 export * from './crm/billing';
+
+// Automation Domain - Routing (PG-132)
+export * from './automation/RoutingConstants';

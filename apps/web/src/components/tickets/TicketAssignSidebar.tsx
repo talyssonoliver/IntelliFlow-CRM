@@ -1,13 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@intelliflow/ui';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@intelliflow/ui';
 import { AppAvatar } from '@/components/shared/app-avatar';
 import type { TicketAssigneeOption } from './types';
 
@@ -84,13 +78,17 @@ export function TicketAssignSidebar({
               <div className="flex items-center gap-3 min-w-0">
                 <span className="material-symbols-outlined text-[#137fec] text-[20px]">person</span>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white">Assign to me</p>
+                  <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                    Assign to me
+                  </p>
                   <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
                     {currentUserName || 'Current user'}
                   </p>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-slate-400 text-[18px]">chevron_right</span>
+              <span className="material-symbols-outlined text-slate-400 text-[18px]">
+                chevron_right
+              </span>
             </button>
           </section>
 
@@ -102,9 +100,13 @@ export function TicketAssignSidebar({
             </div>
 
             {isLoadingOptions ? (
-              <p className="px-3 py-4 text-sm text-slate-500 dark:text-slate-400">Loading team members...</p>
+              <p className="px-3 py-4 text-sm text-slate-500 dark:text-slate-400">
+                Loading team members...
+              </p>
             ) : uniqueAssignees.length === 0 ? (
-              <p className="px-3 py-4 text-sm text-slate-500 dark:text-slate-400">No team members available.</p>
+              <p className="px-3 py-4 text-sm text-slate-500 dark:text-slate-400">
+                No team members available.
+              </p>
             ) : (
               <div className="p-2 space-y-1">
                 {uniqueAssignees.map((assignee) => {

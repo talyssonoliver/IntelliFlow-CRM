@@ -39,7 +39,7 @@ function handleLikeLogic(
   comments: Comment[],
   commentId: string,
   isReply?: boolean,
-  parentId?: string,
+  parentId?: string
 ): Comment[] {
   return comments.map((c) => {
     if (isReply && parentId && c.id === parentId) {
@@ -48,7 +48,7 @@ function handleLikeLogic(
         replies: c.replies?.map((r) =>
           r.id === commentId
             ? { ...r, likes: r.isLiked ? r.likes - 1 : r.likes + 1, isLiked: !r.isLiked }
-            : r,
+            : r
         ),
       };
     }

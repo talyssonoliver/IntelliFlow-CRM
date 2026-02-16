@@ -30,16 +30,15 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Security | IntelliFlow CRM',
-    description:
-      'Enterprise-grade security with ISO 27001, SOC 2, and GDPR compliance.',
+    description: 'Enterprise-grade security with ISO 27001, SOC 2, and GDPR compliance.',
   },
 };
 
 function getCategoryColor(category: string): string {
   const colors: Record<string, string> = {
     'Data Protection': '#137fec',
-    'Architecture': '#8b5cf6',
-    'Compliance': '#10b981',
+    Architecture: '#8b5cf6',
+    Compliance: '#10b981',
     'Access Control': '#f59e0b',
     'Security Operations': '#ef4444',
     'AI Safety': '#06b6d4',
@@ -131,12 +130,19 @@ export default function SecurityPage() {
                 className="p-6 text-center border-2 border-emerald-500/20 bg-gradient-to-br from-white to-emerald-50/50 dark:from-slate-800 dark:to-emerald-900/20"
               >
                 <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-3xl text-emerald-600" aria-hidden="true">
+                  <span
+                    className="material-symbols-outlined text-3xl text-emerald-600"
+                    aria-hidden="true"
+                  >
                     {cert.icon}
                   </span>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{cert.name}</h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{cert.description}</p>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                  {cert.name}
+                </h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                  {cert.description}
+                </p>
                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-500/10 text-emerald-600 text-sm font-medium rounded-full">
                   <span className="material-symbols-outlined text-sm" aria-hidden="true">
                     check_circle

@@ -91,10 +91,7 @@ function EmailVerifyContent() {
         {/* Security footer */}
         <div className="bg-white/[0.03] border-t border-white/10 px-8 py-4">
           <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
-            <span
-              className="material-symbols-outlined text-base text-[#7cc4ff]"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined text-base text-[#7cc4ff]" aria-hidden="true">
               verified_user
             </span>
             <span>Secure email verification</span>
@@ -105,20 +102,14 @@ function EmailVerifyContent() {
       {/* Trust indicators */}
       <div className="mt-6 flex items-center justify-center gap-4 text-xs text-slate-400">
         <div className="flex items-center gap-1">
-          <span
-            className="material-symbols-outlined text-sm text-[#7cc4ff]"
-            aria-hidden="true"
-          >
+          <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
             schedule
           </span>
           Link valid for 24 hours
         </div>
         <div className="w-1 h-1 rounded-full bg-slate-600" aria-hidden="true" />
         <div className="flex items-center gap-1">
-          <span
-            className="material-symbols-outlined text-sm text-[#7cc4ff]"
-            aria-hidden="true"
-          >
+          <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
             shield
           </span>
           Protected

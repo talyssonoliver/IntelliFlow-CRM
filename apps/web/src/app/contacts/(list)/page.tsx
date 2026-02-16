@@ -2,11 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  ConfirmationDialog,
-  toast,
-  Pagination,
-} from '@intelliflow/ui';
+import { ConfirmationDialog, toast, Pagination } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar, type FilterOption } from '@/components/shared';
 import { ContactList } from '@/components/contacts';
 import { api } from '@/lib/api';
@@ -102,29 +98,40 @@ export default function ContactsPage() {
   const utils = api.useUtils();
 
   // Dynamic filter options - updates based on current filter state
-  const { statusOptions, departmentOptions, accountOptions } =
-    useContactFilterOptions({
-      search: debouncedSearch || undefined,
-      status: statusFilter ? [statusFilter as (typeof CONTACT_STATUSES)[number]] : undefined,
-      accountId: companyFilter && isValidUUID(companyFilter) ? companyFilter : undefined,
-      department: departmentFilter || undefined,
-    });
+  const { statusOptions, departmentOptions, accountOptions } = useContactFilterOptions({
+    search: debouncedSearch || undefined,
+    status: statusFilter ? [statusFilter as (typeof CONTACT_STATUSES)[number]] : undefined,
+    accountId: companyFilter && isValidUUID(companyFilter) ? companyFilter : undefined,
+    department: departmentFilter || undefined,
+  });
 
   // Clear filter values when their options become unavailable
   useEffect(() => {
-    if (statusFilter && statusOptions.length > 0 && !statusOptions.some((o: FilterOption) => o.value === statusFilter)) {
+    if (
+      statusFilter &&
+      statusOptions.length > 0 &&
+      !statusOptions.some((o: FilterOption) => o.value === statusFilter)
+    ) {
       setStatusFilter('');
     }
   }, [statusOptions, statusFilter]);
 
   useEffect(() => {
-    if (departmentFilter && departmentOptions.length > 0 && !departmentOptions.some((o: FilterOption) => o.value === departmentFilter)) {
+    if (
+      departmentFilter &&
+      departmentOptions.length > 0 &&
+      !departmentOptions.some((o: FilterOption) => o.value === departmentFilter)
+    ) {
       setDepartmentFilter('');
     }
   }, [departmentOptions, departmentFilter]);
 
   useEffect(() => {
-    if (companyFilter && accountOptions.length > 0 && !accountOptions.some((o: FilterOption) => o.value === companyFilter)) {
+    if (
+      companyFilter &&
+      accountOptions.length > 0 &&
+      !accountOptions.some((o: FilterOption) => o.value === companyFilter)
+    ) {
       setCompanyFilter('');
     }
   }, [accountOptions, companyFilter]);
@@ -133,12 +140,7 @@ export default function ContactsPage() {
   const sortParams = getSortParams(sortOrder);
 
   // Main data query - only run when authenticated
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = api.contact.list.useQuery(
+  const { data, isLoading, error, refetch } = api.contact.list.useQuery(
     {
       page: currentPage,
       limit: pageSize,
@@ -153,7 +155,8 @@ export default function ContactsPage() {
   );
 
   // Check for auth errors
-  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+  const isAuthError =
+    error?.data?.code === 'UNAUTHORIZED' ||
     error?.message?.toLowerCase().includes('authentication') ||
     error?.message?.toLowerCase().includes('unauthorized');
 
@@ -313,10 +316,7 @@ export default function ContactsPage() {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Contacts' },
-        ]}
+        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Contacts' }]}
         title="Contact List"
         description={`View and manage your customer database efficiently.${totalItems > 0 ? ` (${totalItems} total)` : ''}`}
         actions={[
@@ -371,7 +371,12 @@ export default function ContactsPage() {
       {/* Redirecting State for Auth Errors */}
       {error && isAuthError && !isLoading && (
         <div className="flex flex-col items-center justify-center p-8">
-          <span className="material-symbols-outlined text-5xl text-slate-400 mb-4 animate-spin" aria-hidden="true">progress_activity</span>
+          <span
+            className="material-symbols-outlined text-5xl text-slate-400 mb-4 animate-spin"
+            aria-hidden="true"
+          >
+            progress_activity
+          </span>
           <p className="text-slate-600 dark:text-slate-400">Redirecting to login...</p>
         </div>
       )}
@@ -379,7 +384,12 @@ export default function ContactsPage() {
       {/* Error State for Non-Auth Errors */}
       {error && !isAuthError && !isLoading && (
         <div className="flex flex-col items-center justify-center p-8 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-          <span className="material-symbols-outlined text-5xl text-destructive mb-4" aria-hidden="true">error</span>
+          <span
+            className="material-symbols-outlined text-5xl text-destructive mb-4"
+            aria-hidden="true"
+          >
+            error
+          </span>
           <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">
             Failed to load contacts
           </h3>
@@ -390,7 +400,9 @@ export default function ContactsPage() {
             onClick={() => refetch()}
             className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
           >
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">refresh</span>
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">
+              refresh
+            </span>
             Try Again
           </button>
         </div>

@@ -17,13 +17,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import {
-  Card,
-  Button,
-  Badge,
-  Skeleton,
-  Label,
-} from '@intelliflow/ui';
+import { Card, Button, Badge, Skeleton, Label } from '@intelliflow/ui';
 import type { ChainVersionSummary } from '@intelliflow/validators';
 import type { VersionComparison } from '../hooks/useChainVersions';
 
@@ -123,11 +117,7 @@ export function VersionComparisonView({
 
       {/* Compare Button */}
       <div className="flex justify-center">
-        <Button
-          onClick={handleCompare}
-          disabled={!canCompare}
-          variant="default"
-        >
+        <Button onClick={handleCompare} disabled={!canCompare} variant="default">
           {isComparing ? 'Comparing...' : 'Compare Versions'}
         </Button>
       </div>
@@ -172,11 +162,15 @@ export function VersionComparisonView({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Temperature:</span>
-                  <span className="font-medium">{(comparison.versionA as any).temperature ?? 'N/A'}</span>
+                  <span className="font-medium">
+                    {(comparison.versionA as any).temperature ?? 'N/A'}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Max Tokens:</span>
-                  <span className="font-medium">{(comparison.versionA as any).maxTokens ?? 'N/A'}</span>
+                  <span className="font-medium">
+                    {(comparison.versionA as any).maxTokens ?? 'N/A'}
+                  </span>
                 </div>
               </div>
               {(comparison.versionA as any).prompt && (
@@ -208,11 +202,15 @@ export function VersionComparisonView({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Temperature:</span>
-                  <span className="font-medium">{(comparison.versionB as any).temperature ?? 'N/A'}</span>
+                  <span className="font-medium">
+                    {(comparison.versionB as any).temperature ?? 'N/A'}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Max Tokens:</span>
-                  <span className="font-medium">{(comparison.versionB as any).maxTokens ?? 'N/A'}</span>
+                  <span className="font-medium">
+                    {(comparison.versionB as any).maxTokens ?? 'N/A'}
+                  </span>
                 </div>
               </div>
               {(comparison.versionB as any).prompt && (
@@ -234,9 +232,15 @@ export function VersionComparisonView({
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-2 pr-4 text-muted-foreground font-medium">Field</th>
-                      <th className="text-left py-2 pr-4 text-muted-foreground font-medium">Version A</th>
-                      <th className="text-left py-2 text-muted-foreground font-medium">Version B</th>
+                      <th className="text-left py-2 pr-4 text-muted-foreground font-medium">
+                        Field
+                      </th>
+                      <th className="text-left py-2 pr-4 text-muted-foreground font-medium">
+                        Version A
+                      </th>
+                      <th className="text-left py-2 text-muted-foreground font-medium">
+                        Version B
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -267,7 +271,9 @@ export function VersionComparisonView({
 
           {comparison.differences.length === 0 && (
             <Card className="p-4 text-center">
-              <p className="text-muted-foreground">No differences found between the two versions.</p>
+              <p className="text-muted-foreground">
+                No differences found between the two versions.
+              </p>
             </Card>
           )}
         </div>

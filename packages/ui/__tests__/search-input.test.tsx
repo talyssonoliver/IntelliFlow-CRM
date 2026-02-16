@@ -108,9 +108,7 @@ describe('SearchInput', () => {
     it('should call onClear when clear button is clicked', async () => {
       const handleClear = vi.fn();
       const user = userEvent.setup();
-      render(
-        <SearchInput value="test" onChange={() => {}} showClear onClear={handleClear} />
-      );
+      render(<SearchInput value="test" onChange={() => {}} showClear onClear={handleClear} />);
 
       const clearButton = screen.getByLabelText('Clear search');
       await user.click(clearButton);
@@ -156,14 +154,7 @@ describe('SearchInput', () => {
     it('should have base input styles', () => {
       render(<SearchInput />);
       const input = screen.getByRole('searchbox');
-      expect(input).toHaveClass(
-        'flex',
-        'h-10',
-        'w-full',
-        'rounded-md',
-        'border',
-        'text-sm'
-      );
+      expect(input).toHaveClass('flex', 'h-10', 'w-full', 'rounded-md', 'border', 'text-sm');
     });
 
     it('should have left padding for icon', () => {

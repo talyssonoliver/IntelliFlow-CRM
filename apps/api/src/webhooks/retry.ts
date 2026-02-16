@@ -140,7 +140,7 @@ export function isRetryableError(
   const errorCode = typeof error === 'string' ? error : (normalizedError as { code?: string }).code;
 
   const legacyMatch = config.retryableErrors.some(
-    retryable =>
+    (retryable) =>
       errorMessage.includes(retryable) ||
       errorCode === retryable ||
       errorMessage.toUpperCase().includes(retryable)
@@ -478,11 +478,7 @@ export class RetryManager {
   private isProcessing = false;
   private processingInterval?: ReturnType<typeof setInterval>;
 
-  constructor(
-    queue?: RetryQueue,
-    config?: Partial<RetryConfig>,
-    circuitBreaker?: CircuitBreaker
-  ) {
+  constructor(queue?: RetryQueue, config?: Partial<RetryConfig>, circuitBreaker?: CircuitBreaker) {
     this.queue = queue || new InMemoryRetryQueue();
     this.config = { ...DEFAULT_RETRY_CONFIG, ...config };
     this.circuitBreaker = circuitBreaker;
@@ -622,11 +618,7 @@ export class RetryManager {
   /**
    * Start automatic retry processing
    */
-  startProcessing<T>(
-    options: RetryHandlerOptions<T>,
-    intervalMs = 5000,
-    batchSize = 10
-  ): void {
+  startProcessing<T>(options: RetryHandlerOptions<T>, intervalMs = 5000, batchSize = 10): void {
     if (this.isProcessing) return;
 
     this.isProcessing = true;
@@ -698,9 +690,7 @@ export function createInMemoryRetryQueue(): InMemoryRetryQueue {
   return new InMemoryRetryQueue();
 }
 
-export function createCircuitBreaker(
-  config?: Partial<CircuitBreakerConfig>
-): CircuitBreaker {
+export function createCircuitBreaker(config?: Partial<CircuitBreakerConfig>): CircuitBreaker {
   return new CircuitBreaker(config);
 }
 
@@ -714,7 +704,7 @@ const circuitBreakers = new Map<string, PlatformCircuitBreaker>();
 export async function executeWithCircuitBreaker<T>(
   name: string,
   fn: () => Promise<T>,
-  fallback?: (error: Error) => T | Promise<T>,
+  fallback?: (error: Error) => T | Promise<T>
 ): Promise<T> {
   let breaker = circuitBreakers.get(name);
   if (!breaker) {

@@ -229,9 +229,9 @@ describe('Encryption Service - IFC-113', () => {
 
       const encrypted = await service.encrypt(plaintext, { aad: 'correct-aad' });
 
-      await expect(
-        service.decrypt(encrypted, { aad: 'wrong-aad' })
-      ).rejects.toThrow(EncryptionError);
+      await expect(service.decrypt(encrypted, { aad: 'wrong-aad' })).rejects.toThrow(
+        EncryptionError
+      );
     });
 
     it('should fail decryption with tampered ciphertext', async () => {
@@ -267,7 +267,14 @@ describe('Encryption Service - IFC-113', () => {
         getCurrentKey: vi.fn().mockResolvedValue(Buffer.alloc(32, 'a')),
         getKeyByVersion: vi.fn().mockResolvedValue(Buffer.alloc(32, 'a')),
         getCurrentKeyVersion: vi.fn().mockReturnValue(5),
-        getKeyMetadata: vi.fn().mockResolvedValue({ version: 5, createdAt: new Date(), algorithm: 'aes-256-gcm', keyId: 'custom-key' }),
+        getKeyMetadata: vi
+          .fn()
+          .mockResolvedValue({
+            version: 5,
+            createdAt: new Date(),
+            algorithm: 'aes-256-gcm',
+            keyId: 'custom-key',
+          }),
       };
 
       const service = new EncryptionService(mockKeyProvider);

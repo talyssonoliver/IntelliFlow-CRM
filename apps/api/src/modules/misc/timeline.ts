@@ -223,9 +223,12 @@ export class TimelineCommunicationService {
         entityId: msg.id,
         communication: {
           channel: (msgChannel === 'whatsapp' ? 'whatsapp' : 'other') as 'whatsapp' | 'other',
-          direction: (msg.senderType === 'contact' ? 'inbound' : 'outbound') as 'inbound' | 'outbound',
-          from: msg.senderType === 'contact' ? (msg.conversation.contactEmail || undefined) : undefined,
-          to: msg.senderType !== 'contact' ? (msg.conversation.contactEmail || undefined) : undefined,
+          direction: (msg.senderType === 'contact' ? 'inbound' : 'outbound') as
+            | 'inbound'
+            | 'outbound',
+          from:
+            msg.senderType === 'contact' ? msg.conversation.contactEmail || undefined : undefined,
+          to: msg.senderType !== 'contact' ? msg.conversation.contactEmail || undefined : undefined,
         },
         actor:
           msg.senderType === 'user' || msg.senderType === 'bot'

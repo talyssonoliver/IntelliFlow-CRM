@@ -22,10 +22,7 @@ export async function GET(request: NextRequest) {
   const runId = searchParams.get('runId');
 
   if (!runId) {
-    return NextResponse.json(
-      { error: 'runId query parameter is required' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'runId query parameter is required' }, { status: 400 });
   }
 
   const encoder = new TextEncoder();

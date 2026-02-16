@@ -109,7 +109,9 @@ function createMockFeedbackService() {
 }
 
 // Create test context helper (standalone)
-function createFeedbackTestContext(options: { authenticated?: boolean; noFeedbackService?: boolean } = {}): BaseContext {
+function createFeedbackTestContext(
+  options: { authenticated?: boolean; noFeedbackService?: boolean } = {}
+): BaseContext {
   const { authenticated = true, noFeedbackService = false } = options;
 
   const services = noFeedbackService ? {} : { feedback: createMockFeedbackService() };
@@ -120,12 +122,14 @@ function createFeedbackTestContext(options: { authenticated?: boolean; noFeedbac
     services: services as any,
     security: {} as any,
     adapters: {} as any,
-    user: authenticated ? {
-      userId: TEST_UUIDS.user1,
-      email: 'test@example.com',
-      role: 'USER',
-      tenantId: TEST_UUIDS.tenant,
-    } : undefined,
+    user: authenticated
+      ? {
+          userId: TEST_UUIDS.user1,
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: TEST_UUIDS.tenant,
+        }
+      : undefined,
     tenant: {
       tenantId: TEST_UUIDS.tenant,
       tenantType: 'user' as const,
@@ -444,7 +448,9 @@ describe('feedbackRouter', () => {
 
     it('should propagate service errors', async () => {
       const ctx = createFeedbackTestContext();
-      getFeedbackService(ctx).submitSimpleFeedback.mockRejectedValueOnce(new Error('Database connection failed'));
+      getFeedbackService(ctx).submitSimpleFeedback.mockRejectedValueOnce(
+        new Error('Database connection failed')
+      );
       const caller = feedbackRouter.createCaller(ctx);
 
       await expect(caller.submitSimple(validInput)).rejects.toThrow('Database connection failed');

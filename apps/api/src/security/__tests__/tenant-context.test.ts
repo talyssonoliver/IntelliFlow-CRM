@@ -106,9 +106,7 @@ describe('Tenant Context', () => {
 
     it('should throw UNAUTHORIZED for null user', () => {
       expect(() => extractTenantContext(null as any)).toThrow(TRPCError);
-      expect(() => extractTenantContext(null as any)).toThrow(
-        /Authentication required/
-      );
+      expect(() => extractTenantContext(null as any)).toThrow(/Authentication required/);
     });
 
     it('should throw UNAUTHORIZED for undefined user', () => {
@@ -126,10 +124,7 @@ describe('Tenant Context', () => {
         canAccessAllTenantData: true,
       };
 
-      const scopedPrisma = createTenantScopedPrisma(
-        mockPrisma as unknown as PrismaClient,
-        tenant
-      );
+      const scopedPrisma = createTenantScopedPrisma(mockPrisma as unknown as PrismaClient, tenant);
 
       expect(mockPrisma.$extends).toHaveBeenCalled();
       expect(scopedPrisma).toBeDefined();
@@ -217,9 +212,7 @@ describe('Tenant Context', () => {
   });
 
   describe('verifyTenantAccess', () => {
-    const createTenantAwareContext = (
-      tenant: Partial<TenantContext>
-    ): TenantAwareContext =>
+    const createTenantAwareContext = (tenant: Partial<TenantContext>): TenantAwareContext =>
       ({
         prisma: mockPrisma as unknown as PrismaClient,
         tenant: {
@@ -446,15 +439,9 @@ describe('Tenant Context', () => {
   describe('getTeamMemberIds', () => {
     it('should return team member IDs for MANAGER', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ role: 'MANAGER' });
-      mockPrisma.user.findMany.mockResolvedValue([
-        { id: 'member-1' },
-        { id: 'member-2' },
-      ]);
+      mockPrisma.user.findMany.mockResolvedValue([{ id: 'member-1' }, { id: 'member-2' }]);
 
-      const result = await getTeamMemberIds(
-        mockPrisma as unknown as PrismaClient,
-        TEST_USER_ID
-      );
+      const result = await getTeamMemberIds(mockPrisma as unknown as PrismaClient, TEST_USER_ID);
 
       expect(result).toEqual(['member-1', 'member-2']);
       expect(mockPrisma.user.findMany).toHaveBeenCalledWith({
@@ -467,10 +454,7 @@ describe('Tenant Context', () => {
       mockPrisma.user.findUnique.mockResolvedValue({ role: 'ADMIN' });
       mockPrisma.user.findMany.mockResolvedValue([{ id: 'member-1' }]);
 
-      const result = await getTeamMemberIds(
-        mockPrisma as unknown as PrismaClient,
-        TEST_USER_ID
-      );
+      const result = await getTeamMemberIds(mockPrisma as unknown as PrismaClient, TEST_USER_ID);
 
       expect(result).toEqual(['member-1']);
     });
@@ -478,10 +462,7 @@ describe('Tenant Context', () => {
     it('should return empty array for non-manager', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ role: 'USER' });
 
-      const result = await getTeamMemberIds(
-        mockPrisma as unknown as PrismaClient,
-        TEST_USER_ID
-      );
+      const result = await getTeamMemberIds(mockPrisma as unknown as PrismaClient, TEST_USER_ID);
 
       expect(result).toEqual([]);
       expect(mockPrisma.user.findMany).not.toHaveBeenCalled();
@@ -490,10 +471,7 @@ describe('Tenant Context', () => {
     it('should return empty array when user not found', async () => {
       mockPrisma.user.findUnique.mockResolvedValue(null);
 
-      const result = await getTeamMemberIds(
-        mockPrisma as unknown as PrismaClient,
-        TEST_USER_ID
-      );
+      const result = await getTeamMemberIds(mockPrisma as unknown as PrismaClient, TEST_USER_ID);
 
       expect(result).toEqual([]);
     });
@@ -502,10 +480,7 @@ describe('Tenant Context', () => {
   describe('enrichTenantContext', () => {
     it('should add team member IDs for MANAGER', async () => {
       mockPrisma.user.findUnique.mockResolvedValue({ role: 'MANAGER' });
-      mockPrisma.user.findMany.mockResolvedValue([
-        { id: 'member-1' },
-        { id: 'member-2' },
-      ]);
+      mockPrisma.user.findMany.mockResolvedValue([{ id: 'member-1' }, { id: 'member-2' }]);
 
       const tenant: TenantContext = {
         tenantId: TEST_TENANT_ID,
@@ -515,10 +490,7 @@ describe('Tenant Context', () => {
         canAccessAllTenantData: true,
       };
 
-      const result = await enrichTenantContext(
-        mockPrisma as unknown as PrismaClient,
-        tenant
-      );
+      const result = await enrichTenantContext(mockPrisma as unknown as PrismaClient, tenant);
 
       expect(result.teamMemberIds).toEqual(['member-1', 'member-2']);
     });
@@ -535,10 +507,7 @@ describe('Tenant Context', () => {
         canAccessAllTenantData: true,
       };
 
-      const result = await enrichTenantContext(
-        mockPrisma as unknown as PrismaClient,
-        tenant
-      );
+      const result = await enrichTenantContext(mockPrisma as unknown as PrismaClient, tenant);
 
       expect(result.teamMemberIds).toEqual(['member-1']);
     });
@@ -552,10 +521,7 @@ describe('Tenant Context', () => {
         canAccessAllTenantData: false,
       };
 
-      const result = await enrichTenantContext(
-        mockPrisma as unknown as PrismaClient,
-        tenant
-      );
+      const result = await enrichTenantContext(mockPrisma as unknown as PrismaClient, tenant);
 
       expect(result).toEqual(tenant);
       expect(result.teamMemberIds).toBeUndefined();
@@ -612,9 +578,7 @@ describe('Tenant Context', () => {
       } as unknown as Context;
 
       expect(() => assertTenantContext(ctx)).toThrow(TRPCError);
-      expect(() => assertTenantContext(ctx)).toThrow(
-        /Tenant context not initialized/
-      );
+      expect(() => assertTenantContext(ctx)).toThrow(/Tenant context not initialized/);
     });
   });
 

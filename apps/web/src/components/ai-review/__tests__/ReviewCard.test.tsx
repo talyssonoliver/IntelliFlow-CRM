@@ -12,7 +12,9 @@ vi.mock('next/navigation', () => ({
 // Mock next/link
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }: any) => (
-    <a href={href} {...props}>{children}</a>
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -59,12 +61,7 @@ describe('ReviewCard', () => {
   });
 
   it('renders output type label for AUTO_RESPONSE', () => {
-    render(
-      <ReviewCard
-        review={makeReview({ outputType: 'AUTO_RESPONSE' })}
-        {...defaultProps}
-      />,
-    );
+    render(<ReviewCard review={makeReview({ outputType: 'AUTO_RESPONSE' })} {...defaultProps} />);
     expect(screen.getByText('Auto-Response')).toBeDefined();
   });
 
@@ -88,9 +85,7 @@ describe('ReviewCard', () => {
 
     it('calls onClaim with reviewId when Claim clicked', () => {
       const onClaim = vi.fn();
-      render(
-        <ReviewCard review={makeReview()} {...defaultProps} onClaim={onClaim} />,
-      );
+      render(<ReviewCard review={makeReview()} {...defaultProps} onClaim={onClaim} />);
       fireEvent.click(screen.getByText('Claim'));
       expect(onClaim).toHaveBeenCalledWith('review-1');
     });
@@ -106,7 +101,7 @@ describe('ReviewCard', () => {
           })}
           {...defaultProps}
           lockToken="token-abc"
-        />,
+        />
       );
       expect(screen.getByText('Approve')).toBeDefined();
       expect(screen.getByText('Reject')).toBeDefined();
@@ -124,7 +119,7 @@ describe('ReviewCard', () => {
           {...defaultProps}
           lockToken="token-abc"
           onApprove={onApprove}
-        />,
+        />
       );
       fireEvent.click(screen.getByText('Approve'));
       expect(onApprove).toHaveBeenCalledWith('review-1', 'token-abc');
@@ -140,7 +135,7 @@ describe('ReviewCard', () => {
             lockedBy: 'other-user',
           })}
           {...defaultProps}
-        />,
+        />
       );
       expect(screen.getByText('Claimed by another reviewer')).toBeDefined();
     });
@@ -148,24 +143,14 @@ describe('ReviewCard', () => {
 
   describe('ESCALATED status', () => {
     it('shows Claim button', () => {
-      render(
-        <ReviewCard
-          review={makeReview({ status: 'ESCALATED' })}
-          {...defaultProps}
-        />,
-      );
+      render(<ReviewCard review={makeReview({ status: 'ESCALATED' })} {...defaultProps} />);
       expect(screen.getByText('Claim')).toBeDefined();
     });
   });
 
   describe('APPROVED status', () => {
     it('shows View button, no action buttons', () => {
-      render(
-        <ReviewCard
-          review={makeReview({ status: 'APPROVED' })}
-          {...defaultProps}
-        />,
-      );
+      render(<ReviewCard review={makeReview({ status: 'APPROVED' })} {...defaultProps} />);
       expect(screen.getByText('View')).toBeDefined();
       expect(screen.queryByText('Claim')).toBeNull();
       expect(screen.queryByText('Approve')).toBeNull();
@@ -174,12 +159,7 @@ describe('ReviewCard', () => {
 
   describe('REJECTED status', () => {
     it('shows View button, no action buttons', () => {
-      render(
-        <ReviewCard
-          review={makeReview({ status: 'REJECTED' })}
-          {...defaultProps}
-        />,
-      );
+      render(<ReviewCard review={makeReview({ status: 'REJECTED' })} {...defaultProps} />);
       expect(screen.getByText('View')).toBeDefined();
       expect(screen.queryByText('Claim')).toBeNull();
     });
@@ -187,21 +167,14 @@ describe('ReviewCard', () => {
 
   describe('EXPIRED status', () => {
     it('shows View button, no action buttons', () => {
-      render(
-        <ReviewCard
-          review={makeReview({ status: 'EXPIRED' })}
-          {...defaultProps}
-        />,
-      );
+      render(<ReviewCard review={makeReview({ status: 'EXPIRED' })} {...defaultProps} />);
       expect(screen.getByText('View')).toBeDefined();
       expect(screen.queryByText('Claim')).toBeNull();
     });
   });
 
   it('disables buttons when isMutating=true', () => {
-    render(
-      <ReviewCard review={makeReview()} {...defaultProps} isMutating />,
-    );
+    render(<ReviewCard review={makeReview()} {...defaultProps} isMutating />);
     const claimBtn = screen.getByRole('button', { name: /claim/i });
     expect(claimBtn).toHaveProperty('disabled', true);
   });
@@ -213,7 +186,7 @@ describe('ReviewCard', () => {
           slaDeadline: new Date(Date.now() - 3600_000), // 1h ago
         })}
         {...defaultProps}
-      />,
+      />
     );
     // Check for the ring-1 class indicating SLA breach
     const card = container.firstElementChild;
@@ -232,7 +205,7 @@ describe('ReviewCard', () => {
           {...defaultProps}
           lockToken="token-abc"
           onReject={onReject}
-        />,
+        />
       );
       fireEvent.click(screen.getByText('Reject'));
       const textarea = screen.getByPlaceholderText(/rejection reason/i);

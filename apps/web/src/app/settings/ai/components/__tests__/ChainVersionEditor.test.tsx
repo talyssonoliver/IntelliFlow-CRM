@@ -45,9 +45,7 @@ describe('ChainVersionEditor', () => {
 
       expect(screen.getByText('Create Chain Version')).toBeInTheDocument();
       expect(
-        screen.getByText(
-          'Create a new chain version as a draft. You can activate it later.'
-        )
+        screen.getByText('Create a new chain version as a draft. You can activate it later.')
       ).toBeInTheDocument();
     });
 
@@ -211,7 +209,9 @@ describe('ChainVersionEditor', () => {
           // Simulate the component's reset logic
         }
       });
-      const { rerender } = render(<ChainVersionEditor {...defaultProps} onOpenChange={onOpenChange} />);
+      const { rerender } = render(
+        <ChainVersionEditor {...defaultProps} onOpenChange={onOpenChange} />
+      );
 
       // Fill form
       await user.selectOptions(screen.getByLabelText(/Chain Type/i), 'SCORING');
@@ -308,9 +308,7 @@ describe('ChainVersionEditor', () => {
       render(<ChainVersionEditor {...propsWithDraft} />);
 
       expect(screen.getByText('Edit Chain Version')).toBeInTheDocument();
-      expect(
-        screen.getByText('Update the draft chain version configuration.')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Update the draft chain version configuration.')).toBeInTheDocument();
     });
 
     it('populates form fields with existing draft data', () => {

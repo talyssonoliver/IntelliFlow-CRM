@@ -67,19 +67,14 @@ export class RejectReviewUseCase {
     private readonly lockTokenSecret: string
   ) {}
 
-  async execute(
-    input: RejectReviewInput
-  ): Promise<Result<RejectReviewOutput, DomainError>> {
+  async execute(input: RejectReviewInput): Promise<Result<RejectReviewOutput, DomainError>> {
     // 0. Validate notes are provided
     if (!input.notes || input.notes.trim() === '') {
       return Result.fail(new RejectionNotesRequiredError());
     }
 
     // 1. Find review with tenant isolation
-    const review = await this.repository.findByIdForUpdate(
-      input.reviewId,
-      input.tenantId
-    );
+    const review = await this.repository.findByIdForUpdate(input.reviewId, input.tenantId);
 
     if (!review) {
       return Result.fail(new ReviewNotFoundError());
@@ -106,11 +101,7 @@ export class RejectReviewUseCase {
     }
 
     // 6. Reject the review
-    const rejectResult = review.reject(
-      input.userId,
-      ReviewDecision.REJECTED_QUALITY,
-      input.notes
-    );
+    const rejectResult = review.reject(input.userId, ReviewDecision.REJECTED_QUALITY, input.notes);
     if (rejectResult.isFailure) {
       return Result.fail(new InvalidReviewStateError(review.status));
     }

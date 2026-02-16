@@ -169,7 +169,8 @@ const generateSampleEvents = (): TimelineEvent[] => {
       id: 'agent-1',
       type: 'agent_action',
       title: 'AI: Update case priority based on new evidence',
-      description: 'Lead Scoring Agent detected high-priority indicators in recent document uploads',
+      description:
+        'Lead Scoring Agent detected high-priority indicators in recent document uploads',
       date: addDays(0),
       status: 'pending_approval',
       priority: 'high',
@@ -318,7 +319,12 @@ interface TimelineEventCardProps {
   onToggleExpand: () => void;
 }
 
-function TimelineEventCard({ event, onClick, isExpanded, onToggleExpand }: Readonly<TimelineEventCardProps>) {
+function TimelineEventCard({
+  event,
+  onClick,
+  isExpanded,
+  onToggleExpand,
+}: Readonly<TimelineEventCardProps>) {
   const isOverdue = event.status === 'overdue';
   const isCompleted = event.status === 'completed';
 
@@ -329,7 +335,6 @@ function TimelineEventCard({ event, onClick, isExpanded, onToggleExpand }: Reado
         ${isOverdue ? 'bg-red-50/50' : ''}
         ${isCompleted ? 'opacity-75' : ''}
       `}
-      
       aria-label={`${event.type}: ${event.title}`}
     >
       {/* Timeline dot */}
@@ -398,17 +403,18 @@ function TimelineEventCard({ event, onClick, isExpanded, onToggleExpand }: Reado
               className="p-1 hover:bg-gray-100 rounded"
               aria-label={isExpanded ? 'Collapse details' : 'Expand details'}
             >
-              {isExpanded ? <Icon name="expand_less" className="text-base" /> : <Icon name="expand_more" className="text-base" />}
+              {isExpanded ? (
+                <Icon name="expand_less" className="text-base" />
+              ) : (
+                <Icon name="expand_more" className="text-base" />
+              )}
             </button>
           </div>
         </div>
 
         {/* Expanded content */}
         {isExpanded && (
-          <section
-            className="mt-4 pt-4 border-t border-gray-100"
-            aria-label="Event details"
-          >
+          <section className="mt-4 pt-4 border-t border-gray-100" aria-label="Event details">
             {event.description && <p className="text-sm text-gray-600 mb-3">{event.description}</p>}
 
             {/* Agent action specific details */}
@@ -418,7 +424,9 @@ function TimelineEventCard({ event, onClick, isExpanded, onToggleExpand }: Reado
                   <Icon name="smart_toy" className="text-base text-purple-600" />
                   <span className="font-medium text-purple-800">{event.agentName}</span>
                   {event.confidenceScore && (
-                    <span className={`ml-auto px-2 py-0.5 text-xs rounded-full ${getConfidenceScoreStyle(event.confidenceScore)}`}>
+                    <span
+                      className={`ml-auto px-2 py-0.5 text-xs rounded-full ${getConfidenceScoreStyle(event.confidenceScore)}`}
+                    >
                       {event.confidenceScore}% confidence
                     </span>
                   )}
@@ -457,15 +465,17 @@ function TimelineEventCard({ event, onClick, isExpanded, onToggleExpand }: Reado
                 </button>
               )}
               {/* Agent action: Link to approval preview */}
-              {event.type === 'agent_action' && event.status === 'pending_approval' && event.agentActionId && (
-                <Link
-                  href={`/agent-approvals?actionId=${event.agentActionId}`}
-                  className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors flex items-center gap-2"
-                >
-                  <Icon name="open_in_new" className="text-xs" />
-                  Review & Approve
-                </Link>
-              )}
+              {event.type === 'agent_action' &&
+                event.status === 'pending_approval' &&
+                event.agentActionId && (
+                  <Link
+                    href={`/agent-approvals?actionId=${event.agentActionId}`}
+                    className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors flex items-center gap-2"
+                  >
+                    <Icon name="open_in_new" className="text-xs" />
+                    Review & Approve
+                  </Link>
+                )}
               {event.type === 'agent_action' && event.status !== 'pending_approval' && (
                 <span className={`px-3 py-1.5 text-sm rounded ${getStatusColor(event.status)}`}>
                   {getAgentActionLabel(event.status)}
@@ -516,20 +526,20 @@ function FilterPanel({ filters, onFilterChange, isOpen }: Readonly<FilterPanelPr
 
   if (isOpen) {
     return (
-    <section
+      <section
         className="p-4 bg-gray-50 rounded-lg border border-gray-200 mb-4"
         aria-label="Filters"
       >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Event Type Filter */}
-        <div>
-          <h4 className="font-medium text-sm text-gray-700 mb-2">Event Types</h4>
-          <div className="flex flex-wrap gap-2">
-            {eventTypes.map((type) => (
-              <button
-                key={type}
-                onClick={() => toggleEventType(type)}
-                className={`
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Event Type Filter */}
+          <div>
+            <h4 className="font-medium text-sm text-gray-700 mb-2">Event Types</h4>
+            <div className="flex flex-wrap gap-2">
+              {eventTypes.map((type) => (
+                <button
+                  key={type}
+                  onClick={() => toggleEventType(type)}
+                  className={`
                   px-3 py-1 text-sm rounded-full border transition-colors
                   ${
                     filters.eventTypes.includes(type)
@@ -537,23 +547,23 @@ function FilterPanel({ filters, onFilterChange, isOpen }: Readonly<FilterPanelPr
                       : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
                   }
                 `}
-                aria-pressed={filters.eventTypes.includes(type)}
-              >
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </button>
-            ))}
+                  aria-pressed={filters.eventTypes.includes(type)}
+                >
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Priority Filter */}
-        <div>
-          <h4 className="font-medium text-sm text-gray-700 mb-2">Priority</h4>
-          <div className="flex flex-wrap gap-2">
-            {priorities.map((priority) => (
-              <button
-                key={priority}
-                onClick={() => togglePriority(priority)}
-                className={`
+          {/* Priority Filter */}
+          <div>
+            <h4 className="font-medium text-sm text-gray-700 mb-2">Priority</h4>
+            <div className="flex flex-wrap gap-2">
+              {priorities.map((priority) => (
+                <button
+                  key={priority}
+                  onClick={() => togglePriority(priority)}
+                  className={`
                   px-3 py-1 text-sm rounded-full border transition-colors
                   ${
                     filters.priorityFilter.includes(priority)
@@ -561,14 +571,14 @@ function FilterPanel({ filters, onFilterChange, isOpen }: Readonly<FilterPanelPr
                       : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
                   }
                 `}
-                aria-pressed={filters.priorityFilter.includes(priority)}
-              >
-                {priority.charAt(0).toUpperCase() + priority.slice(1)}
-              </button>
-            ))}
+                  aria-pressed={filters.priorityFilter.includes(priority)}
+                >
+                  {priority.charAt(0).toUpperCase() + priority.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
       </section>
     );
   }
@@ -741,11 +751,7 @@ function CaseTimeline({
 
       {/* Filter Panel */}
       <div id="filter-panel">
-        <FilterPanel
-          filters={filters}
-          onFilterChange={setFilters}
-          isOpen={filterOpen}
-        />
+        <FilterPanel filters={filters} onFilterChange={setFilters} isOpen={filterOpen} />
       </div>
 
       {/* Overdue Alert */}
@@ -854,7 +860,8 @@ function transformApiEvent(apiEvent: any): TimelineEvent {
   else if (apiEvent.type === 'agent_action') type = 'agent_action';
   else if (apiEvent.type === 'reminder') type = 'reminder';
   else if (apiEvent.type === 'document' || apiEvent.type === 'document_version') type = 'document';
-  else if (apiEvent.type === 'status_change' || apiEvent.type === 'stage_change') type = 'status_change';
+  else if (apiEvent.type === 'status_change' || apiEvent.type === 'stage_change')
+    type = 'status_change';
   else if (apiEvent.type === 'note') type = 'note';
   else if (apiEvent.type.includes('task')) type = 'task';
 
@@ -915,7 +922,9 @@ function transformApiEvent(apiEvent: any): TimelineEvent {
     assignedTo: apiEvent.actor?.name || undefined,
     agentActionId: apiEvent.agentAction?.actionId,
     agentName: apiEvent.agentAction?.agentName,
-    confidenceScore: apiEvent.agentAction?.confidence ? Math.round(apiEvent.agentAction.confidence * 100) : undefined,
+    confidenceScore: apiEvent.agentAction?.confidence
+      ? Math.round(apiEvent.agentAction.confidence * 100)
+      : undefined,
   };
 }
 
@@ -952,7 +961,8 @@ function CaseTimelinePageContent() {
   );
 
   // Check for auth errors
-  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+  const isAuthError =
+    error?.data?.code === 'UNAUTHORIZED' ||
     error?.message?.toLowerCase().includes('authentication') ||
     error?.message?.toLowerCase().includes('unauthorized');
 
@@ -978,7 +988,7 @@ function CaseTimelinePageContent() {
       const mapPriority = (p: Priority): 'low' | 'medium' | 'high' | 'urgent' =>
         p === 'critical' ? 'urgent' : p;
 
-      const reminderEvents = apiEvents.map(e => ({
+      const reminderEvents = apiEvents.map((e) => ({
         id: e.id,
         type: e.type,
         title: e.title,

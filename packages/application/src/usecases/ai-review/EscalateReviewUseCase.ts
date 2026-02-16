@@ -70,14 +70,9 @@ export class EscalateReviewUseCase {
     private readonly lockTokenSecret: string
   ) {}
 
-  async execute(
-    input: EscalateReviewInput
-  ): Promise<Result<EscalateReviewOutput, DomainError>> {
+  async execute(input: EscalateReviewInput): Promise<Result<EscalateReviewOutput, DomainError>> {
     // 1. Find review with tenant isolation
-    const review = await this.repository.findByIdForUpdate(
-      input.reviewId,
-      input.tenantId
-    );
+    const review = await this.repository.findByIdForUpdate(input.reviewId, input.tenantId);
 
     if (!review) {
       return Result.fail(new ReviewNotFoundError());

@@ -87,9 +87,7 @@ const FAIRNESS_THRESHOLDS = {
 /**
  * Analyze lead scores for demographic bias
  */
-export function detectScoreBias(
-  scores: LeadScoringBiasCheck[]
-): {
+export function detectScoreBias(scores: LeadScoringBiasCheck[]): {
   biasDetected: boolean;
   violations: BiasViolation[];
   metrics: BiasMetric[];
@@ -226,10 +224,7 @@ export async function detectModelDrift(
 /**
  * Save bias metrics to CSV
  */
-export async function saveBiasMetrics(
-  metrics: BiasMetric[],
-  outputPath: string
-): Promise<void> {
+export async function saveBiasMetrics(metrics: BiasMetric[], outputPath: string): Promise<void> {
   const csv = metricsToCSV(metrics);
   await writeFile(outputPath, csv, 'utf-8');
   logger.info({ outputPath, count: metrics.length }, 'Bias metrics saved');
@@ -238,10 +233,7 @@ export async function saveBiasMetrics(
 /**
  * Generate bias report
  */
-export function generateBiasReport(
-  period: string,
-  allScores: LeadScoringBiasCheck[]
-): BiasReport {
+export function generateBiasReport(period: string, allScores: LeadScoringBiasCheck[]): BiasReport {
   const { biasDetected, violations, metrics } = detectScoreBias(allScores);
 
   // Calculate summary statistics
@@ -297,10 +289,7 @@ function getDomainCategory(email?: string): string {
 /**
  * Group array by key function
  */
-function groupBy<T>(
-  array: T[],
-  keyFn: (item: T) => string
-): Record<string, T[]> {
+function groupBy<T>(array: T[], keyFn: (item: T) => string): Record<string, T[]> {
   return array.reduce(
     (groups, item) => {
       const key = keyFn(item);

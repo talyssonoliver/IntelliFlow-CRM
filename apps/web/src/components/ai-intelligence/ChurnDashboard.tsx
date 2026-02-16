@@ -18,11 +18,7 @@ import {
   Skeleton,
   cn,
 } from '@intelliflow/ui';
-import {
-  PageHeader,
-  SearchFilterBar,
-  useMultiFilterState,
-} from '@/components/shared';
+import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
 import { useChurnDashboard } from '@/lib/churn-risk/hooks';
 import type { ChurnFilters } from '@/lib/churn-risk/hooks';
 import type { AtRiskCustomer } from '@/lib/churn-risk/types';
@@ -44,10 +40,7 @@ const ChurnTrendChart = lazy(() => import('./ChurnTrendChart'));
 // Breadcrumb config
 // ============================================
 
-const BREADCRUMBS = [
-  { label: 'AI & Agents', href: '/agent-approvals' },
-  { label: 'Churn Risk' },
-];
+const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'Churn Risk' }];
 
 // ============================================
 // Stats Card (internal)
@@ -70,12 +63,7 @@ function StatCard({
     <Card>
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              'h-10 w-10 rounded-lg flex items-center justify-center',
-              colorClass,
-            )}
-          >
+          <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', colorClass)}>
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               {icon}
             </span>
@@ -150,7 +138,7 @@ function CustomerCard({ customer }: { customer: AtRiskCustomer }) {
             <span
               className={cn(
                 'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
-                getRiskBadgeClass(customer.riskLevel),
+                getRiskBadgeClass(customer.riskLevel)
               )}
               data-testid="risk-badge"
             >
@@ -163,11 +151,21 @@ function CustomerCard({ customer }: { customer: AtRiskCustomer }) {
             <span className="text-xs text-muted-foreground w-24">Engagement</span>
             <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
               <div
-                className={cn('h-full rounded-full transition-all', getEngagementColor(customer.engagementScore))}
+                className={cn(
+                  'h-full rounded-full transition-all',
+                  getEngagementColor(customer.engagementScore)
+                )}
                 style={{ width: `${Math.min(100, customer.engagementScore)}%` }}
               />
             </div>
-            <span className={cn('text-xs font-medium w-8 text-right', getEngagementBgClass(customer.engagementScore).split(' ').filter(c => c.startsWith('text-'))[0])}>
+            <span
+              className={cn(
+                'text-xs font-medium w-8 text-right',
+                getEngagementBgClass(customer.engagementScore)
+                  .split(' ')
+                  .filter((c) => c.startsWith('text-'))[0]
+              )}
+            >
               {customer.engagementScore}
             </span>
           </div>
@@ -179,7 +177,7 @@ function CustomerCard({ customer }: { customer: AtRiskCustomer }) {
               <span
                 className={cn(
                   'font-medium',
-                  sla.isOverdue ? 'text-red-600 dark:text-red-400' : 'text-foreground',
+                  sla.isOverdue ? 'text-red-600 dark:text-red-400' : 'text-foreground'
                 )}
                 data-testid="sla-countdown"
               >
@@ -244,18 +242,21 @@ export function ChurnDashboard() {
   const { stats, atRiskCustomers, trends, distribution, isLoading, error, refetch } =
     useChurnDashboard(filters);
 
-  const handleChipChange = useCallback((chipId: string) => {
-    setActiveChip(chipId);
-    if (chipId === 'critical') {
-      filterState.set('riskLevel', 'CRITICAL');
-    } else if (chipId === 'high') {
-      filterState.set('riskLevel', 'HIGH');
-    } else if (chipId === 'atRisk') {
-      filterState.set('riskLevel', ''); // show CRITICAL + HIGH + MEDIUM
-    } else {
-      filterState.set('riskLevel', '');
-    }
-  }, [filterState]);
+  const handleChipChange = useCallback(
+    (chipId: string) => {
+      setActiveChip(chipId);
+      if (chipId === 'critical') {
+        filterState.set('riskLevel', 'CRITICAL');
+      } else if (chipId === 'high') {
+        filterState.set('riskLevel', 'HIGH');
+      } else if (chipId === 'atRisk') {
+        filterState.set('riskLevel', ''); // show CRITICAL + HIGH + MEDIUM
+      } else {
+        filterState.set('riskLevel', '');
+      }
+    },
+    [filterState]
+  );
 
   const handleLoadMore = useCallback(() => {
     setPage((p) => p + 1);
@@ -266,33 +267,35 @@ export function ChurnDashboard() {
 
   if (filterState.values.riskLevel) {
     filteredCustomers = filteredCustomers.filter(
-      (c) => c.riskLevel === filterState.values.riskLevel,
+      (c) => c.riskLevel === filterState.values.riskLevel
     );
   }
 
   if (activeChip === 'atRisk') {
     filteredCustomers = filteredCustomers.filter(
-      (c) => c.riskLevel === 'CRITICAL' || c.riskLevel === 'HIGH' || c.riskLevel === 'MEDIUM',
+      (c) => c.riskLevel === 'CRITICAL' || c.riskLevel === 'HIGH' || c.riskLevel === 'MEDIUM'
     );
   }
 
   if (filterState.values.search) {
     const searchLower = filterState.values.search.toLowerCase();
-    filteredCustomers = filteredCustomers.filter(
-      (c) => c.entityName.toLowerCase().includes(searchLower),
+    filteredCustomers = filteredCustomers.filter((c) =>
+      c.entityName.toLowerCase().includes(searchLower)
     );
   }
 
   // Sorting
   if (filterState.values.sort === 'engagement') {
-    filteredCustomers = [...filteredCustomers].sort((a, b) => a.engagementScore - b.engagementScore);
+    filteredCustomers = [...filteredCustomers].sort(
+      (a, b) => a.engagementScore - b.engagementScore
+    );
   } else if (filterState.values.sort === 'sla') {
     filteredCustomers = [...filteredCustomers].sort(
-      (a, b) => new Date(a.slaDeadline).getTime() - new Date(b.slaDeadline).getTime(),
+      (a, b) => new Date(a.slaDeadline).getTime() - new Date(b.slaDeadline).getTime()
     );
   } else if (filterState.values.sort === 'newest') {
     filteredCustomers = [...filteredCustomers].sort(
-      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
   }
   // Default 'risk' sort is already applied by the backend
@@ -308,7 +311,12 @@ export function ChurnDashboard() {
         />
         <Card>
           <CardContent className="p-8 text-center">
-            <span className="material-symbols-outlined text-4xl text-red-500 mb-2" aria-hidden="true">error</span>
+            <span
+              className="material-symbols-outlined text-4xl text-red-500 mb-2"
+              aria-hidden="true"
+            >
+              error
+            </span>
             <p className="text-sm text-muted-foreground mb-4">Failed to load churn risk data</p>
             <Button onClick={() => refetch()} variant="outline" size="sm">
               Try again
@@ -330,11 +338,41 @@ export function ChurnDashboard() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        <StatCard label="Critical" value={stats?.critical ?? 0} icon="error" colorClass="bg-destructive/10 text-destructive" isLoading={isLoading} />
-        <StatCard label="High" value={stats?.high ?? 0} icon="warning" colorClass="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" isLoading={isLoading} />
-        <StatCard label="Medium" value={stats?.medium ?? 0} icon="info" colorClass="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" isLoading={isLoading} />
-        <StatCard label="Low" value={stats?.low ?? 0} icon="check_circle" colorClass="bg-primary/10 text-primary" isLoading={isLoading} />
-        <StatCard label="Minimal" value={stats?.minimal ?? 0} icon="verified" colorClass="bg-success/10 text-success" isLoading={isLoading} />
+        <StatCard
+          label="Critical"
+          value={stats?.critical ?? 0}
+          icon="error"
+          colorClass="bg-destructive/10 text-destructive"
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="High"
+          value={stats?.high ?? 0}
+          icon="warning"
+          colorClass="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Medium"
+          value={stats?.medium ?? 0}
+          icon="info"
+          colorClass="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Low"
+          value={stats?.low ?? 0}
+          icon="check_circle"
+          colorClass="bg-primary/10 text-primary"
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Minimal"
+          value={stats?.minimal ?? 0}
+          icon="verified"
+          colorClass="bg-success/10 text-success"
+          isLoading={isLoading}
+        />
       </div>
 
       {/* Date Range + SearchFilterBar */}
@@ -417,7 +455,10 @@ export function ChurnDashboard() {
       ) : filteredCustomers.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center" data-testid="empty-state">
-            <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2" aria-hidden="true">
+            <span
+              className="material-symbols-outlined text-4xl text-muted-foreground mb-2"
+              aria-hidden="true"
+            >
               shield
             </span>
             <p className="text-sm text-muted-foreground">No churn risk data available</p>
@@ -430,11 +471,7 @@ export function ChurnDashboard() {
           ))}
           {atRiskCustomers.length >= 20 && (
             <div className="flex justify-center">
-              <Button
-                variant="outline"
-                onClick={handleLoadMore}
-                data-testid="load-more-button"
-              >
+              <Button variant="outline" onClick={handleLoadMore} data-testid="load-more-button">
                 Load more
               </Button>
             </div>

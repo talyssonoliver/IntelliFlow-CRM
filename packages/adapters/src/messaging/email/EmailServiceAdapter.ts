@@ -22,11 +22,7 @@ import {
   RateLimitExceededError,
   DeliverabilityError,
 } from '@intelliflow/application';
-import {
-  OutboundEmailService,
-  createOutboundEmailService,
-  type OutboundEmail,
-} from './outbound';
+import { OutboundEmailService, createOutboundEmailService, type OutboundEmail } from './outbound';
 import { InboundEmailParser, createInboundEmailParser } from './inbound';
 
 /**
@@ -80,7 +76,7 @@ export class EmailServiceAdapter implements EmailServicePort {
               type: 'to',
             }
           : undefined,
-        recipients: options.recipients.map(r => ({
+        recipients: options.recipients.map((r) => ({
           email: r.email,
           name: r.name,
           type: r.type || 'to',
@@ -88,7 +84,7 @@ export class EmailServiceAdapter implements EmailServicePort {
         subject: options.subject,
         textBody: options.textBody,
         htmlBody: options.htmlBody,
-        attachments: options.attachments?.map(a => ({
+        attachments: options.attachments?.map((a) => ({
           filename: a.filename,
           content: a.content,
           contentType: a.contentType,
@@ -108,9 +104,7 @@ export class EmailServiceAdapter implements EmailServicePort {
 
       if (result.status === 'failed') {
         if (result.error?.includes('Rate limit')) {
-          return Result.fail(
-            new RateLimitExceededError(options.from.email.split('@')[1])
-          );
+          return Result.fail(new RateLimitExceededError(options.from.email.split('@')[1]));
         }
         return Result.fail(new EmailSendError(result.error || 'Unknown error'));
       }
@@ -145,12 +139,12 @@ export class EmailServiceAdapter implements EmailServicePort {
                 type: 'to',
               }
             : undefined,
-          recipients: emailOptions.recipients.map(r => ({
+          recipients: emailOptions.recipients.map((r) => ({
             email: r.email,
             name: r.name,
             type: r.type || 'to',
           })),
-          attachments: emailOptions.attachments?.map(a => ({
+          attachments: emailOptions.attachments?.map((a) => ({
             filename: a.filename,
             content: a.content,
             contentType: a.contentType,
@@ -169,9 +163,7 @@ export class EmailServiceAdapter implements EmailServicePort {
 
       if (result.status === 'failed') {
         if (result.error?.includes('Rate limit')) {
-          return Result.fail(
-            new RateLimitExceededError(emailOptions.from.email.split('@')[1])
-          );
+          return Result.fail(new RateLimitExceededError(emailOptions.from.email.split('@')[1]));
         }
         return Result.fail(new EmailSendError(result.error || 'Unknown error'));
       }
@@ -189,13 +181,13 @@ export class EmailServiceAdapter implements EmailServicePort {
     options?: { concurrency?: number; delayMs?: number }
   ): Promise<Result<EmailSendResult[], EmailSendError>> {
     try {
-      const outboundEmails: OutboundEmail[] = emails.map(e => ({
+      const outboundEmails: OutboundEmail[] = emails.map((e) => ({
         messageId: e.messageId,
         from: { email: e.from.email, name: e.from.name, type: 'to' },
         replyTo: e.replyTo
           ? { email: e.replyTo.email, name: e.replyTo.name, type: 'to' }
           : undefined,
-        recipients: e.recipients.map(r => ({
+        recipients: e.recipients.map((r) => ({
           email: r.email,
           name: r.name,
           type: r.type || 'to',
@@ -203,7 +195,7 @@ export class EmailServiceAdapter implements EmailServicePort {
         subject: e.subject,
         textBody: e.textBody,
         htmlBody: e.htmlBody,
-        attachments: e.attachments?.map(a => ({
+        attachments: e.attachments?.map((a) => ({
           filename: a.filename,
           content: a.content,
           contentType: a.contentType,
@@ -248,15 +240,15 @@ export class EmailServiceAdapter implements EmailServicePort {
             email: parsed.headers.from.address,
             name: parsed.headers.from.name,
           },
-          to: parsed.headers.to.map(t => ({
+          to: parsed.headers.to.map((t) => ({
             email: t.address,
             name: t.name,
           })),
-          cc: parsed.headers.cc?.map(c => ({
+          cc: parsed.headers.cc?.map((c) => ({
             email: c.address,
             name: c.name,
           })),
-          bcc: parsed.headers.bcc?.map(b => ({
+          bcc: parsed.headers.bcc?.map((b) => ({
             email: b.address,
             name: b.name,
           })),
@@ -272,7 +264,7 @@ export class EmailServiceAdapter implements EmailServicePort {
         },
         textBody: parsed.textBody,
         htmlBody: parsed.htmlBody,
-        attachments: parsed.attachments.map(a => ({
+        attachments: parsed.attachments.map((a) => ({
           filename: a.filename,
           content: a.content,
           contentType: a.contentType,
@@ -329,10 +321,7 @@ export class EmailServiceAdapter implements EmailServicePort {
     }
   }
 
-  registerTemplate(
-    name: string,
-    template: { subject: string; html: string; text?: string }
-  ): void {
+  registerTemplate(name: string, template: { subject: string; html: string; text?: string }): void {
     this.outboundService.registerTemplate(name, template);
   }
 

@@ -19,11 +19,13 @@ describe('CancelAppointmentUseCase', () => {
     repository.clear();
   });
 
-  async function createAndSaveAppointment(overrides: Partial<{
-    title: string;
-    startTime: Date;
-    endTime: Date;
-  }> = {}) {
+  async function createAndSaveAppointment(
+    overrides: Partial<{
+      title: string;
+      startTime: Date;
+      endTime: Date;
+    }> = {}
+  ) {
     const result = Appointment.create({
       title: overrides.title ?? 'Test Meeting',
       startTime: overrides.startTime ?? new Date(2025, 0, 2, 14, 0, 0),

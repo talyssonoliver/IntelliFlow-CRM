@@ -60,7 +60,4 @@ export {
 } from './dependency-graph';
 
 // PMBOK Schedule sync
-export {
-  syncScheduleData,
-  type ScheduleSyncResult,
-} from './schedule-sync';
+export { syncScheduleData, type ScheduleSyncResult } from './schedule-sync';

@@ -108,34 +108,31 @@ type NotificationRecord = Awaited<ReturnType<PrismaClient['notification']['findF
  * Convert Prisma record to domain entity
  */
 function toDomainEntity(record: NonNullable<NotificationRecord>): Notification {
-  return Notification.reconstitute(
-    NotificationId.create(record.id),
-    {
-      tenantId: record.tenantId,
-      recipientId: record.recipientId,
-      recipientEmail: record.recipientEmail ?? undefined,
-      recipientPhone: record.recipientPhone ?? undefined,
-      channel: toDomainChannel(record.channel),
-      subject: record.subject,
-      body: record.body,
-      htmlBody: record.htmlBody ?? undefined,
-      priority: toDomainPriority(record.priority),
-      status: toDomainStatus(record.status),
-      templateId: record.templateId ?? undefined,
-      templateVariables: record.templateVariables as Record<string, string> | undefined,
-      metadata: record.metadata as Record<string, unknown> | undefined,
-      providerMessageId: record.providerMessageId ?? undefined,
-      error: record.error ?? undefined,
-      retryCount: record.retryCount,
-      scheduledAt: record.scheduledAt ?? undefined,
-      sentAt: record.sentAt ?? undefined,
-      deliveredAt: record.deliveredAt ?? undefined,
-      readAt: record.readAt ?? undefined,
-      failedAt: record.failedAt ?? undefined,
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-    }
-  );
+  return Notification.reconstitute(NotificationId.create(record.id), {
+    tenantId: record.tenantId,
+    recipientId: record.recipientId,
+    recipientEmail: record.recipientEmail ?? undefined,
+    recipientPhone: record.recipientPhone ?? undefined,
+    channel: toDomainChannel(record.channel),
+    subject: record.subject,
+    body: record.body,
+    htmlBody: record.htmlBody ?? undefined,
+    priority: toDomainPriority(record.priority),
+    status: toDomainStatus(record.status),
+    templateId: record.templateId ?? undefined,
+    templateVariables: record.templateVariables as Record<string, string> | undefined,
+    metadata: record.metadata as Record<string, unknown> | undefined,
+    providerMessageId: record.providerMessageId ?? undefined,
+    error: record.error ?? undefined,
+    retryCount: record.retryCount,
+    scheduledAt: record.scheduledAt ?? undefined,
+    sentAt: record.sentAt ?? undefined,
+    deliveredAt: record.deliveredAt ?? undefined,
+    readAt: record.readAt ?? undefined,
+    failedAt: record.failedAt ?? undefined,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
+  });
 }
 
 export class PrismaNotificationRepository implements NotificationRepository {
@@ -225,18 +222,12 @@ export class PrismaNotificationRepository implements NotificationRepository {
     return records.map(toDomainEntity);
   }
 
-  async findPendingForDelivery(
-    tenantId: string,
-    limit: number = 100
-  ): Promise<Notification[]> {
+  async findPendingForDelivery(tenantId: string, limit: number = 100): Promise<Notification[]> {
     const records = await this.prisma.notification.findMany({
       where: {
         tenantId,
         status: 'PENDING',
-        OR: [
-          { scheduledAt: null },
-          { scheduledAt: { lte: new Date() } },
-        ],
+        OR: [{ scheduledAt: null }, { scheduledAt: { lte: new Date() } }],
       },
       orderBy: [
         { priority: 'asc' }, // HIGH = 0, NORMAL = 1, LOW = 2
@@ -248,10 +239,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
     return records.map(toDomainEntity);
   }
 
-  async findScheduledReadyToSend(
-    now: Date,
-    limit: number = 100
-  ): Promise<Notification[]> {
+  async findScheduledReadyToSend(now: Date, limit: number = 100): Promise<Notification[]> {
     const records = await this.prisma.notification.findMany({
       where: {
         status: 'PENDING',
@@ -260,39 +248,27 @@ export class PrismaNotificationRepository implements NotificationRepository {
           lte: now,
         },
       },
-      orderBy: [
-        { priority: 'asc' },
-        { scheduledAt: 'asc' },
-      ],
+      orderBy: [{ priority: 'asc' }, { scheduledAt: 'asc' }],
       take: limit,
     });
 
     return records.map(toDomainEntity);
   }
 
-  async findFailedForRetry(
-    maxRetries: number,
-    limit: number = 100
-  ): Promise<Notification[]> {
+  async findFailedForRetry(maxRetries: number, limit: number = 100): Promise<Notification[]> {
     const records = await this.prisma.notification.findMany({
       where: {
         status: 'FAILED',
         retryCount: { lt: maxRetries },
       },
-      orderBy: [
-        { priority: 'asc' },
-        { failedAt: 'asc' },
-      ],
+      orderBy: [{ priority: 'asc' }, { failedAt: 'asc' }],
       take: limit,
     });
 
     return records.map(toDomainEntity);
   }
 
-  async countUnread(
-    tenantId: string,
-    recipientId: string
-  ): Promise<number> {
+  async countUnread(tenantId: string, recipientId: string): Promise<number> {
     return this.prisma.notification.count({
       where: {
         tenantId,
@@ -323,10 +299,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
     return records.map(toDomainEntity);
   }
 
-  async markAllAsRead(
-    tenantId: string,
-    recipientId: string
-  ): Promise<number> {
+  async markAllAsRead(tenantId: string, recipientId: string): Promise<number> {
     const result = await this.prisma.notification.updateMany({
       where: {
         tenantId,

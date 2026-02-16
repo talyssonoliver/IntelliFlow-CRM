@@ -107,23 +107,25 @@ export default function SwarmMonitor() {
           if (claudeResponse.ok) {
             const claudeData = await claudeResponse.json();
             if (claudeData.activeSessions && claudeData.activeSessions.length > 0) {
-              const claudeTasks: TaskLog[] = claudeData.activeSessions.map((s: {
-                taskId: string;
-                session: string;
-                status: string;
-                sessionId: string;
-                startedAt: string;
-              }) => ({
-                taskId: s.taskId,
-                status: s.status === 'running' ? 'running' as const : 'stuck' as const,
-                phase: `Claude ${s.session} session`,
-                currentPhase: s.session.toUpperCase(),
-                attempt: 1,
-                lastUpdate: s.startedAt,
-                source: 'claude-session' as const,
-                sessionId: s.sessionId,
-                sessionType: s.session,
-              }));
+              const claudeTasks: TaskLog[] = claudeData.activeSessions.map(
+                (s: {
+                  taskId: string;
+                  session: string;
+                  status: string;
+                  sessionId: string;
+                  startedAt: string;
+                }) => ({
+                  taskId: s.taskId,
+                  status: s.status === 'running' ? ('running' as const) : ('stuck' as const),
+                  phase: `Claude ${s.session} session`,
+                  currentPhase: s.session.toUpperCase(),
+                  attempt: 1,
+                  lastUpdate: s.startedAt,
+                  source: 'claude-session' as const,
+                  sessionId: s.sessionId,
+                  sessionType: s.session,
+                })
+              );
               allTasks.push(...claudeTasks);
             }
           }
@@ -152,7 +154,7 @@ export default function SwarmMonitor() {
         setActiveTasks(allTasks);
 
         // Update health to reflect combined count
-        setHealth(prev => ({
+        setHealth((prev) => ({
           active: allTasks.length,
           max: prev?.max || 4,
           watchdog_threshold: prev?.watchdog_threshold,
@@ -269,9 +271,7 @@ export default function SwarmMonitor() {
             className={activeCount > 0 ? 'text-green-600 animate-pulse' : 'text-gray-400'}
           />
           <h3 className="text-lg font-semibold text-gray-900">Agent Monitor</h3>
-          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
-            Live
-          </span>
+          <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">Live</span>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
@@ -389,7 +389,10 @@ export default function SwarmMonitor() {
                   </div>
 
                   {/* Action Buttons */}
-                  {(task.source === 'claude-session' || task.isStuck || task.needsHumanReview || task.status !== 'running') && (
+                  {(task.source === 'claude-session' ||
+                    task.isStuck ||
+                    task.needsHumanReview ||
+                    task.status !== 'running') && (
                     <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200">
                       <button
                         onClick={() => handleOpenTerminal(task.taskId)}

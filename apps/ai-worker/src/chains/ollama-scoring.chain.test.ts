@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // Create mock at module level using vi.hoisted
 const { mockInvoke, MockChatOllama } = vi.hoisted(() => {
   const mockInvoke = vi.fn();
-  const MockChatOllama = vi.fn(function(this: any) {
+  const MockChatOllama = vi.fn(function (this: any) {
     this.invoke = mockInvoke;
   });
   return { mockInvoke, MockChatOllama };

@@ -16,11 +16,22 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ContactList } from '../ContactList';
-import { createMockContact, createMockContactList, createMockHandlers, resetAllMocks } from './contact-test-utils';
+import {
+  createMockContact,
+  createMockContactList,
+  createMockHandlers,
+  resetAllMocks,
+} from './contact-test-utils';
 
 // Mock the DataTable component from @intelliflow/ui
 vi.mock('@intelliflow/ui', () => ({
-  DataTable: ({ columns, data, onRowClick, emptyMessage, emptyIcon }: {
+  DataTable: ({
+    columns,
+    data,
+    onRowClick,
+    emptyMessage,
+    emptyIcon,
+  }: {
     columns: unknown[];
     data: unknown[];
     onRowClick: (row: unknown) => void;
@@ -41,14 +52,25 @@ vi.mock('@intelliflow/ui', () => ({
           {(data as unknown[]).map((row: unknown, _idx: number) => {
             const rowData = row as { id: string; firstName: string; lastName: string };
             // Render all columns including the actions column
-            const actionsColumn = (columns as unknown[]).find((col: unknown) => (col as { id?: string }).id === 'actions') as { id?: string; cell?: (ctx: unknown) => React.ReactNode } | undefined;
+            const actionsColumn = (columns as unknown[]).find(
+              (col: unknown) => (col as { id?: string }).id === 'actions'
+            ) as { id?: string; cell?: (ctx: unknown) => React.ReactNode } | undefined;
             return (
-              <tr key={rowData.id} onClick={() => onRowClick(row)} data-testid={`row-${rowData.id}`}>
-                <td>{rowData.firstName} {rowData.lastName}</td>
+              <tr
+                key={rowData.id}
+                onClick={() => onRowClick(row)}
+                data-testid={`row-${rowData.id}`}
+              >
+                <td>
+                  {rowData.firstName} {rowData.lastName}
+                </td>
                 {actionsColumn && (
                   <td>
-                    {typeof (actionsColumn as { cell?: (ctx: unknown) => React.ReactNode }).cell === 'function'
-                      ? (actionsColumn as { cell: (ctx: unknown) => React.ReactNode }).cell({ row: { original: row } })
+                    {typeof (actionsColumn as { cell?: (ctx: unknown) => React.ReactNode }).cell ===
+                    'function'
+                      ? (actionsColumn as { cell: (ctx: unknown) => React.ReactNode }).cell({
+                          row: { original: row },
+                        })
                       : null}
                   </td>
                 )}
@@ -59,17 +81,33 @@ vi.mock('@intelliflow/ui', () => ({
       </table>
     );
   },
-  TableRowActions: ({ quickActions, dropdownActions }: {
+  TableRowActions: ({
+    quickActions,
+    dropdownActions,
+  }: {
     quickActions?: Array<{ icon: string; label: string; onClick: () => void }>;
-    dropdownActions?: Array<{ icon: string; label: string; onClick: () => void; separator?: boolean; variant?: string; id?: string }>;
+    dropdownActions?: Array<{
+      icon: string;
+      label: string;
+      onClick: () => void;
+      separator?: boolean;
+      variant?: string;
+      id?: string;
+    }>;
   }) => (
     <div data-testid="row-actions">
       {quickActions?.map((action) => (
-        <button key={action.label} onClick={action.onClick}>{action.label}</button>
+        <button key={action.label} onClick={action.onClick}>
+          {action.label}
+        </button>
       ))}
-      {dropdownActions?.filter(action => !action.separator).map((action) => (
-        <button key={action.label} onClick={action.onClick}>{action.label}</button>
-      ))}
+      {dropdownActions
+        ?.filter((action) => !action.separator)
+        .map((action) => (
+          <button key={action.label} onClick={action.onClick}>
+            {action.label}
+          </button>
+        ))}
     </div>
   ),
   Skeleton: ({ className }: { className?: string }) => (
@@ -237,9 +275,11 @@ describe('ContactList', () => {
       fireEvent.click(row);
 
       expect(handlers.onRowClick).toHaveBeenCalledTimes(1);
-      expect(handlers.onRowClick).toHaveBeenCalledWith(expect.objectContaining({
-        id: contacts[0].id,
-      }));
+      expect(handlers.onRowClick).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: contacts[0].id,
+        })
+      );
     });
   });
 

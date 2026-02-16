@@ -2,18 +2,21 @@
 
 ## Overview
 
-| Property | Value |
-|----------|-------|
-| **Flow ID** | FLOW-043 |
-| **Name** | Revenue Forecasting |
-| **Category** | Analytics |
-| **Priority** | High |
-| **Sprint** | 7 |
+| Property          | Value                     |
+| ----------------- | ------------------------- |
+| **Flow ID**       | FLOW-043                  |
+| **Name**          | Revenue Forecasting       |
+| **Category**      | Analytics                 |
+| **Priority**      | High                      |
+| **Sprint**        | 7                         |
 | **Related Tasks** | IFC-092, IFC-091, IFC-096 |
 
 ## Description
 
-Deal-level revenue forecasting engine that predicts pipeline outcomes using weighted probability, historical win-rate analysis, and stage-duration patterns. Powers forecast views in deal pages, analytics dashboards, and executive summaries. Target accuracy: >=85% (actual measured: 96.2%).
+Deal-level revenue forecasting engine that predicts pipeline outcomes using
+weighted probability, historical win-rate analysis, and stage-duration patterns.
+Powers forecast views in deal pages, analytics dashboards, and executive
+summaries. Target accuracy: >=85% (actual measured: 96.2%).
 
 ---
 
@@ -22,7 +25,8 @@ Deal-level revenue forecasting engine that predicts pipeline outcomes using weig
 - **Sales Rep**: Views forecast for their pipeline and individual deals
 - **Sales Manager**: Reviews team-level forecast and adjusts commitments
 - **Executive**: Views company-wide revenue forecast and variance analysis
-- **Forecast Engine**: Computes weighted pipeline, best/worst case, and predicted close dates
+- **Forecast Engine**: Computes weighted pipeline, best/worst case, and
+  predicted close dates
 - **System**: Triggers periodic re-computation and caches results
 
 ---
@@ -32,7 +36,8 @@ Deal-level revenue forecasting engine that predicts pipeline outcomes using weig
 - User authenticated with valid tenant session
 - At least one opportunity with a stage and estimated value
 - Opportunity pipeline stages defined with probability weights
-- Historical deal data available for win-rate computation (fallback to defaults if insufficient)
+- Historical deal data available for win-rate computation (fallback to defaults
+  if insufficient)
 
 ---
 
@@ -127,14 +132,15 @@ Deal-level revenue forecasting engine that predicts pipeline outcomes using weig
 **Trigger**: User navigates to forecast view or forecast widget loads
 
 **Input**:
+
 ```typescript
 interface ForecastRequest {
   tenantId: string;
   period: 'MONTH' | 'QUARTER' | 'YEAR';
   startDate?: Date;
   endDate?: Date;
-  ownerId?: string;       // Filter by sales rep
-  teamId?: string;        // Filter by team
+  ownerId?: string; // Filter by sales rep
+  teamId?: string; // Filter by team
   category?: 'PIPELINE' | 'COMMIT' | 'CLOSED';
 }
 ```
@@ -147,25 +153,26 @@ interface ForecastRequest {
 
 **Default Stage Probabilities**:
 
-| Stage | Default Weight | Historical Override |
-|-------|---------------|---------------------|
-| PROSPECTING | 10% | Uses actual win rate if N>=20 deals |
-| QUALIFIED | 25% | Uses actual win rate if N>=20 deals |
-| PROPOSAL | 50% | Uses actual win rate if N>=20 deals |
-| NEGOTIATION | 75% | Uses actual win rate if N>=20 deals |
-| VERBAL_COMMIT | 90% | Uses actual win rate if N>=20 deals |
-| CLOSED_WON | 100% | Always 100% |
-| CLOSED_LOST | 0% | Always 0% |
+| Stage         | Default Weight | Historical Override                 |
+| ------------- | -------------- | ----------------------------------- |
+| PROSPECTING   | 10%            | Uses actual win rate if N>=20 deals |
+| QUALIFIED     | 25%            | Uses actual win rate if N>=20 deals |
+| PROPOSAL      | 50%            | Uses actual win rate if N>=20 deals |
+| NEGOTIATION   | 75%            | Uses actual win rate if N>=20 deals |
+| VERBAL_COMMIT | 90%            | Uses actual win rate if N>=20 deals |
+| CLOSED_WON    | 100%           | Always 100%                         |
+| CLOSED_LOST   | 0%             | Always 0%                           |
 
 **Computation**:
+
 ```typescript
 interface ForecastResult {
   summary: {
-    totalPipeline: number;      // SUM of all open deal values
-    weightedForecast: number;   // SUM(value * stageProbability)
-    bestCase: number;           // SUM of all open + commit
-    commitForecast: number;     // SUM where probability >= 75%
-    closedWon: number;          // SUM of already won deals in period
+    totalPipeline: number; // SUM of all open deal values
+    weightedForecast: number; // SUM(value * stageProbability)
+    bestCase: number; // SUM of all open + commit
+    commitForecast: number; // SUM where probability >= 75%
+    closedWon: number; // SUM of already won deals in period
   };
   byStage: {
     stage: string;
@@ -189,7 +196,7 @@ interface ForecastResult {
     probability: number;
     predictedCloseDate: Date;
     daysInCurrentStage: number;
-    isStale: boolean;           // Exceeds avg duration by 2x
+    isStale: boolean; // Exceeds avg duration by 2x
     owner: { id: string; name: string };
   }[];
 }
@@ -201,12 +208,13 @@ interface ForecastResult {
 
 **Endpoint**: `analytics.getAccuracyBacktest`
 
-Computes forecast accuracy by comparing past predictions against actual outcomes:
+Computes forecast accuracy by comparing past predictions against actual
+outcomes:
 
 ```typescript
 interface AccuracyBacktest {
   periodsTested: number;
-  overallAccuracy: number;      // Target: >=85%, actual: 96.2%
+  overallAccuracy: number; // Target: >=85%, actual: 96.2%
   accuracyByStage: {
     stage: string;
     predicted: number;
@@ -216,7 +224,7 @@ interface AccuracyBacktest {
   confidenceInterval: {
     lower: number;
     upper: number;
-    level: number;              // 95% confidence
+    level: number; // 95% confidence
   };
 }
 ```
@@ -227,15 +235,16 @@ interface AccuracyBacktest {
 
 **Charts**:
 
-| Chart | Type | Data Source |
-|-------|------|------------|
-| Summary Cards | Metric cards | `summary` object |
-| Stage Breakdown | Horizontal stacked bar | `byStage` array |
-| Monthly Projection | Line + bar combo | `byMonth` array |
-| Deal Pipeline | Sortable table | `deals` array |
-| Accuracy Gauge | Circular progress | `AccuracyBacktest` |
+| Chart              | Type                   | Data Source        |
+| ------------------ | ---------------------- | ------------------ |
+| Summary Cards      | Metric cards           | `summary` object   |
+| Stage Breakdown    | Horizontal stacked bar | `byStage` array    |
+| Monthly Projection | Line + bar combo       | `byMonth` array    |
+| Deal Pipeline      | Sortable table         | `deals` array      |
+| Accuracy Gauge     | Circular progress      | `AccuracyBacktest` |
 
 **Interactivity**:
+
 - Click stage bar to filter deal list
 - Click month to drill into deals closing that month
 - Sort deal table by value, probability, predicted close date
@@ -245,14 +254,14 @@ interface AccuracyBacktest {
 
 ## Edge Cases
 
-| Scenario | Handling |
-|----------|----------|
-| No deals in pipeline | Show empty state: "No open deals. Create opportunities to see forecasts." |
-| Insufficient historical data | Use default stage weights; show "Based on default probabilities" note |
-| All deals in PROSPECTING | Weighted forecast heavily discounted; show warning about pipeline concentration |
-| Stale deals (>2x avg stage duration) | Highlight in red; suggest review or stage change |
-| Currency mixing | All values normalized to tenant's base currency |
-| Large pipeline (>1000 deals) | Paginate deal list; aggregate charts computed server-side |
+| Scenario                             | Handling                                                                        |
+| ------------------------------------ | ------------------------------------------------------------------------------- |
+| No deals in pipeline                 | Show empty state: "No open deals. Create opportunities to see forecasts."       |
+| Insufficient historical data         | Use default stage weights; show "Based on default probabilities" note           |
+| All deals in PROSPECTING             | Weighted forecast heavily discounted; show warning about pipeline concentration |
+| Stale deals (>2x avg stage duration) | Highlight in red; suggest review or stage change                                |
+| Currency mixing                      | All values normalized to tenant's base currency                                 |
+| Large pipeline (>1000 deals)         | Paginate deal list; aggregate charts computed server-side                       |
 
 ---
 
@@ -260,55 +269,55 @@ interface AccuracyBacktest {
 
 ### Backend (IMPLEMENTED)
 
-| Artifact | Path | Status |
-|----------|------|--------|
-| Forecast Algorithm | `apps/api/src/shared/forecast-algorithm` | COMPLETE |
-| Forecast Tests | `apps/api/src/shared/forecast-algorithm.test.ts` | COMPLETE |
-| Accuracy Backtest | `artifacts/metrics/accuracy-backtest.csv` | COMPLETE |
-| ADR | `docs/planning/adr/ADR-019-core-crm-foundation.md` | COMPLETE |
-| PRD | `docs/planning/prd-core-crm.md` | COMPLETE |
+| Artifact           | Path                                               | Status   |
+| ------------------ | -------------------------------------------------- | -------- |
+| Forecast Algorithm | `apps/api/src/shared/forecast-algorithm`           | COMPLETE |
+| Forecast Tests     | `apps/api/src/shared/forecast-algorithm.test.ts`   | COMPLETE |
+| Accuracy Backtest  | `artifacts/metrics/accuracy-backtest.csv`          | COMPLETE |
+| ADR                | `docs/planning/adr/ADR-019-core-crm-foundation.md` | COMPLETE |
+| PRD                | `docs/planning/prd-core-crm.md`                    | COMPLETE |
 
 ### Frontend (GAP)
 
-| Artifact | Path | Status |
-|----------|------|--------|
-| Forecast Page | `apps/web/src/app/deals/forecast/page.tsx` | **NOT IMPLEMENTED** |
+| Artifact              | Path                                                        | Status              |
+| --------------------- | ----------------------------------------------------------- | ------------------- |
+| Forecast Page         | `apps/web/src/app/deals/forecast/page.tsx`                  | **NOT IMPLEMENTED** |
 | Stage Breakdown Chart | `apps/web/src/components/analytics/StageBreakdownChart.tsx` | **NOT IMPLEMENTED** |
-| Monthly Projection | `apps/web/src/components/analytics/MonthlyProjection.tsx` | **NOT IMPLEMENTED** |
-| Accuracy Gauge | `apps/web/src/components/analytics/AccuracyGauge.tsx` | **NOT IMPLEMENTED** |
+| Monthly Projection    | `apps/web/src/components/analytics/MonthlyProjection.tsx`   | **NOT IMPLEMENTED** |
+| Accuracy Gauge        | `apps/web/src/components/analytics/AccuracyGauge.tsx`       | **NOT IMPLEMENTED** |
 
 ---
 
 ## Performance Requirements
 
-| Metric | Target |
-|--------|--------|
-| Forecast query response | <500ms |
-| Backtest computation | <2s |
-| Chart render time | <300ms |
-| Dashboard TTI | <1s P95 |
+| Metric                  | Target  |
+| ----------------------- | ------- |
+| Forecast query response | <500ms  |
+| Backtest computation    | <2s     |
+| Chart render time       | <300ms  |
+| Dashboard TTI           | <1s P95 |
 
 ---
 
 ## Security Requirements
 
-| Requirement | Implementation |
-|-------------|----------------|
-| Tenant isolation | All queries scoped to tenant |
-| Owner filtering | Sales reps see own deals; managers see team; admins see all |
-| Data integrity | No placeholder data; all values from live database |
-| Forecast accuracy audit | Backtest results stored as artifact |
+| Requirement             | Implementation                                              |
+| ----------------------- | ----------------------------------------------------------- |
+| Tenant isolation        | All queries scoped to tenant                                |
+| Owner filtering         | Sales reps see own deals; managers see team; admins see all |
+| Data integrity          | No placeholder data; all values from live database          |
+| Forecast accuracy audit | Backtest results stored as artifact                         |
 
 ---
 
 ## Success Metrics
 
-| KPI | Target | Validation |
-|-----|--------|------------|
-| Forecast accuracy | >=85% | Backtest CSV (actual: 96.2%) |
-| Win rate visibility | Tracked per stage | Analytics dashboard |
-| Pipeline value visibility | Total and weighted | Summary cards |
-| Query performance p95 | <500ms | Performance monitoring |
+| KPI                       | Target             | Validation                   |
+| ------------------------- | ------------------ | ---------------------------- |
+| Forecast accuracy         | >=85%              | Backtest CSV (actual: 96.2%) |
+| Win rate visibility       | Tracked per stage  | Analytics dashboard          |
+| Pipeline value visibility | Total and weighted | Summary cards                |
+| Query performance p95     | <500ms             | Performance monitoring       |
 
 ---
 
@@ -322,15 +331,14 @@ interface AccuracyBacktest {
 
 ## Implementation Tasks
 
-| Task | Sprint | Status |
-|------|--------|--------|
-| IFC-092 (Deal Forecasting) | 7 | COMPLETED |
-| IFC-091 (Opportunity Aggregate) | 7 | COMPLETED |
-| IFC-096 (Custom Dashboards) | 9 | COMPLETED |
-| **Forecast Page UI** | TBD | NOT STARTED |
-| **Forecast Charts** | TBD | NOT STARTED |
+| Task                            | Sprint | Status      |
+| ------------------------------- | ------ | ----------- |
+| IFC-092 (Deal Forecasting)      | 7      | COMPLETED   |
+| IFC-091 (Opportunity Aggregate) | 7      | COMPLETED   |
+| IFC-096 (Custom Dashboards)     | 9      | COMPLETED   |
+| **Forecast Page UI**            | TBD    | NOT STARTED |
+| **Forecast Charts**             | TBD    | NOT STARTED |
 
 ---
 
-*Flow documented: 2026-02-09*
-*Last updated: 2026-02-09*
+_Flow documented: 2026-02-09_ _Last updated: 2026-02-09_

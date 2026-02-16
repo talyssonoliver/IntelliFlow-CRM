@@ -24,9 +24,7 @@ describe('ScoreBadge', () => {
           score={85}
           mode="expanded"
           confidence={0.9}
-          factors={[
-            { name: 'Test Factor', impact: 20, reasoning: 'Test reasoning' },
-          ]}
+          factors={[{ name: 'Test Factor', impact: 20, reasoning: 'Test reasoning' }]}
         />
       );
 
@@ -95,9 +93,7 @@ describe('ScoreBadge', () => {
         <ScoreBadge
           score={85}
           mode="expanded"
-          factors={[
-            { name: 'Factor 1', impact: 10, reasoning: 'test' },
-          ]}
+          factors={[{ name: 'Factor 1', impact: 10, reasoning: 'test' }]}
         />
       );
       expect(screen.getByRole('button')).toBeInTheDocument();

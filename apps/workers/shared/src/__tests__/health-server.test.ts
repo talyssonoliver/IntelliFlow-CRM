@@ -8,11 +8,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import http from 'http';
 import pino from 'pino';
-import {
-  HealthServer,
-  createDefaultHealthProvider,
-  type HealthProvider,
-} from '../health-server';
+import { HealthServer, createDefaultHealthProvider, type HealthProvider } from '../health-server';
 import type { HealthCheckConfig } from '../worker-config';
 import type { HealthStatus, ComponentHealth, DetailedHealthResponse } from '../types';
 
@@ -111,9 +107,7 @@ describe('HealthServer', () => {
       await server.stop();
 
       // Server should no longer be listening
-      await expect(
-        fetchEndpoint(`http://localhost:${testPort}/health`)
-      ).rejects.toThrow();
+      await expect(fetchEndpoint(`http://localhost:${testPort}/health`)).rejects.toThrow();
     });
 
     it('should be idempotent', async () => {
@@ -316,7 +310,7 @@ describe('createDefaultHealthProvider', () => {
     const getDependencyHealth = async (): Promise<Record<string, ComponentHealth>> => ({});
 
     const getQueueStats = async () => ({
-      'events': { waiting: 5, active: 1, completed: 100, failed: 2, delayed: 0 },
+      events: { waiting: 5, active: 1, completed: 100, failed: 2, delayed: 0 },
     });
 
     const provider = createDefaultHealthProvider(

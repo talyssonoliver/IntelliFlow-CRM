@@ -1,16 +1,15 @@
 # Data Retention Policy - IFC-140
 
-**Version**: 1.0
-**Effective Date**: 2025-12-30
-**Last Reviewed**: 2025-12-29
-**Owner**: Data Protection Officer + Legal Team
-**Next Review**: 2026-12-29
+**Version**: 1.0 **Effective Date**: 2025-12-30 **Last Reviewed**: 2025-12-29
+**Owner**: Data Protection Officer + Legal Team **Next Review**: 2026-12-29
 
 ---
 
 ## Policy Statement
 
-IntelliFlow CRM retains personal data only for as long as necessary to fulfill the purposes for which it was collected, in compliance with GDPR, UK GDPR, and applicable data protection laws.
+IntelliFlow CRM retains personal data only for as long as necessary to fulfill
+the purposes for which it was collected, in compliance with GDPR, UK GDPR, and
+applicable data protection laws.
 
 ## Retention Schedules by Data Classification
 
@@ -24,7 +23,8 @@ IntelliFlow CRM retains personal data only for as long as necessary to fulfill t
 
 **Legal Basis**: UK tax and accounting requirements (6 years + 1 year buffer)
 
-**Automation**: Executed daily via `schedule_deletion_by_retention()` scheduled job
+**Automation**: Executed daily via `schedule_deletion_by_retention()` scheduled
+job
 
 ### INTERNAL Data (3 Years Retention)
 
@@ -46,7 +46,8 @@ IntelliFlow CRM retains personal data only for as long as necessary to fulfill t
 
 **Disposal Method**: Automated anonymization with manual review flag
 
-**Legal Basis**: UK Limitation Act 1980 (6 years for contracts, 12 years for deeds, using 10 years as standard)
+**Legal Basis**: UK Limitation Act 1980 (6 years for contracts, 12 years for
+deeds, using 10 years as standard)
 
 **Automation**: Flagged for manual review before anonymization
 
@@ -68,72 +69,76 @@ IntelliFlow CRM retains personal data only for as long as necessary to fulfill t
 
 ### Leads
 
-| Field Group | Classification | Retention | Rationale |
-|-------------|---------------|-----------|-----------|
-| Contact info (email, phone) | INTERNAL | 3 years | Marketing consent duration |
-| Lead score history | INTERNAL | 3 years | AI model training/audit |
-| Conversion data | CONFIDENTIAL | 10 years | Business analytics |
+| Field Group                 | Classification | Retention | Rationale                  |
+| --------------------------- | -------------- | --------- | -------------------------- |
+| Contact info (email, phone) | INTERNAL       | 3 years   | Marketing consent duration |
+| Lead score history          | INTERNAL       | 3 years   | AI model training/audit    |
+| Conversion data             | CONFIDENTIAL   | 10 years  | Business analytics         |
 
-**Post-Conversion**: Lead data transferred to Contact record, original lead anonymized after 3 years.
+**Post-Conversion**: Lead data transferred to Contact record, original lead
+anonymized after 3 years.
 
 ### Contacts
 
-| Field Group | Classification | Retention | Rationale |
-|-------------|---------------|-----------|-----------|
-| Personal details | CONFIDENTIAL | 10 years | Business relationship |
-| Communication history | CONFIDENTIAL | 10 years | Contractual evidence |
-| Preferences | INTERNAL | 3 years | Active relationship duration |
+| Field Group           | Classification | Retention | Rationale                    |
+| --------------------- | -------------- | --------- | ---------------------------- |
+| Personal details      | CONFIDENTIAL   | 10 years  | Business relationship        |
+| Communication history | CONFIDENTIAL   | 10 years  | Contractual evidence         |
+| Preferences           | INTERNAL       | 3 years   | Active relationship duration |
 
-**Post-Relationship**: After account closure, contact data downgraded to INTERNAL (3 year retention).
+**Post-Relationship**: After account closure, contact data downgraded to
+INTERNAL (3 year retention).
 
 ### Accounts
 
-| Field Group | Classification | Retention | Rationale |
-|-------------|---------------|-----------|-----------|
-| Company info | PUBLIC | 7 years | Public record |
-| Financial data | CONFIDENTIAL | 10 years | UK tax requirements |
-| Contract history | CONFIDENTIAL | 10 years | Limitation Act compliance |
+| Field Group      | Classification | Retention | Rationale                 |
+| ---------------- | -------------- | --------- | ------------------------- |
+| Company info     | PUBLIC         | 7 years   | Public record             |
+| Financial data   | CONFIDENTIAL   | 10 years  | UK tax requirements       |
+| Contract history | CONFIDENTIAL   | 10 years  | Limitation Act compliance |
 
 **Account Closure**: Retention clock starts from final invoice date.
 
 ### Opportunities
 
-| Field Group | Classification | Retention | Rationale |
-|-------------|---------------|-----------|-----------|
-| Deal details | CONFIDENTIAL | 10 years | Revenue recognition audit |
-| Forecast data | INTERNAL | 3 years | Business planning |
-| Pipeline history | INTERNAL | 3 years | Sales analytics |
+| Field Group      | Classification | Retention | Rationale                 |
+| ---------------- | -------------- | --------- | ------------------------- |
+| Deal details     | CONFIDENTIAL   | 10 years  | Revenue recognition audit |
+| Forecast data    | INTERNAL       | 3 years   | Business planning         |
+| Pipeline history | INTERNAL       | 3 years   | Sales analytics           |
 
 **Closed Deals**: Won deals retained for 10 years, lost deals for 3 years.
 
 ### Tasks & Activities
 
-| Field Group | Classification | Retention | Rationale |
-|-------------|---------------|-----------|-----------|
-| Task records | INTERNAL | 3 years | Operational history |
-| Meeting notes | INTERNAL | 3 years | Business context |
-| Follow-up actions | INTERNAL | 3 years | CRM operation |
+| Field Group       | Classification | Retention | Rationale           |
+| ----------------- | -------------- | --------- | ------------------- |
+| Task records      | INTERNAL       | 3 years   | Operational history |
+| Meeting notes     | INTERNAL       | 3 years   | Business context    |
+| Follow-up actions | INTERNAL       | 3 years   | CRM operation       |
 
-**Linked to Opportunities**: If task linked to won opportunity, inherit CONFIDENTIAL (10 year) retention.
+**Linked to Opportunities**: If task linked to won opportunity, inherit
+CONFIDENTIAL (10 year) retention.
 
 ### Audit Logs
 
-| Field Group | Classification | Retention | Rationale |
-|-------------|---------------|-----------|-----------|
-| Access logs | PRIVILEGED | 7 years | GDPR accountability |
-| Change logs | PRIVILEGED | 7 years | Regulatory audit |
-| Security events | PRIVILEGED | 7 years | Incident investigation |
+| Field Group     | Classification | Retention | Rationale              |
+| --------------- | -------------- | --------- | ---------------------- |
+| Access logs     | PRIVILEGED     | 7 years   | GDPR accountability    |
+| Change logs     | PRIVILEGED     | 7 years   | Regulatory audit       |
+| Security events | PRIVILEGED     | 7 years   | Incident investigation |
 
 **Immutability**: Audit logs are immutable and excluded from anonymization.
 
 ### Consents
 
-| Field Group | Classification | Retention | Rationale |
-|-------------|---------------|-----------|-----------|
-| Marketing consent | PRIVILEGED | 7 years post-withdrawal | GDPR proof of consent |
-| Processing consent | PRIVILEGED | 7 years post-termination | Legal defense |
+| Field Group        | Classification | Retention                | Rationale             |
+| ------------------ | -------------- | ------------------------ | --------------------- |
+| Marketing consent  | PRIVILEGED     | 7 years post-withdrawal  | GDPR proof of consent |
+| Processing consent | PRIVILEGED     | 7 years post-termination | Legal defense         |
 
-**Rationale**: Proof of lawful processing must be retained even after data deletion.
+**Rationale**: Proof of lawful processing must be retained even after data
+deletion.
 
 ---
 
@@ -147,6 +152,7 @@ SELECT schedule_deletion_by_retention();
 ```
 
 **Process**:
+
 1. Identify records past retention period
 2. Check for legal holds (skip if hold active)
 3. Execute `anonymize_record()` function
@@ -155,9 +161,11 @@ SELECT schedule_deletion_by_retention();
 
 ### Anonymization Method
 
-**Not Deletion**: We anonymize rather than hard delete to preserve referential integrity and audit trails.
+**Not Deletion**: We anonymize rather than hard delete to preserve referential
+integrity and audit trails.
 
 **Technique**: Personal Identifiable Information (PII) replaced with:
+
 - Emails: `anonymized-{uuid}@deleted.local`
 - Names: `Anonymized User`
 - Phone numbers: `NULL`
@@ -175,12 +183,14 @@ SELECT schedule_deletion_by_retention();
 **Authority**: Legal team, DPO, or authorized manager
 
 **Process**:
+
 1. Create entry in `legal_holds` table
 2. Specify case reference, hold reason, affected records
 3. Automated retention blocked for held records
 4. Notification sent to DPO
 
 **SQL Example**:
+
 ```sql
 INSERT INTO legal_holds (table_name, record_id, case_reference, hold_reason, placed_by)
 VALUES ('contacts', 'uuid-here', 'CASE-2025-001', 'Litigation discovery', 'legal-user-id');
@@ -191,6 +201,7 @@ VALUES ('contacts', 'uuid-here', 'CASE-2025-001', 'Litigation discovery', 'legal
 **Authority**: Legal team or DPO only
 
 **Process**:
+
 1. Update `legal_holds` with `released_at` timestamp
 2. Record becomes eligible for retention enforcement
 3. Normal retention schedule resumes
@@ -207,7 +218,8 @@ VALUES ('contacts', 'uuid-here', 'CASE-2025-001', 'Litigation discovery', 'legal
 
 **Exception**: Cannot erase data under legal hold or required by law.
 
-**Process**: Immediate anonymization upon verified DSAR (see `apps/api/src/workflow/dsar-workflow.ts`).
+**Process**: Immediate anonymization upon verified DSAR (see
+`apps/api/src/workflow/dsar-workflow.ts`).
 
 ### Right to Restriction (GDPR Article 18)
 
@@ -226,6 +238,7 @@ SELECT * FROM gdpr_compliance_report();
 ```
 
 **Tracked Metrics**:
+
 - Total records under management
 - Records anonymized (cumulative)
 - Overdue deletions (should be 0)
@@ -236,6 +249,7 @@ SELECT * FROM gdpr_compliance_report();
 ### Quarterly Review
 
 **DPO Actions**:
+
 1. Review retention schedules for appropriateness
 2. Audit anonymization process effectiveness
 3. Check legal holds for ongoing necessity
@@ -259,6 +273,7 @@ SELECT * FROM gdpr_compliance_report();
 ### Data Residency Metadata
 
 Tracked in `gdpr_metadata.data_residency` field:
+
 - `EU`: Data must remain in EU
 - `UK`: Data must remain in UK
 - `UK_EU`: Data can move within UK/EU
@@ -280,7 +295,8 @@ Tracked in `gdpr_metadata.data_residency` field:
 
 ### Dispute Resolution
 
-**Override**: Contract-related data retained until statute of limitations expires.
+**Override**: Contract-related data retained until statute of limitations
+expires.
 
 **Duration**: UK Limitation Act: 6 years for contracts, 12 years for deeds.
 
@@ -288,7 +304,8 @@ Tracked in `gdpr_metadata.data_residency` field:
 
 ### Insurance Claims
 
-**Override**: Data related to insurance claims retained for claim period + 6 years.
+**Override**: Data related to insurance claims retained for claim period + 6
+years.
 
 **Trigger**: Claim flag in CRM system.
 
@@ -353,6 +370,7 @@ Tracked in `gdpr_metadata.data_residency` field:
 ## Policy Updates & Version Control
 
 **Review Frequency**: Annually, or when:
+
 - Regulatory changes occur
 - Business model changes
 - New data types introduced
@@ -380,8 +398,8 @@ Tracked in `gdpr_metadata.data_residency` field:
 
 **Reviewed and Approved**:
 
-- Data Protection Officer: _________________ Date: _________
-- Legal Counsel: _________________ Date: _________
-- Chief Technology Officer: _________________ Date: _________
+- Data Protection Officer: ********\_******** Date: ****\_****
+- Legal Counsel: ********\_******** Date: ****\_****
+- Chief Technology Officer: ********\_******** Date: ****\_****
 
 **Next Scheduled Review**: 2026-12-29

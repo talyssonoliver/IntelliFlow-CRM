@@ -32,14 +32,13 @@ import { TICKET_STATUSES } from '@intelliflow/domain';
 import { SearchFilterBar } from '@/components/shared';
 import { AppAvatar } from '@/components/shared/app-avatar';
 import { SLAIndicator } from './SLAIndicator';
-import { ticketStatusOptions, ticketPriorityOptions, slaStatusChips } from '@/lib/shared/filter-utils';
+import {
+  ticketStatusOptions,
+  ticketPriorityOptions,
+  slaStatusChips,
+} from '@/lib/shared/filter-utils';
 import { getPriorityConfig } from '@/lib/tickets/ticket-utils';
-import type {
-  TicketListItem,
-  TicketStats,
-  TicketFilterOptions,
-  BulkActionType,
-} from './types';
+import type { TicketListItem, TicketStats, TicketFilterOptions, BulkActionType } from './types';
 
 // =============================================================================
 // Props Interface
@@ -93,8 +92,16 @@ const TICKET_STATUS_OPTIONS: StatusOption[] = TICKET_STATUSES.map((status) => {
   const configs: Record<string, { color: string; icon: string; description: string }> = {
     OPEN: { color: 'blue', icon: 'inbox', description: 'Ticket awaiting action' },
     IN_PROGRESS: { color: 'amber', icon: 'pending', description: 'Actively being worked on' },
-    WAITING_ON_CUSTOMER: { color: 'purple', icon: 'person', description: 'Awaiting customer response' },
-    WAITING_ON_THIRD_PARTY: { color: 'indigo', icon: 'business', description: 'Awaiting third party' },
+    WAITING_ON_CUSTOMER: {
+      color: 'purple',
+      icon: 'person',
+      description: 'Awaiting customer response',
+    },
+    WAITING_ON_THIRD_PARTY: {
+      color: 'indigo',
+      icon: 'business',
+      description: 'Awaiting third party',
+    },
     RESOLVED: { color: 'green', icon: 'check_circle', description: 'Issue has been resolved' },
     CLOSED: { color: 'slate', icon: 'cancel', description: 'Ticket is closed' },
   };
@@ -102,7 +109,11 @@ const TICKET_STATUS_OPTIONS: StatusOption[] = TICKET_STATUSES.map((status) => {
   const config = configs[status] || { color: 'slate', icon: 'help', description: '' };
   return {
     value: status,
-    label: status.toLowerCase().split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+    label: status
+      .toLowerCase()
+      .split('_')
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' '),
     color: config.color,
     icon: config.icon,
     description: config.description,
@@ -111,11 +122,41 @@ const TICKET_STATUS_OPTIONS: StatusOption[] = TICKET_STATUSES.map((status) => {
 
 // Team members for assignment dialog
 const ASSIGNEE_OPTIONS: StatusOption[] = [
-  { value: 'sarah-jenkins', label: 'Sarah Jenkins', color: 'blue', icon: 'person', description: 'Support Lead' },
-  { value: 'mike-ross', label: 'Mike Ross', color: 'green', icon: 'person', description: 'Senior Support Agent' },
-  { value: 'alex-morgan', label: 'Alex Morgan', color: 'purple', icon: 'person', description: 'Technical Support' },
-  { value: 'david-kim', label: 'David Kim', color: 'amber', icon: 'person', description: 'Support Agent' },
-  { value: 'unassigned', label: 'Unassigned', color: 'slate', icon: 'person_off', description: 'Remove assignment' },
+  {
+    value: 'sarah-jenkins',
+    label: 'Sarah Jenkins',
+    color: 'blue',
+    icon: 'person',
+    description: 'Support Lead',
+  },
+  {
+    value: 'mike-ross',
+    label: 'Mike Ross',
+    color: 'green',
+    icon: 'person',
+    description: 'Senior Support Agent',
+  },
+  {
+    value: 'alex-morgan',
+    label: 'Alex Morgan',
+    color: 'purple',
+    icon: 'person',
+    description: 'Technical Support',
+  },
+  {
+    value: 'david-kim',
+    label: 'David Kim',
+    color: 'amber',
+    icon: 'person',
+    description: 'Support Agent',
+  },
+  {
+    value: 'unassigned',
+    label: 'Unassigned',
+    color: 'slate',
+    icon: 'person_off',
+    description: 'Remove assignment',
+  },
 ];
 
 // =============================================================================
@@ -233,7 +274,9 @@ export function TicketList({
         cell: ({ row }) => {
           const ticket = row.original;
           if (!ticket.assignee) {
-            return <span className="text-sm text-slate-500 dark:text-slate-400 italic">Unassigned</span>;
+            return (
+              <span className="text-sm text-slate-500 dark:text-slate-400 italic">Unassigned</span>
+            );
           }
 
           const avatarValue = ticket.assigneeAvatar?.trim() ?? null;
@@ -355,7 +398,11 @@ export function TicketList({
 
       setIsSubmitting(true);
       try {
-        await onBulkAction('assign', tickets.map((t) => t.id), { assigneeId });
+        await onBulkAction(
+          'assign',
+          tickets.map((t) => t.id),
+          { assigneeId }
+        );
       } finally {
         setIsSubmitting(false);
         setShowAssignDialog(false);
@@ -371,7 +418,11 @@ export function TicketList({
 
       setIsSubmitting(true);
       try {
-        await onBulkAction('updateStatus', tickets.map((t) => t.id), { status: newStatus });
+        await onBulkAction(
+          'updateStatus',
+          tickets.map((t) => t.id),
+          { status: newStatus }
+        );
       } finally {
         setIsSubmitting(false);
         setShowStatusDialog(false);
@@ -386,7 +437,10 @@ export function TicketList({
 
     setIsSubmitting(true);
     try {
-      await onBulkAction('resolve', tickets.map((t) => t.id));
+      await onBulkAction(
+        'resolve',
+        tickets.map((t) => t.id)
+      );
     } finally {
       setIsSubmitting(false);
       setShowResolveDialog(false);
@@ -399,7 +453,10 @@ export function TicketList({
 
     setIsSubmitting(true);
     try {
-      await onBulkAction('escalate', tickets.map((t) => t.id));
+      await onBulkAction(
+        'escalate',
+        tickets.map((t) => t.id)
+      );
     } finally {
       setIsSubmitting(false);
       setShowEscalateDialog(false);
@@ -412,7 +469,10 @@ export function TicketList({
 
     setIsSubmitting(true);
     try {
-      await onBulkAction('close', tickets.map((t) => t.id));
+      await onBulkAction(
+        'close',
+        tickets.map((t) => t.id)
+      );
     } finally {
       setIsSubmitting(false);
       setShowCloseDialog(false);
@@ -529,13 +589,20 @@ export function TicketList({
           onClick={() => onStatusChange?.(statusFilter === 'OPEN' ? '' : 'OPEN')}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onStatusChange?.(statusFilter === 'OPEN' ? '' : 'OPEN'); } }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onStatusChange?.(statusFilter === 'OPEN' ? '' : 'OPEN');
+            }
+          }}
           aria-pressed={statusFilter === 'OPEN'}
           aria-label={`Filter by Open tickets: ${stats.open}`}
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-xl text-primary">confirmation_number</span>
+              <span className="material-symbols-outlined text-xl text-primary">
+                confirmation_number
+              </span>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Open</p>
@@ -553,7 +620,12 @@ export function TicketList({
           onClick={() => onStatusChange?.(statusFilter === 'IN_PROGRESS' ? '' : 'IN_PROGRESS')}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onStatusChange?.(statusFilter === 'IN_PROGRESS' ? '' : 'IN_PROGRESS'); } }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onStatusChange?.(statusFilter === 'IN_PROGRESS' ? '' : 'IN_PROGRESS');
+            }
+          }}
           aria-pressed={statusFilter === 'IN_PROGRESS'}
           aria-label={`Filter by In Progress tickets: ${stats.inProgress}`}
         >
@@ -577,7 +649,12 @@ export function TicketList({
           onClick={() => onSLAChange?.(slaFilter === 'BREACHED' ? 'all' : 'BREACHED')}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSLAChange?.(slaFilter === 'BREACHED' ? 'all' : 'BREACHED'); } }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onSLAChange?.(slaFilter === 'BREACHED' ? 'all' : 'BREACHED');
+            }
+          }}
           aria-pressed={slaFilter === 'BREACHED'}
           aria-label={`Filter by SLA Breached tickets: ${stats.breached}`}
         >
@@ -601,7 +678,12 @@ export function TicketList({
           onClick={() => onStatusChange?.(statusFilter === 'RESOLVED' ? '' : 'RESOLVED')}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onStatusChange?.(statusFilter === 'RESOLVED' ? '' : 'RESOLVED'); } }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onStatusChange?.(statusFilter === 'RESOLVED' ? '' : 'RESOLVED');
+            }
+          }}
           aria-pressed={statusFilter === 'RESOLVED'}
           aria-label={`Filter by Resolved tickets: ${stats.resolvedToday}`}
         >

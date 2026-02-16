@@ -260,7 +260,9 @@ describe('Opportunity Router Contract Tests', () => {
     });
 
     it('should return value as number', async () => {
-      const mockDomainOpportunity = createMockDomainOpportunity({ value: { amount: 50000, currency: 'USD' } });
+      const mockDomainOpportunity = createMockDomainOpportunity({
+        value: { amount: 50000, currency: 'USD' },
+      });
       ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
         isSuccess: true,
         isFailure: false,
@@ -306,7 +308,10 @@ describe('Opportunity Router Contract Tests', () => {
       ctx.services!.opportunity!.getOpportunityById = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'NOT_FOUND_ERROR', message: `Opportunity not found: ${TEST_UUIDS.nonExistent}` },
+        error: {
+          code: 'NOT_FOUND_ERROR',
+          message: `Opportunity not found: ${TEST_UUIDS.nonExistent}`,
+        },
       });
 
       try {
@@ -487,7 +492,10 @@ describe('Opportunity Router Contract Tests', () => {
       ctx.services!.opportunity!.deleteOpportunity = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'NOT_FOUND_ERROR', message: `Opportunity not found: ${TEST_UUIDS.nonExistent}` },
+        error: {
+          code: 'NOT_FOUND_ERROR',
+          message: `Opportunity not found: ${TEST_UUIDS.nonExistent}`,
+        },
       });
 
       try {

@@ -30,9 +30,7 @@ describe('Lead Router - Additional Coverage', () => {
       ctx.services = { ...ctx.services, lead: undefined } as any;
       const caller = leadRouter.createCaller(ctx);
 
-      await expect(
-        caller.create({ email: 'test@example.com', source: 'WEBSITE' })
-      ).rejects.toThrow(
+      await expect(caller.create({ email: 'test@example.com', source: 'WEBSITE' })).rejects.toThrow(
         expect.objectContaining({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'Lead service not available',
@@ -87,7 +85,13 @@ describe('Lead Router - Additional Coverage', () => {
 
       const mockLeads = [
         { ...mockLead, id: TEST_UUIDS.lead1, status: 'QUALIFIED', tenantId: 'test-tenant-id' },
-        { ...mockLead, id: TEST_UUIDS.lead2, status: 'CONTACTED', tenantId: 'test-tenant-id', email: 'lead2@example.com' },
+        {
+          ...mockLead,
+          id: TEST_UUIDS.lead2,
+          status: 'CONTACTED',
+          tenantId: 'test-tenant-id',
+          email: 'lead2@example.com',
+        },
       ];
 
       // Mock transaction
@@ -151,9 +155,16 @@ describe('Lead Router - Additional Coverage', () => {
       (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: Function) => {
         const tx = {
           lead: {
-            findMany: vi.fn().mockResolvedValue([
-              { ...mockLead, id: TEST_UUIDS.lead1, status: 'CONVERTED', tenantId: 'test-tenant-id' },
-            ]),
+            findMany: vi
+              .fn()
+              .mockResolvedValue([
+                {
+                  ...mockLead,
+                  id: TEST_UUIDS.lead1,
+                  status: 'CONVERTED',
+                  tenantId: 'test-tenant-id',
+                },
+              ]),
             updateMany: vi.fn().mockResolvedValue({ count: 0 }),
           },
           contact: {
@@ -182,9 +193,17 @@ describe('Lead Router - Additional Coverage', () => {
       (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: Function) => {
         const tx = {
           lead: {
-            findMany: vi.fn().mockResolvedValue([
-              { ...mockLead, id: TEST_UUIDS.lead1, status: 'QUALIFIED', company: 'ACME Corp', tenantId: 'test-tenant-id' },
-            ]),
+            findMany: vi
+              .fn()
+              .mockResolvedValue([
+                {
+                  ...mockLead,
+                  id: TEST_UUIDS.lead1,
+                  status: 'QUALIFIED',
+                  company: 'ACME Corp',
+                  tenantId: 'test-tenant-id',
+                },
+              ]),
             updateMany: vi.fn().mockResolvedValue({ count: 1 }),
           },
           contact: {
@@ -215,9 +234,17 @@ describe('Lead Router - Additional Coverage', () => {
       (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: Function) => {
         const tx = {
           lead: {
-            findMany: vi.fn().mockResolvedValue([
-              { ...mockLead, id: TEST_UUIDS.lead1, status: 'QUALIFIED', company: null, tenantId: 'test-tenant-id' },
-            ]),
+            findMany: vi
+              .fn()
+              .mockResolvedValue([
+                {
+                  ...mockLead,
+                  id: TEST_UUIDS.lead1,
+                  status: 'QUALIFIED',
+                  company: null,
+                  tenantId: 'test-tenant-id',
+                },
+              ]),
             updateMany: vi.fn().mockResolvedValue({ count: 1 }),
           },
           contact: {
@@ -247,9 +274,19 @@ describe('Lead Router - Additional Coverage', () => {
       (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: Function) => {
         const tx = {
           lead: {
-            findMany: vi.fn().mockResolvedValue([
-              { ...mockLead, id: TEST_UUIDS.lead1, status: 'NEW', firstName: null, lastName: null, ownerId: null, tenantId: 'test-tenant-id' },
-            ]),
+            findMany: vi
+              .fn()
+              .mockResolvedValue([
+                {
+                  ...mockLead,
+                  id: TEST_UUIDS.lead1,
+                  status: 'NEW',
+                  firstName: null,
+                  lastName: null,
+                  ownerId: null,
+                  tenantId: 'test-tenant-id',
+                },
+              ]),
             updateMany: vi.fn().mockResolvedValue({ count: 1 }),
           },
           contact: {
@@ -294,9 +331,7 @@ describe('Lead Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = leadRouter.createCaller(ctx);
 
-      prismaMock.lead.findMany.mockResolvedValue([
-        { id: TEST_UUIDS.lead1 },
-      ] as any);
+      prismaMock.lead.findMany.mockResolvedValue([{ id: TEST_UUIDS.lead1 }] as any);
 
       prismaMock.lead.updateMany.mockResolvedValue({ count: 1 } as any);
 
@@ -436,9 +471,7 @@ describe('Lead Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = leadRouter.createCaller(ctx);
 
-      prismaMock.lead.findMany.mockResolvedValue([
-        { id: TEST_UUIDS.lead1 },
-      ] as any);
+      prismaMock.lead.findMany.mockResolvedValue([{ id: TEST_UUIDS.lead1 }] as any);
 
       prismaMock.lead.updateMany.mockResolvedValue({ count: 1 } as any);
 
@@ -523,9 +556,7 @@ describe('Lead Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = leadRouter.createCaller(ctx);
 
-      prismaMock.lead.findMany.mockResolvedValue([
-        { id: TEST_UUIDS.lead1 },
-      ] as any);
+      prismaMock.lead.findMany.mockResolvedValue([{ id: TEST_UUIDS.lead1 }] as any);
 
       prismaMock.lead.deleteMany.mockResolvedValue({ count: 1 } as any);
 
@@ -668,9 +699,7 @@ describe('Lead Router - Additional Coverage', () => {
       const caller = leadRouter.createCaller(ctx);
 
       prismaMock.lead.count.mockResolvedValue(3);
-      (prismaMock.lead.groupBy as any).mockResolvedValue([
-        { status: 'NEW', _count: 3 },
-      ]);
+      (prismaMock.lead.groupBy as any).mockResolvedValue([{ status: 'NEW', _count: 3 }]);
       prismaMock.lead.findMany.mockResolvedValue([
         { score: 60 },
         { score: 80 },

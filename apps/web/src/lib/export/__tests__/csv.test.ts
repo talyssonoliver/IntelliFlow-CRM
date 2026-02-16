@@ -132,7 +132,10 @@ describe('arrayToCSV', () => {
   });
 
   it('supports custom delimiter', () => {
-    const data = [['A', 'B'], ['C', 'D']];
+    const data = [
+      ['A', 'B'],
+      ['C', 'D'],
+    ];
     const csv = arrayToCSV(data, { delimiter: '\t' });
     expect(csv).toBe('A\tB\nC\tD');
   });
@@ -307,9 +310,7 @@ describe('exportPipelineToCSV', () => {
   it('formats percentage with % suffix', () => {
     // We can't easily inspect the CSV content through mocks,
     // but we can verify the function runs without error
-    const stages: PipelineStage[] = [
-      { stage: 'Closing', value: 50000, deals: 10, percentage: 75 },
-    ];
+    const stages: PipelineStage[] = [{ stage: 'Closing', value: 50000, deals: 10, percentage: 75 }];
     exportPipelineToCSV(stages, 'my-pipeline');
     expect(mockLink.setAttribute).toHaveBeenCalledWith('download', 'my-pipeline.csv');
   });

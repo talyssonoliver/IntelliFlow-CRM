@@ -226,11 +226,15 @@ describe('Zod Schemas', () => {
     });
 
     it('should reject negative minor', () => {
-      expect(documentVersionSchema.safeParse({ major: 1, minor: -1, patch: 0 }).success).toBe(false);
+      expect(documentVersionSchema.safeParse({ major: 1, minor: -1, patch: 0 }).success).toBe(
+        false
+      );
     });
 
     it('should reject negative patch', () => {
-      expect(documentVersionSchema.safeParse({ major: 1, minor: 0, patch: -1 }).success).toBe(false);
+      expect(documentVersionSchema.safeParse({ major: 1, minor: 0, patch: -1 }).success).toBe(
+        false
+      );
     });
   });
 
@@ -341,9 +345,7 @@ describe('Zod Schemas', () => {
     });
 
     it('should reject individual tag over 50 chars', () => {
-      const result = caseDocumentMetadataSchema.safeParse(
-        makeMetadata({ tags: ['x'.repeat(51)] })
-      );
+      const result = caseDocumentMetadataSchema.safeParse(makeMetadata({ tags: ['x'.repeat(51)] }));
       expect(result.success).toBe(false);
     });
 

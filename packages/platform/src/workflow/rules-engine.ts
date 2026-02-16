@@ -297,10 +297,7 @@ export class RulesEngine {
 
       try {
         // Evaluate conditions
-        const conditionsMet = this.evaluateConditions(
-          rule.conditions as ConditionGroup,
-          context
-        );
+        const conditionsMet = this.evaluateConditions(rule.conditions as ConditionGroup, context);
 
         result.matched = conditionsMet;
 
@@ -335,10 +332,7 @@ export class RulesEngine {
   /**
    * Evaluate a condition group against context
    */
-  private evaluateConditions(
-    conditionGroup: ConditionGroup,
-    context: RuleContext
-  ): boolean {
+  private evaluateConditions(conditionGroup: ConditionGroup, context: RuleContext): boolean {
     const { operator, conditions } = conditionGroup;
 
     if (operator === 'NOT') {
@@ -346,7 +340,11 @@ export class RulesEngine {
         throw new Error('NOT operator requires exactly one condition');
       }
       const condition = conditions[0];
-      if ('operator' in condition && typeof condition.operator === 'string' && ['AND', 'OR', 'NOT'].includes(condition.operator)) {
+      if (
+        'operator' in condition &&
+        typeof condition.operator === 'string' &&
+        ['AND', 'OR', 'NOT'].includes(condition.operator)
+      ) {
         return !this.evaluateConditions(condition as ConditionGroup, context);
       }
       return !this.evaluateSingleCondition(condition as Condition, context);
@@ -354,7 +352,11 @@ export class RulesEngine {
 
     const evaluator = operator === 'AND' ? 'every' : 'some';
     return conditions[evaluator]((condition) => {
-      if ('operator' in condition && typeof condition.operator === 'string' && ['AND', 'OR', 'NOT'].includes(condition.operator)) {
+      if (
+        'operator' in condition &&
+        typeof condition.operator === 'string' &&
+        ['AND', 'OR', 'NOT'].includes(condition.operator)
+      ) {
         return this.evaluateConditions(condition as ConditionGroup, context);
       }
       return this.evaluateSingleCondition(condition as Condition, context);
@@ -364,10 +366,7 @@ export class RulesEngine {
   /**
    * Evaluate a single condition against context
    */
-  private evaluateSingleCondition(
-    condition: Condition,
-    context: RuleContext
-  ): boolean {
+  private evaluateSingleCondition(condition: Condition, context: RuleContext): boolean {
     const fieldValue = this.getFieldValue(condition.field, context);
     const compareValue = condition.value;
 
@@ -627,16 +626,12 @@ export class RulesEngine {
   private updateMetrics(results: RuleExecutionResult[], totalTimeMs: number): void {
     this.metrics.totalEvaluations++;
     this.metrics.totalRulesMatched += results.filter((r) => r.matched).length;
-    this.metrics.totalActionsExecuted += results.reduce(
-      (sum, r) => sum + r.actionsExecuted,
-      0
-    );
+    this.metrics.totalActionsExecuted += results.reduce((sum, r) => sum + r.actionsExecuted, 0);
     this.metrics.errors += results.reduce((sum, r) => sum + r.errors.length, 0);
 
     // Rolling average for evaluation time
     this.metrics.averageEvaluationTimeMs =
-      (this.metrics.averageEvaluationTimeMs * (this.metrics.totalEvaluations - 1) +
-        totalTimeMs) /
+      (this.metrics.averageEvaluationTimeMs * (this.metrics.totalEvaluations - 1) + totalTimeMs) /
       this.metrics.totalEvaluations;
   }
 
@@ -664,10 +659,7 @@ export class RulesEngine {
 /**
  * Action handler function type
  */
-export type ActionHandler = (
-  action: Action,
-  context: RuleContext
-) => Promise<unknown>;
+export type ActionHandler = (action: Action, context: RuleContext) => Promise<unknown>;
 
 // ============================================================================
 // Pre-built Rule Templates
@@ -738,9 +730,7 @@ export function createLeadScoringRule(config: {
     eventTypes,
     conditions: {
       operator: 'AND',
-      conditions: [
-        { field: 'payload.leadId', operator: 'is_not_null' },
-      ],
+      conditions: [{ field: 'payload.leadId', operator: 'is_not_null' }],
     },
     actions: [
       {
@@ -774,9 +764,7 @@ export function createTaskAssignmentRule(config: {
     eventTypes: [config.eventType],
     conditions: {
       operator: 'AND',
-      conditions: [
-        { field: `payload.${config.assigneeField}`, operator: 'is_not_null' },
-      ],
+      conditions: [{ field: `payload.${config.assigneeField}`, operator: 'is_not_null' }],
     },
     actions: [
       {

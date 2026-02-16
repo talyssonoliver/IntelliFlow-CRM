@@ -314,9 +314,7 @@ describe('Home Page Validators', () => {
           type: 'application/pdf',
           url: 'https://example.com/doc.pdf',
         },
-        badges: [
-          { id: 'badge-1', label: 'Important', variant: 'warning' },
-        ],
+        badges: [{ id: 'badge-1', label: 'Important', variant: 'warning' }],
         actionUrl: '/messages/123',
         isActionable: true,
       });

@@ -34,10 +34,7 @@ vi.mock('@intelliflow/db', () => ({
   },
 }));
 
-import {
-  OutboxEventBusAdapter,
-  type ContextAccessors,
-} from '../OutboxEventBusAdapter';
+import { OutboxEventBusAdapter, type ContextAccessors } from '../OutboxEventBusAdapter';
 
 // --- Test event classes ---
 
@@ -341,7 +338,8 @@ describe('OutboxEventBusAdapter (Implementation)', () => {
     it('should skip duplicates within the batch', async () => {
       const { withTransaction } = await import('@intelliflow/db');
       const mockCreate = vi.fn().mockResolvedValue({ id: 'created-id' });
-      const mockFindFirst = vi.fn()
+      const mockFindFirst = vi
+        .fn()
         .mockResolvedValueOnce(null) // first event is new
         .mockResolvedValueOnce({ id: 'existing-id' }); // second is duplicate
 

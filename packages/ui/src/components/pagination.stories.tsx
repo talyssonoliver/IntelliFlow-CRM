@@ -50,13 +50,7 @@ type Story = StoryObj<typeof Pagination>;
 export const Default: Story = {
   render: function Render() {
     const [currentPage, setCurrentPage] = useState(1);
-    return (
-      <Pagination
-        currentPage={currentPage}
-        totalPages={10}
-        onPageChange={setCurrentPage}
-      />
-    );
+    return <Pagination currentPage={currentPage} totalPages={10} onPageChange={setCurrentPage} />;
   },
 };
 
@@ -103,30 +97,15 @@ export const Sizes: Story = {
       <div className="space-y-6">
         <div>
           <p className="text-sm text-muted-foreground mb-2">Small</p>
-          <Pagination
-            currentPage={page1}
-            totalPages={5}
-            size="sm"
-            onPageChange={setPage1}
-          />
+          <Pagination currentPage={page1} totalPages={5} size="sm" onPageChange={setPage1} />
         </div>
         <div>
           <p className="text-sm text-muted-foreground mb-2">Medium (default)</p>
-          <Pagination
-            currentPage={page2}
-            totalPages={5}
-            size="md"
-            onPageChange={setPage2}
-          />
+          <Pagination currentPage={page2} totalPages={5} size="md" onPageChange={setPage2} />
         </div>
         <div>
           <p className="text-sm text-muted-foreground mb-2">Large</p>
-          <Pagination
-            currentPage={page3}
-            totalPages={5}
-            size="lg"
-            onPageChange={setPage3}
-          />
+          <Pagination currentPage={page3} totalPages={5} size="lg" onPageChange={setPage3} />
         </div>
       </div>
     );
@@ -137,13 +116,7 @@ export const Sizes: Story = {
 export const FewPages: Story = {
   render: function Render() {
     const [currentPage, setCurrentPage] = useState(2);
-    return (
-      <Pagination
-        currentPage={currentPage}
-        totalPages={5}
-        onPageChange={setCurrentPage}
-      />
-    );
+    return <Pagination currentPage={currentPage} totalPages={5} onPageChange={setCurrentPage} />;
   },
 };
 
@@ -164,13 +137,7 @@ export const ManyPages: Story = {
 
 // Single Page
 export const SinglePage: Story = {
-  render: () => (
-    <Pagination
-      currentPage={1}
-      totalPages={1}
-      onPageChange={() => {}}
-    />
-  ),
+  render: () => <Pagination currentPage={1} totalPages={1} onPageChange={() => {}} />,
 };
 
 // On First Page

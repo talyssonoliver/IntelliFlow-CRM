@@ -1,7 +1,7 @@
 # Complete Dependency Chains - All Domains
 
-**Generated**: 2026-02-04
-**Purpose**: Detailed hexagonal architecture dependency chains for all features
+**Generated**: 2026-02-04 **Purpose**: Detailed hexagonal architecture
+dependency chains for all features
 
 ---
 
@@ -37,30 +37,35 @@ Layers:
 
 ## Related Documentation Files
 
-This master document is supported by domain-specific dependency chain files for detailed reference:
+This master document is supported by domain-specific dependency chain files for
+detailed reference:
 
-| File | Domain | Chains Covered |
-|------|--------|----------------|
-| [`complete-dependency-chains.md`](./complete-dependency-chains.md) | **Master** | All 36 chains (this file) |
-| [`core-crm-dependency-chain.md`](./core-crm-dependency-chain.md) | Core CRM | Lead, Contact, Account, Opportunity, Task, Ticket |
-| [`legal-scheduling-dependency-chain.md`](./legal-scheduling-dependency-chain.md) | Legal | Case/Matter, Appointment, Document, Email |
-| [`ai-intelligence-dependency-chain.md`](./ai-intelligence-dependency-chain.md) | AI/Intelligence | Lead Scoring, AI Agents, RAG, NBA, Monitoring, Sentiment, Churn, Auto-Response, Versioning |
-| [`ai-output-review-dependency-chain.md`](./ai-output-review-dependency-chain.md) | AI Output Review | Review Queue, Review API, Feedback Loop |
-| [`security-platform-dependency-chain.md`](./security-platform-dependency-chain.md) | Security/Platform | RBAC/Audit, Analytics |
-| [`auth-public-pages-dependency-chain.md`](./auth-public-pages-dependency-chain.md) | Auth/Public | Home Page, Notifications |
+| File                                                                                           | Domain                  | Chains Covered                                                                               |
+| ---------------------------------------------------------------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------- |
+| [`complete-dependency-chains.md`](./complete-dependency-chains.md)                             | **Master**              | All 36 chains (this file)                                                                    |
+| [`core-crm-dependency-chain.md`](./core-crm-dependency-chain.md)                               | Core CRM                | Lead, Contact, Account, Opportunity, Task, Ticket                                            |
+| [`legal-scheduling-dependency-chain.md`](./legal-scheduling-dependency-chain.md)               | Legal                   | Case/Matter, Appointment, Document, Email                                                    |
+| [`ai-intelligence-dependency-chain.md`](./ai-intelligence-dependency-chain.md)                 | AI/Intelligence         | Lead Scoring, AI Agents, RAG, NBA, Monitoring, Sentiment, Churn, Auto-Response, Versioning   |
+| [`ai-output-review-dependency-chain.md`](./ai-output-review-dependency-chain.md)               | AI Output Review        | Review Queue, Review API, Feedback Loop                                                      |
+| [`security-platform-dependency-chain.md`](./security-platform-dependency-chain.md)             | Security/Platform       | RBAC/Audit, Analytics                                                                        |
+| [`auth-public-pages-dependency-chain.md`](./auth-public-pages-dependency-chain.md)             | Auth/Public             | Home Page, Notifications                                                                     |
 | [`platform-infrastructure-dependency-chain.md`](./platform-infrastructure-dependency-chain.md) | Platform Infrastructure | Workflow Engine, Multi-Tenancy, Security/Secrets, Release Governance, Caching, Domain Events |
-| [`integrations-dependency-chain.md`](./integrations-dependency-chain.md) | Integrations | External APIs/Webhooks, Observability Stack |
-| [`business-workflows-dependency-chain.md`](./business-workflows-dependency-chain.md) | Business Workflows | Lead Qualification, Smart Routing, DSAR, Legal Case Workflows |
+| [`integrations-dependency-chain.md`](./integrations-dependency-chain.md)                       | Integrations            | External APIs/Webhooks, Observability Stack                                                  |
+| [`business-workflows-dependency-chain.md`](./business-workflows-dependency-chain.md)           | Business Workflows      | Lead Qualification, Smart Routing, DSAR, Legal Case Workflows                                |
 
 ### Maintenance Instructions
 
 When implementing new features or modifying existing ones:
 
 1. **Check this document first** - Identify which dependency chain applies
-2. **Follow hexagonal layers** - Domain → Validators → Application → Database → Adapters → API → UI
-3. **Update status indicators** - Mark tasks as ✅ when complete, ⏳ when in progress
-4. **Add new chains** - If creating a new entity/feature, add its dependency chain here
-5. **Keep domain-specific files in sync** - Update the relevant domain file alongside this master
+2. **Follow hexagonal layers** - Domain → Validators → Application → Database →
+   Adapters → API → UI
+3. **Update status indicators** - Mark tasks as ✅ when complete, ⏳ when in
+   progress
+4. **Add new chains** - If creating a new entity/feature, add its dependency
+   chain here
+5. **Keep domain-specific files in sync** - Update the relevant domain file
+   alongside this master
 
 ---
 
@@ -256,11 +261,11 @@ Dependency Chain:
               ┌──────────────────┐              ┌──────────────────┐
               │    PG-135        │              │    PG-131        │
               │  Pipeline Page   │              │  Forecast Page   │
-              │      ⬜ NEW      │              │      ⬜          │
+              │      ✅ DONE     │              │      ⬜          │
               └──────────────────┘              └──────────────────┘
 
 Dependency Chain:
-  IFC-104 (Domain) ──┬──► opportunity.ts (Val) ──► IFC-108 (Services) ──► IFC-107 (Adapters) ──► IFC-186 (API) ✅ ──┬──► PG-135 (Pipeline) ⬜
+  IFC-104 (Domain) ──┬──► opportunity.ts (Val) ──► IFC-108 (Services) ──► IFC-107 (Adapters) ──► IFC-186 (API) ✅ ──┬──► PG-135 (Pipeline) ✅
                      │                                                                                              │
                      └──► IFC-017 (Database) ───────────────────────────────────────────────────────────────────────┴──► PG-131 (Forecast) ⬜
 ```
@@ -636,7 +641,7 @@ Dependency Chain:
 
 Dependency Chain:
   IFC-028 (Workflow) ✅ ──► IFC-029 (Auto-Response) ✅ ──┬──► IFC-149 (Preview UI) ✅
-                                                         ├──► IFC-030 (Routing) ⬜ ──► PG-132 (UI) ⬜
+                                                         ├──► IFC-030 (Routing) ⬜ ──► PG-132 (UI) ✅
                                                          └──► IFC-031 (Builder) ⬜
 ```
 
@@ -788,11 +793,11 @@ Dependency Chain:
                                  ┌──────────────────┐
                                  │    PG-144        │
                                  │  AI Search UI    │
-                                 │      ⬜ NEW      │
+                                 │      ✅ DONE     │
                                  └──────────────────┘
 
 Dependency Chain:
-  IFC-039 (RAG) ✅ ──┬──► IFC-155 (Index) ✅ ──► IFC-156 (RAG Tool) ✅ ──► PG-144 (UI) ⬜
+  IFC-039 (RAG) ✅ ──┬──► IFC-155 (Index) ✅ ──► IFC-156 (RAG Tool) ✅ ──► PG-144 (UI) ✅
                      │
                      └──► IFC-148 (Zep) ✅ ──────────────────────────────────────────────┘
 ```
@@ -1535,7 +1540,7 @@ Dependency Chain:
                                  └──────────────────┘
 
 Dependency Chain:
-  IFC-004 (Capture) ✅ ──► IFC-005 (Scoring) ✅ ──┬──► IFC-024 (Feedback) ⬜ ──► PG-132 (Routing UI) ⬜
+  IFC-004 (Capture) ✅ ──► IFC-005 (Scoring) ✅ ──┬──► IFC-024 (Feedback) ⬜ ──► PG-132 (Routing UI) ✅
                                                   │
                                                   └──► IFC-030 (Routing) ⬜ ──────────────────────────┘
 ```
@@ -1580,7 +1585,7 @@ Dependency Chain:
               └──────────────────┘              └──────────────────┘
 
 Dependency Chain:
-  IFC-030 (Routing) ⬜ ──┬──► routing-rules.ts (Val) ⬜ ──► routing.router ⬜ ──┬──► PG-132 (Config UI) ⬜
+  IFC-030 (Routing) ⬜ ──┬──► routing-rules.ts (Val) ⬜ ──► routing.router ⬜ ──┬──► PG-132 (Config UI) ✅
                         ├──► Load Balancer ⬜ ────────────────────────────────┴──► SLA Dashboard ⬜
                         └──► IFC-017 (Database) ⬜ ─────────────────────────────────────────────────┘
 ```
@@ -1681,54 +1686,55 @@ Dependency Chain:
 
 ## By Domain
 
-| # | Domain | Entity/Feature | Chain Status |
-|---|--------|----------------|--------------|
-| **CORE CRM (6)** |
-| 1 | Core CRM | Lead | ✅ Complete |
-| 2 | Core CRM | Contact | ⬜ Router + UI Missing |
-| 3 | Core CRM | Account | ⏳ UI Missing (Router ✅) |
-| 4 | Core CRM | Opportunity/Deal | ⬜ Router + UI Missing |
-| 5 | Core CRM | Task | ⬜ Router + UI Missing |
-| 6 | Core CRM | Ticket | ⏳ Domain ✅, Router + UI Missing |
-| **LEGAL DOMAIN (4)** |
-| 7 | Legal | Case/Matter | ⬜ UI Missing |
-| 8 | Legal | Appointment | ⬜ UI Missing |
-| 9 | Legal | Document | ⬜ UI Missing |
-| 10 | Legal | Email | ⬜ UI Missing |
-| **AI/INTELLIGENCE (10)** |
-| 11 | AI | Lead Scoring Pipeline | ✅ Complete |
-| 12 | AI | AI Output Review | ✅ All 7 Layers Complete |
-| 13 | AI | Auto-Response | ✅ Complete |
-| 14 | AI | Sentiment Analysis | ✅ Complete (PG-142, Sprint 7) |
-| 15 | AI | Churn Risk | ⏳ UI Planned (PG-143, Sprint 7) |
-| 16 | AI | RAG/Search | ⏳ UI Planned (PG-144, Sprint 7) |
-| 17 | AI | AI Chain Versioning | ⬜ UI Missing |
-| 18 | AI | AI Agents Framework | ⏳ UI Planned (PG-151, Sprint 8) |
-| 19 | AI | Next Best Action | ⬜ All New |
-| 20 | AI | AI Monitoring/Drift | ⏳ Router Complete (IFC-197 ✅), UI Planned (PG-146/151/152/153, Sprint 8) |
+| #                                | Domain      | Entity/Feature         | Chain Status                                                               |
+| -------------------------------- | ----------- | ---------------------- | -------------------------------------------------------------------------- |
+| **CORE CRM (6)**                 |
+| 1                                | Core CRM    | Lead                   | ✅ Complete                                                                |
+| 2                                | Core CRM    | Contact                | ⬜ Router + UI Missing                                                     |
+| 3                                | Core CRM    | Account                | ⏳ UI Missing (Router ✅)                                                  |
+| 4                                | Core CRM    | Opportunity/Deal       | ⬜ Router + UI Missing                                                     |
+| 5                                | Core CRM    | Task                   | ⬜ Router + UI Missing                                                     |
+| 6                                | Core CRM    | Ticket                 | ⏳ Domain ✅, Router + UI Missing                                          |
+| **LEGAL DOMAIN (4)**             |
+| 7                                | Legal       | Case/Matter            | ⬜ UI Missing                                                              |
+| 8                                | Legal       | Appointment            | ⬜ UI Missing                                                              |
+| 9                                | Legal       | Document               | ⬜ UI Missing                                                              |
+| 10                               | Legal       | Email                  | ⬜ UI Missing                                                              |
+| **AI/INTELLIGENCE (10)**         |
+| 11                               | AI          | Lead Scoring Pipeline  | ✅ Complete                                                                |
+| 12                               | AI          | AI Output Review       | ✅ All 7 Layers Complete                                                   |
+| 13                               | AI          | Auto-Response          | ✅ Complete                                                                |
+| 14                               | AI          | Sentiment Analysis     | ✅ Complete (PG-142, Sprint 7)                                             |
+| 15                               | AI          | Churn Risk             | ⏳ UI Planned (PG-143, Sprint 7)                                           |
+| 16                               | AI          | RAG/Search             | ✅ Complete (PG-144, Sprint 7)                                             |
+| 17                               | AI          | AI Chain Versioning    | ⬜ UI Missing                                                              |
+| 18                               | AI          | AI Agents Framework    | ⏳ UI Planned (PG-151, Sprint 8)                                           |
+| 19                               | AI          | Next Best Action       | ⬜ All New                                                                 |
+| 20                               | AI          | AI Monitoring/Drift    | ⏳ Router Complete (IFC-197 ✅), UI Planned (PG-146/151/152/153, Sprint 8) |
 | **PLATFORM INFRASTRUCTURE (10)** |
-| 21 | Platform | Notifications | ⬜ Router Blocking |
-| 22 | Platform | Analytics | ⬜ Router Missing |
-| 23 | Platform | Home Page | ⏳ In Progress |
-| 24 | Platform | RBAC/Audit | ⬜ UI Missing |
-| 25 | Platform | Domain Events | ⬜ All New |
-| 26 | Platform | Workflow Engine | ⬜ Mostly New |
-| 27 | Platform | Multi-Tenancy | ⬜ UI Missing |
-| 28 | Platform | Security/Secrets | ⬜ Mostly New |
-| 29 | Platform | Release Governance | ⬜ All New |
-| 30 | Platform | Caching/Performance | ⬜ Mostly New |
-| **INTEGRATIONS (2)** |
-| 31 | Integration | External APIs/Webhooks | ⬜ All New |
-| 32 | Integration | Observability Stack | ⬜ Mostly New |
-| **BUSINESS WORKFLOWS (4)** |
-| 33 | Workflow | Lead Qualification | ⬜ Partial |
-| 34 | Workflow | Smart Lead Routing | ⬜ All New |
-| 35 | Workflow | DSAR Privacy | ⬜ Mostly New |
-| 36 | Workflow | Legal Case Workflows | ⬜ Partial |
+| 21                               | Platform    | Notifications          | ⬜ Router Blocking                                                         |
+| 22                               | Platform    | Analytics              | ⬜ Router Missing                                                          |
+| 23                               | Platform    | Home Page              | ⏳ In Progress                                                             |
+| 24                               | Platform    | RBAC/Audit             | ⬜ UI Missing                                                              |
+| 25                               | Platform    | Domain Events          | ⬜ All New                                                                 |
+| 26                               | Platform    | Workflow Engine        | ⬜ Mostly New                                                              |
+| 27                               | Platform    | Multi-Tenancy          | ⬜ UI Missing                                                              |
+| 28                               | Platform    | Security/Secrets       | ⬜ Mostly New                                                              |
+| 29                               | Platform    | Release Governance     | ⬜ All New                                                                 |
+| 30                               | Platform    | Caching/Performance    | ⬜ Mostly New                                                              |
+| **INTEGRATIONS (2)**             |
+| 31                               | Integration | External APIs/Webhooks | ⬜ All New                                                                 |
+| 32                               | Integration | Observability Stack    | ⬜ Mostly New                                                              |
+| **BUSINESS WORKFLOWS (4)**       |
+| 33                               | Workflow    | Lead Qualification     | ⬜ Partial                                                                 |
+| 34                               | Workflow    | Smart Lead Routing     | ⬜ All New                                                                 |
+| 35                               | Workflow    | DSAR Privacy           | ⬜ Mostly New                                                              |
+| 36                               | Workflow    | Legal Case Workflows   | ⬜ Partial                                                                 |
 
 ---
 
 ## Complete Chains (Backend + Frontend) - 5 Total
+
 ```
 Lead:          IFC-101 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-013 ──► IFC-004 ✅
 Lead Scoring:  IFC-005 ──► IFC-020 ──► scoring.chain ──► IFC-164 ──► IFC-023 ✅
@@ -1738,15 +1744,17 @@ AI Review:     IFC-128 ✅ ──► IFC-176 ✅ ──► IFC-177 ✅ ──►
 ```
 
 ## Chains In Progress - 1 Total
+
 ```
 Home Page:     IFC-182 ✅ ──► PG-129 ⏳60%
 ```
 
 ## Chains Missing UI Only (Router Exists) - 11 Total
+
 ```
 Contact:       IFC-102 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-184 ⬜ ──► PG-133 ⬜
 Account:       IFC-103 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-185 ✅ ──► PG-134 ✅
-Opportunity:   IFC-104 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-186 ✅ ──► PG-135 ⬜
+Opportunity:   IFC-104 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-186 ✅ ──► PG-135 ✅
 Task:          IFC-105 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-187 ✅ ──► PG-136 ✅
 Case:          IFC-136 ──► validators ──► IFC-139 ──► cases.router ✅ ──► PG-138 ✅
 Appointment:   IFC-137 ──► validators ──► IFC-138 ──► appointments.router ✅ ──► PG-139 ✅
@@ -1754,7 +1762,7 @@ Document:      IFC-152 ──► IFC-153 ──► IFC-154 ──► documents.r
 Email:         IFC-144 ──► IFC-173 ──► inbound.router ✅ ──► PG-141 ⬜
 Sentiment:     IFC-039 ──► timeline.router ✅ ──► PG-142 ✅
 Churn:         IFC-095 ──► intelligence.router ✅ ──► PG-143 ⬜
-RAG:           IFC-039 ──► IFC-155 ✅ ──► IFC-156 ✅ ──► PG-144 ⬜
+RAG:           IFC-039 ──► IFC-155 ✅ ──► IFC-156 ✅ ──► PG-144 ✅
 AI Settings:   IFC-086 ✅ ──► chain-version.router ✅ ──► PG-128 ⬜
 Multi-Tenancy: IFC-098 ✅ ──► IFC-127 ✅ ──► Per-Tenant Keys ✅ ──► PG-106/107 ⬜
 RBAC/Audit:    IFC-098 ✅ ──► IFC-124 ✅ ──► Settings Routers ✅ ──► PG-108/109/110/112/120 ⬜
@@ -1762,12 +1770,14 @@ AI Agents:     IFC-021 ✅ ──► IFC-139 ✅ ──► IFC-149 ✅ ──►
 ```
 
 ## Chains Missing Router (BLOCKING) - 2 Total
+
 ```
 Notifications: IFC-157 ✅ ──► IFC-170 ✅ ──► IFC-171 ✅ ──► IFC-183 ⬜ ──► PG-130 ⬜ BLOCKED
 Analytics:     ANALYTICS-001 ✅ ──► IFC-037 ⬜ ──► IFC-038 ⬜ ──► IFC-190 ⬜ ──► Dashboard ⬜
 ```
 
 ## Chains Mostly/Completely New - 10 Total
+
 ```
 Ticket:           IFC-188 ✅ ──► validators ✅ ──► adapter ⬜ ──► IFC-189 ⬜ ──► PG-137 ⬜
 NBA:              IFC-095 ✅ ──► IFC-039 ⬜ ──► nba.ts ⬜ ──► intelligence.router ──► PG-145 ⬜
@@ -1782,9 +1792,10 @@ Observability:    ENV-008-AI ✅ ──► IFC-116 ⬜ ──► IFC-142 ⬜ ─
 ```
 
 ## Business Workflow Chains - 4 Total
+
 ```
-Lead Qualification:   IFC-004 ✅ ──► IFC-005 ✅ ──► IFC-024 ⬜ ──► IFC-030 ⬜ ──► PG-132 ⬜
-Smart Routing:        IFC-030 ⬜ ──► routing-rules.ts ⬜ ──► routing.router ⬜ ──► PG-132 ⬜
+Lead Qualification:   IFC-004 ✅ ──► IFC-005 ✅ ──► IFC-024 ⬜ ──► IFC-030 ⬜ ──► PG-132 ✅
+Smart Routing:        IFC-030 ⬜ ──► routing-rules.ts ⬜ ──► routing.router ⬜ ──► PG-132 ✅
 DSAR:                 IFC-140 ✅ ──► IFC-058 ⬜ ──► dsar.router ⬜ ──► PG-122/123 ⬜
 Legal Case Workflows: IFC-136 ✅ ──► IFC-147 ✅ ──► IFC-141 ⬜ ──► Status Transitions ⬜ ──► PG-138 ✅
 ```
@@ -1793,15 +1804,15 @@ Legal Case Workflows: IFC-136 ✅ ──► IFC-147 ✅ ──► IFC-141 ⬜ �
 
 ## Statistics
 
-| Status | Count | Percentage |
-|--------|-------|------------|
-| ✅ Complete | 4 | 11.1% |
-| ⏳ In Progress | 2 | 5.6% |
-| ⬜ Missing UI | 15 | 41.7% |
-| ⬜ Missing Router | 2 | 5.6% |
-| ⬜ Mostly/All New | 10 | 27.8% |
-| ⬜ Business Workflows | 3 | 8.3% |
-| **Total** | **36** | **100%** |
+| Status                | Count  | Percentage |
+| --------------------- | ------ | ---------- |
+| ✅ Complete           | 4      | 11.1%      |
+| ⏳ In Progress        | 2      | 5.6%       |
+| ⬜ Missing UI         | 15     | 41.7%      |
+| ⬜ Missing Router     | 2      | 5.6%       |
+| ⬜ Mostly/All New     | 10     | 27.8%      |
+| ⬜ Business Workflows | 3      | 8.3%       |
+| **Total**             | **36** | **100%**   |
 
 ## Critical Blockers
 

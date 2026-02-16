@@ -147,10 +147,7 @@ export async function getRelatedEntityOptions<T extends keyof PrismaClient>(
       },
     },
     select: {
-      ...config.selectFields.reduce(
-        (acc, field) => ({ ...acc, [field]: true }),
-        {}
-      ),
+      ...config.selectFields.reduce((acc, field) => ({ ...acc, [field]: true }), {}),
       _count: {
         select: {
           [config.relationModel]: {

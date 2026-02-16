@@ -36,7 +36,10 @@ export class DateRange extends ValueObject<DateRangeProps> {
    * @param end - End date (must be >= start)
    * @returns Result containing DateRange or InvalidDateRangeError
    */
-  static create(start: Date | string, end: Date | string): Result<DateRange, InvalidDateRangeError> {
+  static create(
+    start: Date | string,
+    end: Date | string
+  ): Result<DateRange, InvalidDateRangeError> {
     // Convert strings to dates if needed
     const startDate = typeof start === 'string' ? new Date(start) : start;
     const endDate = typeof end === 'string' ? new Date(end) : end;
@@ -190,9 +193,7 @@ export class DateRange extends ValueObject<DateRangeProps> {
    * Check if this range overlaps with another range
    */
   overlaps(other: DateRange): boolean {
-    return (
-      this.props.start <= other.props.end && this.props.end >= other.props.start
-    );
+    return this.props.start <= other.props.end && this.props.end >= other.props.start;
   }
 
   /**

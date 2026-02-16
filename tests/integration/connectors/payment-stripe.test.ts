@@ -238,10 +238,7 @@ describe('StripeAdapter', () => {
     });
 
     it('should reject invalid signature', () => {
-      const result = adapter.constructWebhookEvent(
-        '{}',
-        't=1234567890,v1=invalid_signature'
-      );
+      const result = adapter.constructWebhookEvent('{}', 't=1234567890,v1=invalid_signature');
 
       expect(result.isFailure).toBe(true);
     });

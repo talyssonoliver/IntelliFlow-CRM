@@ -70,7 +70,9 @@ async function validatePrimaryKeys(prisma: PrismaClient): Promise<ValidationResu
         check: 'UNIQUENESS',
         entity: table,
         passed: !hasDuplicates,
-        message: hasDuplicates ? `Found ${duplicates[0]?.count} duplicate primary keys` : 'All primary keys unique',
+        message: hasDuplicates
+          ? `Found ${duplicates[0]?.count} duplicate primary keys`
+          : 'All primary keys unique',
         duration: Date.now() - start,
       });
     } catch (error) {
@@ -117,7 +119,9 @@ async function validateForeignKeys(prisma: PrismaClient): Promise<ValidationResu
         check: `${table}.${fk} -> ${ref}.${refKey}`,
         entity: table,
         passed: !hasOrphans,
-        message: hasOrphans ? `Found ${orphans[0]?.count} orphaned records` : 'All references valid',
+        message: hasOrphans
+          ? `Found ${orphans[0]?.count} orphaned records`
+          : 'All references valid',
         duration: Date.now() - start,
       });
     } catch (error) {
@@ -200,7 +204,9 @@ async function validateDataFormats(prisma: PrismaClient): Promise<ValidationResu
       check: 'EMAIL_FORMAT',
       entity: 'users',
       passed: !hasInvalid,
-      message: hasInvalid ? `Found ${invalidEmails[0]?.count} invalid email formats` : 'All emails valid',
+      message: hasInvalid
+        ? `Found ${invalidEmails[0]?.count} invalid email formats`
+        : 'All emails valid',
       duration: Date.now() - start1,
     });
   } catch (error) {
@@ -230,7 +236,9 @@ async function validateDataFormats(prisma: PrismaClient): Promise<ValidationResu
       check: 'URL_FORMAT',
       entity: 'accounts',
       passed: !hasInvalid,
-      message: hasInvalid ? `Found ${invalidUrls[0]?.count} URLs missing http(s):// prefix` : 'All URLs valid',
+      message: hasInvalid
+        ? `Found ${invalidUrls[0]?.count} URLs missing http(s):// prefix`
+        : 'All URLs valid',
       duration: Date.now() - start2,
     });
   } catch (error) {
@@ -258,7 +266,9 @@ async function validateDataFormats(prisma: PrismaClient): Promise<ValidationResu
       check: 'DATE_RANGE',
       entity: 'leads',
       passed: !hasInvalid,
-      message: hasInvalid ? `Found ${outOfRangeDates[0]?.count} dates outside valid range` : 'All dates within range',
+      message: hasInvalid
+        ? `Found ${outOfRangeDates[0]?.count} dates outside valid range`
+        : 'All dates within range',
       duration: Date.now() - start3,
     });
   } catch (error) {
@@ -277,10 +287,7 @@ async function validateDataFormats(prisma: PrismaClient): Promise<ValidationResu
   try {
     const outOfRangeScores = await prisma.lead.count({
       where: {
-        OR: [
-          { score: { lt: 0 } },
-          { score: { gt: 100 } },
-        ],
+        OR: [{ score: { lt: 0 } }, { score: { gt: 100 } }],
       },
     });
 
@@ -289,7 +296,10 @@ async function validateDataFormats(prisma: PrismaClient): Promise<ValidationResu
       check: 'SCORE_RANGE',
       entity: 'leads',
       passed: outOfRangeScores === 0,
-      message: outOfRangeScores > 0 ? `Found ${outOfRangeScores} scores outside 0-100 range` : 'All scores within range',
+      message:
+        outOfRangeScores > 0
+          ? `Found ${outOfRangeScores} scores outside 0-100 range`
+          : 'All scores within range',
       duration: Date.now() - start4,
     });
   } catch (error) {
@@ -308,10 +318,7 @@ async function validateDataFormats(prisma: PrismaClient): Promise<ValidationResu
   try {
     const outOfRangeProb = await prisma.opportunity.count({
       where: {
-        OR: [
-          { probability: { lt: 0 } },
-          { probability: { gt: 100 } },
-        ],
+        OR: [{ probability: { lt: 0 } }, { probability: { gt: 100 } }],
       },
     });
 
@@ -320,7 +327,10 @@ async function validateDataFormats(prisma: PrismaClient): Promise<ValidationResu
       check: 'PROBABILITY_RANGE',
       entity: 'opportunities',
       passed: outOfRangeProb === 0,
-      message: outOfRangeProb > 0 ? `Found ${outOfRangeProb} probabilities outside 0-100 range` : 'All probabilities within range',
+      message:
+        outOfRangeProb > 0
+          ? `Found ${outOfRangeProb} probabilities outside 0-100 range`
+          : 'All probabilities within range',
       duration: Date.now() - start5,
     });
   } catch (error) {
@@ -347,7 +357,7 @@ async function validateIndexes(prisma: PrismaClient): Promise<ValidationResult[]
       SELECT indexname FROM pg_indexes WHERE schemaname = 'public'
     `;
 
-    const indexNames = indexes.map(i => i.indexname);
+    const indexNames = indexes.map((i) => i.indexname);
     const expectedIndexes = [
       'leads_email',
       'leads_tenant_id',
@@ -358,16 +368,17 @@ async function validateIndexes(prisma: PrismaClient): Promise<ValidationResult[]
     ];
 
     const missingIndexes = expectedIndexes.filter(
-      idx => !indexNames.some(name => name.includes(idx.replace('_', '')))
+      (idx) => !indexNames.some((name) => name.includes(idx.replace('_', '')))
     );
 
     results.push({
       category: 'INDEX',
       check: 'KEY_INDEXES_EXIST',
       passed: missingIndexes.length === 0,
-      message: missingIndexes.length > 0
-        ? `Missing indexes: ${missingIndexes.join(', ')}`
-        : `Found ${indexes.length} indexes`,
+      message:
+        missingIndexes.length > 0
+          ? `Missing indexes: ${missingIndexes.join(', ')}`
+          : `Found ${indexes.length} indexes`,
       duration: Date.now() - start,
     });
   } catch (error) {
@@ -442,14 +453,14 @@ function generateLog(summary: ValidationSummary): string {
   lines.push('');
 
   // Group results by category
-  const categories = Array.from(new Set(summary.results.map(r => r.category)));
+  const categories = Array.from(new Set(summary.results.map((r) => r.category)));
 
   for (const category of categories) {
     lines.push('-'.repeat(60));
     lines.push(`CATEGORY: ${category}`);
     lines.push('-'.repeat(60));
 
-    const categoryResults = summary.results.filter(r => r.category === category);
+    const categoryResults = summary.results.filter((r) => r.category === category);
     for (const result of categoryResults) {
       const status = result.passed ? 'PASS' : 'FAIL';
       const entity = result.entity ? ` [${result.entity}]` : '';
@@ -461,7 +472,7 @@ function generateLog(summary: ValidationSummary): string {
   }
 
   // Failed checks summary
-  const failedChecks = summary.results.filter(r => !r.passed);
+  const failedChecks = summary.results.filter((r) => !r.passed);
   if (failedChecks.length > 0) {
     lines.push('-'.repeat(60));
     lines.push('FAILED CHECKS');
@@ -474,9 +485,7 @@ function generateLog(summary: ValidationSummary): string {
   }
 
   // Hash for audit trail
-  const contentHash = createHash('sha256')
-    .update(JSON.stringify(summary))
-    .digest('hex');
+  const contentHash = createHash('sha256').update(JSON.stringify(summary)).digest('hex');
 
   lines.push('-'.repeat(60));
   lines.push('AUDIT TRAIL');
@@ -558,57 +567,219 @@ Options:
 
       // Run all validations
       console.log('Running Primary Key validations...');
-      summary.results.push(...await validatePrimaryKeys(prisma));
+      summary.results.push(...(await validatePrimaryKeys(prisma)));
 
       console.log('Running Foreign Key validations...');
-      summary.results.push(...await validateForeignKeys(prisma));
+      summary.results.push(...(await validateForeignKeys(prisma)));
 
       console.log('Running NOT NULL validations...');
-      summary.results.push(...await validateNotNullConstraints(prisma));
+      summary.results.push(...(await validateNotNullConstraints(prisma)));
 
       console.log('Running Data Format validations...');
-      summary.results.push(...await validateDataFormats(prisma));
+      summary.results.push(...(await validateDataFormats(prisma)));
 
       console.log('Running Index validations...');
-      summary.results.push(...await validateIndexes(prisma));
+      summary.results.push(...(await validateIndexes(prisma)));
 
       console.log('Running Performance validations...');
-      summary.results.push(...await validatePerformance(prisma));
+      summary.results.push(...(await validatePerformance(prisma)));
     } else {
       console.log('No database connection - generating simulated results');
 
       // Simulated validation results for dry run
       summary.results = [
-        { category: 'PRIMARY_KEY', check: 'UNIQUENESS', entity: 'users', passed: true, message: 'All primary keys unique', duration: 5 },
-        { category: 'PRIMARY_KEY', check: 'UNIQUENESS', entity: 'leads', passed: true, message: 'All primary keys unique', duration: 3 },
-        { category: 'PRIMARY_KEY', check: 'UNIQUENESS', entity: 'contacts', passed: true, message: 'All primary keys unique', duration: 4 },
-        { category: 'PRIMARY_KEY', check: 'UNIQUENESS', entity: 'accounts', passed: true, message: 'All primary keys unique', duration: 2 },
-        { category: 'PRIMARY_KEY', check: 'UNIQUENESS', entity: 'opportunities', passed: true, message: 'All primary keys unique', duration: 3 },
-        { category: 'FOREIGN_KEY', check: 'leads.owner_id -> users.id', entity: 'leads', passed: true, message: 'All references valid', duration: 8 },
-        { category: 'FOREIGN_KEY', check: 'leads.tenant_id -> tenants.id', entity: 'leads', passed: true, message: 'All references valid', duration: 6 },
-        { category: 'FOREIGN_KEY', check: 'contacts.account_id -> accounts.id', entity: 'contacts', passed: true, message: 'All references valid', duration: 7 },
-        { category: 'NOT_NULL', check: 'users.email', entity: 'users', passed: true, message: 'No NULL values', duration: 2 },
-        { category: 'NOT_NULL', check: 'leads.first_name', entity: 'leads', passed: true, message: 'No NULL values', duration: 3 },
-        { category: 'NOT_NULL', check: 'leads.email', entity: 'leads', passed: true, message: 'No NULL values', duration: 2 },
-        { category: 'DATA_FORMAT', check: 'EMAIL_FORMAT', entity: 'users', passed: true, message: 'All emails valid', duration: 15 },
-        { category: 'DATA_FORMAT', check: 'URL_FORMAT', entity: 'accounts', passed: true, message: 'All URLs valid', duration: 8 },
-        { category: 'DATA_FORMAT', check: 'DATE_RANGE', entity: 'leads', passed: true, message: 'All dates within range', duration: 10 },
-        { category: 'DATA_FORMAT', check: 'SCORE_RANGE', entity: 'leads', passed: true, message: 'All scores within range', duration: 5 },
-        { category: 'DATA_FORMAT', check: 'PROBABILITY_RANGE', entity: 'opportunities', passed: true, message: 'All probabilities within range', duration: 4 },
-        { category: 'INDEX', check: 'KEY_INDEXES_EXIST', passed: true, message: 'Found 45 indexes', duration: 12 },
-        { category: 'PERFORMANCE', check: 'SIMPLE_QUERY_TIME', entity: 'leads', passed: true, message: 'Query completed in 8ms (threshold: 20ms)', duration: 8 },
+        {
+          category: 'PRIMARY_KEY',
+          check: 'UNIQUENESS',
+          entity: 'users',
+          passed: true,
+          message: 'All primary keys unique',
+          duration: 5,
+        },
+        {
+          category: 'PRIMARY_KEY',
+          check: 'UNIQUENESS',
+          entity: 'leads',
+          passed: true,
+          message: 'All primary keys unique',
+          duration: 3,
+        },
+        {
+          category: 'PRIMARY_KEY',
+          check: 'UNIQUENESS',
+          entity: 'contacts',
+          passed: true,
+          message: 'All primary keys unique',
+          duration: 4,
+        },
+        {
+          category: 'PRIMARY_KEY',
+          check: 'UNIQUENESS',
+          entity: 'accounts',
+          passed: true,
+          message: 'All primary keys unique',
+          duration: 2,
+        },
+        {
+          category: 'PRIMARY_KEY',
+          check: 'UNIQUENESS',
+          entity: 'opportunities',
+          passed: true,
+          message: 'All primary keys unique',
+          duration: 3,
+        },
+        {
+          category: 'FOREIGN_KEY',
+          check: 'leads.owner_id -> users.id',
+          entity: 'leads',
+          passed: true,
+          message: 'All references valid',
+          duration: 8,
+        },
+        {
+          category: 'FOREIGN_KEY',
+          check: 'leads.tenant_id -> tenants.id',
+          entity: 'leads',
+          passed: true,
+          message: 'All references valid',
+          duration: 6,
+        },
+        {
+          category: 'FOREIGN_KEY',
+          check: 'contacts.account_id -> accounts.id',
+          entity: 'contacts',
+          passed: true,
+          message: 'All references valid',
+          duration: 7,
+        },
+        {
+          category: 'NOT_NULL',
+          check: 'users.email',
+          entity: 'users',
+          passed: true,
+          message: 'No NULL values',
+          duration: 2,
+        },
+        {
+          category: 'NOT_NULL',
+          check: 'leads.first_name',
+          entity: 'leads',
+          passed: true,
+          message: 'No NULL values',
+          duration: 3,
+        },
+        {
+          category: 'NOT_NULL',
+          check: 'leads.email',
+          entity: 'leads',
+          passed: true,
+          message: 'No NULL values',
+          duration: 2,
+        },
+        {
+          category: 'DATA_FORMAT',
+          check: 'EMAIL_FORMAT',
+          entity: 'users',
+          passed: true,
+          message: 'All emails valid',
+          duration: 15,
+        },
+        {
+          category: 'DATA_FORMAT',
+          check: 'URL_FORMAT',
+          entity: 'accounts',
+          passed: true,
+          message: 'All URLs valid',
+          duration: 8,
+        },
+        {
+          category: 'DATA_FORMAT',
+          check: 'DATE_RANGE',
+          entity: 'leads',
+          passed: true,
+          message: 'All dates within range',
+          duration: 10,
+        },
+        {
+          category: 'DATA_FORMAT',
+          check: 'SCORE_RANGE',
+          entity: 'leads',
+          passed: true,
+          message: 'All scores within range',
+          duration: 5,
+        },
+        {
+          category: 'DATA_FORMAT',
+          check: 'PROBABILITY_RANGE',
+          entity: 'opportunities',
+          passed: true,
+          message: 'All probabilities within range',
+          duration: 4,
+        },
+        {
+          category: 'INDEX',
+          check: 'KEY_INDEXES_EXIST',
+          passed: true,
+          message: 'Found 45 indexes',
+          duration: 12,
+        },
+        {
+          category: 'PERFORMANCE',
+          check: 'SIMPLE_QUERY_TIME',
+          entity: 'leads',
+          passed: true,
+          message: 'Query completed in 8ms (threshold: 20ms)',
+          duration: 8,
+        },
       ];
     }
   } catch (error) {
     console.log('Database connection failed - generating simulated results');
     // Use same simulated results as above
     summary.results = [
-      { category: 'PRIMARY_KEY', check: 'UNIQUENESS', entity: 'users', passed: true, message: 'All primary keys unique (simulated)', duration: 0 },
-      { category: 'FOREIGN_KEY', check: 'FK_INTEGRITY', passed: true, message: 'All references valid (simulated)', duration: 0 },
-      { category: 'NOT_NULL', check: 'REQUIRED_FIELDS', passed: true, message: 'No NULL values (simulated)', duration: 0 },
-      { category: 'DATA_FORMAT', check: 'FORMAT_VALIDATION', passed: true, message: 'All formats valid (simulated)', duration: 0 },
-      { category: 'INDEX', check: 'KEY_INDEXES_EXIST', passed: true, message: 'Indexes exist (simulated)', duration: 0 },
-      { category: 'PERFORMANCE', check: 'QUERY_TIME', passed: true, message: 'Performance acceptable (simulated)', duration: 0 },
+      {
+        category: 'PRIMARY_KEY',
+        check: 'UNIQUENESS',
+        entity: 'users',
+        passed: true,
+        message: 'All primary keys unique (simulated)',
+        duration: 0,
+      },
+      {
+        category: 'FOREIGN_KEY',
+        check: 'FK_INTEGRITY',
+        passed: true,
+        message: 'All references valid (simulated)',
+        duration: 0,
+      },
+      {
+        category: 'NOT_NULL',
+        check: 'REQUIRED_FIELDS',
+        passed: true,
+        message: 'No NULL values (simulated)',
+        duration: 0,
+      },
+      {
+        category: 'DATA_FORMAT',
+        check: 'FORMAT_VALIDATION',
+        passed: true,
+        message: 'All formats valid (simulated)',
+        duration: 0,
+      },
+      {
+        category: 'INDEX',
+        check: 'KEY_INDEXES_EXIST',
+        passed: true,
+        message: 'Indexes exist (simulated)',
+        duration: 0,
+      },
+      {
+        category: 'PERFORMANCE',
+        check: 'QUERY_TIME',
+        passed: true,
+        message: 'Performance acceptable (simulated)',
+        duration: 0,
+      },
     ];
   }
 
@@ -616,8 +787,8 @@ Options:
   summary.endTime = new Date().toISOString();
   summary.totalDuration = Date.now() - startTime;
   summary.totalChecks = summary.results.length;
-  summary.passed = summary.results.filter(r => r.passed).length;
-  summary.failed = summary.results.filter(r => !r.passed).length;
+  summary.passed = summary.results.filter((r) => r.passed).length;
+  summary.failed = summary.results.filter((r) => !r.passed).length;
   summary.overallStatus = summary.failed > 0 ? 'FAIL' : 'PASS';
 
   // Generate log file

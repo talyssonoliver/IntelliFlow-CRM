@@ -4,11 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Icon } from '@/lib/icons';
 import { Task, SprintNumber } from '@/lib/types';
-import {
-  SessionOutputModal,
-  useSessionPolling,
-  type SessionType,
-} from './SessionOutputModal';
+import { SessionOutputModal, useSessionPolling, type SessionType } from './SessionOutputModal';
 import {
   computePriorityScores,
   type ScoredTask,
@@ -87,20 +83,20 @@ interface WorkflowData {
  * - Re-calculate ready tasks
  * - Generate daily summary
  */
-export function DailyWorkflowSummary({
-  tasks,
-  sprint,
-  onTaskClick,
-}: DailyWorkflowSummaryProps) {
+export function DailyWorkflowSummary({ tasks, sprint, onTaskClick }: DailyWorkflowSummaryProps) {
   const router = useRouter();
   const [workflowData, setWorkflowData] = useState<WorkflowData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
-  const [actionResult, setActionResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [actionResult, setActionResult] = useState<{ success: boolean; message: string } | null>(
+    null
+  );
 
   // Optimistic UI state - tracks tasks being processed
-  const [optimisticUpdates, setOptimisticUpdates] = useState<Map<string, OptimisticState>>(new Map());
+  const [optimisticUpdates, setOptimisticUpdates] = useState<Map<string, OptimisticState>>(
+    new Map()
+  );
 
   // Session modal state
   const [showSessionModal, setShowSessionModal] = useState(false);
@@ -136,9 +132,15 @@ export function DailyWorkflowSummary({
       ]);
 
       const graphData = await graphRes.json();
-      const criticalPathData = criticalPathRes ? await criticalPathRes.json().catch(() => null) : null;
-      const scheduleCalcData = scheduleCalcRes ? await scheduleCalcRes.json().catch(() => null) : null;
-      const sprintProgressData = sprintProgressRes ? await sprintProgressRes.json().catch(() => null) : null;
+      const criticalPathData = criticalPathRes
+        ? await criticalPathRes.json().catch(() => null)
+        : null;
+      const scheduleCalcData = scheduleCalcRes
+        ? await scheduleCalcRes.json().catch(() => null)
+        : null;
+      const sprintProgressData = sprintProgressRes
+        ? await sprintProgressRes.json().catch(() => null)
+        : null;
 
       // Build dep graph node map and critical path set for priority scoring
       const depGraphNodes = new Map<string, DepGraphNode>();
@@ -153,9 +155,7 @@ export function DailyWorkflowSummary({
         }
       }
 
-      const criticalPathIds = new Set<string>(
-        criticalPathData?.criticalPath?.taskIds || []
-      );
+      const criticalPathIds = new Set<string>(criticalPathData?.criticalPath?.taskIds || []);
 
       const scheduleTaskMap = new Map<string, ScheduleTaskInfo>();
       if (criticalPathData?.tasks) {
@@ -180,15 +180,18 @@ export function DailyWorkflowSummary({
       const taskIds = tasks.map((t) => t.id).join(',');
       const batchRes = await fetch(`/api/tasks/plan-batch?taskIds=${taskIds}`);
       const batchData = await batchRes.json();
-      const batchTasks: Record<string, {
-        sprintNumber: number;
-        hasSpec: boolean;
-        hasPlan: boolean;
-        hasContext: boolean;
-        isPlanned: boolean;
-        specPath: string | null;
-        planPath: string | null;
-      }> = batchData.tasks || {};
+      const batchTasks: Record<
+        string,
+        {
+          sprintNumber: number;
+          hasSpec: boolean;
+          hasPlan: boolean;
+          hasContext: boolean;
+          isPlanned: boolean;
+          specPath: string | null;
+          planPath: string | null;
+        }
+      > = batchData.tasks || {};
 
       const workflowTasks: TaskWorkflowStatus[] = tasks.map((task) => {
         const planStatus = batchTasks[task.id] || {
@@ -203,9 +206,9 @@ export function DailyWorkflowSummary({
           hasPlan: planStatus.hasPlan || false,
         });
 
-        const dependenciesMet = graphData.ready_to_start_details?.some(
-          (r: { taskId: string }) => r.taskId === task.id
-        ) || false;
+        const dependenciesMet =
+          graphData.ready_to_start_details?.some((r: { taskId: string }) => r.taskId === task.id) ||
+          false;
 
         const hasContext = planStatus.hasContext || false;
         const hasSpec = planStatus.hasSpec || false;
@@ -242,9 +245,8 @@ export function DailyWorkflowSummary({
       });
 
       // Filter by sprint if needed
-      const filteredTasks = sprint === 'all'
-        ? workflowTasks
-        : workflowTasks.filter((t) => t.sprint === sprint);
+      const filteredTasks =
+        sprint === 'all' ? workflowTasks : workflowTasks.filter((t) => t.sprint === sprint);
 
       // Categorize tasks
       const readyTasks = filteredTasks.filter(
@@ -253,27 +255,25 @@ export function DailyWorkflowSummary({
       const inProgressTasks = filteredTasks.filter(
         (t) => t.status === 'In Progress' || t.status === 'Validating'
       );
-      const awaitingSpec = filteredTasks.filter(
-        (t) => t.currentSession === 'spec' && !t.hasSpec
-      );
+      const awaitingSpec = filteredTasks.filter((t) => t.currentSession === 'spec' && !t.hasSpec);
       const awaitingPlan = filteredTasks.filter(
         (t) => t.currentSession === 'plan' || (t.hasSpec && !t.hasPlan)
       );
       const awaitingExec = filteredTasks.filter(
         (t) => t.currentSession === 'exec' && t.hasSpec && t.hasPlan
       );
-      const completedToday = filteredTasks.filter(
-        (t) => t.status === 'Completed'
-      ).slice(0, 5);
+      const completedToday = filteredTasks.filter((t) => t.status === 'Completed').slice(0, 5);
       const blockedTasks = filteredTasks.filter(
         (t) => t.status === 'Blocked' || (!t.dependenciesMet && t.status !== 'Completed')
       );
 
       // Compute priority scores for ready tasks
-      const readyFullTasks = readyTasks.map((wt) => {
-        const fullTask = tasks.find((t) => t.id === wt.taskId);
-        return fullTask!;
-      }).filter(Boolean);
+      const readyFullTasks = readyTasks
+        .map((wt) => {
+          const fullTask = tasks.find((t) => t.id === wt.taskId);
+          return fullTask!;
+        })
+        .filter(Boolean);
 
       const currentSprintNum = typeof sprint === 'number' ? sprint : undefined;
       // parallel_execution_groups is Record<"sprint-N", Record<"group-N", string[]>>
@@ -302,7 +302,7 @@ export function DailyWorkflowSummary({
         scheduleTaskMap,
         phaseProgress,
         currentSprintNum,
-        parallelGroups,
+        parallelGroups
       );
 
       setWorkflowData({
@@ -327,22 +327,29 @@ export function DailyWorkflowSummary({
   }, [fetchWorkflowData]);
 
   // Helper to apply optimistic update
-  const applyOptimisticUpdate = useCallback((taskId: string, expectedStatus: string, expectedSession: OptimisticState['expectedSession']) => {
-    setOptimisticUpdates(prev => {
-      const next = new Map(prev);
-      next.set(taskId, {
-        taskId,
-        expectedStatus,
-        expectedSession,
-        startedAt: Date.now(),
+  const applyOptimisticUpdate = useCallback(
+    (
+      taskId: string,
+      expectedStatus: string,
+      expectedSession: OptimisticState['expectedSession']
+    ) => {
+      setOptimisticUpdates((prev) => {
+        const next = new Map(prev);
+        next.set(taskId, {
+          taskId,
+          expectedStatus,
+          expectedSession,
+          startedAt: Date.now(),
+        });
+        return next;
       });
-      return next;
-    });
-  }, []);
+    },
+    []
+  );
 
   // Helper to clear optimistic update
   const clearOptimisticUpdate = useCallback((taskId: string) => {
-    setOptimisticUpdates(prev => {
+    setOptimisticUpdates((prev) => {
       const next = new Map(prev);
       next.delete(taskId);
       return next;
@@ -351,68 +358,71 @@ export function DailyWorkflowSummary({
 
   // Unified session launcher — starts session then navigates to /swarm
   // so the user never loses context on page reload.
-  const handleRunSession = useCallback(async (
-    e: React.MouseEvent,
-    taskId: string,
-    sessionType: SessionType,
-  ) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleRunSession = useCallback(
+    async (e: React.MouseEvent, taskId: string, sessionType: SessionType) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    setActionInProgress(taskId);
-    setActionResult(null);
+      setActionInProgress(taskId);
+      setActionResult(null);
 
-    const statusLabels: Record<SessionType, string> = {
-      spec: 'Specifying',
-      plan: 'Planning',
-      exec: 'In Progress',
-      hydrate: 'Hydrating',
-    };
-    applyOptimisticUpdate(taskId, statusLabels[sessionType], sessionType as OptimisticState['expectedSession']);
+      const statusLabels: Record<SessionType, string> = {
+        spec: 'Specifying',
+        plan: 'Planning',
+        exec: 'In Progress',
+        hydrate: 'Hydrating',
+      };
+      applyOptimisticUpdate(
+        taskId,
+        statusLabels[sessionType],
+        sessionType as OptimisticState['expectedSession']
+      );
 
-    try {
-      const res = await fetch('/api/claude-session/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId, session: sessionType }),
-      });
+      try {
+        const res = await fetch('/api/claude-session/start', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ taskId, session: sessionType }),
+        });
 
-      const result = await res.json();
+        const result = await res.json();
 
-      if (res.ok && result.success) {
-        // Navigate to /swarm — it auto-detects the running session via lock files.
-        // Pass taskId so the swarm page can auto-select the task.
-        router.push(`/swarm?task=${encodeURIComponent(taskId)}`);
-      } else {
+        if (res.ok && result.success) {
+          // Navigate to /swarm — it auto-detects the running session via lock files.
+          // Pass taskId so the swarm page can auto-select the task.
+          router.push(`/swarm?task=${encodeURIComponent(taskId)}`);
+        } else {
+          clearOptimisticUpdate(taskId);
+          setActionResult({
+            success: false,
+            message: result.error || result.message || `Failed to start ${sessionType} session`,
+          });
+        }
+      } catch (err) {
         clearOptimisticUpdate(taskId);
         setActionResult({
           success: false,
-          message: result.error || result.message || `Failed to start ${sessionType} session`,
+          message: err instanceof Error ? err.message : 'Network error',
         });
+      } finally {
+        setActionInProgress(null);
       }
-    } catch (err) {
-      clearOptimisticUpdate(taskId);
-      setActionResult({
-        success: false,
-        message: err instanceof Error ? err.message : 'Network error',
-      });
-    } finally {
-      setActionInProgress(null);
-    }
-  }, [applyOptimisticUpdate, clearOptimisticUpdate, router]);
+    },
+    [applyOptimisticUpdate, clearOptimisticUpdate, router]
+  );
 
   // Convenience wrappers that match the existing callback signatures
   const handleRunSpec = useCallback(
     (e: React.MouseEvent, taskId: string) => handleRunSession(e, taskId, 'spec'),
-    [handleRunSession],
+    [handleRunSession]
   );
   const handleRunPlan = useCallback(
     (e: React.MouseEvent, taskId: string) => handleRunSession(e, taskId, 'plan'),
-    [handleRunSession],
+    [handleRunSession]
   );
   const handleRunExec = useCallback(
     (e: React.MouseEvent, taskId: string) => handleRunSession(e, taskId, 'exec'),
-    [handleRunSession],
+    [handleRunSession]
   );
 
   // Kill active session
@@ -502,7 +512,10 @@ export function DailyWorkflowSummary({
           currentSession: optimistic.expectedSession,
           // Update flags based on expected session
           hasSpec: optimistic.expectedSession !== 'spec' || task.hasSpec,
-          hasPlan: optimistic.expectedSession === 'exec' || optimistic.expectedSession === 'completed' || task.hasPlan,
+          hasPlan:
+            optimistic.expectedSession === 'exec' ||
+            optimistic.expectedSession === 'completed' ||
+            task.hasPlan,
           hasDelivery: optimistic.expectedSession === 'completed',
         };
       });
@@ -536,16 +549,12 @@ export function DailyWorkflowSummary({
     ];
 
     // Remove duplicates
-    const uniqueTasks = Array.from(
-      new Map(allTasks.map((t) => [t.taskId, t])).values()
-    );
+    const uniqueTasks = Array.from(new Map(allTasks.map((t) => [t.taskId, t])).values());
 
     const tasksWithOptimistic = applyOptimisticToTasks(uniqueTasks);
 
     return {
-      readyTasks: workflowData.readyTasks.filter(
-        (t) => !optimisticUpdates.has(t.taskId)
-      ),
+      readyTasks: workflowData.readyTasks.filter((t) => !optimisticUpdates.has(t.taskId)),
       inProgressTasks: [
         ...workflowData.inProgressTasks,
         ...tasksWithOptimistic.filter((t) => {
@@ -554,7 +563,9 @@ export function DailyWorkflowSummary({
         }),
       ],
       awaitingSpec: filterByOptimisticSession(tasksWithOptimistic, 'spec').filter(
-        (t) => !optimisticUpdates.has(t.taskId) || optimisticUpdates.get(t.taskId)?.expectedSession !== 'spec'
+        (t) =>
+          !optimisticUpdates.has(t.taskId) ||
+          optimisticUpdates.get(t.taskId)?.expectedSession !== 'spec'
       ),
       awaitingPlan: [
         ...workflowData.awaitingPlan.filter((t) => !optimisticUpdates.has(t.taskId)),
@@ -566,7 +577,9 @@ export function DailyWorkflowSummary({
       ],
       completedToday: [
         ...workflowData.completedToday,
-        ...tasksWithOptimistic.filter((t) => optimisticUpdates.get(t.taskId)?.expectedSession === 'completed'),
+        ...tasksWithOptimistic.filter(
+          (t) => optimisticUpdates.get(t.taskId)?.expectedSession === 'completed'
+        ),
       ],
       blockedTasks: workflowData.blockedTasks,
       scoredTasks,
@@ -630,7 +643,9 @@ export function DailyWorkflowSummary({
             <Icon name="today" className="w-6 h-6 text-white" />
             <div>
               <h3 className="text-lg font-semibold text-white">Daily Workflow Summary</h3>
-              <p className="text-indigo-200 text-sm">{dateStr} • Good {timeOfDay}!</p>
+              <p className="text-indigo-200 text-sm">
+                {dateStr} • Good {timeOfDay}!
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -746,18 +761,18 @@ export function DailyWorkflowSummary({
             </div>
             <div className="divide-y divide-gray-100 max-h-48 overflow-y-auto">
               {data.inProgressTasks.length === 0 ? (
-                <div className="p-3 text-center text-gray-500 text-sm">
-                  No tasks in progress.
-                </div>
+                <div className="p-3 text-center text-gray-500 text-sm">No tasks in progress.</div>
               ) : (
-                data.inProgressTasks.slice(0, 5).map((task) => (
-                  <TaskRow
-                    key={task.taskId}
-                    task={task}
-                    onTaskClick={onTaskClick}
-                    tasks={tasks}
-                  />
-                ))
+                data.inProgressTasks
+                  .slice(0, 5)
+                  .map((task) => (
+                    <TaskRow
+                      key={task.taskId}
+                      task={task}
+                      onTaskClick={onTaskClick}
+                      tasks={tasks}
+                    />
+                  ))
               )}
             </div>
           </div>
@@ -812,7 +827,9 @@ export function DailyWorkflowSummary({
                     <div key={task.taskId} className="p-2 flex items-center gap-2">
                       <Icon name="check_circle" className="w-4 h-4 text-green-500" />
                       <span className="font-mono text-xs text-green-600">{task.taskId}</span>
-                      <span className="text-xs text-gray-500 truncate">{task.description.slice(0, 30)}...</span>
+                      <span className="text-xs text-gray-500 truncate">
+                        {task.description.slice(0, 30)}...
+                      </span>
                     </div>
                   ))
                 )}
@@ -832,9 +849,7 @@ export function DailyWorkflowSummary({
               </div>
               <div className="divide-y divide-gray-100 max-h-32 overflow-y-auto">
                 {data.blockedTasks.length === 0 ? (
-                  <div className="p-3 text-center text-gray-500 text-sm">
-                    No blocked tasks!
-                  </div>
+                  <div className="p-3 text-center text-gray-500 text-sm">No blocked tasks!</div>
                 ) : (
                   data.blockedTasks.slice(0, 5).map((task) => (
                     <div key={task.taskId} className="p-2">
@@ -858,7 +873,8 @@ export function DailyWorkflowSummary({
         <div className="mt-6 pt-4 border-t border-gray-200">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-500">
-              Run <code className="bg-gray-100 px-1 py-0.5 rounded">/matop-execute TASK_ID</code> for full orchestration
+              Run <code className="bg-gray-100 px-1 py-0.5 rounded">/matop-execute TASK_ID</code>{' '}
+              for full orchestration
             </p>
             <a
               href="/swarm"
@@ -919,9 +935,17 @@ const BUCKET_COLORS = {
 } as const;
 
 const ACTION_LABELS: Record<string, { label: string; activeLabel: string; color: string }> = {
-  spec: { label: 'Run Spec', activeLabel: 'Specifying...', color: 'bg-indigo-600 hover:bg-indigo-700' },
+  spec: {
+    label: 'Run Spec',
+    activeLabel: 'Specifying...',
+    color: 'bg-indigo-600 hover:bg-indigo-700',
+  },
   plan: { label: 'Run Plan', activeLabel: 'Planning...', color: 'bg-cyan-600 hover:bg-cyan-700' },
-  exec: { label: 'Run Exec', activeLabel: 'Executing...', color: 'bg-green-600 hover:bg-green-700' },
+  exec: {
+    label: 'Run Exec',
+    activeLabel: 'Executing...',
+    color: 'bg-green-600 hover:bg-green-700',
+  },
 };
 
 // ---------------------------------------------------------------------------
@@ -1079,9 +1103,7 @@ function PriorityBucket({
                   </span>
                   <span className="text-[10px] text-gray-400 ml-2">{sprintTasks.length} tasks</span>
                 </div>
-                <div className="divide-y divide-gray-100">
-                  {sprintTasks.map(renderTaskRow)}
-                </div>
+                <div className="divide-y divide-gray-100">{sprintTasks.map(renderTaskRow)}</div>
               </div>
             ))
           ) : (
@@ -1113,7 +1135,9 @@ function PriorityBucket({
                         disabled={actionInProgress === scored.taskId}
                         className={`px-2 py-1 text-xs text-white rounded shrink-0 disabled:bg-gray-300 ${actionMeta.color}`}
                       >
-                        {actionInProgress === scored.taskId ? actionMeta.activeLabel : actionMeta.label}
+                        {actionInProgress === scored.taskId
+                          ? actionMeta.activeLabel
+                          : actionMeta.label}
                       </button>
                     </div>
                   </div>
@@ -1199,22 +1223,24 @@ function PipelineColumns({
           <div key={col.label} className={`border ${col.borderClass} rounded-lg overflow-hidden`}>
             <div className={`${col.bgClass} px-4 py-2 flex items-center justify-between`}>
               <span className={`text-sm font-medium ${col.colorClass}`}>{col.label}</span>
-              <span className={`text-xs ${col.bgClass} ${col.colorClass} px-2 py-0.5 rounded-full font-medium`}>
+              <span
+                className={`text-xs ${col.bgClass} ${col.colorClass} px-2 py-0.5 rounded-full font-medium`}
+              >
                 {col.tasks.length}
               </span>
             </div>
             <div className="divide-y divide-gray-100 max-h-40 overflow-y-auto">
               {col.tasks.length === 0 ? (
-                <div className="p-3 text-center text-gray-500 text-xs">
-                  None pending
-                </div>
+                <div className="p-3 text-center text-gray-500 text-xs">None pending</div>
               ) : (
                 col.tasks.slice(0, 5).map((scored) => (
                   <div key={scored.taskId} className="p-2 flex items-center justify-between">
                     <div className="flex items-center gap-2 min-w-0">
                       <span className={`font-mono text-xs ${col.colorClass}`}>{scored.taskId}</span>
                       {scored.bucket === 'now' && (
-                        <span className="text-[10px] bg-red-100 text-red-700 px-1 py-0.5 rounded">NOW</span>
+                        <span className="text-[10px] bg-red-100 text-red-700 px-1 py-0.5 rounded">
+                          NOW
+                        </span>
                       )}
                     </div>
                     <button
@@ -1223,7 +1249,9 @@ function PipelineColumns({
                       disabled={actionInProgress === scored.taskId}
                       className={`px-2 py-1 text-xs text-white rounded shrink-0 disabled:bg-gray-300 ${actionMeta.color}`}
                     >
-                      {actionInProgress === scored.taskId ? actionMeta.activeLabel : actionMeta.label}
+                      {actionInProgress === scored.taskId
+                        ? actionMeta.activeLabel
+                        : actionMeta.label}
                     </button>
                   </div>
                 ))

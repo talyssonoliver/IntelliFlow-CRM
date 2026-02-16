@@ -113,8 +113,7 @@ function extractInitials(name: string, maxLength: number = 2): string {
 // ============================================
 
 export interface EntityAvatarProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof entityAvatarVariants> {
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof entityAvatarVariants> {
   /** Full name for initials extraction and color generation */
   name: string;
   /** Image URL (optional) - will show initials if not provided or if image fails to load */

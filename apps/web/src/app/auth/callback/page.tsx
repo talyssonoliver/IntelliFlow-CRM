@@ -55,8 +55,14 @@ export default function OAuthCallbackPage() {
 
   useEffect(() => {
     console.log('[OAuth Callback] ===== useEffect triggered =====');
-    console.log('[OAuth Callback] Full URL:', typeof window !== 'undefined' ? window.location.href : 'SSR');
-    console.log('[OAuth Callback] Hash present:', typeof window !== 'undefined' && window.location.hash ? 'YES' : 'NO');
+    console.log(
+      '[OAuth Callback] Full URL:',
+      typeof window !== 'undefined' ? window.location.href : 'SSR'
+    );
+    console.log(
+      '[OAuth Callback] Hash present:',
+      typeof window !== 'undefined' && window.location.hash ? 'YES' : 'NO'
+    );
 
     const handleCallback = async () => {
       // Prevent double-execution in React Strict Mode
@@ -79,9 +85,10 @@ export default function OAuthCallbackPage() {
 
       try {
         // Parse the hash params
-        const hashStr = typeof window !== 'undefined' && window.location.hash
-          ? window.location.hash.substring(1)
-          : '';
+        const hashStr =
+          typeof window !== 'undefined' && window.location.hash
+            ? window.location.hash.substring(1)
+            : '';
 
         console.log('[OAuth Callback] Hash string length:', hashStr.length);
 
@@ -185,9 +192,12 @@ export default function OAuthCallbackPage() {
           syncTokenToCookie(accessToken);
 
           // Verify cookie was set
-          const cookieNames = document.cookie.split(';').map(c => c.trim().split('=')[0]);
+          const cookieNames = document.cookie.split(';').map((c) => c.trim().split('=')[0]);
           console.log('[OAuth Callback] Current cookies:', cookieNames.join(', '));
-          console.log('[OAuth Callback] accessToken cookie set:', cookieNames.includes('accessToken'));
+          console.log(
+            '[OAuth Callback] accessToken cookie set:',
+            cookieNames.includes('accessToken')
+          );
 
           // Store device fingerprint
           storeSessionFingerprint();
@@ -205,12 +215,11 @@ export default function OAuthCallbackPage() {
           setStatus('success');
 
           // Small delay to ensure all storage operations complete
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise((resolve) => setTimeout(resolve, 100));
 
           // Use window.location.href for a clean redirect
           window.location.href = '/dashboard';
           return;
-
         } catch (decodeError) {
           console.error('[OAuth Callback] Failed to decode token:', decodeError);
           setStatus('error');
@@ -218,13 +227,10 @@ export default function OAuthCallbackPage() {
           isProcessingRef.current = false;
           return;
         }
-
       } catch (err) {
         console.error('[OAuth Callback] Error:', err);
         setStatus('error');
-        setErrorMessage(
-          err instanceof Error ? err.message : 'An unexpected error occurred'
-        );
+        setErrorMessage(err instanceof Error ? err.message : 'An unexpected error occurred');
         isProcessingRef.current = false;
       }
     };
@@ -366,9 +372,7 @@ export default function OAuthCallbackPage() {
             {/* Success indicator */}
             {status === 'success' && (
               <div className="pt-2">
-                <p className="text-xs text-slate-400">
-                  Redirecting to dashboard in a moment...
-                </p>
+                <p className="text-xs text-slate-400">Redirecting to dashboard in a moment...</p>
               </div>
             )}
           </div>

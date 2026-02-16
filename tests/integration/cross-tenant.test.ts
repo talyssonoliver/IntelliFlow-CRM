@@ -415,7 +415,9 @@ describe('Cross-Tenant Resource Limits', () => {
     // User B is not at limit
     (mockPrisma.lead.count as any).mockResolvedValueOnce(50);
 
-    await expect(enforceResourceLimit(mockPrisma, testUsers.userB.id, 'leads')).resolves.not.toThrow();
+    await expect(
+      enforceResourceLimit(mockPrisma, testUsers.userB.id, 'leads')
+    ).resolves.not.toThrow();
   });
 
   it('Each tenant has independent resource usage', async () => {

@@ -12,7 +12,8 @@ import type { TestRunProgress, CoverageMetrics } from './types';
 // Vitest output patterns
 const PATTERNS = {
   // Test file with result count: "✓ packages/domain/src/__tests__/Lead.test.ts (12 tests) 45ms"
-  suiteComplete: /^\s*([✓✔✗✘×])\s+(.+\.(?:test|spec)\.[jt]sx?)\s+\((\d+)\s+tests?\)\s+(\d+)(?:ms|s)/,
+  suiteComplete:
+    /^\s*([✓✔✗✘×])\s+(.+\.(?:test|spec)\.[jt]sx?)\s+\((\d+)\s+tests?\)\s+(\d+)(?:ms|s)/,
   // Individual test pass: "  ✓ should create a lead (12ms)"
   testPass: /^\s*[✓✔]\s+(.+?)(?:\s+\((\d+)(?:ms|s)\))?$/,
   // Individual test fail: "  ✗ should validate email (23ms)"
@@ -20,10 +21,10 @@ const PATTERNS = {
   // Test skip: "  ↓ should handle edge case [skipped]"
   testSkip: /^\s*[↓⊘○]\s+(.+?)(?:\s+\[skipped\])?$/,
   // Coverage table header: "All files |   85.5 |   72.3 |   91.2 |   84.1"
-  coverageTable:
-    /^\s*All files\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)/,
+  coverageTable: /^\s*All files\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)/,
   // Test counts: "Tests  12 passed | 2 failed (14)"
-  testCounts: /Tests?\s+(\d+)\s+passed(?:\s*\|\s*(\d+)\s+failed)?(?:\s*\|\s*(\d+)\s+skipped)?\s*\((\d+)\)/,
+  testCounts:
+    /Tests?\s+(\d+)\s+passed(?:\s*\|\s*(\d+)\s+failed)?(?:\s*\|\s*(\d+)\s+skipped)?\s*\((\d+)\)/,
   // Duration: "Duration  1.23s"
   duration: /Duration\s+([\d.]+)s/,
   // File running: "RUN  packages/domain/src/__tests__/Lead.test.ts"

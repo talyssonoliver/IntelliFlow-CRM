@@ -67,3 +67,9 @@ export * from './ai-review';
 
 // Activity Feed Schemas (IFC-069)
 export * from './activity-feed';
+
+// Module & Plan Tier Schemas (IFC-208)
+export * from './module';
+
+// Routing Schemas (PG-132)
+export * from './routing';

@@ -1,26 +1,29 @@
 # Legacy System Migration - Cutover Plan
 
-**Task ID**: IFC-145
-**Cutover Date**: [To be scheduled - minimum 48 hours notice]
-**Estimated Duration**: 3.5 hours (target: <4 hours)
-**Downtime Window**: Scheduled maintenance window (off-peak hours)
-**Target Date Criteria**: Post-12:00 UTC on weekday (not Friday)
+**Task ID**: IFC-145 **Cutover Date**: [To be scheduled - minimum 48 hours
+notice] **Estimated Duration**: 3.5 hours (target: <4 hours) **Downtime
+Window**: Scheduled maintenance window (off-peak hours) **Target Date
+Criteria**: Post-12:00 UTC on weekday (not Friday)
 
 ---
 
 ## Document Control
 
-| Version | Date | Author | Approval | Status |
-|---------|------|--------|----------|--------|
-| 1.0 | 2025-12-29 | Migration Team | Pending | Ready for Review |
+| Version | Date       | Author         | Approval | Status           |
+| ------- | ---------- | -------------- | -------- | ---------------- |
+| 1.0     | 2025-12-29 | Migration Team | Pending  | Ready for Review |
 
 ---
 
 ## Executive Summary
 
-This document outlines the detailed cutover plan for migrating from the legacy CRM system to IntelliFlow CRM. The plan includes step-by-step execution procedures, rollback triggers and procedures, and contingency plans to minimize business risk and ensure data continuity.
+This document outlines the detailed cutover plan for migrating from the legacy
+CRM system to IntelliFlow CRM. The plan includes step-by-step execution
+procedures, rollback triggers and procedures, and contingency plans to minimize
+business risk and ensure data continuity.
 
 **Key Metrics**:
+
 - Target Migration Time: <4 hours
 - Data Completeness Target: ≥99%
 - Acceptable Data Loss: 0 critical records
@@ -32,6 +35,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 ## 1. Pre-Cutover Phase (48 Hours Before)
 
 ### 1.1 Stakeholder Communication
+
 - [ ] Send cutover notification to all stakeholders (48 hours notice)
 - [ ] Publish cutover schedule in company-wide channels
 - [ ] Prepare user communication message (why cutover, what to expect)
@@ -39,6 +43,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 - [ ] Distribute runbook to on-call team members
 
 ### 1.2 System Preparation
+
 - [ ] Verify production database backup completed and validated
 - [ ] Confirm target database is clean and ready
 - [ ] Test database connectivity from all migration nodes
@@ -47,6 +52,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 - [ ] Check SSL certificates for database connections (expiry >30 days)
 
 ### 1.3 Data Validation
+
 - [ ] Run final reconciliation against legacy system
 - [ ] Verify data completeness metrics (target: ≥99%)
 - [ ] Validate all enum mappings are correct
@@ -55,6 +61,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 - [ ] Test foreign key constraints in target environment
 
 ### 1.4 Monitoring Setup
+
 - [ ] Deploy application performance monitors (APM) agents
 - [ ] Configure dashboards for key metrics:
   - Database query latency (target: <20ms)
@@ -67,6 +74,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 - [ ] Prepare on-call escalation procedure
 
 ### 1.5 Rollback Preparation
+
 - [ ] Verify rollback snapshot exists and is valid
   - SHA256: [to be filled]
   - Size: 847 MB
@@ -77,6 +85,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 - [ ] Brief rollback team on procedures
 
 ### 1.6 User Preparation
+
 - [ ] Notify users of scheduled downtime
 - [ ] Provide login credentials for new system (if changed)
 - [ ] Publish FAQ addressing common questions
@@ -89,11 +98,11 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 
 ### Phase 2.0: Pre-Execution (T-30 minutes)
 
-**Execution Time**: T-30:00
-**Duration**: 30 minutes
-**Responsibility**: Migration Lead + Infrastructure Team
+**Execution Time**: T-30:00 **Duration**: 30 minutes **Responsibility**:
+Migration Lead + Infrastructure Team
 
 #### Steps
+
 1. **Final System Check**
    - [ ] Confirm all team members are online and ready
    - [ ] Verify war room is operational
@@ -119,21 +128,23 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 
 ### Phase 2.1: Legacy System Shutdown (T-0:00 to T+0:30)
 
-**Execution Time**: T-0:00
-**Duration**: 30 minutes
-**Responsibility**: Infrastructure Team + Application Team
+**Execution Time**: T-0:00 **Duration**: 30 minutes **Responsibility**:
+Infrastructure Team + Application Team
 
 #### Steps
+
 1. **Place Legacy System in Read-Only Mode**
+
    ```bash
    # Command executed on legacy-db-prod
    ALTER SYSTEM SET default_transaction_read_only = on;
    SELECT pg_reload_conf();
    ```
+
    - [ ] Confirm all UPDATE/DELETE operations are blocked
    - [ ] Verify SELECT operations still work
    - [ ] Wait 2 minutes for all connections to respect setting
-   - [ ] Log timestamp: ____________
+   - [ ] Log timestamp: ****\_\_\_\_****
 
 2. **Disconnect Legacy Application Servers**
    - [ ] Stop application servers (graceful shutdown, 60 second timeout)
@@ -145,31 +156,33 @@ This document outlines the detailed cutover plan for migrating from the legacy C
    - [ ] Compress application logs for archival
    - [ ] Upload to backup storage
    - [ ] Verify integrity (SHA256 hash match)
-   - [ ] Log location: ____________
+   - [ ] Log location: ****\_\_\_\_****
 
 4. **Create Pre-Migration Snapshot**
    ```bash
    # Snapshot created at T+0:20
    pg_dump --format=custom legacy-db-prod > /db-snapshots/legacy-2025-12-29-cutover.sql
    ```
+
    - [ ] Verify snapshot size: ≥800 MB
-   - [ ] Calculate SHA256: ____________
+   - [ ] Calculate SHA256: ****\_\_\_\_****
    - [ ] Confirm backup location is accessible
    - [ ] Test restore procedure (simulation only)
 
-**Completion Criteria**: Legacy system fully isolated, no read-only violations, snapshot verified.
-**Go/No-Go Decision**: ✅ GO / ❌ NO-GO
+**Completion Criteria**: Legacy system fully isolated, no read-only violations,
+snapshot verified. **Go/No-Go Decision**: ✅ GO / ❌ NO-GO
 
 ---
 
 ### Phase 2.2: Final Data Synchronization (T+0:30 to T+0:45)
 
-**Execution Time**: T+0:30
-**Duration**: 15 minutes
-**Responsibility**: Migration Team + Database Team
+**Execution Time**: T+0:30 **Duration**: 15 minutes **Responsibility**:
+Migration Team + Database Team
 
 #### Steps
+
 1. **Execute Delta Sync**
+
    ```bash
    # Extract changes since rehearsal test
    python3 scripts/migration/delta-sync.py \
@@ -177,9 +190,10 @@ This document outlines the detailed cutover plan for migrating from the legacy C
      --target crm-db-prod \
      --since 2025-12-29T15:00:00Z
    ```
-   - [ ] Records to sync: ____________
+
+   - [ ] Records to sync: ****\_\_\_\_****
    - [ ] Transformation pipeline complete
-   - [ ] Conflicts identified and resolved: ____________
+   - [ ] Conflicts identified and resolved: ****\_\_\_\_****
    - [ ] Data integrity checks passed
 
 2. **Validate Sync Completeness**
@@ -195,6 +209,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
      --target crm-db-prod \
      --output /artifacts/misc/reconciliation-final.csv
    ```
+
    - [ ] User count: 156 ✅
    - [ ] Lead count: 8,234 ✅
    - [ ] Contact count: 5,421 ✅
@@ -204,25 +219,27 @@ This document outlines the detailed cutover plan for migrating from the legacy C
    - [ ] Audit log count: 47,892 ✅
    - [ ] Data completeness: ≥99% ✅
 
-**Completion Criteria**: All data synced, reconciliation passed, checksums verified.
-**Go/No-Go Decision**: ✅ GO / ❌ NO-GO
+**Completion Criteria**: All data synced, reconciliation passed, checksums
+verified. **Go/No-Go Decision**: ✅ GO / ❌ NO-GO
 
 ---
 
 ### Phase 2.3: Target Database Validation (T+0:45 to T+1:00)
 
-**Execution Time**: T+0:45
-**Duration**: 15 minutes
-**Responsibility**: Database Team + QA Team
+**Execution Time**: T+0:45 **Duration**: 15 minutes **Responsibility**: Database
+Team + QA Team
 
 #### Steps
+
 1. **Integrity Check Suite**
+
    ```bash
    # Run comprehensive validation
    python3 scripts/migration/validate-target.py \
      --database crm-db-prod \
      --output /var/log/migration/validation-2025-12-29.log
    ```
+
    - [ ] Primary key uniqueness: ✅
    - [ ] Foreign key constraints: ✅
    - [ ] NOT NULL constraints: ✅
@@ -251,11 +268,11 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 
 ### Phase 2.4: DNS Switch & Routing Update (T+1:00 to T+1:10)
 
-**Execution Time**: T+1:00
-**Duration**: 10 minutes
-**Responsibility**: Infrastructure Team + Network Ops
+**Execution Time**: T+1:00 **Duration**: 10 minutes **Responsibility**:
+Infrastructure Team + Network Ops
 
 #### Steps
+
 1. **Pre-Switch Verification**
    - [ ] Confirm target database is fully operational
    - [ ] Verify application servers are ready (waiting for DB switch)
@@ -263,6 +280,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
    - [ ] Test switchover in parallel environment
 
 2. **DNS Update**
+
    ```bash
    # Update DNS A record
    # Old: crm-db.internal -> legacy-db-prod (203.0.113.50)
@@ -272,6 +290,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
      --hosted-zone-id Z1234567890ABC \
      --change-batch file:///tmp/dns-change.json
    ```
+
    - [ ] DNS change submitted
    - [ ] Propagation monitoring started
    - [ ] Change timestamp: T+1:00
@@ -287,18 +306,18 @@ This document outlines the detailed cutover plan for migrating from the legacy C
    - [ ] Confirm write operations succeeding: ✅
    - [ ] Monitor error logs for connection issues
 
-**Completion Criteria**: DNS switch complete, application fully connected to target database.
-**Go/No-Go Decision**: ✅ GO / ❌ NO-GO
+**Completion Criteria**: DNS switch complete, application fully connected to
+target database. **Go/No-Go Decision**: ✅ GO / ❌ NO-GO
 
 ---
 
 ### Phase 2.5: Application Startup (T+1:10 to T+1:40)
 
-**Execution Time**: T+1:10
-**Duration**: 30 minutes
-**Responsibility**: Application Team + DevOps
+**Execution Time**: T+1:10 **Duration**: 30 minutes **Responsibility**:
+Application Team + DevOps
 
 #### Steps
+
 1. **Prepare Application Servers**
    - [ ] Clear application caches
    - [ ] Reset connection pools
@@ -306,6 +325,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
    - [ ] Prepare rolling restart strategy
 
 2. **Rolling Application Restart**
+
    ```bash
    # Restart application servers one by one
    # Rolling 3-minute restart window ensures high availability
@@ -315,6 +335,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
      verify_health_check $server
    done
    ```
+
    - [ ] App server 1: Started ✅ | Health check: ✅
    - [ ] App server 2: Started ✅ | Health check: ✅
    - [ ] App server 3: Started ✅ | Health check: ✅
@@ -334,8 +355,8 @@ This document outlines the detailed cutover plan for migrating from the legacy C
    - [ ] Search functionality working: ✅
    - [ ] File upload/download functional: ✅
 
-**Completion Criteria**: All application servers healthy, smoke tests passed, users can access system.
-**Go/No-Go Decision**: ✅ GO / ❌ NO-GO
+**Completion Criteria**: All application servers healthy, smoke tests passed,
+users can access system. **Go/No-Go Decision**: ✅ GO / ❌ NO-GO
 
 ---
 
@@ -346,11 +367,12 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 **Duration**: 40 minutes
 
 #### Steps
+
 1. **Data Verification** (5 minutes)
-   - [ ] Query lead count: Expected 8,234, Actual: __________
-   - [ ] Query contact count: Expected 5,421, Actual: __________
-   - [ ] Query account count: Expected 1,847, Actual: __________
-   - [ ] Query user count: Expected 156, Actual: __________
+   - [ ] Query lead count: Expected 8,234, Actual: ****\_\_****
+   - [ ] Query contact count: Expected 5,421, Actual: ****\_\_****
+   - [ ] Query account count: Expected 1,847, Actual: ****\_\_****
+   - [ ] Query user count: Expected 156, Actual: ****\_\_****
    - [ ] Spot check 5 random records match legacy system
 
 2. **Application Functionality** (15 minutes)
@@ -378,6 +400,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 **Duration**: 60 minutes
 
 #### Steps
+
 1. **User Access Verification** (15 minutes)
    - [ ] 20+ users successfully logged in
    - [ ] Role-based permissions working correctly
@@ -406,6 +429,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 **Duration**: 20 minutes
 
 #### Steps
+
 1. **Key Metrics Review**
    - [ ] System uptime: 100% ✅
    - [ ] Error rate: <0.1% ✅
@@ -419,8 +443,8 @@ This document outlines the detailed cutover plan for migrating from the legacy C
    - [ ] Daily health check report for 7 days
    - [ ] Weekly data integrity audit for 30 days
 
-**Completion Criteria**: All validation checks passed, system fully operational, metrics within SLA.
-**Sign-Off**: ✅ CUTOVER SUCCESSFUL
+**Completion Criteria**: All validation checks passed, system fully operational,
+metrics within SLA. **Sign-Off**: ✅ CUTOVER SUCCESSFUL
 
 ---
 
@@ -461,9 +485,11 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 
 ### Rollback Decision Criteria
 
-**Rollback decision authority**: Database Administrator + Infrastructure Lead (must both agree)
+**Rollback decision authority**: Database Administrator + Infrastructure Lead
+(must both agree)
 
-**Rollback window**: Must be initiated within 2 hours of cutover start (T+2:00 latest)
+**Rollback window**: Must be initiated within 2 hours of cutover start (T+2:00
+latest)
 
 **Rollback trigger point**: Restore from pre-migration snapshot
 
@@ -471,23 +497,26 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 
 ### Phase 4.1: Rollback Initiation (T+0 to T+5)
 
-**Duration**: 5 minutes
-**Responsibility**: Database Administrator
+**Duration**: 5 minutes **Responsibility**: Database Administrator
 
 #### Steps
+
 1. **Decision Documentation**
+
    ```
    Rollback Initiated: [timestamp]
    Reason: ___________________________
    Decision Authority: __________________
    Approval from: DBA ✅ | Infra Lead ✅
    ```
+
    - [ ] Reason documented
    - [ ] Approval obtained
    - [ ] War room notified
    - [ ] Escalation initiated
 
 2. **Stop All Connections**
+
    ```bash
    # Disconnect all application servers
    # Kill all idle connections
@@ -495,6 +524,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
    FROM pg_stat_activity
    WHERE pid <> pg_backend_pid();
    ```
+
    - [ ] Application servers shut down
    - [ ] All database connections terminated
    - [ ] No new connections allowed
@@ -511,17 +541,20 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 
 ### Phase 4.2: Restore Legacy System (T+5 to T+10)
 
-**Duration**: 5 minutes
-**Responsibility**: Database Administrator + Database Team
+**Duration**: 5 minutes **Responsibility**: Database Administrator + Database
+Team
 
 #### Steps
+
 1. **Initiate Restore**
+
    ```bash
    # Restore from pre-migration snapshot
    pg_restore --format=custom --clean --create \
      --dbname=legacy-db-prod \
      /db-snapshots/legacy-2025-12-29-pre-migration.sql
    ```
+
    - [ ] Restore process started (monitor progress)
    - [ ] Expected duration: 4-6 minutes
    - [ ] Monitor disk space (need 2GB free minimum)
@@ -536,17 +569,20 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 
 ### Phase 4.3: Reconnect Legacy Application (T+10 to T+15)
 
-**Duration**: 5 minutes
-**Responsibility**: Infrastructure Team + Application Team
+**Duration**: 5 minutes **Responsibility**: Infrastructure Team + Application
+Team
 
 #### Steps
+
 1. **Revert DNS**
+
    ```bash
    # Point DNS back to legacy system
    aws route53 change-resource-record-sets \
      --hosted-zone-id Z1234567890ABC \
      --change-batch file:///tmp/dns-revert.json
    ```
+
    - [ ] DNS change submitted
    - [ ] DNS propagation initiated
 
@@ -565,10 +601,10 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 
 ### Phase 4.4: Rollback Validation (T+15 to T+20)
 
-**Duration**: 5 minutes
-**Responsibility**: QA Team + Business Stakeholders
+**Duration**: 5 minutes **Responsibility**: QA Team + Business Stakeholders
 
 #### Steps
+
 1. **System Functionality Check**
    - [ ] Users can log in: ✅
    - [ ] Dashboard loads: ✅
@@ -587,7 +623,8 @@ This document outlines the detailed cutover plan for migrating from the legacy C
    - [ ] Schedule post-rollback analysis meeting
    - [ ] Document rollback reason and findings
 
-**Rollback Completion Criteria**: Legacy system fully operational, users have access, data integrity confirmed.
+**Rollback Completion Criteria**: Legacy system fully operational, users have
+access, data integrity confirmed.
 
 ---
 
@@ -598,6 +635,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 **Trigger**: Row count variance >0.01% but <0.1%
 
 **Recovery**:
+
 1. Do NOT rollback immediately
 2. Identify missing records from logs
 3. Execute targeted re-sync for missing records
@@ -614,6 +652,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 **Trigger**: Constraint violation errors during application startup
 
 **Recovery**:
+
 1. Do NOT rollback immediately
 2. Run constraint validation query
 3. Identify orphaned references
@@ -631,6 +670,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 **Trigger**: DNS still resolves to legacy after 5 minutes of change
 
 **Recovery**:
+
 1. Check DNS change was applied correctly
 2. Clear local DNS cache on application servers
 3. Restart application servers to pick up new DNS
@@ -647,6 +687,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 **Trigger**: Application health check failing after restart
 
 **Recovery**:
+
 1. Check application logs for errors
 2. Verify database connectivity
 3. Check for dependency issues (cache, queue, etc.)
@@ -664,6 +705,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 **Trigger**: Query latency >500ms or response time >1000ms sustained
 
 **Recovery**:
+
 1. Check database load and connections
 2. Review slow query logs
 3. Rebuild indexes if needed
@@ -678,38 +720,46 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 ## 6. Communication Plan
 
 ### Pre-Cutover (48 hours before)
+
 - **To**: All Stakeholders
 - **Message**: Cutover notification with date, time, expected downtime
 - **Channel**: Email, Slack, all-hands meeting
 - **Action**: Ask for confirmation of availability
 
 ### 2 Hours Before Cutover
+
 - **To**: War room team
 - **Message**: Final preparation reminder, meeting links, call times
 - **Channel**: Email + Slack
 - **Action**: Team confirmation and readiness
 
 ### 30 Minutes Before Cutover
+
 - **To**: All Users
 - **Message**: System going offline in 30 minutes, downtime estimated 3-4 hours
 - **Channel**: In-app banner, email, Slack bot
 - **Action**: Users should save work and log out
 
 ### During Cutover (Every 30 minutes)
+
 - **To**: War room team + stakeholders
 - **Message**: Status update (phase complete, metrics, no issues)
 - **Channel**: Slack status thread + email updates
 - **Action**: Keep team informed, escalate issues immediately
 
 ### Post-Cutover Success
+
 - **To**: All Users
-- **Message**: Migration successful, system is operational, thank you for patience
+- **Message**: Migration successful, system is operational, thank you for
+  patience
 - **Channel**: In-app notification, email, Slack
 - **Action**: Provide support contact for issues
 
 ### Post-Cutover Failure (Rollback)
+
 - **To**: All Users
-- **Message**: Technical issue detected, system rolled back to legacy while we investigate
+- **Message**: Technical issue detected, system rolled back to legacy while we
+  investigate
 - **Channel**: In-app notification, email, Slack, status page
 - **Action**: Apologize, provide timeline for next attempt, link to support
 
@@ -719,39 +769,30 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 
 **Cutover is considered SUCCESSFUL when**:
 
-✅ All data migrated (≥99% completeness)
-✅ Zero critical data loss (no lost leads, contacts, accounts)
-✅ All users can log in
-✅ Dashboard and key features working
-✅ Query performance meets SLA (<20ms)
-✅ API response times meet SLA (<100ms p95)
-✅ Error rate <0.1%
-✅ No critical errors in logs
-✅ All integrity checks passed
-✅ Post-cutover validation completed in <4 hours
+✅ All data migrated (≥99% completeness) ✅ Zero critical data loss (no lost
+leads, contacts, accounts) ✅ All users can log in ✅ Dashboard and key features
+working ✅ Query performance meets SLA (<20ms) ✅ API response times meet SLA
+(<100ms p95) ✅ Error rate <0.1% ✅ No critical errors in logs ✅ All integrity
+checks passed ✅ Post-cutover validation completed in <4 hours
 
-**Cutover is considered FAILED if**:
-❌ Data loss >0.1%
-❌ Critical business data missing or corrupted
-❌ Application cannot start
-❌ Users cannot log in
-❌ Query performance >500ms sustained
-❌ Error rate >1%
-❌ Critical errors in logs
-❌ Data integrity check failed
-❌ Cannot be resolved within 2-hour window
+**Cutover is considered FAILED if**: ❌ Data loss >0.1% ❌ Critical business
+data missing or corrupted ❌ Application cannot start ❌ Users cannot log in ❌
+Query performance >500ms sustained ❌ Error rate >1% ❌ Critical errors in logs
+❌ Data integrity check failed ❌ Cannot be resolved within 2-hour window
 
 ---
 
 ## 8. Post-Cutover Activities
 
 ### Week 1 (Daily)
+
 - [ ] Daily health check report
 - [ ] Monitor error logs for anomalies
 - [ ] Check user feedback for data issues
 - [ ] Validate key business metrics (lead counts, opportunity values)
 
 ### Week 2-4 (Weekly)
+
 - [ ] Weekly reconciliation report
 - [ ] Performance trend analysis
 - [ ] User feedback summary
@@ -759,6 +800,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 - [ ] Backup verification
 
 ### Month 2-3 (Monthly)
+
 - [ ] Decommission legacy system (30 days after cutover)
 - [ ] Archive legacy backups
 - [ ] Close migration tickets
@@ -770,6 +812,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 ## Appendix: Rollback Checklist
 
 ### Pre-Rollback Checklist
+
 - [ ] Rollback decision documented
 - [ ] Approval from DBA and Infrastructure Lead obtained
 - [ ] War room notified
@@ -778,6 +821,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 - [ ] Team members briefed on procedures
 
 ### Rollback Execution Checklist
+
 - [ ] All connections terminated
 - [ ] Pre-migration snapshot location verified
 - [ ] Restore process initiated
@@ -788,6 +832,7 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 - [ ] User access confirmed
 
 ### Post-Rollback Checklist
+
 - [ ] Users notified of rollback
 - [ ] Legacy system functionality verified
 - [ ] Data integrity validated
@@ -802,18 +847,17 @@ This document outlines the detailed cutover plan for migrating from the legacy C
 
 This cutover plan requires approval from all key stakeholders before execution:
 
-| Role | Name | Signature | Date | Approval |
-|------|------|-----------|------|----------|
-| Database Administrator | | | | ☐ |
-| Infrastructure Lead | | | | ☐ |
-| Application Lead | | | | ☐ |
-| Migration Lead | | | | ☐ |
-| Project Manager | | | | ☐ |
+| Role                   | Name | Signature | Date | Approval |
+| ---------------------- | ---- | --------- | ---- | -------- |
+| Database Administrator |      |           |      | ☐        |
+| Infrastructure Lead    |      |           |      | ☐        |
+| Application Lead       |      |           |      | ☐        |
+| Migration Lead         |      |           |      | ☐        |
+| Project Manager        |      |           |      | ☐        |
 
 **Plan Status**: Pending Approval
 
 ---
 
-**Document Version**: 1.0
-**Last Updated**: 2025-12-29
-**Next Review**: To be scheduled after cutover approval
+**Document Version**: 1.0 **Last Updated**: 2025-12-29 **Next Review**: To be
+scheduled after cutover approval

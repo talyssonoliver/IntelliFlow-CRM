@@ -25,8 +25,14 @@ vi.mock('@intelliflow/validators', async (importOriginal) => {
   return {
     ...orig,
     NOTIFICATION_TYPES: orig.NOTIFICATION_TYPES || [
-      'task_assigned', 'lead_scored', 'deal_won', 'deal_lost',
-      'mention', 'comment', 'system_alert', 'reminder',
+      'task_assigned',
+      'lead_scored',
+      'deal_won',
+      'deal_lost',
+      'mention',
+      'comment',
+      'system_alert',
+      'reminder',
     ],
     NOTIFICATION_CHANNELS: orig.NOTIFICATION_CHANNELS || ['in_app', 'email', 'sms', 'push'],
   };
@@ -63,7 +69,7 @@ describe('notificationsRouter b11 - uncovered branches', () => {
               in: ['task_assigned', 'lead_scored'],
             }),
           }),
-        }),
+        })
       );
     });
   });
@@ -87,7 +93,7 @@ describe('notificationsRouter b11 - uncovered branches', () => {
               lte: toDate,
             }),
           }),
-        }),
+        })
       );
     });
   });
@@ -99,7 +105,12 @@ describe('notificationsRouter b11 - uncovered branches', () => {
         eventType: 'Notification.system_alert',
         aggregateType: 'System',
         aggregateId: 'sys-1',
-        payload: { notificationType: 'system_alert', title: `Title ${i}`, body: 'body', priority: 'medium' },
+        payload: {
+          notificationType: 'system_alert',
+          title: `Title ${i}`,
+          body: 'body',
+          priority: 'medium',
+        },
         metadata: { targetUserId: USER_ID },
         occurredAt: new Date(),
         status: 'PENDING',
@@ -144,29 +155,31 @@ describe('notificationsRouter b11 - uncovered branches', () => {
   describe('mapToNotification - PROCESSED status', () => {
     it('should map PROCESSED event as read', async () => {
       const processedAt = new Date('2025-01-15');
-      prismaMock.domainEvent.findMany.mockResolvedValue([{
-        id: 'evt-read',
-        eventType: 'Notification.task_assigned',
-        aggregateType: 'Task',
-        aggregateId: 'task-1',
-        payload: {
-          notificationType: 'task_assigned',
-          title: 'New Task',
-          body: 'You have a task',
-          priority: 'high',
-          entityName: 'My Task',
-          actionUrl: '/tasks/1',
-          actionLabel: 'View',
-          expiresAt: '2025-12-31T00:00:00Z',
-          actor: 'Manager',
-          groupId: 'grp-1',
-          groupCount: 3,
+      prismaMock.domainEvent.findMany.mockResolvedValue([
+        {
+          id: 'evt-read',
+          eventType: 'Notification.task_assigned',
+          aggregateType: 'Task',
+          aggregateId: 'task-1',
+          payload: {
+            notificationType: 'task_assigned',
+            title: 'New Task',
+            body: 'You have a task',
+            priority: 'high',
+            entityName: 'My Task',
+            actionUrl: '/tasks/1',
+            actionLabel: 'View',
+            expiresAt: '2025-12-31T00:00:00Z',
+            actor: 'Manager',
+            groupId: 'grp-1',
+            groupCount: 3,
+          },
+          metadata: { targetUserId: USER_ID },
+          occurredAt: new Date('2025-01-10'),
+          status: 'PROCESSED',
+          processedAt,
         },
-        metadata: { targetUserId: USER_ID },
-        occurredAt: new Date('2025-01-10'),
-        status: 'PROCESSED',
-        processedAt,
-      }] as any);
+      ] as any);
       prismaMock.domainEvent.count.mockResolvedValue(1);
 
       const caller = notificationsRouter.createCaller(ctx);
@@ -259,7 +272,7 @@ describe('notificationsRouter b11 - uncovered branches', () => {
               expiresAt: expiresAt.toISOString(),
             }),
           }),
-        }),
+        })
       );
     });
   });
@@ -277,7 +290,7 @@ describe('notificationsRouter b11 - uncovered branches', () => {
           where: expect.objectContaining({
             status: 'PENDING',
           }),
-        }),
+        })
       );
     });
   });
@@ -297,7 +310,7 @@ describe('notificationsRouter b11 - uncovered branches', () => {
           where: expect.objectContaining({
             status: 'PENDING',
           }),
-        }),
+        })
       );
     });
   });

@@ -28,9 +28,7 @@ export const Default: Story = {
     <Alert>
       <MaterialIcon name="info" className="text-base" />
       <AlertTitle>Heads up!</AlertTitle>
-      <AlertDescription>
-        You can add components to your app using the cli.
-      </AlertDescription>
+      <AlertDescription>You can add components to your app using the cli.</AlertDescription>
     </Alert>
   ),
 };
@@ -40,9 +38,7 @@ export const Destructive: Story = {
     <Alert variant="destructive">
       <MaterialIcon name="error" className="text-base" />
       <AlertTitle>Error</AlertTitle>
-      <AlertDescription>
-        Your session has expired. Please log in again.
-      </AlertDescription>
+      <AlertDescription>Your session has expired. Please log in again.</AlertDescription>
     </Alert>
   ),
 };
@@ -52,9 +48,7 @@ export const Success: Story = {
     <Alert variant="success">
       <MaterialIcon name="check_circle" className="text-base" />
       <AlertTitle>Success!</AlertTitle>
-      <AlertDescription>
-        Your changes have been saved successfully.
-      </AlertDescription>
+      <AlertDescription>Your changes have been saved successfully.</AlertDescription>
     </Alert>
   ),
 };
@@ -64,9 +58,7 @@ export const Warning: Story = {
     <Alert variant="warning">
       <MaterialIcon name="warning" className="text-base" />
       <AlertTitle>Warning</AlertTitle>
-      <AlertDescription>
-        Your subscription is about to expire.
-      </AlertDescription>
+      <AlertDescription>Your subscription is about to expire.</AlertDescription>
     </Alert>
   ),
 };
@@ -82,9 +74,7 @@ export const TitleOnly: Story = {
 export const DescriptionOnly: Story = {
   render: () => (
     <Alert>
-      <AlertDescription>
-        This is a simple alert with only a description.
-      </AlertDescription>
+      <AlertDescription>This is a simple alert with only a description.</AlertDescription>
     </Alert>
   ),
 };

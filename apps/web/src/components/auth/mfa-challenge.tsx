@@ -206,33 +206,40 @@ export function MfaChallenge({
     [code]
   );
 
-  const handlePaste = useCallback((e: ClipboardEvent<HTMLInputElement>) => {
-    e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').replace(/\D/g, '');
+  const handlePaste = useCallback(
+    (e: ClipboardEvent<HTMLInputElement>) => {
+      e.preventDefault();
+      const pastedData = e.clipboardData.getData('text').replace(/\D/g, '');
 
-    if (pastedData.length === 0) return;
+      if (pastedData.length === 0) return;
 
-    const newCode = [...code];
-    for (let i = 0; i < Math.min(pastedData.length, CODE_LENGTH); i++) {
-      newCode[i] = pastedData[i];
-    }
-    setCode(newCode);
+      const newCode = [...code];
+      for (let i = 0; i < Math.min(pastedData.length, CODE_LENGTH); i++) {
+        newCode[i] = pastedData[i];
+      }
+      setCode(newCode);
 
-    // Focus last filled input or last input
-    const lastFilledIndex = Math.min(pastedData.length, CODE_LENGTH) - 1;
-    inputRefs.current[lastFilledIndex]?.focus();
+      // Focus last filled input or last input
+      const lastFilledIndex = Math.min(pastedData.length, CODE_LENGTH) - 1;
+      inputRefs.current[lastFilledIndex]?.focus();
 
-    // Auto-submit if complete
-    if (pastedData.length >= CODE_LENGTH) {
-      handleSubmit(newCode.slice(0, CODE_LENGTH).join(''));
-    }
-  }, [code]);
+      // Auto-submit if complete
+      if (pastedData.length >= CODE_LENGTH) {
+        handleSubmit(newCode.slice(0, CODE_LENGTH).join(''));
+      }
+    },
+    [code]
+  );
 
   const handleSubmit = useCallback(
     async (submittedCode?: string) => {
-      const codeToVerify = submittedCode || (selectedMethod === 'backup' ? backupCode : code.join(''));
+      const codeToVerify =
+        submittedCode || (selectedMethod === 'backup' ? backupCode : code.join(''));
 
-      if (!codeToVerify || codeToVerify.length < (selectedMethod === 'backup' ? BACKUP_CODE_LENGTH : CODE_LENGTH)) {
+      if (
+        !codeToVerify ||
+        codeToVerify.length < (selectedMethod === 'backup' ? BACKUP_CODE_LENGTH : CODE_LENGTH)
+      ) {
         setLocalError('Please enter the complete code');
         return;
       }
@@ -385,9 +392,7 @@ export function MfaChallenge({
         {currentConfig.supportsResend && onResend && (
           <div className="text-center">
             {resendCooldown > 0 ? (
-              <p className="text-sm text-slate-400">
-                Resend code in {resendCooldown}s
-              </p>
+              <p className="text-sm text-slate-400">Resend code in {resendCooldown}s</p>
             ) : (
               <button
                 type="button"

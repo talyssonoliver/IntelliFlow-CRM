@@ -185,7 +185,9 @@ describe('RemindersService', () => {
 
       const caseReminders = service.getRemindersForEntity('case', 'case-100');
       expect(caseReminders).toHaveLength(2);
-      expect(caseReminders.every((r) => r.entityType === 'case' && r.entityId === 'case-100')).toBe(true);
+      expect(caseReminders.every((r) => r.entityType === 'case' && r.entityId === 'case-100')).toBe(
+        true
+      );
     });
 
     it('excludes non-pending reminders for the entity', () => {
@@ -267,9 +269,7 @@ describe('RemindersService', () => {
       expect(snoozed).not.toBeNull();
       expect(snoozed!.status).toBe('snoozed');
       expect(snoozed!.snoozeUntil).toBeInstanceOf(Date);
-      expect(snoozed!.snoozeUntil!.getTime()).toBe(
-        new Date('2026-03-01T10:30:00Z').getTime()
-      );
+      expect(snoozed!.snoozeUntil!.getTime()).toBe(new Date('2026-03-01T10:30:00Z').getTime());
     });
 
     it('returns null for non-existent reminder', () => {
@@ -557,10 +557,7 @@ describe('RemindersService', () => {
       service.start(5000);
 
       expect(errorCallback).toHaveBeenCalled();
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Error in notification callback:',
-        expect.any(Error)
-      );
+      expect(consoleSpy).toHaveBeenCalledWith('Error in notification callback:', expect.any(Error));
     });
 
     it('notification includes entity link and time until due', () => {
@@ -798,9 +795,7 @@ describe('RemindersService', () => {
 
       service.start(5000);
 
-      expect(callback).toHaveBeenCalledWith(
-        expect.objectContaining({ entityLink: expectedLink })
-      );
+      expect(callback).toHaveBeenCalledWith(expect.objectContaining({ entityLink: expectedLink }));
     });
   });
 
@@ -825,9 +820,7 @@ describe('RemindersService', () => {
 
       service.start(5000);
 
-      expect(callback).toHaveBeenCalledWith(
-        expect.objectContaining({ timeUntilDue: 'overdue' })
-      );
+      expect(callback).toHaveBeenCalledWith(expect.objectContaining({ timeUntilDue: 'overdue' }));
     });
 
     it('shows minutes overdue', () => {

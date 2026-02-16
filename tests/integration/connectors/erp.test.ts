@@ -47,7 +47,7 @@ describe.skip('SAP ERP Adapter', () => {
         .mockResolvedValueOnce({
           ok: true,
           headers: {
-            get: (name: string) => name === 'x-csrf-token' ? 'mock-csrf-token' : null,
+            get: (name: string) => (name === 'x-csrf-token' ? 'mock-csrf-token' : null),
           },
         })
         .mockResolvedValueOnce({
@@ -169,12 +169,13 @@ describe.skip('SAP ERP Adapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 201,
-        json: () => Promise.resolve({
-          d: {
-            BusinessPartner: 'CUST003',
-            BusinessPartnerName: 'New Customer',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            d: {
+              BusinessPartner: 'CUST003',
+              BusinessPartnerName: 'New Customer',
+            },
+          }),
       });
 
       const result = await adapter.createCustomer(mockSession, newCustomer);
@@ -197,21 +198,20 @@ describe.skip('SAP ERP Adapter', () => {
       const orderData = {
         customerId: 'CUST001',
         orderType: 'TA',
-        items: [
-          { materialId: 'MAT001', quantity: 10, unit: 'EA' },
-        ],
+        items: [{ materialId: 'MAT001', quantity: 10, unit: 'EA' }],
       };
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 201,
-        json: () => Promise.resolve({
-          d: {
-            SalesOrder: '1000001',
-            SalesOrderType: 'TA',
-            SoldToParty: 'CUST001',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            d: {
+              SalesOrder: '1000001',
+              SalesOrderType: 'TA',
+              SoldToParty: 'CUST001',
+            },
+          }),
       });
 
       const result = await adapter.createSalesOrder(mockSession, orderData);
@@ -225,15 +225,16 @@ describe.skip('SAP ERP Adapter', () => {
     it('should retrieve sales order by ID', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          d: {
-            SalesOrder: '1000001',
-            SalesOrderType: 'TA',
-            SoldToParty: 'CUST001',
-            TotalNetAmount: '1000.00',
-            TransactionCurrency: 'USD',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            d: {
+              SalesOrder: '1000001',
+              SalesOrderType: 'TA',
+              SoldToParty: 'CUST001',
+              TotalNetAmount: '1000.00',
+              TransactionCurrency: 'USD',
+            },
+          }),
       });
 
       const result = await adapter.getSalesOrder(mockSession, '1000001');
@@ -256,14 +257,15 @@ describe.skip('SAP ERP Adapter', () => {
     it('should list invoices for a customer', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          d: {
-            results: [
-              { BillingDocument: 'INV001', TotalNetAmount: '500.00' },
-              { BillingDocument: 'INV002', TotalNetAmount: '750.00' },
-            ],
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            d: {
+              results: [
+                { BillingDocument: 'INV001', TotalNetAmount: '500.00' },
+                { BillingDocument: 'INV002', TotalNetAmount: '750.00' },
+              ],
+            },
+          }),
       });
 
       const result = await adapter.listInvoices(mockSession, { customerId: 'CUST001' });
@@ -277,14 +279,15 @@ describe.skip('SAP ERP Adapter', () => {
     it('should retrieve invoice by ID', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          d: {
-            BillingDocument: 'INV001',
-            TotalNetAmount: '500.00',
-            TransactionCurrency: 'USD',
-            BillingDocumentDate: '2025-01-15',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            d: {
+              BillingDocument: 'INV001',
+              TotalNetAmount: '500.00',
+              TransactionCurrency: 'USD',
+              BillingDocumentDate: '2025-01-15',
+            },
+          }),
       });
 
       const result = await adapter.getInvoice(mockSession, 'INV001');
@@ -307,14 +310,15 @@ describe.skip('SAP ERP Adapter', () => {
     it('should list materials with filters', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          d: {
-            results: [
-              { Material: 'MAT001', MaterialDescription: 'Product A', MaterialType: 'FERT' },
-              { Material: 'MAT002', MaterialDescription: 'Product B', MaterialType: 'FERT' },
-            ],
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            d: {
+              results: [
+                { Material: 'MAT001', MaterialDescription: 'Product A', MaterialType: 'FERT' },
+                { Material: 'MAT002', MaterialDescription: 'Product B', MaterialType: 'FERT' },
+              ],
+            },
+          }),
       });
 
       const result = await adapter.listMaterials(mockSession, { materialType: 'FERT' });
@@ -328,14 +332,15 @@ describe.skip('SAP ERP Adapter', () => {
     it('should retrieve material stock levels', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          d: {
-            Material: 'MAT001',
-            Plant: '1000',
-            AvailableStock: '150.000',
-            BaseUnit: 'EA',
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            d: {
+              Material: 'MAT001',
+              Plant: '1000',
+              AvailableStock: '150.000',
+              BaseUnit: 'EA',
+            },
+          }),
       });
 
       const result = await adapter.getMaterialStock(mockSession, 'MAT001', '1000');
@@ -359,7 +364,7 @@ describe.skip('SAP ERP Adapter', () => {
         ok: false,
         status: 429,
         headers: {
-          get: (name: string) => name === 'Retry-After' ? '60' : null,
+          get: (name: string) => (name === 'Retry-After' ? '60' : null),
         },
         json: () => Promise.resolve({ error: { message: 'Rate limit exceeded' } }),
       });
@@ -437,7 +442,7 @@ describe.skip('SAP ERP Adapter', () => {
     it('should return degraded status for slow responses', async () => {
       // Simulate slow response by delaying the mock
       mockFetch.mockImplementationOnce(async () => {
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
         return { ok: true, json: () => Promise.resolve({}) };
       });
 

@@ -57,37 +57,19 @@ describe('MetricCard', () => {
 
   describe('Change Indicator', () => {
     it('should show positive change', () => {
-      render(
-        <MetricCard
-          title="Leads"
-          value={100}
-          change={{ value: 12, direction: 'up' }}
-        />
-      );
+      render(<MetricCard title="Leads" value={100} change={{ value: 12, direction: 'up' }} />);
       expect(screen.getByText('+12%')).toBeInTheDocument();
       expect(screen.getByText('trending_up')).toBeInTheDocument();
     });
 
     it('should show negative change', () => {
-      render(
-        <MetricCard
-          title="Leads"
-          value={100}
-          change={{ value: 5, direction: 'down' }}
-        />
-      );
+      render(<MetricCard title="Leads" value={100} change={{ value: 5, direction: 'down' }} />);
       expect(screen.getByText('-5%')).toBeInTheDocument();
       expect(screen.getByText('trending_down')).toBeInTheDocument();
     });
 
     it('should show neutral change', () => {
-      render(
-        <MetricCard
-          title="Leads"
-          value={100}
-          change={{ value: 0, direction: 'neutral' }}
-        />
-      );
+      render(<MetricCard title="Leads" value={100} change={{ value: 0, direction: 'neutral' }} />);
       expect(screen.getByText('0%')).toBeInTheDocument();
       expect(screen.getByText('trending_flat')).toBeInTheDocument();
     });
@@ -104,25 +86,13 @@ describe('MetricCard', () => {
     });
 
     it('should apply correct color for positive change', () => {
-      render(
-        <MetricCard
-          title="Leads"
-          value={100}
-          change={{ value: 12, direction: 'up' }}
-        />
-      );
+      render(<MetricCard title="Leads" value={100} change={{ value: 12, direction: 'up' }} />);
       const changeContainer = screen.getByText('+12%').parentElement;
       expect(changeContainer).toHaveClass('text-green-600');
     });
 
     it('should apply correct color for negative change', () => {
-      render(
-        <MetricCard
-          title="Leads"
-          value={100}
-          change={{ value: 5, direction: 'down' }}
-        />
-      );
+      render(<MetricCard title="Leads" value={100} change={{ value: 5, direction: 'down' }} />);
       const changeContainer = screen.getByText('-5%').parentElement;
       expect(changeContainer).toHaveClass('text-red-600');
     });
@@ -136,27 +106,13 @@ describe('MetricCard', () => {
     });
 
     it('should apply custom icon background', () => {
-      render(
-        <MetricCard
-          title="Leads"
-          value={100}
-          icon="group"
-          iconBgClass="bg-green-100"
-        />
-      );
+      render(<MetricCard title="Leads" value={100} icon="group" iconBgClass="bg-green-100" />);
       const iconContainer = screen.getByText('group').parentElement;
       expect(iconContainer).toHaveClass('bg-green-100');
     });
 
     it('should apply custom icon color', () => {
-      render(
-        <MetricCard
-          title="Leads"
-          value={100}
-          icon="group"
-          iconColorClass="text-green-600"
-        />
-      );
+      render(<MetricCard title="Leads" value={100} icon="group" iconColorClass="text-green-600" />);
       const icon = screen.getByText('group');
       expect(icon).toHaveClass('text-green-600');
     });

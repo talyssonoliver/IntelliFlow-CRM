@@ -10,40 +10,59 @@
 
 ## Context and Problem Statement
 
-IntelliFlow CRM needs to model corporate structures where a parent company (e.g., TechCorp HQ) has subsidiaries (TechCorp Brasil, TechCorp UK). Users need to visualize these relationships, set/remove parent accounts, and see consolidated pipeline data. How should we implement the parent/child hierarchy for accounts?
+IntelliFlow CRM needs to model corporate structures where a parent company
+(e.g., TechCorp HQ) has subsidiaries (TechCorp Brasil, TechCorp UK). Users need
+to visualize these relationships, set/remove parent accounts, and see
+consolidated pipeline data. How should we implement the parent/child hierarchy
+for accounts?
 
 ## Decision Drivers
 
-- **Data Model Simplicity**: Minimize schema complexity for a self-referencing relationship.
-- **Query Performance**: Hierarchy traversal (ancestors + descendants) must be fast (<200ms).
+- **Data Model Simplicity**: Minimize schema complexity for a self-referencing
+  relationship.
+- **Query Performance**: Hierarchy traversal (ancestors + descendants) must be
+  fast (<200ms).
 - **Domain Integrity**: Prevent cycles, enforce max depth, and isolate tenants.
 - **UI Accessibility**: Tree component must meet WCAG 2.1 AA.
 - **Scalability**: Support up to 5 levels deep without recursive CTE overhead.
 
 ## Considered Options
 
-- **Option 1**: Self-referencing foreign key with recursive application-level traversal
-- **Option 2**: Materialized path (store full ancestor path as string, e.g., "/root/parent/child")
-- **Option 3**: Closure table (separate table storing all ancestor-descendant pairs)
+- **Option 1**: Self-referencing foreign key with recursive application-level
+  traversal
+- **Option 2**: Materialized path (store full ancestor path as string, e.g.,
+  "/root/parent/child")
+- **Option 3**: Closure table (separate table storing all ancestor-descendant
+  pairs)
 - **Option 4**: Nested sets (left/right integer boundaries)
 
 ## Decision Outcome
 
-Chosen option: **"Self-referencing foreign key with recursive application-level traversal"**, because it provides the simplest schema change (single nullable column), works naturally with Prisma's self-relation support, keeps domain logic in the application layer where cycle detection and depth validation belong, and is sufficient for our max-depth-5 constraint.
+Chosen option: **"Self-referencing foreign key with recursive application-level
+traversal"**, because it provides the simplest schema change (single nullable
+column), works naturally with Prisma's self-relation support, keeps domain logic
+in the application layer where cycle detection and depth validation belong, and
+is sufficient for our max-depth-5 constraint.
 
 ### Positive Consequences
 
 - **Simple schema**: Single `parentAccountId` column with self-FK and index
-- **Prisma-native**: Self-relations work out of the box (`parent`/`children` in Prisma schema)
-- **Domain control**: Cycle detection and depth validation live in AccountService, testable without DB
-- **Deletion handling**: ON DELETE SET NULL automatically orphans children safely
+- **Prisma-native**: Self-relations work out of the box (`parent`/`children` in
+  Prisma schema)
+- **Domain control**: Cycle detection and depth validation live in
+  AccountService, testable without DB
+- **Deletion handling**: ON DELETE SET NULL automatically orphans children
+  safely
 - **Low migration risk**: Single ALTER TABLE, no new tables needed
 
 ### Negative Consequences
 
-- **N+1 risk**: Naive recursive queries can cause N+1; mitigated by loading full subtree in one query with `include` depth
-- **No native ancestry query**: Finding all ancestors requires walking up the chain; acceptable at max depth 5
-- **Application-level cycle detection**: Must walk ancestor chain before allowing setParent; O(depth) queries
+- **N+1 risk**: Naive recursive queries can cause N+1; mitigated by loading full
+  subtree in one query with `include` depth
+- **No native ancestry query**: Finding all ancestors requires walking up the
+  chain; acceptable at max depth 5
+- **Application-level cycle detection**: Must walk ancestor chain before
+  allowing setParent; O(depth) queries
 
 ## Pros and Cons of the Options
 
@@ -64,7 +83,8 @@ Store ancestor path as string (e.g., "/acc-1/acc-2/acc-3").
 
 - Good, because ancestor queries are simple string prefix matches
 - Good, because subtree queries use LIKE 'path%'
-- Bad, because path must be updated on every reparent (cascading update to all descendants)
+- Bad, because path must be updated on every reparent (cascading update to all
+  descendants)
 - Bad, because path string parsing is fragile
 - Bad, because not natively supported by Prisma
 - Bad, because over-engineered for max depth 5
@@ -116,7 +136,8 @@ model Account {
 ### Domain Rules
 
 1. **No self-reference**: `accountId !== parentAccountId`
-2. **No cycles**: Walk ancestor chain from proposed parent; reject if current account found
+2. **No cycles**: Walk ancestor chain from proposed parent; reject if current
+   account found
 3. **Max depth 5**: Count depth from root to proposed position; reject if > 5
 4. **Same tenant**: Both accounts must belong to the same tenant
 5. **Idempotent removal**: Removing parent when none exists is a no-op
@@ -132,10 +153,10 @@ model Account {
 
 ### API Endpoints
 
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `account.getHierarchy` | Query | Returns ancestors + subtree for an account |
-| `account.setParent` | Mutation | Sets or removes parent (null = remove) |
+| Endpoint               | Method   | Description                                |
+| ---------------------- | -------- | ------------------------------------------ |
+| `account.getHierarchy` | Query    | Returns ancestors + subtree for an account |
+| `account.setParent`    | Mutation | Sets or removes parent (null = remove)     |
 
 ### Frontend Tree Component
 
@@ -148,6 +169,7 @@ model Account {
 ### Event
 
 `AccountHierarchyUpdatedEvent` published on setParent/removeParent with:
+
 - `accountId`, `previousParentId`, `newParentId`, `tenantId`
 
 ## Links

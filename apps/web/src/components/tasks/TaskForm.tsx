@@ -3,13 +3,7 @@
 import { useState, useEffect } from 'react';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
 import { TASK_STATUSES, TASK_PRIORITIES } from '@intelliflow/domain';
-import {
-  Sheet,
-  SheetContent,
-  SheetTitle,
-  SheetDescription,
-  toast,
-} from '@intelliflow/ui';
+import { Sheet, SheetContent, SheetTitle, SheetDescription, toast } from '@intelliflow/ui';
 import { EntitySearchField } from './EntitySearchField';
 
 export interface TaskFormData {
@@ -84,7 +78,12 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: TaskFor
   }
 
   return (
-    <Sheet open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
+    <Sheet
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) handleClose();
+      }}
+    >
       <SheetContent
         side="right"
         className="w-full max-w-lg flex flex-col overflow-hidden p-0 gap-0"
@@ -114,13 +113,18 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: TaskFor
               aria-describedby={errors.title ? 'title-error' : undefined}
             />
             {errors.title && (
-              <p id="title-error" className="text-xs text-destructive mt-1">{errors.title}</p>
+              <p id="title-error" className="text-xs text-destructive mt-1">
+                {errors.title}
+              </p>
             )}
           </div>
 
           {/* Description */}
           <div>
-            <label htmlFor="task-description" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="task-description"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               Description
             </label>
             <textarea
@@ -133,13 +137,18 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: TaskFor
               aria-describedby={errors.description ? 'desc-error' : undefined}
             />
             {errors.description && (
-              <p id="desc-error" className="text-xs text-destructive mt-1">{errors.description}</p>
+              <p id="desc-error" className="text-xs text-destructive mt-1">
+                {errors.description}
+              </p>
             )}
           </div>
 
           {/* Due Date */}
           <div>
-            <label htmlFor="task-duedate" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="task-duedate"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               Due Date
             </label>
             <input
@@ -153,7 +162,10 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: TaskFor
 
           {/* Priority */}
           <div>
-            <label htmlFor="task-priority" className="block text-sm font-medium text-foreground mb-1">
+            <label
+              htmlFor="task-priority"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
               Priority
             </label>
             <select
@@ -163,7 +175,9 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: TaskFor
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
               {TASK_PRIORITIES.map((p) => (
-                <option key={p} value={p}>{p.charAt(0) + p.slice(1).toLowerCase()}</option>
+                <option key={p} value={p}>
+                  {p.charAt(0) + p.slice(1).toLowerCase()}
+                </option>
               ))}
             </select>
           </div>
@@ -171,7 +185,10 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: TaskFor
           {/* Status (edit only) */}
           {mode === 'edit' && (
             <div>
-              <label htmlFor="task-status" className="block text-sm font-medium text-foreground mb-1">
+              <label
+                htmlFor="task-status"
+                className="block text-sm font-medium text-foreground mb-1"
+              >
                 Status
               </label>
               <select
@@ -181,7 +198,9 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: TaskFor
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
                 {TASK_STATUSES.map((s) => (
-                  <option key={s} value={s}>{s.replace('_', ' ')}</option>
+                  <option key={s} value={s}>
+                    {s.replace('_', ' ')}
+                  </option>
                 ))}
               </select>
             </div>
@@ -192,13 +211,18 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: TaskFor
             <legend className="text-sm font-medium text-foreground mb-2">Link to Entity</legend>
             <div className="flex gap-4 flex-wrap mb-3">
               {(['none', 'lead', 'contact', 'opportunity'] as const).map((type) => (
-                <label key={type} className="inline-flex items-center gap-1.5 text-sm cursor-pointer">
+                <label
+                  key={type}
+                  className="inline-flex items-center gap-1.5 text-sm cursor-pointer"
+                >
                   <input
                     type="radio"
                     name="entityType"
                     value={type}
                     checked={form.entityType === type}
-                    onChange={() => setForm((f) => ({ ...f, entityType: type, entityId: '', entityName: '' }))}
+                    onChange={() =>
+                      setForm((f) => ({ ...f, entityType: type, entityId: '', entityName: '' }))
+                    }
                     className="accent-primary"
                   />
                   {type === 'none' ? 'None' : type.charAt(0).toUpperCase() + type.slice(1)}

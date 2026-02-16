@@ -16,10 +16,7 @@ import { join } from 'node:path';
 const CSV_PATH = join(process.cwd(), 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv');
 
 // Mandatory governance files (always included)
-const GOVERNANCE_FILES = [
-  '.specify/memory/Framework.md',
-  'audit-matrix.yml',
-];
+const GOVERNANCE_FILES = ['.specify/memory/Framework.md', 'audit-matrix.yml'];
 
 // Maximum inherited files per task (to avoid overflow)
 const MAX_INHERITED_FILES = 5;

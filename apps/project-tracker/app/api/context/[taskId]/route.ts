@@ -15,11 +15,23 @@ function getRepoRoot(): string {
 // Get sprint number for a task from CSV
 async function getTaskSprintNumber(taskId: string): Promise<number> {
   const repoRoot = getRepoRoot();
-  const csvPath = join(repoRoot, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+  const csvPath = join(
+    repoRoot,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    '_global',
+    'Sprint_plan.csv'
+  );
 
   try {
     const csvContent = await readFile(csvPath, 'utf-8');
-    const records = parse(csvContent, { columns: true, skip_empty_lines: true, bom: true }) as Array<Record<string, string>>;
+    const records = parse(csvContent, {
+      columns: true,
+      skip_empty_lines: true,
+      bom: true,
+    }) as Array<Record<string, string>>;
     const task = records.find((r) => r['Task ID'] === taskId);
     return parseInt(task?.['Target Sprint'] || '0', 10);
   } catch {
@@ -101,7 +113,10 @@ function normalizeManifest(raw: RawManifest, taskId: string): NormalizedManifest
 /**
  * Load context pack from sprint-based location first, then legacy
  */
-async function loadContextPack(taskId: string, sprintNumber: number): Promise<{
+async function loadContextPack(
+  taskId: string,
+  sprintNumber: number
+): Promise<{
   manifest?: NormalizedManifest;
   content?: string;
 }> {
@@ -190,15 +205,34 @@ function normalizeAck(raw: RawAckData, taskId: string): NormalizedAck {
  * Load context acknowledgment from sprint-based location first, then legacy
  * Supports both attestation.json (new format) and context_ack.json (legacy format)
  */
-async function loadContextAck(taskId: string, sprintNumber: number): Promise<{
+async function loadContextAck(
+  taskId: string,
+  sprintNumber: number
+): Promise<{
   ack?: NormalizedAck;
 }> {
   const repoRoot = getRepoRoot();
 
   // Sprint-based location first, then legacy locations
   const possiblePaths = [
-    join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId, 'attestation.json'),
-    join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId, 'context_ack.json'),
+    join(
+      repoRoot,
+      '.specify',
+      'sprints',
+      `sprint-${sprintNumber}`,
+      'attestations',
+      taskId,
+      'attestation.json'
+    ),
+    join(
+      repoRoot,
+      '.specify',
+      'sprints',
+      `sprint-${sprintNumber}`,
+      'attestations',
+      taskId,
+      'context_ack.json'
+    ),
     join(repoRoot, 'artifacts', 'attestations', taskId, 'attestation.json'), // Legacy location
     join(repoRoot, 'artifacts', 'attestations', taskId, 'context_ack.json'), // Legacy format
   ];

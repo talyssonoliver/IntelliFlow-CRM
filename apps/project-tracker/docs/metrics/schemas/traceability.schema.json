@@ -88,11 +88,7 @@
             }
           }
         },
-        "required": [
-          "capability_id",
-          "name",
-          "description"
-        ],
+        "required": ["capability_id", "name", "description"],
         "additionalProperties": false
       }
     },
@@ -137,10 +133,7 @@
           "maximum": 100
         }
       },
-      "required": [
-        "total_capabilities",
-        "traceability_coverage_percentage"
-      ],
+      "required": ["total_capabilities", "traceability_coverage_percentage"],
       "additionalProperties": false
     },
     "validated_by": {

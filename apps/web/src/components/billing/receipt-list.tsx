@@ -26,11 +26,7 @@ import {
   TableRow,
 } from '@intelliflow/ui';
 import { formatBillingDate, formatCurrency } from '@/lib/billing/stripe-portal';
-import {
-  downloadInvoicePdf,
-  openInvoicePdf,
-  isValidPdfUrl,
-} from '@/lib/billing/pdf-generator';
+import { downloadInvoicePdf, openInvoicePdf, isValidPdfUrl } from '@/lib/billing/pdf-generator';
 
 // ============================================
 // Types
@@ -88,13 +84,9 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-        <span className="material-symbols-outlined text-3xl text-slate-400">
-          receipt
-        </span>
+        <span className="material-symbols-outlined text-3xl text-slate-400">receipt</span>
       </div>
-      <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-white">
-        No receipts yet
-      </h3>
+      <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-white">No receipts yet</h3>
       <p className="max-w-sm text-sm text-slate-500 dark:text-slate-400">
         When you make payments, your receipts will appear here.
       </p>
@@ -155,9 +147,7 @@ function ReceiptActions({
         aria-label={`Email receipt ${receipt.receiptNumber}`}
       >
         {isSending ? (
-          <span className="material-symbols-outlined text-lg animate-spin">
-            progress_activity
-          </span>
+          <span className="material-symbols-outlined text-lg animate-spin">progress_activity</span>
         ) : (
           <span className="material-symbols-outlined text-lg">mail</span>
         )}
@@ -190,15 +180,9 @@ function ReceiptRow({
       <TableCell className="text-right font-medium text-slate-900 dark:text-white">
         {formatCurrency(receipt.amountPaid, receipt.currency)}
       </TableCell>
-      <TableCell className="text-slate-600 dark:text-slate-400">
-        {receipt.paymentMethod}
-      </TableCell>
+      <TableCell className="text-slate-600 dark:text-slate-400">{receipt.paymentMethod}</TableCell>
       <TableCell className="text-right">
-        <ReceiptActions
-          receipt={receipt}
-          onSendEmail={onSendEmail}
-          isSending={isSending}
-        />
+        <ReceiptActions receipt={receipt} onSendEmail={onSendEmail} isSending={isSending} />
       </TableCell>
     </TableRow>
   );
@@ -233,9 +217,7 @@ export function ReceiptList({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-xl text-primary">
-              receipt
-            </span>
+            <span className="material-symbols-outlined text-xl text-primary">receipt</span>
             Receipts
           </CardTitle>
           <CardDescription>Loading your receipts...</CardDescription>
@@ -252,9 +234,7 @@ export function ReceiptList({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-xl text-primary">
-              receipt
-            </span>
+            <span className="material-symbols-outlined text-xl text-primary">receipt</span>
             Receipts
           </CardTitle>
         </CardHeader>
@@ -271,9 +251,7 @@ export function ReceiptList({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-xl text-primary">
-                receipt
-              </span>
+              <span className="material-symbols-outlined text-xl text-primary">receipt</span>
               Receipts
             </CardTitle>
             <CardDescription>
@@ -324,9 +302,7 @@ export function ReceiptList({
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined mr-2 text-lg">
-                    expand_more
-                  </span>
+                  <span className="material-symbols-outlined mr-2 text-lg">expand_more</span>
                   Load More
                 </>
               )}

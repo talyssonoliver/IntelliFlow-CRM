@@ -173,30 +173,28 @@ export class OpportunityService {
     let filtered = opportunities;
 
     if (params.stage && params.stage.length > 0) {
-      filtered = filtered.filter(o => params.stage!.includes(o.stage as OpportunityStage));
+      filtered = filtered.filter((o) => params.stage!.includes(o.stage as OpportunityStage));
     }
 
     if (params.accountId) {
-      filtered = filtered.filter(o => o.accountId === params.accountId);
+      filtered = filtered.filter((o) => o.accountId === params.accountId);
     }
 
     if (params.contactId) {
-      filtered = filtered.filter(o => o.contactId === params.contactId);
+      filtered = filtered.filter((o) => o.contactId === params.contactId);
     }
 
     if (params.minValue !== undefined) {
-      filtered = filtered.filter(o => o.value.amount >= params.minValue!);
+      filtered = filtered.filter((o) => o.value.amount >= params.minValue!);
     }
 
     if (params.maxValue !== undefined) {
-      filtered = filtered.filter(o => o.value.amount <= params.maxValue!);
+      filtered = filtered.filter((o) => o.value.amount <= params.maxValue!);
     }
 
     if (params.query) {
       const searchLower = params.query.toLowerCase();
-      filtered = filtered.filter(o =>
-        o.name.toLowerCase().includes(searchLower)
-      );
+      filtered = filtered.filter((o) => o.name.toLowerCase().includes(searchLower));
     }
 
     // Sort

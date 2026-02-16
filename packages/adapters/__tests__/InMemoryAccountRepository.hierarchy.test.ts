@@ -11,7 +11,12 @@ import { Account, AccountId } from '@intelliflow/domain';
 const TENANT = 'tenant-001';
 const OWNER = 'owner-001';
 
-function createAccount(overrides: { name: string; parentAccountId?: string; industry?: string; revenue?: number }): Account {
+function createAccount(overrides: {
+  name: string;
+  parentAccountId?: string;
+  industry?: string;
+  revenue?: number;
+}): Account {
   return Account.create({
     name: overrides.name,
     industry: overrides.industry,
@@ -189,7 +194,10 @@ describe('InMemoryAccountRepository — Hierarchy (PG-134)', () => {
     });
 
     it('should handle broken chain (parent not in repo)', async () => {
-      const child = createAccount({ name: 'Orphan', parentAccountId: '00000000-0000-0000-0000-000000000099' });
+      const child = createAccount({
+        name: 'Orphan',
+        parentAccountId: '00000000-0000-0000-0000-000000000099',
+      });
       await repository.save(child);
 
       const ancestors = await repository.findAncestors(child.id);

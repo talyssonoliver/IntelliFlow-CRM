@@ -29,7 +29,7 @@ vi.mock('path', async () => {
       ...actual,
       resolve: vi.fn((...segments: string[]) => segments.join('/')),
       relative: vi.fn((from: string, to: string) =>
-        to.startsWith(from + '/') ? to.slice(from.length + 1) : to,
+        to.startsWith(from + '/') ? to.slice(from.length + 1) : to
       ),
       join: vi.fn((...segments: string[]) => segments.join('/')),
       basename: actual.basename,
@@ -38,7 +38,7 @@ vi.mock('path', async () => {
     ...actual,
     resolve: vi.fn((...segments: string[]) => segments.join('/')),
     relative: vi.fn((from: string, to: string) =>
-      to.startsWith(from + '/') ? to.slice(from.length + 1) : to,
+      to.startsWith(from + '/') ? to.slice(from.length + 1) : to
     ),
     join: vi.fn((...segments: string[]) => segments.join('/')),
   };
@@ -153,7 +153,7 @@ describe('adr-service (b11 coverage)', () => {
     vi.spyOn(process, 'cwd').mockReturnValue('/project');
     pathResolve.mockImplementation((...segments: string[]) => segments.join('/'));
     pathRelative.mockImplementation((from: string, to: string) =>
-      to.startsWith(from + '/') ? to.slice(from.length + 1) : to,
+      to.startsWith(from + '/') ? to.slice(from.length + 1) : to
     );
     pathJoin.mockImplementation((...segments: string[]) => segments.join('/'));
   });

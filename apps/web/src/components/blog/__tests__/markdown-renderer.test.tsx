@@ -1,11 +1,7 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import {
-  MarkdownRenderer,
-  TableOfContents,
-  ReadingProgress,
-} from '../markdown-renderer';
+import { MarkdownRenderer, TableOfContents, ReadingProgress } from '../markdown-renderer';
 
 /**
  * Markdown Renderer Component Tests
@@ -38,9 +34,7 @@ describe('MarkdownRenderer', () => {
 
     it('should accept custom className', () => {
       const content = '# Test';
-      const { container } = render(
-        <MarkdownRenderer content={content} className="custom-class" />
-      );
+      const { container } = render(<MarkdownRenderer content={content} className="custom-class" />);
 
       const wrapper = container.firstChild as HTMLElement;
       expect(wrapper).toHaveClass('custom-class');
@@ -48,9 +42,7 @@ describe('MarkdownRenderer', () => {
 
     it('should escape HTML for XSS protection', () => {
       const maliciousContent = '<script>alert("XSS")</script>';
-      const { container } = render(
-        <MarkdownRenderer content={maliciousContent} />
-      );
+      const { container } = render(<MarkdownRenderer content={maliciousContent} />);
 
       // Script tags should be escaped, not rendered as actual script elements
       const scripts = container.querySelectorAll('script');
@@ -63,9 +55,7 @@ describe('MarkdownRenderer', () => {
 
     it('should escape malicious attributes', () => {
       const maliciousContent = '<img src="x" onerror="alert(1)">';
-      const { container } = render(
-        <MarkdownRenderer content={maliciousContent} />
-      );
+      const { container } = render(<MarkdownRenderer content={maliciousContent} />);
 
       // Should not have any onerror handlers
       const images = container.querySelectorAll('img[onerror]');

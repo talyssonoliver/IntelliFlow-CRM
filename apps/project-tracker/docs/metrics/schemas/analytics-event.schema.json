@@ -22,12 +22,7 @@
       "properties": {
         "environment": {
           "type": "string",
-          "enum": [
-            "development",
-            "test",
-            "staging",
-            "production"
-          ]
+          "enum": ["development", "test", "staging", "production"]
         },
         "app": {
           "type": "string"
@@ -40,9 +35,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "environment"
-      ],
+      "required": ["environment"],
       "additionalProperties": {}
     },
     "properties": {
@@ -54,11 +47,6 @@
       "additionalProperties": {}
     }
   },
-  "required": [
-    "eventId",
-    "occurredAt",
-    "eventName",
-    "context"
-  ],
+  "required": ["eventId", "occurredAt", "eventName", "context"],
   "additionalProperties": false
 }

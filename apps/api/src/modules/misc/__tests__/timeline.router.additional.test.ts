@@ -14,13 +14,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { timelineRouter } from '../timeline.router';
-import {
-  prismaMock,
-  createTestContext,
-  TEST_UUIDS,
-  mockTask,
-  mockUser,
-} from '../../../test/setup';
+import { prismaMock, createTestContext, TEST_UUIDS, mockTask, mockUser } from '../../../test/setup';
 
 // Mock the deadline domain service
 vi.mock('../../../services', () => ({
@@ -752,7 +746,7 @@ describe('Timeline Router - Additional Coverage', () => {
         eventType: 'AgentActionProposed',
         aggregateType: 'Lead',
         aggregateId: 'lead-123',
-        payload: {},  // No payload data
+        payload: {}, // No payload data
         metadata: null,
         occurredAt: new Date(),
         processedAt: null,

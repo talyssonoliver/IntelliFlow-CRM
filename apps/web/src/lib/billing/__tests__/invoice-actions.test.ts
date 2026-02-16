@@ -230,9 +230,7 @@ describe('copyInvoiceLink', () => {
     expect(result.success).toBe(true);
     expect(result.message).toBe('Link copied to clipboard');
     // Prefer hostedUrl over pdfUrl
-    expect(mockWriteText).toHaveBeenCalledWith(
-      'https://stripe.com/hosted/invoice'
-    );
+    expect(mockWriteText).toHaveBeenCalledWith('https://stripe.com/hosted/invoice');
   });
 
   it('copies PDF URL when hosted URL is not available', async () => {
@@ -244,9 +242,7 @@ describe('copyInvoiceLink', () => {
     };
     const result = await copyInvoiceLink(invoicePdfOnly);
     expect(result.success).toBe(true);
-    expect(mockWriteText).toHaveBeenCalledWith(
-      'https://stripe.com/invoice.pdf'
-    );
+    expect(mockWriteText).toHaveBeenCalledWith('https://stripe.com/invoice.pdf');
   });
 
   it('returns failure when no URL is available', async () => {

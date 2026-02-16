@@ -303,7 +303,7 @@ export class SessionService {
     let session = sessionStore.get(sessionId);
 
     if (!session && this.prisma) {
-      session = await this.loadSessionFromDb(sessionId) ?? undefined;
+      session = (await this.loadSessionFromDb(sessionId)) ?? undefined;
       if (session) {
         sessionStore.set(sessionId, session);
       }
@@ -430,7 +430,7 @@ export class SessionService {
     const userSessions = sessionsByUser.get(userId);
     if (!userSessions) return 0;
 
-    const sessionIds = [...userSessions].filter(id => id !== currentSessionId);
+    const sessionIds = [...userSessions].filter((id) => id !== currentSessionId);
     let revokedCount = 0;
 
     for (const sessionId of sessionIds) {
@@ -455,9 +455,10 @@ export class SessionService {
     }
 
     // Calculate new expiration
-    const durationMs = rememberMe ?? session.rememberMe
-      ? this.config.rememberMeDurationMs
-      : this.config.defaultSessionDurationMs;
+    const durationMs =
+      (rememberMe ?? session.rememberMe)
+        ? this.config.rememberMeDurationMs
+        : this.config.defaultSessionDurationMs;
 
     session.expiresAt = new Date(Date.now() + durationMs);
     session.lastActiveAt = new Date();
@@ -518,7 +519,11 @@ export class SessionService {
       info.os = 'Android';
       const match = userAgent.match(/Android ([\d.]+)/);
       if (match) info.osVersion = match[1];
-    } else if (userAgent.includes('iOS') || userAgent.includes('iPhone') || userAgent.includes('iPad')) {
+    } else if (
+      userAgent.includes('iOS') ||
+      userAgent.includes('iPhone') ||
+      userAgent.includes('iPad')
+    ) {
       info.os = 'iOS';
       const match = userAgent.match(/OS ([\d_]+)/);
       if (match) info.osVersion = match[1].replace(/_/g, '.');

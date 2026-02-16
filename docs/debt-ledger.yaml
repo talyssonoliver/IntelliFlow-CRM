@@ -225,7 +225,7 @@ items:
     origin_task: IFC-096
     owner: Tech Lead
     severity: critical
-    description: "Validation failed: pnpm build (exit code: 124)"
+    description: 'Validation failed: pnpm build (exit code: 124)'
     created_at: 2025-12-29T14:34:38.107Z
     expiry_date: 2026-01-28
     remediation_plan: Fix issues causing "pnpm build" to fail
@@ -255,7 +255,7 @@ items:
     origin_task: IFC-145
     owner: Tech Lead
     severity: critical
-    description: "Validation failed: pnpm test (exit code: 124)"
+    description: 'Validation failed: pnpm test (exit code: 124)'
     created_at: 2025-12-29T15:27:16.023Z
     expiry_date: 2026-01-28
     remediation_plan: Fix issues causing "pnpm test" to fail
@@ -265,7 +265,7 @@ items:
     origin_task: IFC-151
     owner: Tech Lead
     severity: critical
-    description: "Validation failed: pnpm test (exit code: 124)"
+    description: 'Validation failed: pnpm test (exit code: 124)'
     created_at: 2025-12-29T15:33:37.120Z
     expiry_date: 2026-01-28
     remediation_plan: Fix issues causing "pnpm test" to fail
@@ -304,5 +304,5 @@ review_schedule:
 alerts:
   expiry_warning_days: 30
   notification_channels:
-    - slack: "#tech-debt"
+    - slack: '#tech-debt'
     - email: tech-lead@intelliflow.dev

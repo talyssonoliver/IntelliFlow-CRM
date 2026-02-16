@@ -77,7 +77,10 @@ function makeFeedbackRecord(overrides: Partial<FeedbackRecord> = {}): FeedbackRe
   };
 }
 
-function makeCorrection(magnitude: number, overrides: Partial<FeedbackRecord> = {}): FeedbackRecord {
+function makeCorrection(
+  magnitude: number,
+  overrides: Partial<FeedbackRecord> = {}
+): FeedbackRecord {
   return makeFeedbackRecord({
     feedbackType: 'SCORE_CORRECTION',
     originalScore: 50,
@@ -228,11 +231,11 @@ describe('FeedbackAnalyticsGenerator', () => {
   describe('calculateCorrectionDistribution', () => {
     it('should bucket corrections by magnitude', async () => {
       const records = [
-        makeCorrection(5),   // minor (<=10)
-        makeCorrection(8),   // minor
-        makeCorrection(15),  // moderate (11-25)
-        makeCorrection(30),  // major (26-50)
-        makeCorrection(60),  // severe (>50)
+        makeCorrection(5), // minor (<=10)
+        makeCorrection(8), // minor
+        makeCorrection(15), // moderate (11-25)
+        makeCorrection(30), // major (26-50)
+        makeCorrection(60), // severe (>50)
       ];
       const analytics = await generator.generate(records, 30);
       const { corrections } = analytics;
@@ -244,11 +247,7 @@ describe('FeedbackAnalyticsGenerator', () => {
     });
 
     it('should calculate average and median magnitude', async () => {
-      const records = [
-        makeCorrection(10),
-        makeCorrection(20),
-        makeCorrection(30),
-      ];
+      const records = [makeCorrection(10), makeCorrection(20), makeCorrection(30)];
       const analytics = await generator.generate(records, 30);
 
       expect(analytics.corrections.averageMagnitude).toBeCloseTo(20, 1);
@@ -437,7 +436,9 @@ describe('FeedbackAnalyticsGenerator', () => {
       const analytics = await generator.generate(records, 30);
 
       expect(analytics.retrainingStatus.needed).toBe(true);
-      expect(analytics.retrainingStatus.reasons.some((r) => r.includes('negative feedback'))).toBe(true);
+      expect(analytics.retrainingStatus.reasons.some((r) => r.includes('negative feedback'))).toBe(
+        true
+      );
     });
 
     it('should detect high average correction magnitude', async () => {
@@ -452,7 +453,9 @@ describe('FeedbackAnalyticsGenerator', () => {
       const analytics = await generator.generate(records, 30);
 
       expect(analytics.retrainingStatus.needed).toBe(true);
-      expect(analytics.retrainingStatus.reasons.some((r) => r.includes('average correction'))).toBe(true);
+      expect(analytics.retrainingStatus.reasons.some((r) => r.includes('average correction'))).toBe(
+        true
+      );
     });
 
     it('should set critical urgency when both thresholds exceeded heavily', async () => {
@@ -546,7 +549,9 @@ describe('FeedbackAnalyticsGenerator', () => {
       const records = Array.from({ length: 10 }, () => makeFeedbackRecord());
       const analytics = await generator.generate(records, 30);
 
-      expect(analytics.recommendations.some((r) => r.includes('feedback more frequently'))).toBe(true);
+      expect(analytics.recommendations.some((r) => r.includes('feedback more frequently'))).toBe(
+        true
+      );
     });
 
     it('should flag high negative ratio', async () => {
@@ -557,16 +562,18 @@ describe('FeedbackAnalyticsGenerator', () => {
       ];
       const analytics = await generator.generate(records, 30);
 
-      expect(analytics.recommendations.some((r) => r.includes('negative feedback ratio'))).toBe(true);
+      expect(analytics.recommendations.some((r) => r.includes('negative feedback ratio'))).toBe(
+        true
+      );
     });
 
     it('should flag high average correction magnitude', async () => {
-      const records = [
-        ...Array.from({ length: 20 }, () => makeCorrection(25)),
-      ];
+      const records = [...Array.from({ length: 20 }, () => makeCorrection(25))];
       const analytics = await generator.generate(records, 30);
 
-      expect(analytics.recommendations.some((r) => r.includes('Average correction magnitude'))).toBe(true);
+      expect(
+        analytics.recommendations.some((r) => r.includes('Average correction magnitude'))
+      ).toBe(true);
     });
 
     it('should flag upward bias', async () => {
@@ -611,7 +618,7 @@ describe('FeedbackAnalyticsGenerator', () => {
       const records = [
         makeCorrection(60), // severe
         makeCorrection(70), // severe
-        makeCorrection(5),  // minor
+        makeCorrection(5), // minor
       ];
       const analytics = await generator.generate(records, 30);
 

@@ -59,7 +59,10 @@ export async function GET(request: Request) {
 
     // Determine which task IDs to check
     const requestedIds = taskIdsParam
-      ? taskIdsParam.split(',').map((id) => id.trim()).filter(Boolean)
+      ? taskIdsParam
+          .split(',')
+          .map((id) => id.trim())
+          .filter(Boolean)
       : Array.from(sprintMap.keys());
 
     // Batch check filesystem for all requested tasks
@@ -98,7 +101,7 @@ export async function GET(request: Request) {
         headers: {
           'Cache-Control': 'no-store, max-age=0',
         },
-      },
+      }
     );
   } catch (error) {
     console.error('Error in plan-batch:', error);
@@ -107,7 +110,7 @@ export async function GET(request: Request) {
         error: 'Failed to batch check plan status',
         details: error instanceof Error ? error.message : String(error),
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

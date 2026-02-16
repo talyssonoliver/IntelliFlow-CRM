@@ -52,9 +52,7 @@ export function LayoutBuilderProvider({
   }, []);
 
   const updateWidget = useCallback((id: string, updates: Partial<Widget>) => {
-    setWidgets((prev) =>
-      prev.map((w) => (w.id === id ? { ...w, ...updates } : w))
-    );
+    setWidgets((prev) => prev.map((w) => (w.id === id ? { ...w, ...updates } : w)));
   }, []);
 
   const save = useCallback(() => {
@@ -83,11 +81,7 @@ export function LayoutBuilderProvider({
     [widgets, addWidget, removeWidget, updateWidget, isDirty, lastSaved, save, cancel]
   );
 
-  return (
-    <LayoutBuilderContext.Provider value={value}>
-      {children}
-    </LayoutBuilderContext.Provider>
-  );
+  return <LayoutBuilderContext.Provider value={value}>{children}</LayoutBuilderContext.Provider>;
 }
 
 interface LayoutBuilderGridProps {
@@ -144,9 +138,7 @@ export function LayoutBuilderHeader({
     <div className="sticky top-0 z-10 bg-white/80 dark:bg-[#1a2632]/90 backdrop-blur-md border-b border-border-light dark:border-border-dark px-6 py-4 flex flex-wrap items-center justify-between gap-4">
       <div className="flex flex-col">
         <h1 className="text-xl font-bold text-slate-900 dark:text-white">{title}</h1>
-        {description && (
-          <p className="text-sm text-slate-500 dark:text-slate-400">{description}</p>
-        )}
+        {description && <p className="text-sm text-slate-500 dark:text-slate-400">{description}</p>}
       </div>
       <div className="flex items-center gap-3">
         <span className="text-xs text-slate-400 hidden sm:inline-block mr-2">

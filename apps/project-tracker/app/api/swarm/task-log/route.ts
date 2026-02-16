@@ -23,10 +23,7 @@ export async function GET(request: Request) {
 
     // Validate and sanitize taskId to prevent path traversal
     if (!isValidTaskId(rawTaskId)) {
-      return NextResponse.json(
-        { error: 'Invalid taskId format' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid taskId format' }, { status: 400 });
     }
 
     const taskId = sanitizeTaskId(rawTaskId);

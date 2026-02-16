@@ -295,10 +295,7 @@ describe('Documents Router Comprehensive Tests', () => {
 
   describe('list procedure', () => {
     it('should return documents with pagination', async () => {
-      const mockDocs = [
-        createMockDocument({ id: 'doc-1' }),
-        createMockDocument({ id: 'doc-2' }),
-      ];
+      const mockDocs = [createMockDocument({ id: 'doc-1' }), createMockDocument({ id: 'doc-2' })];
       mockDocumentRepo.findAccessibleByUser.mockResolvedValue(mockDocs);
 
       const result = await mockDocumentRepo.findAccessibleByUser('user-123', 'user-123');
@@ -314,11 +311,7 @@ describe('Documents Router Comprehensive Tests', () => {
     });
 
     it('should filter by status', () => {
-      const docs = [
-        { status: 'DRAFT' },
-        { status: 'APPROVED' },
-        { status: 'DRAFT' },
-      ];
+      const docs = [{ status: 'DRAFT' }, { status: 'APPROVED' }, { status: 'DRAFT' }];
 
       const filtered = docs.filter((doc) => doc.status === 'DRAFT');
       expect(filtered).toHaveLength(2);
@@ -448,9 +441,7 @@ describe('Documents Router Comprehensive Tests', () => {
         throw new Error('Document must be in DRAFT status');
       });
 
-      expect(() => mockDoc.submitForReview('user-123')).toThrow(
-        'Document must be in DRAFT status'
-      );
+      expect(() => mockDoc.submitForReview('user-123')).toThrow('Document must be in DRAFT status');
     });
   });
 
@@ -477,9 +468,7 @@ describe('Documents Router Comprehensive Tests', () => {
         throw new Error('Document must be in UNDER_REVIEW status');
       });
 
-      expect(() => mockDoc.approve('user-123')).toThrow(
-        'Document must be in UNDER_REVIEW status'
-      );
+      expect(() => mockDoc.approve('user-123')).toThrow('Document must be in UNDER_REVIEW status');
     });
   });
 
@@ -498,11 +487,7 @@ describe('Documents Router Comprehensive Tests', () => {
 
       mockDoc.sign('user-123', '192.168.1.1', 'Mozilla/5.0');
 
-      expect(mockDoc.sign).toHaveBeenCalledWith(
-        'user-123',
-        '192.168.1.1',
-        'Mozilla/5.0'
-      );
+      expect(mockDoc.sign).toHaveBeenCalledWith('user-123', '192.168.1.1', 'Mozilla/5.0');
     });
 
     it('should return signature hash after signing', () => {
@@ -623,9 +608,7 @@ describe('Documents Router Comprehensive Tests', () => {
         throw new Error('Cannot delete document with legal hold');
       });
 
-      expect(() => mockDoc.delete('user-123')).toThrow(
-        'Cannot delete document with legal hold'
-      );
+      expect(() => mockDoc.delete('user-123')).toThrow('Cannot delete document with legal hold');
     });
   });
 
@@ -846,10 +829,7 @@ describe('Documents Router Comprehensive Tests', () => {
     it('should call findAccessibleByUser with userId and tenantId', async () => {
       await mockDocumentRepo.findAccessibleByUser('user-123', 'tenant-1');
 
-      expect(mockDocumentRepo.findAccessibleByUser).toHaveBeenCalledWith(
-        'user-123',
-        'tenant-1'
-      );
+      expect(mockDocumentRepo.findAccessibleByUser).toHaveBeenCalledWith('user-123', 'tenant-1');
     });
   });
 });

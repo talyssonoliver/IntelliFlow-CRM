@@ -918,7 +918,9 @@ export function generateSprintPromptData(options: GeneratorOptions): SprintPromp
   } = options;
 
   const sprintTasks = tasks.filter((t) => t['Target Sprint'] === String(sprintNumber));
-  const _completedTasks = sprintTasks.filter((t) => t.Status === 'Done' || t.Status === 'Completed');
+  const _completedTasks = sprintTasks.filter(
+    (t) => t.Status === 'Done' || t.Status === 'Completed'
+  );
   const inferredTheme = theme || inferTheme(sprintTasks);
 
   // Mission Brief

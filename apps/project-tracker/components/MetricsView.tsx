@@ -424,13 +424,20 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Velocity Trend</h2>
-            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-              velocityData.actual.healthStatus === 'healthy' ? 'bg-green-100 text-green-700' :
-              velocityData.actual.healthStatus === 'warning' ? 'bg-yellow-100 text-yellow-700' :
-              'bg-red-100 text-red-700'
-            }`}>
-              {velocityData.actual.healthStatus === 'healthy' ? 'On Track' :
-               velocityData.actual.healthStatus === 'warning' ? 'Below Target' : 'Critical'}
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                velocityData.actual.healthStatus === 'healthy'
+                  ? 'bg-green-100 text-green-700'
+                  : velocityData.actual.healthStatus === 'warning'
+                    ? 'bg-yellow-100 text-yellow-700'
+                    : 'bg-red-100 text-red-700'
+              }`}
+            >
+              {velocityData.actual.healthStatus === 'healthy'
+                ? 'On Track'
+                : velocityData.actual.healthStatus === 'warning'
+                  ? 'Below Target'
+                  : 'Critical'}
             </span>
           </div>
           <p className="text-sm text-gray-600 mb-4">{velocityData.config.velocityGoal}</p>
@@ -464,21 +471,33 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <p className="text-2xl font-bold text-blue-600">{velocityData.actual.currentVelocity}%</p>
+              <p className="text-2xl font-bold text-blue-600">
+                {velocityData.actual.currentVelocity}%
+              </p>
               <p className="text-sm text-gray-600">Current Velocity</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <p className={`text-2xl font-bold ${
-                velocityData.actual.trend === 'improving' ? 'text-green-600' :
-                velocityData.actual.trend === 'declining' ? 'text-red-600' : 'text-gray-600'
-              }`}>
-                {velocityData.actual.trend === 'improving' ? 'Improving' :
-                 velocityData.actual.trend === 'declining' ? 'Declining' : 'Stable'}
+              <p
+                className={`text-2xl font-bold ${
+                  velocityData.actual.trend === 'improving'
+                    ? 'text-green-600'
+                    : velocityData.actual.trend === 'declining'
+                      ? 'text-red-600'
+                      : 'text-gray-600'
+                }`}
+              >
+                {velocityData.actual.trend === 'improving'
+                  ? 'Improving'
+                  : velocityData.actual.trend === 'declining'
+                    ? 'Declining'
+                    : 'Stable'}
               </p>
               <p className="text-sm text-gray-600">Trend</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <p className="text-2xl font-bold text-gray-700">{velocityData.config.targetVelocity}%</p>
+              <p className="text-2xl font-bold text-gray-700">
+                {velocityData.config.targetVelocity}%
+              </p>
               <p className="text-sm text-gray-600">Target</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
@@ -503,18 +522,29 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
               <p className="text-sm text-gray-600">Total Tasks</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <p className="text-2xl font-bold text-green-600">{capacityData.summary.totalCompleted}</p>
+              <p className="text-2xl font-bold text-green-600">
+                {capacityData.summary.totalCompleted}
+              </p>
               <p className="text-sm text-gray-600">Completed</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <p className="text-2xl font-bold text-purple-600">{capacityData.summary.totalCapacityDays}</p>
+              <p className="text-2xl font-bold text-purple-600">
+                {capacityData.summary.totalCapacityDays}
+              </p>
               <p className="text-sm text-gray-600">Capacity (days)</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <p className={`text-2xl font-bold ${
-                capacityData.summary.totalUtilization > 90 ? 'text-red-600' :
-                capacityData.summary.totalUtilization > 70 ? 'text-orange-500' : 'text-green-600'
-              }`}>{capacityData.summary.totalUtilization}%</p>
+              <p
+                className={`text-2xl font-bold ${
+                  capacityData.summary.totalUtilization > 90
+                    ? 'text-red-600'
+                    : capacityData.summary.totalUtilization > 70
+                      ? 'text-orange-500'
+                      : 'text-green-600'
+                }`}
+              >
+                {capacityData.summary.totalUtilization}%
+              </p>
               <p className="text-sm text-gray-600">Utilization</p>
             </div>
           </div>
@@ -532,8 +562,11 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
                 <div className="w-full bg-gray-200 rounded-full h-3">
                   <div
                     className={`h-3 rounded-full transition-all ${
-                      role.utilization > 90 ? 'bg-red-500' :
-                      role.utilization > 70 ? 'bg-orange-400' : 'bg-green-500'
+                      role.utilization > 90
+                        ? 'bg-red-500'
+                        : role.utilization > 70
+                          ? 'bg-orange-400'
+                          : 'bg-green-500'
                     }`}
                     style={{ width: `${Math.min(100, role.utilization)}%` }}
                   />
@@ -555,26 +588,42 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
               <p className="text-xl font-bold text-gray-700">{riskData.summary.total}</p>
               <p className="text-xs text-gray-600">Total</p>
             </div>
-            <div className={`text-center p-2 rounded-lg ${riskData.summary.critical > 0 ? 'bg-red-100' : 'bg-gray-50'}`}>
-              <p className={`text-xl font-bold ${riskData.summary.critical > 0 ? 'text-red-600' : 'text-gray-400'}`}>
+            <div
+              className={`text-center p-2 rounded-lg ${riskData.summary.critical > 0 ? 'bg-red-100' : 'bg-gray-50'}`}
+            >
+              <p
+                className={`text-xl font-bold ${riskData.summary.critical > 0 ? 'text-red-600' : 'text-gray-400'}`}
+              >
                 {riskData.summary.critical}
               </p>
               <p className="text-xs text-gray-600">Critical</p>
             </div>
-            <div className={`text-center p-2 rounded-lg ${riskData.summary.high > 0 ? 'bg-orange-100' : 'bg-gray-50'}`}>
-              <p className={`text-xl font-bold ${riskData.summary.high > 0 ? 'text-orange-600' : 'text-gray-400'}`}>
+            <div
+              className={`text-center p-2 rounded-lg ${riskData.summary.high > 0 ? 'bg-orange-100' : 'bg-gray-50'}`}
+            >
+              <p
+                className={`text-xl font-bold ${riskData.summary.high > 0 ? 'text-orange-600' : 'text-gray-400'}`}
+              >
                 {riskData.summary.high}
               </p>
               <p className="text-xs text-gray-600">High</p>
             </div>
-            <div className={`text-center p-2 rounded-lg ${riskData.summary.medium > 0 ? 'bg-yellow-100' : 'bg-gray-50'}`}>
-              <p className={`text-xl font-bold ${riskData.summary.medium > 0 ? 'text-yellow-600' : 'text-gray-400'}`}>
+            <div
+              className={`text-center p-2 rounded-lg ${riskData.summary.medium > 0 ? 'bg-yellow-100' : 'bg-gray-50'}`}
+            >
+              <p
+                className={`text-xl font-bold ${riskData.summary.medium > 0 ? 'text-yellow-600' : 'text-gray-400'}`}
+              >
                 {riskData.summary.medium}
               </p>
               <p className="text-xs text-gray-600">Medium</p>
             </div>
-            <div className={`text-center p-2 rounded-lg ${riskData.summary.low > 0 ? 'bg-green-100' : 'bg-gray-50'}`}>
-              <p className={`text-xl font-bold ${riskData.summary.low > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+            <div
+              className={`text-center p-2 rounded-lg ${riskData.summary.low > 0 ? 'bg-green-100' : 'bg-gray-50'}`}
+            >
+              <p
+                className={`text-xl font-bold ${riskData.summary.low > 0 ? 'text-green-600' : 'text-gray-400'}`}
+              >
                 {riskData.summary.low}
               </p>
               <p className="text-xs text-gray-600">Low</p>
@@ -586,20 +635,30 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
           </div>
 
           {/* Overall Risk Level */}
-          <div className={`p-3 rounded-lg mb-4 ${
-            riskData.summary.overallLevel === 'critical' ? 'bg-red-50 border border-red-200' :
-            riskData.summary.overallLevel === 'high' ? 'bg-orange-50 border border-orange-200' :
-            riskData.summary.overallLevel === 'medium' ? 'bg-yellow-50 border border-yellow-200' :
-            'bg-green-50 border border-green-200'
-          }`}>
+          <div
+            className={`p-3 rounded-lg mb-4 ${
+              riskData.summary.overallLevel === 'critical'
+                ? 'bg-red-50 border border-red-200'
+                : riskData.summary.overallLevel === 'high'
+                  ? 'bg-orange-50 border border-orange-200'
+                  : riskData.summary.overallLevel === 'medium'
+                    ? 'bg-yellow-50 border border-yellow-200'
+                    : 'bg-green-50 border border-green-200'
+            }`}
+          >
             <div className="flex items-center justify-between">
               <span className="font-medium">Overall Risk Level</span>
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                riskData.summary.overallLevel === 'critical' ? 'bg-red-500 text-white' :
-                riskData.summary.overallLevel === 'high' ? 'bg-orange-500 text-white' :
-                riskData.summary.overallLevel === 'medium' ? 'bg-yellow-500 text-white' :
-                'bg-green-500 text-white'
-              }`}>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                  riskData.summary.overallLevel === 'critical'
+                    ? 'bg-red-500 text-white'
+                    : riskData.summary.overallLevel === 'high'
+                      ? 'bg-orange-500 text-white'
+                      : riskData.summary.overallLevel === 'medium'
+                        ? 'bg-yellow-500 text-white'
+                        : 'bg-green-500 text-white'
+                }`}
+              >
                 {riskData.summary.overallLevel.toUpperCase()}
               </span>
             </div>
@@ -616,20 +675,29 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
                 key={risk.id}
                 className="flex items-center gap-3 p-2 rounded border border-gray-100 hover:bg-gray-50"
               >
-                <span className={`px-2 py-1 rounded text-xs font-mono font-semibold ${
-                  risk.scoreLevel === 'critical' ? 'bg-red-100 text-red-700' :
-                  risk.scoreLevel === 'high' ? 'bg-orange-100 text-orange-700' :
-                  risk.scoreLevel === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-green-100 text-green-700'
-                }`}>
+                <span
+                  className={`px-2 py-1 rounded text-xs font-mono font-semibold ${
+                    risk.scoreLevel === 'critical'
+                      ? 'bg-red-100 text-red-700'
+                      : risk.scoreLevel === 'high'
+                        ? 'bg-orange-100 text-orange-700'
+                        : risk.scoreLevel === 'medium'
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : 'bg-green-100 text-green-700'
+                  }`}
+                >
                   {risk.id}
                 </span>
                 <span className="flex-1 text-sm truncate">{risk.risk}</span>
-                <span className={`px-2 py-1 rounded text-xs ${
-                  risk.status.toLowerCase() === 'mitigated' ? 'bg-blue-100 text-blue-700' :
-                  risk.status.toLowerCase() === 'monitoring' ? 'bg-purple-100 text-purple-700' :
-                  'bg-gray-100 text-gray-700'
-                }`}>
+                <span
+                  className={`px-2 py-1 rounded text-xs ${
+                    risk.status.toLowerCase() === 'mitigated'
+                      ? 'bg-blue-100 text-blue-700'
+                      : risk.status.toLowerCase() === 'monitoring'
+                        ? 'bg-purple-100 text-purple-700'
+                        : 'bg-gray-100 text-gray-700'
+                  }`}
+                >
                   {risk.status}
                 </span>
               </div>

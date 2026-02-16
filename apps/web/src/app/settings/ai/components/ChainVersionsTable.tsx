@@ -49,14 +49,29 @@ interface ChainVersionsTableProps {
 }
 
 // Status badge configuration
-const STATUS_BADGE_CONFIG: Record<ChainVersionStatus, {
-  variant: 'default' | 'secondary' | 'destructive' | 'outline';
-  className: string;
-}> = {
-  DRAFT: { variant: 'outline', className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' },
-  ACTIVE: { variant: 'default', className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' },
-  DEPRECATED: { variant: 'secondary', className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' },
-  ARCHIVED: { variant: 'outline', className: 'bg-gray-50 text-gray-500 dark:bg-gray-900/50 dark:text-gray-500' },
+const STATUS_BADGE_CONFIG: Record<
+  ChainVersionStatus,
+  {
+    variant: 'default' | 'secondary' | 'destructive' | 'outline';
+    className: string;
+  }
+> = {
+  DRAFT: {
+    variant: 'outline',
+    className: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
+  },
+  ACTIVE: {
+    variant: 'default',
+    className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300',
+  },
+  DEPRECATED: {
+    variant: 'secondary',
+    className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300',
+  },
+  ARCHIVED: {
+    variant: 'outline',
+    className: 'bg-gray-50 text-gray-500 dark:bg-gray-900/50 dark:text-gray-500',
+  },
 };
 
 // Chain type labels
@@ -87,10 +102,7 @@ export function ChainVersionsTable({
 
   // Pagination
   const totalPages = Math.ceil(versions.length / PAGE_SIZE);
-  const paginatedVersions = versions.slice(
-    currentPage * PAGE_SIZE,
-    (currentPage + 1) * PAGE_SIZE
-  );
+  const paginatedVersions = versions.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
 
   if (isLoading) {
     return (
@@ -184,7 +196,8 @@ export function ChainVersionsTable({
                 const canActivate = version.status === 'DRAFT';
                 const canDeprecate = version.status === 'ACTIVE';
                 const canArchive = version.status === 'DEPRECATED';
-                const canRollback = version.status === 'DEPRECATED' || version.status === 'ARCHIVED';
+                const canRollback =
+                  version.status === 'DEPRECATED' || version.status === 'ARCHIVED';
 
                 return (
                   <TableRow
@@ -196,17 +209,12 @@ export function ChainVersionsTable({
                       {CHAIN_TYPE_LABELS[version.chainType]}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={statusConfig.variant}
-                        className={statusConfig.className}
-                      >
+                      <Badge variant={statusConfig.variant} className={statusConfig.className}>
                         {version.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="font-mono text-sm">{version.model}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {version.createdBy}
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">{version.createdBy}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {typeof version.createdAt === 'string'
                         ? new Date(version.createdAt).toLocaleDateString()

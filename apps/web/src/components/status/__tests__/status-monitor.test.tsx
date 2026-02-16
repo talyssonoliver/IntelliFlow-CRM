@@ -15,10 +15,34 @@ import { StatusMonitor } from '../status-monitor';
 
 // Mock data - use unique uptime values to avoid collision with hardcoded UI values
 const mockServices = [
-  { id: 'api', name: 'API', description: 'API Service', status: 'operational' as const, uptime: 99.95 },
-  { id: 'web', name: 'Web App', description: 'Web Application', status: 'operational' as const, uptime: 99.9 },
-  { id: 'db', name: 'Database', description: 'Database Service', status: 'degraded' as const, uptime: 99.5 },
-  { id: 'cdn', name: 'CDN', description: 'Content Delivery', status: 'operational' as const, uptime: 99.8 },
+  {
+    id: 'api',
+    name: 'API',
+    description: 'API Service',
+    status: 'operational' as const,
+    uptime: 99.95,
+  },
+  {
+    id: 'web',
+    name: 'Web App',
+    description: 'Web Application',
+    status: 'operational' as const,
+    uptime: 99.9,
+  },
+  {
+    id: 'db',
+    name: 'Database',
+    description: 'Database Service',
+    status: 'degraded' as const,
+    uptime: 99.5,
+  },
+  {
+    id: 'cdn',
+    name: 'CDN',
+    description: 'Content Delivery',
+    status: 'operational' as const,
+    uptime: 99.8,
+  },
 ];
 
 describe('StatusMonitor', () => {
@@ -73,7 +97,13 @@ describe('StatusMonitor', () => {
     it('should render only first 4 services', async () => {
       const manyServices = [
         ...mockServices,
-        { id: 'extra', name: 'Extra Service', description: 'Extra', status: 'operational' as const, uptime: 99.0 },
+        {
+          id: 'extra',
+          name: 'Extra Service',
+          description: 'Extra',
+          status: 'operational' as const,
+          uptime: 99.0,
+        },
       ];
 
       render(<StatusMonitor services={manyServices} />);
@@ -149,8 +179,12 @@ describe('StatusMonitor', () => {
         vi.advanceTimersByTime(10);
       });
 
-      expect(screen.getByRole('img', { name: /API uptime chart: 99.95% over 90 days/i })).toBeInTheDocument();
-      expect(screen.getByRole('img', { name: /Web App uptime chart: 99.9% over 90 days/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('img', { name: /API uptime chart: 99.95% over 90 days/i })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('img', { name: /Web App uptime chart: 99.9% over 90 days/i })
+      ).toBeInTheDocument();
     });
 
     it('should generate deterministic uptime bars based on service id', async () => {

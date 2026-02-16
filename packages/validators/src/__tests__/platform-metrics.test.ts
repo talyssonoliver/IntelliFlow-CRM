@@ -15,7 +15,12 @@ import {
   onboardingStepSchema,
   secretsToolSchema,
 } from '../platform-metrics';
-import type { SelfServiceMetrics, GoldenPath, DeploymentConfig, KpiEntry } from '../platform-metrics';
+import type {
+  SelfServiceMetrics,
+  GoldenPath,
+  DeploymentConfig,
+  KpiEntry,
+} from '../platform-metrics';
 
 describe('Platform Metrics Validators', () => {
   describe('Enum Schemas', () => {
@@ -384,7 +389,13 @@ describe('Platform Metrics Validators', () => {
         },
         developer_onboarding: {
           name: 'Onboarding',
-          steps: ['clone_repository', 'install_dependencies', 'setup_environment', 'run_local_dev', 'complete_first_task'],
+          steps: [
+            'clone_repository',
+            'install_dependencies',
+            'setup_environment',
+            'run_local_dev',
+            'complete_first_task',
+          ],
           average_time_to_first_commit_hours: 4,
           success_rate_percent: 100,
         },

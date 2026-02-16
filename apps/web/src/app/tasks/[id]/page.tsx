@@ -29,7 +29,11 @@ export default function TaskDetailPage() {
 
   const isValidId = UUID_REGEX.test(params.id ?? '');
 
-  const { data: task, isLoading, error } = api.task.getById.useQuery(
+  const {
+    data: task,
+    isLoading,
+    error,
+  } = api.task.getById.useQuery(
     { id: params.id },
     { enabled: isAuthenticated && !authLoading && !!params.id && isValidId }
   );
@@ -80,35 +84,48 @@ export default function TaskDetailPage() {
     },
   });
 
-  const handleComplete = useCallback((id: string) => {
-    completeMutation.mutate({ taskId: id });
-  }, [completeMutation]);
+  const handleComplete = useCallback(
+    (id: string) => {
+      completeMutation.mutate({ taskId: id });
+    },
+    [completeMutation]
+  );
 
   const handleEdit = useCallback((t: TaskDetailData) => {
     setEditingTask(t);
   }, []);
 
-  const handleDelete = useCallback((id: string) => {
-    deleteMutation.mutate({ id });
-  }, [deleteMutation]);
+  const handleDelete = useCallback(
+    (id: string) => {
+      deleteMutation.mutate({ id });
+    },
+    [deleteMutation]
+  );
 
-  const handleArchive = useCallback((id: string) => {
-    archiveMutation.mutate({ id });
-  }, [archiveMutation]);
+  const handleArchive = useCallback(
+    (id: string) => {
+      archiveMutation.mutate({ id });
+    },
+    [archiveMutation]
+  );
 
-  const handleEditSubmit = useCallback((formData: TaskFormData) => {
-    if (!editingTask) return;
-    updateMutation.mutate({
-      id: editingTask.id,
-      title: formData.title,
-      description: formData.description || undefined,
-      dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
-      priority: formData.priority,
-      status: formData.status,
-    });
-  }, [editingTask, updateMutation]);
+  const handleEditSubmit = useCallback(
+    (formData: TaskFormData) => {
+      if (!editingTask) return;
+      updateMutation.mutate({
+        id: editingTask.id,
+        title: formData.title,
+        description: formData.description || undefined,
+        dueDate: formData.dueDate ? new Date(formData.dueDate) : undefined,
+        priority: formData.priority,
+        status: formData.status,
+      });
+    },
+    [editingTask, updateMutation]
+  );
 
-  const isNotFound = !isLoading && !task && (!error || !isValidId || error.data?.code === 'NOT_FOUND');
+  const isNotFound =
+    !isLoading && !task && (!error || !isValidId || error.data?.code === 'NOT_FOUND');
 
   return (
     <div className="flex flex-col gap-6">
@@ -136,16 +153,34 @@ export default function TaskDetailPage() {
         open={!!editingTask}
         onClose={() => setEditingTask(null)}
         onSubmit={handleEditSubmit}
-        initialData={editingTask ? {
-          title: editingTask.title,
-          description: editingTask.description ?? '',
-          dueDate: editingTask.dueDate ? (typeof editingTask.dueDate === 'string' ? editingTask.dueDate.split('T')[0] : '') : '',
-          priority: editingTask.priority,
-          status: editingTask.status,
-          entityType: editingTask.lead ? 'lead' : editingTask.contact ? 'contact' : editingTask.opportunity ? 'opportunity' : 'none',
-          entityId: editingTask.lead?.id ?? editingTask.contact?.id ?? editingTask.opportunity?.id ?? '',
-          entityName: getEntityName(editingTask),
-        } : null}
+        initialData={
+          editingTask
+            ? {
+                title: editingTask.title,
+                description: editingTask.description ?? '',
+                dueDate: editingTask.dueDate
+                  ? typeof editingTask.dueDate === 'string'
+                    ? editingTask.dueDate.split('T')[0]
+                    : ''
+                  : '',
+                priority: editingTask.priority,
+                status: editingTask.status,
+                entityType: editingTask.lead
+                  ? 'lead'
+                  : editingTask.contact
+                    ? 'contact'
+                    : editingTask.opportunity
+                      ? 'opportunity'
+                      : 'none',
+                entityId:
+                  editingTask.lead?.id ??
+                  editingTask.contact?.id ??
+                  editingTask.opportunity?.id ??
+                  '',
+                entityName: getEntityName(editingTask),
+              }
+            : null
+        }
         mode="edit"
       />
     </div>

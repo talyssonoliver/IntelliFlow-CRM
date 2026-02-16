@@ -19,7 +19,12 @@ const baseLeadFieldsSchema = z.object({
   email: emailSchema,
   firstName: nameSchema.optional(),
   lastName: nameSchema.optional(),
-  company: z.string().min(1).max(200).transform(val => val.trim()).optional(),
+  company: z
+    .string()
+    .min(1)
+    .max(200)
+    .transform((val) => val.trim())
+    .optional(),
   title: nameSchema.optional(),
   phone: phoneSchema,
   source: leadSourceSchema,
@@ -40,12 +45,10 @@ export const createLeadSchema = baseLeadFieldsSchema.extend({
 export type CreateLeadInput = z.infer<typeof createLeadSchema>;
 
 // Update Lead Schema - extends base with id and status, all fields optional
-export const updateLeadSchema = baseLeadFieldsSchema
-  .partial()
-  .extend({
-    id: idSchema,
-    status: leadStatusSchema.optional(),
-  });
+export const updateLeadSchema = baseLeadFieldsSchema.partial().extend({
+  id: idSchema,
+  status: leadStatusSchema.optional(),
+});
 
 export type UpdateLeadInput = z.infer<typeof updateLeadSchema>;
 

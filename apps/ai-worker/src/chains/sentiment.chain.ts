@@ -56,7 +56,10 @@ const logger = pino({
 export const sentimentInputSchema = z.object({
   text: z.string().min(1).max(10000),
   context: z.string().optional(),
-  source: z.enum(['email', 'chat', 'note', 'ticket', 'call_transcript', 'other']).optional().default('other'),
+  source: z
+    .enum(['email', 'chat', 'note', 'ticket', 'call_transcript', 'other'])
+    .optional()
+    .default('other'),
   metadata: z.record(z.unknown()).optional(),
 });
 
@@ -71,10 +74,12 @@ export const sentimentResultSchema = z.object({
   sentimentScore: z.number().min(-1).max(1), // -1 = very negative, +1 = very positive
 
   // Emotions detected
-  emotions: z.array(z.object({
-    emotion: z.enum(EMOTION_LABELS),
-    intensity: z.number().min(0).max(1),
-  })),
+  emotions: z.array(
+    z.object({
+      emotion: z.enum(EMOTION_LABELS),
+      intensity: z.number().min(0).max(1),
+    })
+  ),
   primaryEmotion: z.enum(EMOTION_LABELS),
 
   // Business context
@@ -82,10 +87,12 @@ export const sentimentResultSchema = z.object({
   urgencyScore: z.number().min(0).max(1),
 
   // Key phrases
-  keyPhrases: z.array(z.object({
-    phrase: z.string(),
-    sentiment: z.enum(['positive', 'neutral', 'negative']),
-  })),
+  keyPhrases: z.array(
+    z.object({
+      phrase: z.string(),
+      sentiment: z.enum(['positive', 'neutral', 'negative']),
+    })
+  ),
 
   // Confidence & reasoning
   confidence: z.number().min(0).max(1),
@@ -105,17 +112,21 @@ export type SentimentResult = z.infer<typeof sentimentResultSchema>;
 const llmOutputSchema = z.object({
   sentiment: z.enum(SENTIMENT_LABELS),
   sentimentScore: z.number(),
-  emotions: z.array(z.object({
-    emotion: z.enum(EMOTION_LABELS),
-    intensity: z.number(),
-  })),
+  emotions: z.array(
+    z.object({
+      emotion: z.enum(EMOTION_LABELS),
+      intensity: z.number(),
+    })
+  ),
   primaryEmotion: z.enum(EMOTION_LABELS),
   urgency: z.enum(URGENCY_LEVELS),
   urgencyScore: z.number(),
-  keyPhrases: z.array(z.object({
-    phrase: z.string(),
-    sentiment: z.enum(['positive', 'neutral', 'negative']),
-  })),
+  keyPhrases: z.array(
+    z.object({
+      phrase: z.string(),
+      sentiment: z.enum(['positive', 'neutral', 'negative']),
+    })
+  ),
   confidence: z.number(),
   reasoning: z.string(),
 });
@@ -255,7 +266,7 @@ ANALYSIS INSTRUCTIONS:
       const response = await this.model.invoke(formattedPrompt);
 
       // Parse the structured output
-      const parsed = await this.parser.parse(response.content as string) as {
+      const parsed = (await this.parser.parse(response.content as string)) as {
         sentiment: (typeof SENTIMENT_LABELS)[number];
         sentimentScore: number;
         emotions: Array<{ emotion: (typeof EMOTION_LABELS)[number]; intensity: number }>;
@@ -335,7 +346,7 @@ ANALYSIS INSTRUCTIONS:
       // Rate limiting
       if (aiConfig.performance.rateLimitPerMinute) {
         const delayMs = (60 * 1000) / aiConfig.performance.rateLimitPerMinute;
-        await new Promise(resolve => setTimeout(resolve, delayMs));
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     }
 
@@ -367,10 +378,13 @@ ANALYSIS INSTRUCTIONS:
     }
 
     // Calculate distribution
-    const distribution = SENTIMENT_LABELS.reduce((acc, label) => {
-      acc[label] = results.filter(r => r.sentiment === label).length;
-      return acc;
-    }, {} as Record<SentimentLabel, number>);
+    const distribution = SENTIMENT_LABELS.reduce(
+      (acc, label) => {
+        acc[label] = results.filter((r) => r.sentiment === label).length;
+        return acc;
+      },
+      {} as Record<SentimentLabel, number>
+    );
 
     // Calculate averages
     const avgScore = results.reduce((sum, r) => sum + r.sentimentScore, 0) / results.length;
@@ -411,7 +425,8 @@ ANALYSIS INSTRUCTIONS:
         { phrase: 'excited about the opportunity', sentiment: 'positive' },
       ],
       confidence: 0.85,
-      reasoning: 'The text shows positive engagement with forward-looking language and trust signals.',
+      reasoning:
+        'The text shows positive engagement with forward-looking language and trust signals.',
     });
   }
 }

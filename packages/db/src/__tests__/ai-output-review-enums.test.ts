@@ -8,11 +8,7 @@
  * @see packages/domain/src/ai/review/ReviewStatus.ts
  */
 import { describe, it, expect } from 'vitest';
-import {
-  AI_OUTPUT_TYPES,
-  REVIEW_STATUSES,
-  REVIEW_DECISIONS,
-} from '@intelliflow/domain';
+import { AI_OUTPUT_TYPES, REVIEW_STATUSES, REVIEW_DECISIONS } from '@intelliflow/domain';
 
 // Import Prisma enums - these will fail until schema is updated
 import { AIOutputType, ReviewStatus, ReviewDecision } from '@prisma/client';

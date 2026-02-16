@@ -13,13 +13,7 @@
 
 import { existsSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import type {
-  Task,
-  HydratedContext,
-  AgentRole,
-  AgentProfile,
-  AgentSelection,
-} from './types.js';
+import type { Task, HydratedContext, AgentRole, AgentProfile, AgentSelection } from './types.js';
 import { AGENT_ROLES } from './types.js';
 import { getAgentSelectionPath, getContextDir } from './paths.js';
 
@@ -31,7 +25,8 @@ export const AGENT_POOL: AgentProfile[] = [
   {
     role: 'Backend-Architect',
     expertise: ['system design', 'API design', 'database', 'tRPC', 'Prisma', 'Node.js'],
-    triggerKeywords: /\b(API|router|endpoint|database|prisma|trpc|backend|server|query|mutation)\b/i,
+    triggerKeywords:
+      /\b(API|router|endpoint|database|prisma|trpc|backend|server|query|mutation)\b/i,
     triggerPaths: [/apps\/api/, /packages\/db/, /packages\/adapters/],
     alwaysInclude: false,
     priority: 1,
@@ -39,7 +34,8 @@ export const AGENT_POOL: AgentProfile[] = [
   {
     role: 'Frontend-Lead',
     expertise: ['React', 'Next.js', 'UI/UX', 'components', 'Tailwind', 'shadcn'],
-    triggerKeywords: /\b(component|page|UI|form|dashboard|frontend|react|next|tailwind|shadcn|widget)\b/i,
+    triggerKeywords:
+      /\b(component|page|UI|form|dashboard|frontend|react|next|tailwind|shadcn|widget)\b/i,
     triggerPaths: [/apps\/web/, /packages\/ui/],
     alwaysInclude: false,
     priority: 2,
@@ -47,7 +43,8 @@ export const AGENT_POOL: AgentProfile[] = [
   {
     role: 'AI-Specialist',
     expertise: ['LangChain', 'embeddings', 'prompts', 'ML', 'agents', 'LLM', 'scoring'],
-    triggerKeywords: /\b(AI|ML|embedding|vector|scoring|llm|ollama|openai|langchain|crewai|agent|chain|prompt)\b/i,
+    triggerKeywords:
+      /\b(AI|ML|embedding|vector|scoring|llm|ollama|openai|langchain|crewai|agent|chain|prompt)\b/i,
     triggerPaths: [/apps\/ai-worker/, /chains/, /agents/, /embeddings/],
     alwaysInclude: false,
     priority: 3,
@@ -55,7 +52,8 @@ export const AGENT_POOL: AgentProfile[] = [
   {
     role: 'Security-Lead',
     expertise: ['auth', 'validation', 'OWASP', 'encryption', 'RBAC', 'secrets'],
-    triggerKeywords: /\b(auth|jwt|token|session|rbac|permissions|secret|vault|rate-limit|csrf|xss|injection|security|encrypt)\b/i,
+    triggerKeywords:
+      /\b(auth|jwt|token|session|rbac|permissions|secret|vault|rate-limit|csrf|xss|injection|security|encrypt)\b/i,
     triggerPaths: [/security/, /auth/, /rbac/],
     alwaysInclude: false,
     priority: 4,
@@ -63,7 +61,8 @@ export const AGENT_POOL: AgentProfile[] = [
   {
     role: 'DevOps-Lead',
     expertise: ['Docker', 'CI/CD', 'infrastructure', 'deployment', 'monitoring'],
-    triggerKeywords: /\b(docker|ci|cd|deploy|pipeline|github.actions|terraform|infra|monitoring|observability|kubernetes)\b/i,
+    triggerKeywords:
+      /\b(docker|ci|cd|deploy|pipeline|github.actions|terraform|infra|monitoring|observability|kubernetes)\b/i,
     triggerPaths: [/infra\//, /\.github\/workflows/, /docker/],
     alwaysInclude: false,
     priority: 5,
@@ -71,7 +70,8 @@ export const AGENT_POOL: AgentProfile[] = [
   {
     role: 'Data-Engineer',
     expertise: ['Prisma', 'migrations', 'queries', 'pgvector', 'PostgreSQL', 'Supabase'],
-    triggerKeywords: /\b(schema|migration|query|database|model|prisma|supabase|postgres|pgvector|RLS)\b/i,
+    triggerKeywords:
+      /\b(schema|migration|query|database|model|prisma|supabase|postgres|pgvector|RLS)\b/i,
     triggerPaths: [/packages\/db/, /prisma/, /migrations/],
     alwaysInclude: false,
     priority: 6,
@@ -318,10 +318,9 @@ export function selectAgents(task: Task, context?: HydratedContext): AgentSelect
   const finalAgents = prioritySorted.slice(0, MAX_AGENTS);
 
   // Add Security-Lead for high-risk tasks even if at capacity
-  const isHighRisk =
-    /\b(auth|security|payment|credential|secret|encrypt)\b/i.test(
-      `${task.description} ${task.definitionOfDone}`
-    );
+  const isHighRisk = /\b(auth|security|payment|credential|secret|encrypt)\b/i.test(
+    `${task.description} ${task.definitionOfDone}`
+  );
 
   if (isHighRisk && !finalAgents.includes('Security-Lead')) {
     // Replace lowest priority agent with Security-Lead
@@ -442,7 +441,4 @@ export function getRecommendedTeam(domain: TaskDomain): AgentRole[] {
 // Exports
 // ============================================================================
 
-export {
-  MIN_AGENTS,
-  MAX_AGENTS,
-};
+export { MIN_AGENTS, MAX_AGENTS };

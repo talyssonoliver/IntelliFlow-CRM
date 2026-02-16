@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "ES2022"
-    ],
+    "lib": ["dom", "dom.iterable", "ES2022"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -24,18 +20,10 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@intelliflow/api-client": [
-        "../../packages/api-client/src"
-      ],
-      "@intelliflow/ui": [
-        "../../packages/ui/src"
-      ],
-      "@intelliflow/validators": [
-        "../../packages/validators/src"
-      ]
+      "@/*": ["./src/*"],
+      "@intelliflow/api-client": ["../../packages/api-client/src"],
+      "@intelliflow/ui": ["../../packages/ui/src"],
+      "@intelliflow/validators": ["../../packages/validators/src"]
     }
   },
   "include": [
@@ -46,7 +34,5 @@
     ".next/dev/types/**/*.ts",
     ".next/dev/dev/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }

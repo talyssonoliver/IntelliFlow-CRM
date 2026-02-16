@@ -30,7 +30,9 @@ const DEFAULT_MODEL_VERSION = 'unknown';
  */
 export class OptimisticLockError extends Error {
   constructor(entityType: string, id: string) {
-    super(`Optimistic lock failed for ${entityType} with id ${id}. Entity was modified by another transaction.`);
+    super(
+      `Optimistic lock failed for ${entityType} with id ${id}. Entity was modified by another transaction.`
+    );
     this.name = 'OptimisticLockError';
   }
 }
@@ -81,7 +83,8 @@ export class PrismaAutoResponseDraftRepository implements AutoResponseDraftRepos
     const where: Record<string, unknown> = { tenantId: query.tenantId };
 
     if (query.leadId) where.leadId = query.leadId;
-    if (query.status) where.status = Array.isArray(query.status) ? { in: query.status } : query.status;
+    if (query.status)
+      where.status = Array.isArray(query.status) ? { in: query.status } : query.status;
     if (query.triggerType) where.triggerType = query.triggerType;
     if (query.expiredOnly) where.expiresAt = { lt: new Date() };
 
@@ -220,7 +223,9 @@ export class PrismaAutoResponseDraftRepository implements AutoResponseDraftRepos
     return draft;
   }
 
-  private serializeStatusHistory(history: ReadonlyArray<StatusHistoryEntry>): Prisma.InputJsonValue {
+  private serializeStatusHistory(
+    history: ReadonlyArray<StatusHistoryEntry>
+  ): Prisma.InputJsonValue {
     return history.map((entry) => ({
       status: entry.status,
       changedAt: entry.changedAt.toISOString(),

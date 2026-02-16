@@ -92,16 +92,14 @@ function getOverallBadge(overall?: string, verdict?: string) {
   // Handle sprint audit verdict
   if (verdict === 'PASS')
     return { cls: 'bg-green-100 text-green-800 border-green-300', label: 'PASS' };
-  if (verdict === 'FAIL')
-    return { cls: 'bg-red-100 text-red-800 border-red-300', label: 'FAIL' };
+  if (verdict === 'FAIL') return { cls: 'bg-red-100 text-red-800 border-red-300', label: 'FAIL' };
 
   // Handle system audit overall_status
   if (overall === 'pass')
     return { cls: 'bg-green-100 text-green-800 border-green-300', label: 'PASS' };
   if (overall === 'warn')
     return { cls: 'bg-yellow-100 text-yellow-800 border-yellow-300', label: 'WARN' };
-  if (overall === 'fail')
-    return { cls: 'bg-red-100 text-red-800 border-red-300', label: 'FAIL' };
+  if (overall === 'fail') return { cls: 'bg-red-100 text-red-800 border-red-300', label: 'FAIL' };
 
   return { cls: 'bg-gray-100 text-gray-700 border-gray-300', label: 'UNKNOWN' };
 }
@@ -324,7 +322,9 @@ export default function AuditView() {
   const [sprintToAudit, setSprintToAudit] = useState<number | null>(null);
   const [strictMode, setStrictMode] = useState(false);
   const [skipValidations, setSkipValidations] = useState(false);
-  const [sprintAuditResult, setSprintAuditResult] = useState<SprintCompletionAuditResult | null>(null);
+  const [sprintAuditResult, setSprintAuditResult] = useState<SprintCompletionAuditResult | null>(
+    null
+  );
   const [isLoadingSprints, setIsLoadingSprints] = useState(true);
 
   // Fix Prompt state
@@ -1025,10 +1025,14 @@ export default function AuditView() {
                     <div className="flex items-center justify-between gap-3">
                       <div className="font-mono text-xs text-gray-800">{b.runId}</div>
                       <div className="flex items-center gap-1">
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${typeBadge.cls}`}>
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full border ${typeBadge.cls}`}
+                        >
                           {typeBadge.label}
                         </span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${badge.cls}`}>
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full border ${badge.cls}`}
+                        >
                           {badge.label}
                         </span>
                       </div>
@@ -1041,7 +1045,8 @@ export default function AuditView() {
                     )}
                     {b.type === 'sprint' && b.summary?.sprint !== undefined && (
                       <div className="text-[11px] text-gray-500 mt-1">
-                        Sprint {b.summary.sprint} • {b.summary.summary?.auditedTasks ?? 0} tasks audited
+                        Sprint {b.summary.sprint} • {b.summary.summary?.auditedTasks ?? 0} tasks
+                        audited
                       </div>
                     )}
                     {b.type === 'system' && b.summary?.commit_sha && (
@@ -1211,7 +1216,8 @@ export default function AuditView() {
             </div>
             <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
               <p className="text-xs text-gray-600">
-                Copy this prompt and paste it into Claude Code to automatically fix the audit failures.
+                Copy this prompt and paste it into Claude Code to automatically fix the audit
+                failures.
               </p>
             </div>
           </div>

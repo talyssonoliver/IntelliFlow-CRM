@@ -147,7 +147,15 @@ export function getMetricsFilePath(taskId: string, repoRoot?: string): string {
   const base = repoRoot || process.cwd();
 
   // Read Sprint_plan.csv to find the task's phase
-  const csvPath = join(base, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+  const csvPath = join(
+    base,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    '_global',
+    'Sprint_plan.csv'
+  );
 
   if (!existsSync(csvPath)) {
     throw new Error(`Sprint_plan.csv not found at: ${csvPath}`);
@@ -164,11 +172,19 @@ export function getMetricsFilePath(taskId: string, repoRoot?: string): string {
     throw new Error(`Task ${taskId} not found in Sprint_plan.csv`);
   }
 
-  const sprintNumber = task['Target Sprint'] === 'Continuous' ? 0 : parseInt(task['Target Sprint'], 10) || 0;
+  const sprintNumber =
+    task['Target Sprint'] === 'Continuous' ? 0 : parseInt(task['Target Sprint'], 10) || 0;
 
   // Determine phase directory from task metadata
   // This is simplified - in practice, phase detection may need more logic
-  const metricsBase = join(base, 'apps', 'project-tracker', 'docs', 'metrics', `sprint-${sprintNumber}`);
+  const metricsBase = join(
+    base,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    `sprint-${sprintNumber}`
+  );
 
   // Look for existing task file in any phase directory
   const { readdirSync } = require('node:fs');
@@ -384,7 +400,9 @@ export async function recordTaskComplete(options: TaskCompleteOptions): Promise<
   metrics.status_history.push({
     status,
     at: timestamp,
-    note: note || `${session} session ${success ? 'completed' : 'failed'}${verdict ? ` (${verdict})` : ''}`,
+    note:
+      note ||
+      `${session} session ${success ? 'completed' : 'failed'}${verdict ? ` (${verdict})` : ''}`,
   });
 
   // Update execution block

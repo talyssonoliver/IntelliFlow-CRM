@@ -148,10 +148,7 @@ const ctaSection: CtaSection = {
 const logoCloudSection: LogoCloudSection = {
   type: 'logo-cloud',
   title: 'Trusted by',
-  logos: [
-    { name: 'TechCorp' },
-    { name: 'SalesCo' },
-  ],
+  logos: [{ name: 'TechCorp' }, { name: 'SalesCo' }],
 };
 
 // ---------------------------------------------------------------------------
@@ -570,9 +567,7 @@ describe('LandingBuilder', () => {
       slug: 'test',
       title: 'Test',
       description: 'desc',
-      sections: [
-        { type: 'unknown-section' } as any,
-      ],
+      sections: [{ type: 'unknown-section' } as any],
     };
 
     const { container } = render(<LandingBuilder config={config} />);

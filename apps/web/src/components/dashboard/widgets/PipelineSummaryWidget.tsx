@@ -11,9 +11,21 @@ interface PipelineStage {
 }
 
 const stages: PipelineStage[] = [
-  { name: 'Qualification', value: '$12,400', deals: 8, percentage: 15, color: 'bg-stage-qualification' },
+  {
+    name: 'Qualification',
+    value: '$12,400',
+    deals: 8,
+    percentage: 15,
+    color: 'bg-stage-qualification',
+  },
   { name: 'Proposal', value: '$34,200', deals: 12, percentage: 40, color: 'bg-stage-proposal' },
-  { name: 'Negotiation', value: '$120,000', deals: 4, percentage: 25, color: 'bg-stage-negotiation' },
+  {
+    name: 'Negotiation',
+    value: '$120,000',
+    deals: 4,
+    percentage: 25,
+    color: 'bg-stage-negotiation',
+  },
   { name: 'Closed Won', value: '$40,000', deals: 2, percentage: 20, color: 'bg-stage-won' },
 ];
 
@@ -21,9 +33,7 @@ export function PipelineSummaryWidget(_props: WidgetProps) {
   return (
     <div className="p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-foreground">
-          Pipeline Summary
-        </h3>
+        <h3 className="text-lg font-semibold text-foreground">Pipeline Summary</h3>
         <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
           <span className="material-symbols-outlined">more_horiz</span>
         </button>
@@ -33,9 +43,7 @@ export function PipelineSummaryWidget(_props: WidgetProps) {
         {stages.map((stage) => (
           <div key={stage.name}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-foreground">
-                {stage.name}
-              </span>
+              <span className="text-sm font-medium text-foreground">{stage.name}</span>
               <span className="text-sm text-muted-foreground">
                 {stage.value} ({stage.deals} Deals)
               </span>

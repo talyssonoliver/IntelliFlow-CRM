@@ -81,14 +81,21 @@ describe('PrismaNotificationPreferenceRepository', () => {
     it('should upsert preference', async () => {
       mockPrisma.notificationPreference.upsert.mockResolvedValue({});
       const pref = {
-        id: 'pref_1', tenantId: 'tenant_1', userId: 'user_1',
-        quietHoursStart: '22:00', quietHoursEnd: '08:00', quietHoursEnabled: false,
-        timezone: 'UTC', doNotDisturb: false,
+        id: 'pref_1',
+        tenantId: 'tenant_1',
+        userId: 'user_1',
+        quietHoursStart: '22:00',
+        quietHoursEnd: '08:00',
+        quietHoursEnabled: false,
+        timezone: 'UTC',
+        doNotDisturb: false,
         toJSON: () => ({ channels: { in_app: { enabled: true } }, categories: { system: true } }),
       };
       await repo.save(pref as any);
       expect(mockPrisma.notificationPreference.upsert).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { tenantId_userId: { tenantId: 'tenant_1', userId: 'user_1' } } })
+        expect.objectContaining({
+          where: { tenantId_userId: { tenantId: 'tenant_1', userId: 'user_1' } },
+        })
       );
     });
   });
@@ -102,12 +109,18 @@ describe('PrismaNotificationPreferenceRepository', () => {
 
     it('should return domain entity when found', async () => {
       mockPrisma.notificationPreference.findUnique.mockResolvedValue({
-        id: 'pref_1', tenantId: 'tenant_1', userId: 'user_1',
+        id: 'pref_1',
+        tenantId: 'tenant_1',
+        userId: 'user_1',
         channelPreferences: { in_app: { enabled: true, frequency: 'realtime' } },
         categoryPreferences: { system: true },
-        quietHoursStart: '22:00', quietHoursEnd: '08:00', quietHoursEnabled: false,
-        timezone: 'UTC', doNotDisturb: false,
-        createdAt: new Date(), updatedAt: new Date(),
+        quietHoursStart: '22:00',
+        quietHoursEnd: '08:00',
+        quietHoursEnabled: false,
+        timezone: 'UTC',
+        doNotDisturb: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
       const result = await repo.findByUserId('tenant_1', 'user_1');
       expect(result).not.toBeNull();
@@ -115,11 +128,18 @@ describe('PrismaNotificationPreferenceRepository', () => {
 
     it('should use default preferences when channelPreferences is null', async () => {
       mockPrisma.notificationPreference.findUnique.mockResolvedValue({
-        id: 'pref_2', tenantId: 'tenant_1', userId: 'user_2',
-        channelPreferences: null, categoryPreferences: null,
-        quietHoursStart: '22:00', quietHoursEnd: '08:00', quietHoursEnabled: false,
-        timezone: 'UTC', doNotDisturb: false,
-        createdAt: new Date(), updatedAt: new Date(),
+        id: 'pref_2',
+        tenantId: 'tenant_1',
+        userId: 'user_2',
+        channelPreferences: null,
+        categoryPreferences: null,
+        quietHoursStart: '22:00',
+        quietHoursEnd: '08:00',
+        quietHoursEnabled: false,
+        timezone: 'UTC',
+        doNotDisturb: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
       const result = await repo.findByUserId('tenant_1', 'user_2');
       expect(result).not.toBeNull();
@@ -129,12 +149,18 @@ describe('PrismaNotificationPreferenceRepository', () => {
   describe('findOrCreateDefault', () => {
     it('should return existing preference', async () => {
       mockPrisma.notificationPreference.findUnique.mockResolvedValue({
-        id: 'pref_1', tenantId: 'tenant_1', userId: 'user_1',
+        id: 'pref_1',
+        tenantId: 'tenant_1',
+        userId: 'user_1',
         channelPreferences: { in_app: { enabled: true, frequency: 'realtime' } },
         categoryPreferences: { system: true },
-        quietHoursStart: '22:00', quietHoursEnd: '08:00', quietHoursEnabled: false,
-        timezone: 'UTC', doNotDisturb: false,
-        createdAt: new Date(), updatedAt: new Date(),
+        quietHoursStart: '22:00',
+        quietHoursEnd: '08:00',
+        quietHoursEnabled: false,
+        timezone: 'UTC',
+        doNotDisturb: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
       });
       const result = await repo.findOrCreateDefault('tenant_1', 'user_1');
       expect(result).not.toBeNull();

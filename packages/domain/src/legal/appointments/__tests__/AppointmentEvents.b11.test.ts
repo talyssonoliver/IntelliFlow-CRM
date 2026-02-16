@@ -37,10 +37,7 @@ import { CaseId } from '../../cases/CaseId';
 const aptId = AppointmentId.generate();
 const aptId2 = AppointmentId.generate();
 
-function createTimeSlot(
-  startHour: number = 10,
-  endHour: number = 11
-): TimeSlot {
+function createTimeSlot(startHour: number = 10, endHour: number = 11): TimeSlot {
   const start = new Date('2026-03-10T00:00:00Z');
   start.setUTCHours(startHour, 0, 0, 0);
   const end = new Date('2026-03-10T00:00:00Z');

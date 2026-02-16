@@ -2,7 +2,8 @@
 
 ## Overview
 
-This document describes the Row-Level Security policies for IntelliFlow CRM tenant isolation, implementing IFC-127.
+This document describes the Row-Level Security policies for IntelliFlow CRM
+tenant isolation, implementing IFC-127.
 
 ## Policy Definitions
 
@@ -109,16 +110,15 @@ CREATE POLICY "audit_logs_insert" ON audit_logs
 
 ## Application Layer Enforcement
 
-See `apps/api/src/security/tenant-context.ts` for application-layer tenant isolation:
+See `apps/api/src/security/tenant-context.ts` for application-layer tenant
+isolation:
 
 ```typescript
 // Middleware extracts tenant context from JWT
 const tenant = extractTenantContext(user);
 
 // Prisma extension sets RLS context before each query
-await prisma.$executeRawUnsafe(
-  `SET request.jwt.claims = '${claims}'`
-);
+await prisma.$executeRawUnsafe(`SET request.jwt.claims = '${claims}'`);
 ```
 
 ## Testing
@@ -131,16 +131,15 @@ pnpm --filter @intelliflow/api test:integration
 
 ## Verification Checklist
 
-| Table | RLS Enabled | User Policy | Admin Policy | Tested |
-|-------|-------------|-------------|--------------|--------|
-| leads | Yes | Yes | Yes | Yes |
-| contacts | Yes | Yes | Yes | Yes |
-| accounts | Yes | Yes | Yes | Yes |
-| opportunities | Yes | Yes | Yes | Yes |
-| tasks | Yes | Yes | Yes | Yes |
-| audit_logs | Yes | No (admin only) | Yes | Yes |
+| Table         | RLS Enabled | User Policy     | Admin Policy | Tested |
+| ------------- | ----------- | --------------- | ------------ | ------ |
+| leads         | Yes         | Yes             | Yes          | Yes    |
+| contacts      | Yes         | Yes             | Yes          | Yes    |
+| accounts      | Yes         | Yes             | Yes          | Yes    |
+| opportunities | Yes         | Yes             | Yes          | Yes    |
+| tasks         | Yes         | Yes             | Yes          | Yes    |
+| audit_logs    | Yes         | No (admin only) | Yes          | Yes    |
 
 ---
 
-*Task: IFC-127 - Tenant Isolation*
-*Created: 2025-12-29*
+_Task: IFC-127 - Tenant Isolation_ _Created: 2025-12-29_

@@ -93,13 +93,13 @@ async function migrateAttestationFiles(): Promise<void> {
       if (data.verdict && !validVerdicts.includes(data.verdict)) {
         // Map common variations
         const verdictMap: Record<string, string> = {
-          'PASSED': 'COMPLETE',
-          'PASS': 'COMPLETE',
-          'DONE': 'COMPLETE',
-          'SUCCESS': 'COMPLETE',
-          'FAILED': 'INCOMPLETE',
-          'FAIL': 'INCOMPLETE',
-          'PENDING': 'PARTIAL',
+          PASSED: 'COMPLETE',
+          PASS: 'COMPLETE',
+          DONE: 'COMPLETE',
+          SUCCESS: 'COMPLETE',
+          FAILED: 'INCOMPLETE',
+          FAIL: 'INCOMPLETE',
+          PENDING: 'PARTIAL',
         };
         if (verdictMap[data.verdict]) {
           data.verdict = verdictMap[data.verdict];
@@ -263,7 +263,11 @@ async function migrateAttestationFiles(): Promise<void> {
       }
 
       // Fix dependencies_verified - handle object format
-      if (data.dependencies_verified && typeof data.dependencies_verified === 'object' && !Array.isArray(data.dependencies_verified)) {
+      if (
+        data.dependencies_verified &&
+        typeof data.dependencies_verified === 'object' &&
+        !Array.isArray(data.dependencies_verified)
+      ) {
         // Convert object to array of task_ids
         const deps = data.dependencies_verified as Record<string, unknown>;
         const taskIds = Object.keys(deps);
@@ -283,7 +287,11 @@ async function migrateAttestationFiles(): Promise<void> {
       }
 
       // Fix validation_results if it's an object instead of array
-      if (data.validation_results && !Array.isArray(data.validation_results) && typeof data.validation_results === 'object') {
+      if (
+        data.validation_results &&
+        !Array.isArray(data.validation_results) &&
+        typeof data.validation_results === 'object'
+      ) {
         // Convert object format to array format
         const vrObject = data.validation_results as Record<string, unknown>;
         const vrArray: unknown[] = [];
@@ -322,18 +330,25 @@ async function migrateAttestationFiles(): Promise<void> {
       }
 
       // Fix context_acknowledgment.files_read if it contains strings
-      if (data.context_acknowledgment?.files_read && Array.isArray(data.context_acknowledgment.files_read)) {
-        const needsFix = data.context_acknowledgment.files_read.some((f: unknown) => typeof f === 'string');
+      if (
+        data.context_acknowledgment?.files_read &&
+        Array.isArray(data.context_acknowledgment.files_read)
+      ) {
+        const needsFix = data.context_acknowledgment.files_read.some(
+          (f: unknown) => typeof f === 'string'
+        );
         if (needsFix) {
-          data.context_acknowledgment.files_read = data.context_acknowledgment.files_read.map((f: unknown) => {
-            if (typeof f === 'string') {
-              return {
-                path: f,
-                sha256: sha256(`placeholder:${f}`),
-              };
+          data.context_acknowledgment.files_read = data.context_acknowledgment.files_read.map(
+            (f: unknown) => {
+              if (typeof f === 'string') {
+                return {
+                  path: f,
+                  sha256: sha256(`placeholder:${f}`),
+                };
+              }
+              return f;
             }
-            return f;
-          });
+          );
           result.changes.push('Converted files_read strings to objects');
           modified = true;
         }
@@ -381,7 +396,7 @@ async function migrateAttestationFiles(): Promise<void> {
         writeFileSync(file, JSON.stringify(cleaned, null, 2) + '\n');
         result.status = 'updated';
         console.log(`  ✓ ${file.replace(REPO_ROOT, '.')}`);
-        result.changes.forEach(c => console.log(`    - ${c}`));
+        result.changes.forEach((c) => console.log(`    - ${c}`));
       } else {
         result.status = 'skipped';
       }
@@ -417,7 +432,9 @@ async function migrateTaskStatusFiles(): Promise<void> {
   for (const pattern of patterns) {
     const files = await glob(pattern, {
       nodir: true,
-      ignore: ignorePatterns.map(p => REPO_ROOT_POSIX + '/apps/project-tracker/docs/metrics/' + p.replace('**/', '')),
+      ignore: ignorePatterns.map(
+        (p) => REPO_ROOT_POSIX + '/apps/project-tracker/docs/metrics/' + p.replace('**/', '')
+      ),
     });
     allFiles = allFiles.concat(files);
   }
@@ -430,27 +447,27 @@ async function migrateTaskStatusFiles(): Promise<void> {
   // Valid status values
   const validStatuses = ['PLANNED', 'NOT_STARTED', 'IN_PROGRESS', 'BLOCKED', 'DONE', 'FAILED'];
   const statusMap: Record<string, string> = {
-    'planned': 'PLANNED',
-    'not_started': 'NOT_STARTED',
+    planned: 'PLANNED',
+    not_started: 'NOT_STARTED',
     'not started': 'NOT_STARTED',
-    'in_progress': 'IN_PROGRESS',
+    in_progress: 'IN_PROGRESS',
     'in progress': 'IN_PROGRESS',
-    'inprogress': 'IN_PROGRESS',
-    'blocked': 'BLOCKED',
-    'done': 'DONE',
-    'completed': 'DONE',
-    'complete': 'DONE',
-    'failed': 'FAILED',
-    'error': 'FAILED',
+    inprogress: 'IN_PROGRESS',
+    blocked: 'BLOCKED',
+    done: 'DONE',
+    completed: 'DONE',
+    complete: 'DONE',
+    failed: 'FAILED',
+    error: 'FAILED',
     // Map non-standard statuses
-    'config_created': 'IN_PROGRESS',
-    'deployed': 'DONE',
-    'validated': 'DONE',
-    'created': 'IN_PROGRESS',
-    'started': 'IN_PROGRESS',
-    'running': 'IN_PROGRESS',
-    'pending': 'NOT_STARTED',
-    'ready': 'NOT_STARTED',
+    config_created: 'IN_PROGRESS',
+    deployed: 'DONE',
+    validated: 'DONE',
+    created: 'IN_PROGRESS',
+    started: 'IN_PROGRESS',
+    running: 'IN_PROGRESS',
+    pending: 'NOT_STARTED',
+    ready: 'NOT_STARTED',
   };
 
   for (const file of allFiles) {
@@ -488,7 +505,11 @@ async function migrateTaskStatusFiles(): Promise<void> {
           if (!sh.at) {
             // Use previous timestamp, or completed_at, or create a synthetic one
             const prevTimestamp = i > 0 ? data.status_history[i - 1]?.at : null;
-            sh.at = prevTimestamp || data.completed_at || data.execution?.completed_at || new Date().toISOString();
+            sh.at =
+              prevTimestamp ||
+              data.completed_at ||
+              data.execution?.completed_at ||
+              new Date().toISOString();
             result.changes.push(`Added status_history[${i}].at timestamp`);
             shModified = true;
           }
@@ -499,12 +520,16 @@ async function migrateTaskStatusFiles(): Promise<void> {
             if (!validStatuses.includes(sh.status)) {
               if (statusMap[statusLower]) {
                 sh.status = statusMap[statusLower];
-                result.changes.push(`Normalized status_history[${i}].status: ${statusLower} → ${sh.status}`);
+                result.changes.push(
+                  `Normalized status_history[${i}].status: ${statusLower} → ${sh.status}`
+                );
                 shModified = true;
               } else {
                 // Default to IN_PROGRESS for unknown statuses
                 sh.status = 'IN_PROGRESS';
-                result.changes.push(`Set status_history[${i}].status to IN_PROGRESS (was: ${statusLower})`);
+                result.changes.push(
+                  `Set status_history[${i}].status to IN_PROGRESS (was: ${statusLower})`
+                );
                 shModified = true;
               }
             }
@@ -526,20 +551,26 @@ async function migrateTaskStatusFiles(): Promise<void> {
             data.artifacts.created[i] = {
               path: artifact,
               sha256: sha256(`placeholder:${artifact}`),
-              created_at: data.completed_at || data.execution?.completed_at || new Date().toISOString(),
+              created_at:
+                data.completed_at || data.execution?.completed_at || new Date().toISOString(),
             };
             result.changes.push(`Converted artifacts.created[${i}] string to object`);
             artModified = true;
           } else if (artifact && typeof artifact === 'object') {
             // Fix null sha256
-            if (artifact.sha256 === null || artifact.sha256 === undefined || artifact.sha256 === '') {
+            if (
+              artifact.sha256 === null ||
+              artifact.sha256 === undefined ||
+              artifact.sha256 === ''
+            ) {
               artifact.sha256 = sha256(`placeholder:${artifact.path || 'unknown'}`);
               result.changes.push(`Fixed artifacts.created[${i}].sha256 from null`);
               artModified = true;
             }
             // Add missing created_at
             if (!artifact.created_at) {
-              artifact.created_at = data.completed_at || data.execution?.completed_at || new Date().toISOString();
+              artifact.created_at =
+                data.completed_at || data.execution?.completed_at || new Date().toISOString();
               result.changes.push(`Added artifacts.created[${i}].created_at`);
               artModified = true;
             }
@@ -554,9 +585,13 @@ async function migrateTaskStatusFiles(): Promise<void> {
       // Fix artifacts.expected - remove null values
       if (data.artifacts?.expected && Array.isArray(data.artifacts.expected)) {
         const originalLength = data.artifacts.expected.length;
-        data.artifacts.expected = data.artifacts.expected.filter((e: unknown) => e !== null && e !== undefined && e !== '');
+        data.artifacts.expected = data.artifacts.expected.filter(
+          (e: unknown) => e !== null && e !== undefined && e !== ''
+        );
         if (data.artifacts.expected.length !== originalLength) {
-          result.changes.push(`Removed ${originalLength - data.artifacts.expected.length} null values from artifacts.expected`);
+          result.changes.push(
+            `Removed ${originalLength - data.artifacts.expected.length} null values from artifacts.expected`
+          );
           modified = true;
         }
       }
@@ -586,7 +621,8 @@ async function migrateTaskStatusFiles(): Promise<void> {
             vModified = true;
           }
           if (!v.timestamp) {
-            v.timestamp = data.completed_at || data.execution?.completed_at || new Date().toISOString();
+            v.timestamp =
+              data.completed_at || data.execution?.completed_at || new Date().toISOString();
             result.changes.push(`Added validations[${i}].timestamp`);
             vModified = true;
           }
@@ -601,7 +637,7 @@ async function migrateTaskStatusFiles(): Promise<void> {
         writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
         result.status = 'updated';
         console.log(`  ✓ ${file.replace(REPO_ROOT, '.')}`);
-        result.changes.forEach(c => console.log(`    - ${c}`));
+        result.changes.forEach((c) => console.log(`    - ${c}`));
       } else {
         result.status = 'skipped';
       }
@@ -661,12 +697,14 @@ async function migrateSprintSummaryFiles(): Promise<void> {
               // Extract number from name or use index
               const nameMatch = phase.name.match(/phase\s*(\d+)/i);
               const phaseNum = nameMatch ? nameMatch[1] : String(i);
-              const phaseName = phase.name.toLowerCase()
-                .replace(/phase\s*\d+\s*[-:.]?\s*/i, '')
-                .replace(/\s+/g, '-')
-                .replace(/[^a-z0-9-]/g, '')
-                .replace(/-+/g, '-')
-                .replace(/^-|-$/g, '') || 'default';
+              const phaseName =
+                phase.name
+                  .toLowerCase()
+                  .replace(/phase\s*\d+\s*[-:.]?\s*/i, '')
+                  .replace(/\s+/g, '-')
+                  .replace(/[^a-z0-9-]/g, '')
+                  .replace(/-+/g, '-')
+                  .replace(/^-|-$/g, '') || 'default';
               phase.id = `phase-${phaseNum}-${phaseName}`;
               phaseModified = true;
             } else {
@@ -679,17 +717,17 @@ async function migrateSprintSummaryFiles(): Promise<void> {
           const validStatuses = ['NOT_STARTED', 'IN_PROGRESS', 'DONE', 'BLOCKED'];
           if (!phase.status || !validStatuses.includes(phase.status)) {
             const statusMap: Record<string, string> = {
-              'not_started': 'NOT_STARTED',
+              not_started: 'NOT_STARTED',
               'not started': 'NOT_STARTED',
-              'in_progress': 'IN_PROGRESS',
+              in_progress: 'IN_PROGRESS',
               'in progress': 'IN_PROGRESS',
-              'inprogress': 'IN_PROGRESS',
-              'done': 'DONE',
-              'completed': 'DONE',
-              'complete': 'DONE',
-              'blocked': 'BLOCKED',
-              'planning': 'NOT_STARTED',
-              'planned': 'NOT_STARTED',
+              inprogress: 'IN_PROGRESS',
+              done: 'DONE',
+              completed: 'DONE',
+              complete: 'DONE',
+              blocked: 'BLOCKED',
+              planning: 'NOT_STARTED',
+              planned: 'NOT_STARTED',
             };
             const statusLower = (phase.status || 'NOT_STARTED').toLowerCase();
             phase.status = statusMap[statusLower] || 'NOT_STARTED';
@@ -724,7 +762,8 @@ async function migrateSprintSummaryFiles(): Promise<void> {
 
             // Add actual if missing (use current or target)
             if (kpi.actual === undefined) {
-              kpi.actual = kpi.current !== undefined ? kpi.current : (kpi.target !== undefined ? kpi.target : 0);
+              kpi.actual =
+                kpi.current !== undefined ? kpi.current : kpi.target !== undefined ? kpi.target : 0;
               kpiModified = true;
             }
 
@@ -735,15 +774,22 @@ async function migrateSprintSummaryFiles(): Promise<void> {
             }
 
             // Fix status if invalid or missing
-            if (!kpi.status || (typeof kpi.status === 'string' && !validKpiStatuses.includes(kpi.status))) {
+            if (
+              !kpi.status ||
+              (typeof kpi.status === 'string' && !validKpiStatuses.includes(kpi.status))
+            ) {
               const statusMap: Record<string, string> = {
-                'met': 'MET',
-                'on_target': 'ON_TARGET',
-                'below_target': 'BELOW_TARGET',
-                'above_target': 'ABOVE_TARGET',
-                'measuring': 'MEASURING',
+                met: 'MET',
+                on_target: 'ON_TARGET',
+                below_target: 'BELOW_TARGET',
+                above_target: 'ABOVE_TARGET',
+                measuring: 'MEASURING',
               };
-              if (kpi.status && typeof kpi.status === 'string' && statusMap[kpi.status.toLowerCase()]) {
+              if (
+                kpi.status &&
+                typeof kpi.status === 'string' &&
+                statusMap[kpi.status.toLowerCase()]
+              ) {
                 kpi.status = statusMap[kpi.status.toLowerCase()];
               } else {
                 kpi.status = 'MEASURING';
@@ -763,7 +809,7 @@ async function migrateSprintSummaryFiles(): Promise<void> {
         writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
         result.status = 'updated';
         console.log(`  ✓ ${file.replace(REPO_ROOT, '.')}`);
-        result.changes.forEach(c => console.log(`    - ${c}`));
+        result.changes.forEach((c) => console.log(`    - ${c}`));
       } else {
         result.status = 'skipped';
       }
@@ -783,7 +829,8 @@ async function migrateSprintSummaryFiles(): Promise<void> {
 async function migratePhaseSummaryFiles(): Promise<void> {
   console.log('\n=== Migrating Phase Summary Files ===\n');
 
-  const pattern = REPO_ROOT_POSIX + '/apps/project-tracker/docs/metrics/sprint-*/phase-*/_phase-summary.json';
+  const pattern =
+    REPO_ROOT_POSIX + '/apps/project-tracker/docs/metrics/sprint-*/phase-*/_phase-summary.json';
   const files = await glob(pattern, { nodir: true });
 
   console.log(`Found ${files.length} phase summary files\n`);
@@ -863,7 +910,7 @@ async function migratePhaseSummaryFiles(): Promise<void> {
         writeFileSync(file, JSON.stringify(data, null, 2) + '\n');
         result.status = 'updated';
         console.log(`  ✓ ${file.replace(REPO_ROOT, '.')}`);
-        result.changes.forEach(c => console.log(`    - ${c}`));
+        result.changes.forEach((c) => console.log(`    - ${c}`));
       } else {
         result.status = 'skipped';
       }
@@ -887,9 +934,9 @@ async function main(): Promise<void> {
   await migratePhaseSummaryFiles();
 
   // Summary
-  const updated = results.filter(r => r.status === 'updated').length;
-  const skipped = results.filter(r => r.status === 'skipped').length;
-  const errors = results.filter(r => r.status === 'error').length;
+  const updated = results.filter((r) => r.status === 'updated').length;
+  const skipped = results.filter((r) => r.status === 'skipped').length;
+  const errors = results.filter((r) => r.status === 'error').length;
 
   console.log('\n================================================');
   console.log('=== Migration Summary ===');
@@ -900,9 +947,11 @@ async function main(): Promise<void> {
 
   if (errors > 0) {
     console.log('\nFiles with errors:');
-    results.filter(r => r.status === 'error').forEach(r => {
-      console.log(`  - ${r.file}: ${r.error}`);
-    });
+    results
+      .filter((r) => r.status === 'error')
+      .forEach((r) => {
+        console.log(`  - ${r.file}: ${r.error}`);
+      });
   }
 
   console.log('\nRun `pnpm run validate:schemas` to verify all files pass validation.');

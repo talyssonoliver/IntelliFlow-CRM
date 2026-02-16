@@ -167,9 +167,9 @@ describe('Approval Workflow', () => {
           decidedAt: new Date(),
         };
 
-        await expect(
-          approvalWorkflowService.approveAction(decision, testContext)
-        ).rejects.toThrow(/Action (has expired|is not pending: EXPIRED)/);
+        await expect(approvalWorkflowService.approveAction(decision, testContext)).rejects.toThrow(
+          /Action (has expired|is not pending: EXPIRED)/
+        );
       });
 
       it('should allow modified input on approval', async () => {
@@ -219,9 +219,9 @@ describe('Approval Workflow', () => {
           decidedAt: new Date(),
         };
 
-        await expect(
-          approvalWorkflowService.rejectAction(decision, testContext)
-        ).rejects.toThrow('Pending action not found');
+        await expect(approvalWorkflowService.rejectAction(decision, testContext)).rejects.toThrow(
+          'Pending action not found'
+        );
       });
     });
 

@@ -11,38 +11,59 @@ function formatCurrencyFn(amount: number, currency: string): string {
   const currencyUpper = currency.toUpperCase();
   const locale = currencyUpper === 'GBP' ? 'en-GB' : 'en-US';
   return new Intl.NumberFormat(locale, {
-    style: 'currency', currency: currencyUpper, minimumFractionDigits: 2,
+    style: 'currency',
+    currency: currencyUpper,
+    minimumFractionDigits: 2,
   }).format(amount / 100);
 }
 
 function getSubscriptionStatusDisplayFn(status: string) {
   switch (status) {
-    case 'active': return { label: 'Active', variant: 'success' };
-    case 'trialing': return { label: 'Trial', variant: 'success' };
-    case 'past_due': return { label: 'Past Due', variant: 'warning' };
-    case 'canceled': return { label: 'Canceled', variant: 'error' };
-    case 'unpaid': return { label: 'Unpaid', variant: 'error' };
-    case 'paused': return { label: 'Paused', variant: 'warning' };
-    case 'incomplete': return { label: 'Incomplete', variant: 'warning' };
-    default: return { label: status, variant: 'default' };
+    case 'active':
+      return { label: 'Active', variant: 'success' };
+    case 'trialing':
+      return { label: 'Trial', variant: 'success' };
+    case 'past_due':
+      return { label: 'Past Due', variant: 'warning' };
+    case 'canceled':
+      return { label: 'Canceled', variant: 'error' };
+    case 'unpaid':
+      return { label: 'Unpaid', variant: 'error' };
+    case 'paused':
+      return { label: 'Paused', variant: 'warning' };
+    case 'incomplete':
+      return { label: 'Incomplete', variant: 'warning' };
+    default:
+      return { label: status, variant: 'default' };
   }
 }
 
 function getInvoiceStatusDisplayFn(status: string) {
   switch (status) {
-    case 'paid': return { label: 'Paid', variant: 'success' };
-    case 'open': return { label: 'Open', variant: 'warning' };
-    case 'draft': return { label: 'Draft', variant: 'default' };
-    case 'uncollectible': return { label: 'Uncollectible', variant: 'error' };
-    case 'void': return { label: 'Void', variant: 'error' };
-    default: return { label: status, variant: 'default' };
+    case 'paid':
+      return { label: 'Paid', variant: 'success' };
+    case 'open':
+      return { label: 'Open', variant: 'warning' };
+    case 'draft':
+      return { label: 'Draft', variant: 'default' };
+    case 'uncollectible':
+      return { label: 'Uncollectible', variant: 'error' };
+    case 'void':
+      return { label: 'Void', variant: 'error' };
+    default:
+      return { label: status, variant: 'default' };
   }
 }
 
 function getCardBrandDisplayFn(brand: string): string {
   const brands: Record<string, string> = {
-    visa: 'Visa', mastercard: 'Mastercard', amex: 'American Express',
-    discover: 'Discover', diners: 'Diners Club', jcb: 'JCB', unionpay: 'UnionPay',
+    visa: 'Visa',
+    mastercard: 'Mastercard',
+    amex: 'American Express',
+    discover: 'Discover',
+    diners: 'Diners Club',
+    jcb: 'JCB',
+    unionpay: 'UnionPay',
   };
   return brands[brand.toLowerCase()] ?? brand;
 }
@@ -72,13 +93,22 @@ describe('stripe-portal - formatCurrency', () => {
 
 describe('stripe-portal - subscription status', () => {
   it('active => success', () => {
-    expect(getSubscriptionStatusDisplayFn('active')).toEqual({ label: 'Active', variant: 'success' });
+    expect(getSubscriptionStatusDisplayFn('active')).toEqual({
+      label: 'Active',
+      variant: 'success',
+    });
   });
   it('canceled => error', () => {
-    expect(getSubscriptionStatusDisplayFn('canceled')).toEqual({ label: 'Canceled', variant: 'error' });
+    expect(getSubscriptionStatusDisplayFn('canceled')).toEqual({
+      label: 'Canceled',
+      variant: 'error',
+    });
   });
   it('unknown => default', () => {
-    expect(getSubscriptionStatusDisplayFn('custom')).toEqual({ label: 'custom', variant: 'default' });
+    expect(getSubscriptionStatusDisplayFn('custom')).toEqual({
+      label: 'custom',
+      variant: 'default',
+    });
   });
 });
 

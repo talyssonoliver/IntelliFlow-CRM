@@ -64,9 +64,7 @@ function CopyButton({ text, 'aria-label': ariaLabel }: CopyButtonProps) {
       className={cn(
         'inline-flex items-center gap-1 px-2 py-1 rounded',
         'text-xs font-medium transition-colors',
-        copied
-          ? 'bg-green-500/20 text-green-400'
-          : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+        copied ? 'bg-green-500/20 text-green-400' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
       )}
     >
       <span className="material-symbols-outlined text-sm" aria-hidden="true">
@@ -102,16 +100,11 @@ export function MfaQrGenerator({
           role="img"
           aria-label={`QR code for setting up two-factor authentication for ${accountName}`}
         >
-          <QRCodeSVG
-            value={otpauthUrl}
-            size={200}
-            level="M"
-            includeMargin={false}
-          />
+          <QRCodeSVG value={otpauthUrl} size={200} level="M" includeMargin={false} />
         </div>
         <p className="mt-3 text-sm text-slate-400 text-center max-w-xs">
-          Scan this QR code with your authenticator app
-          (Google Authenticator, Authy, 1Password, etc.)
+          Scan this QR code with your authenticator app (Google Authenticator, Authy, 1Password,
+          etc.)
         </p>
       </div>
 
@@ -147,22 +140,15 @@ export function MfaQrGenerator({
 
         {/* Manual Entry Section */}
         {showManual && (
-          <div
-            id="manual-entry-section"
-            className="mt-3 p-4 bg-slate-800/50 rounded-lg space-y-3"
-          >
+          <div id="manual-entry-section" className="mt-3 p-4 bg-slate-800/50 rounded-lg space-y-3">
             <div className="space-y-1">
-              <label className="text-xs text-slate-500 uppercase tracking-wide">
-                Account
-              </label>
+              <label className="text-xs text-slate-500 uppercase tracking-wide">Account</label>
               <p className="text-sm text-slate-300">{accountName}</p>
             </div>
 
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <label className="text-xs text-slate-500 uppercase tracking-wide">
-                  Secret Key
-                </label>
+                <label className="text-xs text-slate-500 uppercase tracking-wide">Secret Key</label>
                 <CopyButton text={secret} aria-label="Copy secret key" />
               </div>
               <p

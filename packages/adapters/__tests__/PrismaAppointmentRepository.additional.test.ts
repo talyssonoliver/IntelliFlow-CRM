@@ -111,9 +111,12 @@ describe('PrismaAppointmentRepository - Additional', () => {
 
   describe('save()', () => {
     it('should upsert appointment within a transaction', async () => {
-      const { Appointment, AppointmentId, TimeSlot, Buffer: AppBuffer } = await import(
-        '@intelliflow/domain'
-      );
+      const {
+        Appointment,
+        AppointmentId,
+        TimeSlot,
+        Buffer: AppBuffer,
+      } = await import('@intelliflow/domain');
 
       const id = AppointmentId.create('550e8400-e29b-41d4-a716-446655440000').value;
       const timeSlot = TimeSlot.reconstitute(
@@ -147,9 +150,12 @@ describe('PrismaAppointmentRepository - Additional', () => {
     });
 
     it('should sync attendees by deleting and re-creating', async () => {
-      const { Appointment, AppointmentId, TimeSlot, Buffer: AppBuffer } = await import(
-        '@intelliflow/domain'
-      );
+      const {
+        Appointment,
+        AppointmentId,
+        TimeSlot,
+        Buffer: AppBuffer,
+      } = await import('@intelliflow/domain');
 
       const id = AppointmentId.create('550e8400-e29b-41d4-a716-446655440000').value;
       const timeSlot = TimeSlot.reconstitute(
@@ -182,16 +188,27 @@ describe('PrismaAppointmentRepository - Additional', () => {
       // Should create new attendees
       expect(mockPrisma._mockTx.appointmentAttendee.createMany).toHaveBeenCalledWith({
         data: [
-          { appointmentId: '550e8400-e29b-41d4-a716-446655440000', userId: 'user-a', tenantId: 'tenant-001' },
-          { appointmentId: '550e8400-e29b-41d4-a716-446655440000', userId: 'user-b', tenantId: 'tenant-001' },
+          {
+            appointmentId: '550e8400-e29b-41d4-a716-446655440000',
+            userId: 'user-a',
+            tenantId: 'tenant-001',
+          },
+          {
+            appointmentId: '550e8400-e29b-41d4-a716-446655440000',
+            userId: 'user-b',
+            tenantId: 'tenant-001',
+          },
         ],
       });
     });
 
     it('should not create attendees if array is empty', async () => {
-      const { Appointment, AppointmentId, TimeSlot, Buffer: AppBuffer } = await import(
-        '@intelliflow/domain'
-      );
+      const {
+        Appointment,
+        AppointmentId,
+        TimeSlot,
+        Buffer: AppBuffer,
+      } = await import('@intelliflow/domain');
 
       const id = AppointmentId.create('550e8400-e29b-41d4-a716-446655440000').value;
       const timeSlot = TimeSlot.reconstitute(
@@ -222,9 +239,13 @@ describe('PrismaAppointmentRepository - Additional', () => {
     });
 
     it('should sync linked cases', async () => {
-      const { Appointment, AppointmentId, CaseId, TimeSlot, Buffer: AppBuffer } = await import(
-        '@intelliflow/domain'
-      );
+      const {
+        Appointment,
+        AppointmentId,
+        CaseId,
+        TimeSlot,
+        Buffer: AppBuffer,
+      } = await import('@intelliflow/domain');
 
       const id = AppointmentId.create('550e8400-e29b-41d4-a716-446655440000').value;
       const caseId = CaseId.create('550e8400-e29b-41d4-a716-446655440010').value;
@@ -266,9 +287,12 @@ describe('PrismaAppointmentRepository - Additional', () => {
     });
 
     it('should not create linked cases if array is empty', async () => {
-      const { Appointment, AppointmentId, TimeSlot, Buffer: AppBuffer } = await import(
-        '@intelliflow/domain'
-      );
+      const {
+        Appointment,
+        AppointmentId,
+        TimeSlot,
+        Buffer: AppBuffer,
+      } = await import('@intelliflow/domain');
 
       const id = AppointmentId.create('550e8400-e29b-41d4-a716-446655440000').value;
       const timeSlot = TimeSlot.reconstitute(
@@ -300,9 +324,12 @@ describe('PrismaAppointmentRepository - Additional', () => {
 
   describe('saveAll()', () => {
     it('should save multiple appointments in a single transaction', async () => {
-      const { Appointment, AppointmentId, TimeSlot, Buffer: AppBuffer } = await import(
-        '@intelliflow/domain'
-      );
+      const {
+        Appointment,
+        AppointmentId,
+        TimeSlot,
+        Buffer: AppBuffer,
+      } = await import('@intelliflow/domain');
 
       const makeAppt = (idStr: string, title: string) => {
         const id = AppointmentId.create(idStr).value;
@@ -338,9 +365,12 @@ describe('PrismaAppointmentRepository - Additional', () => {
     });
 
     it('should sync attendees for each appointment', async () => {
-      const { Appointment, AppointmentId, TimeSlot, Buffer: AppBuffer } = await import(
-        '@intelliflow/domain'
-      );
+      const {
+        Appointment,
+        AppointmentId,
+        TimeSlot,
+        Buffer: AppBuffer,
+      } = await import('@intelliflow/domain');
 
       const id = AppointmentId.create('550e8400-e29b-41d4-a716-446655440001').value;
       const timeSlot = TimeSlot.reconstitute(
@@ -369,9 +399,13 @@ describe('PrismaAppointmentRepository - Additional', () => {
     });
 
     it('should sync linked cases for each appointment', async () => {
-      const { Appointment, AppointmentId, CaseId, TimeSlot, Buffer: AppBuffer } = await import(
-        '@intelliflow/domain'
-      );
+      const {
+        Appointment,
+        AppointmentId,
+        CaseId,
+        TimeSlot,
+        Buffer: AppBuffer,
+      } = await import('@intelliflow/domain');
 
       const id = AppointmentId.create('550e8400-e29b-41d4-a716-446655440001').value;
       const caseId = CaseId.create('550e8400-e29b-41d4-a716-446655440010').value;

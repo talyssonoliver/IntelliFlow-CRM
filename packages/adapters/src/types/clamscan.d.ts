@@ -46,7 +46,9 @@ declare module 'clamscan' {
     init(config?: ClamScanConfig): Promise<NodeClam>;
     isInfected(filePath: string): Promise<ScanResult>;
     scanFile(filePath: string): Promise<ScanResult>;
-    scanDir(directoryPath: string): Promise<ScanResult & { goodFiles: string[]; badFiles: string[] }>;
+    scanDir(
+      directoryPath: string
+    ): Promise<ScanResult & { goodFiles: string[]; badFiles: string[] }>;
     scanStream(stream: NodeJS.ReadableStream | Buffer): Promise<StreamResult>;
     getVersion(): Promise<string>;
     passthrough(): NodeJS.Transform;

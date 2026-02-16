@@ -108,9 +108,41 @@ export const STOA_PREFIX_RULES: Record<string, StoaType> = {
  * STOA keyword triggers for supporting STOAs
  */
 export const STOA_KEYWORD_TRIGGERS: Record<StoaType, string[]> = {
-  Foundation: ['docker', 'ci', 'deployment', 'infra', 'observability', 'monitoring', 'build', 'webpack', 'turbo'],
-  Security: ['auth', 'jwt', 'token', 'secret', 'vault', 'rbac', 'permission', 'rate-limit', 'csrf', 'xss', 'injection'],
-  Quality: ['coverage', 'e2e', 'test', 'vitest', 'playwright', 'mutation', 'quality', 'a11y', 'accessibility'],
+  Foundation: [
+    'docker',
+    'ci',
+    'deployment',
+    'infra',
+    'observability',
+    'monitoring',
+    'build',
+    'webpack',
+    'turbo',
+  ],
+  Security: [
+    'auth',
+    'jwt',
+    'token',
+    'secret',
+    'vault',
+    'rbac',
+    'permission',
+    'rate-limit',
+    'csrf',
+    'xss',
+    'injection',
+  ],
+  Quality: [
+    'coverage',
+    'e2e',
+    'test',
+    'vitest',
+    'playwright',
+    'mutation',
+    'quality',
+    'a11y',
+    'accessibility',
+  ],
   Domain: ['flow', 'business', 'domain', 'aggregate', 'entity', 'value-object', 'ddd'],
   Intelligence: ['prompt', 'agent', 'chain', 'embedding', 'llm', 'langchain', 'crewai', 'ai', 'ml'],
   Automation: ['pipeline', 'workflow', 'automation', 'cron', 'scheduled', 'trigger'],
@@ -159,8 +191,7 @@ export const OUTPUT_PATHS = {
   specifications: (sprintNumber: number) =>
     `.specify/sprints/sprint-${sprintNumber}/specifications`,
   /** Plans from Phase 2 */
-  planning: (sprintNumber: number) =>
-    `.specify/sprints/sprint-${sprintNumber}/planning`,
+  planning: (sprintNumber: number) => `.specify/sprints/sprint-${sprintNumber}/planning`,
   /** Attestations for completed work */
   attestations: (sprintNumber: number, taskId: string) =>
     `.specify/sprints/sprint-${sprintNumber}/attestations/${taskId}`,

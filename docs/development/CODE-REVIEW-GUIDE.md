@@ -1,7 +1,6 @@
 # IntelliFlow CRM - Systematic Code Review Guide
 
-**Last Updated:** January 25, 2026
-**Test Status:** ✅ Fully Validated
+**Last Updated:** January 25, 2026 **Test Status:** ✅ Fully Validated
 **Duration:** ~154 seconds (full analysis)
 
 ---
@@ -24,6 +23,7 @@
 ### What This System Does
 
 **Systematically analyzes all 26 workspace packages** to identify:
+
 - TypeScript compilation errors
 - Code quality issues (ESLint)
 - Dead/unused code
@@ -35,29 +35,28 @@
 
 ### Current Codebase Health (January 23, 2026)
 
-| Metric | Status | Details |
-|--------|--------|---------|
-| **TypeScript Errors** | 🔴 **4 ERRORS** | Blocking API deployment |
-| **Packages** | ✅ **26 analyzed** | All packages scanned |
-| **High Complexity** | ⚠️ **283 files** | 33% need refactoring |
-| **Average Complexity** | ⚠️ **19.39** | Target: <15 |
-| **Test Coverage** | ℹ️ **Reports ready** | Per-package breakdown available |
-| **Architecture** | ✅ **Validated** | Boundary tests pass |
+| Metric                 | Status               | Details                         |
+| ---------------------- | -------------------- | ------------------------------- |
+| **TypeScript Errors**  | 🔴 **4 ERRORS**      | Blocking API deployment         |
+| **Packages**           | ✅ **26 analyzed**   | All packages scanned            |
+| **High Complexity**    | ⚠️ **283 files**     | 33% need refactoring            |
+| **Average Complexity** | ⚠️ **19.39**         | Target: <15                     |
+| **Test Coverage**      | ℹ️ **Reports ready** | Per-package breakdown available |
+| **Architecture**       | ✅ **Validated**     | Boundary tests pass             |
 
 ### Priority Packages (Need Immediate Review)
 
 **🔴 CRITICAL (4 packages - Score ≥60)**
+
 1. `@intelliflow/web` (Score: 75) - 329 files, 81K LOC, missing tests
 2. `@intelliflow/api` (Score: 65) - **HAS BLOCKING ERRORS**
 3. `@intelliflow/application` (Score: 65) - Critical business logic
 4. `@intelliflow/domain` (Score: 65) - Core domain model
 
-**🟠 HIGH (5 packages - Score 40-59)**
-5. `@intelliflow/ui` (Score: 55)
-6. `@intelliflow/validators` (Score: 50)
-7. `@intelliflow/adapters` (Score: 45)
-8. `@intelliflow/typescript-config` (Score: 45)
-9. `@intelliflow/plan-linter` (Score: 45)
+**🟠 HIGH (5 packages - Score 40-59)** 5. `@intelliflow/ui` (Score: 55) 6.
+`@intelliflow/validators` (Score: 50) 7. `@intelliflow/adapters` (Score: 45) 8.
+`@intelliflow/typescript-config` (Score: 45) 9. `@intelliflow/plan-linter`
+(Score: 45)
 
 ---
 
@@ -73,11 +72,13 @@ node scripts/prioritize-reviews.js --sprint=0
 node scripts/prioritize-reviews.js --legacy
 ```
 
-**Output:** `.specify/sprints/sprint-0/reports/code-review/package-review/REVIEW-PRIORITY.md`
+**Output:**
+`.specify/sprints/sprint-0/reports/code-review/package-review/REVIEW-PRIORITY.md`
 
 ### 2. Run Analysis
 
 **Quick Mode (2-3 minutes) - Daily use:**
+
 ```powershell
 # Sprint 0 (default)
 pwsh scripts/code-review-analysis.ps1 -Sprint 0 -Quick -CleanOldReports -KeepReports 3
@@ -87,16 +88,19 @@ pwsh scripts/code-review-analysis.ps1 -Sprint 3 -Quick
 ```
 
 **Full Mode (10-15 minutes) - Weekly deep dive:**
+
 ```powershell
 pwsh scripts/code-review-analysis.ps1 -Sprint 0 -Full -CleanOldReports -KeepReports 3
 ```
 
 **With STOA Gate Linkage (for task execution):**
+
 ```powershell
 pwsh scripts/code-review-analysis.ps1 -Sprint 0 -TaskId "IFC-001" -LinkToGates -Quick
 ```
 
 **Package-Specific:**
+
 ```powershell
 pwsh scripts/code-review-analysis.ps1 -Sprint 0 -Package "@intelliflow/api" -Full
 ```
@@ -135,7 +139,7 @@ code ".specify/sprints/sprint-0/reports/code-review/latest/typecheck.txt"
 // apps/api/src/container.ts:19
 error TS2305: Module '"@intelliflow/adapters"' has no exported member 'TicketService'
 
-// apps/api/src/container.ts:20  
+// apps/api/src/container.ts:20
 error TS2305: Module '"@intelliflow/adapters"' has no exported member 'AnalyticsService'
 
 // apps/api/src/test/integration-setup.ts:29
@@ -154,13 +158,13 @@ error TS2305: Module '"@intelliflow/adapters"' has no exported member 'Analytics
 **Total:** 283 files with complexity >20  
 **Worst Offenders:**
 
-| File | Complexity | Lines | Issue |
-|------|------------|-------|-------|
-| `statistical-analysis.ts` | 73 | 774 | Unmaintainable |
-| `feedback-analytics-generator.ts` | 43 | 614 | Too complex |
-| `base.agent.ts` | 38 | 321 | Needs splitting |
-| `email-writer.agent.ts` | 36 | 315 | High branching |
-| `embedding.chain.ts` | 31 | 364 | Refactor candidates |
+| File                              | Complexity | Lines | Issue               |
+| --------------------------------- | ---------- | ----- | ------------------- |
+| `statistical-analysis.ts`         | 73         | 774   | Unmaintainable      |
+| `feedback-analytics-generator.ts` | 43         | 614   | Too complex         |
+| `base.agent.ts`                   | 38         | 321   | Needs splitting     |
+| `email-writer.agent.ts`           | 36         | 315   | High branching      |
+| `embedding.chain.ts`              | 31         | 364   | Refactor candidates |
 
 **Impact:** Hard to test, bug-prone, difficult to maintain
 
@@ -189,6 +193,7 @@ pnpm knip --exclude=unlisted --exclude=unresolved
 **Error:** `The term 'madge' is not recognized`
 
 **Fix:**
+
 ```bash
 pnpm add -g madge
 # or
@@ -200,13 +205,14 @@ npm install -g madge
 **Total Coverage:** Available per package in `coverage-summary.json` (118 KB)
 
 **Format:**
+
 ```json
 {
   "total": {
-    "lines": {"pct": 65.3},
-    "statements": {"pct": 64.1},
-    "functions": {"pct": 72.1},
-    "branches": {"pct": 58.7}
+    "lines": { "pct": 65.3 },
+    "statements": { "pct": 64.1 },
+    "functions": { "pct": 72.1 },
+    "branches": { "pct": 58.7 }
   }
 }
 ```
@@ -252,13 +258,15 @@ Each analysis creates a **timestamped directory** using sprint-based paths:
         └── eslint.log
 ```
 
-**Note:** Legacy path `artifacts/reports/code-review-*` is deprecated. Use `-UseLegacyPath` flag only for backwards compatibility.
+**Note:** Legacy path `artifacts/reports/code-review-*` is deprecated. Use
+`-UseLegacyPath` flag only for backwards compatibility.
 
 ### Automatic Cleanup
 
 **Reports are NOT overwritten** - each run creates new timestamped folder.
 
 **Cleanup mechanism:**
+
 ```powershell
 -CleanOldReports -KeepReports 3
 ```
@@ -270,10 +278,10 @@ Each analysis creates a **timestamped directory** using sprint-based paths:
 
 ### Report Sizes
 
-| Mode | Per Report | 10 Reports | Use Case |
-|------|------------|------------|----------|
-| **Quick** | ~8 KB | ~80 KB | Daily checks |
-| **Full** | ~280 KB | ~2.8 MB | Weekly reviews |
+| Mode      | Per Report | 10 Reports | Use Case       |
+| --------- | ---------- | ---------- | -------------- |
+| **Quick** | ~8 KB      | ~80 KB     | Daily checks   |
+| **Full**  | ~280 KB    | ~2.8 MB    | Weekly reviews |
 
 ---
 
@@ -338,21 +346,23 @@ pwsh scripts/code-review-analysis.ps1 `
 
 ## 🔗 STOA Integration
 
-The code review workflow is integrated with the STOA (Specialized Technical Oversight Agent) gate-runner for automated task validation.
+The code review workflow is integrated with the STOA (Specialized Technical
+Oversight Agent) gate-runner for automated task validation.
 
 ### Gate Registration
 
 Code review gates are registered in `audit-matrix.yml`:
 
-| Gate ID | Tier | Description |
-|---------|------|-------------|
-| `code-review-analysis` | 2 | Quick code review (typecheck, lint) |
-| `code-review-full` | 2 | Full analysis with coverage and complexity |
-| `package-review-priority` | 2 | Package prioritization analysis |
+| Gate ID                   | Tier | Description                                |
+| ------------------------- | ---- | ------------------------------------------ |
+| `code-review-analysis`    | 2    | Quick code review (typecheck, lint)        |
+| `code-review-full`        | 2    | Full analysis with coverage and complexity |
+| `package-review-priority` | 2    | Package prioritization analysis            |
 
 ### Running via STOA
 
-When executing tasks through the MATOP (Multi-Agent Task Orchestration Protocol), code review gates can be triggered automatically:
+When executing tasks through the MATOP (Multi-Agent Task Orchestration
+Protocol), code review gates can be triggered automatically:
 
 ```bash
 # Via gate-runner
@@ -378,6 +388,7 @@ When using `-LinkToGates`, key outputs are copied to the STOA gates directory:
 ```
 
 This enables:
+
 - **Audit trail**: All gate outputs preserved per task execution
 - **Evidence integrity**: SHA256 hashes in evidence bundles
 - **Verdict generation**: STOA verdicts based on gate results
@@ -404,7 +415,8 @@ This enables:
 
 ### Path Functions (TypeScript)
 
-For programmatic access, use the path functions from `tools/scripts/lib/code-review/paths.ts`:
+For programmatic access, use the path functions from
+`tools/scripts/lib/code-review/paths.ts`:
 
 ```typescript
 import {
@@ -431,13 +443,15 @@ const gatesDir = getGatesLinkageDir(repoRoot, sprint, taskId, runId);
 
 ## 🔧 Fixing Issues Found
 
-> **⚠️ IMPORTANT NOTE:** The current workflow only **validates and reports** issues.  
+> **⚠️ IMPORTANT NOTE:** The current workflow only **validates and reports**
+> issues.  
 > **It does NOT automatically fix** any problems found.  
 > You must manually address each issue below.
 
 ### Fix 1: TypeScript Errors in API
 
-**Problem:** `@intelliflow/api` imports non-existent exports from `@intelliflow/adapters`
+**Problem:** `@intelliflow/api` imports non-existent exports from
+`@intelliflow/adapters`
 
 **Solution:**
 
@@ -492,11 +506,11 @@ export function analyzeStatistics(data: Data): Result {
 
 // AFTER: Break into smaller functions
 export function analyzeStatistics(data: Data): Result {
-  const cleaned = cleanData(data);              // complexity: 5
-  const validated = validateData(cleaned);      // complexity: 4
+  const cleaned = cleanData(data); // complexity: 5
+  const validated = validateData(cleaned); // complexity: 4
   const transformed = transformData(validated); // complexity: 6
   const calculated = calculateMetrics(transformed); // complexity: 7
-  return formatResults(calculated);             // complexity: 3
+  return formatResults(calculated); // complexity: 3
 }
 // Total: 5 functions, average complexity: 5
 ```
@@ -504,6 +518,7 @@ export function analyzeStatistics(data: Data): Result {
 **Action Plan:**
 
 1. **Identify refactoring candidates:**
+
 ```powershell
 $complexity = Get-Content artifacts/reports/code-review-*/complexity.json | ConvertFrom-Json
 $complexity.packages | Where-Object { $_.complexity -gt 30 } | Format-Table
@@ -517,6 +532,7 @@ $complexity.packages | Where-Object { $_.complexity -gt 30 } | Format-Table
 3. **Add tests for each extracted function**
 
 4. **Re-run analysis:**
+
 ```powershell
 pwsh scripts/code-review-analysis.ps1 -Full
 # Check complexity.json - should see reduction
@@ -526,7 +542,8 @@ pwsh scripts/code-review-analysis.ps1 -Full
 
 **Status:** ✅ FIXED (January 25, 2026)
 
-The Knip command syntax has been corrected in `scripts/code-review-analysis.ps1`:
+The Knip command syntax has been corrected in
+`scripts/code-review-analysis.ps1`:
 
 ```powershell
 # Now uses correct syntax:
@@ -539,12 +556,13 @@ pnpm knip --exclude=unlisted --exclude=unresolved --reporter json
 // knip.json
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "exclude": ["unlisted", "unresolved"],
+  "exclude": ["unlisted", "unresolved"]
   // ... rest of config
 }
 ```
 
 Then run:
+
 ```bash
 pnpm knip --reporter json
 ```
@@ -553,7 +571,8 @@ pnpm knip --reporter json
 
 **Problem:** `madge` not installed for circular dependency detection
 
-**Note:** The analysis script now includes automatic detection and will warn if madge is not installed, rather than failing silently.
+**Note:** The analysis script now includes automatic detection and will warn if
+madge is not installed, rather than failing silently.
 
 **Fix:**
 
@@ -569,6 +588,7 @@ madge --version
 ```
 
 **Then re-run full analysis:**
+
 ```powershell
 pwsh scripts/code-review-analysis.ps1 -Sprint 0 -Full
 # circular-deps.json should now contain data instead of { "skipped": true }
@@ -579,6 +599,7 @@ pwsh scripts/code-review-analysis.ps1 -Sprint 0 -Full
 **Current State:** Coverage data available in `coverage-summary.json`
 
 **View coverage:**
+
 ```bash
 # Open HTML coverage report
 start artifacts/coverage/index.html
@@ -589,6 +610,7 @@ $coverage.total.lines.pct  # Overall line coverage %
 ```
 
 **Target Goals:**
+
 - Critical packages (api, domain, application): >80%
 - High priority packages: >70%
 - All packages: >60%
@@ -596,9 +618,10 @@ $coverage.total.lines.pct  # Overall line coverage %
 **Action Plan:**
 
 1. **Identify gaps:**
+
 ```powershell
 $coverage = Get-Content artifacts/reports/code-review-*/coverage-summary.json | ConvertFrom-Json
-$coverage.PSObject.Properties | 
+$coverage.PSObject.Properties |
   Where-Object { $_.Value.lines.pct -lt 60 } |
   Select-Object Name, @{N='Coverage';E={$_.Value.lines.pct}} |
   Sort-Object Coverage
@@ -613,6 +636,7 @@ $coverage.PSObject.Properties |
 **Problem:** 39 governance errors in Sprint 0 tasks
 
 **Sample errors:**
+
 ```
 [TIER_A_GATES_REQUIRED] Tier A task IFC-093 missing gate_profile
 [TIER_A_OWNER_REQUIRED] Tier A task IFC-093 missing acceptance_owner
@@ -624,6 +648,7 @@ $coverage.PSObject.Properties |
 **Location:** `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
 
 **Required fields for Tier A tasks:**
+
 - `gate_profile`
 - `acceptance_owner`
 - `evidence_required`
@@ -642,10 +667,10 @@ on:
   pull_request:
     branches: [main, develop]
   schedule:
-    - cron: '0 8 * * *'  # Daily at 8 AM
+    - cron: '0 8 * * *' # Daily at 8 AM
 
 env:
-  SPRINT: 0  # Current sprint number
+  SPRINT: 0 # Current sprint number
 
 jobs:
   quick-check:
@@ -695,7 +720,9 @@ jobs:
         run: pnpm add -g madge
 
       - name: Full Code Review
-        run: pwsh scripts/code-review-analysis.ps1 -Sprint $env:SPRINT -Full -CleanOldReports -KeepReports 5
+        run:
+          pwsh scripts/code-review-analysis.ps1 -Sprint $env:SPRINT -Full
+          -CleanOldReports -KeepReports 5
 
       - name: Generate Package Priorities
         run: node scripts/prioritize-reviews.js --sprint=$env:SPRINT
@@ -710,6 +737,7 @@ jobs:
 ### Quality Gates
 
 **Block PR merge if:**
+
 - TypeScript errors > 0
 - New files with complexity > 30
 - Test coverage drops >5%
@@ -778,6 +806,7 @@ Get-ChildItem $baseDir -Directory |
 ### Visualize Trends
 
 Import CSV files into Excel/Google Sheets and create charts:
+
 - TypeScript errors over time → Should trend to 0
 - Average complexity → Should trend down to <15
 - Test coverage → Should trend up to >70%
@@ -804,7 +833,8 @@ Import CSV files into Excel/Google Sheets and create charts:
 ### What This Workflow Does ✅
 
 1. **Identifies 26 packages** by priority (4 critical, 5 high, 6 medium, 11 low)
-2. **Runs 8 comprehensive checks** (typecheck, lint, dead code, deps, circular, coverage, architecture, complexity)
+2. **Runs 8 comprehensive checks** (typecheck, lint, dead code, deps, circular,
+   coverage, architecture, complexity)
 3. **Generates 12 report files** (~280 KB per full run)
 4. **Auto-cleans old reports** (keeps last N runs)
 5. **Provides actionable metrics** (what's broken, where, how bad)
@@ -820,7 +850,8 @@ Import CSV files into Excel/Google Sheets and create charts:
 
 ### Next Actions Required
 
-1. **Fix TypeScript errors** in `@intelliflow/api` ([Fix 1](#fix-1-typescript-errors-in-api))
+1. **Fix TypeScript errors** in `@intelliflow/api`
+   ([Fix 1](#fix-1-typescript-errors-in-api))
 2. **Refactor high complexity files** ([Fix 2](#fix-2-high-complexity-files))
 3. **Fix Knip command** ([Fix 3](#fix-3-knip-dead-code-detection))
 4. **Install madge** ([Fix 4](#fix-4-install-missing-tools))
@@ -832,12 +863,16 @@ Import CSV files into Excel/Google Sheets and create charts:
 ## 📞 Support
 
 **Questions?** Check existing reports:
-- Package priorities: `.specify/sprints/sprint-0/reports/code-review/package-review/REVIEW-PRIORITY.md`
+
+- Package priorities:
+  `.specify/sprints/sprint-0/reports/code-review/package-review/REVIEW-PRIORITY.md`
 - Latest analysis: `.specify/sprints/sprint-0/reports/code-review/latest/`
 - Trend data: `.specify/sprints/sprint-0/reports/code-review/*-trend.csv`
-- STOA gate outputs: `.specify/sprints/sprint-0/execution/{taskId}/{runId}/matop/gates/`
+- STOA gate outputs:
+  `.specify/sprints/sprint-0/execution/{taskId}/{runId}/matop/gates/`
 
 **Commands:**
+
 ```powershell
 # Quick reference
 pwsh scripts/code-review-analysis.ps1 -?
@@ -855,13 +890,16 @@ node scripts/prioritize-reviews.js --help
 ```
 
 **Path Functions (TypeScript):**
+
 ```typescript
-import { getCodeReviewDir, getPackageReviewDir } from './tools/scripts/lib/code-review/paths.js';
+import {
+  getCodeReviewDir,
+  getPackageReviewDir,
+} from './tools/scripts/lib/code-review/paths.js';
 ```
 
 ---
 
-**Last Updated:** January 25, 2026
-**Analysis Duration:** 154 seconds (full mode)
-**Path Migration:** Completed - now uses `.specify/sprints/` structure
+**Last Updated:** January 25, 2026 **Analysis Duration:** 154 seconds (full
+mode) **Path Migration:** Completed - now uses `.specify/sprints/` structure
 **Next Review Due:** February 1, 2026 (weekly cadence)

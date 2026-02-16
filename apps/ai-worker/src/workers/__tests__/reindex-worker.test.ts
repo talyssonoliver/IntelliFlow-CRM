@@ -60,12 +60,36 @@ const createMockIndexer = () => ({
   }),
   reindexAll: vi.fn().mockImplementation(async (_tenantId, onProgress) => {
     // Simulate progress updates
-    onProgress?.({ total: 100, processed: 50, successful: 50, failed: 0, currentBatch: 1, totalBatches: 2, estimatedRemainingMs: 1000 });
-    onProgress?.({ total: 100, processed: 100, successful: 100, failed: 0, currentBatch: 2, totalBatches: 2, estimatedRemainingMs: 0 });
+    onProgress?.({
+      total: 100,
+      processed: 50,
+      successful: 50,
+      failed: 0,
+      currentBatch: 1,
+      totalBatches: 2,
+      estimatedRemainingMs: 1000,
+    });
+    onProgress?.({
+      total: 100,
+      processed: 100,
+      successful: 100,
+      failed: 0,
+      currentBatch: 2,
+      totalBatches: 2,
+      estimatedRemainingMs: 0,
+    });
     return { total: 100, successful: 100, failed: 0, results: [], totalTimeMs: 2000 };
   }),
   reindexAllNotes: vi.fn().mockImplementation(async (_tenantId, onProgress) => {
-    onProgress?.({ total: 50, processed: 50, successful: 48, failed: 2, currentBatch: 1, totalBatches: 1, estimatedRemainingMs: 0 });
+    onProgress?.({
+      total: 50,
+      processed: 50,
+      successful: 48,
+      failed: 2,
+      currentBatch: 1,
+      totalBatches: 1,
+      estimatedRemainingMs: 0,
+    });
     return { total: 50, successful: 48, failed: 2, results: [], totalTimeMs: 1000 };
   }),
 });
@@ -119,7 +143,10 @@ describe('ReindexWorker', () => {
 
     it('should validate documentIds are UUIDs', () => {
       const validData = {
-        documentIds: ['123e4567-e89b-12d3-a456-426614174000', '223e4567-e89b-12d3-a456-426614174001'],
+        documentIds: [
+          '123e4567-e89b-12d3-a456-426614174000',
+          '223e4567-e89b-12d3-a456-426614174001',
+        ],
       };
 
       const result = ReindexJobDataSchema.safeParse(validData);
@@ -324,7 +351,9 @@ describe('ReindexWorker', () => {
         forceRegenerate: false,
       };
 
-      await expect(processJobSimulation(jobData, mockIndexer)).rejects.toThrow('Database connection failed');
+      await expect(processJobSimulation(jobData, mockIndexer)).rejects.toThrow(
+        'Database connection failed'
+      );
     });
 
     it('should track partial failures', async () => {
@@ -442,9 +471,10 @@ async function processJobSimulation(
       documentsResult = await indexer.indexBatch(data.documentIds);
     } else {
       const fullResult = await indexer.reindexAll(data.tenantId, (progress) => {
-        const overallProgress = data.indexType === 'all'
-          ? (progress.processed / progress.total) * 50
-          : (progress.processed / progress.total) * 100;
+        const overallProgress =
+          data.indexType === 'all'
+            ? (progress.processed / progress.total) * 50
+            : (progress.processed / progress.total) * 100;
         onProgress?.({
           stage: 'documents',
           documents: progress,
@@ -487,7 +517,11 @@ async function processJobSimulation(
     jobId: 'test-job-id',
     indexType: data.indexType,
     documents: documentsResult
-      ? { total: documentsResult.total, successful: documentsResult.successful, failed: documentsResult.failed }
+      ? {
+          total: documentsResult.total,
+          successful: documentsResult.successful,
+          failed: documentsResult.failed,
+        }
       : null,
     notes: notesResult
       ? { total: notesResult.total, successful: notesResult.successful, failed: notesResult.failed }

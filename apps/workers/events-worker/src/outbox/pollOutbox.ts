@@ -40,7 +40,12 @@ export interface OutboxRepository {
   /** Mark event as published */
   markAsPublished(eventId: string): Promise<void>;
   /** Mark event as failed and schedule retry */
-  scheduleRetry(eventId: string, retryCount: number, nextRetryAt: Date, error: string): Promise<void>;
+  scheduleRetry(
+    eventId: string,
+    retryCount: number,
+    nextRetryAt: Date,
+    error: string
+  ): Promise<void>;
   /** Move event to dead letter queue */
   moveToDeadLetter(eventId: string, error: string): Promise<void>;
   /** Get event by ID */

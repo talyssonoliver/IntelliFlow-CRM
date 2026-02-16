@@ -279,22 +279,14 @@ describe('TaskService - Additional Coverage', () => {
       task.cancel('Not needed', 'user');
       await taskRepository.save(task);
 
-      const result = await service.assignToContact(
-        task.id.value,
-        testContact.id.value,
-        'user'
-      );
+      const result = await service.assignToContact(task.id.value, testContact.id.value, 'user');
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('completed or cancelled');
     });
 
     it('should fail when task ID is invalid', async () => {
-      const result = await service.assignToContact(
-        'invalid-uuid',
-        testContact.id.value,
-        'user'
-      );
+      const result = await service.assignToContact('invalid-uuid', testContact.id.value, 'user');
 
       expect(result.isFailure).toBe(true);
     });
@@ -304,11 +296,7 @@ describe('TaskService - Additional Coverage', () => {
     it('should fail when task is not found', async () => {
       const fakeId = '00000000-0000-0000-0000-000000000000';
 
-      const result = await service.assignToOpportunity(
-        fakeId,
-        testOpportunity.id.value,
-        'user'
-      );
+      const result = await service.assignToOpportunity(fakeId, testOpportunity.id.value, 'user');
 
       expect(result.isFailure).toBe(true);
     });
@@ -322,11 +310,7 @@ describe('TaskService - Additional Coverage', () => {
 
       const fakeOppId = '00000000-0000-0000-0000-000000000000';
 
-      const result = await service.assignToOpportunity(
-        task.id.value,
-        fakeOppId,
-        'user'
-      );
+      const result = await service.assignToOpportunity(task.id.value, fakeOppId, 'user');
 
       expect(result.isFailure).toBe(true);
     });
@@ -365,11 +349,7 @@ describe('TaskService - Additional Coverage', () => {
     });
 
     it('should fail when task ID is invalid format', async () => {
-      const result = await service.assignToLead(
-        'bad-uuid',
-        testLead.id.value,
-        'user'
-      );
+      const result = await service.assignToLead('bad-uuid', testLead.id.value, 'user');
 
       expect(result.isFailure).toBe(true);
     });
@@ -377,11 +357,7 @@ describe('TaskService - Additional Coverage', () => {
     it('should fail when task not found', async () => {
       const fakeTaskId = '00000000-0000-0000-0000-000000000000';
 
-      const result = await service.assignToLead(
-        fakeTaskId,
-        testLead.id.value,
-        'user'
-      );
+      const result = await service.assignToLead(fakeTaskId, testLead.id.value, 'user');
 
       expect(result.isFailure).toBe(true);
     });
@@ -394,11 +370,7 @@ describe('TaskService - Additional Coverage', () => {
       task.cancel('Not needed', 'user');
       await taskRepository.save(task);
 
-      const result = await service.assignToLead(
-        task.id.value,
-        testLead.id.value,
-        'user'
-      );
+      const result = await service.assignToLead(task.id.value, testLead.id.value, 'user');
 
       expect(result.isFailure).toBe(true);
     });
@@ -674,7 +646,11 @@ describe('TaskService - Additional Coverage', () => {
 
       const saveSpy = vi.spyOn(taskRepository, 'save').mockRejectedValueOnce(new Error('DB error'));
 
-      const result = await service.assignToOpportunity(task.id.value, testOpportunity.id.value, 'user');
+      const result = await service.assignToOpportunity(
+        task.id.value,
+        testOpportunity.id.value,
+        'user'
+      );
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Failed to save task');
@@ -689,7 +665,9 @@ describe('TaskService - Additional Coverage', () => {
       }).value;
       await taskRepository.save(task);
 
-      const deleteSpy = vi.spyOn(taskRepository, 'delete').mockRejectedValueOnce(new Error('DB error'));
+      const deleteSpy = vi
+        .spyOn(taskRepository, 'delete')
+        .mockRejectedValueOnce(new Error('DB error'));
 
       const result = await service.deleteTask(task.id.value);
 
@@ -702,7 +680,9 @@ describe('TaskService - Additional Coverage', () => {
 
   describe('event publishing error handling', () => {
     it('should not fail task creation when event publishing fails', async () => {
-      const publishSpy = vi.spyOn(eventBus, 'publishAll').mockRejectedValueOnce(new Error('Event bus error'));
+      const publishSpy = vi
+        .spyOn(eventBus, 'publishAll')
+        .mockRejectedValueOnce(new Error('Event bus error'));
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       const result = await service.createTask({
@@ -723,7 +703,9 @@ describe('TaskService - Additional Coverage', () => {
 
   describe('validateAssignment - error catch path', () => {
     it('should handle exception during lead validation', async () => {
-      const findByIdSpy = vi.spyOn(leadRepository, 'findById').mockRejectedValueOnce(new Error('DB down'));
+      const findByIdSpy = vi
+        .spyOn(leadRepository, 'findById')
+        .mockRejectedValueOnce(new Error('DB down'));
 
       const result = await service.createTask({
         title: 'Validation Error Task',
@@ -738,7 +720,9 @@ describe('TaskService - Additional Coverage', () => {
     });
 
     it('should handle exception during contact validation', async () => {
-      const findByIdSpy = vi.spyOn(contactRepository, 'findById').mockRejectedValueOnce(new Error('DB down'));
+      const findByIdSpy = vi
+        .spyOn(contactRepository, 'findById')
+        .mockRejectedValueOnce(new Error('DB down'));
 
       const result = await service.createTask({
         title: 'Contact Validation Error',
@@ -753,7 +737,9 @@ describe('TaskService - Additional Coverage', () => {
     });
 
     it('should handle exception during opportunity validation', async () => {
-      const findByIdSpy = vi.spyOn(opportunityRepository, 'findById').mockRejectedValueOnce(new Error('DB down'));
+      const findByIdSpy = vi
+        .spyOn(opportunityRepository, 'findById')
+        .mockRejectedValueOnce(new Error('DB down'));
 
       const result = await service.createTask({
         title: 'Opp Validation Error',

@@ -13,13 +13,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { timelineRouter } from '../timeline.router';
-import {
-  prismaMock,
-  createTestContext,
-  TEST_UUIDS,
-  mockTask,
-  mockUser,
-} from '../../../test/setup';
+import { prismaMock, createTestContext, TEST_UUIDS, mockTask, mockUser } from '../../../test/setup';
 
 describe('Timeline Router', () => {
   const ctx = createTestContext();
@@ -253,9 +247,27 @@ describe('Timeline Router', () => {
       futureBase.setMonth(futureBase.getMonth() + 1);
 
       const tasks = [
-        { ...mockTask, id: 'task-1', dueDate: new Date(futureBase.getTime() + 1 * 24 * 60 * 60 * 1000), createdAt: new Date('2024-01-01'), owner: mockUser },
-        { ...mockTask, id: 'task-2', dueDate: new Date(futureBase.getTime() + 2 * 24 * 60 * 60 * 1000), createdAt: new Date('2024-02-01'), owner: mockUser },
-        { ...mockTask, id: 'task-3', dueDate: new Date(futureBase.getTime() + 3 * 24 * 60 * 60 * 1000), createdAt: new Date('2024-03-01'), owner: mockUser },
+        {
+          ...mockTask,
+          id: 'task-1',
+          dueDate: new Date(futureBase.getTime() + 1 * 24 * 60 * 60 * 1000),
+          createdAt: new Date('2024-01-01'),
+          owner: mockUser,
+        },
+        {
+          ...mockTask,
+          id: 'task-2',
+          dueDate: new Date(futureBase.getTime() + 2 * 24 * 60 * 60 * 1000),
+          createdAt: new Date('2024-02-01'),
+          owner: mockUser,
+        },
+        {
+          ...mockTask,
+          id: 'task-3',
+          dueDate: new Date(futureBase.getTime() + 3 * 24 * 60 * 60 * 1000),
+          createdAt: new Date('2024-03-01'),
+          owner: mockUser,
+        },
       ];
 
       prismaMock.task.findMany.mockResolvedValue(tasks);
@@ -483,8 +495,20 @@ describe('Timeline Router', () => {
       day3.setDate(day3.getDate() + 3);
 
       const tasks = [
-        { ...mockTask, id: 'task-1', title: 'Later Task', dueDate: day3, status: 'PENDING' as const },
-        { ...mockTask, id: 'task-2', title: 'Earlier Task', dueDate: day1, status: 'PENDING' as const },
+        {
+          ...mockTask,
+          id: 'task-1',
+          title: 'Later Task',
+          dueDate: day3,
+          status: 'PENDING' as const,
+        },
+        {
+          ...mockTask,
+          id: 'task-2',
+          title: 'Earlier Task',
+          dueDate: day1,
+          status: 'PENDING' as const,
+        },
       ];
 
       prismaMock.task.findMany.mockResolvedValue(tasks);

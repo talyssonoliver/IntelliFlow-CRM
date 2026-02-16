@@ -52,8 +52,8 @@ function filterEventsByQuarter(events: ComplianceEvent[], quarter: string): Comp
   const year = match[2];
 
   const startMonth = (q - 1) * 3 + 1;
-  const months = [startMonth, startMonth + 1, startMonth + 2].map((m) =>
-    `${year}-${m.toString().padStart(2, '0')}`
+  const months = [startMonth, startMonth + 1, startMonth + 2].map(
+    (m) => `${year}-${m.toString().padStart(2, '0')}`
   );
 
   return events.filter((event) => months.some((month) => event.date.startsWith(month)));

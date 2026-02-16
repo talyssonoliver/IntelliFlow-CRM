@@ -18,9 +18,21 @@ import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
 import { AppAvatar } from '@/components/shared/app-avatar';
 import { EscalationAlert } from './EscalationAlert';
+import { ActivityFeed } from '@/components/shared/activity-feed/ActivityFeed';
 import { TicketAssignSidebar } from './TicketAssignSidebar';
-import { formatSLATime, getSLAConfig, getStatusConfig, getPriorityConfig, getChannelIcon } from '@/lib/tickets/ticket-utils';
-import type { TicketDetailData, ResolutionInput, TicketActivity, TicketAssigneeOption } from './types';
+import {
+  formatSLATime,
+  getSLAConfig,
+  getStatusConfig,
+  getPriorityConfig,
+  getChannelIcon,
+} from '@/lib/tickets/ticket-utils';
+import type {
+  TicketDetailData,
+  ResolutionInput,
+  TicketActivity,
+  TicketAssigneeOption,
+} from './types';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -73,6 +85,7 @@ export function TicketDetail({
   const [replyMode, setReplyMode] = useState<'public' | 'internal'>('public');
   const [replyContent, setReplyContent] = useState('');
   const [activityNote, setActivityNote] = useState('');
+  const [activityView, setActivityView] = useState<'timeline' | 'unified'>('timeline');
   const [resolutionType, setResolutionType] = useState('');
   const [rootCause, setRootCause] = useState('');
   const [resolutionSummary, setResolutionSummary] = useState('');
@@ -105,7 +118,8 @@ export function TicketDetail({
       ? 'bg-green-500'
       : 'bg-red-500'
     : 'bg-amber-500';
-  const canOpenAssignSidebar = Boolean(currentUserId) || assigneeOptions.length > 0 || isAssigneeOptionsLoading;
+  const canOpenAssignSidebar =
+    Boolean(currentUserId) || assigneeOptions.length > 0 || isAssigneeOptionsLoading;
 
   const handleSendReply = async () => {
     if (!replyContent.trim()) return;
@@ -146,21 +160,32 @@ export function TicketDetail({
           <div className="flex flex-col gap-1">
             {/* Breadcrumb */}
             <nav className="flex items-center gap-2 text-sm text-slate-500">
-              <Link href="/tickets" className="hover:text-[#137fec] transition-colors flex items-center gap-1">
+              <Link
+                href="/tickets"
+                className="hover:text-[#137fec] transition-colors flex items-center gap-1"
+              >
                 <span className="material-symbols-outlined text-[16px]">arrow_back</span>
                 Tickets
               </Link>
               <span className="material-symbols-outlined text-[14px]">chevron_right</span>
-              <span className="text-slate-900 dark:text-slate-200 font-medium">#{ticket.ticketNumber}</span>
+              <span className="text-slate-900 dark:text-slate-200 font-medium">
+                #{ticket.ticketNumber}
+              </span>
             </nav>
 
             {/* Title */}
             <div className="flex items-center gap-3 mt-1">
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{ticket.subject}</h1>
-              <span className={`px-2.5 py-0.5 rounded text-xs font-bold ${statusConfig?.bg} ${statusConfig?.text}`}>
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                {ticket.subject}
+              </h1>
+              <span
+                className={`px-2.5 py-0.5 rounded text-xs font-bold ${statusConfig?.bg} ${statusConfig?.text}`}
+              >
                 {statusConfig?.label}
               </span>
-              <span className={`px-2.5 py-0.5 rounded text-xs font-bold ${priorityConfig.bg} ${priorityConfig.text} uppercase`}>
+              <span
+                className={`px-2.5 py-0.5 rounded text-xs font-bold ${priorityConfig.bg} ${priorityConfig.text} uppercase`}
+              >
                 {priorityConfig.label}
               </span>
             </div>
@@ -237,7 +262,9 @@ export function TicketDetail({
                 <div>
                   <p className="text-xs text-slate-500 mb-1">Channel</p>
                   <div className="flex items-center gap-2 text-slate-900 dark:text-slate-200 font-medium">
-                    <span className="material-symbols-outlined text-[18px] text-slate-400">{getChannelIcon(ticket.channel || 'portal')}</span>
+                    <span className="material-symbols-outlined text-[18px] text-slate-400">
+                      {getChannelIcon(ticket.channel || 'portal')}
+                    </span>
                     <span className="text-sm capitalize">{ticket.channel || 'Portal'}</span>
                   </div>
                 </div>
@@ -256,20 +283,27 @@ export function TicketDetail({
                 <div>
                   <p className="text-xs text-slate-500 mb-1">Created</p>
                   <div className="flex items-center gap-1.5 text-slate-900 dark:text-slate-200 font-medium">
-                    <span className="material-symbols-outlined text-[16px] text-slate-400">schedule</span>
+                    <span className="material-symbols-outlined text-[16px] text-slate-400">
+                      schedule
+                    </span>
                     <span className="text-sm">{ticket.createdAt}</span>
                   </div>
                 </div>
                 <div className="col-span-2">
                   <p className="text-xs text-slate-500 mb-1">Last Updated</p>
-                  <span className="text-sm text-slate-700 dark:text-slate-300">{ticket.updatedAt}</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-300">
+                    {ticket.updatedAt}
+                  </span>
                 </div>
                 {ticket.tags.length > 0 && (
                   <div className="col-span-2">
                     <p className="text-xs text-slate-500 mb-1">Tags</p>
                     <div className="flex flex-wrap gap-2">
                       {ticket.tags.map((tag) => (
-                        <span key={tag} className="px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 text-xs text-slate-600 dark:text-slate-300">
+                        <span
+                          key={tag}
+                          className="px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 text-xs text-slate-600 dark:text-slate-300"
+                        >
                           {tag}
                         </span>
                       ))}
@@ -294,25 +328,48 @@ export function TicketDetail({
                 </div>
                 <div className="mb-4">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">{ticket.customer.name}</h3>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                      {ticket.customer.name}
+                    </h3>
                     {ticket.customer.isVIP && (
-                      <span className="px-1.5 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-[10px] font-bold">VIP</span>
+                      <span className="px-1.5 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 text-[10px] font-bold">
+                        VIP
+                      </span>
                     )}
                   </div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{ticket.customer.title}</p>
-                  <Link href={`/accounts/${ticket.account.id}`} className="flex items-center gap-1 text-[#137fec] text-sm font-medium mt-1 hover:underline">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {ticket.customer.title}
+                  </p>
+                  <Link
+                    href={`/accounts/${ticket.account.id}`}
+                    className="flex items-center gap-1 text-[#137fec] text-sm font-medium mt-1 hover:underline"
+                  >
                     <span className="material-symbols-outlined text-[16px]">business</span>
                     {ticket.customer.company}
                   </Link>
                 </div>
                 <div className="space-y-3 text-sm">
                   <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[18px] text-slate-400">mail</span>
-                    <a href={`mailto:${ticket.customer.email}`} className="text-slate-700 dark:text-slate-300 hover:text-[#137fec]">{ticket.customer.email}</a>
+                    <span className="material-symbols-outlined text-[18px] text-slate-400">
+                      mail
+                    </span>
+                    <a
+                      href={`mailto:${ticket.customer.email}`}
+                      className="text-slate-700 dark:text-slate-300 hover:text-[#137fec]"
+                    >
+                      {ticket.customer.email}
+                    </a>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="material-symbols-outlined text-[18px] text-slate-400">call</span>
-                    <a href={`tel:${ticket.customer.phone}`} className="text-slate-700 dark:text-slate-300 hover:text-[#137fec]">{ticket.customer.phone}</a>
+                    <span className="material-symbols-outlined text-[18px] text-slate-400">
+                      call
+                    </span>
+                    <a
+                      href={`tel:${ticket.customer.phone}`}
+                      className="text-slate-700 dark:text-slate-300 hover:text-[#137fec]"
+                    >
+                      {ticket.customer.phone}
+                    </a>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
@@ -324,18 +381,25 @@ export function TicketDetail({
                     <span className="material-symbols-outlined text-[16px]">call</span>
                     Call
                   </button>
-                  <Link href={`/contacts/${ticket.customer.id}`} className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                  <Link
+                    href={`/contacts/${ticket.customer.id}`}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                  >
                     <span className="material-symbols-outlined text-[16px]">person</span>
                     Profile
                   </Link>
                 </div>
                 <div className="grid grid-cols-2 gap-2 mt-4">
                   <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <p className="text-lg font-bold text-slate-900 dark:text-white">{ticket.customer.totalTickets}</p>
+                    <p className="text-lg font-bold text-slate-900 dark:text-white">
+                      {ticket.customer.totalTickets}
+                    </p>
                     <p className="text-[10px] text-slate-500 uppercase">Total Tickets</p>
                   </div>
                   <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <p className="text-lg font-bold text-slate-900 dark:text-white">{ticket.account.tier}</p>
+                    <p className="text-lg font-bold text-slate-900 dark:text-white">
+                      {ticket.account.tier}
+                    </p>
                     <p className="text-[10px] text-slate-500 uppercase">Account Tier</p>
                   </div>
                 </div>
@@ -344,7 +408,9 @@ export function TicketDetail({
 
             {/* Assignee Card */}
             <Card className="p-5 flex-1">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">Assigned To</h3>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
+                Assigned To
+              </h3>
               {ticket.assigneeInfo ? (
                 <div className="flex items-center gap-3">
                   <AppAvatar
@@ -355,7 +421,9 @@ export function TicketDetail({
                     fallbackClassName="text-sm font-bold bg-slate-200 dark:bg-slate-700"
                   />
                   <div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">{ticket.assigneeInfo.name}</p>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">
+                      {ticket.assigneeInfo.name}
+                    </p>
                     <p className="text-xs text-slate-500">{ticket.assigneeInfo.title}</p>
                   </div>
                 </div>
@@ -378,7 +446,12 @@ export function TicketDetail({
               {/* Tabs */}
               <div className="flex border-b border-slate-200 dark:border-slate-800 px-2 overflow-x-auto">
                 {tabs.map((tab) => {
-                  const count = tab.id === 'activity' ? activityCount : tab.id === 'attachments' ? attachmentCount : undefined;
+                  const count =
+                    tab.id === 'activity'
+                      ? activityCount
+                      : tab.id === 'attachments'
+                        ? attachmentCount
+                        : undefined;
                   return (
                     <button
                       key={tab.id}
@@ -391,7 +464,9 @@ export function TicketDetail({
                     >
                       {tab.label}
                       {count !== undefined && count > 0 && (
-                        <span className="ml-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full">{count}</span>
+                        <span className="ml-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full">
+                          {count}
+                        </span>
                       )}
                     </button>
                   );
@@ -404,8 +479,12 @@ export function TicketDetail({
                 {activeTab === 'overview' && (
                   <div className="space-y-6">
                     <div>
-                      <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-2">Description</h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{ticket.description}</p>
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-2">
+                        Description
+                      </h4>
+                      <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                        {ticket.description}
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-3 gap-4">
@@ -414,17 +493,23 @@ export function TicketDetail({
                           {firstResponseValue !== null ? `${firstResponseValue}m` : 'Pending'}
                         </p>
                         <p className="text-xs text-slate-500 mt-1">First Response</p>
-                        <p className="text-[10px] text-slate-400">Target: {ticket.sla.firstResponse.target}m</p>
+                        <p className="text-[10px] text-slate-400">
+                          Target: {ticket.sla.firstResponse.target}m
+                        </p>
                       </div>
                       <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
                         <p className={`text-2xl font-bold ${slaConfig.text}`}>
                           {formatSLATime(ticket.sla.resolution.remaining)}
                         </p>
                         <p className="text-xs text-slate-500 mt-1">Resolution Time</p>
-                        <p className="text-[10px] text-slate-400">Target: {ticket.sla.resolution.target}m</p>
+                        <p className="text-[10px] text-slate-400">
+                          Target: {ticket.sla.resolution.target}m
+                        </p>
                       </div>
                       <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
-                        <p className="text-2xl font-bold text-slate-900 dark:text-white">{activityCount}</p>
+                        <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                          {activityCount}
+                        </p>
                         <p className="text-xs text-slate-500 mt-1">Interactions</p>
                         <p className="text-[10px] text-slate-400">Last: {ticket.updatedAt}</p>
                       </div>
@@ -432,14 +517,22 @@ export function TicketDetail({
 
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">Recent Activity</h4>
-                        <button onClick={() => setActiveTab('activity')} className="text-xs text-[#137fec] font-medium hover:underline">
+                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                          Recent Activity
+                        </h4>
+                        <button
+                          onClick={() => setActiveTab('activity')}
+                          className="text-xs text-[#137fec] font-medium hover:underline"
+                        >
                           View All
                         </button>
                       </div>
                       <div className="space-y-3">
                         {ticket.activities.slice(0, 3).map((activity) => (
-                          <div key={activity.id} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                          <div
+                            key={activity.id}
+                            className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                          >
                             <AppAvatar
                               name={activity.author.name}
                               src={activity.author.avatar ?? null}
@@ -448,10 +541,16 @@ export function TicketDetail({
                               fallbackClassName="text-xs font-bold bg-slate-200 dark:bg-slate-700"
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-slate-900 dark:text-white">{activity.author.name}</p>
-                              <p className="text-xs text-slate-500 truncate">{activity.content.substring(0, 80)}...</p>
+                              <p className="text-sm font-medium text-slate-900 dark:text-white">
+                                {activity.author.name}
+                              </p>
+                              <p className="text-xs text-slate-500 truncate">
+                                {activity.content.substring(0, 80)}...
+                              </p>
                             </div>
-                            <span className="text-[10px] text-slate-400 whitespace-nowrap">{activity.timestamp}</span>
+                            <span className="text-[10px] text-slate-400 whitespace-nowrap">
+                              {activity.timestamp}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -462,6 +561,41 @@ export function TicketDetail({
                 {/* Activity Tab */}
                 {activeTab === 'activity' && (
                   <div className="space-y-6">
+                    {/* View Toggle: Timeline vs Unified Feed (IFC-069) */}
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 w-fit">
+                      <button
+                        onClick={() => setActivityView('timeline')}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                          activityView === 'timeline'
+                            ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-sm align-middle mr-1">timeline</span>
+                        Timeline
+                      </button>
+                      <button
+                        onClick={() => setActivityView('unified')}
+                        className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                          activityView === 'unified'
+                            ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-sm align-middle mr-1">dynamic_feed</span>
+                        All Sources
+                      </button>
+                    </div>
+
+                    {activityView === 'unified' ? (
+                      <ActivityFeed
+                        entityType="TICKET"
+                        entityId={ticket.id}
+                        height={500}
+                        emptyMessage="No activity found across all sources"
+                      />
+                    ) : (
+                    <>
                     <div className="flex gap-3">
                       <div className="pt-1">
                         <div className="w-8 h-8 rounded-full bg-[#137fec] flex items-center justify-center text-white text-xs font-bold">
@@ -478,10 +612,14 @@ export function TicketDetail({
                         <div className="flex justify-between items-center mt-2">
                           <div className="flex gap-2">
                             <button className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                              <span className="material-symbols-outlined text-[20px]">attach_file</span>
+                              <span className="material-symbols-outlined text-[20px]">
+                                attach_file
+                              </span>
                             </button>
                             <button className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                              <span className="material-symbols-outlined text-[20px]">alternate_email</span>
+                              <span className="material-symbols-outlined text-[20px]">
+                                alternate_email
+                              </span>
                             </button>
                           </div>
                           <button
@@ -507,7 +645,9 @@ export function TicketDetail({
                           <button
                             onClick={() => setReplyMode('public')}
                             className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
-                              replyMode === 'public' ? 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200' : 'text-slate-400 hover:bg-slate-50'
+                              replyMode === 'public'
+                                ? 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200'
+                                : 'text-slate-400 hover:bg-slate-50'
                             }`}
                           >
                             Public Reply
@@ -515,7 +655,9 @@ export function TicketDetail({
                           <button
                             onClick={() => setReplyMode('internal')}
                             className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
-                              replyMode === 'internal' ? 'bg-yellow-50 dark:bg-yellow-900/10 text-yellow-700' : 'text-slate-400 hover:bg-yellow-50'
+                              replyMode === 'internal'
+                                ? 'bg-yellow-50 dark:bg-yellow-900/10 text-yellow-700'
+                                : 'text-slate-400 hover:bg-yellow-50'
                             }`}
                           >
                             Internal Note
@@ -530,10 +672,14 @@ export function TicketDetail({
                         <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
                           <div className="flex gap-1">
                             <button className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 transition-colors">
-                              <span className="material-symbols-outlined text-[18px]">format_bold</span>
+                              <span className="material-symbols-outlined text-[18px]">
+                                format_bold
+                              </span>
                             </button>
                             <button className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 transition-colors">
-                              <span className="material-symbols-outlined text-[18px]">attach_file</span>
+                              <span className="material-symbols-outlined text-[18px]">
+                                attach_file
+                              </span>
                             </button>
                           </div>
                           <button
@@ -547,6 +693,8 @@ export function TicketDetail({
                         </div>
                       </div>
                     </div>
+                    </>
+                    )}
                   </div>
                 )}
 
@@ -555,15 +703,23 @@ export function TicketDetail({
                   <div className="space-y-6">
                     <div className="flex items-center justify-between p-4 bg-amber-50 dark:bg-amber-900/10 rounded-lg border border-amber-100 dark:border-amber-900/30">
                       <div>
-                        <p className="font-bold text-amber-800 dark:text-amber-400">Pending Resolution</p>
-                        <p className="text-sm text-slate-600 dark:text-slate-400">This ticket requires a resolution.</p>
+                        <p className="font-bold text-amber-800 dark:text-amber-400">
+                          Pending Resolution
+                        </p>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          This ticket requires a resolution.
+                        </p>
                       </div>
-                      <span className="material-symbols-outlined text-amber-500 text-3xl">pending</span>
+                      <span className="material-symbols-outlined text-amber-500 text-3xl">
+                        pending
+                      </span>
                     </div>
 
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Resolution Type</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                          Resolution Type
+                        </label>
                         <select
                           value={resolutionType}
                           onChange={(e) => setResolutionType(e.target.value)}
@@ -578,7 +734,9 @@ export function TicketDetail({
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Root Cause</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                          Root Cause
+                        </label>
                         <textarea
                           value={rootCause}
                           onChange={(e) => setRootCause(e.target.value)}
@@ -587,7 +745,9 @@ export function TicketDetail({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Resolution Summary</label>
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                          Resolution Summary
+                        </label>
                         <textarea
                           value={resolutionSummary}
                           onChange={(e) => setResolutionSummary(e.target.value)}
@@ -602,12 +762,16 @@ export function TicketDetail({
                           onChange={(e) => setNotifyCustomer(e.target.checked)}
                           className="rounded border-slate-300 text-[#137fec]"
                         />
-                        <span className="text-sm text-slate-600 dark:text-slate-300">Notify customer of resolution</span>
+                        <span className="text-sm text-slate-600 dark:text-slate-300">
+                          Notify customer of resolution
+                        </span>
                       </label>
                     </div>
 
                     <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
-                      <button className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">Save Draft</button>
+                      <button className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">
+                        Save Draft
+                      </button>
                       <button
                         onClick={handleResolve}
                         disabled={isLoading || !resolutionType || !resolutionSummary.trim()}
@@ -624,30 +788,53 @@ export function TicketDetail({
                 {activeTab === 'attachments' && (
                   <div className="space-y-6">
                     <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center hover:border-[#137fec] hover:bg-[#137fec]/5 transition-colors cursor-pointer">
-                      <span className="material-symbols-outlined text-4xl text-slate-400 mb-2">cloud_upload</span>
-                      <p className="text-sm font-medium text-slate-900 dark:text-white mb-1">Drop files here or click to upload</p>
+                      <span className="material-symbols-outlined text-4xl text-slate-400 mb-2">
+                        cloud_upload
+                      </span>
+                      <p className="text-sm font-medium text-slate-900 dark:text-white mb-1">
+                        Drop files here or click to upload
+                      </p>
                       <p className="text-xs text-slate-500">PDF, DOC, PNG, JPG up to 10MB</p>
                     </div>
 
                     <div className="space-y-3">
                       {ticket.attachments.map((file) => (
-                        <div key={file.id} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                            file.type === 'pdf' ? 'bg-red-100 dark:bg-red-900/30' :
-                            file.type === 'image' ? 'bg-blue-100 dark:bg-blue-900/30' :
-                            'bg-green-100 dark:bg-green-900/30'
-                          }`}>
-                            <span className={`material-symbols-outlined ${
-                              file.type === 'pdf' ? 'text-red-600' :
-                              file.type === 'image' ? 'text-blue-600' :
-                              'text-green-600'
-                            }`}>
-                              {file.type === 'pdf' ? 'picture_as_pdf' : file.type === 'image' ? 'image' : 'description'}
+                        <div
+                          key={file.id}
+                          className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                        >
+                          <div
+                            className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                              file.type === 'pdf'
+                                ? 'bg-red-100 dark:bg-red-900/30'
+                                : file.type === 'image'
+                                  ? 'bg-blue-100 dark:bg-blue-900/30'
+                                  : 'bg-green-100 dark:bg-green-900/30'
+                            }`}
+                          >
+                            <span
+                              className={`material-symbols-outlined ${
+                                file.type === 'pdf'
+                                  ? 'text-red-600'
+                                  : file.type === 'image'
+                                    ? 'text-blue-600'
+                                    : 'text-green-600'
+                              }`}
+                            >
+                              {file.type === 'pdf'
+                                ? 'picture_as_pdf'
+                                : file.type === 'image'
+                                  ? 'image'
+                                  : 'description'}
                             </span>
                           </div>
                           <div className="flex-1">
-                            <p className="text-sm font-medium text-slate-900 dark:text-white">{file.name}</p>
-                            <p className="text-xs text-slate-500">{file.size} • {file.uploader}</p>
+                            <p className="text-sm font-medium text-slate-900 dark:text-white">
+                              {file.name}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {file.size} • {file.uploader}
+                            </p>
                           </div>
                           <button className="p-1.5 text-slate-400 hover:text-[#137fec] transition-colors">
                             <span className="material-symbols-outlined">download</span>
@@ -661,33 +848,52 @@ export function TicketDetail({
                 {/* AI Insights Tab */}
                 {activeTab === 'ai-insights' && (
                   <div className="space-y-6">
-                    <div className={`p-4 rounded-lg border ${
-                      ticket.aiInsights.escalationRisk === 'high' ? 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800' :
-                      ticket.aiInsights.escalationRisk === 'medium' ? 'bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-800' :
-                      'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800'
-                    }`}>
+                    <div
+                      className={`p-4 rounded-lg border ${
+                        ticket.aiInsights.escalationRisk === 'high'
+                          ? 'bg-red-50 dark:bg-red-900/10 border-red-200 dark:border-red-800'
+                          : ticket.aiInsights.escalationRisk === 'medium'
+                            ? 'bg-yellow-50 dark:bg-yellow-900/10 border-yellow-200 dark:border-yellow-800'
+                            : 'bg-green-50 dark:bg-green-900/10 border-green-200 dark:border-green-800'
+                      }`}
+                    >
                       <div className="flex items-center gap-3">
-                        <span className={`material-symbols-outlined text-2xl ${
-                          ticket.aiInsights.escalationRisk === 'high' ? 'text-red-500' :
-                          ticket.aiInsights.escalationRisk === 'medium' ? 'text-yellow-500' : 'text-green-500'
-                        }`}>
+                        <span
+                          className={`material-symbols-outlined text-2xl ${
+                            ticket.aiInsights.escalationRisk === 'high'
+                              ? 'text-red-500'
+                              : ticket.aiInsights.escalationRisk === 'medium'
+                                ? 'text-yellow-500'
+                                : 'text-green-500'
+                          }`}
+                        >
                           {ticket.aiInsights.escalationRisk === 'high' ? 'warning' : 'insights'}
                         </span>
                         <div>
-                          <p className="font-bold text-slate-900 dark:text-white">Escalation Risk: <span className="capitalize">{ticket.aiInsights.escalationRisk}</span></p>
-                          <p className="text-sm text-slate-600 dark:text-slate-400">Predicted resolution time: {ticket.aiInsights.predictedResolutionTime}</p>
+                          <p className="font-bold text-slate-900 dark:text-white">
+                            Escalation Risk:{' '}
+                            <span className="capitalize">{ticket.aiInsights.escalationRisk}</span>
+                          </p>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">
+                            Predicted resolution time: {ticket.aiInsights.predictedResolutionTime}
+                          </p>
                         </div>
                       </div>
                     </div>
 
                     <div>
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[#137fec] text-[20px]">lightbulb</span>
+                        <span className="material-symbols-outlined text-[#137fec] text-[20px]">
+                          lightbulb
+                        </span>
                         Suggested Solutions
                       </h4>
                       <div className="space-y-2">
                         {ticket.aiInsights.suggestedSolutions.map((solution, i) => (
-                          <div key={i} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                          <div
+                            key={i}
+                            className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                          >
                             <span className="text-[#137fec] font-bold text-sm">{i + 1}.</span>
                             <p className="text-sm text-slate-700 dark:text-slate-300">{solution}</p>
                           </div>
@@ -697,33 +903,57 @@ export function TicketDetail({
 
                     <div>
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-purple-500 text-[20px]">content_copy</span>
+                        <span className="material-symbols-outlined text-purple-500 text-[20px]">
+                          content_copy
+                        </span>
                         Similar Resolved Tickets ({ticket.aiInsights.similarResolvedTickets})
                       </h4>
                       <div className="space-y-2">
-                        {ticket.relatedTickets.filter(t => t.status === 'RESOLVED').map((related) => (
-                          <Link key={related.id} href={`/tickets/${related.id}`} className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                            <div>
-                              <span className="text-sm font-medium text-[#137fec]">#{related.id}</span>
-                              <p className="text-sm text-slate-600 dark:text-slate-400">{related.subject}</p>
-                            </div>
-                            <span className="text-xs font-medium text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded">{related.similarity}% match</span>
-                          </Link>
-                        ))}
+                        {ticket.relatedTickets
+                          .filter((t) => t.status === 'RESOLVED')
+                          .map((related) => (
+                            <Link
+                              key={related.id}
+                              href={`/tickets/${related.id}`}
+                              className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                            >
+                              <div>
+                                <span className="text-sm font-medium text-[#137fec]">
+                                  #{related.id}
+                                </span>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">
+                                  {related.subject}
+                                </p>
+                              </div>
+                              <span className="text-xs font-medium text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded">
+                                {related.similarity}% match
+                              </span>
+                            </Link>
+                          ))}
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
                         <span className="text-3xl mb-2 block">
-                          {ticket.aiInsights.sentiment === 'positive' ? '😊' : ticket.aiInsights.sentiment === 'negative' ? '😟' : '😐'}
+                          {ticket.aiInsights.sentiment === 'positive'
+                            ? '😊'
+                            : ticket.aiInsights.sentiment === 'negative'
+                              ? '😟'
+                              : '😐'}
                         </span>
-                        <p className="text-sm font-medium text-slate-900 dark:text-white capitalize">{ticket.aiInsights.sentiment} Sentiment</p>
+                        <p className="text-sm font-medium text-slate-900 dark:text-white capitalize">
+                          {ticket.aiInsights.sentiment} Sentiment
+                        </p>
                         <p className="text-xs text-slate-500">Based on customer messages</p>
                       </div>
                       <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
-                        <p className="text-3xl font-bold text-[#137fec] mb-2">{ticket.aiInsights.similarResolvedTickets}</p>
-                        <p className="text-sm font-medium text-slate-900 dark:text-white">Similar Tickets Resolved</p>
+                        <p className="text-3xl font-bold text-[#137fec] mb-2">
+                          {ticket.aiInsights.similarResolvedTickets}
+                        </p>
+                        <p className="text-sm font-medium text-slate-900 dark:text-white">
+                          Similar Tickets Resolved
+                        </p>
                         <p className="text-xs text-slate-500">In the last 30 days</p>
                       </div>
                     </div>
@@ -736,14 +966,14 @@ export function TicketDetail({
           {/* Right Sidebar - 3 cols */}
           <aside className="lg:col-span-3 flex flex-col gap-6">
             <Card className="p-5">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">SLA Tracking</h3>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">
+                SLA Tracking
+              </h3>
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-slate-600 dark:text-slate-300">First Response</span>
-                    <span className={firstResponseSummaryClass}>
-                      {firstResponseSummaryText}
-                    </span>
+                    <span className={firstResponseSummaryClass}>{firstResponseSummaryText}</span>
                   </div>
                   <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
                     <div className={`h-full ${firstResponseBarClass} w-full`} />
@@ -755,60 +985,98 @@ export function TicketDetail({
                     <span className={`font-medium ${slaConfig.text}`}>{slaConfig.label}</span>
                   </div>
                   <div className="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                    <div className={`h-full ${
-                      ticket.sla.resolution.status === 'BREACHED' ? 'bg-red-500' :
-                      ticket.sla.resolution.status === 'AT_RISK' ? 'bg-yellow-500' :
-                      'bg-green-500'
-                    } w-full`} />
+                    <div
+                      className={`h-full ${
+                        ticket.sla.resolution.status === 'BREACHED'
+                          ? 'bg-red-500'
+                          : ticket.sla.resolution.status === 'AT_RISK'
+                            ? 'bg-yellow-500'
+                            : 'bg-green-500'
+                      } w-full`}
+                    />
                   </div>
                   <div className="flex justify-between text-[10px] text-slate-400 mt-1">
                     <span>Target: {ticket.sla.resolution.target}m</span>
-                    <span className={slaConfig.text}>{formatSLATime(ticket.sla.resolution.remaining)}</span>
+                    <span className={slaConfig.text}>
+                      {formatSLATime(ticket.sla.resolution.remaining)}
+                    </span>
                   </div>
                 </div>
               </div>
             </Card>
 
             <Card className="p-5">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">Quick Actions</h3>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
+                Quick Actions
+              </h3>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setActiveTab('resolution')}
                   className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20 transition-all group"
                 >
-                  <span className="material-symbols-outlined text-slate-400 group-hover:text-green-600 mb-1" style={{ fontSize: '24px' }}>check_circle</span>
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:text-green-600">Resolve</span>
+                  <span
+                    className="material-symbols-outlined text-slate-400 group-hover:text-green-600 mb-1"
+                    style={{ fontSize: '24px' }}
+                  >
+                    check_circle
+                  </span>
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:text-green-600">
+                    Resolve
+                  </span>
                 </button>
                 <button
                   onClick={onClose}
                   disabled={isLoading}
                   className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all group disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined text-slate-400 mb-1" style={{ fontSize: '24px' }}>close</span>
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Close</span>
+                  <span
+                    className="material-symbols-outlined text-slate-400 mb-1"
+                    style={{ fontSize: '24px' }}
+                  >
+                    close
+                  </span>
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400">
+                    Close
+                  </span>
                 </button>
                 <button
                   onClick={handleEscalate}
                   disabled={isLoading || ticket.priority === 'CRITICAL'}
                   className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all group disabled:opacity-50 disabled:hover:border-slate-200 disabled:hover:bg-transparent dark:disabled:hover:border-slate-700 dark:disabled:hover:bg-transparent"
                 >
-                  <span className="material-symbols-outlined text-slate-400 group-hover:text-red-600 mb-1" style={{ fontSize: '24px' }}>publish</span>
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:text-red-600">Escalate</span>
+                  <span
+                    className="material-symbols-outlined text-slate-400 group-hover:text-red-600 mb-1"
+                    style={{ fontSize: '24px' }}
+                  >
+                    publish
+                  </span>
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:text-red-600">
+                    Escalate
+                  </span>
                 </button>
                 <button
                   onClick={() => setAssignSidebarOpen(true)}
                   disabled={isLoading || !canOpenAssignSidebar}
                   className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-[#137fec] hover:bg-[#137fec]/5 transition-all group disabled:opacity-50"
                 >
-                  <span className="material-symbols-outlined text-slate-400 group-hover:text-[#137fec] mb-1" style={{ fontSize: '24px' }}>forward</span>
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:text-[#137fec]">Assign</span>
+                  <span
+                    className="material-symbols-outlined text-slate-400 group-hover:text-[#137fec] mb-1"
+                    style={{ fontSize: '24px' }}
+                  >
+                    forward
+                  </span>
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:text-[#137fec]">
+                    Assign
+                  </span>
                 </button>
               </div>
             </Card>
 
             <Card className="p-5">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Next Steps</h3>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                  Next Steps
+                </h3>
                 <button className="w-6 h-6 flex items-center justify-center rounded bg-[#137fec]/10 hover:bg-[#137fec]/20 text-[#137fec] transition-colors">
                   <span className="material-symbols-outlined text-[16px]">add</span>
                 </button>
@@ -816,10 +1084,20 @@ export function TicketDetail({
               <div className="space-y-3">
                 {ticket.nextSteps.map((step) => (
                   <label key={step.id} className="flex items-start gap-3 group cursor-pointer">
-                    <input type="checkbox" defaultChecked={step.completed} className="mt-1 rounded border-slate-300 text-[#137fec] focus:ring-[#137fec]/50" />
+                    <input
+                      type="checkbox"
+                      defaultChecked={step.completed}
+                      className="mt-1 rounded border-slate-300 text-[#137fec] focus:ring-[#137fec]/50"
+                    />
                     <div className="text-sm">
-                      <p className="font-medium text-slate-700 dark:text-slate-300 group-hover:text-[#137fec] transition-colors">{step.title}</p>
-                      <p className={`text-xs mt-0.5 ${step.dueDate.includes('hour') ? 'text-red-500' : 'text-slate-400'}`}>{step.dueDate}</p>
+                      <p className="font-medium text-slate-700 dark:text-slate-300 group-hover:text-[#137fec] transition-colors">
+                        {step.title}
+                      </p>
+                      <p
+                        className={`text-xs mt-0.5 ${step.dueDate.includes('hour') ? 'text-red-500' : 'text-slate-400'}`}
+                      >
+                        {step.dueDate}
+                      </p>
                     </div>
                   </label>
                 ))}
@@ -827,15 +1105,23 @@ export function TicketDetail({
             </Card>
 
             <Card className="p-5 flex-1">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">Related Tickets</h3>
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
+                Related Tickets
+              </h3>
               <div className="space-y-2">
                 {ticket.relatedTickets.map((related) => {
                   const relatedStatus = getStatusConfig(related.status);
                   return (
-                    <Link key={related.id} href={`/tickets/${related.id}`} className="block p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                    <Link
+                      key={related.id}
+                      href={`/tickets/${related.id}`}
+                      className="block p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                    >
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-[#137fec]">#{related.id}</span>
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${relatedStatus?.bg} ${relatedStatus?.text}`}>
+                        <span
+                          className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${relatedStatus?.bg} ${relatedStatus?.text}`}
+                        >
                           {relatedStatus?.label}
                         </span>
                       </div>
@@ -858,24 +1144,44 @@ function ActivityItem({ activity }: { activity: TicketActivity }) {
   return (
     <div className="relative pl-6">
       <div className="absolute -left-[25px] top-1 w-4 h-4 rounded-full border-2 border-white dark:border-slate-900 bg-slate-200 dark:bg-slate-700 z-10">
-        {activity.type === 'customer_message' && <div className="w-full h-full rounded-full bg-slate-400" />}
-        {activity.type === 'agent_reply' && <div className="w-full h-full rounded-full bg-[#137fec]" />}
-        {activity.type === 'internal_note' && <div className="w-full h-full rounded-full bg-yellow-500" />}
-        {activity.type === 'system_event' && <div className="w-full h-full rounded-full bg-slate-300" />}
-        {activity.type === 'sla_breach' && <div className="w-full h-full rounded-full bg-red-500" />}
-        {activity.type === 'priority_change' && <div className="w-full h-full rounded-full bg-orange-500" />}
+        {activity.type === 'customer_message' && (
+          <div className="w-full h-full rounded-full bg-slate-400" />
+        )}
+        {activity.type === 'agent_reply' && (
+          <div className="w-full h-full rounded-full bg-[#137fec]" />
+        )}
+        {activity.type === 'internal_note' && (
+          <div className="w-full h-full rounded-full bg-yellow-500" />
+        )}
+        {activity.type === 'system_event' && (
+          <div className="w-full h-full rounded-full bg-slate-300" />
+        )}
+        {activity.type === 'sla_breach' && (
+          <div className="w-full h-full rounded-full bg-red-500" />
+        )}
+        {activity.type === 'priority_change' && (
+          <div className="w-full h-full rounded-full bg-orange-500" />
+        )}
       </div>
 
       {(activity.type === 'customer_message' || activity.type === 'agent_reply') && (
-        <div className={`p-4 rounded-lg ${activity.type === 'agent_reply' ? 'bg-blue-50 dark:bg-slate-800 border border-blue-100 dark:border-slate-700' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700'}`}>
+        <div
+          className={`p-4 rounded-lg ${activity.type === 'agent_reply' ? 'bg-blue-50 dark:bg-slate-800 border border-blue-100 dark:border-slate-700' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700'}`}
+        >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-slate-900 dark:text-white">{activity.author.name}</span>
-              {activity.metadata?.via && <span className="text-xs text-slate-500">via {activity.metadata.via}</span>}
+              <span className="font-bold text-sm text-slate-900 dark:text-white">
+                {activity.author.name}
+              </span>
+              {activity.metadata?.via && (
+                <span className="text-xs text-slate-500">via {activity.metadata.via}</span>
+              )}
             </div>
             <span className="text-xs text-slate-400">{activity.timestamp}</span>
           </div>
-          <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line">{activity.content}</p>
+          <p className="text-sm text-slate-600 dark:text-slate-300 whitespace-pre-line">
+            {activity.content}
+          </p>
         </div>
       )}
 
@@ -883,8 +1189,12 @@ function ActivityItem({ activity }: { activity: TicketActivity }) {
         <div className="p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-100 dark:border-yellow-900/30">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-sm text-slate-900 dark:text-white">{activity.author.name}</span>
-              <span className="bg-yellow-200 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-400 text-[10px] font-bold px-1.5 rounded">INTERNAL</span>
+              <span className="font-bold text-sm text-slate-900 dark:text-white">
+                {activity.author.name}
+              </span>
+              <span className="bg-yellow-200 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-400 text-[10px] font-bold px-1.5 rounded">
+                INTERNAL
+              </span>
             </div>
             <span className="text-xs text-slate-400">{activity.timestamp}</span>
           </div>
@@ -894,11 +1204,17 @@ function ActivityItem({ activity }: { activity: TicketActivity }) {
 
       {(activity.type === 'system_event' || activity.type === 'priority_change') && (
         <div className="flex items-center gap-2 py-2">
-          <span className="text-xs text-slate-500">{activity.author.name} {activity.content}</span>
+          <span className="text-xs text-slate-500">
+            {activity.author.name} {activity.content}
+          </span>
           {activity.metadata?.newPriority && (
-            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
-              activity.metadata.newPriority === 'Critical' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'
-            }`}>
+            <span
+              className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${
+                activity.metadata.newPriority === 'Critical'
+                  ? 'bg-red-100 text-red-700'
+                  : 'bg-orange-100 text-orange-700'
+              }`}
+            >
               {activity.metadata.newPriority}
             </span>
           )}

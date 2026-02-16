@@ -91,12 +91,7 @@ describe('use-trpc-subscriptions', () => {
   // =========================================================================
   describe('type exports', () => {
     it('ConnectionStatus type should accept valid values', () => {
-      const statuses: ConnectionStatus[] = [
-        'connecting',
-        'connected',
-        'disconnected',
-        'error',
-      ];
+      const statuses: ConnectionStatus[] = ['connecting', 'connected', 'disconnected', 'error'];
       expect(statuses).toHaveLength(4);
     });
 
@@ -149,13 +144,7 @@ describe('use-trpc-subscriptions', () => {
     });
 
     it('SystemEvent type field allows all valid values', () => {
-      const types: SystemEvent['type'][] = [
-        'maintenance',
-        'alert',
-        'info',
-        'error',
-        'warning',
-      ];
+      const types: SystemEvent['type'][] = ['maintenance', 'alert', 'info', 'error', 'warning'];
       expect(types).toHaveLength(5);
     });
 
@@ -292,9 +281,7 @@ describe('use-trpc-subscriptions', () => {
         timestamp: oldDate.toISOString(),
       });
 
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Latency exceeded target')
-      );
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Latency exceeded target'));
       warnSpy.mockRestore();
     });
   });

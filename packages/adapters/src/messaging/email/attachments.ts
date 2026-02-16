@@ -64,10 +64,33 @@ export const DEFAULT_ATTACHMENT_RULES: AttachmentValidationRules = {
     'text/xml',
   ],
   blockedExtensions: [
-    '.exe', '.bat', '.cmd', '.com', '.msi', '.scr', '.pif',
-    '.vbs', '.vbe', '.js', '.jse', '.ws', '.wsf', '.wsc', '.wsh',
-    '.ps1', '.psm1', '.psd1', '.dll', '.sys', '.drv',
-    '.hta', '.cpl', '.reg', '.inf', '.lnk', '.url',
+    '.exe',
+    '.bat',
+    '.cmd',
+    '.com',
+    '.msi',
+    '.scr',
+    '.pif',
+    '.vbs',
+    '.vbe',
+    '.js',
+    '.jse',
+    '.ws',
+    '.wsf',
+    '.wsc',
+    '.wsh',
+    '.ps1',
+    '.psm1',
+    '.psd1',
+    '.dll',
+    '.sys',
+    '.drv',
+    '.hta',
+    '.cpl',
+    '.reg',
+    '.inf',
+    '.lnk',
+    '.url',
   ],
   requireVirusScan: true,
 };
@@ -113,15 +136,15 @@ export interface ContentExtractor {
  * File magic number signatures for MIME type detection
  */
 const MAGIC_SIGNATURES: Array<{ bytes: number[]; mimeType: string }> = [
-  { bytes: [0xFF, 0xD8, 0xFF], mimeType: 'image/jpeg' },
-  { bytes: [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A], mimeType: 'image/png' },
+  { bytes: [0xff, 0xd8, 0xff], mimeType: 'image/jpeg' },
+  { bytes: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], mimeType: 'image/png' },
   { bytes: [0x47, 0x49, 0x46, 0x38], mimeType: 'image/gif' },
-  { bytes: [0x50, 0x4B, 0x03, 0x04], mimeType: 'application/zip' },
+  { bytes: [0x50, 0x4b, 0x03, 0x04], mimeType: 'application/zip' },
   { bytes: [0x25, 0x50, 0x44, 0x46], mimeType: 'application/pdf' },
   { bytes: [0x52, 0x49, 0x46, 0x46], mimeType: 'audio/wav' },
   { bytes: [0x00, 0x00, 0x00, 0x14, 0x66, 0x74, 0x79, 0x70], mimeType: 'video/mp4' },
   { bytes: [0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70], mimeType: 'video/mp4' },
-  { bytes: [0x00, 0x00, 0x00, 0x1C, 0x66, 0x74, 0x79, 0x70], mimeType: 'video/mp4' },
+  { bytes: [0x00, 0x00, 0x00, 0x1c, 0x66, 0x74, 0x79, 0x70], mimeType: 'video/mp4' },
 ];
 
 /**
@@ -198,11 +221,7 @@ export function sanitizeFilename(filename: string): string {
  * Generate unique attachment ID
  */
 export function generateAttachmentId(content: Buffer, emailId: string): string {
-  const hash = createHash('sha256')
-    .update(emailId)
-    .update(content)
-    .digest('hex')
-    .slice(0, 16);
+  const hash = createHash('sha256').update(emailId).update(content).digest('hex').slice(0, 16);
   return `att_${Date.now().toString(36)}_${hash}`;
 }
 
@@ -273,11 +292,13 @@ export class MockVirusScanner implements VirusScanner {
     const startTime = Date.now();
 
     // Simulate scan time
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Check for EICAR test virus signature
     const contentStr = content.toString();
-    if (contentStr.includes('X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*')) {
+    if (
+      contentStr.includes('X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*')
+    ) {
       return {
         clean: false,
         threatName: 'EICAR-Test-File',
@@ -351,12 +372,14 @@ export class AttachmentHandler {
   private virusScanner?: VirusScanner;
   private contentExtractor?: ContentExtractor;
 
-  constructor(options: {
-    rules?: Partial<AttachmentValidationRules>;
-    storage?: AttachmentStorage;
-    virusScanner?: VirusScanner;
-    contentExtractor?: ContentExtractor;
-  } = {}) {
+  constructor(
+    options: {
+      rules?: Partial<AttachmentValidationRules>;
+      storage?: AttachmentStorage;
+      virusScanner?: VirusScanner;
+      contentExtractor?: ContentExtractor;
+    } = {}
+  ) {
     this.rules = { ...DEFAULT_ATTACHMENT_RULES, ...options.rules };
     this.storage = options.storage || new InMemoryAttachmentStorage();
     this.virusScanner = options.virusScanner;
@@ -395,7 +418,8 @@ export class AttachmentHandler {
 
     if (this.rules.allowedMimeTypes.length > 0) {
       const isAllowed = this.rules.allowedMimeTypes.some(
-        allowed => effectiveMimeType === allowed || effectiveMimeType.startsWith(allowed.replace('*', ''))
+        (allowed) =>
+          effectiveMimeType === allowed || effectiveMimeType.startsWith(allowed.replace('*', ''))
       );
 
       if (!isAllowed) {
@@ -541,12 +565,9 @@ export class AttachmentHandler {
     const failed: Array<{ filename: string; errors: string[] }> = [];
 
     for (const attachment of attachments) {
-      const result = await this.process(
-        attachment.content,
-        attachment.filename,
-        emailId,
-        { contentType: attachment.contentType }
-      );
+      const result = await this.process(attachment.content, attachment.filename, emailId, {
+        contentType: attachment.contentType,
+      });
 
       if (result.success && result.metadata) {
         successful.push(result.metadata);

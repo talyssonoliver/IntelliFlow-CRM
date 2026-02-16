@@ -37,7 +37,9 @@ import {
 vi.mock('@intelliflow/domain', () => {
   class MockCaseId {
     value: string;
-    constructor(v: string) { this.value = v; }
+    constructor(v: string) {
+      this.value = v;
+    }
     static create(v: string) {
       if (!v || typeof v !== 'string') {
         return { isFailure: true, value: undefined };
@@ -72,7 +74,12 @@ vi.mock('@intelliflow/platform', () => ({
   isRulesEngineEvent: vi.fn().mockReturnValue(false),
 }));
 
-import { WorkflowEngineFactory, getRulesEngine, getCaseEventWorkflowEngine, isRulesEngineEvent } from '@intelliflow/platform';
+import {
+  WorkflowEngineFactory,
+  getRulesEngine,
+  getCaseEventWorkflowEngine,
+  isRulesEngineEvent,
+} from '@intelliflow/platform';
 
 const validUUID = '550e8400-e29b-41d4-a716-446655440000';
 const validUUID2 = '550e8400-e29b-41d4-a716-446655440001';
@@ -139,10 +146,7 @@ describe('Case Event Handlers', () => {
     });
 
     it('should fail when caseId is missing', async () => {
-      const result = await handler.handle(
-        makePayload({ caseId: '' as any }),
-        makeContext()
-      );
+      const result = await handler.handle(makePayload({ caseId: '' as any }), makeContext());
 
       expect(result.success).toBe(false);
     });
@@ -189,10 +193,7 @@ describe('Case Event Handlers', () => {
     });
 
     it('should default to system userId when context has no userId', async () => {
-      const result = await handler.handle(
-        makePayload(),
-        makeContext({ userId: undefined })
-      );
+      const result = await handler.handle(makePayload(), makeContext({ userId: undefined }));
 
       expect(result.success).toBe(true);
     });
@@ -311,15 +312,10 @@ describe('Case Event Handlers', () => {
 
     it('should evaluate rules and return result', async () => {
       (getRulesEngine as any).mockReturnValue({
-        evaluate: vi.fn().mockResolvedValue([
-          { matched: true, actionsExecuted: 2 },
-        ]),
+        evaluate: vi.fn().mockResolvedValue([{ matched: true, actionsExecuted: 2 }]),
       });
 
-      const result = await handler.handle(
-        makePayload({ priority: 'HIGH' }),
-        makeContext()
-      );
+      const result = await handler.handle(makePayload({ priority: 'HIGH' }), makeContext());
 
       expect(result.success).toBe(true);
       expect(result.workflowEngine).toBe('rules');
@@ -341,11 +337,7 @@ describe('Case Event Handlers', () => {
         eventPublisher: mockPublisher as any,
       };
 
-      const result = await handler.handle(
-        makePayload({ priority: 'URGENT' }),
-        makeContext(),
-        deps
-      );
+      const result = await handler.handle(makePayload({ priority: 'URGENT' }), makeContext(), deps);
 
       expect(result.success).toBe(true);
       expect(result.metadata?.isEscalation).toBe(true);
@@ -361,11 +353,9 @@ describe('Case Event Handlers', () => {
         publish: vi.fn().mockResolvedValue(undefined),
       };
 
-      const result = await handler.handle(
-        makePayload({ priority: 'LOW' }),
-        makeContext(),
-        { eventPublisher: mockPublisher as any }
-      );
+      const result = await handler.handle(makePayload({ priority: 'LOW' }), makeContext(), {
+        eventPublisher: mockPublisher as any,
+      });
 
       expect(result.metadata?.isEscalation).toBe(false);
       expect(mockPublisher.publish).not.toHaveBeenCalled();
@@ -433,10 +423,7 @@ describe('Case Event Handlers', () => {
         evaluate: vi.fn().mockResolvedValue([]),
       });
 
-      const result = await handler.handle(
-        makePayload({ newDeadline: undefined }),
-        makeContext()
-      );
+      const result = await handler.handle(makePayload({ newDeadline: undefined }), makeContext());
 
       expect(result.success).toBe(true);
       expect(result.metadata?.hoursUntilDeadline).toBeNull();
@@ -488,11 +475,9 @@ describe('Case Event Handlers', () => {
         startWorkflow: vi.fn().mockRejectedValue(new Error('Temporal unavailable')),
       };
 
-      const result = await handler.handle(
-        makePayload(),
-        makeContext(),
-        { workflowEngine: mockEngine as any }
-      );
+      const result = await handler.handle(makePayload(), makeContext(), {
+        workflowEngine: mockEngine as any,
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Temporal unavailable');
@@ -581,10 +566,7 @@ describe('Case Event Handlers', () => {
     });
 
     it('should handle missing assignedTo with default approver', async () => {
-      const result = await handler.handle(
-        makePayload({ assignedTo: undefined }),
-        makeContext()
-      );
+      const result = await handler.handle(makePayload({ assignedTo: undefined }), makeContext());
 
       expect(result.success).toBe(true);
     });
@@ -627,11 +609,7 @@ describe('Case Event Handlers', () => {
     it('should process event through correct handler', async () => {
       const registry = new CaseEventHandlerRegistry();
 
-      const result = await registry.processEvent(
-        'case.created',
-        makePayload(),
-        makeContext()
-      );
+      const result = await registry.processEvent('case.created', makePayload(), makeContext());
 
       expect(result.success).toBe(true);
     });
@@ -639,11 +617,7 @@ describe('Case Event Handlers', () => {
     it('should return error for unhandled event type', async () => {
       const registry = new CaseEventHandlerRegistry();
 
-      const result = await registry.processEvent(
-        'case.nonexistent',
-        makePayload(),
-        makeContext()
-      );
+      const result = await registry.processEvent('case.nonexistent', makePayload(), makeContext());
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('No handler for event type');

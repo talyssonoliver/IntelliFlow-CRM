@@ -128,11 +128,7 @@ describe('GoogleCalendarAdapter - Additional Coverage', () => {
         externalCalendarId: 'existing-event-id',
       });
 
-      const result = await adapter.pushToCalendar(
-        mockTokens,
-        appointment as any,
-        'idem-key-1'
-      );
+      const result = await adapter.pushToCalendar(mockTokens, appointment as any, 'idem-key-1');
 
       expect(result.isSuccess).toBe(true);
       expect(result.value?.operation).toBe('update');
@@ -153,11 +149,7 @@ describe('GoogleCalendarAdapter - Additional Coverage', () => {
 
       const appointment = createMockAppointment();
 
-      const result = await adapter.pushToCalendar(
-        mockTokens,
-        appointment as any,
-        'idem-key-2'
-      );
+      const result = await adapter.pushToCalendar(mockTokens, appointment as any, 'idem-key-2');
 
       expect(result.isSuccess).toBe(true);
       expect(result.value?.operation).toBe('create');
@@ -187,11 +179,7 @@ describe('GoogleCalendarAdapter - Additional Coverage', () => {
         externalCalendarId: 'deleted-externally',
       });
 
-      const result = await adapter.pushToCalendar(
-        mockTokens,
-        appointment as any,
-        'idem-key-3'
-      );
+      const result = await adapter.pushToCalendar(mockTokens, appointment as any, 'idem-key-3');
 
       expect(result.isSuccess).toBe(true);
       expect(result.value?.operation).toBe('create');
@@ -222,11 +210,7 @@ describe('GoogleCalendarAdapter - Additional Coverage', () => {
         externalCalendarId: 'existing-id',
       });
 
-      const result = await adapter.pushToCalendar(
-        mockTokens,
-        appointment as any,
-        'idem-key-4'
-      );
+      const result = await adapter.pushToCalendar(mockTokens, appointment as any, 'idem-key-4');
 
       expect(result.isFailure).toBe(true);
     });
@@ -240,11 +224,7 @@ describe('GoogleCalendarAdapter - Additional Coverage', () => {
 
       const appointment = createMockAppointment();
 
-      const result = await adapter.pushToCalendar(
-        mockTokens,
-        appointment as any,
-        'idem-key-5'
-      );
+      const result = await adapter.pushToCalendar(mockTokens, appointment as any, 'idem-key-5');
 
       expect(result.isFailure).toBe(true);
     });
@@ -518,11 +498,7 @@ describe('GoogleCalendarAdapter - Additional Coverage', () => {
         attendeeIds: ['user1@example.com', 'user2@example.com'],
       });
 
-      const result = await adapter.createEvent(
-        mockTokens,
-        appointment as any,
-        'idem-attend-1'
-      );
+      const result = await adapter.createEvent(mockTokens, appointment as any, 'idem-attend-1');
 
       expect(result.isSuccess).toBe(true);
       // Verify the body included attendees
@@ -548,11 +524,7 @@ describe('GoogleCalendarAdapter - Additional Coverage', () => {
         isCancelled: true,
       });
 
-      const result = await adapter.createEvent(
-        mockTokens,
-        appointment as any,
-        'idem-cancel-1'
-      );
+      const result = await adapter.createEvent(mockTokens, appointment as any, 'idem-cancel-1');
 
       expect(result.isSuccess).toBe(true);
       const callArgs = mockFetch.mock.calls[0];
@@ -932,11 +904,7 @@ describe('GoogleCalendarAdapter - Additional Coverage', () => {
       mockFetch.mockRejectedValueOnce(new Error('Timeout'));
 
       const appointment = createMockAppointment();
-      const result = await adapter.updateEvent(
-        mockTokens,
-        'event-123',
-        appointment as any
-      );
+      const result = await adapter.updateEvent(mockTokens, 'event-123', appointment as any);
 
       expect(result.isFailure).toBe(true);
     });
@@ -945,11 +913,7 @@ describe('GoogleCalendarAdapter - Additional Coverage', () => {
       mockFetch.mockRejectedValueOnce('string thrown');
 
       const appointment = createMockAppointment();
-      const result = await adapter.updateEvent(
-        mockTokens,
-        'event-123',
-        appointment as any
-      );
+      const result = await adapter.updateEvent(mockTokens, 'event-123', appointment as any);
 
       expect(result.isFailure).toBe(true);
       expect(result.error?.message).toContain('Unknown error');
@@ -959,15 +923,13 @@ describe('GoogleCalendarAdapter - Additional Coverage', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        json: async () => { throw new Error('Invalid JSON'); },
+        json: async () => {
+          throw new Error('Invalid JSON');
+        },
       });
 
       const appointment = createMockAppointment();
-      const result = await adapter.updateEvent(
-        mockTokens,
-        'event-123',
-        appointment as any
-      );
+      const result = await adapter.updateEvent(mockTokens, 'event-123', appointment as any);
 
       expect(result.isFailure).toBe(true);
     });
@@ -977,10 +939,7 @@ describe('GoogleCalendarAdapter - Additional Coverage', () => {
     it('should handle network error during webhook registration', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Cannot reach Google'));
 
-      const result = await adapter.registerWebhook(
-        mockTokens,
-        'https://example.com/webhook'
-      );
+      const result = await adapter.registerWebhook(mockTokens, 'https://example.com/webhook');
 
       expect(result.isFailure).toBe(true);
       expect(result.error?.message).toContain('Cannot reach Google');
@@ -989,10 +948,7 @@ describe('GoogleCalendarAdapter - Additional Coverage', () => {
     it('should handle non-Error thrown during webhook registration', async () => {
       mockFetch.mockRejectedValueOnce(undefined);
 
-      const result = await adapter.registerWebhook(
-        mockTokens,
-        'https://example.com/webhook'
-      );
+      const result = await adapter.registerWebhook(mockTokens, 'https://example.com/webhook');
 
       expect(result.isFailure).toBe(true);
       expect(result.error?.message).toContain('Unknown error');
@@ -1031,11 +987,7 @@ describe('GoogleCalendarAdapter - Additional Coverage', () => {
         }),
       });
 
-      const result = await adapter.unregisterWebhook(
-        mockTokens,
-        'channel-123',
-        'resource-123'
-      );
+      const result = await adapter.unregisterWebhook(mockTokens, 'channel-123', 'resource-123');
 
       expect(result.isFailure).toBe(true);
     });
@@ -1043,11 +995,7 @@ describe('GoogleCalendarAdapter - Additional Coverage', () => {
     it('should handle network error on unregister', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
-      const result = await adapter.unregisterWebhook(
-        mockTokens,
-        'channel-123',
-        'resource-123'
-      );
+      const result = await adapter.unregisterWebhook(mockTokens, 'channel-123', 'resource-123');
 
       expect(result.isFailure).toBe(true);
     });

@@ -59,8 +59,9 @@ export default function PartnersPage() {
             </h1>
 
             <p className="text-lg text-slate-200 max-w-2xl mx-auto mb-8">
-              Join our partner ecosystem to integrate your technology, resell our platform, or become a
-              certified consultant. We provide the tools, support, and revenue opportunities you need to succeed.
+              Join our partner ecosystem to integrate your technology, resell our platform, or
+              become a certified consultant. We provide the tools, support, and revenue
+              opportunities you need to succeed.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -163,9 +164,7 @@ export default function PartnersPage() {
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
                   {category.name}
                 </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  {category.description}
-                </p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">{category.description}</p>
               </Card>
             ))}
           </div>
@@ -188,9 +187,7 @@ export default function PartnersPage() {
             {/* Technology Partners */}
             <div>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-8 flex items-center gap-3">
-                <span
-                  className="w-10 h-10 rounded-lg bg-[#137fec]/10 flex items-center justify-center"
-                >
+                <span className="w-10 h-10 rounded-lg bg-[#137fec]/10 flex items-center justify-center">
                   <span className="material-symbols-outlined text-[#137fec]" aria-hidden="true">
                     integration_instructions
                   </span>
@@ -209,7 +206,10 @@ export default function PartnersPage() {
                         className="w-12 h-12 rounded-lg bg-[#137fec]/10 flex items-center
                           justify-center flex-shrink-0"
                       >
-                        <span className="material-symbols-outlined text-[#137fec]" aria-hidden="true">
+                        <span
+                          className="material-symbols-outlined text-[#137fec]"
+                          aria-hidden="true"
+                        >
                           {benefit.icon}
                         </span>
                       </div>
@@ -230,9 +230,7 @@ export default function PartnersPage() {
             {/* Resellers */}
             <div>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-8 flex items-center gap-3">
-                <span
-                  className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center"
-                >
+                <span className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
                   <span className="material-symbols-outlined text-green-600" aria-hidden="true">
                     storefront
                   </span>
@@ -251,7 +249,10 @@ export default function PartnersPage() {
                         className="w-12 h-12 rounded-lg bg-green-500/10 flex items-center
                           justify-center flex-shrink-0"
                       >
-                        <span className="material-symbols-outlined text-green-600" aria-hidden="true">
+                        <span
+                          className="material-symbols-outlined text-green-600"
+                          aria-hidden="true"
+                        >
                           {benefit.icon}
                         </span>
                       </div>
@@ -272,9 +273,7 @@ export default function PartnersPage() {
             {/* Consultants */}
             <div>
               <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-8 flex items-center gap-3">
-                <span
-                  className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center"
-                >
+                <span className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center">
                   <span className="material-symbols-outlined text-indigo-600" aria-hidden="true">
                     psychology
                   </span>
@@ -293,7 +292,10 @@ export default function PartnersPage() {
                         className="w-12 h-12 rounded-lg bg-indigo-500/10 flex items-center
                           justify-center flex-shrink-0"
                       >
-                        <span className="material-symbols-outlined text-indigo-600" aria-hidden="true">
+                        <span
+                          className="material-symbols-outlined text-indigo-600"
+                          aria-hidden="true"
+                        >
                           {benefit.icon}
                         </span>
                       </div>
@@ -317,9 +319,7 @@ export default function PartnersPage() {
       {/* CTA Section */}
       <section className="py-16 lg:py-20 bg-gradient-to-r from-[#137fec] to-[#0e6ac7]">
         <div className="container px-4 lg:px-6 mx-auto max-w-5xl text-center space-y-6 text-white">
-          <h2 className="text-3xl lg:text-4xl font-bold">
-            Ready to Partner with IntelliFlow CRM?
-          </h2>
+          <h2 className="text-3xl lg:text-4xl font-bold">Ready to Partner with IntelliFlow CRM?</h2>
           <p className="text-lg text-white/90 max-w-2xl mx-auto">
             Join hundreds of technology partners, resellers, and consultants building successful
             businesses with our platform.
@@ -382,9 +382,7 @@ export default function PartnersPage() {
                     expand_more
                   </span>
                 </summary>
-                <div className="px-6 pb-6 text-slate-600 dark:text-slate-400">
-                  {faq.answer}
-                </div>
+                <div className="px-6 pb-6 text-slate-600 dark:text-slate-400">{faq.answer}</div>
               </details>
             ))}
           </div>

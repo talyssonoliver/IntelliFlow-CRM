@@ -47,7 +47,7 @@ export default function AnalyticsPage() {
       '7d': 'Last 7 days',
       '30d': 'Last 30 days',
       '90d': 'Last 90 days',
-      'ytd': 'Year to date',
+      ytd: 'Year to date',
     };
     return labels[selectedPeriod] || 'Last 30 days';
   };
@@ -111,9 +111,13 @@ export default function AnalyticsPage() {
               onClick={() => setExportMenuOpen(!exportMenuOpen)}
               className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2.5 px-5 rounded-lg shadow-sm shadow-primary/30 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 group"
             >
-              <span className="material-symbols-outlined text-lg transition-transform group-hover:scale-110">download</span>
+              <span className="material-symbols-outlined text-lg transition-transform group-hover:scale-110">
+                download
+              </span>
               Export
-              <span className={`material-symbols-outlined text-sm transition-transform ${exportMenuOpen ? 'rotate-180' : ''}`}>
+              <span
+                className={`material-symbols-outlined text-sm transition-transform ${exportMenuOpen ? 'rotate-180' : ''}`}
+              >
                 expand_more
               </span>
             </button>
@@ -129,21 +133,27 @@ export default function AnalyticsPage() {
                     onClick={() => handleExportCSV('metrics')}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                   >
-                    <span className="material-symbols-outlined text-lg text-muted-foreground">table_chart</span>
+                    <span className="material-symbols-outlined text-lg text-muted-foreground">
+                      table_chart
+                    </span>
                     Metrics Only
                   </button>
                   <button
                     onClick={() => handleExportCSV('pipeline')}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                   >
-                    <span className="material-symbols-outlined text-lg text-muted-foreground">waterfall_chart</span>
+                    <span className="material-symbols-outlined text-lg text-muted-foreground">
+                      waterfall_chart
+                    </span>
                     Pipeline Only
                   </button>
                   <button
                     onClick={() => handleExportCSV('all')}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                   >
-                    <span className="material-symbols-outlined text-lg text-muted-foreground">download</span>
+                    <span className="material-symbols-outlined text-lg text-muted-foreground">
+                      download
+                    </span>
                     All Data (CSV)
                   </button>
 
@@ -154,7 +164,9 @@ export default function AnalyticsPage() {
                     onClick={handleExportPDF}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                   >
-                    <span className="material-symbols-outlined text-lg text-destructive">picture_as_pdf</span>
+                    <span className="material-symbols-outlined text-lg text-destructive">
+                      picture_as_pdf
+                    </span>
                     Full Report (PDF)
                   </button>
                 </div>
@@ -202,9 +214,7 @@ export default function AnalyticsPage() {
         {/* Pipeline Overview */}
         <Card className="lg:col-span-2 p-6 bg-card border-border">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-foreground">
-              Pipeline Overview
-            </h3>
+            <h3 className="text-lg font-semibold text-foreground">Pipeline Overview</h3>
             <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
               <span className="material-symbols-outlined">more_horiz</span>
             </button>
@@ -246,9 +256,7 @@ export default function AnalyticsPage() {
         {/* AI Recommendations */}
         <Card className="p-6 bg-card border-border">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-foreground">
-              AI Recommendations
-            </h3>
+            <h3 className="text-lg font-semibold text-foreground">AI Recommendations</h3>
             <Link href="/ai/insights" className="text-sm text-primary hover:underline">
               View All
             </Link>
@@ -282,9 +290,7 @@ export default function AnalyticsPage() {
         {/* Revenue Chart Placeholder */}
         <Card className="p-6 bg-card border-border">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-foreground">
-              Revenue Trend
-            </h3>
+            <h3 className="text-lg font-semibold text-foreground">Revenue Trend</h3>
             <select className="px-2 py-1 text-sm border border-border rounded bg-background text-foreground">
               <option>Last 6 months</option>
               <option>Last 12 months</option>
@@ -303,9 +309,7 @@ export default function AnalyticsPage() {
         {/* Recent Activity */}
         <Card className="p-6 bg-card border-border">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-foreground">
-              Recent Activity
-            </h3>
+            <h3 className="text-lg font-semibold text-foreground">Recent Activity</h3>
             <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
               <span className="material-symbols-outlined">refresh</span>
             </button>

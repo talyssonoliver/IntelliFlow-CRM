@@ -93,11 +93,7 @@ describe('ConfidenceIndicator', () => {
 
     it('should apply custom className', () => {
       render(
-        <ConfidenceIndicator
-          confidence={0.85}
-          className="custom-class"
-          data-testid="indicator"
-        />
+        <ConfidenceIndicator confidence={0.85} className="custom-class" data-testid="indicator" />
       );
       expect(screen.getByTestId('indicator')).toHaveClass('custom-class');
     });

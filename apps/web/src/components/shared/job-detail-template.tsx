@@ -78,19 +78,10 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: JobDetailTemplatePr
         <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-700 p-4 z-40 shadow-lg lg:hidden">
           <div className="container mx-auto flex items-center justify-between gap-4">
             <div className="truncate">
-              <p className="font-semibold text-slate-900 dark:text-white truncate">
-                {job.title}
-              </p>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                {job.department}
-              </p>
+              <p className="font-semibold text-slate-900 dark:text-white truncate">{job.title}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">{job.department}</p>
             </div>
-            <ApplyButton
-              jobId={job.id}
-              jobTitle={job.title}
-              size="sm"
-              showIcon={false}
-            />
+            <ApplyButton jobId={job.id} jobTitle={job.title} size="sm" showIcon={false} />
           </div>
         </div>
       )}
@@ -174,7 +165,10 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: JobDetailTemplatePr
           <div className="flex-1">
             {/* About the Role */}
             <section aria-labelledby="about-heading" className="mb-10">
-              <h2 id="about-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
+              <h2
+                id="about-heading"
+                className="text-2xl font-bold text-slate-900 dark:text-white mb-4"
+              >
                 About the Role
               </h2>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
@@ -184,13 +178,19 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: JobDetailTemplatePr
 
             {/* Responsibilities */}
             <section aria-labelledby="responsibilities-heading" className="mb-10">
-              <h2 id="responsibilities-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
+              <h2
+                id="responsibilities-heading"
+                className="text-2xl font-bold text-slate-900 dark:text-white mb-4"
+              >
                 What You&apos;ll Do
               </h2>
               <ul className="space-y-3">
                 {job.responsibilities.map((item, idx) => (
                   <li key={idx} className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-[#137fec] mt-0.5" aria-hidden="true">
+                    <span
+                      className="material-symbols-outlined text-[#137fec] mt-0.5"
+                      aria-hidden="true"
+                    >
                       check_circle
                     </span>
                     <span className="text-slate-600 dark:text-slate-300">{item}</span>
@@ -201,13 +201,19 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: JobDetailTemplatePr
 
             {/* Requirements */}
             <section aria-labelledby="requirements-heading" className="mb-10">
-              <h2 id="requirements-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
+              <h2
+                id="requirements-heading"
+                className="text-2xl font-bold text-slate-900 dark:text-white mb-4"
+              >
                 What We&apos;re Looking For
               </h2>
               <ul className="space-y-3">
                 {job.requirements.map((item, idx) => (
                   <li key={idx} className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-slate-400 mt-0.5" aria-hidden="true">
+                    <span
+                      className="material-symbols-outlined text-slate-400 mt-0.5"
+                      aria-hidden="true"
+                    >
                       arrow_right
                     </span>
                     <span className="text-slate-600 dark:text-slate-300">{item}</span>
@@ -219,13 +225,19 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: JobDetailTemplatePr
             {/* Nice to Have */}
             {job.niceToHave && job.niceToHave.length > 0 && (
               <section aria-labelledby="nice-heading" className="mb-10">
-                <h2 id="nice-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
+                <h2
+                  id="nice-heading"
+                  className="text-2xl font-bold text-slate-900 dark:text-white mb-4"
+                >
                   Nice to Have
                 </h2>
                 <ul className="space-y-3">
                   {job.niceToHave.map((item, idx) => (
                     <li key={idx} className="flex items-start gap-3">
-                      <span className="material-symbols-outlined text-amber-500 mt-0.5" aria-hidden="true">
+                      <span
+                        className="material-symbols-outlined text-amber-500 mt-0.5"
+                        aria-hidden="true"
+                      >
                         star
                       </span>
                       <span className="text-slate-600 dark:text-slate-300">{item}</span>
@@ -238,7 +250,10 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: JobDetailTemplatePr
             {/* Benefits */}
             {job.benefits && job.benefits.length > 0 && (
               <section aria-labelledby="benefits-heading" className="mb-10">
-                <h2 id="benefits-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
+                <h2
+                  id="benefits-heading"
+                  className="text-2xl font-bold text-slate-900 dark:text-white mb-4"
+                >
                   Benefits & Perks
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -262,9 +277,7 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: JobDetailTemplatePr
           <aside className="lg:w-80 space-y-6">
             {/* Quick Info Card */}
             <Card className="p-6 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 sticky top-20">
-              <h3 className="font-semibold text-slate-900 dark:text-white mb-4">
-                Job Details
-              </h3>
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-4">Job Details</h3>
               <dl className="space-y-4">
                 <div>
                   <dt className="text-sm text-slate-500 dark:text-slate-400">Department</dt>
@@ -303,19 +316,13 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: JobDetailTemplatePr
               </dl>
 
               <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-700">
-                <ApplyButton
-                  jobId={job.id}
-                  jobTitle={job.title}
-                  fullWidth
-                />
+                <ApplyButton jobId={job.id} jobTitle={job.title} fullWidth />
               </div>
             </Card>
 
             {/* Contact Card */}
             <Card className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
-              <h3 className="font-semibold text-slate-900 dark:text-white mb-2">
-                Questions?
-              </h3>
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-2">Questions?</h3>
               <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
                 Reach out to our talent team for any questions about this role.
               </p>
@@ -337,11 +344,14 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: JobDetailTemplatePr
       {relatedJobs.length > 0 && (
         <section aria-labelledby="related-heading" className="bg-slate-50 dark:bg-slate-800 py-16">
           <div className="container px-4 lg:px-6 mx-auto max-w-auto">
-            <h2 id="related-heading" className="text-2xl font-bold text-slate-900 dark:text-white mb-8">
+            <h2
+              id="related-heading"
+              className="text-2xl font-bold text-slate-900 dark:text-white mb-8"
+            >
               Similar Opportunities
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {relatedJobs.map(relatedJob => (
+              {relatedJobs.map((relatedJob) => (
                 <Card
                   key={relatedJob.id}
                   className="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-[#137fec] transition-colors"

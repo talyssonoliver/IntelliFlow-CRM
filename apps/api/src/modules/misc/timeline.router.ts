@@ -312,7 +312,11 @@ export const timelineRouter = createTRPCRouter({
     // =========================================================================
     // 1. Fetch Tasks
     // =========================================================================
-    if (shouldIncludeType('task') || shouldIncludeType('task_completed') || shouldIncludeType('task_overdue')) {
+    if (
+      shouldIncludeType('task') ||
+      shouldIncludeType('task_completed') ||
+      shouldIncludeType('task_overdue')
+    ) {
       const taskWhere: any = {};
 
       if (effectiveOpportunityId) {
@@ -471,7 +475,11 @@ export const timelineRouter = createTRPCRouter({
     // 3. Fetch Audit Log Entries (for status changes, stage changes, etc.)
     // Using consolidated AuditLogEntry table per ADR-008
     // =========================================================================
-    if (shouldIncludeType('status_change') || shouldIncludeType('stage_change') || shouldIncludeType('audit')) {
+    if (
+      shouldIncludeType('status_change') ||
+      shouldIncludeType('stage_change') ||
+      shouldIncludeType('audit')
+    ) {
       const auditWhere: any = {};
 
       if (effectiveOpportunityId) {
@@ -737,7 +745,9 @@ export const timelineRouter = createTRPCRouter({
 
     // Warn if response time exceeds KPI target (1s)
     if (duration > 1000) {
-      console.warn(`[timeline.getEvents] SLOW: Response took ${duration.toFixed(2)}ms (target: <1000ms)`);
+      console.warn(
+        `[timeline.getEvents] SLOW: Response took ${duration.toFixed(2)}ms (target: <1000ms)`
+      );
     }
 
     return {
@@ -904,7 +914,7 @@ export const timelineRouter = createTRPCRouter({
             type: 'task',
             title: task.title,
             dueDate: task.dueDate,
-            priority: task.priority?.toLowerCase() as TimelinePriorityValue || null,
+            priority: (task.priority?.toLowerCase() as TimelinePriorityValue) || null,
             isOverdue: task.dueDate < new Date(),
           });
         }

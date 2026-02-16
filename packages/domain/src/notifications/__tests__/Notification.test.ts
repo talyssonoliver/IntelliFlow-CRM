@@ -3,7 +3,12 @@
  * @see IFC-157: Notification service MVP
  */
 import { describe, it, expect, beforeEach } from 'vitest';
-import { Notification, NotificationChannel, NotificationStatus, NotificationPriority } from '../Notification';
+import {
+  Notification,
+  NotificationChannel,
+  NotificationStatus,
+  NotificationPriority,
+} from '../Notification';
 import { NotificationId } from '../NotificationId';
 import {
   NotificationCreatedEvent,
@@ -13,16 +18,18 @@ import {
 } from '../NotificationEvents';
 
 describe('Notification', () => {
-  const createTestNotification = (overrides?: Partial<{
-    id: NotificationId;
-    tenantId: string;
-    recipientId: string;
-    channel: NotificationChannel;
-    subject: string;
-    body: string;
-    priority: NotificationPriority;
-    templateId: string;
-  }>) => {
+  const createTestNotification = (
+    overrides?: Partial<{
+      id: NotificationId;
+      tenantId: string;
+      recipientId: string;
+      channel: NotificationChannel;
+      subject: string;
+      body: string;
+      priority: NotificationPriority;
+      templateId: string;
+    }>
+  ) => {
     return Notification.create({
       id: overrides?.id ?? NotificationId.generate(),
       tenantId: overrides?.tenantId ?? 'tenant-123',
@@ -69,7 +76,7 @@ describe('Notification', () => {
     it('should support all channels', () => {
       const channels: NotificationChannel[] = ['in_app', 'email', 'sms', 'push', 'webhook'];
 
-      channels.forEach(channel => {
+      channels.forEach((channel) => {
         const notification = createTestNotification({ channel });
         expect(notification.channel).toBe(channel);
       });
@@ -78,7 +85,7 @@ describe('Notification', () => {
     it('should support all priorities', () => {
       const priorities: NotificationPriority[] = ['high', 'normal', 'low'];
 
-      priorities.forEach(priority => {
+      priorities.forEach((priority) => {
         const notification = createTestNotification({ priority });
         expect(notification.priority).toBe(priority);
       });
@@ -112,7 +119,9 @@ describe('Notification', () => {
       const notification = createTestNotification();
       notification.markAsSent('msg-1');
 
-      expect(() => notification.markAsSent('msg-2')).toThrow('Cannot send notification that is not pending');
+      expect(() => notification.markAsSent('msg-2')).toThrow(
+        'Cannot send notification that is not pending'
+      );
     });
   });
 
@@ -130,7 +139,9 @@ describe('Notification', () => {
     it('should throw if not sent first', () => {
       const notification = createTestNotification();
 
-      expect(() => notification.markAsDelivered()).toThrow('Cannot deliver notification that was not sent');
+      expect(() => notification.markAsDelivered()).toThrow(
+        'Cannot deliver notification that was not sent'
+      );
     });
   });
 
@@ -201,7 +212,9 @@ describe('Notification', () => {
     it('should throw if not delivered first', () => {
       const notification = createTestNotification();
 
-      expect(() => notification.markAsRead()).toThrow('Cannot mark as read a notification that was not delivered');
+      expect(() => notification.markAsRead()).toThrow(
+        'Cannot mark as read a notification that was not delivered'
+      );
     });
   });
 

@@ -191,14 +191,10 @@ export class ConvertLeadToDealUseCase {
    */
   private validateInput(input: ConvertLeadToDealInput): Result<void, DomainError> {
     if (!input.convertedBy || input.convertedBy.trim() === '') {
-      return Result.fail(
-        new ValidationError('convertedBy is required for audit trail')
-      );
+      return Result.fail(new ValidationError('convertedBy is required for audit trail'));
     }
     if (input.dealValue <= 0) {
-      return Result.fail(
-        new ValidationError('Deal value must be greater than zero')
-      );
+      return Result.fail(new ValidationError('Deal value must be greater than zero'));
     }
     return Result.ok(undefined);
   }
@@ -215,7 +211,9 @@ export class ConvertLeadToDealUseCase {
 
     if (!accountName) {
       return Result.fail(
-        new ValidationError('Account name is required. Provide accountName or ensure lead has a company.')
+        new ValidationError(
+          'Account name is required. Provide accountName or ensure lead has a company.'
+        )
       );
     }
 

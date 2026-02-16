@@ -13,8 +13,16 @@ export const contactFormSchema = z.object({
   // Optional fields
   phone: phoneSchema,
   company: z.string().max(100).optional().nullable(),
-  subject: z.string().min(3, 'Subject must be at least 3 characters').max(200).optional().nullable(),
-  message: z.string().min(10, 'Message must be at least 10 characters').max(2000, 'Message is too long'),
+  subject: z
+    .string()
+    .min(3, 'Subject must be at least 3 characters')
+    .max(200)
+    .optional()
+    .nullable(),
+  message: z
+    .string()
+    .min(10, 'Message must be at least 10 characters')
+    .max(2000, 'Message is too long'),
 
   // Spam prevention (honeypot field - should remain empty)
   website: z.string().max(0, 'Invalid submission').optional().default(''),

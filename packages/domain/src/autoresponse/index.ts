@@ -26,10 +26,7 @@ export {
 export { AutoResponseDraftId } from './AutoResponseDraftId';
 
 // Value Objects
-export {
-  ResponseContent,
-  ResponseContentValidationError,
-} from './ResponseContent';
+export { ResponseContent, ResponseContentValidationError } from './ResponseContent';
 
 // Events
 export {

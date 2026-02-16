@@ -87,18 +87,21 @@ export function ChainVersionEditor({
   }, [existingDraft]);
 
   // Reset form when dialog closes
-  const handleOpenChange = useCallback((newOpen: boolean) => {
-    if (!newOpen) {
-      setChainType('');
-      setModel('');
-      setPrompt('');
-      setTemperature('0.7');
-      setMaxTokens('2000');
-      setDescription('');
-      setError(null);
-    }
-    onOpenChange(newOpen);
-  }, [onOpenChange]);
+  const handleOpenChange = useCallback(
+    (newOpen: boolean) => {
+      if (!newOpen) {
+        setChainType('');
+        setModel('');
+        setPrompt('');
+        setTemperature('0.7');
+        setMaxTokens('2000');
+        setDescription('');
+        setError(null);
+      }
+      onOpenChange(newOpen);
+    },
+    [onOpenChange]
+  );
 
   // Validation
   const isPromptValid = prompt.length >= 10;
@@ -144,9 +147,7 @@ export function ChainVersionEditor({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>
-            {isEditMode ? 'Edit Chain Version' : 'Create Chain Version'}
-          </DialogTitle>
+          <DialogTitle>{isEditMode ? 'Edit Chain Version' : 'Create Chain Version'}</DialogTitle>
           <DialogDescription>
             {isEditMode
               ? 'Update the draft chain version configuration.'
@@ -255,29 +256,16 @@ export function ChainVersionEditor({
 
           {/* Error */}
           {error && (
-            <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-lg">
-              {error}
-            </div>
+            <div className="p-3 bg-destructive/10 text-destructive text-sm rounded-lg">{error}</div>
           )}
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => handleOpenChange(false)}
-            disabled={isLoading}
-          >
+          <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isLoading}>
             Cancel
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-          >
-            {isLoading
-              ? 'Saving...'
-              : isEditMode
-              ? 'Save Changes'
-              : 'Create Draft'}
+          <Button onClick={handleSubmit} disabled={!canSubmit}>
+            {isLoading ? 'Saving...' : isEditMode ? 'Save Changes' : 'Create Draft'}
           </Button>
         </DialogFooter>
       </DialogContent>

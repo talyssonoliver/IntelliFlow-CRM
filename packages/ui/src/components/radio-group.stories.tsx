@@ -109,9 +109,7 @@ export const WithDescription: Story = {
           <Label htmlFor="startup" className="font-medium">
             Startup
           </Label>
-          <p className="text-sm text-muted-foreground">
-            Perfect for small teams getting started.
-          </p>
+          <p className="text-sm text-muted-foreground">Perfect for small teams getting started.</p>
         </div>
       </div>
       <div className="flex items-start space-x-3">

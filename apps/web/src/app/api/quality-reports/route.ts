@@ -105,7 +105,12 @@ function getLighthouseReport(): QualityReport {
       const isPlaceholder = data.type === 'unavailable' || data.source === 'placeholder';
 
       // Handle both summary format and raw lighthouse format
-      let scores: { performance: number; accessibility: number; bestPractices: number; seo: number };
+      let scores: {
+        performance: number;
+        accessibility: number;
+        bestPractices: number;
+        seo: number;
+      };
       let generatedAt: string;
 
       if (data.scores) {
@@ -130,20 +135,27 @@ function getLighthouseReport(): QualityReport {
       );
 
       // If we have valid scores, it's not a placeholder
-      const hasValidData = avgScore > 0 || Object.values(scores).some(s => s > 0);
+      const hasValidData = avgScore > 0 || Object.values(scores).some((s) => s > 0);
 
       return {
         id: 'lighthouse',
         name: 'Lighthouse Performance',
         type: 'lighthouse',
-        status: isPlaceholder ? 'unknown' : avgScore >= 90 ? 'passing' : avgScore >= 70 ? 'failing' : 'failing',
+        status: isPlaceholder
+          ? 'unknown'
+          : avgScore >= 90
+            ? 'passing'
+            : avgScore >= 70
+              ? 'failing'
+              : 'failing',
         score: hasValidData ? avgScore : undefined,
         generatedAt,
-        source: isPlaceholder ? 'placeholder' : (data.source || 'ci'),
+        source: isPlaceholder ? 'placeholder' : data.source || 'ci',
         htmlPath: '/api/quality-reports/view?report=lighthouse',
         details: scores,
         isPlaceholder: isPlaceholder && !hasValidData,
-        placeholderReason: isPlaceholder && !hasValidData ? (data.message || 'Lighthouse not available') : undefined,
+        placeholderReason:
+          isPlaceholder && !hasValidData ? data.message || 'Lighthouse not available' : undefined,
       };
     }
   } catch (error) {
@@ -216,9 +228,10 @@ function getCoverageReport(): QualityReport {
             break;
           case 'partial':
             status = meta.thresholdsMet ? 'passing' : 'failing';
-            statusMessage = meta.testsFailed > 0
-              ? `${meta.testsPassed}/${meta.testsTotal} tests passing`
-              : 'Thresholds not met';
+            statusMessage =
+              meta.testsFailed > 0
+                ? `${meta.testsPassed}/${meta.testsTotal} tests passing`
+                : 'Thresholds not met';
             break;
           case 'failed':
           case 'no-tests':
@@ -246,8 +259,7 @@ function getCoverageReport(): QualityReport {
 
       // Source determination
       const source: 'ci' | 'manual' | 'placeholder' =
-        data.source === 'placeholder' ? 'placeholder' :
-        data.source === 'manual' ? 'manual' : 'ci';
+        data.source === 'placeholder' ? 'placeholder' : data.source === 'manual' ? 'manual' : 'ci';
 
       return {
         id: 'coverage',
@@ -296,7 +308,8 @@ function getPerformanceReport(): QualityReport {
       const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
       // Check for placeholder markers - synthetic benchmarks are still valid data
-      const isPlaceholder = data.source === 'placeholder' || data.message?.includes('not installed');
+      const isPlaceholder =
+        data.source === 'placeholder' || data.message?.includes('not installed');
 
       // Handle both summary format and raw benchmark format
       let passed: boolean;
@@ -325,12 +338,10 @@ function getPerformanceReport(): QualityReport {
 
         // Score based on p95 times vs targets (lower is better)
         // Target: tRPC < 50ms, DB < 20ms
-        const tRPCScore = tRPCBench?.p95Time !== undefined
-          ? Math.max(0, 100 - (tRPCBench.p95Time / 50) * 100)
-          : 80;
-        const dbScore = dbBench?.p95Time !== undefined
-          ? Math.max(0, 100 - (dbBench.p95Time / 20) * 100)
-          : 80;
+        const tRPCScore =
+          tRPCBench?.p95Time !== undefined ? Math.max(0, 100 - (tRPCBench.p95Time / 50) * 100) : 80;
+        const dbScore =
+          dbBench?.p95Time !== undefined ? Math.max(0, 100 - (dbBench.p95Time / 20) * 100) : 80;
 
         score = Math.round((tRPCScore + dbScore) / 2);
         score = Math.min(100, Math.max(0, score)); // Clamp 0-100
@@ -356,7 +367,7 @@ function getPerformanceReport(): QualityReport {
         status: passed ? 'passing' : 'failing',
         score,
         generatedAt,
-        source: isPlaceholder ? 'placeholder' : isSynthetic ? 'manual' : (data.source || 'ci'),
+        source: isPlaceholder ? 'placeholder' : isSynthetic ? 'manual' : data.source || 'ci',
         htmlPath: '/api/quality-reports/view?report=performance',
         details,
         isPlaceholder: false, // If we have data, it's not a placeholder
@@ -444,7 +455,8 @@ function getDebtReport(): QualityReport {
     generatedAt: new Date().toISOString(),
     source: 'placeholder',
     isPlaceholder: true,
-    placeholderReason: 'Run code analysis to generate debt report. Uses debt-ledger.yaml as source.',
+    placeholderReason:
+      'Run code analysis to generate debt report. Uses debt-ledger.yaml as source.',
   };
 }
 
@@ -475,7 +487,8 @@ function getSonarQubeReport(): QualityReport {
             generatedAt: data.timestamp || new Date().toISOString(),
             source: 'dynamic',
             isPlaceholder: true,
-            placeholderReason: 'SonarQube server not available. Start with: docker-compose up sonarqube',
+            placeholderReason:
+              'SonarQube server not available. Start with: docker-compose up sonarqube',
           };
         }
 
@@ -521,7 +534,8 @@ function getSonarQubeReport(): QualityReport {
     generatedAt: new Date().toISOString(),
     source: 'placeholder',
     isPlaceholder: true,
-    placeholderReason: 'Run code analysis to fetch SonarQube metrics. Requires SonarQube server running.',
+    placeholderReason:
+      'Run code analysis to fetch SonarQube metrics. Requires SonarQube server running.',
   };
 }
 

@@ -43,8 +43,20 @@ describe('incident-tracker', () => {
   describe('initializeServices', () => {
     it('should initialize services with provided data', () => {
       const services = [
-        { id: 'api', name: 'API', description: 'API Service', status: 'operational' as ServiceStatus, uptime: 99.9 },
-        { id: 'web', name: 'Web App', description: 'Web Application', status: 'operational' as ServiceStatus, uptime: 99.95 },
+        {
+          id: 'api',
+          name: 'API',
+          description: 'API Service',
+          status: 'operational' as ServiceStatus,
+          uptime: 99.9,
+        },
+        {
+          id: 'web',
+          name: 'Web App',
+          description: 'Web Application',
+          status: 'operational' as ServiceStatus,
+          uptime: 99.95,
+        },
       ];
 
       initializeServices(services);
@@ -57,7 +69,13 @@ describe('incident-tracker', () => {
 
     it('should set lastChecked to current date', () => {
       const services = [
-        { id: 'api', name: 'API', description: 'API Service', status: 'operational' as ServiceStatus, uptime: 99.9 },
+        {
+          id: 'api',
+          name: 'API',
+          description: 'API Service',
+          status: 'operational' as ServiceStatus,
+          uptime: 99.9,
+        },
       ];
 
       initializeServices(services);
@@ -75,7 +93,13 @@ describe('incident-tracker', () => {
 
     it('should return all initialized services', () => {
       initializeServices([
-        { id: 'svc1', name: 'Service 1', description: 'Desc 1', status: 'operational', uptime: 99.9 },
+        {
+          id: 'svc1',
+          name: 'Service 1',
+          description: 'Desc 1',
+          status: 'operational',
+          uptime: 99.9,
+        },
         { id: 'svc2', name: 'Service 2', description: 'Desc 2', status: 'degraded', uptime: 99.5 },
       ]);
 

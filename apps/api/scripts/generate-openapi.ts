@@ -113,13 +113,22 @@ Ticket created → SLA timer starts → ON_TRACK → AT_RISK (80% elapsed) → B
 
 const TAGS: OpenAPITag[] = [
   { name: 'Leads', description: 'Lead capture, qualification, scoring, conversion' },
-  { name: 'Contacts & Accounts', description: 'Contact/account management with relationship tracking' },
+  {
+    name: 'Contacts & Accounts',
+    description: 'Contact/account management with relationship tracking',
+  },
   { name: 'Opportunities', description: 'Deal pipeline, stage progression, weighted forecasting' },
-  { name: 'Tasks & Activities', description: 'Task management, activity tracking, real-time feeds' },
+  {
+    name: 'Tasks & Activities',
+    description: 'Task management, activity tracking, real-time feeds',
+  },
   { name: 'Support & Tickets', description: 'Ticket management with SLA tracking' },
   { name: 'AI Intelligence', description: 'AI scoring, NBA, churn risk, human-in-the-loop review' },
   { name: 'AI Operations', description: 'Chain versioning, cost tracking, model governance' },
-  { name: 'Legal Operations', description: 'Case/matter management, scheduling, document processing' },
+  {
+    name: 'Legal Operations',
+    description: 'Case/matter management, scheduling, document processing',
+  },
   { name: 'Platform & System', description: 'Auth, billing, notifications, health, webhooks' },
   { name: 'Security & Compliance', description: 'Audit logs, security events, admin operations' },
 ];
@@ -156,7 +165,10 @@ const STANDARD_RESPONSES: Record<string, OpenAPIResponse> = {
           properties: {
             error: {
               type: 'object',
-              properties: { message: { type: 'string' }, code: { type: 'string', enum: ['UNAUTHORIZED'] } },
+              properties: {
+                message: { type: 'string' },
+                code: { type: 'string', enum: ['UNAUTHORIZED'] },
+              },
             },
           },
         },
@@ -172,7 +184,10 @@ const STANDARD_RESPONSES: Record<string, OpenAPIResponse> = {
           properties: {
             error: {
               type: 'object',
-              properties: { message: { type: 'string' }, code: { type: 'string', enum: ['FORBIDDEN'] } },
+              properties: {
+                message: { type: 'string' },
+                code: { type: 'string', enum: ['FORBIDDEN'] },
+              },
             },
           },
         },
@@ -188,7 +203,10 @@ const STANDARD_RESPONSES: Record<string, OpenAPIResponse> = {
           properties: {
             error: {
               type: 'object',
-              properties: { message: { type: 'string' }, code: { type: 'string', enum: ['NOT_FOUND'] } },
+              properties: {
+                message: { type: 'string' },
+                code: { type: 'string', enum: ['NOT_FOUND'] },
+              },
             },
           },
         },
@@ -204,7 +222,10 @@ const STANDARD_RESPONSES: Record<string, OpenAPIResponse> = {
           properties: {
             error: {
               type: 'object',
-              properties: { message: { type: 'string' }, code: { type: 'string', enum: ['TOO_MANY_REQUESTS'] } },
+              properties: {
+                message: { type: 'string' },
+                code: { type: 'string', enum: ['TOO_MANY_REQUESTS'] },
+              },
             },
           },
         },
@@ -220,7 +241,10 @@ const STANDARD_RESPONSES: Record<string, OpenAPIResponse> = {
           properties: {
             error: {
               type: 'object',
-              properties: { message: { type: 'string' }, code: { type: 'string', enum: ['INTERNAL_SERVER_ERROR'] } },
+              properties: {
+                message: { type: 'string' },
+                code: { type: 'string', enum: ['INTERNAL_SERVER_ERROR'] },
+              },
             },
           },
         },
@@ -241,25 +265,73 @@ const ROUTER_MAPPINGS: RouterMapping[] = [
     router: 'lead',
     tag: 'Leads',
     procedures: [
-      { name: 'create', method: 'post', summary: 'Create a new lead', operationId: 'createLead', inputSchema: 'CreateLeadInput' },
-      { name: 'list', method: 'get', summary: 'List leads with filtering and pagination', operationId: 'listLeads' },
+      {
+        name: 'create',
+        method: 'post',
+        summary: 'Create a new lead',
+        operationId: 'createLead',
+        inputSchema: 'CreateLeadInput',
+      },
+      {
+        name: 'list',
+        method: 'get',
+        summary: 'List leads with filtering and pagination',
+        operationId: 'listLeads',
+      },
       { name: 'getById', method: 'get', summary: 'Get a lead by ID', operationId: 'getLeadById' },
-      { name: 'update', method: 'post', summary: 'Update a lead', operationId: 'updateLead', inputSchema: 'UpdateLeadInput' },
+      {
+        name: 'update',
+        method: 'post',
+        summary: 'Update a lead',
+        operationId: 'updateLead',
+        inputSchema: 'UpdateLeadInput',
+      },
       { name: 'delete', method: 'post', summary: 'Delete a lead', operationId: 'deleteLead' },
       { name: 'qualify', method: 'post', summary: 'Qualify a lead', operationId: 'qualifyLead' },
-      { name: 'convert', method: 'post', summary: 'Convert lead to contact', operationId: 'convertLead' },
-      { name: 'scoreWithAI', method: 'post', summary: 'Score lead with AI', operationId: 'scoreLeadWithAI' },
+      {
+        name: 'convert',
+        method: 'post',
+        summary: 'Convert lead to contact',
+        operationId: 'convertLead',
+      },
+      {
+        name: 'scoreWithAI',
+        method: 'post',
+        summary: 'Score lead with AI',
+        operationId: 'scoreLeadWithAI',
+      },
       { name: 'stats', method: 'get', summary: 'Get lead statistics', operationId: 'getLeadStats' },
-      { name: 'bulkConvert', method: 'post', summary: 'Bulk convert leads to contacts', operationId: 'bulkConvertLeads' },
+      {
+        name: 'bulkConvert',
+        method: 'post',
+        summary: 'Bulk convert leads to contacts',
+        operationId: 'bulkConvertLeads',
+      },
     ],
   },
   {
     router: 'contact',
     tag: 'Contacts & Accounts',
     procedures: [
-      { name: 'create', method: 'post', summary: 'Create a new contact', operationId: 'createContact', inputSchema: 'CreateContactInput' },
-      { name: 'list', method: 'get', summary: 'List contacts with filtering', operationId: 'listContacts' },
-      { name: 'getById', method: 'get', summary: 'Get a contact by ID', operationId: 'getContactById' },
+      {
+        name: 'create',
+        method: 'post',
+        summary: 'Create a new contact',
+        operationId: 'createContact',
+        inputSchema: 'CreateContactInput',
+      },
+      {
+        name: 'list',
+        method: 'get',
+        summary: 'List contacts with filtering',
+        operationId: 'listContacts',
+      },
+      {
+        name: 'getById',
+        method: 'get',
+        summary: 'Get a contact by ID',
+        operationId: 'getContactById',
+      },
       { name: 'update', method: 'post', summary: 'Update a contact', operationId: 'updateContact' },
     ],
   },
@@ -267,27 +339,67 @@ const ROUTER_MAPPINGS: RouterMapping[] = [
     router: 'account',
     tag: 'Contacts & Accounts',
     procedures: [
-      { name: 'create', method: 'post', summary: 'Create a new account', operationId: 'createAccount' },
+      {
+        name: 'create',
+        method: 'post',
+        summary: 'Create a new account',
+        operationId: 'createAccount',
+      },
       { name: 'list', method: 'get', summary: 'List accounts', operationId: 'listAccounts' },
-      { name: 'getById', method: 'get', summary: 'Get an account by ID', operationId: 'getAccountById' },
+      {
+        name: 'getById',
+        method: 'get',
+        summary: 'Get an account by ID',
+        operationId: 'getAccountById',
+      },
     ],
   },
   {
     router: 'opportunity',
     tag: 'Opportunities',
     procedures: [
-      { name: 'create', method: 'post', summary: 'Create a new opportunity', operationId: 'createOpportunity' },
-      { name: 'list', method: 'get', summary: 'List opportunities', operationId: 'listOpportunities' },
-      { name: 'getById', method: 'get', summary: 'Get an opportunity by ID', operationId: 'getOpportunityById' },
-      { name: 'moveStage', method: 'post', summary: 'Move opportunity to a different stage', operationId: 'moveOpportunityStage' },
+      {
+        name: 'create',
+        method: 'post',
+        summary: 'Create a new opportunity',
+        operationId: 'createOpportunity',
+      },
+      {
+        name: 'list',
+        method: 'get',
+        summary: 'List opportunities',
+        operationId: 'listOpportunities',
+      },
+      {
+        name: 'getById',
+        method: 'get',
+        summary: 'Get an opportunity by ID',
+        operationId: 'getOpportunityById',
+      },
+      {
+        name: 'moveStage',
+        method: 'post',
+        summary: 'Move opportunity to a different stage',
+        operationId: 'moveOpportunityStage',
+      },
     ],
   },
   {
     router: 'pipelineConfig',
     tag: 'Opportunities',
     procedures: [
-      { name: 'get', method: 'get', summary: 'Get pipeline configuration', operationId: 'getPipelineConfig' },
-      { name: 'update', method: 'post', summary: 'Update pipeline configuration', operationId: 'updatePipelineConfig' },
+      {
+        name: 'get',
+        method: 'get',
+        summary: 'Get pipeline configuration',
+        operationId: 'getPipelineConfig',
+      },
+      {
+        name: 'update',
+        method: 'post',
+        summary: 'Update pipeline configuration',
+        operationId: 'updatePipelineConfig',
+      },
     ],
   },
   {
@@ -304,7 +416,12 @@ const ROUTER_MAPPINGS: RouterMapping[] = [
     router: 'timeline',
     tag: 'Tasks & Activities',
     procedures: [
-      { name: 'getForEntity', method: 'get', summary: 'Get timeline for an entity', operationId: 'getEntityTimeline' },
+      {
+        name: 'getForEntity',
+        method: 'get',
+        summary: 'Get timeline for an entity',
+        operationId: 'getEntityTimeline',
+      },
     ],
   },
   {
@@ -318,58 +435,133 @@ const ROUTER_MAPPINGS: RouterMapping[] = [
     router: 'ticket',
     tag: 'Support & Tickets',
     procedures: [
-      { name: 'create', method: 'post', summary: 'Create a support ticket', operationId: 'createTicket' },
+      {
+        name: 'create',
+        method: 'post',
+        summary: 'Create a support ticket',
+        operationId: 'createTicket',
+      },
       { name: 'list', method: 'get', summary: 'List tickets', operationId: 'listTickets' },
-      { name: 'getById', method: 'get', summary: 'Get a ticket by ID', operationId: 'getTicketById' },
-      { name: 'addResponse', method: 'post', summary: 'Add a response to a ticket', operationId: 'addTicketResponse' },
+      {
+        name: 'getById',
+        method: 'get',
+        summary: 'Get a ticket by ID',
+        operationId: 'getTicketById',
+      },
+      {
+        name: 'addResponse',
+        method: 'post',
+        summary: 'Add a response to a ticket',
+        operationId: 'addTicketResponse',
+      },
     ],
   },
   {
     router: 'intelligence',
     tag: 'AI Intelligence',
     procedures: [
-      { name: 'triggerPrediction', method: 'post', summary: 'Trigger AI prediction', operationId: 'triggerPrediction' },
-      { name: 'getInsights', method: 'get', summary: 'Get AI insights for an entity', operationId: 'getInsights' },
+      {
+        name: 'triggerPrediction',
+        method: 'post',
+        summary: 'Trigger AI prediction',
+        operationId: 'triggerPrediction',
+      },
+      {
+        name: 'getInsights',
+        method: 'get',
+        summary: 'Get AI insights for an entity',
+        operationId: 'getInsights',
+      },
     ],
   },
   {
     router: 'aiReview',
     tag: 'AI Intelligence',
     procedures: [
-      { name: 'list', method: 'get', summary: 'List AI output reviews', operationId: 'listAIReviews' },
-      { name: 'approve', method: 'post', summary: 'Approve AI output', operationId: 'approveAIOutput' },
-      { name: 'reject', method: 'post', summary: 'Reject AI output', operationId: 'rejectAIOutput' },
+      {
+        name: 'list',
+        method: 'get',
+        summary: 'List AI output reviews',
+        operationId: 'listAIReviews',
+      },
+      {
+        name: 'approve',
+        method: 'post',
+        summary: 'Approve AI output',
+        operationId: 'approveAIOutput',
+      },
+      {
+        name: 'reject',
+        method: 'post',
+        summary: 'Reject AI output',
+        operationId: 'rejectAIOutput',
+      },
     ],
   },
   {
     router: 'agent',
     tag: 'AI Intelligence',
     procedures: [
-      { name: 'listPending', method: 'get', summary: 'List pending AI approvals', operationId: 'listPendingApprovals' },
-      { name: 'approve', method: 'post', summary: 'Approve AI agent action', operationId: 'approveAgentAction' },
+      {
+        name: 'listPending',
+        method: 'get',
+        summary: 'List pending AI approvals',
+        operationId: 'listPendingApprovals',
+      },
+      {
+        name: 'approve',
+        method: 'post',
+        summary: 'Approve AI agent action',
+        operationId: 'approveAgentAction',
+      },
     ],
   },
   {
     router: 'autoResponse',
     tag: 'AI Intelligence',
     procedures: [
-      { name: 'list', method: 'get', summary: 'List auto-response drafts', operationId: 'listAutoResponses' },
-      { name: 'approve', method: 'post', summary: 'Approve auto-response draft', operationId: 'approveAutoResponse' },
+      {
+        name: 'list',
+        method: 'get',
+        summary: 'List auto-response drafts',
+        operationId: 'listAutoResponses',
+      },
+      {
+        name: 'approve',
+        method: 'post',
+        summary: 'Approve auto-response draft',
+        operationId: 'approveAutoResponse',
+      },
     ],
   },
   {
     router: 'aiMonitoring',
     tag: 'AI Intelligence',
     procedures: [
-      { name: 'getMetrics', method: 'get', summary: 'Get AI monitoring metrics', operationId: 'getAIMetrics' },
+      {
+        name: 'getMetrics',
+        method: 'get',
+        summary: 'Get AI monitoring metrics',
+        operationId: 'getAIMetrics',
+      },
     ],
   },
   {
     router: 'chainVersion',
     tag: 'AI Operations',
     procedures: [
-      { name: 'list', method: 'get', summary: 'List chain versions', operationId: 'listChainVersions' },
-      { name: 'create', method: 'post', summary: 'Create chain version', operationId: 'createChainVersion' },
+      {
+        name: 'list',
+        method: 'get',
+        summary: 'List chain versions',
+        operationId: 'listChainVersions',
+      },
+      {
+        name: 'create',
+        method: 'post',
+        summary: 'Create chain version',
+        operationId: 'createChainVersion',
+      },
     ],
   },
   {
@@ -391,15 +583,30 @@ const ROUTER_MAPPINGS: RouterMapping[] = [
     router: 'appointments',
     tag: 'Legal Operations',
     procedures: [
-      { name: 'create', method: 'post', summary: 'Create an appointment', operationId: 'createAppointment' },
-      { name: 'list', method: 'get', summary: 'List appointments', operationId: 'listAppointments' },
+      {
+        name: 'create',
+        method: 'post',
+        summary: 'Create an appointment',
+        operationId: 'createAppointment',
+      },
+      {
+        name: 'list',
+        method: 'get',
+        summary: 'List appointments',
+        operationId: 'listAppointments',
+      },
     ],
   },
   {
     router: 'documents',
     tag: 'Legal Operations',
     procedures: [
-      { name: 'upload', method: 'post', summary: 'Upload a document', operationId: 'uploadDocument' },
+      {
+        name: 'upload',
+        method: 'post',
+        summary: 'Upload a document',
+        operationId: 'uploadDocument',
+      },
       { name: 'list', method: 'get', summary: 'List documents', operationId: 'listDocuments' },
     ],
   },
@@ -415,15 +622,30 @@ const ROUTER_MAPPINGS: RouterMapping[] = [
     router: 'billing',
     tag: 'Platform & System',
     procedures: [
-      { name: 'getSubscription', method: 'get', summary: 'Get subscription details', operationId: 'getSubscription' },
+      {
+        name: 'getSubscription',
+        method: 'get',
+        summary: 'Get subscription details',
+        operationId: 'getSubscription',
+      },
     ],
   },
   {
     router: 'notifications',
     tag: 'Platform & System',
     procedures: [
-      { name: 'list', method: 'get', summary: 'List notifications', operationId: 'listNotifications' },
-      { name: 'markRead', method: 'post', summary: 'Mark notification as read', operationId: 'markNotificationRead' },
+      {
+        name: 'list',
+        method: 'get',
+        summary: 'List notifications',
+        operationId: 'listNotifications',
+      },
+      {
+        name: 'markRead',
+        method: 'post',
+        summary: 'Mark notification as read',
+        operationId: 'markNotificationRead',
+      },
     ],
   },
   {
@@ -437,7 +659,12 @@ const ROUTER_MAPPINGS: RouterMapping[] = [
     router: 'home',
     tag: 'Platform & System',
     procedures: [
-      { name: 'getDashboard', method: 'get', summary: 'Get home dashboard data', operationId: 'getHomeDashboard' },
+      {
+        name: 'getDashboard',
+        method: 'get',
+        summary: 'Get home dashboard data',
+        operationId: 'getHomeDashboard',
+      },
     ],
   },
   {
@@ -445,7 +672,12 @@ const ROUTER_MAPPINGS: RouterMapping[] = [
     tag: 'Security & Compliance',
     procedures: [
       { name: 'list', method: 'get', summary: 'List audit events', operationId: 'listAuditEvents' },
-      { name: 'getById', method: 'get', summary: 'Get audit event by ID', operationId: 'getAuditEventById' },
+      {
+        name: 'getById',
+        method: 'get',
+        summary: 'Get audit event by ID',
+        operationId: 'getAuditEventById',
+      },
     ],
   },
 ];
@@ -483,7 +715,16 @@ const COMPONENT_SCHEMAS: Record<string, OpenAPISchema> = {
   },
   LeadSource: {
     type: 'string',
-    enum: ['WEBSITE', 'REFERRAL', 'COLD_CALL', 'TRADE_SHOW', 'PARTNER', 'SOCIAL_MEDIA', 'EMAIL_CAMPAIGN', 'OTHER'],
+    enum: [
+      'WEBSITE',
+      'REFERRAL',
+      'COLD_CALL',
+      'TRADE_SHOW',
+      'PARTNER',
+      'SOCIAL_MEDIA',
+      'EMAIL_CAMPAIGN',
+      'OTHER',
+    ],
   },
   CreateContactInput: {
     type: 'object',

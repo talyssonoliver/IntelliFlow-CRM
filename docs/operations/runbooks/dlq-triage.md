@@ -1,19 +1,22 @@
 # Dead Letter Queue (DLQ) Triage Runbook - IntelliFlow CRM
 
-**Document ID**: IFC-151-DLQ-TRIAGE
-**Version**: 1.0.0
-**Last Updated**: 2025-12-29
-**Owner**: STOA-Domain (Backend Dev + SRE)
+**Document ID**: IFC-151-DLQ-TRIAGE **Version**: 1.0.0 **Last Updated**:
+2025-12-29 **Owner**: STOA-Domain (Backend Dev + SRE)
 
 ---
 
 ## 1. Overview
 
-This runbook provides procedures for monitoring, diagnosing, and remediating domain event consumer failures in IntelliFlow CRM's Dead Letter Queue (DLQ). Events move to DLQ after exhausting all retry attempts and require manual triage.
+This runbook provides procedures for monitoring, diagnosing, and remediating
+domain event consumer failures in IntelliFlow CRM's Dead Letter Queue (DLQ).
+Events move to DLQ after exhausting all retry attempts and require manual
+triage.
 
 ### 1.1 DLQ Purpose
 
-The DLQ is a safety net for domain events that cannot be processed by their handlers:
+The DLQ is a safety net for domain events that cannot be processed by their
+handlers:
+
 - **Poison messages**: Events that trigger bugs in handlers
 - **Permanent failures**: External services down (no recovery expected)
 - **Schema mismatches**: Handler expects different event structure
@@ -32,21 +35,23 @@ The DLQ is a safety net for domain events that cannot be processed by their hand
 
 ### 2.1 Key Metrics
 
-| Metric | Target | Alert Threshold | Check Frequency |
-|--------|--------|-----------------|-----------------|
-| DLQ Depth | 0 messages | >5 messages for >5 min | Every 1 minute |
-| DLQ Drain Success | >95% | <95% success rate | Every 5 minutes |
-| Retry Success Rate | >90% | <90% on first retry | Continuous |
-| MTTR (Mean Time to Resolve) | <30 min | Alert when incident declared | Ongoing |
+| Metric                      | Target     | Alert Threshold              | Check Frequency |
+| --------------------------- | ---------- | ---------------------------- | --------------- |
+| DLQ Depth                   | 0 messages | >5 messages for >5 min       | Every 1 minute  |
+| DLQ Drain Success           | >95%       | <95% success rate            | Every 5 minutes |
+| Retry Success Rate          | >90%       | <90% on first retry          | Continuous      |
+| MTTR (Mean Time to Resolve) | <30 min    | Alert when incident declared | Ongoing         |
 
 ### 2.2 Prometheus Queries
 
 **Current DLQ Depth** (messages pending triage):
+
 ```promql
 increase(domain_events_dead_letter_total[5m])
 ```
 
 **Drain Success Rate** (percentage of DLQ messages successfully reprocessed):
+
 ```promql
 (
   increase(domain_events_dlq_drained_total[1h])
@@ -56,6 +61,7 @@ increase(domain_events_dead_letter_total[5m])
 ```
 
 **Retry Success Rate** (first attempt success percentage):
+
 ```promql
 (
   increase(domain_events_published_total[5m])
@@ -90,12 +96,14 @@ increase(domain_events_dead_letter_total[5m])
 ### 3.1 Incident Declaration
 
 **When to declare a DLQ incident**:
+
 - DLQ depth exceeds 10 messages
 - DLQ drain success rate <95%
 - Same event type failing repeatedly
 - Handlers unable to recover automatically
 
 **Declare incident**:
+
 ```bash
 # Post to Slack
 /incident-open dlq-backlog
@@ -105,6 +113,7 @@ increase(domain_events_dead_letter_total[5m])
 ### 3.2 Investigation Procedure (10-15 minutes)
 
 **Step 1: Identify Problem Messages**
+
 ```sql
 -- Connect to database
 psql $DATABASE_URL
@@ -138,13 +147,13 @@ ORDER BY count DESC;
 
 Check `last_error` field for common patterns:
 
-| Error Pattern | Likely Cause | Investigation |
-|---------------|--------------|----------------|
-| `Cannot find handler for event` | Handler not registered | Check handler registration code |
-| `Schema validation failed` | Event version mismatch | Check event contract version |
-| `Connection timeout` | External service down | Check service health |
-| `TypeError: Cannot read property 'x'` | Handler bug | Review handler code, check logs |
-| `Unique constraint violation` | Idempotency failure | Check deduplication cache |
+| Error Pattern                         | Likely Cause           | Investigation                   |
+| ------------------------------------- | ---------------------- | ------------------------------- |
+| `Cannot find handler for event`       | Handler not registered | Check handler registration code |
+| `Schema validation failed`            | Event version mismatch | Check event contract version    |
+| `Connection timeout`                  | External service down  | Check service health            |
+| `TypeError: Cannot read property 'x'` | Handler bug            | Review handler code, check logs |
+| `Unique constraint violation`         | Idempotency failure    | Check deduplication cache       |
 
 **Step 3: Examine Handler Logs**
 
@@ -157,6 +166,7 @@ timestamp > now() - 30m
 ```
 
 Or via command line:
+
 ```bash
 # Tail application logs
 kubectl logs -f deployment/api-server \
@@ -174,6 +184,7 @@ kubectl logs -f deployment/api-server \
 **Example**: Email service timeout during send
 
 **Resolution**:
+
 1. Verify service status (check statuspage.io)
 2. Wait for service recovery
 3. Drain DLQ by replaying messages
@@ -188,8 +199,8 @@ curl -X POST \
 # {"drained": 47, "failed": 0, "duration_ms": 340}
 ```
 
-**Expected MTTR**: 5-15 minutes
-**Drain success expectation**: 100% if root cause fixed
+**Expected MTTR**: 5-15 minutes **Drain success expectation**: 100% if root
+cause fixed
 
 ---
 
@@ -198,6 +209,7 @@ curl -X POST \
 **Example**: Handler expects `v2` schema, but events are `v1`
 
 **Resolution**:
+
 1. Verify event contract version
 2. Deploy handler upgrade supporting new schema
 3. Update event publisher if needed
@@ -217,8 +229,8 @@ pnpm --filter api deploy:staging
 curl -X POST http://api.local:3000/admin/dlq/drain
 ```
 
-**Expected MTTR**: 15-30 minutes
-**Drain success expectation**: 95%+ (some may need manual fixes)
+**Expected MTTR**: 15-30 minutes **Drain success expectation**: 95%+ (some may
+need manual fixes)
 
 ---
 
@@ -227,6 +239,7 @@ curl -X POST http://api.local:3000/admin/dlq/drain
 **Example**: Handler throws TypeError on specific payload
 
 **Resolution**:
+
 1. Examine handler code and failing payload
 2. Write minimal test case
 3. Deploy fix
@@ -255,8 +268,7 @@ pnpm --filter api deploy:staging
 curl -X POST http://api.local:3000/admin/dlq/drain
 ```
 
-**Expected MTTR**: 20-40 minutes
-**Drain success expectation**: >95%
+**Expected MTTR**: 20-40 minutes **Drain success expectation**: >95%
 
 ---
 
@@ -265,6 +277,7 @@ curl -X POST http://api.local:3000/admin/dlq/drain
 **Example**: Event payload corrupted, handler cannot process safely
 
 **Resolution**:
+
 1. Assess impact (is data loss acceptable?)
 2. Either:
    - **Option A**: Delete message (data loss - document decision)
@@ -290,8 +303,8 @@ WHERE id = '{message_id}';
 curl -X POST http://api.local:3000/admin/dlq/drain
 ```
 
-**Expected MTTR**: 30+ minutes (requires decisions)
-**Drain success expectation**: Varies (may have residual losses)
+**Expected MTTR**: 30+ minutes (requires decisions) **Drain success
+expectation**: Varies (may have residual losses)
 
 ---
 
@@ -318,6 +331,7 @@ Attempt 4 (DLQ): After 30 seconds + jitter, then dead letter
 ```
 
 **Why exponential backoff?**
+
 - Gives transient failures time to recover
 - Reduces load during outages
 - Prevents thundering herd on service restart
@@ -328,8 +342,8 @@ For specific event types needing longer grace periods:
 
 ```typescript
 const CUSTOM_BACKOFF = {
-  'EmailSent': [5000, 30000, 120000], // 5s, 30s, 2min
-  'PaymentProcessed': [10000, 60000, 300000], // 10s, 1min, 5min
+  EmailSent: [5000, 30000, 120000], // 5s, 30s, 2min
+  PaymentProcessed: [10000, 60000, 300000], // 10s, 1min, 5min
 };
 ```
 
@@ -433,32 +447,34 @@ When handing off to another engineer:
 ```markdown
 ## DLQ Incident Handoff
 
-**Incident ID**: IFC-151-DLQ-{timestamp}
-**Severity**: P{level}
-**Duration**: {start} → {current}
+**Incident ID**: IFC-151-DLQ-{timestamp} **Severity**: P{level} **Duration**:
+{start} → {current}
 
 ### Current Status
+
 - DLQ depth: {count} messages
 - Event types affected: {list}
 - Root cause identified: {yes/no}
 
 ### Last Action
+
 - {action}
 - Time: {timestamp}
 - Result: {outcome}
 
 ### Next Steps
+
 1. {recommendation}
 2. {follow-up}
 3. {escalation_if_needed}
 
 ### Relevant Links
+
 - Grafana Dashboard: {link}
 - Logs: {query}
 - Code: {repository_path}
 
-**Handed off to**: {engineer_name}
-**Time**: {timestamp}
+**Handed off to**: {engineer_name} **Time**: {timestamp}
 ```
 
 ---
@@ -472,12 +488,11 @@ After resolving DLQ incident, document:
 ```markdown
 # DLQ Incident Report
 
-**Incident ID**: IFC-151-DLQ-{timestamp}
-**Event Type**: {EventName}
-**Severity**: P{level}
-**Duration**: {start_time} → {end_time} ({duration})
+**Incident ID**: IFC-151-DLQ-{timestamp} **Event Type**: {EventName}
+**Severity**: P{level} **Duration**: {start_time} → {end_time} ({duration})
 
 ## Timeline
+
 - {T+0m}: Alert triggered
 - {T+5m}: Incident declared
 - {T+15m}: Root cause identified
@@ -486,23 +501,28 @@ After resolving DLQ incident, document:
 - {T+30m}: Incident resolved
 
 ## Root Cause
+
 {Detailed explanation of why messages went to DLQ}
 
 ## Resolution
+
 {What fixed the problem}
 
 ## Impact
+
 - Messages recovered: 47
 - Data loss: 0
 - SLA met: ✓ (MTTR: 30 min, target: 30 min)
 
 ## Action Items
+
 - [ ] Enhance alerting for {event_type}
 - [ ] Add regression test for {scenario}
 - [ ] Update {handler} error handling
 - [ ] Document {pattern} in runbook
 
 ## Prevention
+
 {How to prevent similar incidents}
 ```
 
@@ -510,12 +530,12 @@ After resolving DLQ incident, document:
 
 Track incident metrics:
 
-| Metric | Target | Q4 2025 | Trend |
-|--------|--------|---------|-------|
-| Avg Incident Duration | <30 min | 22 min | ↓ |
-| DLQ Drain Success | >95% | 97% | ↑ |
-| Retry Success on 1st Attempt | >90% | 93% | ✓ |
-| Time to Root Cause | <15 min | 12 min | ↓ |
+| Metric                       | Target  | Q4 2025 | Trend |
+| ---------------------------- | ------- | ------- | ----- |
+| Avg Incident Duration        | <30 min | 22 min  | ↓     |
+| DLQ Drain Success            | >95%    | 97%     | ↑     |
+| Retry Success on 1st Attempt | >90%    | 93%     | ✓     |
+| Time to Root Cause           | <15 min | 12 min  | ↓     |
 
 ---
 
@@ -526,6 +546,7 @@ Track incident metrics:
 **Symptom**: DLQ depth increases despite drain attempts
 
 **Diagnosis**:
+
 ```bash
 # Check if poller is running
 kubectl logs deployment/api-server -c app | grep -i "poller\|outbox"
@@ -544,6 +565,7 @@ GROUP BY event_type;
 ```
 
 **Resolution**:
+
 - Restart outbox poller
 - Verify handler endpoints are healthy
 - Check for memory leaks in handlers
@@ -555,6 +577,7 @@ GROUP BY event_type;
 **Symptom**: Drain operation times out or runs very slowly
 
 **Diagnosis**:
+
 ```bash
 # Check database performance
 EXPLAIN ANALYZE
@@ -567,6 +590,7 @@ curl http://localhost:3000/admin/handler-metrics
 ```
 
 **Resolution**:
+
 - Increase drain timeout: `timeout_ms: 120000`
 - Reduce batch size: `batch_size: 50`
 - Check external service latency
@@ -579,6 +603,7 @@ curl http://localhost:3000/admin/handler-metrics
 **Symptom**: Same message processed multiple times
 
 **Diagnosis**:
+
 ```bash
 # Check cache backend (Redis)
 redis-cli PING
@@ -597,6 +622,7 @@ HAVING COUNT(*) > 1;
 ```
 
 **Resolution**:
+
 - Verify Redis connectivity
 - Check cache TTL settings
 - Monitor cache hit rate
@@ -605,12 +631,12 @@ HAVING COUNT(*) > 1;
 
 ## 10. Performance Targets
 
-| Target | Metric | How to Measure |
-|--------|--------|----------------|
-| **DLQ Drain Success >95%** | % messages successfully reprocessed | `drained / (drained + failed)` |
-| **Retry Success >90%** | % messages that succeed on retry | Track per event type |
-| **MTTR <30 min** | Time from alert to resolution | `resolved_at - incident_declared_at` |
-| **Drain Latency <10s** | Time to drain single message | Prometheus histogram |
+| Target                     | Metric                              | How to Measure                       |
+| -------------------------- | ----------------------------------- | ------------------------------------ |
+| **DLQ Drain Success >95%** | % messages successfully reprocessed | `drained / (drained + failed)`       |
+| **Retry Success >90%**     | % messages that succeed on retry    | Track per event type                 |
+| **MTTR <30 min**           | Time from alert to resolution       | `resolved_at - incident_declared_at` |
+| **Drain Latency <10s**     | Time to drain single message        | Prometheus histogram                 |
 
 ---
 

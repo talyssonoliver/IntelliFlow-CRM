@@ -198,7 +198,12 @@ describe('PrismaOutboxRepository', () => {
       await repository.scheduleRetry(eventId, retryCount, nextRetryAt, error);
 
       // Assert
-      expect(repository.scheduleRetry).toHaveBeenCalledWith(eventId, retryCount, nextRetryAt, error);
+      expect(repository.scheduleRetry).toHaveBeenCalledWith(
+        eventId,
+        retryCount,
+        nextRetryAt,
+        error
+      );
     });
 
     it('should preserve status as PENDING when scheduling retry', async () => {
@@ -224,12 +229,7 @@ describe('PrismaOutboxRepository', () => {
       await repository.scheduleRetry(eventId, 1, new Date(Date.now() + 1000), error);
 
       // Assert
-      expect(repository.scheduleRetry).toHaveBeenCalledWith(
-        eventId,
-        1,
-        expect.any(Date),
-        error
-      );
+      expect(repository.scheduleRetry).toHaveBeenCalledWith(eventId, 1, expect.any(Date), error);
     });
   });
 

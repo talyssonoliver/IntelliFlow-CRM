@@ -1,13 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@intelliflow/ui';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@intelliflow/ui';
 import type { ComplianceDetailResponse, ControlStatus } from '@/app/api/compliance/types';
 
 const STATUS_CONFIG: Record<ControlStatus, { color: string; icon: string; label: string }> = {
@@ -107,7 +101,10 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
 
     const points = scores.map((score, index) => {
       const x = padding + (index * (chartWidth - padding * 2)) / (scores.length - 1);
-      const y = chartHeight - padding - ((score.score - minScore) / (maxScore - minScore)) * (chartHeight - padding * 2);
+      const y =
+        chartHeight -
+        padding -
+        ((score.score - minScore) / (maxScore - minScore)) * (chartHeight - padding * 2);
       return { x, y, score: score.score, date: score.date };
     });
 
@@ -122,7 +119,10 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
         >
           {/* Grid lines */}
           {[0, 25, 50, 75, 100].map((val) => {
-            const y = chartHeight - padding - ((val - minScore) / (maxScore - minScore)) * (chartHeight - padding * 2);
+            const y =
+              chartHeight -
+              padding -
+              ((val - minScore) / (maxScore - minScore)) * (chartHeight - padding * 2);
             return (
               <g key={val}>
                 <line
@@ -200,13 +200,13 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
             <SheetHeader>
               <div className="flex items-center gap-3">
                 <SheetTitle className="text-xl">{detail.standardName}</SheetTitle>
-                <span className={`px-2.5 py-0.5 text-xs font-medium rounded-full capitalize ${getStatusBadgeClass(detail.status)}`}>
+                <span
+                  className={`px-2.5 py-0.5 text-xs font-medium rounded-full capitalize ${getStatusBadgeClass(detail.status)}`}
+                >
                   {detail.status}
                 </span>
               </div>
-              <SheetDescription>
-                Compliance breakdown and historical data
-              </SheetDescription>
+              <SheetDescription>Compliance breakdown and historical data</SheetDescription>
             </SheetHeader>
 
             {/* Score Overview */}
@@ -216,14 +216,25 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
                   <p className="text-sm text-muted-foreground">Compliance Score</p>
                   <p className="text-3xl font-bold text-foreground">{detail.score}%</p>
                 </div>
-                <div className={`flex items-center gap-1 ${
-                  detail.trend > 0 ? 'text-emerald-500' : detail.trend < 0 ? 'text-red-500' : 'text-muted-foreground'
-                }`}>
+                <div
+                  className={`flex items-center gap-1 ${
+                    detail.trend > 0
+                      ? 'text-emerald-500'
+                      : detail.trend < 0
+                        ? 'text-red-500'
+                        : 'text-muted-foreground'
+                  }`}
+                >
                   <span className="material-symbols-outlined">
-                    {detail.trend > 0 ? 'trending_up' : detail.trend < 0 ? 'trending_down' : 'remove'}
+                    {detail.trend > 0
+                      ? 'trending_up'
+                      : detail.trend < 0
+                        ? 'trending_down'
+                        : 'remove'}
                   </span>
                   <span className="text-sm font-medium">
-                    {detail.trend > 0 ? '+' : ''}{detail.trend}%
+                    {detail.trend > 0 ? '+' : ''}
+                    {detail.trend}%
                   </span>
                 </div>
               </div>
@@ -232,8 +243,11 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
               <div className="mt-3 h-2 bg-background rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all ${
-                    detail.score >= 90 ? 'bg-emerald-500' :
-                    detail.score >= 70 ? 'bg-amber-500' : 'bg-red-500'
+                    detail.score >= 90
+                      ? 'bg-emerald-500'
+                      : detail.score >= 70
+                        ? 'bg-amber-500'
+                        : 'bg-red-500'
                   }`}
                   style={{ width: `${detail.score}%` }}
                 />
@@ -317,9 +331,7 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
                               {control.id}: {control.name}
                             </p>
                             {control.notes && (
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {control.notes}
-                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">{control.notes}</p>
                             )}
                             <p className="text-xs text-muted-foreground mt-1">
                               Last assessed: {new Date(control.lastAssessed).toLocaleDateString()}
@@ -339,25 +351,33 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
                   </p>
                   {renderHistoryChart()}
                   <div className="mt-4 space-y-2">
-                    {detail.historicalScores.slice().reverse().map((score) => (
-                      <div
-                        key={score.date}
-                        className="flex items-center justify-between py-2 border-b border-border last:border-0"
-                      >
-                        <span className="text-sm text-muted-foreground">
-                          {new Date(score.date).toLocaleDateString('en-US', {
-                            month: 'long',
-                            year: 'numeric',
-                          })}
-                        </span>
-                        <span className={`text-sm font-bold ${
-                          score.score >= 90 ? 'text-emerald-500' :
-                          score.score >= 70 ? 'text-amber-500' : 'text-red-500'
-                        }`}>
-                          {score.score}%
-                        </span>
-                      </div>
-                    ))}
+                    {detail.historicalScores
+                      .slice()
+                      .reverse()
+                      .map((score) => (
+                        <div
+                          key={score.date}
+                          className="flex items-center justify-between py-2 border-b border-border last:border-0"
+                        >
+                          <span className="text-sm text-muted-foreground">
+                            {new Date(score.date).toLocaleDateString('en-US', {
+                              month: 'long',
+                              year: 'numeric',
+                            })}
+                          </span>
+                          <span
+                            className={`text-sm font-bold ${
+                              score.score >= 90
+                                ? 'text-emerald-500'
+                                : score.score >= 70
+                                  ? 'text-amber-500'
+                                  : 'text-red-500'
+                            }`}
+                          >
+                            {score.score}%
+                          </span>
+                        </div>
+                      ))}
                   </div>
                 </div>
               )}
@@ -365,10 +385,7 @@ export function ComplianceDetailPanel({ standardId, open, onClose }: ComplianceD
               {activeTab === 'changes' && (
                 <div className="space-y-4">
                   {detail.recentChanges.map((change, index) => (
-                    <div
-                      key={index}
-                      className="flex gap-3"
-                    >
+                    <div key={index} className="flex gap-3">
                       <div className="flex flex-col items-center">
                         <div className="w-2 h-2 rounded-full bg-primary mt-2" />
                         {index < detail.recentChanges.length - 1 && (

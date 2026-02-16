@@ -15,14 +15,16 @@ import {
 import { DocumentClassification } from '../case-document';
 
 describe('DocumentIngestionCreatedEvent', () => {
-  const createEvent = (overrides?: Partial<{
-    documentId: string;
-    tenantId: string;
-    filename: string;
-    contentHash: string;
-    classification: DocumentClassification;
-    uploadedBy: string;
-  }>) => {
+  const createEvent = (
+    overrides?: Partial<{
+      documentId: string;
+      tenantId: string;
+      filename: string;
+      contentHash: string;
+      classification: DocumentClassification;
+      uploadedBy: string;
+    }>
+  ) => {
     return new DocumentIngestionCreatedEvent(
       overrides?.documentId ?? 'doc-001',
       overrides?.tenantId ?? 'tenant-123',
@@ -113,7 +115,10 @@ describe('DocumentIngestionCreatedEvent', () => {
 describe('DocumentIngestionFailedEvent', () => {
   it('should create event with correct eventType', () => {
     const event = new DocumentIngestionFailedEvent(
-      'tenant-123', 'malware.exe', 'user-456', 'Virus detected'
+      'tenant-123',
+      'malware.exe',
+      'user-456',
+      'Virus detected'
     );
     expect(event.eventType).toBe('document.ingestion_failed');
   });
@@ -135,7 +140,10 @@ describe('DocumentIngestionFailedEvent', () => {
 
   it('should expose all constructor properties', () => {
     const event = new DocumentIngestionFailedEvent(
-      'tenant-123', 'bad-file.docx', 'user-789', 'File too large'
+      'tenant-123',
+      'bad-file.docx',
+      'user-789',
+      'File too large'
     );
     expect(event.tenantId).toBe('tenant-123');
     expect(event.filename).toBe('bad-file.docx');
@@ -146,21 +154,32 @@ describe('DocumentIngestionFailedEvent', () => {
 
   it('should handle optional threatName when provided', () => {
     const event = new DocumentIngestionFailedEvent(
-      'tenant-123', 'malware.exe', 'user-456', 'AV scan failed', 'Trojan.Generic'
+      'tenant-123',
+      'malware.exe',
+      'user-456',
+      'AV scan failed',
+      'Trojan.Generic'
     );
     expect(event.threatName).toBe('Trojan.Generic');
   });
 
   it('should handle optional threatName when omitted', () => {
     const event = new DocumentIngestionFailedEvent(
-      'tenant-123', 'oversized.zip', 'user-456', 'File size exceeds limit'
+      'tenant-123',
+      'oversized.zip',
+      'user-456',
+      'File size exceeds limit'
     );
     expect(event.threatName).toBeUndefined();
   });
 
   it('should serialize to payload with all fields including threatName', () => {
     const event = new DocumentIngestionFailedEvent(
-      'tenant-123', 'infected.exe', 'user-456', 'Virus found', 'Win32.Trojan'
+      'tenant-123',
+      'infected.exe',
+      'user-456',
+      'Virus found',
+      'Win32.Trojan'
     );
     const payload = event.toPayload();
 
@@ -175,7 +194,10 @@ describe('DocumentIngestionFailedEvent', () => {
 
   it('should serialize to payload with undefined threatName', () => {
     const event = new DocumentIngestionFailedEvent(
-      'tenant-123', 'bad.pdf', 'user-456', 'Validation failed'
+      'tenant-123',
+      'bad.pdf',
+      'user-456',
+      'Validation failed'
     );
     const payload = event.toPayload();
 

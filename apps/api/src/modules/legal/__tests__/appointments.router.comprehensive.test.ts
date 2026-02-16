@@ -146,13 +146,16 @@ describe('Appointments Router Comprehensive Tests', () => {
         ],
       });
 
-      const result = mocks.checkConflicts({
-        startTime: validInput.startTime,
-        endTime: validInput.endTime,
-        attendeeIds: ['user-123', ...validInput.attendeeIds],
-        bufferMinutesBefore: 5,
-        bufferMinutesAfter: 5,
-      }, []);
+      const result = mocks.checkConflicts(
+        {
+          startTime: validInput.startTime,
+          endTime: validInput.endTime,
+          attendeeIds: ['user-123', ...validInput.attendeeIds],
+          bufferMinutesBefore: 5,
+          bufferMinutesAfter: 5,
+        },
+        []
+      );
 
       expect(result.hasConflicts).toBe(true);
       expect(result.conflicts).toHaveLength(1);
@@ -370,11 +373,14 @@ describe('Appointments Router Comprehensive Tests', () => {
         conflicts: [{ appointmentId: 'apt-conflict' }],
       });
 
-      const result = mocks.checkConflicts({
-        startTime: new Date(),
-        endTime: new Date(),
-        attendeeIds: ['user-1'],
-      }, []);
+      const result = mocks.checkConflicts(
+        {
+          startTime: new Date(),
+          endTime: new Date(),
+          attendeeIds: ['user-1'],
+        },
+        []
+      );
 
       expect(result.hasConflicts).toBe(true);
     });
@@ -603,11 +609,14 @@ describe('Appointments Router Comprehensive Tests', () => {
       mockPrisma.appointment.findMany.mockResolvedValue([]);
       mocks.checkConflicts.mockReturnValue({ hasConflicts: false, conflicts: [] });
 
-      const result = mocks.checkConflicts({
-        startTime: new Date(),
-        endTime: new Date(),
-        attendeeIds: ['user-1'],
-      }, []);
+      const result = mocks.checkConflicts(
+        {
+          startTime: new Date(),
+          endTime: new Date(),
+          attendeeIds: ['user-1'],
+        },
+        []
+      );
 
       expect(result.hasConflicts).toBe(false);
       expect(result.conflicts).toHaveLength(0);
@@ -636,11 +645,14 @@ describe('Appointments Router Comprehensive Tests', () => {
         ],
       });
 
-      const result = mocks.checkConflicts({
-        startTime: new Date('2026-02-01T10:30:00Z'),
-        endTime: new Date('2026-02-01T11:30:00Z'),
-        attendeeIds: ['user-1'],
-      }, []);
+      const result = mocks.checkConflicts(
+        {
+          startTime: new Date('2026-02-01T10:30:00Z'),
+          endTime: new Date('2026-02-01T11:30:00Z'),
+          attendeeIds: ['user-1'],
+        },
+        []
+      );
 
       expect(result.hasConflicts).toBe(true);
       expect(result.conflicts).toHaveLength(1);
@@ -666,13 +678,16 @@ describe('Appointments Router Comprehensive Tests', () => {
       mockPrisma.appointment.findMany.mockResolvedValue([]);
       mocks.checkAvailability.mockReturnValue(availableSlots);
 
-      const result = mocks.checkAvailability({
-        attendeeId: 'user-1',
-        startTime: new Date('2026-02-01T08:00:00Z'),
-        endTime: new Date('2026-02-01T18:00:00Z'),
-        minimumSlotMinutes: 30,
-        includeBuffer: true,
-      }, []);
+      const result = mocks.checkAvailability(
+        {
+          attendeeId: 'user-1',
+          startTime: new Date('2026-02-01T08:00:00Z'),
+          endTime: new Date('2026-02-01T18:00:00Z'),
+          minimumSlotMinutes: 30,
+          includeBuffer: true,
+        },
+        []
+      );
 
       expect(result).toHaveLength(2);
       expect(result[0].durationMinutes).toBe(60);
@@ -699,12 +714,15 @@ describe('Appointments Router Comprehensive Tests', () => {
       mockPrisma.appointment.findMany.mockResolvedValue([]);
       mocks.findNextAvailableSlot.mockReturnValue(nextSlot);
 
-      const result = mocks.findNextAvailableSlot({
-        attendeeId: 'user-1',
-        startFrom: new Date(),
-        durationMinutes: 60,
-        maxDaysAhead: 30,
-      }, []);
+      const result = mocks.findNextAvailableSlot(
+        {
+          attendeeId: 'user-1',
+          startFrom: new Date(),
+          durationMinutes: 60,
+          maxDaysAhead: 30,
+        },
+        []
+      );
 
       expect(result).toEqual(nextSlot);
     });

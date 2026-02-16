@@ -82,7 +82,7 @@ describe('VaultKeyVersionStore', () => {
         'http://vault:8200/v1/transit/keys/test-key',
         expect.objectContaining({
           headers: { 'X-Vault-Token': 'test-token' },
-        }),
+        })
       );
     });
 
@@ -95,7 +95,7 @@ describe('VaultKeyVersionStore', () => {
       const store = new VaultKeyVersionStore();
 
       await expect(store.getCurrentVersion()).rejects.toThrow(
-        'Failed to get current key version from Vault',
+        'Failed to get current key version from Vault'
       );
     });
   });
@@ -124,7 +124,7 @@ describe('VaultKeyVersionStore', () => {
             min_decryption_version: 1, // version - 4
             min_encryption_version: 5,
           }),
-        }),
+        })
       );
     });
   });
@@ -231,7 +231,7 @@ describe('VaultKeyVersionStore', () => {
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({ min_decryption_version: 3 }),
-        }),
+        })
       );
     });
 
@@ -247,7 +247,7 @@ describe('VaultKeyVersionStore', () => {
       const store = new VaultKeyVersionStore();
 
       await expect(store.deprecateVersion(3)).rejects.toThrow(
-        'Cannot deprecate current or future versions',
+        'Cannot deprecate current or future versions'
       );
     });
   });
@@ -326,7 +326,7 @@ describe('KeyRotationService - Comprehensive Tests', () => {
       const service = new KeyRotationService(
         { reEncryptionBatchSize: 10 },
         store,
-        encryptionService,
+        encryptionService
       );
 
       const progress = await service.reEncryptData(mockDataProvider);
@@ -344,16 +344,16 @@ describe('KeyRotationService - Comprehensive Tests', () => {
 
       const mockDataProvider: DataProvider = {
         getRecordCount: vi.fn().mockResolvedValue(1),
-        getRecordsByKeyVersion: vi.fn().mockResolvedValue([
-          { id: 'record-1', encryptedData: encrypted },
-        ]),
+        getRecordsByKeyVersion: vi
+          .fn()
+          .mockResolvedValue([{ id: 'record-1', encryptedData: encrypted }]),
         updateRecord: vi.fn().mockResolvedValue(undefined),
       };
 
       const service = new KeyRotationService(
         { reEncryptionBatchSize: 10 },
         store,
-        encryptionService,
+        encryptionService
       );
 
       const progress = await service.reEncryptData(mockDataProvider, 2);
@@ -384,7 +384,7 @@ describe('KeyRotationService - Comprehensive Tests', () => {
       const service = new KeyRotationService(
         { reEncryptionBatchSize: 10 },
         store,
-        encryptionService,
+        encryptionService
       );
 
       const progress = await service.reEncryptData(mockDataProvider);
@@ -419,16 +419,16 @@ describe('KeyRotationService - Comprehensive Tests', () => {
 
       const mockDataProvider: DataProvider = {
         getRecordCount: vi.fn().mockResolvedValue(1),
-        getRecordsByKeyVersion: vi.fn().mockResolvedValue([
-          { id: 'record-1', encryptedData: encrypted },
-        ]),
+        getRecordsByKeyVersion: vi
+          .fn()
+          .mockResolvedValue([{ id: 'record-1', encryptedData: encrypted }]),
         updateRecord: vi.fn().mockResolvedValue(undefined),
       };
 
       const service = new KeyRotationService(
         { reEncryptionBatchSize: 10 },
         store,
-        encryptionService,
+        encryptionService
       );
 
       await service.reEncryptData(mockDataProvider);
@@ -454,7 +454,7 @@ describe('KeyRotationService - Comprehensive Tests', () => {
 
       const service = new KeyRotationService(
         { preRotationValidation: true, postRotationVerification: false },
-        badStore,
+        badStore
       );
 
       const result = await service.rotateKeys();
@@ -482,16 +482,14 @@ describe('KeyRotationService - Comprehensive Tests', () => {
       // This causes postRotationVerification to fail
       const service = new KeyRotationService(
         { preRotationValidation: false, postRotationVerification: true },
-        mockStore,
+        mockStore
       );
 
       const result = await service.rotateKeys();
 
       // Rotation still succeeds but with warning
       expect(result.success).toBe(true);
-      expect(result.errors).toContain(
-        'Post-rotation verification failed but rotation completed',
-      );
+      expect(result.errors).toContain('Post-rotation verification failed but rotation completed');
     });
   });
 
@@ -506,7 +504,7 @@ describe('KeyRotationService - Comprehensive Tests', () => {
           postRotationVerification: false,
           notificationWebhook: 'https://example.com/webhook',
         },
-        store,
+        store
       );
 
       const result = await service.rotateKeys();
@@ -517,7 +515,7 @@ describe('KeyRotationService - Comprehensive Tests', () => {
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-        }),
+        })
       );
     });
 
@@ -532,7 +530,7 @@ describe('KeyRotationService - Comprehensive Tests', () => {
           postRotationVerification: false,
           notificationWebhook: 'https://example.com/webhook',
         },
-        store,
+        store
       );
 
       const result = await service.rotateKeys();
@@ -555,7 +553,7 @@ describe('KeyRotationService - Comprehensive Tests', () => {
         { preRotationValidation: false, postRotationVerification: false },
         store,
         new EncryptionService(),
-        mockAuditLogger,
+        mockAuditLogger
       );
 
       await service.rotateKeys();
@@ -568,7 +566,7 @@ describe('KeyRotationService - Comprehensive Tests', () => {
           resourceId: 'encryption-keys',
           action: 'CONFIGURE',
           actionResult: 'SUCCESS',
-        }),
+        })
       );
     });
 
@@ -590,7 +588,7 @@ describe('KeyRotationService - Comprehensive Tests', () => {
         { preRotationValidation: true, postRotationVerification: false },
         badStore,
         new EncryptionService(),
-        mockAuditLogger,
+        mockAuditLogger
       );
 
       await service.rotateKeys();
@@ -599,7 +597,7 @@ describe('KeyRotationService - Comprehensive Tests', () => {
         expect.objectContaining({
           eventType: 'KEY_ROTATION_FAILED',
           actionResult: 'FAILURE',
-        }),
+        })
       );
     });
   });
@@ -625,7 +623,7 @@ describe('KeyRotationService - Comprehensive Tests', () => {
           preRotationValidation: false,
           postRotationVerification: false,
         },
-        store,
+        store
       );
 
       // Rotate to version 9
@@ -647,7 +645,7 @@ describe('KeyRotationService - Comprehensive Tests', () => {
           preRotationValidation: false,
           postRotationVerification: false,
         },
-        store,
+        store
       );
 
       // Rotate to version 2
@@ -669,9 +667,9 @@ describe('KeyRotationService - Comprehensive Tests', () => {
 
       const mockDataProvider: DataProvider = {
         getRecordCount: vi.fn().mockResolvedValue(1),
-        getRecordsByKeyVersion: vi.fn().mockResolvedValue([
-          { id: 'record-1', encryptedData: encrypted },
-        ]),
+        getRecordsByKeyVersion: vi
+          .fn()
+          .mockResolvedValue([{ id: 'record-1', encryptedData: encrypted }]),
         updateRecord: vi.fn().mockResolvedValue(undefined),
       };
 
@@ -682,7 +680,7 @@ describe('KeyRotationService - Comprehensive Tests', () => {
           reEncryptionBatchSize: 1,
         },
         store,
-        encryptionService,
+        encryptionService
       );
 
       // Generate more than 1000 events by rotating many times
@@ -904,10 +902,7 @@ describe('Error handling edge cases', () => {
       listVersions: () => Promise.resolve([]),
     };
 
-    const service = new KeyRotationService(
-      { preRotationValidation: true },
-      badStore,
-    );
+    const service = new KeyRotationService({ preRotationValidation: true }, badStore);
 
     const result = await service.rotateKeys();
 

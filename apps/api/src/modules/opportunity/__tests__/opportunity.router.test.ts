@@ -86,7 +86,7 @@ describe('Opportunity Router', () => {
       const result = await caller.create(input);
 
       expect(result.name).toBe(input.name);
-      expect(result.value).toBe(input.value.amount);  // Mapper returns value.amount
+      expect(result.value).toBe(input.value.amount); // Mapper returns value.amount
       expect(result.stage).toBe(input.stage);
       expect(ctx.services!.opportunity!.createOpportunity).toHaveBeenCalled();
     });
@@ -155,14 +155,19 @@ describe('Opportunity Router', () => {
 
       expect(result.id).toBe(TEST_UUIDS.opportunity1);
       expect(result.name).toBe('Big Deal');
-      expect(ctx.services!.opportunity!.getOpportunityById).toHaveBeenCalledWith(TEST_UUIDS.opportunity1);
+      expect(ctx.services!.opportunity!.getOpportunityById).toHaveBeenCalledWith(
+        TEST_UUIDS.opportunity1
+      );
     });
 
     it('should throw NOT_FOUND for non-existent opportunity', async () => {
       ctx.services!.opportunity!.getOpportunityById = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'NOT_FOUND_ERROR', message: `Opportunity not found: ${TEST_UUIDS.nonExistent}` },
+        error: {
+          code: 'NOT_FOUND_ERROR',
+          message: `Opportunity not found: ${TEST_UUIDS.nonExistent}`,
+        },
       });
 
       await expect(caller.getById({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
@@ -286,7 +291,10 @@ describe('Opportunity Router', () => {
       ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'NOT_FOUND_ERROR', message: `Opportunity not found: ${TEST_UUIDS.nonExistent}` },
+        error: {
+          code: 'NOT_FOUND_ERROR',
+          message: `Opportunity not found: ${TEST_UUIDS.nonExistent}`,
+        },
       });
 
       await expect(
@@ -319,7 +327,10 @@ describe('Opportunity Router', () => {
       ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'VALIDATION_ERROR', message: 'Invalid stage transition from PROPOSAL to CLOSED_WON' },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid stage transition from PROPOSAL to CLOSED_WON',
+        },
       });
 
       await expect(
@@ -344,14 +355,19 @@ describe('Opportunity Router', () => {
 
       expect(result.success).toBe(true);
       expect(result.id).toBe(TEST_UUIDS.opportunity1);
-      expect(ctx.services!.opportunity!.deleteOpportunity).toHaveBeenCalledWith(TEST_UUIDS.opportunity1);
+      expect(ctx.services!.opportunity!.deleteOpportunity).toHaveBeenCalledWith(
+        TEST_UUIDS.opportunity1
+      );
     });
 
     it('should throw NOT_FOUND for non-existent opportunity', async () => {
       ctx.services!.opportunity!.deleteOpportunity = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'NOT_FOUND_ERROR', message: `Opportunity not found: ${TEST_UUIDS.nonExistent}` },
+        error: {
+          code: 'NOT_FOUND_ERROR',
+          message: `Opportunity not found: ${TEST_UUIDS.nonExistent}`,
+        },
       });
 
       await expect(caller.delete({ id: TEST_UUIDS.nonExistent })).rejects.toThrow(
@@ -365,7 +381,10 @@ describe('Opportunity Router', () => {
       ctx.services!.opportunity!.deleteOpportunity = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'VALIDATION_ERROR', message: 'Cannot delete won opportunities. Archive them instead.' },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Cannot delete won opportunities. Archive them instead.',
+        },
       });
 
       await expect(caller.delete({ id: TEST_UUIDS.opportunity1 })).rejects.toThrow(
@@ -563,9 +582,7 @@ describe('Opportunity Router', () => {
 
       await expect(
         caller.moveStage({ id: TEST_UUIDS.opportunity1, targetStage: 'PROPOSAL' })
-      ).rejects.toThrow(
-        expect.objectContaining({ code: 'BAD_REQUEST' })
-      );
+      ).rejects.toThrow(expect.objectContaining({ code: 'BAD_REQUEST' }));
     });
 
     it('should throw NOT_FOUND for non-existent opportunity', async () => {
@@ -577,31 +594,48 @@ describe('Opportunity Router', () => {
 
       await expect(
         caller.moveStage({ id: TEST_UUIDS.nonExistent, targetStage: 'NEGOTIATION' })
-      ).rejects.toThrow(
-        expect.objectContaining({ code: 'NOT_FOUND' })
-      );
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
     });
 
     it('should throw BAD_REQUEST for CLOSED_LOST without reason', async () => {
       ctx.services!.opportunity!.markAsLost = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'VALIDATION_ERROR', message: 'Reason is required and must be at least 10 characters' },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Reason is required and must be at least 10 characters',
+        },
       });
 
       await expect(
         caller.moveStage({ id: TEST_UUIDS.opportunity1, targetStage: 'CLOSED_LOST', reason: '' })
-      ).rejects.toThrow(
-        expect.objectContaining({ code: 'BAD_REQUEST' })
-      );
+      ).rejects.toThrow(expect.objectContaining({ code: 'BAD_REQUEST' }));
     });
   });
 
   describe('getHistory', () => {
     const mockEvents = [
-      { id: 'evt-1', opportunityId: TEST_UUIDS.opportunity1, type: 'STAGE_CHANGE', timestamp: new Date('2024-06-15T10:00:00Z'), data: {} },
-      { id: 'evt-2', opportunityId: TEST_UUIDS.opportunity1, type: 'NOTE', timestamp: new Date('2024-06-14T10:00:00Z'), data: {} },
-      { id: 'evt-3', opportunityId: TEST_UUIDS.opportunity1, type: 'CALL', timestamp: new Date('2024-06-13T10:00:00Z'), data: {} },
+      {
+        id: 'evt-1',
+        opportunityId: TEST_UUIDS.opportunity1,
+        type: 'STAGE_CHANGE',
+        timestamp: new Date('2024-06-15T10:00:00Z'),
+        data: {},
+      },
+      {
+        id: 'evt-2',
+        opportunityId: TEST_UUIDS.opportunity1,
+        type: 'NOTE',
+        timestamp: new Date('2024-06-14T10:00:00Z'),
+        data: {},
+      },
+      {
+        id: 'evt-3',
+        opportunityId: TEST_UUIDS.opportunity1,
+        type: 'CALL',
+        timestamp: new Date('2024-06-13T10:00:00Z'),
+        data: {},
+      },
     ];
 
     it('should return paginated activity events', async () => {
@@ -689,8 +723,24 @@ describe('Opportunity Router', () => {
   describe('getProducts', () => {
     it('should return products with calculated total value', async () => {
       const mockProducts = [
-        { id: 'prod-1', opportunityId: TEST_UUIDS.opportunity1, name: 'Product A', quantity: 2, unitPrice: new Prisma.Decimal(10000), totalPrice: new Prisma.Decimal(25000), createdAt: new Date() },
-        { id: 'prod-2', opportunityId: TEST_UUIDS.opportunity1, name: 'Product B', quantity: 1, unitPrice: new Prisma.Decimal(15000), totalPrice: new Prisma.Decimal(15000), createdAt: new Date() },
+        {
+          id: 'prod-1',
+          opportunityId: TEST_UUIDS.opportunity1,
+          name: 'Product A',
+          quantity: 2,
+          unitPrice: new Prisma.Decimal(10000),
+          totalPrice: new Prisma.Decimal(25000),
+          createdAt: new Date(),
+        },
+        {
+          id: 'prod-2',
+          opportunityId: TEST_UUIDS.opportunity1,
+          name: 'Product B',
+          quantity: 1,
+          unitPrice: new Prisma.Decimal(15000),
+          totalPrice: new Prisma.Decimal(15000),
+          createdAt: new Date(),
+        },
       ];
 
       (prismaMock.dealProduct as any).findMany.mockResolvedValue(mockProducts);
@@ -747,16 +797,61 @@ describe('Opportunity Router', () => {
 
   describe('getPipeline', () => {
     const mockStageConfigs = [
-      { stageKey: 'PROSPECTING', displayName: 'Prospecting', color: '#94a3b8', order: 0, probability: 10, tenantId: 'test-tenant-id' },
-      { stageKey: 'QUALIFICATION', displayName: 'Qualification', color: '#60a5fa', order: 1, probability: 20, tenantId: 'test-tenant-id' },
-      { stageKey: 'NEEDS_ANALYSIS', displayName: 'Needs Analysis', color: '#38bdf8', order: 2, probability: 30, tenantId: 'test-tenant-id' },
-      { stageKey: 'PROPOSAL', displayName: 'Proposal', color: '#fb923c', order: 3, probability: 70, tenantId: 'test-tenant-id' },
-      { stageKey: 'NEGOTIATION', displayName: 'Negotiation', color: '#facc15', order: 4, probability: 80, tenantId: 'test-tenant-id' },
+      {
+        stageKey: 'PROSPECTING',
+        displayName: 'Prospecting',
+        color: '#94a3b8',
+        order: 0,
+        probability: 10,
+        tenantId: 'test-tenant-id',
+      },
+      {
+        stageKey: 'QUALIFICATION',
+        displayName: 'Qualification',
+        color: '#60a5fa',
+        order: 1,
+        probability: 20,
+        tenantId: 'test-tenant-id',
+      },
+      {
+        stageKey: 'NEEDS_ANALYSIS',
+        displayName: 'Needs Analysis',
+        color: '#38bdf8',
+        order: 2,
+        probability: 30,
+        tenantId: 'test-tenant-id',
+      },
+      {
+        stageKey: 'PROPOSAL',
+        displayName: 'Proposal',
+        color: '#fb923c',
+        order: 3,
+        probability: 70,
+        tenantId: 'test-tenant-id',
+      },
+      {
+        stageKey: 'NEGOTIATION',
+        displayName: 'Negotiation',
+        color: '#facc15',
+        order: 4,
+        probability: 80,
+        tenantId: 'test-tenant-id',
+      },
     ];
 
     const mockGroupBy = [
-      { stage: 'PROSPECTING', _count: 5, _sum: { value: new Prisma.Decimal(100000) }, _avg: { probability: 10 } },
-      { stage: 'PROPOSAL', _count: 3, _sum: { value: new Prisma.Decimal(200000) }, _avg: { probability: 70 } },
+      {
+        stage: 'PROSPECTING',
+        _count: 5,
+        _sum: { value: new Prisma.Decimal(100000) },
+        _avg: { probability: 10 },
+      },
+      {
+        stage: 'PROPOSAL',
+        _count: 3,
+        _sum: { value: new Prisma.Decimal(200000) },
+        _avg: { probability: 70 },
+      },
     ];
 
     it('should return stages with opportunity counts and values', async () => {
@@ -769,7 +864,7 @@ describe('Opportunity Router', () => {
 
       expect(result.stages.length).toBe(5); // Excludes CLOSED_WON, CLOSED_LOST
       expect(result.totalOpportunities).toBe(8); // 5 + 3
-      const prospecting = result.stages.find(s => s.stageKey === 'PROSPECTING');
+      const prospecting = result.stages.find((s) => s.stageKey === 'PROSPECTING');
       expect(prospecting?.count).toBe(5);
       expect(prospecting?.totalValue).toBe('100000');
     });
@@ -782,7 +877,7 @@ describe('Opportunity Router', () => {
 
       const result = await caller.getPipeline({});
 
-      const stageKeys = result.stages.map(s => s.stageKey);
+      const stageKeys = result.stages.map((s) => s.stageKey);
       expect(stageKeys).not.toContain('CLOSED_WON');
       expect(stageKeys).not.toContain('CLOSED_LOST');
     });
@@ -790,8 +885,22 @@ describe('Opportunity Router', () => {
     it('should include closed stages when includeClosedStages=true', async () => {
       const allConfigs = [
         ...mockStageConfigs,
-        { stageKey: 'CLOSED_WON', displayName: 'Closed Won', color: '#22c55e', order: 5, probability: 100, tenantId: 'test-tenant-id' },
-        { stageKey: 'CLOSED_LOST', displayName: 'Closed Lost', color: '#ef4444', order: 6, probability: 0, tenantId: 'test-tenant-id' },
+        {
+          stageKey: 'CLOSED_WON',
+          displayName: 'Closed Won',
+          color: '#22c55e',
+          order: 5,
+          probability: 100,
+          tenantId: 'test-tenant-id',
+        },
+        {
+          stageKey: 'CLOSED_LOST',
+          displayName: 'Closed Lost',
+          color: '#ef4444',
+          order: 6,
+          probability: 0,
+          tenantId: 'test-tenant-id',
+        },
       ];
 
       (prismaMock.pipelineStageConfig as any).findMany.mockResolvedValue(allConfigs);
@@ -801,7 +910,7 @@ describe('Opportunity Router', () => {
 
       const result = await caller.getPipeline({ includeClosedStages: true });
 
-      const stageKeys = result.stages.map(s => s.stageKey);
+      const stageKeys = result.stages.map((s) => s.stageKey);
       expect(stageKeys).toContain('CLOSED_WON');
       expect(stageKeys).toContain('CLOSED_LOST');
       expect(result.stages.length).toBe(7);
@@ -817,7 +926,7 @@ describe('Opportunity Router', () => {
 
       expect(result.totalOpportunities).toBe(0);
       expect(result.totalPipelineValue).toBe('0');
-      result.stages.forEach(s => {
+      result.stages.forEach((s) => {
         expect(s.count).toBe(0);
         expect(s.totalValue).toBe('0');
       });
@@ -825,7 +934,14 @@ describe('Opportunity Router', () => {
 
     it('should use stage config for display names and colors', async () => {
       const customConfigs = [
-        { stageKey: 'PROSPECTING', displayName: 'Lead Generation', color: '#ff0000', order: 0, probability: 15, tenantId: 'test-tenant-id' },
+        {
+          stageKey: 'PROSPECTING',
+          displayName: 'Lead Generation',
+          color: '#ff0000',
+          order: 0,
+          probability: 15,
+          tenantId: 'test-tenant-id',
+        },
       ];
 
       (prismaMock.pipelineStageConfig as any).findMany.mockResolvedValue(customConfigs);
@@ -835,7 +951,7 @@ describe('Opportunity Router', () => {
 
       const result = await caller.getPipeline({});
 
-      const prospecting = result.stages.find(s => s.stageKey === 'PROSPECTING');
+      const prospecting = result.stages.find((s) => s.stageKey === 'PROSPECTING');
       expect(prospecting?.displayName).toBe('Lead Generation');
       expect(prospecting?.color).toBe('#ff0000');
       expect(prospecting?.probability).toBe(15);

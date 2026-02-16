@@ -1,18 +1,21 @@
 # Multi-Tenancy Architecture
 
-**Status:** Implemented (IFC-127)
-**Date:** 2025-12-29
-**Related Tasks:** IFC-127 (Tenant Isolation), IFC-072 (Zero Trust Security)
+**Status:** Implemented (IFC-127) **Date:** 2025-12-29 **Related Tasks:**
+IFC-127 (Tenant Isolation), IFC-072 (Zero Trust Security)
 
 ## Overview
 
-IntelliFlow CRM implements a comprehensive multi-tenant architecture that ensures complete data isolation between tenants at both the application and database layers. This document describes the isolation strategy, implementation details, and security guarantees.
+IntelliFlow CRM implements a comprehensive multi-tenant architecture that
+ensures complete data isolation between tenants at both the application and
+database layers. This document describes the isolation strategy, implementation
+details, and security guarantees.
 
 ## Tenancy Model
 
 ### Current Implementation: User-Level Tenancy
 
-The current implementation uses **user-level tenancy** where each user is their own tenant:
+The current implementation uses **user-level tenancy** where each user is their
+own tenant:
 
 ```
 Tenant = User
@@ -44,6 +47,7 @@ Multi-tenant isolation is enforced at three layers:
 **Implementation:** `apps/api/src/security/tenant-context.ts`
 
 The tenant context middleware:
+
 1. Extracts tenant identity from JWT claims
 2. Injects tenant context into request context
 3. Creates tenant-scoped Prisma client
@@ -63,6 +67,7 @@ tenantProcedure.query(async ({ ctx }) => {
 ### Layer 2: Database Layer (Defense-in-Depth)
 
 **Implementation:**
+
 - `packages/db/prisma/migrations/tenant-rls.sql`
 - `infra/supabase/rls-policies.sql`
 
@@ -76,21 +81,23 @@ CREATE POLICY "leads_select_own"
   USING ("ownerId" = auth.user_id());
 ```
 
-RLS acts as the last line of defense - even if application code is bypassed, data isolation is maintained.
+RLS acts as the last line of defense - even if application code is bypassed,
+data isolation is maintained.
 
 ### Layer 3: Resource Limits (Fairness)
 
 **Implementation:** `apps/api/src/security/tenant-limiter.ts`
 
-Per-tenant resource limits prevent any single tenant from consuming excessive resources:
+Per-tenant resource limits prevent any single tenant from consuming excessive
+resources:
 
-| Resource | Free | Starter | Professional | Enterprise |
-|----------|------|---------|--------------|------------|
-| Leads | 100 | 1,000 | 10,000 | 100,000 |
-| Contacts | 100 | 1,000 | 10,000 | 100,000 |
-| AI Scores/day | 10 | 100 | 500 | 5,000 |
-| API Rate/min | 60 | 120 | 300 | 1,000 |
-| Storage (MB) | 100 | 1,024 | 5,120 | 51,200 |
+| Resource      | Free | Starter | Professional | Enterprise |
+| ------------- | ---- | ------- | ------------ | ---------- |
+| Leads         | 100  | 1,000   | 10,000       | 100,000    |
+| Contacts      | 100  | 1,000   | 10,000       | 100,000    |
+| AI Scores/day | 10   | 100     | 500          | 5,000      |
+| API Rate/min  | 60   | 120     | 300          | 1,000      |
+| Storage (MB)  | 100  | 1,024   | 5,120        | 51,200     |
 
 ## Key Components
 
@@ -100,13 +107,13 @@ The core tenant identity model:
 
 ```typescript
 interface TenantContext {
-  tenantId: string;           // Current tenant ID
+  tenantId: string; // Current tenant ID
   tenantType: 'user' | 'organization';
-  userId: string;             // User within tenant
-  role: string;               // User role
-  organizationId?: string;    // Future: org-level tenancy
-  canAccessAllTenantData: boolean;  // Admin/Manager flag
-  teamMemberIds?: string[];   // For manager hierarchy
+  userId: string; // User within tenant
+  role: string; // User role
+  organizationId?: string; // Future: org-level tenancy
+  canAccessAllTenantData: boolean; // Admin/Manager flag
+  teamMemberIds?: string[]; // For manager hierarchy
 }
 ```
 
@@ -141,12 +148,12 @@ const result = await verifyTenantAccess(ctx, resourceOwnerId);
 
 ### Access Hierarchy
 
-| Role | Own Data | Team Data | All Data |
-|------|----------|-----------|----------|
-| USER | Yes | No | No |
-| SALES_REP | Yes | No | No |
-| MANAGER | Yes | Yes | No |
-| ADMIN | Yes | Yes | Yes |
+| Role      | Own Data | Team Data | All Data |
+| --------- | -------- | --------- | -------- |
+| USER      | Yes      | No        | No       |
+| SALES_REP | Yes      | No        | No       |
+| MANAGER   | Yes      | Yes       | No       |
+| ADMIN     | Yes      | Yes       | Yes      |
 
 ### Implementation
 
@@ -197,7 +204,7 @@ const ROLE_HIERARCHY = {
 import {
   tenantContextMiddleware,
   rateLimitMiddleware,
-  resourceLimitMiddleware
+  resourceLimitMiddleware,
 } from './security';
 
 // Create tenant-aware procedure
@@ -290,11 +297,11 @@ CREATE INDEX idx_contacts_owner ON contacts("ownerId");
 
 ### Performance Targets
 
-| Query Type | Target Latency |
-|------------|----------------|
-| Simple owner query | <10ms |
-| Manager team query | <50ms |
-| Cross-table EXISTS | <100ms |
+| Query Type         | Target Latency |
+| ------------------ | -------------- |
+| Simple owner query | <10ms          |
+| Manager team query | <50ms          |
+| Cross-table EXISTS | <100ms         |
 
 ## Monitoring
 
@@ -360,4 +367,5 @@ CREATE INDEX idx_documents_owner ON documents("ownerId");
 
 ---
 
-**Status:** Fully implemented with comprehensive testing. All isolation guarantees verified.
+**Status:** Fully implemented with comprehensive testing. All isolation
+guarantees verified.

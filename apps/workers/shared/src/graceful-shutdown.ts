@@ -88,10 +88,7 @@ export function setupGracefulShutdown(
 
     // Set timeout for forced exit
     const forceExitTimeout = setTimeout(() => {
-      logger.error(
-        { timeoutMs },
-        'Shutdown timeout exceeded, forcing exit'
-      );
+      logger.error({ timeoutMs }, 'Shutdown timeout exceeded, forcing exit');
       process.exit(1);
     }, timeoutMs);
 

@@ -7,15 +7,8 @@
  * @module @intelliflow/application/services/ExperimentService
  */
 
-import {
-  EXPERIMENT_DEFAULTS,
-  DomainEvent,
-} from '@intelliflow/domain';
-import type {
-  ExperimentStatus,
-  ExperimentType,
-  ExperimentVariant,
-} from '@intelliflow/domain';
+import { EXPERIMENT_DEFAULTS, DomainEvent } from '@intelliflow/domain';
+import type { ExperimentStatus, ExperimentType, ExperimentVariant } from '@intelliflow/domain';
 import type {
   CreateExperimentInput,
   UpdateExperimentInput,
@@ -127,11 +120,23 @@ export interface AssignmentRepositoryPort {
   findByExperimentId(experimentId: string): Promise<AssignmentRecord[]>;
   findByLeadId(leadId: string): Promise<AssignmentRecord[]>;
   findByExperimentAndLead(experimentId: string, leadId: string): Promise<AssignmentRecord | null>;
-  updateScore(experimentId: string, leadId: string, score: number, confidence?: number): Promise<AssignmentRecord>;
-  updateConversion(experimentId: string, leadId: string, conversionValue?: number): Promise<AssignmentRecord>;
+  updateScore(
+    experimentId: string,
+    leadId: string,
+    score: number,
+    confidence?: number
+  ): Promise<AssignmentRecord>;
+  updateConversion(
+    experimentId: string,
+    leadId: string,
+    conversionValue?: number
+  ): Promise<AssignmentRecord>;
   countByVariant(experimentId: string, variant: string): Promise<number>;
   getScoresByVariant(experimentId: string, variant: string): Promise<number[]>;
-  getConversionsByVariant(experimentId: string, variant: string): Promise<{ count: number; total: number }>;
+  getConversionsByVariant(
+    experimentId: string,
+    variant: string
+  ): Promise<{ count: number; total: number }>;
 }
 
 /**
@@ -140,7 +145,10 @@ export interface AssignmentRepositoryPort {
 export interface ResultRepositoryPort {
   create(data: Omit<ExperimentResultRecord, 'id' | 'analyzedAt'>): Promise<ExperimentResultRecord>;
   findByExperimentId(experimentId: string): Promise<ExperimentResultRecord | null>;
-  update(experimentId: string, data: Partial<ExperimentResultRecord>): Promise<ExperimentResultRecord>;
+  update(
+    experimentId: string,
+    data: Partial<ExperimentResultRecord>
+  ): Promise<ExperimentResultRecord>;
 }
 
 // =============================================================================
@@ -273,12 +281,7 @@ export class ExperimentService {
     });
 
     await this.eventBus.publish(
-      new ExperimentCreatedEvent(
-        experiment.id,
-        experiment.name,
-        experiment.type,
-        tenantId
-      )
+      new ExperimentCreatedEvent(experiment.id, experiment.name, experiment.type, tenantId)
     );
 
     return experiment;
@@ -328,9 +331,7 @@ export class ExperimentService {
       startDate: experiment.startDate ?? startDate,
     });
 
-    await this.eventBus.publish(
-      new ExperimentStartedEvent(experimentId, startDate)
-    );
+    await this.eventBus.publish(new ExperimentStartedEvent(experimentId, startDate));
 
     return updated;
   }
@@ -424,10 +425,7 @@ export class ExperimentService {
     }
 
     // Check if already assigned
-    const existing = await this.assignmentRepo.findByExperimentAndLead(
-      experimentId,
-      leadId
-    );
+    const existing = await this.assignmentRepo.findByExperimentAndLead(experimentId, leadId);
     if (existing) {
       return {
         variant: existing.variant as ExperimentVariant,
@@ -436,11 +434,7 @@ export class ExperimentService {
     }
 
     // Deterministic variant assignment using hash
-    const variant = this.calculateVariant(
-      experimentId,
-      leadId,
-      experiment.trafficPercent
-    );
+    const variant = this.calculateVariant(experimentId, leadId, experiment.trafficPercent);
 
     const assignment = await this.assignmentRepo.create({
       experimentId,
@@ -448,9 +442,7 @@ export class ExperimentService {
       variant,
     });
 
-    await this.eventBus.publish(
-      new VariantAssignedEvent(experimentId, leadId, variant)
-    );
+    await this.eventBus.publish(new VariantAssignedEvent(experimentId, leadId, variant));
 
     return { variant, assignment };
   }
@@ -458,14 +450,8 @@ export class ExperimentService {
   /**
    * Get variant for a lead (without creating assignment)
    */
-  async getVariant(
-    experimentId: string,
-    leadId: string
-  ): Promise<ExperimentVariant | null> {
-    const assignment = await this.assignmentRepo.findByExperimentAndLead(
-      experimentId,
-      leadId
-    );
+  async getVariant(experimentId: string, leadId: string): Promise<ExperimentVariant | null> {
+    const assignment = await this.assignmentRepo.findByExperimentAndLead(experimentId, leadId);
     return assignment ? (assignment.variant as ExperimentVariant) : null;
   }
 
@@ -482,7 +468,7 @@ export class ExperimentService {
     let hash = 0;
     for (let i = 0; i < combined.length; i++) {
       const char = combined.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
 
@@ -556,14 +542,8 @@ export class ExperimentService {
     }
 
     // Get scores by variant
-    const controlScores = await this.assignmentRepo.getScoresByVariant(
-      experimentId,
-      'control'
-    );
-    const treatmentScores = await this.assignmentRepo.getScoresByVariant(
-      experimentId,
-      'treatment'
-    );
+    const controlScores = await this.assignmentRepo.getScoresByVariant(experimentId, 'control');
+    const treatmentScores = await this.assignmentRepo.getScoresByVariant(experimentId, 'treatment');
 
     // Descriptive statistics
     const controlStats = this.calculateStats(controlScores);
@@ -600,19 +580,16 @@ export class ExperimentService {
       'treatment'
     );
 
-    const controlConversionRate = controlConversions.total > 0
-      ? controlConversions.count / controlConversions.total
-      : null;
-    const treatmentConversionRate = treatmentConversions.total > 0
-      ? treatmentConversions.count / treatmentConversions.total
-      : null;
+    const controlConversionRate =
+      controlConversions.total > 0 ? controlConversions.count / controlConversions.total : null;
+    const treatmentConversionRate =
+      treatmentConversions.total > 0
+        ? treatmentConversions.count / treatmentConversions.total
+        : null;
 
     // Chi-square test for conversions (if available)
     let chiSquare: { statistic: number; pValue: number } | null = null;
-    if (
-      controlConversions.total > 0 &&
-      treatmentConversions.total > 0
-    ) {
+    if (controlConversions.total > 0 && treatmentConversions.total > 0) {
       chiSquare = this.chiSquareTest(
         controlConversions.count,
         controlConversions.total,
@@ -802,9 +779,7 @@ export class ExperimentService {
     }
 
     const mean = data.reduce((sum, x) => sum + x, 0) / n;
-    const variance = n > 1
-      ? data.reduce((sum, x) => sum + Math.pow(x - mean, 2), 0) / (n - 1)
-      : 0;
+    const variance = n > 1 ? data.reduce((sum, x) => sum + Math.pow(x - mean, 2), 0) / (n - 1) : 0;
 
     return {
       n,
@@ -822,7 +797,12 @@ export class ExperimentService {
     var2: number,
     n2: number,
     alpha: number
-  ): { tStatistic: number; pValue: number; isSignificant: boolean; confidenceInterval: ConfidenceInterval } {
+  ): {
+    tStatistic: number;
+    pValue: number;
+    isSignificant: boolean;
+    confidenceInterval: ConfidenceInterval;
+  } {
     if (n1 < 2 || n2 < 2) {
       return {
         tStatistic: 0,
@@ -900,7 +880,10 @@ export class ExperimentService {
       this.chiSquareComponent(controlConversions, expectedControlConversions) +
       this.chiSquareComponent(controlTotal - controlConversions, expectedControlNonConversions) +
       this.chiSquareComponent(treatmentConversions, expectedTreatmentConversions) +
-      this.chiSquareComponent(treatmentTotal - treatmentConversions, expectedTreatmentNonConversions);
+      this.chiSquareComponent(
+        treatmentTotal - treatmentConversions,
+        expectedTreatmentNonConversions
+      );
 
     // Approximate p-value from chi-square distribution (df=1)
     const pValue = this.approximateChiSquarePValue(chiSquare, 1);
@@ -952,7 +935,7 @@ export class ExperimentService {
     const sign = z < 0 ? -1 : 1;
     z = Math.abs(z) / Math.sqrt(2);
     const t = 1 / (1 + p * z);
-    const erf = 1 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-z * z);
+    const erf = 1 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-z * z);
     return 0.5 * (1 + sign * erf);
   }
 
@@ -964,16 +947,20 @@ export class ExperimentService {
     pValue: number
   ): string {
     if (!isSignificant) {
-      return `No statistically significant difference detected (p=${pValue.toFixed(4)}). ` +
-        `Consider increasing sample size or running the experiment longer.`;
+      return (
+        `No statistically significant difference detected (p=${pValue.toFixed(4)}). ` +
+        `Consider increasing sample size or running the experiment longer.`
+      );
     }
 
     const winnerLabel = winner === 'treatment' ? 'AI scoring' : 'Manual scoring';
-    const effectLabel = Math.abs(effectSize) < 0.5 ? 'small' :
-      Math.abs(effectSize) < 0.8 ? 'medium' : 'large';
+    const effectLabel =
+      Math.abs(effectSize) < 0.5 ? 'small' : Math.abs(effectSize) < 0.8 ? 'medium' : 'large';
 
-    return `${winnerLabel} shows a statistically significant improvement of ${Math.abs(difference).toFixed(1)} points ` +
+    return (
+      `${winnerLabel} shows a statistically significant improvement of ${Math.abs(difference).toFixed(1)} points ` +
       `(p=${pValue.toFixed(4)}, effect size: ${effectLabel}). ` +
-      `Recommend adopting ${winnerLabel.toLowerCase()} for production use.`;
+      `Recommend adopting ${winnerLabel.toLowerCase()} for production use.`
+    );
   }
 }

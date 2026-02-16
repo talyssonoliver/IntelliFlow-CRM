@@ -187,7 +187,14 @@ export function validateContextAck(
   const warnings: string[] = [];
 
   // Paths - sprint-based structure: .specify/sprints/sprint-{N}/attestations/{taskId}/
-  const contextDir = join(repoRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId);
+  const contextDir = join(
+    repoRoot,
+    '.specify',
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'attestations',
+    taskId
+  );
   const ackPath = join(contextDir, 'context_ack.json');
   const manifestPath = join(contextDir, 'context_pack.manifest.json');
 

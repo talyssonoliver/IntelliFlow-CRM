@@ -1,4 +1,9 @@
-import { Account, AccountId, AccountRepository, type AccountHierarchyRecord } from '@intelliflow/domain';
+import {
+  Account,
+  AccountId,
+  AccountRepository,
+  type AccountHierarchyRecord,
+} from '@intelliflow/domain';
 
 /**
  * In-Memory Account Repository
@@ -59,16 +64,20 @@ export class InMemoryAccountRepository implements AccountRepository {
     return counts;
   }
 
-  async findWithChildren(id: AccountId, maxDepth: number = 5): Promise<AccountHierarchyRecord | null> {
+  async findWithChildren(
+    id: AccountId,
+    maxDepth: number = 5
+  ): Promise<AccountHierarchyRecord | null> {
     const root = this.accounts.get(id.value);
     if (!root) return null;
 
     const buildNode = (account: Account, depth: number): AccountHierarchyRecord => {
-      const children = depth > 0
-        ? Array.from(this.accounts.values())
-            .filter((a) => a.parentAccountId === account.id.value)
-            .map((child) => buildNode(child, depth - 1))
-        : [];
+      const children =
+        depth > 0
+          ? Array.from(this.accounts.values())
+              .filter((a) => a.parentAccountId === account.id.value)
+              .map((child) => buildNode(child, depth - 1))
+          : [];
       return {
         id: account.id.value,
         name: account.name,

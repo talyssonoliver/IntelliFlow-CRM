@@ -28,18 +28,67 @@ vi.mock('fs', () => ({
 
 const mockCalendarData = {
   events: [
-    { id: 'E1', title: 'Audit', date: '2026-03-15', type: 'audit', standard: 'ISO 27001', status: 'scheduled' },
-    { id: 'E2', title: 'Review', date: '2026-03-20', type: 'review', standard: 'GDPR', status: 'scheduled' },
-    { id: 'E3', title: 'Cert', date: '2026-06-01', type: 'certification', standard: 'SOC 2', status: 'scheduled' },
-    { id: 'E4', title: 'Done', date: '2025-12-15', type: 'assessment', standard: 'OWASP', status: 'completed' },
+    {
+      id: 'E1',
+      title: 'Audit',
+      date: '2026-03-15',
+      type: 'audit',
+      standard: 'ISO 27001',
+      status: 'scheduled',
+    },
+    {
+      id: 'E2',
+      title: 'Review',
+      date: '2026-03-20',
+      type: 'review',
+      standard: 'GDPR',
+      status: 'scheduled',
+    },
+    {
+      id: 'E3',
+      title: 'Cert',
+      date: '2026-06-01',
+      type: 'certification',
+      standard: 'SOC 2',
+      status: 'scheduled',
+    },
+    {
+      id: 'E4',
+      title: 'Done',
+      date: '2025-12-15',
+      type: 'assessment',
+      standard: 'OWASP',
+      status: 'completed',
+    },
   ],
 };
 
 const mockRiskData = {
   risks: [
-    { id: 'R1', title: 'Risk1', probability: 'high', impact: 'high', status: 'requires_action', category: 'ISO' },
-    { id: 'R2', title: 'Risk2', probability: 'low', impact: 'medium', status: 'accepted', category: 'GDPR' },
-    { id: 'R3', title: 'Risk3', probability: 'medium', impact: 'low', status: 'mitigated', category: 'SOC' },
+    {
+      id: 'R1',
+      title: 'Risk1',
+      probability: 'high',
+      impact: 'high',
+      status: 'requires_action',
+      category: 'ISO',
+    },
+    {
+      id: 'R2',
+      title: 'Risk2',
+      probability: 'low',
+      impact: 'medium',
+      status: 'accepted',
+      category: 'GDPR',
+    },
+    {
+      id: 'R3',
+      title: 'Risk3',
+      probability: 'medium',
+      impact: 'low',
+      status: 'mitigated',
+      category: 'SOC',
+    },
   ],
 };
 
@@ -51,7 +100,7 @@ describe('Compliance Timeline API', () => {
         body,
         status: init?.status || 200,
         headers: new Map(Object.entries(init?.headers || {})),
-      }),
+      })
     );
     mockExistsSync.mockReturnValue(true);
     mockReadFileSync.mockReturnValue(JSON.stringify(mockCalendarData));
@@ -59,7 +108,10 @@ describe('Compliance Timeline API', () => {
 
   it('returns all events without filter', async () => {
     const { GET } = await import('../timeline/route');
-    const req = { url: 'http://localhost/api/compliance/timeline', nextUrl: { searchParams: new URLSearchParams() } } as any;
+    const req = {
+      url: 'http://localhost/api/compliance/timeline',
+      nextUrl: { searchParams: new URLSearchParams() },
+    } as any;
     const res = await GET(req);
     const d = await res.json();
     expect(d.success).toBe(true);
@@ -71,7 +123,10 @@ describe('Compliance Timeline API', () => {
   it('filters events by month', async () => {
     const { GET } = await import('../timeline/route');
     const sp = new URLSearchParams({ month: '2026-03' });
-    const req = { url: 'http://localhost/api/compliance/timeline?month=2026-03', nextUrl: { searchParams: sp } } as any;
+    const req = {
+      url: 'http://localhost/api/compliance/timeline?month=2026-03',
+      nextUrl: { searchParams: sp },
+    } as any;
     const res = await GET(req);
     const d = await res.json();
     expect(d.success).toBe(true);
@@ -81,7 +136,10 @@ describe('Compliance Timeline API', () => {
   it('filters events by quarter', async () => {
     const { GET } = await import('../timeline/route');
     const sp = new URLSearchParams({ quarter: 'Q1-2026' });
-    const req = { url: 'http://localhost/api/compliance/timeline?quarter=Q1-2026', nextUrl: { searchParams: sp } } as any;
+    const req = {
+      url: 'http://localhost/api/compliance/timeline?quarter=Q1-2026',
+      nextUrl: { searchParams: sp },
+    } as any;
     const res = await GET(req);
     const d = await res.json();
     expect(d.success).toBe(true);
@@ -90,7 +148,10 @@ describe('Compliance Timeline API', () => {
   it('handles missing calendar file', async () => {
     mockExistsSync.mockReturnValue(false);
     const { GET } = await import('../timeline/route');
-    const req = { url: 'http://localhost/api/compliance/timeline', nextUrl: { searchParams: new URLSearchParams() } } as any;
+    const req = {
+      url: 'http://localhost/api/compliance/timeline',
+      nextUrl: { searchParams: new URLSearchParams() },
+    } as any;
     const res = await GET(req);
     const d = await res.json();
     expect(d.success).toBe(true);
@@ -99,7 +160,10 @@ describe('Compliance Timeline API', () => {
 
   it('sorts events by date', async () => {
     const { GET } = await import('../timeline/route');
-    const req = { url: 'http://localhost/api/compliance/timeline', nextUrl: { searchParams: new URLSearchParams() } } as any;
+    const req = {
+      url: 'http://localhost/api/compliance/timeline',
+      nextUrl: { searchParams: new URLSearchParams() },
+    } as any;
     const res = await GET(req);
     const d = await res.json();
     if (d.data.events.length > 1) {
@@ -118,7 +182,7 @@ describe('Compliance Risks API', () => {
         body,
         status: init?.status || 200,
         headers: new Map(Object.entries(init?.headers || {})),
-      }),
+      })
     );
     mockExistsSync.mockReturnValue(true);
     mockReadFileSync.mockReturnValue(JSON.stringify(mockRiskData));

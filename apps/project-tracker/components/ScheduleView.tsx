@@ -137,12 +137,20 @@ export default function ScheduleView() {
         const progressData = progressRes ? await progressRes.json().catch(() => null) : null;
 
         const readyDetails = graphData.ready_to_start_details || [];
-        if (readyDetails.length === 0) { setTodaysCriticalWork([]); return; }
+        if (readyDetails.length === 0) {
+          setTodaysCriticalWork([]);
+          return;
+        }
 
         // Build scorer inputs
         const depGraphNodes = new Map<string, DepGraphNode>();
         if (graphData.nodes) {
-          for (const [id, node] of Object.entries(graphData.nodes as Record<string, { task_id: string; dependencies: string[]; dependents: string[] }>)) {
+          for (const [id, node] of Object.entries(
+            graphData.nodes as Record<
+              string,
+              { task_id: string; dependencies: string[]; dependents: string[] }
+            >
+          )) {
             depGraphNodes.set(id, {
               task_id: node.task_id || id,
               dependencies: node.dependencies || [],
@@ -166,22 +174,32 @@ export default function ScheduleView() {
         const phaseProgress: PhaseProgress[] = progressData?.phases || [];
 
         // Build minimal Task objects
-        const readyTasks = readyDetails.map((rd: { taskId: string; section: string; description: string; owner: string; dependencies: string[]; sprint: number; status?: string }) => ({
-          id: rd.taskId,
-          section: rd.section,
-          description: rd.description,
-          owner: rd.owner,
-          dependencies: rd.dependencies,
-          cleanDependencies: [],
-          crossQuarterDeps: false,
-          prerequisites: '',
-          dod: '',
-          status: rd.status || 'Planned',
-          kpis: '',
-          sprint: rd.sprint,
-          artifacts: [],
-          validation: '',
-        }));
+        const readyTasks = readyDetails.map(
+          (rd: {
+            taskId: string;
+            section: string;
+            description: string;
+            owner: string;
+            dependencies: string[];
+            sprint: number;
+            status?: string;
+          }) => ({
+            id: rd.taskId,
+            section: rd.section,
+            description: rd.description,
+            owner: rd.owner,
+            dependencies: rd.dependencies,
+            cleanDependencies: [],
+            crossQuarterDeps: false,
+            prerequisites: '',
+            dod: '',
+            status: rd.status || 'Planned',
+            kpis: '',
+            sprint: rd.sprint,
+            artifacts: [],
+            validation: '',
+          })
+        );
 
         const scored = computePriorityScores(
           readyTasks,
@@ -190,7 +208,7 @@ export default function ScheduleView() {
           new Map<string, SessionStatus>(),
           scheduleTaskMap,
           phaseProgress,
-          typeof currentSprint === 'number' ? currentSprint : undefined,
+          typeof currentSprint === 'number' ? currentSprint : undefined
         );
 
         // Filter to NOW bucket, take top 3
@@ -274,14 +292,11 @@ export default function ScheduleView() {
   }
 
   // Check if sprint is overdue (no incomplete tasks)
-  const isSprintComplete = scheduleData && Object.values(scheduleData.tasks).every(
-    (t) => t.percentComplete === 100
-  );
+  const isSprintComplete =
+    scheduleData && Object.values(scheduleData.tasks).every((t) => t.percentComplete === 100);
 
   // Display label for current view
-  const sprintLabel = currentSprint === 'all'
-    ? 'All Sprints'
-    : `Sprint ${currentSprint}`;
+  const sprintLabel = currentSprint === 'all' ? 'All Sprints' : `Sprint ${currentSprint}`;
 
   return (
     <div className="w-full space-y-6">
@@ -316,11 +331,13 @@ export default function ScheduleView() {
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Sprints</option>
-              {sprints.filter((s) => typeof s === 'number').map((sprint) => (
-                <option key={sprint} value={sprint}>
-                  Sprint {sprint}
-                </option>
-              ))}
+              {sprints
+                .filter((s) => typeof s === 'number')
+                .map((sprint) => (
+                  <option key={sprint} value={sprint}>
+                    Sprint {sprint}
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -344,8 +361,8 @@ export default function ScheduleView() {
           <div>
             <span className="text-sm font-medium text-green-800">{sprintLabel} Complete</span>
             <span className="text-sm text-green-600 ml-2">
-              All {Object.keys(scheduleData?.tasks || {}).length} tasks are 100% complete.
-              Critical path analysis shows historical data.
+              All {Object.keys(scheduleData?.tasks || {}).length} tasks are 100% complete. Critical
+              path analysis shows historical data.
             </span>
           </div>
         </div>
@@ -360,7 +377,12 @@ export default function ScheduleView() {
               <div className="text-sm text-gray-500">Schedule Performance Index</div>
               <Icon name="speed" size="lg" className="text-gray-400" />
             </div>
-            <div className={clsx('text-3xl font-bold mt-2', getSpiColor(scheduleData.scheduleVariance.spi))}>
+            <div
+              className={clsx(
+                'text-3xl font-bold mt-2',
+                getSpiColor(scheduleData.scheduleVariance.spi)
+              )}
+            >
               {scheduleData.scheduleVariance.spi.toFixed(2)}
             </div>
             <div className="mt-2">
@@ -388,7 +410,7 @@ export default function ScheduleView() {
               )}
             >
               {scheduleData.scheduleVariance.svMinutes >= 0 ? '+' : ''}
-              {Math.round(scheduleData.scheduleVariance.svMinutes / 60 * 10) / 10}h
+              {Math.round((scheduleData.scheduleVariance.svMinutes / 60) * 10) / 10}h
             </div>
             <div className="text-sm text-gray-500 mt-1">
               {scheduleData.scheduleVariance.svMinutes} minutes
@@ -405,7 +427,8 @@ export default function ScheduleView() {
               {scheduleData.criticalPath.taskIds.length}
             </div>
             <div className="text-sm text-gray-500 mt-1">
-              tasks • {Math.round(scheduleData.criticalPath.totalDuration / 60 * 10) / 10}h duration
+              tasks • {Math.round((scheduleData.criticalPath.totalDuration / 60) * 10) / 10}h
+              duration
             </div>
           </div>
 
@@ -449,7 +472,9 @@ export default function ScheduleView() {
                 <span className="font-mono text-sm text-blue-700">{scored.taskId}</span>
                 <span className="text-xs text-gray-500 flex-1 truncate">{scored.reason}</span>
                 {typeof scored.task.sprint === 'number' && (
-                  <span className="text-xs text-gray-400 shrink-0">Sprint {scored.task.sprint}</span>
+                  <span className="text-xs text-gray-400 shrink-0">
+                    Sprint {scored.task.sprint}
+                  </span>
                 )}
               </div>
             ))}
@@ -498,7 +523,8 @@ export default function ScheduleView() {
                         key={task.taskId}
                         className={clsx(
                           'border-t border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors',
-                          task.taskId === criticalPathData.criticalPath.bottleneckTaskId && 'bg-red-50'
+                          task.taskId === criticalPathData.criticalPath.bottleneckTaskId &&
+                            'bg-red-50'
                         )}
                         onClick={() => handleTaskClick(task.taskId)}
                       >
@@ -512,7 +538,9 @@ export default function ScheduleView() {
                             <span className="font-mono text-blue-700">{task.taskId}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-gray-700 max-w-xs truncate">{task.description}</td>
+                        <td className="px-4 py-3 text-gray-700 max-w-xs truncate">
+                          {task.description}
+                        </td>
                         <td className="px-4 py-3">
                           <span
                             className={clsx(
@@ -541,7 +569,7 @@ export default function ScheduleView() {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-right font-mono text-gray-600">
-                          {Math.round(task.expectedDuration / 60 * 10) / 10}h
+                          {Math.round((task.expectedDuration / 60) * 10) / 10}h
                         </td>
                         <td className="px-4 py-3 text-gray-600">
                           {new Date(task.earlyStart).toLocaleDateString()}
@@ -599,7 +627,6 @@ export default function ScheduleView() {
           </p>
         </div>
       )}
-
     </div>
   );
 }

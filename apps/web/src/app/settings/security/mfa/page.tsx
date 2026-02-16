@@ -107,13 +107,21 @@ function MethodCard({ method, selected, onSelect }: MethodCardProps) {
             selected ? 'bg-primary' : 'bg-muted'
           )}
         >
-          <span className={cn('material-symbols-outlined', selected ? 'text-primary-foreground' : 'text-muted-foreground')} aria-hidden="true">
+          <span
+            className={cn(
+              'material-symbols-outlined',
+              selected ? 'text-primary-foreground' : 'text-muted-foreground'
+            )}
+            aria-hidden="true"
+          >
             {method.icon}
           </span>
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2">
-            <span className={cn('font-medium', selected ? 'text-foreground' : 'text-foreground/80')}>
+            <span
+              className={cn('font-medium', selected ? 'text-foreground' : 'text-foreground/80')}
+            >
               {method.name}
             </span>
             {method.recommended && (
@@ -131,7 +139,10 @@ function MethodCard({ method, selected, onSelect }: MethodCardProps) {
           )}
         >
           {selected && (
-            <span className="material-symbols-outlined text-sm text-primary-foreground" aria-hidden="true">
+            <span
+              className="material-symbols-outlined text-sm text-primary-foreground"
+              aria-hidden="true"
+            >
               check
             </span>
           )}
@@ -269,9 +280,7 @@ export default function MfaSetupPage() {
       }
     } catch (error) {
       console.error('MFA setup failed:', error);
-      setVerificationError(
-        error instanceof Error ? error.message : 'Failed to initiate MFA setup'
-      );
+      setVerificationError(error instanceof Error ? error.message : 'Failed to initiate MFA setup');
     }
   }, [selectedMethod, phoneNumber, setupMfaMutation]);
 
@@ -317,7 +326,8 @@ export default function MfaSetupPage() {
 
   // Check if any mutation is loading (for future UI enhancements)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const _isLoading = setupMfaMutation.isPending || confirmMfaMutation.isPending || getBackupCodesMutation.isPending;
+  const _isLoading =
+    setupMfaMutation.isPending || confirmMfaMutation.isPending || getBackupCodesMutation.isPending;
 
   // Get step title and description
   const getStepInfo = () => {
@@ -495,14 +505,17 @@ export default function MfaSetupPage() {
         )}
 
         {/* TOTP Setup Step */}
-        {step === 'setup' && setupData?.method === 'totp' && setupData.qrCodeUrl && setupData.secret && (
-          <MfaQrGenerator
-            otpauthUrl={setupData.qrCodeUrl}
-            secret={setupData.secret}
-            accountName={userEmail}
-            onConfirm={handleSetupComplete}
-          />
-        )}
+        {step === 'setup' &&
+          setupData?.method === 'totp' &&
+          setupData.qrCodeUrl &&
+          setupData.secret && (
+            <MfaQrGenerator
+              otpauthUrl={setupData.qrCodeUrl}
+              secret={setupData.secret}
+              accountName={userEmail}
+              onConfirm={handleSetupComplete}
+            />
+          )}
 
         {/* SMS/Email Setup Step (placeholder) */}
         {step === 'setup' && (setupData?.method === 'sms' || setupData?.method === 'email') && (
@@ -562,7 +575,10 @@ export default function MfaSetupPage() {
         {step === 'complete' && (
           <div className="text-center space-y-6">
             <div className="w-16 h-16 mx-auto bg-emerald-500/20 rounded-full flex items-center justify-center">
-              <span className="material-symbols-outlined text-4xl text-emerald-600 dark:text-emerald-400" aria-hidden="true">
+              <span
+                className="material-symbols-outlined text-4xl text-emerald-600 dark:text-emerald-400"
+                aria-hidden="true"
+              >
                 verified_user
               </span>
             </div>
@@ -571,8 +587,8 @@ export default function MfaSetupPage() {
                 Two-Factor Authentication Enabled
               </h3>
               <p className="text-muted-foreground mt-2">
-                Your account is now protected with an additional layer of security.
-                You will need to enter a verification code when signing in.
+                Your account is now protected with an additional layer of security. You will need to
+                enter a verification code when signing in.
               </p>
             </div>
             <button

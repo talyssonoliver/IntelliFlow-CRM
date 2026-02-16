@@ -76,10 +76,7 @@ export function toFilterChipsWithAll<T extends readonly string[]>(
   labelFormatter?: (value: T[number]) => string,
   allLabel = 'All'
 ): FilterChip[] {
-  return [
-    { id: 'all', label: allLabel },
-    ...toFilterChips(values, colorMap, labelFormatter),
-  ];
+  return [{ id: 'all', label: allLabel }, ...toFilterChips(values, colorMap, labelFormatter)];
 }
 
 // =============================================================================
@@ -203,29 +200,23 @@ import {
 // Lead filters
 export const leadStatusOptions = () => toFilterOptions(LEAD_STATUSES);
 export const leadSourceOptions = () => toFilterOptions(LEAD_SOURCES);
-export const leadStatusChips = () =>
-  toFilterChipsWithAll(LEAD_STATUSES, LEAD_STATUS_COLORS);
-export const leadSourceChips = () =>
-  toFilterChipsWithAll(LEAD_SOURCES, LEAD_SOURCE_COLORS);
+export const leadStatusChips = () => toFilterChipsWithAll(LEAD_STATUSES, LEAD_STATUS_COLORS);
+export const leadSourceChips = () => toFilterChipsWithAll(LEAD_SOURCES, LEAD_SOURCE_COLORS);
 
 // Ticket filters
 export const ticketStatusOptions = () => toFilterOptions(TICKET_STATUSES);
 export const ticketPriorityOptions = () => toFilterOptions(TICKET_PRIORITIES);
 export const slaStatusOptions = () => toFilterOptions(SLA_STATUSES);
-export const ticketStatusChips = () =>
-  toFilterChipsWithAll(TICKET_STATUSES, TICKET_STATUS_COLORS);
+export const ticketStatusChips = () => toFilterChipsWithAll(TICKET_STATUSES, TICKET_STATUS_COLORS);
 export const ticketPriorityChips = () =>
   toFilterChipsWithAll(TICKET_PRIORITIES, TICKET_PRIORITY_COLORS);
-export const slaStatusChips = () =>
-  toFilterChipsWithAll(SLA_STATUSES, SLA_STATUS_COLORS);
+export const slaStatusChips = () => toFilterChipsWithAll(SLA_STATUSES, SLA_STATUS_COLORS);
 
 // Case filters
 export const caseStatusOptions = () => toFilterOptions(CASE_STATUSES);
 export const casePriorityOptions = () => toFilterOptions(CASE_PRIORITIES);
-export const caseStatusChips = () =>
-  toFilterChipsWithAll(CASE_STATUSES, CASE_STATUS_COLORS);
-export const casePriorityChips = () =>
-  toFilterChipsWithAll(CASE_PRIORITIES, CASE_PRIORITY_COLORS);
+export const caseStatusChips = () => toFilterChipsWithAll(CASE_STATUSES, CASE_STATUS_COLORS);
+export const casePriorityChips = () => toFilterChipsWithAll(CASE_PRIORITIES, CASE_PRIORITY_COLORS);
 
 // =============================================================================
 // Task Color Mappings
@@ -251,7 +242,5 @@ export const TASK_PRIORITY_COLORS: Record<string, string> = {
 // Task filters
 export const taskStatusOptions = () => toFilterOptions(TASK_STATUSES);
 export const taskPriorityOptions = () => toFilterOptions(TASK_PRIORITIES);
-export const taskStatusChips = () =>
-  toFilterChipsWithAll(TASK_STATUSES, TASK_STATUS_COLORS);
-export const taskPriorityChips = () =>
-  toFilterChipsWithAll(TASK_PRIORITIES, TASK_PRIORITY_COLORS);
+export const taskStatusChips = () => toFilterChipsWithAll(TASK_STATUSES, TASK_STATUS_COLORS);
+export const taskPriorityChips = () => toFilterChipsWithAll(TASK_PRIORITIES, TASK_PRIORITY_COLORS);

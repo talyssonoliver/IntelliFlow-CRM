@@ -6,10 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { readFileSync, existsSync } from 'fs';
-import {
-  scanArtifactRegistry,
-  ArtifactCategory,
-} from '@/lib/artifact-registry';
+import { scanArtifactRegistry, ArtifactCategory } from '@/lib/artifact-registry';
 import { PATHS } from '@/lib/paths';
 
 interface OrphanSummary {
@@ -65,7 +62,10 @@ function loadTasks(): Array<{
 
       const artifactsField = cols[colIndex['Artifacts To Track']]?.trim() || '';
       const artifacts = artifactsField
-        ? artifactsField.split(/[,;\n]/).map((a) => a.trim()).filter(Boolean)
+        ? artifactsField
+            .split(/[,;\n]/)
+            .map((a) => a.trim())
+            .filter(Boolean)
         : [];
 
       tasks.push({
@@ -131,9 +131,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Sort by last modified (most recent first)
-    orphans.sort((a, b) =>
-      new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
-    );
+    orphans.sort((a, b) => new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime());
 
     // Generate orphan summary
     const summary: OrphanSummary = {
@@ -144,10 +142,8 @@ export async function GET(request: NextRequest) {
     };
 
     for (const orphan of orphans) {
-      summary.byCategory[orphan.category] =
-        (summary.byCategory[orphan.category] || 0) + 1;
-      summary.byExtension[orphan.extension] =
-        (summary.byExtension[orphan.extension] || 0) + 1;
+      summary.byCategory[orphan.category] = (summary.byCategory[orphan.category] || 0) + 1;
+      summary.byExtension[orphan.extension] = (summary.byExtension[orphan.extension] || 0) + 1;
       summary.totalSize += orphan.size;
     }
 

@@ -74,7 +74,7 @@ describe('GET /api/openapi', () => {
     await GET();
     expect(fs.readFileSync).toHaveBeenCalledWith(
       expect.stringContaining('api/openapi.json'),
-      'utf-8',
+      'utf-8'
     );
   });
 });

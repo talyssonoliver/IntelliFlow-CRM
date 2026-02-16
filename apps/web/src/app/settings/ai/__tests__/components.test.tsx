@@ -150,7 +150,10 @@ describe('ChainVersionCard', () => {
 });
 
 describe('ChainVersionsDashboard', () => {
-  const mockActiveVersions: Record<'SCORING' | 'QUALIFICATION' | 'EMAIL_WRITER' | 'FOLLOWUP', ChainVersionSummary | null> = {
+  const mockActiveVersions: Record<
+    'SCORING' | 'QUALIFICATION' | 'EMAIL_WRITER' | 'FOLLOWUP',
+    ChainVersionSummary | null
+  > = {
     SCORING: mockVersionSummary,
     QUALIFICATION: null,
     EMAIL_WRITER: null,

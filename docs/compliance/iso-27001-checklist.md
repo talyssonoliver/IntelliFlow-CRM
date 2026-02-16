@@ -1,16 +1,18 @@
 # ISO 27001:2022 Compliance Checklist
 
-**Document Version:** 1.0
-**Date:** 2025-12-29
-**Task:** IFC-100 - ADR Registry & Compliance Reporting
-**Status:** Initial Assessment
-**Owner:** Security Team, Compliance Officer
+**Document Version:** 1.0 **Date:** 2025-12-29 **Task:** IFC-100 - ADR Registry
+& Compliance Reporting **Status:** Initial Assessment **Owner:** Security Team,
+Compliance Officer
 
 ## Executive Summary
 
-This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:2022 requirements for Information Security Management Systems (ISMS). The standard provides a framework for establishing, implementing, maintaining, and continually improving information security.
+This checklist maps IntelliFlow CRM's compliance status against ISO/IEC
+27001:2022 requirements for Information Security Management Systems (ISMS). The
+standard provides a framework for establishing, implementing, maintaining, and
+continually improving information security.
 
-**Overall Compliance:** 35% (foundational controls in place, formal ISMS pending)
+**Overall Compliance:** 35% (foundational controls in place, formal ISMS
+pending)
 
 **Target:** 80%+ by Sprint 25 (Production Readiness)
 
@@ -31,18 +33,22 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 
 **Status:** Partial
 
-**Requirement:** Determine external and internal issues relevant to the organization's purpose and ISMS.
+**Requirement:** Determine external and internal issues relevant to the
+organization's purpose and ISMS.
 
 **Implementation:**
+
 - Business context documented in project planning
 - Stakeholder requirements identified
 - Regulatory environment assessed (GDPR, ISO 42001)
 
 **Evidence:**
+
 - [Sprint Plan](../../apps/project-tracker/docs/metrics/_global/Sprint_plan.csv)
 - [GDPR Checklist](./gdpr-checklist.md)
 
 **Gaps:**
+
 - [ ] Formal ISMS scope document required
 - [ ] Regular context review process needed
 
@@ -52,18 +58,17 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 
 **Status:** Partial
 
-**Requirement:** Identify interested parties and their requirements related to information security.
+**Requirement:** Identify interested parties and their requirements related to
+information security.
 
-**Current State:**
-| Interested Party | Security Requirements | Status |
-|-----------------|----------------------|--------|
-| Customers | Data protection, availability | Partial |
-| Regulators | GDPR, data localization | Partial |
-| Employees | Access controls, training | Planned |
-| Partners | API security, SLAs | Planned |
-| Investors | Risk management, compliance | Partial |
+**Current State:** | Interested Party | Security Requirements | Status |
+|-----------------|----------------------|--------| | Customers | Data
+protection, availability | Partial | | Regulators | GDPR, data localization |
+Partial | | Employees | Access controls, training | Planned | | Partners | API
+security, SLAs | Planned | | Investors | Risk management, compliance | Partial |
 
 **Gaps:**
+
 - [ ] Formal stakeholder register needed
 - [ ] Requirements tracking system required
 
@@ -76,12 +81,14 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 **Requirement:** Define boundaries and applicability of the ISMS.
 
 **Planned Scope:**
+
 - All IntelliFlow CRM applications and infrastructure
 - All data processing activities
 - All development and operations processes
 - Cloud infrastructure (Supabase, Railway/Vercel)
 
 **Gaps:**
+
 - [ ] Formal scope statement document
 - [ ] Scope boundaries clearly defined
 
@@ -94,11 +101,13 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 **Requirement:** Establish, implement, maintain, and improve an ISMS.
 
 **Current State:**
+
 - Security-by-design principles adopted
 - ADRs document security decisions
 - No formal ISMS structure yet
 
 **Gaps:**
+
 - [ ] ISMS documentation framework
 - [ ] Process integration
 - [ ] Continuous improvement cycle
@@ -111,17 +120,21 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 
 **Status:** Partial
 
-**Requirement:** Top management demonstrates leadership and commitment to the ISMS.
+**Requirement:** Top management demonstrates leadership and commitment to the
+ISMS.
 
 **Implementation:**
+
 - Security prioritized in sprint planning
 - ADR-009 (Zero Trust) approved by leadership
 - Security budget allocated
 
 **Evidence:**
+
 - [ADR-009: Zero Trust Security](../planning/adr/ADR-009-zero-trust-security.md)
 
 **Gaps:**
+
 - [ ] Formal management commitment statement
 - [ ] Regular security reviews with leadership
 
@@ -133,15 +146,13 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 
 **Requirement:** Establish an information security policy.
 
-**Current Policies:**
-| Policy | Status | Location |
-|--------|--------|----------|
-| Data Governance | Implemented | ADR-007 |
-| Access Control | Partial | ADR-004 |
-| Security Policy | Planned | Sprint 8 |
-| Acceptable Use | Planned | Sprint 10 |
+**Current Policies:** | Policy | Status | Location |
+|--------|--------|----------| | Data Governance | Implemented | ADR-007 | |
+Access Control | Partial | ADR-004 | | Security Policy | Planned | Sprint 8 | |
+Acceptable Use | Planned | Sprint 10 |
 
 **Gaps:**
+
 - [ ] Comprehensive security policy document
 - [ ] Policy review and approval process
 
@@ -154,12 +165,14 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 **Requirement:** Assign and communicate security responsibilities.
 
 **Planned Roles:**
+
 - Chief Information Security Officer (CISO)
 - Data Protection Officer (DPO)
 - Security Champions (per team)
 - Incident Response Team
 
 **Gaps:**
+
 - [ ] RACI matrix for security responsibilities
 - [ ] Role descriptions and authorities
 
@@ -171,18 +184,22 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 
 **Status:** Partial
 
-**Requirement:** Determine risks and opportunities; plan actions to address them.
+**Requirement:** Determine risks and opportunities; plan actions to address
+them.
 
 **Implementation:**
+
 - Risk assessments in ADRs
 - Threat modeling planned (IFC-008)
 - Security considerations in sprint planning
 
 **Evidence:**
+
 - [ISO 42001 Gap Analysis](../planning/iso42001-gap-analysis.md)
 - ADR risk sections
 
 **Gaps:**
+
 - [ ] Formal risk assessment methodology
 - [ ] Risk register
 - [ ] Risk treatment plan
@@ -195,15 +212,13 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 
 **Requirement:** Establish security objectives consistent with policy.
 
-**Current Objectives:**
-| Objective | KPI | Target | Status |
-|-----------|-----|--------|--------|
-| Availability | Uptime | 99.9% | Planned |
-| Confidentiality | Data breaches | 0 | Active |
-| Integrity | Data corruption | 0 | Active |
-| Response time | Incident MTTR | <4 hours | Planned |
+**Current Objectives:** | Objective | KPI | Target | Status |
+|-----------|-----|--------|--------| | Availability | Uptime | 99.9% | Planned
+| | Confidentiality | Data breaches | 0 | Active | | Integrity | Data corruption
+| 0 | Active | | Response time | Incident MTTR | <4 hours | Planned |
 
 **Gaps:**
+
 - [ ] Measurable security objectives documented
 - [ ] Objective achievement tracking
 
@@ -218,14 +233,17 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 **Requirement:** Determine and provide necessary resources for ISMS.
 
 **Current Resources:**
+
 - Development team with security focus
 - Cloud infrastructure (Supabase, Railway)
 - Security tools (HashiCorp Vault)
 
 **Evidence:**
+
 - [EXC-SEC-001: Vault Setup](../../apps/project-tracker/docs/metrics/sprint-0/phase-2-parallel/parallel-c/EXC-SEC-001.json)
 
 **Gaps:**
+
 - [ ] Dedicated security budget
 - [ ] Security tooling roadmap
 
@@ -235,9 +253,11 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 
 **Status:** Planned
 
-**Requirement:** Ensure persons are competent based on education, training, or experience.
+**Requirement:** Ensure persons are competent based on education, training, or
+experience.
 
 **Gaps:**
+
 - [ ] Security training program
 - [ ] Competency assessment framework
 - [ ] Training records
@@ -248,9 +268,11 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 
 **Status:** Planned
 
-**Requirement:** Persons are aware of security policy, their contribution, and implications.
+**Requirement:** Persons are aware of security policy, their contribution, and
+implications.
 
 **Gaps:**
+
 - [ ] Security awareness program
 - [ ] Regular security communications
 - [ ] Policy acknowledgment process
@@ -264,10 +286,12 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 **Requirement:** Determine internal and external security communications.
 
 **Current State:**
+
 - Security issues tracked in sprint planning
 - Incident communication planned
 
 **Gaps:**
+
 - [ ] Communication matrix
 - [ ] External communication procedures
 
@@ -279,15 +303,13 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 
 **Requirement:** Include documentation required by standard and organization.
 
-**Current Documentation:**
-| Document Type | Status | Location |
-|--------------|--------|----------|
-| ADRs | Implemented | docs/planning/adr/ |
-| Security policies | Partial | docs/security/ |
-| Procedures | Partial | docs/operations/ |
-| Records | Planned | artifacts/ |
+**Current Documentation:** | Document Type | Status | Location |
+|--------------|--------|----------| | ADRs | Implemented | docs/planning/adr/ |
+| Security policies | Partial | docs/security/ | | Procedures | Partial |
+docs/operations/ | | Records | Planned | artifacts/ |
 
 **Gaps:**
+
 - [ ] Document control procedures
 - [ ] Version control for policies
 - [ ] Retention requirements
@@ -300,17 +322,21 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 
 **Status:** Partial
 
-**Requirement:** Plan, implement, and control processes to meet security requirements.
+**Requirement:** Plan, implement, and control processes to meet security
+requirements.
 
 **Implementation:**
+
 - CI/CD security gates planned
 - Code review processes
 - Testing requirements
 
 **Evidence:**
+
 - [Quality Gates](../quality-gates.md)
 
 **Gaps:**
+
 - [ ] Formal change management process
 - [ ] Operational procedures documented
 
@@ -323,6 +349,7 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 **Requirement:** Perform risk assessments at planned intervals.
 
 **Gaps:**
+
 - [ ] Risk assessment schedule
 - [ ] Risk assessment methodology
 - [ ] Risk criteria documented
@@ -336,6 +363,7 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 **Requirement:** Implement the risk treatment plan.
 
 **Gaps:**
+
 - [ ] Risk treatment plan
 - [ ] Control selection process
 - [ ] Residual risk acceptance
@@ -351,15 +379,18 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 **Requirement:** Determine what to monitor and measure.
 
 **Current Monitoring:**
+
 - Application monitoring (OpenTelemetry)
 - Audit logging (ADR-008)
 - Security metrics planned
 
 **Evidence:**
+
 - [ADR-008: Audit Logging](../planning/adr/ADR-008-audit-logging.md)
 - [OTEL Config](../../artifacts/misc/otel-config.yaml)
 
 **Gaps:**
+
 - [ ] Security KPI dashboard
 - [ ] Regular security metrics review
 
@@ -372,6 +403,7 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 **Requirement:** Conduct internal audits at planned intervals.
 
 **Gaps:**
+
 - [ ] Audit program
 - [ ] Audit procedures
 - [ ] Auditor competence requirements
@@ -385,6 +417,7 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 **Requirement:** Review the ISMS at planned intervals.
 
 **Gaps:**
+
 - [ ] Management review schedule
 - [ ] Review input/output requirements
 - [ ] Review records
@@ -400,10 +433,12 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 **Requirement:** Continually improve the ISMS.
 
 **Current State:**
+
 - Sprint retrospectives include security
 - ADR evolution process
 
 **Gaps:**
+
 - [ ] Formal improvement process
 - [ ] Improvement tracking
 
@@ -416,6 +451,7 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 **Requirement:** React to nonconformities and take corrective action.
 
 **Gaps:**
+
 - [ ] Nonconformity procedures
 - [ ] Corrective action tracking
 - [ ] Root cause analysis process
@@ -504,6 +540,7 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 - [ ] Formal security checkpoints
 
 **Evidence:**
+
 - Sprint Plan tasks include security requirements
 - ADR process includes security review
 
@@ -547,6 +584,7 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 - [ ] Handling procedures per classification
 
 **Evidence:**
+
 - [ADR-007: Data Governance](../planning/adr/ADR-007-data-governance.md)
 
 ---
@@ -581,6 +619,7 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 - [ ] Periodic access review
 
 **Evidence:**
+
 - [ADR-004: Multi-tenancy](../planning/adr/ADR-004-multi-tenancy.md)
 - [ADR-009: Zero Trust](../planning/adr/ADR-009-zero-trust-security.md)
 
@@ -605,6 +644,7 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 - [ ] Secret management (Vault)
 
 **Evidence:**
+
 - [EXC-SEC-001: Vault](../../apps/project-tracker/docs/metrics/sprint-0/phase-2-parallel/parallel-c/EXC-SEC-001.json)
 
 ---
@@ -747,6 +787,7 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 - [ ] Legal advice channels
 
 **Evidence:**
+
 - [GDPR Checklist](./gdpr-checklist.md)
 - [ISO 42001 Gap Analysis](../planning/iso42001-gap-analysis.md)
 
@@ -782,6 +823,7 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 - [ ] Data subject rights implementation
 
 **Evidence:**
+
 - [GDPR Checklist](./gdpr-checklist.md)
 - [ADR-007: Data Governance](../planning/adr/ADR-007-data-governance.md)
 
@@ -816,6 +858,7 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 - [ ] Procedure review cycle
 
 **Evidence:**
+
 - [Incident Runbook](../operations/incident-runbook.md)
 
 ---
@@ -1040,6 +1083,7 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 - [ ] Data access reviews
 
 **Evidence:**
+
 - [ADR-004: Multi-tenancy](../planning/adr/ADR-004-multi-tenancy.md)
 - [ADR-009: Zero Trust](../planning/adr/ADR-009-zero-trust-security.md)
 
@@ -1165,6 +1209,7 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 - [ ] Log analysis tools
 
 **Evidence:**
+
 - [ADR-008: Audit Logging](../planning/adr/ADR-008-audit-logging.md)
 - [OTEL Config](../../artifacts/misc/otel-config.yaml)
 
@@ -1269,6 +1314,7 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 - [ ] SAST/DAST tools
 
 **Evidence:**
+
 - [Quality Gates](../quality-gates.md)
 - [TDD Guidelines](../tdd-guidelines.md)
 
@@ -1293,6 +1339,7 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 - [x] Domain-driven design
 
 **Evidence:**
+
 - [ADR-002: DDD](../planning/adr/ADR-002-domain-driven-design.md)
 - [ADR-009: Zero Trust](../planning/adr/ADR-009-zero-trust-security.md)
 - [Hex Boundaries](../architecture/hex-boundaries.md)
@@ -1372,31 +1419,34 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 
 ## Summary by Control Category
 
-| Category | Total | Implemented | Partial | Planned | N/A |
-|----------|-------|-------------|---------|---------|-----|
-| A.5 Organizational | 37 | 2 | 20 | 13 | 2 |
-| A.6 People | 8 | 0 | 2 | 6 | 0 |
-| A.7 Physical | 14 | 0 | 1 | 2 | 11 |
-| A.8 Technological | 34 | 4 | 17 | 12 | 1 |
-| **Total** | **93** | **6** | **40** | **33** | **14** |
+| Category           | Total  | Implemented | Partial | Planned | N/A    |
+| ------------------ | ------ | ----------- | ------- | ------- | ------ |
+| A.5 Organizational | 37     | 2           | 20      | 13      | 2      |
+| A.6 People         | 8      | 0           | 2       | 6       | 0      |
+| A.7 Physical       | 14     | 0           | 1       | 2       | 11     |
+| A.8 Technological  | 34     | 4           | 17      | 12      | 1      |
+| **Total**          | **93** | **6**       | **40**  | **33**  | **14** |
 
 **Compliance Percentage (excluding N/A):** 35%
 
 ## Remediation Roadmap
 
 ### Phase 1: Foundation (Sprint 8-12)
+
 - Complete security policy framework
 - Implement incident response plan
 - Establish risk management process
 - Complete access control implementation
 
 ### Phase 2: Operations (Sprint 13-18)
+
 - Security awareness training
 - Vulnerability management program
 - Security monitoring enhancement
 - Business continuity planning
 
 ### Phase 3: Maturity (Sprint 19-25)
+
 - Internal audit program
 - Management review cycle
 - Continuous improvement process
@@ -1412,6 +1462,5 @@ This checklist maps IntelliFlow CRM's compliance status against ISO/IEC 27001:20
 
 ---
 
-**Last Updated:** 2025-12-29
-**Next Review:** 2026-Q1
-**Maintained by:** Security Team, Compliance Officer
+**Last Updated:** 2025-12-29 **Next Review:** 2026-Q1 **Maintained by:**
+Security Team, Compliance Officer

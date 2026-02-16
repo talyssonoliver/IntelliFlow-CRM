@@ -179,9 +179,11 @@ export const inboundEmailRouter = router({
   /**
    * List emails for a case or thread
    */
-  listEmails: protectedProcedure
-    .input(ListEmailsInputSchema)
-    .query(async ({ input, ctx }): Promise<{
+  listEmails: protectedProcedure.input(ListEmailsInputSchema).query(
+    async ({
+      input,
+      ctx,
+    }): Promise<{
       emails: ParsedEmailResponse[];
       total: number;
       hasMore: boolean;
@@ -192,7 +194,8 @@ export const inboundEmailRouter = router({
         total: 0,
         hasMore: false,
       };
-    }),
+    }
+  ),
 
   /**
    * Process an email (archive, spam, delete, forward)
@@ -230,42 +233,56 @@ export const inboundEmailRouter = router({
    * Get email thread by thread ID
    */
   getThread: protectedProcedure
-    .input(z.object({
-      threadId: z.string(),
-      limit: z.number().int().min(1).max(50).default(20),
-    }))
-    .query(async ({ input, ctx }): Promise<{
-      threadId: string;
-      subject: string;
-      emails: ParsedEmailResponse[];
-      participantCount: number;
-    }> => {
-      // In production, fetch thread from database
-      return {
-        threadId: input.threadId,
-        subject: '',
-        emails: [],
-        participantCount: 0,
-      };
-    }),
+    .input(
+      z.object({
+        threadId: z.string(),
+        limit: z.number().int().min(1).max(50).default(20),
+      })
+    )
+    .query(
+      async ({
+        input,
+        ctx,
+      }): Promise<{
+        threadId: string;
+        subject: string;
+        emails: ParsedEmailResponse[];
+        participantCount: number;
+      }> => {
+        // In production, fetch thread from database
+        return {
+          threadId: input.threadId,
+          subject: '',
+          emails: [],
+          participantCount: 0,
+        };
+      }
+    ),
 
   /**
    * Download attachment
    */
   getAttachment: protectedProcedure
-    .input(z.object({
-      emailId: z.string(),
-      attachmentId: z.string(),
-    }))
-    .query(async ({ input, ctx }): Promise<{
-      filename: string;
-      contentType: string;
-      size: number;
-      downloadUrl: string;
-    } | null> => {
-      // In production, generate signed URL for attachment download
-      return null;
-    }),
+    .input(
+      z.object({
+        emailId: z.string(),
+        attachmentId: z.string(),
+      })
+    )
+    .query(
+      async ({
+        input,
+        ctx,
+      }): Promise<{
+        filename: string;
+        contentType: string;
+        size: number;
+        downloadUrl: string;
+      } | null> => {
+        // In production, generate signed URL for attachment download
+        return null;
+      }
+    ),
 });
 
 // ============================================================================

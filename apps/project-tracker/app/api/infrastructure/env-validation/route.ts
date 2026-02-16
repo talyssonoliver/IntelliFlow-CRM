@@ -134,24 +134,28 @@ export async function GET(_request: NextRequest) {
     // Calculate validation metrics
     const envSummary = {
       total: envVars.length,
-      set: envVars.filter(e => e.set).length,
-      valid: envVars.filter(e => e.valid).length,
-      missing: envVars.filter(e => e.required && !e.set).map(e => e.name),
+      set: envVars.filter((e) => e.set).length,
+      valid: envVars.filter((e) => e.valid).length,
+      missing: envVars.filter((e) => e.required && !e.set).map((e) => e.name),
     };
 
     const serviceSummary = {
       total: services.length,
-      healthy: services.filter(s => s.status === 'healthy').length,
-      degraded: services.filter(s => s.status === 'degraded').length,
-      unhealthy: services.filter(s => s.status === 'unhealthy').length,
-      unknown: services.filter(s => s.status === 'unknown').length,
+      healthy: services.filter((s) => s.status === 'healthy').length,
+      degraded: services.filter((s) => s.status === 'degraded').length,
+      unhealthy: services.filter((s) => s.status === 'unhealthy').length,
+      unknown: services.filter((s) => s.status === 'unknown').length,
     };
 
     // Overall status
     const envHealthy = envSummary.missing.length === 0;
     const servicesHealthy = serviceSummary.unhealthy === 0;
-    const overallStatus = envHealthy && servicesHealthy ? 'healthy' :
-                          envHealthy || servicesHealthy ? 'degraded' : 'unhealthy';
+    const overallStatus =
+      envHealthy && servicesHealthy
+        ? 'healthy'
+        : envHealthy || servicesHealthy
+          ? 'degraded'
+          : 'unhealthy';
 
     // Environment readiness by category
     const categoryReadiness: Record<string, { ready: number; total: number }> = {};
@@ -181,9 +185,10 @@ export async function GET(_request: NextRequest) {
         },
         healthCheckConfigured: !!healthConfig,
         nodeEnv: process.env.NODE_ENV || 'development',
-        recommendation: envSummary.missing.length > 0
-          ? `Set missing environment variables: ${envSummary.missing.slice(0, 3).join(', ')}${envSummary.missing.length > 3 ? '...' : ''}`
-          : 'Environment configuration is complete',
+        recommendation:
+          envSummary.missing.length > 0
+            ? `Set missing environment variables: ${envSummary.missing.slice(0, 3).join(', ')}${envSummary.missing.length > 3 ? '...' : ''}`
+            : 'Environment configuration is complete',
       },
       {
         headers: {

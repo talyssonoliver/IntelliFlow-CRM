@@ -243,11 +243,7 @@ describe('Webhook Framework - Supplementary', () => {
         order.push('handler');
       });
 
-      await framework.handle(
-        'test',
-        jsonPayload({ id: 'mw-1', type: 'order.test', data: {} }),
-        {}
-      );
+      await framework.handle('test', jsonPayload({ id: 'mw-1', type: 'order.test', data: {} }), {});
 
       expect(order).toEqual(['mw1-before', 'mw2-before', 'handler', 'mw2-after', 'mw1-after']);
     });
@@ -404,7 +400,7 @@ describe('Webhook Framework - Supplementary', () => {
       // We need to manipulate time to test properly.
       // Instead, we'll directly call processRetries after waiting enough.
       // The first retry delay is 1000 * 2^1 = 2000ms. We'll wait for it.
-      await new Promise(resolve => setTimeout(resolve, 2100));
+      await new Promise((resolve) => setTimeout(resolve, 2100));
       const retryResult = await retryFramework.processRetries();
 
       expect(retryResult.processed).toBe(1);
@@ -430,7 +426,7 @@ describe('Webhook Framework - Supplementary', () => {
       );
 
       // Wait for retry window (1000 * 2^1 = 2000ms)
-      await new Promise(resolve => setTimeout(resolve, 2100));
+      await new Promise((resolve) => setTimeout(resolve, 2100));
       const retryResult = await dlqFramework.processRetries();
 
       // After failing with attempts=1 and maxRetries-1=1, should go to DLQ
@@ -451,11 +447,7 @@ describe('Webhook Framework - Supplementary', () => {
         throw new Error('Handler error');
       });
 
-      await framework.handle(
-        'test',
-        jsonPayload({ id: 'fm-1', type: 'fail.event', data: {} }),
-        {}
-      );
+      await framework.handle('test', jsonPayload({ id: 'fm-1', type: 'fail.event', data: {} }), {});
 
       const metrics = framework.getMetrics();
       expect(metrics.eventsFailed).toBe(1);
@@ -505,7 +497,7 @@ describe('Webhook Framework - Supplementary', () => {
       );
 
       // Wait for TTL expiration
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       const cleaned = shortTtlFw.cleanup();
       expect(cleaned.idempotencyRemoved).toBeGreaterThanOrEqual(1);
@@ -713,22 +705,14 @@ describe('Webhook Framework - Supplementary', () => {
       registerOpenSource(framework);
 
       framework.on('timed.a', async () => {
-        await new Promise(r => setTimeout(r, 5));
+        await new Promise((r) => setTimeout(r, 5));
       });
       framework.on('timed.b', async () => {
-        await new Promise(r => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, 10));
       });
 
-      await framework.handle(
-        'test',
-        jsonPayload({ id: 't1', type: 'timed.a', data: {} }),
-        {}
-      );
-      await framework.handle(
-        'test',
-        jsonPayload({ id: 't2', type: 'timed.b', data: {} }),
-        {}
-      );
+      await framework.handle('test', jsonPayload({ id: 't1', type: 'timed.a', data: {} }), {});
+      await framework.handle('test', jsonPayload({ id: 't2', type: 'timed.b', data: {} }), {});
 
       const metrics = framework.getMetrics();
       expect(metrics.averageProcessingTimeMs).toBeGreaterThan(0);
@@ -762,7 +746,9 @@ describe('Webhook Framework - Supplementary', () => {
     });
 
     it('should support method chaining on use()', () => {
-      const result = framework.use(async (_e, _c, next) => { await next(); });
+      const result = framework.use(async (_e, _c, next) => {
+        await next();
+      });
       expect(result).toBe(framework);
     });
   });

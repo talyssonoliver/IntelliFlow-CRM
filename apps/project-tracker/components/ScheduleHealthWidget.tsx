@@ -47,12 +47,8 @@ export default function ScheduleHealthWidget({ sprint = 0 }: ScheduleHealthWidge
         } else {
           // Calculate at-risk tasks (incomplete critical path tasks)
           // With planned-date scheduling, "at risk" = incomplete tasks on critical path
-          const criticalTasks = Object.values(result.tasks || {}).filter(
-            (t: any) => t.isCritical
-          );
-          const atRiskCount = criticalTasks.filter(
-            (t: any) => t.percentComplete < 100
-          ).length;
+          const criticalTasks = Object.values(result.tasks || {}).filter((t: any) => t.isCritical);
+          const atRiskCount = criticalTasks.filter((t: any) => t.percentComplete < 100).length;
 
           setData({
             spi: result.scheduleVariance.spi,
@@ -82,11 +78,23 @@ export default function ScheduleHealthWidget({ sprint = 0 }: ScheduleHealthWidge
   const getStatusConfig = (status: string) => {
     switch (status) {
       case 'ahead':
-        return { label: 'Ahead', color: 'bg-green-100 text-green-800', iconColor: 'text-green-500' };
+        return {
+          label: 'Ahead',
+          color: 'bg-green-100 text-green-800',
+          iconColor: 'text-green-500',
+        };
       case 'on_track':
-        return { label: 'On Track', color: 'bg-blue-100 text-blue-800', iconColor: 'text-blue-500' };
+        return {
+          label: 'On Track',
+          color: 'bg-blue-100 text-blue-800',
+          iconColor: 'text-blue-500',
+        };
       case 'behind':
-        return { label: 'Behind', color: 'bg-amber-100 text-amber-800', iconColor: 'text-amber-500' };
+        return {
+          label: 'Behind',
+          color: 'bg-amber-100 text-amber-800',
+          iconColor: 'text-amber-500',
+        };
       case 'critical':
         return { label: 'Critical', color: 'bg-red-100 text-red-800', iconColor: 'text-red-500' };
       default:
@@ -116,9 +124,7 @@ export default function ScheduleHealthWidget({ sprint = 0 }: ScheduleHealthWidge
           <h3 className="text-lg font-semibold text-gray-900">Schedule Health</h3>
         </div>
         <div className="text-center py-4">
-          <p className="text-gray-500 text-sm">
-            {error || 'No schedule data available'}
-          </p>
+          <p className="text-gray-500 text-sm">{error || 'No schedule data available'}</p>
         </div>
       </div>
     );
@@ -161,7 +167,7 @@ export default function ScheduleHealthWidget({ sprint = 0 }: ScheduleHealthWidge
             )}
           >
             {data.svMinutes >= 0 ? '+' : ''}
-            {Math.round(data.svMinutes / 60 * 10) / 10}h
+            {Math.round((data.svMinutes / 60) * 10) / 10}h
           </div>
           <div className="text-xs text-gray-400">
             {data.svMinutes >= 0 ? 'Ahead' : 'Behind'} schedule
@@ -172,9 +178,7 @@ export default function ScheduleHealthWidget({ sprint = 0 }: ScheduleHealthWidge
         <div className="bg-gray-50 rounded-lg p-3">
           <div className="text-xs text-gray-500 mb-1">Critical Path</div>
           <div className="text-2xl font-bold text-red-600">{data.criticalPathCount}</div>
-          <div className="text-xs text-gray-400">
-            {data.criticalPathCompletion}% complete
-          </div>
+          <div className="text-xs text-gray-400">{data.criticalPathCompletion}% complete</div>
         </div>
 
         {/* At Risk */}

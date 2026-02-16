@@ -11,12 +11,7 @@
  * - Action-specific authorization rules
  */
 
-import {
-  AgentAuthContext,
-  AgentActionType,
-  EntityType,
-  AgentToolDefinition,
-} from './types';
+import { AgentAuthContext, AgentActionType, EntityType, AgentToolDefinition } from './types';
 import { agentLogger } from './logger';
 
 /**
@@ -59,14 +54,7 @@ const ROLE_PERMISSIONS: Record<
     maxActionsPerSession: 500,
   },
   USER: {
-    allowedEntityTypes: [
-      'LEAD',
-      'CONTACT',
-      'ACCOUNT',
-      'OPPORTUNITY',
-      'TASK',
-      'MESSAGE',
-    ],
+    allowedEntityTypes: ['LEAD', 'CONTACT', 'ACCOUNT', 'OPPORTUNITY', 'TASK', 'MESSAGE'],
     allowedActionTypes: ['SEARCH', 'CREATE', 'UPDATE', 'DRAFT'],
     maxActionsPerSession: 200,
   },
@@ -138,10 +126,7 @@ export interface UserInfo {
 /**
  * Build authorization context from user info and session
  */
-export function buildAuthContext(
-  user: UserInfo,
-  agentSessionId: string
-): AgentAuthContext {
+export function buildAuthContext(user: UserInfo, agentSessionId: string): AgentAuthContext {
   const rolePermissions = ROLE_PERMISSIONS[user.role] || ROLE_PERMISSIONS.READONLY;
 
   return {
@@ -322,10 +307,7 @@ export class AgentAuthorizationService {
    * Validate that a user can rollback actions
    * The user must be the same who approved the action, or an ADMIN
    */
-  canRollbackAction(
-    context: AgentAuthContext,
-    approvedBy: string
-  ): boolean {
+  canRollbackAction(context: AgentAuthContext, approvedBy: string): boolean {
     return context.userRole === 'ADMIN' || context.userId === approvedBy;
   }
 

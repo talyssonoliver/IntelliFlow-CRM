@@ -21,24 +21,14 @@ import Link from 'next/link';
 import { cn } from '@intelliflow/ui';
 import { useRedirectIfAuthenticated } from '@/lib/auth/AuthContext';
 import { AuthBackground, AuthCard } from '@/components/shared';
-import {
-  PasswordResetForm,
-  ResetSuccess,
-  TokenInvalid,
-} from '@/components/shared/password-reset';
+import { PasswordResetForm, ResetSuccess, TokenInvalid } from '@/components/shared/password-reset';
 import { validateResetToken } from '@/lib/shared/reset-token';
 
 // ============================================
 // Types
 // ============================================
 
-type PageState =
-  | 'validating'
-  | 'invalid'
-  | 'expired'
-  | 'used'
-  | 'form'
-  | 'success';
+type PageState = 'validating' | 'invalid' | 'expired' | 'used' | 'form' | 'success';
 
 interface PageParams {
   params: Promise<{ token: string }>;
@@ -160,9 +150,7 @@ export default function ResetPasswordPage({ params }: PageParams) {
 
           {/* Invalid/Expired/Used States */}
           {(state === 'invalid' || state === 'expired' || state === 'used') && (
-            <TokenInvalid
-              reason={state as 'invalid' | 'expired' | 'used'}
-            />
+            <TokenInvalid reason={state as 'invalid' | 'expired' | 'used'} />
           )}
 
           {/* Form State */}
@@ -203,10 +191,7 @@ export default function ResetPasswordPage({ params }: PageParams) {
               'inline-flex items-center gap-1'
             )}
           >
-            <span
-              className="material-symbols-outlined text-sm"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">
               help
             </span>
             Need help?

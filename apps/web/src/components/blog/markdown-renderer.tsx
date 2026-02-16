@@ -71,10 +71,7 @@ function parseMarkdown(markdown: string): string {
   let html = markdown;
 
   // Escape HTML to prevent XSS
-  html = html
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+  html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   // Code blocks (fenced)
   html = html.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
@@ -108,7 +105,10 @@ function parseMarkdown(markdown: string): string {
   html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" loading="lazy" />');
 
   // Links
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+  html = html.replace(
+    /\[([^\]]+)\]\(([^)]+)\)/g,
+    '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
+  );
 
   // Horizontal rules
   html = html.replace(/^---$/gm, '<hr />');
@@ -125,7 +125,7 @@ function parseMarkdown(markdown: string): string {
   // Paragraphs (wrap remaining text)
   html = html
     .split('\n\n')
-    .map(block => {
+    .map((block) => {
       block = block.trim();
       if (
         block &&
@@ -152,7 +152,7 @@ function parseMarkdown(markdown: string): string {
 export function TableOfContents({ content }: { content: string }) {
   const headings = React.useMemo(() => {
     const matches = content.matchAll(/^(#{2,4}) (.*)$/gm);
-    return Array.from(matches).map(match => ({
+    return Array.from(matches).map((match) => ({
       level: match[1].length,
       text: match[2],
       id: match[2].toLowerCase().replace(/[^a-z0-9]+/g, '-'),
@@ -162,16 +162,16 @@ export function TableOfContents({ content }: { content: string }) {
   if (headings.length === 0) return null;
 
   return (
-    <nav aria-label="Table of contents" className="mb-8 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+    <nav
+      aria-label="Table of contents"
+      className="mb-8 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg"
+    >
       <h2 className="text-sm font-semibold text-slate-900 dark:text-white mb-3 uppercase tracking-wide">
         Contents
       </h2>
       <ul className="space-y-2">
         {headings.map((heading, idx) => (
-          <li
-            key={idx}
-            style={{ paddingLeft: `${(heading.level - 2) * 16}px` }}
-          >
+          <li key={idx} style={{ paddingLeft: `${(heading.level - 2) * 16}px` }}>
             <a
               href={`#${heading.id}`}
               className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"

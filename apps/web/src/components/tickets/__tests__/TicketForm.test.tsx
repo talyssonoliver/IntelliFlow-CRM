@@ -17,7 +17,9 @@ describe('TicketForm', () => {
   });
 
   it('renders all form fields', () => {
-    render(<TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />);
+    render(
+      <TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />
+    );
 
     expect(screen.getByLabelText(/subject/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
@@ -30,7 +32,9 @@ describe('TicketForm', () => {
   });
 
   it('renders in create mode with empty fields', () => {
-    render(<TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />);
+    render(
+      <TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />
+    );
 
     const subjectInput = screen.getByLabelText(/subject/i) as HTMLInputElement;
     expect(subjectInput.value).toBe('');
@@ -62,7 +66,9 @@ describe('TicketForm', () => {
   });
 
   it('shows error when subject is empty on submit', async () => {
-    render(<TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />);
+    render(
+      <TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />
+    );
 
     const submitButton = screen.getByRole('button', { name: /create ticket/i });
     fireEvent.click(submitButton);
@@ -75,7 +81,9 @@ describe('TicketForm', () => {
   });
 
   it('shows error when contact name is empty', async () => {
-    render(<TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />);
+    render(
+      <TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />
+    );
 
     const subjectInput = screen.getByLabelText(/subject/i);
     fireEvent.change(subjectInput, { target: { value: 'Test Subject' } });
@@ -91,7 +99,9 @@ describe('TicketForm', () => {
   });
 
   it('shows error when email format is invalid', async () => {
-    render(<TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />);
+    render(
+      <TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />
+    );
 
     const emailInput = screen.getByLabelText(/contact email/i);
     fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
@@ -107,7 +117,9 @@ describe('TicketForm', () => {
   });
 
   it('validates and calls onSubmit with valid data', async () => {
-    render(<TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />);
+    render(
+      <TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />
+    );
 
     fireEvent.change(screen.getByLabelText(/subject/i), {
       target: { value: 'Test Ticket' },
@@ -135,12 +147,7 @@ describe('TicketForm', () => {
 
   it('disables submit button when isSubmitting=true', () => {
     render(
-      <TicketForm
-        onSubmit={onSubmit}
-        onCancel={onCancel}
-        isSubmitting={true}
-        mode="create"
-      />
+      <TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={true} mode="create" />
     );
 
     const submitButton = screen.getByRole('button', { name: /create ticket/i });
@@ -148,7 +155,9 @@ describe('TicketForm', () => {
   });
 
   it('calls onCancel when cancel clicked', () => {
-    render(<TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />);
+    render(
+      <TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />
+    );
 
     const cancelButton = screen.getByRole('button', { name: /cancel/i });
     fireEvent.click(cancelButton);
@@ -157,7 +166,9 @@ describe('TicketForm', () => {
   });
 
   it('has aria-invalid on error fields', async () => {
-    render(<TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />);
+    render(
+      <TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />
+    );
 
     const submitButton = screen.getByRole('button', { name: /create ticket/i });
     fireEvent.click(submitButton);
@@ -169,7 +180,9 @@ describe('TicketForm', () => {
   });
 
   it('allows selecting priority from dropdown', () => {
-    render(<TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />);
+    render(
+      <TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />
+    );
 
     const prioritySelect = screen.getByLabelText(/priority/i);
     fireEvent.change(prioritySelect, { target: { value: 'HIGH' } });

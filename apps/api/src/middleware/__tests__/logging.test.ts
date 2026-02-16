@@ -138,7 +138,7 @@ describe('LoggingMiddleware', () => {
           userId: 'user-456',
           email: 'test@example.com',
           role: 'USER',
-          tenantId: ''
+          tenantId: '',
         },
       });
 
@@ -203,7 +203,7 @@ describe('LoggingMiddleware', () => {
           userId: 'user-789',
           email: 'test@example.com',
           role: 'USER',
-          tenantId: ''
+          tenantId: '',
         },
       });
 
@@ -256,7 +256,7 @@ describe('LoggingMiddleware', () => {
             userId: 'user-123',
             email: 'test@example.com',
             role: 'USER',
-            tenantId: ''
+            tenantId: '',
           },
         }),
         customProp: 'custom-value',

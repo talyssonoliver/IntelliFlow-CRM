@@ -53,18 +53,12 @@ export function AppHeader() {
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
         >
-          <span className="material-symbols-outlined text-xl">
-            {mobileOpen ? 'close' : 'menu'}
-          </span>
+          <span className="material-symbols-outlined text-xl">{mobileOpen ? 'close' : 'menu'}</span>
         </button>
       </div>
 
       {/* Mobile Navigation */}
-      <MobileNav
-        routes={routes}
-        isOpen={mobileOpen}
-        onClose={() => setMobileOpen(false)}
-      />
+      <MobileNav routes={routes} isOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
     </header>
   );
 }

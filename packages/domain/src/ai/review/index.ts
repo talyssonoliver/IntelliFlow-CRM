@@ -17,11 +17,7 @@ export {
   VALID_TRANSITIONS,
   canTransitionTo,
 } from './ReviewStatus';
-export type {
-  ReviewStatusType,
-  ReviewDecisionType,
-  AuditEventTypeValue,
-} from './ReviewStatus';
+export type { ReviewStatusType, ReviewDecisionType, AuditEventTypeValue } from './ReviewStatus';
 
 // Domain Events
 export * from './events';

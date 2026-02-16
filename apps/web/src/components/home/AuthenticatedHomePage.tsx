@@ -4,24 +4,38 @@ import { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
-import { useActivityFeed } from '@/hooks/useActivityFeed';
+import { ActivityFeed } from '@/components/shared/activity-feed/ActivityFeed';
 import type { ActivityFeedType } from '@intelliflow/domain';
 import {
-  EditQuickActionsSheet, ALL_QUICK_ACTIONS, loadEnabledActions,
-  EditPinnedNavigationSheet, ALL_PINNED_NAV_GROUPS, loadPinnedGroups,
+  EditQuickActionsSheet,
+  ALL_QUICK_ACTIONS,
+  loadEnabledActions,
+  EditPinnedNavigationSheet,
+  ALL_PINNED_NAV_GROUPS,
+  loadPinnedGroups,
   getPinnedIcon,
 } from './PinnedItemsSheet';
 
-// Activity feed type filter options — values match ActivityFeedType (IFC-069 unified feed)
+// Activity feed type filter options — values match ActivityFeedType (IFC-069 unified feed, all 17 types)
 const FEED_FILTER_OPTIONS = [
   { value: 'all', label: 'All Activity', icon: 'list' },
-  { value: 'CALL', label: 'Calls', icon: 'call' },
+  { value: 'CALL', label: 'Calls', icon: 'call_received' },
   { value: 'EMAIL', label: 'Emails', icon: 'mail' },
   { value: 'MEETING', label: 'Meetings', icon: 'event' },
   { value: 'TASK', label: 'Tasks', icon: 'task_alt' },
   { value: 'DEAL', label: 'Deals', icon: 'handshake' },
   { value: 'NOTE', label: 'Notes', icon: 'sticky_note_2' },
   { value: 'TICKET', label: 'Tickets', icon: 'confirmation_number' },
+  { value: 'CHAT', label: 'Chat', icon: 'chat' },
+  { value: 'DOCUMENT', label: 'Documents', icon: 'description' },
+  { value: 'STAGE_CHANGE', label: 'Stage Changes', icon: 'swap_horiz' },
+  { value: 'STATUS_CHANGE', label: 'Status Changes', icon: 'published_with_changes' },
+  { value: 'SCORE_UPDATE', label: 'Score Updates', icon: 'trending_up' },
+  { value: 'QUALIFICATION', label: 'Qualifications', icon: 'verified' },
+  { value: 'AGENT_ACTION', label: 'AI Actions', icon: 'smart_toy' },
+  { value: 'SLA_ALERT', label: 'SLA Alerts', icon: 'warning' },
+  { value: 'ASSIGNMENT', label: 'Assignments', icon: 'person_add' },
+  { value: 'SYSTEM', label: 'System', icon: 'settings' },
 ] as const;
 
 // =============================================================================
@@ -42,41 +56,6 @@ type SerializedAIInsight = {
   createdAt: string;
 };
 
-/** Shape of items from the unified activity feed (IFC-069), after tRPC serialization */
-type UnifiedFeedItem = {
-  id: string;
-  source: string;
-  type: string;
-  title: string;
-  description: string | null;
-  timestamp: string; // Date serialized to string by tRPC
-  actor: { id: string | null; name: string; avatarUrl?: string | null } | null;
-  entity: { id: string; type: string; name: string } | null;
-  metadata: Record<string, unknown> | null;
-};
-
-/** Compute relative time label from a timestamp string */
-function formatRelativeTime(timestamp: string): string {
-  const diff = Date.now() - new Date(timestamp).getTime();
-  const minutes = Math.floor(diff / 60_000);
-  if (minutes < 1) return 'just now';
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return new Date(timestamp).toLocaleDateString();
-}
-
-/** Derive initials from a name string */
-function getInitialsFromName(name: string): string {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((w) => w[0].toUpperCase())
-    .join('');
-}
 
 type SerializedDailyGoal = {
   id: string;
@@ -92,7 +71,15 @@ type SerializedDailyGoal = {
 
 type SerializedPinnedItem = {
   id: string;
-  entityType: 'lead' | 'contact' | 'account' | 'opportunity' | 'document' | 'report' | 'list' | 'ticket';
+  entityType:
+    | 'lead'
+    | 'contact'
+    | 'account'
+    | 'opportunity'
+    | 'document'
+    | 'report'
+    | 'list'
+    | 'ticket';
   entityId: string;
   title: string;
   subtitle?: string | null;
@@ -108,12 +95,6 @@ interface InsightIconStyle {
   iconColor: string;
 }
 
-interface ActivityIconStyle {
-  initials?: string;
-  icon?: string;
-  bg: string;
-  color: string;
-}
 
 // =============================================================================
 // Helper Functions
@@ -125,41 +106,41 @@ function getGreetingIcon(hour: number): string {
 
 function getInsightIcon(type: string): InsightIconStyle {
   const iconMap: Record<string, InsightIconStyle> = {
-    warning: { icon: 'warning', iconBg: 'bg-amber-100 dark:bg-amber-900/30', iconColor: 'text-amber-600 dark:text-amber-400' },
-    opportunity: { icon: 'trending_up', iconBg: 'bg-emerald-100 dark:bg-emerald-900/30', iconColor: 'text-emerald-600 dark:text-emerald-400' },
-    reminder: { icon: 'schedule', iconBg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: 'text-blue-600 dark:text-blue-400' },
-    achievement: { icon: 'emoji_events', iconBg: 'bg-purple-100 dark:bg-purple-900/30', iconColor: 'text-purple-600 dark:text-purple-400' },
+    warning: {
+      icon: 'warning',
+      iconBg: 'bg-amber-100 dark:bg-amber-900/30',
+      iconColor: 'text-amber-600 dark:text-amber-400',
+    },
+    opportunity: {
+      icon: 'trending_up',
+      iconBg: 'bg-emerald-100 dark:bg-emerald-900/30',
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
+    },
+    reminder: {
+      icon: 'schedule',
+      iconBg: 'bg-blue-100 dark:bg-blue-900/30',
+      iconColor: 'text-blue-600 dark:text-blue-400',
+    },
+    achievement: {
+      icon: 'emoji_events',
+      iconBg: 'bg-purple-100 dark:bg-purple-900/30',
+      iconColor: 'text-purple-600 dark:text-purple-400',
+    },
   };
-  return iconMap[type] || { icon: 'info', iconBg: 'bg-slate-100 dark:bg-slate-800', iconColor: 'text-slate-600 dark:text-slate-400' };
+  return (
+    iconMap[type] || {
+      icon: 'info',
+      iconBg: 'bg-slate-100 dark:bg-slate-800',
+      iconColor: 'text-slate-600 dark:text-slate-400',
+    }
+  );
 }
 
-function getActivityIcon(type: string): ActivityIconStyle {
-  const iconMap: Record<string, ActivityIconStyle> = {
-    // Unified feed types (UPPERCASE — IFC-069)
-    CALL: { icon: 'call_received', bg: 'bg-emerald-100 dark:bg-emerald-900', color: 'text-emerald-600 dark:text-emerald-300' },
-    EMAIL: { icon: 'mail', bg: 'bg-indigo-100 dark:bg-indigo-900', color: 'text-indigo-600 dark:text-indigo-300' },
-    MEETING: { icon: 'event', bg: 'bg-blue-100 dark:bg-blue-900', color: 'text-blue-600 dark:text-blue-300' },
-    NOTE: { icon: 'sticky_note_2', bg: 'bg-teal-100 dark:bg-teal-900', color: 'text-teal-600 dark:text-teal-300' },
-    TASK: { icon: 'task_alt', bg: 'bg-amber-100 dark:bg-amber-900', color: 'text-amber-600 dark:text-amber-300' },
-    CHAT: { icon: 'chat', bg: 'bg-pink-100 dark:bg-pink-900', color: 'text-pink-600 dark:text-pink-300' },
-    DOCUMENT: { icon: 'description', bg: 'bg-orange-100 dark:bg-orange-900', color: 'text-orange-600 dark:text-orange-300' },
-    DEAL: { icon: 'handshake', bg: 'bg-green-100 dark:bg-green-900', color: 'text-green-600 dark:text-green-300' },
-    TICKET: { icon: 'confirmation_number', bg: 'bg-rose-100 dark:bg-rose-900', color: 'text-rose-600 dark:text-rose-300' },
-    STAGE_CHANGE: { icon: 'swap_horiz', bg: 'bg-violet-100 dark:bg-violet-900', color: 'text-violet-600 dark:text-violet-300' },
-    STATUS_CHANGE: { icon: 'published_with_changes', bg: 'bg-sky-100 dark:bg-sky-900', color: 'text-sky-600 dark:text-sky-300' },
-    SCORE_UPDATE: { icon: 'trending_up', bg: 'bg-lime-100 dark:bg-lime-900', color: 'text-lime-600 dark:text-lime-300' },
-    QUALIFICATION: { icon: 'verified', bg: 'bg-cyan-100 dark:bg-cyan-900', color: 'text-cyan-600 dark:text-cyan-300' },
-    AGENT_ACTION: { initials: 'AI', bg: 'bg-purple-100 dark:bg-purple-900', color: 'text-purple-600 dark:text-purple-300' },
-    SLA_ALERT: { icon: 'warning', bg: 'bg-red-100 dark:bg-red-900', color: 'text-red-600 dark:text-red-300' },
-    ASSIGNMENT: { icon: 'person_add', bg: 'bg-cyan-100 dark:bg-cyan-900', color: 'text-cyan-600 dark:text-cyan-300' },
-    SYSTEM: { icon: 'settings', bg: 'bg-slate-200 dark:bg-slate-700', color: 'text-slate-600 dark:text-slate-300' },
-  };
-  return iconMap[type] || { icon: 'notifications', bg: 'bg-slate-100 dark:bg-slate-800', color: 'text-slate-600 dark:text-slate-400' };
-}
 
 function pluralize(count: number, singular: string): string {
   return count === 1 ? singular : `${singular}s`;
 }
+
 
 type StatsPeriod = 'today' | 'yesterday' | 'this_week' | 'this_month' | 'all_time';
 
@@ -199,11 +180,15 @@ function buildWelcomeMessage(stats: WelcomeStats | undefined): string {
   const parts: string[] = [];
 
   if (stats.highPriorityTasksCount > 0) {
-    parts.push(`${stats.highPriorityTasksCount} high-priority ${pluralize(stats.highPriorityTasksCount, 'task')} pending`);
+    parts.push(
+      `${stats.highPriorityTasksCount} high-priority ${pluralize(stats.highPriorityTasksCount, 'task')} pending`
+    );
   }
   if (stats.newLeadsCount > 0) {
     const periodLabel = getPeriodLabel(stats.newLeadsPeriod);
-    parts.push(`${stats.newLeadsCount} new ${pluralize(stats.newLeadsCount, 'lead')} assigned to you ${periodLabel}`);
+    parts.push(
+      `${stats.newLeadsCount} new ${pluralize(stats.newLeadsCount, 'lead')} assigned to you ${periodLabel}`
+    );
   }
 
   // Build the deal trend suffix
@@ -242,23 +227,6 @@ function InsightsSkeleton() {
   );
 }
 
-function FeedSkeleton() {
-  return (
-    <>
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="p-5 animate-pulse">
-          <div className="flex gap-3">
-            <div className="size-10 rounded-full bg-slate-200 dark:bg-slate-700" />
-            <div className="flex-1">
-              <div className="h-4 w-48 bg-slate-200 dark:bg-slate-700 rounded mb-2" />
-              <div className="h-3 w-full bg-slate-200 dark:bg-slate-700 rounded" />
-            </div>
-          </div>
-        </div>
-      ))}
-    </>
-  );
-}
 
 function GoalSkeleton() {
   return (
@@ -304,11 +272,16 @@ function InsightCard({ insight }: Readonly<InsightCardProps>) {
         <span className="material-symbols-outlined">{iconStyle.icon}</span>
       </div>
       <div>
-        <h4 className="font-semibold text-slate-800 dark:text-slate-200 text-sm">{insight.title}</h4>
+        <h4 className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
+          {insight.title}
+        </h4>
         <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
           {insight.description}
           {insight.suggestedAction && (
-            <span className="font-medium text-[#137fec]"> Suggested Action: {insight.suggestedAction}</span>
+            <span className="font-medium text-[#137fec]">
+              {' '}
+              Suggested Action: {insight.suggestedAction}
+            </span>
           )}
         </p>
       </div>
@@ -327,7 +300,9 @@ function InsightsSection({ isLoading, insights }: Readonly<InsightsSectionProps>
   }
 
   if (!insights || insights.length === 0) {
-    return <p className="text-sm text-slate-500 dark:text-slate-400 p-3">No insights at this time.</p>;
+    return (
+      <p className="text-sm text-slate-500 dark:text-slate-400 p-3">No insights at this time.</p>
+    );
   }
 
   return (
@@ -339,97 +314,6 @@ function InsightsSection({ isLoading, insights }: Readonly<InsightsSectionProps>
   );
 }
 
-interface FeedItemCardProps {
-  item: UnifiedFeedItem;
-}
-
-function FeedItemCard({ item }: Readonly<FeedItemCardProps>) {
-  const iconStyle = getActivityIcon(item.type);
-  const actorInitials = item.actor ? getInitialsFromName(item.actor.name) : null;
-  const showInitials = actorInitials || iconStyle.initials;
-  const relativeTime = formatRelativeTime(item.timestamp);
-  // Build entity link if we have an entity reference
-  const entityUrl = item.entity
-    ? `/${item.entity.type.toLowerCase()}s/${item.entity.id}`
-    : null;
-
-  return (
-    <div className="p-5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-      <div className="flex gap-3">
-        {showInitials ? (
-          <div className={`size-10 rounded-full ${iconStyle.bg} flex items-center justify-center ${iconStyle.color} font-bold shrink-0`}>
-            {actorInitials || iconStyle.initials}
-          </div>
-        ) : (
-          <div className={`size-10 rounded-full ${iconStyle.bg} flex items-center justify-center ${iconStyle.color} shrink-0`}>
-            <span className="material-symbols-outlined">{iconStyle.icon}</span>
-          </div>
-        )}
-        <div className="flex-1">
-          <div className="flex justify-between items-start">
-            <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{item.title}</p>
-            <span className="text-xs text-slate-400 whitespace-nowrap">{relativeTime}</span>
-          </div>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{item.description || ''}</p>
-          {entityUrl && (
-            <Link href={entityUrl} className="mt-2 text-sm text-[#137fec] font-medium hover:underline inline-block">
-              View {item.entity!.name}
-            </Link>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-interface FeedSectionProps {
-  isLoading: boolean;
-  items: UnifiedFeedItem[] | undefined;
-  hasMore: boolean | undefined;
-  onLoadMore?: () => void;
-  isLoadingMore?: boolean;
-}
-
-function FeedSection({ isLoading, items, hasMore, onLoadMore, isLoadingMore }: Readonly<FeedSectionProps>) {
-  if (isLoading) {
-    return <FeedSkeleton />;
-  }
-
-  if (!items || items.length === 0) {
-    return (
-      <div className="p-8 text-center text-slate-500 dark:text-slate-400">
-        <span className="material-symbols-outlined text-4xl mb-2">inbox</span>
-        <p>No recent activity</p>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      {items.map((item, idx) => (
-        <FeedItemCard key={`${item.id}-${idx}`} item={item} />
-      ))}
-      {hasMore && (
-        <div className="p-4 border-t border-[#e2e8f0] dark:border-[#334155] text-center">
-          <button
-            onClick={onLoadMore}
-            disabled={isLoadingMore}
-            className="text-sm font-medium text-slate-500 hover:text-[#137fec] transition-colors disabled:opacity-50"
-          >
-            {isLoadingMore ? (
-              <span className="flex items-center gap-2 justify-center">
-                <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
-                Loading...
-              </span>
-            ) : (
-              'Load More Updates'
-            )}
-          </button>
-        </div>
-      )}
-    </>
-  );
-}
 
 interface GoalSectionProps {
   isLoading: boolean;
@@ -470,7 +354,8 @@ function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
         </div>
       </div>
       <p className="text-sm text-center text-slate-600 dark:text-slate-400">
-        You need <span className="font-bold text-slate-900 dark:text-white">{remaining}</span> more to hit today&apos;s target.
+        You need <span className="font-bold text-slate-900 dark:text-white">{remaining}</span> more
+        to hit today&apos;s target.
       </p>
     </>
   );
@@ -487,24 +372,33 @@ function PinnedItemCard({ item }: Readonly<{ item: SerializedPinnedItem }>) {
       href={item.url}
       className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors group"
     >
-      <div className={`size-8 rounded ${iconStyle.iconBg} ${iconStyle.iconColor} flex items-center justify-center`}>
+      <div
+        className={`size-8 rounded ${iconStyle.iconBg} ${iconStyle.iconColor} flex items-center justify-center`}
+      >
         <span className="material-symbols-outlined text-lg">{iconStyle.icon}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate group-hover:text-[#137fec]">{item.title}</p>
+        <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate group-hover:text-[#137fec]">
+          {item.title}
+        </p>
         {item.subtitle && <p className="text-xs text-slate-400">{item.subtitle}</p>}
       </div>
     </Link>
   );
 }
 
-function PinnedSection({ isLoading, items }: Readonly<{ isLoading: boolean; items: SerializedPinnedItem[] | undefined }>) {
+function PinnedSection({
+  isLoading,
+  items,
+}: Readonly<{ isLoading: boolean; items: SerializedPinnedItem[] | undefined }>) {
   if (isLoading) {
     return <PinnedSkeleton />;
   }
 
   if (!items || items.length === 0) {
-    return <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">No pinned items</p>;
+    return (
+      <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">No pinned items</p>
+    );
   }
 
   return (
@@ -545,26 +439,19 @@ export function AuthenticatedHomePage() {
     undefined,
     { enabled: queryEnabled }
   );
-  // Unified Activity Feed (IFC-069) — real-time via WebSocket subscriptions
+  // Unified Activity Feed (IFC-069) — filter types computed from dropdown
   const feedTypes = useMemo(
     () => (feedFilter === 'all' ? undefined : [feedFilter as ActivityFeedType]),
-    [feedFilter],
+    [feedFilter]
   );
+  const { data: goalData, isLoading: goalLoading } = trpc.home.getDailyGoal.useQuery(undefined, {
+    enabled: queryEnabled,
+  });
   const {
-    items: unifiedFeedItems,
-    isLoading: feedLoading,
-    isFetchingNextPage: feedFetchingNext,
-    hasNextPage: feedHasMore,
-    fetchNextPage: feedFetchNextPage,
-  } = useActivityFeed({ limit: 5, types: feedTypes, enabled: queryEnabled });
-  const { data: goalData, isLoading: goalLoading } = trpc.home.getDailyGoal.useQuery(
-    undefined,
-    { enabled: queryEnabled }
-  );
-  const { data: pinnedData, isLoading: pinnedLoading, refetch: refetchPinned } = trpc.home.getPinnedItems.useQuery(
-    undefined,
-    { enabled: queryEnabled }
-  );
+    data: pinnedData,
+    isLoading: pinnedLoading,
+    refetch: refetchPinned,
+  } = trpc.home.getPinnedItems.useQuery(undefined, { enabled: queryEnabled });
 
   // Mutations
   const unpinMutation = trpc.home.unpinItem.useMutation({
@@ -574,18 +461,17 @@ export function AuthenticatedHomePage() {
   });
 
   // Callbacks
-  const handleLoadMore = useCallback(() => {
-    feedFetchNextPage();
-  }, [feedFetchNextPage]);
-
   const handleFeedFilterChange = useCallback((filter: string) => {
     setFeedFilter(filter);
     setShowFeedFilterMenu(false);
   }, []);
 
-  const handleUnpin = useCallback((entityType: string, entityId: string) => {
-    unpinMutation.mutate({ entityType: entityType as any, entityId });
-  }, [unpinMutation]);
+  const handleUnpin = useCallback(
+    (entityType: string, entityId: string) => {
+      unpinMutation.mutate({ entityType: entityType as any, entityId });
+    },
+    [unpinMutation]
+  );
 
   const handleQuickActionsSave = useCallback((ids: Set<string>) => {
     setEnabledActionIds(new Set(ids));
@@ -600,10 +486,9 @@ export function AuthenticatedHomePage() {
   // Compute enabled groups and filter pinned items by those groups
   const enabledGroups = ALL_PINNED_NAV_GROUPS.filter((g) => pinnedGroupIds.has(g.id));
   const enabledEntityTypes = new Set(enabledGroups.flatMap((g) => g.entityTypes));
-  const filteredPinnedItems = pinnedData?.items?.filter((item) => enabledEntityTypes.has(item.entityType));
-
-  // Feed items are already flattened by useActivityFeed hook
-  const displayedFeedItems = unifiedFeedItems as UnifiedFeedItem[];
+  const filteredPinnedItems = pinnedData?.items?.filter((item) =>
+    enabledEntityTypes.has(item.entityType)
+  );
 
   const firstName = welcomeData?.userName || user?.name?.split(' ')[0] || 'there';
   const greeting = welcomeData?.greeting || 'Welcome';
@@ -642,13 +527,15 @@ export function AuthenticatedHomePage() {
                   href="/calendar"
                   className="bg-white text-[#137fec] hover:bg-blue-50 px-4 py-2 rounded-lg font-semibold text-sm transition-colors shadow-sm flex items-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-lg">calendar_today</span> View Schedule
+                  <span className="material-symbols-outlined text-lg">calendar_today</span> View
+                  Schedule
                 </Link>
                 <Link
                   href="/dashboard"
                   className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors backdrop-blur-sm flex items-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-lg">dashboard</span> Go to Dashboard
+                  <span className="material-symbols-outlined text-lg">dashboard</span> Go to
+                  Dashboard
                 </Link>
               </div>
             </div>
@@ -660,10 +547,19 @@ export function AuthenticatedHomePage() {
             <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-white dark:bg-[#1e2936] rounded-xl border border-[#e2e8f0] dark:border-[#334155] shadow-sm">
               <div className="p-4 border-b border-[#e2e8f0] dark:border-[#334155] flex justify-between items-center bg-indigo-50/50 dark:bg-indigo-900/10 rounded-t-xl">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-indigo-600 dark:text-indigo-400">auto_awesome</span>
-                  <h3 className="font-bold text-slate-800 dark:text-slate-100">AI Daily Insights</h3>
+                  <span className="material-symbols-outlined text-indigo-600 dark:text-indigo-400">
+                    auto_awesome
+                  </span>
+                  <h3 className="font-bold text-slate-800 dark:text-slate-100">
+                    AI Daily Insights
+                  </h3>
                 </div>
-                <Link href="/agent-approvals" className="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 hover:underline">View All</Link>
+                <Link
+                  href="/agent-approvals"
+                  className="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 hover:underline"
+                >
+                  View All
+                </Link>
               </div>
               <div className="p-4 grid gap-4">
                 <InsightsSection isLoading={insightsLoading} insights={insightsData?.insights} />
@@ -689,10 +585,14 @@ export function AuthenticatedHomePage() {
                     href={action.href}
                     className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors gap-2 group"
                   >
-                    <div className={`p-2 ${action.iconBg} ${action.iconColor} rounded-full group-hover:scale-110 transition-transform`}>
+                    <div
+                      className={`p-2 ${action.iconBg} ${action.iconColor} rounded-full group-hover:scale-110 transition-transform`}
+                    >
                       <span className="material-symbols-outlined">{action.icon}</span>
                     </div>
-                    <span className="text-xs font-medium text-slate-600 dark:text-slate-300">{action.label}</span>
+                    <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                      {action.label}
+                    </span>
                   </Link>
                 ))}
                 {visibleQuickActions.length === 0 && (
@@ -711,32 +611,41 @@ export function AuthenticatedHomePage() {
                   <button
                     onClick={() => setShowFeedFilterMenu(!showFeedFilterMenu)}
                     className={`p-1 transition-colors rounded flex items-center gap-1 ${
-                      feedFilter !== 'all' ? 'text-[#137fec]' : 'text-slate-400 hover:text-[#137fec]'
+                      feedFilter !== 'all'
+                        ? 'text-[#137fec]'
+                        : 'text-slate-400 hover:text-[#137fec]'
                     }`}
                   >
                     <span className="material-symbols-outlined text-[20px]">filter_list</span>
                     {feedFilter !== 'all' && (
                       <span className="text-xs font-medium">
-                        {FEED_FILTER_OPTIONS.find(o => o.value === feedFilter)?.label}
+                        {FEED_FILTER_OPTIONS.find((o) => o.value === feedFilter)?.label}
                       </span>
                     )}
                   </button>
                   {showFeedFilterMenu && (
                     <>
-                      <div className="fixed inset-0 z-10" onClick={() => setShowFeedFilterMenu(false)} />
-                      <div className="absolute right-0 top-full mt-1 z-20 bg-white dark:bg-[#1e2936] border border-[#e2e8f0] dark:border-[#334155] rounded-lg shadow-lg py-1 min-w-[160px]">
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setShowFeedFilterMenu(false)}
+                      />
+                      <div className="absolute right-0 top-full mt-1 z-20 bg-white dark:bg-[#1e2936] border border-[#e2e8f0] dark:border-[#334155] rounded-lg shadow-lg py-1 min-w-[180px] max-h-[320px] overflow-y-auto">
                         {FEED_FILTER_OPTIONS.map((option) => (
                           <button
                             key={option.value}
                             onClick={() => handleFeedFilterChange(option.value)}
                             className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${
-                              feedFilter === option.value ? 'text-[#137fec] font-medium' : 'text-slate-700 dark:text-slate-300'
+                              feedFilter === option.value
+                                ? 'text-[#137fec] font-medium'
+                                : 'text-slate-700 dark:text-slate-300'
                             }`}
                           >
                             <span className="material-symbols-outlined text-lg">{option.icon}</span>
                             {option.label}
                             {feedFilter === option.value && (
-                              <span className="material-symbols-outlined text-sm ml-auto">check</span>
+                              <span className="material-symbols-outlined text-sm ml-auto">
+                                check
+                              </span>
                             )}
                           </button>
                         ))}
@@ -745,15 +654,12 @@ export function AuthenticatedHomePage() {
                   )}
                 </div>
               </div>
-              <div className="divide-y divide-[#e2e8f0] dark:divide-[#334155]">
-                <FeedSection
-                  isLoading={feedLoading}
-                  items={displayedFeedItems}
-                  hasMore={feedHasMore}
-                  onLoadMore={handleLoadMore}
-                  isLoadingMore={feedFetchingNext}
-                />
-              </div>
+              <ActivityFeed
+                types={feedTypes}
+                limit={20}
+                enabled={queryEnabled}
+                height={480}
+              />
             </div>
 
             {/* Today's Focus - colSpan: 1 */}
@@ -796,19 +702,39 @@ export function AuthenticatedHomePage() {
                 <div className="w-8 h-8 rounded bg-[#137fec] flex items-center justify-center flex-shrink-0">
                   <span className="material-symbols-outlined text-white text-xl">grid_view</span>
                 </div>
-                <span className="text-lg font-bold text-slate-900 dark:text-white">IntelliFlow CRM</span>
+                <span className="text-lg font-bold text-slate-900 dark:text-white">
+                  IntelliFlow CRM
+                </span>
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
                 AI-powered CRM with modern automation and governance-grade validation
               </p>
               <div className="flex items-center gap-3">
-                <a href="https://twitter.com/intelliflow" target="_blank" rel="noopener noreferrer" className="text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors" aria-label="Twitter">
+                <a
+                  href="https://twitter.com/intelliflow"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  aria-label="Twitter"
+                >
                   <span className="text-sm font-medium">X</span>
                 </a>
-                <a href="https://linkedin.com/company/intelliflow" target="_blank" rel="noopener noreferrer" className="text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors" aria-label="LinkedIn">
+                <a
+                  href="https://linkedin.com/company/intelliflow"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  aria-label="LinkedIn"
+                >
                   <span className="text-sm font-medium">LinkedIn</span>
                 </a>
-                <a href="https://github.com/intelliflow" target="_blank" rel="noopener noreferrer" className="text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors" aria-label="GitHub">
+                <a
+                  href="https://github.com/intelliflow"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  aria-label="GitHub"
+                >
                   <span className="text-sm font-medium">GitHub</span>
                 </a>
               </div>
@@ -816,47 +742,178 @@ export function AuthenticatedHomePage() {
             <div>
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Product</h3>
               <ul className="space-y-3">
-                <li><Link href="/features" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Features</Link></li>
-                <li><Link href="/pricing" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Pricing</Link></li>
-                <li><Link href="/security" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Security</Link></li>
-                <li><Link href="/integrations" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Integrations</Link></li>
+                <li>
+                  <Link
+                    href="/features"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  >
+                    Features
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/pricing"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  >
+                    Pricing
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/security"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  >
+                    Security
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/integrations"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  >
+                    Integrations
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Company</h3>
               <ul className="space-y-3">
-                <li><Link href="/about" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">About</Link></li>
-                <li><Link href="/contact" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Contact</Link></li>
-                <li><Link href="/partners" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Partners</Link></li>
-                <li><Link href="/press" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Press</Link></li>
+                <li>
+                  <Link
+                    href="/about"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  >
+                    About
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/contact"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  >
+                    Contact
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/partners"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  >
+                    Partners
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/press"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  >
+                    Press
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Resources</h3>
+              <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">
+                Resources
+              </h3>
               <ul className="space-y-3">
-                <li><Link href="/docs" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Documentation</Link></li>
-                <li><Link href="/api-docs" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">API Reference</Link></li>
-                <li><Link href="/support" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Support</Link></li>
-                <li><a href="https://status.intelliflow.ai" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Status</a></li>
+                <li>
+                  <Link
+                    href="/docs"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  >
+                    Documentation
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/api-docs"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  >
+                    API Reference
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/support"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  >
+                    Support
+                  </Link>
+                </li>
+                <li>
+                  <a
+                    href="https://status.intelliflow.ai"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  >
+                    Status
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
               <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4">Legal</h3>
               <ul className="space-y-3">
-                <li><Link href="/privacy" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Privacy Policy</Link></li>
-                <li><Link href="/terms" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Terms of Service</Link></li>
-                <li><Link href="/cookies" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Cookie Policy</Link></li>
-                <li><Link href="/gdpr" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">GDPR</Link></li>
+                <li>
+                  <Link
+                    href="/privacy"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  >
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/terms"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  >
+                    Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/cookies"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  >
+                    Cookie Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/gdpr"
+                    className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                  >
+                    GDPR
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>
           <div className="pt-8 border-t border-[#e2e8f0] dark:border-[#334155]">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-sm text-slate-600 dark:text-slate-400">&copy; 2025 IntelliFlow CRM. All rights reserved.</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                &copy; 2025 IntelliFlow CRM. All rights reserved.
+              </p>
               <div className="flex items-center gap-6">
-                <Link href="/privacy" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Privacy</Link>
-                <Link href="/terms" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Terms</Link>
-                <Link href="/cookies" className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors">Cookies</Link>
+                <Link
+                  href="/privacy"
+                  className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                >
+                  Privacy
+                </Link>
+                <Link
+                  href="/terms"
+                  className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                >
+                  Terms
+                </Link>
+                <Link
+                  href="/cookies"
+                  className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] transition-colors"
+                >
+                  Cookies
+                </Link>
               </div>
             </div>
           </div>
@@ -878,7 +935,6 @@ export function AuthenticatedHomePage() {
         pinnedItems={pinnedData?.items}
         onUnpin={handleUnpin}
       />
-
     </div>
   );
 }

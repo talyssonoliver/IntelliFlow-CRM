@@ -12,9 +12,7 @@ describe('PublicHomePage', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: /move faster, stay governed/i })
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/audit-matrix gates, wcag defaults/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/audit-matrix gates, wcag defaults/i)).toBeInTheDocument();
   });
 
   it('includes primary and secondary calls to action with correct destinations', () => {
@@ -43,9 +41,7 @@ describe('PublicHomePage', () => {
 
     const pillars = screen.getAllByTestId('value-pillar');
     expect(pillars).toHaveLength(3);
-    expect(
-      screen.getByText(/automation with safeguards/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/automation with safeguards/i)).toBeInTheDocument();
     expect(screen.getByText(/evidence-backed delivery/i)).toBeInTheDocument();
     expect(screen.getByText(/human-centered ai/i)).toBeInTheDocument();
   });
@@ -55,15 +51,9 @@ describe('PublicHomePage', () => {
 
     const flows = screen.getAllByTestId('flow-card');
     expect(flows).toHaveLength(3);
-    expect(
-      screen.getByText(/Flow-005\/006/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Flow-007\/008/i)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Flow-011\/012/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Flow-005\/006/i)).toBeInTheDocument();
+    expect(screen.getByText(/Flow-007\/008/i)).toBeInTheDocument();
+    expect(screen.getByText(/Flow-011\/012/i)).toBeInTheDocument();
   });
 
   it('lists security and accessibility guarantees', () => {
@@ -78,12 +68,9 @@ describe('PublicHomePage', () => {
     const { container } = render(<HomePage />);
 
     expect(
-      container.querySelector('[class*="#137fec"]') ||
-        container.querySelector('[class*="primary"]')
+      container.querySelector('[class*="#137fec"]') || container.querySelector('[class*="primary"]')
     ).toBeTruthy();
-    expect(
-      container.querySelector('.material-symbols-outlined')
-    ).toBeTruthy();
+    expect(container.querySelector('.material-symbols-outlined')).toBeTruthy();
   });
 
   it('exposes a main landmark for skip links and accessibility tooling', () => {

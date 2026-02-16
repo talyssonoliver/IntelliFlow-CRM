@@ -68,7 +68,7 @@ describe('Entry Points', () => {
       const context = await createContext();
 
       expect(context.user).toEqual({
-        userId: '00000000-0000-4000-8000-000000000103',  // Sarah Johnson from SEED_IDS
+        userId: '00000000-0000-4000-8000-000000000103', // Sarah Johnson from SEED_IDS
         email: 'sarah.johnson@intelliflow.dev',
         role: 'SALES_REP',
         tenantId: '00000000-0000-4000-8000-000000000001',

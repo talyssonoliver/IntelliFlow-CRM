@@ -28,13 +28,15 @@ export interface ResetToken {
   usedAt?: Date;
 }
 
-export type ResetTokenResult = {
-  ok: true;
-  value: ResetToken;
-} | {
-  ok: false;
-  error: ResetTokenError;
-};
+export type ResetTokenResult =
+  | {
+      ok: true;
+      value: ResetToken;
+    }
+  | {
+      ok: false;
+      error: ResetTokenError;
+    };
 
 export interface ResetTokenError {
   code: 'EXPIRED' | 'INVALID' | 'ALREADY_USED' | 'RATE_LIMITED' | 'GENERATION_FAILED';

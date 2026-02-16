@@ -13,8 +13,18 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -72,7 +82,9 @@ vi.mock('@/components/shared/entity-action-sheet', () => ({
 }));
 vi.mock('@/components/shared/more-actions-button', () => ({
   MoreActionsButton: ({ onClick }: { onClick: () => void }) => (
-    <button onClick={onClick} data-testid="more-actions">More</button>
+    <button onClick={onClick} data-testid="more-actions">
+      More
+    </button>
   ),
 }));
 
@@ -80,8 +92,18 @@ vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <div className={className}>{children}</div>
   ),
-  Button: ({ children, onClick, ...props }: { children?: React.ReactNode; onClick?: () => void; [key: string]: unknown }) => (
-    <button onClick={onClick} {...props}>{children}</button>
+  Button: ({
+    children,
+    onClick,
+    ...props
+  }: {
+    children?: React.ReactNode;
+    onClick?: () => void;
+    [key: string]: unknown;
+  }) => (
+    <button onClick={onClick} {...props}>
+      {children}
+    </button>
   ),
   Skeleton: ({ className }: { className?: string }) => (
     <div className={`animate-pulse ${className ?? ''}`} />

@@ -42,8 +42,14 @@ describe('Auto-Response Validators', () => {
   describe('autoResponseStatusSchema', () => {
     it('should accept all valid statuses', () => {
       const valid = [
-        'DRAFT', 'PENDING_APPROVAL', 'APPROVED', 'REJECTED',
-        'INVALIDATED', 'SENT', 'FAILED', 'ESCALATED',
+        'DRAFT',
+        'PENDING_APPROVAL',
+        'APPROVED',
+        'REJECTED',
+        'INVALIDATED',
+        'SENT',
+        'FAILED',
+        'ESCALATED',
       ];
       valid.forEach((v) => {
         const result = autoResponseStatusSchema.safeParse(v);

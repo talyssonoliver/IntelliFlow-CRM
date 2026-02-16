@@ -53,9 +53,7 @@ export async function makeRequest(
   return Result.ok(data as Record<string, unknown>);
 }
 
-export function handleErrorResponse(
-  error: string
-): Result<Record<string, unknown>, DomainError> {
+export function handleErrorResponse(error: string): Result<Record<string, unknown>, DomainError> {
   switch (error) {
     case 'invalid_auth':
     case 'not_authed':

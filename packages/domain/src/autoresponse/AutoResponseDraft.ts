@@ -30,22 +30,12 @@ export const AUTO_RESPONSE_STATUSES = [
 export type AutoResponseStatus = (typeof AUTO_RESPONSE_STATUSES)[number];
 
 // Trigger types
-export const TRIGGER_TYPES = [
-  'EMAIL_RECEIVED',
-  'FORM_SUBMIT',
-  'CHAT_MESSAGE',
-  'MANUAL',
-] as const;
+export const TRIGGER_TYPES = ['EMAIL_RECEIVED', 'FORM_SUBMIT', 'CHAT_MESSAGE', 'MANUAL'] as const;
 
 export type TriggerType = (typeof TRIGGER_TYPES)[number];
 
 // Lead statuses that allow auto-response
-export const ALLOWED_LEAD_STATUSES = [
-  'NEW',
-  'CONTACTED',
-  'QUALIFIED',
-  'NURTURING',
-] as const;
+export const ALLOWED_LEAD_STATUSES = ['NEW', 'CONTACTED', 'QUALIFIED', 'NURTURING'] as const;
 
 // Domain Errors
 export class InvalidLeadStatusError extends DomainError {
@@ -311,9 +301,7 @@ export class AutoResponseDraft extends AggregateRoot<AutoResponseDraftId> {
   }
 
   get approvalDecision(): ApprovalDecision | undefined {
-    return this.props.approvalDecision
-      ? { ...this.props.approvalDecision }
-      : undefined;
+    return this.props.approvalDecision ? { ...this.props.approvalDecision } : undefined;
   }
 
   get escalation(): Escalation | undefined {
@@ -371,9 +359,7 @@ export class AutoResponseDraft extends AggregateRoot<AutoResponseDraftId> {
     }
 
     if (this.props.status !== 'DRAFT') {
-      return Result.fail(
-        new InvalidStatusTransitionError(this.props.status, 'PENDING_APPROVAL')
-      );
+      return Result.fail(new InvalidStatusTransitionError(this.props.status, 'PENDING_APPROVAL'));
     }
 
     this.props.status = 'PENDING_APPROVAL';
@@ -381,11 +367,7 @@ export class AutoResponseDraft extends AggregateRoot<AutoResponseDraftId> {
     this.addStatusHistory('PENDING_APPROVAL', approverId, 'Submitted for human approval');
 
     this.addDomainEvent(
-      new AutoResponseSubmittedForApprovalEvent(
-        this.id.toString(),
-        this.props.tenantId,
-        approverId
-      )
+      new AutoResponseSubmittedForApprovalEvent(this.id.toString(), this.props.tenantId, approverId)
     );
 
     return Result.ok(undefined);
@@ -405,9 +387,7 @@ export class AutoResponseDraft extends AggregateRoot<AutoResponseDraftId> {
     }
 
     if (this.props.status !== 'PENDING_APPROVAL') {
-      return Result.fail(
-        new InvalidStatusTransitionError(this.props.status, 'APPROVED')
-      );
+      return Result.fail(new InvalidStatusTransitionError(this.props.status, 'APPROVED'));
     }
 
     // Apply modifications if provided
@@ -452,9 +432,7 @@ export class AutoResponseDraft extends AggregateRoot<AutoResponseDraftId> {
     }
 
     if (this.props.status !== 'PENDING_APPROVAL') {
-      return Result.fail(
-        new InvalidStatusTransitionError(this.props.status, 'REJECTED')
-      );
+      return Result.fail(new InvalidStatusTransitionError(this.props.status, 'REJECTED'));
     }
 
     this.props.status = 'REJECTED';
@@ -468,12 +446,7 @@ export class AutoResponseDraft extends AggregateRoot<AutoResponseDraftId> {
     this.addStatusHistory('REJECTED', rejectedBy, reason);
 
     this.addDomainEvent(
-      new AutoResponseRejectedEvent(
-        this.id.toString(),
-        rejectedBy,
-        this.props.tenantId,
-        reason
-      )
+      new AutoResponseRejectedEvent(this.id.toString(), rejectedBy, this.props.tenantId, reason)
     );
 
     return Result.ok(undefined);
@@ -489,9 +462,7 @@ export class AutoResponseDraft extends AggregateRoot<AutoResponseDraftId> {
       if (this.props.status === 'DRAFT' || this.props.status === 'PENDING_APPROVAL') {
         return Result.fail(new ApprovalRequiredError());
       }
-      return Result.fail(
-        new InvalidStatusTransitionError(this.props.status, 'SENT')
-      );
+      return Result.fail(new InvalidStatusTransitionError(this.props.status, 'SENT'));
     }
 
     this.props.status = 'SENT';
@@ -513,13 +484,9 @@ export class AutoResponseDraft extends AggregateRoot<AutoResponseDraftId> {
   /**
    * Mark send as failed
    */
-  markSendFailed(
-    error: string
-  ): Result<void, InvalidStatusTransitionError> {
+  markSendFailed(error: string): Result<void, InvalidStatusTransitionError> {
     if (this.props.status !== 'APPROVED') {
-      return Result.fail(
-        new InvalidStatusTransitionError(this.props.status, 'FAILED')
-      );
+      return Result.fail(new InvalidStatusTransitionError(this.props.status, 'FAILED'));
     }
 
     this.props.status = 'FAILED';
@@ -527,11 +494,7 @@ export class AutoResponseDraft extends AggregateRoot<AutoResponseDraftId> {
     this.addStatusHistory('FAILED', undefined, `Send failed: ${error}`);
 
     this.addDomainEvent(
-      new AutoResponseSendFailedEvent(
-        this.id.toString(),
-        this.props.tenantId,
-        error
-      )
+      new AutoResponseSendFailedEvent(this.id.toString(), this.props.tenantId, error)
     );
 
     return Result.ok(undefined);
@@ -553,9 +516,7 @@ export class AutoResponseDraft extends AggregateRoot<AutoResponseDraftId> {
     }
 
     if (this.props.status !== 'PENDING_APPROVAL') {
-      return Result.fail(
-        new InvalidStatusTransitionError(this.props.status, 'ESCALATED')
-      );
+      return Result.fail(new InvalidStatusTransitionError(this.props.status, 'ESCALATED'));
     }
 
     // IFC-029: Check escalation limit
@@ -608,11 +569,7 @@ export class AutoResponseDraft extends AggregateRoot<AutoResponseDraftId> {
     this.addStatusHistory('INVALIDATED', undefined, reason);
 
     this.addDomainEvent(
-      new AutoResponseInvalidatedEvent(
-        this.id.toString(),
-        this.props.tenantId,
-        reason
-      )
+      new AutoResponseInvalidatedEvent(this.id.toString(), this.props.tenantId, reason)
     );
   }
 
@@ -625,9 +582,7 @@ export class AutoResponseDraft extends AggregateRoot<AutoResponseDraftId> {
       this.props.updatedAt = new Date();
       this.addStatusHistory('INVALIDATED', undefined, 'Expired after 24 hours');
 
-      this.addDomainEvent(
-        new AutoResponseExpiredEvent(this.id.toString(), this.props.tenantId)
-      );
+      this.addDomainEvent(new AutoResponseExpiredEvent(this.id.toString(), this.props.tenantId));
     }
   }
 
@@ -656,9 +611,7 @@ export class AutoResponseDraft extends AggregateRoot<AutoResponseDraftId> {
     }
 
     if (this.props.status !== 'ESCALATED') {
-      return Result.fail(
-        new InvalidStatusTransitionError(this.props.status, 'PENDING_APPROVAL')
-      );
+      return Result.fail(new InvalidStatusTransitionError(this.props.status, 'PENDING_APPROVAL'));
     }
 
     const now = new Date();

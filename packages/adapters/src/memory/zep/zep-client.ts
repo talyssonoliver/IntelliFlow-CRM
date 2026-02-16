@@ -49,9 +49,7 @@ export interface ZepPrismaClient {
         lastSyncSuccess: boolean;
       }>;
     }) => Promise<Record<string, unknown>>;
-    findUnique: (args: {
-      where: { tenantId: string };
-    }) => Promise<{
+    findUnique: (args: { where: { tenantId: string } }) => Promise<{
       id: string;
       tenantId: string;
       episodesUsed: number;
@@ -161,7 +159,8 @@ export class ZepMemoryAdapter {
     this.apiKey = config.apiKey;
     this.projectId = config.projectId;
     this.maxEpisodes = config.maxEpisodes ?? ZEP_CONFIG.MAX_FREE_EPISODES;
-    this.warningThresholdPercent = config.warningThresholdPercent ?? ZEP_CONFIG.WARNING_THRESHOLD_PERCENT;
+    this.warningThresholdPercent =
+      config.warningThresholdPercent ?? ZEP_CONFIG.WARNING_THRESHOLD_PERCENT;
     this.hardLimitPercent = config.hardLimitPercent ?? ZEP_CONFIG.HARD_LIMIT_PERCENT;
     this.prisma = config.prisma as ZepPrismaClient | undefined;
     this.tenantId = config.tenantId ?? 'global';
@@ -228,7 +227,9 @@ export class ZepMemoryAdapter {
       }
 
       this.isInitializedFlag = true;
-      console.log(`[ZepMemoryAdapter] Initialized. Episodes used: ${this.episodeCount}/${this.maxEpisodes}`);
+      console.log(
+        `[ZepMemoryAdapter] Initialized. Episodes used: ${this.episodeCount}/${this.maxEpisodes}`
+      );
     } catch (error) {
       console.error('[ZepMemoryAdapter] Failed to sync with Cloud API:', error);
 
@@ -246,17 +247,16 @@ export class ZepMemoryAdapter {
 
       // Still mark as initialized - we can work with local data
       this.isInitializedFlag = true;
-      console.log(`[ZepMemoryAdapter] Initialized. Episodes used: ${this.episodeCount}/${this.maxEpisodes}`);
+      console.log(
+        `[ZepMemoryAdapter] Initialized. Episodes used: ${this.episodeCount}/${this.maxEpisodes}`
+      );
     }
   }
 
   /**
    * Create or get a session
    */
-  async createSession(
-    sessionId: string,
-    metadata: SessionMetadata
-  ): Promise<ZepSession> {
+  async createSession(sessionId: string, metadata: SessionMetadata): Promise<ZepSession> {
     await this.ensureInitialized();
 
     if (this.useFallback) {
@@ -385,12 +385,8 @@ export class ZepMemoryAdapter {
   async getEpisodeBudget(): Promise<EpisodeBudget> {
     await this.ensureInitialized();
 
-    const warningThreshold = Math.floor(
-      (this.maxEpisodes * this.warningThresholdPercent) / 100
-    );
-    const limitThreshold = Math.floor(
-      (this.maxEpisodes * this.hardLimitPercent) / 100
-    );
+    const warningThreshold = Math.floor((this.maxEpisodes * this.warningThresholdPercent) / 100);
+    const limitThreshold = Math.floor((this.maxEpisodes * this.hardLimitPercent) / 100);
 
     return {
       used: this.episodeCount,
@@ -456,9 +452,7 @@ export class ZepMemoryAdapter {
   }
 
   private shouldUseFallback(): boolean {
-    const limitThreshold = Math.floor(
-      (this.maxEpisodes * this.hardLimitPercent) / 100
-    );
+    const limitThreshold = Math.floor((this.maxEpisodes * this.hardLimitPercent) / 100);
     return this.episodeCount >= limitThreshold;
   }
 
@@ -553,7 +547,7 @@ export class ZepMemoryAdapter {
     const url = `${baseUrl}${endpoint}`;
 
     const headers: Record<string, string> = {
-      'Authorization': `Bearer ${this.apiKey}`,
+      Authorization: `Bearer ${this.apiKey}`,
       'Content-Type': 'application/json',
     };
 
@@ -583,10 +577,7 @@ export class ZepMemoryAdapter {
   // Fallback Methods (in-memory)
   // =============================================================================
 
-  private createFallbackSession(
-    sessionId: string,
-    metadata: SessionMetadata
-  ): ZepSession {
+  private createFallbackSession(sessionId: string, metadata: SessionMetadata): ZepSession {
     if (!this.inMemoryFallback.has(sessionId)) {
       this.inMemoryFallback.set(sessionId, { messages: [] });
     }

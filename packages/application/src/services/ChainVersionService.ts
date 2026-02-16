@@ -7,10 +7,7 @@
  * @module @intelliflow/application/services/ChainVersionService
  */
 
-import {
-  CHAIN_VERSION_DEFAULTS,
-  DomainEvent,
-} from '@intelliflow/domain';
+import { CHAIN_VERSION_DEFAULTS, DomainEvent } from '@intelliflow/domain';
 import type {
   ChainType,
   ChainVersionStatus,
@@ -89,7 +86,11 @@ export interface ChainVersionRepositoryPort {
   findByTenantId(tenantId: string): Promise<ChainVersionRecord[]>;
   findByChainType(chainType: ChainType, tenantId: string): Promise<ChainVersionRecord[]>;
   findActive(chainType: ChainType, tenantId: string): Promise<ChainVersionRecord | null>;
-  findByStatus(chainType: ChainType, status: ChainVersionStatus, tenantId: string): Promise<ChainVersionRecord[]>;
+  findByStatus(
+    chainType: ChainType,
+    status: ChainVersionStatus,
+    tenantId: string
+  ): Promise<ChainVersionRecord[]>;
   update(id: string, data: Partial<ChainVersionRecord>): Promise<ChainVersionRecord>;
   delete(id: string): Promise<void>;
 }
@@ -303,7 +304,8 @@ export class ChainVersionService {
       description: input.description ?? version.description,
       rolloutStrategy: input.rolloutStrategy ?? version.rolloutStrategy,
       rolloutPercent: input.rolloutPercent ?? version.rolloutPercent,
-      experimentId: input.experimentId === null ? null : (input.experimentId ?? version.experimentId),
+      experimentId:
+        input.experimentId === null ? null : (input.experimentId ?? version.experimentId),
     });
 
     // Create audit entry
@@ -322,10 +324,7 @@ export class ChainVersionService {
   /**
    * Activate a chain version (marks as ACTIVE, deprecates previous active)
    */
-  async activateVersion(
-    versionId: string,
-    activatedBy: string
-  ): Promise<ChainVersionRecord> {
+  async activateVersion(versionId: string, activatedBy: string): Promise<ChainVersionRecord> {
     const version = await this.versionRepo.findById(versionId);
     if (!version) {
       throw new Error(`Chain version not found: ${versionId}`);
@@ -414,10 +413,7 @@ export class ChainVersionService {
   /**
    * Archive a chain version
    */
-  async archiveVersion(
-    versionId: string,
-    archivedBy: string
-  ): Promise<ChainVersionRecord> {
+  async archiveVersion(versionId: string, archivedBy: string): Promise<ChainVersionRecord> {
     const version = await this.versionRepo.findById(versionId);
     if (!version) {
       throw new Error(`Chain version not found: ${versionId}`);
@@ -616,7 +612,12 @@ export class ChainVersionService {
    */
   async listVersions(
     tenantId: string,
-    options?: { chainType?: ChainType; status?: ChainVersionStatus; limit?: number; offset?: number }
+    options?: {
+      chainType?: ChainType;
+      status?: ChainVersionStatus;
+      limit?: number;
+      offset?: number;
+    }
   ): Promise<ChainVersionRecord[]> {
     let versions: ChainVersionRecord[];
 
@@ -655,10 +656,7 @@ export class ChainVersionService {
   /**
    * Get audit log entries for a specific version
    */
-  async getVersionAuditLog(
-    versionId: string,
-    limit?: number
-  ): Promise<ChainVersionAuditRecord[]> {
+  async getVersionAuditLog(versionId: string, limit?: number): Promise<ChainVersionAuditRecord[]> {
     const entries = await this.auditRepo.findByVersionId(versionId);
     return limit ? entries.slice(0, limit) : entries;
   }
@@ -690,10 +688,18 @@ export class ChainVersionService {
     for (const v of versions) {
       byChainType[v.chainType] = (byChainType[v.chainType] ?? 0) + 1;
       switch (v.status) {
-        case 'ACTIVE': activeVersions++; break;
-        case 'DRAFT': draftVersions++; break;
-        case 'DEPRECATED': deprecatedVersions++; break;
-        case 'ARCHIVED': archivedVersions++; break;
+        case 'ACTIVE':
+          activeVersions++;
+          break;
+        case 'DRAFT':
+          draftVersions++;
+          break;
+        case 'DEPRECATED':
+          deprecatedVersions++;
+          break;
+        case 'ARCHIVED':
+          archivedVersions++;
+          break;
       }
     }
 
@@ -731,8 +737,14 @@ export class ChainVersionService {
     }
 
     const compareFields: Array<keyof ChainVersionRecord> = [
-      'prompt', 'model', 'temperature', 'maxTokens',
-      'additionalParams', 'description', 'rolloutStrategy', 'rolloutPercent',
+      'prompt',
+      'model',
+      'temperature',
+      'maxTokens',
+      'additionalParams',
+      'description',
+      'rolloutStrategy',
+      'rolloutPercent',
     ];
 
     const differences: Array<{ field: string; valueA: unknown; valueB: unknown }> = [];

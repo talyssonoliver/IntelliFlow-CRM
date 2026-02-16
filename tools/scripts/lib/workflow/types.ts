@@ -15,17 +15,17 @@ export type WorkflowSession = 'spec' | 'plan' | 'exec';
 export type WorkflowStatus =
   | 'Backlog'
   | 'Planned'
-  | 'Specifying'      // SESSION 1 in progress
-  | 'Spec Complete'   // SESSION 1 done, ready for SESSION 2
-  | 'Planning'        // SESSION 2 in progress
-  | 'Plan Complete'   // SESSION 2 done, ready for SESSION 3
-  | 'In Progress'     // SESSION 3 in progress
-  | 'Validating'      // MATOP validation running
-  | 'Completed'       // Task done
-  | 'Failed'          // Execution failed
-  | 'Blocked'         // External blocker
-  | 'Needs Human'     // Requires human intervention
-  | 'In Review';      // Code review pending
+  | 'Specifying' // SESSION 1 in progress
+  | 'Spec Complete' // SESSION 1 done, ready for SESSION 2
+  | 'Planning' // SESSION 2 in progress
+  | 'Plan Complete' // SESSION 2 done, ready for SESSION 3
+  | 'In Progress' // SESSION 3 in progress
+  | 'Validating' // MATOP validation running
+  | 'Completed' // Task done
+  | 'Failed' // Execution failed
+  | 'Blocked' // External blocker
+  | 'Needs Human' // Requires human intervention
+  | 'In Review'; // Code review pending
 
 /**
  * MATOP verdict values
@@ -64,11 +64,11 @@ export interface SessionResult {
  * Artifacts produced by a session
  */
 export interface SessionArtifacts {
-  spec?: string;        // Path to spec file
-  plan?: string;        // Path to plan file
-  delivery?: string;    // Path to delivery report
-  context?: string;     // Path to hydrated context
-  evidence?: string[];  // Paths to evidence files
+  spec?: string; // Path to spec file
+  plan?: string; // Path to plan file
+  delivery?: string; // Path to delivery report
+  context?: string; // Path to hydrated context
+  evidence?: string[]; // Paths to evidence files
 }
 
 /**

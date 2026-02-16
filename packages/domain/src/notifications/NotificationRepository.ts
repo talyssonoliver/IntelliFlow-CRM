@@ -43,34 +43,22 @@ export interface NotificationRepository {
   /**
    * Find pending notifications for delivery
    */
-  findPendingForDelivery(
-    tenantId: string,
-    limit?: number
-  ): Promise<Notification[]>;
+  findPendingForDelivery(tenantId: string, limit?: number): Promise<Notification[]>;
 
   /**
    * Find scheduled notifications ready to send
    */
-  findScheduledReadyToSend(
-    now: Date,
-    limit?: number
-  ): Promise<Notification[]>;
+  findScheduledReadyToSend(now: Date, limit?: number): Promise<Notification[]>;
 
   /**
    * Find failed notifications for retry
    */
-  findFailedForRetry(
-    maxRetries: number,
-    limit?: number
-  ): Promise<Notification[]>;
+  findFailedForRetry(maxRetries: number, limit?: number): Promise<Notification[]>;
 
   /**
    * Count unread notifications for a recipient
    */
-  countUnread(
-    tenantId: string,
-    recipientId: string
-  ): Promise<number>;
+  countUnread(tenantId: string, recipientId: string): Promise<number>;
 
   /**
    * Get recent notifications for a recipient
@@ -85,10 +73,7 @@ export interface NotificationRepository {
   /**
    * Mark all notifications as read for a recipient
    */
-  markAllAsRead(
-    tenantId: string,
-    recipientId: string
-  ): Promise<number>;
+  markAllAsRead(tenantId: string, recipientId: string): Promise<number>;
 
   /**
    * Delete old notifications (retention policy)

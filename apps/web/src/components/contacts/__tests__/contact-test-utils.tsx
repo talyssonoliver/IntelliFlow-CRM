@@ -9,7 +9,15 @@ import { vi } from 'vitest';
 // ─── Type Definitions ───────────────────────────────────────────────────────
 
 export type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'ARCHIVED';
-export type ActivityType = 'email' | 'call' | 'meeting' | 'chat' | 'document' | 'deal' | 'ticket' | 'note';
+export type ActivityType =
+  | 'email'
+  | 'call'
+  | 'meeting'
+  | 'chat'
+  | 'document'
+  | 'deal'
+  | 'ticket'
+  | 'note';
 
 export interface MockContact {
   id: string;
@@ -70,14 +78,16 @@ export function createMockContact(overrides?: Partial<MockContact>): MockContact
 }
 
 export function createMockContactList(count: number): MockContact[] {
-  return Array.from({ length: count }, (_, i) => createMockContact({
-    id: `00000000-0000-4000-8000-00000000000${i + 1}`,
-    firstName: `Contact${i + 1}`,
-    lastName: `User${i + 1}`,
-    email: `contact${i + 1}@example.com`,
-    phone: i % 2 === 0 ? `+1 (555) 000-000${i}` : null,
-    _count: { opportunities: i % 3, tasks: i % 5 },
-  }));
+  return Array.from({ length: count }, (_, i) =>
+    createMockContact({
+      id: `00000000-0000-4000-8000-00000000000${i + 1}`,
+      firstName: `Contact${i + 1}`,
+      lastName: `User${i + 1}`,
+      email: `contact${i + 1}@example.com`,
+      phone: i % 2 === 0 ? `+1 (555) 000-000${i}` : null,
+      _count: { opportunities: i % 3, tasks: i % 5 },
+    })
+  );
 }
 
 // ─── Activity Factory ───────────────────────────────────────────────────────
@@ -96,18 +106,33 @@ export function createMockActivity(overrides?: Partial<MockActivity>): MockActiv
 }
 
 export function createMockActivityList(count: number): MockActivity[] {
-  const types: ActivityType[] = ['email', 'call', 'meeting', 'chat', 'document', 'deal', 'ticket', 'note'];
-  const sentiments: Array<'positive' | 'neutral' | 'negative'> = ['positive', 'neutral', 'negative'];
+  const types: ActivityType[] = [
+    'email',
+    'call',
+    'meeting',
+    'chat',
+    'document',
+    'deal',
+    'ticket',
+    'note',
+  ];
+  const sentiments: Array<'positive' | 'neutral' | 'negative'> = [
+    'positive',
+    'neutral',
+    'negative',
+  ];
 
-  return Array.from({ length: count }, (_, i) => createMockActivity({
-    id: `activity-${i + 1}`,
-    type: types[i % types.length],
-    title: `Activity ${i + 1}`,
-    description: `Description for activity ${i + 1}`,
-    timestamp: new Date(Date.now() - i * 86400000).toISOString(), // Days in the past
-    user: `User ${i % 3 + 1}`,
-    sentiment: sentiments[i % sentiments.length],
-  }));
+  return Array.from({ length: count }, (_, i) =>
+    createMockActivity({
+      id: `activity-${i + 1}`,
+      type: types[i % types.length],
+      title: `Activity ${i + 1}`,
+      description: `Description for activity ${i + 1}`,
+      timestamp: new Date(Date.now() - i * 86400000).toISOString(), // Days in the past
+      user: `User ${(i % 3) + 1}`,
+      sentiment: sentiments[i % sentiments.length],
+    })
+  );
 }
 
 // ─── Next.js Mocks ──────────────────────────────────────────────────────────
@@ -127,10 +152,22 @@ export const mockRouter = {
 export const mockUseRouter = vi.fn(() => mockRouter);
 
 export function createMockLink() {
-  return vi.fn(({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
-    // @ts-ignore - simplified mock
-    <a href={href} {...props}>{children}</a>
-  ));
+  return vi.fn(
+    ({
+      children,
+      href,
+      ...props
+    }: {
+      children: React.ReactNode;
+      href: string;
+      [key: string]: unknown;
+    }) => (
+      // @ts-ignore - simplified mock
+      <a href={href} {...props}>
+        {children}
+      </a>
+    )
+  );
 }
 
 // ─── Mock Handlers ──────────────────────────────────────────────────────────
@@ -195,10 +232,7 @@ export function createMockContactDetail() {
       nextBestAction: 'Schedule quarterly review meeting',
       sentiment: 'POSITIVE',
       engagementScore: 82,
-      recommendations: [
-        'Follow up on Q1 objectives',
-        'Introduce new product features',
-      ],
+      recommendations: ['Follow up on Q1 objectives', 'Introduce new product features'],
       sentimentTrend: 'IMPROVING',
       lastEngagementDays: 3,
     },
@@ -239,8 +273,20 @@ export function createMockRelationshipData() {
       accountId: 'account-1',
     },
     relatedContacts: [
-      { id: 'contact-2', firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', title: 'CTO' },
-      { id: 'contact-3', firstName: 'Bob', lastName: 'Johnson', email: 'bob@example.com', title: 'VP Sales' },
+      {
+        id: 'contact-2',
+        firstName: 'Jane',
+        lastName: 'Smith',
+        email: 'jane@example.com',
+        title: 'CTO',
+      },
+      {
+        id: 'contact-3',
+        firstName: 'Bob',
+        lastName: 'Johnson',
+        email: 'bob@example.com',
+        title: 'VP Sales',
+      },
     ],
     opportunityCount: 5,
     taskCount: 8,
@@ -251,7 +297,7 @@ export function createMockRelationshipData() {
 // ─── Reset All Mocks ────────────────────────────────────────────────────────
 
 export function resetAllMocks(handlers: ReturnType<typeof createMockHandlers>) {
-  Object.values(handlers).forEach(mock => mock.mockReset());
+  Object.values(handlers).forEach((mock) => mock.mockReset());
   mockRouter.push.mockReset();
   mockRouter.replace.mockReset();
   mockRouter.refresh.mockReset();

@@ -10,10 +10,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error('ADR index generation error:', error);
-    return NextResponse.json(
-      { success: false, error: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }
 }
 
@@ -22,10 +19,7 @@ export async function POST() {
     const result = writeADRIndex();
 
     if (!result.success) {
-      return NextResponse.json(
-        { success: false, error: result.error },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: result.error }, { status: 400 });
     }
 
     return NextResponse.json({
@@ -34,9 +28,6 @@ export async function POST() {
     });
   } catch (error) {
     console.error('ADR index write error:', error);
-    return NextResponse.json(
-      { success: false, error: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }
 }

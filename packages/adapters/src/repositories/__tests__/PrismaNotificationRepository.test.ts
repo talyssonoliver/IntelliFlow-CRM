@@ -7,10 +7,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PrismaNotificationRepository } from '../PrismaNotificationRepository';
-import {
-  Notification,
-  NotificationId,
-} from '@intelliflow/domain';
+import { Notification, NotificationId } from '@intelliflow/domain';
 
 // ==================== Mock Setup ====================
 
@@ -57,34 +54,33 @@ function createDbRecord(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function createNotification(overrides: Partial<{
-  id: string;
-  tenantId: string;
-  recipientId: string;
-  channel: 'in_app' | 'email' | 'sms' | 'push' | 'webhook';
-  subject: string;
-  body: string;
-  priority: 'high' | 'normal' | 'low';
-  status: 'pending' | 'sent' | 'delivered' | 'failed' | 'read' | 'bounced';
-  scheduledAt: Date;
-}> = {}): Notification {
-  return Notification.reconstitute(
-    NotificationId.create(overrides.id ?? 'notif-123'),
-    {
-      tenantId: overrides.tenantId ?? 'tenant-1',
-      recipientId: overrides.recipientId ?? 'user-1',
-      recipientEmail: 'user@example.com',
-      channel: overrides.channel ?? 'in_app',
-      subject: overrides.subject ?? 'Test Notification',
-      body: overrides.body ?? 'This is a test notification',
-      priority: overrides.priority ?? 'normal',
-      status: overrides.status ?? 'pending',
-      retryCount: 0,
-      scheduledAt: overrides.scheduledAt,
-      createdAt: new Date('2025-01-15T10:00:00Z'),
-      updatedAt: new Date('2025-01-15T10:00:00Z'),
-    }
-  );
+function createNotification(
+  overrides: Partial<{
+    id: string;
+    tenantId: string;
+    recipientId: string;
+    channel: 'in_app' | 'email' | 'sms' | 'push' | 'webhook';
+    subject: string;
+    body: string;
+    priority: 'high' | 'normal' | 'low';
+    status: 'pending' | 'sent' | 'delivered' | 'failed' | 'read' | 'bounced';
+    scheduledAt: Date;
+  }> = {}
+): Notification {
+  return Notification.reconstitute(NotificationId.create(overrides.id ?? 'notif-123'), {
+    tenantId: overrides.tenantId ?? 'tenant-1',
+    recipientId: overrides.recipientId ?? 'user-1',
+    recipientEmail: 'user@example.com',
+    channel: overrides.channel ?? 'in_app',
+    subject: overrides.subject ?? 'Test Notification',
+    body: overrides.body ?? 'This is a test notification',
+    priority: overrides.priority ?? 'normal',
+    status: overrides.status ?? 'pending',
+    retryCount: 0,
+    scheduledAt: overrides.scheduledAt,
+    createdAt: new Date('2025-01-15T10:00:00Z'),
+    updatedAt: new Date('2025-01-15T10:00:00Z'),
+  });
 }
 
 // ==================== Tests ====================
@@ -403,15 +399,9 @@ describe('PrismaNotificationRepository', () => {
         where: {
           tenantId: 'tenant-1',
           status: 'PENDING',
-          OR: [
-            { scheduledAt: null },
-            { scheduledAt: { lte: expect.any(Date) } },
-          ],
+          OR: [{ scheduledAt: null }, { scheduledAt: { lte: expect.any(Date) } }],
         },
-        orderBy: [
-          { priority: 'asc' },
-          { createdAt: 'asc' },
-        ],
+        orderBy: [{ priority: 'asc' }, { createdAt: 'asc' }],
         take: 100,
       });
     });
@@ -445,10 +435,7 @@ describe('PrismaNotificationRepository', () => {
             lte: now,
           },
         },
-        orderBy: [
-          { priority: 'asc' },
-          { scheduledAt: 'asc' },
-        ],
+        orderBy: [{ priority: 'asc' }, { scheduledAt: 'asc' }],
         take: 100,
       });
     });
@@ -478,10 +465,7 @@ describe('PrismaNotificationRepository', () => {
           status: 'FAILED',
           retryCount: { lt: 3 },
         },
-        orderBy: [
-          { priority: 'asc' },
-          { failedAt: 'asc' },
-        ],
+        orderBy: [{ priority: 'asc' }, { failedAt: 'asc' }],
         take: 100,
       });
     });

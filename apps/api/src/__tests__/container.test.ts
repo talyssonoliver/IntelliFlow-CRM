@@ -39,37 +39,146 @@ vi.mock('@intelliflow/db', () => {
 
 // All adapter/service mocks must be constructable (source uses `new X(...)`)
 vi.mock('@intelliflow/adapters', () => ({
-  PrismaLeadRepository: class { constructor() { return { name: 'leadRepo' }; } },
-  PrismaContactRepository: class { constructor() { return { name: 'contactRepo' }; } },
-  PrismaAccountRepository: class { constructor() { return { name: 'accountRepo' }; } },
-  PrismaOpportunityRepository: class { constructor() { return { name: 'opportunityRepo' }; } },
-  PrismaTaskRepository: class { constructor() { return { name: 'taskRepo' }; } },
-  PrismaChainVersionRepository: class { constructor() { return { name: 'chainVersionRepo' }; } },
-  PrismaChainVersionAuditRepository: class { constructor() { return { name: 'chainVersionAuditRepo' }; } },
-  PrismaActivityFeedRepository: class { constructor() { return { name: 'activityFeedRepo' }; } },
-  InMemoryEventBus: class { constructor() { return { name: 'eventBus' }; } },
-  MockAIService: class { constructor() { return { name: 'aiService' }; } },
-  GuardrailsAIService: class { constructor() { return { name: 'guardrailsAIService' }; } },
-  DurableAuditLogAdapter: class { constructor() { return { name: 'durableAuditLogAdapter' }; } },
-  InMemoryCache: class { constructor() { return { name: 'cache' }; } },
+  PrismaLeadRepository: class {
+    constructor() {
+      return { name: 'leadRepo' };
+    }
+  },
+  PrismaContactRepository: class {
+    constructor() {
+      return { name: 'contactRepo' };
+    }
+  },
+  PrismaAccountRepository: class {
+    constructor() {
+      return { name: 'accountRepo' };
+    }
+  },
+  PrismaOpportunityRepository: class {
+    constructor() {
+      return { name: 'opportunityRepo' };
+    }
+  },
+  PrismaTaskRepository: class {
+    constructor() {
+      return { name: 'taskRepo' };
+    }
+  },
+  PrismaChainVersionRepository: class {
+    constructor() {
+      return { name: 'chainVersionRepo' };
+    }
+  },
+  PrismaChainVersionAuditRepository: class {
+    constructor() {
+      return { name: 'chainVersionAuditRepo' };
+    }
+  },
+  PrismaActivityFeedRepository: class {
+    constructor() {
+      return { name: 'activityFeedRepo' };
+    }
+  },
+  InMemoryEventBus: class {
+    constructor() {
+      return { name: 'eventBus' };
+    }
+  },
+  MockAIService: class {
+    constructor() {
+      return { name: 'aiService' };
+    }
+  },
+  GuardrailsAIService: class {
+    constructor() {
+      return { name: 'guardrailsAIService' };
+    }
+  },
+  DurableAuditLogAdapter: class {
+    constructor() {
+      return { name: 'durableAuditLogAdapter' };
+    }
+  },
+  InMemoryCache: class {
+    constructor() {
+      return { name: 'cache' };
+    }
+  },
+  FeatureFlagAdapter: class {
+    constructor() {
+      return { name: 'featureFlagAdapter', isEnabled: vi.fn(), getVariant: vi.fn(), getRolloutPercent: vi.fn() };
+    }
+  },
+}));
+
+vi.mock('@intelliflow/platform', () => ({
+  InMemoryFeatureFlagProvider: {
+    fromConfig: vi.fn().mockReturnValue({
+      isEnabled: vi.fn().mockReturnValue(true),
+      getDecision: vi.fn().mockReturnValue({ key: 'test', enabled: true, reason: 'default' }),
+    }),
+  },
 }));
 
 vi.mock('@intelliflow/application', () => ({
-  LeadService: class { constructor() { return { name: 'leadService' }; } },
-  ContactService: class { constructor() { return { name: 'contactService' }; } },
-  AccountService: class { constructor() { return { name: 'accountService' }; } },
-  OpportunityService: class { constructor() { return { name: 'opportunityService' }; } },
-  TaskService: class { constructor() { return { name: 'taskService' }; } },
-  ChainVersionService: class { constructor() { return { name: 'chainVersionService' }; } },
-  ActivityFeedService: class { constructor() { return { name: 'activityFeedService' }; } },
+  LeadService: class {
+    constructor() {
+      return { name: 'leadService' };
+    }
+  },
+  ContactService: class {
+    constructor() {
+      return { name: 'contactService' };
+    }
+  },
+  AccountService: class {
+    constructor() {
+      return { name: 'accountService' };
+    }
+  },
+  OpportunityService: class {
+    constructor() {
+      return { name: 'opportunityService' };
+    }
+  },
+  TaskService: class {
+    constructor() {
+      return { name: 'taskService' };
+    }
+  },
+  ChainVersionService: class {
+    constructor() {
+      return { name: 'chainVersionService' };
+    }
+  },
+  ActivityFeedService: class {
+    constructor() {
+      return { name: 'activityFeedService' };
+    }
+  },
 }));
 
 vi.mock('../services/TicketService', () => ({
-  TicketService: class { constructor() { return { name: 'ticketService' }; } },
+  TicketService: class {
+    constructor() {
+      return { name: 'ticketService' };
+    }
+  },
 }));
 
 vi.mock('../services/AnalyticsService', () => ({
-  AnalyticsService: class { constructor() { return { name: 'analyticsService' }; } },
+  AnalyticsService: class {
+    constructor() {
+      return { name: 'analyticsService' };
+    }
+  },
+}));
+
+vi.mock('../config/feature-flags.config', () => ({
+  loadFeatureFlagsConfig: vi.fn().mockReturnValue({
+    version: 1,
+    flags: [{ key: 'test_flag', enabled: true }],
+  }),
 }));
 
 vi.mock('../security', () => ({
@@ -121,6 +230,8 @@ describe('Container', () => {
     expect(container.adapters.eventBus).toBeDefined();
     expect(container.adapters.aiService).toBeDefined();
     expect(container.adapters.cache).toBeDefined();
+    expect(container.adapters.featureFlagProvider).toBeDefined();
+    expect(container.adapters.featureFlagAdapter).toBeDefined();
   });
 
   describe('container.get()', () => {

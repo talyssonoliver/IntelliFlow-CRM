@@ -76,7 +76,9 @@ export type PredictionJobResult = z.infer<typeof PredictionJobResultSchema>;
  * @param job - BullMQ job containing prediction request
  * @returns Prediction result
  */
-export async function processPredictionJob(job: Job<PredictionJobData>): Promise<PredictionJobResult> {
+export async function processPredictionJob(
+  job: Job<PredictionJobData>
+): Promise<PredictionJobResult> {
   const startTime = Date.now();
   const { entityType, entityId, predictionType, context } = job.data;
 
@@ -102,7 +104,11 @@ export async function processPredictionJob(job: Job<PredictionJobData>): Promise
       ({ prediction, recommendations } = await processChurnRisk(entityType, entityId, context));
       break;
     case 'NEXT_BEST_ACTION':
-      ({ prediction, recommendations } = await processNextBestAction(entityType, entityId, context));
+      ({ prediction, recommendations } = await processNextBestAction(
+        entityType,
+        entityId,
+        context
+      ));
       break;
     case 'QUALIFICATION':
       ({ prediction, recommendations } = await processQualification(entityType, entityId, context));

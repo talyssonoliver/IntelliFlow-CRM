@@ -232,7 +232,10 @@ export class BillingDomainService {
     return Result.ok(receipts);
   }
 
-  private async publishEvents(aggregate: { getDomainEvents(): ReadonlyArray<any>; clearDomainEvents(): void }): Promise<void> {
+  private async publishEvents(aggregate: {
+    getDomainEvents(): ReadonlyArray<any>;
+    clearDomainEvents(): void;
+  }): Promise<void> {
     const events = aggregate.getDomainEvents();
     if (events.length > 0) {
       try {

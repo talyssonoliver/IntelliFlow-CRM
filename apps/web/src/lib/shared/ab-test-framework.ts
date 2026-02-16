@@ -193,9 +193,7 @@ function sendConversion(event: ConversionEvent): void {
     }
 
     // Custom event for internal tracking
-    window.dispatchEvent(
-      new CustomEvent('ab_conversion', { detail: event })
-    );
+    window.dispatchEvent(new CustomEvent('ab_conversion', { detail: event }));
   }
 }
 

@@ -25,13 +25,7 @@ export const SUBSCRIPTION_STATUSES = [
   'paused',
 ] as const;
 
-export const INVOICE_STATUSES = [
-  'draft',
-  'open',
-  'paid',
-  'uncollectible',
-  'void',
-] as const;
+export const INVOICE_STATUSES = ['draft', 'open', 'paid', 'uncollectible', 'void'] as const;
 
 export const PAYMENT_METHOD_TYPES = [
   'card',
@@ -148,12 +142,14 @@ export type UpdatePaymentMethodInput = z.infer<typeof updatePaymentMethodInputSc
 /**
  * Update subscription (change plan or quantity)
  */
-export const updateSubscriptionInputSchema = z.object({
-  priceId: z.string().optional(),
-  quantity: z.number().int().min(1).optional(),
-}).refine((data) => data.priceId || data.quantity, {
-  message: 'Either priceId or quantity must be provided',
-});
+export const updateSubscriptionInputSchema = z
+  .object({
+    priceId: z.string().optional(),
+    quantity: z.number().int().min(1).optional(),
+  })
+  .refine((data) => data.priceId || data.quantity, {
+    message: 'Either priceId or quantity must be provided',
+  });
 
 export type UpdateSubscriptionInput = z.infer<typeof updateSubscriptionInputSchema>;
 

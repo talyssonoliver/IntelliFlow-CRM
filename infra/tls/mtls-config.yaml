@@ -7,12 +7,12 @@
 # Global mTLS settings
 mtls:
   enabled: true
-  mode: STRICT  # STRICT, PERMISSIVE, or DISABLED
+  mode: STRICT # STRICT, PERMISSIVE, or DISABLED
 
 # TLS version and cipher configuration
 tls:
-  min_version: "1.2"
-  max_version: "1.3"
+  min_version: '1.2'
+  max_version: '1.3'
   cipher_suites:
     # TLS 1.3 cipher suites (automatically selected)
     - TLS_AES_256_GCM_SHA384
@@ -36,19 +36,19 @@ tls:
 ca:
   # Root CA for IntelliFlow services
   root:
-    common_name: "IntelliFlow Root CA"
-    organization: "IntelliFlow"
-    country: "GB"
-    validity_days: 3650  # 10 years
-    key_algorithm: "ECDSA"
-    key_size: 384  # P-384 curve
+    common_name: 'IntelliFlow Root CA'
+    organization: 'IntelliFlow'
+    country: 'GB'
+    validity_days: 3650 # 10 years
+    key_algorithm: 'ECDSA'
+    key_size: 384 # P-384 curve
 
   # Intermediate CA for service certificates
   intermediate:
-    common_name: "IntelliFlow Services CA"
-    organization: "IntelliFlow"
-    validity_days: 1825  # 5 years
-    key_algorithm: "ECDSA"
+    common_name: 'IntelliFlow Services CA'
+    organization: 'IntelliFlow'
+    validity_days: 1825 # 5 years
+    key_algorithm: 'ECDSA'
     key_size: 384
 
   # Certificate paths
@@ -63,24 +63,24 @@ ca:
 services:
   # API server (tRPC)
   api:
-    common_name: "intelliflow-api"
+    common_name: 'intelliflow-api'
     dns_names:
       - api.intelliflow.local
       - localhost
       - api
     ip_addresses:
       - 127.0.0.1
-      - "::1"
+      - '::1'
     validity_days: 365
-    key_algorithm: "ECDSA"
-    key_size: 256  # P-256 curve
+    key_algorithm: 'ECDSA'
+    key_size: 256 # P-256 curve
     paths:
       cert: /etc/intelliflow/tls/services/api.crt
       key: /etc/intelliflow/tls/services/api.key
 
   # Web frontend (Next.js)
   web:
-    common_name: "intelliflow-web"
+    common_name: 'intelliflow-web'
     dns_names:
       - web.intelliflow.local
       - localhost
@@ -88,7 +88,7 @@ services:
     ip_addresses:
       - 127.0.0.1
     validity_days: 365
-    key_algorithm: "ECDSA"
+    key_algorithm: 'ECDSA'
     key_size: 256
     paths:
       cert: /etc/intelliflow/tls/services/web.crt
@@ -96,12 +96,12 @@ services:
 
   # AI Worker
   ai_worker:
-    common_name: "intelliflow-ai-worker"
+    common_name: 'intelliflow-ai-worker'
     dns_names:
       - ai-worker.intelliflow.local
       - ai-worker
     validity_days: 365
-    key_algorithm: "ECDSA"
+    key_algorithm: 'ECDSA'
     key_size: 256
     paths:
       cert: /etc/intelliflow/tls/services/ai-worker.crt
@@ -109,12 +109,12 @@ services:
 
   # Database (Supabase)
   database:
-    common_name: "intelliflow-database"
+    common_name: 'intelliflow-database'
     dns_names:
       - db.intelliflow.local
       - supabase.intelliflow.local
     validity_days: 365
-    key_algorithm: "ECDSA"
+    key_algorithm: 'ECDSA'
     key_size: 256
     paths:
       cert: /etc/intelliflow/tls/services/database.crt
@@ -122,12 +122,12 @@ services:
 
   # Redis cache
   redis:
-    common_name: "intelliflow-redis"
+    common_name: 'intelliflow-redis'
     dns_names:
       - redis.intelliflow.local
       - cache.intelliflow.local
     validity_days: 365
-    key_algorithm: "ECDSA"
+    key_algorithm: 'ECDSA'
     key_size: 256
     paths:
       cert: /etc/intelliflow/tls/services/redis.crt
@@ -137,15 +137,15 @@ services:
 client_auth:
   # Services authorized to connect
   allowed_clients:
-    - common_name: "intelliflow-api"
+    - common_name: 'intelliflow-api'
       permissions:
         - read:all
         - write:all
-    - common_name: "intelliflow-web"
+    - common_name: 'intelliflow-web'
       permissions:
         - read:all
         - write:limited
-    - common_name: "intelliflow-ai-worker"
+    - common_name: 'intelliflow-ai-worker'
       permissions:
         - read:ai-data
         - write:ai-scores
@@ -162,7 +162,7 @@ client_auth:
 revocation:
   crl:
     enabled: true
-    update_interval: "1h"
+    update_interval: '1h'
     distribution_points:
       - http://crl.intelliflow.local/crl.pem
 
@@ -175,7 +175,7 @@ revocation:
 # Certificate renewal settings
 renewal:
   enabled: true
-  threshold_days: 30  # Renew when less than 30 days remain
+  threshold_days: 30 # Renew when less than 30 days remain
   auto_renew: true
   notification:
     enabled: true
@@ -191,9 +191,9 @@ renewal:
 environments:
   development:
     mtls:
-      mode: PERMISSIVE  # Allow non-mTLS for local development
+      mode: PERMISSIVE # Allow non-mTLS for local development
     tls:
-      min_version: "1.2"
+      min_version: '1.2'
     renewal:
       auto_renew: false
 
@@ -207,7 +207,7 @@ environments:
     mtls:
       mode: STRICT
     tls:
-      min_version: "1.3"  # TLS 1.3 only in production
+      min_version: '1.3' # TLS 1.3 only in production
     renewal:
       threshold_days: 30
       auto_renew: true
@@ -244,7 +244,7 @@ monitoring:
       severity: high
     handshake_failures:
       threshold: 100
-      window: "5m"
+      window: '5m'
 
 # Logging
 logging:

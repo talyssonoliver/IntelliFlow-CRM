@@ -28,14 +28,16 @@ describe('PrismaLeadConversionRepository', () => {
     repository = new PrismaLeadConversionRepository(mockPrisma as never);
   });
 
-  const createTestAudit = (overrides: Partial<{
-    leadId: string;
-    contactId: string;
-    accountId: string | null;
-    tenantId: string;
-    convertedBy: string;
-    idempotencyKey: string;
-  }> = {}) => {
+  const createTestAudit = (
+    overrides: Partial<{
+      leadId: string;
+      contactId: string;
+      accountId: string | null;
+      tenantId: string;
+      convertedBy: string;
+      idempotencyKey: string;
+    }> = {}
+  ) => {
     return LeadConversionAudit.create({
       leadId: overrides.leadId ?? 'lead-123',
       contactId: overrides.contactId ?? 'contact-456',

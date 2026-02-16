@@ -1,5 +1,12 @@
 import { PrismaClient } from '@intelliflow/db';
-import { Lead, LeadId, Email, PhoneNumber, type LeadSource, type LeadStatus } from '@intelliflow/domain';
+import {
+  Lead,
+  LeadId,
+  Email,
+  PhoneNumber,
+  type LeadSource,
+  type LeadStatus,
+} from '@intelliflow/domain';
 import { LeadRepository } from '@intelliflow/application';
 
 /**
@@ -289,7 +296,7 @@ export class PrismaLeadRepository implements LeadRepository {
         where: { id: { in: ids } },
         select: { id: true },
       });
-      const existingIds = new Set(existingLeads.map(l => l.id));
+      const existingIds = new Set(existingLeads.map((l) => l.id));
 
       // Track non-existent IDs
       for (const id of ids) {
@@ -299,7 +306,7 @@ export class PrismaLeadRepository implements LeadRepository {
       }
 
       // Batch update existing leads
-      const idsToUpdate = ids.filter(id => existingIds.has(id));
+      const idsToUpdate = ids.filter((id) => existingIds.has(id));
       if (idsToUpdate.length > 0) {
         await this.prisma.lead.updateMany({
           where: { id: { in: idsToUpdate } },
@@ -313,7 +320,7 @@ export class PrismaLeadRepository implements LeadRepository {
     } catch (error) {
       // If batch update fails, all IDs fail
       for (const id of ids) {
-        if (!failed.find(f => f.id === id)) {
+        if (!failed.find((f) => f.id === id)) {
           failed.push({
             id,
             error: error instanceof Error ? error.message : 'Unknown error',
@@ -341,7 +348,7 @@ export class PrismaLeadRepository implements LeadRepository {
         where: { id: { in: ids } },
         select: { id: true },
       });
-      const existingIds = new Set(existingLeads.map(l => l.id));
+      const existingIds = new Set(existingLeads.map((l) => l.id));
 
       // Track non-existent IDs
       for (const id of ids) {
@@ -351,7 +358,7 @@ export class PrismaLeadRepository implements LeadRepository {
       }
 
       // Batch delete existing leads
-      const idsToDelete = ids.filter(id => existingIds.has(id));
+      const idsToDelete = ids.filter((id) => existingIds.has(id));
       if (idsToDelete.length > 0) {
         await this.prisma.lead.deleteMany({
           where: { id: { in: idsToDelete } },
@@ -361,7 +368,7 @@ export class PrismaLeadRepository implements LeadRepository {
     } catch (error) {
       // If batch delete fails, all IDs fail
       for (const id of ids) {
-        if (!failed.find(f => f.id === id)) {
+        if (!failed.find((f) => f.id === id)) {
           failed.push({
             id,
             error: error instanceof Error ? error.message : 'Unknown error',
@@ -390,7 +397,7 @@ export class PrismaLeadRepository implements LeadRepository {
       const leads = await tx.lead.findMany({
         where: { id: { in: ids } },
       });
-      const existingIds = new Set(leads.map(l => l.id));
+      const existingIds = new Set(leads.map((l) => l.id));
 
       // Track non-existent leads
       for (const id of ids) {
@@ -400,8 +407,8 @@ export class PrismaLeadRepository implements LeadRepository {
       }
 
       // Filter valid leads for conversion (not already converted)
-      const validLeads = leads.filter(l => l.status !== 'CONVERTED');
-      const alreadyConverted = leads.filter(l => l.status === 'CONVERTED');
+      const validLeads = leads.filter((l) => l.status !== 'CONVERTED');
+      const alreadyConverted = leads.filter((l) => l.status === 'CONVERTED');
 
       for (const lead of alreadyConverted) {
         failed.push({ id: lead.id, error: 'Lead already converted' });
@@ -413,7 +420,7 @@ export class PrismaLeadRepository implements LeadRepository {
 
       // Batch update lead statuses
       await tx.lead.updateMany({
-        where: { id: { in: validLeads.map(l => l.id) } },
+        where: { id: { in: validLeads.map((l) => l.id) } },
         data: {
           status: 'CONVERTED',
           updatedAt: new Date(),
@@ -422,7 +429,7 @@ export class PrismaLeadRepository implements LeadRepository {
 
       // Batch create contacts
       await tx.contact.createMany({
-        data: validLeads.map(lead => ({
+        data: validLeads.map((lead) => ({
           firstName: lead.firstName || 'Unknown',
           lastName: lead.lastName || 'Unknown',
           email: lead.email,
@@ -440,10 +447,10 @@ export class PrismaLeadRepository implements LeadRepository {
 
       // Optionally create accounts
       if (createAccounts) {
-        const companiesWithLeads = validLeads.filter(l => l.company);
+        const companiesWithLeads = validLeads.filter((l) => l.company);
         if (companiesWithLeads.length > 0) {
           await tx.account.createMany({
-            data: companiesWithLeads.map(lead => ({
+            data: companiesWithLeads.map((lead) => ({
               name: lead.company!,
               tenantId: lead.tenantId,
               ownerId: lead.ownerId || userId,
@@ -456,7 +463,7 @@ export class PrismaLeadRepository implements LeadRepository {
         }
       }
 
-      successful.push(...validLeads.map(l => l.id));
+      successful.push(...validLeads.map((l) => l.id));
       return { successful, failed };
     });
   }

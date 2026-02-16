@@ -226,10 +226,38 @@ describe('notifications logic', () => {
   // ===================== notification filtering =====================
   describe('notification filtering', () => {
     const notifications: ReminderNotification[] = [
-      { reminderId: '1', title: 'Filing Deadline', message: 'Due soon', priority: 'high', timeUntilDue: '30m', entityLink: '/cases/1' },
-      { reminderId: '2', title: 'Task Review', message: 'Review docs', priority: 'medium', timeUntilDue: '2h', entityLink: '/cases/2' },
-      { reminderId: '3', title: 'Appointment', message: 'Client call', priority: 'urgent', timeUntilDue: '1h overdue', entityLink: '/cases/3' },
-      { reminderId: '4', title: 'Follow up', message: 'Check status', priority: 'low', timeUntilDue: '1d', entityLink: '/cases/4' },
+      {
+        reminderId: '1',
+        title: 'Filing Deadline',
+        message: 'Due soon',
+        priority: 'high',
+        timeUntilDue: '30m',
+        entityLink: '/cases/1',
+      },
+      {
+        reminderId: '2',
+        title: 'Task Review',
+        message: 'Review docs',
+        priority: 'medium',
+        timeUntilDue: '2h',
+        entityLink: '/cases/2',
+      },
+      {
+        reminderId: '3',
+        title: 'Appointment',
+        message: 'Client call',
+        priority: 'urgent',
+        timeUntilDue: '1h overdue',
+        entityLink: '/cases/3',
+      },
+      {
+        reminderId: '4',
+        title: 'Follow up',
+        message: 'Check status',
+        priority: 'low',
+        timeUntilDue: '1d',
+        entityLink: '/cases/4',
+      },
     ];
 
     it('can filter by priority', () => {

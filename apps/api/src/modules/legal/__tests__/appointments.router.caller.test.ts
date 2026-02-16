@@ -24,7 +24,7 @@ vi.mock('../../../services', () => ({
         bufferBefore: a.bufferMinutesBefore || 0,
         bufferAfter: a.bufferMinutesAfter || 0,
         attendees: a.attendees?.map((att: any) => att.userId) || [],
-      })),
+      }))
     ),
     checkConflicts: vi.fn(() => ({ hasConflicts: false, conflicts: [] })),
     checkAvailability: vi.fn(() => [
@@ -141,6 +141,7 @@ describe('Appointments Router - Caller Tests', () => {
 
       prismaMock.appointment.findMany.mockResolvedValue([mockAppointment] as any);
       prismaMock.appointment.count.mockResolvedValue(1);
+      (prismaMock.user.findMany as any).mockResolvedValue([]);
 
       const result = await caller.list({});
 
@@ -154,6 +155,7 @@ describe('Appointments Router - Caller Tests', () => {
 
       prismaMock.appointment.findMany.mockResolvedValue([]);
       prismaMock.appointment.count.mockResolvedValue(0);
+      (prismaMock.user.findMany as any).mockResolvedValue([]);
 
       const result = await caller.list({
         startTimeFrom: now,
@@ -170,6 +172,7 @@ describe('Appointments Router - Caller Tests', () => {
 
       prismaMock.appointment.findMany.mockResolvedValue([]);
       prismaMock.appointment.count.mockResolvedValue(0);
+      (prismaMock.user.findMany as any).mockResolvedValue([]);
 
       await caller.list({
         status: ['SCHEDULED', 'CONFIRMED'],
@@ -184,6 +187,7 @@ describe('Appointments Router - Caller Tests', () => {
 
       prismaMock.appointment.findMany.mockResolvedValue([]);
       prismaMock.appointment.count.mockResolvedValue(0);
+      (prismaMock.user.findMany as any).mockResolvedValue([]);
 
       await caller.list({
         appointmentType: ['MEETING', 'CALL'],
@@ -198,6 +202,7 @@ describe('Appointments Router - Caller Tests', () => {
 
       prismaMock.appointment.findMany.mockResolvedValue([]);
       prismaMock.appointment.count.mockResolvedValue(0);
+      (prismaMock.user.findMany as any).mockResolvedValue([]);
 
       await caller.list({
         caseId: TEST_UUIDS.account1,
@@ -233,7 +238,7 @@ describe('Appointments Router - Caller Tests', () => {
       prismaMock.appointment.findUnique.mockResolvedValue(null);
 
       await expect(caller.update({ id: 'non-existent', title: 'Updated' })).rejects.toThrow(
-        TRPCError,
+        TRPCError
       );
     });
 
@@ -247,7 +252,7 @@ describe('Appointments Router - Caller Tests', () => {
       } as any);
 
       await expect(caller.update({ id: mockAppointment.id, title: 'Updated' })).rejects.toThrow(
-        TRPCError,
+        TRPCError
       );
     });
   });
@@ -295,7 +300,7 @@ describe('Appointments Router - Caller Tests', () => {
           id: mockAppointment.id,
           newStartTime: new Date(),
           newEndTime: new Date(Date.now() + 3600000),
-        }),
+        })
       ).rejects.toThrow(TRPCError);
     });
 
@@ -313,7 +318,7 @@ describe('Appointments Router - Caller Tests', () => {
           id: mockAppointment.id,
           newStartTime: new Date(),
           newEndTime: new Date(Date.now() + 3600000),
-        }),
+        })
       ).rejects.toThrow(TRPCError);
     });
 
@@ -331,7 +336,7 @@ describe('Appointments Router - Caller Tests', () => {
           id: mockAppointment.id,
           newStartTime: new Date(Date.now() + 7200000),
           newEndTime: new Date(Date.now() + 3600000),
-        }),
+        })
       ).rejects.toThrow(TRPCError);
     });
   });
@@ -646,7 +651,7 @@ describe('Appointments Router - Caller Tests', () => {
         caller.linkToCase({
           appointmentId: 'non-existent',
           caseId: TEST_UUIDS.account1,
-        }),
+        })
       ).rejects.toThrow(TRPCError);
     });
   });
@@ -681,7 +686,7 @@ describe('Appointments Router - Caller Tests', () => {
         caller.unlinkFromCase({
           appointmentId: mockAppointment.id,
           caseId: TEST_UUIDS.account1,
-        }),
+        })
       ).rejects.toThrow(TRPCError);
     });
   });
@@ -737,7 +742,7 @@ describe('Appointments Router - Caller Tests', () => {
         caller.addAttendee({
           appointmentId: 'non-existent',
           userId: TEST_UUIDS.user2,
-        }),
+        })
       ).rejects.toThrow(TRPCError);
     });
   });
@@ -772,7 +777,7 @@ describe('Appointments Router - Caller Tests', () => {
         caller.removeAttendee({
           appointmentId: mockAppointment.id,
           userId: TEST_UUIDS.user2,
-        }),
+        })
       ).rejects.toThrow(TRPCError);
     });
   });

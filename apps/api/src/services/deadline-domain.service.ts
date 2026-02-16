@@ -437,17 +437,13 @@ export class DeadlineDomainService {
     daysAhead: number = 30
   ): TimelineDeadline[] {
     // Filter to case
-    const caseDeadlines = deadlines.filter(
-      (d) => d.caseId.value === caseId && d.isActive
-    );
+    const caseDeadlines = deadlines.filter((d) => d.caseId.value === caseId && d.isActive);
 
     // Filter to upcoming
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + daysAhead);
 
-    const upcoming = caseDeadlines.filter(
-      (d) => d.dueDate <= futureDate || d.isOverdue
-    );
+    const upcoming = caseDeadlines.filter((d) => d.dueDate <= futureDate || d.isOverdue);
 
     // Sort by urgency
     const sorted = this.sortByUrgency(upcoming);
@@ -509,13 +505,15 @@ export class DeadlineDomainService {
         // Create deadline
         const deadlineResult = Deadline.create({
           caseId: caseIdResult.value,
-          rule: rule ?? DeadlineRule.create({
-            name: dbDl.title,
-            description: '',
-            daysCount: 0,
-            dayCountType: 'CALENDAR',
-            trigger: 'CUSTOM',
-          }).value,
+          rule:
+            rule ??
+            DeadlineRule.create({
+              name: dbDl.title,
+              description: '',
+              daysCount: 0,
+              dayCountType: 'CALENDAR',
+              trigger: 'CUSTOM',
+            }).value,
           triggerDate: dbDl.triggerDate,
           dueDate: dbDl.dueDate,
           title: dbDl.title,
@@ -540,6 +538,8 @@ export class DeadlineDomainService {
 export const deadlineDomainService = new DeadlineDomainService();
 
 // Export factory function for custom configurations
-export function createDeadlineDomainService(config?: Partial<DeadlineEngineConfig>): DeadlineDomainService {
+export function createDeadlineDomainService(
+  config?: Partial<DeadlineEngineConfig>
+): DeadlineDomainService {
   return new DeadlineDomainService(config);
 }

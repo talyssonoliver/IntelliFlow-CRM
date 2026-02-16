@@ -30,20 +30,20 @@ These ADRs cover advanced topics for later sprints:
 
 ### Sprint 0 ADRs (Process/Tooling)
 
-| ADR                                                       | Title                    | Status      | Date | Sprint | Technical Story |
-| --------------------------------------------------------- | ------------------------ | ----------- | ---- | ------ | --------------- |
-| [ADR-012 (CSV)](./ADR-012-csv-source-of-truth.md)         | CSV as Source of Truth   | ✅ Accepted | -    | 0      | Metrics System  |
-| [ADR-013 (Sprint)](./ADR-013-sprint-scoped-validation.md) | Sprint-Scoped Validation | ✅ Accepted | -    | 0      | Metrics System  |
-| [ADR-015](./ADR-015-security-validation.md)               | Security Validation & Remediation | ✅ Accepted | - | 0 | ENV-013-AI, IFC-046, IFC-040 |
-| [ADR-016](./ADR-016-analytics-integrity.md)               | Real-Time Analytics Integrity    | ✅ Accepted | - | 0 | IFC-037, IFC-038 |
-| [ADR-017](./ADR-017-workflow-reliability.md)              | Workflow Reliability & Observability | ✅ Accepted | - | 0 | IFC-029-033 |
-| [ADR-018](./ADR-018-performance-load-testing.md)          | Performance & Load Testing Strategy | ✅ Accepted | - | 0 | IFC-047, IFC-033 |
-| [ADR-019](./ADR-019-core-crm-foundation.md)               | Core CRM Domain Foundations | ✅ Accepted | - | 0 | IFC-061, IFC-063, IFC-089-094, IFC-101-110 |
-| [ADR-020](./ADR-020-public-site-auth.md)                  | Public Site & Auth Funnel | ✅ Accepted | - | 0 | PG-001-018 |
-| [ADR-021](./ADR-021-governance-ops-release.md)            | Governance, Ops, Release Gates | ✅ Accepted | - | 0 | IFC-130, IFC-132-134, IFC-142, IFC-160 |
-| [ADR-022](./ADR-022-ai-features-quality.md)               | AI Features Quality & Safety | ✅ Accepted | - | 0 | IFC-039, IFC-085, IFC-086, IFC-095 |
-| [ADR-023](./ADR-023-communications-inbox.md)              | Communications & Inbox | ✅ Accepted | - | 0 | IFC-144, IFC-170-173 |
-| [ADR-024](./ADR-024-scheduling-calendar.md)               | Scheduling & Calendar Integration | ✅ Accepted | - | 0 | IFC-136-138, IFC-172 |
+| ADR                                                       | Title                                | Status      | Date | Sprint | Technical Story                            |
+| --------------------------------------------------------- | ------------------------------------ | ----------- | ---- | ------ | ------------------------------------------ |
+| [ADR-012 (CSV)](./ADR-012-csv-source-of-truth.md)         | CSV as Source of Truth               | ✅ Accepted | -    | 0      | Metrics System                             |
+| [ADR-013 (Sprint)](./ADR-013-sprint-scoped-validation.md) | Sprint-Scoped Validation             | ✅ Accepted | -    | 0      | Metrics System                             |
+| [ADR-015](./ADR-015-security-validation.md)               | Security Validation & Remediation    | ✅ Accepted | -    | 0      | ENV-013-AI, IFC-046, IFC-040               |
+| [ADR-016](./ADR-016-analytics-integrity.md)               | Real-Time Analytics Integrity        | ✅ Accepted | -    | 0      | IFC-037, IFC-038                           |
+| [ADR-017](./ADR-017-workflow-reliability.md)              | Workflow Reliability & Observability | ✅ Accepted | -    | 0      | IFC-029-033                                |
+| [ADR-018](./ADR-018-performance-load-testing.md)          | Performance & Load Testing Strategy  | ✅ Accepted | -    | 0      | IFC-047, IFC-033                           |
+| [ADR-019](./ADR-019-core-crm-foundation.md)               | Core CRM Domain Foundations          | ✅ Accepted | -    | 0      | IFC-061, IFC-063, IFC-089-094, IFC-101-110 |
+| [ADR-020](./ADR-020-public-site-auth.md)                  | Public Site & Auth Funnel            | ✅ Accepted | -    | 0      | PG-001-018                                 |
+| [ADR-021](./ADR-021-governance-ops-release.md)            | Governance, Ops, Release Gates       | ✅ Accepted | -    | 0      | IFC-130, IFC-132-134, IFC-142, IFC-160     |
+| [ADR-022](./ADR-022-ai-features-quality.md)               | AI Features Quality & Safety         | ✅ Accepted | -    | 0      | IFC-039, IFC-085, IFC-086, IFC-095         |
+| [ADR-023](./ADR-023-communications-inbox.md)              | Communications & Inbox               | ✅ Accepted | -    | 0      | IFC-144, IFC-170-173                       |
+| [ADR-024](./ADR-024-scheduling-calendar.md)               | Scheduling & Calendar Integration    | ✅ Accepted | -    | 0      | IFC-136-138, IFC-172                       |
 
 ## ADR Relationships
 
@@ -183,13 +183,17 @@ New ADRs should follow the
 
 - **Total ADRs**: 25 (including feasibility and process ADRs)
 - **Sprint 1 Foundation**: 5 ADRs (ADR-001 to ADR-005)
-- **High-Risk Coverage**: Security (ADR-015), Analytics (ADR-016), Workflow (ADR-017), Performance (ADR-018), Core CRM (ADR-019), Web/Auth (ADR-020), Governance/Release (ADR-021), AI Safety (ADR-022), Comms (ADR-023), Scheduling (ADR-024)
+- **High-Risk Coverage**: Security (ADR-015), Analytics (ADR-016), Workflow
+  (ADR-017), Performance (ADR-018), Core CRM (ADR-019), Web/Auth (ADR-020),
+  Governance/Release (ADR-021), AI Safety (ADR-022), Comms (ADR-023), Scheduling
+  (ADR-024)
 - **Stakeholder Approval**: ✅ Accepted
 - **IFC-002 Links**: ✅ All ADRs reference domain model design
 
 ## Next Steps
 
-Future ADRs will use IDs **025+** to avoid collisions with existing records. Proposed topics:
+Future ADRs will use IDs **025+** to avoid collisions with existing records.
+Proposed topics:
 
 - **ADR-025**: Database Migration Strategy (Prisma + Supabase migrations)
 - **ADR-026**: Caching Strategy (Redis, React Query)

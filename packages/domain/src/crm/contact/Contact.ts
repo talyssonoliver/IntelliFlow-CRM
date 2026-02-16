@@ -23,7 +23,13 @@ export const CONTACT_TYPES = [
   'other',
 ] as const;
 
-export const CONTACT_STATUSES = ['ACTIVE', 'INACTIVE', 'PROSPECT', 'CUSTOMER', 'FORMER_CUSTOMER'] as const;
+export const CONTACT_STATUSES = [
+  'ACTIVE',
+  'INACTIVE',
+  'PROSPECT',
+  'CUSTOMER',
+  'FORMER_CUSTOMER',
+] as const;
 
 // Derive types from const arrays
 export type ContactType = (typeof CONTACT_TYPES)[number];
@@ -459,10 +465,7 @@ export class Contact extends AggregateRoot<ContactId> {
    * @param linkedBy - The user performing the action
    * @returns Result indicating success or failure
    */
-  linkToLead(
-    leadId: string,
-    linkedBy: string
-  ): Result<void, ContactAlreadyLinkedToLeadError> {
+  linkToLead(leadId: string, linkedBy: string): Result<void, ContactAlreadyLinkedToLeadError> {
     // Idempotent: already linked to same lead
     if (this.props.leadId === leadId) {
       return Result.ok(undefined);
@@ -496,9 +499,7 @@ export class Contact extends AggregateRoot<ContactId> {
     this.props.leadId = undefined;
     this.props.updatedAt = new Date();
 
-    this.addDomainEvent(
-      new ContactUnlinkedFromLeadEvent(this.id, previousLeadId, unlinkedBy)
-    );
+    this.addDomainEvent(new ContactUnlinkedFromLeadEvent(this.id, previousLeadId, unlinkedBy));
 
     return Result.ok(undefined);
   }

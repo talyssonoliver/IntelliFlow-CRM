@@ -849,7 +849,9 @@ describe('LeadService', () => {
         );
 
         if (createdEvent) {
-          const payload = (createdEvent as { toPayload?: () => Record<string, unknown> }).toPayload?.();
+          const payload = (
+            createdEvent as { toPayload?: () => Record<string, unknown> }
+          ).toPayload?.();
           expect(payload?.leadId).toBeDefined();
         }
       });
@@ -892,11 +894,7 @@ describe('LeadService', () => {
         eventBus.clear();
 
         // Act
-        const result = await leadService.qualifyLead(
-          lead.id.value,
-          'sales-rep',
-          'Good fit'
-        );
+        const result = await leadService.qualifyLead(lead.id.value, 'sales-rep', 'Good fit');
 
         // Assert
         expect(result.isSuccess).toBe(true);

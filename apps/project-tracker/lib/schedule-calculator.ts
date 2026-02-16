@@ -152,11 +152,7 @@ export function parseDependencyTypes(depString: string): ScheduleDependency[] {
 /**
  * Add working minutes to a date, respecting working hours
  */
-export function addWorkingMinutes(
-  date: Date,
-  minutes: number,
-  config: ScheduleConfig
-): Date {
+export function addWorkingMinutes(date: Date, minutes: number, config: ScheduleConfig): Date {
   const { workingHoursPerDay } = config;
   const workingMinutesPerDay = workingHoursPerDay * 60;
 
@@ -297,7 +293,7 @@ export function calculateSchedule(
     // Distribute tasks within the sprint based on their position
     else if (task.targetSprint !== undefined && task.targetSprint >= 0) {
       const sprintStartDate = new Date(sprintStart);
-      sprintStartDate.setDate(sprintStartDate.getDate() + (task.targetSprint * 14));
+      sprintStartDate.setDate(sprintStartDate.getDate() + task.targetSprint * 14);
 
       // Get task position within sprint and distribute across 14 days
       const sprintTasks = tasksBySpint.get(task.targetSprint) || [];
@@ -307,9 +303,10 @@ export function calculateSchedule(
       // Calculate offset: spread tasks across 12 days (leaving 2 days buffer)
       // Each task gets an offset based on its position
       const daysToDistribute = Math.min(12, totalTasksInSprint); // Max 12 days spread
-      const dayOffset = totalTasksInSprint > 1
-        ? Math.floor((position / (totalTasksInSprint - 1)) * daysToDistribute)
-        : 0;
+      const dayOffset =
+        totalTasksInSprint > 1
+          ? Math.floor((position / (totalTasksInSprint - 1)) * daysToDistribute)
+          : 0;
 
       earlyStart = new Date(sprintStartDate);
       earlyStart.setDate(earlyStart.getDate() + dayOffset);
@@ -458,9 +455,7 @@ export function calculateSchedule(
       const minSuccessorES = Math.min(
         ...successors.map((s) => scheduledTasks.get(s.taskId)!.earlyStart.getTime())
       );
-      scheduled.freeFloat = Math.round(
-        (minSuccessorES - scheduled.earlyFinish.getTime()) / 60000
-      );
+      scheduled.freeFloat = Math.round((minSuccessorES - scheduled.earlyFinish.getTime()) / 60000);
     } else {
       scheduled.freeFloat = scheduled.totalFloat;
     }

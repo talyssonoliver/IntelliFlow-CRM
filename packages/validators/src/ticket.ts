@@ -85,19 +85,18 @@ export const addResponseSchema = z.object({
 export type AddResponseInput = z.infer<typeof addResponseSchema>;
 
 // Status Transition Schema - validates that a transition is allowed
-export const statusTransitionSchema = z.object({
-  ticketId: idSchema,
-  fromStatus: ticketStatusSchema,
-  toStatus: ticketStatusSchema,
-  changedBy: z.string().min(1),
-  reason: z.string().optional(),
-}).refine(
-  (data) => canTransitionTicketTo(data.fromStatus, data.toStatus),
-  {
+export const statusTransitionSchema = z
+  .object({
+    ticketId: idSchema,
+    fromStatus: ticketStatusSchema,
+    toStatus: ticketStatusSchema,
+    changedBy: z.string().min(1),
+    reason: z.string().optional(),
+  })
+  .refine((data) => canTransitionTicketTo(data.fromStatus, data.toStatus), {
     message: 'Invalid status transition',
     path: ['toStatus'],
-  }
-);
+  });
 
 export type StatusTransitionInput = z.infer<typeof statusTransitionSchema>;
 

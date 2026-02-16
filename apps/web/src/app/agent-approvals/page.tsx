@@ -18,10 +18,7 @@ import { Card, Button } from '@intelliflow/ui';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
 import { useAuth, useRequireAuth } from '@/lib/auth/AuthContext';
-import type {
-  AgentAction,
-  ActionStatus,
-} from '@/lib/agent';
+import type { AgentAction, ActionStatus } from '@/lib/agent';
 
 // Material Symbols icon helper component
 const Icon = ({ name, className = '' }: { name: string; className?: string }) => (
@@ -79,19 +76,21 @@ interface AutoResponseDraftFromAPI {
  * Map backend AutoResponseDraft to frontend AgentAction format
  */
 function mapDraftToAction(draft: AutoResponseDraftFromAPI): AgentAction {
-  const createdAt = typeof draft.createdAt === 'string' ? new Date(draft.createdAt) : draft.createdAt;
-  const expiresAt = typeof draft.expiresAt === 'string' ? new Date(draft.expiresAt) : draft.expiresAt;
+  const createdAt =
+    typeof draft.createdAt === 'string' ? new Date(draft.createdAt) : draft.createdAt;
+  const expiresAt =
+    typeof draft.expiresAt === 'string' ? new Date(draft.expiresAt) : draft.expiresAt;
 
   // Map backend status to frontend status
   const statusMap: Record<string, ActionStatus> = {
-    'DRAFT': 'pending',
-    'PENDING_APPROVAL': 'pending',
-    'APPROVED': 'approved',
-    'REJECTED': 'rejected',
-    'ESCALATED': 'pending', // Escalated items still need review
-    'SENT': 'approved',
-    'FAILED': 'rejected',
-    'INVALIDATED': 'expired',
+    DRAFT: 'pending',
+    PENDING_APPROVAL: 'pending',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+    ESCALATED: 'pending', // Escalated items still need review
+    SENT: 'approved',
+    FAILED: 'rejected',
+    INVALIDATED: 'expired',
   };
 
   return {
@@ -316,7 +315,10 @@ function ActionCard({
                   {formatTimeAgo(action.createdAt)}
                 </span>
                 {isPending && (
-                  <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400" data-testid="expires-time">
+                  <span
+                    className="flex items-center gap-1 text-amber-600 dark:text-amber-400"
+                    data-testid="expires-time"
+                  >
                     <Icon name="warning" className="text-sm" />
                     Expires in {formatTimeRemaining(action.expiresAt)}
                   </span>
@@ -359,14 +361,23 @@ function ActionCard({
       {isExpanded && (
         <div className="border-t border-slate-200 dark:border-slate-700">
           {/* AI Reasoning */}
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 border-b border-slate-200 dark:border-slate-700" data-testid="action-card-expanded">
+          <div
+            className="p-4 bg-blue-50 dark:bg-blue-900/20 border-b border-slate-200 dark:border-slate-700"
+            data-testid="action-card-expanded"
+          >
             <div className="flex items-start gap-2">
-              <Icon name="shield" className="text-base text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+              <Icon
+                name="shield"
+                className="text-base text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0"
+              />
               <div>
                 <h4 className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-1">
                   AI Reasoning
                 </h4>
-                <p className="text-sm text-blue-800 dark:text-blue-300" data-testid="ai-reasoning-content">
+                <p
+                  className="text-sm text-blue-800 dark:text-blue-300"
+                  data-testid="ai-reasoning-content"
+                >
                   {action.aiReasoning}
                 </p>
               </div>
@@ -532,8 +543,7 @@ function ActionCard({
                   Rollback
                 </Button>
                 <span className="text-sm text-slate-500 dark:text-slate-400">
-                  Action was approved{' '}
-                  {action.reviewedAt && formatTimeAgo(action.reviewedAt)}
+                  Action was approved {action.reviewedAt && formatTimeAgo(action.reviewedAt)}
                 </span>
               </div>
             )}
@@ -577,12 +587,8 @@ function ActionCard({
 
             {action.status !== 'pending' && action.feedback && (
               <div className="text-sm">
-                <span className="text-slate-500 dark:text-slate-400">
-                  Feedback:{' '}
-                </span>
-                <span className="text-slate-700 dark:text-slate-300">
-                  {action.feedback}
-                </span>
+                <span className="text-slate-500 dark:text-slate-400">Feedback: </span>
+                <span className="text-slate-700 dark:text-slate-300">{action.feedback}</span>
               </div>
             )}
 
@@ -620,33 +626,31 @@ function MetricsCard({ stats, isLoading }: MetricsCardProps) {
   const total = Object.values(stats).reduce((a, b) => a + b, 0);
   const approved = (stats['APPROVED'] || 0) + (stats['SENT'] || 0);
   const rejected = (stats['REJECTED'] || 0) + (stats['FAILED'] || 0);
-  const pending = (stats['DRAFT'] || 0) + (stats['PENDING_APPROVAL'] || 0) + (stats['ESCALATED'] || 0);
+  const pending =
+    (stats['DRAFT'] || 0) + (stats['PENDING_APPROVAL'] || 0) + (stats['ESCALATED'] || 0);
   const approvalRate = total > 0 ? Math.round((approved / total) * 100) : 0;
 
   return (
     <div className="grid gap-4 md:grid-cols-5" data-testid="metrics-dashboard">
       <Card className="p-4" data-testid="metric-total">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-          Total Drafts
-        </div>
-        <div className="text-2xl font-bold text-slate-900 dark:text-white" data-testid="metric-value">
+        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Total Drafts</div>
+        <div
+          className="text-2xl font-bold text-slate-900 dark:text-white"
+          data-testid="metric-value"
+        >
           {total}
         </div>
       </Card>
 
       <Card className="p-4" data-testid="metric-pending">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-          Pending Review
-        </div>
+        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Pending Review</div>
         <div className="text-2xl font-bold text-amber-600" data-testid="metric-value">
           {pending}
         </div>
       </Card>
 
       <Card className="p-4" data-testid="metric-approved">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-          Approved/Sent
-        </div>
+        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Approved/Sent</div>
         <div className="text-2xl font-bold text-green-600" data-testid="metric-value">
           {approved}
         </div>
@@ -656,18 +660,14 @@ function MetricsCard({ stats, isLoading }: MetricsCardProps) {
       </Card>
 
       <Card className="p-4" data-testid="metric-rejected">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-          Rejected
-        </div>
+        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Rejected</div>
         <div className="text-2xl font-bold text-red-600" data-testid="metric-value">
           {rejected}
         </div>
       </Card>
 
       <Card className="p-4" data-testid="metric-escalated">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">
-          Escalated
-        </div>
+        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Escalated</div>
         <div className="text-2xl font-bold text-purple-600" data-testid="metric-value">
           {stats['ESCALATED'] || 0}
         </div>
@@ -854,11 +854,7 @@ function AgentApprovalsContent() {
   );
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([
-      pendingQuery.refetch(),
-      listQuery.refetch(),
-      statsQuery.refetch(),
-    ]);
+    await Promise.all([pendingQuery.refetch(), listQuery.refetch(), statsQuery.refetch()]);
   }, [pendingQuery, listQuery, statsQuery]);
 
   // ==========================================================================
@@ -866,7 +862,11 @@ function AgentApprovalsContent() {
   // ==========================================================================
 
   const isLoading = authLoading || pendingQuery.isLoading || listQuery.isLoading;
-  const isMutating = approveMutation.isPending || rejectMutation.isPending || escalateMutation.isPending || rollbackMutation.isPending;
+  const isMutating =
+    approveMutation.isPending ||
+    rejectMutation.isPending ||
+    escalateMutation.isPending ||
+    rollbackMutation.isPending;
 
   // Debug: Log query states
   console.log('[AgentApprovals] Query states:', {
@@ -883,7 +883,8 @@ function AgentApprovalsContent() {
 
   // Show error state if queries failed (but redirect for auth errors)
   const queryError = pendingQuery.error || listQuery.error;
-  const isAuthError = queryError?.data?.code === 'UNAUTHORIZED' ||
+  const isAuthError =
+    queryError?.data?.code === 'UNAUTHORIZED' ||
     queryError?.message?.toLowerCase().includes('authentication') ||
     queryError?.message?.toLowerCase().includes('unauthorized');
 
@@ -944,9 +945,7 @@ function AgentApprovalsContent() {
           Dashboard
         </Link>
         <span>/</span>
-        <span className="text-slate-900 dark:text-white font-medium">
-          Agent Approvals
-        </span>
+        <span className="text-slate-900 dark:text-white font-medium">Agent Approvals</span>
       </nav>
 
       {/* Header */}
@@ -966,12 +965,7 @@ function AgentApprovalsContent() {
               {pendingCount} pending
             </span>
           )}
-          <Button
-            variant="outline"
-            onClick={handleRefresh}
-            disabled={isLoading}
-            className="gap-2"
-          >
+          <Button variant="outline" onClick={handleRefresh} disabled={isLoading} className="gap-2">
             <Icon name="refresh" className={`text-base ${isLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
@@ -992,27 +986,23 @@ function AgentApprovalsContent() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <Icon name="filter_list" className="text-base text-slate-400" />
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Filter:
-            </span>
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Filter:</span>
           </div>
           <div className="flex flex-wrap gap-2" data-testid="filter-buttons">
-            {(['all', 'pending', 'approved', 'rejected', 'expired'] as const).map(
-              (status) => (
-                <button
-                  key={status}
-                  type="button"
-                  onClick={() => setFilterStatus(status)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    filterStatus === status
-                      ? 'bg-[#137fec] text-white'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
-                </button>
-              )
-            )}
+            {(['all', 'pending', 'approved', 'rejected', 'expired'] as const).map((status) => (
+              <button
+                key={status}
+                type="button"
+                onClick={() => setFilterStatus(status)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  filterStatus === status
+                    ? 'bg-[#137fec] text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
+              </button>
+            ))}
           </div>
         </div>
       </Card>
@@ -1071,7 +1061,9 @@ function AgentApprovalsContent() {
       <Card className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className={`w-2 h-2 rounded-full ${isAuthenticated ? 'bg-green-500' : 'bg-red-500'}`} />
+            <div
+              className={`w-2 h-2 rounded-full ${isAuthenticated ? 'bg-green-500' : 'bg-red-500'}`}
+            />
             <div>
               <h3 className="text-sm font-medium text-slate-900 dark:text-white">
                 Backend Connection

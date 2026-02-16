@@ -148,7 +148,15 @@ function parseKnipOutput(output: string): KnipResult {
     };
   } catch (err) {
     console.error('Failed to parse Knip JSON output:', err);
-    return { files: [], dependencies: [], devDependencies: [], unlisted: [], exports: [], types: [], duplicates: [] };
+    return {
+      files: [],
+      dependencies: [],
+      devDependencies: [],
+      unlisted: [],
+      exports: [],
+      types: [],
+      duplicates: [],
+    };
   }
 }
 
@@ -194,7 +202,19 @@ function runKnip(): AnalysisResult['knip'] {
     }
 
     if (!output.trim()) {
-      return { success: true, data: { files: [], dependencies: [], devDependencies: [], unlisted: [], exports: [], types: [], duplicates: [] }, summary: { unusedFiles: 0, unusedDeps: 0, unusedExports: 0, unusedTypes: 0 } };
+      return {
+        success: true,
+        data: {
+          files: [],
+          dependencies: [],
+          devDependencies: [],
+          unlisted: [],
+          exports: [],
+          types: [],
+          duplicates: [],
+        },
+        summary: { unusedFiles: 0, unusedDeps: 0, unusedExports: 0, unusedTypes: 0 },
+      };
     }
 
     const data = parseKnipOutput(output);
@@ -244,7 +264,11 @@ function runDepcheck(): AnalysisResult['depcheck'] {
     }
 
     if (!output.trim()) {
-      return { success: true, data: { dependencies: [], devDependencies: [], missing: {} }, summary: { unusedDeps: 0, unusedDevDeps: 0, missingDeps: 0 } };
+      return {
+        success: true,
+        data: { dependencies: [], devDependencies: [], missing: {} },
+        summary: { unusedDeps: 0, unusedDevDeps: 0, missingDeps: 0 },
+      };
     }
 
     const data = parseDepcheckOutput(output);

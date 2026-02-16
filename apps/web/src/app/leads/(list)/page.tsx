@@ -250,12 +250,48 @@ function createColumns(handlers: RowActionHandlers): ColumnDef<Lead>[] {
 // =============================================================================
 
 const LEAD_STATUS_OPTIONS: StatusOption[] = [
-  { value: 'NEW', label: 'New', color: 'slate', icon: 'fiber_new', description: 'Newly captured lead' },
-  { value: 'CONTACTED', label: 'Contacted', color: 'orange', icon: 'phone_in_talk', description: 'Initial contact made' },
-  { value: 'QUALIFIED', label: 'Qualified', color: 'blue', icon: 'verified', description: 'Lead meets qualification criteria' },
-  { value: 'NEGOTIATING', label: 'Negotiating', color: 'purple', icon: 'handshake', description: 'Active negotiations in progress' },
-  { value: 'UNQUALIFIED', label: 'Unqualified', color: 'red', icon: 'do_not_disturb', description: 'Lead does not meet criteria' },
-  { value: 'LOST', label: 'Lost', color: 'slate', icon: 'cancel', description: 'Lead is no longer viable' },
+  {
+    value: 'NEW',
+    label: 'New',
+    color: 'slate',
+    icon: 'fiber_new',
+    description: 'Newly captured lead',
+  },
+  {
+    value: 'CONTACTED',
+    label: 'Contacted',
+    color: 'orange',
+    icon: 'phone_in_talk',
+    description: 'Initial contact made',
+  },
+  {
+    value: 'QUALIFIED',
+    label: 'Qualified',
+    color: 'blue',
+    icon: 'verified',
+    description: 'Lead meets qualification criteria',
+  },
+  {
+    value: 'NEGOTIATING',
+    label: 'Negotiating',
+    color: 'purple',
+    icon: 'handshake',
+    description: 'Active negotiations in progress',
+  },
+  {
+    value: 'UNQUALIFIED',
+    label: 'Unqualified',
+    color: 'red',
+    icon: 'do_not_disturb',
+    description: 'Lead does not meet criteria',
+  },
+  {
+    value: 'LOST',
+    label: 'Lost',
+    color: 'slate',
+    icon: 'cancel',
+    description: 'Lead is no longer viable',
+  },
 ];
 
 // =============================================================================
@@ -324,12 +360,7 @@ export default function LeadsPage() {
   const scoreParams = getScoreParams(scoreFilter);
 
   // Main data query - only run when authenticated
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = api.lead.list.useQuery(
+  const { data, isLoading, error, refetch } = api.lead.list.useQuery(
     {
       page: currentPage,
       limit: pageSize,
@@ -343,7 +374,8 @@ export default function LeadsPage() {
   );
 
   // Check for auth errors
-  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+  const isAuthError =
+    error?.data?.code === 'UNAUTHORIZED' ||
     error?.message?.toLowerCase().includes('authentication') ||
     error?.message?.toLowerCase().includes('unauthorized');
 
@@ -637,8 +669,7 @@ export default function LeadsPage() {
   const rowActionHandlers: RowActionHandlers = useMemo(
     () => ({
       onEdit: (lead) => router.push(`/leads/${lead.id}/edit`),
-      onConvert: (lead) =>
-        convertMutation.mutate({ leadId: lead.id, createAccount: true }),
+      onConvert: (lead) => convertMutation.mutate({ leadId: lead.id, createAccount: true }),
       onQualify: (lead) =>
         qualifyMutation.mutate({ leadId: lead.id, reason: 'Manual qualification from list' }),
       onScore: (lead) => scoreMutation.mutate({ leadId: lead.id }),
@@ -648,10 +679,7 @@ export default function LeadsPage() {
   );
 
   // Create columns with row handlers
-  const columns = useMemo(
-    () => createColumns(rowActionHandlers),
-    [rowActionHandlers]
-  );
+  const columns = useMemo(() => createColumns(rowActionHandlers), [rowActionHandlers]);
 
   // Bulk actions for selected leads
   const bulkActions: BulkAction<Lead>[] = useMemo(
@@ -703,10 +731,7 @@ export default function LeadsPage() {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Leads' },
-        ]}
+        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Leads' }]}
         title="Lead List"
         description={`Manage and track your potential customers effectively.${totalItems > 0 ? ` (${totalItems} total)` : ''}`}
         actions={[
@@ -754,7 +779,10 @@ export default function LeadsPage() {
       {isLoading && (
         <div className="space-y-3">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700">
+            <div
+              key={i}
+              className="flex items-center gap-4 p-4 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
+            >
               <Skeleton className="size-10 rounded-full" />
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-1/3" />
@@ -770,7 +798,9 @@ export default function LeadsPage() {
       {/* Redirecting State for Auth Errors */}
       {error && isAuthError && !isLoading && (
         <div className="flex flex-col items-center justify-center p-8">
-          <span className="material-symbols-outlined text-[48px] text-slate-400 mb-4 animate-spin">progress_activity</span>
+          <span className="material-symbols-outlined text-[48px] text-slate-400 mb-4 animate-spin">
+            progress_activity
+          </span>
           <p className="text-slate-600 dark:text-slate-400">Redirecting to login...</p>
         </div>
       )}
@@ -961,7 +991,9 @@ function StatusBadge({ status }: Readonly<{ status: LeadStatus }>) {
   const { label, className } = config[status];
 
   return (
-    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${className}`}>
+    <span
+      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${className}`}
+    >
       {label}
     </span>
   );

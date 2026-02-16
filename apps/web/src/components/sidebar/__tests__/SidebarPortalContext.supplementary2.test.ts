@@ -22,8 +22,13 @@ vi.mock('react', () => {
       return { Provider: vi.fn(), Consumer: vi.fn(), _defaultValue: defaultValue };
     }),
     useContext: vi.fn(() => mockContextValue.current),
-    useState: vi.fn((initial: any) => [typeof initial === 'function' ? initial() : initial, vi.fn()]),
-    useEffect: vi.fn((fn: () => any) => { fn(); }),
+    useState: vi.fn((initial: any) => [
+      typeof initial === 'function' ? initial() : initial,
+      vi.fn(),
+    ]),
+    useEffect: vi.fn((fn: () => any) => {
+      fn();
+    }),
     useMemo: vi.fn((fn: any) => fn()),
     useRef: vi.fn((initial: any) => ({ current: initial })),
   };
@@ -195,7 +200,7 @@ describe('SidebarPortalContext logic', () => {
 
       // Simulate the cleanup
       setConfigMock(config); // mount
-      setConfigMock(null);   // unmount cleanup
+      setConfigMock(null); // unmount cleanup
 
       expect(setConfigMock).toHaveBeenCalledTimes(2);
       expect(setConfigMock).toHaveBeenLastCalledWith(null);

@@ -294,9 +294,7 @@ describe('use-subscription supplementary2', () => {
       const entityType = 'opportunity';
       const entityId = 'opp-456';
       const filter =
-        entityType === 'opportunity' && entityId
-          ? `opportunityId=eq.${entityId}`
-          : undefined;
+        entityType === 'opportunity' && entityId ? `opportunityId=eq.${entityId}` : undefined;
       expect(filter).toBe('opportunityId=eq.opp-456');
     });
 
@@ -304,9 +302,7 @@ describe('use-subscription supplementary2', () => {
       const entityType: string = 'lead';
       const entityId = 'lead-123';
       const filter =
-        entityType === 'opportunity' && entityId
-          ? `opportunityId=eq.${entityId}`
-          : undefined;
+        entityType === 'opportunity' && entityId ? `opportunityId=eq.${entityId}` : undefined;
       expect(filter).toBeUndefined();
     });
 

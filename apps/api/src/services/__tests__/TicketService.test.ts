@@ -619,7 +619,9 @@ describe('TicketService', () => {
     it('should calculate SLA response time for CRITICAL priority', async () => {
       mockPrisma.ticket.count.mockResolvedValue(0);
       mockPrisma.sLAPolicy.findUnique.mockResolvedValue(mockSLAPolicy);
-      mockPrisma.ticket.create.mockResolvedValue(createMockTicket({ priority: 'CRITICAL' as TicketPriority }));
+      mockPrisma.ticket.create.mockResolvedValue(
+        createMockTicket({ priority: 'CRITICAL' as TicketPriority })
+      );
       mockPrisma.ticketActivity.create.mockResolvedValue({});
 
       await service.create({
@@ -646,7 +648,9 @@ describe('TicketService', () => {
     it('should calculate SLA response time for HIGH priority', async () => {
       mockPrisma.ticket.count.mockResolvedValue(0);
       mockPrisma.sLAPolicy.findUnique.mockResolvedValue(mockSLAPolicy);
-      mockPrisma.ticket.create.mockResolvedValue(createMockTicket({ priority: 'HIGH' as TicketPriority }));
+      mockPrisma.ticket.create.mockResolvedValue(
+        createMockTicket({ priority: 'HIGH' as TicketPriority })
+      );
       mockPrisma.ticketActivity.create.mockResolvedValue({});
 
       await service.create({
@@ -673,7 +677,9 @@ describe('TicketService', () => {
     it('should calculate SLA response time for LOW priority', async () => {
       mockPrisma.ticket.count.mockResolvedValue(0);
       mockPrisma.sLAPolicy.findUnique.mockResolvedValue(mockSLAPolicy);
-      mockPrisma.ticket.create.mockResolvedValue(createMockTicket({ priority: 'LOW' as TicketPriority }));
+      mockPrisma.ticket.create.mockResolvedValue(
+        createMockTicket({ priority: 'LOW' as TicketPriority })
+      );
       mockPrisma.ticketActivity.create.mockResolvedValue({});
 
       await service.create({
@@ -949,8 +955,14 @@ describe('TicketService', () => {
       mockPrisma.ticket.count.mockResolvedValueOnce(3); // breached
       mockPrisma.ticket.count.mockResolvedValueOnce(2); // resolved today
       mockPrisma.ticket.findMany.mockResolvedValueOnce([
-        { createdAt: new Date('2025-01-15T09:00:00Z'), firstResponseAt: new Date('2025-01-15T09:30:00Z') },
-        { createdAt: new Date('2025-01-15T08:00:00Z'), firstResponseAt: new Date('2025-01-15T08:45:00Z') },
+        {
+          createdAt: new Date('2025-01-15T09:00:00Z'),
+          firstResponseAt: new Date('2025-01-15T09:30:00Z'),
+        },
+        {
+          createdAt: new Date('2025-01-15T08:00:00Z'),
+          firstResponseAt: new Date('2025-01-15T08:45:00Z'),
+        },
       ]);
 
       const result = await service.getStats('tenant-1');
@@ -1030,9 +1042,7 @@ describe('TicketService', () => {
       mockPrisma.ticket.groupBy
         .mockResolvedValueOnce([{ status: 'OPEN', _count: 5 }])
         .mockResolvedValueOnce([{ priority: 'LOW', _count: 5 }])
-        .mockResolvedValueOnce([
-          { slaStatus: 'ON_TRACK', _count: 5 },
-        ]); // Only ON_TRACK returned
+        .mockResolvedValueOnce([{ slaStatus: 'ON_TRACK', _count: 5 }]); // Only ON_TRACK returned
       mockPrisma.ticket.count.mockResolvedValueOnce(0);
       mockPrisma.ticket.count.mockResolvedValueOnce(0);
       mockPrisma.ticket.findMany.mockResolvedValueOnce([]);

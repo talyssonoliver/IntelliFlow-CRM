@@ -502,9 +502,7 @@ describe('AuditEventHandler - Additional Coverage', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(mockLogFn).toHaveBeenCalledWith(
-        expect.objectContaining({ action: 'PASSWORD_RESET' })
-      );
+      expect(mockLogFn).toHaveBeenCalledWith(expect.objectContaining({ action: 'PASSWORD_RESET' }));
     });
 
     it('should handle PermissionDenied event', async () => {
@@ -562,9 +560,7 @@ describe('AuditEventHandler - Additional Coverage', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(mockLogFn).toHaveBeenCalledWith(
-        expect.objectContaining({ action: 'BULK_DELETE' })
-      );
+      expect(mockLogFn).toHaveBeenCalledWith(expect.objectContaining({ action: 'BULK_DELETE' }));
     });
   });
 
@@ -586,9 +582,7 @@ describe('AuditEventHandler - Additional Coverage', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(mockLogFn).toHaveBeenCalledWith(
-        expect.objectContaining({ action: 'LOGOUT' })
-      );
+      expect(mockLogFn).toHaveBeenCalledWith(expect.objectContaining({ action: 'LOGOUT' }));
     });
 
     it('should infer TRANSFER for transfer events', async () => {
@@ -605,9 +599,7 @@ describe('AuditEventHandler - Additional Coverage', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(mockLogFn).toHaveBeenCalledWith(
-        expect.objectContaining({ action: 'TRANSFER' })
-      );
+      expect(mockLogFn).toHaveBeenCalledWith(expect.objectContaining({ action: 'TRANSFER' }));
     });
 
     it('should default to UPDATE for unrecognized event types', async () => {
@@ -624,9 +616,7 @@ describe('AuditEventHandler - Additional Coverage', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(mockLogFn).toHaveBeenCalledWith(
-        expect.objectContaining({ action: 'UPDATE' })
-      );
+      expect(mockLogFn).toHaveBeenCalledWith(expect.objectContaining({ action: 'UPDATE' }));
     });
 
     it('should infer CREATE for "added" events', async () => {
@@ -643,9 +633,7 @@ describe('AuditEventHandler - Additional Coverage', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(mockLogFn).toHaveBeenCalledWith(
-        expect.objectContaining({ action: 'CREATE' })
-      );
+      expect(mockLogFn).toHaveBeenCalledWith(expect.objectContaining({ action: 'CREATE' }));
     });
 
     it('should infer DELETE for "removed" events', async () => {
@@ -662,9 +650,7 @@ describe('AuditEventHandler - Additional Coverage', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(mockLogFn).toHaveBeenCalledWith(
-        expect.objectContaining({ action: 'DELETE' })
-      );
+      expect(mockLogFn).toHaveBeenCalledWith(expect.objectContaining({ action: 'DELETE' }));
     });
   });
 
@@ -721,9 +707,7 @@ describe('AuditEventHandler - Additional Coverage', () => {
         metadata: { tenantId: 't1' },
       });
 
-      expect(mockLogFn).toHaveBeenCalledWith(
-        expect.objectContaining({ resourceType: 'task' })
-      );
+      expect(mockLogFn).toHaveBeenCalledWith(expect.objectContaining({ resourceType: 'task' }));
     });
   });
 
@@ -744,9 +728,7 @@ describe('AuditEventHandler - Additional Coverage', () => {
         metadata: { tenantId: 't1' },
       });
 
-      expect(mockLogFn).toHaveBeenCalledWith(
-        expect.objectContaining({ actorType: 'AI_AGENT' })
-      );
+      expect(mockLogFn).toHaveBeenCalledWith(expect.objectContaining({ actorType: 'AI_AGENT' }));
     });
   });
 

@@ -48,7 +48,7 @@ export interface LogoutRedirectResult {
 
 const DEFAULT_LOGIN_PATH = '/login';
 const DEFAULT_LOGOUT_PATH = '/logout';
-const ALLOWED_REDIRECT_HOSTS: string[] = [];  // Add trusted hosts here
+const ALLOWED_REDIRECT_HOSTS: string[] = []; // Add trusted hosts here
 
 const LOGOUT_MESSAGES: Record<LogoutReason, string> = {
   user_initiated: 'You have been logged out successfully.',
@@ -122,11 +122,13 @@ export function sanitizeReturnUrl(url: string | null | undefined): string | null
 /**
  * Build the login page URL with optional parameters
  */
-export function buildLoginUrl(options: {
-  returnUrl?: string | null;
-  reason?: LogoutReason;
-  showMessage?: boolean;
-} = {}): string {
+export function buildLoginUrl(
+  options: {
+    returnUrl?: string | null;
+    reason?: LogoutReason;
+    showMessage?: boolean;
+  } = {}
+): string {
   const params = new URLSearchParams();
 
   // Add sanitized return URL
@@ -233,7 +235,8 @@ export function getLogoutRedirect(options: LogoutRedirectOptions = {}): LogoutRe
       reason: options.reason,
       showMessage: options.showMessage,
     });
-    ssoLogoutUrl = getSsoLogoutUrl(options.ssoProvider, `${window.location.origin}${loginUrl}`) || undefined;
+    ssoLogoutUrl =
+      getSsoLogoutUrl(options.ssoProvider, `${window.location.origin}${loginUrl}`) || undefined;
   }
 
   const queryString = params.toString();
@@ -250,9 +253,7 @@ export function getLogoutRedirect(options: LogoutRedirectOptions = {}): LogoutRe
 /**
  * Perform the logout redirect
  */
-export function performLogoutRedirect(
-  options: LogoutRedirectOptions = {}
-): void {
+export function performLogoutRedirect(options: LogoutRedirectOptions = {}): void {
   if (typeof window === 'undefined') return;
 
   const { url, requiresSsoLogout, ssoLogoutUrl } = getLogoutRedirect(options);

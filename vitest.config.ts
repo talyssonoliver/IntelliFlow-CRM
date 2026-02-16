@@ -63,17 +63,19 @@ export default defineConfig({
     },
 
     // Timeouts to prevent hung tests from accumulating memory
-    testTimeout: 30000,      // 30s per test
-    hookTimeout: 30000,      // 30s for beforeAll/afterAll
-    teardownTimeout: 10000,  // 10s for cleanup
+    testTimeout: 30000, // 30s per test
+    hookTimeout: 30000, // 30s for beforeAll/afterAll
+    teardownTimeout: 10000, // 10s for cleanup
 
     // Handle worker exit errors at root level - these occur during cleanup after tests complete
     // The errors are: "Worker exited unexpectedly" during post-test cleanup
     onUnhandledError(error: Error): boolean | void {
       // Filter out worker exit errors that occur during cleanup
-      if (error.message?.includes('Worker exited unexpectedly') ||
-          error.message?.includes('vitest-pool') ||
-          error.message?.includes('[vitest-pool]')) {
+      if (
+        error.message?.includes('Worker exited unexpectedly') ||
+        error.message?.includes('vitest-pool') ||
+        error.message?.includes('[vitest-pool]')
+      ) {
         return false; // Don't fail the test run for these errors
       }
     },
@@ -154,9 +156,7 @@ export default defineConfig({
             // This is for any remaining tests in the root project that need jsdom
             ['apps/project-tracker/**/*.{test,spec}.{ts,tsx}', 'jsdom'],
           ],
-          setupFiles: [
-            './apps/api/src/test/setup.ts',
-          ],
+          setupFiles: ['./apps/api/src/test/setup.ts'],
           include: [
             'apps/**/*.{test,spec}.ts',
             'apps/**/*.{test,spec}.tsx',
@@ -289,15 +289,15 @@ export default defineConfig({
         // Per architecture plan: These are placeholders, not production code
         // Remove from exclusions when implementation starts
         // =============================================================
-        'packages/adapters/src/calendar/microsoft/**',  // IFC-172 planned
-        'packages/adapters/src/messaging/teams/**',      // Future sprint
-        'packages/adapters/src/messaging/slack/**',      // Future sprint
-        'packages/adapters/src/payments/paypal/**',      // Future sprint
-        'packages/adapters/src/email/outlook/**',        // Future sprint
-        'packages/adapters/src/erp/sap/**',              // Future sprint
-        'packages/adapters/src/storage/**',              // Future sprint
-        'packages/adapters/src/antivirus/**',            // Future sprint
-        'packages/adapters/src/shared/**',               // Utilities for future adapters
+        'packages/adapters/src/calendar/microsoft/**', // IFC-172 planned
+        'packages/adapters/src/messaging/teams/**', // Future sprint
+        'packages/adapters/src/messaging/slack/**', // Future sprint
+        'packages/adapters/src/payments/paypal/**', // Future sprint
+        'packages/adapters/src/email/outlook/**', // Future sprint
+        'packages/adapters/src/erp/sap/**', // Future sprint
+        'packages/adapters/src/storage/**', // Future sprint
+        'packages/adapters/src/antivirus/**', // Future sprint
+        'packages/adapters/src/shared/**', // Utilities for future adapters
         // SDK not yet implemented
         'packages/sdk/src/**',
         // Search package placeholder

@@ -33,13 +33,17 @@ vi.mock('../notifications', () => ({
 
 vi.mock('../search-bar', () => ({
   SearchBar: ({ className }: { className?: string }) => (
-    <div data-testid="search-bar" className={className}>Search</div>
+    <div data-testid="search-bar" className={className}>
+      Search
+    </div>
   ),
 }));
 
 vi.mock('../user-menu', () => ({
   UserMenu: ({ className }: { className?: string }) => (
-    <div data-testid="user-menu" className={className}>User Menu</div>
+    <div data-testid="user-menu" className={className}>
+      User Menu
+    </div>
   ),
 }));
 
@@ -105,13 +109,22 @@ describe('AppHeader', () => {
     it('should have correct href for each navigation link', () => {
       render(<AppHeader />);
 
-      expect(screen.getByRole('link', { name: /dashboard/i })).toHaveAttribute('href', '/dashboard');
+      expect(screen.getByRole('link', { name: /dashboard/i })).toHaveAttribute(
+        'href',
+        '/dashboard'
+      );
       expect(screen.getByRole('link', { name: /leads/i })).toHaveAttribute('href', '/leads');
       expect(screen.getByRole('link', { name: /contacts/i })).toHaveAttribute('href', '/contacts');
       expect(screen.getByRole('link', { name: /deals/i })).toHaveAttribute('href', '/deals');
       expect(screen.getByRole('link', { name: /tickets/i })).toHaveAttribute('href', '/tickets');
-      expect(screen.getByRole('link', { name: /documents/i })).toHaveAttribute('href', '/documents');
-      expect(screen.getByRole('link', { name: /ai & agents/i })).toHaveAttribute('href', '/agent-approvals');
+      expect(screen.getByRole('link', { name: /documents/i })).toHaveAttribute(
+        'href',
+        '/documents'
+      );
+      expect(screen.getByRole('link', { name: /ai & agents/i })).toHaveAttribute(
+        'href',
+        '/agent-approvals'
+      );
       expect(screen.getByRole('link', { name: /reports/i })).toHaveAttribute('href', '/analytics');
     });
 

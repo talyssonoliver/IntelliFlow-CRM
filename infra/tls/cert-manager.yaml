@@ -31,8 +31,8 @@ spec:
   isCA: true
   commonName: IntelliFlow Root CA
   secretName: intelliflow-root-ca-secret
-  duration: 87600h  # 10 years
-  renewBefore: 8760h  # 1 year before expiry
+  duration: 87600h # 10 years
+  renewBefore: 8760h # 1 year before expiry
   subject:
     organizations:
       - IntelliFlow
@@ -74,8 +74,8 @@ metadata:
     app.kubernetes.io/component: api
 spec:
   secretName: intelliflow-api-tls
-  duration: 8760h  # 1 year
-  renewBefore: 720h  # 30 days before expiry
+  duration: 8760h # 1 year
+  renewBefore: 720h # 30 days before expiry
   subject:
     organizations:
       - IntelliFlow

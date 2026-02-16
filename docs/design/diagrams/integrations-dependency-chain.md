@@ -1,7 +1,7 @@
 # Integrations Dependency Chain
 
-**Generated**: 2026-02-04
-**Purpose**: Hexagonal architecture dependency chains for Integration features
+**Generated**: 2026-02-04 **Purpose**: Hexagonal architecture dependency chains
+for Integration features
 
 ---
 
@@ -29,14 +29,15 @@ Hexagonal Layers:
 ## 1. External APIs & Webhooks
 
 ### Overview
-| Layer | Task ID | Status | Description |
-|-------|---------|--------|-------------|
-| Domain | IFC-099 | ⬜ | Webhook Framework |
-| Validators | webhook.ts | ⬜ | Webhook schemas |
-| Application | IFC-114 | ⬜ | Rate Limiting & DDoS |
-| Adapters | - | ⬜ | Webhook adapters |
-| API | webhooks.router | ⬜ | Webhook router |
-| UI | PG-114, PG-115 | ⬜ | Integration Catalog, Webhook Config |
+
+| Layer       | Task ID         | Status | Description                         |
+| ----------- | --------------- | ------ | ----------------------------------- |
+| Domain      | IFC-099         | ⬜     | Webhook Framework                   |
+| Validators  | webhook.ts      | ⬜     | Webhook schemas                     |
+| Application | IFC-114         | ⬜     | Rate Limiting & DDoS                |
+| Adapters    | -               | ⬜     | Webhook adapters                    |
+| API         | webhooks.router | ⬜     | Webhook router                      |
+| UI          | PG-114, PG-115  | ⬜     | Integration Catalog, Webhook Config |
 
 ### Dependency Diagram
 
@@ -78,6 +79,7 @@ Hexagonal Layers:
 ```
 
 ### Dependency Chain
+
 ```
 IFC-099 (Webhooks) ⬜ ──┬──► IFC-114 (Rate Limit) ⬜ ──► webhooks.router ⬜ ──┬──► PG-114 (Catalog) ⬜
                        ├──► webhook.ts (Val) ⬜ ──────────────────────────────┴──► PG-115 (Config) ⬜
@@ -89,14 +91,15 @@ IFC-099 (Webhooks) ⬜ ──┬──► IFC-114 (Rate Limit) ⬜ ──► web
 ## 2. Observability Stack
 
 ### Overview
-| Layer | Task ID | Status | Description |
-|-------|---------|--------|-------------|
-| Domain | ENV-008-AI | ✅ | OpenTelemetry Setup |
-| Validators | traces.ts | ⬜ | Trace schemas |
-| Application | IFC-116 | ⬜ | Metrics Collection |
-| Adapters | IFC-142 | ⬜ | Alerting & SLOs |
-| API | - | ⬜ | Metrics router |
-| UI | TRACK-001, TRACK-006 | ⬜ | Status & Build Dashboards |
+
+| Layer       | Task ID              | Status | Description               |
+| ----------- | -------------------- | ------ | ------------------------- |
+| Domain      | ENV-008-AI           | ✅     | OpenTelemetry Setup       |
+| Validators  | traces.ts            | ⬜     | Trace schemas             |
+| Application | IFC-116              | ⬜     | Metrics Collection        |
+| Adapters    | IFC-142              | ⬜     | Alerting & SLOs           |
+| API         | -                    | ⬜     | Metrics router            |
+| UI          | TRACK-001, TRACK-006 | ⬜     | Status & Build Dashboards |
 
 ### Dependency Diagram
 
@@ -139,6 +142,7 @@ IFC-099 (Webhooks) ⬜ ──┬──► IFC-114 (Rate Limit) ⬜ ──► web
 ```
 
 ### Dependency Chain
+
 ```
 ENV-008-AI (OTel) ✅ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana Dashboards ⬜ ──┬──► TRACK-001 (Status) ⬜
                        ├──► IFC-142 (Alerting) ⬜ ────────────────────────────┴──► TRACK-006 (Build) ⬜
@@ -149,10 +153,10 @@ ENV-008-AI (OTel) ✅ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana
 
 ## Summary
 
-| Chain | Status | Blocking Issues |
-|-------|--------|-----------------|
-| External APIs/Webhooks | ⬜ All New | IFC-099, IFC-114 need implementation |
-| Observability Stack | ⬜ Mostly New | IFC-116, IFC-142 need implementation |
+| Chain                  | Status        | Blocking Issues                      |
+| ---------------------- | ------------- | ------------------------------------ |
+| External APIs/Webhooks | ⬜ All New    | IFC-099, IFC-114 need implementation |
+| Observability Stack    | ⬜ Mostly New | IFC-116, IFC-142 need implementation |
 
 ### Prerequisites for Implementation
 

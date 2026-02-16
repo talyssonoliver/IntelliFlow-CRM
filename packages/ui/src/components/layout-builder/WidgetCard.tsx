@@ -124,9 +124,7 @@ export function WidgetCard({
       )}
 
       {/* Widget content */}
-      <div className={`h-full ${isEditing && dragHandleProps ? 'pt-10' : ''}`}>
-        {children}
-      </div>
+      <div className={`h-full ${isEditing && dragHandleProps ? 'pt-10' : ''}`}>{children}</div>
 
       {/* Resize handles - only visible when in edit mode */}
       {isEditing && onResize && (
@@ -176,8 +174,8 @@ function ResizeHandle({ widget, position, onResize, isResizing }: ResizeHandlePr
   const startSpanRef = React.useRef({ colSpan: widget.colSpan, rowSpan: widget.rowSpan });
 
   const positionClasses: Record<string, string> = {
-    'right': 'right-0 top-1/2 -translate-y-1/2 w-2 h-12 cursor-ew-resize hover:bg-ds-primary/30',
-    'bottom': 'bottom-0 left-1/2 -translate-x-1/2 h-2 w-12 cursor-ns-resize hover:bg-ds-primary/30',
+    right: 'right-0 top-1/2 -translate-y-1/2 w-2 h-12 cursor-ew-resize hover:bg-ds-primary/30',
+    bottom: 'bottom-0 left-1/2 -translate-x-1/2 h-2 w-12 cursor-ns-resize hover:bg-ds-primary/30',
     'bottom-right': 'right-0 bottom-0 w-4 h-4 cursor-nwse-resize hover:bg-ds-primary/50',
   };
 
@@ -201,7 +199,11 @@ function ResizeHandle({ widget, position, onResize, isResizing }: ResizeHandlePr
 
       if (position === 'right' || position === 'bottom-right') {
         const colDelta = Math.round(deltaX / colThreshold);
-        newColSpan = Math.max(1, Math.min(4, startSpanRef.current.colSpan + colDelta)) as 1 | 2 | 3 | 4;
+        newColSpan = Math.max(1, Math.min(4, startSpanRef.current.colSpan + colDelta)) as
+          | 1
+          | 2
+          | 3
+          | 4;
       }
 
       if (position === 'bottom' || position === 'bottom-right') {
@@ -223,7 +225,8 @@ function ResizeHandle({ widget, position, onResize, isResizing }: ResizeHandlePr
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-    document.body.style.cursor = position === 'right' ? 'ew-resize' : position === 'bottom' ? 'ns-resize' : 'nwse-resize';
+    document.body.style.cursor =
+      position === 'right' ? 'ew-resize' : position === 'bottom' ? 'ns-resize' : 'nwse-resize';
     document.body.style.userSelect = 'none';
   };
 
@@ -270,19 +273,22 @@ export function CompactWidgetContent({
   return (
     <div className="p-5 flex flex-col justify-between h-full">
       <div className="flex items-center gap-3">
-        <div className={`size-8 rounded-full ${iconBgColor} flex items-center justify-center ${iconColor}`}>
+        <div
+          className={`size-8 rounded-full ${iconBgColor} flex items-center justify-center ${iconColor}`}
+        >
           <span className="material-symbols-outlined text-lg">{icon}</span>
         </div>
         <h3 className="font-medium text-slate-700 dark:text-slate-300">{title}</h3>
       </div>
       <div>
         <div className="text-3xl font-bold text-slate-900 dark:text-white">{value}</div>
-        {subtitle && (
-          <div className="text-xs text-slate-500 mt-1">{subtitle}</div>
-        )}
+        {subtitle && <div className="text-xs text-slate-500 mt-1">{subtitle}</div>}
         {progress !== undefined && (
           <div className="w-full bg-slate-100 dark:bg-slate-700 h-1.5 rounded-full mt-2 overflow-hidden">
-            <div className={`${progressColor} h-full rounded-full`} style={{ width: `${progress}%` }} />
+            <div
+              className={`${progressColor} h-full rounded-full`}
+              style={{ width: `${progress}%` }}
+            />
           </div>
         )}
       </div>

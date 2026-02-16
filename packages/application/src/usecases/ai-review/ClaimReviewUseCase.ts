@@ -8,12 +8,7 @@
  * @implements IFC-177
  */
 
-import {
-  Result,
-  DomainError,
-  AIOutputReview,
-  ReviewStatus,
-} from '@intelliflow/domain';
+import { Result, DomainError, AIOutputReview, ReviewStatus } from '@intelliflow/domain';
 import { IAIOutputReviewRepository } from '../../ports/repositories';
 import { EventBusPort } from '../../ports/external';
 import { generateLockToken } from './lock-token-utils';
@@ -97,14 +92,9 @@ export class ClaimReviewUseCase {
     private readonly lockTokenSecret: string
   ) {}
 
-  async execute(
-    input: ClaimReviewInput
-  ): Promise<Result<ClaimReviewOutput, DomainError>> {
+  async execute(input: ClaimReviewInput): Promise<Result<ClaimReviewOutput, DomainError>> {
     // 1. Find review with tenant isolation (SELECT FOR UPDATE)
-    const review = await this.repository.findByIdForUpdate(
-      input.reviewId,
-      input.tenantId
-    );
+    const review = await this.repository.findByIdForUpdate(input.reviewId, input.tenantId);
 
     if (!review) {
       return Result.fail(new ReviewNotFoundError());
@@ -121,7 +111,9 @@ export class ClaimReviewUseCase {
     // 3. Validate review is claimable (PENDING or IN_REVIEW with expired lock)
     const canClaim =
       review.status === ReviewStatus.PENDING ||
-      (review.status === ReviewStatus.IN_REVIEW && review.lockExpiresAt && new Date() > review.lockExpiresAt);
+      (review.status === ReviewStatus.IN_REVIEW &&
+        review.lockExpiresAt &&
+        new Date() > review.lockExpiresAt);
 
     if (!canClaim) {
       return Result.fail(new InvalidReviewStateError(review.status));

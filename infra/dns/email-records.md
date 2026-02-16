@@ -1,14 +1,19 @@
 # Email DNS Records Documentation
 
-This document outlines the DNS records required for proper email deliverability and authentication for IntelliFlow CRM.
+This document outlines the DNS records required for proper email deliverability
+and authentication for IntelliFlow CRM.
 
 ## Overview
 
-For emails sent from IntelliFlow CRM to achieve high deliverability (target: >=95%), the following DNS records must be configured:
+For emails sent from IntelliFlow CRM to achieve high deliverability
+(target: >=95%), the following DNS records must be configured:
 
-1. **SPF** (Sender Policy Framework) - Authorizes which servers can send email for your domain
-2. **DKIM** (DomainKeys Identified Mail) - Cryptographically signs emails to verify authenticity
-3. **DMARC** (Domain-based Message Authentication, Reporting & Conformance) - Defines policy for handling authentication failures
+1. **SPF** (Sender Policy Framework) - Authorizes which servers can send email
+   for your domain
+2. **DKIM** (DomainKeys Identified Mail) - Cryptographically signs emails to
+   verify authenticity
+3. **DMARC** (Domain-based Message Authentication, Reporting & Conformance) -
+   Defines policy for handling authentication failures
 4. **MX** (Mail Exchanger) - Specifies mail servers for receiving email
 5. **PTR** (Reverse DNS) - Maps IP addresses to domain names for verification
 
@@ -26,11 +31,13 @@ TTL:   3600
 ```
 
 **Breakdown:**
+
 - `v=spf1` - SPF version 1
 - `include:_spf.intelliflow-crm.com` - Include our internal SPF records
 - `include:sendgrid.net` - Authorize SendGrid to send on our behalf
 - `include:amazonses.com` - Authorize Amazon SES as backup
-- `~all` - Soft fail for unauthorized senders (use `-all` for strict enforcement in production)
+- `~all` - Soft fail for unauthorized senders (use `-all` for strict enforcement
+  in production)
 
 #### DKIM Records
 
@@ -53,6 +60,7 @@ TTL:   3600
 ```
 
 **DKIM Configuration Options:**
+
 - `v=DKIM1` - DKIM version
 - `k=rsa` - Key type (RSA)
 - `p=...` - Base64-encoded public key
@@ -69,6 +77,7 @@ TTL:   3600
 ```
 
 **Breakdown:**
+
 - `v=DMARC1` - DMARC version
 - `p=quarantine` - Policy for failures (none/quarantine/reject)
 - `rua=mailto:...` - Aggregate report destination
@@ -98,6 +107,7 @@ TTL:   3600
 ```
 
 **Priority:**
+
 - 10: Primary mail server
 - 20: Secondary mail server
 - 30: Backup mail server
@@ -249,6 +259,7 @@ TTL:   3600
 ```
 
 **Requirements:**
+
 - SVG logo must be in Tiny PS format
 - VMC (Verified Mark Certificate) required for full support
 - DMARC policy must be `p=quarantine` or `p=reject`
@@ -266,6 +277,7 @@ Set up automated processing of DMARC aggregate reports:
 ### Deliverability Monitoring
 
 Track these metrics:
+
 - **Delivery rate**: Target >= 95%
 - **Bounce rate**: Target <= 2%
 - **Spam complaint rate**: Target <= 0.1%
@@ -286,7 +298,7 @@ Track these metrics:
 ### Recommended Schedule
 
 | Selector | Active From | Retire Date |
-|----------|-------------|-------------|
+| -------- | ----------- | ----------- |
 | ifc1     | 2024-01-01  | 2024-06-30  |
 | ifc2     | 2024-07-01  | 2024-12-31  |
 | ifc1     | 2025-01-01  | 2025-06-30  |

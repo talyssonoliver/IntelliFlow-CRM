@@ -7,11 +7,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { InMemoryTicketRepository } from '../InMemoryTicketRepository';
-import type {
-  TicketDTO,
-  CreateTicketData,
-  SLAPolicyDTO,
-} from '@intelliflow/application';
+import type { TicketDTO, CreateTicketData, SLAPolicyDTO } from '@intelliflow/application';
 
 describe('InMemoryTicketRepository', () => {
   let repo: InMemoryTicketRepository;
@@ -348,30 +344,55 @@ describe('InMemoryTicketRepository', () => {
       // Seed several tickets with varying attributes
       const base = new Date('2026-01-10T10:00:00Z');
 
-      repo.seedTicket(makeTicketDTO({
-        id: 't-1', status: 'OPEN', priority: 'LOW', assigneeId: 'agent-1',
-        slaStatus: 'ON_TRACK', contactId: 'c-1',
-        createdAt: new Date(base.getTime() + 1000),
-        updatedAt: new Date(base.getTime() + 1000),
-      }));
-      repo.seedTicket(makeTicketDTO({
-        id: 't-2', status: 'IN_PROGRESS', priority: 'HIGH', assigneeId: 'agent-2',
-        slaStatus: 'AT_RISK', contactId: 'c-2',
-        createdAt: new Date(base.getTime() + 2000),
-        updatedAt: new Date(base.getTime() + 2000),
-      }));
-      repo.seedTicket(makeTicketDTO({
-        id: 't-3', status: 'OPEN', priority: 'CRITICAL', assigneeId: 'agent-1',
-        slaStatus: 'BREACHED', contactId: 'c-1',
-        createdAt: new Date(base.getTime() + 3000),
-        updatedAt: new Date(base.getTime() + 3000),
-      }));
-      repo.seedTicket(makeTicketDTO({
-        id: 't-4', status: 'RESOLVED', priority: 'MEDIUM', assigneeId: 'agent-3',
-        slaStatus: 'MET', contactId: 'c-3', tenantId: 'tenant-other',
-        createdAt: new Date(base.getTime() + 4000),
-        updatedAt: new Date(base.getTime() + 4000),
-      }));
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 't-1',
+          status: 'OPEN',
+          priority: 'LOW',
+          assigneeId: 'agent-1',
+          slaStatus: 'ON_TRACK',
+          contactId: 'c-1',
+          createdAt: new Date(base.getTime() + 1000),
+          updatedAt: new Date(base.getTime() + 1000),
+        })
+      );
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 't-2',
+          status: 'IN_PROGRESS',
+          priority: 'HIGH',
+          assigneeId: 'agent-2',
+          slaStatus: 'AT_RISK',
+          contactId: 'c-2',
+          createdAt: new Date(base.getTime() + 2000),
+          updatedAt: new Date(base.getTime() + 2000),
+        })
+      );
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 't-3',
+          status: 'OPEN',
+          priority: 'CRITICAL',
+          assigneeId: 'agent-1',
+          slaStatus: 'BREACHED',
+          contactId: 'c-1',
+          createdAt: new Date(base.getTime() + 3000),
+          updatedAt: new Date(base.getTime() + 3000),
+        })
+      );
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 't-4',
+          status: 'RESOLVED',
+          priority: 'MEDIUM',
+          assigneeId: 'agent-3',
+          slaStatus: 'MET',
+          contactId: 'c-3',
+          tenantId: 'tenant-other',
+          createdAt: new Date(base.getTime() + 4000),
+          updatedAt: new Date(base.getTime() + 4000),
+        })
+      );
     });
 
     it('should filter by tenantId (required)', async () => {
@@ -454,20 +475,14 @@ describe('InMemoryTicketRepository', () => {
     });
 
     it('should apply pagination with offset and limit', async () => {
-      const result = await repo.findMany(
-        { tenantId: TENANT_ID },
-        { offset: 1, limit: 1 }
-      );
+      const result = await repo.findMany({ tenantId: TENANT_ID }, { offset: 1, limit: 1 });
       expect(result.tickets.length).toBe(1);
       expect(result.total).toBe(3);
       expect(result.hasMore).toBe(true);
     });
 
     it('should report hasMore=false when on last page', async () => {
-      const result = await repo.findMany(
-        { tenantId: TENANT_ID },
-        { offset: 2, limit: 5 }
-      );
+      const result = await repo.findMany({ tenantId: TENANT_ID }, { offset: 2, limit: 5 });
       expect(result.tickets.length).toBe(1);
       expect(result.hasMore).toBe(false);
     });
@@ -487,12 +502,14 @@ describe('InMemoryTicketRepository', () => {
 
     it('should handle sort with null values (null last for asc)', async () => {
       // Seed a ticket with null slaResolutionDue to test the null-handling branch
-      repo.seedTicket(makeTicketDTO({
-        id: 't-null',
-        slaResolutionDue: null,
-        createdAt: new Date('2026-01-10T10:05:00Z'),
-        updatedAt: new Date('2026-01-10T10:05:00Z'),
-      }));
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 't-null',
+          slaResolutionDue: null,
+          createdAt: new Date('2026-01-10T10:05:00Z'),
+          updatedAt: new Date('2026-01-10T10:05:00Z'),
+        })
+      );
 
       const result = await repo.findMany(
         { tenantId: TENANT_ID },
@@ -505,8 +522,12 @@ describe('InMemoryTicketRepository', () => {
 
     it('should handle sort with both values null', async () => {
       repo.clear();
-      repo.seedTicket(makeTicketDTO({ id: 'n1', slaResolutionDue: null, createdAt: new Date('2026-01-01') }));
-      repo.seedTicket(makeTicketDTO({ id: 'n2', slaResolutionDue: null, createdAt: new Date('2026-01-02') }));
+      repo.seedTicket(
+        makeTicketDTO({ id: 'n1', slaResolutionDue: null, createdAt: new Date('2026-01-01') })
+      );
+      repo.seedTicket(
+        makeTicketDTO({ id: 'n2', slaResolutionDue: null, createdAt: new Date('2026-01-02') })
+      );
 
       const result = await repo.findMany(
         { tenantId: TENANT_ID },
@@ -543,10 +564,12 @@ describe('InMemoryTicketRepository', () => {
     });
 
     it('should count SLA breaches', async () => {
-      repo.seedTicket(makeTicketDTO({
-        id: 'b1',
-        slaBreachedAt: new Date('2026-01-15T10:00:00Z'),
-      }));
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'b1',
+          slaBreachedAt: new Date('2026-01-15T10:00:00Z'),
+        })
+      );
       repo.seedTicket(makeTicketDTO({ id: 'b2', slaBreachedAt: null }));
 
       const stats = await repo.getStats(TENANT_ID);
@@ -558,17 +581,21 @@ describe('InMemoryTicketRepository', () => {
       // 60 minutes after created
       const responded = new Date('2026-01-10T11:00:00Z');
 
-      repo.seedTicket(makeTicketDTO({
-        id: 'r1',
-        createdAt: created,
-        firstResponseAt: responded,
-      }));
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'r1',
+          createdAt: created,
+          firstResponseAt: responded,
+        })
+      );
       // 120 minutes after
-      repo.seedTicket(makeTicketDTO({
-        id: 'r2',
-        createdAt: created,
-        firstResponseAt: new Date('2026-01-10T12:00:00Z'),
-      }));
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'r2',
+          createdAt: created,
+          firstResponseAt: new Date('2026-01-10T12:00:00Z'),
+        })
+      );
 
       const stats = await repo.getStats(TENANT_ID);
       // Average of 60 and 120 = 90
@@ -675,23 +702,37 @@ describe('InMemoryTicketRepository', () => {
     });
 
     it('should apply all filter types', async () => {
-      repo.seedTicket(makeTicketDTO({
-        id: 'f1', status: 'OPEN', priority: 'HIGH', assigneeId: 'a1',
-        slaStatus: 'AT_RISK', contactId: 'c1',
-      }));
-      repo.seedTicket(makeTicketDTO({
-        id: 'f2', status: 'OPEN', priority: 'LOW', assigneeId: 'a2',
-        slaStatus: 'ON_TRACK', contactId: 'c2',
-      }));
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'f1',
+          status: 'OPEN',
+          priority: 'HIGH',
+          assigneeId: 'a1',
+          slaStatus: 'AT_RISK',
+          contactId: 'c1',
+        })
+      );
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'f2',
+          status: 'OPEN',
+          priority: 'LOW',
+          assigneeId: 'a2',
+          slaStatus: 'ON_TRACK',
+          contactId: 'c2',
+        })
+      );
 
-      expect(await repo.count({
-        tenantId: TENANT_ID,
-        status: 'OPEN',
-        priority: 'HIGH',
-        assigneeId: 'a1',
-        slaStatus: 'AT_RISK',
-        contactId: 'c1',
-      })).toBe(1);
+      expect(
+        await repo.count({
+          tenantId: TENANT_ID,
+          status: 'OPEN',
+          priority: 'HIGH',
+          assigneeId: 'a1',
+          slaStatus: 'AT_RISK',
+          contactId: 'c1',
+        })
+      ).toBe(1);
     });
   });
 
@@ -707,14 +748,20 @@ describe('InMemoryTicketRepository', () => {
 
     it('should calculate average correctly', async () => {
       const created = new Date('2026-01-10T10:00:00Z');
-      repo.seedTicket(makeTicketDTO({
-        id: 'avg1', createdAt: created,
-        firstResponseAt: new Date('2026-01-10T10:30:00Z'), // 30 min
-      }));
-      repo.seedTicket(makeTicketDTO({
-        id: 'avg2', createdAt: created,
-        firstResponseAt: new Date('2026-01-10T11:30:00Z'), // 90 min
-      }));
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'avg1',
+          createdAt: created,
+          firstResponseAt: new Date('2026-01-10T10:30:00Z'), // 30 min
+        })
+      );
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'avg2',
+          createdAt: created,
+          firstResponseAt: new Date('2026-01-10T11:30:00Z'), // 90 min
+        })
+      );
 
       const avg = await repo.getAverageResponseTime(TENANT_ID);
       expect(avg).toBe(60); // (30+90)/2
@@ -722,14 +769,22 @@ describe('InMemoryTicketRepository', () => {
 
     it('should only consider tickets for the given tenant', async () => {
       const created = new Date('2026-01-10T10:00:00Z');
-      repo.seedTicket(makeTicketDTO({
-        id: 'mine', tenantId: TENANT_ID, createdAt: created,
-        firstResponseAt: new Date('2026-01-10T11:00:00Z'), // 60 min
-      }));
-      repo.seedTicket(makeTicketDTO({
-        id: 'other', tenantId: 'other-tenant', createdAt: created,
-        firstResponseAt: new Date('2026-01-10T14:00:00Z'), // 240 min
-      }));
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'mine',
+          tenantId: TENANT_ID,
+          createdAt: created,
+          firstResponseAt: new Date('2026-01-10T11:00:00Z'), // 60 min
+        })
+      );
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'other',
+          tenantId: 'other-tenant',
+          createdAt: created,
+          firstResponseAt: new Date('2026-01-10T14:00:00Z'), // 240 min
+        })
+      );
 
       const avg = await repo.getAverageResponseTime(TENANT_ID);
       expect(avg).toBe(60);
@@ -741,23 +796,27 @@ describe('InMemoryTicketRepository', () => {
   // ==========================================================
   describe('findBreachingSLA()', () => {
     it('should return empty array when no tickets are breaching', async () => {
-      repo.seedTicket(makeTicketDTO({
-        id: 'ok',
-        slaBreachedAt: null,
-        slaResponseDue: new Date('2099-01-01'),
-        slaResolutionDue: new Date('2099-01-01'),
-      }));
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'ok',
+          slaBreachedAt: null,
+          slaResponseDue: new Date('2099-01-01'),
+          slaResolutionDue: new Date('2099-01-01'),
+        })
+      );
 
       const breaching = await repo.findBreachingSLA(TENANT_ID);
       expect(breaching).toEqual([]);
     });
 
     it('should include tickets already breached', async () => {
-      repo.seedTicket(makeTicketDTO({
-        id: 'breached-already',
-        status: 'OPEN',
-        slaBreachedAt: new Date('2026-01-01T10:00:00Z'),
-      }));
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'breached-already',
+          status: 'OPEN',
+          slaBreachedAt: new Date('2026-01-01T10:00:00Z'),
+        })
+      );
 
       const breaching = await repo.findBreachingSLA(TENANT_ID);
       expect(breaching.length).toBe(1);
@@ -765,75 +824,87 @@ describe('InMemoryTicketRepository', () => {
     });
 
     it('should include tickets with response SLA past due and no first response', async () => {
-      repo.seedTicket(makeTicketDTO({
-        id: 'resp-overdue',
-        status: 'OPEN',
-        slaBreachedAt: null,
-        slaResponseDue: new Date('2020-01-01T10:00:00Z'), // past
-        firstResponseAt: null,
-      }));
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'resp-overdue',
+          status: 'OPEN',
+          slaBreachedAt: null,
+          slaResponseDue: new Date('2020-01-01T10:00:00Z'), // past
+          firstResponseAt: null,
+        })
+      );
 
       const breaching = await repo.findBreachingSLA(TENANT_ID);
       expect(breaching.length).toBe(1);
     });
 
     it('should include tickets with resolution SLA past due', async () => {
-      repo.seedTicket(makeTicketDTO({
-        id: 'resol-overdue',
-        status: 'IN_PROGRESS',
-        slaBreachedAt: null,
-        slaResponseDue: null,
-        slaResolutionDue: new Date('2020-01-01T10:00:00Z'), // past
-        firstResponseAt: new Date('2020-01-01T08:00:00Z'),
-      }));
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'resol-overdue',
+          status: 'IN_PROGRESS',
+          slaBreachedAt: null,
+          slaResponseDue: null,
+          slaResolutionDue: new Date('2020-01-01T10:00:00Z'), // past
+          firstResponseAt: new Date('2020-01-01T08:00:00Z'),
+        })
+      );
 
       const breaching = await repo.findBreachingSLA(TENANT_ID);
       expect(breaching.length).toBe(1);
     });
 
     it('should exclude RESOLVED tickets', async () => {
-      repo.seedTicket(makeTicketDTO({
-        id: 'resolved-breach',
-        status: 'RESOLVED',
-        slaBreachedAt: new Date('2026-01-01'),
-      }));
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'resolved-breach',
+          status: 'RESOLVED',
+          slaBreachedAt: new Date('2026-01-01'),
+        })
+      );
 
       const breaching = await repo.findBreachingSLA(TENANT_ID);
       expect(breaching).toEqual([]);
     });
 
     it('should exclude CLOSED tickets', async () => {
-      repo.seedTicket(makeTicketDTO({
-        id: 'closed-breach',
-        status: 'CLOSED',
-        slaBreachedAt: new Date('2026-01-01'),
-      }));
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'closed-breach',
+          status: 'CLOSED',
+          slaBreachedAt: new Date('2026-01-01'),
+        })
+      );
 
       const breaching = await repo.findBreachingSLA(TENANT_ID);
       expect(breaching).toEqual([]);
     });
 
     it('should not include ticket when response SLA due but already responded', async () => {
-      repo.seedTicket(makeTicketDTO({
-        id: 'responded',
-        status: 'OPEN',
-        slaBreachedAt: null,
-        slaResponseDue: new Date('2020-01-01'),
-        firstResponseAt: new Date('2019-12-31'), // responded before due
-        slaResolutionDue: new Date('2099-01-01'),
-      }));
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'responded',
+          status: 'OPEN',
+          slaBreachedAt: null,
+          slaResponseDue: new Date('2020-01-01'),
+          firstResponseAt: new Date('2019-12-31'), // responded before due
+          slaResolutionDue: new Date('2099-01-01'),
+        })
+      );
 
       const breaching = await repo.findBreachingSLA(TENANT_ID);
       expect(breaching).toEqual([]);
     });
 
     it('should filter by tenantId', async () => {
-      repo.seedTicket(makeTicketDTO({
-        id: 'other-tenant-breach',
-        tenantId: 'other',
-        status: 'OPEN',
-        slaBreachedAt: new Date('2026-01-01'),
-      }));
+      repo.seedTicket(
+        makeTicketDTO({
+          id: 'other-tenant-breach',
+          tenantId: 'other',
+          status: 'OPEN',
+          slaBreachedAt: new Date('2026-01-01'),
+        })
+      );
 
       const breaching = await repo.findBreachingSLA(TENANT_ID);
       expect(breaching).toEqual([]);
@@ -887,11 +958,16 @@ describe('InMemoryTicketRepository', () => {
 
     it('seedSLAPolicy() should make the policy retrievable', async () => {
       const policy: SLAPolicyDTO = {
-        id: 'p1', name: 'Test',
-        criticalResponseMinutes: 1, criticalResolutionMinutes: 2,
-        highResponseMinutes: 3, highResolutionMinutes: 4,
-        mediumResponseMinutes: 5, mediumResolutionMinutes: 6,
-        lowResponseMinutes: 7, lowResolutionMinutes: 8,
+        id: 'p1',
+        name: 'Test',
+        criticalResponseMinutes: 1,
+        criticalResolutionMinutes: 2,
+        highResponseMinutes: 3,
+        highResolutionMinutes: 4,
+        mediumResponseMinutes: 5,
+        mediumResolutionMinutes: 6,
+        lowResponseMinutes: 7,
+        lowResolutionMinutes: 8,
       };
       repo.seedSLAPolicy(policy);
       const found = await repo.getSLAPolicy('p1');

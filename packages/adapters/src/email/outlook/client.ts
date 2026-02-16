@@ -201,38 +201,102 @@ export interface OutlookEmailServicePort {
   validateTokens(tokens: OutlookOAuthTokens): boolean;
 
   // Message Operations
-  getMessage(tokens: OutlookOAuthTokens, messageId: string): Promise<Result<OutlookMessage | null, DomainError>>;
-  searchMessages(tokens: OutlookOAuthTokens, params: SearchEmailsParams): Promise<Result<SearchEmailsResult, DomainError>>;
-  sendMessage(tokens: OutlookOAuthTokens, params: ComposeEmailParams): Promise<Result<OutlookSendResult, DomainError>>;
-  replyToMessage(tokens: OutlookOAuthTokens, messageId: string, params: ComposeEmailParams): Promise<Result<OutlookSendResult, DomainError>>;
-  replyAllToMessage(tokens: OutlookOAuthTokens, messageId: string, params: ComposeEmailParams): Promise<Result<OutlookSendResult, DomainError>>;
-  forwardMessage(tokens: OutlookOAuthTokens, messageId: string, to: string[], comment?: string): Promise<Result<void, DomainError>>;
+  getMessage(
+    tokens: OutlookOAuthTokens,
+    messageId: string
+  ): Promise<Result<OutlookMessage | null, DomainError>>;
+  searchMessages(
+    tokens: OutlookOAuthTokens,
+    params: SearchEmailsParams
+  ): Promise<Result<SearchEmailsResult, DomainError>>;
+  sendMessage(
+    tokens: OutlookOAuthTokens,
+    params: ComposeEmailParams
+  ): Promise<Result<OutlookSendResult, DomainError>>;
+  replyToMessage(
+    tokens: OutlookOAuthTokens,
+    messageId: string,
+    params: ComposeEmailParams
+  ): Promise<Result<OutlookSendResult, DomainError>>;
+  replyAllToMessage(
+    tokens: OutlookOAuthTokens,
+    messageId: string,
+    params: ComposeEmailParams
+  ): Promise<Result<OutlookSendResult, DomainError>>;
+  forwardMessage(
+    tokens: OutlookOAuthTokens,
+    messageId: string,
+    to: string[],
+    comment?: string
+  ): Promise<Result<void, DomainError>>;
   deleteMessage(tokens: OutlookOAuthTokens, messageId: string): Promise<Result<void, DomainError>>;
-  moveMessage(tokens: OutlookOAuthTokens, messageId: string, destinationFolderId: string): Promise<Result<OutlookMessage, DomainError>>;
-  copyMessage(tokens: OutlookOAuthTokens, messageId: string, destinationFolderId: string): Promise<Result<OutlookMessage, DomainError>>;
-  updateMessage(tokens: OutlookOAuthTokens, messageId: string, updates: Partial<{ isRead: boolean; categories: string[]; flag: { flagStatus: string } }>): Promise<Result<OutlookMessage, DomainError>>;
+  moveMessage(
+    tokens: OutlookOAuthTokens,
+    messageId: string,
+    destinationFolderId: string
+  ): Promise<Result<OutlookMessage, DomainError>>;
+  copyMessage(
+    tokens: OutlookOAuthTokens,
+    messageId: string,
+    destinationFolderId: string
+  ): Promise<Result<OutlookMessage, DomainError>>;
+  updateMessage(
+    tokens: OutlookOAuthTokens,
+    messageId: string,
+    updates: Partial<{ isRead: boolean; categories: string[]; flag: { flagStatus: string } }>
+  ): Promise<Result<OutlookMessage, DomainError>>;
 
   // Draft Operations
-  createDraft(tokens: OutlookOAuthTokens, params: ComposeEmailParams): Promise<Result<OutlookMessage, DomainError>>;
-  updateDraft(tokens: OutlookOAuthTokens, draftId: string, params: ComposeEmailParams): Promise<Result<OutlookMessage, DomainError>>;
+  createDraft(
+    tokens: OutlookOAuthTokens,
+    params: ComposeEmailParams
+  ): Promise<Result<OutlookMessage, DomainError>>;
+  updateDraft(
+    tokens: OutlookOAuthTokens,
+    draftId: string,
+    params: ComposeEmailParams
+  ): Promise<Result<OutlookMessage, DomainError>>;
   sendDraft(tokens: OutlookOAuthTokens, draftId: string): Promise<Result<void, DomainError>>;
 
   // Folder Operations
   listFolders(tokens: OutlookOAuthTokens): Promise<Result<OutlookFolder[], DomainError>>;
-  createFolder(tokens: OutlookOAuthTokens, displayName: string, parentFolderId?: string): Promise<Result<OutlookFolder, DomainError>>;
+  createFolder(
+    tokens: OutlookOAuthTokens,
+    displayName: string,
+    parentFolderId?: string
+  ): Promise<Result<OutlookFolder, DomainError>>;
   deleteFolder(tokens: OutlookOAuthTokens, folderId: string): Promise<Result<void, DomainError>>;
 
   // Attachment Operations
-  listAttachments(tokens: OutlookOAuthTokens, messageId: string): Promise<Result<OutlookAttachment[], DomainError>>;
-  getAttachment(tokens: OutlookOAuthTokens, messageId: string, attachmentId: string): Promise<Result<OutlookAttachment | null, DomainError>>;
-  addAttachment(tokens: OutlookOAuthTokens, messageId: string, attachment: { name: string; contentType: string; contentBytes: string }): Promise<Result<OutlookAttachment, DomainError>>;
+  listAttachments(
+    tokens: OutlookOAuthTokens,
+    messageId: string
+  ): Promise<Result<OutlookAttachment[], DomainError>>;
+  getAttachment(
+    tokens: OutlookOAuthTokens,
+    messageId: string,
+    attachmentId: string
+  ): Promise<Result<OutlookAttachment | null, DomainError>>;
+  addAttachment(
+    tokens: OutlookOAuthTokens,
+    messageId: string,
+    attachment: { name: string; contentType: string; contentBytes: string }
+  ): Promise<Result<OutlookAttachment, DomainError>>;
 
   // Category Operations
   listCategories(tokens: OutlookOAuthTokens): Promise<Result<OutlookCategory[], DomainError>>;
-  createCategory(tokens: OutlookOAuthTokens, displayName: string, color: OutlookCategory['color']): Promise<Result<OutlookCategory, DomainError>>;
+  createCategory(
+    tokens: OutlookOAuthTokens,
+    displayName: string,
+    color: OutlookCategory['color']
+  ): Promise<Result<OutlookCategory, DomainError>>;
 
   // Health Check
-  checkConnection(tokens: OutlookOAuthTokens): Promise<Result<{ status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number }, DomainError>>;
+  checkConnection(
+    tokens: OutlookOAuthTokens
+  ): Promise<
+    Result<{ status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number }, DomainError>
+  >;
 }
 
 // ==================== Adapter Implementation ====================
@@ -289,7 +353,9 @@ export class OutlookAdapter implements OutlookEmailServicePort {
       });
 
       if (!response.ok) {
-        const errorData = (await response.json().catch(() => ({}))) as { error_description?: string };
+        const errorData = (await response.json().catch(() => ({}))) as {
+          error_description?: string;
+        };
         return Result.fail(
           new OutlookAuthenticationError(errorData.error_description ?? 'Token exchange failed')
         );
@@ -331,7 +397,9 @@ export class OutlookAdapter implements OutlookEmailServicePort {
       });
 
       if (!response.ok) {
-        const errorData = (await response.json().catch(() => ({}))) as { error_description?: string };
+        const errorData = (await response.json().catch(() => ({}))) as {
+          error_description?: string;
+        };
         return Result.fail(
           new OutlookAuthenticationError(errorData.error_description ?? 'Token refresh failed')
         );
@@ -597,7 +665,12 @@ export class OutlookAdapter implements OutlookEmailServicePort {
     updates: Partial<{ isRead: boolean; categories: string[]; flag: { flagStatus: string } }>
   ): Promise<Result<OutlookMessage, DomainError>> {
     try {
-      const response = await this.makeRequest(tokens, 'PATCH', `/me/messages/${messageId}`, updates);
+      const response = await this.makeRequest(
+        tokens,
+        'PATCH',
+        `/me/messages/${messageId}`,
+        updates
+      );
 
       if (response.isFailure) return Result.fail(response.error);
 
@@ -813,8 +886,8 @@ export class OutlookAdapter implements OutlookEmailServicePort {
 
       if (response.isFailure) return Result.fail(response.error);
 
-      const categories = ((response.value.value as Array<Record<string, unknown>>) ?? []).map(
-        (c) => this.mapToCategory(c)
+      const categories = ((response.value.value as Array<Record<string, unknown>>) ?? []).map((c) =>
+        this.mapToCategory(c)
       );
       return Result.ok(categories);
     } catch (error) {
@@ -849,7 +922,9 @@ export class OutlookAdapter implements OutlookEmailServicePort {
 
   async checkConnection(
     tokens: OutlookOAuthTokens
-  ): Promise<Result<{ status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number }, DomainError>> {
+  ): Promise<
+    Result<{ status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number }, DomainError>
+  > {
     const start = Date.now();
 
     try {
@@ -886,7 +961,7 @@ export class OutlookAdapter implements OutlookEmailServicePort {
     const response = await fetch(`${this.graphBaseUrl}${endpoint}`, {
       method,
       headers: {
-        'Authorization': `Bearer ${tokens.accessToken}`,
+        Authorization: `Bearer ${tokens.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: body ? JSON.stringify(body) : undefined,
@@ -907,12 +982,16 @@ export class OutlookAdapter implements OutlookEmailServicePort {
   private async handleErrorResponse(
     response: Response
   ): Promise<Result<Record<string, unknown>, DomainError>> {
-    const data = (await response.json().catch(() => ({}))) as { error?: { code?: number; message?: string; status?: string } };
+    const data = (await response.json().catch(() => ({}))) as {
+      error?: { code?: number; message?: string; status?: string };
+    };
     const error = data.error ?? {};
 
     switch (response.status) {
       case 401:
-        return Result.fail(new OutlookAuthenticationError(error.message ?? 'Token expired or invalid'));
+        return Result.fail(
+          new OutlookAuthenticationError(error.message ?? 'Token expired or invalid')
+        );
       case 404:
         return Result.fail(new OutlookNotFoundError('Resource', error.message ?? 'unknown'));
       case 429: {
@@ -990,9 +1069,7 @@ export class OutlookAdapter implements OutlookEmailServicePort {
           )
         : undefined,
       receivedDateTime: new Date(String(data.receivedDateTime ?? new Date().toISOString())),
-      sentDateTime: data.sentDateTime
-        ? new Date(String(data.sentDateTime))
-        : undefined,
+      sentDateTime: data.sentDateTime ? new Date(String(data.sentDateTime)) : undefined,
       hasAttachments: Boolean(data.hasAttachments),
       importance: (data.importance ?? 'normal') as 'low' | 'normal' | 'high',
       isRead: Boolean(data.isRead),

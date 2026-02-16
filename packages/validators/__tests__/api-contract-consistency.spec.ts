@@ -221,10 +221,25 @@ describe('API Contract Consistency', () => {
 
     it('should define all 19 routers', () => {
       const expectedRouters = [
-        'lead', 'contact', 'account', 'opportunity', 'task', 'ticket',
-        'analytics', 'agent', 'conversation', 'feedback',
-        'appointments', 'documents', 'health', 'auth', 'billing', 'timeline',
-        'system', 'upload', 'cases'
+        'lead',
+        'contact',
+        'account',
+        'opportunity',
+        'task',
+        'ticket',
+        'analytics',
+        'agent',
+        'conversation',
+        'feedback',
+        'appointments',
+        'documents',
+        'health',
+        'auth',
+        'billing',
+        'timeline',
+        'system',
+        'upload',
+        'cases',
       ];
 
       expect(expectedRouters.length).toBe(19);
@@ -283,11 +298,12 @@ describe('API Contract Consistency', () => {
           const router = contracts.routers[routerName];
           const crudEndpoints = ['create', 'getById', 'list', 'update', 'delete'];
           const procedures = crudEndpoints
-            .filter(e => router.endpoints[e])
-            .map(e => router.endpoints[e].procedure);
+            .filter((e) => router.endpoints[e])
+            .map((e) => router.endpoints[e].procedure);
 
           const uniqueProcedures = new Set(procedures);
-          expect(uniqueProcedures.size,
+          expect(
+            uniqueProcedures.size,
             `${routerName} CRUD endpoints should use same procedure: ${[...uniqueProcedures].join(', ')}`
           ).toBe(1);
         });
@@ -296,11 +312,12 @@ describe('API Contract Consistency', () => {
           const router = contracts.routers[routerName];
           const crudEndpoints = ['create', 'getById', 'list', 'update', 'delete'];
           const filters = crudEndpoints
-            .filter(e => router.endpoints[e])
-            .map(e => router.endpoints[e].ownerFilter);
+            .filter((e) => router.endpoints[e])
+            .map((e) => router.endpoints[e].ownerFilter);
 
           const uniqueFilters = new Set(filters);
-          expect(uniqueFilters.size,
+          expect(
+            uniqueFilters.size,
             `${routerName} CRUD endpoints should have consistent ownerFilter`
           ).toBe(1);
         });
@@ -314,7 +331,7 @@ describe('API Contract Consistency', () => {
     });
 
     it('should track resolved violations in history', () => {
-      const resolved = contracts.resolvedViolations?.find(v => v.id === 'VIOLATION-001');
+      const resolved = contracts.resolvedViolations?.find((v) => v.id === 'VIOLATION-001');
       expect(resolved).toBeDefined();
       expect(resolved?.router).toBe('lead');
       expect(resolved?.endpoint).toBe('stats');
@@ -379,14 +396,14 @@ describe('Code-to-Contract Validation', () => {
       expect(filePath).not.toBeNull();
     });
 
-        it('lead.stats should use protectedProcedure in code (pending RLS migration)', () => {
+    it('lead.stats should use protectedProcedure in code (pending RLS migration)', () => {
       const filePath = findRouterFile('lead');
       if (!filePath) {
         throw new Error('Lead router file not found');
       }
 
       const endpoints = analyzeRouterFile(filePath);
-      const statsEndpoint = endpoints.find(e => e.name === 'stats');
+      const statsEndpoint = endpoints.find((e) => e.name === 'stats');
 
       expect(statsEndpoint).toBeDefined();
       // Uses tenantProcedure with createTenantWhereClause for proper tenant isolation
@@ -402,7 +419,7 @@ describe('Code-to-Contract Validation', () => {
       }
 
       const endpoints = analyzeRouterFile(filePath);
-      const listEndpoint = endpoints.find(e => e.name === 'list');
+      const listEndpoint = endpoints.find((e) => e.name === 'list');
 
       if (listEndpoint) {
         expect(listEndpoint.procedure).toBe('tenantProcedure');

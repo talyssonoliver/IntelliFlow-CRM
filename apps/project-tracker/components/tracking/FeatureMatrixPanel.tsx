@@ -11,7 +11,8 @@ export default function FeatureMatrixPanel() {
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Feature Matrix</h3>
           <p className="mt-1 text-sm text-gray-600">
-            Source-of-truth inventory for feature status, task coverage, and requirement traceability.
+            Source-of-truth inventory for feature status, task coverage, and requirement
+            traceability.
           </p>
         </div>
         <a

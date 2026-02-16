@@ -21,17 +21,44 @@
       "medium": { "value": 500, "description": "Slightly emphasized text" },
       "semibold": { "value": 600, "description": "Subheadings, labels" },
       "bold": { "value": 700, "description": "Headings, emphasis" },
-      "extrabold": { "value": 800, "description": "Hero text, strong emphasis" },
+      "extrabold": {
+        "value": 800,
+        "description": "Hero text, strong emphasis"
+      },
       "black": { "value": 900, "description": "Maximum weight" }
     },
     "fontSize": {
-      "xs": { "value": "0.75rem", "px": "12px", "description": "Extra small - labels, captions" },
-      "sm": { "value": "0.875rem", "px": "14px", "description": "Small - secondary text" },
-      "base": { "value": "1rem", "px": "16px", "description": "Base body text" },
-      "lg": { "value": "1.125rem", "px": "18px", "description": "Large body text" },
-      "xl": { "value": "1.25rem", "px": "20px", "description": "Small headings" },
+      "xs": {
+        "value": "0.75rem",
+        "px": "12px",
+        "description": "Extra small - labels, captions"
+      },
+      "sm": {
+        "value": "0.875rem",
+        "px": "14px",
+        "description": "Small - secondary text"
+      },
+      "base": {
+        "value": "1rem",
+        "px": "16px",
+        "description": "Base body text"
+      },
+      "lg": {
+        "value": "1.125rem",
+        "px": "18px",
+        "description": "Large body text"
+      },
+      "xl": {
+        "value": "1.25rem",
+        "px": "20px",
+        "description": "Small headings"
+      },
       "2xl": { "value": "1.5rem", "px": "24px", "description": "H4 headings" },
-      "3xl": { "value": "1.875rem", "px": "30px", "description": "H3 headings" },
+      "3xl": {
+        "value": "1.875rem",
+        "px": "30px",
+        "description": "H3 headings"
+      },
       "4xl": { "value": "2.25rem", "px": "36px", "description": "H2 headings" },
       "5xl": { "value": "3rem", "px": "48px", "description": "H1 headings" },
       "6xl": { "value": "3.75rem", "px": "60px", "description": "Hero text" }
@@ -45,7 +72,10 @@
       "loose": { "value": 2, "description": "Spacious text" }
     },
     "letterSpacing": {
-      "tighter": { "value": "-0.05em", "description": "Tight tracking for large text" },
+      "tighter": {
+        "value": "-0.05em",
+        "description": "Tight tracking for large text"
+      },
       "tight": { "value": "-0.025em", "description": "Slightly tight" },
       "normal": { "value": "0em", "description": "Default tracking" },
       "wide": { "value": "0.025em", "description": "Slightly wide" },
@@ -141,9 +171,33 @@
   },
   "tailwind": {
     "fontFamily": {
-      "display": ["Inter", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
-      "body": ["Inter", "system-ui", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
-      "mono": ["ui-monospace", "SFMono-Regular", "SF Mono", "Menlo", "Consolas", "Liberation Mono", "monospace"]
+      "display": [
+        "Inter",
+        "system-ui",
+        "-apple-system",
+        "BlinkMacSystemFont",
+        "Segoe UI",
+        "Roboto",
+        "sans-serif"
+      ],
+      "body": [
+        "Inter",
+        "system-ui",
+        "-apple-system",
+        "BlinkMacSystemFont",
+        "Segoe UI",
+        "Roboto",
+        "sans-serif"
+      ],
+      "mono": [
+        "ui-monospace",
+        "SFMono-Regular",
+        "SF Mono",
+        "Menlo",
+        "Consolas",
+        "Liberation Mono",
+        "monospace"
+      ]
     }
   }
 }

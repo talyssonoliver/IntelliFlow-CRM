@@ -21,7 +21,11 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '../../trpc';
 import { AppointmentDomainService } from '../../services';
-import { ConflictDetectionError, AppointmentConflictDetectedEvent, AppointmentId } from '@intelliflow/domain';
+import {
+  ConflictDetectionError,
+  AppointmentConflictDetectedEvent,
+  AppointmentId,
+} from '@intelliflow/domain';
 
 // Zod schemas for appointment operations
 const appointmentTypeSchema = z.enum([
@@ -134,6 +138,17 @@ const listAppointmentsSchema = z.object({
   sortBy: z.enum(['startTime', 'createdAt', 'updatedAt']).optional().default('startTime'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
 });
+
+/**
+ * Returns a Prisma WHERE clause scoping appointments to the current user,
+ * or an empty object for admins (who can see all appointments).
+ */
+function userScopeFilter(user: { userId: string; role: string }) {
+  if (user.role === 'ADMIN') return {};
+  return {
+    OR: [{ organizerId: user.userId }, { attendees: { some: { userId: user.userId } } }],
+  };
+}
 
 export const appointmentsRouter = createTRPCRouter({
   /**
@@ -343,9 +358,8 @@ export const appointmentsRouter = createTRPCRouter({
     } = input;
     const skip = (page - 1) * limit;
 
-    const where: any = {
-      OR: [{ organizerId: ctx.user.userId }, { attendees: { some: { userId: ctx.user.userId } } }],
-    };
+    // Admins see all appointments; regular users only see their own
+    const where: any = { ...userScopeFilter(ctx.user) };
 
     if (status && status.length > 0) {
       where.status = { in: status };
@@ -380,17 +394,21 @@ export const appointmentsRouter = createTRPCRouter({
     ]);
 
     // Enrich attendees with user data for display
-    const allUserIds = [...new Set(appointments.flatMap(a => [a.organizerId, ...a.attendees.map(att => att.userId)]))];
+    const allUserIds = [
+      ...new Set(
+        appointments.flatMap((a) => [a.organizerId, ...a.attendees.map((att) => att.userId)])
+      ),
+    ];
     const users = await ctx.prisma.user.findMany({
       where: { id: { in: allUserIds } },
       select: { id: true, name: true, avatarUrl: true },
     });
-    const userMap = new Map(users.map(u => [u.id, u]));
+    const userMap = new Map(users.map((u) => [u.id, u]));
 
-    const enrichedAppointments = appointments.map(a => ({
+    const enrichedAppointments = appointments.map((a) => ({
       ...a,
       organizer: userMap.get(a.organizerId) ?? null,
-      attendees: a.attendees.map(att => ({
+      attendees: a.attendees.map((att) => ({
         ...att,
         user: userMap.get(att.userId) ?? null,
       })),
@@ -564,7 +582,9 @@ export const appointmentsRouter = createTRPCRouter({
     });
 
     const duration = performance.now() - startTime;
-    console.log(`[appointments.reschedule] Domain-validated reschedule in ${duration.toFixed(2)}ms`);
+    console.log(
+      `[appointments.reschedule] Domain-validated reschedule in ${duration.toFixed(2)}ms`
+    );
 
     return {
       appointment,
@@ -898,7 +918,9 @@ export const appointmentsRouter = createTRPCRouter({
       );
 
       const duration = performance.now() - startTime;
-      console.log(`[appointments.checkAvailability] Domain-based check in ${duration.toFixed(2)}ms`);
+      console.log(
+        `[appointments.checkAvailability] Domain-based check in ${duration.toFixed(2)}ms`
+      );
 
       return {
         availableSlots,
@@ -1130,18 +1152,12 @@ export const appointmentsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const now = new Date();
 
+      const scopeFilter = userScopeFilter(ctx.user);
       const appointments = await ctx.prisma.appointment.findMany({
         where: {
-          AND: [
-            {
-              OR: [
-                { organizerId: ctx.user.userId },
-                { attendees: { some: { userId: ctx.user.userId } } },
-              ],
-            },
-            { startTime: { gte: now } },
-            { status: { notIn: ['CANCELLED', 'COMPLETED', 'NO_SHOW'] } },
-          ],
+          ...scopeFilter,
+          startTime: { gte: now },
+          status: { notIn: ['CANCELLED', 'COMPLETED', 'NO_SHOW'] },
         },
         take: input.limit,
         orderBy: { startTime: 'asc' },
@@ -1158,61 +1174,31 @@ export const appointmentsRouter = createTRPCRouter({
    * Get appointment statistics
    */
   stats: protectedProcedure.query(async ({ ctx }) => {
+    const scopeFilter = userScopeFilter(ctx.user);
     const [total, byStatus, byType, upcoming, overdue] = await Promise.all([
-      ctx.prisma.appointment.count({
-        where: {
-          OR: [
-            { organizerId: ctx.user.userId },
-            { attendees: { some: { userId: ctx.user.userId } } },
-          ],
-        },
-      }),
+      ctx.prisma.appointment.count({ where: scopeFilter }),
       ctx.prisma.appointment.groupBy({
         by: ['status'],
-        where: {
-          OR: [
-            { organizerId: ctx.user.userId },
-            { attendees: { some: { userId: ctx.user.userId } } },
-          ],
-        },
+        where: scopeFilter,
         _count: true,
       }),
       ctx.prisma.appointment.groupBy({
         by: ['appointmentType'],
-        where: {
-          OR: [
-            { organizerId: ctx.user.userId },
-            { attendees: { some: { userId: ctx.user.userId } } },
-          ],
-        },
+        where: scopeFilter,
         _count: true,
       }),
       ctx.prisma.appointment.count({
         where: {
-          AND: [
-            {
-              OR: [
-                { organizerId: ctx.user.userId },
-                { attendees: { some: { userId: ctx.user.userId } } },
-              ],
-            },
-            { startTime: { gte: new Date() } },
-            { status: { in: ['SCHEDULED', 'CONFIRMED'] } },
-          ],
+          ...scopeFilter,
+          startTime: { gte: new Date() },
+          status: { in: ['SCHEDULED', 'CONFIRMED'] },
         },
       }),
       ctx.prisma.appointment.count({
         where: {
-          AND: [
-            {
-              OR: [
-                { organizerId: ctx.user.userId },
-                { attendees: { some: { userId: ctx.user.userId } } },
-              ],
-            },
-            { endTime: { lt: new Date() } },
-            { status: { in: ['SCHEDULED', 'CONFIRMED'] } },
-          ],
+          ...scopeFilter,
+          endTime: { lt: new Date() },
+          status: { in: ['SCHEDULED', 'CONFIRMED'] },
         },
       }),
     ]);

@@ -9,11 +9,7 @@ import {
   dealsSidebarConfig,
 } from '@/components/sidebar';
 
-export default function DealDetailLayout({
-  children,
-}: {
-  readonly children: React.ReactNode;
-}) {
+export default function DealDetailLayout({ children }: { readonly children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)] w-full overflow-hidden">
@@ -35,9 +31,7 @@ export default function DealDetailLayout({
               <span className="text-sm font-medium text-foreground">Deal Details</span>
             </div>
 
-            <div className="flex-1 overflow-y-auto overflow-x-hidden">
-              {children}
-            </div>
+            <div className="flex-1 overflow-y-auto overflow-x-hidden">{children}</div>
           </main>
         </SidebarInset>
       </div>

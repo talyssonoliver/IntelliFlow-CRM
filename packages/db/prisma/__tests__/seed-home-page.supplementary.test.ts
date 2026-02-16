@@ -10,19 +10,15 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // ---------------------------------------------------------------------------
 // vi.hoisted mocks
 // ---------------------------------------------------------------------------
-const {
-  mockFindFirst,
-  mockUpsert,
-  mockCreate,
-  mockExecuteRaw,
-  mockDisconnect,
-} = vi.hoisted(() => ({
-  mockFindFirst: vi.fn(),
-  mockUpsert: vi.fn().mockResolvedValue({}),
-  mockCreate: vi.fn().mockResolvedValue({ id: 'created-id', name: 'Test' }),
-  mockExecuteRaw: vi.fn().mockResolvedValue(undefined),
-  mockDisconnect: vi.fn().mockResolvedValue(undefined),
-}));
+const { mockFindFirst, mockUpsert, mockCreate, mockExecuteRaw, mockDisconnect } = vi.hoisted(
+  () => ({
+    mockFindFirst: vi.fn(),
+    mockUpsert: vi.fn().mockResolvedValue({}),
+    mockCreate: vi.fn().mockResolvedValue({ id: 'created-id', name: 'Test' }),
+    mockExecuteRaw: vi.fn().mockResolvedValue(undefined),
+    mockDisconnect: vi.fn().mockResolvedValue(undefined),
+  })
+);
 
 vi.mock('@prisma/client', () => ({
   PrismaClient: vi.fn().mockImplementation(() => ({
@@ -194,7 +190,13 @@ describe('seed-home-page - supplementary', () => {
 
   describe('seedHomePageData - audit log entries', () => {
     it('should upsert 5 recent audit log entries', async () => {
-      const auditTypes = ['DealClosed', 'TaskCompleted', 'LeadQualified', 'EmailSent', 'CallLogged'];
+      const auditTypes = [
+        'DealClosed',
+        'TaskCompleted',
+        'LeadQualified',
+        'EmailSent',
+        'CallLogged',
+      ];
 
       for (const eventType of auditTypes) {
         await mockUpsert({

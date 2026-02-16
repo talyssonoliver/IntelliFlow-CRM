@@ -29,10 +29,7 @@ export function createMockDeal(overrides?: Partial<Deal>): Deal {
   };
 }
 
-export function createMockDeals(
-  count: number,
-  stage?: OpportunityStage,
-): Deal[] {
+export function createMockDeals(count: number, stage?: OpportunityStage): Deal[] {
   const stages: OpportunityStage[] = [
     'PROSPECTING',
     'QUALIFICATION',
@@ -54,15 +51,13 @@ export function createMockDeals(
       contactName: i % 3 === 0 ? null : `Contact ${i + 1}`,
       ownerId: `user-${(i % 3) + 1}`,
       ownerName: `Owner ${(i % 3) + 1}`,
-    }),
+    })
   );
 }
 
 // ─── Stats Factory ───────────────────────────────────────────────────────────
 
-export function createMockPipelineStats(
-  overrides?: Partial<PipelineStats>,
-): PipelineStats {
+export function createMockPipelineStats(overrides?: Partial<PipelineStats>): PipelineStats {
   return {
     totalDeals: 12,
     totalValue: 450000,
@@ -74,9 +69,7 @@ export function createMockPipelineStats(
 
 // ─── Filter Factory ──────────────────────────────────────────────────────────
 
-export function createMockDealFilters(
-  overrides?: Partial<DealFiltersValue>,
-): DealFiltersValue {
+export function createMockDealFilters(overrides?: Partial<DealFiltersValue>): DealFiltersValue {
   return {
     ownerId: undefined,
     dateRange: undefined,

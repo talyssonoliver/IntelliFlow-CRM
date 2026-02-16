@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { Suspense, useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Icon } from '@/lib/icons';
@@ -76,7 +76,23 @@ interface TaskQuestions {
   questions: Question[];
 }
 
+function SwarmPageFallback() {
+  return (
+    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+      <span className="text-sm text-gray-400">Loading swarm...</span>
+    </div>
+  );
+}
+
 export default function SwarmPage() {
+  return (
+    <Suspense fallback={<SwarmPageFallback />}>
+      <SwarmPageContent />
+    </Suspense>
+  );
+}
+
+function SwarmPageContent() {
   const searchParams = useSearchParams();
   const taskFromUrl = searchParams.get('task');
   const [health, setHealth] = useState<SwarmHealth | null>(null);
@@ -1010,7 +1026,11 @@ export default function SwarmPage() {
                   autoScroll ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-700 hover:bg-gray-600'
                 }`}
               >
-                {autoScroll ? <Icon name="play_arrow" size="xs" /> : <Icon name="pause" size="xs" />}
+                {autoScroll ? (
+                  <Icon name="play_arrow" size="xs" />
+                ) : (
+                  <Icon name="pause" size="xs" />
+                )}
                 Auto-scroll
               </button>
               <button

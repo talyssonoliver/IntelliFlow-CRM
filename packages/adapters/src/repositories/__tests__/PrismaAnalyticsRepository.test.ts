@@ -343,9 +343,7 @@ describe('PrismaAnalyticsRepository', () => {
     });
 
     it('should return recent audit logs with icon and description', async () => {
-      mockPrisma.auditLogEntry.findMany.mockResolvedValue([
-        createMockAuditEntry(),
-      ]);
+      mockPrisma.auditLogEntry.findMany.mockResolvedValue([createMockAuditEntry()]);
 
       const result = await repository.getRecentAuditLogs(tenantId, 10);
 
@@ -445,9 +443,7 @@ describe('PrismaAnalyticsRepository', () => {
     // Test getIconForAction via getRecentAuditLogs
     describe('icon mapping (getIconForAction)', () => {
       const testIconMapping = async (action: string, expectedIcon: string) => {
-        mockPrisma.auditLogEntry.findMany.mockResolvedValue([
-          createMockAuditEntry({ action }),
-        ]);
+        mockPrisma.auditLogEntry.findMany.mockResolvedValue([createMockAuditEntry({ action })]);
         const result = await repository.getRecentAuditLogs(tenantId, 10);
         expect(result[0].icon).toBe(expectedIcon);
       };
@@ -568,11 +564,7 @@ describe('PrismaAnalyticsRepository', () => {
       });
 
       it('should format opportunity.created', async () => {
-        await testDescription(
-          'opportunity.created',
-          { name: 'Big Deal' },
-          'New deal: Big Deal'
-        );
+        await testDescription('opportunity.created', { name: 'Big Deal' }, 'New deal: Big Deal');
       });
 
       it('should format opportunity.won', async () => {
@@ -584,11 +576,7 @@ describe('PrismaAnalyticsRepository', () => {
       });
 
       it('should format opportunity.won with default value', async () => {
-        await testDescription(
-          'opportunity.won',
-          { name: 'Won Deal' },
-          'Deal won: Won Deal ($0)'
-        );
+        await testDescription('opportunity.won', { name: 'Won Deal' }, 'Deal won: Won Deal ($0)');
       });
 
       it('should format contact.created', async () => {

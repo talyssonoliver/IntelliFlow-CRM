@@ -44,36 +44,39 @@ function loadCapacityConfig(): CapacityRole[] {
     if (lines.length < 2) return [];
 
     // Skip header row
-    return lines.slice(1).map(line => {
-      // Parse CSV properly handling quoted values
-      const values: string[] = [];
-      let current = '';
-      let inQuotes = false;
+    return lines
+      .slice(1)
+      .map((line) => {
+        // Parse CSV properly handling quoted values
+        const values: string[] = [];
+        let current = '';
+        let inQuotes = false;
 
-      for (const char of line) {
-        if (char === '"') {
-          inQuotes = !inQuotes;
-        } else if (char === ',' && !inQuotes) {
-          values.push(current.trim());
-          current = '';
-        } else {
-          current += char;
+        for (const char of line) {
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            values.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
         }
-      }
-      values.push(current.trim());
+        values.push(current.trim());
 
-      return {
-        role: values[0] || 'Unknown',
-        fte: parseFloat(values[1]) || 1.0,
-        availableDays: parseInt(values[2], 10) || 10,
-        focusFactor: parseFloat(values[3]) || 0.7,
-        notes: values[4] || '',
-        actualTasks: 0,
-        completedTasks: 0,
-        inProgressTasks: 0,
-        utilization: 0,
-      };
-    }).filter(r => r.role && r.role !== 'Unknown');
+        return {
+          role: values[0] || 'Unknown',
+          fte: parseFloat(values[1]) || 1.0,
+          availableDays: parseInt(values[2], 10) || 10,
+          focusFactor: parseFloat(values[3]) || 0.7,
+          notes: values[4] || '',
+          actualTasks: 0,
+          completedTasks: 0,
+          inProgressTasks: 0,
+          utilization: 0,
+        };
+      })
+      .filter((r) => r.role && r.role !== 'Unknown');
   } catch {
     return [];
   }
@@ -88,7 +91,11 @@ function mapOwnerToRole(owner: string): string {
   if (ownerLower.includes('devops') || ownerLower.includes('infra') || ownerLower.includes('ops')) {
     return 'DevOps';
   }
-  if (ownerLower.includes('ai') || ownerLower.includes('ml') || ownerLower.includes('intelligence')) {
+  if (
+    ownerLower.includes('ai') ||
+    ownerLower.includes('ml') ||
+    ownerLower.includes('intelligence')
+  ) {
     return 'AI Specialist';
   }
   if (ownerLower.includes('security') || ownerLower.includes('sec')) {
@@ -104,10 +111,7 @@ export async function GET() {
     const allTasks = loadCSVTasks();
 
     if (!allTasks.length) {
-      return NextResponse.json(
-        { error: 'No tasks found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'No tasks found' }, { status: 404 });
     }
 
     // Create a role map for tracking
@@ -132,7 +136,10 @@ export async function GET() {
     }
 
     // Track tasks by role
-    const roleTaskCounts = new Map<string, { total: number; completed: number; inProgress: number }>();
+    const roleTaskCounts = new Map<
+      string,
+      { total: number; completed: number; inProgress: number }
+    >();
 
     for (const task of allTasks) {
       const owner = task.owner || 'Unassigned';
@@ -185,7 +192,7 @@ export async function GET() {
           actualTasks: taskCounts.total,
           completedTasks: taskCounts.completed,
           inProgressTasks: taskCounts.inProgress,
-          utilization: Math.min(100, Math.round((taskCounts.total * 0.5 / 7) * 100)),
+          utilization: Math.min(100, Math.round(((taskCounts.total * 0.5) / 7) * 100)),
         });
       }
     }
@@ -194,28 +201,33 @@ export async function GET() {
     resultRoles.sort((a, b) => b.utilization - a.utilization);
 
     // Calculate totals
-    const totalCapacity = resultRoles.reduce((sum, r) => sum + (r.fte * r.availableDays * r.focusFactor), 0);
+    const totalCapacity = resultRoles.reduce(
+      (sum, r) => sum + r.fte * r.availableDays * r.focusFactor,
+      0
+    );
     const totalTasks = resultRoles.reduce((sum, r) => sum + r.actualTasks, 0);
     const totalCompleted = resultRoles.reduce((sum, r) => sum + r.completedTasks, 0);
-    const totalUtilization = totalCapacity > 0
-      ? Math.min(100, Math.round(((totalTasks * 0.5) / totalCapacity) * 100))
-      : 0;
+    const totalUtilization =
+      totalCapacity > 0 ? Math.min(100, Math.round(((totalTasks * 0.5) / totalCapacity) * 100)) : 0;
 
-    return NextResponse.json({
-      timestamp: new Date().toISOString(),
-      roles: resultRoles,
-      summary: {
-        totalCapacityDays: Math.round(totalCapacity * 10) / 10,
-        totalTasks,
-        totalCompleted,
-        totalUtilization,
-        rolesCount: resultRoles.length,
+    return NextResponse.json(
+      {
+        timestamp: new Date().toISOString(),
+        roles: resultRoles,
+        summary: {
+          totalCapacityDays: Math.round(totalCapacity * 10) / 10,
+          totalTasks,
+          totalCompleted,
+          totalUtilization,
+          rolesCount: resultRoles.length,
+        },
       },
-    }, {
-      headers: {
-        'Cache-Control': 'no-store, no-cache, max-age=0',
-      },
-    });
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, max-age=0',
+        },
+      }
+    );
   } catch (error) {
     console.error('Error generating capacity data:', error);
     return NextResponse.json(

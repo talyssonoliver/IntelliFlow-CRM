@@ -85,12 +85,26 @@ vi.mock('@/components/auth/mfa-challenge', () => ({
       {maskedEmail && <div data-testid="masked-email">{maskedEmail}</div>}
       <div data-testid="default-method">{defaultMethod}</div>
       <div data-testid="available-methods">{(availableMethods || []).join(',')}</div>
-      <button data-testid="verify-totp" onClick={() => onVerify('123456', 'totp')}>Verify TOTP</button>
-      <button data-testid="verify-bad-totp" onClick={() => onVerify('12345', 'totp')}>Verify Bad TOTP</button>
-      <button data-testid="verify-backup" onClick={() => onVerify('A1B2C3D4E5', 'backup')}>Verify Backup</button>
-      <button data-testid="verify-bad-backup" onClick={() => onVerify('short', 'backup')}>Verify Bad Backup</button>
-      <button data-testid="resend-sms" onClick={() => onResend?.('sms')}>Resend SMS</button>
-      {onCancel && <button data-testid="cancel" onClick={onCancel}>Cancel</button>}
+      <button data-testid="verify-totp" onClick={() => onVerify('123456', 'totp')}>
+        Verify TOTP
+      </button>
+      <button data-testid="verify-bad-totp" onClick={() => onVerify('12345', 'totp')}>
+        Verify Bad TOTP
+      </button>
+      <button data-testid="verify-backup" onClick={() => onVerify('A1B2C3D4E5', 'backup')}>
+        Verify Backup
+      </button>
+      <button data-testid="verify-bad-backup" onClick={() => onVerify('short', 'backup')}>
+        Verify Bad Backup
+      </button>
+      <button data-testid="resend-sms" onClick={() => onResend?.('sms')}>
+        Resend SMS
+      </button>
+      {onCancel && (
+        <button data-testid="cancel" onClick={onCancel}>
+          Cancel
+        </button>
+      )}
     </div>
   ),
 }));
@@ -114,12 +128,7 @@ describe('MfaVerification (supplementary)', () => {
 
   describe('Rendering with valid challenge', () => {
     it('renders the MfaChallenge component', () => {
-      render(
-        <MfaVerification
-          challengeId="valid-challenge-123"
-          onSuccess={vi.fn()}
-        />,
-      );
+      render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
       expect(screen.getByTestId('mfa-challenge-mock')).toBeInTheDocument();
     });
@@ -130,7 +139,7 @@ describe('MfaVerification (supplementary)', () => {
           challengeId="valid-challenge-123"
           email="user@test.com"
           onSuccess={vi.fn()}
-        />,
+        />
       );
 
       expect(screen.getByText('user@test.com')).toBeInTheDocument();
@@ -144,7 +153,7 @@ describe('MfaVerification (supplementary)', () => {
           maskedPhone="***-1234"
           maskedEmail="u***@test.com"
           onSuccess={vi.fn()}
-        />,
+        />
       );
 
       expect(screen.getByTestId('masked-phone').textContent).toBe('***-1234');
@@ -158,7 +167,7 @@ describe('MfaVerification (supplementary)', () => {
           method="sms"
           availableMethods={['totp', 'sms']}
           onSuccess={vi.fn()}
-        />,
+        />
       );
 
       expect(screen.getByTestId('default-method').textContent).toBe('sms');
@@ -168,12 +177,7 @@ describe('MfaVerification (supplementary)', () => {
 
   describe('Invalid challenge', () => {
     it('renders invalid state for short challenge ID', async () => {
-      render(
-        <MfaVerification
-          challengeId="ab"
-          onSuccess={vi.fn()}
-        />,
-      );
+      render(<MfaVerification challengeId="ab" onSuccess={vi.fn()} />);
 
       await waitFor(() => {
         expect(screen.getByText('Invalid Verification Link')).toBeInTheDocument();
@@ -181,12 +185,7 @@ describe('MfaVerification (supplementary)', () => {
     });
 
     it('renders invalid state for "invalid" challenge ID', async () => {
-      render(
-        <MfaVerification
-          challengeId="invalid"
-          onSuccess={vi.fn()}
-        />,
-      );
+      render(<MfaVerification challengeId="invalid" onSuccess={vi.fn()} />);
 
       await waitFor(() => {
         expect(screen.getByText('Invalid Verification Link')).toBeInTheDocument();
@@ -196,13 +195,7 @@ describe('MfaVerification (supplementary)', () => {
     it('renders Return to Login button when onCancel is provided', async () => {
       const onCancel = vi.fn();
 
-      render(
-        <MfaVerification
-          challengeId="invalid"
-          onSuccess={vi.fn()}
-          onCancel={onCancel}
-        />,
-      );
+      render(<MfaVerification challengeId="invalid" onSuccess={vi.fn()} onCancel={onCancel} />);
 
       await waitFor(() => {
         expect(screen.getByText('Return to Login')).toBeInTheDocument();
@@ -218,12 +211,7 @@ describe('MfaVerification (supplementary)', () => {
       const onSuccess = vi.fn();
       mocks.mockMutateAsync.mockResolvedValue({ success: true });
 
-      render(
-        <MfaVerification
-          challengeId="valid-challenge-123"
-          onSuccess={onSuccess}
-        />,
-      );
+      render(<MfaVerification challengeId="valid-challenge-123" onSuccess={onSuccess} />);
 
       await act(async () => {
         fireEvent.click(screen.getByTestId('verify-totp'));
@@ -240,29 +228,21 @@ describe('MfaVerification (supplementary)', () => {
     });
 
     it('shows error for invalid TOTP code format', async () => {
-      render(
-        <MfaVerification
-          challengeId="valid-challenge-123"
-          onSuccess={vi.fn()}
-        />,
-      );
+      render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
       await act(async () => {
         fireEvent.click(screen.getByTestId('verify-bad-totp'));
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('mfa-error').textContent).toBe('Please enter a valid 6-digit code');
+        expect(screen.getByTestId('mfa-error').textContent).toBe(
+          'Please enter a valid 6-digit code'
+        );
       });
     });
 
     it('shows error for invalid backup code format', async () => {
-      render(
-        <MfaVerification
-          challengeId="valid-challenge-123"
-          onSuccess={vi.fn()}
-        />,
-      );
+      render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
       await act(async () => {
         fireEvent.click(screen.getByTestId('verify-bad-backup'));
@@ -276,12 +256,7 @@ describe('MfaVerification (supplementary)', () => {
     it('calls mutation with backup code unsanitized', async () => {
       mocks.mockMutateAsync.mockResolvedValue({ success: true });
 
-      render(
-        <MfaVerification
-          challengeId="valid-challenge-123"
-          onSuccess={vi.fn()}
-        />,
-      );
+      render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
       await act(async () => {
         fireEvent.click(screen.getByTestId('verify-backup'));
@@ -299,19 +274,16 @@ describe('MfaVerification (supplementary)', () => {
     it('shows "Verification failed" when result.success is false', async () => {
       mocks.mockMutateAsync.mockResolvedValue({ success: false });
 
-      render(
-        <MfaVerification
-          challengeId="valid-challenge-123"
-          onSuccess={vi.fn()}
-        />,
-      );
+      render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
       await act(async () => {
         fireEvent.click(screen.getByTestId('verify-totp'));
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('mfa-error').textContent).toBe('Verification failed. Please try again.');
+        expect(screen.getByTestId('mfa-error').textContent).toBe(
+          'Verification failed. Please try again.'
+        );
       });
     });
   });
@@ -320,12 +292,7 @@ describe('MfaVerification (supplementary)', () => {
     it('shows expired error for expired token message', async () => {
       mocks.mockMutateAsync.mockRejectedValue(new Error('Token has expired'));
 
-      render(
-        <MfaVerification
-          challengeId="valid-challenge-123"
-          onSuccess={vi.fn()}
-        />,
-      );
+      render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
       await act(async () => {
         fireEvent.click(screen.getByTestId('verify-totp'));
@@ -339,12 +306,7 @@ describe('MfaVerification (supplementary)', () => {
     it('shows invalid error for incorrect code message', async () => {
       mocks.mockMutateAsync.mockRejectedValue(new Error('Code is invalid'));
 
-      render(
-        <MfaVerification
-          challengeId="valid-challenge-123"
-          onSuccess={vi.fn()}
-        />,
-      );
+      render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
       await act(async () => {
         fireEvent.click(screen.getByTestId('verify-totp'));
@@ -358,12 +320,7 @@ describe('MfaVerification (supplementary)', () => {
     it('shows too many attempts error', async () => {
       mocks.mockMutateAsync.mockRejectedValue(new Error('Too many attempts'));
 
-      render(
-        <MfaVerification
-          challengeId="valid-challenge-123"
-          onSuccess={vi.fn()}
-        />,
-      );
+      render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
       await act(async () => {
         fireEvent.click(screen.getByTestId('verify-totp'));
@@ -377,12 +334,7 @@ describe('MfaVerification (supplementary)', () => {
     it('shows generic error for unknown errors', async () => {
       mocks.mockMutateAsync.mockRejectedValue(new Error('Network failure'));
 
-      render(
-        <MfaVerification
-          challengeId="valid-challenge-123"
-          onSuccess={vi.fn()}
-        />,
-      );
+      render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
       await act(async () => {
         fireEvent.click(screen.getByTestId('verify-totp'));
@@ -403,7 +355,7 @@ describe('MfaVerification (supplementary)', () => {
           challengeId="valid-challenge-123"
           redirectUrl="/dashboard"
           onSuccess={vi.fn()}
-        />,
+        />
       );
 
       await act(async () => {
@@ -425,7 +377,7 @@ describe('MfaVerification (supplementary)', () => {
           challengeId="valid-challenge-123"
           onSuccess={vi.fn()}
           onCancel={onCancel}
-        />,
+        />
       );
 
       const cancelBtn = screen.getByTestId('cancel');
@@ -434,12 +386,7 @@ describe('MfaVerification (supplementary)', () => {
     });
 
     it('does not render cancel button when onCancel not provided', () => {
-      render(
-        <MfaVerification
-          challengeId="valid-challenge-123"
-          onSuccess={vi.fn()}
-        />,
-      );
+      render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
       expect(screen.queryByTestId('cancel')).not.toBeInTheDocument();
     });
@@ -447,12 +394,7 @@ describe('MfaVerification (supplementary)', () => {
 
   describe('Resend flow', () => {
     it('resend button exists and can be clicked', async () => {
-      render(
-        <MfaVerification
-          challengeId="valid-challenge-123"
-          onSuccess={vi.fn()}
-        />,
-      );
+      render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
       // Click resend - should not throw
       await act(async () => {
@@ -463,12 +405,7 @@ describe('MfaVerification (supplementary)', () => {
 
   describe('data-testid attribute', () => {
     it('renders with mfa-verification data-testid', () => {
-      render(
-        <MfaVerification
-          challengeId="valid-challenge-123"
-          onSuccess={vi.fn()}
-        />,
-      );
+      render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
       expect(screen.getByTestId('mfa-verification')).toBeInTheDocument();
     });

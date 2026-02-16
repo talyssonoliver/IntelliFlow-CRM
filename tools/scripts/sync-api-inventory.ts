@@ -166,8 +166,15 @@ const CRITICAL_ENDPOINTS = new Set([
 ]);
 
 // Description templates based on common patterns
-function generateDescription(routerName: string, procedureName: string, type: 'query' | 'mutation'): string {
-  const action = procedureName.replace(/([A-Z])/g, ' $1').toLowerCase().trim();
+function generateDescription(
+  routerName: string,
+  procedureName: string,
+  type: 'query' | 'mutation'
+): string {
+  const action = procedureName
+    .replace(/([A-Z])/g, ' $1')
+    .toLowerCase()
+    .trim();
 
   // Common patterns
   if (procedureName === 'create') return `Create new ${routerName}`;
@@ -175,7 +182,8 @@ function generateDescription(routerName: string, procedureName: string, type: 'q
   if (procedureName === 'list') return `List ${routerName}s with pagination`;
   if (procedureName === 'update') return `Update ${routerName}`;
   if (procedureName === 'delete') return `Delete ${routerName}`;
-  if (procedureName === 'stats') return `${routerName.charAt(0).toUpperCase() + routerName.slice(1)} statistics`;
+  if (procedureName === 'stats')
+    return `${routerName.charAt(0).toUpperCase() + routerName.slice(1)} statistics`;
   if (procedureName === 'search') return `Search ${routerName}s`;
   if (procedureName === 'filterOptions') return 'Get filter options';
 
@@ -214,7 +222,11 @@ function extractEndpointsFromFile(filePath: string, routerName: string): Extract
     const procName = match[1];
 
     // Skip internal helpers
-    if (!procName || procName.startsWith('_') || ['router', 'procedure'].includes(procName.toLowerCase())) {
+    if (
+      !procName ||
+      procName.startsWith('_') ||
+      ['router', 'procedure'].includes(procName.toLowerCase())
+    ) {
       continue;
     }
 
@@ -223,7 +235,9 @@ function extractEndpointsFromFile(filePath: string, routerName: string): Extract
     const startIdx = match.index + match[0].length;
 
     // Find the next procedure definition (if any)
-    const nextProcMatch = routerBody.slice(startIdx).match(/\n\s+\w+\s*:\s*(?:protected|tenant|admin|public)?[Pp]rocedure/);
+    const nextProcMatch = routerBody
+      .slice(startIdx)
+      .match(/\n\s+\w+\s*:\s*(?:protected|tenant|admin|public)?[Pp]rocedure/);
     const endIdx = nextProcMatch
       ? startIdx + (nextProcMatch.index ?? routerBody.length)
       : routerBody.length;
@@ -416,7 +430,9 @@ async function main() {
   // Show breakdown
   console.log('Router breakdown:');
   for (const router of inventory.routers) {
-    console.log(`  ${router.name.padEnd(20)} ${router.endpoints} endpoints (${router.queries} GET, ${router.mutations} POST)`);
+    console.log(
+      `  ${router.name.padEnd(20)} ${router.endpoints} endpoints (${router.queries} GET, ${router.mutations} POST)`
+    );
   }
   console.log();
 

@@ -432,10 +432,7 @@ export function getFailedValidations(results: ValidationResult[]): ValidationRes
 /**
  * Creates a dry-run result (doesn't execute command)
  */
-export function createDryRunResult(
-  taskId: string,
-  command: string
-): ValidationResult {
+export function createDryRunResult(taskId: string, command: string): ValidationResult {
   return {
     taskId,
     command,

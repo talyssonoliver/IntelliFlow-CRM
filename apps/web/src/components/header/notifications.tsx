@@ -93,10 +93,7 @@ export function Notifications({ count: propCount, className }: NotificationsProp
           <div className="px-4 py-3 border-b border-border flex items-center justify-between">
             <h3 className="text-sm font-semibold text-foreground">Notifications</h3>
             {count > 0 && (
-              <button
-                onClick={handleMarkAllRead}
-                className="text-xs text-primary hover:underline"
-              >
+              <button onClick={handleMarkAllRead} className="text-xs text-primary hover:underline">
                 Mark all read
               </button>
             )}
@@ -119,10 +116,12 @@ export function Notifications({ count: propCount, className }: NotificationsProp
                     }}
                   >
                     <div className="flex items-start gap-3">
-                      <span className={cn(
-                        'material-symbols-outlined',
-                        getPriorityColor(notification.priority)
-                      )}>
+                      <span
+                        className={cn(
+                          'material-symbols-outlined',
+                          getPriorityColor(notification.priority)
+                        )}
+                      >
                         {getReminderIcon(notification)}
                       </span>
                       <div className="flex-1 min-w-0">
@@ -131,12 +130,14 @@ export function Notifications({ count: propCount, className }: NotificationsProp
                           {notification.message}
                         </p>
                         <div className="flex items-center justify-between mt-1">
-                          <p className={cn(
-                            'text-xs',
-                            notification.timeUntilDue.includes('overdue')
-                              ? 'text-destructive font-medium'
-                              : 'text-muted-foreground'
-                          )}>
+                          <p
+                            className={cn(
+                              'text-xs',
+                              notification.timeUntilDue.includes('overdue')
+                                ? 'text-destructive font-medium'
+                                : 'text-muted-foreground'
+                            )}
+                          >
                             {notification.timeUntilDue}
                           </p>
                           <div className="flex gap-1">

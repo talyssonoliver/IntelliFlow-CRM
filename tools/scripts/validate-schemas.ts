@@ -43,7 +43,7 @@ interface ValidationRule {
   name: string;
   schema: z.ZodType;
   patterns: string[];
-  ignore?: string[];  // Glob patterns to ignore
+  ignore?: string[]; // Glob patterns to ignore
 }
 
 const VALIDATION_RULES: ValidationRule[] = [
@@ -51,17 +51,13 @@ const VALIDATION_RULES: ValidationRule[] = [
   {
     name: 'Vulnerability Baseline',
     schema: vulnerabilityBaselineSchema,
-    patterns: [
-      'artifacts/misc/vulnerability-baseline.json',
-    ],
+    patterns: ['artifacts/misc/vulnerability-baseline.json'],
   },
   // 🔧 FIX: Attestation - changed path to .specify/ with context_ack.json
   {
     name: 'Attestation',
     schema: attestationSchema,
-    patterns: [
-      '.specify/sprints/sprint-*/attestations/*/context_ack.json',
-    ],
+    patterns: ['.specify/sprints/sprint-*/attestations/*/context_ack.json'],
   },
   // 🔧 FIX: Task Status - use ignore option for summaries
   {
@@ -69,7 +65,7 @@ const VALIDATION_RULES: ValidationRule[] = [
     schema: taskStatusObjectSchema,
     patterns: [
       'apps/project-tracker/docs/metrics/sprint-*/phase-*/*.json',
-      'apps/project-tracker/docs/metrics/sprint-*/*.json',  // flat structure (sprint-12)
+      'apps/project-tracker/docs/metrics/sprint-*/*.json', // flat structure (sprint-12)
     ],
     ignore: [
       'apps/project-tracker/docs/metrics/sprint-*/phase-*/_phase-summary.json',
@@ -81,47 +77,35 @@ const VALIDATION_RULES: ValidationRule[] = [
   {
     name: 'Phase Summary',
     schema: phaseSummarySchema,
-    patterns: [
-      'apps/project-tracker/docs/metrics/sprint-*/phase-*/_phase-summary.json',
-    ],
+    patterns: ['apps/project-tracker/docs/metrics/sprint-*/phase-*/_phase-summary.json'],
   },
   {
     name: 'Sprint Summary',
     schema: sprintSummarySchema,
-    patterns: [
-      'apps/project-tracker/docs/metrics/sprint-*/_summary.json',
-    ],
+    patterns: ['apps/project-tracker/docs/metrics/sprint-*/_summary.json'],
   },
   // ✅ Working - keep as-is
   {
     name: 'Task Registry',
     schema: taskRegistrySchema,
-    patterns: [
-      'apps/project-tracker/docs/metrics/_global/task-registry.json',
-    ],
+    patterns: ['apps/project-tracker/docs/metrics/_global/task-registry.json'],
   },
   // ✅ Working - keep as-is
   {
     name: 'Dependency Graph',
     schema: dependencyGraphSchema,
-    patterns: [
-      'apps/project-tracker/docs/metrics/_global/dependency-graph.json',
-    ],
+    patterns: ['apps/project-tracker/docs/metrics/_global/dependency-graph.json'],
   },
   // 🔧 FIX: KPI Definitions - correct path to _global/
   {
     name: 'KPI Definitions',
     schema: kpiDefinitionsSchema,
-    patterns: [
-      'apps/project-tracker/docs/metrics/_global/kpi-definitions.json',
-    ],
+    patterns: ['apps/project-tracker/docs/metrics/_global/kpi-definitions.json'],
   },
   {
     name: 'Traceability',
     schema: traceabilitySchema,
-    patterns: [
-      'artifacts/reports/traceability-matrix.json',
-    ],
+    patterns: ['artifacts/reports/traceability-matrix.json'],
   },
   // Benchmark results
   {
@@ -187,8 +171,8 @@ async function main(): Promise<void> {
       const fullPattern = REPO_ROOT_POSIX + '/' + pattern;
       const files = await glob(fullPattern, {
         nodir: true,
-        dot: true,  // Match dotfiles and directories like .specify/
-        ignore: rule.ignore?.map(p => REPO_ROOT_POSIX + '/' + p) || []
+        dot: true, // Match dotfiles and directories like .specify/
+        ignore: rule.ignore?.map((p) => REPO_ROOT_POSIX + '/' + p) || [],
       });
 
       for (const file of files) {
@@ -218,7 +202,9 @@ async function main(): Promise<void> {
 
   if (failed > 0) {
     console.log('\n❌ Schema validation failed!');
-    console.log('Fix the errors above or update the schema if the structure intentionally changed.');
+    console.log(
+      'Fix the errors above or update the schema if the structure intentionally changed.'
+    );
     console.log('To regenerate schemas: pnpm run generate:schemas');
     process.exit(1);
   } else {

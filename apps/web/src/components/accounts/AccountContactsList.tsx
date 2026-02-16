@@ -53,7 +53,9 @@ export function AccountContactsList({ accountId }: AccountContactsListProps) {
   if (contacts.length === 0 && !statusFilter) {
     return (
       <div className="text-center py-12">
-        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3">person_off</span>
+        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3">
+          person_off
+        </span>
         <p className="text-muted-foreground">No contacts linked to this account</p>
         <Button variant="outline" size="sm" className="mt-3">
           <span className="material-symbols-outlined text-base mr-1">person_add</span>
@@ -93,7 +95,8 @@ export function AccountContactsList({ accountId }: AccountContactsListProps) {
             onClick={() => router.push(`/contacts/${contact.id}`)}
           >
             <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-medium">
-              {contact.firstName[0]}{contact.lastName[0]}
+              {contact.firstName[0]}
+              {contact.lastName[0]}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">
@@ -110,11 +113,7 @@ export function AccountContactsList({ accountId }: AccountContactsListProps) {
 
       {data?.nextCursor && (
         <div className="flex justify-center pt-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setCursor(data.nextCursor)}
-          >
+          <Button variant="outline" size="sm" onClick={() => setCursor(data.nextCursor)}>
             Load More
           </Button>
         </div>

@@ -42,7 +42,11 @@ describe('AuthenticationError', () => {
 
     it('should set authType when provided', () => {
       const authTypes: Array<'oauth' | 'api_key' | 'bearer' | 'basic' | 'unknown'> = [
-        'oauth', 'api_key', 'bearer', 'basic', 'unknown',
+        'oauth',
+        'api_key',
+        'bearer',
+        'basic',
+        'unknown',
       ];
 
       for (const authType of authTypes) {

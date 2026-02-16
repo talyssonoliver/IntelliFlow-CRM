@@ -27,7 +27,11 @@ export class TaxRate extends ValueObject<TaxRateProps> {
     return this.props.jurisdiction;
   }
 
-  static create(rate: number, type: TaxType, jurisdiction?: string): Result<TaxRate, InvalidTaxRateError> {
+  static create(
+    rate: number,
+    type: TaxType,
+    jurisdiction?: string
+  ): Result<TaxRate, InvalidTaxRateError> {
     if (rate < 0 || rate > 100) {
       return Result.fail(new InvalidTaxRateError(rate));
     }

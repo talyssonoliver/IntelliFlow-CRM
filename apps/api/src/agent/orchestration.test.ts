@@ -19,7 +19,12 @@ import { z } from 'zod';
  */
 export const orchestrationRequestSchema = z.object({
   workflowId: z.string(),
-  taskType: z.enum(['lead_qualification', 'email_generation', 'followup_strategy', 'full_pipeline']),
+  taskType: z.enum([
+    'lead_qualification',
+    'email_generation',
+    'followup_strategy',
+    'full_pipeline',
+  ]),
   input: z.record(z.unknown()),
   options: z
     .object({
@@ -91,7 +96,17 @@ class MockOrchestrationService {
   async executeWorkflow(request: OrchestrationRequest): Promise<OrchestrationResponse> {
     this.executionCount++;
     const startTime = Date.now();
-    const results: Record<string, { agentName: string; success: boolean; output?: unknown; confidence: number; duration: number; error?: string }> = {};
+    const results: Record<
+      string,
+      {
+        agentName: string;
+        success: boolean;
+        output?: unknown;
+        confidence: number;
+        duration: number;
+        error?: string;
+      }
+    > = {};
     const lowConfidenceAgents: string[] = [];
     const threshold = request.options?.humanCheckpointThreshold ?? 0.5;
 
@@ -144,7 +159,11 @@ class MockOrchestrationService {
       case 'followup_strategy':
         return ['Follow-up Strategy Specialist'];
       case 'full_pipeline':
-        return ['Lead Qualification Specialist', 'Email Writer Specialist', 'Follow-up Strategy Specialist'];
+        return [
+          'Lead Qualification Specialist',
+          'Email Writer Specialist',
+          'Follow-up Strategy Specialist',
+        ];
     }
   }
 
@@ -380,7 +399,9 @@ describe('Agent Orchestration Integration Tests', () => {
 
       expect(response.status).toBe('failed');
       expect(response.results['Lead Qualification Specialist'].success).toBe(false);
-      expect(response.results['Lead Qualification Specialist'].error).toBe('LLM invocation timeout');
+      expect(response.results['Lead Qualification Specialist'].error).toBe(
+        'LLM invocation timeout'
+      );
     });
 
     it('should continue pipeline on partial failures', async () => {
@@ -506,8 +527,14 @@ describe('Agent Orchestration Integration Tests', () => {
       expect(response.aggregatedOutput).toBeDefined();
       const aggregated = response.aggregatedOutput as Record<string, unknown>;
       expect(aggregated['Lead Qualification Specialist']).toEqual({ qualified: true, score: 85 });
-      expect(aggregated['Email Writer Specialist']).toEqual({ subject: 'Hello', body: 'Content...' });
-      expect(aggregated['Follow-up Strategy Specialist']).toEqual({ action: 'send_email', timing: '2_days' });
+      expect(aggregated['Email Writer Specialist']).toEqual({
+        subject: 'Hello',
+        body: 'Content...',
+      });
+      expect(aggregated['Follow-up Strategy Specialist']).toEqual({
+        action: 'send_email',
+        timing: '2_days',
+      });
     });
   });
 

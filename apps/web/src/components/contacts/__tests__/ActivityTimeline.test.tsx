@@ -16,7 +16,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ActivityTimeline } from '../ActivityTimeline';
-import { createMockActivity, createMockActivityList, createMockHandlers, resetAllMocks } from './contact-test-utils';
+import {
+  createMockActivity,
+  createMockActivityList,
+  createMockHandlers,
+  resetAllMocks,
+} from './contact-test-utils';
 
 describe('ActivityTimeline', () => {
   let handlers: ReturnType<typeof createMockHandlers>;
@@ -40,12 +45,7 @@ describe('ActivityTimeline', () => {
   describe('Rendering', () => {
     it('renders activities in timeline format', () => {
       const activities = createMockActivityList(3);
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       expect(screen.getByText('Activity 1')).toBeInTheDocument();
       expect(screen.getByText('Activity 2')).toBeInTheDocument();
@@ -54,39 +54,26 @@ describe('ActivityTimeline', () => {
 
     it('renders activity descriptions', () => {
       const activities = [createMockActivity({ description: 'Discussed quarterly review' })];
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       expect(screen.getByText('Discussed quarterly review')).toBeInTheDocument();
     });
 
     it('renders user names', () => {
       const activities = [createMockActivity({ user: 'Sales Manager' })];
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       expect(screen.getByText(/Sales Manager/)).toBeInTheDocument();
     });
 
     it('renders relative timestamps', () => {
       const now = new Date();
-      const activities = [createMockActivity({
-        timestamp: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-      })];
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      const activities = [
+        createMockActivity({
+          timestamp: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
+        }),
+      ];
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       expect(screen.getByText(/2 days ago/i)).toBeInTheDocument();
     });
@@ -94,12 +81,7 @@ describe('ActivityTimeline', () => {
 
   describe('Search Functionality', () => {
     it('renders search input', () => {
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={[]}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={[]} />);
 
       expect(screen.getByPlaceholderText('Search activities...')).toBeInTheDocument();
     });
@@ -111,12 +93,7 @@ describe('ActivityTimeline', () => {
         createMockActivity({ id: '2', title: 'Phone call' }),
       ];
 
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       const searchInput = screen.getByPlaceholderText('Search activities...');
       await user.type(searchInput, 'email');
@@ -132,12 +109,7 @@ describe('ActivityTimeline', () => {
         createMockActivity({ id: '2', description: 'Follow-up meeting' }),
       ];
 
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       const searchInput = screen.getByPlaceholderText('Search activities...');
       await user.type(searchInput, 'pricing');
@@ -149,11 +121,7 @@ describe('ActivityTimeline', () => {
     it('calls onSearch when search input changes', async () => {
       const user = userEvent.setup();
       render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={[]}
-          onSearch={handlers.onSearch}
-        />
+        <ActivityTimeline contactId="contact-1" activities={[]} onSearch={handlers.onSearch} />
       );
 
       const searchInput = screen.getByPlaceholderText('Search activities...');
@@ -169,12 +137,7 @@ describe('ActivityTimeline', () => {
       const user = userEvent.setup();
       const activities = createMockActivityList(5);
 
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       const searchInput = screen.getByPlaceholderText('Search activities...');
       await user.type(searchInput, 'Activity 1');
@@ -187,12 +150,7 @@ describe('ActivityTimeline', () => {
 
   describe('Type Filters', () => {
     it('renders all filter buttons', () => {
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={[]}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={[]} />);
 
       expect(screen.getByRole('radio', { name: /^All$/i })).toBeInTheDocument();
       expect(screen.getByRole('radio', { name: /Emails/i })).toBeInTheDocument();
@@ -211,12 +169,7 @@ describe('ActivityTimeline', () => {
         createMockActivity({ id: '2', type: 'call' }),
       ];
 
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       fireEvent.click(screen.getByRole('radio', { name: /Emails/i }));
 
@@ -229,12 +182,7 @@ describe('ActivityTimeline', () => {
         createMockActivity({ id: '2', type: 'email', title: 'Sent email' }),
       ];
 
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       fireEvent.click(screen.getByRole('radio', { name: /Calls/i }));
 
@@ -245,12 +193,7 @@ describe('ActivityTimeline', () => {
     it('shows all activities when "All" is selected', () => {
       const activities = createMockActivityList(5);
 
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       // Click a filter
       fireEvent.click(screen.getByRole('radio', { name: /Emails/i }));
@@ -262,12 +205,7 @@ describe('ActivityTimeline', () => {
     });
 
     it('highlights active filter', () => {
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={[]}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={[]} />);
 
       const emailFilter = screen.getByRole('radio', { name: /Emails/i });
       fireEvent.click(emailFilter);
@@ -279,24 +217,14 @@ describe('ActivityTimeline', () => {
   describe('Expand/Collapse', () => {
     it('renders expand button for each activity', () => {
       const activities = [createMockActivity()];
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       expect(screen.getByLabelText('Expand details')).toBeInTheDocument();
     });
 
     it('expands activity details on button click', () => {
       const activities = [createMockActivity({ title: 'Test Activity' })];
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       const expandButton = screen.getByLabelText('Expand details');
       fireEvent.click(expandButton);
@@ -306,12 +234,7 @@ describe('ActivityTimeline', () => {
 
     it('changes button label when expanded', () => {
       const activities = [createMockActivity()];
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       const expandButton = screen.getByLabelText('Expand details');
       fireEvent.click(expandButton);
@@ -321,12 +244,7 @@ describe('ActivityTimeline', () => {
 
     it('collapses activity on second click', () => {
       const activities = [createMockActivity({ title: 'Test Activity' })];
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       const expandButton = screen.getByLabelText('Expand details');
       fireEvent.click(expandButton);
@@ -340,10 +258,7 @@ describe('ActivityTimeline', () => {
     it('renders positive sentiment icon', () => {
       const activities = [createMockActivity({ sentiment: 'positive' })];
       const { container } = render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
+        <ActivityTimeline contactId="contact-1" activities={activities} />
       );
 
       expect(container.querySelector('[title="Positive sentiment"]')).toBeInTheDocument();
@@ -352,10 +267,7 @@ describe('ActivityTimeline', () => {
     it('renders neutral sentiment icon', () => {
       const activities = [createMockActivity({ sentiment: 'neutral' })];
       const { container } = render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
+        <ActivityTimeline contactId="contact-1" activities={activities} />
       );
 
       expect(container.querySelector('[title="Neutral sentiment"]')).toBeInTheDocument();
@@ -364,10 +276,7 @@ describe('ActivityTimeline', () => {
     it('renders negative sentiment icon', () => {
       const activities = [createMockActivity({ sentiment: 'negative' })];
       const { container } = render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
+        <ActivityTimeline contactId="contact-1" activities={activities} />
       );
 
       expect(container.querySelector('[title="Negative sentiment"]')).toBeInTheDocument();
@@ -376,10 +285,7 @@ describe('ActivityTimeline', () => {
     it('does not render sentiment when not provided', () => {
       const activities = [createMockActivity({ sentiment: undefined })];
       const { container } = render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
+        <ActivityTimeline contactId="contact-1" activities={activities} />
       );
 
       expect(container.querySelector('[title*="sentiment"]')).not.toBeInTheDocument();
@@ -388,13 +294,7 @@ describe('ActivityTimeline', () => {
 
   describe('Loading State', () => {
     it('renders loading skeletons when isLoading is true', () => {
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={[]}
-          isLoading={true}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={[]} isLoading={true} />);
 
       expect(screen.getByText('Loading activities...')).toBeInTheDocument();
       expect(screen.getByRole('status')).toHaveAttribute('aria-busy', 'true');
@@ -404,12 +304,7 @@ describe('ActivityTimeline', () => {
   describe('Empty State', () => {
     it('shows empty message when no activities match filters', () => {
       const activities = [createMockActivity({ type: 'email' })];
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       // Filter to show only calls (no matches)
       fireEvent.click(screen.getByRole('radio', { name: /Calls/i }));
@@ -478,23 +373,13 @@ describe('ActivityTimeline', () => {
 
   describe('Accessibility', () => {
     it('has proper aria-label for search input', () => {
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={[]}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={[]} />);
 
       expect(screen.getByLabelText('Search activities')).toBeInTheDocument();
     });
 
     it('has aria-describedby linking search to result count', () => {
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={createMockActivityList(3)}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={createMockActivityList(3)} />);
 
       const searchInput = screen.getByLabelText('Search activities');
       expect(searchInput).toHaveAttribute('aria-describedby', 'activity-result-count');
@@ -502,12 +387,7 @@ describe('ActivityTimeline', () => {
     });
 
     it('has aria-live region for result count updates', () => {
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={createMockActivityList(3)}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={createMockActivityList(3)} />);
 
       const resultCount = screen.getByText(/Showing 3 of 3/);
       expect(resultCount).toHaveAttribute('aria-live', 'polite');
@@ -515,24 +395,17 @@ describe('ActivityTimeline', () => {
 
     it('has proper aria-label for timeline list', () => {
       const activities = createMockActivityList(3);
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
-      expect(screen.getByRole('list')).toHaveAttribute('aria-label', 'Activity timeline, newest first');
+      expect(screen.getByRole('list')).toHaveAttribute(
+        'aria-label',
+        'Activity timeline, newest first'
+      );
     });
 
     it('has aria-expanded on expand buttons', () => {
       const activities = [createMockActivity()];
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       const expandButton = screen.getByLabelText('Expand details');
       expect(expandButton).toHaveAttribute('aria-expanded', 'false');
@@ -543,12 +416,7 @@ describe('ActivityTimeline', () => {
 
     it('has aria-controls linking expand button to detail panel', () => {
       const activities = [createMockActivity({ id: 'activity-1' })];
-      render(
-        <ActivityTimeline
-          contactId="contact-1"
-          activities={activities}
-        />
-      );
+      render(<ActivityTimeline contactId="contact-1" activities={activities} />);
 
       const expandButton = screen.getByLabelText('Expand details');
       expect(expandButton).toHaveAttribute('aria-controls', 'detail-activity-1');

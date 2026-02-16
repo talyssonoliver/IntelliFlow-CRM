@@ -218,19 +218,21 @@ export function getDeviceFingerprintHash(): string {
 export function sanitizeInput(input: string): string {
   if (!input) return '';
 
-  return input
-    // Remove HTML tags
-    .replace(/<[^>]*>/g, '')
-    // Escape HTML entities
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-    // Remove null bytes
-    .replace(/\0/g, '')
-    // Trim whitespace
-    .trim();
+  return (
+    input
+      // Remove HTML tags
+      .replace(/<[^>]*>/g, '')
+      // Escape HTML entities
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;')
+      // Remove null bytes
+      .replace(/\0/g, '')
+      // Trim whitespace
+      .trim()
+  );
 }
 
 /**
@@ -275,9 +277,11 @@ export function sanitizeEmail(email: string): string {
 export function sanitizePassword(password: string): string {
   if (!password) return '';
 
-  return password
-    // Remove null bytes and other control characters
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  return (
+    password
+      // Remove null bytes and other control characters
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+  );
 }
 
 // ============================================

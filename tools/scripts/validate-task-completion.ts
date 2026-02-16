@@ -75,7 +75,11 @@ function checkArtifactExists(artifactPath: string): boolean {
 
 // Determine suggested status based on artifact completion and sprint
 // Conservative approach: only auto-complete for sprints 0-10, be cautious with 11+
-function suggestStatus(completionPercent: number, currentStatus: string, sprintNum: number): string {
+function suggestStatus(
+  completionPercent: number,
+  currentStatus: string,
+  sprintNum: number
+): string {
   const currentNorm = currentStatus.toLowerCase().trim();
 
   // Sprint 0-10: These are mostly complete, auto-suggest based on artifacts
@@ -99,7 +103,12 @@ function suggestStatus(completionPercent: number, currentStatus: string, sprintN
   if (sprintNum >= 11 && sprintNum <= 14) {
     if (completionPercent >= 80) {
       // Only suggest Completed if current status indicates work started
-      if (currentNorm === 'in progress' || currentNorm === 'validating' || currentNorm === 'completed' || currentNorm === 'done') {
+      if (
+        currentNorm === 'in progress' ||
+        currentNorm === 'validating' ||
+        currentNorm === 'completed' ||
+        currentNorm === 'done'
+      ) {
         return 'Completed';
       }
       return 'In Progress'; // Has artifacts but not officially started
@@ -142,9 +151,8 @@ function analyzeTaskCompletion(): TaskInfo[] {
       }
     }
 
-    const completionPercent = artifacts.length > 0
-      ? Math.round((foundArtifacts.length / artifacts.length) * 100)
-      : 0;
+    const completionPercent =
+      artifacts.length > 0 ? Math.round((foundArtifacts.length / artifacts.length) * 100) : 0;
 
     const currentStatus = row['Status'] || 'Planned';
     const targetSprint = row['Target Sprint'] || '99';
@@ -170,14 +178,17 @@ function analyzeTaskCompletion(): TaskInfo[] {
 
 // Generate summary report
 function generateReport(tasks: TaskInfo[]): void {
-  console.log('=' .repeat(80));
+  console.log('='.repeat(80));
   console.log('TASK COMPLETION VALIDATION REPORT');
-  console.log('=' .repeat(80));
+  console.log('='.repeat(80));
   console.log(`\nScanned: ${CSV_PATH}`);
   console.log(`Repository: ${REPO_ROOT}\n`);
 
   // Summary by sprint
-  const sprintStats: Record<string, { total: number; completed: number; inProgress: number; planned: number }> = {};
+  const sprintStats: Record<
+    string,
+    { total: number; completed: number; inProgress: number; planned: number }
+  > = {};
 
   for (const task of tasks) {
     const sprint = task.targetSprint || 'Continuous';
@@ -207,16 +218,20 @@ function generateReport(tasks: TaskInfo[]): void {
   for (const sprint of sortedSprints) {
     const stats = sprintStats[sprint];
     const pct = Math.round((stats.completed / stats.total) * 100);
-    console.log(`Sprint ${sprint.padEnd(12)} | Total: ${stats.total.toString().padStart(3)} | Completed: ${stats.completed.toString().padStart(3)} (${pct.toString().padStart(3)}%) | In Progress: ${stats.inProgress.toString().padStart(3)} | Planned: ${stats.planned.toString().padStart(3)}`);
+    console.log(
+      `Sprint ${sprint.padEnd(12)} | Total: ${stats.total.toString().padStart(3)} | Completed: ${stats.completed.toString().padStart(3)} (${pct.toString().padStart(3)}%) | In Progress: ${stats.inProgress.toString().padStart(3)} | Planned: ${stats.planned.toString().padStart(3)}`
+    );
   }
 
   // Status mismatches
-  const mismatches = tasks.filter(t => {
+  const mismatches = tasks.filter((t) => {
     const currentNorm = t.status.toLowerCase().replace(/\s+/g, '');
     const suggestedNorm = t.suggestedStatus.toLowerCase().replace(/\s+/g, '');
-    return currentNorm !== suggestedNorm &&
-           !(currentNorm === 'done' && suggestedNorm === 'completed') &&
-           !(currentNorm === 'completed' && suggestedNorm === 'completed');
+    return (
+      currentNorm !== suggestedNorm &&
+      !(currentNorm === 'done' && suggestedNorm === 'completed') &&
+      !(currentNorm === 'completed' && suggestedNorm === 'completed')
+    );
   });
 
   if (mismatches.length > 0) {
@@ -227,11 +242,15 @@ function generateReport(tasks: TaskInfo[]): void {
     for (const task of mismatches.slice(0, 50)) {
       console.log(`\n${task.taskId} (Sprint ${task.targetSprint}):`);
       console.log(`  Current: ${task.status} -> Suggested: ${task.suggestedStatus}`);
-      console.log(`  Artifacts: ${task.completionPercent}% found (${task.foundArtifacts.length}/${task.artifacts.length})`);
+      console.log(
+        `  Artifacts: ${task.completionPercent}% found (${task.foundArtifacts.length}/${task.artifacts.length})`
+      );
       if (task.missingArtifacts.length > 0 && task.missingArtifacts.length <= 5) {
         console.log(`  Missing: ${task.missingArtifacts.join(', ')}`);
       } else if (task.missingArtifacts.length > 5) {
-        console.log(`  Missing: ${task.missingArtifacts.slice(0, 5).join(', ')} ... and ${task.missingArtifacts.length - 5} more`);
+        console.log(
+          `  Missing: ${task.missingArtifacts.slice(0, 5).join(', ')} ... and ${task.missingArtifacts.length - 5} more`
+        );
       }
     }
 
@@ -244,9 +263,11 @@ function generateReport(tasks: TaskInfo[]): void {
   console.log('TOTALS:');
   console.log('-'.repeat(80));
 
-  const totalCompleted = tasks.filter(t => t.suggestedStatus === 'Completed').length;
-  const totalInProgress = tasks.filter(t => t.suggestedStatus === 'In Progress' || t.suggestedStatus === 'In Review').length;
-  const totalPlanned = tasks.filter(t => t.suggestedStatus === 'Planned').length;
+  const totalCompleted = tasks.filter((t) => t.suggestedStatus === 'Completed').length;
+  const totalInProgress = tasks.filter(
+    (t) => t.suggestedStatus === 'In Progress' || t.suggestedStatus === 'In Review'
+  ).length;
+  const totalPlanned = tasks.filter((t) => t.suggestedStatus === 'Planned').length;
 
   console.log(`Total Tasks: ${tasks.length}`);
   console.log(`Actually Completed (>=80% artifacts): ${totalCompleted}`);
@@ -266,14 +287,16 @@ function updateCSV(tasks: TaskInfo[]): void {
   let updated = 0;
 
   for (const row of rows) {
-    const task = tasks.find(t => t.taskId === row['Task ID']);
+    const task = tasks.find((t) => t.taskId === row['Task ID']);
     if (task && task.status !== task.suggestedStatus) {
       // Only update if there's a significant change
       const currentNorm = task.status.toLowerCase().replace(/\s+/g, '');
       const suggestedNorm = task.suggestedStatus.toLowerCase().replace(/\s+/g, '');
 
-      if (currentNorm !== suggestedNorm &&
-          !(currentNorm === 'done' && suggestedNorm === 'completed')) {
+      if (
+        currentNorm !== suggestedNorm &&
+        !(currentNorm === 'done' && suggestedNorm === 'completed')
+      ) {
         row['Status'] = task.suggestedStatus;
         updated++;
       }

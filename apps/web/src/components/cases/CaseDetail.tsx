@@ -24,12 +24,7 @@ import {
 import { DeadlineTracker } from './DeadlineTracker';
 import { PartyManager } from './PartyManager';
 import { DocumentLinks } from './DocumentLinks';
-import type {
-  CaseDetailData,
-  CaseAssigneeOption,
-  PartyData,
-  TimelineEntry,
-} from './types';
+import type { CaseDetailData, CaseAssigneeOption, PartyData, TimelineEntry } from './types';
 import type { AddCaseTaskInput } from '@intelliflow/validators/case';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -70,7 +65,13 @@ function TimelineIcon({ type }: { type: TimelineEntry['type'] }) {
   };
   const c = config[type] || config.note;
   return (
-    <div className={cn('size-10 rounded-full border-4 border-white flex items-center justify-center z-10 shrink-0', c.bg, c.text)}>
+    <div
+      className={cn(
+        'size-10 rounded-full border-4 border-white flex items-center justify-center z-10 shrink-0',
+        c.bg,
+        c.text
+      )}
+    >
       <span className="material-symbols-outlined text-sm">{c.icon}</span>
     </div>
   );
@@ -85,7 +86,13 @@ function Avatar({ name, url, size = 'sm' }: { name: string; url?: string; size?:
     return <img src={url} alt={name} className={cn(sizeClass, 'rounded-full object-cover')} />;
   }
   return (
-    <div className={cn(sizeClass, 'rounded-full bg-muted flex items-center justify-center font-bold text-muted-foreground', textSize)}>
+    <div
+      className={cn(
+        sizeClass,
+        'rounded-full bg-muted flex items-center justify-center font-bold text-muted-foreground',
+        textSize
+      )}
+    >
       {getInitials(name)}
     </div>
   );
@@ -122,7 +129,9 @@ export function CaseDetail({
             <Skeleton className="h-64 rounded-xl" />
             <Skeleton className="h-32 rounded-xl" />
           </div>
-          <div className="xl:col-span-6"><Skeleton className="h-96 rounded-xl" /></div>
+          <div className="xl:col-span-6">
+            <Skeleton className="h-96 rounded-xl" />
+          </div>
           <div className="xl:col-span-3 space-y-4">
             <Skeleton className="h-48 rounded-xl" />
             <Skeleton className="h-40 rounded-xl" />
@@ -153,7 +162,13 @@ export function CaseDetail({
   const parsedParties: PartyData[] = Array.isArray(rawParties)
     ? rawParties
     : typeof rawParties === 'string'
-      ? (() => { try { return JSON.parse(rawParties); } catch { return []; } })()
+      ? (() => {
+          try {
+            return JSON.parse(rawParties);
+          } catch {
+            return [];
+          }
+        })()
       : [];
   // Ensure every party has a stable unique id (DB-stored JSON may omit it)
   const parties: PartyData[] = parsedParties.map((p, i) => ({
@@ -183,9 +198,13 @@ export function CaseDetail({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-            <Link href="/" className="hover:text-primary">Main Dashboard</Link>
+            <Link href="/" className="hover:text-primary">
+              Main Dashboard
+            </Link>
             <span className="material-symbols-outlined text-[12px]">chevron_right</span>
-            <Link href="/cases" className="hover:text-primary">Cases</Link>
+            <Link href="/cases" className="hover:text-primary">
+              Cases
+            </Link>
             <span className="material-symbols-outlined text-[12px]">chevron_right</span>
             <span className="text-primary font-medium">{caseNumber}</span>
           </div>
@@ -208,16 +227,18 @@ export function CaseDetail({
 
       {/* ── Three Column Grid ── */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-
         {/* ── Left Column: Profile ── */}
         <div className="xl:col-span-3 space-y-6">
           {/* Case info card */}
           <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
             <div className="flex justify-between items-start mb-4">
-              <span className={cn(
-                'px-2 py-1 text-[10px] font-bold rounded uppercase tracking-wider',
-                priorityCfg.bgColor, priorityCfg.color,
-              )}>
+              <span
+                className={cn(
+                  'px-2 py-1 text-[10px] font-bold rounded uppercase tracking-wider',
+                  priorityCfg.bgColor,
+                  priorityCfg.color
+                )}
+              >
                 {priorityCfg.label} Priority
               </span>
               <button className="text-muted-foreground hover:text-foreground">
@@ -227,26 +248,43 @@ export function CaseDetail({
 
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Case Number</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  Case Number
+                </label>
                 <p className="text-sm font-bold text-foreground">{caseNumber}</p>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Client</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  Client
+                </label>
                 <div className="flex items-center gap-2 mt-1">
                   <div className="size-6 bg-muted rounded flex items-center justify-center">
-                    <span className="material-symbols-outlined text-muted-foreground text-sm">business</span>
+                    <span className="material-symbols-outlined text-muted-foreground text-sm">
+                      business
+                    </span>
                   </div>
-                  <Link href={`/accounts/${caseData.client.id}`} className="text-sm font-semibold text-foreground hover:text-primary">
+                  <Link
+                    href={`/accounts/${caseData.client.id}`}
+                    className="text-sm font-semibold text-foreground hover:text-primary"
+                  >
                     {caseData.client.name}
                   </Link>
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">Status</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                  Status
+                </label>
                 {isClosed ? (
-                  <span className={cn('inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full', statusCfg.bgColor, statusCfg.color)}>
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full',
+                      statusCfg.bgColor,
+                      statusCfg.color
+                    )}
+                  >
                     {statusCfg.label}
                   </span>
                 ) : (
@@ -259,7 +297,9 @@ export function CaseDetail({
 
               {/* Assigned Team */}
               <div className="pt-4 border-t border-border/50">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-3">Assigned Team</label>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-3">
+                  Assigned Team
+                </label>
                 {caseData.assignedTeam && caseData.assignedTeam.length > 0 ? (
                   <>
                     <div className="flex -space-x-2">
@@ -273,12 +313,18 @@ export function CaseDetail({
                       )}
                     </div>
                     {caseData.managedBy && (
-                      <p className="text-xs text-muted-foreground mt-2 italic">Managed by {caseData.managedBy}</p>
+                      <p className="text-xs text-muted-foreground mt-2 italic">
+                        Managed by {caseData.managedBy}
+                      </p>
                     )}
                   </>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <Avatar name={caseData.assignee.name} url={caseData.assignee.avatarUrl ?? undefined} size="md" />
+                    <Avatar
+                      name={caseData.assignee.name}
+                      url={caseData.assignee.avatarUrl ?? undefined}
+                      size="md"
+                    />
                     <span className="text-sm text-foreground">{caseData.assignee.name}</span>
                   </div>
                 )}
@@ -292,7 +338,10 @@ export function CaseDetail({
               <h3 className="text-sm font-bold text-foreground mb-4">Case Tags</h3>
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => (
-                  <span key={tag} className="px-2 py-1 bg-muted text-muted-foreground text-[10px] font-medium rounded">
+                  <span
+                    key={tag}
+                    className="px-2 py-1 bg-muted text-muted-foreground text-[10px] font-medium rounded"
+                  >
                     {tag}
                   </span>
                 ))}
@@ -314,7 +363,7 @@ export function CaseDetail({
                     'px-4 py-4 text-sm font-medium transition-colors',
                     activeTab === tab.id
                       ? 'text-primary font-bold border-b-2 border-primary'
-                      : 'text-muted-foreground hover:text-foreground',
+                      : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
                   {tab.label}
@@ -338,13 +387,22 @@ export function CaseDetail({
                     />
                     <div className="flex items-center justify-between mt-2 pt-3 border-t border-border/50">
                       <div className="flex gap-2">
-                        <button className="p-1.5 text-muted-foreground hover:bg-muted/50 rounded transition-colors" aria-label="Attach file">
+                        <button
+                          className="p-1.5 text-muted-foreground hover:bg-muted/50 rounded transition-colors"
+                          aria-label="Attach file"
+                        >
                           <span className="material-symbols-outlined">attach_file</span>
                         </button>
-                        <button className="p-1.5 text-muted-foreground hover:bg-muted/50 rounded transition-colors" aria-label="Mention">
+                        <button
+                          className="p-1.5 text-muted-foreground hover:bg-muted/50 rounded transition-colors"
+                          aria-label="Mention"
+                        >
                           <span className="material-symbols-outlined">alternate_email</span>
                         </button>
-                        <button className="p-1.5 text-muted-foreground hover:bg-muted/50 rounded transition-colors" aria-label="Add image">
+                        <button
+                          className="p-1.5 text-muted-foreground hover:bg-muted/50 rounded transition-colors"
+                          aria-label="Add image"
+                        >
                           <span className="material-symbols-outlined">image</span>
                         </button>
                       </div>
@@ -370,17 +428,28 @@ export function CaseDetail({
                           <div className="flex-1 bg-card rounded-lg border border-border/50 p-4 shadow-sm group-hover:border-primary/30 transition-colors">
                             <div className="flex justify-between items-center mb-1">
                               <p className="text-sm font-bold text-foreground">{entry.title}</p>
-                              <span className="text-[10px] text-muted-foreground">{timeAgo(entry.timestamp)}</span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {timeAgo(entry.timestamp)}
+                              </span>
                             </div>
-                            <p className="text-xs text-muted-foreground leading-relaxed">{entry.description}</p>
+                            <p className="text-xs text-muted-foreground leading-relaxed">
+                              {entry.description}
+                            </p>
                             {entry.attachment && (
                               <div className="mt-3 p-2 bg-muted rounded border border-border/50 flex items-center justify-between">
                                 <div className="flex items-center gap-2">
-                                  <span className="material-symbols-outlined text-primary">description</span>
-                                  <span className="text-[10px] font-medium text-foreground">{entry.attachment.name}</span>
+                                  <span className="material-symbols-outlined text-primary">
+                                    description
+                                  </span>
+                                  <span className="text-[10px] font-medium text-foreground">
+                                    {entry.attachment.name}
+                                  </span>
                                 </div>
                                 {entry.attachment.downloadUrl && (
-                                  <a href={entry.attachment.downloadUrl} className="text-[10px] text-primary font-bold hover:underline">
+                                  <a
+                                    href={entry.attachment.downloadUrl}
+                                    className="text-[10px] text-primary font-bold hover:underline"
+                                  >
                                     Download
                                   </a>
                                 )}
@@ -389,7 +458,9 @@ export function CaseDetail({
                             {entry.user && (
                               <div className="mt-3 flex items-center gap-2">
                                 <Avatar name={entry.user.name} url={entry.user.avatarUrl} />
-                                <span className="text-[10px] text-muted-foreground">{entry.user.name}</span>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {entry.user.name}
+                                </span>
                               </div>
                             )}
                           </div>
@@ -400,11 +471,15 @@ export function CaseDetail({
                     <div className="space-y-4">
                       {caseData.description && (
                         <div>
-                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{caseData.description}</p>
+                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                            {caseData.description}
+                          </p>
                         </div>
                       )}
                       <div className="py-8 text-center text-sm text-muted-foreground">
-                        <span className="material-symbols-outlined text-3xl mb-2 block">timeline</span>
+                        <span className="material-symbols-outlined text-3xl mb-2 block">
+                          timeline
+                        </span>
                         No timeline entries yet. Log an activity above to get started.
                       </div>
                     </div>
@@ -424,17 +499,11 @@ export function CaseDetail({
               )}
 
               {/* ── Evidence Tab ── */}
-              {activeTab === 'evidence' && (
-                <DocumentLinks caseId={caseData.id} />
-              )}
+              {activeTab === 'evidence' && <DocumentLinks caseId={caseData.id} />}
 
               {/* ── Records Tab ── */}
               {activeTab === 'records' && (
-                <PartyManager
-                  parties={parties}
-                  onUpdate={onUpdateParties}
-                  disabled={isClosed}
-                />
+                <PartyManager parties={parties} onUpdate={onUpdateParties} disabled={isClosed} />
               )}
             </div>
           </div>
@@ -452,7 +521,10 @@ export function CaseDetail({
                   <span className="text-xs font-bold text-primary">{resolutionProgress}%</span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
-                  <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${resolutionProgress}%` }} />
+                  <div
+                    className="bg-primary h-2 rounded-full transition-all"
+                    style={{ width: `${resolutionProgress}%` }}
+                  />
                 </div>
               </div>
               <div>
@@ -461,7 +533,10 @@ export function CaseDetail({
                   <span className="text-xs font-bold text-amber-600">{budgetConsumed}%</span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
-                  <div className="bg-amber-500 h-2 rounded-full transition-all" style={{ width: `${budgetConsumed}%` }} />
+                  <div
+                    className="bg-amber-500 h-2 rounded-full transition-all"
+                    style={{ width: `${budgetConsumed}%` }}
+                  />
                 </div>
               </div>
               <div className="pt-2 grid grid-cols-2 gap-4">
@@ -470,7 +545,9 @@ export function CaseDetail({
                   <p className="text-lg font-black text-foreground">{slaDays}</p>
                 </div>
                 <div className="text-center p-3 bg-muted rounded-lg">
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase">Items Open</p>
+                  <p className="text-[10px] text-muted-foreground font-bold uppercase">
+                    Items Open
+                  </p>
                   <p className="text-lg font-black text-foreground">{openItems}</p>
                 </div>
               </div>
@@ -494,19 +571,23 @@ export function CaseDetail({
                       key={task.id}
                       className={cn(
                         'flex gap-3 p-2 hover:bg-muted rounded-lg transition-colors border-l-4',
-                        task.isOverdue ? 'border-red-500' : 'border-amber-500',
+                        task.isOverdue ? 'border-red-500' : 'border-amber-500'
                       )}
                     >
                       {ds && (
                         <div className="flex flex-col items-center justify-center bg-muted rounded min-w-[36px] h-9">
-                          <span className="text-[10px] font-bold text-muted-foreground uppercase">{ds.month}</span>
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                            {ds.month}
+                          </span>
                           <span className="text-sm font-black text-foreground">{ds.day}</span>
                         </div>
                       )}
                       <div className="min-w-0">
                         <p className="text-xs font-bold text-foreground truncate">{task.title}</p>
                         {task.description && (
-                          <p className="text-[10px] text-muted-foreground truncate">{task.description}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">
+                            {task.description}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -515,23 +596,34 @@ export function CaseDetail({
               {caseData.appointments.slice(0, 2).map((apt) => {
                 const ds = formatDeadlineShort(apt.startTime);
                 return (
-                  <div key={apt.id} className="flex gap-3 p-2 hover:bg-muted rounded-lg transition-colors border-l-4 border-blue-500">
+                  <div
+                    key={apt.id}
+                    className="flex gap-3 p-2 hover:bg-muted rounded-lg transition-colors border-l-4 border-blue-500"
+                  >
                     {ds && (
                       <div className="flex flex-col items-center justify-center bg-muted rounded min-w-[36px] h-9">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase">{ds.month}</span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase">
+                          {ds.month}
+                        </span>
                         <span className="text-sm font-black text-foreground">{ds.day}</span>
                       </div>
                     )}
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-foreground truncate">{apt.title}</p>
-                      {apt.location && <p className="text-[10px] text-muted-foreground truncate">{apt.location}</p>}
+                      {apt.location && (
+                        <p className="text-[10px] text-muted-foreground truncate">{apt.location}</p>
+                      )}
                     </div>
                   </div>
                 );
               })}
-              {caseData.tasks.filter((t) => t.dueDate && t.status !== 'COMPLETED' && t.status !== 'CANCELLED').length === 0 &&
+              {caseData.tasks.filter(
+                (t) => t.dueDate && t.status !== 'COMPLETED' && t.status !== 'CANCELLED'
+              ).length === 0 &&
                 caseData.appointments.length === 0 && (
-                  <p className="text-xs text-muted-foreground text-center py-2">No upcoming deadlines</p>
+                  <p className="text-xs text-muted-foreground text-center py-2">
+                    No upcoming deadlines
+                  </p>
                 )}
             </div>
           </div>

@@ -9,11 +9,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import {
-  RateLimiter,
-  TieredRateLimiter,
-  DEFAULT_RATE_LIMITER_CONFIG,
-} from '../RateLimiter';
+import { RateLimiter, TieredRateLimiter, DEFAULT_RATE_LIMITER_CONFIG } from '../RateLimiter';
 
 describe('RateLimiter', () => {
   afterEach(() => {
@@ -429,9 +425,9 @@ describe('TieredRateLimiter', () => {
     it('should support API rate limiting pattern (e.g., Slack-like tiers)', () => {
       vi.useFakeTimers();
       const slackLikeLimiter = new TieredRateLimiter({
-        'tier-1': { windowMs: 60000, maxRequests: 1 },  // 1 per minute
-        'tier-2': { windowMs: 60000, maxRequests: 20 },  // 20 per minute
-        'tier-3': { windowMs: 60000, maxRequests: 50 },  // 50 per minute
+        'tier-1': { windowMs: 60000, maxRequests: 1 }, // 1 per minute
+        'tier-2': { windowMs: 60000, maxRequests: 20 }, // 20 per minute
+        'tier-3': { windowMs: 60000, maxRequests: 50 }, // 50 per minute
       });
 
       // Use tier-1 (strictest)

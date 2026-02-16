@@ -27,10 +27,7 @@ export async function POST(request: Request) {
     // Get session info before killing
     const sessionInfo = await getSessionStatus(sessionId);
     if (!sessionInfo) {
-      return NextResponse.json(
-        { error: `Session ${sessionId} not found` },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: `Session ${sessionId} not found` }, { status: 404 });
     }
 
     if (sessionInfo.status !== 'running') {

@@ -6,8 +6,8 @@
   "completed_at": null,
   "phases": [],
   "task_summary": {
-    "total": 9,
-    "done": 9,
+    "total": 5,
+    "done": 5,
     "in_progress": 0,
     "blocked": 0,
     "not_started": 0,
@@ -16,51 +16,31 @@
   "completed_tasks": [
     {
       "task_id": "IFC-076",
-      "completed_at": "2026-02-15T16:58:55.421Z",
+      "completed_at": "2026-02-16T20:49:51.459Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-099",
-      "completed_at": "2026-02-15T16:58:55.421Z",
-      "duration_minutes": 15
-    },
-    {
-      "task_id": "IFC-100",
-      "completed_at": "2026-02-15T16:58:55.421Z",
+      "completed_at": "2026-02-16T20:49:51.459Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-113",
-      "completed_at": "2026-02-15T16:58:55.421Z",
-      "duration_minutes": 15
-    },
-    {
-      "task_id": "IFC-117",
-      "completed_at": "2026-02-15T16:58:55.421Z",
+      "completed_at": "2026-02-16T20:49:51.459Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-121",
-      "completed_at": "2026-02-15T16:58:55.421Z",
-      "duration_minutes": 15
-    },
-    {
-      "task_id": "IFC-127",
-      "completed_at": "2026-02-15T16:58:55.421Z",
+      "completed_at": "2026-02-16T20:49:51.459Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-141",
-      "completed_at": "2026-02-15T16:58:55.421Z",
-      "duration_minutes": 15
-    },
-    {
-      "task_id": "IFC-144",
-      "completed_at": "2026-02-15T16:58:55.421Z",
+      "completed_at": "2026-02-16T20:49:51.459Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "9/9 tasks DONE (100%). Last synced: 2026-02-15T16:58:55.421Z",
+  "notes": "5/5 tasks DONE (100%). Last synced: 2026-02-16T20:49:51.459Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
@@ -80,6 +60,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-02-15T16:58:55.447Z"
+    "calculated_at": "2026-02-16T20:50:01.319Z"
   }
 }

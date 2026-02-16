@@ -58,8 +58,18 @@ vi.mock('../AccountCard', () => ({
 }));
 
 vi.mock('@intelliflow/ui', () => ({
-  Button: ({ children, onClick, ...props }: { children?: React.ReactNode; onClick?: () => void; [key: string]: unknown }) => (
-    <button onClick={onClick} {...props}>{children}</button>
+  Button: ({
+    children,
+    onClick,
+    ...props
+  }: {
+    children?: React.ReactNode;
+    onClick?: () => void;
+    [key: string]: unknown;
+  }) => (
+    <button onClick={onClick} {...props}>
+      {children}
+    </button>
   ),
   Skeleton: ({ className }: { className?: string }) => (
     <div className={`animate-pulse ${className ?? ''}`} />
@@ -80,7 +90,9 @@ describe('AccountHierarchy', () => {
 
   it('shows loading skeleton while fetching', () => {
     useQueryMock.mockReturnValue({ data: undefined, isLoading: true, error: null });
-    const { container } = render(<AccountHierarchy accountId="00000000-0000-4000-8000-000000000001" />);
+    const { container } = render(
+      <AccountHierarchy accountId="00000000-0000-4000-8000-000000000001" />
+    );
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 
@@ -92,7 +104,9 @@ describe('AccountHierarchy', () => {
 
   it('returns null when no data and not loading', () => {
     useQueryMock.mockReturnValue({ data: undefined, isLoading: false, error: null });
-    const { container } = render(<AccountHierarchy accountId="00000000-0000-4000-8000-000000000001" />);
+    const { container } = render(
+      <AccountHierarchy accountId="00000000-0000-4000-8000-000000000001" />
+    );
     // Should render the wrapper div but no tree
     expect(container.querySelector('[role="tree"]')).toBeNull();
   });

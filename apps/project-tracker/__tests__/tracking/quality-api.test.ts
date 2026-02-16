@@ -47,9 +47,9 @@ const mockFs = fs as unknown as {
 // Sample data - matches the structure expected by the route.ts
 const SAMPLE_DEBT_ANALYSIS = {
   timestamp: '2026-01-06T10:00:00Z',
-  total: 15,  // Route reads debtData?.total
-  by_severity: { critical: 2, high: 5, medium: 6, low: 2 },  // Route reads by_severity not bySeverity
-  trend: 'stable',  // Route reads debtData?.trend directly
+  total: 15, // Route reads debtData?.total
+  by_severity: { critical: 2, high: 5, medium: 6, low: 2 }, // Route reads by_severity not bySeverity
+  trend: 'stable', // Route reads debtData?.trend directly
 };
 
 const SAMPLE_COVERAGE = {
@@ -62,7 +62,7 @@ const SAMPLE_COVERAGE = {
 };
 
 const SAMPLE_SONARQUBE = {
-  qualityGate: 'OK',  // Route reads this directly as string, not { status: 'OK' }
+  qualityGate: 'OK', // Route reads this directly as string, not { status: 'OK' }
   bugs: 3,
   vulnerabilities: 1,
   codeSmells: 25,

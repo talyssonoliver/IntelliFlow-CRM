@@ -1,10 +1,7 @@
 # Artifact Signing and Provenance
 
-**Status**: Implemented (Sprint 7)
-**Related Task**: IFC-133
-**Owner**: Security Team
-**Last Updated**: 2025-12-28
-**Review Frequency**: Quarterly
+**Status**: Implemented (Sprint 7) **Related Task**: IFC-133 **Owner**: Security
+Team **Last Updated**: 2025-12-28 **Review Frequency**: Quarterly
 **Dependencies**: IFC-132 (SBOM Generation)
 
 ## Overview
@@ -34,12 +31,12 @@ which provides keyless signing using OIDC identity tokens from GitHub Actions.
 
 ### What Gets Signed
 
-| Artifact Type | Signing Tool | Format | Storage |
-|---------------|--------------|--------|---------|
-| Container Images | cosign | OCI signatures | GitHub Container Registry |
-| Release Archives | cosign | Detached signatures (.sig) | GitHub Releases |
-| SBOM Files | cosign | Attached attestations | GitHub Artifacts |
-| NPM Packages | npm provenance | SLSA attestation | npm Registry |
+| Artifact Type    | Signing Tool   | Format                     | Storage                   |
+| ---------------- | -------------- | -------------------------- | ------------------------- |
+| Container Images | cosign         | OCI signatures             | GitHub Container Registry |
+| Release Archives | cosign         | Detached signatures (.sig) | GitHub Releases           |
+| SBOM Files       | cosign         | Attached attestations      | GitHub Artifacts          |
+| NPM Packages     | npm provenance | SLSA attestation           | npm Registry              |
 
 ### Signing Workflow
 
@@ -91,6 +88,7 @@ We use Sigstore's keyless signing with GitHub Actions OIDC:
 4. **No Key Management**: No private keys to manage or rotate
 
 **Benefits**:
+
 - No secret key management overhead
 - Immutable audit trail via transparency log
 - Tied to CI/CD identity (non-repudiation)
@@ -104,28 +102,29 @@ We use Sigstore's keyless signing with GitHub Actions OIDC:
 
 In keyless mode, no long-lived keys are used. Instead:
 
-| Component | Source | Lifetime |
-|-----------|--------|----------|
-| Signing Key | Ephemeral from Fulcio | ~10 minutes |
-| OIDC Token | GitHub Actions | ~5 minutes |
-| Certificate | Fulcio CA | ~10 minutes |
-| Signature Record | Rekor | Permanent |
+| Component        | Source                | Lifetime    |
+| ---------------- | --------------------- | ----------- |
+| Signing Key      | Ephemeral from Fulcio | ~10 minutes |
+| OIDC Token       | GitHub Actions        | ~5 minutes  |
+| Certificate      | Fulcio CA             | ~10 minutes |
+| Signature Record | Rekor                 | Permanent   |
 
 ### Fallback Key Mode (Disaster Recovery)
 
 For scenarios where keyless signing is unavailable:
 
-| Key Type | Storage | Rotation | Access |
-|----------|---------|----------|--------|
-| Cosign Private Key | GitHub Secrets | 90 days | GitHub Actions only |
-| Cosign Public Key | Repository (public) | 90 days | Public |
-| Backup Key | HashiCorp Vault | 180 days | Security Team |
+| Key Type           | Storage             | Rotation | Access              |
+| ------------------ | ------------------- | -------- | ------------------- |
+| Cosign Private Key | GitHub Secrets      | 90 days  | GitHub Actions only |
+| Cosign Public Key  | Repository (public) | 90 days  | Public              |
+| Backup Key         | HashiCorp Vault     | 180 days | Security Team       |
 
 ### Key Rotation Procedure
 
 If using stored keys (fallback mode):
 
 1. **Generate new key pair**:
+
    ```bash
    cosign generate-key-pair
    ```
@@ -211,22 +210,22 @@ All builds generate SLSA provenance attestations containing:
 
 ### Provenance Fields
 
-| Field | Description | Verification Use |
-|-------|-------------|------------------|
-| `subject.digest` | Artifact hash | Verify artifact integrity |
-| `builder.id` | Workflow identity | Verify build origin |
-| `invocation.configSource` | Source repo + commit | Verify source code |
-| `metadata.buildInvocationId` | GitHub run ID | Audit trail |
-| `materials` | Build inputs | Dependency verification |
+| Field                        | Description          | Verification Use          |
+| ---------------------------- | -------------------- | ------------------------- |
+| `subject.digest`             | Artifact hash        | Verify artifact integrity |
+| `builder.id`                 | Workflow identity    | Verify build origin       |
+| `invocation.configSource`    | Source repo + commit | Verify source code        |
+| `metadata.buildInvocationId` | GitHub run ID        | Audit trail               |
+| `materials`                  | Build inputs         | Dependency verification   |
 
 ### Attestation Storage
 
-| Attestation Type | Storage Location | Retention |
-|------------------|------------------|-----------|
-| SLSA Provenance | GitHub Artifacts | 90 days |
-| Container Attestation | OCI Registry | With image |
-| Release Attestation | GitHub Release | Permanent |
-| SBOM Attestation | GitHub Artifacts | 90 days |
+| Attestation Type      | Storage Location | Retention  |
+| --------------------- | ---------------- | ---------- |
+| SLSA Provenance       | GitHub Artifacts | 90 days    |
+| Container Attestation | OCI Registry     | With image |
+| Release Attestation   | GitHub Release   | Permanent  |
+| SBOM Attestation      | GitHub Artifacts | 90 days    |
 
 ---
 
@@ -237,6 +236,7 @@ All builds generate SLSA provenance attestations containing:
 Before deploying any artifact, the deployment pipeline MUST verify:
 
 1. **Signature Validity**:
+
    ```bash
    cosign verify-blob \
      --certificate-identity-regexp 'https://github.com/intelliflow-ai/intelliflow-crm/.*' \
@@ -245,6 +245,7 @@ Before deploying any artifact, the deployment pipeline MUST verify:
    ```
 
 2. **Provenance Check**:
+
    ```bash
    cosign verify-attestation \
      --type slsaprovenance \
@@ -348,27 +349,27 @@ Blue/Green Deploy (blue-green-deploy.yml)
 
 The signing workflow triggers on:
 
-- **Releases**: All release tags (v*)
+- **Releases**: All release tags (v\*)
 - **Main Branch**: All pushes to main
 - **Manual**: workflow_dispatch for testing
 
 ### Artifact Flow
 
-| Stage | Artifact | Signature |
-|-------|----------|-----------|
-| Build | dist/, .next/ | Not signed |
-| Package | .tar.gz, Docker image | Signed |
-| SBOM | .cyclonedx.json | Attested |
-| Release | GitHub Release assets | Signed + Provenance |
-| Deploy | Container image | Verified before deploy |
+| Stage   | Artifact              | Signature              |
+| ------- | --------------------- | ---------------------- |
+| Build   | dist/, .next/         | Not signed             |
+| Package | .tar.gz, Docker image | Signed                 |
+| SBOM    | .cyclonedx.json       | Attested               |
+| Release | GitHub Release assets | Signed + Provenance    |
+| Deploy  | Container image       | Verified before deploy |
 
 ### CI/CD Secrets Required
 
-| Secret | Purpose | Source |
-|--------|---------|--------|
-| `GITHUB_TOKEN` | OIDC token for keyless signing | GitHub (automatic) |
-| `COSIGN_PRIVATE_KEY` | Fallback signing key | GitHub Secrets |
-| `COSIGN_PASSWORD` | Key password (if encrypted) | GitHub Secrets |
+| Secret               | Purpose                        | Source             |
+| -------------------- | ------------------------------ | ------------------ |
+| `GITHUB_TOKEN`       | OIDC token for keyless signing | GitHub (automatic) |
+| `COSIGN_PRIVATE_KEY` | Fallback signing key           | GitHub Secrets     |
+| `COSIGN_PASSWORD`    | Key password (if encrypted)    | GitHub Secrets     |
 
 ---
 
@@ -378,23 +379,23 @@ The signing workflow triggers on:
 
 This implementation achieves:
 
-| SLSA Level | Requirement | Status |
-|------------|-------------|--------|
-| Level 1 | Build process documented | Achieved |
-| Level 2 | Signed provenance | Achieved |
-| Level 2 | Hosted build platform | Achieved (GitHub Actions) |
-| Level 3 | Hardened build platform | Partial (GitHub-managed) |
+| SLSA Level | Requirement              | Status                    |
+| ---------- | ------------------------ | ------------------------- |
+| Level 1    | Build process documented | Achieved                  |
+| Level 2    | Signed provenance        | Achieved                  |
+| Level 2    | Hosted build platform    | Achieved (GitHub Actions) |
+| Level 3    | Hardened build platform  | Partial (GitHub-managed)  |
 
 ### Audit Trail
 
 All signing activities are logged:
 
-| Log Type | Location | Retention |
-|----------|----------|-----------|
-| Rekor Transparency Log | rekor.sigstore.dev | Permanent (public) |
-| GitHub Actions Logs | GitHub UI | 90 days |
-| Signing Workflow Output | GitHub Step Summary | 90 days |
-| Verification Results | Deployment logs | 90 days |
+| Log Type                | Location            | Retention          |
+| ----------------------- | ------------------- | ------------------ |
+| Rekor Transparency Log  | rekor.sigstore.dev  | Permanent (public) |
+| GitHub Actions Logs     | GitHub UI           | 90 days            |
+| Signing Workflow Output | GitHub Step Summary | 90 days            |
+| Verification Results    | Deployment logs     | 90 days            |
 
 ### Querying Rekor
 
@@ -479,12 +480,11 @@ permissions:
 
 ## Document History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2025-12-28 | IFC-133 | Initial artifact signing and provenance policy |
+| Version | Date       | Author  | Changes                                        |
+| ------- | ---------- | ------- | ---------------------------------------------- |
+| 1.0     | 2025-12-28 | IFC-133 | Initial artifact signing and provenance policy |
 
 ---
 
-**Next Review**: 2026-03-28 (Quarterly)
-**Owner**: Security Team
-**Approver**: CTO
+**Next Review**: 2026-03-28 (Quarterly) **Owner**: Security Team **Approver**:
+CTO

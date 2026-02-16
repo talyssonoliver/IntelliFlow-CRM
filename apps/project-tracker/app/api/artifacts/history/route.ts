@@ -256,9 +256,8 @@ export async function GET(request: NextRequest) {
       '.github/',
     ];
 
-    const filteredFiles = allFiles.filter((f) =>
-      relevantDirs.some((dir) => f.startsWith(dir)) ||
-      !f.includes('/') // Root files
+    const filteredFiles = allFiles.filter(
+      (f) => relevantDirs.some((dir) => f.startsWith(dir)) || !f.includes('/') // Root files
     );
 
     // Get history for each file (with progress batching for performance)

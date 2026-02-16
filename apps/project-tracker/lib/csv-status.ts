@@ -150,11 +150,3 @@ function checkArtifactsExist(
 ): { exists: boolean; missing: string[] } {
   return _checkArtifactsExist(taskId, session, getRepoRoot());
 }
-
-
-
-
-
-
-
-

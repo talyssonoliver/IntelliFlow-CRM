@@ -12,12 +12,7 @@
 /**
  * Node.js environment values
  */
-export const NODE_ENVIRONMENTS = [
-  'development',
-  'test',
-  'staging',
-  'production',
-] as const;
+export const NODE_ENVIRONMENTS = ['development', 'test', 'staging', 'production'] as const;
 
 export type NodeEnvironment = (typeof NODE_ENVIRONMENTS)[number];
 
@@ -28,11 +23,6 @@ export type NodeEnvironment = (typeof NODE_ENVIRONMENTS)[number];
 /**
  * Logging levels (severity order: debug < info < warn < error)
  */
-export const LOG_LEVELS = [
-  'debug',
-  'info',
-  'warn',
-  'error',
-] as const;
+export const LOG_LEVELS = ['debug', 'info', 'warn', 'error'] as const;
 
 export type LogLevel = (typeof LOG_LEVELS)[number];

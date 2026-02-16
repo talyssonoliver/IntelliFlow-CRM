@@ -75,9 +75,7 @@ export function generateWebhookSignature(
 ): string {
   const ts = timestamp || Math.floor(Date.now() / 1000);
   const signaturePayload = `${ts}.${payload}`;
-  const signature = createHmac('sha256', secret)
-    .update(signaturePayload)
-    .digest('hex');
+  const signature = createHmac('sha256', secret).update(signaturePayload).digest('hex');
   return `t=${ts},v1=${signature}`;
 }
 
@@ -103,9 +101,7 @@ export function verifyWebhookSignature(
   }
 
   // Verify signature
-  const expectedSignature = createHmac('sha256', secret)
-    .update(`${ts}.${payload}`)
-    .digest('hex');
+  const expectedSignature = createHmac('sha256', secret).update(`${ts}.${payload}`).digest('hex');
 
   return hash === expectedSignature;
 }
@@ -163,10 +159,7 @@ export class OutboundWebhookClient {
 
         // Create abort controller for timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(
-          () => controller.abort(),
-          this.config.timeoutMs
-        );
+        const timeoutId = setTimeout(() => controller.abort(), this.config.timeoutMs);
 
         const response = await fetch(request.url, {
           method,
@@ -186,7 +179,8 @@ export class OutboundWebhookClient {
           // Check if we should retry based on status code
           const retryableStatuses = [429, 500, 502, 503, 504];
           if (retryableStatuses.includes(response.status) && attempts <= this.config.maxRetries) {
-            const backoffMs = this.config.retryBackoffMs[attempts - 1] ||
+            const backoffMs =
+              this.config.retryBackoffMs[attempts - 1] ||
               this.config.retryBackoffMs[this.config.retryBackoffMs.length - 1];
             await this.sleep(backoffMs);
             continue;
@@ -249,7 +243,8 @@ export class OutboundWebhookClient {
 
         // Retry on network errors
         if (attempts <= this.config.maxRetries) {
-          const backoffMs = this.config.retryBackoffMs[attempts - 1] ||
+          const backoffMs =
+            this.config.retryBackoffMs[attempts - 1] ||
             this.config.retryBackoffMs[this.config.retryBackoffMs.length - 1];
           await this.sleep(backoffMs);
           continue;

@@ -130,7 +130,7 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
       expect(result.emailId).toBe('email-123');
       expect(warnSpy).toHaveBeenCalledWith(
         'Spam email detected',
-        expect.objectContaining({ spamScore: 85 }),
+        expect.objectContaining({ spamScore: 85 })
       );
       warnSpy.mockRestore();
     });
@@ -139,22 +139,24 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
   describe('webhook - attachments processing', () => {
     it('should process attachments when present', async () => {
       const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      mockParseFn.mockReturnValue(defaultParsedEmail({
-        attachments: [
-          {
-            filename: 'doc.pdf',
-            contentType: 'application/pdf',
-            size: 1024,
-            checksum: 'abc123',
-          },
-          {
-            filename: 'image.png',
-            contentType: 'image/png',
-            size: 2048,
-            checksum: 'def456',
-          },
-        ],
-      }));
+      mockParseFn.mockReturnValue(
+        defaultParsedEmail({
+          attachments: [
+            {
+              filename: 'doc.pdf',
+              contentType: 'application/pdf',
+              size: 1024,
+              checksum: 'abc123',
+            },
+            {
+              filename: 'image.png',
+              contentType: 'image/png',
+              size: 2048,
+              checksum: 'def456',
+            },
+          ],
+        })
+      );
 
       const result = await publicCaller.webhook({
         rawEmail: 'From: test@example.com\r\n\r\nWith attachments',
@@ -165,11 +167,11 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
       // processAttachments should log each attachment
       expect(logSpy).toHaveBeenCalledWith(
         'Processing attachment',
-        expect.objectContaining({ filename: 'doc.pdf' }),
+        expect.objectContaining({ filename: 'doc.pdf' })
       );
       expect(logSpy).toHaveBeenCalledWith(
         'Processing attachment',
-        expect.objectContaining({ filename: 'image.png' }),
+        expect.objectContaining({ filename: 'image.png' })
       );
       logSpy.mockRestore();
     });
@@ -185,7 +187,7 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
         publicCaller.webhook({
           rawEmail: 'not a valid email',
           provider: 'raw',
-        }),
+        })
       ).rejects.toThrow('Failed to process inbound email');
     });
   });

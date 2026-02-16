@@ -27,8 +27,14 @@ vi.mock('@intelliflow/validators', async (importOriginal) => {
   return {
     ...orig,
     NOTIFICATION_TYPES: orig.NOTIFICATION_TYPES || [
-      'task_assigned', 'lead_scored', 'deal_won', 'deal_lost',
-      'mention', 'comment', 'system_alert', 'reminder',
+      'task_assigned',
+      'lead_scored',
+      'deal_won',
+      'deal_lost',
+      'mention',
+      'comment',
+      'system_alert',
+      'reminder',
     ],
     NOTIFICATION_CHANNELS: orig.NOTIFICATION_CHANNELS || ['in_app', 'email', 'sms', 'push'],
   };
@@ -335,9 +341,7 @@ describe('notificationsRouter batch10 - uncovered branches', () => {
 
       const caller = notificationsRouter.createCaller(ctx);
       const result = await caller.updatePreferences({
-        preferences: [
-          { type: 'deal_won', enabled: true, channels: ['push'] },
-        ],
+        preferences: [{ type: 'deal_won', enabled: true, channels: ['push'] }],
       });
 
       expect(result.success).toBe(true);
@@ -375,17 +379,19 @@ describe('notificationsRouter batch10 - uncovered branches', () => {
 
   describe('mapToNotification - edge cases', () => {
     it('should map event without payload fields to defaults', async () => {
-      prismaMock.domainEvent.findMany.mockResolvedValue([{
-        id: 'evt-minimal',
-        eventType: 'Notification.unknown',
-        aggregateType: 'System',
-        aggregateId: 'sys-1',
-        payload: {},
-        metadata: { targetUserId: USER_ID },
-        occurredAt: new Date(),
-        status: 'PENDING',
-        processedAt: null,
-      }] as any);
+      prismaMock.domainEvent.findMany.mockResolvedValue([
+        {
+          id: 'evt-minimal',
+          eventType: 'Notification.unknown',
+          aggregateType: 'System',
+          aggregateId: 'sys-1',
+          payload: {},
+          metadata: { targetUserId: USER_ID },
+          occurredAt: new Date(),
+          status: 'PENDING',
+          processedAt: null,
+        },
+      ] as any);
       prismaMock.domainEvent.count.mockResolvedValue(1);
 
       const caller = notificationsRouter.createCaller(ctx);

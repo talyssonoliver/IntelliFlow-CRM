@@ -57,7 +57,8 @@ async function globalSetup(config: FullConfig) {
 
   // Optional: Pre-authenticate and save auth state
   // This speeds up tests by avoiding repeated login
-  const baseURL = config?.projects?.[0]?.use?.baseURL || config?.use?.baseURL || 'http://localhost:3000';
+  const baseURL =
+    config?.projects?.[0]?.use?.baseURL || config?.use?.baseURL || 'http://localhost:3000';
   const browser = await chromium.launch();
   const context = await browser.newContext();
   const page = await context.newPage();

@@ -24,7 +24,11 @@ describe('TaskCalendar', () => {
 
   it('renders calendar grid', () => {
     render(
-      <TaskCalendar tasks={mockTasks} onTaskClick={onTaskClick} onCreateWithDate={onCreateWithDate} />
+      <TaskCalendar
+        tasks={mockTasks}
+        onTaskClick={onTaskClick}
+        onCreateWithDate={onCreateWithDate}
+      />
     );
 
     expect(screen.getByRole('grid')).toBeInTheDocument();
@@ -32,7 +36,11 @@ describe('TaskCalendar', () => {
 
   it('renders day name headers', () => {
     render(
-      <TaskCalendar tasks={mockTasks} onTaskClick={onTaskClick} onCreateWithDate={onCreateWithDate} />
+      <TaskCalendar
+        tasks={mockTasks}
+        onTaskClick={onTaskClick}
+        onCreateWithDate={onCreateWithDate}
+      />
     );
 
     expect(screen.getByText('Mon')).toBeInTheDocument();
@@ -46,7 +54,11 @@ describe('TaskCalendar', () => {
 
   it('renders task chips', () => {
     render(
-      <TaskCalendar tasks={mockTasks} onTaskClick={onTaskClick} onCreateWithDate={onCreateWithDate} />
+      <TaskCalendar
+        tasks={mockTasks}
+        onTaskClick={onTaskClick}
+        onCreateWithDate={onCreateWithDate}
+      />
     );
 
     const chips = screen.getAllByTestId('calendar-task-chip');
@@ -55,7 +67,11 @@ describe('TaskCalendar', () => {
 
   it('calls onTaskClick when chip is clicked', () => {
     render(
-      <TaskCalendar tasks={mockTasks} onTaskClick={onTaskClick} onCreateWithDate={onCreateWithDate} />
+      <TaskCalendar
+        tasks={mockTasks}
+        onTaskClick={onTaskClick}
+        onCreateWithDate={onCreateWithDate}
+      />
     );
 
     const chips = screen.getAllByTestId('calendar-task-chip');
@@ -77,7 +93,11 @@ describe('TaskCalendar', () => {
 
   it('navigates to previous month', () => {
     render(
-      <TaskCalendar tasks={mockTasks} onTaskClick={onTaskClick} onCreateWithDate={onCreateWithDate} />
+      <TaskCalendar
+        tasks={mockTasks}
+        onTaskClick={onTaskClick}
+        onCreateWithDate={onCreateWithDate}
+      />
     );
 
     const prevBtn = screen.getByRole('button', { name: 'Previous month' });
@@ -89,7 +109,11 @@ describe('TaskCalendar', () => {
 
   it('navigates to next month', () => {
     render(
-      <TaskCalendar tasks={mockTasks} onTaskClick={onTaskClick} onCreateWithDate={onCreateWithDate} />
+      <TaskCalendar
+        tasks={mockTasks}
+        onTaskClick={onTaskClick}
+        onCreateWithDate={onCreateWithDate}
+      />
     );
 
     const nextBtn = screen.getByRole('button', { name: 'Next month' });
@@ -100,7 +124,11 @@ describe('TaskCalendar', () => {
 
   it('has Today button', () => {
     render(
-      <TaskCalendar tasks={mockTasks} onTaskClick={onTaskClick} onCreateWithDate={onCreateWithDate} />
+      <TaskCalendar
+        tasks={mockTasks}
+        onTaskClick={onTaskClick}
+        onCreateWithDate={onCreateWithDate}
+      />
     );
 
     expect(screen.getByText('Today')).toBeInTheDocument();
@@ -115,7 +143,11 @@ describe('TaskCalendar', () => {
     ];
 
     render(
-      <TaskCalendar tasks={manyTasks} onTaskClick={onTaskClick} onCreateWithDate={onCreateWithDate} />
+      <TaskCalendar
+        tasks={manyTasks}
+        onTaskClick={onTaskClick}
+        onCreateWithDate={onCreateWithDate}
+      />
     );
 
     expect(screen.getByTestId('overflow-indicator')).toBeInTheDocument();
@@ -135,7 +167,11 @@ describe('TaskCalendar', () => {
 
   it('renders accessible aria-labels on cells', () => {
     render(
-      <TaskCalendar tasks={mockTasks} onTaskClick={onTaskClick} onCreateWithDate={onCreateWithDate} />
+      <TaskCalendar
+        tasks={mockTasks}
+        onTaskClick={onTaskClick}
+        onCreateWithDate={onCreateWithDate}
+      />
     );
 
     const cells = screen.getAllByRole('gridcell');

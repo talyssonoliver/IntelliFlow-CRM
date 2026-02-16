@@ -500,7 +500,7 @@ describe('KeyRotationService Functional Tests', () => {
     const store = new InMemoryKeyVersionStore();
     const service = new KeyRotationService(
       { preRotationValidation: false, postRotationVerification: false },
-      store,
+      store
     );
 
     const result = await service.rotateKeys();
@@ -516,13 +516,13 @@ describe('KeyRotationService Functional Tests', () => {
     const store = new InMemoryKeyVersionStore();
     const service = new KeyRotationService(
       { preRotationValidation: false, postRotationVerification: false },
-      store,
+      store
     );
 
     await service.rotateKeys();
     const events = service.getLifecycleEvents();
 
     expect(events.length).toBeGreaterThanOrEqual(1);
-    expect(events.some(e => e.eventType === 'KEY_ROTATED')).toBe(true);
+    expect(events.some((e) => e.eventType === 'KEY_ROTATED')).toBe(true);
   });
 });

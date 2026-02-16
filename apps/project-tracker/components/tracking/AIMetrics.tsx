@@ -86,10 +86,7 @@ export default function AIMetrics() {
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
         </div>
-        <button
-          onClick={fetchData}
-          className="mt-2 text-sm underline hover:no-underline"
-        >
+        <button onClick={fetchData} className="mt-2 text-sm underline hover:no-underline">
           Try again
         </button>
       </div>
@@ -109,29 +106,21 @@ export default function AIMetrics() {
           <div>
             <h3 className="text-lg font-semibold text-gray-900">AI Metrics</h3>
             {lastUpdated && (
-              <StaleIndicator
-                lastUpdated={lastUpdated}
-                thresholdMinutes={60}
-                showTime
-              />
+              <StaleIndicator lastUpdated={lastUpdated} thresholdMinutes={60} showTime />
             )}
           </div>
         </div>
-        <RefreshButton
-          onRefresh={handleRefresh}
-          label="Refresh Metrics"
-          disabled={loading}
-        />
+        <RefreshButton onRefresh={handleRefresh} label="Refresh Metrics" disabled={loading} />
       </div>
 
       {/* Drift & Hallucination Alerts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Drift Detection */}
-        <div className={`rounded-lg p-4 border ${
-          data?.drift.detected
-            ? 'bg-red-50 border-red-200'
-            : 'bg-green-50 border-green-200'
-        }`}>
+        <div
+          className={`rounded-lg p-4 border ${
+            data?.drift.detected ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
+          }`}
+        >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Icon
@@ -162,31 +151,41 @@ export default function AIMetrics() {
           <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
             <div
               className={`h-full ${data?.drift.detected ? 'bg-red-500' : 'bg-green-500'}`}
-              style={{ width: `${Math.min((data?.drift.score ?? 0) / (data?.drift.threshold ?? 0.05) * 100, 100)}%` }}
+              style={{
+                width: `${Math.min(((data?.drift.score ?? 0) / (data?.drift.threshold ?? 0.05)) * 100, 100)}%`,
+              }}
             />
           </div>
         </div>
 
         {/* Hallucination Rate */}
-        <div className={`rounded-lg p-4 border ${
-          (data?.hallucination.rate ?? 0) > (data?.hallucination.threshold ?? 0.05)
-            ? 'bg-red-50 border-red-200'
-            : 'bg-green-50 border-green-200'
-        }`}>
+        <div
+          className={`rounded-lg p-4 border ${
+            (data?.hallucination.rate ?? 0) > (data?.hallucination.threshold ?? 0.05)
+              ? 'bg-red-50 border-red-200'
+              : 'bg-green-50 border-green-200'
+          }`}
+        >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Icon
                 name="psychology"
-                className={(data?.hallucination.rate ?? 0) > (data?.hallucination.threshold ?? 0.05) ? 'text-red-600' : 'text-green-600'}
+                className={
+                  (data?.hallucination.rate ?? 0) > (data?.hallucination.threshold ?? 0.05)
+                    ? 'text-red-600'
+                    : 'text-green-600'
+                }
                 size="lg"
               />
               <span className="font-medium text-gray-900">Hallucination Rate</span>
             </div>
-            <span className={`text-sm ${
-              (data?.hallucination.rate ?? 0) > (data?.hallucination.threshold ?? 0.05)
-                ? 'text-red-600'
-                : 'text-green-600'
-            }`}>
+            <span
+              className={`text-sm ${
+                (data?.hallucination.rate ?? 0) > (data?.hallucination.threshold ?? 0.05)
+                  ? 'text-red-600'
+                  : 'text-green-600'
+              }`}
+            >
               {((data?.hallucination.rate ?? 0) * 100).toFixed(1)}%
             </span>
           </div>
@@ -214,7 +213,9 @@ export default function AIMetrics() {
             <Icon name="attach_money" size="base" />
             Cost Tracking (Current Month)
           </h4>
-          <span className={`text-sm ${costUtilization > 90 ? 'text-red-600' : costUtilization > 70 ? 'text-yellow-600' : 'text-green-600'}`}>
+          <span
+            className={`text-sm ${costUtilization > 90 ? 'text-red-600' : costUtilization > 70 ? 'text-yellow-600' : 'text-green-600'}`}
+          >
             {costUtilization}% of budget
           </span>
         </div>
@@ -236,7 +237,9 @@ export default function AIMetrics() {
             value={`$${data?.costs.forecast.toFixed(2) ?? '0.00'}`}
             icon="trending_up"
             trend={data?.costs.trend}
-            variant={(data?.costs.forecast ?? 0) > (data?.costs.budget ?? 0) ? 'warning' : 'default'}
+            variant={
+              (data?.costs.forecast ?? 0) > (data?.costs.budget ?? 0) ? 'warning' : 'default'
+            }
           />
         </div>
         <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
@@ -245,8 +248,8 @@ export default function AIMetrics() {
               costUtilization > 90
                 ? 'bg-red-500'
                 : costUtilization > 70
-                ? 'bg-yellow-500'
-                : 'bg-green-500'
+                  ? 'bg-yellow-500'
+                  : 'bg-green-500'
             }`}
             style={{ width: `${Math.min(costUtilization, 100)}%` }}
           />
@@ -277,17 +280,23 @@ export default function AIMetrics() {
               <tr key={model.name} className="border-b border-gray-100 hover:bg-gray-50">
                 <td className="p-3 font-medium text-gray-900">{model.name}</td>
                 <td className="p-3 text-center">
-                  <span className={`font-mono text-sm ${model.latency_p50 < 500 ? 'text-green-600' : model.latency_p50 < 1000 ? 'text-yellow-600' : 'text-red-600'}`}>
+                  <span
+                    className={`font-mono text-sm ${model.latency_p50 < 500 ? 'text-green-600' : model.latency_p50 < 1000 ? 'text-yellow-600' : 'text-red-600'}`}
+                  >
                     {model.latency_p50}ms
                   </span>
                 </td>
                 <td className="p-3 text-center">
-                  <span className={`font-mono text-sm ${model.latency_p95 < 1000 ? 'text-green-600' : model.latency_p95 < 2000 ? 'text-yellow-600' : 'text-red-600'}`}>
+                  <span
+                    className={`font-mono text-sm ${model.latency_p95 < 1000 ? 'text-green-600' : model.latency_p95 < 2000 ? 'text-yellow-600' : 'text-red-600'}`}
+                  >
                     {model.latency_p95}ms
                   </span>
                 </td>
                 <td className="p-3 text-center">
-                  <span className={`font-mono text-sm ${model.accuracy >= 0.9 ? 'text-green-600' : model.accuracy >= 0.8 ? 'text-yellow-600' : 'text-red-600'}`}>
+                  <span
+                    className={`font-mono text-sm ${model.accuracy >= 0.9 ? 'text-green-600' : model.accuracy >= 0.8 ? 'text-yellow-600' : 'text-red-600'}`}
+                  >
                     {(model.accuracy * 100).toFixed(0)}%
                   </span>
                 </td>

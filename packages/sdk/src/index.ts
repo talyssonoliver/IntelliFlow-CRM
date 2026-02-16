@@ -98,10 +98,7 @@ export function createIntelliFlowSDK(config: SDKConfig): IntelliFlowClient {
 }
 
 // Re-export domain constants for validation helpers
-import {
-  LEAD_STATUSES,
-  LEAD_SOURCES,
-} from '@intelliflow/domain';
+import { LEAD_STATUSES, LEAD_SOURCES } from '@intelliflow/domain';
 import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
 import { TASK_STATUSES, TASK_PRIORITIES } from '@intelliflow/domain';
 
@@ -133,7 +130,9 @@ export function isValidLeadSource(source: string): source is (typeof LEAD_SOURCE
  * @param stage - The stage string to validate
  * @returns true if the stage is valid
  */
-export function isValidOpportunityStage(stage: string): stage is (typeof OPPORTUNITY_STAGES)[number] {
+export function isValidOpportunityStage(
+  stage: string
+): stage is (typeof OPPORTUNITY_STAGES)[number] {
   return (OPPORTUNITY_STAGES as readonly string[]).includes(stage);
 }
 
@@ -151,6 +150,8 @@ export function isValidTaskStatus(status: string): status is (typeof TASK_STATUS
  * @param priority - The priority string to validate
  * @returns true if the priority is valid
  */
-export function isValidTaskPriority(priority: string): priority is (typeof TASK_PRIORITIES)[number] {
+export function isValidTaskPriority(
+  priority: string
+): priority is (typeof TASK_PRIORITIES)[number] {
   return (TASK_PRIORITIES as readonly string[]).includes(priority);
 }

@@ -3,10 +3,7 @@
  * In-memory implementation for testing
  * @see IFC-157: Notification service MVP
  */
-import {
-  NotificationPreference,
-  NotificationPreferenceRepository,
-} from '@intelliflow/domain';
+import { NotificationPreference, NotificationPreferenceRepository } from '@intelliflow/domain';
 
 export class InMemoryNotificationPreferenceRepository implements NotificationPreferenceRepository {
   private preferences: Map<string, NotificationPreference> = new Map();
@@ -20,18 +17,12 @@ export class InMemoryNotificationPreferenceRepository implements NotificationPre
     this.preferences.set(key, preference);
   }
 
-  async findByUserId(
-    tenantId: string,
-    userId: string
-  ): Promise<NotificationPreference | null> {
+  async findByUserId(tenantId: string, userId: string): Promise<NotificationPreference | null> {
     const key = this.makeKey(tenantId, userId);
     return this.preferences.get(key) ?? null;
   }
 
-  async findOrCreateDefault(
-    tenantId: string,
-    userId: string
-  ): Promise<NotificationPreference> {
+  async findOrCreateDefault(tenantId: string, userId: string): Promise<NotificationPreference> {
     const existing = await this.findByUserId(tenantId, userId);
     if (existing) {
       return existing;
@@ -52,10 +43,7 @@ export class InMemoryNotificationPreferenceRepository implements NotificationPre
     return this.preferences.has(key);
   }
 
-  async findUsersWithChannelEnabled(
-    tenantId: string,
-    channel: string
-  ): Promise<string[]> {
+  async findUsersWithChannelEnabled(tenantId: string, channel: string): Promise<string[]> {
     const result: string[] = [];
     for (const pref of this.preferences.values()) {
       if (pref.tenantId !== tenantId) continue;

@@ -90,32 +90,42 @@ function isFullTask(task: Task | MinimalTask): task is Task {
   return 'section' in task && 'owner' in task && 'dod' in task;
 }
 
-export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = true, allTasks: _allTasks }: TaskModalProps) {
+export default function TaskModal({
+  task,
+  onClose,
+  onNavigateToTask,
+  isOpen = true,
+  allTasks: _allTasks,
+}: TaskModalProps) {
   const taskId = getTaskId(task);
 
   // Full task data (fetched from API if not provided)
   const [fullTask, setFullTask] = useState<FullTaskData | null>(
-    isFullTask(task) ? {
-      id: task.id,
-      section: task.section,
-      description: task.description,
-      owner: task.owner,
-      dependencies: task.dependencies,
-      cleanDependencies: task.cleanDependencies || [],
-      prerequisites: task.prerequisites,
-      dod: task.dod,
-      status: task.status,
-      kpis: task.kpis,
-      sprint: task.sprint,
-      artifacts: task.artifacts,
-      validation: task.validation,
-    } : null
+    isFullTask(task)
+      ? {
+          id: task.id,
+          section: task.section,
+          description: task.description,
+          owner: task.owner,
+          dependencies: task.dependencies,
+          cleanDependencies: task.cleanDependencies || [],
+          prerequisites: task.prerequisites,
+          dod: task.dod,
+          status: task.status,
+          kpis: task.kpis,
+          sprint: task.sprint,
+          artifacts: task.artifacts,
+          validation: task.validation,
+        }
+      : null
   );
   const [loadingTask, setLoadingTask] = useState(!isFullTask(task));
 
   const [contextData, setContextData] = useState<ContextPackData | null>(null);
   const [loadingContext, setLoadingContext] = useState(false);
-  const [activeTab, setActiveTab] = useState<'details' | 'contract' | 'context' | 'validation' | 'schedule'>('details');
+  const [activeTab, setActiveTab] = useState<
+    'details' | 'contract' | 'context' | 'validation' | 'schedule'
+  >('details');
   const [planStatus, setPlanStatus] = useState<PlanStatus | null>(null);
   const [loadingPlanStatus, setLoadingPlanStatus] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -155,21 +165,25 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
   }, [task, taskId, isOpen]);
 
   // Use fullTask data or fall back to provided task data
-  const displayTask = fullTask || (isFullTask(task) ? {
-    id: task.id,
-    section: task.section,
-    description: task.description,
-    owner: task.owner,
-    dependencies: task.dependencies,
-    cleanDependencies: task.cleanDependencies || [],
-    prerequisites: task.prerequisites,
-    dod: task.dod,
-    status: task.status,
-    kpis: task.kpis,
-    sprint: task.sprint,
-    artifacts: task.artifacts,
-    validation: task.validation,
-  } : null);
+  const displayTask =
+    fullTask ||
+    (isFullTask(task)
+      ? {
+          id: task.id,
+          section: task.section,
+          description: task.description,
+          owner: task.owner,
+          dependencies: task.dependencies,
+          cleanDependencies: task.cleanDependencies || [],
+          prerequisites: task.prerequisites,
+          dod: task.dod,
+          status: task.status,
+          kpis: task.kpis,
+          sprint: task.sprint,
+          artifacts: task.artifacts,
+          validation: task.validation,
+        }
+      : null);
 
   // Check if task has contract tags (safely handle missing data)
   const hasPrereqTags = displayTask ? hasContractTags(displayTask.prerequisites) : false;
@@ -201,7 +215,13 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
 
   // Load validation summary when validation tab is selected
   useEffect(() => {
-    if (activeTab === 'validation' && !validationSummary && !loadingValidation && taskId && isOpen) {
+    if (
+      activeTab === 'validation' &&
+      !validationSummary &&
+      !loadingValidation &&
+      taskId &&
+      isOpen
+    ) {
       setLoadingValidation(true);
       fetch(`/api/tasks/validation-summary/${taskId}`)
         .then((res) => res.json())
@@ -352,7 +372,8 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                   displayTask.status === 'Completed' && 'bg-green-100 text-green-800',
                   displayTask.status === 'In Progress' && 'bg-blue-100 text-blue-800',
                   displayTask.status === 'Blocked' && 'bg-red-100 text-red-800',
-                  !['Completed', 'In Progress', 'Blocked'].includes(displayTask.status) && 'bg-gray-100 text-gray-800'
+                  !['Completed', 'In Progress', 'Blocked'].includes(displayTask.status) &&
+                    'bg-gray-100 text-gray-800'
                 )}
               >
                 {displayTask.status}
@@ -473,7 +494,8 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                           displayTask.status === 'Completed' && 'bg-green-100 text-green-800',
                           displayTask.status === 'In Progress' && 'bg-blue-100 text-blue-800',
                           displayTask.status === 'Blocked' && 'bg-red-100 text-red-800',
-                          !['Completed', 'In Progress', 'Blocked'].includes(displayTask.status) && 'bg-gray-100 text-gray-800'
+                          !['Completed', 'In Progress', 'Blocked'].includes(displayTask.status) &&
+                            'bg-gray-100 text-gray-800'
                         )}
                       >
                         {displayTask.status}
@@ -523,13 +545,20 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                             <Icon
                               name="chevron_right"
                               size="sm"
-                              className={clsx('text-gray-400', onNavigateToTask && 'group-hover:text-blue-500')}
+                              className={clsx(
+                                'text-gray-400',
+                                onNavigateToTask && 'group-hover:text-blue-500'
+                              )}
                             />
                             <span className="font-mono text-sm text-blue-700">{dep}</span>
                             {onNavigateToTask && (
                               <>
                                 <span className="text-xs text-gray-400 ml-auto">Click to view</span>
-                                <Icon name="open_in_new" size="xs" className="text-gray-400 group-hover:text-blue-500" />
+                                <Icon
+                                  name="open_in_new"
+                                  size="xs"
+                                  className="text-gray-400 group-hover:text-blue-500"
+                                />
                               </>
                             )}
                           </button>
@@ -587,9 +616,7 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                   )}
                 </>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  Unable to load task details
-                </div>
+                <div className="text-center py-8 text-gray-500">Unable to load task details</div>
               )}
             </div>
           )}
@@ -708,9 +735,7 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                   </div>
                 </>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  Unable to load task details
-                </div>
+                <div className="text-center py-8 text-gray-500">Unable to load task details</div>
               )}
             </div>
           )}
@@ -793,7 +818,8 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                         <div>
                           <h4 className="text-sm font-semibold text-red-800">Critical Path Task</h4>
                           <p className="text-sm text-red-600">
-                            This task is on the critical path. Any delay will impact the sprint completion date.
+                            This task is on the critical path. Any delay will impact the sprint
+                            completion date.
                           </p>
                         </div>
                       </div>
@@ -806,14 +832,19 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                     <div className="bg-gray-50 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-gray-700">Percent Complete</span>
-                        <span className="text-lg font-bold text-gray-900">{scheduleData.percentComplete}%</span>
+                        <span className="text-lg font-bold text-gray-900">
+                          {scheduleData.percentComplete}%
+                        </span>
                       </div>
                       <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
                         <div
                           className={clsx(
                             'h-full rounded-full transition-all',
-                            scheduleData.percentComplete >= 100 ? 'bg-green-500' :
-                            scheduleData.isCritical ? 'bg-red-500' : 'bg-blue-500'
+                            scheduleData.percentComplete >= 100
+                              ? 'bg-green-500'
+                              : scheduleData.isCritical
+                                ? 'bg-red-500'
+                                : 'bg-blue-500'
                           )}
                           style={{ width: `${Math.min(100, scheduleData.percentComplete)}%` }}
                         />
@@ -823,7 +854,9 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
 
                   {/* Duration & Estimate */}
                   <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-3">Duration Estimate (PERT)</h3>
+                    <h3 className="text-sm font-medium text-gray-500 mb-3">
+                      Duration Estimate (PERT)
+                    </h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {scheduleData.estimate ? (
                         <>
@@ -848,7 +881,7 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                           <div className="bg-purple-50 rounded-lg p-3 text-center border border-purple-200">
                             <div className="text-xs text-purple-600 mb-1">Expected</div>
                             <div className="text-lg font-bold text-purple-700">
-                              {Math.round(scheduleData.expectedDuration / 60 * 10) / 10}h
+                              {Math.round((scheduleData.expectedDuration / 60) * 10) / 10}h
                             </div>
                           </div>
                         </>
@@ -856,9 +889,11 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                         <div className="col-span-4 bg-gray-50 rounded-lg p-3 text-center border border-gray-200">
                           <div className="text-xs text-gray-600 mb-1">Expected Duration</div>
                           <div className="text-lg font-bold text-gray-700">
-                            {Math.round(scheduleData.expectedDuration / 60 * 10) / 10}h
+                            {Math.round((scheduleData.expectedDuration / 60) * 10) / 10}h
                           </div>
-                          <div className="text-xs text-gray-400 mt-1">No three-point estimate provided</div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            No three-point estimate provided
+                          </div>
                         </div>
                       )}
                     </div>
@@ -869,7 +904,9 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                     <h3 className="text-sm font-medium text-gray-500 mb-3">Calculated Schedule</h3>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="text-xs font-medium text-gray-500 mb-3 uppercase">Early Dates (Forward Pass)</h4>
+                        <h4 className="text-xs font-medium text-gray-500 mb-3 uppercase">
+                          Early Dates (Forward Pass)
+                        </h4>
                         <div className="space-y-2">
                           <div className="flex justify-between">
                             <span className="text-sm text-gray-600">Early Start</span>
@@ -886,7 +923,9 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                         </div>
                       </div>
                       <div className="bg-gray-50 rounded-lg p-4">
-                        <h4 className="text-xs font-medium text-gray-500 mb-3 uppercase">Late Dates (Backward Pass)</h4>
+                        <h4 className="text-xs font-medium text-gray-500 mb-3 uppercase">
+                          Late Dates (Backward Pass)
+                        </h4>
                         <div className="space-y-2">
                           <div className="flex justify-between">
                             <span className="text-sm text-gray-600">Late Start</span>
@@ -909,25 +948,33 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-3">Float / Slack</h3>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className={clsx(
-                        'rounded-lg p-4 border',
-                        scheduleData.totalFloat <= 0 ? 'bg-red-50 border-red-200' :
-                        scheduleData.totalFloat < 60 ? 'bg-amber-50 border-amber-200' :
-                        'bg-green-50 border-green-200'
-                      )}>
+                      <div
+                        className={clsx(
+                          'rounded-lg p-4 border',
+                          scheduleData.totalFloat <= 0
+                            ? 'bg-red-50 border-red-200'
+                            : scheduleData.totalFloat < 60
+                              ? 'bg-amber-50 border-amber-200'
+                              : 'bg-green-50 border-green-200'
+                        )}
+                      >
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="text-xs text-gray-500 mb-1">Total Float</div>
-                            <div className={clsx(
-                              'text-2xl font-bold',
-                              scheduleData.totalFloat <= 0 ? 'text-red-700' :
-                              scheduleData.totalFloat < 60 ? 'text-amber-700' :
-                              'text-green-700'
-                            )}>
+                            <div
+                              className={clsx(
+                                'text-2xl font-bold',
+                                scheduleData.totalFloat <= 0
+                                  ? 'text-red-700'
+                                  : scheduleData.totalFloat < 60
+                                    ? 'text-amber-700'
+                                    : 'text-green-700'
+                              )}
+                            >
                               {scheduleData.totalFloat} min
                             </div>
                             <div className="text-xs text-gray-400">
-                              {Math.round(scheduleData.totalFloat / 60 * 10) / 10} hours
+                              {Math.round((scheduleData.totalFloat / 60) * 10) / 10} hours
                             </div>
                           </div>
                           {scheduleData.totalFloat <= 0 && (
@@ -941,12 +988,13 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                           {scheduleData.freeFloat} min
                         </div>
                         <div className="text-xs text-gray-400">
-                          {Math.round(scheduleData.freeFloat / 60 * 10) / 10} hours
+                          {Math.round((scheduleData.freeFloat / 60) * 10) / 10} hours
                         </div>
                       </div>
                     </div>
                     <p className="text-xs text-gray-400 mt-2">
-                      Total Float = Late Start - Early Start. Tasks with zero float are on the critical path.
+                      Total Float = Late Start - Early Start. Tasks with zero float are on the
+                      critical path.
                     </p>
                   </div>
 
@@ -957,13 +1005,16 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                         <Icon name="info" size="sm" className="text-gray-400" />
                         <span className="text-sm text-gray-600">Task Status</span>
                       </div>
-                      <span className={clsx(
-                        'px-3 py-1 text-sm font-medium rounded-full',
-                        scheduleData.status === 'Completed' && 'bg-green-100 text-green-800',
-                        scheduleData.status === 'In Progress' && 'bg-blue-100 text-blue-800',
-                        scheduleData.status === 'Blocked' && 'bg-red-100 text-red-800',
-                        !['Completed', 'In Progress', 'Blocked'].includes(scheduleData.status) && 'bg-gray-100 text-gray-800'
-                      )}>
+                      <span
+                        className={clsx(
+                          'px-3 py-1 text-sm font-medium rounded-full',
+                          scheduleData.status === 'Completed' && 'bg-green-100 text-green-800',
+                          scheduleData.status === 'In Progress' && 'bg-blue-100 text-blue-800',
+                          scheduleData.status === 'Blocked' && 'bg-red-100 text-red-800',
+                          !['Completed', 'In Progress', 'Blocked'].includes(scheduleData.status) &&
+                            'bg-gray-100 text-gray-800'
+                        )}
+                      >
                         {scheduleData.status}
                       </span>
                     </div>
@@ -974,8 +1025,10 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                   <Icon name="calendar_today" size="xl" className="text-gray-300 mx-auto mb-3" />
                   <p className="text-gray-500">No schedule data available for this task.</p>
                   <p className="text-sm text-gray-400 mt-2">
-                    Schedule data is calculated from Sprint_plan.csv columns:<br/>
-                    Estimate (O/M/P), Planned Start, Planned Finish, Percent Complete, Dependency Types
+                    Schedule data is calculated from Sprint_plan.csv columns:
+                    <br />
+                    Estimate (O/M/P), Planned Start, Planned Finish, Percent Complete, Dependency
+                    Types
                   </p>
                 </div>
               )}
@@ -1045,12 +1098,18 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                       <h3 className="text-sm font-medium text-gray-500 mb-3">Coverage Metrics</h3>
                       <div className="space-y-2">
                         {(['lines', 'branches', 'functions'] as const).map((metric) => {
-                          const data = validationSummary.coverage?.[metric as keyof CoverageMetrics];
+                          const data =
+                            validationSummary.coverage?.[metric as keyof CoverageMetrics];
                           if (!data || typeof data !== 'object' || !('pct' in data)) return null;
-                          const coverageData = data as { pct: number; met: boolean };
+                          const coverageData = {
+                            pct: Number(data.pct) || 0,
+                            met: Boolean((data as Record<string, unknown>).met),
+                          };
                           return (
                             <div key={metric} className="flex items-center gap-3">
-                              <span className="text-xs text-gray-500 w-20 capitalize">{metric}</span>
+                              <span className="text-xs text-gray-500 w-20 capitalize">
+                                {metric}
+                              </span>
                               <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
                                 <div
                                   className={clsx(
@@ -1227,7 +1286,11 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                                   </td>
                                   <td className="py-2 text-center">
                                     {kpi.met ? (
-                                      <Icon name="check_circle" size="sm" className="text-green-500" />
+                                      <Icon
+                                        name="check_circle"
+                                        size="sm"
+                                        className="text-green-500"
+                                      />
                                     ) : (
                                       <Icon name="cancel" size="sm" className="text-red-500" />
                                     )}
@@ -1279,7 +1342,11 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                               )}
                             >
                               {item.met ? (
-                                <Icon name="check_circle" size="sm" className="text-green-500 mt-0.5" />
+                                <Icon
+                                  name="check_circle"
+                                  size="sm"
+                                  className="text-green-500 mt-0.5"
+                                />
                               ) : (
                                 <Icon name="cancel" size="sm" className="text-red-500 mt-0.5" />
                               )}
@@ -1327,14 +1394,16 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                               {validationSummary.spec.sections &&
                                 validationSummary.spec.sections.length > 0 && (
                                   <div className="flex flex-wrap gap-1">
-                                    {validationSummary.spec.sections.slice(0, 5).map((section, idx) => (
-                                      <span
-                                        key={idx}
-                                        className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs"
-                                      >
-                                        {section}
-                                      </span>
-                                    ))}
+                                    {validationSummary.spec.sections
+                                      .slice(0, 5)
+                                      .map((section, idx) => (
+                                        <span
+                                          key={idx}
+                                          className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs"
+                                        >
+                                          {section}
+                                        </span>
+                                      ))}
                                     {validationSummary.spec.sections.length > 5 && (
                                       <span className="text-xs text-gray-400">
                                         +{validationSummary.spec.sections.length - 5} more
@@ -1380,14 +1449,16 @@ export default function TaskModal({ task, onClose, onNavigateToTask, isOpen = tr
                               {validationSummary.plan.sections &&
                                 validationSummary.plan.sections.length > 0 && (
                                   <div className="flex flex-wrap gap-1">
-                                    {validationSummary.plan.sections.slice(0, 5).map((section, idx) => (
-                                      <span
-                                        key={idx}
-                                        className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs"
-                                      >
-                                        {section}
-                                      </span>
-                                    ))}
+                                    {validationSummary.plan.sections
+                                      .slice(0, 5)
+                                      .map((section, idx) => (
+                                        <span
+                                          key={idx}
+                                          className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs"
+                                        >
+                                          {section}
+                                        </span>
+                                      ))}
                                     {validationSummary.plan.sections.length > 5 && (
                                       <span className="text-xs text-gray-400">
                                         +{validationSummary.plan.sections.length - 5} more

@@ -243,12 +243,7 @@ describe('StatusBadge', () => {
     it('should have base badge styles', () => {
       render(<StatusBadge status="NEW" type="lead" />);
       const badge = screen.getByText('New').closest('span');
-      expect(badge).toHaveClass(
-        'inline-flex',
-        'items-center',
-        'rounded-full',
-        'font-medium'
-      );
+      expect(badge).toHaveClass('inline-flex', 'items-center', 'rounded-full', 'font-medium');
     });
 
     it('should accept custom className', () => {

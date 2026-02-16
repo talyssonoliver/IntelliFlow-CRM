@@ -1,9 +1,5 @@
 import { Result, DomainError } from '@intelliflow/domain';
-import {
-  AIServicePort,
-  LeadScoringInput,
-  LeadScoringResult,
-} from '@intelliflow/application';
+import { AIServicePort, LeadScoringInput, LeadScoringResult } from '@intelliflow/application';
 import type {
   AuditLogPort,
   AISecurityEventInput,
@@ -129,7 +125,9 @@ const defaultMetrics: MetricsTracker = {
  * Wraps any AIServicePort with automatic security and fairness checks
  */
 export class GuardrailsAIService implements AIServicePort {
-  private readonly config: Required<Omit<GuardrailsConfig, 'modelId' | 'modelVersion' | 'jurisdiction'>> & {
+  private readonly config: Required<
+    Omit<GuardrailsConfig, 'modelId' | 'modelVersion' | 'jurisdiction'>
+  > & {
     modelId?: string;
     modelVersion?: string;
     jurisdiction: 'EU' | 'UK' | 'US' | 'GLOBAL';
@@ -333,26 +331,29 @@ export class GuardrailsAIService implements AIServicePort {
   /**
    * Build description for security event
    */
-  private buildDescription(eventType: AISecurityEventType, details: Record<string, unknown>): string {
+  private buildDescription(
+    eventType: AISecurityEventType,
+    details: Record<string, unknown>
+  ): string {
     const baseDescriptions: Record<AISecurityEventType, string> = {
-      'AI_GUARDRAIL_TRIGGERED': 'AI guardrail was triggered during processing',
-      'AI_GUARDRAIL_BYPASSED': 'AI guardrail was bypassed',
-      'AI_GUARDRAIL_TIMEOUT': 'AI guardrail processing timed out',
-      'AI_PROMPT_INJECTION_DETECTED': 'Potential prompt injection attempt detected',
-      'AI_PII_EXPOSURE_BLOCKED': 'PII exposure was blocked in AI output',
-      'AI_TOXIC_CONTENT_BLOCKED': 'Toxic content was blocked in AI output',
-      'AI_HALLUCINATION_DETECTED': 'AI hallucination detected in output',
-      'AI_TOKEN_LIMIT_EXCEEDED': 'AI token limit was exceeded',
-      'AI_COST_THRESHOLD_BREACH': 'AI cost threshold was breached',
-      'AI_RATE_LIMIT_TRIGGERED': 'AI rate limit was triggered',
-      'AI_LOW_CONFIDENCE_OVERRIDE': 'Low confidence AI output was overridden',
-      'AI_CHAIN_FAILURE': 'AI chain processing failed',
-      'AI_OUTPUT_VALIDATION_FAILED': 'AI output validation failed',
-      'AI_MODEL_VERSION_MISMATCH': 'AI model version mismatch detected',
-      'AI_CONSENT_VALIDATION_FAILED': 'AI consent validation failed',
-      'AI_DATA_RETENTION_VIOLATION': 'AI data retention policy was violated',
-      'AI_CROSS_TENANT_ACCESS_ATTEMPT': 'Cross-tenant access attempt detected',
-      'AI_BIAS_THRESHOLD_EXCEEDED': 'AI bias threshold was exceeded',
+      AI_GUARDRAIL_TRIGGERED: 'AI guardrail was triggered during processing',
+      AI_GUARDRAIL_BYPASSED: 'AI guardrail was bypassed',
+      AI_GUARDRAIL_TIMEOUT: 'AI guardrail processing timed out',
+      AI_PROMPT_INJECTION_DETECTED: 'Potential prompt injection attempt detected',
+      AI_PII_EXPOSURE_BLOCKED: 'PII exposure was blocked in AI output',
+      AI_TOXIC_CONTENT_BLOCKED: 'Toxic content was blocked in AI output',
+      AI_HALLUCINATION_DETECTED: 'AI hallucination detected in output',
+      AI_TOKEN_LIMIT_EXCEEDED: 'AI token limit was exceeded',
+      AI_COST_THRESHOLD_BREACH: 'AI cost threshold was breached',
+      AI_RATE_LIMIT_TRIGGERED: 'AI rate limit was triggered',
+      AI_LOW_CONFIDENCE_OVERRIDE: 'Low confidence AI output was overridden',
+      AI_CHAIN_FAILURE: 'AI chain processing failed',
+      AI_OUTPUT_VALIDATION_FAILED: 'AI output validation failed',
+      AI_MODEL_VERSION_MISMATCH: 'AI model version mismatch detected',
+      AI_CONSENT_VALIDATION_FAILED: 'AI consent validation failed',
+      AI_DATA_RETENTION_VIOLATION: 'AI data retention policy was violated',
+      AI_CROSS_TENANT_ACCESS_ATTEMPT: 'Cross-tenant access attempt detected',
+      AI_BIAS_THRESHOLD_EXCEEDED: 'AI bias threshold was exceeded',
     };
 
     const baseDescription = baseDescriptions[eventType] ?? 'AI security event occurred';
@@ -378,9 +379,7 @@ export class GuardrailsAIService implements AIServicePort {
     if (!this.config.enableLogging) return;
 
     // Get severity from domain constants
-    const severity = isAISecurityEventType(eventType)
-      ? AI_EVENT_SEVERITY_MAP[eventType]
-      : 'MEDIUM';
+    const severity = isAISecurityEventType(eventType) ? AI_EVENT_SEVERITY_MAP[eventType] : 'MEDIUM';
 
     // Build the event input for AuditLogPort
     const event: AISecurityEventInput = {

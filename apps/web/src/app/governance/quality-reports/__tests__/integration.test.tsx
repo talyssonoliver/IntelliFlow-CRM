@@ -59,14 +59,11 @@ const handlers = [
       });
     }
 
-    return HttpResponse.json(
-      { success: false, error: 'Unknown action' },
-      { status: 400 }
-    );
+    return HttpResponse.json({ success: false, error: 'Unknown action' }, { status: 400 });
   }),
 
   http.post('/api/quality-reports/test-run', async ({ request }) => {
-    const body = await request.json() as { scope?: string; coverage?: boolean };
+    const body = (await request.json()) as { scope?: string; coverage?: boolean };
     const runId = `test-mock-${Date.now()}`;
     const scope = body.scope ?? 'all';
     const withCoverage = body.coverage ?? false;
@@ -151,7 +148,9 @@ class MockEventSource {
 
   addEventListener() {}
   removeEventListener() {}
-  dispatchEvent() { return true; }
+  dispatchEvent() {
+    return true;
+  }
 }
 
 (global as Record<string, unknown>).EventSource = MockEventSource;
@@ -188,7 +187,9 @@ describe('QualityReportsPage', () => {
 
       expect(screen.getByRole('heading', { name: 'Quality Reports' })).toBeInTheDocument();
       expect(
-        screen.getByText('CI-generated quality reports for Lighthouse, test coverage, and performance')
+        screen.getByText(
+          'CI-generated quality reports for Lighthouse, test coverage, and performance'
+        )
       ).toBeInTheDocument();
     });
 
@@ -235,10 +236,7 @@ describe('QualityReportsPage', () => {
       // Override handler to return error
       server.use(
         http.get('/api/quality-reports', () => {
-          return HttpResponse.json(
-            { success: false, error: 'Server error' },
-            { status: 500 }
-          );
+          return HttpResponse.json({ success: false, error: 'Server error' }, { status: 500 });
         })
       );
 

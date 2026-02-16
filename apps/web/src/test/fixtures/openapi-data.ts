@@ -115,7 +115,10 @@ export const mockOpenAPISpec = {
             schema: {
               type: 'object',
               properties: {
-                error: { type: 'object', properties: { message: { type: 'string' }, code: { type: 'string' } } },
+                error: {
+                  type: 'object',
+                  properties: { message: { type: 'string' }, code: { type: 'string' } },
+                },
               },
             },
           },
@@ -128,7 +131,10 @@ export const mockOpenAPISpec = {
             schema: {
               type: 'object',
               properties: {
-                error: { type: 'object', properties: { message: { type: 'string' }, code: { type: 'string' } } },
+                error: {
+                  type: 'object',
+                  properties: { message: { type: 'string' }, code: { type: 'string' } },
+                },
               },
             },
           },
@@ -141,7 +147,10 @@ export const mockOpenAPISpec = {
             schema: {
               type: 'object',
               properties: {
-                error: { type: 'object', properties: { message: { type: 'string' }, code: { type: 'string' } } },
+                error: {
+                  type: 'object',
+                  properties: { message: { type: 'string' }, code: { type: 'string' } },
+                },
               },
             },
           },
@@ -154,7 +163,10 @@ export const mockOpenAPISpec = {
             schema: {
               type: 'object',
               properties: {
-                error: { type: 'object', properties: { message: { type: 'string' }, code: { type: 'string' } } },
+                error: {
+                  type: 'object',
+                  properties: { message: { type: 'string' }, code: { type: 'string' } },
+                },
               },
             },
           },
@@ -167,7 +179,10 @@ export const mockOpenAPISpec = {
             schema: {
               type: 'object',
               properties: {
-                error: { type: 'object', properties: { message: { type: 'string' }, code: { type: 'string' } } },
+                error: {
+                  type: 'object',
+                  properties: { message: { type: 'string' }, code: { type: 'string' } },
+                },
               },
             },
           },
@@ -180,7 +195,10 @@ export const mockOpenAPISpec = {
             schema: {
               type: 'object',
               properties: {
-                error: { type: 'object', properties: { message: { type: 'string' }, code: { type: 'string' } } },
+                error: {
+                  type: 'object',
+                  properties: { message: { type: 'string' }, code: { type: 'string' } },
+                },
               },
             },
           },

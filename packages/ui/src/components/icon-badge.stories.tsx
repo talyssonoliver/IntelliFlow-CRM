@@ -197,8 +197,18 @@ export const InListContext: Story = {
     <div className="max-w-md space-y-2">
       {[
         { icon: 'person', name: 'John Doe', role: 'Sales Manager', variant: 'primary' as const },
-        { icon: 'business', name: 'Acme Corp', role: 'Enterprise Client', variant: 'info' as const },
-        { icon: 'task_alt', name: 'Follow-up Call', role: 'Due Today', variant: 'warning' as const },
+        {
+          icon: 'business',
+          name: 'Acme Corp',
+          role: 'Enterprise Client',
+          variant: 'info' as const,
+        },
+        {
+          icon: 'task_alt',
+          name: 'Follow-up Call',
+          role: 'Due Today',
+          variant: 'warning' as const,
+        },
         { icon: 'paid', name: 'Invoice #1234', role: 'Paid', variant: 'success' as const },
       ].map((item) => (
         <div
@@ -224,9 +234,7 @@ export const CombinedWithText: Story = {
       <IconBadge icon="rocket_launch" variant="primary" size="lg" />
       <div>
         <h3 className="font-semibold">Get Started</h3>
-        <p className="text-sm text-muted-foreground">
-          Launch your first campaign in minutes
-        </p>
+        <p className="text-sm text-muted-foreground">Launch your first campaign in minutes</p>
       </div>
     </div>
   ),

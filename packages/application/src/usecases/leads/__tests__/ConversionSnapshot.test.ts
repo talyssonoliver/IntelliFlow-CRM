@@ -13,17 +13,19 @@ import { ConversionSnapshot } from '../ConversionSnapshot';
 import { Lead } from '@intelliflow/domain';
 
 describe('ConversionSnapshot', () => {
-  const createTestLead = (overrides: Partial<{
-    email: string;
-    firstName: string;
-    lastName: string;
-    company: string;
-    title: string;
-    phone: string;
-    source: 'WEBSITE' | 'REFERRAL' | 'SOCIAL' | 'EMAIL' | 'COLD_CALL' | 'EVENT' | 'OTHER';
-    ownerId: string;
-    tenantId: string;
-  }> = {}) => {
+  const createTestLead = (
+    overrides: Partial<{
+      email: string;
+      firstName: string;
+      lastName: string;
+      company: string;
+      title: string;
+      phone: string;
+      source: 'WEBSITE' | 'REFERRAL' | 'SOCIAL' | 'EMAIL' | 'COLD_CALL' | 'EVENT' | 'OTHER';
+      ownerId: string;
+      tenantId: string;
+    }> = {}
+  ) => {
     const result = Lead.create({
       email: overrides.email ?? 'test@example.com',
       firstName: overrides.firstName ?? 'John',
@@ -202,7 +204,15 @@ describe('ConversionSnapshot', () => {
 
   describe('edge cases', () => {
     it('should handle all lead sources', () => {
-      const sources = ['WEBSITE', 'REFERRAL', 'SOCIAL', 'EMAIL', 'COLD_CALL', 'EVENT', 'OTHER'] as const;
+      const sources = [
+        'WEBSITE',
+        'REFERRAL',
+        'SOCIAL',
+        'EMAIL',
+        'COLD_CALL',
+        'EVENT',
+        'OTHER',
+      ] as const;
 
       for (const source of sources) {
         const lead = createTestLead({ source, email: `${source.toLowerCase()}@example.com` });

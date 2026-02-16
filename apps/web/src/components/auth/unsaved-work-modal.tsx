@@ -98,13 +98,13 @@ export function UnsavedWorkModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent
-        className="sm:max-w-[425px]"
-        aria-describedby="unsaved-work-description"
-      >
+      <DialogContent className="sm:max-w-[425px]" aria-describedby="unsaved-work-description">
         <DialogHeader>
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined h-5 w-5 text-amber-500 text-xl" aria-hidden="true">
+            <span
+              className="material-symbols-outlined h-5 w-5 text-amber-500 text-xl"
+              aria-hidden="true"
+            >
               warning
             </span>
             <DialogTitle>Unsaved Changes</DialogTitle>

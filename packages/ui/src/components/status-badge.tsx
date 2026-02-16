@@ -15,9 +15,12 @@ const statusBadgeVariants = cva(
       variant: {
         default: 'border-transparent bg-primary/10 text-primary',
         muted: 'border-transparent bg-muted text-muted-foreground',
-        success: 'border-transparent bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400',
-        warning: 'border-transparent bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400',
-        destructive: 'border-transparent bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400',
+        success:
+          'border-transparent bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-400',
+        warning:
+          'border-transparent bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400',
+        destructive:
+          'border-transparent bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400',
         info: 'border-transparent bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400',
       },
       size: {
@@ -121,7 +124,8 @@ const STATUS_CONFIGS: Record<StatusType, Record<string, StatusConfig>> = {
 // ============================================
 
 export interface StatusBadgeProps
-  extends Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'>,
+  extends
+    Omit<React.HTMLAttributes<HTMLSpanElement>, 'children'>,
     VariantProps<typeof statusBadgeVariants> {
   /** The status value (e.g., 'NEW', 'QUALIFIED', 'DRAFT') */
   status: string;

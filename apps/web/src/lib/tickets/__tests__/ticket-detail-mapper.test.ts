@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { mapTicketListItems, mapTicketToDetailData, mapTicketToListItem } from '../ticket-detail-mapper';
+import {
+  mapTicketListItems,
+  mapTicketToDetailData,
+  mapTicketToListItem,
+} from '../ticket-detail-mapper';
 
 describe('mapTicketToDetailData', () => {
   it('builds a safe detail model when SLA object is missing', () => {
@@ -131,7 +135,8 @@ describe('mapTicketToDetailData', () => {
   });
 
   it('proxies google-hosted avatar URLs through the local avatar endpoint', () => {
-    const googleAvatar = 'https://lh3.googleusercontent.com/a/ACg8ocI1tAWmpksfd_bBrwfQ3yUxXxjaOpMU2BTlBd32zDO0WQIG9IDGWA=s96-c';
+    const googleAvatar =
+      'https://lh3.googleusercontent.com/a/ACg8ocI1tAWmpksfd_bBrwfQ3yUxXxjaOpMU2BTlBd32zDO0WQIG9IDGWA=s96-c';
 
     const listMapped = mapTicketToListItem({
       id: 'ticket-3b',

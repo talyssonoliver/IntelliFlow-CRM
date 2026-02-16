@@ -66,14 +66,9 @@ export class ApproveReviewUseCase {
     private readonly lockTokenSecret: string
   ) {}
 
-  async execute(
-    input: ApproveReviewInput
-  ): Promise<Result<ApproveReviewOutput, DomainError>> {
+  async execute(input: ApproveReviewInput): Promise<Result<ApproveReviewOutput, DomainError>> {
     // 1. Find review with tenant isolation
-    const review = await this.repository.findByIdForUpdate(
-      input.reviewId,
-      input.tenantId
-    );
+    const review = await this.repository.findByIdForUpdate(input.reviewId, input.tenantId);
 
     if (!review) {
       return Result.fail(new ReviewNotFoundError());

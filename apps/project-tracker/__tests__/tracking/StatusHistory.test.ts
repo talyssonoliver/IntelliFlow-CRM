@@ -36,7 +36,9 @@ interface HistoryEntry {
 /**
  * Calculates trend from recent history entries
  */
-function calculateTrend(entries: HistoryEntry[]): { direction: 'up' | 'down' | 'stable'; value: number } | null {
+function calculateTrend(
+  entries: HistoryEntry[]
+): { direction: 'up' | 'down' | 'stable'; value: number } | null {
   if (entries.length < 2) return null;
 
   const totalCompleted = entries
@@ -92,10 +94,14 @@ describe('StatusHistory Component Logic', () => {
   describe('calculateTrend', () => {
     it('returns null when less than 2 entries', () => {
       expect(calculateTrend([])).toBeNull();
-      expect(calculateTrend([{
-        timestamp: '2025-01-05T10:00:00Z',
-        summary: { total: 10, completed: 5, in_progress: 2, blocked: 1, backlog: 2 },
-      }])).toBeNull();
+      expect(
+        calculateTrend([
+          {
+            timestamp: '2025-01-05T10:00:00Z',
+            summary: { total: 10, completed: 5, in_progress: 2, blocked: 1, backlog: 2 },
+          },
+        ])
+      ).toBeNull();
     });
 
     it('returns "up" direction when tasks are being completed', () => {
@@ -152,13 +158,37 @@ describe('StatusHistory Component Logic', () => {
 
     it('only considers last 5 entries for trend calculation', () => {
       const entries: HistoryEntry[] = [
-        { timestamp: '2025-01-05T16:00:00Z', summary: { total: 10, completed: 10, in_progress: 0, blocked: 0, backlog: 0 }, delta: { completed: 1, in_progress: 0, blocked: 0, backlog: -1 } },
-        { timestamp: '2025-01-05T15:00:00Z', summary: { total: 10, completed: 9, in_progress: 0, blocked: 0, backlog: 1 }, delta: { completed: 1, in_progress: 0, blocked: 0, backlog: -1 } },
-        { timestamp: '2025-01-05T14:00:00Z', summary: { total: 10, completed: 8, in_progress: 0, blocked: 0, backlog: 2 }, delta: { completed: 1, in_progress: 0, blocked: 0, backlog: -1 } },
-        { timestamp: '2025-01-05T13:00:00Z', summary: { total: 10, completed: 7, in_progress: 0, blocked: 0, backlog: 3 }, delta: { completed: 1, in_progress: 0, blocked: 0, backlog: -1 } },
-        { timestamp: '2025-01-05T12:00:00Z', summary: { total: 10, completed: 6, in_progress: 0, blocked: 0, backlog: 4 }, delta: { completed: 1, in_progress: 0, blocked: 0, backlog: -1 } },
+        {
+          timestamp: '2025-01-05T16:00:00Z',
+          summary: { total: 10, completed: 10, in_progress: 0, blocked: 0, backlog: 0 },
+          delta: { completed: 1, in_progress: 0, blocked: 0, backlog: -1 },
+        },
+        {
+          timestamp: '2025-01-05T15:00:00Z',
+          summary: { total: 10, completed: 9, in_progress: 0, blocked: 0, backlog: 1 },
+          delta: { completed: 1, in_progress: 0, blocked: 0, backlog: -1 },
+        },
+        {
+          timestamp: '2025-01-05T14:00:00Z',
+          summary: { total: 10, completed: 8, in_progress: 0, blocked: 0, backlog: 2 },
+          delta: { completed: 1, in_progress: 0, blocked: 0, backlog: -1 },
+        },
+        {
+          timestamp: '2025-01-05T13:00:00Z',
+          summary: { total: 10, completed: 7, in_progress: 0, blocked: 0, backlog: 3 },
+          delta: { completed: 1, in_progress: 0, blocked: 0, backlog: -1 },
+        },
+        {
+          timestamp: '2025-01-05T12:00:00Z',
+          summary: { total: 10, completed: 6, in_progress: 0, blocked: 0, backlog: 4 },
+          delta: { completed: 1, in_progress: 0, blocked: 0, backlog: -1 },
+        },
         // This entry should be ignored (beyond 5)
-        { timestamp: '2025-01-05T11:00:00Z', summary: { total: 10, completed: 5, in_progress: 0, blocked: 0, backlog: 5 }, delta: { completed: 100, in_progress: 0, blocked: 0, backlog: -100 } },
+        {
+          timestamp: '2025-01-05T11:00:00Z',
+          summary: { total: 10, completed: 5, in_progress: 0, blocked: 0, backlog: 5 },
+          delta: { completed: 100, in_progress: 0, blocked: 0, backlog: -100 },
+        },
       ];
 
       const trend = calculateTrend(entries);
@@ -267,8 +297,20 @@ describe('StatusHistory Component Logic', () => {
 
   describe('Delta Calculation Logic', () => {
     it('calculates correct deltas between consecutive entries', () => {
-      const older: HistorySummary = { total: 100, completed: 50, in_progress: 20, blocked: 5, backlog: 25 };
-      const newer: HistorySummary = { total: 100, completed: 53, in_progress: 18, blocked: 4, backlog: 25 };
+      const older: HistorySummary = {
+        total: 100,
+        completed: 50,
+        in_progress: 20,
+        blocked: 5,
+        backlog: 25,
+      };
+      const newer: HistorySummary = {
+        total: 100,
+        completed: 53,
+        in_progress: 18,
+        blocked: 4,
+        backlog: 25,
+      };
 
       const delta: HistoryDelta = {
         completed: newer.completed - older.completed,
@@ -284,8 +326,20 @@ describe('StatusHistory Component Logic', () => {
     });
 
     it('handles edge case where total changes', () => {
-      const older: HistorySummary = { total: 100, completed: 50, in_progress: 20, blocked: 5, backlog: 25 };
-      const newer: HistorySummary = { total: 105, completed: 52, in_progress: 22, blocked: 5, backlog: 26 };
+      const older: HistorySummary = {
+        total: 100,
+        completed: 50,
+        in_progress: 20,
+        blocked: 5,
+        backlog: 25,
+      };
+      const newer: HistorySummary = {
+        total: 105,
+        completed: 52,
+        in_progress: 22,
+        blocked: 5,
+        backlog: 26,
+      };
 
       const delta: HistoryDelta = {
         completed: newer.completed - older.completed,
@@ -307,8 +361,11 @@ describe('StatusHistory Component Logic', () => {
       const jsonlContent = `{"timestamp":"2025-01-04T10:00:00Z","summary":{"total":5,"completed":1,"in_progress":1,"blocked":1,"backlog":2}}
 {"timestamp":"2025-01-05T10:00:00Z","summary":{"total":5,"completed":2,"in_progress":0,"blocked":1,"backlog":2}}`;
 
-      const lines = jsonlContent.trim().split('\n').filter(line => line.trim());
-      const entries: HistoryEntry[] = lines.map(line => JSON.parse(line));
+      const lines = jsonlContent
+        .trim()
+        .split('\n')
+        .filter((line) => line.trim());
+      const entries: HistoryEntry[] = lines.map((line) => JSON.parse(line));
 
       expect(entries).toHaveLength(2);
       expect(entries[0].timestamp).toBe('2025-01-04T10:00:00Z');
@@ -319,16 +376,28 @@ describe('StatusHistory Component Logic', () => {
 
     it('handles empty JSONL gracefully', () => {
       const emptyContent = '';
-      const lines = emptyContent.trim().split('\n').filter(line => line.trim());
+      const lines = emptyContent
+        .trim()
+        .split('\n')
+        .filter((line) => line.trim());
 
       expect(lines).toHaveLength(0);
     });
 
     it('reverses entries for newest-first display', () => {
       const entries: HistoryEntry[] = [
-        { timestamp: '2025-01-03T10:00:00Z', summary: { total: 5, completed: 1, in_progress: 1, blocked: 1, backlog: 2 } },
-        { timestamp: '2025-01-04T10:00:00Z', summary: { total: 5, completed: 2, in_progress: 1, blocked: 1, backlog: 1 } },
-        { timestamp: '2025-01-05T10:00:00Z', summary: { total: 5, completed: 3, in_progress: 1, blocked: 0, backlog: 1 } },
+        {
+          timestamp: '2025-01-03T10:00:00Z',
+          summary: { total: 5, completed: 1, in_progress: 1, blocked: 1, backlog: 2 },
+        },
+        {
+          timestamp: '2025-01-04T10:00:00Z',
+          summary: { total: 5, completed: 2, in_progress: 1, blocked: 1, backlog: 1 },
+        },
+        {
+          timestamp: '2025-01-05T10:00:00Z',
+          summary: { total: 5, completed: 3, in_progress: 1, blocked: 0, backlog: 1 },
+        },
       ];
 
       const reversed = [...entries].reverse();

@@ -29,7 +29,12 @@ interface ContextPackStatusProps {
 }
 
 const STATUS_CONFIG = {
-  generated: { icon: 'check_circle', color: 'text-green-600', bg: 'bg-green-50', label: 'Generated' },
+  generated: {
+    icon: 'check_circle',
+    color: 'text-green-600',
+    bg: 'bg-green-50',
+    label: 'Generated',
+  },
   acknowledged: {
     icon: 'check_circle',
     color: 'text-green-600',
@@ -112,7 +117,11 @@ export default function ContextPackStatus({ data, compact = false }: ContextPack
         onClick={() => setExpanded(!expanded)}
       >
         <div className="flex items-center gap-2">
-          <Icon name="inventory_2" size="lg" className={allValid ? 'text-green-600' : 'text-gray-500'} />
+          <Icon
+            name="inventory_2"
+            size="lg"
+            className={allValid ? 'text-green-600' : 'text-gray-500'}
+          />
           <span className="font-medium text-gray-900">Context Verification</span>
           <StatusBadge status={overallStatus} />
         </div>
@@ -251,4 +260,3 @@ function ContextStatusIndicator({
     </div>
   );
 }
-

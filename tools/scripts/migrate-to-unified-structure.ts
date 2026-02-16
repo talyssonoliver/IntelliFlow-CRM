@@ -169,7 +169,10 @@ async function migrateSpecifications(
   // Check nested location: .specify/{TASK-ID}/specifications/{TASK-ID}-spec.md
   const specifyEntries = await readdir(SPECIFY_DIR, { withFileTypes: true });
   for (const entry of specifyEntries) {
-    if (entry.isDirectory() && !['sprints', 'memory', 'context', 'planning', 'specifications'].includes(entry.name)) {
+    if (
+      entry.isDirectory() &&
+      !['sprints', 'memory', 'context', 'planning', 'specifications'].includes(entry.name)
+    ) {
       const taskId = entry.name;
       const sprint = taskSprintMap.get(taskId) ?? 0;
       const taskSpecDir = join(SPECIFY_DIR, taskId, 'specifications');
@@ -212,7 +215,10 @@ async function migratePlans(
   // Check nested location: .specify/{TASK-ID}/planning/{TASK-ID}-plan.md
   const specifyEntries = await readdir(SPECIFY_DIR, { withFileTypes: true });
   for (const entry of specifyEntries) {
-    if (entry.isDirectory() && !['sprints', 'memory', 'context', 'planning', 'specifications'].includes(entry.name)) {
+    if (
+      entry.isDirectory() &&
+      !['sprints', 'memory', 'context', 'planning', 'specifications'].includes(entry.name)
+    ) {
       const taskId = entry.name;
       const sprint = taskSprintMap.get(taskId) ?? 0;
       const taskPlanDir = join(SPECIFY_DIR, taskId, 'planning');
@@ -255,7 +261,10 @@ async function migrateContext(
   // Check nested location: .specify/{TASK-ID}/context/
   const specifyEntries = await readdir(SPECIFY_DIR, { withFileTypes: true });
   for (const entry of specifyEntries) {
-    if (entry.isDirectory() && !['sprints', 'memory', 'context', 'planning', 'specifications'].includes(entry.name)) {
+    if (
+      entry.isDirectory() &&
+      !['sprints', 'memory', 'context', 'planning', 'specifications'].includes(entry.name)
+    ) {
       const taskId = entry.name;
       const sprint = taskSprintMap.get(taskId) ?? 0;
       const taskContextDir = join(SPECIFY_DIR, taskId, 'context');
@@ -292,7 +301,10 @@ async function migrateAttestations(
   // Migrate from .specify/{TASK-ID}/attestations/
   const specifyEntries = await readdir(SPECIFY_DIR, { withFileTypes: true });
   for (const entry of specifyEntries) {
-    if (entry.isDirectory() && !['sprints', 'memory', 'context', 'planning', 'specifications'].includes(entry.name)) {
+    if (
+      entry.isDirectory() &&
+      !['sprints', 'memory', 'context', 'planning', 'specifications'].includes(entry.name)
+    ) {
       const taskId = entry.name;
       const sprint = taskSprintMap.get(taskId) ?? 0;
       const taskAttestDir = join(SPECIFY_DIR, taskId, 'attestations');
@@ -315,7 +327,10 @@ async function migrateEvidence(
   // Migrate from .specify/{TASK-ID}/evidence/
   const specifyEntries = await readdir(SPECIFY_DIR, { withFileTypes: true });
   for (const entry of specifyEntries) {
-    if (entry.isDirectory() && !['sprints', 'memory', 'context', 'planning', 'specifications'].includes(entry.name)) {
+    if (
+      entry.isDirectory() &&
+      !['sprints', 'memory', 'context', 'planning', 'specifications'].includes(entry.name)
+    ) {
       const taskId = entry.name;
       const sprint = taskSprintMap.get(taskId) ?? 0;
       const taskEvidenceDir = join(SPECIFY_DIR, taskId, 'evidence');

@@ -100,12 +100,13 @@ describe('ZepMemoryAdapter', () => {
           const body = options?.body ? JSON.parse(options.body) : {};
           return Promise.resolve({
             ok: true,
-            json: () => Promise.resolve({
-              session_id: body.session_id ?? 'test-session',
-              metadata: body.metadata ?? {},
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            }),
+            json: () =>
+              Promise.resolve({
+                session_id: body.session_id ?? 'test-session',
+                metadata: body.metadata ?? {},
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              }),
           });
         }
         return Promise.resolve({
@@ -174,9 +175,7 @@ describe('ZepMemoryAdapter', () => {
 
       // Add 8 episodes (80% of 10)
       for (let i = 0; i < 8; i++) {
-        await limitedAdapter.addMemory(`session-${i}`, [
-          { role: 'user', content: `Message ${i}` },
-        ]);
+        await limitedAdapter.addMemory(`session-${i}`, [{ role: 'user', content: `Message ${i}` }]);
       }
 
       // Should be at warning threshold
@@ -228,9 +227,7 @@ describe('ZepMemoryAdapter', () => {
 
       // Add 5 episodes to reach warning threshold
       for (let i = 0; i < 5; i++) {
-        await limitedAdapter.addMemory(`session-${i}`, [
-          { role: 'user', content: `Message ${i}` },
-        ]);
+        await limitedAdapter.addMemory(`session-${i}`, [{ role: 'user', content: `Message ${i}` }]);
       }
 
       const budget = await limitedAdapter.getEpisodeBudget();
@@ -252,9 +249,7 @@ describe('ZepMemoryAdapter', () => {
 
       // Add 8 episodes to reach hard limit threshold
       for (let i = 0; i < 8; i++) {
-        await limitedAdapter.addMemory(`session-${i}`, [
-          { role: 'user', content: `Message ${i}` },
-        ]);
+        await limitedAdapter.addMemory(`session-${i}`, [{ role: 'user', content: `Message ${i}` }]);
       }
 
       const budget = await limitedAdapter.getEpisodeBudget();
@@ -295,9 +290,7 @@ describe('ZepMemoryAdapter', () => {
 
       // Fill up to hard limit (4 episodes)
       for (let i = 0; i < 4; i++) {
-        await limitedAdapter.addMemory(`session-${i}`, [
-          { role: 'user', content: `Message ${i}` },
-        ]);
+        await limitedAdapter.addMemory(`session-${i}`, [{ role: 'user', content: `Message ${i}` }]);
       }
 
       // After reaching hard limit, should be using fallback
@@ -326,9 +319,7 @@ describe('ZepMemoryAdapter', () => {
 
       // Fill up to hard limit (4 episodes)
       for (let i = 0; i < 4; i++) {
-        await limitedAdapter.addMemory(`session-${i}`, [
-          { role: 'user', content: `Message ${i}` },
-        ]);
+        await limitedAdapter.addMemory(`session-${i}`, [{ role: 'user', content: `Message ${i}` }]);
       }
 
       // Add to fallback

@@ -1,23 +1,25 @@
 # Legal/Scheduling Domain - Dependency Chain Analysis
 
-**Generated**: 2026-02-03
-**Purpose**: Ensure complete hexagonal architecture implementation with no orphaned tasks
+**Generated**: 2026-02-03 **Purpose**: Ensure complete hexagonal architecture
+implementation with no orphaned tasks
 
 ---
 
 ## Executive Summary
 
-The **Legal/Scheduling** domain covers Case Management, Appointments, Documents, and Timeline features. Backend infrastructure is **100% complete**, but **frontend pages are missing**.
+The **Legal/Scheduling** domain covers Case Management, Appointments, Documents,
+and Timeline features. Backend infrastructure is **100% complete**, but
+**frontend pages are missing**.
 
-| Feature | Domain | Database | Adapter | Router | Frontend | Status |
-|---------|--------|----------|---------|--------|----------|--------|
-| Case/Matter | IFC-136 | IFC-017 | IFC-152 | cases.router | MISSING | ORPHAN |
-| Appointment | IFC-137 | IFC-017 | IFC-138 | appointments.router | MISSING | ORPHAN |
-| Documents | IFC-152 | IFC-017 | IFC-153/154 | documents.router | MISSING | ORPHAN |
-| Timeline | IFC-147 | IFC-017 | IFC-159 | timeline.router | IFC-147* | PARTIAL |
-| Calendar Sync | IFC-138 | IFC-017 | IFC-172 | - | N/A | COMPLETE |
+| Feature       | Domain  | Database | Adapter     | Router              | Frontend  | Status   |
+| ------------- | ------- | -------- | ----------- | ------------------- | --------- | -------- |
+| Case/Matter   | IFC-136 | IFC-017  | IFC-152     | cases.router        | MISSING   | ORPHAN   |
+| Appointment   | IFC-137 | IFC-017  | IFC-138     | appointments.router | MISSING   | ORPHAN   |
+| Documents     | IFC-152 | IFC-017  | IFC-153/154 | documents.router    | MISSING   | ORPHAN   |
+| Timeline      | IFC-147 | IFC-017  | IFC-159     | timeline.router     | IFC-147\* | PARTIAL  |
+| Calendar Sync | IFC-138 | IFC-017  | IFC-172     | -                   | N/A       | COMPLETE |
 
-*IFC-147 creates timeline UI but no formal PG-* task exists
+_IFC-147 creates timeline UI but no formal PG-_ task exists
 
 ---
 
@@ -248,29 +250,30 @@ The **Legal/Scheduling** domain covers Case Management, Appointments, Documents,
 
 ### Frontend Pages (Missing - Backend Complete)
 
-| New Task ID | Feature | Description | Dependencies | Sprint |
-|-------------|---------|-------------|--------------|--------|
-| PG-138 | Cases | Case List & Detail Pages - party management, deadline tracking | cases.router | 7 |
-| PG-139 | Appointments | Appointment Scheduling UI - calendar view, conflict display | appointments.router | 7 |
-| PG-140 | Documents | Document Manager UI - viewer, version history, ACL | documents.router | 8 |
-| PG-141 | Email | Email Compose & History - thread view, attachments | email.router | 8 |
+| New Task ID | Feature      | Description                                                    | Dependencies        | Sprint |
+| ----------- | ------------ | -------------------------------------------------------------- | ------------------- | ------ |
+| PG-138      | Cases        | Case List & Detail Pages - party management, deadline tracking | cases.router        | 7      |
+| PG-139      | Appointments | Appointment Scheduling UI - calendar view, conflict display    | appointments.router | 7      |
+| PG-140      | Documents    | Document Manager UI - viewer, version history, ACL             | documents.router    | 8      |
+| PG-141      | Email        | Email Compose & History - thread view, attachments             | email.router        | 8      |
 
 ---
 
 ## Orphan Status Summary
 
-| Feature | Backend Complete? | Frontend Task? | Action Required |
-|---------|-------------------|----------------|-----------------|
-| Case Management | YES | YES ✅ | PG-138 COMPLETED |
-| Appointments | YES | YES ✅ | PG-139 COMPLETED |
-| Documents | YES | NO | Create PG-140 |
-| Timeline | YES | YES (IFC-147)* | None |
-| Calendar Sync | YES | N/A (settings) | None |
-| Email | YES | NO | Create PG-141 |
+| Feature         | Backend Complete? | Frontend Task?  | Action Required  |
+| --------------- | ----------------- | --------------- | ---------------- |
+| Case Management | YES               | YES ✅          | PG-138 COMPLETED |
+| Appointments    | YES               | YES ✅          | PG-139 COMPLETED |
+| Documents       | YES               | NO              | Create PG-140    |
+| Timeline        | YES               | YES (IFC-147)\* | None             |
+| Calendar Sync   | YES               | N/A (settings)  | None             |
+| Email           | YES               | NO              | Create PG-141    |
 
-*IFC-147 creates timeline UI but should formalize as PG-* for consistency
+_IFC-147 creates timeline UI but should formalize as PG-_ for consistency
 
 **Total New Tasks Required: 4**
+
 - 4 Frontend (PG-138 to PG-141)
 - 0 Backend (all complete)
 
@@ -278,17 +281,18 @@ The **Legal/Scheduling** domain covers Case Management, Appointments, Documents,
 
 ## Backend Infrastructure Status
 
-| Component | Task | Status | Notes |
-|-----------|------|--------|-------|
-| Domain Models | IFC-136, IFC-137, IFC-152 | COMPLETE | All aggregates defined |
-| Database Schema | IFC-017 | COMPLETE | Migrations applied |
-| tRPC Routers | cases, appointments, documents | COMPLETE | All CRUD endpoints |
-| Calendar Sync | IFC-138, IFC-172 | COMPLETE | Google + Microsoft |
-| Email Integration | IFC-144, IFC-173 | COMPLETE | Inbound + Outbound |
-| Document Pipeline | IFC-153, IFC-154 | COMPLETE | Upload, OCR, storage |
-| Search Indexing | IFC-155 | COMPLETE | FTS + embeddings with tenant/case ACL |
-| Notifications | IFC-157, IFC-170, IFC-171 | COMPLETE | All channels |
-| Agent Tools | IFC-139, IFC-156 | COMPLETE | RAG + CRUD tools |
-| Timeline | IFC-147, IFC-159 | COMPLETE | Enriched events |
+| Component         | Task                           | Status   | Notes                                 |
+| ----------------- | ------------------------------ | -------- | ------------------------------------- |
+| Domain Models     | IFC-136, IFC-137, IFC-152      | COMPLETE | All aggregates defined                |
+| Database Schema   | IFC-017                        | COMPLETE | Migrations applied                    |
+| tRPC Routers      | cases, appointments, documents | COMPLETE | All CRUD endpoints                    |
+| Calendar Sync     | IFC-138, IFC-172               | COMPLETE | Google + Microsoft                    |
+| Email Integration | IFC-144, IFC-173               | COMPLETE | Inbound + Outbound                    |
+| Document Pipeline | IFC-153, IFC-154               | COMPLETE | Upload, OCR, storage                  |
+| Search Indexing   | IFC-155                        | COMPLETE | FTS + embeddings with tenant/case ACL |
+| Notifications     | IFC-157, IFC-170, IFC-171      | COMPLETE | All channels                          |
+| Agent Tools       | IFC-139, IFC-156               | COMPLETE | RAG + CRUD tools                      |
+| Timeline          | IFC-147, IFC-159               | COMPLETE | Enriched events                       |
 
-**The Legal/Scheduling domain has strong backend infrastructure (100%) but needs frontend pages to expose functionality to users.**
+**The Legal/Scheduling domain has strong backend infrastructure (100%) but needs
+frontend pages to expose functionality to users.**

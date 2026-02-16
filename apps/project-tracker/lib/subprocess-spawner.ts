@@ -496,10 +496,3 @@ async function validateScripts(): Promise<{
     matop: { exists: existsSync(matopPath), path: matopPath },
   };
 }
-
-
-
-
-
-
-

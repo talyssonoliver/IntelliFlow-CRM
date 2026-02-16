@@ -77,7 +77,10 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
     null
   );
   const [taskPlanStatus, setTaskPlanStatus] = useState<
-    Record<string, { hasSpec: boolean; hasPlan: boolean; specPath?: string | null; planPath?: string | null }>
+    Record<
+      string,
+      { hasSpec: boolean; hasPlan: boolean; specPath?: string | null; planPath?: string | null }
+    >
   >({});
   const [scoredMap, setScoredMap] = useState<Map<string, ScoredTask>>(new Map());
 
@@ -126,7 +129,12 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
             }
           } catch {
             // Default to not planned
-            planStatusMap[taskId] = { hasSpec: false, hasPlan: false, specPath: null, planPath: null };
+            planStatusMap[taskId] = {
+              hasSpec: false,
+              hasPlan: false,
+              specPath: null,
+              planPath: null,
+            };
           }
         });
 
@@ -146,7 +154,12 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
         // Build structures for priority scorer
         const depGraphNodes = new Map<string, DepGraphNode>();
         if (result.nodes) {
-          for (const [id, node] of Object.entries(result.nodes as Record<string, { task_id: string; dependencies: string[]; dependents: string[] }>)) {
+          for (const [id, node] of Object.entries(
+            result.nodes as Record<
+              string,
+              { task_id: string; dependencies: string[]; dependents: string[] }
+            >
+          )) {
             depGraphNodes.set(id, {
               task_id: node.task_id || id,
               dependencies: node.dependencies || [],
@@ -204,7 +217,7 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
           sessionStatuses,
           scheduleTaskMap,
           phaseProgress,
-          currentSprintNum,
+          currentSprintNum
         );
 
         const newMap = new Map<string, ScoredTask>();
@@ -327,7 +340,12 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
         // Update local plan status
         setTaskPlanStatus((prev) => ({
           ...prev,
-          [taskId]: { hasSpec: true, hasPlan: true, specPath: result.specPath, planPath: result.planPath },
+          [taskId]: {
+            hasSpec: true,
+            hasPlan: true,
+            specPath: result.specPath,
+            planPath: result.planPath,
+          },
         }));
 
         // Refresh to update any status changes
@@ -457,7 +475,11 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                   className="w-full flex items-center justify-between p-4 border-2 border-gray-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all group"
                 >
                   <div className="flex items-center gap-3">
-                    <Icon name="play_arrow" size="lg" className="text-gray-500 group-hover:text-blue-600" />
+                    <Icon
+                      name="play_arrow"
+                      size="lg"
+                      className="text-gray-500 group-hover:text-blue-600"
+                    />
                     <div className="text-left">
                       <p className="font-medium text-gray-900">Start Only</p>
                       <p className="text-xs text-gray-500">Mark as In Progress, work manually</p>
@@ -540,8 +562,12 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                 const isNextSprint = sprint === summary.next_sprint;
 
                 // Count bucket distribution for header
-                const nowCount = sprintTasks.filter((t) => scoredMap.get(t.taskId)?.bucket === 'now').length;
-                const nextCount = sprintTasks.filter((t) => scoredMap.get(t.taskId)?.bucket === 'next').length;
+                const nowCount = sprintTasks.filter(
+                  (t) => scoredMap.get(t.taskId)?.bucket === 'now'
+                ).length;
+                const nextCount = sprintTasks.filter(
+                  (t) => scoredMap.get(t.taskId)?.bucket === 'next'
+                ).length;
 
                 return (
                   <div
@@ -575,7 +601,10 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                           <span className="ml-1 text-xs">
                             ({nowCount > 0 && <span className="text-red-600">{nowCount} NOW</span>}
                             {nowCount > 0 && nextCount > 0 && ' \u00b7 '}
-                            {nextCount > 0 && <span className="text-amber-600">{nextCount} NEXT</span>})
+                            {nextCount > 0 && (
+                              <span className="text-amber-600">{nextCount} NEXT</span>
+                            )}
+                            )
                           </span>
                         )}
                       </span>
@@ -607,18 +636,23 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                                       {task.section}
                                     </span>
                                     {/* Priority badge */}
-                                    {scoredMap.has(task.taskId) && (() => {
-                                      const scored = scoredMap.get(task.taskId)!;
-                                      const badgeColor =
-                                        scored.bucket === 'now' ? 'bg-red-100 text-red-700' :
-                                        scored.bucket === 'next' ? 'bg-amber-100 text-amber-700' :
-                                        'bg-gray-100 text-gray-500';
-                                      return (
-                                        <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${badgeColor}`}>
-                                          {scored.bucket.toUpperCase()}
-                                        </span>
-                                      );
-                                    })()}
+                                    {scoredMap.has(task.taskId) &&
+                                      (() => {
+                                        const scored = scoredMap.get(task.taskId)!;
+                                        const badgeColor =
+                                          scored.bucket === 'now'
+                                            ? 'bg-red-100 text-red-700'
+                                            : scored.bucket === 'next'
+                                              ? 'bg-amber-100 text-amber-700'
+                                              : 'bg-gray-100 text-gray-500';
+                                        return (
+                                          <span
+                                            className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${badgeColor}`}
+                                          >
+                                            {scored.bucket.toUpperCase()}
+                                          </span>
+                                        );
+                                      })()}
                                     {status && !isReadyStatus && (
                                       <span className="text-xs px-2 py-0.5 bg-gray-200 text-gray-700 rounded">
                                         {status.replace('_', ' ')}
@@ -647,38 +681,42 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                                   {isReadyStatus ? (
                                     isTaskPlanned(task.taskId) ? (
                                       <>
-                                    <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
-                                      <Icon name="check" size="xs" />
-                                      Planned
-                                    </span>
-                                    <button
-                                      onClick={(e) => copyPath(e, specPath)}
-                                      className="px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 border border-gray-200 text-gray-700 hover:bg-gray-100"
-                                      title={specPath || 'Spec path'}
-                                    >
-                                      <Icon name="content_copy" size="xs" />
-                                      Spec
-                                    </button>
-                                    <button
-                                      onClick={(e) => copyPath(e, planPath)}
-                                      className="px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 border border-gray-200 text-gray-700 hover:bg-gray-100"
-                                      title={planPath || 'Plan path'}
-                                    >
-                                      <Icon name="content_copy" size="xs" />
-                                      Plan
-                                    </button>
-                                    <button
-                                      onClick={(e) => handleStartClick(e, task)}
-                                      disabled={startingTask === task.taskId}
-                                      className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-all ${
-                                        startingTask === task.taskId
+                                        <span className="flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded">
+                                          <Icon name="check" size="xs" />
+                                          Planned
+                                        </span>
+                                        <button
+                                          onClick={(e) => copyPath(e, specPath)}
+                                          className="px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 border border-gray-200 text-gray-700 hover:bg-gray-100"
+                                          title={specPath || 'Spec path'}
+                                        >
+                                          <Icon name="content_copy" size="xs" />
+                                          Spec
+                                        </button>
+                                        <button
+                                          onClick={(e) => copyPath(e, planPath)}
+                                          className="px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 border border-gray-200 text-gray-700 hover:bg-gray-100"
+                                          title={planPath || 'Plan path'}
+                                        >
+                                          <Icon name="content_copy" size="xs" />
+                                          Plan
+                                        </button>
+                                        <button
+                                          onClick={(e) => handleStartClick(e, task)}
+                                          disabled={startingTask === task.taskId}
+                                          className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-all ${
+                                            startingTask === task.taskId
                                               ? 'bg-gray-200 text-gray-500 cursor-wait'
                                               : 'bg-green-600 text-white hover:bg-green-700 shadow-sm hover:shadow'
                                           }`}
                                         >
                                           {startingTask === task.taskId ? (
                                             <>
-                                              <Icon name="progress_activity" size="sm" className="animate-spin" />
+                                              <Icon
+                                                name="progress_activity"
+                                                size="sm"
+                                                className="animate-spin"
+                                              />
                                               <span>Starting...</span>
                                             </>
                                           ) : (
@@ -701,7 +739,11 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                                       >
                                         {planningTask === task.taskId ? (
                                           <>
-                                            <Icon name="progress_activity" size="sm" className="animate-spin" />
+                                            <Icon
+                                              name="progress_activity"
+                                              size="sm"
+                                              className="animate-spin"
+                                            />
                                             <span>Planning...</span>
                                           </>
                                         ) : (
@@ -713,7 +755,9 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                                       </button>
                                     )
                                   ) : (
-                                    <span className="text-xs text-gray-500">Not ready to plan/start</span>
+                                    <span className="text-xs text-gray-500">
+                                      Not ready to plan/start
+                                    </span>
                                   )}
                                 </div>
                               </div>

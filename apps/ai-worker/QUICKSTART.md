@@ -171,7 +171,8 @@ Key environment variables:
 
 ### "OpenAI API key not found"
 
-Set `OPENAI_API_KEY` for OpenAI cloud, or set `OPENAI_BASE_URL` for a local OpenAI-compatible runtime.
+Set `OPENAI_API_KEY` for OpenAI cloud, or set `OPENAI_BASE_URL` for a local
+OpenAI-compatible runtime.
 
 ### "Connection refused" (Ollama)
 

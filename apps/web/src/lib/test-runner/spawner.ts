@@ -289,9 +289,12 @@ export async function startTestRun(config: TestRunConfig): Promise<TestRunState>
         });
 
         // Keep in memory for 10 minutes for status queries
-        setTimeout(() => {
-          activeRuns.delete(runId);
-        }, 10 * 60 * 1000);
+        setTimeout(
+          () => {
+            activeRuns.delete(runId);
+          },
+          10 * 60 * 1000
+        );
 
         resolve(state);
       });

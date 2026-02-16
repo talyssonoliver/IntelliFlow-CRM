@@ -47,7 +47,10 @@ async function isLockStale(lockPath: string): Promise<boolean> {
 /**
  * Acquire a file lock with timeout
  */
-async function acquireLock(filePath: string, timeoutMs: number = LOCK_TIMEOUT_MS): Promise<boolean> {
+async function acquireLock(
+  filePath: string,
+  timeoutMs: number = LOCK_TIMEOUT_MS
+): Promise<boolean> {
   const lockPath = getLockFilePath(filePath);
   const lockDir = dirname(lockPath);
 

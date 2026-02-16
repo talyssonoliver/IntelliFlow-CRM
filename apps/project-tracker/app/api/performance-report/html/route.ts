@@ -8,7 +8,10 @@ export const revalidate = 0;
 export async function GET() {
   try {
     // Read the actual performance-report.html file
-    const reportPath = path.join(process.cwd(), '../../artifacts/benchmarks/performance-report.html');
+    const reportPath = path.join(
+      process.cwd(),
+      '../../artifacts/benchmarks/performance-report.html'
+    );
 
     if (!fs.existsSync(reportPath)) {
       return new NextResponse(

@@ -64,36 +64,168 @@ interface SyncSummary {
 
 const TRANSFORMATION_RULES: TransformationRule[] = [
   // User transformations
-  { sourceTable: 'users', targetTable: 'User', sourceField: 'id', targetField: 'id', transformationType: 'id_mapping' },
-  { sourceTable: 'users', targetTable: 'User', sourceField: 'email', targetField: 'email', transformationType: 'email_normalize' },
-  { sourceTable: 'users', targetTable: 'User', sourceField: 'role', targetField: 'role', transformationType: 'enum_mapping' },
-  { sourceTable: 'users', targetTable: 'User', sourceField: 'created_at', targetField: 'createdAt', transformationType: 'date_parse' },
+  {
+    sourceTable: 'users',
+    targetTable: 'User',
+    sourceField: 'id',
+    targetField: 'id',
+    transformationType: 'id_mapping',
+  },
+  {
+    sourceTable: 'users',
+    targetTable: 'User',
+    sourceField: 'email',
+    targetField: 'email',
+    transformationType: 'email_normalize',
+  },
+  {
+    sourceTable: 'users',
+    targetTable: 'User',
+    sourceField: 'role',
+    targetField: 'role',
+    transformationType: 'enum_mapping',
+  },
+  {
+    sourceTable: 'users',
+    targetTable: 'User',
+    sourceField: 'created_at',
+    targetField: 'createdAt',
+    transformationType: 'date_parse',
+  },
 
   // Lead transformations
-  { sourceTable: 'leads', targetTable: 'Lead', sourceField: 'id', targetField: 'id', transformationType: 'id_mapping' },
-  { sourceTable: 'leads', targetTable: 'Lead', sourceField: 'email', targetField: 'email', transformationType: 'email_normalize' },
-  { sourceTable: 'leads', targetTable: 'Lead', sourceField: 'source', targetField: 'source', transformationType: 'enum_mapping' },
-  { sourceTable: 'leads', targetTable: 'Lead', sourceField: 'status', targetField: 'status', transformationType: 'enum_mapping' },
-  { sourceTable: 'leads', targetTable: 'Lead', sourceField: 'score', targetField: 'score', transformationType: 'score_clamp' },
-  { sourceTable: 'leads', targetTable: 'Lead', sourceField: 'created_at', targetField: 'createdAt', transformationType: 'date_parse' },
+  {
+    sourceTable: 'leads',
+    targetTable: 'Lead',
+    sourceField: 'id',
+    targetField: 'id',
+    transformationType: 'id_mapping',
+  },
+  {
+    sourceTable: 'leads',
+    targetTable: 'Lead',
+    sourceField: 'email',
+    targetField: 'email',
+    transformationType: 'email_normalize',
+  },
+  {
+    sourceTable: 'leads',
+    targetTable: 'Lead',
+    sourceField: 'source',
+    targetField: 'source',
+    transformationType: 'enum_mapping',
+  },
+  {
+    sourceTable: 'leads',
+    targetTable: 'Lead',
+    sourceField: 'status',
+    targetField: 'status',
+    transformationType: 'enum_mapping',
+  },
+  {
+    sourceTable: 'leads',
+    targetTable: 'Lead',
+    sourceField: 'score',
+    targetField: 'score',
+    transformationType: 'score_clamp',
+  },
+  {
+    sourceTable: 'leads',
+    targetTable: 'Lead',
+    sourceField: 'created_at',
+    targetField: 'createdAt',
+    transformationType: 'date_parse',
+  },
 
   // Contact transformations
-  { sourceTable: 'contacts', targetTable: 'Contact', sourceField: 'id', targetField: 'id', transformationType: 'id_mapping' },
-  { sourceTable: 'contacts', targetTable: 'Contact', sourceField: 'email', targetField: 'email', transformationType: 'email_normalize' },
-  { sourceTable: 'contacts', targetTable: 'Contact', sourceField: 'account_id', targetField: 'accountId', transformationType: 'fk_lookup' },
-  { sourceTable: 'contacts', targetTable: 'Contact', sourceField: 'created_at', targetField: 'createdAt', transformationType: 'date_parse' },
+  {
+    sourceTable: 'contacts',
+    targetTable: 'Contact',
+    sourceField: 'id',
+    targetField: 'id',
+    transformationType: 'id_mapping',
+  },
+  {
+    sourceTable: 'contacts',
+    targetTable: 'Contact',
+    sourceField: 'email',
+    targetField: 'email',
+    transformationType: 'email_normalize',
+  },
+  {
+    sourceTable: 'contacts',
+    targetTable: 'Contact',
+    sourceField: 'account_id',
+    targetField: 'accountId',
+    transformationType: 'fk_lookup',
+  },
+  {
+    sourceTable: 'contacts',
+    targetTable: 'Contact',
+    sourceField: 'created_at',
+    targetField: 'createdAt',
+    transformationType: 'date_parse',
+  },
 
   // Opportunity transformations
-  { sourceTable: 'opportunities', targetTable: 'Opportunity', sourceField: 'id', targetField: 'id', transformationType: 'id_mapping' },
-  { sourceTable: 'opportunities', targetTable: 'Opportunity', sourceField: 'stage', targetField: 'stage', transformationType: 'enum_mapping' },
-  { sourceTable: 'opportunities', targetTable: 'Opportunity', sourceField: 'probability', targetField: 'probability', transformationType: 'probability_clamp' },
-  { sourceTable: 'opportunities', targetTable: 'Opportunity', sourceField: 'amount', targetField: 'amount', transformationType: 'decimal_precision' },
-  { sourceTable: 'opportunities', targetTable: 'Opportunity', sourceField: 'created_at', targetField: 'createdAt', transformationType: 'date_parse' },
+  {
+    sourceTable: 'opportunities',
+    targetTable: 'Opportunity',
+    sourceField: 'id',
+    targetField: 'id',
+    transformationType: 'id_mapping',
+  },
+  {
+    sourceTable: 'opportunities',
+    targetTable: 'Opportunity',
+    sourceField: 'stage',
+    targetField: 'stage',
+    transformationType: 'enum_mapping',
+  },
+  {
+    sourceTable: 'opportunities',
+    targetTable: 'Opportunity',
+    sourceField: 'probability',
+    targetField: 'probability',
+    transformationType: 'probability_clamp',
+  },
+  {
+    sourceTable: 'opportunities',
+    targetTable: 'Opportunity',
+    sourceField: 'amount',
+    targetField: 'amount',
+    transformationType: 'decimal_precision',
+  },
+  {
+    sourceTable: 'opportunities',
+    targetTable: 'Opportunity',
+    sourceField: 'created_at',
+    targetField: 'createdAt',
+    transformationType: 'date_parse',
+  },
 
   // Account transformations
-  { sourceTable: 'accounts', targetTable: 'Account', sourceField: 'id', targetField: 'id', transformationType: 'id_mapping' },
-  { sourceTable: 'accounts', targetTable: 'Account', sourceField: 'website', targetField: 'website', transformationType: 'url_validate' },
-  { sourceTable: 'accounts', targetTable: 'Account', sourceField: 'created_at', targetField: 'createdAt', transformationType: 'date_parse' },
+  {
+    sourceTable: 'accounts',
+    targetTable: 'Account',
+    sourceField: 'id',
+    targetField: 'id',
+    transformationType: 'id_mapping',
+  },
+  {
+    sourceTable: 'accounts',
+    targetTable: 'Account',
+    sourceField: 'website',
+    targetField: 'website',
+    transformationType: 'url_validate',
+  },
+  {
+    sourceTable: 'accounts',
+    targetTable: 'Account',
+    sourceField: 'created_at',
+    targetField: 'createdAt',
+    transformationType: 'date_parse',
+  },
 ];
 
 // Enum mappings from legacy INT values to new string enums
@@ -103,19 +235,35 @@ const ENUM_MAPPINGS: Record<string, Record<string, Record<number | string, strin
   },
   leads: {
     source: {
-      0: 'WEBSITE', 1: 'REFERRAL', 2: 'SOCIAL', 3: 'EMAIL',
-      4: 'PHONE', 5: 'EVENT', 6: 'OTHER',
+      0: 'WEBSITE',
+      1: 'REFERRAL',
+      2: 'SOCIAL',
+      3: 'EMAIL',
+      4: 'PHONE',
+      5: 'EVENT',
+      6: 'OTHER',
     },
     status: {
-      0: 'NEW', 1: 'CONTACTED', 2: 'QUALIFIED', 3: 'PROPOSAL',
-      4: 'NEGOTIATION', 5: 'WON', 6: 'LOST',
+      0: 'NEW',
+      1: 'CONTACTED',
+      2: 'QUALIFIED',
+      3: 'PROPOSAL',
+      4: 'NEGOTIATION',
+      5: 'WON',
+      6: 'LOST',
     },
   },
   opportunities: {
     stage: {
-      0: 'PROSPECTING', 1: 'QUALIFICATION', 2: 'NEEDS_ANALYSIS',
-      3: 'VALUE_PROPOSITION', 4: 'DECISION_MAKERS', 5: 'PROPOSAL',
-      6: 'NEGOTIATION', 7: 'CLOSED_WON', 8: 'CLOSED_LOST',
+      0: 'PROSPECTING',
+      1: 'QUALIFICATION',
+      2: 'NEEDS_ANALYSIS',
+      3: 'VALUE_PROPOSITION',
+      4: 'DECISION_MAKERS',
+      5: 'PROPOSAL',
+      6: 'NEGOTIATION',
+      7: 'CLOSED_WON',
+      8: 'CLOSED_LOST',
     },
   },
 };
@@ -214,7 +362,7 @@ async function syncTable(
 
   try {
     // Get rules for this table
-    const rules = TRANSFORMATION_RULES.filter(r => r.sourceTable === tableName);
+    const rules = TRANSFORMATION_RULES.filter((r) => r.sourceTable === tableName);
     if (rules.length === 0) {
       result.errors.push(`No transformation rules found for table: ${tableName}`);
       result.duration = Date.now() - startTime;
@@ -238,7 +386,9 @@ async function syncTable(
     result.duration = Date.now() - startTime;
     return result;
   } catch (error) {
-    result.errors.push(`Error syncing ${tableName}: ${error instanceof Error ? error.message : String(error)}`);
+    result.errors.push(
+      `Error syncing ${tableName}: ${error instanceof Error ? error.message : String(error)}`
+    );
     result.duration = Date.now() - startTime;
     return result;
   }
@@ -299,10 +449,10 @@ Options:
     console.log('Validation Mode - Checking transformation rules...');
     console.log('');
 
-    const tables = Array.from(new Set(TRANSFORMATION_RULES.map(r => r.sourceTable)));
+    const tables = Array.from(new Set(TRANSFORMATION_RULES.map((r) => r.sourceTable)));
     console.log(`Tables configured: ${tables.length}`);
-    tables.forEach(table => {
-      const rules = TRANSFORMATION_RULES.filter(r => r.sourceTable === table);
+    tables.forEach((table) => {
+      const rules = TRANSFORMATION_RULES.filter((r) => r.sourceTable === table);
       console.log(`  - ${table}: ${rules.length} rules`);
     });
 
@@ -348,9 +498,11 @@ Options:
     console.log(`Processing: ${table}`);
 
     if (options.dryRun) {
-      const rules = TRANSFORMATION_RULES.filter(r => r.sourceTable === table);
+      const rules = TRANSFORMATION_RULES.filter((r) => r.sourceTable === table);
       console.log(`  [DRY RUN] Would apply ${rules.length} transformation rules`);
-      console.log(`  [DRY RUN] Transformation types: ${Array.from(new Set(rules.map(r => r.transformationType))).join(', ')}`);
+      console.log(
+        `  [DRY RUN] Transformation types: ${Array.from(new Set(rules.map((r) => r.transformationType))).join(', ')}`
+      );
 
       summary.tables.push({
         table,
@@ -376,9 +528,7 @@ Options:
   }
 
   // Generate hash for audit trail
-  const summaryHash = createHash('sha256')
-    .update(JSON.stringify(summary))
-    .digest('hex');
+  const summaryHash = createHash('sha256').update(JSON.stringify(summary)).digest('hex');
 
   console.log('==========================================');
   console.log('Delta Sync Summary');

@@ -161,9 +161,15 @@ export interface SemanticSearchParams {
 export interface ConversationRepositoryPort {
   findById(id: string, tenantId: string): Promise<ConversationWithDetails | null>;
   findBySessionId(sessionId: string, tenantId: string): Promise<ConversationWithDetails | null>;
-  search(params: ConversationSearchParams): Promise<{ conversations: ConversationSearchResult[]; total: number }>;
+  search(
+    params: ConversationSearchParams
+  ): Promise<{ conversations: ConversationSearchResult[]; total: number }>;
   searchByEmbedding(params: SemanticSearchParams): Promise<ConversationSearchResult[]>;
-  findByContext(contextType: string, contextId: string, tenantId: string): Promise<ConversationSearchResult[]>;
+  findByContext(
+    contextType: string,
+    contextId: string,
+    tenantId: string
+  ): Promise<ConversationSearchResult[]>;
   exportUserConversations(userId: string, tenantId: string): Promise<ConversationWithDetails[]>;
 }
 
@@ -263,9 +269,7 @@ export class ConversationSearchService {
         durationMs,
       });
     } catch (error) {
-      return Result.fail(
-        error instanceof Error ? error : new Error('Search failed')
-      );
+      return Result.fail(error instanceof Error ? error : new Error('Search failed'));
     }
   }
 
@@ -281,7 +285,9 @@ export class ConversationSearchService {
     const startTime = Date.now();
 
     if (!this.embeddingService) {
-      return Result.fail(new ValidationError('Semantic search not configured: embedding service required'));
+      return Result.fail(
+        new ValidationError('Semantic search not configured: embedding service required')
+      );
     }
 
     if (!query || !tenantId) {
@@ -312,9 +318,7 @@ export class ConversationSearchService {
         durationMs,
       });
     } catch (error) {
-      return Result.fail(
-        error instanceof Error ? error : new Error('Semantic search failed')
-      );
+      return Result.fail(error instanceof Error ? error : new Error('Semantic search failed'));
     }
   }
 
@@ -339,9 +343,7 @@ export class ConversationSearchService {
 
       return Result.ok(conversations);
     } catch (error) {
-      return Result.fail(
-        error instanceof Error ? error : new Error('Context search failed')
-      );
+      return Result.fail(error instanceof Error ? error : new Error('Context search failed'));
     }
   }
 
@@ -364,9 +366,7 @@ export class ConversationSearchService {
 
       return Result.ok(conversations);
     } catch (error) {
-      return Result.fail(
-        error instanceof Error ? error : new Error('Export failed')
-      );
+      return Result.fail(error instanceof Error ? error : new Error('Export failed'));
     }
   }
 

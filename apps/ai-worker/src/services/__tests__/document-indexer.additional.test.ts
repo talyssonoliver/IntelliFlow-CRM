@@ -16,7 +16,9 @@ describe('DocumentIndexer additional', () => {
     process.env.MOCK_EMBEDDINGS = 'true';
     indexer = createDocumentIndexer(mockPrisma as any);
   });
-  afterEach(() => { delete process.env.MOCK_EMBEDDINGS; });
+  afterEach(() => {
+    delete process.env.MOCK_EMBEDDINGS;
+  });
 
   describe('indexNote error handling', () => {
     it('returns failure when note not found', async () => {
@@ -98,10 +100,13 @@ describe('DocumentIndexer additional', () => {
     it('with progress callback', async () => {
       mockPrisma.contactNote.count.mockResolvedValue(2);
       mockPrisma.contactNote.findMany.mockResolvedValue([{ id: 'n1' }, { id: 'n2' }]);
-      mockPrisma.contactNote.findUnique.mockImplementation(async (args: any) => ({ id: args.where.id, content: 'text' }));
+      mockPrisma.contactNote.findUnique.mockImplementation(async (args: any) => ({
+        id: args.where.id,
+        content: 'text',
+      }));
       mockPrisma.$executeRaw.mockResolvedValue(1);
       const progress: any[] = [];
-      const r = await indexer.reindexAllNotes(undefined, (p) => progress.push({...p}));
+      const r = await indexer.reindexAllNotes(undefined, (p) => progress.push({ ...p }));
       expect(r.total).toBe(2);
       expect(r.successful).toBe(2);
       expect(progress.length).toBeGreaterThan(0);

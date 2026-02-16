@@ -1,6 +1,14 @@
 'use client';
 
-import { getTypeConfig, getStatusConfig, formatTimeRange, formatDuration, isOverdue, APPOINTMENT_TYPE_OPTIONS, APPOINTMENT_STATUS_OPTIONS } from '@/lib/appointments/appointment-utils';
+import {
+  getTypeConfig,
+  getStatusConfig,
+  formatTimeRange,
+  formatDuration,
+  isOverdue,
+  APPOINTMENT_TYPE_OPTIONS,
+  APPOINTMENT_STATUS_OPTIONS,
+} from '@/lib/appointments/appointment-utils';
 import type { AppointmentListItem, AppointmentStats, AppointmentFilters } from './types';
 
 export interface AppointmentListProps {
@@ -15,9 +23,27 @@ export interface AppointmentListProps {
 }
 
 const STAT_CARDS = [
-  { key: 'upcoming', label: 'Upcoming', icon: 'schedule', color: 'text-blue-600', bg: 'bg-blue-50' },
-  { key: 'confirmed', label: 'Confirmed', icon: 'check_circle', color: 'text-green-600', bg: 'bg-green-50' },
-  { key: 'completed', label: 'Completed', icon: 'task_alt', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  {
+    key: 'upcoming',
+    label: 'Upcoming',
+    icon: 'schedule',
+    color: 'text-blue-600',
+    bg: 'bg-blue-50',
+  },
+  {
+    key: 'confirmed',
+    label: 'Confirmed',
+    icon: 'check_circle',
+    color: 'text-green-600',
+    bg: 'bg-green-50',
+  },
+  {
+    key: 'completed',
+    label: 'Completed',
+    icon: 'task_alt',
+    color: 'text-emerald-600',
+    bg: 'bg-emerald-50',
+  },
   { key: 'overdue', label: 'Overdue', icon: 'warning', color: 'text-destructive', bg: 'bg-red-50' },
 ] as const;
 
@@ -78,7 +104,9 @@ export function AppointmentList({
       <div className="flex flex-wrap gap-3 items-center">
         <div className="flex-1 min-w-[200px]">
           <div className="relative">
-            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">search</span>
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
+              search
+            </span>
             <input
               type="text"
               value={filters.search}
@@ -91,25 +119,35 @@ export function AppointmentList({
 
         <select
           value={filters.status}
-          onChange={(e) => onFilterChange({ status: e.target.value as AppointmentFilters['status'] })}
+          onChange={(e) =>
+            onFilterChange({ status: e.target.value as AppointmentFilters['status'] })
+          }
           className="rounded-md border border-gray-300 px-3 py-2 text-sm"
           aria-label="Status filter"
         >
           <option value="">All Statuses</option>
           {APPOINTMENT_STATUS_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
           ))}
         </select>
 
         <select
           value={filters.appointmentType}
-          onChange={(e) => onFilterChange({ appointmentType: e.target.value as AppointmentFilters['appointmentType'] })}
+          onChange={(e) =>
+            onFilterChange({
+              appointmentType: e.target.value as AppointmentFilters['appointmentType'],
+            })
+          }
           className="rounded-md border border-gray-300 px-3 py-2 text-sm"
           aria-label="Type filter"
         >
           <option value="">All Types</option>
           {APPOINTMENT_TYPE_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
           ))}
         </select>
       </div>
@@ -148,18 +186,34 @@ export function AppointmentList({
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <span className={`material-symbols-outlined text-base ${typeConfig.color}`}>{typeConfig.icon}</span>
-                        <span className="font-medium text-gray-900 truncate max-w-[200px]">{appt.title}</span>
+                        <span className={`material-symbols-outlined text-base ${typeConfig.color}`}>
+                          {typeConfig.icon}
+                        </span>
+                        <span className="font-medium text-gray-900 truncate max-w-[200px]">
+                          {appt.title}
+                        </span>
                         {appt.hasConflict && (
-                          <span className="material-symbols-outlined text-sm text-red-500" title="Has conflict">warning</span>
+                          <span
+                            className="material-symbols-outlined text-sm text-red-500"
+                            title="Has conflict"
+                          >
+                            warning
+                          </span>
                         )}
                         {appt.isRecurring && (
-                          <span className="material-symbols-outlined text-sm text-gray-400" title="Recurring">repeat</span>
+                          <span
+                            className="material-symbols-outlined text-sm text-gray-400"
+                            title="Recurring"
+                          >
+                            repeat
+                          </span>
                         )}
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-1 rounded ${typeConfig.bgColor} ${typeConfig.color}`}>
+                      <span
+                        className={`text-xs px-2 py-1 rounded ${typeConfig.bgColor} ${typeConfig.color}`}
+                      >
                         {typeConfig.label}
                       </span>
                     </td>
@@ -173,7 +227,9 @@ export function AppointmentList({
                       <span className="text-gray-600">{appt.attendeeCount}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-xs px-2 py-1 rounded ${statusConfig.bgColor} ${statusConfig.color}`}>
+                      <span
+                        className={`text-xs px-2 py-1 rounded ${statusConfig.bgColor} ${statusConfig.color}`}
+                      >
                         {statusConfig.label}
                       </span>
                     </td>
@@ -189,7 +245,8 @@ export function AppointmentList({
       {totalPages > 1 && (
         <div className="flex items-center justify-between pt-2" data-testid="pagination">
           <p className="text-sm text-gray-600">
-            Showing {(pagination.page - 1) * pagination.limit + 1}-{Math.min(pagination.page * pagination.limit, total)} of {total}
+            Showing {(pagination.page - 1) * pagination.limit + 1}-
+            {Math.min(pagination.page * pagination.limit, total)} of {total}
           </p>
           <div className="flex gap-1">
             <button

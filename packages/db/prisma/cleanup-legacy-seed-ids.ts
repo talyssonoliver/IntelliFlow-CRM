@@ -106,7 +106,9 @@ async function cleanupLegacySeedData() {
       console.log(`  ✓ Deleted ${apiUsageDeleted.count} API usage records`);
       totalDeleted += apiUsageDeleted.count;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   try {
     const apiKeysDeleted = await prisma.aPIKey.deleteMany({
@@ -116,7 +118,9 @@ async function cleanupLegacySeedData() {
       console.log(`  ✓ Deleted ${apiKeysDeleted.count} API keys`);
       totalDeleted += apiKeysDeleted.count;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   try {
     const webhooksDeleted = await prisma.webhookEndpoint.deleteMany({
@@ -126,7 +130,9 @@ async function cleanupLegacySeedData() {
       console.log(`  ✓ Deleted ${webhooksDeleted.count} webhook endpoints`);
       totalDeleted += webhooksDeleted.count;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   // 2. Agent actions and activities
   try {
@@ -137,7 +143,9 @@ async function cleanupLegacySeedData() {
       console.log(`  ✓ Deleted ${agentActionsDeleted.count} agent actions`);
       totalDeleted += agentActionsDeleted.count;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   try {
     const contactActivitiesDeleted = await prisma.contactActivity.deleteMany({
@@ -147,7 +155,9 @@ async function cleanupLegacySeedData() {
       console.log(`  ✓ Deleted ${contactActivitiesDeleted.count} contact activities`);
       totalDeleted += contactActivitiesDeleted.count;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   // 3. Ticket-related
   try {
@@ -158,7 +168,9 @@ async function cleanupLegacySeedData() {
       console.log(`  ✓ Deleted ${ticketActivitiesDeleted.count} ticket activities`);
       totalDeleted += ticketActivitiesDeleted.count;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   try {
     const ticketAttachmentsDeleted = await prisma.ticketAttachment.deleteMany({
@@ -168,7 +180,9 @@ async function cleanupLegacySeedData() {
       console.log(`  ✓ Deleted ${ticketAttachmentsDeleted.count} ticket attachments`);
       totalDeleted += ticketAttachmentsDeleted.count;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   try {
     const ticketsDeleted = await prisma.ticket.deleteMany({
@@ -178,7 +192,9 @@ async function cleanupLegacySeedData() {
       console.log(`  ✓ Deleted ${ticketsDeleted.count} tickets`);
       totalDeleted += ticketsDeleted.count;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   // 4. Tasks
   try {
@@ -189,7 +205,9 @@ async function cleanupLegacySeedData() {
       console.log(`  ✓ Deleted ${tasksDeleted.count} tasks`);
       totalDeleted += tasksDeleted.count;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   // 5. Deal-related
   try {
@@ -200,7 +218,9 @@ async function cleanupLegacySeedData() {
       console.log(`  ✓ Deleted ${dealActivitiesDeleted.count} deal activities`);
       totalDeleted += dealActivitiesDeleted.count;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   try {
     const dealFilesDeleted = await prisma.file.deleteMany({
@@ -210,7 +230,9 @@ async function cleanupLegacySeedData() {
       console.log(`  ✓ Deleted ${dealFilesDeleted.count} deal files`);
       totalDeleted += dealFilesDeleted.count;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   try {
     const opportunitiesDeleted = await prisma.opportunity.deleteMany({
@@ -220,7 +242,9 @@ async function cleanupLegacySeedData() {
       console.log(`  ✓ Deleted ${opportunitiesDeleted.count} opportunities`);
       totalDeleted += opportunitiesDeleted.count;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   // 6. Leads
   try {
@@ -231,7 +255,9 @@ async function cleanupLegacySeedData() {
       console.log(`  ✓ Deleted ${leadsDeleted.count} leads`);
       totalDeleted += leadsDeleted.count;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   // 7. Contacts
   try {
@@ -242,7 +268,9 @@ async function cleanupLegacySeedData() {
       console.log(`  ✓ Deleted ${contactsDeleted.count} contacts`);
       totalDeleted += contactsDeleted.count;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   // 8. Accounts
   try {
@@ -253,9 +281,13 @@ async function cleanupLegacySeedData() {
       console.log(`  ✓ Deleted ${accountsDeleted.count} accounts`);
       totalDeleted += accountsDeleted.count;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
-  console.log(`\n✅ Cleanup complete! Deleted ${totalDeleted} total records with legacy string IDs.`);
+  console.log(
+    `\n✅ Cleanup complete! Deleted ${totalDeleted} total records with legacy string IDs.`
+  );
   console.log('\n💡 Next steps:');
   console.log('   1. Run: pnpm --filter @intelliflow/db db:seed');
   console.log('   2. This will re-seed with the new UUID format.');
@@ -275,7 +307,9 @@ async function showLegacyCounts() {
       console.log(`  • Leads: ${leadCount} records with string IDs`);
       totalFound += leadCount;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   // Check contacts
   try {
@@ -286,7 +320,9 @@ async function showLegacyCounts() {
       console.log(`  • Contacts: ${contactCount} records with string IDs`);
       totalFound += contactCount;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   // Check accounts
   try {
@@ -297,7 +333,9 @@ async function showLegacyCounts() {
       console.log(`  • Accounts: ${accountCount} records with string IDs`);
       totalFound += accountCount;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   // Check opportunities
   try {
@@ -308,7 +346,9 @@ async function showLegacyCounts() {
       console.log(`  • Opportunities: ${oppCount} records with string IDs`);
       totalFound += oppCount;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   // Check tasks
   try {
@@ -319,7 +359,9 @@ async function showLegacyCounts() {
       console.log(`  • Tasks: ${taskCount} records with string IDs`);
       totalFound += taskCount;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   // Check tickets
   try {
@@ -330,7 +372,9 @@ async function showLegacyCounts() {
       console.log(`  • Tickets: ${ticketCount} records with string IDs`);
       totalFound += ticketCount;
     }
-  } catch { /* table may not exist */ }
+  } catch {
+    /* table may not exist */
+  }
 
   if (totalFound === 0) {
     console.log('  ✓ No legacy string-ID seed data found!');

@@ -13,10 +13,22 @@ const mockMakeRequest = vi.mocked(makeRequest);
 const mockMapToInvoice = vi.mocked(mapToInvoice);
 
 const config: StripeConfig = { secretKey: 'sk_test_inv' };
-const mockInv: StripeInvoice = { id: 'inv_123', customerId: 'cus_123', status: 'open', amountDue: 5000, amountPaid: 0, amountRemaining: 5000, currency: 'usd', created: new Date('2025-01-01') };
+const mockInv: StripeInvoice = {
+  id: 'inv_123',
+  customerId: 'cus_123',
+  status: 'open',
+  amountDue: 5000,
+  amountPaid: 0,
+  amountRemaining: 5000,
+  currency: 'usd',
+  created: new Date('2025-01-01'),
+};
 
 describe('invoices handler', () => {
-  beforeEach(() => { vi.clearAllMocks(); mockMapToInvoice.mockReturnValue(mockInv); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockMapToInvoice.mockReturnValue(mockInv);
+  });
 
   describe('getInvoice', () => {
     it('should retrieve by id', async () => {
@@ -25,14 +37,18 @@ describe('invoices handler', () => {
     });
 
     it('should return null for STRIPE_INVALID_REQUEST', async () => {
-      mockMakeRequest.mockResolvedValue(Result.fail({ message: 'x', code: 'STRIPE_INVALID_REQUEST' } as any));
+      mockMakeRequest.mockResolvedValue(
+        Result.fail({ message: 'x', code: 'STRIPE_INVALID_REQUEST' } as any)
+      );
       const r = await getInvoice(config, 'inv_x');
       expect(r.isSuccess).toBe(true);
       expect(r.value).toBeNull();
     });
 
     it('should propagate other errors', async () => {
-      mockMakeRequest.mockResolvedValue(Result.fail({ message: 'x', code: 'STRIPE_AUTH_ERROR' } as any));
+      mockMakeRequest.mockResolvedValue(
+        Result.fail({ message: 'x', code: 'STRIPE_AUTH_ERROR' } as any)
+      );
       expect((await getInvoice(config, 'inv_123')).isFailure).toBe(true);
     });
 

@@ -134,11 +134,7 @@
           },
           "dependency_type": {
             "type": "string",
-            "enum": [
-              "REQUIRED",
-              "OPTIONAL",
-              "BLOCKED_BY"
-            ]
+            "enum": ["REQUIRED", "OPTIONAL", "BLOCKED_BY"]
           },
           "description": {
             "type": "string"

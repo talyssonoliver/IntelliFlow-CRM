@@ -29,17 +29,15 @@ export async function POST(request: NextRequest) {
     }
 
     const projectRoot = path.resolve(process.cwd(), '../..');
-    const scriptPath = testType === 'quick'
-      ? 'artifacts/misc/k6/scripts/authenticated-load-test.js'
-      : 'artifacts/misc/k6/scripts/comprehensive-load-test.js';
+    const scriptPath =
+      testType === 'quick'
+        ? 'artifacts/misc/k6/scripts/authenticated-load-test.js'
+        : 'artifacts/misc/k6/scripts/comprehensive-load-test.js';
 
     const fullScriptPath = path.join(projectRoot, scriptPath);
 
     if (!fs.existsSync(fullScriptPath)) {
-      return NextResponse.json(
-        { error: `Test script not found: ${scriptPath}` },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: `Test script not found: ${scriptPath}` }, { status: 404 });
     }
 
     // Read env vars from .env.local
@@ -56,9 +54,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Run k6 test
-    const k6Path = process.platform === 'win32'
-      ? 'C:\\Users\\talys\\tools\\k6\\k6-v0.49.0-windows-amd64\\k6.exe'
-      : 'k6';
+    const k6Path =
+      process.platform === 'win32'
+        ? 'C:\\Users\\talys\\tools\\k6\\k6-v0.49.0-windows-amd64\\k6.exe'
+        : 'k6';
 
     const result = await new Promise<TestResult>((resolve) => {
       const env = {

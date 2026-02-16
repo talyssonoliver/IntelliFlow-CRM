@@ -386,10 +386,7 @@ export class RBACService {
       const roleAssignments = await this.prisma.userRoleAssignment.findMany({
         where: {
           userId,
-          OR: [
-            { expiresAt: null },
-            { expiresAt: { gt: new Date() } },
-          ],
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
         },
         include: {
           role: true,
@@ -481,10 +478,7 @@ export class RBACService {
       const userOverrides = await this.prisma.userPermission.findMany({
         where: {
           userId,
-          OR: [
-            { expiresAt: null },
-            { expiresAt: { gt: new Date() } },
-          ],
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
         },
         include: { permission: true },
       });

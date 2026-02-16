@@ -38,8 +38,7 @@ const mockJob: JobListing = {
   department: 'Engineering',
   location: 'Remote (UK/EU)',
   type: 'Full-time',
-  description:
-    'We are looking for a Senior Full-Stack Engineer to join our core platform team.',
+  description: 'We are looking for a Senior Full-Stack Engineer to join our core platform team.',
   responsibilities: [
     'Design and implement new features',
     'Lead technical design discussions',
@@ -50,15 +49,8 @@ const mockJob: JobListing = {
     'Strong proficiency in TypeScript and React',
     'Experience with Node.js backend development',
   ],
-  niceToHave: [
-    'Experience with AI/ML integrations',
-    'Contributions to open-source projects',
-  ],
-  benefits: [
-    'Competitive salary + equity',
-    'Remote-first culture',
-    'Flexible working hours',
-  ],
+  niceToHave: ['Experience with AI/ML integrations', 'Contributions to open-source projects'],
+  benefits: ['Competitive salary + equity', 'Remote-first culture', 'Flexible working hours'],
   salary: {
     min: 90000,
     max: 130000,
@@ -182,29 +174,21 @@ describe('JobDetailTemplate', () => {
     it('should render responsibilities heading', () => {
       render(<JobDetailTemplate job={mockJob} />);
 
-      expect(
-        screen.getByRole('heading', { name: /what you'll do/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /what you'll do/i })).toBeInTheDocument();
     });
 
     it('should render all responsibilities', () => {
       render(<JobDetailTemplate job={mockJob} />);
 
-      expect(
-        screen.getByText('Design and implement new features')
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText('Lead technical design discussions')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Design and implement new features')).toBeInTheDocument();
+      expect(screen.getByText('Lead technical design discussions')).toBeInTheDocument();
       expect(screen.getByText('Mentor junior engineers')).toBeInTheDocument();
     });
 
     it('should have section with aria-labelledby', () => {
       render(<JobDetailTemplate job={mockJob} />);
 
-      const section = document.querySelector(
-        'section[aria-labelledby="responsibilities-heading"]'
-      );
+      const section = document.querySelector('section[aria-labelledby="responsibilities-heading"]');
       expect(section).toBeInTheDocument();
     });
   });
@@ -213,9 +197,7 @@ describe('JobDetailTemplate', () => {
     it('should render requirements heading', () => {
       render(<JobDetailTemplate job={mockJob} />);
 
-      expect(
-        screen.getByRole('heading', { name: /what we're looking for/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /what we're looking for/i })).toBeInTheDocument();
     });
 
     it('should render all requirements', () => {
@@ -224,9 +206,7 @@ describe('JobDetailTemplate', () => {
       expect(
         screen.getByText(/5\+ years of professional software engineering/)
       ).toBeInTheDocument();
-      expect(
-        screen.getByText(/Strong proficiency in TypeScript and React/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Strong proficiency in TypeScript and React/)).toBeInTheDocument();
     });
   });
 
@@ -234,38 +214,28 @@ describe('JobDetailTemplate', () => {
     it('should render nice to have section when present', () => {
       render(<JobDetailTemplate job={mockJob} />);
 
-      expect(
-        screen.getByRole('heading', { name: /nice to have/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /nice to have/i })).toBeInTheDocument();
     });
 
     it('should render all nice to have items', () => {
       render(<JobDetailTemplate job={mockJob} />);
 
-      expect(
-        screen.getByText('Experience with AI/ML integrations')
-      ).toBeInTheDocument();
-      expect(
-        screen.getByText('Contributions to open-source projects')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Experience with AI/ML integrations')).toBeInTheDocument();
+      expect(screen.getByText('Contributions to open-source projects')).toBeInTheDocument();
     });
 
     it('should not render section when niceToHave is empty', () => {
       const jobWithoutNiceToHave = { ...mockJob, niceToHave: [] };
       render(<JobDetailTemplate job={jobWithoutNiceToHave} />);
 
-      expect(
-        screen.queryByRole('heading', { name: /nice to have/i })
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: /nice to have/i })).not.toBeInTheDocument();
     });
 
     it('should not render section when niceToHave is undefined', () => {
       const jobWithoutNiceToHave = { ...mockJob, niceToHave: undefined };
       render(<JobDetailTemplate job={jobWithoutNiceToHave} />);
 
-      expect(
-        screen.queryByRole('heading', { name: /nice to have/i })
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: /nice to have/i })).not.toBeInTheDocument();
     });
   });
 
@@ -273,17 +243,13 @@ describe('JobDetailTemplate', () => {
     it('should render benefits section when present', () => {
       render(<JobDetailTemplate job={mockJob} />);
 
-      expect(
-        screen.getByRole('heading', { name: /benefits & perks/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /benefits & perks/i })).toBeInTheDocument();
     });
 
     it('should render all benefits', () => {
       render(<JobDetailTemplate job={mockJob} />);
 
-      expect(
-        screen.getByText('Competitive salary + equity')
-      ).toBeInTheDocument();
+      expect(screen.getByText('Competitive salary + equity')).toBeInTheDocument();
       expect(screen.getByText('Remote-first culture')).toBeInTheDocument();
       expect(screen.getByText('Flexible working hours')).toBeInTheDocument();
     });
@@ -292,9 +258,7 @@ describe('JobDetailTemplate', () => {
       const jobWithoutBenefits = { ...mockJob, benefits: [] };
       render(<JobDetailTemplate job={jobWithoutBenefits} />);
 
-      expect(
-        screen.queryByRole('heading', { name: /benefits & perks/i })
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: /benefits & perks/i })).not.toBeInTheDocument();
     });
   });
 
@@ -337,19 +301,13 @@ describe('JobDetailTemplate', () => {
 
   describe('Related Jobs Section', () => {
     it('should render related jobs section when provided', () => {
-      render(
-        <JobDetailTemplate job={mockJob} relatedJobs={mockRelatedJobs} />
-      );
+      render(<JobDetailTemplate job={mockJob} relatedJobs={mockRelatedJobs} />);
 
-      expect(
-        screen.getByRole('heading', { name: /similar opportunities/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /similar opportunities/i })).toBeInTheDocument();
     });
 
     it('should render related job cards', () => {
-      render(
-        <JobDetailTemplate job={mockJob} relatedJobs={mockRelatedJobs} />
-      );
+      render(<JobDetailTemplate job={mockJob} relatedJobs={mockRelatedJobs} />);
 
       expect(screen.getByText('AI/ML Engineer')).toBeInTheDocument();
     });
@@ -363,9 +321,7 @@ describe('JobDetailTemplate', () => {
     });
 
     it('should link to related job detail page', () => {
-      render(
-        <JobDetailTemplate job={mockJob} relatedJobs={mockRelatedJobs} />
-      );
+      render(<JobDetailTemplate job={mockJob} relatedJobs={mockRelatedJobs} />);
 
       // Find the related job card link by its text content
       const relatedJobTitle = screen.getByText('AI/ML Engineer');
@@ -388,7 +344,7 @@ describe('JobDetailTemplate', () => {
 
       // Sidebar apply button
       const applyLinks = screen.getAllByRole('link', { name: /apply/i });
-      expect(applyLinks.some(link => link.closest('aside'))).toBe(true);
+      expect(applyLinks.some((link) => link.closest('aside'))).toBe(true);
     });
   });
 
@@ -464,9 +420,7 @@ describe('JobDetailTemplate', () => {
         document.querySelector('section[aria-labelledby="about-heading"]')
       ).toBeInTheDocument();
       expect(
-        document.querySelector(
-          'section[aria-labelledby="responsibilities-heading"]'
-        )
+        document.querySelector('section[aria-labelledby="responsibilities-heading"]')
       ).toBeInTheDocument();
       expect(
         document.querySelector('section[aria-labelledby="requirements-heading"]')
@@ -478,7 +432,7 @@ describe('JobDetailTemplate', () => {
 
       const icons = container.querySelectorAll('.material-symbols-outlined');
       const hiddenIcons = Array.from(icons).filter(
-        icon => icon.getAttribute('aria-hidden') === 'true'
+        (icon) => icon.getAttribute('aria-hidden') === 'true'
       );
       expect(hiddenIcons.length).toBeGreaterThan(0);
     });

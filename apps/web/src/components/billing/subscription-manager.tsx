@@ -57,8 +57,15 @@ import {
 interface Subscription {
   id: string;
   customerId: string;
-  status: 'incomplete' | 'incomplete_expired' | 'trialing' | 'active' |
-          'past_due' | 'canceled' | 'unpaid' | 'paused';
+  status:
+    | 'incomplete'
+    | 'incomplete_expired'
+    | 'trialing'
+    | 'active'
+    | 'past_due'
+    | 'canceled'
+    | 'unpaid'
+    | 'paused';
   priceId: string;
   quantity: number;
   currency: string;
@@ -107,22 +114,16 @@ function CurrentPlanCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#137fec]/10">
-              <span className="material-symbols-outlined text-[#137fec]">
-                workspace_premium
-              </span>
+              <span className="material-symbols-outlined text-[#137fec]">workspace_premium</span>
             </div>
             <div>
-              <CardTitle className="text-lg">
-                {currentPlan?.name ?? 'Current Plan'}
-              </CardTitle>
+              <CardTitle className="text-lg">{currentPlan?.name ?? 'Current Plan'}</CardTitle>
               <CardDescription>
                 {currentPlan?.description ?? 'Your active subscription'}
               </CardDescription>
             </div>
           </div>
-          <Badge variant={badgeVariantMap[statusDisplay.variant]}>
-            {statusDisplay.label}
-          </Badge>
+          <Badge variant={badgeVariantMap[statusDisplay.variant]}>{statusDisplay.label}</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -215,9 +216,7 @@ function PlanCard({
     >
       {plan.popular && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-          <Badge className="bg-[#137fec] text-white hover:bg-[#137fec]">
-            Most Popular
-          </Badge>
+          <Badge className="bg-[#137fec] text-white hover:bg-[#137fec]">Most Popular</Badge>
         </div>
       )}
 
@@ -325,9 +324,7 @@ function IntervalToggle({
         >
           {interval.label}
           {interval.id === 'annual' && (
-            <span className="ml-1 text-xs text-green-600 dark:text-green-400">
-              Save 20%
-            </span>
+            <span className="ml-1 text-xs text-green-600 dark:text-green-400">Save 20%</span>
           )}
         </button>
       ))}
@@ -359,10 +356,7 @@ function ChangePlanDialog({
   if (!comparison) return null;
 
   const directionDisplay = getPlanChangeDirectionDisplay(comparison.direction);
-  const priceDiff = formatPriceDifference(
-    comparison.priceDifference,
-    targetPlan.currency
-  );
+  const priceDiff = formatPriceDifference(comparison.priceDifference, targetPlan.currency);
 
   const gainedFeatures = comparison.featureChanges.filter((f) => f.change === 'gained');
   const lostFeatures = comparison.featureChanges.filter((f) => f.change === 'lost');
@@ -374,26 +368,20 @@ function ChangePlanDialog({
           <DialogTitle className="flex items-center gap-2">
             <span
               className={`material-symbols-outlined ${
-                comparison.direction === 'upgrade'
-                  ? 'text-green-600'
-                  : 'text-amber-600'
+                comparison.direction === 'upgrade' ? 'text-green-600' : 'text-amber-600'
               }`}
             >
               {directionDisplay.icon}
             </span>
             {directionDisplay.label} to {targetPlan.name}
           </DialogTitle>
-          <DialogDescription>
-            {directionDisplay.description}
-          </DialogDescription>
+          <DialogDescription>{directionDisplay.description}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="rounded-lg bg-slate-50 p-4 dark:bg-slate-800">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-slate-600 dark:text-slate-400">
-                Price Change
-              </span>
+              <span className="text-sm text-slate-600 dark:text-slate-400">Price Change</span>
               <span
                 className={`font-semibold ${
                   priceDiff.isIncrease
@@ -416,9 +404,7 @@ function ChangePlanDialog({
               <ul className="space-y-1">
                 {gainedFeatures.map((f, i) => (
                   <li key={i} className="flex items-center gap-2 text-sm">
-                    <span className="material-symbols-outlined text-green-600">
-                      add_circle
-                    </span>
+                    <span className="material-symbols-outlined text-green-600">add_circle</span>
                     {f.name}
                   </li>
                 ))}
@@ -434,9 +420,7 @@ function ChangePlanDialog({
               <ul className="space-y-1">
                 {lostFeatures.map((f, i) => (
                   <li key={i} className="flex items-center gap-2 text-sm">
-                    <span className="material-symbols-outlined text-amber-600">
-                      remove_circle
-                    </span>
+                    <span className="material-symbols-outlined text-amber-600">remove_circle</span>
                     {f.name}
                   </li>
                 ))}
@@ -512,30 +496,24 @@ function CancelDialog({
             <span className="material-symbols-outlined">warning</span>
             Cancel Subscription
           </DialogTitle>
-          <DialogDescription>
-            Are you sure you want to cancel your subscription?
-          </DialogDescription>
+          <DialogDescription>Are you sure you want to cancel your subscription?</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="rounded-lg bg-amber-50 p-4 dark:bg-amber-900/20">
             <p className="text-sm text-amber-800 dark:text-amber-200">
               Your subscription will remain active until{' '}
-              <strong>{formatBillingDate(cancellationInfo.effectiveDate)}</strong>.
-              After that, you'll lose access to premium features.
+              <strong>{formatBillingDate(cancellationInfo.effectiveDate)}</strong>. After that,
+              you'll lose access to premium features.
             </p>
           </div>
 
           {cancellationInfo.retentionOffer && (
             <div className="rounded-lg border-2 border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-900/20">
               <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-green-600">
-                  local_offer
-                </span>
+                <span className="material-symbols-outlined text-green-600">local_offer</span>
                 <div>
-                  <h4 className="font-medium text-green-800 dark:text-green-200">
-                    Stay with us!
-                  </h4>
+                  <h4 className="font-medium text-green-800 dark:text-green-200">Stay with us!</h4>
                   <p className="text-sm text-green-700 dark:text-green-300">
                     {cancellationInfo.retentionOffer.description}
                   </p>
@@ -556,7 +534,11 @@ function CancelDialog({
         </div>
 
         <DialogFooter className="flex-col gap-2 sm:flex-row">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="w-full sm:w-auto"
+          >
             Keep Subscription
           </Button>
           <Button
@@ -590,9 +572,7 @@ function NoSubscriptionState({ onSelectPlan }: { onSelectPlan: () => void }) {
     <Card className="border-dashed">
       <CardContent className="flex flex-col items-center justify-center py-12 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-          <span className="material-symbols-outlined text-3xl text-slate-400">
-            credit_card_off
-          </span>
+          <span className="material-symbols-outlined text-3xl text-slate-400">credit_card_off</span>
         </div>
         <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-white">
           No Active Subscription
@@ -646,15 +626,16 @@ export function SubscriptionManager({
   const [showPlanSelector, setShowPlanSelector] = useState(false);
 
   // Queries
-  const {
-    data: fetchedSubscription,
-    isLoading: isLoadingSubscription,
-  } = trpc.billing.getSubscription.useQuery(undefined, {
-    enabled: !externalSubscription && isAuthenticated && !authLoading,
-  });
+  const { data: fetchedSubscription, isLoading: isLoadingSubscription } =
+    trpc.billing.getSubscription.useQuery(undefined, {
+      enabled: !externalSubscription && isAuthenticated && !authLoading,
+    });
 
   // Cast tRPC response to our Subscription type (dates come as ISO strings)
-  const subscription = (externalSubscription ?? fetchedSubscription) as Subscription | null | undefined;
+  const subscription = (externalSubscription ?? fetchedSubscription) as
+    | Subscription
+    | null
+    | undefined;
 
   // Mutations
   const updateSubscription = trpc.billing.updateSubscription.useMutation({
@@ -679,10 +660,7 @@ export function SubscriptionManager({
     return plan?.id ?? null;
   }, [subscription]);
 
-  const plansWithState = useMemo(
-    () => getPlansWithSelectionState(currentPlanId),
-    [currentPlanId]
-  );
+  const plansWithState = useMemo(() => getPlansWithSelectionState(currentPlanId), [currentPlanId]);
 
   const selectedPlan = useMemo(
     () => (selectedPlanId ? getPlanById(selectedPlanId) : null),

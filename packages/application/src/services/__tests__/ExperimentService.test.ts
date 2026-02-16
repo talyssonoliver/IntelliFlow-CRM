@@ -152,7 +152,7 @@ describe('ExperimentService', () => {
       experimentRepo as ExperimentRepositoryPort,
       assignmentRepo as AssignmentRepositoryPort,
       resultRepo as ResultRepositoryPort,
-      eventBus as any,
+      eventBus as any
     );
   });
 
@@ -176,7 +176,7 @@ describe('ExperimentService', () => {
           minSampleSize: 100,
           significanceLevel: 0.05,
         },
-        'tenant-1',
+        'tenant-1'
       );
 
       expect(result).toEqual(created);
@@ -191,7 +191,7 @@ describe('ExperimentService', () => {
           minSampleSize: 100,
           significanceLevel: 0.05,
           tenantId: 'tenant-1',
-        }),
+        })
       );
       expect(eventBus.publish).toHaveBeenCalledTimes(1);
     });
@@ -206,7 +206,7 @@ describe('ExperimentService', () => {
           type: 'AI_VS_MANUAL',
           hypothesis: 'hypothesis',
         } as any,
-        'tenant-1',
+        'tenant-1'
       );
 
       const call = experimentRepo.create.mock.calls[0][0];
@@ -227,7 +227,7 @@ describe('ExperimentService', () => {
           type: 'AI_VS_MANUAL',
           hypothesis: 'hypothesis',
         } as any,
-        'tenant-1',
+        'tenant-1'
       );
 
       const publishedEvent = eventBus.publish.mock.calls[0][0];
@@ -252,7 +252,7 @@ describe('ExperimentService', () => {
       expect(result.name).toBe('Updated');
       expect(experimentRepo.update).toHaveBeenCalledWith(
         'exp-1',
-        expect.objectContaining({ name: 'Updated' }),
+        expect.objectContaining({ name: 'Updated' })
       );
     });
 
@@ -260,7 +260,7 @@ describe('ExperimentService', () => {
       experimentRepo.findById.mockResolvedValue(null);
 
       await expect(service.updateExperiment('missing', { name: 'X' })).rejects.toThrow(
-        'Experiment missing not found',
+        'Experiment missing not found'
       );
     });
 
@@ -268,14 +268,17 @@ describe('ExperimentService', () => {
       experimentRepo.findById.mockResolvedValue(makeExperiment({ status: 'RUNNING' }));
 
       await expect(service.updateExperiment('exp-1', { name: 'X' })).rejects.toThrow(
-        'Can only update experiments in DRAFT status',
+        'Can only update experiments in DRAFT status'
       );
     });
 
     it('should preserve existing values when partial update is given', async () => {
       const existing = makeExperiment({ status: 'DRAFT', hypothesis: 'old' });
       experimentRepo.findById.mockResolvedValue(existing);
-      experimentRepo.update.mockImplementation((_id: string, data: any) => ({ ...existing, ...data }));
+      experimentRepo.update.mockImplementation((_id: string, data: any) => ({
+        ...existing,
+        ...data,
+      }));
 
       await service.updateExperiment('exp-1', { name: 'NewName' });
 
@@ -299,7 +302,7 @@ describe('ExperimentService', () => {
       expect(result.status).toBe('RUNNING');
       expect(experimentRepo.update).toHaveBeenCalledWith(
         'exp-1',
-        expect.objectContaining({ status: 'RUNNING' }),
+        expect.objectContaining({ status: 'RUNNING' })
       );
       expect(eventBus.publish).toHaveBeenCalledTimes(1);
     });
@@ -320,7 +323,7 @@ describe('ExperimentService', () => {
       experimentRepo.findById.mockResolvedValue(null);
 
       await expect(service.startExperiment('missing')).rejects.toThrow(
-        'Experiment missing not found',
+        'Experiment missing not found'
       );
     });
 
@@ -328,7 +331,7 @@ describe('ExperimentService', () => {
       experimentRepo.findById.mockResolvedValue(makeExperiment({ status: 'COMPLETED' }));
 
       await expect(service.startExperiment('exp-1')).rejects.toThrow(
-        'Can only start experiments in DRAFT or PAUSED status',
+        'Can only start experiments in DRAFT or PAUSED status'
       );
     });
 
@@ -364,7 +367,7 @@ describe('ExperimentService', () => {
       experimentRepo.findById.mockResolvedValue(null);
 
       await expect(service.pauseExperiment('missing')).rejects.toThrow(
-        'Experiment missing not found',
+        'Experiment missing not found'
       );
     });
 
@@ -372,7 +375,7 @@ describe('ExperimentService', () => {
       experimentRepo.findById.mockResolvedValue(makeExperiment({ status: 'DRAFT' }));
 
       await expect(service.pauseExperiment('exp-1')).rejects.toThrow(
-        'Can only pause running experiments',
+        'Can only pause running experiments'
       );
     });
   });
@@ -404,7 +407,7 @@ describe('ExperimentService', () => {
       experimentRepo.findById.mockResolvedValue(null);
 
       await expect(service.completeExperiment('missing')).rejects.toThrow(
-        'Experiment missing not found',
+        'Experiment missing not found'
       );
     });
 
@@ -420,7 +423,7 @@ describe('ExperimentService', () => {
       await service.completeExperiment('exp-1');
 
       const completedEvent = eventBus.publish.mock.calls.find(
-        (call: any[]) => call[0].eventType === 'experiment.completed',
+        (call: any[]) => call[0].eventType === 'experiment.completed'
       );
       expect(completedEvent).toBeDefined();
     });
@@ -446,7 +449,7 @@ describe('ExperimentService', () => {
       experimentRepo.findById.mockResolvedValue(null);
 
       await expect(service.archiveExperiment('missing')).rejects.toThrow(
-        'Experiment missing not found',
+        'Experiment missing not found'
       );
     });
 
@@ -454,7 +457,7 @@ describe('ExperimentService', () => {
       experimentRepo.findById.mockResolvedValue(makeExperiment({ status: 'RUNNING' }));
 
       await expect(service.archiveExperiment('exp-1')).rejects.toThrow(
-        'Can only archive completed experiments',
+        'Can only archive completed experiments'
       );
     });
   });
@@ -492,7 +495,7 @@ describe('ExperimentService', () => {
         expect.objectContaining({
           experimentId: 'exp-1',
           leadId: 'lead-1',
-        }),
+        })
       );
       expect(eventBus.publish).toHaveBeenCalled();
       expect(result.assignment).toEqual(newAssignment);
@@ -502,7 +505,7 @@ describe('ExperimentService', () => {
       experimentRepo.findById.mockResolvedValue(null);
 
       await expect(service.assignVariant('missing', 'lead-1')).rejects.toThrow(
-        'Experiment missing not found',
+        'Experiment missing not found'
       );
     });
 
@@ -510,7 +513,7 @@ describe('ExperimentService', () => {
       experimentRepo.findById.mockResolvedValue(makeExperiment({ status: 'DRAFT' }));
 
       await expect(service.assignVariant('exp-1', 'lead-1')).rejects.toThrow(
-        'Can only assign variants for running experiments',
+        'Can only assign variants for running experiments'
       );
     });
 
@@ -555,7 +558,7 @@ describe('ExperimentService', () => {
   describe('getVariant', () => {
     it('should return variant for assigned lead', async () => {
       assignmentRepo.findByExperimentAndLead.mockResolvedValue(
-        makeAssignment({ variant: 'treatment' }),
+        makeAssignment({ variant: 'treatment' })
       );
 
       const result = await service.getVariant('exp-1', 'lead-1');
@@ -601,7 +604,7 @@ describe('ExperimentService', () => {
           experimentId: 'exp-1',
           leadId: 'lead-999',
           score: 85,
-        }),
+        })
       ).rejects.toThrow('No assignment found for lead lead-999 in experiment exp-1');
     });
   });
@@ -637,7 +640,7 @@ describe('ExperimentService', () => {
         service.recordConversion({
           experimentId: 'exp-1',
           leadId: 'lead-999',
-        }),
+        })
       ).rejects.toThrow('No assignment found for lead lead-999 in experiment exp-1');
     });
   });
@@ -655,14 +658,17 @@ describe('ExperimentService', () => {
       const controlScores = Array.from({ length: 50 }, (_, i) => 40 + i * 0.4);
       const treatmentScores = Array.from({ length: 50 }, (_, i) => 55 + i * 0.4);
 
-      assignmentRepo.getScoresByVariant.mockImplementation(
-        (_expId: string, variant: string) =>
-          variant === 'control' ? controlScores : treatmentScores,
+      assignmentRepo.getScoresByVariant.mockImplementation((_expId: string, variant: string) =>
+        variant === 'control' ? controlScores : treatmentScores
       );
 
       assignmentRepo.getConversionsByVariant.mockResolvedValue({ count: 10, total: 50 });
       resultRepo.findByExperimentId.mockResolvedValue(null);
-      resultRepo.create.mockImplementation((data: any) => ({ ...data, id: 'result-1', analyzedAt: new Date() }));
+      resultRepo.create.mockImplementation((data: any) => ({
+        ...data,
+        id: 'result-1',
+        analyzedAt: new Date(),
+      }));
 
       const result = await service.analyzeExperiment('exp-1');
 
@@ -693,7 +699,7 @@ describe('ExperimentService', () => {
       experimentRepo.findById.mockResolvedValue(null);
 
       await expect(service.analyzeExperiment('missing')).rejects.toThrow(
-        'Experiment missing not found',
+        'Experiment missing not found'
       );
     });
 
@@ -702,7 +708,11 @@ describe('ExperimentService', () => {
       assignmentRepo.getScoresByVariant.mockResolvedValue([]);
       assignmentRepo.getConversionsByVariant.mockResolvedValue({ count: 0, total: 0 });
       resultRepo.findByExperimentId.mockResolvedValue(null);
-      resultRepo.create.mockImplementation((data: any) => ({ ...data, id: 'result-1', analyzedAt: new Date() }));
+      resultRepo.create.mockImplementation((data: any) => ({
+        ...data,
+        id: 'result-1',
+        analyzedAt: new Date(),
+      }));
 
       const result = await service.analyzeExperiment('exp-1');
 
@@ -719,7 +729,11 @@ describe('ExperimentService', () => {
       assignmentRepo.getScoresByVariant.mockResolvedValue([50]);
       assignmentRepo.getConversionsByVariant.mockResolvedValue({ count: 0, total: 0 });
       resultRepo.findByExperimentId.mockResolvedValue(null);
-      resultRepo.create.mockImplementation((data: any) => ({ ...data, id: 'r1', analyzedAt: new Date() }));
+      resultRepo.create.mockImplementation((data: any) => ({
+        ...data,
+        id: 'r1',
+        analyzedAt: new Date(),
+      }));
 
       const result = await service.analyzeExperiment('exp-1');
 
@@ -735,13 +749,15 @@ describe('ExperimentService', () => {
 
       assignmentRepo.getConversionsByVariant.mockImplementation(
         (_expId: string, variant: string) =>
-          variant === 'control'
-            ? { count: 10, total: 50 }
-            : { count: 25, total: 50 },
+          variant === 'control' ? { count: 10, total: 50 } : { count: 25, total: 50 }
       );
 
       resultRepo.findByExperimentId.mockResolvedValue(null);
-      resultRepo.create.mockImplementation((data: any) => ({ ...data, id: 'r1', analyzedAt: new Date() }));
+      resultRepo.create.mockImplementation((data: any) => ({
+        ...data,
+        id: 'r1',
+        analyzedAt: new Date(),
+      }));
 
       const result = await service.analyzeExperiment('exp-1');
 
@@ -756,7 +772,11 @@ describe('ExperimentService', () => {
       assignmentRepo.getScoresByVariant.mockResolvedValue([50, 60]);
       assignmentRepo.getConversionsByVariant.mockResolvedValue({ count: 0, total: 0 });
       resultRepo.findByExperimentId.mockResolvedValue(null);
-      resultRepo.create.mockImplementation((data: any) => ({ ...data, id: 'r1', analyzedAt: new Date() }));
+      resultRepo.create.mockImplementation((data: any) => ({
+        ...data,
+        id: 'r1',
+        analyzedAt: new Date(),
+      }));
 
       const result = await service.analyzeExperiment('exp-1');
 
@@ -773,13 +793,16 @@ describe('ExperimentService', () => {
       const controlScores = Array.from({ length: 100 }, () => 40);
       const treatmentScores = Array.from({ length: 100 }, () => 80);
 
-      assignmentRepo.getScoresByVariant.mockImplementation(
-        (_expId: string, variant: string) =>
-          variant === 'control' ? controlScores : treatmentScores,
+      assignmentRepo.getScoresByVariant.mockImplementation((_expId: string, variant: string) =>
+        variant === 'control' ? controlScores : treatmentScores
       );
       assignmentRepo.getConversionsByVariant.mockResolvedValue({ count: 0, total: 0 });
       resultRepo.findByExperimentId.mockResolvedValue(null);
-      resultRepo.create.mockImplementation((data: any) => ({ ...data, id: 'r1', analyzedAt: new Date() }));
+      resultRepo.create.mockImplementation((data: any) => ({
+        ...data,
+        id: 'r1',
+        analyzedAt: new Date(),
+      }));
 
       const result = await service.analyzeExperiment('exp-1');
 
@@ -858,7 +881,7 @@ describe('ExperimentService', () => {
       experimentRepo.findByTenantId.mockResolvedValue([makeExperiment()]);
       assignmentRepo.countByVariant.mockResolvedValue(50);
       resultRepo.findByExperimentId.mockResolvedValue(
-        makeResultRecord({ isSignificant: true, winner: 'treatment' }),
+        makeResultRecord({ isSignificant: true, winner: 'treatment' })
       );
 
       const summaries = await service.listExperiments('tenant-1');
@@ -876,8 +899,8 @@ describe('ExperimentService', () => {
   describe('getStatus', () => {
     it('should return experiment status with sample counts', async () => {
       experimentRepo.findById.mockResolvedValue(makeExperiment({ minSampleSize: 100 }));
-      assignmentRepo.countByVariant.mockImplementation(
-        (_expId: string, variant: string) => (variant === 'control' ? 40 : 35),
+      assignmentRepo.countByVariant.mockImplementation((_expId: string, variant: string) =>
+        variant === 'control' ? 40 : 35
       );
 
       const status = await service.getStatus('exp-1');
@@ -911,9 +934,7 @@ describe('ExperimentService', () => {
     it('should throw if experiment not found', async () => {
       experimentRepo.findById.mockResolvedValue(null);
 
-      await expect(service.getStatus('missing')).rejects.toThrow(
-        'Experiment missing not found',
-      );
+      await expect(service.getStatus('missing')).rejects.toThrow('Experiment missing not found');
     });
   });
 

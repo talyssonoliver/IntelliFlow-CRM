@@ -138,9 +138,10 @@ export function checkSignupRateLimit(
     attemptsRemaining,
     lockedUntil: null,
     secondsRemaining: 0,
-    message: attemptsRemaining <= 2
-      ? `Warning: ${attemptsRemaining} attempt${attemptsRemaining === 1 ? '' : 's'} remaining before lockout.`
-      : '',
+    message:
+      attemptsRemaining <= 2
+        ? `Warning: ${attemptsRemaining} attempt${attemptsRemaining === 1 ? '' : 's'} remaining before lockout.`
+        : '',
   };
 }
 

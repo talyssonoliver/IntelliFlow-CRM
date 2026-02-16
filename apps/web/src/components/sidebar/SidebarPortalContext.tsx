@@ -52,11 +52,7 @@ export function SidebarPortalProvider({ children }: SidebarPortalProviderProps) 
     [config]
   );
 
-  return (
-    <SidebarPortalContext.Provider value={value}>
-      {children}
-    </SidebarPortalContext.Provider>
-  );
+  return <SidebarPortalContext.Provider value={value}>{children}</SidebarPortalContext.Provider>;
 }
 
 /**

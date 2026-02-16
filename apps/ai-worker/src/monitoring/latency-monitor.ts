@@ -121,7 +121,8 @@ export interface LatencyAlert {
 export class LatencyMonitor {
   private measurements: LatencyMeasurement[] = [];
   private alerts: LatencyAlert[] = [];
-  private operationTimers: Map<string, { startTime: number; phases: Record<string, number> }> = new Map();
+  private operationTimers: Map<string, { startTime: number; phases: Record<string, number> }> =
+    new Map();
 
   constructor(private readonly config: LatencyMonitorConfig) {
     logger.info({ config }, 'LatencyMonitor initialized');
@@ -246,11 +247,7 @@ export class LatencyMonitor {
     }
 
     if (measurement.phase === 'total') {
-      this.checkSLOCompliance(
-        measurement.model,
-        measurement.operationType,
-        measurement.durationMs
-      );
+      this.checkSLOCompliance(measurement.model, measurement.operationType, measurement.durationMs);
     }
 
     return entry;
@@ -264,41 +261,39 @@ export class LatencyMonitor {
     const end = endTime ?? new Date();
 
     const periodMeasurements = this.measurements.filter(
-      m => m.timestamp >= start && m.timestamp <= end
+      (m) => m.timestamp >= start && m.timestamp <= end
     );
 
     // Filter to total latency measurements
-    const totalMeasurements = periodMeasurements.filter(m => m.phase === 'total');
-    const durations = totalMeasurements.map(m => m.durationMs);
+    const totalMeasurements = periodMeasurements.filter((m) => m.phase === 'total');
+    const durations = totalMeasurements.map((m) => m.durationMs);
 
     // Calculate overall percentiles
     const percentiles = this.calculatePercentiles(durations);
 
     // Success rate
-    const successCount = totalMeasurements.filter(m => m.success).length;
-    const successRate = totalMeasurements.length > 0
-      ? successCount / totalMeasurements.length
-      : 1;
+    const successCount = totalMeasurements.filter((m) => m.success).length;
+    const successRate = totalMeasurements.length > 0 ? successCount / totalMeasurements.length : 1;
 
     // By model
     const byModel: Record<string, LatencyPercentiles> = {};
-    const modelGroups = this.groupBy(totalMeasurements, m => m.model);
+    const modelGroups = this.groupBy(totalMeasurements, (m) => m.model);
     for (const [model, measurements] of Object.entries(modelGroups)) {
-      byModel[model] = this.calculatePercentiles(measurements.map(m => m.durationMs));
+      byModel[model] = this.calculatePercentiles(measurements.map((m) => m.durationMs));
     }
 
     // By operation
     const byOperation: Record<string, LatencyPercentiles> = {};
-    const opGroups = this.groupBy(totalMeasurements, m => m.operationType);
+    const opGroups = this.groupBy(totalMeasurements, (m) => m.operationType);
     for (const [op, measurements] of Object.entries(opGroups)) {
-      byOperation[op] = this.calculatePercentiles(measurements.map(m => m.durationMs));
+      byOperation[op] = this.calculatePercentiles(measurements.map((m) => m.durationMs));
     }
 
     // By phase
     const byPhase: Record<string, LatencyPercentiles> = {};
-    const phaseGroups = this.groupBy(periodMeasurements, m => m.phase);
+    const phaseGroups = this.groupBy(periodMeasurements, (m) => m.phase);
     for (const [phase, measurements] of Object.entries(phaseGroups)) {
-      byPhase[phase] = this.calculatePercentiles(measurements.map(m => m.durationMs));
+      byPhase[phase] = this.calculatePercentiles(measurements.map((m) => m.durationMs));
     }
 
     // SLO compliance
@@ -337,7 +332,7 @@ export class LatencyMonitor {
     const periodStart = new Date(now.getTime() - periodMinutes * 60 * 1000);
 
     const totalMeasurements = this.measurements.filter(
-      m => m.phase === 'total' && m.timestamp >= periodStart
+      (m) => m.phase === 'total' && m.timestamp >= periodStart
     );
 
     const buckets: Map<number, LatencyMeasurement[]> = new Map();
@@ -351,12 +346,13 @@ export class LatencyMonitor {
       buckets.get(bucketKey)!.push(m);
     }
 
-    const trend: Array<{ timestamp: Date; p50: number; p95: number; p99: number; count: number }> = [];
+    const trend: Array<{ timestamp: Date; p50: number; p95: number; p99: number; count: number }> =
+      [];
 
     const sortedKeys = [...buckets.keys()].sort((a, b) => a - b);
     for (const bucketKey of sortedKeys) {
       const measurements = buckets.get(bucketKey)!;
-      const durations = measurements.map(m => m.durationMs);
+      const durations = measurements.map((m) => m.durationMs);
       const percentiles = this.calculatePercentiles(durations);
 
       trend.push({
@@ -375,10 +371,10 @@ export class LatencyMonitor {
    * Get slow operations (above P95 threshold)
    */
   getSlowOperations(limit: number = 100): LatencyMeasurement[] {
-    const totalMeasurements = this.measurements.filter(m => m.phase === 'total');
+    const totalMeasurements = this.measurements.filter((m) => m.phase === 'total');
 
     return [...totalMeasurements]
-      .filter(m => m.durationMs > this.config.sloTargets.p95Ms)
+      .filter((m) => m.durationMs > this.config.sloTargets.p95Ms)
       .sort((a, b) => b.durationMs - a.durationMs)
       .slice(0, limit);
   }
@@ -434,10 +430,7 @@ export class LatencyMonitor {
   /**
    * Group measurements by key
    */
-  private groupBy<T, K extends string>(
-    items: T[],
-    keyFn: (item: T) => K
-  ): Record<K, T[]> {
+  private groupBy<T, K extends string>(items: T[], keyFn: (item: T) => K): Record<K, T[]> {
     const groups: Record<string, T[]> = {};
 
     for (const item of items) {
@@ -473,11 +466,7 @@ export class LatencyMonitor {
   /**
    * Check SLO compliance and generate alerts
    */
-  private checkSLOCompliance(
-    model: string,
-    operationType: string,
-    duration: number
-  ): void {
+  private checkSLOCompliance(model: string, operationType: string, duration: number): void {
     const { p95Ms } = this.config.sloTargets;
     const { p95MultiplierWarning, p95MultiplierCritical } = this.config.alertThresholds;
 
@@ -533,8 +522,8 @@ export class LatencyMonitor {
     const cutoff = new Date(Date.now() - this.config.retentionHours * 60 * 60 * 1000);
     const originalCount = this.measurements.length;
 
-    this.measurements = this.measurements.filter(m => m.timestamp > cutoff);
-    this.alerts = this.alerts.filter(a => a.timestamp > cutoff);
+    this.measurements = this.measurements.filter((m) => m.timestamp > cutoff);
+    this.alerts = this.alerts.filter((a) => a.timestamp > cutoff);
 
     const pruned = originalCount - this.measurements.length;
     if (pruned > 0) {
@@ -632,17 +621,24 @@ export function getLatencyMetrics(): string {
   // Approximate bucket counts from percentiles
   const totalMeasurements = stats.sampleCount;
   for (const bucket of buckets) {
-    const ratio = bucket <= stats.percentiles.p50 ? 0.5 :
-                  bucket <= stats.percentiles.p75 ? 0.75 :
-                  bucket <= stats.percentiles.p90 ? 0.90 :
-                  bucket <= stats.percentiles.p95 ? 0.95 :
-                  bucket <= stats.percentiles.p99 ? 0.99 : 1.0;
+    const ratio =
+      bucket <= stats.percentiles.p50
+        ? 0.5
+        : bucket <= stats.percentiles.p75
+          ? 0.75
+          : bucket <= stats.percentiles.p90
+            ? 0.9
+            : bucket <= stats.percentiles.p95
+              ? 0.95
+              : bucket <= stats.percentiles.p99
+                ? 0.99
+                : 1.0;
     const count = Math.round(totalMeasurements * ratio);
     metrics += `intelliflow_ai_latency_seconds_bucket{le="${(bucket / 1000).toFixed(3)}"} ${count}\n`;
   }
   metrics += `intelliflow_ai_latency_seconds_bucket{le="+Inf"} ${totalMeasurements}\n`;
   metrics += `intelliflow_ai_latency_seconds_count ${totalMeasurements}\n`;
-  metrics += `intelliflow_ai_latency_seconds_sum ${(totalMeasurements * stats.percentiles.mean / 1000).toFixed(3)}\n`;
+  metrics += `intelliflow_ai_latency_seconds_sum ${((totalMeasurements * stats.percentiles.mean) / 1000).toFixed(3)}\n`;
 
   // Percentile gauges
   metrics += `# HELP intelliflow_ai_latency_p95_ms P95 latency in milliseconds\n`;

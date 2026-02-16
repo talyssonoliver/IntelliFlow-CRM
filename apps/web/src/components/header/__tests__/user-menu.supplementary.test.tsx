@@ -66,19 +66,13 @@ describe('UserMenu', () => {
   });
 
   it('renders user name from props when no auth user', () => {
-    render(
-      <UserMenu
-        user={{ name: 'John Doe', email: 'john@example.com', role: 'Admin' }}
-      />
-    );
+    render(<UserMenu user={{ name: 'John Doe', email: 'john@example.com', role: 'Admin' }} />);
 
     expect(screen.getByText('John Doe')).toBeDefined();
   });
 
   it('renders initials when no avatar is provided', () => {
-    render(
-      <UserMenu user={{ name: 'John Doe', email: 'john@example.com' }} />
-    );
+    render(<UserMenu user={{ name: 'John Doe', email: 'john@example.com' }} />);
 
     expect(screen.getByText('JD')).toBeDefined();
   });
@@ -118,9 +112,7 @@ describe('UserMenu', () => {
   });
 
   it('opens dropdown menu on click', () => {
-    render(
-      <UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />
-    );
+    render(<UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />);
 
     const trigger = screen.getByRole('button', { expanded: false });
     fireEvent.click(trigger);
@@ -133,9 +125,7 @@ describe('UserMenu', () => {
   });
 
   it('closes menu on second click (toggle)', () => {
-    render(
-      <UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />
-    );
+    render(<UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />);
 
     const trigger = screen.getByRole('button');
     fireEvent.click(trigger); // open
@@ -146,9 +136,7 @@ describe('UserMenu', () => {
   });
 
   it('closes menu on Escape key', () => {
-    render(
-      <UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />
-    );
+    render(<UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />);
 
     const trigger = screen.getByRole('button');
     fireEvent.click(trigger);
@@ -175,9 +163,7 @@ describe('UserMenu', () => {
   });
 
   it('calls logout and closes menu on Sign out click', async () => {
-    render(
-      <UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />
-    );
+    render(<UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />);
 
     const trigger = screen.getByRole('button');
     fireEvent.click(trigger);
@@ -193,9 +179,7 @@ describe('UserMenu', () => {
   it('shows "Signing out..." when isLoggingOut is true', () => {
     mockIsLoggingOut.value = true;
 
-    render(
-      <UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />
-    );
+    render(<UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />);
 
     const trigger = screen.getByRole('button');
     fireEvent.click(trigger);
@@ -206,9 +190,7 @@ describe('UserMenu', () => {
   it('disables sign out button when isLoggingOut is true', () => {
     mockIsLoggingOut.value = true;
 
-    render(
-      <UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />
-    );
+    render(<UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />);
 
     const trigger = screen.getByRole('button');
     fireEvent.click(trigger);
@@ -218,9 +200,7 @@ describe('UserMenu', () => {
   });
 
   it('displays user email in dropdown', () => {
-    render(
-      <UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />
-    );
+    render(<UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />);
 
     const trigger = screen.getByRole('button');
     fireEvent.click(trigger);
@@ -229,9 +209,7 @@ describe('UserMenu', () => {
   });
 
   it('displays user role badge in dropdown', () => {
-    render(
-      <UserMenu user={{ name: 'Jane', email: 'jane@test.com', role: 'Admin' }} />
-    );
+    render(<UserMenu user={{ name: 'Jane', email: 'jane@test.com', role: 'Admin' }} />);
 
     const trigger = screen.getByRole('button');
     fireEvent.click(trigger);
@@ -240,9 +218,7 @@ describe('UserMenu', () => {
   });
 
   it('closes menu when Profile link is clicked', () => {
-    render(
-      <UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />
-    );
+    render(<UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />);
 
     const trigger = screen.getByRole('button');
     fireEvent.click(trigger);
@@ -252,9 +228,7 @@ describe('UserMenu', () => {
   });
 
   it('closes menu when Settings link is clicked', () => {
-    render(
-      <UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />
-    );
+    render(<UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />);
 
     const trigger = screen.getByRole('button');
     fireEvent.click(trigger);
@@ -264,9 +238,7 @@ describe('UserMenu', () => {
   });
 
   it('closes menu when Governance link is clicked', () => {
-    render(
-      <UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />
-    );
+    render(<UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />);
 
     const trigger = screen.getByRole('button');
     fireEvent.click(trigger);
@@ -277,19 +249,14 @@ describe('UserMenu', () => {
 
   it('applies custom className', () => {
     const { container } = render(
-      <UserMenu
-        user={{ name: 'Jane', email: 'jane@test.com' }}
-        className="test-class"
-      />
+      <UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} className="test-class" />
     );
 
     expect(container.firstElementChild?.className).toContain('test-class');
   });
 
   it('shows expand_more icon when closed and expand_less when open', () => {
-    render(
-      <UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />
-    );
+    render(<UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} />);
 
     expect(screen.getByText('expand_more')).toBeDefined();
 
@@ -306,11 +273,7 @@ describe('UserMenu', () => {
   });
 
   it('truncates initials to 2 characters for long names', () => {
-    render(
-      <UserMenu
-        user={{ name: 'John Michael Smith', email: 'jms@test.com' }}
-      />
-    );
+    render(<UserMenu user={{ name: 'John Michael Smith', email: 'jms@test.com' }} />);
 
     // Should take first letter of each word then slice(0, 2)
     expect(screen.getByText('JM')).toBeDefined();

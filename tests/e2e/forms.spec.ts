@@ -278,7 +278,9 @@ test.describe('Interactive Components', () => {
       await page.goto('/leads');
 
       // Check for score progress bars
-      const progressBars = page.locator('.bg-gray-200.rounded-full, [class*="h-2"][class*="rounded-full"]');
+      const progressBars = page.locator(
+        '.bg-gray-200.rounded-full, [class*="h-2"][class*="rounded-full"]'
+      );
       const count = await progressBars.count();
 
       if (count > 0) {

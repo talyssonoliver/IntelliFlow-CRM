@@ -1,8 +1,8 @@
 ### 7.1 Billing & Subscription Management
 
-**Cenario**: Admin or tenant owner needs to manage their subscription plan,
-view invoices, manage payment methods, process upgrades/downgrades, and
-download receipts.
+**Cenario**: Admin or tenant owner needs to manage their subscription plan, view
+invoices, manage payment methods, process upgrades/downgrades, and download
+receipts.
 
 **Especificacoes Tecnicas**:
 
@@ -392,7 +392,8 @@ plan, review recent invoices, and update an expiring credit card.
 
 - Cartão expirado durante upgrade -> Mostra prompt para atualizar cartão
 - Webhook delayed -> Invoice status atualizado na próxima sync
-- Downgrade com features em uso -> Warning com lista de features que serão perdidas
+- Downgrade com features em uso -> Warning com lista de features que serão
+  perdidas
 - Cancelamento -> Acesso mantido até fim do período, opção de reativar
 
 **Sistemas**:

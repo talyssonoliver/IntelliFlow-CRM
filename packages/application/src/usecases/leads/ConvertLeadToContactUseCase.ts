@@ -23,11 +23,7 @@ import {
   LeadConversionAudit,
   LeadConversionAuditRepository,
 } from '@intelliflow/domain';
-import {
-  LeadRepository,
-  ContactRepository,
-  AccountRepository,
-} from '../../ports/repositories';
+import { LeadRepository, ContactRepository, AccountRepository } from '../../ports/repositories';
 import { EventBusPort } from '../../ports/external';
 import { ValidationError, NotFoundError, PersistenceError } from '../../errors';
 import { ConversionSnapshot } from './ConversionSnapshot';
@@ -233,9 +229,7 @@ export class ConvertLeadToContactUseCase {
    */
   private validateInput(input: ConvertLeadToContactInput): Result<void, DomainError> {
     if (!input.convertedBy || input.convertedBy.trim() === '') {
-      return Result.fail(
-        new ValidationError('convertedBy is required for audit trail')
-      );
+      return Result.fail(new ValidationError('convertedBy is required for audit trail'));
     }
     return Result.ok(undefined);
   }

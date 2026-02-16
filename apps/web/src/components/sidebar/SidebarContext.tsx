@@ -102,7 +102,18 @@ export function SidebarProvider({
       closeSidebar,
       isVisible,
     }),
-    [isExpanded, isPinned, isHovered, isMobileOpen, togglePinned, setHovered, toggleMobile, closeMobile, closeSidebar, isVisible]
+    [
+      isExpanded,
+      isPinned,
+      isHovered,
+      isMobileOpen,
+      togglePinned,
+      setHovered,
+      toggleMobile,
+      closeMobile,
+      closeSidebar,
+      isVisible,
+    ]
   );
 
   return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>;

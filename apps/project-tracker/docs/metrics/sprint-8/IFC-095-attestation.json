@@ -14,9 +14,7 @@
   "implementation_summary": {
     "p1_security_fix": {
       "description": "Tenant isolation enforcement - removed random UUID fallback",
-      "files_modified": [
-        "apps/ai-worker/src/jobs/prediction.job.ts"
-      ],
+      "files_modified": ["apps/ai-worker/src/jobs/prediction.job.ts"],
       "files_created": [
         "apps/ai-worker/src/jobs/__tests__/prediction-tenant-isolation.test.ts"
       ],

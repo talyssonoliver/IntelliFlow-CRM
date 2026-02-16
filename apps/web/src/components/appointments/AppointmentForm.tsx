@@ -1,10 +1,22 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { APPOINTMENT_TYPE_OPTIONS, BUFFER_PRESETS, REMINDER_PRESETS, getReminderLabel } from '@/lib/appointments/appointment-utils';
+import {
+  APPOINTMENT_TYPE_OPTIONS,
+  BUFFER_PRESETS,
+  REMINDER_PRESETS,
+  getReminderLabel,
+} from '@/lib/appointments/appointment-utils';
 import { ConflictWarning } from './ConflictWarning';
 import { RecurrenceEditor } from './RecurrenceEditor';
-import type { AppointmentDetailData, AppointmentFormInput, ConflictInfo, ConflictCheckParams, RecurrencePattern, AppointmentType } from './types';
+import type {
+  AppointmentDetailData,
+  AppointmentFormInput,
+  ConflictInfo,
+  ConflictCheckParams,
+  RecurrencePattern,
+  AppointmentType,
+} from './types';
 
 export interface AppointmentFormProps {
   appointment?: AppointmentDetailData;
@@ -28,15 +40,27 @@ export function AppointmentForm({
 
   const [title, setTitle] = useState(appointment?.title || '');
   const [description, setDescription] = useState(appointment?.description || '');
-  const [appointmentType, setAppointmentType] = useState<AppointmentType>(appointment?.appointmentType || 'MEETING');
-  const [startTime, setStartTime] = useState(appointment?.startTime ? toLocalDateTimeString(appointment.startTime) : '');
-  const [endTime, setEndTime] = useState(appointment?.endTime ? toLocalDateTimeString(appointment.endTime) : '');
+  const [appointmentType, setAppointmentType] = useState<AppointmentType>(
+    appointment?.appointmentType || 'MEETING'
+  );
+  const [startTime, setStartTime] = useState(
+    appointment?.startTime ? toLocalDateTimeString(appointment.startTime) : ''
+  );
+  const [endTime, setEndTime] = useState(
+    appointment?.endTime ? toLocalDateTimeString(appointment.endTime) : ''
+  );
   const [location, setLocation] = useState(appointment?.location || '');
   const [attendeeIds] = useState<string[]>(appointment?.attendees?.map((a) => a.userId) || []);
   const [linkedCaseIds] = useState<string[]>(appointment?.linkedCases?.map((c) => c.caseId) || []);
-  const [bufferMinutesBefore, setBufferMinutesBefore] = useState(appointment?.bufferMinutesBefore ?? 0);
-  const [bufferMinutesAfter, setBufferMinutesAfter] = useState(appointment?.bufferMinutesAfter ?? 0);
-  const [recurrence, setRecurrence] = useState<RecurrencePattern | null>(appointment?.recurrence ?? null);
+  const [bufferMinutesBefore, setBufferMinutesBefore] = useState(
+    appointment?.bufferMinutesBefore ?? 0
+  );
+  const [bufferMinutesAfter, setBufferMinutesAfter] = useState(
+    appointment?.bufferMinutesAfter ?? 0
+  );
+  const [recurrence, setRecurrence] = useState<RecurrencePattern | null>(
+    appointment?.recurrence ?? null
+  );
   const [reminderMinutes, setReminderMinutes] = useState(appointment?.reminderMinutes ?? 60);
   const [forceOverrideConflicts, setForceOverrideConflicts] = useState(false);
 
@@ -116,7 +140,11 @@ export function AppointmentForm({
           aria-invalid={!!errors.title}
           aria-describedby={errors.title ? 'title-error' : undefined}
         />
-        {errors.title && <p id="title-error" className="text-xs text-red-600 mt-1">{errors.title}</p>}
+        {errors.title && (
+          <p id="title-error" className="text-xs text-red-600 mt-1">
+            {errors.title}
+          </p>
+        )}
       </div>
 
       {/* Description */}
@@ -149,10 +177,14 @@ export function AppointmentForm({
           aria-invalid={!!errors.appointmentType}
         >
           {APPOINTMENT_TYPE_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
           ))}
         </select>
-        {errors.appointmentType && <p className="text-xs text-red-600 mt-1">{errors.appointmentType}</p>}
+        {errors.appointmentType && (
+          <p className="text-xs text-red-600 mt-1">{errors.appointmentType}</p>
+        )}
       </div>
 
       {/* Start / End Time */}
@@ -171,7 +203,11 @@ export function AppointmentForm({
             aria-invalid={!!errors.startTime}
             aria-describedby={errors.startTime ? 'start-error' : undefined}
           />
-          {errors.startTime && <p id="start-error" className="text-xs text-red-600 mt-1">{errors.startTime}</p>}
+          {errors.startTime && (
+            <p id="start-error" className="text-xs text-red-600 mt-1">
+              {errors.startTime}
+            </p>
+          )}
         </div>
         <div>
           <label htmlFor="appt-end" className="block text-sm font-medium text-gray-700 mb-1">
@@ -187,7 +223,11 @@ export function AppointmentForm({
             aria-invalid={!!errors.endTime}
             aria-describedby={errors.endTime ? 'end-error' : undefined}
           />
-          {errors.endTime && <p id="end-error" className="text-xs text-red-600 mt-1">{errors.endTime}</p>}
+          {errors.endTime && (
+            <p id="end-error" className="text-xs text-red-600 mt-1">
+              {errors.endTime}
+            </p>
+          )}
         </div>
       </div>
 
@@ -210,7 +250,10 @@ export function AppointmentForm({
       {/* Buffer Time */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="appt-buffer-before" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="appt-buffer-before"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Buffer Before
           </label>
           <select
@@ -221,12 +264,17 @@ export function AppointmentForm({
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
           >
             {BUFFER_PRESETS.map((v) => (
-              <option key={v} value={v}>{v === 0 ? 'None' : `${v} min`}</option>
+              <option key={v} value={v}>
+                {v === 0 ? 'None' : `${v} min`}
+              </option>
             ))}
           </select>
         </div>
         <div>
-          <label htmlFor="appt-buffer-after" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="appt-buffer-after"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Buffer After
           </label>
           <select
@@ -237,7 +285,9 @@ export function AppointmentForm({
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
           >
             {BUFFER_PRESETS.map((v) => (
-              <option key={v} value={v}>{v === 0 ? 'None' : `${v} min`}</option>
+              <option key={v} value={v}>
+                {v === 0 ? 'None' : `${v} min`}
+              </option>
             ))}
           </select>
         </div>
@@ -256,17 +306,15 @@ export function AppointmentForm({
           className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
         >
           {REMINDER_PRESETS.map((v) => (
-            <option key={v} value={v}>{getReminderLabel(v)}</option>
+            <option key={v} value={v}>
+              {getReminderLabel(v)}
+            </option>
           ))}
         </select>
       </div>
 
       {/* Recurrence */}
-      <RecurrenceEditor
-        value={recurrence}
-        onChange={setRecurrence}
-        disabled={isSubmitting}
-      />
+      <RecurrenceEditor value={recurrence} onChange={setRecurrence} disabled={isSubmitting} />
 
       {/* Conflict Warning */}
       {conflicts?.hasConflicts && (
@@ -293,7 +341,9 @@ export function AppointmentForm({
           className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
         >
           {isSubmitting && (
-            <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+            <span className="material-symbols-outlined text-base animate-spin">
+              progress_activity
+            </span>
           )}
           {isEdit ? 'Update' : 'Create'}
         </button>

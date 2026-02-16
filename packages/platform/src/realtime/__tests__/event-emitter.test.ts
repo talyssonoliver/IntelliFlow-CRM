@@ -74,10 +74,7 @@ describe('Event Emitter', () => {
   describe('emitLeadScored() + subscribeToChannel', () => {
     it('should emit and receive a LeadScoredEvent', () => {
       const handler = vi.fn();
-      const unsub = subscribeToChannel<LeadScoredEvent>(
-        REALTIME_CHANNELS.LEAD_SCORED,
-        handler
-      );
+      const unsub = subscribeToChannel<LeadScoredEvent>(REALTIME_CHANNELS.LEAD_SCORED, handler);
       unsubscribers.push(unsub);
 
       const event: LeadScoredEvent = {
@@ -97,14 +94,8 @@ describe('Event Emitter', () => {
       const handler1 = vi.fn();
       const handler2 = vi.fn();
 
-      const unsub1 = subscribeToChannel<LeadScoredEvent>(
-        REALTIME_CHANNELS.LEAD_SCORED,
-        handler1
-      );
-      const unsub2 = subscribeToChannel<LeadScoredEvent>(
-        REALTIME_CHANNELS.LEAD_SCORED,
-        handler2
-      );
+      const unsub1 = subscribeToChannel<LeadScoredEvent>(REALTIME_CHANNELS.LEAD_SCORED, handler1);
+      const unsub2 = subscribeToChannel<LeadScoredEvent>(REALTIME_CHANNELS.LEAD_SCORED, handler2);
       unsubscribers.push(unsub1, unsub2);
 
       const event: LeadScoredEvent = {
@@ -122,10 +113,7 @@ describe('Event Emitter', () => {
 
     it('should include correct event data', () => {
       const handler = vi.fn();
-      const unsub = subscribeToChannel<LeadScoredEvent>(
-        REALTIME_CHANNELS.LEAD_SCORED,
-        handler
-      );
+      const unsub = subscribeToChannel<LeadScoredEvent>(REALTIME_CHANNELS.LEAD_SCORED, handler);
       unsubscribers.push(unsub);
 
       const timestamp = new Date('2025-06-15T10:00:00Z');
@@ -147,10 +135,7 @@ describe('Event Emitter', () => {
   describe('emitTaskAssigned() + subscribeToChannel', () => {
     it('should emit and receive a TaskAssignedEvent', () => {
       const handler = vi.fn();
-      const unsub = subscribeToChannel<TaskAssignedEvent>(
-        REALTIME_CHANNELS.TASK_ASSIGNED,
-        handler
-      );
+      const unsub = subscribeToChannel<TaskAssignedEvent>(REALTIME_CHANNELS.TASK_ASSIGNED, handler);
       unsubscribers.push(unsub);
 
       const event: TaskAssignedEvent = {
@@ -168,10 +153,7 @@ describe('Event Emitter', () => {
 
     it('should include correct task data', () => {
       const handler = vi.fn();
-      const unsub = subscribeToChannel<TaskAssignedEvent>(
-        REALTIME_CHANNELS.TASK_ASSIGNED,
-        handler
-      );
+      const unsub = subscribeToChannel<TaskAssignedEvent>(REALTIME_CHANNELS.TASK_ASSIGNED, handler);
       unsubscribers.push(unsub);
 
       const dueDate = new Date('2025-08-15');
@@ -193,10 +175,7 @@ describe('Event Emitter', () => {
   describe('emitSystemEvent()', () => {
     it('should add timestamp automatically', () => {
       const handler = vi.fn();
-      const unsub = subscribeToChannel<SystemEvent>(
-        REALTIME_CHANNELS.SYSTEM_EVENT,
-        handler
-      );
+      const unsub = subscribeToChannel<SystemEvent>(REALTIME_CHANNELS.SYSTEM_EVENT, handler);
       unsubscribers.push(unsub);
 
       const before = new Date();
@@ -218,10 +197,7 @@ describe('Event Emitter', () => {
 
     it('should emit warning type', () => {
       const handler = vi.fn();
-      const unsub = subscribeToChannel<SystemEvent>(
-        REALTIME_CHANNELS.SYSTEM_EVENT,
-        handler
-      );
+      const unsub = subscribeToChannel<SystemEvent>(REALTIME_CHANNELS.SYSTEM_EVENT, handler);
       unsubscribers.push(unsub);
 
       emitSystemEvent({
@@ -235,10 +211,7 @@ describe('Event Emitter', () => {
 
     it('should emit error type', () => {
       const handler = vi.fn();
-      const unsub = subscribeToChannel<SystemEvent>(
-        REALTIME_CHANNELS.SYSTEM_EVENT,
-        handler
-      );
+      const unsub = subscribeToChannel<SystemEvent>(REALTIME_CHANNELS.SYSTEM_EVENT, handler);
       unsubscribers.push(unsub);
 
       emitSystemEvent({
@@ -255,10 +228,7 @@ describe('Event Emitter', () => {
   describe('emitAIProgress()', () => {
     it('should emit and receive an AIProgressEvent', () => {
       const handler = vi.fn();
-      const unsub = subscribeToChannel<AIProgressEvent>(
-        REALTIME_CHANNELS.AI_PROGRESS,
-        handler
-      );
+      const unsub = subscribeToChannel<AIProgressEvent>(REALTIME_CHANNELS.AI_PROGRESS, handler);
       unsubscribers.push(unsub);
 
       const event: AIProgressEvent = {
@@ -275,10 +245,7 @@ describe('Event Emitter', () => {
 
     it('should include correct progress data', () => {
       const handler = vi.fn();
-      const unsub = subscribeToChannel<AIProgressEvent>(
-        REALTIME_CHANNELS.AI_PROGRESS,
-        handler
-      );
+      const unsub = subscribeToChannel<AIProgressEvent>(REALTIME_CHANNELS.AI_PROGRESS, handler);
       unsubscribers.push(unsub);
 
       emitAIProgress({
@@ -297,10 +264,7 @@ describe('Event Emitter', () => {
   describe('subscribeToChannel() unsubscribe', () => {
     it('should return an unsubscribe function', () => {
       const handler = vi.fn();
-      const unsub = subscribeToChannel<LeadScoredEvent>(
-        REALTIME_CHANNELS.LEAD_SCORED,
-        handler
-      );
+      const unsub = subscribeToChannel<LeadScoredEvent>(REALTIME_CHANNELS.LEAD_SCORED, handler);
 
       expect(typeof unsub).toBe('function');
       unsub();
@@ -308,10 +272,7 @@ describe('Event Emitter', () => {
 
     it('should stop receiving events after unsubscribing', () => {
       const handler = vi.fn();
-      const unsub = subscribeToChannel<LeadScoredEvent>(
-        REALTIME_CHANNELS.LEAD_SCORED,
-        handler
-      );
+      const unsub = subscribeToChannel<LeadScoredEvent>(REALTIME_CHANNELS.LEAD_SCORED, handler);
 
       // Emit first event - should be received
       emitLeadScored({

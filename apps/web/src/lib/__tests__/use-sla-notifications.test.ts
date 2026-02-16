@@ -10,7 +10,9 @@ const hoisted = vi.hoisted(() => {
 });
 
 vi.mock('../../../lib/tickets/sla-notifications', () => {
-  function SLANotificationManager() { return hoisted.mgr; }
+  function SLANotificationManager() {
+    return hoisted.mgr;
+  }
   return { SLANotificationManager };
 });
 
@@ -19,11 +21,16 @@ vi.mock('../../../lib/tickets/sla-service', () => ({
 }));
 
 vi.mock('react', () => ({
-  useEffect: vi.fn((fn: () => any) => { fn(); }),
+  useEffect: vi.fn((fn: () => any) => {
+    fn();
+  }),
   useRef: vi.fn((initial: any) => ({ current: initial })),
 }));
 
-import { useSLANotifications, useSLANotificationListener } from '../../../lib/tickets/use-sla-notifications';
+import {
+  useSLANotifications,
+  useSLANotificationListener,
+} from '../../../lib/tickets/use-sla-notifications';
 
 describe('useSLANotifications', () => {
   beforeEach(() => {

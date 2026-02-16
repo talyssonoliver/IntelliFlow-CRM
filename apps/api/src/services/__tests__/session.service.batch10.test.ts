@@ -238,7 +238,7 @@ describe('SessionService batch10 - uncovered branches', () => {
       await service.createSession({ userId: 'user-a', tenantId: 't1' });
 
       // Wait for sessions to expire (inactivity timeout is 500ms)
-      await new Promise(r => setTimeout(r, 600));
+      await new Promise((r) => setTimeout(r, 600));
 
       const cleaned = service.cleanupExpiredSessions();
       expect(cleaned).toBe(3);
@@ -270,7 +270,7 @@ describe('SessionService batch10 - uncovered branches', () => {
       await service.createSession({ userId: 'user-expired', tenantId: 't1' });
 
       // Wait for sessions to expire
-      await new Promise(r => setTimeout(r, 400));
+      await new Promise((r) => setTimeout(r, 400));
 
       // Creating a new session should not fail even though we have 2 "tracked" sessions
       const newSession = await service.createSession({ userId: 'user-expired', tenantId: 't1' });

@@ -181,9 +181,9 @@ export async function setupTestDatabase(): Promise<string> {
       : 'Docker not available';
     throw new Error(
       `${reason}. To run integration tests:\n` +
-      '   1. Install Docker, OR\n' +
-      '   2. Set DATABASE_URL environment variable, OR\n' +
-      '   3. Run: docker-compose up -d postgres-test'
+        '   1. Install Docker, OR\n' +
+        '   2. Set DATABASE_URL environment variable, OR\n' +
+        '   3. Run: docker-compose up -d postgres-test'
     );
   }
 

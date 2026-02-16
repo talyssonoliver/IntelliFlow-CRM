@@ -38,9 +38,7 @@ export class ResponseContent extends ValueObject<ResponseContentProps> {
       throw new ResponseContentValidationError('Body is required');
     }
     if (props.body.length > this.MAX_BODY_LENGTH) {
-      throw new ResponseContentValidationError(
-        `Body exceeds ${this.MAX_BODY_LENGTH} characters`
-      );
+      throw new ResponseContentValidationError(`Body exceeds ${this.MAX_BODY_LENGTH} characters`);
     }
     return new ResponseContent({
       subject: props.subject.trim(),
@@ -73,10 +71,7 @@ export class ResponseContent extends ValueObject<ResponseContentProps> {
   /**
    * Create a modified copy of the content
    */
-  withModifications(modifications: {
-    subject?: string;
-    body?: string;
-  }): ResponseContent {
+  withModifications(modifications: { subject?: string; body?: string }): ResponseContent {
     return ResponseContent.create({
       subject: modifications.subject ?? this.props.subject,
       body: modifications.body ?? this.props.body,

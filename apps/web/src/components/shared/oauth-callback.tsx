@@ -297,9 +297,7 @@ export function OAuthCallback({
             {/* Success indicator */}
             {status === 'success' && (
               <div className="pt-2">
-                <p className="text-xs text-slate-400">
-                  Redirecting to dashboard in a moment...
-                </p>
+                <p className="text-xs text-slate-400">Redirecting to dashboard in a moment...</p>
               </div>
             )}
           </div>

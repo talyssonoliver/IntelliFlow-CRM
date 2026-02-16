@@ -40,7 +40,14 @@ export function RiskIndicators({ distribution, total }: RiskIndicatorsProps) {
               >
                 {level}
               </span>
-              <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${level}: ${pct}%`}>
+              <div
+                className="flex-1 h-2 rounded-full bg-muted overflow-hidden"
+                role="progressbar"
+                aria-valuenow={pct}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`${level}: ${pct}%`}
+              >
                 <div
                   className={`h-full rounded-full transition-all ${LEVEL_COLORS[level] ?? 'bg-slate-500'}`}
                   style={{ width: `${pct}%` }}

@@ -8,7 +8,12 @@
  */
 
 import { ValueObject } from '../shared/ValueObject';
-import { NBA_ACTION_TYPES, NBA_ACTION_PRIORITIES, type NBAActionType, type NBAActionPriority } from '../ai/AIConstants';
+import {
+  NBA_ACTION_TYPES,
+  NBA_ACTION_PRIORITIES,
+  type NBAActionType,
+  type NBAActionPriority,
+} from '../ai/AIConstants';
 
 export class InvalidActionTypeError extends Error {
   constructor(value: string) {

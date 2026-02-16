@@ -114,10 +114,7 @@ export default function RiskRegister() {
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
         </div>
-        <button
-          onClick={fetchData}
-          className="mt-2 text-sm underline hover:no-underline"
-        >
+        <button onClick={fetchData} className="mt-2 text-sm underline hover:no-underline">
           Try again
         </button>
       </div>
@@ -133,11 +130,7 @@ export default function RiskRegister() {
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Risk Register</h3>
             {lastUpdated && (
-              <StaleIndicator
-                lastUpdated={lastUpdated}
-                thresholdMinutes={43200}
-                showTime
-              />
+              <StaleIndicator lastUpdated={lastUpdated} thresholdMinutes={43200} showTime />
             )}
           </div>
         </div>
@@ -217,11 +210,16 @@ export default function RiskRegister() {
                 <tr key={risk.id} className="border-b border-gray-100 hover:bg-gray-50">
                   <td className="p-3 font-mono text-sm text-blue-600">{risk.id}</td>
                   <td className="p-3 text-sm text-gray-700">{risk.category}</td>
-                  <td className="p-3 text-sm text-gray-700 max-w-xs truncate" title={risk.description}>
+                  <td
+                    className="p-3 text-sm text-gray-700 max-w-xs truncate"
+                    title={risk.description}
+                  >
                     {risk.description}
                   </td>
                   <td className="p-3 text-center">
-                    <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold border ${getScoreColor(risk.score)}`}>
+                    <span
+                      className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold border ${getScoreColor(risk.score)}`}
+                    >
                       {risk.score}
                     </span>
                   </td>
@@ -240,10 +238,7 @@ export default function RiskRegister() {
 
       {/* Add Risk Modal */}
       {showAddModal && (
-        <AddRiskModal
-          onClose={() => setShowAddModal(false)}
-          onAdd={handleAddRisk}
-        />
+        <AddRiskModal onClose={() => setShowAddModal(false)} onAdd={handleAddRisk} />
       )}
     </div>
   );
@@ -316,7 +311,9 @@ function AddRiskModal({
               <label className="block text-sm text-gray-400 mb-1">Impact</label>
               <select
                 value={formData.impact}
-                onChange={(e) => setFormData({ ...formData, impact: e.target.value as 'High' | 'Medium' | 'Low' })}
+                onChange={(e) =>
+                  setFormData({ ...formData, impact: e.target.value as 'High' | 'Medium' | 'Low' })
+                }
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
               >
                 <option value="High">High</option>
@@ -328,7 +325,12 @@ function AddRiskModal({
               <label className="block text-sm text-gray-400 mb-1">Likelihood</label>
               <select
                 value={formData.likelihood}
-                onChange={(e) => setFormData({ ...formData, likelihood: e.target.value as 'High' | 'Medium' | 'Low' })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    likelihood: e.target.value as 'High' | 'Medium' | 'Low',
+                  })
+                }
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white"
               >
                 <option value="High">High</option>

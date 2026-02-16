@@ -30,14 +30,7 @@
         "format": {
           "description": "Source document format",
           "type": "string",
-          "enum": [
-            "pdf",
-            "png",
-            "jpg",
-            "jpeg",
-            "tiff",
-            "webp"
-          ]
+          "enum": ["pdf", "png", "jpg", "jpeg", "tiff", "webp"]
         },
         "language": {
           "description": "ISO 639-1 language code",
@@ -65,12 +58,7 @@
         "engine": {
           "description": "OCR engine used for extraction",
           "type": "string",
-          "enum": [
-            "tesseract",
-            "google-vision",
-            "aws-textract",
-            "azure-vision"
-          ]
+          "enum": ["tesseract", "google-vision", "aws-textract", "azure-vision"]
         },
         "confidence": {
           "description": "Overall OCR confidence score (0-1)",

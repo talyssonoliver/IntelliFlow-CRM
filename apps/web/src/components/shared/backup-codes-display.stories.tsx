@@ -92,13 +92,7 @@ export const FewCodes: Story = {
  */
 export const ManyCodes: Story = {
   args: {
-    codes: [
-      ...DEMO_CODES,
-      'X1Y2Z3A4B5',
-      'C6D7E8F9G0',
-      'H1I2J3K4L5',
-      'M6N7O8P9Q0',
-    ],
+    codes: [...DEMO_CODES, 'X1Y2Z3A4B5', 'C6D7E8F9G0', 'H1I2J3K4L5', 'M6N7O8P9Q0'],
     email: 'poweruser@example.com',
     generatedAt: new Date(),
   },
@@ -200,8 +194,8 @@ export const PrintPreview: Story = {
     (Story) => (
       <div className="max-w-lg p-6 bg-white rounded-lg text-slate-900">
         <p className="text-sm text-slate-500 mb-4">
-          Note: Print preview shows how codes appear when printed.
-          Actual print layout uses dedicated print styles.
+          Note: Print preview shows how codes appear when printed. Actual print layout uses
+          dedicated print styles.
         </p>
         <Story />
       </div>

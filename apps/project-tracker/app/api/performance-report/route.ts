@@ -113,65 +113,78 @@ export async function GET() {
     const totalTests = apiResults.length;
     const passedTests = apiResults.filter((r: { status: string }) => r.status === 'PASS').length;
     // Only count real benchmarks (p50 > 1ms) for success rate - exclude 401/403 instant rejections
-    const realBenchmarks = apiResults.filter((r: { status: string; p50: number }) => r.status === 'PASS' && r.p50 > 1);
+    const realBenchmarks = apiResults.filter(
+      (r: { status: string; p50: number }) => r.status === 'PASS' && r.p50 > 1
+    );
     const realSuccessRate = realBenchmarks.length > 0 ? 100 : null; // All real benchmarks passed
 
     // Extract k6 load test results if available
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const loadTestResults = (data as any).load_test_results as {
-      timestamp: string;
-      target_vus: number;
-      max_concurrent_users: number;
-      requests_per_second: number | null;
-      error_rate: number | null;
-      p50_response_time: number | null;
-      p95_response_time: number | null;
-      p99_response_time: number | null;
-      duration_seconds: number;
-      thresholds_passed: boolean;
-    } | undefined;
+    const loadTestResults = (data as any).load_test_results as
+      | {
+          timestamp: string;
+          target_vus: number;
+          max_concurrent_users: number;
+          requests_per_second: number | null;
+          error_rate: number | null;
+          p50_response_time: number | null;
+          p95_response_time: number | null;
+          p99_response_time: number | null;
+          duration_seconds: number;
+          thresholds_passed: boolean;
+        }
+      | undefined;
 
     // Use k6 load test data if available, otherwise use API benchmark data
-    const performanceMetrics = hasPerformanceData ? {
-      // Response times: prefer load test results, fallback to API benchmark
-      p50_response_time: loadTestResults?.p50_response_time ?? aggregateResult?.p50 ?? healthResult?.p50 ?? null,
-      p95_response_time: loadTestResults?.p95_response_time ?? aggregateResult?.p95 ?? healthResult?.p95 ?? null,
-      p99_response_time: loadTestResults?.p99_response_time ?? aggregateResult?.p99 ?? healthResult?.p99 ?? null,
-      // Load test specific metrics - only from k6, never fake
-      requests_per_second: loadTestResults?.requests_per_second ?? null,
-      error_rate: loadTestResults?.error_rate ?? (realSuccessRate !== null ? 0 : null),
-      max_concurrent_users: loadTestResults?.max_concurrent_users ?? null,
-      // Test counts from API benchmarks
-      total_tests: totalTests,
-      passed_tests: realBenchmarks.length, // Only count real benchmarks with actual timing
-      failed_tests: totalTests - passedTests, // Config issues (wrong endpoint names, etc.)
-      status: 'completed' as const,
-      // Include load test metadata if available
-      load_test_timestamp: loadTestResults?.timestamp ?? null,
-      load_test_duration_seconds: loadTestResults?.duration_seconds ?? null,
-      load_test_thresholds_passed: loadTestResults?.thresholds_passed ?? null,
-    } : {
-      p50_response_time: null,
-      p95_response_time: null,
-      p99_response_time: null,
-      requests_per_second: null,
-      error_rate: null,
-      max_concurrent_users: null,
-      total_tests: null,
-      passed_tests: null,
-      failed_tests: null,
-      status: (data.status === 'COMPLETED' ? 'completed' :
-               data.status === 'PARTIAL' ? 'pending' : 'pending') as 'pending' | 'running' | 'completed' | 'failed',
-      load_test_timestamp: null,
-      load_test_duration_seconds: null,
-      load_test_thresholds_passed: null,
-    };
+    const performanceMetrics = hasPerformanceData
+      ? {
+          // Response times: prefer load test results, fallback to API benchmark
+          p50_response_time:
+            loadTestResults?.p50_response_time ?? aggregateResult?.p50 ?? healthResult?.p50 ?? null,
+          p95_response_time:
+            loadTestResults?.p95_response_time ?? aggregateResult?.p95 ?? healthResult?.p95 ?? null,
+          p99_response_time:
+            loadTestResults?.p99_response_time ?? aggregateResult?.p99 ?? healthResult?.p99 ?? null,
+          // Load test specific metrics - only from k6, never fake
+          requests_per_second: loadTestResults?.requests_per_second ?? null,
+          error_rate: loadTestResults?.error_rate ?? (realSuccessRate !== null ? 0 : null),
+          max_concurrent_users: loadTestResults?.max_concurrent_users ?? null,
+          // Test counts from API benchmarks
+          total_tests: totalTests,
+          passed_tests: realBenchmarks.length, // Only count real benchmarks with actual timing
+          failed_tests: totalTests - passedTests, // Config issues (wrong endpoint names, etc.)
+          status: 'completed' as const,
+          // Include load test metadata if available
+          load_test_timestamp: loadTestResults?.timestamp ?? null,
+          load_test_duration_seconds: loadTestResults?.duration_seconds ?? null,
+          load_test_thresholds_passed: loadTestResults?.thresholds_passed ?? null,
+        }
+      : {
+          p50_response_time: null,
+          p95_response_time: null,
+          p99_response_time: null,
+          requests_per_second: null,
+          error_rate: null,
+          max_concurrent_users: null,
+          total_tests: null,
+          passed_tests: null,
+          failed_tests: null,
+          status: (data.status === 'COMPLETED'
+            ? 'completed'
+            : data.status === 'PARTIAL'
+              ? 'pending'
+              : 'pending') as 'pending' | 'running' | 'completed' | 'failed',
+          load_test_timestamp: null,
+          load_test_duration_seconds: null,
+          load_test_thresholds_passed: null,
+        };
 
     // Extract individual endpoint results for the Response Time chart
     // Filter out endpoints with 0ms timing (401 responses that didn't actually process)
     const endpointMetrics = apiResults
-      .filter((r: { name: string; status: string; p50: number }) =>
-        r.status === 'PASS' && r.name !== 'api-p95' && r.p50 > 1 // Only real benchmarks (p50 > 1ms)
+      .filter(
+        (r: { name: string; status: string; p50: number }) =>
+          r.status === 'PASS' && r.name !== 'api-p95' && r.p50 > 1 // Only real benchmarks (p50 > 1ms)
       )
       .map((r: { name: string; p50: number; p95: number; p99: number; avgTime: number }) => ({
         name: r.name.replace('api-', ''),
@@ -182,52 +195,69 @@ export async function GET() {
       }));
 
     // Helper to recursively extract all checks from groups
-    function getAllChecks(group: { checks?: K6Check[]; groups?: { checks?: K6Check[]; groups?: unknown[] }[] }): K6Check[] {
+    function getAllChecks(group: {
+      checks?: K6Check[];
+      groups?: { checks?: K6Check[]; groups?: unknown[] }[];
+    }): K6Check[] {
       const checks: K6Check[] = [];
       if (group.checks) {
         checks.push(...group.checks);
       }
       if (group.groups) {
         for (const subGroup of group.groups) {
-          checks.push(...getAllChecks(subGroup as { checks?: K6Check[]; groups?: { checks?: K6Check[]; groups?: unknown[] }[] }));
+          checks.push(
+            ...getAllChecks(
+              subGroup as {
+                checks?: K6Check[];
+                groups?: { checks?: K6Check[]; groups?: unknown[] }[];
+              }
+            )
+          );
         }
       }
       return checks;
     }
 
     // Extract k6 tested endpoints from ALL checks (including nested groups)
-    const allK6Checks = k6RawData?.raw_data?.root_group ? getAllChecks(k6RawData.raw_data.root_group) : [];
+    const allK6Checks = k6RawData?.raw_data?.root_group
+      ? getAllChecks(k6RawData.raw_data.root_group)
+      : [];
     const k6TestedEndpoints = allK6Checks
-      .filter(check => check.name.includes('status 200')) // Only count status checks as endpoint tests
-      .map(check => ({
+      .filter((check) => check.name.includes('status 200')) // Only count status checks as endpoint tests
+      .map((check) => ({
         name: check.name.replace(' status 200', ''),
         passes: check.passes,
         fails: check.fails,
         total: check.passes + check.fails,
-        success_rate: (check.passes + check.fails) > 0 ? check.passes / (check.passes + check.fails) * 100 : 0,
+        success_rate:
+          check.passes + check.fails > 0 ? (check.passes / (check.passes + check.fails)) * 100 : 0,
       }));
 
     // Extract k6 test configuration
-    const k6TestConfig = k6RawData ? {
-      test_type: k6RawData.test_type || 'load_test',
-      target_vus: k6RawData.target_vus,
-      duration_seconds: k6RawData.duration_seconds,
-      timestamp: k6RawData.timestamp,
-      thresholds_passed: k6RawData.thresholds_passed,
-      thresholds: k6RawData.raw_data?.metrics?.http_req_duration?.thresholds || {},
-      total_requests: k6RawData.metrics?.total_requests,
-      avg_response_time: k6RawData.metrics?.avg_response_time,
-    } : null;
+    const k6TestConfig = k6RawData
+      ? {
+          test_type: k6RawData.test_type || 'load_test',
+          target_vus: k6RawData.target_vus,
+          duration_seconds: k6RawData.duration_seconds,
+          timestamp: k6RawData.timestamp,
+          thresholds_passed: k6RawData.thresholds_passed,
+          thresholds: k6RawData.raw_data?.metrics?.http_req_duration?.thresholds || {},
+          total_requests: k6RawData.metrics?.total_requests,
+          avg_response_time: k6RawData.metrics?.avg_response_time,
+        }
+      : null;
 
     // Extract k6 error analysis data
-    const k6ErrorAnalysis = k6RawData ? {
-      total_checks_passed: k6RawData.raw_data?.metrics?.checks?.values?.passes || 0,
-      total_checks_failed: k6RawData.raw_data?.metrics?.checks?.values?.fails || 0,
-      check_success_rate: k6RawData.raw_data?.metrics?.checks?.values?.rate || 1,
-      http_failed_rate: k6RawData.raw_data?.metrics?.http_req_failed?.values?.rate || 0,
-      http_failed_count: k6RawData.raw_data?.metrics?.http_req_failed?.values?.passes || 0, // passes = failed requests in http_req_failed
-      error_rate_percent: k6RawData.metrics?.error_rate || 0,
-    } : null;
+    const k6ErrorAnalysis = k6RawData
+      ? {
+          total_checks_passed: k6RawData.raw_data?.metrics?.checks?.values?.passes || 0,
+          total_checks_failed: k6RawData.raw_data?.metrics?.checks?.values?.fails || 0,
+          check_success_rate: k6RawData.raw_data?.metrics?.checks?.values?.rate || 1,
+          http_failed_rate: k6RawData.raw_data?.metrics?.http_req_failed?.values?.rate || 0,
+          http_failed_count: k6RawData.raw_data?.metrics?.http_req_failed?.values?.passes || 0, // passes = failed requests in http_req_failed
+          error_rate_percent: k6RawData.metrics?.error_rate || 0,
+        }
+      : null;
 
     // Extract inventory sections
     const response = {
@@ -255,9 +285,6 @@ export async function GET() {
     return NextResponse.json(response);
   } catch (error) {
     console.error('Error reading performance report data:', error);
-    return NextResponse.json(
-      { error: 'Failed to read performance report data' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to read performance report data' }, { status: 500 });
   }
 }

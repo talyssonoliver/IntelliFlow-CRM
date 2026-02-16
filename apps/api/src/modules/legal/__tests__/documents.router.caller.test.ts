@@ -222,7 +222,7 @@ describe('Documents Router - Caller Tests', () => {
           versionType: 'major',
           storageKey: 'docs/test.pdf',
           contentHash: 'c'.repeat(64),
-        }),
+        })
       ).rejects.toThrow(TRPCError);
     });
 
@@ -243,7 +243,7 @@ describe('Documents Router - Caller Tests', () => {
           versionType: 'major',
           storageKey: 'docs/test.pdf',
           contentHash: 'c'.repeat(64),
-        }),
+        })
       ).rejects.toThrow(TRPCError);
     });
   });
@@ -384,7 +384,7 @@ describe('Documents Router - Caller Tests', () => {
           principalId: TEST_UUIDS.user2,
           principalType: 'USER',
           accessLevel: 'VIEW',
-        }),
+        })
       ).rejects.toThrow(TRPCError);
     });
 
@@ -404,7 +404,7 @@ describe('Documents Router - Caller Tests', () => {
           principalId: TEST_UUIDS.user2,
           principalType: 'USER',
           accessLevel: 'VIEW',
-        }),
+        })
       ).rejects.toThrow(TRPCError);
     });
   });
@@ -433,7 +433,7 @@ describe('Documents Router - Caller Tests', () => {
         caller.revokeAccess({
           documentId: TEST_UUIDS.task1,
           principalId: TEST_UUIDS.user2,
-        }),
+        })
       ).rejects.toThrow(TRPCError);
     });
   });
@@ -456,7 +456,7 @@ describe('Documents Router - Caller Tests', () => {
       mockRepo.findById.mockResolvedValue(null);
 
       await expect(caller.submitForReview({ documentId: TEST_UUIDS.task1 })).rejects.toThrow(
-        TRPCError,
+        TRPCError
       );
     });
 
@@ -469,7 +469,7 @@ describe('Documents Router - Caller Tests', () => {
       });
 
       await expect(caller.submitForReview({ documentId: TEST_UUIDS.task1 })).rejects.toThrow(
-        TRPCError,
+        TRPCError
       );
     });
   });
@@ -538,7 +538,7 @@ describe('Documents Router - Caller Tests', () => {
           documentId: TEST_UUIDS.task1,
           ipAddress: '192.168.1.1',
           userAgent: 'Mozilla/5.0',
-        }),
+        })
       ).rejects.toThrow(TRPCError);
     });
 
@@ -555,7 +555,7 @@ describe('Documents Router - Caller Tests', () => {
           documentId: TEST_UUIDS.task1,
           ipAddress: '192.168.1.1',
           userAgent: 'Mozilla/5.0',
-        }),
+        })
       ).rejects.toThrow(TRPCError);
     });
   });
@@ -614,7 +614,7 @@ describe('Documents Router - Caller Tests', () => {
         caller.placeLegalHold({
           documentId: TEST_UUIDS.task1,
           retentionUntil: futureDate,
-        }),
+        })
       ).rejects.toThrow(TRPCError);
     });
 
@@ -628,7 +628,7 @@ describe('Documents Router - Caller Tests', () => {
         caller.placeLegalHold({
           documentId: TEST_UUIDS.task1,
           retentionUntil: futureDate,
-        }),
+        })
       ).rejects.toThrow(TRPCError);
     });
   });
@@ -649,7 +649,7 @@ describe('Documents Router - Caller Tests', () => {
       const caller = documentsRouter.createCaller(ctx);
 
       await expect(caller.releaseLegalHold({ documentId: TEST_UUIDS.task1 })).rejects.toThrow(
-        TRPCError,
+        TRPCError
       );
     });
 
@@ -660,7 +660,7 @@ describe('Documents Router - Caller Tests', () => {
       mockRepo.findById.mockResolvedValue(null);
 
       await expect(caller.releaseLegalHold({ documentId: TEST_UUIDS.task1 })).rejects.toThrow(
-        TRPCError,
+        TRPCError
       );
     });
   });

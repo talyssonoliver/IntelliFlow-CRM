@@ -23,10 +23,11 @@ vi.mock('@langchain/openai', () => ({
         body: 'Dear John,\n\nThank you for your interest in our CRM solution...',
         callToAction: 'Schedule a 15-minute demo call',
         confidence: 0.85,
-        reasoning: 'Based on lead engagement and company profile, personalized outreach is appropriate.',
+        reasoning:
+          'Based on lead engagement and company profile, personalized outreach is appropriate.',
         suggestedSendTime: 'Tuesday 10:00 AM',
         alternativeSubjects: [
-          'John, let\'s discuss your CRM needs',
+          "John, let's discuss your CRM needs",
           'Quick question about your sales process',
         ],
         personalizationElements: [

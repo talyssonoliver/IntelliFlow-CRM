@@ -84,10 +84,12 @@ export function AuthCard({
       {/* Branding header */}
       <div className="text-center mb-8 space-y-2">
         {badge && (
-          <div className={cn(
-            "inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur-sm text-sm mb-4",
-            badgeClassName
-          )}>
+          <div
+            className={cn(
+              'inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur-sm text-sm mb-4',
+              badgeClassName
+            )}
+          >
             {badgeIcon && (
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 {badgeIcon}

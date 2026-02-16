@@ -152,7 +152,7 @@ export class RAGContextChain {
   ) {
     this.embeddingChain = customEmbeddingChain || embeddingChain;
     this.retrievalService = retrievalService || null;
-    this.useMockFallback = options?.useMockFallback ?? (process.env.NODE_ENV === 'test');
+    this.useMockFallback = options?.useMockFallback ?? process.env.NODE_ENV === 'test';
 
     logger.info(
       {
@@ -195,9 +195,10 @@ export class RAGContextChain {
       const context = await this.performRetrieval(validatedInput);
 
       // Calculate aggregate metrics
-      const avgRelevance = context.length > 0
-        ? context.reduce((sum, c) => sum + c.relevanceScore, 0) / context.length
-        : 0;
+      const avgRelevance =
+        context.length > 0
+          ? context.reduce((sum, c) => sum + c.relevanceScore, 0) / context.length
+          : 0;
 
       const contextTokens = this.estimateTokens(context);
 
@@ -207,7 +208,7 @@ export class RAGContextChain {
         totalRetrieved: context.length,
         avgRelevance,
         contextTokens,
-        sources: [...new Set(context.map(c => c.source))],
+        sources: [...new Set(context.map((c) => c.source))],
         searchType: validatedInput.searchType,
         executionTimeMs: Date.now() - startTime,
         success: true,
@@ -301,8 +302,8 @@ export class RAGContextChain {
 
     // Map RetrievalService results to ContextItem format
     const contextItems: ContextItem[] = searchResult.results
-      .filter(r => r.relevanceScore >= input.minRelevance)
-      .map(result => ({
+      .filter((r) => r.relevanceScore >= input.minRelevance)
+      .map((result) => ({
         id: result.id,
         source: result.source,
         title: result.title,
@@ -354,7 +355,7 @@ export class RAGContextChain {
    */
   private async performMockRetrieval(input: RAGContextInput): Promise<ContextItem[]> {
     // Simulate database query delay
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
 
     // Mock context items for testing
     const mockItems: ContextItem[] = [
@@ -362,7 +363,8 @@ export class RAGContextChain {
         id: 'mock-doc-001',
         source: 'documents',
         title: 'CRM Best Practices Guide',
-        content: 'Effective CRM usage requires consistent data entry, regular follow-ups, and pipeline management...',
+        content:
+          'Effective CRM usage requires consistent data entry, regular follow-ups, and pipeline management...',
         snippet: '...consistent data entry, regular <b>follow-ups</b>, and pipeline management...',
         relevanceScore: 0.92,
         metadata: { type: 'guide', category: 'best-practices', isMock: true },
@@ -373,7 +375,8 @@ export class RAGContextChain {
         id: 'mock-note-042',
         source: 'notes',
         title: 'Customer meeting notes - Acme Corp',
-        content: 'Discussed budget constraints and timeline. Decision maker is CFO. Follow up needed by Friday.',
+        content:
+          'Discussed budget constraints and timeline. Decision maker is CFO. Follow up needed by Friday.',
         snippet: '...budget constraints and <b>timeline</b>. Decision maker is CFO...',
         relevanceScore: 0.85,
         metadata: { contactId: 'contact-123', accountId: 'account-456', isMock: true },
@@ -384,8 +387,8 @@ export class RAGContextChain {
 
     // Filter by requested sources and relevance threshold
     return mockItems
-      .filter(item => input.sources.includes(item.source as RAGSource))
-      .filter(item => item.relevanceScore >= input.minRelevance)
+      .filter((item) => input.sources.includes(item.source as RAGSource))
+      .filter((item) => item.relevanceScore >= input.minRelevance)
       .slice(0, input.maxResults);
   }
 

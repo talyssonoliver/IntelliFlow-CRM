@@ -73,11 +73,7 @@ export const analyticsRouter = createTRPCRouter({
       const analyticsService = getAnalyticsService(ctx);
       const tenantId = getTenantId(ctx);
 
-      const trends = await analyticsService.getGrowthTrend(
-        tenantId,
-        input.metric,
-        input.months
-      );
+      const trends = await analyticsService.getGrowthTrend(tenantId, input.metric, input.months);
 
       return trends;
     }),

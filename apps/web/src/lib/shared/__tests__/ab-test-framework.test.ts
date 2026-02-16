@@ -206,9 +206,7 @@ describe('ab-test-framework', () => {
 
       trackConversion('nonexistent-exp', 'click');
 
-      expect(warnSpy).toHaveBeenCalledWith(
-        'No assignment found for experiment: nonexistent-exp'
-      );
+      expect(warnSpy).toHaveBeenCalledWith('No assignment found for experiment: nonexistent-exp');
     });
 
     it('queues conversion event to localStorage', () => {
@@ -217,9 +215,7 @@ describe('ab-test-framework', () => {
 
       trackConversion('test-exp', 'signup', { plan: 'free' });
 
-      const queue = JSON.parse(
-        localStorage.getItem('intelliflow_ab_conversions') || '[]'
-      );
+      const queue = JSON.parse(localStorage.getItem('intelliflow_ab_conversions') || '[]');
       expect(queue).toHaveLength(1);
       expect(queue[0]).toMatchObject({
         experimentId: 'test-exp',
@@ -236,9 +232,7 @@ describe('ab-test-framework', () => {
       trackConversion('test-exp', 'click');
       trackConversion('test-exp', 'signup');
 
-      const queue = JSON.parse(
-        localStorage.getItem('intelliflow_ab_conversions') || '[]'
-      );
+      const queue = JSON.parse(localStorage.getItem('intelliflow_ab_conversions') || '[]');
       expect(queue).toHaveLength(2);
       expect(queue[0].eventType).toBe('click');
       expect(queue[1].eventType).toBe('signup');
@@ -270,10 +264,14 @@ describe('ab-test-framework', () => {
 
       trackConversion('test-exp', 'click');
 
-      expect(gtagFn).toHaveBeenCalledWith('event', 'ab_conversion', expect.objectContaining({
-        experiment_id: 'test-exp',
-        event_type: 'click',
-      }));
+      expect(gtagFn).toHaveBeenCalledWith(
+        'event',
+        'ab_conversion',
+        expect.objectContaining({
+          experiment_id: 'test-exp',
+          event_type: 'click',
+        })
+      );
 
       delete (window as any).gtag;
     });
@@ -285,9 +283,7 @@ describe('ab-test-framework', () => {
       // Should not throw
       trackConversion('test-exp', 'click');
 
-      const queue = JSON.parse(
-        localStorage.getItem('intelliflow_ab_conversions') || '[]'
-      );
+      const queue = JSON.parse(localStorage.getItem('intelliflow_ab_conversions') || '[]');
       expect(queue[0].metadata).toBeUndefined();
     });
   });

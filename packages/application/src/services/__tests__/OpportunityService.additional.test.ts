@@ -280,11 +280,7 @@ describe('OpportunityService (additional coverage)', () => {
       }).value;
       await opportunityRepository.save(opp);
 
-      const result = await service.updateOpportunity(
-        opp.id.value,
-        { value: 75000 },
-        'updater'
-      );
+      const result = await service.updateOpportunity(opp.id.value, { value: 75000 }, 'updater');
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.value.amount).toBe(75000);
@@ -300,11 +296,7 @@ describe('OpportunityService (additional coverage)', () => {
       await opportunityRepository.save(opp);
 
       // PROSPECTING default is 10%, tolerance is 20%
-      const result = await service.updateOpportunity(
-        opp.id.value,
-        { probability: 15 },
-        'updater'
-      );
+      const result = await service.updateOpportunity(opp.id.value, { probability: 15 }, 'updater');
 
       expect(result.isSuccess).toBe(true);
     });
@@ -1118,7 +1110,11 @@ describe('OpportunityService (additional coverage)', () => {
 
       opportunityRepository.save = vi.fn().mockRejectedValue(new Error('DB down'));
 
-      const result = await service.markAsLost(opp.id.value, 'Competition had better offering', 'user');
+      const result = await service.markAsLost(
+        opp.id.value,
+        'Competition had better offering',
+        'user'
+      );
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Failed to save opportunity');

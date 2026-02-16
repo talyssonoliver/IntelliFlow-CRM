@@ -32,18 +32,37 @@ export * from './payments/stripe';
 export { PayPalAdapter } from './payments/paypal';
 export type { PayPalServicePort } from './payments/paypal';
 export type {
-  PayPalConfig, PayPalAccessToken, PayPalOrder, PayPalPurchaseUnit,
-  PayPalItem, PayPalPayer, PayPalAddress, PayPalCapture, PayPalAuthorization,
-  PayPalRefund, PayPalLink, PayPalSubscription, PayPalWebhookEvent,
-  CreateOrderParams, CreateSubscriptionParams,
+  PayPalConfig,
+  PayPalAccessToken,
+  PayPalOrder,
+  PayPalPurchaseUnit,
+  PayPalItem,
+  PayPalPayer,
+  PayPalAddress,
+  PayPalCapture,
+  PayPalAuthorization,
+  PayPalRefund,
+  PayPalLink,
+  PayPalSubscription,
+  PayPalWebhookEvent,
+  CreateOrderParams,
+  CreateSubscriptionParams,
 } from './payments/paypal';
 export {
-  PayPalAuthenticationError, PayPalInvalidRequestError,
-  PayPalRateLimitError, PayPalConnectionError, PayPalResourceNotFoundError,
+  PayPalAuthenticationError,
+  PayPalInvalidRequestError,
+  PayPalRateLimitError,
+  PayPalConnectionError,
+  PayPalResourceNotFoundError,
 } from './payments/paypal';
 export {
-  mapToOrder, mapToPurchaseUnit, mapToItem, mapToPayer,
-  mapToAddress, mapToCapture, mapToAuthorization,
+  mapToOrder,
+  mapToPurchaseUnit,
+  mapToItem,
+  mapToPayer,
+  mapToAddress,
+  mapToCapture,
+  mapToAuthorization,
   mapToRefund as mapToPayPalRefund,
   mapToSubscription as mapToPayPalSubscription,
 } from './payments/paypal';
@@ -92,6 +111,9 @@ export * from './messaging/WebhookServiceAdapter';
 
 // Memory Adapters (Zep)
 export * from './memory/zep';
+
+// Feature Flag Adapter
+export * from './feature-flags';
 
 // Audit Adapters (IFC-125)
 export * from './audit';

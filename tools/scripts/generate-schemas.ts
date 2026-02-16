@@ -60,14 +60,16 @@ const SCHEMAS: SchemaDefinition[] = [
     filename: 'vulnerability-baseline.schema.json',
     schema: vulnerabilityBaselineSchema,
     title: 'Vulnerability Baseline Schema',
-    description: 'Schema for tracking security vulnerability baseline, scan results, and remediation status',
+    description:
+      'Schema for tracking security vulnerability baseline, scan results, and remediation status',
   },
   {
     name: 'attestation',
     filename: 'attestation.schema.json',
     schema: attestationSchema,
     title: 'Task Attestation Schema',
-    description: 'Schema for task completion attestations combining context acknowledgment and verification evidence',
+    description:
+      'Schema for task completion attestations combining context acknowledgment and verification evidence',
   },
   {
     name: 'task-status',
@@ -116,7 +118,8 @@ const SCHEMAS: SchemaDefinition[] = [
     filename: 'traceability.schema.json',
     schema: traceabilitySchema,
     title: 'Traceability Matrix Schema',
-    description: 'Schema for IntelliFlow CRM Capability Traceability Matrix - links business capabilities to domain services, APIs, UIs, and tests',
+    description:
+      'Schema for IntelliFlow CRM Capability Traceability Matrix - links business capabilities to domain services, APIs, UIs, and tests',
   },
   {
     name: 'extracted-text',
@@ -148,8 +151,12 @@ function generateSchema(def: SchemaDefinition): void {
   };
 
   // Remove the Zod v4 $schema if it differs
-  if ((enhancedSchema as Record<string, unknown>)['$schema'] !== 'http://json-schema.org/draft-07/schema#') {
-    (enhancedSchema as Record<string, unknown>)['$schema'] = 'http://json-schema.org/draft-07/schema#';
+  if (
+    (enhancedSchema as Record<string, unknown>)['$schema'] !==
+    'http://json-schema.org/draft-07/schema#'
+  ) {
+    (enhancedSchema as Record<string, unknown>)['$schema'] =
+      'http://json-schema.org/draft-07/schema#';
   }
 
   const outputPath = join(OUTPUT_DIR, def.filename);

@@ -29,9 +29,14 @@ const hasDatabase: boolean = await (async () => {
         resolve(true);
       });
       sock.on('error', () => resolve(false));
-      sock.setTimeout(1000, () => { sock.destroy(); resolve(false); });
+      sock.setTimeout(1000, () => {
+        sock.destroy();
+        resolve(false);
+      });
     });
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 })();
 
 // Test database client
@@ -44,9 +49,11 @@ beforeAll(async () => {
   prisma = new PrismaClient();
 
   // Clean up any existing test tenant first
-  await prisma.tenant.deleteMany({
-    where: { id: TEST_TENANT_ID },
-  }).catch(() => {});
+  await prisma.tenant
+    .deleteMany({
+      where: { id: TEST_TENANT_ID },
+    })
+    .catch(() => {});
 
   // Create test tenant for FK constraint
   await prisma.tenant.create({
@@ -64,14 +71,18 @@ afterAll(async () => {
   if (!hasDatabase) return;
   try {
     // Delete all domain events for this tenant first
-    await prisma.domainEvent.deleteMany({
-      where: { tenantId: TEST_TENANT_ID },
-    }).catch(() => {});
+    await prisma.domainEvent
+      .deleteMany({
+        where: { tenantId: TEST_TENANT_ID },
+      })
+      .catch(() => {});
 
     // Then delete the tenant
-    await prisma.tenant.deleteMany({
-      where: { id: TEST_TENANT_ID },
-    }).catch(() => {});
+    await prisma.tenant
+      .deleteMany({
+        where: { id: TEST_TENANT_ID },
+      })
+      .catch(() => {});
   } finally {
     await prisma.$disconnect();
   }

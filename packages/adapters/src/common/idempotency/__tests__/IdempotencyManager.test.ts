@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { IdempotencyManager, calculateContentHash, DEFAULT_IDEMPOTENCY_CONFIG } from '../IdempotencyManager';
+import {
+  IdempotencyManager,
+  calculateContentHash,
+  DEFAULT_IDEMPOTENCY_CONFIG,
+} from '../IdempotencyManager';
 import { InMemoryIdempotencyStore } from '../IdempotencyStore';
 
 describe('IdempotencyManager', () => {
@@ -28,10 +32,14 @@ describe('IdempotencyManager', () => {
 
   describe('generateContentKey', () => {
     it('includes content hash', () => {
-      expect(manager.generateContentKey('r1', 'up', 'h1')).not.toBe(manager.generateContentKey('r1', 'up', 'h2'));
+      expect(manager.generateContentKey('r1', 'up', 'h1')).not.toBe(
+        manager.generateContentKey('r1', 'up', 'h2')
+      );
     });
     it('deterministic', () => {
-      expect(manager.generateContentKey('r1', 'up', 'h1')).toBe(manager.generateContentKey('r1', 'up', 'h1'));
+      expect(manager.generateContentKey('r1', 'up', 'h1')).toBe(
+        manager.generateContentKey('r1', 'up', 'h1')
+      );
     });
   });
 
@@ -59,7 +67,9 @@ describe('IdempotencyManager', () => {
     it('sets TTL', async () => {
       await manager.recordSuccess('k', 'r', 'op');
       const rec = await store.get('k');
-      expect(rec!.expiresAt.getTime()).toBe(rec!.createdAt.getTime() + DEFAULT_IDEMPOTENCY_CONFIG.ttlMinutes * 60 * 1000);
+      expect(rec!.expiresAt.getTime()).toBe(
+        rec!.createdAt.getTime() + DEFAULT_IDEMPOTENCY_CONFIG.ttlMinutes * 60 * 1000
+      );
     });
   });
 
@@ -73,7 +83,9 @@ describe('IdempotencyManager', () => {
     it('uses failure TTL', async () => {
       await manager.recordFailure('k', 'r', 'op', 'e');
       const rec = await store.get('k');
-      expect(rec!.expiresAt.getTime()).toBe(rec!.createdAt.getTime() + DEFAULT_IDEMPOTENCY_CONFIG.failureTtlMinutes * 60 * 1000);
+      expect(rec!.expiresAt.getTime()).toBe(
+        rec!.createdAt.getTime() + DEFAULT_IDEMPOTENCY_CONFIG.failureTtlMinutes * 60 * 1000
+      );
     });
   });
 
@@ -102,8 +114,16 @@ describe('IdempotencyManager', () => {
 });
 
 describe('calculateContentHash', () => {
-  it('consistent', () => { expect(calculateContentHash({a:1})).toBe(calculateContentHash({a:1})); });
-  it('different content', () => { expect(calculateContentHash({a:1})).not.toBe(calculateContentHash({a:2})); });
-  it('normalizes keys', () => { expect(calculateContentHash({b:2,a:1})).toBe(calculateContentHash({a:1,b:2})); });
-  it('16-char hex', () => { expect(calculateContentHash({x:'y'})).toMatch(/^[a-f0-9]{16}/); });
+  it('consistent', () => {
+    expect(calculateContentHash({ a: 1 })).toBe(calculateContentHash({ a: 1 }));
+  });
+  it('different content', () => {
+    expect(calculateContentHash({ a: 1 })).not.toBe(calculateContentHash({ a: 2 }));
+  });
+  it('normalizes keys', () => {
+    expect(calculateContentHash({ b: 2, a: 1 })).toBe(calculateContentHash({ a: 1, b: 2 }));
+  });
+  it('16-char hex', () => {
+    expect(calculateContentHash({ x: 'y' })).toMatch(/^[a-f0-9]{16}/);
+  });
 });

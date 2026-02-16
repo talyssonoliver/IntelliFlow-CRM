@@ -26,8 +26,7 @@ const confidenceIndicatorVariants = cva('flex items-center gap-2', {
 });
 
 export interface ConfidenceIndicatorProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof confidenceIndicatorVariants> {
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof confidenceIndicatorVariants> {
   /** Confidence value (0-1) */
   confidence: number;
   /** Show confidence level label */
@@ -67,9 +66,7 @@ function ConfidenceIndicator({
       <div className="flex items-center gap-2 w-full">
         {/* Label and Percentage */}
         <div className="flex items-center gap-2 flex-1">
-          {showLabel && (
-            <span className={cn('font-medium', config.color)}>{config.label}</span>
-          )}
+          {showLabel && <span className={cn('font-medium', config.color)}>{config.label}</span>}
           <span className="text-muted-foreground">{formatConfidence(confidence)}</span>
         </div>
       </div>

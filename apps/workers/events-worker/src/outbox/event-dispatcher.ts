@@ -154,10 +154,7 @@ export class EventDispatcher {
       matchingHandlers.map(async (config) => {
         try {
           await config.handler(event);
-          this.logger.debug(
-            { eventId: event.id, handler: config.name },
-            'Handler completed'
-          );
+          this.logger.debug({ eventId: event.id, handler: config.name }, 'Handler completed');
         } catch (error) {
           this.logger.error(
             {
@@ -173,9 +170,7 @@ export class EventDispatcher {
     );
 
     // Check if any handler failed
-    const failures = results.filter(
-      (r): r is PromiseRejectedResult => r.status === 'rejected'
-    );
+    const failures = results.filter((r): r is PromiseRejectedResult => r.status === 'rejected');
 
     if (failures.length > 0) {
       const firstError = failures[0].reason;

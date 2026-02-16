@@ -4,7 +4,9 @@ This folder captures Sprint 0 security deliverables for IntelliFlow CRM.
 
 ## Authentication Architecture
 
-**[auth-architecture.md](./auth-architecture.md)** - Complete documentation of the authentication system including:
+**[auth-architecture.md](./auth-architecture.md)** - Complete documentation of
+the authentication system including:
+
 - JWT token lifecycle (access + refresh tokens)
 - OAuth and email/password login flows
 - Automatic token refresh mechanism

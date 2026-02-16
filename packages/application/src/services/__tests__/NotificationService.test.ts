@@ -8,11 +8,7 @@ import {
   NotificationTemplate,
   NotificationAuditLogger,
 } from '../NotificationService';
-import {
-  Notification,
-  NotificationId,
-  NotificationPreference,
-} from '@intelliflow/domain';
+import { Notification, NotificationId, NotificationPreference } from '@intelliflow/domain';
 import {
   Result,
   DomainError,
@@ -70,10 +66,7 @@ class MockNotificationRepository implements NotificationRepository {
 
   async countUnread(tenantId: string, recipientId: string): Promise<number> {
     return Array.from(this.notifications.values()).filter(
-      (n) =>
-        n.tenantId === tenantId &&
-        n.recipientId === recipientId &&
-        n.status === 'delivered'
+      (n) => n.tenantId === tenantId && n.recipientId === recipientId && n.status === 'delivered'
     ).length;
   }
 
@@ -85,10 +78,7 @@ class MockNotificationRepository implements NotificationRepository {
   ): Promise<Notification[]> {
     return Array.from(this.notifications.values())
       .filter(
-        (n) =>
-          n.tenantId === tenantId &&
-          n.recipientId === recipientId &&
-          n.channel === channel
+        (n) => n.tenantId === tenantId && n.recipientId === recipientId && n.channel === channel
       )
       .slice(0, limit);
   }
@@ -467,17 +457,13 @@ describe('NotificationService', () => {
       // Now mark as read
       await service.markAsRead(result.notificationId);
 
-      const updated = await notificationRepo.findById(
-        NotificationId.create(result.notificationId)
-      );
+      const updated = await notificationRepo.findById(NotificationId.create(result.notificationId));
       expect(updated!.status).toBe('read');
       expect(updated!.readAt).toBeDefined();
     });
 
     it('should throw error for non-existent notification', async () => {
-      await expect(
-        service.markAsRead('non-existent-id')
-      ).rejects.toThrow('Notification not found');
+      await expect(service.markAsRead('non-existent-id')).rejects.toThrow('Notification not found');
     });
   });
 

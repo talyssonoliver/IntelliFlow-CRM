@@ -2,7 +2,12 @@
  * Churn Risk Dashboard Test Fixtures (PG-143)
  */
 
-import type { ChurnStats, AtRiskCustomer, ChurnTrendPoint, ChurnDashboardData } from '@/lib/churn-risk/types';
+import type {
+  ChurnStats,
+  AtRiskCustomer,
+  ChurnTrendPoint,
+  ChurnDashboardData,
+} from '@/lib/churn-risk/types';
 
 export const mockChurnStats: ChurnStats = {
   total: 120,
@@ -107,13 +112,69 @@ export const mockAtRiskCustomers: AtRiskCustomer[] = [
 ];
 
 export const mockChurnTrends: ChurnTrendPoint[] = [
-  { date: '2026-02-08', critical: 5, high: 18, medium: 30, low: 28, minimal: 22, avgEngagement: 58 },
-  { date: '2026-02-09', critical: 6, high: 19, medium: 31, low: 29, minimal: 23, avgEngagement: 59 },
-  { date: '2026-02-10', critical: 7, high: 20, medium: 33, low: 29, minimal: 24, avgEngagement: 60 },
-  { date: '2026-02-11', critical: 7, high: 21, medium: 34, low: 30, minimal: 24, avgEngagement: 61 },
-  { date: '2026-02-12', critical: 8, high: 21, medium: 34, low: 30, minimal: 25, avgEngagement: 61 },
-  { date: '2026-02-13', critical: 8, high: 22, medium: 35, low: 30, minimal: 25, avgEngagement: 62 },
-  { date: '2026-02-14', critical: 8, high: 22, medium: 35, low: 30, minimal: 25, avgEngagement: 62 },
+  {
+    date: '2026-02-08',
+    critical: 5,
+    high: 18,
+    medium: 30,
+    low: 28,
+    minimal: 22,
+    avgEngagement: 58,
+  },
+  {
+    date: '2026-02-09',
+    critical: 6,
+    high: 19,
+    medium: 31,
+    low: 29,
+    minimal: 23,
+    avgEngagement: 59,
+  },
+  {
+    date: '2026-02-10',
+    critical: 7,
+    high: 20,
+    medium: 33,
+    low: 29,
+    minimal: 24,
+    avgEngagement: 60,
+  },
+  {
+    date: '2026-02-11',
+    critical: 7,
+    high: 21,
+    medium: 34,
+    low: 30,
+    minimal: 24,
+    avgEngagement: 61,
+  },
+  {
+    date: '2026-02-12',
+    critical: 8,
+    high: 21,
+    medium: 34,
+    low: 30,
+    minimal: 25,
+    avgEngagement: 61,
+  },
+  {
+    date: '2026-02-13',
+    critical: 8,
+    high: 22,
+    medium: 35,
+    low: 30,
+    minimal: 25,
+    avgEngagement: 62,
+  },
+  {
+    date: '2026-02-14',
+    critical: 8,
+    high: 22,
+    medium: 35,
+    low: 30,
+    minimal: 25,
+    avgEngagement: 62,
+  },
 ];
 
 export const mockEmptyChurnDashboard: ChurnDashboardData = {

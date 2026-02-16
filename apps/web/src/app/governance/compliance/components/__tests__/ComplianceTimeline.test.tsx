@@ -267,12 +267,15 @@ describe('ComplianceTimeline', () => {
     it('should show event date in list', async () => {
       render(<ComplianceTimeline />);
 
-      await waitFor(() => {
-        // Events should show date format like "Feb 10" (future date)
-        // The component uses toLocaleDateString with { month: 'short', day: 'numeric' }
-        // which produces "Feb 10" format
-        expect(screen.getByText(/Feb 10/)).toBeInTheDocument();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          // Events should show date format like "Feb 10" (future date)
+          // The component uses toLocaleDateString with { month: 'short', day: 'numeric' }
+          // which produces "Feb 10" format
+          expect(screen.getByText(/Feb 10/)).toBeInTheDocument();
+        },
+        { timeout: 3000 }
+      );
     });
 
     it('should show event standard in list', async () => {
@@ -398,14 +401,15 @@ describe('ComplianceTimeline', () => {
   describe('Empty State', () => {
     it('should show empty state when no upcoming events', async () => {
       mockFetch.mockResolvedValue({
-        json: () => Promise.resolve({
-          success: true,
-          data: {
-            events: [],
-            currentMonth: '2027-01',
-            upcomingCount: 0,
-          },
-        }),
+        json: () =>
+          Promise.resolve({
+            success: true,
+            data: {
+              events: [],
+              currentMonth: '2027-01',
+              upcomingCount: 0,
+            },
+          }),
       });
 
       render(<ComplianceTimeline />);

@@ -37,17 +37,26 @@ export function ConflictWarning({ conflicts, onViewConflict, onOverride }: Confl
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className={`material-symbols-outlined text-base ${severity.color}`}>
-                      {conflict.conflictType === 'EXACT' ? 'block' : conflict.conflictType === 'PARTIAL' ? 'schedule' : 'timer'}
+                      {conflict.conflictType === 'EXACT'
+                        ? 'block'
+                        : conflict.conflictType === 'PARTIAL'
+                          ? 'schedule'
+                          : 'timer'}
                     </span>
                     <span className={`text-sm font-medium ${severity.color}`}>
-                      {conflict.conflictType === 'EXACT' ? 'Exact overlap' : conflict.conflictType === 'PARTIAL' ? 'Partial overlap' : 'Buffer overlap'}
+                      {conflict.conflictType === 'EXACT'
+                        ? 'Exact overlap'
+                        : conflict.conflictType === 'PARTIAL'
+                          ? 'Partial overlap'
+                          : 'Buffer overlap'}
                     </span>
                   </div>
                   <p className="text-sm font-medium text-gray-900 mt-1 truncate">
                     {conflict.title}
                   </p>
                   <p className="text-xs text-gray-600 mt-0.5">
-                    {formatTimeRange(conflict.startTime, conflict.endTime)} · {conflict.overlapMinutes} min overlap
+                    {formatTimeRange(conflict.startTime, conflict.endTime)} ·{' '}
+                    {conflict.overlapMinutes} min overlap
                   </p>
                 </div>
                 <button
@@ -71,9 +80,7 @@ export function ConflictWarning({ conflicts, onViewConflict, onOverride }: Confl
             onChange={() => onOverride()}
             className="rounded border-gray-300 text-red-600 focus:ring-red-500"
           />
-          <span className="text-sm text-red-800">
-            I want to schedule despite conflicts
-          </span>
+          <span className="text-sm text-red-800">I want to schedule despite conflicts</span>
         </label>
       )}
     </div>

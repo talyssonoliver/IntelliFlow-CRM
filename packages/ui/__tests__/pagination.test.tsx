@@ -153,13 +153,7 @@ describe('Pagination', () => {
   describe('Summary', () => {
     it('should show summary when showSummary is true', () => {
       render(
-        <Pagination
-          {...defaultProps}
-          showSummary
-          totalItems={100}
-          pageSize={10}
-          currentPage={1}
-        />
+        <Pagination {...defaultProps} showSummary totalItems={100} pageSize={10} currentPage={1} />
       );
       // Summary format: "Showing X to Y of Z results"
       const summary = screen.getByText(/Showing.*to.*of.*results/);
@@ -168,13 +162,7 @@ describe('Pagination', () => {
 
     it('should calculate correct range for middle pages', () => {
       render(
-        <Pagination
-          {...defaultProps}
-          showSummary
-          totalItems={100}
-          pageSize={10}
-          currentPage={5}
-        />
+        <Pagination {...defaultProps} showSummary totalItems={100} pageSize={10} currentPage={5} />
       );
       // Page 5 of 10 pages with 10 items per page: items 41-50
       // Numbers are in separate span elements, so check for their presence
@@ -200,14 +188,7 @@ describe('Pagination', () => {
     });
 
     it('should not show summary when showSummary is false', () => {
-      render(
-        <Pagination
-          {...defaultProps}
-          showSummary={false}
-          totalItems={100}
-          pageSize={10}
-        />
-      );
+      render(<Pagination {...defaultProps} showSummary={false} totalItems={100} pageSize={10} />);
       expect(screen.queryByText(/Showing/)).not.toBeInTheDocument();
     });
   });

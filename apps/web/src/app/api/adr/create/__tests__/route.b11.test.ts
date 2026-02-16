@@ -63,7 +63,7 @@ describe('/api/adr/create route', () => {
         makeReq({
           title: 'Adopt Event Sourcing',
           technicalStory: 'We need audit trail for compliance',
-        }),
+        })
       );
       const data = await res.json();
 
@@ -71,7 +71,7 @@ describe('/api/adr/create route', () => {
       expect(data.data.path).toBe('docs/adr/ADR-042-my-decision.md');
       expect(mockCreateADR).toHaveBeenCalledWith(
         'Adopt Event Sourcing',
-        'We need audit trail for compliance',
+        'We need audit trail for compliance'
       );
     });
   });

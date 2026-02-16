@@ -1,10 +1,8 @@
 # Supply Chain Security Policy
 
-**Status**: Implemented (Sprint 7)
-**Related Tasks**: IFC-132 (SBOM), IFC-133 (Signing)
-**Owner**: Security Team
-**Last Updated**: 2025-12-28
-**Review Frequency**: Quarterly
+**Status**: Implemented (Sprint 7) **Related Tasks**: IFC-132 (SBOM), IFC-133
+(Signing) **Owner**: Security Team **Last Updated**: 2025-12-28 **Review
+Frequency**: Quarterly
 
 ## Overview
 
@@ -46,12 +44,12 @@ pnpm install  # May update lockfile
 
 ### Version Specification Guidelines
 
-| Dependency Type | Recommended Specifier | Example |
-|-----------------|----------------------|---------|
-| Critical/Security | Exact version | `"express": "4.18.2"` |
-| Production | Caret (minor updates) | `"react": "^18.2.0"` |
-| Development | Caret (minor updates) | `"vitest": "^4.0.0"` |
-| Peer dependencies | Range | `"react": ">=17.0.0"` |
+| Dependency Type   | Recommended Specifier | Example               |
+| ----------------- | --------------------- | --------------------- |
+| Critical/Security | Exact version         | `"express": "4.18.2"` |
+| Production        | Caret (minor updates) | `"react": "^18.2.0"`  |
+| Development       | Caret (minor updates) | `"vitest": "^4.0.0"`  |
+| Peer dependencies | Range                 | `"react": ">=17.0.0"` |
 
 ### Lockfile Integrity
 
@@ -69,9 +67,9 @@ The following patterns are **NOT ALLOWED**:
 ```json
 {
   "dependencies": {
-    "some-package": "*",           // Never use wildcards
-    "some-package": "latest",      // Never use latest
-    "some-package": ">=1.0.0"      // Avoid open-ended ranges in prod
+    "some-package": "*", // Never use wildcards
+    "some-package": "latest", // Never use latest
+    "some-package": ">=1.0.0" // Avoid open-ended ranges in prod
   }
 }
 ```
@@ -98,11 +96,11 @@ The SBOM is automatically generated:
 
 ### Tools Used
 
-| Tool | Purpose | Format Output |
-|------|---------|---------------|
-| **Syft** (Anchore) | Primary SBOM generator | CycloneDX 1.5, SPDX |
-| **license-checker** | License compliance | JSON |
-| **pnpm audit** | Vulnerability scanning | JSON |
+| Tool                | Purpose                | Format Output       |
+| ------------------- | ---------------------- | ------------------- |
+| **Syft** (Anchore)  | Primary SBOM generator | CycloneDX 1.5, SPDX |
+| **license-checker** | License compliance     | JSON                |
+| **pnpm audit**      | Vulnerability scanning | JSON                |
 
 ### SBOM Formats
 
@@ -124,11 +122,11 @@ Generated SBOMs are available in multiple formats:
 
 ### Storage and Retention
 
-| Artifact Type | Retention Period | Location |
-|---------------|------------------|----------|
-| Build SBOMs | 90 days | GitHub Actions Artifacts |
-| Release SBOMs | 365 days | GitHub Releases + Artifacts |
-| Audit Reports | 30 days | GitHub Actions Artifacts |
+| Artifact Type | Retention Period | Location                    |
+| ------------- | ---------------- | --------------------------- |
+| Build SBOMs   | 90 days          | GitHub Actions Artifacts    |
+| Release SBOMs | 365 days         | GitHub Releases + Artifacts |
+| Audit Reports | 30 days          | GitHub Actions Artifacts    |
 
 ### SBOM Content
 
@@ -157,18 +155,19 @@ gh run download <run-id> -n sbom-intelliflow-crm-*
 ### Overview (IFC-133)
 
 All production-bound artifacts are cryptographically signed using Sigstore's
-cosign tool with SLSA provenance attestations. This ensures artifact authenticity
-and provides a verifiable chain of custody from build to deployment.
+cosign tool with SLSA provenance attestations. This ensures artifact
+authenticity and provides a verifiable chain of custody from build to
+deployment.
 
 **Workflow**: `.github/workflows/signing.yml`
 
 ### What Gets Signed
 
-| Artifact Type | Signing Method | Storage |
-|---------------|----------------|---------|
-| Release Archives | Cosign keyless | GitHub Releases |
-| Container Images | Cosign keyless | GitHub Container Registry |
-| SBOM Files | Cosign attestation | GitHub Artifacts |
+| Artifact Type    | Signing Method     | Storage                   |
+| ---------------- | ------------------ | ------------------------- |
+| Release Archives | Cosign keyless     | GitHub Releases           |
+| Container Images | Cosign keyless     | GitHub Container Registry |
+| SBOM Files       | Cosign attestation | GitHub Artifacts          |
 
 ### Keyless Signing
 
@@ -259,12 +258,12 @@ For all dependency updates:
 
 Per `security-baseline.json`:
 
-| Update Type | Frequency | Urgency |
-|-------------|-----------|---------|
-| Security patches | Immediate | Critical |
-| Major versions | Monthly review | Normal |
-| Minor versions | Bi-weekly | Normal |
-| Patch versions | Weekly | Normal |
+| Update Type      | Frequency      | Urgency  |
+| ---------------- | -------------- | -------- |
+| Security patches | Immediate      | Critical |
+| Major versions   | Monthly review | Normal   |
+| Minor versions   | Bi-weekly      | Normal   |
+| Patch versions   | Weekly         | Normal   |
 
 ---
 
@@ -274,12 +273,12 @@ Per `security-baseline.json`:
 
 Per `security-baseline.json`:
 
-| Severity | Initial Response | Patch Deployment |
-|----------|-----------------|------------------|
-| Critical (CVSS 9.0+) | Immediate | 1-7 days |
-| High (CVSS 7.0-8.9) | 24 hours | 7-14 days |
-| Medium (CVSS 4.0-6.9) | 3 days | 14-30 days |
-| Low (CVSS 0.1-3.9) | 7 days | 30-90 days |
+| Severity              | Initial Response | Patch Deployment |
+| --------------------- | ---------------- | ---------------- |
+| Critical (CVSS 9.0+)  | Immediate        | 1-7 days         |
+| High (CVSS 7.0-8.9)   | 24 hours         | 7-14 days        |
+| Medium (CVSS 4.0-6.9) | 3 days           | 14-30 days       |
+| Low (CVSS 0.1-3.9)    | 7 days           | 30-90 days       |
 
 ### Vulnerability Thresholds
 
@@ -316,25 +315,25 @@ The CI pipeline enforces the following thresholds:
 
 The following licenses are approved for use:
 
-| License | Status | Notes |
-|---------|--------|-------|
-| MIT | Approved | Preferred for OSS |
-| Apache-2.0 | Approved | |
-| BSD-2-Clause | Approved | |
-| BSD-3-Clause | Approved | |
-| ISC | Approved | |
-| 0BSD | Approved | |
+| License      | Status   | Notes             |
+| ------------ | -------- | ----------------- |
+| MIT          | Approved | Preferred for OSS |
+| Apache-2.0   | Approved |                   |
+| BSD-2-Clause | Approved |                   |
+| BSD-3-Clause | Approved |                   |
+| ISC          | Approved |                   |
+| 0BSD         | Approved |                   |
 
 ### Forbidden Licenses
 
 The following licenses are **NOT ALLOWED**:
 
-| License | Status | Reason |
-|---------|--------|--------|
-| GPL-2.0 | Forbidden | Copyleft requirements |
-| GPL-3.0 | Forbidden | Copyleft requirements |
-| AGPL-1.0 | Forbidden | Network copyleft |
-| AGPL-3.0 | Forbidden | Network copyleft |
+| License  | Status    | Reason                |
+| -------- | --------- | --------------------- |
+| GPL-2.0  | Forbidden | Copyleft requirements |
+| GPL-3.0  | Forbidden | Copyleft requirements |
+| AGPL-1.0 | Forbidden | Network copyleft      |
+| AGPL-3.0 | Forbidden | Network copyleft      |
 
 ### License Check Process
 
@@ -360,13 +359,13 @@ If a forbidden-license package is required:
 
 ### What is Logged
 
-| Event | Log Location | Retention |
-|-------|-------------|-----------|
-| Dependency updates | Git history | Permanent |
-| SBOM generation | GitHub Actions | 90 days |
-| Vulnerability scans | GitHub Actions + Security tab | 90 days |
-| License checks | GitHub Actions | 30 days |
-| Lockfile changes | Git history | Permanent |
+| Event               | Log Location                  | Retention |
+| ------------------- | ----------------------------- | --------- |
+| Dependency updates  | Git history                   | Permanent |
+| SBOM generation     | GitHub Actions                | 90 days   |
+| Vulnerability scans | GitHub Actions + Security tab | 90 days   |
+| License checks      | GitHub Actions                | 30 days   |
+| Lockfile changes    | Git history                   | Permanent |
 
 ### Monitoring
 
@@ -405,13 +404,12 @@ For compliance audits, the following can be provided:
 
 ## Document History
 
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0 | 2025-12-27 | IFC-132 | Initial supply chain security policy |
-| 1.1 | 2025-12-28 | IFC-133 | Added artifact signing section and references |
+| Version | Date       | Author  | Changes                                       |
+| ------- | ---------- | ------- | --------------------------------------------- |
+| 1.0     | 2025-12-27 | IFC-132 | Initial supply chain security policy          |
+| 1.1     | 2025-12-28 | IFC-133 | Added artifact signing section and references |
 
 ---
 
-**Next Review**: 2026-03-28 (Quarterly)
-**Owner**: Security Team
-**Approver**: CTO
+**Next Review**: 2026-03-28 (Quarterly) **Owner**: Security Team **Approver**:
+CTO

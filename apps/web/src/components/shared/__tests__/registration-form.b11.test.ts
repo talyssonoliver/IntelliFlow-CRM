@@ -77,7 +77,7 @@ function calculatePasswordStrength(password: string): PasswordStrengthResult {
 function validateField(
   name: string,
   value: string | boolean,
-  password: string = '',
+  password: string = ''
 ): string | undefined {
   switch (name) {
     case 'fullName':

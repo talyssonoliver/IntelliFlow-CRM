@@ -54,7 +54,9 @@ describe('EntityAvatar', () => {
     });
 
     it('should use custom alt for image', () => {
-      const { container } = render(<EntityAvatar name="John Doe" imageUrl="/avatar.jpg" alt="Custom" />);
+      const { container } = render(
+        <EntityAvatar name="John Doe" imageUrl="/avatar.jpg" alt="Custom" />
+      );
       const img = container.querySelector('img');
       expect(img).toHaveAttribute('alt', 'Custom');
     });
@@ -196,9 +198,7 @@ describe('EntityAvatar', () => {
 
   describe('Custom Fallback', () => {
     it('should render custom fallback instead of initials', () => {
-      render(
-        <EntityAvatar name="John Doe" fallback={<span data-testid="custom">Custom</span>} />
-      );
+      render(<EntityAvatar name="John Doe" fallback={<span data-testid="custom">Custom</span>} />);
       expect(screen.getByTestId('custom')).toBeInTheDocument();
       expect(screen.queryByText('JD')).not.toBeInTheDocument();
     });

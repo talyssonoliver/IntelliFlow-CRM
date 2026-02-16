@@ -299,7 +299,7 @@ export class EmailChannel {
         messageId: result.messageId,
         accepted: result.accepted as string[],
         rejected: result.rejected as string[],
-        pending: result.pending as string[] || [],
+        pending: (result.pending as string[]) || [],
         response: result.response,
         deliveredAt: new Date().toISOString(),
         deliveryTimeMs,

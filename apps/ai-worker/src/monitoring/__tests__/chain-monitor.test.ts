@@ -192,7 +192,7 @@ describe('ChainMonitor', () => {
 
     it('should record latency during execution', async () => {
       const slowFn = vi.fn().mockImplementation(async () => {
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
         return { data: 'slow result' };
       });
 

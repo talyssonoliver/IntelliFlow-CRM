@@ -113,10 +113,7 @@ export class PrismaNotificationPreferenceRepository implements NotificationPrefe
     });
   }
 
-  async findByUserId(
-    tenantId: string,
-    userId: string
-  ): Promise<NotificationPreference | null> {
+  async findByUserId(tenantId: string, userId: string): Promise<NotificationPreference | null> {
     const record = await this.prisma.notificationPreference.findUnique({
       where: {
         tenantId_userId: { tenantId, userId },
@@ -126,10 +123,7 @@ export class PrismaNotificationPreferenceRepository implements NotificationPrefe
     return record ? toDomainEntity(record) : null;
   }
 
-  async findOrCreateDefault(
-    tenantId: string,
-    userId: string
-  ): Promise<NotificationPreference> {
+  async findOrCreateDefault(tenantId: string, userId: string): Promise<NotificationPreference> {
     const existing = await this.findByUserId(tenantId, userId);
     if (existing) {
       return existing;
@@ -155,10 +149,7 @@ export class PrismaNotificationPreferenceRepository implements NotificationPrefe
     return count > 0;
   }
 
-  async findUsersWithChannelEnabled(
-    tenantId: string,
-    channel: string
-  ): Promise<string[]> {
+  async findUsersWithChannelEnabled(tenantId: string, channel: string): Promise<string[]> {
     // This requires querying JSON field
     const records = await this.prisma.notificationPreference.findMany({
       where: {

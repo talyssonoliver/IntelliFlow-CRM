@@ -80,8 +80,8 @@ export type DriftMetricType =
   | 'token_usage'
   | 'error_rate'
   | 'output_length'
-  | 'user_correction_error'  // IFC-024: Human feedback
-  | 'user_satisfaction';     // IFC-024: Human feedback
+  | 'user_correction_error' // IFC-024: Human feedback
+  | 'user_satisfaction'; // IFC-024: Human feedback
 
 /**
  * Human feedback data for drift signals (IFC-024)
@@ -122,7 +122,7 @@ export class DriftDetector {
 
     // Prune old samples (keep 48 hours of data)
     const cutoffTime = new Date(Date.now() - 48 * 60 * 60 * 1000);
-    const prunedSamples = samples.filter(s => s.timestamp > cutoffTime);
+    const prunedSamples = samples.filter((s) => s.timestamp > cutoffTime);
     this.samples.set(key, prunedSamples);
 
     logger.debug(
@@ -146,9 +146,8 @@ export class DriftDetector {
     const timestamp = new Date();
 
     // Track user satisfaction (thumbs up = 1, thumbs down = 0, correction = 0.5)
-    const satisfactionValue = feedback.feedbackType === 'THUMBS_UP' ? 1
-      : feedback.feedbackType === 'THUMBS_DOWN' ? 0
-      : 0.5;
+    const satisfactionValue =
+      feedback.feedbackType === 'THUMBS_UP' ? 1 : feedback.feedbackType === 'THUMBS_DOWN' ? 0 : 0.5;
 
     this.recordSample({
       value: satisfactionValue,
@@ -222,7 +221,7 @@ export class DriftDetector {
 
     const baselineCutoff = sortedSamples.length / 2;
     const baselineSamples = sortedSamples.slice(0, baselineCutoff);
-    const values = baselineSamples.map(s => s.value);
+    const values = baselineSamples.map((s) => s.value);
 
     const window = this.computeWindow(values, baselineSamples);
     this.setBaseline(model, metric, window);
@@ -263,17 +262,15 @@ export class DriftDetector {
     }
 
     // Get current window samples
-    const windowCutoff = new Date(
-      Date.now() - this.config.windowSizeHours * 60 * 60 * 1000
-    );
-    const currentSamples = samples.filter(s => s.timestamp > windowCutoff);
+    const windowCutoff = new Date(Date.now() - this.config.windowSizeHours * 60 * 60 * 1000);
+    const currentSamples = samples.filter((s) => s.timestamp > windowCutoff);
 
     if (currentSamples.length < this.config.minSamplesRequired / 2) {
       logger.debug({ key, currentCount: currentSamples.length }, 'Insufficient current samples');
       return defaultResult;
     }
 
-    const currentValues = currentSamples.map(s => s.value);
+    const currentValues = currentSamples.map((s) => s.value);
     const currentWindow = this.computeWindow(currentValues, currentSamples);
 
     // Perform statistical tests
@@ -363,21 +360,22 @@ export class DriftDetector {
     }
 
     const recentDrift = this.driftHistory.filter(
-      d => d.timestamp > new Date(Date.now() - 24 * 60 * 60 * 1000)
+      (d) => d.timestamp > new Date(Date.now() - 24 * 60 * 60 * 1000)
     );
 
     const highSeverity = recentDrift.filter(
-      d => d.severity === 'high' || d.severity === 'critical'
+      (d) => d.severity === 'high' || d.severity === 'critical'
     );
 
     return {
       trackedMetrics: this.samples.size,
       totalSamples,
-      driftDetected: recentDrift.some(d => d.detected),
+      driftDetected: recentDrift.some((d) => d.detected),
       highSeverityCount: highSeverity.length,
-      lastCheck: this.driftHistory.length > 0
-        ? this.driftHistory[this.driftHistory.length - 1].timestamp
-        : null,
+      lastCheck:
+        this.driftHistory.length > 0
+          ? this.driftHistory[this.driftHistory.length - 1].timestamp
+          : null,
     };
   }
 
@@ -398,15 +396,12 @@ export class DriftDetector {
     const distribution = new Array(binCount).fill(0);
 
     for (const v of values) {
-      const binIndex = Math.min(
-        Math.floor((v - min) / binWidth),
-        binCount - 1
-      );
+      const binIndex = Math.min(Math.floor((v - min) / binWidth), binCount - 1);
       distribution[binIndex]++;
     }
 
     // Normalize to probabilities
-    const normalizedDist = distribution.map(count => count / n);
+    const normalizedDist = distribution.map((count) => count / n);
 
     return {
       startTime: samples.length > 0 ? samples[0].timestamp : new Date(),
@@ -455,10 +450,7 @@ export class DriftDetector {
   /**
    * Population Stability Index (PSI)
    */
-  private populationStabilityIndex(
-    expected: number[],
-    actual: number[]
-  ): number {
+  private populationStabilityIndex(expected: number[], actual: number[]): number {
     let psi = 0;
     const epsilon = 0.0001; // Avoid log(0)
 
@@ -489,9 +481,7 @@ export class DriftDetector {
   /**
    * Classify drift severity based on score
    */
-  private classifySeverity(
-    driftScore: number
-  ): 'none' | 'low' | 'medium' | 'high' | 'critical' {
+  private classifySeverity(driftScore: number): 'none' | 'low' | 'medium' | 'high' | 'critical' {
     const { driftScoreThresholds } = this.config;
 
     if (driftScore >= driftScoreThresholds.critical) return 'critical';
@@ -504,11 +494,7 @@ export class DriftDetector {
   /**
    * Generate recommendations based on drift severity
    */
-  private generateRecommendations(
-    severity: string,
-    metric: string,
-    _driftScore: number
-  ): string[] {
+  private generateRecommendations(severity: string, metric: string, _driftScore: number): string[] {
     const recommendations: string[] = [];
 
     switch (severity) {

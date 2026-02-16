@@ -137,7 +137,7 @@ describe('FieldEncryption Utilities', () => {
       const result = await FieldEncryption.encryptField(
         obj,
         'level1.level2.level3.secret',
-        service,
+        service
       );
 
       expect(result.level1.level2.level3.secret).not.toBe('deep-secret');
@@ -174,14 +174,14 @@ describe('FieldEncryption Utilities', () => {
       const encrypted = await FieldEncryption.encryptField(
         originalObj,
         'user.profile.secret',
-        service,
+        service
       );
 
       // Then decrypt
       const decrypted = await FieldEncryption.decryptField(
         encrypted,
         'user.profile.secret',
-        service,
+        service
       );
 
       expect(decrypted.public).toBe('visible');
@@ -240,12 +240,12 @@ describe('FieldEncryption Utilities', () => {
       const encrypted = await FieldEncryption.encryptField(
         originalObj,
         'level1.level2.level3.secret',
-        service,
+        service
       );
       const decrypted = await FieldEncryption.decryptField(
         encrypted,
         'level1.level2.level3.secret',
-        service,
+        service
       );
 
       expect(decrypted.level1.level2.level3.secret).toBe('deep-secret');
@@ -267,11 +267,7 @@ describe('FieldEncryption Utilities', () => {
         },
       };
 
-      const encrypted = await FieldEncryption.encryptField(
-        originalObj,
-        'profile.ssn',
-        service,
-      );
+      const encrypted = await FieldEncryption.encryptField(originalObj, 'profile.ssn', service);
       const decrypted = await FieldEncryption.decryptField(encrypted, 'profile.ssn', service);
 
       expect(decrypted).toEqual(originalObj);
@@ -343,7 +339,7 @@ describe('VaultKeyProvider Extended Tests', () => {
         'http://vault:8200/v1/transit/keys/test-key',
         expect.objectContaining({
           headers: { 'X-Vault-Token': 'test-token' },
-        }),
+        })
       );
     });
 
@@ -398,7 +394,7 @@ describe('VaultKeyProvider Extended Tests', () => {
             'X-Vault-Token': 'test-token',
             'Content-Type': 'application/json',
           },
-        }),
+        })
       );
     });
 
@@ -439,7 +435,7 @@ describe('VaultKeyProvider Extended Tests', () => {
         'http://vault:8200/v1/transit/decrypt/test-key',
         expect.objectContaining({
           method: 'POST',
-        }),
+        })
       );
     });
 
@@ -452,7 +448,7 @@ describe('VaultKeyProvider Extended Tests', () => {
       const provider = new VaultKeyProvider();
 
       await expect(provider.decryptWithVault('vault:v1:encrypted')).rejects.toThrow(
-        EncryptionError,
+        EncryptionError
       );
     });
   });
@@ -573,7 +569,7 @@ describe('EncryptionService.encryptToString and decryptFromString', () => {
     const service = new EncryptionService();
 
     await expect(service.decryptFromString('not-valid-base64-json')).rejects.toThrow(
-      EncryptionError,
+      EncryptionError
     );
   });
 
@@ -726,7 +722,7 @@ describe('EncryptionService.reEncrypt', () => {
     const reEncrypted = await service.reEncrypt(original);
 
     expect(new Date(reEncrypted.encryptedAt).getTime()).toBeGreaterThan(
-      new Date(original.encryptedAt).getTime(),
+      new Date(original.encryptedAt).getTime()
     );
   });
 });

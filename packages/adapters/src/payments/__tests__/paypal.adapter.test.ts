@@ -58,9 +58,10 @@ describe('PayPalAdapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
-        json: () => Promise.resolve({
-          error_description: 'Invalid client credentials',
-        }),
+        json: () =>
+          Promise.resolve({
+            error_description: 'Invalid client credentials',
+          }),
       });
 
       const result = await adapter.getAccessToken();
@@ -77,12 +78,13 @@ describe('PayPalAdapter', () => {
       // First mock for auth
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          access_token: 'test_token',
-          token_type: 'Bearer',
-          expires_in: 32400,
-          scope: 'https://uri.paypal.com/...',
-        }),
+        json: () =>
+          Promise.resolve({
+            access_token: 'test_token',
+            token_type: 'Bearer',
+            expires_in: 32400,
+            scope: 'https://uri.paypal.com/...',
+          }),
       });
 
       // Second mock for order creation
@@ -90,10 +92,12 @@ describe('PayPalAdapter', () => {
         id: 'ORDER123',
         status: 'CREATED',
         intent: 'CAPTURE',
-        purchase_units: [{
-          reference_id: 'unit-0',
-          amount: { currency_code: 'USD', value: '100.00' },
-        }],
+        purchase_units: [
+          {
+            reference_id: 'unit-0',
+            amount: { currency_code: 'USD', value: '100.00' },
+          },
+        ],
         create_time: new Date().toISOString(),
         update_time: new Date().toISOString(),
         links: [
@@ -109,11 +113,13 @@ describe('PayPalAdapter', () => {
 
       const result = await adapter.createOrder({
         intent: 'CAPTURE',
-        purchaseUnits: [{
-          currencyCode: 'USD',
-          amount: '100.00',
-          description: 'Test order',
-        }],
+        purchaseUnits: [
+          {
+            currencyCode: 'USD',
+            amount: '100.00',
+            description: 'Test order',
+          },
+        ],
       });
 
       expect(result.isSuccess).toBe(true);
@@ -129,30 +135,34 @@ describe('PayPalAdapter', () => {
       // Auth mock
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          access_token: 'test_token',
-          token_type: 'Bearer',
-          expires_in: 32400,
-          scope: '',
-        }),
+        json: () =>
+          Promise.resolve({
+            access_token: 'test_token',
+            token_type: 'Bearer',
+            expires_in: 32400,
+            scope: '',
+          }),
       });
 
       // Order creation failure
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 400,
-        json: () => Promise.resolve({
-          message: 'Invalid request',
-          details: [{ field: 'amount', description: 'Invalid amount format' }],
-        }),
+        json: () =>
+          Promise.resolve({
+            message: 'Invalid request',
+            details: [{ field: 'amount', description: 'Invalid amount format' }],
+          }),
       });
 
       const result = await adapter.createOrder({
         intent: 'CAPTURE',
-        purchaseUnits: [{
-          currencyCode: 'USD',
-          amount: 'invalid',
-        }],
+        purchaseUnits: [
+          {
+            currencyCode: 'USD',
+            amount: 'invalid',
+          },
+        ],
       });
 
       expect(result.isFailure).toBe(true);
@@ -167,12 +177,13 @@ describe('PayPalAdapter', () => {
       // Auth mock
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          access_token: 'test_token',
-          token_type: 'Bearer',
-          expires_in: 32400,
-          scope: '',
-        }),
+        json: () =>
+          Promise.resolve({
+            access_token: 'test_token',
+            token_type: 'Bearer',
+            expires_in: 32400,
+            scope: '',
+          }),
       });
 
       // Capture response
@@ -180,20 +191,24 @@ describe('PayPalAdapter', () => {
         id: 'ORDER123',
         status: 'COMPLETED',
         intent: 'CAPTURE',
-        purchase_units: [{
-          reference_id: 'unit-0',
-          amount: { currency_code: 'USD', value: '100.00' },
-          payments: {
-            captures: [{
-              id: 'CAP123',
-              status: 'COMPLETED',
-              amount: { currency_code: 'USD', value: '100.00' },
-              final_capture: true,
-              create_time: new Date().toISOString(),
-              update_time: new Date().toISOString(),
-            }],
+        purchase_units: [
+          {
+            reference_id: 'unit-0',
+            amount: { currency_code: 'USD', value: '100.00' },
+            payments: {
+              captures: [
+                {
+                  id: 'CAP123',
+                  status: 'COMPLETED',
+                  amount: { currency_code: 'USD', value: '100.00' },
+                  final_capture: true,
+                  create_time: new Date().toISOString(),
+                  update_time: new Date().toISOString(),
+                },
+              ],
+            },
           },
-        }],
+        ],
         create_time: new Date().toISOString(),
         update_time: new Date().toISOString(),
         links: [],
@@ -220,12 +235,13 @@ describe('PayPalAdapter', () => {
       // Auth mock
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          access_token: 'test_token',
-          token_type: 'Bearer',
-          expires_in: 32400,
-          scope: '',
-        }),
+        json: () =>
+          Promise.resolve({
+            access_token: 'test_token',
+            token_type: 'Bearer',
+            expires_in: 32400,
+            scope: '',
+          }),
       });
 
       // Refund response
@@ -263,12 +279,13 @@ describe('PayPalAdapter', () => {
       // Auth mock
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          access_token: 'test_token',
-          token_type: 'Bearer',
-          expires_in: 32400,
-          scope: '',
-        }),
+        json: () =>
+          Promise.resolve({
+            access_token: 'test_token',
+            token_type: 'Bearer',
+            expires_in: 32400,
+            scope: '',
+          }),
       });
 
       // Subscription response
@@ -279,7 +296,10 @@ describe('PayPalAdapter', () => {
         create_time: new Date().toISOString(),
         update_time: new Date().toISOString(),
         links: [
-          { href: 'https://www.sandbox.paypal.com/webapps/billing/subscriptions?ba_token=SUB123', rel: 'approve' },
+          {
+            href: 'https://www.sandbox.paypal.com/webapps/billing/subscriptions?ba_token=SUB123',
+            rel: 'approve',
+          },
         ],
       };
 
@@ -309,12 +329,13 @@ describe('PayPalAdapter', () => {
       // Auth mock
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          access_token: 'test_token',
-          token_type: 'Bearer',
-          expires_in: 32400,
-          scope: '',
-        }),
+        json: () =>
+          Promise.resolve({
+            access_token: 'test_token',
+            token_type: 'Bearer',
+            expires_in: 32400,
+            scope: '',
+          }),
       });
 
       // Cancel returns 204 No Content
@@ -334,12 +355,13 @@ describe('PayPalAdapter', () => {
     it('should return healthy status when API responds quickly', async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          access_token: 'test_token',
-          token_type: 'Bearer',
-          expires_in: 32400,
-          scope: '',
-        }),
+        json: () =>
+          Promise.resolve({
+            access_token: 'test_token',
+            token_type: 'Bearer',
+            expires_in: 32400,
+            scope: '',
+          }),
       });
 
       const result = await adapter.checkConnection();
@@ -355,9 +377,10 @@ describe('PayPalAdapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
-        json: () => Promise.resolve({
-          error_description: 'Invalid credentials',
-        }),
+        json: () =>
+          Promise.resolve({
+            error_description: 'Invalid credentials',
+          }),
       });
 
       const result = await adapter.checkConnection();
@@ -409,12 +432,13 @@ describe('PayPalAdapter', () => {
       // Auth mock
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: () => Promise.resolve({
-          access_token: 'test_token',
-          token_type: 'Bearer',
-          expires_in: 32400,
-          scope: '',
-        }),
+        json: () =>
+          Promise.resolve({
+            access_token: 'test_token',
+            token_type: 'Bearer',
+            expires_in: 32400,
+            scope: '',
+          }),
       });
 
       // Rate limited response
@@ -422,17 +446,20 @@ describe('PayPalAdapter', () => {
         ok: false,
         status: 429,
         headers: new Map([['Retry-After', '60']]) as unknown as Headers,
-        json: () => Promise.resolve({
-          message: 'Rate limit exceeded',
-        }),
+        json: () =>
+          Promise.resolve({
+            message: 'Rate limit exceeded',
+          }),
       });
 
       const result = await adapter.createOrder({
         intent: 'CAPTURE',
-        purchaseUnits: [{
-          currencyCode: 'USD',
-          amount: '100.00',
-        }],
+        purchaseUnits: [
+          {
+            currencyCode: 'USD',
+            amount: '100.00',
+          },
+        ],
       });
 
       expect(result.isFailure).toBe(true);

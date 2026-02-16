@@ -268,10 +268,7 @@ export class VersionLoader {
   /**
    * Get chain config only (without version metadata)
    */
-  async getChainConfig(
-    chainType: ChainType,
-    context: ExecutionContext
-  ): Promise<ChainConfig> {
+  async getChainConfig(chainType: ChainType, context: ExecutionContext): Promise<ChainConfig> {
     const loaded = await this.loadVersionedChain(chainType, context);
     return loaded.config;
   }

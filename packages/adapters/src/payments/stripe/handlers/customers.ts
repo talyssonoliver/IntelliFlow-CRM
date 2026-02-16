@@ -3,7 +3,12 @@
  */
 
 import { Result, DomainError } from '@intelliflow/domain';
-import type { StripeConfig, StripeCustomer, CreateCustomerParams, UpdateCustomerParams } from '../types';
+import type {
+  StripeConfig,
+  StripeCustomer,
+  CreateCustomerParams,
+  UpdateCustomerParams,
+} from '../types';
 import { StripeConnectionError } from '../errors';
 import { makeRequest } from '../http-client';
 import { mapToCustomer } from '../mappers';

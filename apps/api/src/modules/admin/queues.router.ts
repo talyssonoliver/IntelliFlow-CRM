@@ -22,9 +22,7 @@ export const queuesAdminRouter = createTRPCRouter({
   }),
 
   /** Get queue details by name */
-  getByName: protectedProcedure
-    .input(z.object({ name: z.string() }))
-    .query(async ({ input }) => {
-      return null;
-    }),
+  getByName: protectedProcedure.input(z.object({ name: z.string() })).query(async ({ input }) => {
+    return null;
+  }),
 });

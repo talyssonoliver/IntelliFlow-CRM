@@ -45,8 +45,14 @@ describe('Billing Validators', () => {
   describe('subscriptionStatusSchema', () => {
     it('should accept all valid subscription statuses', () => {
       const valid: SubscriptionStatus[] = [
-        'incomplete', 'incomplete_expired', 'trialing', 'active',
-        'past_due', 'canceled', 'unpaid', 'paused',
+        'incomplete',
+        'incomplete_expired',
+        'trialing',
+        'active',
+        'past_due',
+        'canceled',
+        'unpaid',
+        'paused',
       ];
       valid.forEach((v) => {
         const result = subscriptionStatusSchema.safeParse(v);
@@ -108,9 +114,15 @@ describe('Billing Validators', () => {
   describe('paymentErrorCodeSchema', () => {
     it('should accept all valid error codes', () => {
       const codes = [
-        'CARD_DECLINED', 'EXPIRED_CARD', 'INSUFFICIENT_FUNDS',
-        'PROCESSING_ERROR', 'VALIDATION_ERROR', 'INVALID_CVC',
-        'INVALID_EXPIRY', 'INVALID_NUMBER', 'RATE_LIMIT',
+        'CARD_DECLINED',
+        'EXPIRED_CARD',
+        'INSUFFICIENT_FUNDS',
+        'PROCESSING_ERROR',
+        'VALIDATION_ERROR',
+        'INVALID_CVC',
+        'INVALID_EXPIRY',
+        'INVALID_NUMBER',
+        'RATE_LIMIT',
       ];
       codes.forEach((c) => {
         expect(paymentErrorCodeSchema.safeParse(c).success).toBe(true);
@@ -124,7 +136,16 @@ describe('Billing Validators', () => {
 
   describe('cardBrandSchema', () => {
     it('should accept all valid card brands', () => {
-      const brands = ['visa', 'mastercard', 'amex', 'discover', 'diners', 'jcb', 'unionpay', 'unknown'];
+      const brands = [
+        'visa',
+        'mastercard',
+        'amex',
+        'discover',
+        'diners',
+        'jcb',
+        'unionpay',
+        'unknown',
+      ];
       brands.forEach((b) => {
         expect(cardBrandSchema.safeParse(b).success).toBe(true);
       });

@@ -37,7 +37,9 @@ export async function waitForElementOrTimeout(
 export async function waitForContentStable(page: Page, timeout = 2000): Promise<void> {
   await page.waitForLoadState('domcontentloaded', { timeout });
   // Brief pause for any animations - this is more reliable than fixed timeout
-  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  await page.evaluate(
+    () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+  );
 }
 
 /**
@@ -195,7 +197,10 @@ export async function captureStableScreenshot(locator: Locator, name: string): P
 
   await expect(locator).toHaveScreenshot(name, {
     animations: 'disabled',
-    mask: [page.locator('[data-testid="timestamp"]'), page.locator('[data-testid="relative-time"]')],
+    mask: [
+      page.locator('[data-testid="timestamp"]'),
+      page.locator('[data-testid="relative-time"]'),
+    ],
   });
 }
 

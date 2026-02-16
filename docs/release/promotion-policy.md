@@ -1,12 +1,13 @@
 # Release Promotion Policy
 
-> **Task**: IFC-130 - Release governance: staging auto-deploy, promotion policy, quality/security gates, rollback criteria
-> **Status**: Completed
-> **Sprint**: 5
+> **Task**: IFC-130 - Release governance: staging auto-deploy, promotion policy,
+> quality/security gates, rollback criteria **Status**: Completed **Sprint**: 5
 
 ## Overview
 
-This document defines the release promotion workflow for IntelliFlow CRM, ensuring safe and reliable deployments through automated quality gates and human approvals.
+This document defines the release promotion workflow for IntelliFlow CRM,
+ensuring safe and reliable deployments through automated quality gates and human
+approvals.
 
 ## Environment Hierarchy
 
@@ -14,11 +15,11 @@ This document defines the release promotion workflow for IntelliFlow CRM, ensuri
 Development → Staging → Production
 ```
 
-| Environment | Purpose | Auto-Deploy | Approval Required |
-|-------------|---------|-------------|-------------------|
-| Development | Feature testing | Yes (on PR merge to `develop`) | No |
-| Staging | Pre-production validation | Yes (on merge to `main`) | No |
-| Production | Live system | No | Yes (manual gate) |
+| Environment | Purpose                   | Auto-Deploy                    | Approval Required |
+| ----------- | ------------------------- | ------------------------------ | ----------------- |
+| Development | Feature testing           | Yes (on PR merge to `develop`) | No                |
+| Staging     | Pre-production validation | Yes (on merge to `main`)       | No                |
+| Production  | Live system               | No                             | Yes (manual gate) |
 
 ## Promotion Workflow
 
@@ -27,6 +28,7 @@ Development → Staging → Production
 **Trigger**: Merge to `main` branch
 
 **Automated Checks**:
+
 - All CI tests pass (unit, integration, E2E)
 - Code coverage ≥90%
 - No critical/high security vulnerabilities (Snyk/Dependabot)
@@ -35,6 +37,7 @@ Development → Staging → Production
 - Architecture tests pass (no boundary violations)
 
 **Deployment**:
+
 - Automatic blue-green deployment
 - Health checks must pass within 2 minutes
 - Automatic rollback if health checks fail
@@ -44,6 +47,7 @@ Development → Staging → Production
 **Trigger**: Manual promotion request
 
 **Pre-Promotion Checklist**:
+
 1. [ ] Staging deployment stable for ≥24 hours
 2. [ ] All automated tests pass in staging
 3. [ ] Performance benchmarks within acceptable range
@@ -53,11 +57,13 @@ Development → Staging → Production
 7. [ ] Monitoring and alerting verified
 
 **Approval Requirements**:
+
 - At least 1 approval from Tech Lead or DevOps Lead
 - All blocking issues resolved
 - Release notes documented
 
 **Deployment**:
+
 - Blue-green deployment with gradual traffic shift
 - 10% → 50% → 100% traffic rollout
 - Each phase requires health check validation
@@ -67,24 +73,24 @@ Development → Staging → Production
 
 ### Automated Gates
 
-| Gate | Threshold | Enforcement |
-|------|-----------|-------------|
-| Unit Test Coverage | ≥90% | CI blocks merge |
-| Integration Tests | 100% pass | CI blocks merge |
-| E2E Tests | 100% pass | CI blocks merge |
-| Security Scan | 0 critical, 0 high | CI blocks merge |
-| Performance (p99) | <200ms API response | CI warning, manual review |
-| Lighthouse Score | ≥90 | CI blocks merge |
-| Bundle Size | <500KB initial load | CI warning |
+| Gate               | Threshold           | Enforcement               |
+| ------------------ | ------------------- | ------------------------- |
+| Unit Test Coverage | ≥90%                | CI blocks merge           |
+| Integration Tests  | 100% pass           | CI blocks merge           |
+| E2E Tests          | 100% pass           | CI blocks merge           |
+| Security Scan      | 0 critical, 0 high  | CI blocks merge           |
+| Performance (p99)  | <200ms API response | CI warning, manual review |
+| Lighthouse Score   | ≥90                 | CI blocks merge           |
+| Bundle Size        | <500KB initial load | CI warning                |
 
 ### Manual Gates
 
-| Gate | Reviewer | Required For |
-|------|----------|--------------|
-| Architecture Review | Tech Lead | New features |
-| Security Review | Security Engineer | Auth/data changes |
-| UX Review | UX Lead | UI changes |
-| Performance Review | SRE | Infrastructure changes |
+| Gate                | Reviewer          | Required For           |
+| ------------------- | ----------------- | ---------------------- |
+| Architecture Review | Tech Lead         | New features           |
+| Security Review     | Security Engineer | Auth/data changes      |
+| UX Review           | UX Lead           | UI changes             |
+| Performance Review  | SRE               | Infrastructure changes |
 
 ## Rollback Criteria
 
@@ -112,12 +118,12 @@ Development → Staging → Production
 
 ## SLAs
 
-| Metric | Target | Monitoring |
-|--------|--------|------------|
-| Staging Deploy Time | ≤5 minutes | GitHub Actions |
+| Metric                 | Target      | Monitoring     |
+| ---------------------- | ----------- | -------------- |
+| Staging Deploy Time    | ≤5 minutes  | GitHub Actions |
 | Production Deploy Time | ≤10 minutes | GitHub Actions |
-| Rollback Time | ≤2 minutes | Automated |
-| MTTR | ≤1 hour | PagerDuty |
+| Rollback Time          | ≤2 minutes  | Automated      |
+| MTTR                   | ≤1 hour     | PagerDuty      |
 
 ## Release Schedule
 

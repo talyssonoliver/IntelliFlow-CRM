@@ -32,7 +32,9 @@ export function DashboardSidebar({
   className = '',
 }: DashboardSidebarProps) {
   return (
-    <aside className={`hidden lg:flex w-64 flex-col bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark flex-shrink-0 z-20 ${className}`}>
+    <aside
+      className={`hidden lg:flex w-64 flex-col bg-surface-light dark:bg-surface-dark border-r border-border-light dark:border-border-dark flex-shrink-0 z-20 ${className}`}
+    >
       <div className="flex flex-col flex-1 overflow-y-auto py-4">
         {/* My Dashboards Section */}
         <div className="px-4 mb-2">
@@ -62,7 +64,9 @@ export function DashboardSidebar({
                 >
                   {dashboard.icon}
                 </span>
-                <span className={`text-sm ${activeDashboardId === dashboard.id ? 'font-semibold' : 'font-medium'}`}>
+                <span
+                  className={`text-sm ${activeDashboardId === dashboard.id ? 'font-semibold' : 'font-medium'}`}
+                >
                   {dashboard.name}
                 </span>
               </button>
@@ -103,7 +107,9 @@ export function DashboardSidebar({
                 >
                   {item.icon}
                 </span>
-                <span className={`text-sm ${activeConfigId === item.id ? 'font-semibold' : 'font-medium'}`}>
+                <span
+                  className={`text-sm ${activeConfigId === item.id ? 'font-semibold' : 'font-medium'}`}
+                >
                   {item.label}
                 </span>
               </button>

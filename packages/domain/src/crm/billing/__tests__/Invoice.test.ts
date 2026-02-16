@@ -16,7 +16,12 @@ function validInvoiceProps(overrides: Partial<CreateInvoiceProps> = {}): CreateI
     customerId: 'cust-001',
     tenantId: 'tenant-001',
     lineItems: [
-      { description: 'Monthly plan', quantity: 1, unitPriceCents: 10000, type: 'SUBSCRIPTION' as const },
+      {
+        description: 'Monthly plan',
+        quantity: 1,
+        unitPriceCents: 10000,
+        type: 'SUBSCRIPTION' as const,
+      },
     ],
     billingEmail: 'billing@example.com',
     currency: 'USD',
@@ -43,12 +48,14 @@ describe('Invoice', () => {
     });
 
     it('should calculate subtotal from line items', () => {
-      const result = Invoice.create(validInvoiceProps({
-        lineItems: [
-          { description: 'Item 1', quantity: 2, unitPriceCents: 5000, type: 'ONE_TIME' },
-          { description: 'Item 2', quantity: 1, unitPriceCents: 3000, type: 'ONE_TIME' },
-        ],
-      }));
+      const result = Invoice.create(
+        validInvoiceProps({
+          lineItems: [
+            { description: 'Item 1', quantity: 2, unitPriceCents: 5000, type: 'ONE_TIME' },
+            { description: 'Item 2', quantity: 1, unitPriceCents: 3000, type: 'ONE_TIME' },
+          ],
+        })
+      );
       expect(result.isSuccess).toBe(true);
       expect(result.value.subtotal.cents).toBe(13000);
     });
@@ -114,10 +121,12 @@ describe('Invoice', () => {
     });
 
     it('should reject dueDate before issueDate', () => {
-      const result = Invoice.create(validInvoiceProps({
-        issueDate: new Date('2026-03-01'),
-        dueDate: new Date('2026-02-01'),
-      }));
+      const result = Invoice.create(
+        validInvoiceProps({
+          issueDate: new Date('2026-03-01'),
+          dueDate: new Date('2026-02-01'),
+        })
+      );
       expect(result.isFailure).toBe(true);
     });
   });
@@ -463,7 +472,12 @@ describe('Invoice', () => {
   describe('Invoice.addLineItem', () => {
     it('should add line item to DRAFT invoice', () => {
       const invoice = Invoice.create(validInvoiceProps()).value;
-      const result = invoice.addLineItem({ description: 'Extra', quantity: 1, unitPriceCents: 500, type: 'ONE_TIME' });
+      const result = invoice.addLineItem({
+        description: 'Extra',
+        quantity: 1,
+        unitPriceCents: 500,
+        type: 'ONE_TIME',
+      });
       expect(result.isSuccess).toBe(true);
       expect(invoice.lineItems.length).toBe(2);
     });
@@ -471,25 +485,37 @@ describe('Invoice', () => {
     it('should recalculate totals', () => {
       const invoice = Invoice.create(validInvoiceProps()).value;
       const oldTotal = invoice.totalAmount.cents;
-      invoice.addLineItem({ description: 'Extra', quantity: 1, unitPriceCents: 5000, type: 'ONE_TIME' });
+      invoice.addLineItem({
+        description: 'Extra',
+        quantity: 1,
+        unitPriceCents: 5000,
+        type: 'ONE_TIME',
+      });
       expect(invoice.totalAmount.cents).toBeGreaterThan(oldTotal);
     });
 
     it('should reject on non-DRAFT invoice', () => {
       const invoice = createOpenInvoice();
-      const result = invoice.addLineItem({ description: 'Extra', quantity: 1, unitPriceCents: 500, type: 'ONE_TIME' });
+      const result = invoice.addLineItem({
+        description: 'Extra',
+        quantity: 1,
+        unitPriceCents: 500,
+        type: 'ONE_TIME',
+      });
       expect(result.isFailure).toBe(true);
     });
   });
 
   describe('Invoice.removeLineItem', () => {
     it('should remove line item by index', () => {
-      const invoice = Invoice.create(validInvoiceProps({
-        lineItems: [
-          { description: 'A', quantity: 1, unitPriceCents: 1000, type: 'ONE_TIME' },
-          { description: 'B', quantity: 1, unitPriceCents: 2000, type: 'ONE_TIME' },
-        ],
-      })).value;
+      const invoice = Invoice.create(
+        validInvoiceProps({
+          lineItems: [
+            { description: 'A', quantity: 1, unitPriceCents: 1000, type: 'ONE_TIME' },
+            { description: 'B', quantity: 1, unitPriceCents: 2000, type: 'ONE_TIME' },
+          ],
+        })
+      ).value;
       const result = invoice.removeLineItem(0);
       expect(result.isSuccess).toBe(true);
       expect(invoice.lineItems.length).toBe(1);
@@ -497,12 +523,14 @@ describe('Invoice', () => {
     });
 
     it('should recalculate totals', () => {
-      const invoice = Invoice.create(validInvoiceProps({
-        lineItems: [
-          { description: 'A', quantity: 1, unitPriceCents: 1000, type: 'ONE_TIME' },
-          { description: 'B', quantity: 1, unitPriceCents: 2000, type: 'ONE_TIME' },
-        ],
-      })).value;
+      const invoice = Invoice.create(
+        validInvoiceProps({
+          lineItems: [
+            { description: 'A', quantity: 1, unitPriceCents: 1000, type: 'ONE_TIME' },
+            { description: 'B', quantity: 1, unitPriceCents: 2000, type: 'ONE_TIME' },
+          ],
+        })
+      ).value;
       invoice.removeLineItem(0);
       expect(invoice.subtotal.cents).toBe(2000);
     });
@@ -539,10 +567,12 @@ describe('Invoice', () => {
     });
 
     it('isOverdue should be true when OPEN + past due', () => {
-      const invoice = Invoice.create(validInvoiceProps({
-        dueDate: new Date('2020-01-01'),
-        issueDate: new Date('2019-12-01'),
-      })).value;
+      const invoice = Invoice.create(
+        validInvoiceProps({
+          dueDate: new Date('2020-01-01'),
+          issueDate: new Date('2019-12-01'),
+        })
+      ).value;
       invoice.issue();
       expect(invoice.isOverdue).toBe(true);
     });

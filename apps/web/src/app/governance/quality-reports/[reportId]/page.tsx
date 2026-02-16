@@ -85,11 +85,26 @@ export default function QualityReportDetailPage() {
   const getStatusInfo = (status: string) => {
     switch (status) {
       case 'passing':
-        return { icon: 'check_circle', color: 'text-emerald-500', bgColor: 'bg-emerald-100 dark:bg-emerald-900/30', label: 'Passing' };
+        return {
+          icon: 'check_circle',
+          color: 'text-emerald-500',
+          bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
+          label: 'Passing',
+        };
       case 'failing':
-        return { icon: 'cancel', color: 'text-red-500', bgColor: 'bg-red-100 dark:bg-red-900/30', label: 'Failing' };
+        return {
+          icon: 'cancel',
+          color: 'text-red-500',
+          bgColor: 'bg-red-100 dark:bg-red-900/30',
+          label: 'Failing',
+        };
       default:
-        return { icon: 'help', color: 'text-muted-foreground', bgColor: 'bg-muted', label: 'Unknown' };
+        return {
+          icon: 'help',
+          color: 'text-muted-foreground',
+          bgColor: 'bg-muted',
+          label: 'Unknown',
+        };
     }
   };
 
@@ -98,64 +113,71 @@ export default function QualityReportDetailPage() {
   return (
     <>
       <PageHeader
-          breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' },
-            { label: 'Governance', href: '/governance' },
-            { label: 'Quality Reports', href: '/governance/quality-reports' },
-            { label: config.title },
-          ]}
-          title={config.title}
-          description={`${report?.source === 'ci' ? 'CI-generated' : 'Manually created'} quality report`}
-          className="mb-8"
-        />
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Governance', href: '/governance' },
+          { label: 'Quality Reports', href: '/governance/quality-reports' },
+          { label: config.title },
+        ]}
+        title={config.title}
+        description={`${report?.source === 'ci' ? 'CI-generated' : 'Manually created'} quality report`}
+        className="mb-8"
+      />
 
-        {loading && (
-          <div className="text-center py-16 text-muted-foreground">
-            <span className="material-symbols-outlined text-5xl mb-4 animate-spin">
-              progress_activity
-            </span>
-            <p className="text-lg">Loading report...</p>
-          </div>
-        )}
+      {loading && (
+        <div className="text-center py-16 text-muted-foreground">
+          <span className="material-symbols-outlined text-5xl mb-4 animate-spin">
+            progress_activity
+          </span>
+          <p className="text-lg">Loading report...</p>
+        </div>
+      )}
 
-        {!loading && report && (
-          <>
-            {/* Report Summary */}
-            <div className="grid gap-4 md:grid-cols-4 mb-6">
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-lg ${config.color} flex items-center justify-center`}>
-                    <span className="material-symbols-outlined text-white">{config.icon}</span>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Report Type</p>
-                    <p className="font-semibold text-foreground capitalize">{report.type}</p>
-                  </div>
+      {!loading && report && (
+        <>
+          {/* Report Summary */}
+          <div className="grid gap-4 md:grid-cols-4 mb-6">
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-10 h-10 rounded-lg ${config.color} flex items-center justify-center`}
+                >
+                  <span className="material-symbols-outlined text-white">{config.icon}</span>
                 </div>
-              </Card>
-
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-lg ${statusInfo.bgColor} flex items-center justify-center`}>
-                    <span className={`material-symbols-outlined ${statusInfo.color}`}>{statusInfo.icon}</span>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Status</p>
-                    <p className={`font-semibold ${statusInfo.color}`}>{statusInfo.label}</p>
-                  </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Report Type</p>
+                  <p className="font-semibold text-foreground capitalize">{report.type}</p>
                 </div>
-              </Card>
+              </div>
+            </Card>
 
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-cyan-600 dark:text-cyan-400">
-                      percent
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Score</p>
-                    <p className={`font-semibold text-2xl ${
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-10 h-10 rounded-lg ${statusInfo.bgColor} flex items-center justify-center`}
+                >
+                  <span className={`material-symbols-outlined ${statusInfo.color}`}>
+                    {statusInfo.icon}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <p className={`font-semibold ${statusInfo.color}`}>{statusInfo.label}</p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-cyan-600 dark:text-cyan-400">
+                    percent
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Score</p>
+                  <p
+                    className={`font-semibold text-2xl ${
                       report.score !== undefined
                         ? report.score >= 90
                           ? 'text-emerald-500'
@@ -163,116 +185,118 @@ export default function QualityReportDetailPage() {
                             ? 'text-amber-500'
                             : 'text-red-500'
                         : 'text-muted-foreground'
-                    }`}>
-                      {report.score !== undefined ? `${report.score}%` : 'N/A'}
-                    </p>
-                  </div>
+                    }`}
+                  >
+                    {report.score !== undefined ? `${report.score}%` : 'N/A'}
+                  </p>
                 </div>
-              </Card>
+              </div>
+            </Card>
 
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-blue-600 dark:text-blue-400">
-                      schedule
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Generated</p>
-                    <p className="font-semibold text-foreground">
-                      {new Date(report.generatedAt).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </p>
-                  </div>
+            <Card className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-blue-600 dark:text-blue-400">
+                    schedule
+                  </span>
                 </div>
-              </Card>
+                <div>
+                  <p className="text-sm text-muted-foreground">Generated</p>
+                  <p className="font-semibold text-foreground">
+                    {new Date(report.generatedAt).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Thresholds */}
+          <Card className="p-4 mb-6">
+            <h3 className="font-semibold text-foreground mb-3">Required Thresholds</h3>
+            <div className="flex flex-wrap gap-4">
+              {config.thresholds.map((threshold) => (
+                <div key={threshold.label} className="flex items-center gap-2 text-sm">
+                  <span className="material-symbols-outlined text-base text-muted-foreground">
+                    flag
+                  </span>
+                  <span className="text-muted-foreground">{threshold.label}:</span>
+                  <span className="font-medium text-foreground">
+                    {threshold.value}
+                    {reportId === 'performance' ? 'ms' : '%'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Report Viewer */}
+          <Card className="overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-border bg-muted/50">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-muted-foreground">description</span>
+                <span className="font-medium text-foreground">Full Report</span>
+                {report.source === 'ci' && (
+                  <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs rounded-full font-medium">
+                    CI Generated
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    window.open(`/api/quality-reports/view?report=${reportId}`, '_blank')
+                  }
+                >
+                  <span className="material-symbols-outlined text-base mr-1">open_in_new</span>
+                  Open in New Tab
+                </Button>
+              </div>
             </div>
 
-            {/* Thresholds */}
-            <Card className="p-4 mb-6">
-              <h3 className="font-semibold text-foreground mb-3">Required Thresholds</h3>
-              <div className="flex flex-wrap gap-4">
-                {config.thresholds.map((threshold) => (
-                  <div key={threshold.label} className="flex items-center gap-2 text-sm">
-                    <span className="material-symbols-outlined text-base text-muted-foreground">
-                      flag
+            <div className="relative" style={{ height: '70vh' }}>
+              {!iframeLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
+                  <div className="text-center">
+                    <span className="material-symbols-outlined text-4xl text-muted-foreground animate-spin">
+                      progress_activity
                     </span>
-                    <span className="text-muted-foreground">{threshold.label}:</span>
-                    <span className="font-medium text-foreground">
-                      {threshold.value}{reportId === 'performance' ? 'ms' : '%'}
-                    </span>
+                    <p className="text-sm text-muted-foreground mt-2">Loading report...</p>
                   </div>
-                ))}
-              </div>
-            </Card>
-
-            {/* Report Viewer */}
-            <Card className="overflow-hidden">
-              <div className="flex items-center justify-between p-4 border-b border-border bg-muted/50">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-muted-foreground">
-                    description
-                  </span>
-                  <span className="font-medium text-foreground">Full Report</span>
-                  {report.source === 'ci' && (
-                    <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-xs rounded-full font-medium">
-                      CI Generated
-                    </span>
-                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => window.open(`/api/quality-reports/view?report=${reportId}`, '_blank')}
-                  >
-                    <span className="material-symbols-outlined text-base mr-1">open_in_new</span>
-                    Open in New Tab
-                  </Button>
-                </div>
-              </div>
-
-              <div className="relative" style={{ height: '70vh' }}>
-                {!iframeLoaded && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-muted/50">
-                    <div className="text-center">
-                      <span className="material-symbols-outlined text-4xl text-muted-foreground animate-spin">
-                        progress_activity
-                      </span>
-                      <p className="text-sm text-muted-foreground mt-2">Loading report...</p>
-                    </div>
-                  </div>
-                )}
-                <iframe
-                  src={`/api/quality-reports/view?report=${reportId}`}
-                  className="w-full h-full border-0"
-                  title={`${config.title} Report`}
-                  onLoad={() => setIframeLoaded(true)}
-                />
-              </div>
-            </Card>
-          </>
-        )}
-
-        {!loading && !report && (
-          <Card className="p-12 text-center">
-            <span className="material-symbols-outlined text-5xl text-muted-foreground mb-4">
-              error
-            </span>
-            <h3 className="text-lg font-semibold text-foreground mb-2">Report Not Found</h3>
-            <p className="text-muted-foreground mb-4">
-              The requested quality report could not be found.
-            </p>
-            <Button onClick={() => router.push('/governance/quality-reports')}>
-              <span className="material-symbols-outlined text-base mr-1">arrow_back</span>
-              Back to Quality Reports
-            </Button>
+              )}
+              <iframe
+                src={`/api/quality-reports/view?report=${reportId}`}
+                className="w-full h-full border-0"
+                title={`${config.title} Report`}
+                onLoad={() => setIframeLoaded(true)}
+              />
+            </div>
           </Card>
-        )}
+        </>
+      )}
+
+      {!loading && !report && (
+        <Card className="p-12 text-center">
+          <span className="material-symbols-outlined text-5xl text-muted-foreground mb-4">
+            error
+          </span>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Report Not Found</h3>
+          <p className="text-muted-foreground mb-4">
+            The requested quality report could not be found.
+          </p>
+          <Button onClick={() => router.push('/governance/quality-reports')}>
+            <span className="material-symbols-outlined text-base mr-1">arrow_back</span>
+            Back to Quality Reports
+          </Button>
+        </Card>
+      )}
     </>
   );
 }

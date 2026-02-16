@@ -13,10 +13,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  ConvertLeadToDealUseCase,
-  ConvertLeadToDealInput,
-} from '../ConvertLeadToDealUseCase';
+import { ConvertLeadToDealUseCase, ConvertLeadToDealInput } from '../ConvertLeadToDealUseCase';
 import { Lead, Contact, Account, Opportunity } from '@intelliflow/domain';
 import {
   LeadRepository,

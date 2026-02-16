@@ -30,7 +30,9 @@ vi.mock('next/navigation', () => ({
 
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }: any) => (
-    <a href={href} {...props}>{children}</a>
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -113,9 +115,9 @@ describe('ReviewQueue', () => {
     // Stats values are bold <p> tags inside stat cards
     const statValues = container.querySelectorAll('p.text-2xl.font-bold');
     const valueTexts = Array.from(statValues).map((el) => el.textContent);
-    expect(valueTexts).toContain('5');   // pending
-    expect(valueTexts).toContain('2');   // inReview
-    expect(valueTexts).toContain('10');  // approved
+    expect(valueTexts).toContain('5'); // pending
+    expect(valueTexts).toContain('2'); // inReview
+    expect(valueTexts).toContain('10'); // approved
   });
 
   it('renders SearchFilterBar', () => {

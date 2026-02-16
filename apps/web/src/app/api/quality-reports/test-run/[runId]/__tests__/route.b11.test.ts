@@ -38,14 +38,12 @@ function makeParams(runId: string) {
 
 describe('/api/quality-reports/test-run/[runId]', () => {
   beforeEach(() => {
-    mockNextResponseJson.mockImplementation(
-      (body: unknown, init?: { status?: number }) => ({
-        json: () => Promise.resolve(body),
-        body,
-        status: init?.status || 200,
-        headers: new Map(),
-      }),
-    );
+    mockNextResponseJson.mockImplementation((body: unknown, init?: { status?: number }) => ({
+      json: () => Promise.resolve(body),
+      body,
+      status: init?.status || 200,
+      headers: new Map(),
+    }));
     mockGetRunState.mockReset();
     mockCancelTestRun.mockReset();
     vi.spyOn(console, 'error').mockImplementation(() => {});
@@ -88,7 +86,13 @@ describe('/api/quality-reports/test-run/[runId]', () => {
         status: 'completed',
         startedAt: '2026-01-15T12:00:00Z',
         completedAt: '2026-01-15T12:05:00Z',
-        progress: { testsRun: 100, testsPassed: 95, testsFailed: 5, testsSkipped: 0, testsTotal: 100 },
+        progress: {
+          testsRun: 100,
+          testsPassed: 95,
+          testsFailed: 5,
+          testsSkipped: 0,
+          testsTotal: 100,
+        },
         coverage: { lines: 85, branches: 78, functions: 90, statements: 84 },
         error: null,
         config: { scope: 'comprehensive', coverage: true },
@@ -171,10 +175,7 @@ describe('/api/quality-reports/test-run/[runId]', () => {
 
       await GET(makeRequest(), makeParams('err-run'));
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to get test run status:',
-        error,
-      );
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to get test run status:', error);
     });
   });
 
@@ -224,10 +225,7 @@ describe('/api/quality-reports/test-run/[runId]', () => {
 
       await DELETE(makeRequest(), makeParams('crash-cancel'));
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to cancel test run:',
-        error,
-      );
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to cancel test run:', error);
     });
 
     it('passes correct runId from params', async () => {

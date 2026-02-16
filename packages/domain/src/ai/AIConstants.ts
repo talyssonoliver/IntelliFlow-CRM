@@ -26,12 +26,7 @@ export type AIPriority = (typeof AI_PRIORITIES)[number];
 /**
  * Lead qualification levels from AI analysis
  */
-export const QUALIFICATION_LEVELS = [
-  'HIGH',
-  'MEDIUM',
-  'LOW',
-  'UNQUALIFIED',
-] as const;
+export const QUALIFICATION_LEVELS = ['HIGH', 'MEDIUM', 'LOW', 'UNQUALIFIED'] as const;
 
 export type QualificationLevel = (typeof QUALIFICATION_LEVELS)[number];
 
@@ -42,13 +37,7 @@ export type QualificationLevel = (typeof QUALIFICATION_LEVELS)[number];
 /**
  * Urgency levels for follow-up recommendations
  */
-export const FOLLOWUP_URGENCIES = [
-  'IMMEDIATE',
-  'HIGH',
-  'MEDIUM',
-  'LOW',
-  'DEFER',
-] as const;
+export const FOLLOWUP_URGENCIES = ['IMMEDIATE', 'HIGH', 'MEDIUM', 'LOW', 'DEFER'] as const;
 
 export type FollowupUrgency = (typeof FOLLOWUP_URGENCIES)[number];
 
@@ -79,13 +68,7 @@ export type RecommendedAction = (typeof RECOMMENDED_ACTIONS)[number];
 /**
  * Optimal days for outreach (business days)
  */
-export const OPTIMAL_DAYS = [
-  'MONDAY',
-  'TUESDAY',
-  'WEDNESDAY',
-  'THURSDAY',
-  'FRIDAY',
-] as const;
+export const OPTIMAL_DAYS = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'] as const;
 
 export type OptimalDay = (typeof OPTIMAL_DAYS)[number];
 
@@ -108,12 +91,7 @@ export type OptimalTimeSlot = (typeof OPTIMAL_TIME_SLOTS)[number];
 /**
  * Communication tone options
  */
-export const COMMUNICATION_TONES = [
-  'FORMAL',
-  'PROFESSIONAL',
-  'FRIENDLY',
-  'CASUAL',
-] as const;
+export const COMMUNICATION_TONES = ['FORMAL', 'PROFESSIONAL', 'FRIENDLY', 'CASUAL'] as const;
 
 export type CommunicationTone = (typeof COMMUNICATION_TONES)[number];
 
@@ -208,11 +186,7 @@ export type InteractionType = (typeof INTERACTION_TYPES)[number];
 /**
  * Types of feedback users can provide on AI scores
  */
-export const FEEDBACK_TYPES = [
-  'THUMBS_UP',
-  'THUMBS_DOWN',
-  'SCORE_CORRECTION',
-] as const;
+export const FEEDBACK_TYPES = ['THUMBS_UP', 'THUMBS_DOWN', 'SCORE_CORRECTION'] as const;
 
 export type FeedbackType = (typeof FEEDBACK_TYPES)[number];
 
@@ -264,24 +238,14 @@ export const CORRECTION_MAGNITUDE_BUCKETS = {
 /**
  * Experiment statuses for A/B tests
  */
-export const EXPERIMENT_STATUSES = [
-  'DRAFT',
-  'RUNNING',
-  'PAUSED',
-  'COMPLETED',
-  'ARCHIVED',
-] as const;
+export const EXPERIMENT_STATUSES = ['DRAFT', 'RUNNING', 'PAUSED', 'COMPLETED', 'ARCHIVED'] as const;
 
 export type ExperimentStatus = (typeof EXPERIMENT_STATUSES)[number];
 
 /**
  * Types of experiments supported
  */
-export const EXPERIMENT_TYPES = [
-  'AI_VS_MANUAL',
-  'MODEL_COMPARISON',
-  'THRESHOLD_TEST',
-] as const;
+export const EXPERIMENT_TYPES = ['AI_VS_MANUAL', 'MODEL_COMPARISON', 'THRESHOLD_TEST'] as const;
 
 export type ExperimentType = (typeof EXPERIMENT_TYPES)[number];
 
@@ -369,13 +333,7 @@ export type EmotionLabel = (typeof EMOTION_LABELS)[number];
 /**
  * Urgency levels for customer communications
  */
-export const URGENCY_LEVELS = [
-  'CRITICAL',
-  'HIGH',
-  'MEDIUM',
-  'LOW',
-  'NONE',
-] as const;
+export const URGENCY_LEVELS = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'NONE'] as const;
 
 export type UrgencyLevel = (typeof URGENCY_LEVELS)[number];
 
@@ -387,13 +345,7 @@ export type UrgencyLevel = (typeof URGENCY_LEVELS)[number];
  * Churn risk levels with severity classification
  * Used for risk categorization in churn prediction outputs
  */
-export const CHURN_RISK_LEVELS = [
-  'CRITICAL',
-  'HIGH',
-  'MEDIUM',
-  'LOW',
-  'MINIMAL',
-] as const;
+export const CHURN_RISK_LEVELS = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'MINIMAL'] as const;
 
 export type ChurnRiskLevel = (typeof CHURN_RISK_LEVELS)[number];
 
@@ -450,12 +402,7 @@ export type NBAActionType = (typeof NBA_ACTION_TYPES)[number];
 /**
  * Priority levels for NBA actions
  */
-export const NBA_ACTION_PRIORITIES = [
-  'CRITICAL',
-  'HIGH',
-  'MEDIUM',
-  'LOW',
-] as const;
+export const NBA_ACTION_PRIORITIES = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'] as const;
 
 export type NBAActionPriority = (typeof NBA_ACTION_PRIORITIES)[number];
 
@@ -496,10 +443,10 @@ export const DEFAULT_CONFIDENCE_THRESHOLD = 0.85;
  */
 export const CHAIN_CONFIDENCE_THRESHOLDS: Record<AIChainType, number> = {
   LEAD_SCORING: 0.85,
-  SENTIMENT_ANALYSIS: 0.80, // Lower threshold acceptable for internal use
-  AUTO_RESPONSE: 0.90, // Higher for customer-facing
+  SENTIMENT_ANALYSIS: 0.8, // Lower threshold acceptable for internal use
+  AUTO_RESPONSE: 0.9, // Higher for customer-facing
   CHURN_PREDICTION: 0.85,
-  EMAIL_GENERATION: 0.90, // Higher for customer-facing
+  EMAIL_GENERATION: 0.9, // Higher for customer-facing
   NEXT_BEST_ACTION: 0.85,
 } as const;
 
@@ -514,9 +461,6 @@ export function getConfidenceThreshold(chainType: AIChainType): number {
 /**
  * Check if a confidence score requires human review for a given chain type
  */
-export function requiresHumanReview(
-  confidence: number,
-  chainType: AIChainType
-): boolean {
+export function requiresHumanReview(confidence: number, chainType: AIChainType): boolean {
   return confidence < getConfidenceThreshold(chainType);
 }

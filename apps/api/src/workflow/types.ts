@@ -38,8 +38,9 @@ export interface WorkflowStateBase {
 /**
  * Generic workflow state combining base state with custom state
  */
-export interface WorkflowState<T extends Record<string, unknown> = Record<string, unknown>>
-  extends WorkflowStateBase {
+export interface WorkflowState<
+  T extends Record<string, unknown> = Record<string, unknown>,
+> extends WorkflowStateBase {
   /** Custom workflow-specific state */
   data: T;
   /** History of state transitions */
@@ -187,9 +188,7 @@ export interface IWorkflowEngine {
   /**
    * Register a workflow definition
    */
-  registerWorkflow<T extends Record<string, unknown>>(
-    definition: WorkflowDefinition<T>
-  ): void;
+  registerWorkflow<T extends Record<string, unknown>>(definition: WorkflowDefinition<T>): void;
 
   /**
    * Create a new workflow instance
@@ -218,9 +217,7 @@ export interface IWorkflowEngine {
   /**
    * Get current workflow state
    */
-  getState<T extends Record<string, unknown>>(
-    workflowId: string
-  ): Promise<WorkflowState<T> | null>;
+  getState<T extends Record<string, unknown>>(workflowId: string): Promise<WorkflowState<T> | null>;
 
   /**
    * List workflows matching query

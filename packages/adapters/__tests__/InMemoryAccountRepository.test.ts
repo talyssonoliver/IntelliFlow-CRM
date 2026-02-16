@@ -721,10 +721,7 @@ describe('InMemoryAccountRepository', () => {
       });
 
       // Simulate concurrent saves
-      await Promise.all([
-        repository.save(testAccount),
-        repository.save(account2Result.value),
-      ]);
+      await Promise.all([repository.save(testAccount), repository.save(account2Result.value)]);
 
       const allAccounts = repository.getAll();
       expect(allAccounts).toHaveLength(2);

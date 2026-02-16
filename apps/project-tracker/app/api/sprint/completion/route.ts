@@ -89,9 +89,20 @@ function loadTaskAttestation(taskId: string): any | null {
 }
 
 // Load sprint completion data
-function loadSprintCompletion(sprintNumber: number): { tasks: CompletedTask[]; completion: SprintCompletion } {
+function loadSprintCompletion(sprintNumber: number): {
+  tasks: CompletedTask[];
+  completion: SprintCompletion;
+} {
   const projectRoot = getProjectRoot();
-  const csvPath = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+  const csvPath = join(
+    projectRoot,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    '_global',
+    'Sprint_plan.csv'
+  );
   const tasks: CompletedTask[] = [];
   let totalTasks = 0;
   let completedCount = 0;
@@ -145,9 +156,13 @@ function loadSprintCompletion(sprintNumber: number): { tasks: CompletedTask[]; c
 
   const percentage = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
   const status: SprintCompletion['status'] =
-    percentage === 0 ? 'not-started' :
-    percentage === 100 ? 'completed' :
-    percentage >= 80 ? 'partial' : 'in-progress';
+    percentage === 0
+      ? 'not-started'
+      : percentage === 100
+        ? 'completed'
+        : percentage >= 80
+          ? 'partial'
+          : 'in-progress';
 
   return {
     tasks: tasks.sort((a, b) => b.completedAt.localeCompare(a.completedAt)),
@@ -169,7 +184,14 @@ function loadSprintCompletion(sprintNumber: number): { tasks: CompletedTask[]; c
 // Load phase completion from phase summaries
 function loadPhaseCompletion(sprintNumber: number): any[] {
   const projectRoot = getProjectRoot();
-  const sprintDir = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', `sprint-${sprintNumber}`);
+  const sprintDir = join(
+    projectRoot,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    `sprint-${sprintNumber}`
+  );
   const phases: any[] = [];
 
   try {
@@ -186,11 +208,16 @@ function loadPhaseCompletion(sprintNumber: number): any[] {
               name: summary.phase_name || entry.name,
               total: summary.total_tasks || 0,
               completed: summary.completed_tasks || 0,
-              percentage: summary.total_tasks > 0
-                ? Math.round((summary.completed_tasks / summary.total_tasks) * 100)
-                : 0,
-              status: summary.completed_tasks === summary.total_tasks ? 'completed' :
-                      summary.completed_tasks > 0 ? 'in-progress' : 'not-started',
+              percentage:
+                summary.total_tasks > 0
+                  ? Math.round((summary.completed_tasks / summary.total_tasks) * 100)
+                  : 0,
+              status:
+                summary.completed_tasks === summary.total_tasks
+                  ? 'completed'
+                  : summary.completed_tasks > 0
+                    ? 'in-progress'
+                    : 'not-started',
             });
           }
         }
@@ -226,7 +253,8 @@ function generateMarkdown(
     md += `| Phase | Status | Progress |\n`;
     md += `|-------|--------|----------|\n`;
     for (const phase of phases) {
-      const statusEmoji = phase.status === 'completed' ? '✅' : phase.status === 'in-progress' ? '🔄' : '⏳';
+      const statusEmoji =
+        phase.status === 'completed' ? '✅' : phase.status === 'in-progress' ? '🔄' : '⏳';
       md += `| ${phase.name} | ${statusEmoji} ${phase.status} | ${phase.completed}/${phase.total} (${phase.percentage}%) |\n`;
     }
     md += `\n`;
@@ -268,24 +296,26 @@ export async function GET(request: NextRequest) {
     }
 
     // Group tasks by section
-    const bySection = tasks.reduce((acc, t) => {
-      if (!acc[t.section]) acc[t.section] = [];
-      acc[t.section].push({
-        taskId: t.taskId,
-        kpisMet: t.kpisMet,
-        kpisTotal: t.kpisTotal,
-      });
-      return acc;
-    }, {} as Record<string, any[]>);
+    const bySection = tasks.reduce(
+      (acc, t) => {
+        if (!acc[t.section]) acc[t.section] = [];
+        acc[t.section].push({
+          taskId: t.taskId,
+          kpisMet: t.kpisMet,
+          kpisTotal: t.kpisTotal,
+        });
+        return acc;
+      },
+      {} as Record<string, any[]>
+    );
 
     // Calculate velocity (tasks completed per day)
     const completionDates = tasks
-      .filter(t => t.completedAt)
-      .map(t => t.completedAt.split('T')[0]);
+      .filter((t) => t.completedAt)
+      .map((t) => t.completedAt.split('T')[0]);
     const uniqueDates = [...new Set(completionDates)];
-    const velocity = uniqueDates.length > 0
-      ? Math.round((tasks.length / uniqueDates.length) * 10) / 10
-      : 0;
+    const velocity =
+      uniqueDates.length > 0 ? Math.round((tasks.length / uniqueDates.length) * 10) / 10 : 0;
 
     // Build response data
     const responseData = {
@@ -300,23 +330,27 @@ export async function GET(request: NextRequest) {
       velocity: {
         tasksPerDay: velocity,
         daysWorked: uniqueDates.length,
-        dateRange: uniqueDates.length > 0 ? {
-          first: uniqueDates[uniqueDates.length - 1],
-          last: uniqueDates[0],
-        } : null,
+        dateRange:
+          uniqueDates.length > 0
+            ? {
+                first: uniqueDates[uniqueDates.length - 1],
+                last: uniqueDates[0],
+              }
+            : null,
       },
-      recentCompletions: tasks.slice(0, 10).map(t => ({
+      recentCompletions: tasks.slice(0, 10).map((t) => ({
         taskId: t.taskId,
         description: t.description.substring(0, 60),
         completedAt: t.completedAt,
         kpiSuccess: t.kpisTotal > 0 ? `${t.kpisMet}/${t.kpisTotal}` : 'N/A',
       })),
-      artifacts: tasks.flatMap(t => t.artifacts).slice(0, 20),
-      recommendation: completion.status === 'completed'
-        ? 'Sprint completed successfully!'
-        : completion.status === 'partial'
-        ? `${completion.totalTasks - completion.completedTasks} tasks remaining for full completion`
-        : `Continue working on sprint tasks - ${completion.completionPercentage}% complete`,
+      artifacts: tasks.flatMap((t) => t.artifacts).slice(0, 20),
+      recommendation:
+        completion.status === 'completed'
+          ? 'Sprint completed successfully!'
+          : completion.status === 'partial'
+            ? `${completion.totalTasks - completion.completedTasks} tasks remaining for full completion`
+            : `Continue working on sprint tasks - ${completion.completionPercentage}% complete`,
     };
 
     // If no fresh data available, try fallback

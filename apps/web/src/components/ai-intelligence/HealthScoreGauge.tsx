@@ -80,7 +80,10 @@ export function HealthScoreGauge({ score, label = 'Health Score' }: HealthScoreG
           </svg>
           {/* Center score text */}
           <div className="absolute inset-0 flex flex-col items-center justify-end pb-0">
-            <span className={cn('text-3xl font-bold', getScoreColor(clampedScore))} data-testid="health-score-value">
+            <span
+              className={cn('text-3xl font-bold', getScoreColor(clampedScore))}
+              data-testid="health-score-value"
+            >
               {clampedScore}
             </span>
           </div>

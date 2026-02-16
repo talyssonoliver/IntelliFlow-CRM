@@ -7,12 +7,12 @@
 # Event Naming Convention: {Aggregate}{Action}Event
 # Example: LeadCreatedEvent, ContactUpdatedEvent, OpportunityClosedEvent
 
-version: "1.0.0"
+version: '1.0.0'
 metadata:
-  created_at: "2025-12-29T00:00:00Z"
-  last_updated: "2025-12-29T00:00:00Z"
-  schema_registry: "internal"
-  compatibility_mode: "backward" # backward, forward, full, none
+  created_at: '2025-12-29T00:00:00Z'
+  last_updated: '2025-12-29T00:00:00Z'
+  schema_registry: 'internal'
+  compatibility_mode: 'backward' # backward, forward, full, none
 
 # Event Categories
 categories:
@@ -42,11 +42,11 @@ events:
   # ============================================
 
   LeadCreated:
-    version: "1.0"
+    version: '1.0'
     category: lead
     description: Emitted when a new lead is created in the system
     aggregate_id_field: leadId
-    idempotency_key: "LeadCreated:{leadId}"
+    idempotency_key: 'LeadCreated:{leadId}'
     schema:
       type: object
       required:
@@ -92,21 +92,21 @@ events:
           type: object
           description: Additional lead metadata
     example:
-      leadId: "123e4567-e89b-12d3-a456-426614174000"
-      email: "john.doe@example.com"
-      source: "web_form"
-      tenantId: "tenant-uuid"
-      createdAt: "2025-12-29T10:30:00Z"
-      firstName: "John"
-      lastName: "Doe"
-      company: "Acme Corp"
+      leadId: '123e4567-e89b-12d3-a456-426614174000'
+      email: 'john.doe@example.com'
+      source: 'web_form'
+      tenantId: 'tenant-uuid'
+      createdAt: '2025-12-29T10:30:00Z'
+      firstName: 'John'
+      lastName: 'Doe'
+      company: 'Acme Corp'
 
   LeadScored:
-    version: "1.0"
+    version: '1.0'
     category: lead
     description: Emitted when a lead receives an AI or manual score
     aggregate_id_field: leadId
-    idempotency_key: "LeadScored:{leadId}:{scoredAt}"
+    idempotency_key: 'LeadScored:{leadId}:{scoredAt}'
     schema:
       type: object
       required:
@@ -152,21 +152,21 @@ events:
           type: string
           format: date-time
     example:
-      leadId: "123e4567-e89b-12d3-a456-426614174000"
+      leadId: '123e4567-e89b-12d3-a456-426614174000'
       score: 85
       previousScore: null
-      scoredBy: "ai"
+      scoredBy: 'ai'
       confidence: 0.92
-      scoringModel: "v2.1.0"
-      tenantId: "tenant-uuid"
-      scoredAt: "2025-12-29T10:31:00Z"
+      scoringModel: 'v2.1.0'
+      tenantId: 'tenant-uuid'
+      scoredAt: '2025-12-29T10:31:00Z'
 
   LeadQualified:
-    version: "1.0"
+    version: '1.0'
     category: lead
     description: Emitted when a lead is qualified (meets MQL/SQL criteria)
     aggregate_id_field: leadId
-    idempotency_key: "LeadQualified:{leadId}:{qualifiedAt}"
+    idempotency_key: 'LeadQualified:{leadId}:{qualifiedAt}'
     schema:
       type: object
       required:
@@ -209,11 +209,11 @@ events:
           format: date-time
 
   LeadConverted:
-    version: "1.0"
+    version: '1.0'
     category: lead
     description: Emitted when a lead is converted to a contact/opportunity
     aggregate_id_field: leadId
-    idempotency_key: "LeadConverted:{leadId}"
+    idempotency_key: 'LeadConverted:{leadId}'
     schema:
       type: object
       required:
@@ -250,11 +250,11 @@ events:
           format: date-time
 
   LeadStatusChanged:
-    version: "1.0"
+    version: '1.0'
     category: lead
     description: Emitted when lead status changes
     aggregate_id_field: leadId
-    idempotency_key: "LeadStatusChanged:{leadId}:{changedAt}"
+    idempotency_key: 'LeadStatusChanged:{leadId}:{changedAt}'
     schema:
       type: object
       required:
@@ -287,11 +287,11 @@ events:
           format: date-time
 
   LeadAssigned:
-    version: "1.0"
+    version: '1.0'
     category: lead
     description: Emitted when a lead is assigned to a user/team
     aggregate_id_field: leadId
-    idempotency_key: "LeadAssigned:{leadId}:{assignedAt}"
+    idempotency_key: 'LeadAssigned:{leadId}:{assignedAt}'
     schema:
       type: object
       required:
@@ -327,11 +327,11 @@ events:
   # ============================================
 
   ContactCreated:
-    version: "1.0"
+    version: '1.0'
     category: contact
     description: Emitted when a new contact is created
     aggregate_id_field: contactId
-    idempotency_key: "ContactCreated:{contactId}"
+    idempotency_key: 'ContactCreated:{contactId}'
     schema:
       type: object
       required:
@@ -365,11 +365,11 @@ events:
           format: date-time
 
   ContactUpdated:
-    version: "1.0"
+    version: '1.0'
     category: contact
     description: Emitted when a contact is updated
     aggregate_id_field: contactId
-    idempotency_key: "ContactUpdated:{contactId}:{updatedAt}"
+    idempotency_key: 'ContactUpdated:{contactId}:{updatedAt}'
     schema:
       type: object
       required:
@@ -399,11 +399,11 @@ events:
   # ============================================
 
   OpportunityCreated:
-    version: "1.0"
+    version: '1.0'
     category: opportunity
     description: Emitted when a new opportunity is created
     aggregate_id_field: opportunityId
-    idempotency_key: "OpportunityCreated:{opportunityId}"
+    idempotency_key: 'OpportunityCreated:{opportunityId}'
     schema:
       type: object
       required:
@@ -433,7 +433,7 @@ events:
           minimum: 0
         currency:
           type: string
-          pattern: "^[A-Z]{3}$"
+          pattern: '^[A-Z]{3}$'
         probability:
           type: integer
           minimum: 0
@@ -449,11 +449,11 @@ events:
           format: date-time
 
   OpportunityStageChanged:
-    version: "1.0"
+    version: '1.0'
     category: opportunity
     description: Emitted when opportunity stage changes
     aggregate_id_field: opportunityId
-    idempotency_key: "OpportunityStageChanged:{opportunityId}:{changedAt}"
+    idempotency_key: 'OpportunityStageChanged:{opportunityId}:{changedAt}'
     schema:
       type: object
       required:
@@ -485,11 +485,11 @@ events:
           format: date-time
 
   OpportunityClosed:
-    version: "1.0"
+    version: '1.0'
     category: opportunity
     description: Emitted when opportunity is won or lost
     aggregate_id_field: opportunityId
-    idempotency_key: "OpportunityClosed:{opportunityId}"
+    idempotency_key: 'OpportunityClosed:{opportunityId}'
     schema:
       type: object
       required:
@@ -530,11 +530,11 @@ events:
   # ============================================
 
   AccountCreated:
-    version: "1.0"
+    version: '1.0'
     category: account
     description: Emitted when a new account is created
     aggregate_id_field: accountId
-    idempotency_key: "AccountCreated:{accountId}"
+    idempotency_key: 'AccountCreated:{accountId}'
     schema:
       type: object
       required:
@@ -569,11 +569,11 @@ events:
   # ============================================
 
   TaskCreated:
-    version: "1.0"
+    version: '1.0'
     category: task
     description: Emitted when a new task is created
     aggregate_id_field: taskId
-    idempotency_key: "TaskCreated:{taskId}"
+    idempotency_key: 'TaskCreated:{taskId}'
     schema:
       type: object
       required:
@@ -614,11 +614,11 @@ events:
           format: date-time
 
   TaskCompleted:
-    version: "1.0"
+    version: '1.0'
     category: task
     description: Emitted when a task is completed
     aggregate_id_field: taskId
-    idempotency_key: "TaskCompleted:{taskId}"
+    idempotency_key: 'TaskCompleted:{taskId}'
     schema:
       type: object
       required:
@@ -649,11 +649,11 @@ events:
   # ============================================
 
   AIAnalysisCompleted:
-    version: "1.0"
+    version: '1.0'
     category: ai
     description: Emitted when AI analysis completes
     aggregate_id_field: analysisId
-    idempotency_key: "AIAnalysisCompleted:{analysisId}"
+    idempotency_key: 'AIAnalysisCompleted:{analysisId}'
     schema:
       type: object
       required:
@@ -695,11 +695,11 @@ events:
           format: date-time
 
   AIPredictionGenerated:
-    version: "1.0"
+    version: '1.0'
     category: ai
     description: Emitted when AI generates a prediction
     aggregate_id_field: predictionId
-    idempotency_key: "AIPredictionGenerated:{predictionId}"
+    idempotency_key: 'AIPredictionGenerated:{predictionId}'
     schema:
       type: object
       required:
@@ -767,7 +767,7 @@ publishing:
   # Dead Letter Queue
   dlq:
     enabled: true
-    max_age_hours: 168  # 7 days
+    max_age_hours: 168 # 7 days
     alert_threshold: 100
 
 # Schema Evolution Rules

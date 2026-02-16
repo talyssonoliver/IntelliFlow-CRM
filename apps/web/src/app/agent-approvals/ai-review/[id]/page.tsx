@@ -196,7 +196,10 @@ export default function AIReviewDetailPage() {
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-muted-foreground" aria-label="Breadcrumb">
+      <nav
+        className="flex items-center gap-2 text-sm text-muted-foreground"
+        aria-label="Breadcrumb"
+      >
         <Link href="/agent-approvals" className="hover:text-foreground transition-colors">
           AI & Agents
         </Link>
@@ -205,9 +208,7 @@ export default function AIReviewDetailPage() {
           AI Review
         </Link>
         <span aria-hidden="true">/</span>
-        <span className="text-foreground font-medium">
-          Review #{reviewId.slice(0, 8)}
-        </span>
+        <span className="text-foreground font-medium">Review #{reviewId.slice(0, 8)}</span>
       </nav>
 
       {/* Header */}
@@ -250,11 +251,7 @@ export default function AIReviewDetailPage() {
           </Card>
 
           {/* SLA */}
-          <Card
-            className={cn(
-              slaClock.isBreached && 'border-red-300 dark:border-red-700',
-            )}
-          >
+          <Card className={cn(slaClock.isBreached && 'border-red-300 dark:border-red-700')}>
             <CardHeader>
               <CardTitle className="text-sm">SLA Deadline</CardTitle>
             </CardHeader>
@@ -262,9 +259,7 @@ export default function AIReviewDetailPage() {
               <p
                 className={cn(
                   'text-2xl font-mono tabular-nums font-bold',
-                  slaClock.isBreached
-                    ? 'text-red-600 dark:text-red-400'
-                    : 'text-foreground',
+                  slaClock.isBreached ? 'text-red-600 dark:text-red-400' : 'text-foreground'
                 )}
               >
                 {slaClock.display}
@@ -293,8 +288,7 @@ export default function AIReviewDetailPage() {
               </p>
               {review.reviewerId && (
                 <p>
-                  <span className="font-medium text-foreground">Reviewer:</span>{' '}
-                  {review.reviewerId}
+                  <span className="font-medium text-foreground">Reviewer:</span> {review.reviewerId}
                 </p>
               )}
               {review.reviewDecision && (
@@ -311,9 +305,7 @@ export default function AIReviewDetailPage() {
               )}
               {review.escalationDepth > 0 && (
                 <p>
-                  <span className="font-medium text-foreground">
-                    Escalation Depth:
-                  </span>{' '}
+                  <span className="font-medium text-foreground">Escalation Depth:</span>{' '}
                   {review.escalationDepth}
                 </p>
               )}
@@ -329,10 +321,7 @@ export default function AIReviewDetailPage() {
             {/* PENDING → Claim */}
             {review.status === 'PENDING' && (
               <Button onClick={handleClaim} disabled={isMutating}>
-                <span
-                  className="material-symbols-outlined text-sm mr-1"
-                  aria-hidden="true"
-                >
+                <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                   lock
                 </span>
                 Claim Review
@@ -347,10 +336,7 @@ export default function AIReviewDetailPage() {
                   onClick={handleApprove}
                   disabled={isMutating}
                 >
-                  <span
-                    className="material-symbols-outlined text-sm mr-1"
-                    aria-hidden="true"
-                  >
+                  <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                     check_circle
                   </span>
                   Approve
@@ -364,10 +350,7 @@ export default function AIReviewDetailPage() {
                   }}
                   disabled={isMutating}
                 >
-                  <span
-                    className="material-symbols-outlined text-sm mr-1"
-                    aria-hidden="true"
-                  >
+                  <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                     cancel
                   </span>
                   Reject
@@ -381,10 +364,7 @@ export default function AIReviewDetailPage() {
                   }}
                   disabled={isMutating}
                 >
-                  <span
-                    className="material-symbols-outlined text-sm mr-1"
-                    aria-hidden="true"
-                  >
+                  <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                     arrow_upward
                   </span>
                   Escalate
@@ -395,10 +375,7 @@ export default function AIReviewDetailPage() {
             {/* ESCALATED → Claim */}
             {review.status === 'ESCALATED' && (
               <Button onClick={handleClaim} disabled={isMutating}>
-                <span
-                  className="material-symbols-outlined text-sm mr-1"
-                  aria-hidden="true"
-                >
+                <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                   lock
                 </span>
                 Claim Escalated Review
@@ -411,10 +388,7 @@ export default function AIReviewDetailPage() {
               onClick={() => router.push('/agent-approvals/ai-review')}
               className="ml-auto"
             >
-              <span
-                className="material-symbols-outlined text-sm mr-1"
-                aria-hidden="true"
-              >
+              <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                 arrow_back
               </span>
               Back to Queue

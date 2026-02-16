@@ -35,12 +35,15 @@ export const PLACEHOLDER_PATTERNS: Record<PlaceholderPattern, RegExp> = {
   XXX: /\bXXX\b/gi,
 
   // Empty or placeholder implementations
-  EMPTY_FUNCTION: /(?:function\s+\w+|\w+\s*[:=]\s*(?:async\s+)?function|\w+\s*[:=]\s*(?:async\s+)?\([^)]*\)\s*=>)\s*\{\s*\}/g,
-  THROW_NOT_IMPLEMENTED: /throw\s+(?:new\s+)?(?:Error|NotImplementedError)\s*\(\s*['"`](?:Not implemented|TODO|FIXME|STUB)/gi,
+  EMPTY_FUNCTION:
+    /(?:function\s+\w+|\w+\s*[:=]\s*(?:async\s+)?function|\w+\s*[:=]\s*(?:async\s+)?\([^)]*\)\s*=>)\s*\{\s*\}/g,
+  THROW_NOT_IMPLEMENTED:
+    /throw\s+(?:new\s+)?(?:Error|NotImplementedError)\s*\(\s*['"`](?:Not implemented|TODO|FIXME|STUB)/gi,
 
   // Test placeholders
   SKIP_TEST: /\b(?:it|test|describe)\.skip\s*\(/g,
-  EMPTY_TEST: /\b(?:it|test)\s*\(\s*['"`][^'"`]+['"`]\s*,\s*(?:async\s+)?\(\s*\)\s*=>\s*\{\s*\}\s*\)/g,
+  EMPTY_TEST:
+    /\b(?:it|test)\s*\(\s*['"`][^'"`]+['"`]\s*,\s*(?:async\s+)?\(\s*\)\s*=>\s*\{\s*\}\s*\)/g,
   PENDING_TEST: /\b(?:it|test)\.todo\s*\(/g,
 
   // Mock returns that may indicate incomplete implementation
@@ -59,10 +62,12 @@ export const PLACEHOLDER_PATTERNS: Record<PlaceholderPattern, RegExp> = {
   PLACEHOLDER_CHANNEL: /case\s+['"](\w+)['"]\s*:[\s\S]{0,100}placeholder:\s*true/g,
 
   // Null fallback returns (IFC-020, IFC-155)
-  NULL_FALLBACK: /\/\/\s*For now,?\s*return\s*null\s*to\s*fallback|return\s*null\s*;?\s*\/\/\s*(placeholder|TODO|fallback)/gi,
+  NULL_FALLBACK:
+    /\/\/\s*For now,?\s*return\s*null\s*to\s*fallback|return\s*null\s*;?\s*\/\/\s*(placeholder|TODO|fallback)/gi,
 
   // Hardcoded AI prediction values (IFC-095)
-  HARDCODED_PREDICTION: /\/\/\s*TODO:\s*Implement\s+with\s+real\s+.*chain|return\s*\{\s*(confidence|score|risk|churnProbability):\s*\d+\.?\d*\s*,/gi,
+  HARDCODED_PREDICTION:
+    /\/\/\s*TODO:\s*Implement\s+with\s+real\s+.*chain|return\s*\{\s*(confidence|score|risk|churnProbability):\s*\d+\.?\d*\s*,/gi,
 
   // Deferred audit logging (IFC-125)
   DEFERRED_AUDIT: /\/\/\s*TODO:?\s*.*audit\s*log/gi,
@@ -92,11 +97,7 @@ const CONTEXT_EXCLUSIONS = {
     /mocks/,
   ],
   // Comments that indicate intentional placeholder (documented technical debt)
-  documentedDebt: [
-    /\/\/\s*@debt/i,
-    /\/\/\s*@technical-debt/i,
-    /\/\*\*?\s*@debt/i,
-  ],
+  documentedDebt: [/\/\/\s*@debt/i, /\/\/\s*@technical-debt/i, /\/\*\*?\s*@debt/i],
 };
 
 // =============================================================================
@@ -113,8 +114,7 @@ export async function discoverFiles(
   const { extensions, excludeDirs } = config;
 
   // Build glob pattern for all extensions
-  const extPattern =
-    extensions.length === 1 ? extensions[0] : `{${extensions.join(',')}}`;
+  const extPattern = extensions.length === 1 ? extensions[0] : `{${extensions.join(',')}}`;
 
   const pattern = `**/*${extPattern}`;
 
@@ -148,10 +148,7 @@ export async function discoverFiles(
 /**
  * Scans a single file for placeholder patterns
  */
-export async function scanFile(
-  filePath: string,
-  repoRoot: string
-): Promise<PlaceholderFinding[]> {
+export async function scanFile(filePath: string, repoRoot: string): Promise<PlaceholderFinding[]> {
   const findings: PlaceholderFinding[] = [];
 
   try {
@@ -213,10 +210,7 @@ export async function scanFile(
 /**
  * Detects empty functions that span multiple lines
  */
-function detectEmptyFunctions(
-  content: string,
-  relativePath: string
-): PlaceholderFinding[] {
+function detectEmptyFunctions(content: string, relativePath: string): PlaceholderFinding[] {
   const findings: PlaceholderFinding[] = [];
 
   // Pattern for functions with only whitespace/comments in body
@@ -229,7 +223,11 @@ function detectEmptyFunctions(
 
     // Check if function body has any real code (not just comments/whitespace)
     const bodyContent = match[0].substring(match[0].indexOf('{') + 1, match[0].lastIndexOf('}'));
-    const hasRealCode = bodyContent.replace(/\/\/[^\n]*/g, '').replace(/\/\*[\s\S]*?\*\//g, '').trim().length > 0;
+    const hasRealCode =
+      bodyContent
+        .replace(/\/\/[^\n]*/g, '')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .trim().length > 0;
 
     if (!hasRealCode) {
       findings.push({
@@ -305,9 +303,7 @@ export async function scanForPlaceholders(
   const batchSize = 50;
   for (let i = 0; i < files.length; i += batchSize) {
     const batch = files.slice(i, i + batchSize);
-    const batchResults = await Promise.all(
-      batch.map((file) => scanFile(file, repoRoot))
-    );
+    const batchResults = await Promise.all(batch.map((file) => scanFile(file, repoRoot)));
     allFindings.push(...batchResults.flat());
   }
 
@@ -344,9 +340,7 @@ export function filterFindingsByTaskArtifacts(
   artifactPaths: string[]
 ): PlaceholderFinding[] {
   // Normalize artifact paths for comparison
-  const normalizedArtifacts = artifactPaths.map((p) =>
-    p.replace(/\\/g, '/').toLowerCase()
-  );
+  const normalizedArtifacts = artifactPaths.map((p) => p.replace(/\\/g, '/').toLowerCase());
 
   return findings.filter((finding) => {
     const normalizedFile = finding.file.replace(/\\/g, '/').toLowerCase();
@@ -397,9 +391,7 @@ export function groupByPattern(
 /**
  * Groups findings by file
  */
-export function groupByFile(
-  findings: PlaceholderFinding[]
-): Map<string, PlaceholderFinding[]> {
+export function groupByFile(findings: PlaceholderFinding[]): Map<string, PlaceholderFinding[]> {
   const grouped = new Map<string, PlaceholderFinding[]>();
 
   for (const finding of findings) {

@@ -221,9 +221,13 @@ export function LandingFeatures({ section }: { section: FeaturesSection }) {
     <section className="py-16 lg:py-20 bg-white dark:bg-slate-800">
       <div className="container px-4 lg:px-6 mx-auto max-w-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">{section.title}</h2>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
+            {section.title}
+          </h2>
           {section.subtitle && (
-            <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">{section.subtitle}</p>
+            <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+              {section.subtitle}
+            </p>
           )}
         </div>
 
@@ -255,9 +259,13 @@ export function LandingTestimonials({ section }: { section: TestimonialsSection 
     <section className="py-16 lg:py-20 bg-slate-50 dark:bg-slate-900">
       <div className="container px-4 lg:px-6 mx-auto max-w-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">{section.title}</h2>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
+            {section.title}
+          </h2>
           {section.subtitle && (
-            <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">{section.subtitle}</p>
+            <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+              {section.subtitle}
+            </p>
           )}
         </div>
 
@@ -277,7 +285,9 @@ export function LandingTestimonials({ section }: { section: TestimonialsSection 
                   </span>
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-900 dark:text-white">{testimonial.author}</p>
+                  <p className="font-semibold text-slate-900 dark:text-white">
+                    {testimonial.author}
+                  </p>
                   <p className="text-sm text-slate-500 dark:text-slate-400">
                     {testimonial.role}, {testimonial.company}
                   </p>
@@ -298,7 +308,8 @@ export function LandingStats({ section }: { section: StatsSection }) {
     brand: 'bg-gradient-to-r from-[#137fec] to-[#0e6ac7]',
   }[section.background || 'light'];
 
-  const textClass = section.background === 'brand' ? 'text-white' : 'text-slate-900 dark:text-white';
+  const textClass =
+    section.background === 'brand' ? 'text-white' : 'text-slate-900 dark:text-white';
 
   return (
     <section className={`py-12 lg:py-16 ${bgClass}`}>
@@ -309,10 +320,14 @@ export function LandingStats({ section }: { section: StatsSection }) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {section.stats.map((stat, index) => (
             <div key={index} className="text-center">
-              <p className={`text-4xl font-bold mb-2 ${section.background === 'brand' ? 'text-white' : 'text-[#137fec]'}`}>
+              <p
+                className={`text-4xl font-bold mb-2 ${section.background === 'brand' ? 'text-white' : 'text-[#137fec]'}`}
+              >
                 {stat.value}
               </p>
-              <p className={`text-sm ${section.background === 'brand' ? 'text-white/80' : 'text-slate-600 dark:text-slate-400'}`}>
+              <p
+                className={`text-sm ${section.background === 'brand' ? 'text-white/80' : 'text-slate-600 dark:text-slate-400'}`}
+              >
                 {stat.label}
               </p>
             </div>
@@ -328,9 +343,13 @@ export function LandingPricing({ section }: { section: PricingSection }) {
     <section className="py-16 lg:py-20 bg-white dark:bg-slate-800">
       <div className="container px-4 lg:px-6 mx-auto max-w-auto">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">{section.title}</h2>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
+            {section.title}
+          </h2>
           {section.subtitle && (
-            <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">{section.subtitle}</p>
+            <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+              {section.subtitle}
+            </p>
           )}
         </div>
 
@@ -351,14 +370,22 @@ export function LandingPricing({ section }: { section: PricingSection }) {
               )}
               <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{tier.name}</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-slate-900 dark:text-white">{tier.price}</span>
+                <span className="text-4xl font-bold text-slate-900 dark:text-white">
+                  {tier.price}
+                </span>
                 <span className="text-slate-600 dark:text-slate-400">/{tier.period}</span>
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">{tier.description}</p>
               <ul className="space-y-3 mb-6">
                 {tier.features.map((feature, fIndex) => (
-                  <li key={fIndex} className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-                    <span className="material-symbols-outlined text-emerald-500 text-base mt-0.5" aria-hidden="true">
+                  <li
+                    key={fIndex}
+                    className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400"
+                  >
+                    <span
+                      className="material-symbols-outlined text-emerald-500 text-base mt-0.5"
+                      aria-hidden="true"
+                    >
                       check_circle
                     </span>
                     {feature}
@@ -385,9 +412,13 @@ export function LandingFaq({ section }: { section: FaqSection }) {
     <section className="py-16 lg:py-20 bg-slate-50 dark:bg-slate-900">
       <div className="container px-4 lg:px-6 mx-auto max-w-4xl">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">{section.title}</h2>
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
+            {section.title}
+          </h2>
           {section.subtitle && (
-            <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">{section.subtitle}</p>
+            <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+              {section.subtitle}
+            </p>
           )}
         </div>
 
@@ -398,8 +429,13 @@ export function LandingFaq({ section }: { section: FaqSection }) {
               className="group bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
             >
               <summary className="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors rounded-lg">
-                <span className="font-semibold text-slate-900 dark:text-white pr-4">{item.question}</span>
-                <span className="material-symbols-outlined text-slate-500 group-open:rotate-180 transition-transform" aria-hidden="true">
+                <span className="font-semibold text-slate-900 dark:text-white pr-4">
+                  {item.question}
+                </span>
+                <span
+                  className="material-symbols-outlined text-slate-500 group-open:rotate-180 transition-transform"
+                  aria-hidden="true"
+                >
                   expand_more
                 </span>
               </summary>
@@ -453,7 +489,9 @@ export function LandingLogoCloud({ section }: { section: LogoCloudSection }) {
     <section className="py-12 lg:py-16 bg-slate-50 dark:bg-slate-900">
       <div className="container px-4 lg:px-6 mx-auto max-w-auto">
         {section.title && (
-          <p className="text-center text-sm text-slate-500 dark:text-slate-400 mb-8">{section.title}</p>
+          <p className="text-center text-sm text-slate-500 dark:text-slate-400 mb-8">
+            {section.title}
+          </p>
         )}
         <div className="flex flex-wrap items-center justify-center gap-8 lg:gap-12">
           {section.logos.map((logo, index) => (

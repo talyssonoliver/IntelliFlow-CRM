@@ -30,7 +30,10 @@ export function getTaskPaths(sprintNumber: number, taskId: string, runId?: strin
 
     // Context files (Phase 0)
     hydratedContext: join(OUTPUT_PATHS.context(sprintNumber, taskId), FILE_NAMES.context(taskId)),
-    agentSelection: join(OUTPUT_PATHS.context(sprintNumber, taskId), FILE_NAMES.agentSelection(taskId)),
+    agentSelection: join(
+      OUTPUT_PATHS.context(sprintNumber, taskId),
+      FILE_NAMES.agentSelection(taskId)
+    ),
 
     // Specification files (Phase 1)
     spec: join(OUTPUT_PATHS.specifications(sprintNumber), FILE_NAMES.spec(taskId)),
@@ -43,15 +46,32 @@ export function getTaskPaths(sprintNumber: number, taskId: string, runId?: strin
     ...(runId && {
       execution: OUTPUT_PATHS.execution(sprintNumber, taskId, runId),
       implementation: join(OUTPUT_PATHS.execution(sprintNumber, taskId, runId), 'implementation'),
-      stepsCompleted: join(OUTPUT_PATHS.execution(sprintNumber, taskId, runId), 'implementation', FILE_NAMES.stepsCompleted),
-      filesModified: join(OUTPUT_PATHS.execution(sprintNumber, taskId, runId), 'implementation', FILE_NAMES.filesModified),
+      stepsCompleted: join(
+        OUTPUT_PATHS.execution(sprintNumber, taskId, runId),
+        'implementation',
+        FILE_NAMES.stepsCompleted
+      ),
+      filesModified: join(
+        OUTPUT_PATHS.execution(sprintNumber, taskId, runId),
+        'implementation',
+        FILE_NAMES.filesModified
+      ),
       matop: OUTPUT_PATHS.matop(sprintNumber, taskId, runId),
       gates: OUTPUT_PATHS.gates(sprintNumber, taskId, runId),
       verdicts: OUTPUT_PATHS.verdicts(sprintNumber, taskId, runId),
-      gateSelection: join(OUTPUT_PATHS.matop(sprintNumber, taskId, runId), FILE_NAMES.gateSelection),
+      gateSelection: join(
+        OUTPUT_PATHS.matop(sprintNumber, taskId, runId),
+        FILE_NAMES.gateSelection
+      ),
       summary: join(OUTPUT_PATHS.execution(sprintNumber, taskId, runId), FILE_NAMES.summary),
-      delivery: join(OUTPUT_PATHS.execution(sprintNumber, taskId, runId), FILE_NAMES.delivery(taskId)),
-      evidenceHashes: join(OUTPUT_PATHS.matop(sprintNumber, taskId, runId), FILE_NAMES.evidenceHashes),
+      delivery: join(
+        OUTPUT_PATHS.execution(sprintNumber, taskId, runId),
+        FILE_NAMES.delivery(taskId)
+      ),
+      evidenceHashes: join(
+        OUTPUT_PATHS.matop(sprintNumber, taskId, runId),
+        FILE_NAMES.evidenceHashes
+      ),
     }),
   };
 }
@@ -60,10 +80,7 @@ export function getTaskPaths(sprintNumber: number, taskId: string, runId?: strin
  * Generate a unique run ID for execution
  */
 export function generateRunId(): string {
-  const timestamp = new Date()
-    .toISOString()
-    .replace(/[-:T]/g, '')
-    .slice(0, 14);
+  const timestamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
   const randomHex = Math.random().toString(16).slice(2, 10);
   return `${timestamp}-${randomHex}`;
 }
@@ -118,11 +135,15 @@ export function isSpecifyPath(path: string): boolean {
  */
 export function extractTaskIdFromPath(path: string): string | null {
   // New sprint-based: .specify/sprints/sprint-X/context/TASK-ID/
-  const newMatch = path.match(/\.specify[/\\]sprints[/\\]sprint-\d+[/\\](?:context|attestations|execution)[/\\]([A-Z]+-\d+(?:-[A-Z]+)?)[/\\]/);
+  const newMatch = path.match(
+    /\.specify[/\\]sprints[/\\]sprint-\d+[/\\](?:context|attestations|execution)[/\\]([A-Z]+-\d+(?:-[A-Z]+)?)[/\\]/
+  );
   if (newMatch) return newMatch[1];
 
   // New sprint-based: .specify/sprints/sprint-X/specifications/TASK-ID-spec.md
-  const specMatch = path.match(/\.specify[/\\]sprints[/\\]sprint-\d+[/\\](?:specifications|planning)[/\\]([A-Z]+-\d+(?:-[A-Z]+)?)-/);
+  const specMatch = path.match(
+    /\.specify[/\\]sprints[/\\]sprint-\d+[/\\](?:specifications|planning)[/\\]([A-Z]+-\d+(?:-[A-Z]+)?)-/
+  );
   if (specMatch) return specMatch[1];
 
   // Old task-based: .specify/{TASK_ID}/

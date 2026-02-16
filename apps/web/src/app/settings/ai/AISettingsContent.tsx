@@ -33,7 +33,11 @@ import {
   DialogTitle,
 } from '@intelliflow/ui';
 import type { ChainType, ChainVersionStatus } from '@intelliflow/domain';
-import type { ChainVersionSummary, CreateChainVersionInput, UpdateChainVersionInput } from '@intelliflow/validators';
+import type {
+  ChainVersionSummary,
+  CreateChainVersionInput,
+  UpdateChainVersionInput,
+} from '@intelliflow/validators';
 import { useChainVersions, useVersionAudit } from './hooks';
 import {
   ChainVersionsDashboard,
@@ -103,37 +107,49 @@ export default function AISettingsContent() {
     setSelectedVersion(version);
   }, []);
 
-  const handleActivateClick = useCallback((versionId: string) => {
-    const version = versions?.find((v) => v.id === versionId);
-    if (version) {
-      setActionVersion(version);
-      setActivateDialogOpen(true);
-    }
-  }, [versions]);
+  const handleActivateClick = useCallback(
+    (versionId: string) => {
+      const version = versions?.find((v) => v.id === versionId);
+      if (version) {
+        setActionVersion(version);
+        setActivateDialogOpen(true);
+      }
+    },
+    [versions]
+  );
 
-  const handleDeprecateClick = useCallback((versionId: string) => {
-    const version = versions?.find((v) => v.id === versionId);
-    if (version) {
-      setActionVersion(version);
-      setDeprecateDialogOpen(true);
-    }
-  }, [versions]);
+  const handleDeprecateClick = useCallback(
+    (versionId: string) => {
+      const version = versions?.find((v) => v.id === versionId);
+      if (version) {
+        setActionVersion(version);
+        setDeprecateDialogOpen(true);
+      }
+    },
+    [versions]
+  );
 
-  const handleArchiveClick = useCallback((versionId: string) => {
-    const version = versions?.find((v) => v.id === versionId);
-    if (version) {
-      setActionVersion(version);
-      setArchiveDialogOpen(true);
-    }
-  }, [versions]);
+  const handleArchiveClick = useCallback(
+    (versionId: string) => {
+      const version = versions?.find((v) => v.id === versionId);
+      if (version) {
+        setActionVersion(version);
+        setArchiveDialogOpen(true);
+      }
+    },
+    [versions]
+  );
 
-  const handleRollbackClick = useCallback((versionId: string) => {
-    const version = versions?.find((v) => v.id === versionId);
-    if (version) {
-      setActionVersion(version);
-      setRollbackDialogOpen(true);
-    }
-  }, [versions]);
+  const handleRollbackClick = useCallback(
+    (versionId: string) => {
+      const version = versions?.find((v) => v.id === versionId);
+      if (version) {
+        setActionVersion(version);
+        setRollbackDialogOpen(true);
+      }
+    },
+    [versions]
+  );
 
   const handleActivateConfirm = useCallback(async () => {
     if (!actionVersion) return;
@@ -156,23 +172,33 @@ export default function AISettingsContent() {
     setActionVersion(null);
   }, [actionVersion, archiveVersion]);
 
-  const handleRollbackConfirm = useCallback(async (reason: string) => {
-    if (!actionVersion) return;
-    await rollbackVersion(actionVersion.id, reason);
-    setRollbackDialogOpen(false);
-    setActionVersion(null);
-  }, [actionVersion, rollbackVersion]);
+  const handleRollbackConfirm = useCallback(
+    async (reason: string) => {
+      if (!actionVersion) return;
+      await rollbackVersion(actionVersion.id, reason);
+      setRollbackDialogOpen(false);
+      setActionVersion(null);
+    },
+    [actionVersion, rollbackVersion]
+  );
 
-  const handleCreateVersion = useCallback(async (input: CreateChainVersionInput) => {
-    await createVersion(input);
-  }, [createVersion]);
+  const handleCreateVersion = useCallback(
+    async (input: CreateChainVersionInput) => {
+      await createVersion(input);
+    },
+    [createVersion]
+  );
 
-  const handleUpdateVersion = useCallback(async (id: string, input: UpdateChainVersionInput) => {
-    await updateVersion(id, input);
-  }, [updateVersion]);
+  const handleUpdateVersion = useCallback(
+    async (id: string, input: UpdateChainVersionInput) => {
+      await updateVersion(id, input);
+    },
+    [updateVersion]
+  );
 
   // Check for auth errors
-  const isAuthError = error?.message?.toLowerCase().includes('authentication') ||
+  const isAuthError =
+    error?.message?.toLowerCase().includes('authentication') ||
     error?.message?.toLowerCase().includes('unauthorized');
 
   // Redirect to login for auth errors
@@ -188,7 +214,9 @@ export default function AISettingsContent() {
       <div className="settings_ai_page">
         <div className="max-w-5xl">
           <Card className="p-6 flex items-center gap-3">
-            <span className="material-symbols-outlined text-slate-400 animate-spin">progress_activity</span>
+            <span className="material-symbols-outlined text-slate-400 animate-spin">
+              progress_activity
+            </span>
             <p className="text-muted-foreground">Redirecting to login...</p>
           </Card>
         </div>
@@ -202,14 +230,8 @@ export default function AISettingsContent() {
       <div className="settings_ai_page">
         <div className="max-w-5xl">
           <Card className="p-6 border-destructive">
-            <p className="text-destructive">
-              Failed to load AI settings: {error.message}
-            </p>
-            <Button
-              variant="outline"
-              className="mt-4"
-              onClick={() => refetch()}
-            >
+            <p className="text-destructive">Failed to load AI settings: {error.message}</p>
+            <Button variant="outline" className="mt-4" onClick={() => refetch()}>
               Retry
             </Button>
           </Card>
@@ -338,20 +360,30 @@ export default function AISettingsContent() {
                 <h3 className="text-lg font-semibold mb-4">Memory Management</h3>
                 <div className="space-y-4 text-sm text-muted-foreground">
                   <p>
-                    Zep Memory provides persistent conversation storage for AI chains.
-                    The free tier includes 1,000 episodes per month.
+                    Zep Memory provides persistent conversation storage for AI chains. The free tier
+                    includes 1,000 episodes per month.
                   </p>
                   <div className="space-y-2">
-                    <p><strong>Thresholds:</strong></p>
+                    <p>
+                      <strong>Thresholds:</strong>
+                    </p>
                     <ul className="list-disc pl-5 space-y-1">
-                      <li><span className="text-green-600">0-79%</span>: Normal operation</li>
-                      <li><span className="text-yellow-600">80-94%</span>: Warning - consider upgrading</li>
-                      <li><span className="text-red-600">95-100%</span>: Critical - fallback to in-memory</li>
+                      <li>
+                        <span className="text-green-600">0-79%</span>: Normal operation
+                      </li>
+                      <li>
+                        <span className="text-yellow-600">80-94%</span>: Warning - consider
+                        upgrading
+                      </li>
+                      <li>
+                        <span className="text-red-600">95-100%</span>: Critical - fallback to
+                        in-memory
+                      </li>
                     </ul>
                   </div>
                   <p>
-                    When the limit is reached, conversations will use in-memory storage
-                    which does not persist across sessions.
+                    When the limit is reached, conversations will use in-memory storage which does
+                    not persist across sessions.
                   </p>
                 </div>
               </Card>
@@ -360,10 +392,7 @@ export default function AISettingsContent() {
 
           {/* Audit Tab */}
           <TabsContent value="audit">
-            <VersionAuditLog
-              auditLog={auditLog}
-              isLoading={isLoadingAudit}
-            />
+            <VersionAuditLog auditLog={auditLog} isLoading={isLoadingAudit} />
           </TabsContent>
         </Tabs>
 
@@ -374,8 +403,8 @@ export default function AISettingsContent() {
               <DialogTitle>Activate Version?</DialogTitle>
               <DialogDescription>
                 This will activate version{' '}
-                <span className="font-mono">{actionVersion?.id.slice(0, 8)}...</span> and
-                deprecate the current active version for {actionVersion?.chainType}.
+                <span className="font-mono">{actionVersion?.id.slice(0, 8)}...</span> and deprecate
+                the current active version for {actionVersion?.chainType}.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -396,19 +425,15 @@ export default function AISettingsContent() {
               <DialogTitle>Deprecate Version?</DialogTitle>
               <DialogDescription>
                 This will deprecate version{' '}
-                <span className="font-mono">{actionVersion?.id.slice(0, 8)}...</span>.
-                Deprecated versions can be rolled back or archived.
+                <span className="font-mono">{actionVersion?.id.slice(0, 8)}...</span>. Deprecated
+                versions can be rolled back or archived.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setDeprecateDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button
-                variant="secondary"
-                onClick={handleDeprecateConfirm}
-                disabled={isDeprecating}
-              >
+              <Button variant="secondary" onClick={handleDeprecateConfirm} disabled={isDeprecating}>
                 {isDeprecating ? 'Deprecating...' : 'Deprecate'}
               </Button>
             </DialogFooter>
@@ -422,19 +447,15 @@ export default function AISettingsContent() {
               <DialogTitle>Archive Version?</DialogTitle>
               <DialogDescription>
                 This will archive version{' '}
-                <span className="font-mono">{actionVersion?.id.slice(0, 8)}...</span>.
-                Archived versions are hidden by default but can still be rolled back.
+                <span className="font-mono">{actionVersion?.id.slice(0, 8)}...</span>. Archived
+                versions are hidden by default but can still be rolled back.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => setArchiveDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button
-                variant="secondary"
-                onClick={handleArchiveConfirm}
-                disabled={isArchiving}
-              >
+              <Button variant="secondary" onClick={handleArchiveConfirm} disabled={isArchiving}>
                 {isArchiving ? 'Archiving...' : 'Archive'}
               </Button>
             </DialogFooter>

@@ -332,9 +332,7 @@ describe('DriftDetector - Additional Coverage', () => {
       const result = detector.detectDrift('gpt-4', 'latency');
 
       if (result.detected) {
-        expect(result.recommendations.some(r =>
-          r.includes('infrastructure metrics')
-        )).toBe(true);
+        expect(result.recommendations.some((r) => r.includes('infrastructure metrics'))).toBe(true);
       }
     });
 
@@ -362,12 +360,8 @@ describe('DriftDetector - Additional Coverage', () => {
       const result = detector.detectDrift('gpt-4', 'error_rate');
 
       if (result.detected) {
-        expect(result.recommendations.some(r =>
-          r.includes('error logs')
-        )).toBe(true);
-        expect(result.recommendations.some(r =>
-          r.includes('API provider status')
-        )).toBe(true);
+        expect(result.recommendations.some((r) => r.includes('error logs'))).toBe(true);
+        expect(result.recommendations.some((r) => r.includes('API provider status'))).toBe(true);
       }
     });
 
@@ -400,9 +394,7 @@ describe('DriftDetector - Additional Coverage', () => {
         expect(result.recommendations).toContain(
           'URGENT: Immediately investigate model performance'
         );
-        expect(result.recommendations).toContain(
-          'Consider rolling back to previous model version'
-        );
+        expect(result.recommendations).toContain('Consider rolling back to previous model version');
         expect(result.recommendations).toContain('Alert on-call team');
       }
     });
@@ -431,12 +423,8 @@ describe('DriftDetector - Additional Coverage', () => {
       const result = detector.detectDrift('gpt-4', 'confidence_level');
 
       if (result.severity === 'high') {
-        expect(result.recommendations).toContain(
-          'Review recent model inputs for anomalies'
-        );
-        expect(result.recommendations).toContain(
-          'Compare model outputs with human evaluations'
-        );
+        expect(result.recommendations).toContain('Review recent model inputs for anomalies');
+        expect(result.recommendations).toContain('Compare model outputs with human evaluations');
       }
     });
 
@@ -464,12 +452,8 @@ describe('DriftDetector - Additional Coverage', () => {
       const result = detector.detectDrift('gpt-4', 'token_usage');
 
       if (result.severity === 'medium') {
-        expect(result.recommendations).toContain(
-          'Monitor closely over next 24 hours'
-        );
-        expect(result.recommendations).toContain(
-          'Review input data quality'
-        );
+        expect(result.recommendations).toContain('Monitor closely over next 24 hours');
+        expect(result.recommendations).toContain('Review input data quality');
       }
     });
 
@@ -498,9 +482,7 @@ describe('DriftDetector - Additional Coverage', () => {
 
       if (result.severity === 'low') {
         expect(result.recommendations).toContain('Continue monitoring');
-        expect(result.recommendations).toContain(
-          'Document observation for trend analysis'
-        );
+        expect(result.recommendations).toContain('Document observation for trend analysis');
       }
     });
 
@@ -648,7 +630,7 @@ describe('DriftDetector - Additional Coverage', () => {
       const status = detector.getStatus();
       // highSeverityCount should match how many had high/critical severity
       const expectedHigh = [result1, result2].filter(
-        r => r.severity === 'high' || r.severity === 'critical'
+        (r) => r.severity === 'high' || r.severity === 'critical'
       ).length;
       expect(status.highSeverityCount).toBe(expectedHigh);
     });
@@ -850,9 +832,7 @@ describe('DriftDetector - Additional Coverage', () => {
       };
 
       const result = testSeverity('none');
-      expect(['none', 'low', 'medium', 'high', 'critical']).toContain(
-        result.severity
-      );
+      expect(['none', 'low', 'medium', 'high', 'critical']).toContain(result.severity);
     });
   });
 });

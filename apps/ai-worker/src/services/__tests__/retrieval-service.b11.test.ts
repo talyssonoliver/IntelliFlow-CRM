@@ -167,9 +167,10 @@ describe('Retrieval Service - b11 coverage', () => {
         titleBoost: 5.0,
         recentBoost: 3.0,
       });
-      const result = evaluator.calculateFinalScore(
-        0.9, 0.9, new Date(), 'Test Match', ['test', 'match']
-      );
+      const result = evaluator.calculateFinalScore(0.9, 0.9, new Date(), 'Test Match', [
+        'test',
+        'match',
+      ]);
       expect(result).toBeLessThanOrEqual(1);
     });
   });

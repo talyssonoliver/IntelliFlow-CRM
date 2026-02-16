@@ -31,7 +31,13 @@ import {
 // Types
 // ============================================
 
-export type VerificationStatus = 'loading' | 'success' | 'expired' | 'invalid' | 'already_verified' | 'error';
+export type VerificationStatus =
+  | 'loading'
+  | 'success'
+  | 'expired'
+  | 'invalid'
+  | 'already_verified'
+  | 'error';
 
 export interface EmailVerificationProps {
   token: string;
@@ -69,7 +75,7 @@ function StatusIcon({ status }: StatusIconProps) {
         status === 'loading' ? 'bg-[#137fec]/10' : '',
         status === 'success' || status === 'already_verified' ? 'bg-green-500/10' : '',
         status === 'expired' ? 'bg-amber-500/10' : '',
-        (status === 'invalid' || status === 'error') ? 'bg-red-500/10' : ''
+        status === 'invalid' || status === 'error' ? 'bg-red-500/10' : ''
       )}
     >
       <span
@@ -253,7 +259,10 @@ export function EmailVerification({
               >
                 {isResending ? (
                   <>
-                    <span className="material-symbols-outlined text-xl animate-spin" aria-hidden="true">
+                    <span
+                      className="material-symbols-outlined text-xl animate-spin"
+                      aria-hidden="true"
+                    >
                       sync
                     </span>
                     Sending...
@@ -329,11 +338,7 @@ export function EmailVerification({
   };
 
   return (
-    <div
-      className={cn('text-center', className)}
-      data-testid="email-verification"
-      role="main"
-    >
+    <div className={cn('text-center', className)} data-testid="email-verification" role="main">
       {/* Status Icon */}
       <div className="flex justify-center">
         <StatusIcon status={status} />
@@ -350,18 +355,17 @@ export function EmailVerification({
       </h1>
 
       {/* Message */}
-      <p
-        className="text-slate-400 mb-8 max-w-md mx-auto"
-        role="status"
-        aria-live="polite"
-      >
+      <p className="text-slate-400 mb-8 max-w-md mx-auto" role="status" aria-live="polite">
         {message}
       </p>
 
       {/* Verified Email (on success) */}
       {verifiedEmail && status === 'success' && (
         <p className="text-sm text-slate-300 mb-6">
-          <span className="material-symbols-outlined text-green-500 text-sm align-middle mr-1" aria-hidden="true">
+          <span
+            className="material-symbols-outlined text-green-500 text-sm align-middle mr-1"
+            aria-hidden="true"
+          >
             check_circle
           </span>
           {verifiedEmail}
@@ -371,28 +375,27 @@ export function EmailVerification({
       {/* Show warning if token is expiring soon */}
       {showExpiryWarning && (status === 'expired' || status === 'loading') && (
         <div className="mb-6 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-start gap-2">
-          <span className="material-symbols-outlined text-amber-500 text-lg mt-0.5 flex-shrink-0" aria-hidden="true">
+          <span
+            className="material-symbols-outlined text-amber-500 text-lg mt-0.5 flex-shrink-0"
+            aria-hidden="true"
+          >
             schedule
           </span>
           <p className="text-xs text-amber-300 text-left">
-            This verification link will expire soon (within 1 hour). Please complete verification quickly or request a new link.
+            This verification link will expire soon (within 1 hour). Please complete verification
+            quickly or request a new link.
           </p>
         </div>
       )}
 
       {/* Actions */}
-      <div className="flex flex-col items-center gap-4">
-        {getActionContent()}
-      </div>
+      <div className="flex flex-col items-center gap-4">{getActionContent()}</div>
 
       {/* Help Text */}
       {status !== 'loading' && (
         <p className="mt-8 text-sm text-slate-500">
           Need help?{' '}
-          <Link
-            href="/contact"
-            className="text-[#137fec] hover:text-[#7cc4ff] transition-colors"
-          >
+          <Link href="/contact" className="text-[#137fec] hover:text-[#7cc4ff] transition-colors">
             Contact Support
           </Link>
         </p>

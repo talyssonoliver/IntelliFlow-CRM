@@ -67,7 +67,7 @@ vi.mock('../audit-logger', () => {
       entityType: string,
       entityId: string,
       tenantId: string,
-      options?: any,
+      options?: any
     ) {
       const data: any = {
         action,
@@ -90,7 +90,7 @@ vi.mock('../audit-logger', () => {
       entityId: string,
       permission: string,
       tenantId: string,
-      options?: any,
+      options?: any
     ) {
       await this.prisma.auditLog.create({ data: { entityType, entityId, permission, ...options } });
       return 'pd-id';
@@ -112,7 +112,7 @@ vi.mock('../audit-logger', () => {
       entityType: string,
       ids: string[],
       tenantId: string,
-      options?: any,
+      options?: any
     ) {
       await this.prisma.auditLog.create({
         data: { action, entityType, ids, tenantId, ...options },
@@ -231,7 +231,8 @@ vi.mock('../rbac', () => {
       return (await this.can({ userId: u, userRole: r, resourceType: rs, action: 'read' })).granted;
     }
     async canWrite(u: string, r: string, rs: string) {
-      return (await this.can({ userId: u, userRole: r, resourceType: rs, action: 'write' })).granted;
+      return (await this.can({ userId: u, userRole: r, resourceType: rs, action: 'write' }))
+        .granted;
     }
     async canDelete(u: string, r: string, rs: string) {
       return (await this.can({ userId: u, userRole: r, resourceType: rs, action: 'delete' }))
@@ -413,7 +414,7 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
             entityType: 'lead',
             entityId: 'lead-123',
           }),
-        }),
+        })
       );
     });
 
@@ -460,7 +461,7 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
             oldValue: beforeState,
             newValue: afterState,
           }),
-        }),
+        })
       );
     });
 
@@ -548,7 +549,7 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
         'lead-123',
         'lead:delete',
         TEST_TENANT_ID,
-        { actorId: 'user-1', actorRole: 'VIEWER', reason: 'Viewers cannot delete leads' },
+        { actorId: 'user-1', actorRole: 'VIEWER', reason: 'Viewers cannot delete leads' }
       );
       expect(id).toBeDefined();
     });
@@ -576,7 +577,7 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
       expect(mockSecurityEventCreate).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ eventType: 'LOGIN_SUCCESS' }),
-        }),
+        })
       );
     });
 
@@ -602,7 +603,7 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
             eventType: 'LOGIN_FAILURE',
             severity: 'MEDIUM',
           }),
-        }),
+        })
       );
     });
   });
@@ -622,7 +623,7 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
         'lead',
         ['lead-1', 'lead-2', 'lead-3'],
         TEST_TENANT_ID,
-        { actorId: 'user-1', successCount: 3, failureCount: 0 },
+        { actorId: 'user-1', successCount: 3, failureCount: 0 }
       );
       expect(id).toBeDefined();
     });
@@ -641,7 +642,7 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
         'contact',
         ['c-1', 'c-2', 'c-3', 'c-4', 'c-5'],
         TEST_TENANT_ID,
-        { actorId: 'user-1', successCount: 4, failureCount: 1 },
+        { actorId: 'user-1', successCount: 4, failureCount: 1 }
       );
       expect(id).toBeDefined();
     });
@@ -674,7 +675,7 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
             ipAddress: '192.168.1.100',
             userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
           }),
-        }),
+        })
       );
     });
   });
@@ -869,7 +870,7 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
       expect(
         rbac.evaluateConditions([{ field: 'status', operator: 'eq', value: 'ACTIVE' }], {
           status: 'ACTIVE',
-        }),
+        })
       ).toBe(true);
     });
 
@@ -881,7 +882,7 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
       expect(
         rbac.evaluateConditions([{ field: 'status', operator: 'neq', value: 'DELETED' }], {
           status: 'ACTIVE',
-        }),
+        })
       ).toBe(true);
     });
 
@@ -891,10 +892,9 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
       const rbac = new RBACService({} as any);
 
       expect(
-        rbac.evaluateConditions(
-          [{ field: 'role', operator: 'in', value: ['ADMIN', 'MANAGER'] }],
-          { role: 'MANAGER' },
-        ),
+        rbac.evaluateConditions([{ field: 'role', operator: 'in', value: ['ADMIN', 'MANAGER'] }], {
+          role: 'MANAGER',
+        })
       ).toBe(true);
     });
 
@@ -906,7 +906,7 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
       expect(
         rbac.evaluateConditions([{ field: 'email', operator: 'contains', value: '@example' }], {
           email: 'user@example.com',
-        }),
+        })
       ).toBe(true);
     });
 
@@ -918,7 +918,7 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
       expect(
         rbac.evaluateConditions([{ field: 'name', operator: 'startsWith', value: 'Admin' }], {
           name: 'Admin User',
-        }),
+        })
       ).toBe(true);
     });
 
@@ -930,7 +930,7 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
       expect(
         rbac.evaluateConditions([{ field: 'status', operator: 'eq', value: 'ACTIVE' }], {
           status: 'INACTIVE',
-        }),
+        })
       ).toBe(false);
     });
   });
@@ -961,7 +961,14 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
       resetAuditLogger();
       const logger = new AuditLogger(prisma, { consoleLog: false });
 
-      const allCRMResources = ['lead', 'contact', 'account', 'opportunity', 'task', 'appointment'] as const;
+      const allCRMResources = [
+        'lead',
+        'contact',
+        'account',
+        'opportunity',
+        'task',
+        'appointment',
+      ] as const;
       const allCRUDActions = ['CREATE', 'READ', 'UPDATE', 'DELETE'] as const;
 
       for (const resource of allCRMResources) {
@@ -974,7 +981,7 @@ describe('audit-coverage-test.ts source coverage - batch10r', () => {
       }
 
       expect(mockAuditLogCreate).toHaveBeenCalledTimes(
-        allCRMResources.length * allCRUDActions.length,
+        allCRMResources.length * allCRUDActions.length
       );
     });
 

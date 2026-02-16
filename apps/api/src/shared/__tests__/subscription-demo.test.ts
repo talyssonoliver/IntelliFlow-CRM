@@ -169,7 +169,12 @@ describe('Subscription Demo Router', () => {
         emitLeadScored({ leadId: 'lead-other', score: 80, confidence: 0.8, timestamp: new Date() });
 
         // Emit event for specific lead - should be received
-        emitLeadScored({ leadId: 'lead-specific', score: 95, confidence: 0.99, timestamp: new Date() });
+        emitLeadScored({
+          leadId: 'lead-specific',
+          score: 95,
+          confidence: 0.99,
+          timestamp: new Date(),
+        });
 
         await new Promise((resolve) => setTimeout(resolve, 10));
 

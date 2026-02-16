@@ -46,7 +46,10 @@ export const taskStatusSchema = z.enum([
 // Dependencies object
 export const taskDependenciesSchema = z.object({
   required: z.array(z.string()).describe('List of prerequisite task IDs'),
-  verified_at: lenientDatetime().nullable().optional().describe('ISO 8601 timestamp when dependencies were verified (null if not yet verified)'),
+  verified_at: lenientDatetime()
+    .nullable()
+    .optional()
+    .describe('ISO 8601 timestamp when dependencies were verified (null if not yet verified)'),
   all_satisfied: z.boolean().describe('Whether all dependencies are satisfied'),
   notes: z.string().optional().describe('Additional notes about dependency status'),
 });
@@ -60,15 +63,28 @@ export const statusHistoryEntrySchema = z.object({
 
 // Execution details
 export const executionSchema = z.object({
-  started_at: lenientDatetime().nullable().optional().describe('When execution started (null if not started)'),
-  completed_at: lenientDatetime().nullable().optional().describe('When execution completed (null if not completed)'),
+  started_at: lenientDatetime()
+    .nullable()
+    .optional()
+    .describe('When execution started (null if not started)'),
+  completed_at: lenientDatetime()
+    .nullable()
+    .optional()
+    .describe('When execution completed (null if not completed)'),
   duration_minutes: z.number().nullable().optional().describe('Execution duration in minutes'),
   executor: z.string().optional().describe('Who/what executed the task (human, agent, etc.)'),
   agents: z.array(z.string()).optional().describe('List of AI agents involved in execution'),
   execution_log: z.string().optional().describe('Path to detailed execution log file'),
-  log_path: z.string().optional().describe('Alternative path to execution log (alias for execution_log)'),
+  log_path: z
+    .string()
+    .optional()
+    .describe('Alternative path to execution log (alias for execution_log)'),
   retry_count: z.number().int().min(0).optional().default(0).describe('Number of retry attempts'),
-  last_error: z.string().nullable().optional().describe('Last error message if task failed (null if no error)'),
+  last_error: z
+    .string()
+    .nullable()
+    .optional()
+    .describe('Last error message if task failed (null if no error)'),
 });
 
 // Artifact entry (detailed format with hash verification)
@@ -88,17 +104,29 @@ export const artifactItemSchema = z.union([
 // Missing reason - can be a simple string or a detailed object mapping reasons by artifact
 export const missingReasonSchema = z.union([
   z.string().describe('Simple explanation for missing artifacts'),
-  z.record(z.string(), z.object({
-    reason: z.string(),
-  }).passthrough()).describe('Detailed explanations by artifact key'),
+  z
+    .record(
+      z.string(),
+      z
+        .object({
+          reason: z.string(),
+        })
+        .passthrough()
+    )
+    .describe('Detailed explanations by artifact key'),
 ]);
 
 // Artifacts object
 export const artifactsSchema = z.object({
   expected: z.array(z.string()).optional().describe('List of expected file paths or patterns'),
-  created: z.array(artifactItemSchema).optional().describe('Artifacts actually created - can be paths or detailed objects with hashes'),
+  created: z
+    .array(artifactItemSchema)
+    .optional()
+    .describe('Artifacts actually created - can be paths or detailed objects with hashes'),
   missing: z.array(z.string()).optional().describe('Expected artifacts that were not created'),
-  missing_reason: missingReasonSchema.optional().describe('Explanation for why artifacts are missing - can be string or object'),
+  missing_reason: missingReasonSchema
+    .optional()
+    .describe('Explanation for why artifacts are missing - can be string or object'),
 });
 
 // Validation entry
@@ -149,14 +177,14 @@ export const scheduleDependencySchema = z.object({
 
 // Schedule constraint types per PMBOK
 export const constraintTypeSchema = z.enum([
-  'ASAP',  // As Soon As Possible (default)
-  'ALAP',  // As Late As Possible
-  'SNET',  // Start No Earlier Than
-  'SNLT',  // Start No Later Than
-  'FNET',  // Finish No Earlier Than
-  'FNLT',  // Finish No Later Than
-  'MSO',   // Must Start On
-  'MFO',   // Must Finish On
+  'ASAP', // As Soon As Possible (default)
+  'ALAP', // As Late As Possible
+  'SNET', // Start No Earlier Than
+  'SNLT', // Start No Later Than
+  'FNET', // Finish No Earlier Than
+  'FNLT', // Finish No Later Than
+  'MSO', // Must Start On
+  'MFO', // Must Finish On
 ]);
 
 // Three-point PERT estimation
@@ -164,7 +192,12 @@ export const threePointEstimateSchema = z.object({
   optimistic_minutes: z.number().min(0).nullable().optional().describe('Optimistic duration (O)'),
   most_likely_minutes: z.number().min(0).nullable().optional().describe('Most likely duration (M)'),
   pessimistic_minutes: z.number().min(0).nullable().optional().describe('Pessimistic duration (P)'),
-  expected_minutes: z.number().min(0).nullable().optional().describe('PERT Expected = (O + 4M + P) / 6'),
+  expected_minutes: z
+    .number()
+    .min(0)
+    .nullable()
+    .optional()
+    .describe('PERT Expected = (O + 4M + P) / 6'),
   standard_deviation: z.number().min(0).nullable().optional().describe('PERT SD = (P - O) / 6'),
 });
 
@@ -179,17 +212,26 @@ export const planningSchema = z.object({
 
   // Baseline dates (locked at sprint start for variance analysis)
   baseline_start: lenientDatetime().nullable().optional().describe('Baseline start date (locked)'),
-  baseline_finish: lenientDatetime().nullable().optional().describe('Baseline finish date (locked)'),
+  baseline_finish: lenientDatetime()
+    .nullable()
+    .optional()
+    .describe('Baseline finish date (locked)'),
 
   // Enhanced dependencies with types and lag/lead
-  schedule_dependencies: z.array(scheduleDependencySchema).optional().describe('Dependencies with relationship types'),
+  schedule_dependencies: z
+    .array(scheduleDependencySchema)
+    .optional()
+    .describe('Dependencies with relationship types'),
 
   // Progress tracking
   percent_complete: z.number().min(0).max(100).default(0).describe('Task progress percentage'),
 
   // Constraint per PMBOK
   constraint_type: constraintTypeSchema.default('ASAP').describe('Schedule constraint type'),
-  constraint_date: lenientDatetime().nullable().optional().describe('Constraint date for MSO/MFO/SNET/etc.'),
+  constraint_date: lenientDatetime()
+    .nullable()
+    .optional()
+    .describe('Constraint date for MSO/MFO/SNET/etc.'),
 });
 
 // Computed schedule data (populated by scheduler algorithm)
@@ -217,31 +259,67 @@ export const scheduleSchema = z.object({
 // Main task status schema
 export const taskStatusObjectSchema = z.object({
   $schema: z.string().optional(),
-  task_id: z.string().regex(taskIdPattern).describe('Unique task identifier (e.g., ENV-002-AI, EXC-SEC-001)'),
+  task_id: z
+    .string()
+    .regex(taskIdPattern)
+    .describe('Unique task identifier (e.g., ENV-002-AI, EXC-SEC-001)'),
   section: z.string().optional().describe('Task category/section'),
   description: z.string().optional().describe('Brief description of the task'),
   owner: z.string().optional().describe('Task owner or responsible party'),
   sprint: z.string().optional().describe('Sprint identifier (e.g., sprint-0)'),
   phase: z.string().optional().describe('Phase within the sprint (e.g., phase-1-ai-foundation)'),
-  stream: z.string().nullable().optional().describe('Parallel stream identifier (e.g., parallel-a, parallel-b, parallel-c)'),
+  stream: z
+    .string()
+    .nullable()
+    .optional()
+    .describe('Parallel stream identifier (e.g., parallel-a, parallel-b, parallel-c)'),
   dependencies: taskDependenciesSchema.optional(),
-  dependencies_resolved: z.array(z.string()).optional().describe('List of resolved dependency task IDs (legacy compatibility)'),
+  dependencies_resolved: z
+    .array(z.string())
+    .optional()
+    .describe('List of resolved dependency task IDs (legacy compatibility)'),
   status: taskStatusSchema.describe('Current task status'),
-  started_at: lenientDatetime().nullable().optional().describe('ISO 8601 timestamp when task execution started (null if not started)'),
-  completed_at: lenientDatetime().nullable().optional().describe('ISO 8601 timestamp when task was completed (null if not completed)'),
-  target_duration_minutes: z.number().nullable().optional().describe('Expected duration in minutes'),
+  started_at: lenientDatetime()
+    .nullable()
+    .optional()
+    .describe('ISO 8601 timestamp when task execution started (null if not started)'),
+  completed_at: lenientDatetime()
+    .nullable()
+    .optional()
+    .describe('ISO 8601 timestamp when task was completed (null if not completed)'),
+  target_duration_minutes: z
+    .number()
+    .nullable()
+    .optional()
+    .describe('Expected duration in minutes'),
   actual_duration_minutes: z.number().nullable().optional().describe('Actual duration in minutes'),
-  status_history: z.array(statusHistoryEntrySchema).optional().describe('Chronological history of status changes'),
+  status_history: z
+    .array(statusHistoryEntrySchema)
+    .optional()
+    .describe('Chronological history of status changes'),
   execution: executionSchema.optional(),
   artifacts: artifactsSchema.optional(),
-  validations: z.array(validationEntrySchema).optional().describe('Validation commands executed to verify task completion'),
-  kpis: z.record(z.string(), kpiEntrySchema).optional().describe('Key Performance Indicators for this task'),
-  blockers: z.array(blockerEntrySchema).optional().describe('Any blockers encountered during task execution'),
+  validations: z
+    .array(validationEntrySchema)
+    .optional()
+    .describe('Validation commands executed to verify task completion'),
+  kpis: z
+    .record(z.string(), kpiEntrySchema)
+    .optional()
+    .describe('Key Performance Indicators for this task'),
+  blockers: z
+    .array(blockerEntrySchema)
+    .optional()
+    .describe('Any blockers encountered during task execution'),
   notes: z.string().optional().describe('Additional notes or context'),
 
   // PMBOK Schedule Management fields
-  planning: planningSchema.optional().describe('PMBOK planning data (estimates, planned dates, constraints)'),
-  schedule: scheduleSchema.optional().describe('Computed schedule data (early/late dates, float, critical path)'),
+  planning: planningSchema
+    .optional()
+    .describe('PMBOK planning data (estimates, planned dates, constraints)'),
+  schedule: scheduleSchema
+    .optional()
+    .describe('Computed schedule data (early/late dates, float, critical path)'),
 });
 
 // Export TypeScript types inferred from Zod schema

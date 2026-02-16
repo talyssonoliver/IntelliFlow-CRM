@@ -16,12 +16,15 @@ import {
   PrismaChainVersionRepository,
   PrismaChainVersionAuditRepository,
   PrismaActivityFeedRepository,
+  PrismaTenantModuleRepository,
   InMemoryEventBus,
   MockAIService,
   InMemoryCache,
   GuardrailsAIService,
   DurableAuditLogAdapter,
+  FeatureFlagAdapter,
 } from '@intelliflow/adapters';
+import { InMemoryFeatureFlagProvider } from '@intelliflow/platform';
 import { TicketService } from './services/TicketService';
 import { AnalyticsService } from './services/AnalyticsService';
 import {
@@ -40,6 +43,7 @@ import {
   getKeyRotationService,
   getAuditEventHandler,
 } from './security';
+import { loadFeatureFlagsConfig } from './config/feature-flags.config';
 
 /**
  * Get the API Prisma client.
@@ -70,6 +74,11 @@ const createAdapters = (prismaClient: PrismaClient) => {
   const chainVersionAuditRepository = new PrismaChainVersionAuditRepository(prismaClient);
   const activityFeedRepository = new PrismaActivityFeedRepository(prismaClient);
 
+  // Feature flags
+  const featureFlagsConfig = loadFeatureFlagsConfig();
+  const featureFlagProvider = InMemoryFeatureFlagProvider.fromConfig(featureFlagsConfig);
+  const featureFlagAdapter = new FeatureFlagAdapter(featureFlagProvider, featureFlagsConfig);
+
   // External services
   const eventBus = new InMemoryEventBus();
   const baseAIService = new MockAIService();
@@ -80,11 +89,9 @@ const createAdapters = (prismaClient: PrismaClient) => {
     process.env.AI_AUDIT_SIGNING_KEY || 'dev-signing-key-change-in-production',
     'utf-8'
   );
-  const auditLogAdapter = new DurableAuditLogAdapter(
-    prismaClient as any,
-    auditSigningKey,
-    { encryptPII: !!process.env.AI_AUDIT_ENCRYPTION_KEY }
-  );
+  const auditLogAdapter = new DurableAuditLogAdapter(prismaClient as any, auditSigningKey, {
+    encryptPII: !!process.env.AI_AUDIT_ENCRYPTION_KEY,
+  });
   const aiService = new GuardrailsAIService(baseAIService, auditLogAdapter, {
     userId: 'system',
     tenantId: process.env.DEFAULT_TENANT_ID || 'default',
@@ -104,6 +111,8 @@ const createAdapters = (prismaClient: PrismaClient) => {
     eventBus,
     aiService,
     cache,
+    featureFlagProvider,
+    featureFlagAdapter,
   };
 };
 
@@ -187,7 +196,7 @@ const createServices = (prismaClient: PrismaClient) => {
   const chainVersionService = new ChainVersionService(
     adapters.chainVersionRepository,
     adapters.chainVersionAuditRepository,
-    null,  // featureFlags — no provider yet
+    adapters.featureFlagAdapter,
     adapters.eventBus
   );
 
@@ -240,7 +249,7 @@ export const container = {
     // Service not found - throw error with helpful message
     throw new Error(
       `Service '${serviceName}' not found in container. ` +
-      `Available services: ${Object.keys(containerBase).join(', ')}`
+        `Available services: ${Object.keys(containerBase).join(', ')}`
     );
   },
 };

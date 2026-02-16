@@ -272,10 +272,12 @@ success_metrics:
 
 **AI Intelligence (IFC-095)**:
 
-- `apps/api/src/modules/intelligence/intelligence.router.ts` - tRPC router for predictions
+- `apps/api/src/modules/intelligence/intelligence.router.ts` - tRPC router for
+  predictions
 - `packages/domain/src/intelligence/ChurnRiskScore.ts` - Churn risk value object
 - `packages/domain/src/intelligence/NextBestAction.ts` - NBA value object
 - `packages/ui/src/components/intelligence/ChurnRiskCard.tsx` - UI component
-- `packages/ui/src/components/intelligence/NextBestActionCard.tsx` - UI component
+- `packages/ui/src/components/intelligence/NextBestActionCard.tsx` - UI
+  component
 - `apps/web/src/app/contacts/[id]/page.tsx` - Contact 360 with AI Insights
 - `apps/web/src/app/leads/[id]/page.tsx` - Lead 360 with AI Insights

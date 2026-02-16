@@ -48,13 +48,7 @@ describe('EntitySearchField', () => {
   });
 
   it('renders selected value with clear button', () => {
-    render(
-      <EntitySearchField
-        {...defaultProps}
-        value="123"
-        valueName="John Doe"
-      />
-    );
+    render(<EntitySearchField {...defaultProps} value="123" valueName="John Doe" />);
     expect(screen.getByText('John Doe')).toBeInTheDocument();
     expect(screen.getByLabelText('Clear selection')).toBeInTheDocument();
   });
@@ -62,12 +56,7 @@ describe('EntitySearchField', () => {
   it('calls onChange with empty values when clear is clicked', () => {
     const onChange = vi.fn();
     render(
-      <EntitySearchField
-        {...defaultProps}
-        value="123"
-        valueName="John Doe"
-        onChange={onChange}
-      />
+      <EntitySearchField {...defaultProps} value="123" valueName="John Doe" onChange={onChange} />
     );
     fireEvent.click(screen.getByLabelText('Clear selection'));
     expect(onChange).toHaveBeenCalledWith('', '');

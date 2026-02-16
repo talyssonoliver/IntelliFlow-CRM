@@ -94,7 +94,7 @@ export function useActivityFeed(options: UseActivityFeedOptions = {}) {
       getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
       // Fallback poll at 60s as safety net — primary updates come via WebSocket.
       refetchInterval: 60_000,
-    },
+    }
   );
 
   // Flatten all pages into a single array of items
@@ -162,7 +162,7 @@ export function useEntityFeed(options: UseEntityFeedOptions) {
       getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
       // Fallback poll at 60s — primary updates via WebSocket subscriptions.
       refetchInterval: 60_000,
-    },
+    }
   );
 
   const items = query.data?.pages.flatMap((page) => page.items) ?? [];

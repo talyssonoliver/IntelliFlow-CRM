@@ -138,8 +138,7 @@ export async function POST(request: Request) {
       specification: {
         status: 'completed',
         path: specPath,
-        acceptanceCriteria:
-          task['Definition of Done']?.split(';').filter(Boolean).length || 0,
+        acceptanceCriteria: task['Definition of Done']?.split(';').filter(Boolean).length || 0,
       },
     };
 
@@ -254,7 +253,12 @@ ${
   depDetails.length > 0
     ? depDetails
         .map(
-          (d: { taskId: string; status: string; description: string; artifacts: string }) => `### ${d.taskId}
+          (d: {
+            taskId: string;
+            status: string;
+            description: string;
+            artifacts: string;
+          }) => `### ${d.taskId}
 - **Status**: ${d.status}
 - **Description**: ${d.description}
 - **Artifacts**: ${d.artifacts || 'None'}`
@@ -267,7 +271,10 @@ ${
 
 ${
   depArtifacts
-    .map((a: { taskId: string; hasSpec: boolean; hasPlan: boolean }) => `- **${a.taskId}**: Spec: ${a.hasSpec ? 'Yes' : 'No'}, Plan: ${a.hasPlan ? 'Yes' : 'No'}`)
+    .map(
+      (a: { taskId: string; hasSpec: boolean; hasPlan: boolean }) =>
+        `- **${a.taskId}**: Spec: ${a.hasSpec ? 'Yes' : 'No'}, Plan: ${a.hasPlan ? 'Yes' : 'No'}`
+    )
     .join('\n') || 'None'
 }
 
@@ -343,11 +350,7 @@ function selectAgentsForTask(task: TaskRecord): { domain: string; agents: string
   return { domain, agents: [...new Set(agents)].slice(0, 5) };
 }
 
-function generateSpecification(
-  task: TaskRecord,
-  allTasks: TaskRecord[],
-  agents: string[]
-): string {
+function generateSpecification(task: TaskRecord, allTasks: TaskRecord[], agents: string[]): string {
   const deps =
     task.Dependencies?.split(',')
       .map((d: string) => d.trim())
@@ -355,9 +358,7 @@ function generateSpecification(
   const depDetails = deps
     .map((depId: string) => {
       const depTask = allTasks.find((t: TaskRecord) => t['Task ID'] === depId);
-      return depTask
-        ? `- **${depId}**: ${depTask.Description}`
-        : `- **${depId}**: (not found)`;
+      return depTask ? `- **${depId}**: ${depTask.Description}` : `- **${depId}**: (not found)`;
     })
     .join('\n');
 
@@ -460,11 +461,48 @@ ${agents.map((a) => `- [ ] ${a}: Pending`).join('\n')}
 function extractKeywords(description: string): string[] {
   const words = description.toLowerCase().split(/\W+/);
   const stopWords = new Set([
-    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of',
-    'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have',
-    'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should',
-    'may', 'might', 'must', 'shall', 'can', 'this', 'that', 'these', 'those',
-    'it', 'its',
+    'the',
+    'a',
+    'an',
+    'and',
+    'or',
+    'but',
+    'in',
+    'on',
+    'at',
+    'to',
+    'for',
+    'of',
+    'with',
+    'by',
+    'is',
+    'are',
+    'was',
+    'were',
+    'be',
+    'been',
+    'being',
+    'have',
+    'has',
+    'had',
+    'do',
+    'does',
+    'did',
+    'will',
+    'would',
+    'could',
+    'should',
+    'may',
+    'might',
+    'must',
+    'shall',
+    'can',
+    'this',
+    'that',
+    'these',
+    'those',
+    'it',
+    'its',
   ]);
   return words.filter((w) => w.length > 3 && !stopWords.has(w));
 }

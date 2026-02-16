@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import type { Risk, RiskHeatMapResponse, RiskSummary, RiskStatus, RiskProbability, RiskImpact } from '../types';
+import type {
+  Risk,
+  RiskHeatMapResponse,
+  RiskSummary,
+  RiskStatus,
+  RiskProbability,
+  RiskImpact,
+} from '../types';
 
 // Find project root by looking for package.json
 function findProjectRoot(startDir: string): string {

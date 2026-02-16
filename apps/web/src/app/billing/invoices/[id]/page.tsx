@@ -28,7 +28,11 @@ export default function InvoiceDetailPage() {
   const fetchedRef = useRef(false);
 
   // Fetch invoices list and find the specific invoice
-  const { data, isLoading: queryLoading, error: queryError } = trpc.billing.listInvoices.useQuery(
+  const {
+    data,
+    isLoading: queryLoading,
+    error: queryError,
+  } = trpc.billing.listInvoices.useQuery(
     { page: 1, limit: INVOICES_PER_PAGE },
     { enabled: !!invoiceId }
   );
@@ -80,20 +84,14 @@ export default function InvoiceDetailPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-          Invoice Details
-        </h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Invoice Details</h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           View and manage invoice information
         </p>
       </div>
 
       {/* Invoice Detail Component */}
-      <InvoiceDetail
-        invoice={invoice}
-        isLoading={isLoading}
-        error={error}
-      />
+      <InvoiceDetail invoice={invoice} isLoading={isLoading} error={error} />
     </div>
   );
 }

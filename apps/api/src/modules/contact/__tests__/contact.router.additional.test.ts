@@ -182,9 +182,7 @@ describe('Contact Router - Additional Coverage', () => {
         error: { message: 'Contact not found' },
       });
 
-      await expect(
-        caller.update({ id: TEST_UUIDS.nonExistent, accountId: null })
-      ).rejects.toThrow(
+      await expect(caller.update({ id: TEST_UUIDS.nonExistent, accountId: null })).rejects.toThrow(
         expect.objectContaining({
           code: 'NOT_FOUND',
         })
@@ -201,9 +199,7 @@ describe('Contact Router - Additional Coverage', () => {
         error: { message: 'Database constraint violation' },
       });
 
-      await expect(
-        caller.update({ id: TEST_UUIDS.contact1, accountId: null })
-      ).rejects.toThrow(
+      await expect(caller.update({ id: TEST_UUIDS.contact1, accountId: null })).rejects.toThrow(
         expect.objectContaining({
           code: 'BAD_REQUEST',
         })
@@ -390,9 +386,7 @@ describe('Contact Router - Additional Coverage', () => {
         error: { message: 'Cannot unlink while deal is active' },
       });
 
-      await expect(
-        caller.unlinkFromAccount({ contactId: TEST_UUIDS.contact1 })
-      ).rejects.toThrow(
+      await expect(caller.unlinkFromAccount({ contactId: TEST_UUIDS.contact1 })).rejects.toThrow(
         expect.objectContaining({
           code: 'BAD_REQUEST',
           message: 'Cannot unlink while deal is active',
@@ -472,9 +466,7 @@ describe('Contact Router - Additional Coverage', () => {
         error: { message: 'Contact not found' },
       });
 
-      await expect(
-        caller.unlinkFromLead({ contactId: TEST_UUIDS.nonExistent })
-      ).rejects.toThrow(
+      await expect(caller.unlinkFromLead({ contactId: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({
           code: 'NOT_FOUND',
         })
@@ -491,9 +483,7 @@ describe('Contact Router - Additional Coverage', () => {
         error: { message: 'Cannot unlink: active conversion in progress' },
       });
 
-      await expect(
-        caller.unlinkFromLead({ contactId: TEST_UUIDS.contact1 })
-      ).rejects.toThrow(
+      await expect(caller.unlinkFromLead({ contactId: TEST_UUIDS.contact1 })).rejects.toThrow(
         expect.objectContaining({
           code: 'BAD_REQUEST',
           message: 'Cannot unlink: active conversion in progress',
@@ -542,9 +532,7 @@ describe('Contact Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      (prismaMock.contact.groupBy as any)
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([]);
+      (prismaMock.contact.groupBy as any).mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
       const result = await caller.filterOptions({ search: 'John' });
 
@@ -579,9 +567,7 @@ describe('Contact Router - Additional Coverage', () => {
 
       (prismaMock.contact.groupBy as any)
         .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([
-          { accountId: TEST_UUIDS.account1, _count: 5 },
-        ]);
+        .mockResolvedValueOnce([{ accountId: TEST_UUIDS.account1, _count: 5 }]);
 
       // Account not found in DB - should fallback to accountId
       prismaMock.account.findMany.mockResolvedValue([]);
@@ -596,9 +582,7 @@ describe('Contact Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
-      (prismaMock.contact.groupBy as any)
-        .mockResolvedValueOnce([])
-        .mockResolvedValueOnce([]); // No accounts with non-null accountId
+      (prismaMock.contact.groupBy as any).mockResolvedValueOnce([]).mockResolvedValueOnce([]); // No accounts with non-null accountId
 
       const result = await caller.filterOptions();
 

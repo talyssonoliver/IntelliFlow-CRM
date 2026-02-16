@@ -26,9 +26,7 @@ export const ValueSummary = React.memo(function ValueSummary({ stats }: ValueSum
         aria-label={`Active deals: ${stats.totalDeals}`}
       >
         <p className="text-xs sm:text-sm text-muted-foreground">Active Deals</p>
-        <p className="text-xl sm:text-2xl font-bold text-foreground mt-1">
-          {stats.totalDeals}
-        </p>
+        <p className="text-xl sm:text-2xl font-bold text-foreground mt-1">{stats.totalDeals}</p>
       </Card>
       <Card
         className="p-3 sm:p-4 bg-card border-border"

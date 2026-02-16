@@ -199,51 +199,171 @@ export interface TeamsMessagingPort {
   // Team Operations
   listTeams(tokens: TeamsOAuthTokens): Promise<Result<TeamsTeam[], DomainError>>;
   getTeam(tokens: TeamsOAuthTokens, teamId: string): Promise<Result<TeamsTeam | null, DomainError>>;
-  createTeam(tokens: TeamsOAuthTokens, displayName: string, description?: string, visibility?: 'private' | 'public'): Promise<Result<TeamsTeam, DomainError>>;
+  createTeam(
+    tokens: TeamsOAuthTokens,
+    displayName: string,
+    description?: string,
+    visibility?: 'private' | 'public'
+  ): Promise<Result<TeamsTeam, DomainError>>;
   archiveTeam(tokens: TeamsOAuthTokens, teamId: string): Promise<Result<void, DomainError>>;
   unarchiveTeam(tokens: TeamsOAuthTokens, teamId: string): Promise<Result<void, DomainError>>;
 
   // Channel Operations
-  listChannels(tokens: TeamsOAuthTokens, teamId: string): Promise<Result<TeamsChannel[], DomainError>>;
-  getChannel(tokens: TeamsOAuthTokens, teamId: string, channelId: string): Promise<Result<TeamsChannel | null, DomainError>>;
-  createChannel(tokens: TeamsOAuthTokens, teamId: string, displayName: string, description?: string, membershipType?: 'standard' | 'private'): Promise<Result<TeamsChannel, DomainError>>;
-  deleteChannel(tokens: TeamsOAuthTokens, teamId: string, channelId: string): Promise<Result<void, DomainError>>;
+  listChannels(
+    tokens: TeamsOAuthTokens,
+    teamId: string
+  ): Promise<Result<TeamsChannel[], DomainError>>;
+  getChannel(
+    tokens: TeamsOAuthTokens,
+    teamId: string,
+    channelId: string
+  ): Promise<Result<TeamsChannel | null, DomainError>>;
+  createChannel(
+    tokens: TeamsOAuthTokens,
+    teamId: string,
+    displayName: string,
+    description?: string,
+    membershipType?: 'standard' | 'private'
+  ): Promise<Result<TeamsChannel, DomainError>>;
+  deleteChannel(
+    tokens: TeamsOAuthTokens,
+    teamId: string,
+    channelId: string
+  ): Promise<Result<void, DomainError>>;
 
   // Channel Message Operations
-  sendChannelMessage(tokens: TeamsOAuthTokens, teamId: string, channelId: string, params: PostMessageParams): Promise<Result<TeamsMessage, DomainError>>;
-  replyToChannelMessage(tokens: TeamsOAuthTokens, teamId: string, channelId: string, messageId: string, params: PostMessageParams): Promise<Result<TeamsMessage, DomainError>>;
-  getChannelMessage(tokens: TeamsOAuthTokens, teamId: string, channelId: string, messageId: string): Promise<Result<TeamsMessage | null, DomainError>>;
-  listChannelMessages(tokens: TeamsOAuthTokens, teamId: string, channelId: string, top?: number): Promise<Result<TeamsMessage[], DomainError>>;
-  getMessageReplies(tokens: TeamsOAuthTokens, teamId: string, channelId: string, messageId: string): Promise<Result<TeamsMessage[], DomainError>>;
-  updateChannelMessage(tokens: TeamsOAuthTokens, teamId: string, channelId: string, messageId: string, body: string, isHtml?: boolean): Promise<Result<TeamsMessage, DomainError>>;
-  deleteChannelMessage(tokens: TeamsOAuthTokens, teamId: string, channelId: string, messageId: string): Promise<Result<void, DomainError>>;
+  sendChannelMessage(
+    tokens: TeamsOAuthTokens,
+    teamId: string,
+    channelId: string,
+    params: PostMessageParams
+  ): Promise<Result<TeamsMessage, DomainError>>;
+  replyToChannelMessage(
+    tokens: TeamsOAuthTokens,
+    teamId: string,
+    channelId: string,
+    messageId: string,
+    params: PostMessageParams
+  ): Promise<Result<TeamsMessage, DomainError>>;
+  getChannelMessage(
+    tokens: TeamsOAuthTokens,
+    teamId: string,
+    channelId: string,
+    messageId: string
+  ): Promise<Result<TeamsMessage | null, DomainError>>;
+  listChannelMessages(
+    tokens: TeamsOAuthTokens,
+    teamId: string,
+    channelId: string,
+    top?: number
+  ): Promise<Result<TeamsMessage[], DomainError>>;
+  getMessageReplies(
+    tokens: TeamsOAuthTokens,
+    teamId: string,
+    channelId: string,
+    messageId: string
+  ): Promise<Result<TeamsMessage[], DomainError>>;
+  updateChannelMessage(
+    tokens: TeamsOAuthTokens,
+    teamId: string,
+    channelId: string,
+    messageId: string,
+    body: string,
+    isHtml?: boolean
+  ): Promise<Result<TeamsMessage, DomainError>>;
+  deleteChannelMessage(
+    tokens: TeamsOAuthTokens,
+    teamId: string,
+    channelId: string,
+    messageId: string
+  ): Promise<Result<void, DomainError>>;
 
   // Chat Operations
   listChats(tokens: TeamsOAuthTokens): Promise<Result<TeamsChat[], DomainError>>;
   getChat(tokens: TeamsOAuthTokens, chatId: string): Promise<Result<TeamsChat | null, DomainError>>;
-  createGroupChat(tokens: TeamsOAuthTokens, topic: string, memberUserIds: string[]): Promise<Result<TeamsChat, DomainError>>;
-  createOneOnOneChat(tokens: TeamsOAuthTokens, userId: string): Promise<Result<TeamsChat, DomainError>>;
+  createGroupChat(
+    tokens: TeamsOAuthTokens,
+    topic: string,
+    memberUserIds: string[]
+  ): Promise<Result<TeamsChat, DomainError>>;
+  createOneOnOneChat(
+    tokens: TeamsOAuthTokens,
+    userId: string
+  ): Promise<Result<TeamsChat, DomainError>>;
 
   // Chat Message Operations
-  sendChatMessage(tokens: TeamsOAuthTokens, chatId: string, params: PostMessageParams): Promise<Result<TeamsMessage, DomainError>>;
-  getChatMessage(tokens: TeamsOAuthTokens, chatId: string, messageId: string): Promise<Result<TeamsMessage | null, DomainError>>;
-  listChatMessages(tokens: TeamsOAuthTokens, chatId: string, top?: number): Promise<Result<TeamsMessage[], DomainError>>;
-  updateChatMessage(tokens: TeamsOAuthTokens, chatId: string, messageId: string, body: string, isHtml?: boolean): Promise<Result<TeamsMessage, DomainError>>;
-  deleteChatMessage(tokens: TeamsOAuthTokens, chatId: string, messageId: string): Promise<Result<void, DomainError>>;
+  sendChatMessage(
+    tokens: TeamsOAuthTokens,
+    chatId: string,
+    params: PostMessageParams
+  ): Promise<Result<TeamsMessage, DomainError>>;
+  getChatMessage(
+    tokens: TeamsOAuthTokens,
+    chatId: string,
+    messageId: string
+  ): Promise<Result<TeamsMessage | null, DomainError>>;
+  listChatMessages(
+    tokens: TeamsOAuthTokens,
+    chatId: string,
+    top?: number
+  ): Promise<Result<TeamsMessage[], DomainError>>;
+  updateChatMessage(
+    tokens: TeamsOAuthTokens,
+    chatId: string,
+    messageId: string,
+    body: string,
+    isHtml?: boolean
+  ): Promise<Result<TeamsMessage, DomainError>>;
+  deleteChatMessage(
+    tokens: TeamsOAuthTokens,
+    chatId: string,
+    messageId: string
+  ): Promise<Result<void, DomainError>>;
 
   // Member Operations
-  listTeamMembers(tokens: TeamsOAuthTokens, teamId: string): Promise<Result<TeamsMember[], DomainError>>;
-  addTeamMember(tokens: TeamsOAuthTokens, teamId: string, userId: string, roles?: string[]): Promise<Result<TeamsMember, DomainError>>;
-  removeTeamMember(tokens: TeamsOAuthTokens, teamId: string, membershipId: string): Promise<Result<void, DomainError>>;
-  listChannelMembers(tokens: TeamsOAuthTokens, teamId: string, channelId: string): Promise<Result<TeamsMember[], DomainError>>;
-  addChannelMember(tokens: TeamsOAuthTokens, teamId: string, channelId: string, userId: string, roles?: string[]): Promise<Result<TeamsMember, DomainError>>;
-  removeChannelMember(tokens: TeamsOAuthTokens, teamId: string, channelId: string, membershipId: string): Promise<Result<void, DomainError>>;
+  listTeamMembers(
+    tokens: TeamsOAuthTokens,
+    teamId: string
+  ): Promise<Result<TeamsMember[], DomainError>>;
+  addTeamMember(
+    tokens: TeamsOAuthTokens,
+    teamId: string,
+    userId: string,
+    roles?: string[]
+  ): Promise<Result<TeamsMember, DomainError>>;
+  removeTeamMember(
+    tokens: TeamsOAuthTokens,
+    teamId: string,
+    membershipId: string
+  ): Promise<Result<void, DomainError>>;
+  listChannelMembers(
+    tokens: TeamsOAuthTokens,
+    teamId: string,
+    channelId: string
+  ): Promise<Result<TeamsMember[], DomainError>>;
+  addChannelMember(
+    tokens: TeamsOAuthTokens,
+    teamId: string,
+    channelId: string,
+    userId: string,
+    roles?: string[]
+  ): Promise<Result<TeamsMember, DomainError>>;
+  removeChannelMember(
+    tokens: TeamsOAuthTokens,
+    teamId: string,
+    channelId: string,
+    membershipId: string
+  ): Promise<Result<void, DomainError>>;
 
   // Webhook Operations
   parseWebhookEvent(body: string): Result<TeamsWebhookEvent, DomainError>;
 
   // Health Check
-  checkConnection(tokens: TeamsOAuthTokens): Promise<Result<{ status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number }, DomainError>>;
+  checkConnection(
+    tokens: TeamsOAuthTokens
+  ): Promise<
+    Result<{ status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number }, DomainError>
+  >;
 }
 
 // ==================== Adapter Implementation ====================
@@ -278,7 +398,9 @@ export class TeamsAdapter implements TeamsMessagingPort {
       });
 
       if (!response.ok) {
-        const errorData = (await response.json().catch(() => ({}))) as { error_description?: string };
+        const errorData = (await response.json().catch(() => ({}))) as {
+          error_description?: string;
+        };
         return Result.fail(
           new TeamsAuthenticationError(errorData.error_description ?? 'Authentication failed')
         );
@@ -352,8 +474,7 @@ export class TeamsAdapter implements TeamsMessagingPort {
   ): Promise<Result<TeamsTeam, DomainError>> {
     try {
       const response = await this.makeRequest(tokens, 'POST', '/teams', {
-        'template@odata.bind':
-          "https://graph.microsoft.com/v1.0/teamsTemplates('standard')",
+        'template@odata.bind': "https://graph.microsoft.com/v1.0/teamsTemplates('standard')",
         displayName,
         description,
         visibility,
@@ -392,7 +513,10 @@ export class TeamsAdapter implements TeamsMessagingPort {
     }
   }
 
-  async unarchiveTeam(tokens: TeamsOAuthTokens, teamId: string): Promise<Result<void, DomainError>> {
+  async unarchiveTeam(
+    tokens: TeamsOAuthTokens,
+    teamId: string
+  ): Promise<Result<void, DomainError>> {
     try {
       const response = await this.makeRequest(tokens, 'POST', `/teams/${teamId}/unarchive`);
 
@@ -1089,7 +1213,9 @@ export class TeamsAdapter implements TeamsMessagingPort {
 
   async checkConnection(
     tokens: TeamsOAuthTokens
-  ): Promise<Result<{ status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number }, DomainError>> {
+  ): Promise<
+    Result<{ status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number }, DomainError>
+  > {
     const start = Date.now();
 
     try {
@@ -1126,7 +1252,7 @@ export class TeamsAdapter implements TeamsMessagingPort {
     const response = await fetch(`${this.graphBaseUrl}${endpoint}`, {
       method,
       headers: {
-        'Authorization': `Bearer ${tokens.accessToken}`,
+        Authorization: `Bearer ${tokens.accessToken}`,
         'Content-Type': 'application/json',
       },
       body: body ? JSON.stringify(body) : undefined,
@@ -1152,7 +1278,9 @@ export class TeamsAdapter implements TeamsMessagingPort {
 
     switch (response.status) {
       case 401:
-        return Result.fail(new TeamsAuthenticationError(error.message ?? 'Token expired or invalid'));
+        return Result.fail(
+          new TeamsAuthenticationError(error.message ?? 'Token expired or invalid')
+        );
       case 404:
         return Result.fail(new TeamsNotFoundError('Resource', error.message ?? 'unknown'));
       case 429: {
@@ -1285,7 +1413,7 @@ export class TeamsAdapter implements TeamsMessagingPort {
         ? new Date(String(data.lastUpdatedDateTime))
         : undefined,
       members: data.members
-        ? ((data.members as Array<Record<string, unknown>>).map((m) => this.mapToMember(m)))
+        ? (data.members as Array<Record<string, unknown>>).map((m) => this.mapToMember(m))
         : undefined,
       webUrl: data.webUrl ? String(data.webUrl) : undefined,
     };

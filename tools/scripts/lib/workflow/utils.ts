@@ -35,7 +35,15 @@ export function getSprintForTask(taskId: string, repoRoot: string): number {
   }
 
   // Load and cache mappings
-  const csvPath = join(repoRoot, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+  const csvPath = join(
+    repoRoot,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    '_global',
+    'Sprint_plan.csv'
+  );
 
   if (!existsSync(csvPath)) {
     throw new Error(`Sprint_plan.csv not found at: ${csvPath}`);

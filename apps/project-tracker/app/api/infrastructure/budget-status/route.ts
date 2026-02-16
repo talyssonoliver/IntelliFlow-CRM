@@ -37,27 +37,35 @@ function getProjectRoot(): string {
 // Load budget data from Sprint_plan and attestations
 function loadBudgetData(): { lines: BudgetLine[]; milestones: MilestonePayment[] } {
   const projectRoot = getProjectRoot();
-  const csvPath = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+  const csvPath = join(
+    projectRoot,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    '_global',
+    'Sprint_plan.csv'
+  );
 
   const lines: BudgetLine[] = [];
   const milestones: MilestonePayment[] = [];
 
   // Default budget allocation (from project planning)
   const budgetAllocation: Record<string, number> = {
-    'Infrastructure': 200,
+    Infrastructure: 200,
     'AI/ML Services': 150,
     'Development Tools': 50,
     'Third-party SaaS': 50,
-    'Contingency': 50,
+    Contingency: 50,
   };
 
   // Estimated spend (would come from actual tracking in production)
   const estimatedSpend: Record<string, number> = {
-    'Infrastructure': 0,     // Using free tiers
-    'AI/ML Services': 20,    // OpenAI dev usage
-    'Development Tools': 0,  // Free tools
-    'Third-party SaaS': 0,   // Free tiers
-    'Contingency': 0,
+    Infrastructure: 0, // Using free tiers
+    'AI/ML Services': 20, // OpenAI dev usage
+    'Development Tools': 0, // Free tools
+    'Third-party SaaS': 0, // Free tiers
+    Contingency: 0,
   };
 
   for (const [category, allocated] of Object.entries(budgetAllocation)) {
@@ -79,7 +87,7 @@ function loadBudgetData(): { lines: BudgetLine[]; milestones: MilestonePayment[]
 
       // Investment gates
       const gates: Record<string, { name: string; amount: number }> = {
-        'IFC-010': { name: 'Phase 1 Go/No-Go', amount: 0 },  // Decision point, no payment
+        'IFC-010': { name: 'Phase 1 Go/No-Go', amount: 0 }, // Decision point, no payment
         'IFC-019': { name: 'Gate 1 - £500 Review', amount: 500 },
         'IFC-027': { name: 'Gate 2 - £2000 Investment', amount: 2000 },
         'IFC-034': { name: 'Gate 3 - £3000 Investment', amount: 3000 },
@@ -94,8 +102,12 @@ function loadBudgetData(): { lines: BudgetLine[]; milestones: MilestonePayment[]
             milestone: gates[taskId].name,
             taskId,
             amount: gates[taskId].amount,
-            status: status === 'completed' || status === 'done' ? 'released' :
-                    status === 'in progress' ? 'approved' : 'pending',
+            status:
+              status === 'completed' || status === 'done'
+                ? 'released'
+                : status === 'in progress'
+                  ? 'approved'
+                  : 'pending',
           });
         }
       }
@@ -119,22 +131,28 @@ export async function GET(_request: NextRequest) {
     // Milestone funding totals
     const totalFunding = milestones.reduce((sum, m) => sum + m.amount, 0);
     const releasedFunding = milestones
-      .filter(m => m.status === 'released')
+      .filter((m) => m.status === 'released')
       .reduce((sum, m) => sum + m.amount, 0);
     const pendingFunding = totalFunding - releasedFunding;
 
     // Budget health
     const spendPercentage = Math.round((totalSpent / totalAllocated) * 100);
-    const health = spendPercentage < 50 ? 'healthy' :
-                   spendPercentage < 80 ? 'moderate' :
-                   spendPercentage < 100 ? 'caution' : 'over-budget';
+    const health =
+      spendPercentage < 50
+        ? 'healthy'
+        : spendPercentage < 80
+          ? 'moderate'
+          : spendPercentage < 100
+            ? 'caution'
+            : 'over-budget';
 
     // Burn rate (monthly)
     const monthlyBurn = totalSpent; // Simplified - would calculate from historical data
 
     // Runway calculation
     const currentFunds = releasedFunding;
-    const runway = monthlyBurn > 0 ? Math.floor((currentFunds - totalSpent) / monthlyBurn) : 'unlimited';
+    const runway =
+      monthlyBurn > 0 ? Math.floor((currentFunds - totalSpent) / monthlyBurn) : 'unlimited';
 
     return NextResponse.json(
       {
@@ -161,20 +179,22 @@ export async function GET(_request: NextRequest) {
           runway: runway === 'unlimited' ? 'Unlimited (no burn)' : `${runway} months`,
         },
         alerts: lines
-          .filter(l => l.status === 'over' || (l.status === 'on-track' && l.remaining < 20))
-          .map(l => ({
+          .filter((l) => l.status === 'over' || (l.status === 'on-track' && l.remaining < 20))
+          .map((l) => ({
             category: l.category,
-            message: l.status === 'over'
-              ? `Over budget by £${Math.abs(l.remaining)}`
-              : `Only £${l.remaining} remaining`,
+            message:
+              l.status === 'over'
+                ? `Over budget by £${Math.abs(l.remaining)}`
+                : `Only £${l.remaining} remaining`,
             severity: l.status === 'over' ? 'high' : 'medium',
           })),
-        nextMilestone: milestones.find(m => m.status === 'pending') || null,
-        recommendation: health === 'healthy'
-          ? 'Budget utilization is optimal'
-          : health === 'over-budget'
-          ? 'URGENT: Review and reduce spending'
-          : 'Monitor spending closely',
+        nextMilestone: milestones.find((m) => m.status === 'pending') || null,
+        recommendation:
+          health === 'healthy'
+            ? 'Budget utilization is optimal'
+            : health === 'over-budget'
+              ? 'URGENT: Review and reduce spending'
+              : 'Monitor spending closely',
       },
       {
         headers: {

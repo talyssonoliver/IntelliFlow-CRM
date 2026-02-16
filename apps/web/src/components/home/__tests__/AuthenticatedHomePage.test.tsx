@@ -67,6 +67,56 @@ vi.mock('@/hooks/useActivityFeed', () => ({
   useActivityFeed: mockUseActivityFeed,
 }));
 
+// Mock ActivityFeed to bypass @tanstack/react-virtual (no layout in JSDOM)
+vi.mock('@/components/shared/activity-feed/ActivityFeed', () => ({
+  ActivityFeed: (props: any) => {
+    const feed = mockUseActivityFeed();
+    if (feed.isLoading)
+      return (
+        <div>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="animate-pulse" />
+          ))}
+        </div>
+      );
+    if (feed.items.length === 0) return <div>No recent activity</div>;
+    return (
+      <div data-testid="activity-feed">
+        {feed.items.map((item: any) => (
+          <div key={item.id}>
+            {item.actor && (
+              <span>
+                {item.actor.name
+                  .split(' ')
+                  .map((w: string) => w[0])
+                  .join('')}
+              </span>
+            )}
+            <span>{item.title}</span>
+            <span>{item.description}</span>
+            <time>
+              {(() => {
+                const ms = Date.now() - new Date(item.timestamp).getTime();
+                const m = Math.round(ms / 60_000);
+                if (m < 60) return `${m}m ago`;
+                return `${Math.round(m / 60)}h ago`;
+              })()}
+            </time>
+            {item.entity && (
+              <a href={`/${item.entity.type.toLowerCase()}s/${item.entity.id}`}>
+                View {item.entity.name}
+              </a>
+            )}
+          </div>
+        ))}
+        {feed.hasNextPage && (
+          <button onClick={feed.fetchNextPage}>Load More Updates</button>
+        )}
+      </div>
+    );
+  },
+}));
+
 vi.mock('@/lib/auth/AuthContext', () => ({
   useAuth: vi.fn(() => ({
     user: { id: 'user-1', name: 'Alice Smith', email: 'alice@example.com' },
@@ -521,8 +571,8 @@ describe('AuthenticatedHomePage', () => {
     it('renders SVG progress ring', () => {
       render(<AuthenticatedHomePage />);
       const svgElements = document.querySelectorAll('svg');
-      const progressSvg = Array.from(svgElements).find(
-        (svg) => svg.querySelector('path[stroke-dasharray]')
+      const progressSvg = Array.from(svgElements).find((svg) =>
+        svg.querySelector('path[stroke-dasharray]')
       );
       expect(progressSvg).toBeTruthy();
     });

@@ -70,10 +70,7 @@ export class PrismaTicketRepository implements TicketRepository {
     };
   }
 
-  async findById(
-    id: string,
-    options: TicketQueryOptions = {}
-  ): Promise<TicketDTO | null> {
+  async findById(id: string, options: TicketQueryOptions = {}): Promise<TicketDTO | null> {
     const {
       includeActivities = true,
       includeAttachments = true,
@@ -197,27 +194,26 @@ export class PrismaTicketRepository implements TicketRepository {
   async getStats(tenantId: string): Promise<TicketStats> {
     const where = { tenantId };
 
-    const [total, byStatus, byPriority, breachedCount, avgResponseTime] =
-      await Promise.all([
-        this.prisma.ticket.count({ where }),
-        this.prisma.ticket.groupBy({
-          by: ['status'],
-          where,
-          _count: true,
-        }),
-        this.prisma.ticket.groupBy({
-          by: ['priority'],
-          where,
-          _count: true,
-        }),
-        this.prisma.ticket.count({
-          where: {
-            ...where,
-            slaBreachedAt: { not: null },
-          },
-        }),
-        this.getAverageResponseTime(tenantId),
-      ]);
+    const [total, byStatus, byPriority, breachedCount, avgResponseTime] = await Promise.all([
+      this.prisma.ticket.count({ where }),
+      this.prisma.ticket.groupBy({
+        by: ['status'],
+        where,
+        _count: true,
+      }),
+      this.prisma.ticket.groupBy({
+        by: ['priority'],
+        where,
+        _count: true,
+      }),
+      this.prisma.ticket.count({
+        where: {
+          ...where,
+          slaBreachedAt: { not: null },
+        },
+      }),
+      this.getAverageResponseTime(tenantId),
+    ]);
 
     return {
       total,
@@ -285,8 +281,7 @@ export class PrismaTicketRepository implements TicketRepository {
     if (tickets.length === 0) return 0;
 
     const totalResponseTime = tickets.reduce((sum, ticket) => {
-      const responseTime =
-        ticket.firstResponseAt!.getTime() - ticket.createdAt.getTime();
+      const responseTime = ticket.firstResponseAt!.getTime() - ticket.createdAt.getTime();
       return sum + responseTime;
     }, 0);
 
@@ -353,22 +348,18 @@ export class PrismaTicketRepository implements TicketRepository {
         ? {
             id: (record.slaPolicy as Record<string, unknown>).id as string,
             name: (record.slaPolicy as Record<string, unknown>).name as string,
-            criticalResponseMinutes: (
-              record.slaPolicy as Record<string, unknown>
-            ).criticalResponseMinutes as number,
-            criticalResolutionMinutes: (
-              record.slaPolicy as Record<string, unknown>
-            ).criticalResolutionMinutes as number,
+            criticalResponseMinutes: (record.slaPolicy as Record<string, unknown>)
+              .criticalResponseMinutes as number,
+            criticalResolutionMinutes: (record.slaPolicy as Record<string, unknown>)
+              .criticalResolutionMinutes as number,
             highResponseMinutes: (record.slaPolicy as Record<string, unknown>)
               .highResponseMinutes as number,
             highResolutionMinutes: (record.slaPolicy as Record<string, unknown>)
               .highResolutionMinutes as number,
-            mediumResponseMinutes: (
-              record.slaPolicy as Record<string, unknown>
-            ).mediumResponseMinutes as number,
-            mediumResolutionMinutes: (
-              record.slaPolicy as Record<string, unknown>
-            ).mediumResolutionMinutes as number,
+            mediumResponseMinutes: (record.slaPolicy as Record<string, unknown>)
+              .mediumResponseMinutes as number,
+            mediumResolutionMinutes: (record.slaPolicy as Record<string, unknown>)
+              .mediumResolutionMinutes as number,
             lowResponseMinutes: (record.slaPolicy as Record<string, unknown>)
               .lowResponseMinutes as number,
             lowResolutionMinutes: (record.slaPolicy as Record<string, unknown>)

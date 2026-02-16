@@ -717,9 +717,13 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
                             </span>
                           )}
 
-                          {isCompleted && <Icon name="check_circle" size="sm" className="text-green-500" />}
+                          {isCompleted && (
+                            <Icon name="check_circle" size="sm" className="text-green-500" />
+                          )}
                           {isFailed && <Icon name="cancel" size="sm" className="text-red-500" />}
-                          {needsHuman && <Icon name="warning" size="sm" className="text-yellow-500" />}
+                          {needsHuman && (
+                            <Icon name="warning" size="sm" className="text-yellow-500" />
+                          )}
 
                           <button
                             onClick={(e) => {
@@ -757,7 +761,9 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
       {phases.length === 0 && !loading && (
         <div className="text-center py-12 text-gray-500">
           <Icon name="schedule" size="2xl" className="mx-auto mb-4 opacity-50" />
-          <p>No phases found for {targetSprint === 'all' ? 'All Sprints' : `Sprint ${targetSprint}`}</p>
+          <p>
+            No phases found for {targetSprint === 'all' ? 'All Sprints' : `Sprint ${targetSprint}`}
+          </p>
           <p className="text-sm mt-2">
             Make sure dependency-graph.json is synced and tasks exist for this sprint.
           </p>
@@ -821,7 +827,8 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
               <div className="text-center py-8 text-gray-500">
                 <Icon name="history" size="2xl" className="mx-auto mb-2 opacity-50" />
                 <p>
-                  No execution history found for {targetSprint === 'all' ? 'All Sprints' : `Sprint ${targetSprint}`}
+                  No execution history found for{' '}
+                  {targetSprint === 'all' ? 'All Sprints' : `Sprint ${targetSprint}`}
                 </p>
                 <p className="text-sm">Execute the sprint to start tracking history.</p>
               </div>
@@ -931,7 +938,11 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
                   disabled={historyLoading}
                   className="w-full mt-2 px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center justify-center gap-1 disabled:opacity-50"
                 >
-                  <Icon name="refresh" size="sm" className={clsx({ 'animate-spin': historyLoading })} />
+                  <Icon
+                    name="refresh"
+                    size="sm"
+                    className={clsx({ 'animate-spin': historyLoading })}
+                  />
                   Refresh History
                 </button>
               </div>

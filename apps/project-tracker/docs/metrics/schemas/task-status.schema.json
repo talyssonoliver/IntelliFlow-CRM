@@ -76,10 +76,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "required",
-        "all_satisfied"
-      ],
+      "required": ["required", "all_satisfied"],
       "additionalProperties": false
     },
     "dependencies_resolved": {
@@ -199,10 +196,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "status",
-          "at"
-        ],
+        "required": ["status", "at"],
         "additionalProperties": false
       }
     },
@@ -284,9 +278,7 @@
           ]
         }
       },
-      "required": [
-        "retry_count"
-      ],
+      "required": ["retry_count"],
       "additionalProperties": false
     },
     "artifacts": {
@@ -318,11 +310,7 @@
                 "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
               }
             },
-            "required": [
-              "path",
-              "sha256",
-              "created_at"
-            ],
+            "required": ["path", "sha256", "created_at"],
             "additionalProperties": false
           }
         },
@@ -371,13 +359,7 @@
             "type": "boolean"
           }
         },
-        "required": [
-          "name",
-          "command",
-          "executed_at",
-          "exit_code",
-          "passed"
-        ],
+        "required": ["name", "command", "executed_at", "exit_code", "passed"],
         "additionalProperties": false
       }
     },
@@ -426,11 +408,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "target",
-          "actual",
-          "met"
-        ],
+        "required": ["target", "actual", "met"],
         "additionalProperties": false
       }
     },
@@ -464,10 +442,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "description",
-          "raised_at"
-        ],
+        "required": ["description", "raised_at"],
         "additionalProperties": false
       }
     },
@@ -476,9 +451,6 @@
       "type": "string"
     }
   },
-  "required": [
-    "task_id",
-    "status"
-  ],
+  "required": ["task_id", "status"],
   "additionalProperties": false
 }

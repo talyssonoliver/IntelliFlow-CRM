@@ -57,7 +57,9 @@ export default function AccountDetailPage() {
     return (
       <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         <Card className="p-8 text-center">
-          <span className="material-symbols-outlined text-5xl text-slate-400 mb-4 animate-spin">progress_activity</span>
+          <span className="material-symbols-outlined text-5xl text-slate-400 mb-4 animate-spin">
+            progress_activity
+          </span>
           <p className="text-slate-500 dark:text-slate-400">Redirecting to login...</p>
         </Card>
       </div>

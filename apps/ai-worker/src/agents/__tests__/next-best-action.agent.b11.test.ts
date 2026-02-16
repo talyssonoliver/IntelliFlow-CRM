@@ -58,11 +58,7 @@ vi.mock('../../utils/token-counter', () => ({
   countTokens: vi.fn().mockReturnValue(50),
 }));
 
-import {
-  NextBestActionAgent,
-  createNBAAgent,
-  type NBAContext,
-} from '../next-best-action.agent';
+import { NextBestActionAgent, createNBAAgent, type NBAContext } from '../next-best-action.agent';
 
 function createContext(overrides: Partial<NBAContext> = {}): NBAContext {
   return {

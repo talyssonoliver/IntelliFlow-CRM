@@ -57,9 +57,7 @@ const mockPrisma = {
     findFirst: vi.fn(),
     findMany: vi.fn(),
   },
-  $transaction: vi.fn((callback: (tx: unknown) => Promise<unknown>) =>
-    callback(mockPrisma)
-  ),
+  $transaction: vi.fn((callback: (tx: unknown) => Promise<unknown>) => callback(mockPrisma)),
 };
 
 // Mock context getters

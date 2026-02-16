@@ -49,16 +49,36 @@ export class Receipt extends AggregateRoot<ReceiptId> {
 
   // ── Getters ──
 
-  get receiptNumber(): string { return this.props.receiptNumber; }
-  get invoiceId(): string { return this.props.invoiceId; }
-  get customerId(): string { return this.props.customerId; }
-  get tenantId(): string { return this.props.tenantId; }
-  get amount(): Money { return this.props.amount; }
-  get paymentMethod(): PaymentMethod { return this.props.paymentMethod; }
-  get transactionId(): string | undefined { return this.props.transactionId; }
-  get paymentDate(): Date { return this.props.paymentDate; }
-  get notes(): string | undefined { return this.props.notes; }
-  get createdAt(): Date { return this.props.createdAt; }
+  get receiptNumber(): string {
+    return this.props.receiptNumber;
+  }
+  get invoiceId(): string {
+    return this.props.invoiceId;
+  }
+  get customerId(): string {
+    return this.props.customerId;
+  }
+  get tenantId(): string {
+    return this.props.tenantId;
+  }
+  get amount(): Money {
+    return this.props.amount;
+  }
+  get paymentMethod(): PaymentMethod {
+    return this.props.paymentMethod;
+  }
+  get transactionId(): string | undefined {
+    return this.props.transactionId;
+  }
+  get paymentDate(): Date {
+    return this.props.paymentDate;
+  }
+  get notes(): string | undefined {
+    return this.props.notes;
+  }
+  get createdAt(): Date {
+    return this.props.createdAt;
+  }
 
   // ── Factory methods ──
 

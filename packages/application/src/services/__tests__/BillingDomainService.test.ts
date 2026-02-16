@@ -25,9 +25,11 @@ class InMemoryInvoiceRepository implements InvoiceRepository {
     return this.store.get(id.value) ?? null;
   }
   async findByInvoiceNumber(invoiceNumber: string, tenantId: string) {
-    return [...this.store.values()].find(
-      (i) => i.invoiceNumber === invoiceNumber && i.tenantId === tenantId
-    ) ?? null;
+    return (
+      [...this.store.values()].find(
+        (i) => i.invoiceNumber === invoiceNumber && i.tenantId === tenantId
+      ) ?? null
+    );
   }
   async findByCustomerId(customerId: string, tenantId: string) {
     return [...this.store.values()].filter(
@@ -35,9 +37,7 @@ class InMemoryInvoiceRepository implements InvoiceRepository {
     );
   }
   async findOverdueInvoices(tenantId: string) {
-    return [...this.store.values()].filter(
-      (i) => i.isOverdue && i.tenantId === tenantId
-    );
+    return [...this.store.values()].filter((i) => i.isOverdue && i.tenantId === tenantId);
   }
   async delete(id: InvoiceId) {
     this.store.delete(id.value);
@@ -96,7 +96,12 @@ function validCreateProps(overrides: Partial<CreateInvoiceProps> = {}): CreateIn
     customerId: 'cust-001',
     tenantId: 'tenant-001',
     lineItems: [
-      { description: 'Monthly plan', quantity: 1, unitPriceCents: 10000, type: 'SUBSCRIPTION' as const },
+      {
+        description: 'Monthly plan',
+        quantity: 1,
+        unitPriceCents: 10000,
+        type: 'SUBSCRIPTION' as const,
+      },
     ],
     billingEmail: 'billing@example.com',
     currency: 'USD',
@@ -215,7 +220,11 @@ describe('BillingDomainService', () => {
 
     it('should return Result.fail if invoice not found', async () => {
       const amount = Money.fromCents(1000, 'USD').value;
-      const result = await service.recordPayment('00000000-0000-0000-0000-000000000000', amount, 'CARD');
+      const result = await service.recordPayment(
+        '00000000-0000-0000-0000-000000000000',
+        amount,
+        'CARD'
+      );
       expect(result.isFailure).toBe(true);
     });
 
@@ -286,7 +295,11 @@ describe('BillingDomainService', () => {
 
     it('should return Result.fail if not found', async () => {
       const refund = Money.fromCents(1000, 'USD').value;
-      const result = await service.processRefund('00000000-0000-0000-0000-000000000000', refund, 'CUSTOMER_REQUEST');
+      const result = await service.processRefund(
+        '00000000-0000-0000-0000-000000000000',
+        refund,
+        'CUSTOMER_REQUEST'
+      );
       expect(result.isFailure).toBe(true);
     });
 
@@ -395,10 +408,14 @@ describe('BillingDomainService', () => {
 
   describe('getOverdueInvoices', () => {
     it('should return overdue invoices', async () => {
-      const created = (await service.createInvoice(validCreateProps({
-        dueDate: new Date('2020-01-01'),
-        issueDate: new Date('2019-12-01'),
-      }))).value;
+      const created = (
+        await service.createInvoice(
+          validCreateProps({
+            dueDate: new Date('2020-01-01'),
+            issueDate: new Date('2019-12-01'),
+          })
+        )
+      ).value;
       await service.issueInvoice(created.id.value);
 
       const result = await service.getOverdueInvoices('tenant-001');

@@ -140,10 +140,7 @@ export class NotificationPreference extends Entity<string> {
   /**
    * Reconstruct from persistence
    */
-  static reconstitute(
-    id: string,
-    props: NotificationPreferenceProps
-  ): NotificationPreference {
+  static reconstitute(id: string, props: NotificationPreferenceProps): NotificationPreference {
     return new NotificationPreference(id, props);
   }
 

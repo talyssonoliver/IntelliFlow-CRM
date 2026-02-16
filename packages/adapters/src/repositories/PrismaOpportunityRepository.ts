@@ -1,5 +1,11 @@
 import { PrismaClient, Decimal } from '@intelliflow/db';
-import { Opportunity, OpportunityId, Money, Percentage, type OpportunityStage } from '@intelliflow/domain';
+import {
+  Opportunity,
+  OpportunityId,
+  Money,
+  Percentage,
+  type OpportunityStage,
+} from '@intelliflow/domain';
 import { OpportunityRepository } from '@intelliflow/application';
 
 /**
@@ -112,7 +118,7 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
         accountId: record.accountId,
         contactId: record.contactId ?? undefined,
         ownerId: record.ownerId,
-      tenantId: record.tenantId,
+        tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         closedAt: record.closedAt ?? undefined,
@@ -137,7 +143,7 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
         accountId: record.accountId,
         contactId: record.contactId ?? undefined,
         ownerId: record.ownerId,
-      tenantId: record.tenantId,
+        tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         closedAt: record.closedAt ?? undefined,
@@ -165,7 +171,7 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
         accountId: record.accountId,
         contactId: record.contactId ?? undefined,
         ownerId: record.ownerId,
-      tenantId: record.tenantId,
+        tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         closedAt: record.closedAt ?? undefined,
@@ -197,7 +203,7 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
         accountId: record.accountId,
         contactId: record.contactId ?? undefined,
         ownerId: record.ownerId,
-      tenantId: record.tenantId,
+        tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         closedAt: record.closedAt ?? undefined,
@@ -260,7 +266,7 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
         accountId: record.accountId,
         contactId: record.contactId ?? undefined,
         ownerId: record.ownerId,
-      tenantId: record.tenantId,
+        tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         closedAt: record.closedAt ?? undefined,
@@ -288,7 +294,7 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
         accountId: record.accountId,
         contactId: record.contactId ?? undefined,
         ownerId: record.ownerId,
-      tenantId: record.tenantId,
+        tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
         closedAt: record.closedAt ?? undefined,

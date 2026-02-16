@@ -51,13 +51,13 @@ async function parseRiskRegister(): Promise<{ risks: Risk[]; lastUpdated: string
   try {
     const content = await fs.readFile(RISK_REGISTER_PATH, 'utf-8');
     const stats = await fs.stat(RISK_REGISTER_PATH);
-    const lines = content.split('\n').filter(line => line.trim());
+    const lines = content.split('\n').filter((line) => line.trim());
 
     if (lines.length < 2) {
       return { risks: [], lastUpdated: stats.mtime.toISOString() };
     }
 
-    const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase());
+    const headers = parseCSVLine(lines[0]).map((h) => h.toLowerCase());
     const risks: Risk[] = [];
 
     for (let i = 1; i < lines.length; i++) {
@@ -69,12 +69,12 @@ async function parseRiskRegister(): Promise<{ risks: Risk[]; lastUpdated: string
       if (!firstValue.startsWith('RISK-')) continue;
 
       const getValue = (key: string): string => {
-        const idx = headers.findIndex(h => h.includes(key));
+        const idx = headers.findIndex((h) => h.includes(key));
         return idx >= 0 ? values[idx] || '' : '';
       };
 
-      const impact = getValue('impact') as Risk['impact'] || 'Medium';
-      const likelihood = getValue('likelihood') as Risk['likelihood'] || 'Medium';
+      const impact = (getValue('impact') as Risk['impact']) || 'Medium';
+      const likelihood = (getValue('likelihood') as Risk['likelihood']) || 'Medium';
 
       risks.push({
         id: getValue('id') || `RISK-${i}`,
@@ -86,7 +86,8 @@ async function parseRiskRegister(): Promise<{ risks: Risk[]; lastUpdated: string
         status: (getValue('status') as Risk['status']) || 'Open',
         owner: getValue('owner') || 'Unassigned',
         mitigation: getValue('mitigation') || '',
-        lastReviewed: getValue('reviewed') || getValue('date') || new Date().toISOString().split('T')[0],
+        lastReviewed:
+          getValue('reviewed') || getValue('date') || new Date().toISOString().split('T')[0],
       });
     }
 
@@ -104,13 +105,13 @@ export async function GET() {
     // Calculate summary
     const summary = {
       total: risks.length,
-      open: risks.filter(r => r.status === 'Open').length,
-      mitigated: risks.filter(r => r.status === 'Mitigated').length,
-      monitoring: risks.filter(r => r.status === 'Monitoring').length,
-      closed: risks.filter(r => r.status === 'Closed').length,
-      highRisk: risks.filter(r => r.score >= 6).length,
-      mediumRisk: risks.filter(r => r.score >= 3 && r.score < 6).length,
-      lowRisk: risks.filter(r => r.score < 3).length,
+      open: risks.filter((r) => r.status === 'Open').length,
+      mitigated: risks.filter((r) => r.status === 'Mitigated').length,
+      monitoring: risks.filter((r) => r.status === 'Monitoring').length,
+      closed: risks.filter((r) => r.status === 'Closed').length,
+      highRisk: risks.filter((r) => r.score >= 6).length,
+      mediumRisk: risks.filter((r) => r.score >= 3 && r.score < 6).length,
+      lowRisk: risks.filter((r) => r.score < 3).length,
     };
 
     return NextResponse.json({
@@ -122,10 +123,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Error reading risk register:', error);
-    return NextResponse.json(
-      { status: 'error', message: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ status: 'error', message: String(error) }, { status: 500 });
   }
 }
 
@@ -137,11 +135,12 @@ export async function POST(request: NextRequest) {
     if (action === 'add' && risk) {
       // Read current content
       let content = '';
-      let headers = 'ID,Category,Description,Impact,Likelihood,Status,Owner,Mitigation,Last Reviewed';
+      let headers =
+        'ID,Category,Description,Impact,Likelihood,Status,Owner,Mitigation,Last Reviewed';
 
       try {
         content = await fs.readFile(RISK_REGISTER_PATH, 'utf-8');
-        const lines = content.split('\n').filter(l => l.trim());
+        const lines = content.split('\n').filter((l) => l.trim());
         if (lines.length > 0) {
           headers = lines[0];
         }
@@ -183,15 +182,9 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json(
-      { status: 'error', message: 'Invalid action' },
-      { status: 400 }
-    );
+    return NextResponse.json({ status: 'error', message: 'Invalid action' }, { status: 400 });
   } catch (error) {
     console.error('Error updating risk register:', error);
-    return NextResponse.json(
-      { status: 'error', message: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ status: 'error', message: String(error) }, { status: 500 });
   }
 }

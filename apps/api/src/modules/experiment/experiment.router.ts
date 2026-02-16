@@ -47,14 +47,12 @@ export const experimentRouter = createTRPCRouter({
    * Create a new A/B experiment
    * SECURITY: Uses tenantProcedure to enforce tenant isolation
    */
-  create: tenantProcedure
-    .input(createExperimentSchema)
-    .mutation(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const experimentService = getExperimentService(ctx);
+  create: tenantProcedure.input(createExperimentSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const experimentService = getExperimentService(ctx);
 
-      return experimentService.createExperiment(input, typedCtx.tenant.tenantId);
-    }),
+    return experimentService.createExperiment(input, typedCtx.tenant.tenantId);
+  }),
 
   /**
    * Update experiment configuration (DRAFT only)
@@ -161,12 +159,10 @@ export const experimentRouter = createTRPCRouter({
    * Record a score for a lead in an experiment
    * SECURITY: Uses tenantProcedure
    */
-  recordScore: tenantProcedure
-    .input(recordScoreInputSchema)
-    .mutation(async ({ ctx, input }) => {
-      const experimentService = getExperimentService(ctx);
-      return experimentService.recordScore(input);
-    }),
+  recordScore: tenantProcedure.input(recordScoreInputSchema).mutation(async ({ ctx, input }) => {
+    const experimentService = getExperimentService(ctx);
+    return experimentService.recordScore(input);
+  }),
 
   /**
    * Record a conversion for a lead

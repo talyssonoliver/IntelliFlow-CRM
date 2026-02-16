@@ -7,10 +7,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import pino from 'pino';
-import {
-  setupGracefulShutdown,
-  createCompositeShutdown,
-} from '../graceful-shutdown';
+import { setupGracefulShutdown, createCompositeShutdown } from '../graceful-shutdown';
 
 describe('setupGracefulShutdown', () => {
   let mockLogger: pino.Logger;

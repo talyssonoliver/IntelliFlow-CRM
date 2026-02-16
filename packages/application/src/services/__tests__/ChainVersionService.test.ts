@@ -86,7 +86,9 @@ function makeVersion(overrides: Partial<ChainVersionRecord> = {}): ChainVersionR
   };
 }
 
-function makeAuditRecord(overrides: Partial<ChainVersionAuditRecord> = {}): ChainVersionAuditRecord {
+function makeAuditRecord(
+  overrides: Partial<ChainVersionAuditRecord> = {}
+): ChainVersionAuditRecord {
   return {
     id: 'audit-1',
     versionId: 'ver-1',
@@ -121,7 +123,7 @@ describe('ChainVersionService', () => {
       versionRepo as ChainVersionRepositoryPort,
       auditRepo as ChainVersionAuditRepositoryPort,
       featureFlags as FeatureFlagProviderPort,
-      eventBus as any,
+      eventBus as any
     );
   });
 
@@ -143,7 +145,7 @@ describe('ChainVersionService', () => {
           maxTokens: 2000,
         } as any,
         'user-1',
-        'tenant-1',
+        'tenant-1'
       );
 
       expect(result).toEqual(created);
@@ -153,7 +155,7 @@ describe('ChainVersionService', () => {
           prompt: 'Score this lead based on...',
           createdBy: 'user-1',
           tenantId: 'tenant-1',
-        }),
+        })
       );
     });
 
@@ -166,7 +168,7 @@ describe('ChainVersionService', () => {
           prompt: 'Score this lead',
         } as any,
         'user-1',
-        'tenant-1',
+        'tenant-1'
       );
 
       const call = versionRepo.create.mock.calls[0][0];
@@ -183,7 +185,7 @@ describe('ChainVersionService', () => {
       await service.createVersion(
         { chainType: 'LEAD_SCORING', prompt: 'test' } as any,
         'user-1',
-        'tenant-1',
+        'tenant-1'
       );
 
       expect(auditRepo.create).toHaveBeenCalledWith(
@@ -191,7 +193,7 @@ describe('ChainVersionService', () => {
           versionId: 'ver-1',
           action: 'CREATED',
           performedBy: 'user-1',
-        }),
+        })
       );
     });
 
@@ -201,7 +203,7 @@ describe('ChainVersionService', () => {
       await service.createVersion(
         { chainType: 'LEAD_SCORING', prompt: 'test' } as any,
         'user-1',
-        'tenant-1',
+        'tenant-1'
       );
 
       const event = eventBus.publish.mock.calls[0][0];
@@ -226,7 +228,7 @@ describe('ChainVersionService', () => {
       const result = await service.updateVersion(
         'ver-1',
         { prompt: 'Updated prompt' } as any,
-        'user-1',
+        'user-1'
       );
 
       expect(result.prompt).toBe('Updated prompt');
@@ -237,7 +239,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(null);
 
       await expect(
-        service.updateVersion('missing', { prompt: 'test' } as any, 'user-1'),
+        service.updateVersion('missing', { prompt: 'test' } as any, 'user-1')
       ).rejects.toThrow('Chain version not found: missing');
     });
 
@@ -245,7 +247,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(makeVersion({ status: 'ACTIVE' }));
 
       await expect(
-        service.updateVersion('ver-1', { prompt: 'test' } as any, 'user-1'),
+        service.updateVersion('ver-1', { prompt: 'test' } as any, 'user-1')
       ).rejects.toThrow('Only DRAFT versions can be updated');
     });
 
@@ -310,13 +312,13 @@ describe('ChainVersionService', () => {
 
       // Should create audit for deprecation
       const deprecationAudit = auditRepo.create.mock.calls.find(
-        (call: any[]) => call[0].action === 'DEPRECATED',
+        (call: any[]) => call[0].action === 'DEPRECATED'
       );
       expect(deprecationAudit).toBeDefined();
 
       // Should publish deprecation event
       const deprecationEvent = eventBus.publish.mock.calls.find(
-        (call: any[]) => call[0].eventType === 'chain_version.deprecated',
+        (call: any[]) => call[0].eventType === 'chain_version.deprecated'
       );
       expect(deprecationEvent).toBeDefined();
     });
@@ -325,7 +327,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(null);
 
       await expect(service.activateVersion('missing', 'user-1')).rejects.toThrow(
-        'Chain version not found: missing',
+        'Chain version not found: missing'
       );
     });
 
@@ -333,7 +335,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(makeVersion({ status: 'ACTIVE' }));
 
       await expect(service.activateVersion('ver-1', 'user-1')).rejects.toThrow(
-        'Only DRAFT versions can be activated',
+        'Only DRAFT versions can be activated'
       );
     });
 
@@ -345,7 +347,7 @@ describe('ChainVersionService', () => {
       await service.activateVersion('ver-1', 'user-1');
 
       const activatedEvent = eventBus.publish.mock.calls.find(
-        (call: any[]) => call[0].eventType === 'chain_version.activated',
+        (call: any[]) => call[0].eventType === 'chain_version.activated'
       );
       expect(activatedEvent).toBeDefined();
       expect(activatedEvent![0].versionId).toBe('ver-1');
@@ -356,12 +358,15 @@ describe('ChainVersionService', () => {
       const currentActive = makeVersion({ id: 'ver-old', status: 'ACTIVE' });
       versionRepo.findById.mockResolvedValue(makeVersion({ id: 'ver-new', status: 'DRAFT' }));
       versionRepo.findActive.mockResolvedValue(currentActive);
-      versionRepo.update.mockImplementation((id: string, data: any) => ({ ...makeVersion({ id }), ...data }));
+      versionRepo.update.mockImplementation((id: string, data: any) => ({
+        ...makeVersion({ id }),
+        ...data,
+      }));
 
       await service.activateVersion('ver-new', 'user-1');
 
       const activatedEvent = eventBus.publish.mock.calls.find(
-        (call: any[]) => call[0].eventType === 'chain_version.activated',
+        (call: any[]) => call[0].eventType === 'chain_version.activated'
       );
       expect(activatedEvent![0].previousVersionId).toBe('ver-old');
     });
@@ -384,7 +389,7 @@ describe('ChainVersionService', () => {
         expect.objectContaining({
           action: 'DEPRECATED',
           reason: 'No longer needed',
-        }),
+        })
       );
     });
 
@@ -402,7 +407,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(null);
 
       await expect(service.deprecateVersion('missing', 'user-1')).rejects.toThrow(
-        'Chain version not found: missing',
+        'Chain version not found: missing'
       );
     });
 
@@ -410,7 +415,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(makeVersion({ status: 'ARCHIVED' }));
 
       await expect(service.deprecateVersion('ver-1', 'user-1')).rejects.toThrow(
-        'Archived versions cannot be deprecated',
+        'Archived versions cannot be deprecated'
       );
     });
 
@@ -453,7 +458,7 @@ describe('ChainVersionService', () => {
           action: 'ARCHIVED',
           previousState: { status: 'DEPRECATED' },
           newState: { status: 'ARCHIVED' },
-        }),
+        })
       );
     });
 
@@ -471,7 +476,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(null);
 
       await expect(service.archiveVersion('missing', 'user-1')).rejects.toThrow(
-        'Chain version not found: missing',
+        'Chain version not found: missing'
       );
     });
 
@@ -479,7 +484,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(makeVersion({ status: 'ACTIVE' }));
 
       await expect(service.archiveVersion('ver-1', 'user-1')).rejects.toThrow(
-        'Active versions cannot be archived directly. Deprecate first.',
+        'Active versions cannot be archived directly. Deprecate first.'
       );
     });
   });
@@ -516,7 +521,7 @@ describe('ChainVersionService', () => {
           prompt: targetVersion.prompt,
           model: targetVersion.model,
           parentVersionId: 'ver-old',
-        }),
+        })
       );
       // Should activate new version
       expect(versionRepo.update).toHaveBeenCalledWith('ver-new', { status: 'ACTIVE' });
@@ -563,18 +568,18 @@ describe('ChainVersionService', () => {
     it('should throw if target version not found', async () => {
       versionRepo.findById.mockResolvedValue(null);
 
-      await expect(
-        service.rollbackToVersion('missing', 'reason', 'user-1'),
-      ).rejects.toThrow('Target version not found: missing');
+      await expect(service.rollbackToVersion('missing', 'reason', 'user-1')).rejects.toThrow(
+        'Target version not found: missing'
+      );
     });
 
     it('should throw if no active version exists', async () => {
       versionRepo.findById.mockResolvedValue(makeVersion({ status: 'DEPRECATED' }));
       versionRepo.findActive.mockResolvedValue(null);
 
-      await expect(
-        service.rollbackToVersion('ver-1', 'reason', 'user-1'),
-      ).rejects.toThrow('No active version to rollback from');
+      await expect(service.rollbackToVersion('ver-1', 'reason', 'user-1')).rejects.toThrow(
+        'No active version to rollback from'
+      );
     });
 
     it('should throw if rolling back to the same active version', async () => {
@@ -582,14 +587,16 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(version);
       versionRepo.findActive.mockResolvedValue(version);
 
-      await expect(
-        service.rollbackToVersion('ver-1', 'reason', 'user-1'),
-      ).rejects.toThrow('Cannot rollback to the same version');
+      await expect(service.rollbackToVersion('ver-1', 'reason', 'user-1')).rejects.toThrow(
+        'Cannot rollback to the same version'
+      );
     });
 
     it('should publish ChainVersionRolledBackEvent', async () => {
       versionRepo.findById.mockResolvedValue(makeVersion({ id: 'ver-old', status: 'DRAFT' }));
-      versionRepo.findActive.mockResolvedValue(makeVersion({ id: 'ver-current', status: 'ACTIVE' }));
+      versionRepo.findActive.mockResolvedValue(
+        makeVersion({ id: 'ver-current', status: 'ACTIVE' })
+      );
       versionRepo.update.mockImplementation((id: string, data: any) => ({
         ...makeVersion({ id }),
         ...data,
@@ -598,7 +605,7 @@ describe('ChainVersionService', () => {
       await service.rollbackToVersion('ver-old', 'Performance regression', 'user-1');
 
       const rollbackEvent = eventBus.publish.mock.calls.find(
-        (call: any[]) => call[0].eventType === 'chain_version.rolled_back',
+        (call: any[]) => call[0].eventType === 'chain_version.rolled_back'
       );
       expect(rollbackEvent).toBeDefined();
       expect(rollbackEvent![0].fromVersionId).toBe('ver-current');
@@ -607,7 +614,9 @@ describe('ChainVersionService', () => {
 
     it('should create audit entries for both deprecation and activation', async () => {
       versionRepo.findById.mockResolvedValue(makeVersion({ id: 'ver-old', status: 'DRAFT' }));
-      versionRepo.findActive.mockResolvedValue(makeVersion({ id: 'ver-current', status: 'ACTIVE' }));
+      versionRepo.findActive.mockResolvedValue(
+        makeVersion({ id: 'ver-current', status: 'ACTIVE' })
+      );
       versionRepo.update.mockImplementation((id: string, data: any) => ({
         ...makeVersion({ id }),
         ...data,
@@ -616,10 +625,10 @@ describe('ChainVersionService', () => {
       await service.rollbackToVersion('ver-old', 'reason', 'user-1');
 
       const rollbackAudit = auditRepo.create.mock.calls.find(
-        (call: any[]) => call[0].action === 'ROLLED_BACK',
+        (call: any[]) => call[0].action === 'ROLLED_BACK'
       );
       const activationAudit = auditRepo.create.mock.calls.find(
-        (call: any[]) => call[0].action === 'ACTIVATED',
+        (call: any[]) => call[0].action === 'ACTIVATED'
       );
       expect(rollbackAudit).toBeDefined();
       expect(activationAudit).toBeDefined();
@@ -631,7 +640,12 @@ describe('ChainVersionService', () => {
   // =========================================================================
 
   describe('getActiveVersion', () => {
-    const context = { tenantId: 'tenant-1', userId: 'user-1', sessionId: 'sess-1', leadId: 'lead-1' };
+    const context = {
+      tenantId: 'tenant-1',
+      userId: 'user-1',
+      sessionId: 'sess-1',
+      leadId: 'lead-1',
+    };
 
     it('should return active version with direct selection', async () => {
       const activeVersion = makeVersion({ status: 'ACTIVE', rolloutStrategy: 'IMMEDIATE' });
@@ -727,9 +741,9 @@ describe('ChainVersionService', () => {
     it('should throw if no active version exists', async () => {
       versionRepo.findActive.mockResolvedValue(null);
 
-      await expect(
-        service.getActiveVersion('LEAD_SCORING' as any, context),
-      ).rejects.toThrow('No active version found for chain type: LEAD_SCORING');
+      await expect(service.getActiveVersion('LEAD_SCORING' as any, context)).rejects.toThrow(
+        'No active version found for chain type: LEAD_SCORING'
+      );
     });
 
     it('should handle null feature flags gracefully', async () => {
@@ -737,7 +751,7 @@ describe('ChainVersionService', () => {
         versionRepo as ChainVersionRepositoryPort,
         auditRepo as ChainVersionAuditRepositoryPort,
         null,
-        eventBus as any,
+        eventBus as any
       );
 
       const activeVersion = makeVersion({
@@ -839,7 +853,10 @@ describe('ChainVersionService', () => {
 
     it('should apply pagination', async () => {
       const versions = Array.from({ length: 50 }, (_, i) =>
-        makeVersion({ id: `ver-${i}`, createdAt: new Date(`2025-01-${String(i + 1).padStart(2, '0')}`) }),
+        makeVersion({
+          id: `ver-${i}`,
+          createdAt: new Date(`2025-01-${String(i + 1).padStart(2, '0')}`),
+        })
       );
       versionRepo.findByChainType.mockResolvedValue(versions);
 
@@ -854,7 +871,7 @@ describe('ChainVersionService', () => {
 
     it('should use default pagination of 20 items', async () => {
       const versions = Array.from({ length: 30 }, (_, i) =>
-        makeVersion({ id: `ver-${i}`, createdAt: new Date(2025, 0, i + 1) }),
+        makeVersion({ id: `ver-${i}`, createdAt: new Date(2025, 0, i + 1) })
       );
       versionRepo.findByChainType.mockResolvedValue(versions);
 
@@ -885,7 +902,7 @@ describe('ChainVersionService', () => {
 
     it('should respect limit parameter', async () => {
       const versions = Array.from({ length: 10 }, (_, i) =>
-        makeVersion({ id: `ver-${i}`, createdAt: new Date(2025, 0, i + 1) }),
+        makeVersion({ id: `ver-${i}`, createdAt: new Date(2025, 0, i + 1) })
       );
       versionRepo.findByChainType.mockResolvedValue(versions);
 
@@ -911,9 +928,7 @@ describe('ChainVersionService', () => {
     });
 
     it('should respect limit parameter', async () => {
-      const audits = Array.from({ length: 10 }, (_, i) =>
-        makeAuditRecord({ id: `audit-${i}` }),
-      );
+      const audits = Array.from({ length: 10 }, (_, i) => makeAuditRecord({ id: `audit-${i}` }));
       auditRepo.findByVersionId.mockResolvedValue(audits);
 
       const result = await service.getVersionAuditLog('ver-1', 3);
@@ -947,9 +962,7 @@ describe('ChainVersionService', () => {
     });
 
     it('should filter by chain type when provided', async () => {
-      versionRepo.findByChainType.mockResolvedValue([
-        makeVersion({ status: 'ACTIVE' }),
-      ]);
+      versionRepo.findByChainType.mockResolvedValue([makeVersion({ status: 'ACTIVE' })]);
 
       const stats = await service.getVersionStats('tenant-1', 'LEAD_SCORING' as any);
 
@@ -981,7 +994,7 @@ describe('ChainVersionService', () => {
         expect.arrayContaining([
           expect.objectContaining({ field: 'prompt', valueA: 'prompt A', valueB: 'prompt B' }),
           expect.objectContaining({ field: 'temperature', valueA: 0.5, valueB: 0.7 }),
-        ]),
+        ])
       );
     });
 
@@ -989,7 +1002,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(null);
 
       await expect(service.compareVersions('missing', 'v-b')).rejects.toThrow(
-        'Chain version not found: missing',
+        'Chain version not found: missing'
       );
     });
 
@@ -1000,7 +1013,7 @@ describe('ChainVersionService', () => {
       });
 
       await expect(service.compareVersions('v-a', 'missing')).rejects.toThrow(
-        'Chain version not found: missing',
+        'Chain version not found: missing'
       );
     });
 
@@ -1030,7 +1043,12 @@ describe('ChainVersionService', () => {
       });
       versionRepo.findActive.mockResolvedValue(version);
 
-      const context = { tenantId: 'tenant-1', userId: 'user-1', sessionId: 'sess-1', leadId: 'lead-1' };
+      const context = {
+        tenantId: 'tenant-1',
+        userId: 'user-1',
+        sessionId: 'sess-1',
+        leadId: 'lead-1',
+      };
       const config = await service.getChainConfig('LEAD_SCORING' as any, context);
 
       expect(config.prompt).toBe('Score this lead');
@@ -1044,7 +1062,12 @@ describe('ChainVersionService', () => {
       const version = makeVersion({ status: 'ACTIVE', additionalParams: null });
       versionRepo.findActive.mockResolvedValue(version);
 
-      const context = { tenantId: 'tenant-1', userId: 'user-1', sessionId: 'sess-1', leadId: 'lead-1' };
+      const context = {
+        tenantId: 'tenant-1',
+        userId: 'user-1',
+        sessionId: 'sess-1',
+        leadId: 'lead-1',
+      };
       const config = await service.getChainConfig('LEAD_SCORING' as any, context);
 
       expect(config.additionalParams).toBeUndefined();

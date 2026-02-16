@@ -45,7 +45,9 @@ interface QualityMetrics {
   };
 }
 
-async function readJsonFile<T>(filePath: string): Promise<{ data: T | null; lastUpdated: string | null }> {
+async function readJsonFile<T>(
+  filePath: string
+): Promise<{ data: T | null; lastUpdated: string | null }> {
   try {
     const content = await fs.readFile(filePath, 'utf-8');
     const stats = await fs.stat(filePath);
@@ -66,7 +68,8 @@ export async function GET() {
 
     // Read coverage
     const coveragePath = path.join(ARTIFACTS_DIR, 'coverage', 'coverage-summary.json');
-    const { data: coverageData, lastUpdated: coverageUpdated } = await readJsonFile<any>(coveragePath);
+    const { data: coverageData, lastUpdated: coverageUpdated } =
+      await readJsonFile<any>(coveragePath);
 
     // Read SonarQube metrics
     const sonarPath = path.join(CODE_ANALYSIS_DIR, 'latest.json');
@@ -115,10 +118,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Error reading quality metrics:', error);
-    return NextResponse.json(
-      { status: 'error', message: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ status: 'error', message: String(error) }, { status: 500 });
   }
 }
 
@@ -170,9 +170,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error refreshing quality metrics:', error);
-    return NextResponse.json(
-      { status: 'error', message: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ status: 'error', message: String(error) }, { status: 500 });
   }
 }

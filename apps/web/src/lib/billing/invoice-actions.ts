@@ -55,10 +55,7 @@ export async function downloadInvoice(invoice: InvoiceData): Promise<InvoiceActi
   }
 
   try {
-    const filename = generateInvoiceFilename(
-      invoice.id,
-      new Date(invoice.created)
-    );
+    const filename = generateInvoiceFilename(invoice.id, new Date(invoice.created));
     await downloadInvoicePdf(pdfInfo.pdfUrl!, filename);
     return {
       success: true,
@@ -216,10 +213,7 @@ export async function copyInvoiceLink(invoice: InvoiceData): Promise<InvoiceActi
  * Email invoice to recipient
  * Opens default email client with invoice link
  */
-export function emailInvoice(
-  invoice: InvoiceData,
-  recipientEmail?: string
-): InvoiceActionResult {
+export function emailInvoice(invoice: InvoiceData, recipientEmail?: string): InvoiceActionResult {
   const pdfInfo = getInvoicePdfInfo(invoice.invoicePdf, invoice.hostedInvoiceUrl);
   const url = pdfInfo.hostedUrl || pdfInfo.pdfUrl;
 

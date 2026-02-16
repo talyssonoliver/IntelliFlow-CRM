@@ -80,13 +80,7 @@ describe('Timeline Validators', () => {
 
   describe('agentActionStatusSchema', () => {
     it('should accept all valid agent action statuses', () => {
-      const validStatuses = [
-        'pending_approval',
-        'approved',
-        'rejected',
-        'rolled_back',
-        'expired',
-      ];
+      const validStatuses = ['pending_approval', 'approved', 'rejected', 'rolled_back', 'expired'];
 
       validStatuses.forEach((status) => {
         const result = agentActionStatusSchema.safeParse(status);

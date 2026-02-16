@@ -10,11 +10,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { notificationsRouter } from '../notifications.router';
-import {
-  prismaMock,
-  createTestContext,
-  TEST_UUIDS,
-} from '../../../test/setup';
+import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 
 // Helper to build a mock domain event that represents a notification
 function createMockDomainEvent(overrides: Record<string, any> = {}) {

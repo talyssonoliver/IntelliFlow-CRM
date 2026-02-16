@@ -34,10 +34,7 @@ interface LLMModel {
 }
 
 // Import domain constants (IFC-095: DRY pattern)
-import {
-  CHURN_RISK_LEVELS,
-  type ChurnRiskLevel,
-} from '@intelliflow/domain';
+import { CHURN_RISK_LEVELS, type ChurnRiskLevel } from '@intelliflow/domain';
 
 const logger = pino({
   name: 'churn-risk-chain',
@@ -58,7 +55,7 @@ function validateProviderForProduction(): void {
   if (isProduction && isMockProvider) {
     throw new Error(
       'SECURITY: Mock AI provider cannot be used in production environment. ' +
-      'Configure AI_PROVIDER to use "openai" or "ollama" for production workloads.'
+        'Configure AI_PROVIDER to use "openai" or "ollama" for production workloads.'
     );
   }
 }
@@ -518,11 +515,21 @@ ANALYSIS INSTRUCTIONS:
     const parts: string[] = [];
 
     if (input.usageTrendSlope !== undefined) {
-      const trend = input.usageTrendSlope > 0 ? 'increasing' : input.usageTrendSlope < 0 ? 'decreasing' : 'stable';
+      const trend =
+        input.usageTrendSlope > 0
+          ? 'increasing'
+          : input.usageTrendSlope < 0
+            ? 'decreasing'
+            : 'stable';
       parts.push(`Usage trend: ${trend} (slope: ${input.usageTrendSlope.toFixed(2)})`);
     }
     if (input.sessionTimeTrend !== undefined) {
-      const trend = input.sessionTimeTrend > 0 ? 'increasing' : input.sessionTimeTrend < 0 ? 'decreasing' : 'stable';
+      const trend =
+        input.sessionTimeTrend > 0
+          ? 'increasing'
+          : input.sessionTimeTrend < 0
+            ? 'decreasing'
+            : 'stable';
       parts.push(`Session time trend: ${trend}`);
     }
 
@@ -659,14 +666,17 @@ ANALYSIS INSTRUCTIONS:
       riskScore,
       riskLevel,
       confidence: 0.4, // Low confidence for fallback
-      topRiskFactors: factors.length > 0 ? factors : [
-        {
-          factor: 'insufficient_data',
-          value: 'N/A',
-          impact: 'low',
-          reasoning: 'Unable to assess risk due to limited data',
-        },
-      ],
+      topRiskFactors:
+        factors.length > 0
+          ? factors
+          : [
+              {
+                factor: 'insufficient_data',
+                value: 'N/A',
+                impact: 'low',
+                reasoning: 'Unable to assess risk due to limited data',
+              },
+            ],
       explanation: `Fallback analysis due to: ${_error instanceof Error ? _error.message : 'Unknown error'}. Risk estimated using available heuristics.`,
       recommendations: [
         'Schedule a customer check-in call',
@@ -708,7 +718,8 @@ ANALYSIS INSTRUCTIONS:
           reasoning: 'Support satisfaction is acceptable but below target',
         },
       ],
-      explanation: 'Customer shows moderate churn risk due to declining engagement. Recent login gap and usage decline are primary concerns, though transaction history remains stable.',
+      explanation:
+        'Customer shows moderate churn risk due to declining engagement. Recent login gap and usage decline are primary concerns, though transaction history remains stable.',
       recommendations: [
         'Schedule a check-in call within 48 hours',
         'Send personalized feature highlight email',

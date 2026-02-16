@@ -35,9 +35,7 @@ export async function wrapExternalServiceCall<T>(
     const ExternalServiceError = (app as any).ExternalServiceError;
 
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    throw new ExternalServiceError(
-      `${serviceName} service failed: ${errorMessage}`
-    );
+    throw new ExternalServiceError(`${serviceName} service failed: ${errorMessage}`);
   }
 }
 
@@ -61,11 +59,7 @@ export async function wrapExternalServiceCallWithTimeout<T>(
 
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => {
-      reject(
-        new ExternalServiceError(
-          `${serviceName} service timed out after ${timeoutMs}ms`
-        )
-      );
+      reject(new ExternalServiceError(`${serviceName} service timed out after ${timeoutMs}ms`));
     }, timeoutMs);
   });
 
@@ -73,51 +67,46 @@ export async function wrapExternalServiceCallWithTimeout<T>(
     return await Promise.race([serviceCall(), timeoutPromise]);
   } catch (error) {
     // If error is already ExternalServiceError, rethrow
-    if (error && typeof error === 'object' && 'code' in error && (error as any).code === 'EXTERNAL_SERVICE_ERROR') {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      (error as any).code === 'EXTERNAL_SERVICE_ERROR'
+    ) {
       throw error;
     }
 
     // Wrap other errors
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    throw new ExternalServiceError(
-      `${serviceName} service failed: ${errorMessage}`
-    );
+    throw new ExternalServiceError(`${serviceName} service failed: ${errorMessage}`);
   }
 }
 
 /**
  * Example usage for Stripe API calls
  */
-export async function callStripeAPI<T>(
-  apiCall: () => Promise<T>
-): Promise<T> {
+export async function callStripeAPI<T>(apiCall: () => Promise<T>): Promise<T> {
   return wrapExternalServiceCallWithTimeout(apiCall, 'Stripe', 10000);
 }
 
 /**
  * Example usage for OpenAI API calls
  */
-export async function callOpenAI<T>(
-  apiCall: () => Promise<T>
-): Promise<T> {
+export async function callOpenAI<T>(apiCall: () => Promise<T>): Promise<T> {
   return wrapExternalServiceCallWithTimeout(apiCall, 'OpenAI', 60000);
 }
 
 /**
  * Example usage for SendGrid API calls
  */
-export async function callSendGrid<T>(
-  apiCall: () => Promise<T>
-): Promise<T> {
+export async function callSendGrid<T>(apiCall: () => Promise<T>): Promise<T> {
   return wrapExternalServiceCallWithTimeout(apiCall, 'SendGrid', 15000);
 }
 
 /**
  * Example usage for Twilio API calls
  */
-export async function callTwilio<T>(
-  apiCall: () => Promise<T>
-): Promise<T> {
+export async function callTwilio<T>(apiCall: () => Promise<T>): Promise<T> {
   return wrapExternalServiceCallWithTimeout(apiCall, 'Twilio', 10000);
 }
 
@@ -158,7 +147,7 @@ export async function wrapExternalServiceCallWithRetry<T>(
       console.warn(
         `[ExternalService] ${serviceName} failed (attempt ${attempt + 1}/${maxRetries + 1}), retrying in ${delayMs}ms...`
       );
-      await new Promise(resolve => setTimeout(resolve, delayMs));
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
 

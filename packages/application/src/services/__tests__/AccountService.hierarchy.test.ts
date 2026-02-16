@@ -16,7 +16,14 @@ import { Account, Contact, Opportunity } from '@intelliflow/domain';
 const TENANT = 'tenant-001';
 const OWNER = 'owner-001';
 
-function createAccount(overrides: Partial<{ name: string; industry: string; revenue: number; parentAccountId: string }> = {}): Account {
+function createAccount(
+  overrides: Partial<{
+    name: string;
+    industry: string;
+    revenue: number;
+    parentAccountId: string;
+  }> = {}
+): Account {
   return Account.create({
     name: overrides.name ?? 'Test Account',
     industry: overrides.industry,
@@ -213,7 +220,12 @@ describe('AccountService — Hierarchy (PG-134)', () => {
       const newChild = createAccount({ name: 'Too Deep' });
       await accountRepo.save(newChild);
 
-      const result = await service.setParent(newChild.id.value, accounts[4].id.value, TENANT, OWNER);
+      const result = await service.setParent(
+        newChild.id.value,
+        accounts[4].id.value,
+        TENANT,
+        OWNER
+      );
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('depth');
@@ -323,7 +335,9 @@ describe('AccountService — Hierarchy (PG-134)', () => {
       const account = createAccount({ name: 'Tenant Check' });
       await accountRepo.save(account);
 
-      const result = await service.getAccountContacts(account.id.value, 'wrong-tenant', { limit: 20 });
+      const result = await service.getAccountContacts(account.id.value, 'wrong-tenant', {
+        limit: 20,
+      });
 
       expect(result.isFailure).toBe(true);
     });
@@ -386,7 +400,9 @@ describe('AccountService — Hierarchy (PG-134)', () => {
       const account = createAccount({ name: 'Tenant Check' });
       await accountRepo.save(account);
 
-      const result = await service.getAccountOpportunities(account.id.value, 'wrong-tenant', { limit: 20 });
+      const result = await service.getAccountOpportunities(account.id.value, 'wrong-tenant', {
+        limit: 20,
+      });
 
       expect(result.isFailure).toBe(true);
     });
@@ -474,7 +490,9 @@ describe('AccountService — Hierarchy (PG-134)', () => {
       const account = createAccount({ name: 'Tenant Activity' });
       await accountRepo.save(account);
 
-      const result = await service.getAccountActivity(account.id.value, 'wrong-tenant', { limit: 20 });
+      const result = await service.getAccountActivity(account.id.value, 'wrong-tenant', {
+        limit: 20,
+      });
 
       expect(result.isFailure).toBe(true);
     });

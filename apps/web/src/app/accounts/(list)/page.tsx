@@ -2,13 +2,13 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  DataTable,
-  Pagination,
-  Skeleton,
-} from '@intelliflow/ui';
+import { DataTable, Pagination, Skeleton } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar } from '@/components/shared';
-import { createAccountColumns, type AccountRow, type AccountRowHandlers } from '@/components/accounts/AccountCard';
+import {
+  createAccountColumns,
+  type AccountRow,
+  type AccountRowHandlers,
+} from '@/components/accounts/AccountCard';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useAccountFilterOptions } from '@/hooks/use-dynamic-filters';
@@ -94,7 +94,9 @@ function StatCard({ title, value, detail, isLoading }: StatCardProps) {
 
   return (
     <div className="rounded-lg border border-border bg-card p-5">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        {title}
+      </p>
       <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
       {detail && <p className="text-xs text-muted-foreground mt-1">{detail}</p>}
     </div>
@@ -126,10 +128,9 @@ export default function AccountsPage() {
   });
 
   // Stats query
-  const { data: stats, isLoading: statsLoading } = api.account.stats.useQuery(
-    undefined,
-    { enabled: isAuthenticated && !authLoading }
-  );
+  const { data: stats, isLoading: statsLoading } = api.account.stats.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+  });
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -170,25 +171,28 @@ export default function AccountsPage() {
     setSearchQuery(value);
   }, []);
 
-  const handleRowClick = useCallback((row: AccountRow) => {
-    router.push(`/accounts/${row.id}`);
-  }, [router]);
+  const handleRowClick = useCallback(
+    (row: AccountRow) => {
+      router.push(`/accounts/${row.id}`);
+    },
+    [router]
+  );
 
   // Stat calculations
   const totalRevenue = stats ? Number(stats.totalRevenue) : 0;
   const avgRevenue = stats && stats.total > 0 ? totalRevenue / stats.total : 0;
-  const withOpportunities = (stats as Record<string, unknown>)?.withOpportunities as number | undefined;
-  const oppShare = stats && stats.total > 0 && withOpportunities != null
-    ? Math.round((withOpportunities / stats.total) * 100)
-    : 0;
+  const withOpportunities = (stats as Record<string, unknown>)?.withOpportunities as
+    | number
+    | undefined;
+  const oppShare =
+    stats && stats.total > 0 && withOpportunities != null
+      ? Math.round((withOpportunities / stats.total) * 100)
+      : 0;
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Accounts' },
-        ]}
+        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Accounts' }]}
         title="Account List Overview"
         description="Manage corporate hierarchies and account relationships"
         actions={[
@@ -259,7 +263,12 @@ export default function AccountsPage() {
 
       {error && !isLoading && (
         <div className="flex flex-col items-center justify-center p-8 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
-          <span className="material-symbols-outlined text-5xl text-destructive mb-4" aria-hidden="true">error</span>
+          <span
+            className="material-symbols-outlined text-5xl text-destructive mb-4"
+            aria-hidden="true"
+          >
+            error
+          </span>
           <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">
             Failed to load accounts
           </h3>
@@ -270,7 +279,9 @@ export default function AccountsPage() {
             onClick={() => refetch()}
             className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
           >
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">refresh</span>
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">
+              refresh
+            </span>
             Try Again
           </button>
         </div>
@@ -286,7 +297,9 @@ export default function AccountsPage() {
             </div>
           ) : accounts.length === 0 ? (
             <div className="text-center py-16">
-              <span className="material-symbols-outlined text-5xl text-muted-foreground mb-3">domain</span>
+              <span className="material-symbols-outlined text-5xl text-muted-foreground mb-3">
+                domain
+              </span>
               <h3 className="text-lg font-semibold text-foreground mb-1">No accounts found</h3>
               <p className="text-muted-foreground text-sm">
                 {searchQuery || industryFilter || ownerFilter

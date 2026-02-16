@@ -13,7 +13,12 @@ import { z } from 'zod';
 export const documentFormatSchema = z.enum(['pdf', 'png', 'jpg', 'jpeg', 'tiff', 'webp']);
 
 // OCR engine
-export const ocrEngineSchema = z.enum(['tesseract', 'google-vision', 'aws-textract', 'azure-vision']);
+export const ocrEngineSchema = z.enum([
+  'tesseract',
+  'google-vision',
+  'aws-textract',
+  'azure-vision',
+]);
 
 // Language code pattern (ISO 639-1)
 const languagePattern = /^[a-z]{2}(-[A-Z]{2})?$/;
@@ -63,8 +68,13 @@ export const extractedTextSchema = z.object({
   text: z.string().describe('Raw extracted text from OCR'),
   normalizedText: z.string().describe('Normalized text with cleaned whitespace and characters'),
   metadata: extractedTextMetadataSchema,
-  searchableContent: z.array(z.string().min(1)).describe('Text chunks optimized for search and RAG'),
-  embeddings: z.array(z.array(z.number())).optional().describe('Vector embeddings for each searchable chunk'),
+  searchableContent: z
+    .array(z.string().min(1))
+    .describe('Text chunks optimized for search and RAG'),
+  embeddings: z
+    .array(z.array(z.number()))
+    .optional()
+    .describe('Vector embeddings for each searchable chunk'),
   provenance: provenanceSchema.optional(),
   quality: qualityMetricsSchema.optional(),
 });

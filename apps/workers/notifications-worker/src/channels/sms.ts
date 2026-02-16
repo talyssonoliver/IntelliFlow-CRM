@@ -181,10 +181,7 @@ export class SMSChannel {
       }
     }
 
-    this.logger.info(
-      { provider: this.config.provider },
-      'SMS channel initialized'
-    );
+    this.logger.info({ provider: this.config.provider }, 'SMS channel initialized');
   }
 
   /**
@@ -279,9 +276,13 @@ export class SMSChannel {
    * Send via Twilio
    * @task IFC-170 - Implement Twilio SMS channel
    */
-  private async sendViaTwilio(payload: SMSPayload): Promise<Omit<SMSDeliveryResult, 'deliveryTimeMs'>> {
+  private async sendViaTwilio(
+    payload: SMSPayload
+  ): Promise<Omit<SMSDeliveryResult, 'deliveryTimeMs'>> {
     if (!this.twilioClient) {
-      throw new Error('Twilio client not initialized - missing TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN');
+      throw new Error(
+        'Twilio client not initialized - missing TWILIO_ACCOUNT_SID or TWILIO_AUTH_TOKEN'
+      );
     }
 
     try {
@@ -308,7 +309,9 @@ export class SMSChannel {
         messageId: message.sid,
         status: statusMap[message.status] || 'queued',
         deliveredAt: new Date().toISOString(),
-        segmentCount: message.numSegments ? parseInt(message.numSegments, 10) : Math.ceil(payload.body.length / 160),
+        segmentCount: message.numSegments
+          ? parseInt(message.numSegments, 10)
+          : Math.ceil(payload.body.length / 160),
         cost: message.price ? parseFloat(message.price) : undefined,
       };
     } catch (error) {
@@ -324,16 +327,16 @@ export class SMSChannel {
         'Twilio API error'
       );
 
-      throw new Error(
-        twilioError.message || 'Twilio API error'
-      );
+      throw new Error(twilioError.message || 'Twilio API error');
     }
   }
 
   /**
    * Send via MessageBird
    */
-  private async sendViaMessageBird(payload: SMSPayload): Promise<Omit<SMSDeliveryResult, 'deliveryTimeMs'>> {
+  private async sendViaMessageBird(
+    payload: SMSPayload
+  ): Promise<Omit<SMSDeliveryResult, 'deliveryTimeMs'>> {
     // In production, use MessageBird SDK:
     // const messagebird = require('messagebird')(this.config.authToken);
     // const message = await messagebird.messages.create({
@@ -355,7 +358,9 @@ export class SMSChannel {
   /**
    * Mock provider for testing
    */
-  private async sendViaMock(payload: SMSPayload): Promise<Omit<SMSDeliveryResult, 'deliveryTimeMs'>> {
+  private async sendViaMock(
+    payload: SMSPayload
+  ): Promise<Omit<SMSDeliveryResult, 'deliveryTimeMs'>> {
     // Simulate delay
     await new Promise((resolve) => setTimeout(resolve, 50));
 

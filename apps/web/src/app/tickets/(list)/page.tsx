@@ -73,30 +73,55 @@ export default function TicketsPage() {
 
   // Bulk mutation hooks
   const bulkAssignMutation = api.ticket.bulkAssign.useMutation({
-    onSuccess: () => { utils.ticket.list.invalidate(); utils.ticket.stats.invalidate(); },
+    onSuccess: () => {
+      utils.ticket.list.invalidate();
+      utils.ticket.stats.invalidate();
+    },
   });
   const bulkUpdateStatusMutation = api.ticket.bulkUpdateStatus.useMutation({
-    onSuccess: () => { utils.ticket.list.invalidate(); utils.ticket.stats.invalidate(); },
+    onSuccess: () => {
+      utils.ticket.list.invalidate();
+      utils.ticket.stats.invalidate();
+    },
   });
   const bulkResolveMutation = api.ticket.bulkResolve.useMutation({
-    onSuccess: () => { utils.ticket.list.invalidate(); utils.ticket.stats.invalidate(); },
+    onSuccess: () => {
+      utils.ticket.list.invalidate();
+      utils.ticket.stats.invalidate();
+    },
   });
   const bulkEscalateMutation = api.ticket.bulkEscalate.useMutation({
-    onSuccess: () => { utils.ticket.list.invalidate(); utils.ticket.stats.invalidate(); },
+    onSuccess: () => {
+      utils.ticket.list.invalidate();
+      utils.ticket.stats.invalidate();
+    },
   });
   const bulkCloseMutation = api.ticket.bulkClose.useMutation({
-    onSuccess: () => { utils.ticket.list.invalidate(); utils.ticket.stats.invalidate(); },
+    onSuccess: () => {
+      utils.ticket.list.invalidate();
+      utils.ticket.stats.invalidate();
+    },
   });
 
-  const handleBulkAction = async (action: BulkActionType, ticketIds: string[], params?: Record<string, unknown>) => {
+  const handleBulkAction = async (
+    action: BulkActionType,
+    ticketIds: string[],
+    params?: Record<string, unknown>
+  ) => {
     try {
       let result: { updated: number };
       switch (action) {
         case 'assign':
-          result = await bulkAssignMutation.mutateAsync({ ticketIds, assigneeId: params?.assigneeId as string });
+          result = await bulkAssignMutation.mutateAsync({
+            ticketIds,
+            assigneeId: params?.assigneeId as string,
+          });
           break;
         case 'updateStatus':
-          result = await bulkUpdateStatusMutation.mutateAsync({ ticketIds, status: params?.status } as never);
+          result = await bulkUpdateStatusMutation.mutateAsync({
+            ticketIds,
+            status: params?.status,
+          } as never);
           break;
         case 'resolve':
           result = await bulkResolveMutation.mutateAsync({ ticketIds });
@@ -112,11 +137,18 @@ export default function TicketsPage() {
       }
 
       if (result.updated > 0) {
-        toast({ title: `${action} completed`, description: `${result.updated} ticket(s) updated.` });
+        toast({
+          title: `${action} completed`,
+          description: `${result.updated} ticket(s) updated.`,
+        });
       }
       const failedCount = ticketIds.length - result.updated;
       if (failedCount > 0) {
-        toast({ title: 'Some actions failed', description: `${failedCount} ticket(s) could not be updated.`, variant: 'destructive' });
+        toast({
+          title: 'Some actions failed',
+          description: `${failedCount} ticket(s) could not be updated.`,
+          variant: 'destructive',
+        });
       }
     } catch (error) {
       toast({
@@ -130,10 +162,7 @@ export default function TicketsPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Tickets' },
-        ]}
+        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Tickets' }]}
         title="Support Tickets"
         description="Monitor real-time SLA compliance and prioritize urgent customer issues"
         actions={[

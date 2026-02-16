@@ -155,9 +155,10 @@ describe('Contact Validators', () => {
 
       if (result.success) {
         // Phone should be normalized (spaces/dashes removed), returned as PhoneNumber value object
-        const phoneValue = typeof result.data.phone === 'object' && result.data.phone !== null
-          ? (result.data.phone as { props: { value: string } }).props.value
-          : result.data.phone;
+        const phoneValue =
+          typeof result.data.phone === 'object' && result.data.phone !== null
+            ? (result.data.phone as { props: { value: string } }).props.value
+            : result.data.phone;
         expect(phoneValue).toBe('+15551234567');
       }
     });
@@ -175,9 +176,10 @@ describe('Contact Validators', () => {
 
       if (result.success) {
         // Phone should be normalized (spaces/dashes removed), returned as PhoneNumber value object
-        const phoneValue = typeof result.data.phone === 'object' && result.data.phone !== null
-          ? (result.data.phone as { props: { value: string } }).props.value
-          : result.data.phone;
+        const phoneValue =
+          typeof result.data.phone === 'object' && result.data.phone !== null
+            ? (result.data.phone as { props: { value: string } }).props.value
+            : result.data.phone;
         expect(phoneValue).toBe('+15551234567');
       }
     });

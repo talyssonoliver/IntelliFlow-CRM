@@ -15,11 +15,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { pipelineConfigRouter } from '../pipeline-config.router';
-import {
-  prismaMock,
-  createTestContext,
-  TEST_UUIDS,
-} from '../../../test/setup';
+import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 import {
   DEFAULT_STAGE_COLORS,
   DEFAULT_STAGE_NAMES,
@@ -63,7 +59,7 @@ describe('Pipeline Config Router', () => {
       expect(result.stages).toHaveLength(7);
       expect(result.stages[0].stageKey).toBe('PROSPECTING');
       expect(result.stages[0].displayName).toBe('Prospecting');
-      expect(result.stages[0].color).toBe('#94a3b8');  // Actual default from validators
+      expect(result.stages[0].color).toBe('#94a3b8'); // Actual default from validators
       expect(result.stages[0].probability).toBe(10);
       expect(result.stages[0].isActive).toBe(true);
     });
@@ -181,7 +177,7 @@ describe('Pipeline Config Router', () => {
       expect(prismaMock.pipelineStageConfig.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
-            stageKey: 'NEGOTIATION',  // Correct field name
+            stageKey: 'NEGOTIATION', // Correct field name
             color: '#ff9f43',
             displayName: 'Negotiation', // Default
             probability: 80, // Default for NEGOTIATION
@@ -235,7 +231,7 @@ describe('Pipeline Config Router', () => {
   describe('updateAll', () => {
     it('should batch update all stages', async () => {
       const stages = OPPORTUNITY_STAGES.map((stageKey, index) => ({
-        stage: stageKey as typeof OPPORTUNITY_STAGES[number],
+        stage: stageKey as (typeof OPPORTUNITY_STAGES)[number],
         displayName: `Custom ${stageKey}`,
         color: '#6366f1',
         sortOrder: index,
@@ -350,9 +346,7 @@ describe('Pipeline Config Router', () => {
     });
 
     it('should use custom colors from config', async () => {
-      const configs = [
-        createMockPipelineConfig('PROPOSAL', { color: '#custom-color' }),
-      ];
+      const configs = [createMockPipelineConfig('PROPOSAL', { color: '#custom-color' })];
 
       vi.mocked(prismaMock.opportunity.groupBy).mockResolvedValue([]);
       prismaMock.pipelineStageConfig.findMany.mockResolvedValue(configs as any);

@@ -422,7 +422,10 @@ export async function verifyToken(
     return { user: data.user, error };
   } catch (unexpectedError) {
     console.error('[verifyToken] Unexpected error:', unexpectedError);
-    return { user: null, error: unexpectedError instanceof Error ? unexpectedError : new Error('Unknown error') };
+    return {
+      user: null,
+      error: unexpectedError instanceof Error ? unexpectedError : new Error('Unknown error'),
+    };
   }
 }
 

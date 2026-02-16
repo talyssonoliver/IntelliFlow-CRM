@@ -83,7 +83,9 @@ describe('ScoreCard', () => {
       render(<ScoreCard data={defaultData} onFeedback={handleFeedback} />);
       // Use aria-label for precise matching
       expect(screen.getByRole('button', { name: /This score was helpful/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /This score was not helpful/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /This score was not helpful/i })
+      ).toBeInTheDocument();
     });
 
     it('should call onFeedback with positive when helpful clicked', () => {
@@ -103,7 +105,9 @@ describe('ScoreCard', () => {
 
     it('should not show feedback buttons when onFeedback is not provided', () => {
       render(<ScoreCard data={defaultData} />);
-      expect(screen.queryByRole('button', { name: /This score was helpful/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /This score was helpful/i })
+      ).not.toBeInTheDocument();
     });
   });
 

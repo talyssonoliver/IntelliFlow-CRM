@@ -492,9 +492,7 @@ describe('SLANotificationManager', () => {
   describe('updateConfig', () => {
     it('should update configuration', () => {
       const mgr = new SLANotificationManager();
-      expect(() =>
-        mgr.updateConfig({ webhookUrl: 'https://new-hook.example.com' })
-      ).not.toThrow();
+      expect(() => mgr.updateConfig({ webhookUrl: 'https://new-hook.example.com' })).not.toThrow();
       mgr.dispose();
     });
 
@@ -671,10 +669,7 @@ describe('SLANotificationManager', () => {
       slaService.startMonitoring(vi.fn().mockResolvedValue([ticket]));
       await vi.advanceTimersByTimeAsync(200);
 
-      expect(consoleSpy).toHaveBeenCalledWith(
-        '[SLA Toast]',
-        expect.stringContaining('T-10001')
-      );
+      expect(consoleSpy).toHaveBeenCalledWith('[SLA Toast]', expect.stringContaining('T-10001'));
 
       slaService.stopMonitoring();
       mgr.dispose();

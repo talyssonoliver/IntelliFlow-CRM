@@ -59,16 +59,9 @@ export function ApiReferenceClient({ specUrl }: ApiReferenceClientProps) {
         aria-live="assertive"
         className="mx-8 rounded-lg border border-destructive bg-destructive/10 p-6"
       >
-        <h2 className="text-lg font-semibold text-destructive">
-          Error Loading API Reference
-        </h2>
-        <p className="text-sm text-destructive/90 mt-1">
-          {error || 'Unknown error'}
-        </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 text-sm underline"
-        >
+        <h2 className="text-lg font-semibold text-destructive">Error Loading API Reference</h2>
+        <p className="text-sm text-destructive/90 mt-1">{error || 'Unknown error'}</p>
+        <button onClick={() => window.location.reload()} className="mt-4 text-sm underline">
           Retry
         </button>
       </div>
@@ -77,11 +70,7 @@ export function ApiReferenceClient({ specUrl }: ApiReferenceClientProps) {
 
   return (
     <ErrorBoundary
-      fallback={
-        <div className="p-8 text-destructive">
-          Failed to render API reference.
-        </div>
-      }
+      fallback={<div className="p-8 text-destructive">Failed to render API reference.</div>}
     >
       <div className="h-full overflow-auto" style={{ contain: 'strict' }}>
         <ApiReferenceReact

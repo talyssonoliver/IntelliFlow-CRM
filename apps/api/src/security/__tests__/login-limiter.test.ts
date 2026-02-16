@@ -507,7 +507,9 @@ describe('Login Limiter Standalone Functions', () => {
       recordFailedAttempt('user@example.com', undefined, customConfig);
       recordFailedAttempt('user@example.com', undefined, customConfig);
 
-      expect(() => checkLoginAllowed('user@example.com', undefined, customConfig)).toThrow(TRPCError);
+      expect(() => checkLoginAllowed('user@example.com', undefined, customConfig)).toThrow(
+        TRPCError
+      );
     });
   });
 

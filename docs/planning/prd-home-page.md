@@ -2,39 +2,50 @@
 
 ## Overview
 
-| Field             | Value                                                  |
-| ----------------- | ------------------------------------------------------ |
-| **Feature Name**  | Home Page (Public & Authenticated)                     |
-| **Owner**         | Growth Lead, CRM FE Lead                               |
-| **Status**        | In Progress                                            |
-| **Target Sprint** | 13-14                                                  |
-| **Created Date**  | 2026-02-03                                             |
-| **Last Updated**  | 2026-02-03                                             |
-| **Related Tasks** | IFC-182, PG-001, PG-129, IFC-069, IFC-183              |
+| Field             | Value                                     |
+| ----------------- | ----------------------------------------- |
+| **Feature Name**  | Home Page (Public & Authenticated)        |
+| **Owner**         | Growth Lead, CRM FE Lead                  |
+| **Status**        | In Progress                               |
+| **Target Sprint** | 13-14                                     |
+| **Created Date**  | 2026-02-03                                |
+| **Last Updated**  | 2026-02-03                                |
+| **Related Tasks** | IFC-182, PG-001, PG-129, IFC-069, IFC-183 |
 
 ## Problem Statement
 
 ### Background
 
-The Home Page (`/`) is the primary entry point for IntelliFlow CRM. It serves two distinct user groups with different needs:
-- **Visitors** need to understand the product value proposition and convert to users
-- **Authenticated users** need a personalized dashboard to start their workday efficiently
+The Home Page (`/`) is the primary entry point for IntelliFlow CRM. It serves
+two distinct user groups with different needs:
 
-Currently, the frontend components exist but the authenticated home page relies on hardcoded data instead of real backend APIs.
+- **Visitors** need to understand the product value proposition and convert to
+  users
+- **Authenticated users** need a personalized dashboard to start their workday
+  efficiently
+
+Currently, the frontend components exist but the authenticated home page relies
+on hardcoded data instead of real backend APIs.
 
 ### Problem Description
 
-1. **Visitors** land on the home page and need clear value proposition, social proof, and easy path to signup
-2. **Authenticated users** need at-a-glance view of their daily priorities, AI-generated insights, recent activity, and quick access to frequent actions
-3. **Backend integration** is incomplete - the UI displays placeholder data instead of real CRM data
+1. **Visitors** land on the home page and need clear value proposition, social
+   proof, and easy path to signup
+2. **Authenticated users** need at-a-glance view of their daily priorities,
+   AI-generated insights, recent activity, and quick access to frequent actions
+3. **Backend integration** is incomplete - the UI displays placeholder data
+   instead of real CRM data
 
 ### Impact
 
 **Who is affected?**
 
-- **Prospects**: First impression of the product; directly affects conversion rate
-- **Sales Representatives**: Daily workflow efficiency; need quick access to hot leads and tasks
-- **Account Managers**: Customer relationship visibility; need deal status and activity feed
+- **Prospects**: First impression of the product; directly affects conversion
+  rate
+- **Sales Representatives**: Daily workflow efficiency; need quick access to hot
+  leads and tasks
+- **Account Managers**: Customer relationship visibility; need deal status and
+  activity feed
 - **Support Agents**: Ticket awareness; need overdue task reminders
 
 **What is the business impact?**
@@ -55,7 +66,9 @@ Currently, the frontend components exist but the authenticated home page relies 
 
 ### Primary User Story
 
-**As a** sales representative **I want to** see my high-priority tasks, hot leads, and AI insights when I log in **So that** I can immediately focus on the most impactful actions for my day.
+**As a** sales representative **I want to** see my high-priority tasks, hot
+leads, and AI insights when I log in **So that** I can immediately focus on the
+most impactful actions for my day.
 
 **Acceptance Criteria:**
 
@@ -69,19 +82,23 @@ Currently, the frontend components exist but the authenticated home page relies 
 
 #### Story 2: Visitor Conversion
 
-**As a** prospective customer **I want to** understand what IntelliFlow CRM offers and how it's different **So that** I can decide whether to start a free trial.
+**As a** prospective customer **I want to** understand what IntelliFlow CRM
+offers and how it's different **So that** I can decide whether to start a free
+trial.
 
 **Acceptance Criteria:**
 
 - [ ] Hero section clearly communicates value proposition
 - [ ] Social proof section shows trusted companies
-- [ ] Feature highlights explain key differentiators (AI, governance, accessibility)
+- [ ] Feature highlights explain key differentiators (AI, governance,
+      accessibility)
 - [ ] CTAs are prominent and lead to signup/contact forms
 - [ ] Page loads fast (<2s LCP) and scores >90 on Lighthouse
 
 #### Story 3: Goal Tracking
 
-**As a** sales rep **I want to** see my progress toward daily revenue goals **So that** I know how much more I need to close today.
+**As a** sales rep **I want to** see my progress toward daily revenue goals **So
+that** I know how much more I need to close today.
 
 **Acceptance Criteria:**
 
@@ -91,7 +108,9 @@ Currently, the frontend components exist but the authenticated home page relies 
 
 #### Story 4: Quick Access
 
-**As a** power user **I want to** pin frequently accessed items (leads, documents, reports) **So that** I can access them with one click from the home page.
+**As a** power user **I want to** pin frequently accessed items (leads,
+documents, reports) **So that** I can access them with one click from the home
+page.
 
 **Acceptance Criteria:**
 
@@ -155,31 +174,33 @@ Currently, the frontend components exist but the authenticated home page relies 
 
 ### API Endpoints
 
-| Method | Endpoint                    | Description                  | Auth Required |
-| ------ | --------------------------- | ---------------------------- | ------------- |
-| GET    | `home.getWelcomeSummary`    | User greeting and daily stats | Yes           |
-| GET    | `home.getAIInsights`        | AI-generated insights        | Yes           |
-| GET    | `home.getActivityFeed`      | Paginated activity feed      | Yes           |
-| GET    | `home.getDailyGoal`         | Daily goal progress          | Yes           |
-| GET    | `home.getPinnedItems`       | User's pinned items          | Yes           |
-| POST   | `home.pinItem`              | Pin a new item               | Yes           |
-| POST   | `home.unpinItem`            | Remove pinned item           | Yes           |
-| POST   | `home.reorderPinnedItems`   | Reorder pinned items         | Yes           |
+| Method | Endpoint                  | Description                   | Auth Required |
+| ------ | ------------------------- | ----------------------------- | ------------- |
+| GET    | `home.getWelcomeSummary`  | User greeting and daily stats | Yes           |
+| GET    | `home.getAIInsights`      | AI-generated insights         | Yes           |
+| GET    | `home.getActivityFeed`    | Paginated activity feed       | Yes           |
+| GET    | `home.getDailyGoal`       | Daily goal progress           | Yes           |
+| GET    | `home.getPinnedItems`     | User's pinned items           | Yes           |
+| POST   | `home.pinItem`            | Pin a new item                | Yes           |
+| POST   | `home.unpinItem`          | Remove pinned item            | Yes           |
+| POST   | `home.reorderPinnedItems` | Reorder pinned items          | Yes           |
 
 **tRPC Procedures:**
 
 ```typescript
 // apps/api/src/modules/home/home.router.ts
 export const homeRouter = createTRPCRouter({
-  getWelcomeSummary: protectedProcedure
-    .query(async ({ ctx }): Promise<WelcomeSummary> => {
+  getWelcomeSummary: protectedProcedure.query(
+    async ({ ctx }): Promise<WelcomeSummary> => {
       // Returns: userName, greeting, todayDate, stats
-    }),
+    }
+  ),
 
-  getAIInsights: protectedProcedure
-    .query(async ({ ctx }): Promise<AIInsightsResponse> => {
+  getAIInsights: protectedProcedure.query(
+    async ({ ctx }): Promise<AIInsightsResponse> => {
       // Returns: insights[], lastRefreshed
-    }),
+    }
+  ),
 
   getActivityFeed: protectedProcedure
     .input(activityFeedQuerySchema)
@@ -187,15 +208,17 @@ export const homeRouter = createTRPCRouter({
       // Returns: items[], nextCursor, hasMore
     }),
 
-  getDailyGoal: protectedProcedure
-    .query(async ({ ctx }): Promise<DailyGoalResponse> => {
+  getDailyGoal: protectedProcedure.query(
+    async ({ ctx }): Promise<DailyGoalResponse> => {
       // Returns: goal { id, type, label, progress, ... }
-    }),
+    }
+  ),
 
-  getPinnedItems: protectedProcedure
-    .query(async ({ ctx }): Promise<PinnedItemsResponse> => {
+  getPinnedItems: protectedProcedure.query(
+    async ({ ctx }): Promise<PinnedItemsResponse> => {
       // Returns: items[], maxItems
-    }),
+    }
+  ),
 
   pinItem: protectedProcedure
     .input(pinItemInputSchema)
@@ -253,11 +276,11 @@ export const homeRouter = createTRPCRouter({
 
 **Internal Services:**
 
-| Service | Purpose | Communication |
-|---------|---------|---------------|
-| Auth Context | User identity, tenant ID | tRPC context |
-| Prisma | Database queries | Direct ORM |
-| Audit Log | Activity feed source | Prisma query |
+| Service      | Purpose                  | Communication |
+| ------------ | ------------------------ | ------------- |
+| Auth Context | User identity, tenant ID | tRPC context  |
+| Prisma       | Database queries         | Direct ORM    |
+| Audit Log    | Activity feed source     | Prisma query  |
 
 **AI/LLM Integration:**
 
@@ -274,24 +297,24 @@ export const homeRouter = createTRPCRouter({
 
 **Pages:**
 
-| Route | Component | Type | Data Loading |
-|-------|-----------|------|--------------|
-| `/` | `HomePageContent` | Client | Conditional render |
-| `/` | `PublicHomePage` | Server | Static |
-| `/` | `AuthenticatedHomePage` | Client | tRPC queries |
+| Route | Component               | Type   | Data Loading       |
+| ----- | ----------------------- | ------ | ------------------ |
+| `/`   | `HomePageContent`       | Client | Conditional render |
+| `/`   | `PublicHomePage`        | Server | Static             |
+| `/`   | `AuthenticatedHomePage` | Client | tRPC queries       |
 
 **New Components:**
 
-| Component | Location | Purpose |
-|-----------|----------|---------|
-| `InsightCard` | AuthenticatedHomePage.tsx | Display AI insight |
-| `InsightsSection` | AuthenticatedHomePage.tsx | Insights container |
-| `FeedItemCard` | AuthenticatedHomePage.tsx | Activity feed item |
-| `FeedSection` | AuthenticatedHomePage.tsx | Feed container |
-| `GoalSection` | AuthenticatedHomePage.tsx | Progress ring |
-| `PinnedItemCard` | AuthenticatedHomePage.tsx | Pinned item row |
-| `PinnedSection` | AuthenticatedHomePage.tsx | Pinned items container |
-| `*Skeleton` | AuthenticatedHomePage.tsx | Loading states (4) |
+| Component         | Location                  | Purpose                |
+| ----------------- | ------------------------- | ---------------------- |
+| `InsightCard`     | AuthenticatedHomePage.tsx | Display AI insight     |
+| `InsightsSection` | AuthenticatedHomePage.tsx | Insights container     |
+| `FeedItemCard`    | AuthenticatedHomePage.tsx | Activity feed item     |
+| `FeedSection`     | AuthenticatedHomePage.tsx | Feed container         |
+| `GoalSection`     | AuthenticatedHomePage.tsx | Progress ring          |
+| `PinnedItemCard`  | AuthenticatedHomePage.tsx | Pinned item row        |
+| `PinnedSection`   | AuthenticatedHomePage.tsx | Pinned items container |
+| `*Skeleton`       | AuthenticatedHomePage.tsx | Loading states (4)     |
 
 ### State Management
 
@@ -312,7 +335,7 @@ export const homeRouter = createTRPCRouter({
 
 ### Security Considerations
 
-- **Authentication**: Required for all home.* endpoints
+- **Authentication**: Required for all home.\* endpoints
 - **Authorization**: User can only see own data (userId filter)
 - **Tenant Isolation**: tenantId filter on all queries
 - **Input Validation**: Zod schemas for all inputs
@@ -322,43 +345,43 @@ export const homeRouter = createTRPCRouter({
 
 ### Performance Targets
 
-| Metric                    | Target   | Measurement Method   |
-| ------------------------- | -------- | -------------------- |
-| API Response Time (p95)   | <150ms   | OpenTelemetry traces |
-| API Response Time (p99)   | <200ms   | OpenTelemetry traces |
-| Page Load Time (FCP)      | <1s      | Lighthouse           |
-| Time to Interactive (TTI) | <2s      | Lighthouse           |
-| Public Page LCP           | <2s      | Core Web Vitals      |
-| Public Page CLS           | <0.1     | Core Web Vitals      |
+| Metric                    | Target | Measurement Method   |
+| ------------------------- | ------ | -------------------- |
+| API Response Time (p95)   | <150ms | OpenTelemetry traces |
+| API Response Time (p99)   | <200ms | OpenTelemetry traces |
+| Page Load Time (FCP)      | <1s    | Lighthouse           |
+| Time to Interactive (TTI) | <2s    | Lighthouse           |
+| Public Page LCP           | <2s    | Core Web Vitals      |
+| Public Page CLS           | <0.1   | Core Web Vitals      |
 
 ### Quality Targets
 
-| Metric                        | Target | Measurement Method     |
-| ----------------------------- | ------ | ---------------------- |
-| Test Coverage (home.router)   | ≥90%   | Vitest coverage report |
-| Test Coverage (validators)    | ≥95%   | Vitest coverage report |
-| Lighthouse Score (Public)     | ≥90    | Lighthouse CI          |
-| Lighthouse Score (Auth)       | ≥85    | Lighthouse CI          |
-| Accessibility Score           | ≥95    | axe DevTools           |
+| Metric                      | Target | Measurement Method     |
+| --------------------------- | ------ | ---------------------- |
+| Test Coverage (home.router) | ≥90%   | Vitest coverage report |
+| Test Coverage (validators)  | ≥95%   | Vitest coverage report |
+| Lighthouse Score (Public)   | ≥90    | Lighthouse CI          |
+| Lighthouse Score (Auth)     | ≥85    | Lighthouse CI          |
+| Accessibility Score         | ≥95    | axe DevTools           |
 
 ### Business Metrics
 
-| Metric                  | Target        | Measurement Method      |
-| ----------------------- | ------------- | ----------------------- |
-| Visitor → Signup Rate   | >5%           | Analytics               |
-| Daily Active Users      | Track         | Analytics               |
-| Insight Click Rate      | >20%          | Analytics               |
-| Quick Action Usage      | >30%          | Analytics               |
-| Pinned Items Adoption   | >15% of users | Analytics               |
-| Time on Home Page       | <30s          | Analytics (efficiency)  |
+| Metric                | Target        | Measurement Method     |
+| --------------------- | ------------- | ---------------------- |
+| Visitor → Signup Rate | >5%           | Analytics              |
+| Daily Active Users    | Track         | Analytics              |
+| Insight Click Rate    | >20%          | Analytics              |
+| Quick Action Usage    | >30%          | Analytics              |
+| Pinned Items Adoption | >15% of users | Analytics              |
+| Time on Home Page     | <30s          | Analytics (efficiency) |
 
 ### AI Metrics (Future)
 
-| Metric                | Target | Measurement Method |
-| --------------------- | ------ | ------------------ |
-| Insight Relevance     | ≥80%   | User feedback      |
-| Action Taken Rate     | ≥25%   | Click tracking     |
-| AI Cost per Refresh   | <$0.01 | Cost tracking      |
+| Metric              | Target | Measurement Method |
+| ------------------- | ------ | ------------------ |
+| Insight Relevance   | ≥80%   | User feedback      |
+| Action Taken Rate   | ≥25%   | Click tracking     |
+| AI Cost per Refresh | <$0.01 | Cost tracking      |
 
 ## Dependencies
 
@@ -386,13 +409,13 @@ From `Sprint_plan.csv` Dependencies column:
 
 ## Risks and Mitigations
 
-| Risk | Likelihood | Impact | Mitigation |
-| ---- | ---------- | ------ | ---------- |
-| Slow aggregation queries | Medium | High | Add database indexes, use parallel queries |
-| AI insights not useful | Medium | Medium | Start with rule-based, iterate based on feedback |
-| Activity feed too noisy | Low | Medium | Implement type filters, smart batching |
-| Public page SEO regression | Low | High | Lighthouse CI on every commit |
-| Performance degradation | Medium | High | Set up alerting for p99 >200ms |
+| Risk                       | Likelihood | Impact | Mitigation                                       |
+| -------------------------- | ---------- | ------ | ------------------------------------------------ |
+| Slow aggregation queries   | Medium     | High   | Add database indexes, use parallel queries       |
+| AI insights not useful     | Medium     | Medium | Start with rule-based, iterate based on feedback |
+| Activity feed too noisy    | Low        | Medium | Implement type filters, smart batching           |
+| Public page SEO regression | Low        | High   | Lighthouse CI on every commit                    |
+| Performance degradation    | Medium     | High   | Set up alerting for p99 >200ms                   |
 
 ## Out of Scope
 
@@ -414,31 +437,32 @@ From `Sprint_plan.csv` Dependencies column:
 
 ## Timeline
 
-| Milestone            | Sprint | Owner        | Status    |
-| -------------------- | ------ | ------------ | --------- |
-| PRD Review           | 13     | Product Lead | Complete  |
-| Backend Router       | 13     | Backend Dev  | Complete  |
-| Frontend Integration | 13     | Frontend Dev | Complete  |
-| Unit Tests           | 13     | QA           | Pending   |
-| Integration Tests    | 14     | QA           | Pending   |
-| E2E Tests            | 14     | QA           | Pending   |
-| Performance Testing  | 14     | QA           | Pending   |
-| Production Deploy    | 14     | DevOps       | Pending   |
+| Milestone            | Sprint | Owner        | Status   |
+| -------------------- | ------ | ------------ | -------- |
+| PRD Review           | 13     | Product Lead | Complete |
+| Backend Router       | 13     | Backend Dev  | Complete |
+| Frontend Integration | 13     | Frontend Dev | Complete |
+| Unit Tests           | 13     | QA           | Pending  |
+| Integration Tests    | 14     | QA           | Pending  |
+| E2E Tests            | 14     | QA           | Pending  |
+| Performance Testing  | 14     | QA           | Pending  |
+| Production Deploy    | 14     | DevOps       | Pending  |
 
 ## Approval
 
-| Role                | Name     | Date       | Signature |
-| ------------------- | -------- | ---------- | --------- |
-| Product Owner       | [TBD]    | [TBD]      | Pending   |
-| Tech Lead           | [TBD]    | [TBD]      | Pending   |
-| Engineering Manager | [TBD]    | [TBD]      | Pending   |
+| Role                | Name  | Date  | Signature |
+| ------------------- | ----- | ----- | --------- |
+| Product Owner       | [TBD] | [TBD] | Pending   |
+| Tech Lead           | [TBD] | [TBD] | Pending   |
+| Engineering Manager | [TBD] | [TBD] | Pending   |
 
 ## References
 
 - **Spec Document**: `docs/specs/HOME-PAGE-SPEC.md`
 - **Sprint Plan**: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
 - **Integration Backlog**: `docs/design/integration-backlog.md`
-- **Flow Index**: `apps/project-tracker/docs/metrics/_global/flows/flow-index.md`
+- **Flow Index**:
+  `apps/project-tracker/docs/metrics/_global/flows/flow-index.md`
 - **ADR-020**: `docs/planning/adr/ADR-020-public-site-auth.md`
 - **Page Map**: `docs/design/PAGE_MAP_AND_FLOWS.md`
 

@@ -151,7 +151,9 @@ describe('Account Activation Service', () => {
     });
 
     it('returns invalid error for non-existent token', () => {
-      const result = validateVerificationToken('nonexistent-token-1234567890123456789012345678901234567890');
+      const result = validateVerificationToken(
+        'nonexistent-token-1234567890123456789012345678901234567890'
+      );
 
       expect(result.ok).toBe(false);
       if (!result.ok) {
@@ -229,7 +231,9 @@ describe('Account Activation Service', () => {
     });
 
     it('returns false for non-existent token', () => {
-      const success = markEmailVerified('nonexistent-token-1234567890123456789012345678901234567890');
+      const success = markEmailVerified(
+        'nonexistent-token-1234567890123456789012345678901234567890'
+      );
       expect(success).toBe(false);
     });
 

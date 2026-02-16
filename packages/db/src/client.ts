@@ -213,10 +213,7 @@ export type VectorEmbedding = number[];
 /**
  * Validate embedding dimensions (OpenAI uses 1536)
  */
-export function validateEmbedding(
-  embedding: VectorEmbedding,
-  expectedDimensions = 1536
-): boolean {
+export function validateEmbedding(embedding: VectorEmbedding, expectedDimensions = 1536): boolean {
   return Array.isArray(embedding) && embedding.length === expectedDimensions;
 }
 

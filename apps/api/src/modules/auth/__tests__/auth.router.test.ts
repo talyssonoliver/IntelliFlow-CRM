@@ -111,7 +111,13 @@ vi.mock('../../../lib/supabase', () => ({
 }));
 
 // Import mocked supabase after mocking
-import { signIn, signOut, getSession, signInWithOAuth, exchangeCodeForSession } from '../../../lib/supabase';
+import {
+  signIn,
+  signOut,
+  getSession,
+  signInWithOAuth,
+  exchangeCodeForSession,
+} from '../../../lib/supabase';
 
 describe('authRouter', () => {
   // Create mock context
@@ -171,7 +177,10 @@ describe('authRouter', () => {
     });
     mockMfaService.sendSmsOtp.mockResolvedValue({ success: true });
     mockMfaService.sendEmailOtp.mockResolvedValue({ success: true });
-    mockMfaService.getUserMfaSettings.mockResolvedValue({ totpSecret: 'ABCDEFGHIJ', totpEnabled: false });
+    mockMfaService.getUserMfaSettings.mockResolvedValue({
+      totpSecret: 'ABCDEFGHIJ',
+      totpEnabled: false,
+    });
     mockMfaService.verifyTotp.mockReturnValue(true);
     mockMfaService.saveUserMfaSettings.mockResolvedValue(undefined);
     mockMfaService.generateBackupCodes.mockReturnValue({
@@ -229,7 +238,9 @@ describe('authRouter', () => {
   describe('login', () => {
     it('should successfully login with valid credentials', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.login({
         email: 'test@example.com',
@@ -249,7 +260,9 @@ describe('authRouter', () => {
     it('should return MFA challenge when MFA is enabled', async () => {
       mockMfaService.isUserMfaEnabled.mockResolvedValueOnce(true);
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.login({
         email: 'test@example.com',
@@ -270,7 +283,9 @@ describe('authRouter', () => {
       });
 
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       await expect(
         caller.login({
@@ -296,7 +311,9 @@ describe('authRouter', () => {
       });
 
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       await expect(
         caller.login({
@@ -314,7 +331,9 @@ describe('authRouter', () => {
   describe('loginWithOAuth', () => {
     it('should initiate OAuth flow and return URL', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.loginWithOAuth({
         provider: 'google',
@@ -332,7 +351,9 @@ describe('authRouter', () => {
       });
 
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       await expect(
         caller.loginWithOAuth({
@@ -346,7 +367,9 @@ describe('authRouter', () => {
   describe('oauthCallback', () => {
     it('should exchange code for session', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.oauthCallback({
         code: 'auth_code_123',
@@ -362,7 +385,9 @@ describe('authRouter', () => {
 
     it('should handle OAuth error response', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       // When error is provided, code can be a placeholder since error takes precedence
       await expect(
@@ -383,7 +408,9 @@ describe('authRouter', () => {
   describe('verifyMfa', () => {
     it('should verify MFA code and complete login', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.verifyMfa({
         challengeId: TEST_UUIDS.challenge,
@@ -398,10 +425,15 @@ describe('authRouter', () => {
     });
 
     it('should reject invalid MFA code', async () => {
-      mockMfaService.verifyChallenge.mockResolvedValueOnce({ success: false, error: 'Invalid code' });
+      mockMfaService.verifyChallenge.mockResolvedValueOnce({
+        success: false,
+        error: 'Invalid code',
+      });
 
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       await expect(
         caller.verifyMfa({
@@ -416,7 +448,9 @@ describe('authRouter', () => {
       mockMfaService.getChallengeInfo.mockReturnValueOnce({ exists: false });
 
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       await expect(
         caller.verifyMfa({
@@ -431,7 +465,9 @@ describe('authRouter', () => {
   describe('resendMfaCode', () => {
     it('should resend SMS MFA code', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.resendMfaCode({
         method: 'sms',
@@ -445,7 +481,9 @@ describe('authRouter', () => {
 
     it('should resend email MFA code', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.resendMfaCode({
         method: 'email',
@@ -465,7 +503,9 @@ describe('authRouter', () => {
   describe('logout', () => {
     it('should logout user and revoke sessions', async () => {
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.logout();
 
@@ -489,7 +529,9 @@ describe('authRouter', () => {
   describe('refreshSession', () => {
     it('should refresh session token', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.refreshSession({
         refreshToken: 'refresh_token_123',
@@ -507,7 +549,9 @@ describe('authRouter', () => {
       });
 
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       await expect(
         caller.refreshSession({
@@ -525,7 +569,9 @@ describe('authRouter', () => {
       ]);
 
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.getSessions();
 
@@ -537,7 +583,9 @@ describe('authRouter', () => {
   describe('revokeSession', () => {
     it('should revoke specific session', async () => {
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.revokeSession({
         sessionId: TEST_UUIDS.session,
@@ -557,7 +605,9 @@ describe('authRouter', () => {
       mockSessionService.revokeSession.mockResolvedValueOnce(false);
 
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       await expect(
         caller.revokeSession({
@@ -574,7 +624,9 @@ describe('authRouter', () => {
   describe('setupMfa', () => {
     it('should setup TOTP MFA', async () => {
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.setupMfa({
         method: 'totp',
@@ -588,7 +640,9 @@ describe('authRouter', () => {
 
     it('should setup SMS MFA', async () => {
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.setupMfa({
         method: 'sms',
@@ -603,7 +657,9 @@ describe('authRouter', () => {
 
     it('should require phone for SMS MFA', async () => {
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       await expect(
         caller.setupMfa({
@@ -614,7 +670,9 @@ describe('authRouter', () => {
 
     it('should setup email MFA', async () => {
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.setupMfa({
         method: 'email',
@@ -629,7 +687,9 @@ describe('authRouter', () => {
   describe('confirmMfa', () => {
     it('should confirm and enable TOTP MFA', async () => {
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.confirmMfa({
         method: 'totp',
@@ -651,7 +711,9 @@ describe('authRouter', () => {
       mockMfaService.verifyTotp.mockReturnValueOnce(false);
 
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       await expect(
         caller.confirmMfa({
@@ -665,7 +727,9 @@ describe('authRouter', () => {
   describe('getBackupCodes', () => {
     it('should generate backup codes', async () => {
       const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.getBackupCodes();
 
@@ -711,7 +775,9 @@ describe('authRouter', () => {
         },
         user: undefined,
       };
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.getStatus();
 
@@ -741,7 +807,9 @@ describe('authRouter', () => {
         },
         user: undefined,
       };
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.getStatus();
 
@@ -756,7 +824,9 @@ describe('authRouter', () => {
   describe('verifyEmail', () => {
     it('should process email verification', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.verifyEmail({
         token: 'a'.repeat(64), // 64 hex chars
@@ -774,7 +844,9 @@ describe('authRouter', () => {
   describe('resendVerification', () => {
     it('should resend verification email', async () => {
       const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]);
+      const caller = authRouter.createCaller(
+        mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
+      );
 
       const result = await caller.resendVerification({
         email: 'test@example.com',

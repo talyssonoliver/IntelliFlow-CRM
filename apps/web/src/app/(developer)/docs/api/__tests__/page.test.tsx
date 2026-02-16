@@ -30,7 +30,7 @@ describe('ApiReferencePage', () => {
     render(<ApiReferencePage />);
     expect(screen.getByTestId('api-reference-client')).toHaveAttribute(
       'data-spec-url',
-      '/api/openapi',
+      '/api/openapi'
     );
   });
 

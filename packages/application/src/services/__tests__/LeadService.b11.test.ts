@@ -111,13 +111,7 @@ describe('LeadService - b11', () => {
     aiService = createMockAIService();
     eventBus = createMockEventBus();
 
-    service = new LeadService(
-      leadRepo,
-      contactRepo,
-      accountRepo,
-      aiService,
-      eventBus
-    );
+    service = new LeadService(leadRepo, contactRepo, accountRepo, aiService, eventBus);
   });
 
   describe('publishAccountEvents error path', () => {

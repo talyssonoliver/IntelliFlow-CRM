@@ -6,14 +6,9 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  InMemoryIdempotencyStore,
-  type IdempotencyRecord,
-} from '../IdempotencyStore';
+import { InMemoryIdempotencyStore, type IdempotencyRecord } from '../IdempotencyStore';
 
-function createRecord(
-  overrides: Partial<IdempotencyRecord> = {}
-): IdempotencyRecord {
+function createRecord(overrides: Partial<IdempotencyRecord> = {}): IdempotencyRecord {
   return {
     key: 'test-key',
     operation: 'create',

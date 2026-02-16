@@ -1,28 +1,29 @@
 # Incident Response Runbook - IntelliFlow CRM
 
-**Document ID**: IFC-142-INCIDENT
-**Version**: 1.0.0
-**Last Updated**: 2025-12-29
-**Owner**: STOA-Automation
+**Document ID**: IFC-142-INCIDENT **Version**: 1.0.0 **Last Updated**:
+2025-12-29 **Owner**: STOA-Automation
 
 ---
 
 ## 1. Overview
 
-This runbook provides standardized procedures for responding to incidents affecting IntelliFlow CRM services. All on-call engineers must be familiar with these procedures.
+This runbook provides standardized procedures for responding to incidents
+affecting IntelliFlow CRM services. All on-call engineers must be familiar with
+these procedures.
 
 ### 1.1 Incident Definition
 
-An **incident** is any unplanned interruption to service or reduction in service quality that impacts users or business operations.
+An **incident** is any unplanned interruption to service or reduction in service
+quality that impacts users or business operations.
 
 ### 1.2 Severity Levels
 
-| Level | Name | Definition | Response Time | Resolution Target |
-|-------|------|------------|---------------|-------------------|
-| **P1** | Critical | Complete service outage, data loss, security breach | 5 min | 1 hour |
-| **P2** | High | Major feature unavailable, significant degradation | 15 min | 4 hours |
-| **P3** | Medium | Minor feature issue, performance degradation | 1 hour | 24 hours |
-| **P4** | Low | Cosmetic issues, minor bugs | 8 hours | 1 week |
+| Level  | Name     | Definition                                          | Response Time | Resolution Target |
+| ------ | -------- | --------------------------------------------------- | ------------- | ----------------- |
+| **P1** | Critical | Complete service outage, data loss, security breach | 5 min         | 1 hour            |
+| **P2** | High     | Major feature unavailable, significant degradation  | 15 min        | 4 hours           |
+| **P3** | Medium   | Minor feature issue, performance degradation        | 1 hour        | 24 hours          |
+| **P4** | Low      | Cosmetic issues, minor bugs                         | 8 hours       | 1 week            |
 
 ---
 
@@ -31,16 +32,19 @@ An **incident** is any unplanned interruption to service or reduction in service
 ### 2.1 Phase 1: Detection & Alert (0-5 minutes)
 
 #### Automated Detection
+
 1. Monitoring system detects anomaly
 2. Alert fires to PagerDuty/Slack
 3. On-call engineer receives notification
 
 #### Manual Detection
+
 1. User reports issue via support channels
 2. Support escalates to engineering
 3. On-call engineer is paged
 
 #### First Response Actions
+
 ```
 [ ] Acknowledge the alert within SLA (P1: 5min, P2: 15min)
 [ ] Open incident channel: /incident-open in Slack
@@ -51,6 +55,7 @@ An **incident** is any unplanned interruption to service or reduction in service
 ### 2.2 Phase 2: Triage (5-15 minutes)
 
 #### Gather Information
+
 ```
 [ ] What service(s) are affected?
 [ ] When did the issue start?
@@ -62,6 +67,7 @@ An **incident** is any unplanned interruption to service or reduction in service
 #### Severity Assessment Checklist
 
 **P1 Indicators**:
+
 - [ ] Complete service outage (>50% error rate)
 - [ ] Data corruption or loss
 - [ ] Security breach detected
@@ -69,18 +75,21 @@ An **incident** is any unplanned interruption to service or reduction in service
 - [ ] Revenue-impacting
 
 **P2 Indicators**:
+
 - [ ] Major feature unavailable
 - [ ] Significant performance degradation (>500ms p95)
-- [ ] >10% of users affected
+- [ ] > 10% of users affected
 - [ ] Business operations impacted
 
 **P3 Indicators**:
+
 - [ ] Minor feature issues
 - [ ] <10% users affected
 - [ ] Workaround available
 - [ ] No data impact
 
 #### Escalation Decision
+
 ```
 IF severity >= P2:
     [ ] Escalate to team lead
@@ -96,6 +105,7 @@ IF severity = P1:
 ### 2.3 Phase 3: Mitigation (15-60 minutes)
 
 #### Quick Wins (Try First)
+
 ```
 1. [ ] Restart affected service(s)
 2. [ ] Rollback recent deployment
@@ -107,6 +117,7 @@ IF severity = P1:
 #### Common Scenarios
 
 ##### API High Error Rate
+
 ```bash
 # Check error logs
 kubectl logs -l app=api --tail=1000 | grep ERROR
@@ -122,6 +133,7 @@ kubectl scale deployment/api --replicas=5
 ```
 
 ##### Database Connection Issues
+
 ```bash
 # Check connection pool
 psql -c "SELECT count(*) FROM pg_stat_activity;"
@@ -135,6 +147,7 @@ psql -c "SELECT * FROM pg_locks WHERE granted = false;"
 ```
 
 ##### High Memory/CPU
+
 ```bash
 # Identify resource hogs
 kubectl top pods --sort-by=memory
@@ -147,6 +160,7 @@ kubectl logs <pod-name> | grep -i "heap\|memory"
 ```
 
 ##### AI Service Degradation
+
 ```bash
 # Check AI worker status
 curl http://ai-worker:3000/health
@@ -161,6 +175,7 @@ curl -X POST http://ai-worker:3000/config -d '{"model": "fallback"}'
 ### 2.4 Phase 4: Resolution (Variable)
 
 #### Verification Steps
+
 ```
 [ ] Error rates returned to normal (<0.1%)
 [ ] Latency within SLO (p95 <200ms)
@@ -170,6 +185,7 @@ curl -X POST http://ai-worker:3000/config -d '{"model": "fallback"}'
 ```
 
 #### Documentation During Incident
+
 ```
 [ ] Timeline of events in incident channel
 [ ] Actions taken and results
@@ -180,6 +196,7 @@ curl -X POST http://ai-worker:3000/config -d '{"model": "fallback"}'
 ### 2.5 Phase 5: Post-Incident (24-72 hours)
 
 #### Immediate Actions
+
 ```
 [ ] Update status page to resolved
 [ ] Notify stakeholders of resolution
@@ -188,10 +205,12 @@ curl -X POST http://ai-worker:3000/config -d '{"model": "fallback"}'
 ```
 
 #### Post-Mortem Template
+
 ```markdown
 # Incident Post-Mortem: [INCIDENT-ID]
 
 ## Summary
+
 - Date/Time:
 - Duration:
 - Severity:
@@ -199,40 +218,48 @@ curl -X POST http://ai-worker:3000/config -d '{"model": "fallback"}'
 - Users Impacted:
 
 ## Timeline
-| Time (UTC) | Event |
-|------------|-------|
-| HH:MM | Alert triggered |
-| HH:MM | Engineer acknowledged |
-| HH:MM | Mitigation applied |
-| HH:MM | Resolved |
+
+| Time (UTC) | Event                 |
+| ---------- | --------------------- |
+| HH:MM      | Alert triggered       |
+| HH:MM      | Engineer acknowledged |
+| HH:MM      | Mitigation applied    |
+| HH:MM      | Resolved              |
 
 ## Root Cause
+
 [Detailed technical explanation]
 
 ## Contributing Factors
+
 1.
 2.
 3.
 
 ## Impact
+
 - Revenue: $X
 - Users affected: N
 - Error budget consumed: X%
 
 ## What Went Well
+
 1.
 2.
 
 ## What Went Wrong
+
 1.
 2.
 
 ## Action Items
-| ID | Action | Owner | Due Date | Status |
-|----|--------|-------|----------|--------|
-| 1  |        |       |          |        |
+
+| ID  | Action | Owner | Due Date | Status |
+| --- | ------ | ----- | -------- | ------ |
+| 1   |        |       |          |        |
 
 ## Lessons Learned
+
 1.
 2.
 ```
@@ -242,6 +269,7 @@ curl -X POST http://ai-worker:3000/config -d '{"model": "fallback"}'
 ## 3. Communication Templates
 
 ### 3.1 Initial Notification (P1/P2)
+
 ```
 :rotating_light: INCIDENT DECLARED
 
@@ -257,6 +285,7 @@ Next update in 15 minutes.
 ```
 
 ### 3.2 Status Update
+
 ```
 :yellow_circle: INCIDENT UPDATE
 
@@ -274,6 +303,7 @@ Next update in [X] minutes.
 ```
 
 ### 3.3 Resolution Notification
+
 ```
 :large_green_circle: INCIDENT RESOLVED
 
@@ -290,6 +320,7 @@ Full timeline will be shared in #incidents.
 ```
 
 ### 3.4 Customer Communication (P1)
+
 ```
 Subject: Service Disruption - [Date]
 
@@ -321,7 +352,9 @@ IntelliFlow CRM Team
 ## 4. Role Definitions
 
 ### 4.1 Incident Commander (IC)
+
 **Responsibilities**:
+
 - Coordinate response efforts
 - Make severity and escalation decisions
 - Communicate with stakeholders
@@ -331,7 +364,9 @@ IntelliFlow CRM Team
 **Who**: Senior engineer or designated IC rotation
 
 ### 4.2 Technical Lead
+
 **Responsibilities**:
+
 - Lead technical investigation
 - Direct debugging efforts
 - Make technical decisions on mitigation
@@ -340,7 +375,9 @@ IntelliFlow CRM Team
 **Who**: Most experienced engineer for affected system
 
 ### 4.3 Communications Lead
+
 **Responsibilities**:
+
 - Update status page
 - Draft customer communications
 - Manage Slack updates
@@ -349,7 +386,9 @@ IntelliFlow CRM Team
 **Who**: Support lead or designated comms person
 
 ### 4.4 Scribe
+
 **Responsibilities**:
+
 - Document timeline in real-time
 - Record all actions taken
 - Capture decisions and rationale
@@ -362,29 +401,32 @@ IntelliFlow CRM Team
 ## 5. Tool Reference
 
 ### 5.1 Monitoring & Observability
-| Tool | URL | Purpose |
-|------|-----|---------|
-| Grafana | https://grafana.intelliflow.io | Dashboards, metrics |
-| Prometheus | https://prometheus.intelliflow.io | Metrics queries |
-| Loki | https://grafana.intelliflow.io/explore | Log search |
-| Jaeger | https://jaeger.intelliflow.io | Distributed tracing |
-| Sentry | https://sentry.io/intelliflow | Error tracking |
+
+| Tool       | URL                                    | Purpose             |
+| ---------- | -------------------------------------- | ------------------- |
+| Grafana    | https://grafana.intelliflow.io         | Dashboards, metrics |
+| Prometheus | https://prometheus.intelliflow.io      | Metrics queries     |
+| Loki       | https://grafana.intelliflow.io/explore | Log search          |
+| Jaeger     | https://jaeger.intelliflow.io          | Distributed tracing |
+| Sentry     | https://sentry.io/intelliflow          | Error tracking      |
 
 ### 5.2 Infrastructure
-| Tool | URL/Access | Purpose |
-|------|------------|---------|
-| Kubernetes | `kubectl` | Container orchestration |
-| AWS Console | https://console.aws.amazon.com | Cloud resources |
-| Supabase | https://app.supabase.com | Database |
-| Vercel | https://vercel.com/intelliflow | Deployments |
+
+| Tool        | URL/Access                     | Purpose                 |
+| ----------- | ------------------------------ | ----------------------- |
+| Kubernetes  | `kubectl`                      | Container orchestration |
+| AWS Console | https://console.aws.amazon.com | Cloud resources         |
+| Supabase    | https://app.supabase.com       | Database                |
+| Vercel      | https://vercel.com/intelliflow | Deployments             |
 
 ### 5.3 Communication
-| Tool | Channel | Purpose |
-|------|---------|---------|
-| Slack | #incidents | Active incidents |
-| Slack | #oncall | On-call coordination |
-| PagerDuty | intelliflow | Alerting, escalation |
-| Status Page | status.intelliflow.io | Public status |
+
+| Tool        | Channel               | Purpose              |
+| ----------- | --------------------- | -------------------- |
+| Slack       | #incidents            | Active incidents     |
+| Slack       | #oncall               | On-call coordination |
+| PagerDuty   | intelliflow           | Alerting, escalation |
+| Status Page | status.intelliflow.io | Public status        |
 
 ### 5.4 Useful Commands
 
@@ -414,29 +456,32 @@ kubectl logs -l app=api --since=1h | jq '.level == "error"'
 ## 6. Escalation Contacts
 
 ### 6.1 Engineering
-| Role | Name | Contact |
-|------|------|---------|
-| CTO | [Name] | @cto / +1-XXX-XXX-XXXX |
-| VP Engineering | [Name] | @vpe / +1-XXX-XXX-XXXX |
-| Engineering Manager | [Name] | @em / +1-XXX-XXX-XXXX |
+
+| Role                | Name   | Contact                |
+| ------------------- | ------ | ---------------------- |
+| CTO                 | [Name] | @cto / +1-XXX-XXX-XXXX |
+| VP Engineering      | [Name] | @vpe / +1-XXX-XXX-XXXX |
+| Engineering Manager | [Name] | @em / +1-XXX-XXX-XXXX  |
 
 ### 6.2 External Dependencies
-| Vendor | Support Contact | SLA |
-|--------|-----------------|-----|
-| AWS | aws.amazon.com/support | Enterprise |
-| Supabase | support@supabase.io | Pro |
-| Vercel | support@vercel.com | Pro |
-| OpenAI | help.openai.com | Tier 4 |
-| PagerDuty | support@pagerduty.com | Standard |
+
+| Vendor    | Support Contact        | SLA        |
+| --------- | ---------------------- | ---------- |
+| AWS       | aws.amazon.com/support | Enterprise |
+| Supabase  | support@supabase.io    | Pro        |
+| Vercel    | support@vercel.com     | Pro        |
+| OpenAI    | help.openai.com        | Tier 4     |
+| PagerDuty | support@pagerduty.com  | Standard   |
 
 ### 6.3 Emergency Actions
-| Action | Authority Required | Contact |
-|--------|-------------------|---------|
-| Rollback | On-call engineer | Self |
-| Scale infrastructure | On-call engineer | Self |
-| Region failover | Engineering Manager | @em |
-| Data restoration | DBA + EM approval | #database |
-| Security response | Security team | @security |
+
+| Action               | Authority Required  | Contact   |
+| -------------------- | ------------------- | --------- |
+| Rollback             | On-call engineer    | Self      |
+| Scale infrastructure | On-call engineer    | Self      |
+| Region failover      | Engineering Manager | @em       |
+| Data restoration     | DBA + EM approval   | #database |
+| Security response    | Security team       | @security |
 
 ---
 
@@ -444,25 +489,26 @@ kubectl logs -l app=api --since=1h | jq '.level == "error"'
 
 ### 7.1 Incident Severity Matrix
 
-| Impact | Users Affected | Duration | Data Risk | Severity |
-|--------|---------------|----------|-----------|----------|
-| Total outage | All | Any | Any | P1 |
-| Partial outage | >50% | >15 min | None | P1 |
-| Major feature down | >10% | >30 min | None | P2 |
-| Performance issue | Any | >1 hour | None | P2 |
-| Minor feature issue | <10% | Any | None | P3 |
-| UI/UX issue | Any | Any | None | P4 |
+| Impact              | Users Affected | Duration | Data Risk | Severity |
+| ------------------- | -------------- | -------- | --------- | -------- |
+| Total outage        | All            | Any      | Any       | P1       |
+| Partial outage      | >50%           | >15 min  | None      | P1       |
+| Major feature down  | >10%           | >30 min  | None      | P2       |
+| Performance issue   | Any            | >1 hour  | None      | P2       |
+| Minor feature issue | <10%           | Any      | None      | P3       |
+| UI/UX issue         | Any            | Any      | None      | P4       |
 
 ### 7.2 Error Budget Quick Reference
 
-| Service | Monthly Budget | Current Status |
-|---------|---------------|----------------|
-| API | 43.2 min | [Check Grafana] |
-| Auth | 21.6 min | [Check Grafana] |
-| AI Worker | 3.6 hours | [Check Grafana] |
-| Database | 4.3 min | [Check Grafana] |
+| Service   | Monthly Budget | Current Status  |
+| --------- | -------------- | --------------- |
+| API       | 43.2 min       | [Check Grafana] |
+| Auth      | 21.6 min       | [Check Grafana] |
+| AI Worker | 3.6 hours      | [Check Grafana] |
+| Database  | 4.3 min        | [Check Grafana] |
 
 ### 7.3 Related Documents
+
 - [SLO Definitions](./slo-definitions.md)
 - [On-Call Schedule](../artifacts/misc/oncall-schedule.json)
 - [Alerts Configuration](../artifacts/misc/alerts-config.yaml)
@@ -471,7 +517,6 @@ kubectl logs -l app=api --since=1h | jq '.level == "error"'
 
 ---
 
-**Document History**:
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 1.0.0 | 2025-12-29 | STOA-Automation | Initial release |
+**Document History**: | Version | Date | Author | Changes |
+|---------|------|--------|---------| | 1.0.0 | 2025-12-29 | STOA-Automation |
+Initial release |

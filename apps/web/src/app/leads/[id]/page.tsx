@@ -3,7 +3,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { Card, Skeleton, ChurnRiskCard, NextBestActionCard, type ChurnRiskData, type NextBestActionData, type ChurnRiskLevel, type NBAActionType, type NBAPriority } from '@intelliflow/ui';
+import {
+  Card,
+  Skeleton,
+  ChurnRiskCard,
+  NextBestActionCard,
+  type ChurnRiskData,
+  type NextBestActionData,
+  type ChurnRiskLevel,
+  type NBAActionType,
+  type NBAPriority,
+} from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
@@ -12,6 +22,7 @@ import { AppAvatar } from '@/components/shared/app-avatar';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 import { UpcomingEventsCard } from '@/components/shared';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
+import { ActivityFeed } from '@/components/shared/activity-feed/ActivityFeed';
 
 // Tab types matching Contact360 pattern
 type TabId = 'overview' | 'activity' | 'tasks' | 'notes' | 'emails' | 'files' | 'ai-insights';
@@ -23,8 +34,24 @@ interface Tab {
 }
 
 // Activity types matching database enum
-type ActivityType = 'web_form' | 'score_update' | 'email' | 'call' | 'note' | 'meeting' | 'status_change' | 'qualification';
-type DBActivityType = 'WEB_FORM' | 'EMAIL' | 'CALL' | 'MEETING' | 'NOTE' | 'SCORE_UPDATE' | 'STATUS_CHANGE' | 'QUALIFICATION';
+type ActivityType =
+  | 'web_form'
+  | 'score_update'
+  | 'email'
+  | 'call'
+  | 'note'
+  | 'meeting'
+  | 'status_change'
+  | 'qualification';
+type DBActivityType =
+  | 'WEB_FORM'
+  | 'EMAIL'
+  | 'CALL'
+  | 'MEETING'
+  | 'NOTE'
+  | 'SCORE_UPDATE'
+  | 'STATUS_CHANGE'
+  | 'QUALIFICATION';
 
 // Map database activity types to UI activity types
 const mapActivityType = (dbType: DBActivityType): ActivityType => {
@@ -42,7 +69,9 @@ const mapActivityType = (dbType: DBActivityType): ActivityType => {
 };
 
 // Map sentiment from database to UI
-const mapSentiment = (dbSentiment: string | null): 'positive' | 'neutral' | 'negative' | undefined => {
+const mapSentiment = (
+  dbSentiment: string | null
+): 'positive' | 'neutral' | 'negative' | undefined => {
   if (!dbSentiment) return undefined;
   const sentimentMap: Record<string, 'positive' | 'neutral' | 'negative'> = {
     POSITIVE: 'positive',
@@ -95,8 +124,10 @@ type LeadSource = 'WEBSITE' | 'REFERRAL' | 'SOCIAL' | 'EMAIL' | 'COLD_CALL' | 'E
 type LeadTemperature = 'hot' | 'warm' | 'cold';
 
 // Default avatar for leads without one
-const defaultLeadAvatar = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&h=160&fit=crop&crop=face';
-const defaultOwnerAvatar = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face';
+const defaultLeadAvatar =
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&h=160&fit=crop&crop=face';
+const defaultOwnerAvatar =
+  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face';
 
 // Extended Lead type with relations (to be replaced by Prisma-generated types after regeneration)
 interface LeadWithRelations {
@@ -192,33 +223,41 @@ function LeadStatusBadge({ status }: { status: LeadStatus }) {
   const statusConfig: Record<LeadStatus, { label: string; className: string }> = {
     NEW: {
       label: 'New Lead',
-      className: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800',
+      className:
+        'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800',
     },
     CONTACTED: {
       label: 'Contacted',
-      className: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800',
+      className:
+        'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800',
     },
     QUALIFIED: {
       label: 'Qualified',
-      className: 'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800',
+      className:
+        'bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800',
     },
     UNQUALIFIED: {
       label: 'Unqualified',
-      className: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
+      className:
+        'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
     },
     CONVERTED: {
       label: 'Converted',
-      className: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800',
+      className:
+        'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800',
     },
     LOST: {
       label: 'Lost',
-      className: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800',
+      className:
+        'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800',
     },
   };
 
   const config = statusConfig[status];
   return (
-    <span className={`inline-flex items-center px-2 py-1 rounded border text-xs font-semibold ${config.className}`}>
+    <span
+      className={`inline-flex items-center px-2 py-1 rounded border text-xs font-semibold ${config.className}`}
+    >
       {config.label}
     </span>
   );
@@ -227,13 +266,25 @@ function LeadStatusBadge({ status }: { status: LeadStatus }) {
 // Temperature Badge Component
 function TemperatureBadge({ temperature }: { temperature: LeadTemperature }) {
   const config: Record<LeadTemperature, { label: string; className: string }> = {
-    hot: { label: 'Hot', className: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400' },
-    warm: { label: 'Warm', className: 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400' },
-    cold: { label: 'Cold', className: 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-400' },
+    hot: {
+      label: 'Hot',
+      className: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400',
+    },
+    warm: {
+      label: 'Warm',
+      className:
+        'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400',
+    },
+    cold: {
+      label: 'Cold',
+      className: 'bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-400',
+    },
   };
 
   return (
-    <span className={`inline-flex items-center px-2 py-1 rounded border text-xs font-semibold ${config[temperature].className}`}>
+    <span
+      className={`inline-flex items-center px-2 py-1 rounded border text-xs font-semibold ${config[temperature].className}`}
+    >
       {config[temperature].label}
     </span>
   );
@@ -253,7 +304,9 @@ function SourceBadge({ source }: { source: LeadSource }) {
 
   const config = sourceConfig[source];
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded border text-xs font-medium ${config.className}`}>
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded border text-xs font-medium ${config.className}`}
+    >
       {config.label}
     </span>
   );
@@ -269,13 +322,18 @@ export default function Lead360Page() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
 
   // Fetch lead data from API
-  const { data: rawApiLead, isLoading, error } = api.lead.getById.useQuery(
+  const {
+    data: rawApiLead,
+    isLoading,
+    error,
+  } = api.lead.getById.useQuery(
     { id: leadId },
     { enabled: isAuthenticated && !authLoading && !!leadId }
   );
 
   // Check for auth errors
-  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+  const isAuthError =
+    error?.data?.code === 'UNAUTHORIZED' ||
     error?.message?.toLowerCase().includes('authentication') ||
     error?.message?.toLowerCase().includes('unauthorized');
 
@@ -297,6 +355,7 @@ export default function Lead360Page() {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedActivities, setExpandedActivities] = useState<Set<string>>(new Set());
   const [visibleCount, setVisibleCount] = useState(5);
+  const [activityView, setActivityView] = useState<'timeline' | 'unified'>('timeline');
 
   // Calculate temperature based on score
   const getTemperature = (score: number): LeadTemperature => {
@@ -308,13 +367,20 @@ export default function Lead360Page() {
   // Transform API data to UI format
   const lead = useMemo(() => {
     if (!apiLead) return null;
-    const normalizedLeadAvatar = normalizeAvatarSource(apiLead.avatarUrl) ?? normalizeAvatarSource(defaultLeadAvatar) ?? defaultLeadAvatar;
-    const normalizedOwnerAvatar = normalizeAvatarSource(apiLead.owner?.avatarUrl) ?? normalizeAvatarSource(defaultOwnerAvatar) ?? defaultOwnerAvatar;
+    const normalizedLeadAvatar =
+      normalizeAvatarSource(apiLead.avatarUrl) ??
+      normalizeAvatarSource(defaultLeadAvatar) ??
+      defaultLeadAvatar;
+    const normalizedOwnerAvatar =
+      normalizeAvatarSource(apiLead.owner?.avatarUrl) ??
+      normalizeAvatarSource(defaultOwnerAvatar) ??
+      defaultOwnerAvatar;
 
     // Handle phone - could be string or value object
-    const phoneValue = typeof apiLead.phone === 'string'
-      ? apiLead.phone
-      : (apiLead.phone as { value?: string } | null)?.value || '';
+    const phoneValue =
+      typeof apiLead.phone === 'string'
+        ? apiLead.phone
+        : (apiLead.phone as { value?: string } | null)?.value || '';
 
     return {
       id: apiLead.id,
@@ -335,15 +401,17 @@ export default function Lead360Page() {
       avatarUrl: normalizedLeadAvatar,
       estimatedValue: apiLead.estimatedValue || 0,
       tags: apiLead.tags || [],
-      owner: apiLead.owner ? {
-        name: apiLead.owner.name || 'Unknown',
-        title: 'Sales Representative',
-        avatarUrl: normalizedOwnerAvatar,
-      } : {
-        name: 'Unassigned',
-        title: '',
-        avatarUrl: normalizedOwnerAvatar,
-      },
+      owner: apiLead.owner
+        ? {
+            name: apiLead.owner.name || 'Unknown',
+            title: 'Sales Representative',
+            avatarUrl: normalizedOwnerAvatar,
+          }
+        : {
+            name: 'Unassigned',
+            title: '',
+            avatarUrl: normalizedOwnerAvatar,
+          },
     };
   }, [apiLead]);
 
@@ -382,7 +450,8 @@ export default function Lead360Page() {
       id: file.id,
       name: file.name,
       size: file.size,
-      uploadedAt: typeof file.uploadedAt === 'string' ? file.uploadedAt : file.uploadedAt.toISOString(),
+      uploadedAt:
+        typeof file.uploadedAt === 'string' ? file.uploadedAt : file.uploadedAt.toISOString(),
     }));
   }, [apiLead?.files]);
 
@@ -392,7 +461,11 @@ export default function Lead360Page() {
     return apiLead.tasks.map((task) => ({
       id: task.id,
       title: task.title,
-      dueDate: task.dueDate ? (typeof task.dueDate === 'string' ? task.dueDate : task.dueDate.toISOString()) : '',
+      dueDate: task.dueDate
+        ? typeof task.dueDate === 'string'
+          ? task.dueDate
+          : task.dueDate.toISOString()
+        : '',
       priority: task.priority?.toLowerCase() || 'medium',
       completed: task.status === 'COMPLETED',
     }));
@@ -435,7 +508,8 @@ export default function Lead360Page() {
       };
     }
 
-    const engagementLevel = insight.engagementScore >= 70 ? 'High' : insight.engagementScore >= 40 ? 'Medium' : 'Low';
+    const engagementLevel =
+      insight.engagementScore >= 70 ? 'High' : insight.engagementScore >= 40 ? 'Medium' : 'Low';
 
     return {
       qualificationScore: lead?.score || insight.engagementScore,
@@ -495,12 +569,39 @@ export default function Lead360Page() {
       level,
       confidence: 0.85,
       slaHours: slaMap[level],
-      trend: insight.sentimentTrend === 'IMPROVING' ? 'IMPROVING' :
-             insight.sentimentTrend === 'DECLINING' ? 'DECLINING' : 'STABLE',
+      trend:
+        insight.sentimentTrend === 'IMPROVING'
+          ? 'IMPROVING'
+          : insight.sentimentTrend === 'DECLINING'
+            ? 'DECLINING'
+            : 'STABLE',
       factors: [
-        { factor: 'Engagement Score', impact: insight.engagementScore < 30 ? 'HIGH' : insight.engagementScore < 60 ? 'MEDIUM' : 'LOW', value: `${insight.engagementScore}%` },
-        { factor: 'Days Since Contact', impact: insight.lastEngagementDays > 30 ? 'HIGH' : insight.lastEngagementDays > 14 ? 'MEDIUM' : 'LOW', value: `${insight.lastEngagementDays} days` },
-        { factor: 'Conversion Probability', impact: insight.conversionProbability < 30 ? 'HIGH' : insight.conversionProbability < 60 ? 'MEDIUM' : 'LOW', value: `${insight.conversionProbability}%` },
+        {
+          factor: 'Engagement Score',
+          impact:
+            insight.engagementScore < 30 ? 'HIGH' : insight.engagementScore < 60 ? 'MEDIUM' : 'LOW',
+          value: `${insight.engagementScore}%`,
+        },
+        {
+          factor: 'Days Since Contact',
+          impact:
+            insight.lastEngagementDays > 30
+              ? 'HIGH'
+              : insight.lastEngagementDays > 14
+                ? 'MEDIUM'
+                : 'LOW',
+          value: `${insight.lastEngagementDays} days`,
+        },
+        {
+          factor: 'Conversion Probability',
+          impact:
+            insight.conversionProbability < 30
+              ? 'HIGH'
+              : insight.conversionProbability < 60
+                ? 'MEDIUM'
+                : 'LOW',
+          value: `${insight.conversionProbability}%`,
+        },
       ],
     };
   }, [apiLead?.aiInsight]);
@@ -551,15 +652,18 @@ export default function Lead360Page() {
   }, [activities]);
 
   // Dynamic tabs with real counts
-  const tabs: Tab[] = useMemo(() => [
-    { id: 'overview', label: 'Overview' },
-    { id: 'activity', label: 'Activity', count: activities.length },
-    { id: 'tasks', label: 'Tasks', count: tasks.filter((t) => !t.completed).length },
-    { id: 'notes', label: 'Notes', count: notes.length },
-    { id: 'emails', label: 'Emails', count: emails.length },
-    { id: 'files', label: 'Files', count: files.length },
-    { id: 'ai-insights', label: 'AI Insights' },
-  ], [activities.length, tasks, notes.length, emails.length, files.length]);
+  const tabs: Tab[] = useMemo(
+    () => [
+      { id: 'overview', label: 'Overview' },
+      { id: 'activity', label: 'Activity', count: activities.length },
+      { id: 'tasks', label: 'Tasks', count: tasks.filter((t) => !t.completed).length },
+      { id: 'notes', label: 'Notes', count: notes.length },
+      { id: 'emails', label: 'Emails', count: emails.length },
+      { id: 'files', label: 'Files', count: files.length },
+      { id: 'ai-insights', label: 'AI Insights' },
+    ],
+    [activities.length, tasks, notes.length, emails.length, files.length]
+  );
 
   // Loading state
   if (isLoading) {
@@ -600,7 +704,9 @@ export default function Lead360Page() {
     return (
       <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         <Card className="p-8 text-center">
-          <span className="material-symbols-outlined text-5xl text-slate-400 mb-4 animate-spin">progress_activity</span>
+          <span className="material-symbols-outlined text-5xl text-slate-400 mb-4 animate-spin">
+            progress_activity
+          </span>
           <p className="text-slate-500 dark:text-slate-400">Redirecting to login...</p>
         </Card>
       </div>
@@ -615,9 +721,13 @@ export default function Lead360Page() {
           <span className="material-symbols-outlined text-5xl text-red-500 mb-4">error</span>
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Lead Not Found</h2>
           <p className="text-slate-500 dark:text-slate-400 mb-4">
-            The lead you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to view it.
+            The lead you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to
+            view it.
           </p>
-          <Link href="/leads" className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors">
+          <Link
+            href="/leads"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+          >
             <span className="material-symbols-outlined !text-lg">arrow_back</span>
             Back to Leads
           </Link>
@@ -650,7 +760,8 @@ export default function Lead360Page() {
       const matchesTitle = activity.title.toLowerCase().includes(query);
       const matchesDescription = activity.description.toLowerCase().includes(query);
       const matchesUser = activity.user.toLowerCase().includes(query);
-      const matchesMetadata = activity.metadata?.subject?.toLowerCase().includes(query) ||
+      const matchesMetadata =
+        activity.metadata?.subject?.toLowerCase().includes(query) ||
         activity.metadata?.preview?.toLowerCase().includes(query) ||
         activity.metadata?.message?.toLowerCase().includes(query);
       if (!matchesTitle && !matchesDescription && !matchesUser && !matchesMetadata) return false;
@@ -729,9 +840,12 @@ export default function Lead360Page() {
 
   const getSentimentTrendStyle = (trend?: string) => {
     switch (trend) {
-      case 'improving': return 'text-green-600';
-      case 'declining': return 'text-red-600';
-      default: return 'text-slate-600';
+      case 'improving':
+        return 'text-green-600';
+      case 'declining':
+        return 'text-red-600';
+      default:
+        return 'text-slate-600';
     }
   };
 
@@ -744,7 +858,9 @@ export default function Lead360Page() {
       case 'web_form':
         return (
           <div className="mt-2 bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400">
-            <p><span className="font-semibold">Message:</span> "{meta.message}"</p>
+            <p>
+              <span className="font-semibold">Message:</span> "{meta.message}"
+            </p>
           </div>
         );
 
@@ -752,21 +868,34 @@ export default function Lead360Page() {
         return (
           <div className="mt-2 flex items-center gap-2">
             <span className="text-xs text-slate-500">Score changed from</span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">{meta.oldScore}</span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
+              {meta.oldScore}
+            </span>
             <span className="material-symbols-outlined text-slate-400 !text-sm">arrow_forward</span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">{meta.newScore}</span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
+              {meta.newScore}
+            </span>
           </div>
         );
 
       case 'email':
         return (
           <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
-            {meta.subject && <p className="text-sm font-medium text-slate-900 dark:text-white mb-1">{meta.subject}</p>}
-            {meta.preview && <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{meta.preview}</p>}
+            {meta.subject && (
+              <p className="text-sm font-medium text-slate-900 dark:text-white mb-1">
+                {meta.subject}
+              </p>
+            )}
+            {meta.preview && (
+              <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+                {meta.preview}
+              </p>
+            )}
             <div className="flex gap-2 mt-2">
               {meta.opened && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-600 border border-blue-100">
-                  <span className="material-symbols-outlined !text-[14px] mr-1">done_all</span> Opened{meta.openCount && meta.openCount > 1 ? ` ${meta.openCount}x` : ''}
+                  <span className="material-symbols-outlined !text-[14px] mr-1">done_all</span>{' '}
+                  Opened{meta.openCount && meta.openCount > 1 ? ` ${meta.openCount}x` : ''}
                 </span>
               )}
               {meta.clicked && (
@@ -783,12 +912,20 @@ export default function Lead360Page() {
           <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                  meta.outcome === 'connected' ? 'bg-green-100 text-green-700' :
-                  meta.outcome === 'voicemail' ? 'bg-yellow-100 text-yellow-700' :
-                  'bg-red-100 text-red-700'
-                }`}>
-                  {meta.outcome === 'connected' ? '✓ Connected' : meta.outcome === 'voicemail' ? '📞 Voicemail' : '✗ No Answer'}
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                    meta.outcome === 'connected'
+                      ? 'bg-green-100 text-green-700'
+                      : meta.outcome === 'voicemail'
+                        ? 'bg-yellow-100 text-yellow-700'
+                        : 'bg-red-100 text-red-700'
+                  }`}
+                >
+                  {meta.outcome === 'connected'
+                    ? '✓ Connected'
+                    : meta.outcome === 'voicemail'
+                      ? '📞 Voicemail'
+                      : '✗ No Answer'}
                 </span>
                 {meta.duration && <span className="text-sm text-slate-500">{meta.duration}</span>}
               </div>
@@ -854,11 +991,17 @@ export default function Lead360Page() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-            <Link href="/leads" className="hover:text-[#137fec]">Leads</Link>
+            <Link href="/leads" className="hover:text-[#137fec]">
+              Leads
+            </Link>
             <span className="material-symbols-outlined !text-sm">chevron_right</span>
-            <span className="font-medium text-slate-900 dark:text-white">{lead.firstName} {lead.lastName}</span>
+            <span className="font-medium text-slate-900 dark:text-white">
+              {lead.firstName} {lead.lastName}
+            </span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{lead.firstName} {lead.lastName}</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            {lead.firstName} {lead.lastName}
+          </h1>
         </div>
         <div className="flex gap-3">
           <button className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
@@ -911,8 +1054,12 @@ export default function Lead360Page() {
                 />
               </div>
               <div className="mb-4">
-                <h2 className="text-xl font-bold text-slate-900 dark:text-white">{lead.firstName} {lead.lastName}</h2>
-                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{lead.title}</p>
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                  {lead.firstName} {lead.lastName}
+                </h2>
+                <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
+                  {lead.title}
+                </p>
                 <div className="flex items-center gap-1 text-[#137fec] text-sm font-medium mt-1">
                   <span className="material-symbols-outlined !text-sm">domain</span>
                   <span>{lead.company}</span>
@@ -922,43 +1069,77 @@ export default function Lead360Page() {
                 <LeadStatusBadge status={lead.status} />
                 <TemperatureBadge temperature={lead.temperature} />
                 {lead.tags.map((tag) => (
-                  <span key={tag} className="px-2 py-1 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-medium">{tag}</span>
+                  <span
+                    key={tag}
+                    className="px-2 py-1 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-medium"
+                  >
+                    {tag}
+                  </span>
                 ))}
               </div>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">mail</span>
+                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">
+                    mail
+                  </span>
                   <div className="flex flex-col">
                     <span className="text-xs text-slate-400 uppercase font-semibold">Email</span>
-                    <a href={`mailto:${lead.email}`} className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec] break-all">{lead.email}</a>
+                    <a
+                      href={`mailto:${lead.email}`}
+                      className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec] break-all"
+                    >
+                      {lead.email}
+                    </a>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">call</span>
+                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">
+                    call
+                  </span>
                   <div className="flex flex-col">
                     <span className="text-xs text-slate-400 uppercase font-semibold">Phone</span>
-                    <a href={`tel:${lead.phone.replace(/\D/g, '')}`} className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec]">{lead.phone}</a>
+                    <a
+                      href={`tel:${lead.phone.replace(/\D/g, '')}`}
+                      className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec]"
+                    >
+                      {lead.phone}
+                    </a>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">location_on</span>
+                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">
+                    location_on
+                  </span>
                   <div className="flex flex-col">
                     <span className="text-xs text-slate-400 uppercase font-semibold">Location</span>
-                    <span className="text-sm text-slate-700 dark:text-slate-300">{lead.location}</span>
+                    <span className="text-sm text-slate-700 dark:text-slate-300">
+                      {lead.location}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">language</span>
+                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">
+                    language
+                  </span>
                   <div className="flex flex-col">
                     <span className="text-xs text-slate-400 uppercase font-semibold">Website</span>
-                    <a href={`https://${lead.website}`} target="_blank" rel="noopener noreferrer" className="text-sm text-[#137fec] hover:underline">{lead.website}</a>
+                    <a
+                      href={`https://${lead.website}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-[#137fec] hover:underline"
+                    >
+                      {lead.website}
+                    </a>
                   </div>
                 </div>
               </div>
               {/* Metrics Grid */}
               <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <p className="text-lg font-bold text-slate-900 dark:text-white">${(leadMetrics.estimatedValue / 1000).toFixed(0)}k</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-white">
+                    ${(leadMetrics.estimatedValue / 1000).toFixed(0)}k
+                  </p>
                   <p className="text-xs text-slate-500">Est. Value</p>
                 </div>
                 <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
@@ -966,11 +1147,18 @@ export default function Lead360Page() {
                   <p className="text-xs text-slate-500">Lead Score</p>
                 </div>
                 <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <p className="text-lg font-bold text-slate-900 dark:text-white">{leadMetrics.emailsSent > 0 ? Math.round((leadMetrics.emailsOpened / leadMetrics.emailsSent) * 100) : 0}%</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-white">
+                    {leadMetrics.emailsSent > 0
+                      ? Math.round((leadMetrics.emailsOpened / leadMetrics.emailsSent) * 100)
+                      : 0}
+                    %
+                  </p>
                   <p className="text-xs text-slate-500">Open Rate</p>
                 </div>
                 <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <p className="text-lg font-bold text-slate-900 dark:text-white">{leadMetrics.touchpoints}</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-white">
+                    {leadMetrics.touchpoints}
+                  </p>
                   <p className="text-xs text-slate-500">Touchpoints</p>
                 </div>
               </div>
@@ -979,8 +1167,12 @@ export default function Lead360Page() {
             <div className="h-32 w-full bg-cover bg-center border-t border-slate-200 dark:border-slate-800 relative">
               <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-50 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
                 <div className="text-center">
-                  <span className="material-symbols-outlined text-[#137fec] !text-3xl mb-1">location_on</span>
-                  <button className="bg-white/90 text-slate-900 text-xs font-bold px-3 py-1.5 rounded shadow-sm hover:bg-white transition">View Map</button>
+                  <span className="material-symbols-outlined text-[#137fec] !text-3xl mb-1">
+                    location_on
+                  </span>
+                  <button className="bg-white/90 text-slate-900 text-xs font-bold px-3 py-1.5 rounded shadow-sm hover:bg-white transition">
+                    View Map
+                  </button>
                 </div>
               </div>
             </div>
@@ -988,7 +1180,9 @@ export default function Lead360Page() {
 
           {/* Lead Owner */}
           <Card className="p-5">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase mb-3 tracking-wider">Lead Owner</h3>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase mb-3 tracking-wider">
+              Lead Owner
+            </h3>
             <div className="flex items-center gap-3">
               <AppAvatar
                 name={lead.owner.name}
@@ -997,7 +1191,9 @@ export default function Lead360Page() {
                 fallbackClassName="text-sm font-bold bg-slate-200 dark:bg-slate-700"
               />
               <div>
-                <p className="text-sm font-bold text-slate-900 dark:text-white">{lead.owner.name}</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white">
+                  {lead.owner.name}
+                </p>
                 <p className="text-xs text-slate-500">{lead.owner.title}</p>
               </div>
             </div>
@@ -1021,7 +1217,9 @@ export default function Lead360Page() {
                 >
                   {tab.label}
                   {tab.count !== undefined && tab.count > 0 && (
-                    <span className="ml-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full">{tab.count}</span>
+                    <span className="ml-1.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[10px] px-1.5 py-0.5 rounded-full">
+                      {tab.count}
+                    </span>
                   )}
                 </button>
               ))}
@@ -1066,60 +1264,105 @@ export default function Lead360Page() {
             <div className="space-y-6">
               <Card className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Recent Activity</h3>
-                  <button onClick={() => setActiveTab('activity')} className="text-sm text-[#137fec] hover:underline">View All</button>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                    Recent Activity
+                  </h3>
+                  <button
+                    onClick={() => setActiveTab('activity')}
+                    className="text-sm text-[#137fec] hover:underline"
+                  >
+                    View All
+                  </button>
                 </div>
                 <div className="space-y-4">
-                  {activities.length > 0 ? activities.slice(0, 3).map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${getActivityIconBg(activity.type)}`}>
-                        <span className="material-symbols-outlined !text-[16px]">{getActivityIcon(activity.type)}</span>
+                  {activities.length > 0 ? (
+                    activities.slice(0, 3).map((activity) => (
+                      <div key={activity.id} className="flex items-start gap-3">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${getActivityIconBg(activity.type)}`}
+                        >
+                          <span className="material-symbols-outlined !text-[16px]">
+                            {getActivityIcon(activity.type)}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-900 dark:text-white">
+                            {activity.title}
+                          </p>
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+                            {activity.description}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-1">
+                            {activity.user} • {formatRelativeTime(activity.timestamp)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 dark:text-white">{activity.title}</p>
-                        <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{activity.description}</p>
-                        <p className="text-xs text-slate-500 mt-1">{activity.user} • {formatRelativeTime(activity.timestamp)}</p>
-                      </div>
-                    </div>
-                  )) : (
+                    ))
+                  ) : (
                     <p className="text-sm text-slate-500 text-center py-4">No activities yet</p>
                   )}
                 </div>
               </Card>
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Lead Information</h3>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                  Lead Information
+                </h3>
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <dt className="text-sm text-slate-500 dark:text-slate-400">Status</dt>
-                    <dd className="text-sm font-medium mt-1"><LeadStatusBadge status={lead.status} /></dd>
+                    <dd className="text-sm font-medium mt-1">
+                      <LeadStatusBadge status={lead.status} />
+                    </dd>
                   </div>
                   <div>
                     <dt className="text-sm text-slate-500 dark:text-slate-400">Source</dt>
-                    <dd className="text-sm font-medium mt-1"><SourceBadge source={lead.source} /></dd>
+                    <dd className="text-sm font-medium mt-1">
+                      <SourceBadge source={lead.source} />
+                    </dd>
                   </div>
                   <div>
                     <dt className="text-sm text-slate-500 dark:text-slate-400">Temperature</dt>
-                    <dd className="text-sm font-medium mt-1"><TemperatureBadge temperature={lead.temperature} /></dd>
+                    <dd className="text-sm font-medium mt-1">
+                      <TemperatureBadge temperature={lead.temperature} />
+                    </dd>
                   </div>
                   <div>
                     <dt className="text-sm text-slate-500 dark:text-slate-400">Lead Owner</dt>
-                    <dd className="text-sm font-medium text-slate-900 dark:text-white">{lead.owner.name}</dd>
+                    <dd className="text-sm font-medium text-slate-900 dark:text-white">
+                      {lead.owner.name}
+                    </dd>
                   </div>
                   <div>
                     <dt className="text-sm text-slate-500 dark:text-slate-400">Last Contacted</dt>
-                    <dd className="text-sm font-medium text-slate-900 dark:text-white">{formatRelativeTime(typeof lead.lastContactedAt === 'string' ? lead.lastContactedAt : lead.lastContactedAt.toISOString())}</dd>
+                    <dd className="text-sm font-medium text-slate-900 dark:text-white">
+                      {formatRelativeTime(
+                        typeof lead.lastContactedAt === 'string'
+                          ? lead.lastContactedAt
+                          : lead.lastContactedAt.toISOString()
+                      )}
+                    </dd>
                   </div>
                   <div>
                     <dt className="text-sm text-slate-500 dark:text-slate-400">Created</dt>
-                    <dd className="text-sm font-medium text-slate-900 dark:text-white">{formatDate(typeof lead.createdAt === 'string' ? lead.createdAt : lead.createdAt.toISOString())}</dd>
+                    <dd className="text-sm font-medium text-slate-900 dark:text-white">
+                      {formatDate(
+                        typeof lead.createdAt === 'string'
+                          ? lead.createdAt
+                          : lead.createdAt.toISOString()
+                      )}
+                    </dd>
                   </div>
                   <div>
                     <dt className="text-sm text-slate-500 dark:text-slate-400">Company</dt>
-                    <dd className="text-sm font-medium"><span className="text-[#137fec]">{lead.company}</span></dd>
+                    <dd className="text-sm font-medium">
+                      <span className="text-[#137fec]">{lead.company}</span>
+                    </dd>
                   </div>
                   <div>
                     <dt className="text-sm text-slate-500 dark:text-slate-400">Lead Score</dt>
-                    <dd className="text-sm font-medium text-slate-900 dark:text-white">{lead.score}/100</dd>
+                    <dd className="text-sm font-medium text-slate-900 dark:text-white">
+                      {lead.score}/100
+                    </dd>
                   </div>
                 </dl>
               </Card>
@@ -1136,11 +1379,48 @@ export default function Lead360Page() {
           {/* Activity Tab - Timeline with Filters */}
           {activeTab === 'activity' && (
             <Card className="p-6">
+              {/* View Toggle: Timeline (single-source) vs Unified (7-source IFC-069) */}
+              <div className="flex items-center gap-1 mb-4 bg-slate-100 dark:bg-slate-800 rounded-lg p-1 w-fit">
+                <button
+                  onClick={() => setActivityView('timeline')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    activityView === 'timeline'
+                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-sm align-middle mr-1">timeline</span>
+                  Timeline
+                </button>
+                <button
+                  onClick={() => setActivityView('unified')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                    activityView === 'unified'
+                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-sm align-middle mr-1">dynamic_feed</span>
+                  All Sources
+                </button>
+              </div>
+
+              {activityView === 'unified' ? (
+                <ActivityFeed
+                  entityType="LEAD"
+                  entityId={leadId}
+                  height={500}
+                  emptyMessage="No activity found across all sources"
+                />
+              ) : (
+              <>
               {/* Filters and Search Bar */}
               <div className="mb-6 space-y-4">
                 {/* Search */}
                 <div className="relative">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 !text-[18px] text-slate-400">search</span>
+                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 !text-[18px] text-slate-400">
+                    search
+                  </span>
                   <input
                     type="text"
                     value={searchQuery}
@@ -1177,12 +1457,18 @@ export default function Lead360Page() {
                     className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec]"
                   >
                     {personFilters.map((filter) => (
-                      <option key={filter.value} value={filter.value}>{filter.label}</option>
+                      <option key={filter.value} value={filter.value}>
+                        {filter.label}
+                      </option>
                     ))}
                   </select>
                   {(activityTypeFilter !== 'all' || personFilter !== 'all' || searchQuery) && (
                     <button
-                      onClick={() => { setActivityTypeFilter('all'); setPersonFilter('all'); setSearchQuery(''); }}
+                      onClick={() => {
+                        setActivityTypeFilter('all');
+                        setPersonFilter('all');
+                        setSearchQuery('');
+                      }}
                       className="text-xs text-[#137fec] hover:underline"
                     >
                       Clear filters
@@ -1194,13 +1480,21 @@ export default function Lead360Page() {
                 {aiInsights.sentimentTrend && (
                   <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
                     <div className="w-8 h-8 rounded-full bg-[#137fec]/10 flex items-center justify-center">
-                      <span className="material-symbols-outlined !text-[18px] text-[#137fec]">auto_awesome</span>
+                      <span className="material-symbols-outlined !text-[18px] text-[#137fec]">
+                        auto_awesome
+                      </span>
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-slate-900 dark:text-white">
-                        Sentiment is <span className={getSentimentTrendStyle(aiInsights.sentimentTrend)}>{aiInsights.sentimentTrend}</span>
+                        Sentiment is{' '}
+                        <span className={getSentimentTrendStyle(aiInsights.sentimentTrend)}>
+                          {aiInsights.sentimentTrend}
+                        </span>
                       </p>
-                      <p className="text-xs text-slate-500">Last engagement: {aiInsights.lastEngagementDays} day{aiInsights.lastEngagementDays !== 1 ? 's' : ''} ago</p>
+                      <p className="text-xs text-slate-500">
+                        Last engagement: {aiInsights.lastEngagementDays} day
+                        {aiInsights.lastEngagementDays !== 1 ? 's' : ''} ago
+                      </p>
                     </div>
                   </div>
                 )}
@@ -1225,22 +1519,36 @@ export default function Lead360Page() {
                       {/* Activity Card */}
                       <div className="relative ml-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-600 transition-colors">
                         {/* Timeline dot */}
-                        <div className={`absolute -left-8 top-4 w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center z-10 ${getActivityIconBg(activity.type)}`}>
-                          <span className="material-symbols-outlined !text-[16px]">{getActivityIcon(activity.type)}</span>
+                        <div
+                          className={`absolute -left-8 top-4 w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center z-10 ${getActivityIconBg(activity.type)}`}
+                        >
+                          <span className="material-symbols-outlined !text-[16px]">
+                            {getActivityIcon(activity.type)}
+                          </span>
                         </div>
 
                         {/* Header */}
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1">
-                            <p className="text-sm font-semibold text-slate-900 dark:text-white">{activity.title}</p>
-                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">{activity.description}</p>
-                            <p className="text-xs text-slate-500 mt-1">{activity.user} • {formatRelativeTime(activity.timestamp)}</p>
+                            <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                              {activity.title}
+                            </p>
+                            <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+                              {activity.description}
+                            </p>
+                            <p className="text-xs text-slate-500 mt-1">
+                              {activity.user} • {formatRelativeTime(activity.timestamp)}
+                            </p>
                           </div>
                           <button
                             onClick={() => toggleExpand(activity.id)}
                             className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
                           >
-                            <span className={`material-symbols-outlined !text-[18px] transition-transform ${isExpanded ? 'rotate-180' : ''}`}>expand_more</span>
+                            <span
+                              className={`material-symbols-outlined !text-[18px] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                            >
+                              expand_more
+                            </span>
                           </button>
                         </div>
 
@@ -1248,7 +1556,10 @@ export default function Lead360Page() {
                         {activity.reactions && activity.reactions.length > 0 && (
                           <div className="flex items-center gap-2 mt-2">
                             {activity.reactions.map((reaction) => (
-                              <span key={`${activity.id}-${reaction.emoji}`} className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-full text-xs">
+                              <span
+                                key={`${activity.id}-${reaction.emoji}`}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-700 rounded-full text-xs"
+                              >
                                 {reaction.emoji} {reaction.count}
                               </span>
                             ))}
@@ -1264,11 +1575,20 @@ export default function Lead360Page() {
                             {/* Comments */}
                             {activity.comments && activity.comments.length > 0 && (
                               <div className="mt-3 space-y-2">
-                                <p className="text-xs font-semibold text-slate-500 uppercase">Comments</p>
+                                <p className="text-xs font-semibold text-slate-500 uppercase">
+                                  Comments
+                                </p>
                                 {activity.comments.map((comment) => (
-                                  <div key={`${activity.id}-${comment.timestamp}`} className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded border border-slate-100 dark:border-slate-700">
-                                    <p className="text-sm text-slate-600 dark:text-slate-400">{comment.text}</p>
-                                    <p className="text-xs text-slate-500 mt-1">{comment.user} • {formatRelativeTime(comment.timestamp)}</p>
+                                  <div
+                                    key={`${activity.id}-${comment.timestamp}`}
+                                    className="p-2 bg-slate-50 dark:bg-slate-800/50 rounded border border-slate-100 dark:border-slate-700"
+                                  >
+                                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                                      {comment.text}
+                                    </p>
+                                    <p className="text-xs text-slate-500 mt-1">
+                                      {comment.user} • {formatRelativeTime(comment.timestamp)}
+                                    </p>
                                   </div>
                                 ))}
                               </div>
@@ -1296,21 +1616,30 @@ export default function Lead360Page() {
 
               {filteredActivities.length === 0 && (
                 <div className="text-center py-12">
-                  <span className="material-symbols-outlined !text-[48px] text-slate-300 mb-4">search_off</span>
+                  <span className="material-symbols-outlined !text-[48px] text-slate-300 mb-4">
+                    search_off
+                  </span>
                   <p className="text-slate-500">No activities match your filters</p>
-                  <button onClick={() => { setActivityTypeFilter('all'); setPersonFilter('all'); setSearchQuery(''); }} className="mt-2 text-sm text-[#137fec] hover:underline">Clear filters</button>
+                  <button
+                    onClick={() => {
+                      setActivityTypeFilter('all');
+                      setPersonFilter('all');
+                      setSearchQuery('');
+                    }}
+                    className="mt-2 text-sm text-[#137fec] hover:underline"
+                  >
+                    Clear filters
+                  </button>
                 </div>
+              )}
+              </>
               )}
             </Card>
           )}
 
           {/* Tasks Tab */}
           {activeTab === 'tasks' && (
-            <RelatedTasksCard
-              entityType="lead"
-              entityId={leadId}
-              maxItems={20}
-            />
+            <RelatedTasksCard entityType="lead" entityId={leadId} maxItems={20} />
           )}
 
           {/* Notes Tab */}
@@ -1324,16 +1653,21 @@ export default function Lead360Page() {
                 </button>
               </div>
               <div className="space-y-4">
-                {notes.length > 0 ? notes.map((note) => (
-                  <div key={note.id} className="pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0">
-                    <p className="text-sm text-slate-600 dark:text-slate-400">{note.content}</p>
-                    <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
-                      <span>{note.author}</span>
-                      <span>•</span>
-                      <span>{formatRelativeTime(note.createdAt)}</span>
+                {notes.length > 0 ? (
+                  notes.map((note) => (
+                    <div
+                      key={note.id}
+                      className="pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0"
+                    >
+                      <p className="text-sm text-slate-600 dark:text-slate-400">{note.content}</p>
+                      <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
+                        <span>{note.author}</span>
+                        <span>•</span>
+                        <span>{formatRelativeTime(note.createdAt)}</span>
+                      </div>
                     </div>
-                  </div>
-                )) : (
+                  ))
+                ) : (
                   <p className="text-sm text-slate-500 text-center py-8">No notes yet</p>
                 )}
               </div>
@@ -1351,25 +1685,38 @@ export default function Lead360Page() {
                 </button>
               </div>
               <div className="space-y-3">
-                {emails.length > 0 ? emails.map((email) => (
-                  <div key={email.id} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors">
-                    <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
-                      <span className="material-symbols-outlined !text-[20px] text-orange-600">mail</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-slate-900 dark:text-white truncate">{email.subject}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${email.status === 'opened' ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
-                          {email.status === 'opened' ? `Opened ${email.openCount}x` : 'Sent'}
+                {emails.length > 0 ? (
+                  emails.map((email) => (
+                    <div
+                      key={email.id}
+                      className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                        <span className="material-symbols-outlined !text-[20px] text-orange-600">
+                          mail
                         </span>
-                        <span className="text-xs text-slate-500">{formatRelativeTime(email.sentAt)}</span>
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-slate-900 dark:text-white truncate">
+                          {email.subject}
+                        </p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${email.status === 'opened' ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600'}`}
+                          >
+                            {email.status === 'opened' ? `Opened ${email.openCount}x` : 'Sent'}
+                          </span>
+                          <span className="text-xs text-slate-500">
+                            {formatRelativeTime(email.sentAt)}
+                          </span>
+                        </div>
+                      </div>
+                      <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg">
+                        <span className="material-symbols-outlined !text-[18px]">open_in_new</span>
+                      </button>
                     </div>
-                    <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg">
-                      <span className="material-symbols-outlined !text-[18px]">open_in_new</span>
-                    </button>
-                  </div>
-                )) : (
+                  ))
+                ) : (
                   <p className="text-sm text-slate-500 text-center py-8">No emails yet</p>
                 )}
               </div>
@@ -1387,20 +1734,29 @@ export default function Lead360Page() {
                 </button>
               </div>
               <div className="space-y-3">
-                {files.length > 0 ? files.map((file) => (
-                  <div key={file.id} className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                    <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                      <span className="material-symbols-outlined !text-[20px] text-red-600">description</span>
+                {files.length > 0 ? (
+                  files.map((file) => (
+                    <div
+                      key={file.id}
+                      className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                    >
+                      <div className="w-10 h-10 rounded-lg bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                        <span className="material-symbols-outlined !text-[20px] text-red-600">
+                          description
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-slate-900 dark:text-white">{file.name}</p>
+                        <p className="text-sm text-slate-500">
+                          {file.size} • {formatRelativeTime(file.uploadedAt)}
+                        </p>
+                      </div>
+                      <button className="p-2 text-slate-500 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
+                        <span className="material-symbols-outlined !text-[18px]">download</span>
+                      </button>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-slate-900 dark:text-white">{file.name}</p>
-                      <p className="text-sm text-slate-500">{file.size} • {formatRelativeTime(file.uploadedAt)}</p>
-                    </div>
-                    <button className="p-2 text-slate-500 hover:text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors">
-                      <span className="material-symbols-outlined !text-[18px]">download</span>
-                    </button>
-                  </div>
-                )) : (
+                  ))
+                ) : (
                   <p className="text-sm text-slate-500 text-center py-8">No files yet</p>
                 )}
               </div>
@@ -1436,10 +1792,14 @@ export default function Lead360Page() {
                 <Card className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                      <span className="material-symbols-outlined !text-[20px] text-green-600">trending_up</span>
+                      <span className="material-symbols-outlined !text-[20px] text-green-600">
+                        trending_up
+                      </span>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{aiInsights.conversionProbability}%</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                        {aiInsights.conversionProbability}%
+                      </p>
                       <p className="text-xs text-slate-500">Conversion Probability</p>
                     </div>
                   </div>
@@ -1447,10 +1807,14 @@ export default function Lead360Page() {
                 <Card className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-[#137fec]/10 flex items-center justify-center">
-                      <span className="material-symbols-outlined !text-[20px] text-[#137fec]">payments</span>
+                      <span className="material-symbols-outlined !text-[20px] text-[#137fec]">
+                        payments
+                      </span>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">${(aiInsights.estimatedValue / 1000).toFixed(0)}k</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                        ${(aiInsights.estimatedValue / 1000).toFixed(0)}k
+                      </p>
                       <p className="text-xs text-slate-500">Est. Deal Value</p>
                     </div>
                   </div>
@@ -1458,17 +1822,23 @@ export default function Lead360Page() {
                 <Card className="p-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                      <span className="material-symbols-outlined !text-[20px] text-purple-600">grade</span>
+                      <span className="material-symbols-outlined !text-[20px] text-purple-600">
+                        grade
+                      </span>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-slate-900 dark:text-white">{aiInsights.qualificationScore}</p>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-white">
+                        {aiInsights.qualificationScore}
+                      </p>
                       <p className="text-xs text-slate-500">Qualification Score</p>
                     </div>
                   </div>
                 </Card>
               </div>
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">AI Recommendations</h3>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                  AI Recommendations
+                </h3>
                 <ul className="space-y-3">
                   {aiInsights.recommendations.map((rec, index) => (
                     <li key={`rec-${index}`} className="flex items-start gap-3">
@@ -1481,20 +1851,31 @@ export default function Lead360Page() {
                 </ul>
               </Card>
               <Card className="p-6">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">Engagement Analysis</h3>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+                  Engagement Analysis
+                </h3>
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between mb-1.5">
-                      <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Engagement Score</span>
-                      <span className="text-sm font-bold text-[#137fec]">{aiInsights.engagementScore}%</span>
+                      <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                        Engagement Score
+                      </span>
+                      <span className="text-sm font-bold text-[#137fec]">
+                        {aiInsights.engagementScore}%
+                      </span>
                     </div>
                     <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                      <div className="bg-[#137fec] h-2 rounded-full" style={{ width: `${aiInsights.engagementScore}%` }} />
+                      <div
+                        className="bg-[#137fec] h-2 rounded-full"
+                        style={{ width: `${aiInsights.engagementScore}%` }}
+                      />
                     </div>
                   </div>
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-sm text-slate-600 dark:text-slate-300">Sentiment</span>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">{aiInsights.sentiment}</span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                      {aiInsights.sentiment}
+                    </span>
                   </div>
                 </div>
               </Card>
@@ -1511,19 +1892,30 @@ export default function Lead360Page() {
                 <span className="material-symbols-outlined text-[#137fec]">auto_awesome</span>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">Lead IQ</h3>
               </div>
-              <span className="text-[10px] bg-[#137fec]/10 text-[#137fec] px-1.5 py-0.5 rounded font-bold">BETA</span>
+              <span className="text-[10px] bg-[#137fec]/10 text-[#137fec] px-1.5 py-0.5 rounded font-bold">
+                BETA
+              </span>
             </div>
             <div className="space-y-5">
               {/* Qualification Score */}
               <div>
                 <div className="flex justify-between mb-1.5">
-                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Qualification Score</span>
-                  <span className="text-sm font-bold text-green-600">{aiInsights.qualificationScore}/100</span>
+                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                    Qualification Score
+                  </span>
+                  <span className="text-sm font-bold text-green-600">
+                    {aiInsights.qualificationScore}/100
+                  </span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                  <div className="bg-green-500 h-2 rounded-full" style={{ width: `${aiInsights.qualificationScore}%` }} />
+                  <div
+                    className="bg-green-500 h-2 rounded-full"
+                    style={{ width: `${aiInsights.qualificationScore}%` }}
+                  />
                 </div>
-                <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">{aiInsights.icpMatch}</p>
+                <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                  {aiInsights.icpMatch}
+                </p>
               </div>
 
               <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
@@ -1531,15 +1923,21 @@ export default function Lead360Page() {
               {/* Engagement */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Engagement</span>
-                  <span className="text-xs font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">{aiInsights.engagementLevel}</span>
+                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                    Engagement
+                  </span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
+                    {aiInsights.engagementLevel}
+                  </span>
                 </div>
                 <div className="flex gap-1 h-1.5">
                   {[1, 2, 3, 4, 5].map((level) => (
                     <div
                       key={level}
                       className={`flex-1 ${level === 1 ? 'rounded-l-full' : ''} ${level === 5 ? 'rounded-r-full' : ''} ${
-                        aiInsights.engagementScore >= level * 20 ? 'bg-[#137fec]' : 'bg-[#137fec]/30'
+                        aiInsights.engagementScore >= level * 20
+                          ? 'bg-[#137fec]'
+                          : 'bg-[#137fec]/30'
                       }`}
                     />
                   ))}
@@ -1550,7 +1948,9 @@ export default function Lead360Page() {
 
               {/* Recommended Next Steps */}
               <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Recommended Next Steps</p>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Recommended Next Steps
+                </p>
                 <div className="space-y-2">
                   {aiInsights.nextBestActions.map((action) => (
                     <button
@@ -1562,15 +1962,28 @@ export default function Lead360Page() {
                       }`}
                     >
                       <div className="flex items-center gap-2">
-                        <span className={`material-symbols-outlined !text-[18px] ${action.primary ? 'text-[#137fec]' : 'text-slate-500'}`}>{action.icon}</span>
-                        <span className={`text-sm font-medium ${action.primary ? 'text-slate-700 dark:text-slate-200 group-hover:text-[#137fec]' : 'text-slate-600 dark:text-slate-300 group-hover:text-slate-900'}`}>{action.label}</span>
+                        <span
+                          className={`material-symbols-outlined !text-[18px] ${action.primary ? 'text-[#137fec]' : 'text-slate-500'}`}
+                        >
+                          {action.icon}
+                        </span>
+                        <span
+                          className={`text-sm font-medium ${action.primary ? 'text-slate-700 dark:text-slate-200 group-hover:text-[#137fec]' : 'text-slate-600 dark:text-slate-300 group-hover:text-slate-900'}`}
+                        >
+                          {action.label}
+                        </span>
                       </div>
                     </button>
                   ))}
                 </div>
               </div>
             </div>
-            <button onClick={() => setActiveTab('ai-insights')} className="w-full mt-4 text-sm text-[#137fec] hover:underline text-center">View Full Analysis</button>
+            <button
+              onClick={() => setActiveTab('ai-insights')}
+              className="w-full mt-4 text-sm text-[#137fec] hover:underline text-center"
+            >
+              View Full Analysis
+            </button>
           </Card>
 
           {/* Tasks Widget */}
@@ -1583,12 +1996,7 @@ export default function Lead360Page() {
           />
 
           {/* Upcoming Event */}
-          <UpcomingEventsCard
-            entityType="lead"
-            entityId={leadId}
-            maxItems={1}
-            compact
-          />
+          <UpcomingEventsCard entityType="lead" entityId={leadId} maxItems={1} compact />
 
           {/* Notes Widget */}
           <Card className="p-5">
@@ -1599,16 +2007,23 @@ export default function Lead360Page() {
               </button>
             </div>
             <div className="space-y-4">
-              {notes.length > 0 ? notes.slice(0, 2).map((note) => (
-                <div key={note.id} className="pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0">
-                  <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">{note.content}</p>
-                  <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
-                    <span>{note.author}</span>
-                    <span>•</span>
-                    <span>{formatRelativeTime(note.createdAt)}</span>
+              {notes.length > 0 ? (
+                notes.slice(0, 2).map((note) => (
+                  <div
+                    key={note.id}
+                    className="pb-4 border-b border-slate-100 dark:border-slate-800 last:border-0 last:pb-0"
+                  >
+                    <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
+                      {note.content}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
+                      <span>{note.author}</span>
+                      <span>•</span>
+                      <span>{formatRelativeTime(note.createdAt)}</span>
+                    </div>
                   </div>
-                </div>
-              )) : (
+                ))
+              ) : (
                 <p className="text-sm text-slate-500 text-center py-2">No notes yet</p>
               )}
             </div>
@@ -1621,13 +2036,24 @@ export default function Lead360Page() {
             </div>
             <div className="space-y-3">
               {mockSimilarLeads.map((similarLead) => (
-                <Link key={similarLead.id} href={`/leads/${similarLead.id}`} className="flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 -mx-2 px-2 py-2 rounded-lg transition-colors">
+                <Link
+                  key={similarLead.id}
+                  href={`/leads/${similarLead.id}`}
+                  className="flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800 -mx-2 px-2 py-2 rounded-lg transition-colors"
+                >
                   <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 text-xs font-bold">
-                    {similarLead.name.split(' ').map((n) => n[0]).join('')}
+                    {similarLead.name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')}
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-slate-900 dark:text-white">{similarLead.name}</p>
-                    <p className="text-xs text-slate-500">{similarLead.title} at {similarLead.company}</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-white">
+                      {similarLead.name}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {similarLead.title} at {similarLead.company}
+                    </p>
                   </div>
                 </Link>
               ))}

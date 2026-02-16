@@ -6,16 +6,16 @@ WCAG 2.1 AA compliant patterns for all interactive components.
 
 ## Quick Reference
 
-| Component | Key ARIA | Keyboard | Focus |
-|-----------|----------|----------|-------|
-| Button | `aria-label`, `aria-disabled` | Enter, Space | Visible ring |
-| Link | `aria-current` | Enter | Visible ring |
-| Modal | `role="dialog"`, `aria-modal` | Escape to close | Trap focus |
-| Dropdown | `aria-expanded`, `aria-haspopup` | Arrow keys | Roving tabindex |
-| Tab | `role="tablist"`, `aria-selected` | Arrow keys | Roving tabindex |
-| Form | `aria-describedby`, `aria-invalid` | Tab navigation | Input focus |
-| Alert | `role="alert"`, `aria-live` | N/A | N/A |
-| Table | `scope`, `aria-sort` | Arrow keys (optional) | Cell focus |
+| Component | Key ARIA                           | Keyboard              | Focus           |
+| --------- | ---------------------------------- | --------------------- | --------------- |
+| Button    | `aria-label`, `aria-disabled`      | Enter, Space          | Visible ring    |
+| Link      | `aria-current`                     | Enter                 | Visible ring    |
+| Modal     | `role="dialog"`, `aria-modal`      | Escape to close       | Trap focus      |
+| Dropdown  | `aria-expanded`, `aria-haspopup`   | Arrow keys            | Roving tabindex |
+| Tab       | `role="tablist"`, `aria-selected`  | Arrow keys            | Roving tabindex |
+| Form      | `aria-describedby`, `aria-invalid` | Tab navigation        | Input focus     |
+| Alert     | `role="alert"`, `aria-live`        | N/A                   | N/A             |
+| Table     | `scope`, `aria-sort`               | Arrow keys (optional) | Cell focus      |
 
 ---
 
@@ -59,8 +59,20 @@ WCAG 2.1 AA compliant patterns for all interactive components.
          rounded font-medium opacity-75 cursor-wait"
 >
   <svg class="animate-spin h-4 w-4" aria-hidden="true" viewBox="0 0 24 24">
-    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
-    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+    <circle
+      class="opacity-25"
+      cx="12"
+      cy="12"
+      r="10"
+      stroke="currentColor"
+      stroke-width="4"
+      fill="none"
+    />
+    <path
+      class="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+    />
   </svg>
   <span>Saving...</span>
 </button>
@@ -104,7 +116,9 @@ WCAG 2.1 AA compliant patterns for all interactive components.
         class="flex items-center gap-3 px-3 py-2 rounded-lg
                bg-primary/10 text-primary font-medium"
       >
-        <span class="material-symbols-outlined" aria-hidden="true">dashboard</span>
+        <span class="material-symbols-outlined" aria-hidden="true"
+          >dashboard</span
+        >
         Dashboard
       </a>
     </li>
@@ -114,7 +128,9 @@ WCAG 2.1 AA compliant patterns for all interactive components.
         class="flex items-center gap-3 px-3 py-2 rounded-lg
                text-slate-600 hover:bg-slate-100"
       >
-        <span class="material-symbols-outlined" aria-hidden="true">contacts</span>
+        <span class="material-symbols-outlined" aria-hidden="true"
+          >contacts</span
+        >
         Contacts
       </a>
     </li>
@@ -132,11 +148,15 @@ WCAG 2.1 AA compliant patterns for all interactive components.
     </li>
     <li aria-hidden="true" class="text-slate-400">/</li>
     <li>
-      <a href="/contacts" class="text-slate-500 hover:text-slate-700">Contacts</a>
+      <a href="/contacts" class="text-slate-500 hover:text-slate-700"
+        >Contacts</a
+      >
     </li>
     <li aria-hidden="true" class="text-slate-400">/</li>
     <li>
-      <span aria-current="page" class="text-slate-900 font-medium">John Doe</span>
+      <span aria-current="page" class="text-slate-900 font-medium"
+        >John Doe</span
+      >
     </li>
   </ol>
 </nav>
@@ -184,7 +204,7 @@ WCAG 2.1 AA compliant patterns for all interactive components.
     class="w-full px-3 py-2 border border-slate-300 rounded-lg
            focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
     placeholder="you@example.com"
-  >
+  />
   <p id="email-hint" class="text-xs text-slate-500">
     We'll never share your email with anyone.
   </p>
@@ -207,9 +227,15 @@ WCAG 2.1 AA compliant patterns for all interactive components.
     class="w-full px-3 py-2 border border-red-500 rounded-lg
            focus:outline-none focus:ring-2 focus:ring-red-500"
     value="not-an-email"
+  />
+  <p
+    id="email-error-msg"
+    class="text-sm text-red-600 flex items-center gap-1"
+    role="alert"
   >
-  <p id="email-error-msg" class="text-sm text-red-600 flex items-center gap-1" role="alert">
-    <span class="material-symbols-outlined text-sm" aria-hidden="true">error</span>
+    <span class="material-symbols-outlined text-sm" aria-hidden="true"
+      >error</span
+    >
     Please enter a valid email address.
   </p>
 </div>
@@ -251,7 +277,7 @@ WCAG 2.1 AA compliant patterns for all interactive components.
         value="email"
         class="w-4 h-4 text-primary border-slate-300 rounded
                focus:ring-2 focus:ring-primary focus:ring-offset-2"
-      >
+      />
       <span class="text-sm text-slate-700">Email notifications</span>
     </label>
     <label class="flex items-center gap-3 cursor-pointer">
@@ -261,7 +287,7 @@ WCAG 2.1 AA compliant patterns for all interactive components.
         value="sms"
         class="w-4 h-4 text-primary border-slate-300 rounded
                focus:ring-2 focus:ring-primary focus:ring-offset-2"
-      >
+      />
       <span class="text-sm text-slate-700">SMS notifications</span>
     </label>
   </div>
@@ -283,7 +309,7 @@ WCAG 2.1 AA compliant patterns for all interactive components.
         value="high"
         class="w-4 h-4 text-primary border-slate-300
                focus:ring-2 focus:ring-primary focus:ring-offset-2"
-      >
+      />
       <span class="text-sm text-slate-700">High</span>
     </label>
     <label class="flex items-center gap-3 cursor-pointer">
@@ -294,7 +320,7 @@ WCAG 2.1 AA compliant patterns for all interactive components.
         checked
         class="w-4 h-4 text-primary border-slate-300
                focus:ring-2 focus:ring-primary focus:ring-offset-2"
-      >
+      />
       <span class="text-sm text-slate-700">Medium</span>
     </label>
     <label class="flex items-center gap-3 cursor-pointer">
@@ -304,7 +330,7 @@ WCAG 2.1 AA compliant patterns for all interactive components.
         value="low"
         class="w-4 h-4 text-primary border-slate-300
                focus:ring-2 focus:ring-primary focus:ring-offset-2"
-      >
+      />
       <span class="text-sm text-slate-700">Low</span>
     </label>
   </div>
@@ -317,7 +343,10 @@ WCAG 2.1 AA compliant patterns for all interactive components.
 <div role="search">
   <label for="search" class="sr-only">Search contacts</label>
   <div class="relative">
-    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" aria-hidden="true">
+    <span
+      class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+      aria-hidden="true"
+    >
       <span class="material-symbols-outlined">search</span>
     </span>
     <input
@@ -327,7 +356,7 @@ WCAG 2.1 AA compliant patterns for all interactive components.
       placeholder="Search contacts..."
       class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg
              focus:outline-none focus:ring-2 focus:ring-primary"
-    >
+    />
   </div>
 </div>
 ```
@@ -338,11 +367,7 @@ WCAG 2.1 AA compliant patterns for all interactive components.
 
 ```html
 <!-- Trigger -->
-<button
-  type="button"
-  aria-haspopup="dialog"
-  onclick="openModal()"
->
+<button type="button" aria-haspopup="dialog" onclick="openModal()">
   Open Modal
 </button>
 
@@ -369,9 +394,7 @@ WCAG 2.1 AA compliant patterns for all interactive components.
   >
     <!-- Header -->
     <div class="flex items-center justify-between px-6 py-4 border-b">
-      <h2 id="modal-title" class="text-lg font-semibold">
-        Confirm Delete
-      </h2>
+      <h2 id="modal-title" class="text-lg font-semibold">Confirm Delete</h2>
       <button
         type="button"
         aria-label="Close modal"
@@ -386,7 +409,8 @@ WCAG 2.1 AA compliant patterns for all interactive components.
     <!-- Body -->
     <div id="modal-description" class="px-6 py-4">
       <p class="text-slate-600">
-        Are you sure you want to delete this contact? This action cannot be undone.
+        Are you sure you want to delete this contact? This action cannot be
+        undone.
       </p>
     </div>
 
@@ -395,33 +419,31 @@ WCAG 2.1 AA compliant patterns for all interactive components.
       <button type="button" onclick="closeModal()" class="btn-secondary">
         Cancel
       </button>
-      <button type="button" class="btn-danger">
-        Delete
-      </button>
+      <button type="button" class="btn-danger">Delete</button>
     </div>
   </div>
 </div>
 
 <script>
-function openModal() {
-  const modal = document.getElementById('modal');
-  modal.classList.remove('hidden');
-  // Trap focus
-  modal.querySelector('button').focus();
-  // Prevent body scroll
-  document.body.style.overflow = 'hidden';
-}
+  function openModal() {
+    const modal = document.getElementById('modal');
+    modal.classList.remove('hidden');
+    // Trap focus
+    modal.querySelector('button').focus();
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
+  }
 
-function closeModal() {
-  const modal = document.getElementById('modal');
-  modal.classList.add('hidden');
-  document.body.style.overflow = '';
-}
+  function closeModal() {
+    const modal = document.getElementById('modal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+  }
 
-// Close on Escape
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') closeModal();
-});
+  // Close on Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
 </script>
 ```
 
@@ -432,7 +454,11 @@ document.addEventListener('keydown', (e) => {
 ```html
 <div class="tabs">
   <!-- Tab List -->
-  <div role="tablist" aria-label="Contact details" class="flex border-b border-slate-200">
+  <div
+    role="tablist"
+    aria-label="Contact details"
+    class="flex border-b border-slate-200"
+  >
     <button
       role="tab"
       id="tab-overview"
@@ -499,24 +525,30 @@ document.addEventListener('keydown', (e) => {
 </div>
 
 <script>
-// Arrow key navigation for tabs
-document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
-  const tabs = [...e.currentTarget.querySelectorAll('[role="tab"]')];
-  const current = tabs.findIndex(t => t.getAttribute('aria-selected') === 'true');
-  let next;
+  // Arrow key navigation for tabs
+  document
+    .querySelector('[role="tablist"]')
+    .addEventListener('keydown', (e) => {
+      const tabs = [...e.currentTarget.querySelectorAll('[role="tab"]')];
+      const current = tabs.findIndex(
+        (t) => t.getAttribute('aria-selected') === 'true'
+      );
+      let next;
 
-  if (e.key === 'ArrowRight') next = (current + 1) % tabs.length;
-  else if (e.key === 'ArrowLeft') next = (current - 1 + tabs.length) % tabs.length;
-  else return;
+      if (e.key === 'ArrowRight') next = (current + 1) % tabs.length;
+      else if (e.key === 'ArrowLeft')
+        next = (current - 1 + tabs.length) % tabs.length;
+      else return;
 
-  tabs.forEach((t, i) => {
-    t.setAttribute('aria-selected', i === next);
-    t.setAttribute('tabindex', i === next ? 0 : -1);
-    document.getElementById(t.getAttribute('aria-controls'))
-      .classList.toggle('hidden', i !== next);
-  });
-  tabs[next].focus();
-});
+      tabs.forEach((t, i) => {
+        t.setAttribute('aria-selected', i === next);
+        t.setAttribute('tabindex', i === next ? 0 : -1);
+        document
+          .getElementById(t.getAttribute('aria-controls'))
+          .classList.toggle('hidden', i !== next);
+      });
+      tabs[next].focus();
+    });
 </script>
 ```
 
@@ -537,7 +569,9 @@ document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
            focus:ring-primary"
   >
     Options
-    <span class="material-symbols-outlined text-sm" aria-hidden="true">expand_more</span>
+    <span class="material-symbols-outlined text-sm" aria-hidden="true"
+      >expand_more</span
+    >
   </button>
 
   <!-- Menu -->
@@ -554,7 +588,9 @@ document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
       class="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100
              focus:bg-slate-100 focus:outline-none"
     >
-      <span class="material-symbols-outlined text-sm mr-2" aria-hidden="true">edit</span>
+      <span class="material-symbols-outlined text-sm mr-2" aria-hidden="true"
+        >edit</span
+      >
       Edit
     </button>
     <button
@@ -563,17 +599,21 @@ document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
       class="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-100
              focus:bg-slate-100 focus:outline-none"
     >
-      <span class="material-symbols-outlined text-sm mr-2" aria-hidden="true">content_copy</span>
+      <span class="material-symbols-outlined text-sm mr-2" aria-hidden="true"
+        >content_copy</span
+      >
       Duplicate
     </button>
-    <hr class="my-1 border-slate-200" role="separator">
+    <hr class="my-1 border-slate-200" role="separator" />
     <button
       role="menuitem"
       tabindex="-1"
       class="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50
              focus:bg-red-50 focus:outline-none"
     >
-      <span class="material-symbols-outlined text-sm mr-2" aria-hidden="true">delete</span>
+      <span class="material-symbols-outlined text-sm mr-2" aria-hidden="true"
+        >delete</span
+      >
       Delete
     </button>
   </div>
@@ -592,7 +632,9 @@ document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
   role="alert"
   class="flex items-start gap-3 p-4 bg-green-50 border border-green-200 rounded-lg"
 >
-  <span class="material-symbols-outlined text-green-600" aria-hidden="true">check_circle</span>
+  <span class="material-symbols-outlined text-green-600" aria-hidden="true"
+    >check_circle</span
+  >
   <div>
     <p class="font-medium text-green-800">Contact saved successfully</p>
     <p class="text-sm text-green-700">Your changes have been saved.</p>
@@ -605,10 +647,14 @@ document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
   aria-live="assertive"
   class="flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-lg"
 >
-  <span class="material-symbols-outlined text-red-600" aria-hidden="true">error</span>
+  <span class="material-symbols-outlined text-red-600" aria-hidden="true"
+    >error</span
+  >
   <div>
     <p class="font-medium text-red-800">Failed to save contact</p>
-    <p class="text-sm text-red-700">Please check your connection and try again.</p>
+    <p class="text-sm text-red-700">
+      Please check your connection and try again.
+    </p>
   </div>
 </div>
 ```
@@ -630,7 +676,9 @@ document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
     aria-label="Dismiss notification"
     class="p-1 hover:bg-white/10 rounded"
   >
-    <span class="material-symbols-outlined text-sm" aria-hidden="true">close</span>
+    <span class="material-symbols-outlined text-sm" aria-hidden="true"
+      >close</span
+    >
   </button>
 </div>
 ```
@@ -642,16 +690,27 @@ document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
 ```html
 <div class="overflow-x-auto" role="region" aria-label="Contacts table">
   <table class="w-full">
-    <caption class="sr-only">List of contacts with their status and value</caption>
+    <caption class="sr-only">
+      List of contacts with their status and value
+    </caption>
     <thead>
       <tr class="bg-slate-50">
-        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">
+        <th
+          scope="col"
+          class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase"
+        >
           Name
         </th>
-        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">
+        <th
+          scope="col"
+          class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase"
+        >
           Email
         </th>
-        <th scope="col" class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase">
+        <th
+          scope="col"
+          class="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase"
+        >
           Status
         </th>
         <th
@@ -661,10 +720,15 @@ document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
         >
           <button class="inline-flex items-center gap-1 hover:text-slate-700">
             Value
-            <span class="material-symbols-outlined text-sm" aria-hidden="true">arrow_downward</span>
+            <span class="material-symbols-outlined text-sm" aria-hidden="true"
+              >arrow_downward</span
+            >
           </button>
         </th>
-        <th scope="col" class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase">
+        <th
+          scope="col"
+          class="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase"
+        >
           <span class="sr-only">Actions</span>
         </th>
       </tr>
@@ -674,12 +738,12 @@ document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
         <th scope="row" class="px-4 py-3 text-sm font-medium text-slate-900">
           John Doe
         </th>
-        <td class="px-4 py-3 text-sm text-slate-600">
-          john@example.com
-        </td>
+        <td class="px-4 py-3 text-sm text-slate-600">john@example.com</td>
         <td class="px-4 py-3">
-          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
-                       bg-green-100 text-green-800">
+          <span
+            class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium
+                       bg-green-100 text-green-800"
+          >
             Active
           </span>
         </td>
@@ -693,7 +757,9 @@ document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
             class="p-1 text-slate-400 hover:text-slate-600 rounded
                    focus:outline-none focus:ring-2 focus:ring-primary"
           >
-            <span class="material-symbols-outlined text-lg" aria-hidden="true">edit</span>
+            <span class="material-symbols-outlined text-lg" aria-hidden="true"
+              >edit</span
+            >
           </button>
         </td>
       </tr>
@@ -729,8 +795,20 @@ document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
     aria-hidden="true"
     viewBox="0 0 24 24"
   >
-    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"/>
-    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+    <circle
+      class="opacity-25"
+      cx="12"
+      cy="12"
+      r="10"
+      stroke="currentColor"
+      stroke-width="4"
+      fill="none"
+    />
+    <path
+      class="opacity-75"
+      fill="currentColor"
+      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+    />
   </svg>
   <span>Loading...</span>
 </div>
@@ -746,9 +824,15 @@ document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
 <div class="text-sm text-slate-600">
   <p class="mb-2 font-medium">Keyboard Shortcuts:</p>
   <dl class="grid grid-cols-2 gap-2">
-    <dt><kbd class="px-1.5 py-0.5 bg-slate-100 rounded text-xs">Ctrl</kbd> + <kbd class="px-1.5 py-0.5 bg-slate-100 rounded text-xs">S</kbd></dt>
+    <dt>
+      <kbd class="px-1.5 py-0.5 bg-slate-100 rounded text-xs">Ctrl</kbd> +
+      <kbd class="px-1.5 py-0.5 bg-slate-100 rounded text-xs">S</kbd>
+    </dt>
     <dd>Save changes</dd>
-    <dt><kbd class="px-1.5 py-0.5 bg-slate-100 rounded text-xs">Ctrl</kbd> + <kbd class="px-1.5 py-0.5 bg-slate-100 rounded text-xs">K</kbd></dt>
+    <dt>
+      <kbd class="px-1.5 py-0.5 bg-slate-100 rounded text-xs">Ctrl</kbd> +
+      <kbd class="px-1.5 py-0.5 bg-slate-100 rounded text-xs">K</kbd>
+    </dt>
     <dd>Open search</dd>
     <dt><kbd class="px-1.5 py-0.5 bg-slate-100 rounded text-xs">Esc</kbd></dt>
     <dd>Close modal</dd>
@@ -793,12 +877,22 @@ document.querySelector('[role="tablist"]').addEventListener('keydown', (e) => {
 
 ```html
 <!-- Polite announcements (non-urgent) -->
-<div aria-live="polite" aria-atomic="true" class="sr-only" id="status-announcer">
+<div
+  aria-live="polite"
+  aria-atomic="true"
+  class="sr-only"
+  id="status-announcer"
+>
   <!-- Inject status messages here via JS -->
 </div>
 
 <!-- Assertive announcements (urgent) -->
-<div aria-live="assertive" aria-atomic="true" class="sr-only" id="alert-announcer">
+<div
+  aria-live="assertive"
+  aria-atomic="true"
+  class="sr-only"
+  id="alert-announcer"
+>
   <!-- Inject critical alerts here via JS -->
 </div>
 ```
@@ -811,7 +905,7 @@ function announce(message, priority = 'polite') {
   );
   announcer.textContent = message;
   // Clear after announcement
-  setTimeout(() => announcer.textContent = '', 1000);
+  setTimeout(() => (announcer.textContent = ''), 1000);
 }
 
 // Usage
@@ -875,17 +969,18 @@ function closeModal() {
 
 ## Color Contrast Reference
 
-| Usage | Foreground | Background | Ratio |
-|-------|------------|------------|-------|
-| Body text | `#0f172a` | `#ffffff` | 15.5:1 |
-| Secondary text | `#475569` | `#ffffff` | 7.0:1 |
-| Muted text | `#64748b` | `#ffffff` | 4.6:1 |
-| Primary button | `#ffffff` | `#137fec` | 4.5:1 |
-| Error text | `#991b1b` | `#fee2e2` | 5.9:1 |
-| Success text | `#166534` | `#dcfce7` | 5.8:1 |
-| Link (primary) | `#137fec` | `#ffffff` | 4.5:1 |
+| Usage          | Foreground | Background | Ratio  |
+| -------------- | ---------- | ---------- | ------ |
+| Body text      | `#0f172a`  | `#ffffff`  | 15.5:1 |
+| Secondary text | `#475569`  | `#ffffff`  | 7.0:1  |
+| Muted text     | `#64748b`  | `#ffffff`  | 4.6:1  |
+| Primary button | `#ffffff`  | `#137fec`  | 4.5:1  |
+| Error text     | `#991b1b`  | `#fee2e2`  | 5.9:1  |
+| Success text   | `#166534`  | `#dcfce7`  | 5.8:1  |
+| Link (primary) | `#137fec`  | `#ffffff`  | 4.5:1  |
 
-All combinations meet WCAG 2.1 AA requirements (4.5:1 for normal text, 3:1 for large text).
+All combinations meet WCAG 2.1 AA requirements (4.5:1 for normal text, 3:1 for
+large text).
 
 ---
 

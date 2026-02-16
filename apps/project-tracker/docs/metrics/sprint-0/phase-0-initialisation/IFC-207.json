@@ -11,9 +11,7 @@
   "dependencies": {
     "all_satisfied": true,
     "verified_at": "2026-02-14T22:00:00+00:00",
-    "required": [
-      "IFC-189"
-    ]
+    "required": ["IFC-189"]
   },
   "started_at": "2026-02-14T22:00:00+00:00",
   "completed_at": "2026-02-14T22:43:00+00:00",

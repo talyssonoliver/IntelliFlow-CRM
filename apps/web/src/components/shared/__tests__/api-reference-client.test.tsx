@@ -10,11 +10,14 @@ vi.mock('next-themes', () => ({
 }));
 
 // Mock @scalar/api-reference-react
-const MockApiReferenceReact = vi.fn(({ configuration }: { configuration: Record<string, unknown> }) => (
-  <div data-testid="scalar-reference" data-config={JSON.stringify(configuration)} />
-));
+const MockApiReferenceReact = vi.fn(
+  ({ configuration }: { configuration: Record<string, unknown> }) => (
+    <div data-testid="scalar-reference" data-config={JSON.stringify(configuration)} />
+  )
+);
 vi.mock('@scalar/api-reference-react', () => ({
-  ApiReferenceReact: (props: { configuration: Record<string, unknown> }) => MockApiReferenceReact(props),
+  ApiReferenceReact: (props: { configuration: Record<string, unknown> }) =>
+    MockApiReferenceReact(props),
 }));
 
 // Mock the CSS import
@@ -25,9 +28,11 @@ import { ApiReferenceClient } from '../api-reference-client';
 describe('ApiReferenceClient', () => {
   beforeEach(() => {
     mockUseTheme.mockReturnValue({ resolvedTheme: 'light' });
-    MockApiReferenceReact.mockImplementation(({ configuration }: { configuration: Record<string, unknown> }) => (
-      <div data-testid="scalar-reference" data-config={JSON.stringify(configuration)} />
-    ));
+    MockApiReferenceReact.mockImplementation(
+      ({ configuration }: { configuration: Record<string, unknown> }) => (
+        <div data-testid="scalar-reference" data-config={JSON.stringify(configuration)} />
+      )
+    );
     vi.stubGlobal('fetch', vi.fn());
   });
 
@@ -88,7 +93,7 @@ describe('ApiReferenceClient', () => {
       await waitFor(() => {
         expect(globalThis.fetch).toHaveBeenCalledWith(
           '/api/openapi',
-          expect.objectContaining({ signal: expect.any(AbortSignal) }),
+          expect.objectContaining({ signal: expect.any(AbortSignal) })
         );
       });
     });

@@ -122,7 +122,15 @@ describe('Lead Router Contract Tests', () => {
     });
 
     it('should accept all valid source enum values', async () => {
-      const sources = ['WEBSITE', 'REFERRAL', 'SOCIAL', 'EMAIL', 'COLD_CALL', 'EVENT', 'OTHER'] as const;
+      const sources = [
+        'WEBSITE',
+        'REFERRAL',
+        'SOCIAL',
+        'EMAIL',
+        'COLD_CALL',
+        'EVENT',
+        'OTHER',
+      ] as const;
 
       for (const source of sources) {
         const input = { email: `test-${source.toLowerCase()}@example.com`, source };
@@ -361,9 +369,7 @@ describe('Lead Router Contract Tests', () => {
 
     it('should enforce valid status enum values in filter', async () => {
       // This should still work because the router validates input
-      await expect(
-        caller.list({ status: ['INVALID_STATUS' as any] })
-      ).rejects.toThrow();
+      await expect(caller.list({ status: ['INVALID_STATUS' as any] })).rejects.toThrow();
     });
 
     it('should enforce pagination limits', async () => {
@@ -650,9 +656,15 @@ describe('Lead Router Contract Tests', () => {
         { status: 'QUALIFIED', _count: 30 },
       ] as any);
       prismaMock.lead.findMany.mockResolvedValue([
-        { score: 80 }, { score: 85 }, { score: 75 }, // Hot leads (score >= 70)
-        { score: 50 }, { score: 60 }, { score: 45 }, // Warm leads
-        { score: 30 }, { score: 20 }, { score: 10 }, // Cold leads
+        { score: 80 },
+        { score: 85 },
+        { score: 75 }, // Hot leads (score >= 70)
+        { score: 50 },
+        { score: 60 },
+        { score: 45 }, // Warm leads
+        { score: 30 },
+        { score: 20 },
+        { score: 10 }, // Cold leads
       ] as any);
 
       const result = await callerWithService.stats();

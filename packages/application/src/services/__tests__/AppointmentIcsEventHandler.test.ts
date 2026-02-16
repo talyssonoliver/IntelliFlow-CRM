@@ -7,7 +7,7 @@ import {
   AppointmentCancelledEvent,
   AppointmentId,
   TimeSlot,
-  Result
+  Result,
 } from '@intelliflow/domain';
 import type {
   IcsGenerationServicePort,
@@ -47,10 +47,7 @@ describe('AppointmentIcsEventHandler', () => {
       validatePhoneNumber: vi.fn(() => true),
     };
 
-    handler = new AppointmentIcsEventHandler(
-      mockIcsService,
-      mockNotificationService
-    );
+    handler = new AppointmentIcsEventHandler(mockIcsService, mockNotificationService);
 
     // Create test appointment
     const startTime = new Date();
@@ -99,9 +96,7 @@ describe('AppointmentIcsEventHandler', () => {
         uid: 'test-uid@example.com',
       };
 
-      vi.mocked(mockIcsService.generateInvitation).mockReturnValue(
-        Result.ok(mockIcs)
-      );
+      vi.mocked(mockIcsService.generateInvitation).mockReturnValue(Result.ok(mockIcs));
 
       const mockEmailResult: NotificationResult = {
         id: 'email-123',
@@ -110,9 +105,7 @@ describe('AppointmentIcsEventHandler', () => {
         sentAt: new Date(),
       };
 
-      vi.mocked(mockNotificationService.sendEmail).mockResolvedValue(
-        Result.ok(mockEmailResult)
-      );
+      vi.mocked(mockNotificationService.sendEmail).mockResolvedValue(Result.ok(mockEmailResult));
 
       await handler.handleAppointmentCreated(event, appointment);
 
@@ -158,9 +151,7 @@ describe('AppointmentIcsEventHandler', () => {
         uid: 'test-uid@example.com',
       };
 
-      vi.mocked(mockIcsService.generateInvitation).mockReturnValue(
-        Result.ok(mockIcs)
-      );
+      vi.mocked(mockIcsService.generateInvitation).mockReturnValue(Result.ok(mockIcs));
 
       vi.mocked(mockNotificationService.sendEmail).mockResolvedValue(
         Result.ok({
@@ -210,9 +201,7 @@ describe('AppointmentIcsEventHandler', () => {
         uid: 'test-uid@example.com',
       };
 
-      vi.mocked(mockIcsService.generateUpdate).mockReturnValue(
-        Result.ok(mockIcs)
-      );
+      vi.mocked(mockIcsService.generateUpdate).mockReturnValue(Result.ok(mockIcs));
 
       vi.mocked(mockNotificationService.sendEmail).mockResolvedValue(
         Result.ok({
@@ -259,9 +248,7 @@ describe('AppointmentIcsEventHandler', () => {
         uid: 'test-uid@example.com',
       };
 
-      vi.mocked(mockIcsService.generateUpdate).mockReturnValue(
-        Result.ok(mockIcs)
-      );
+      vi.mocked(mockIcsService.generateUpdate).mockReturnValue(Result.ok(mockIcs));
 
       vi.mocked(mockNotificationService.sendEmail).mockResolvedValue(
         Result.ok({
@@ -301,9 +288,7 @@ describe('AppointmentIcsEventHandler', () => {
         uid: 'test-uid@example.com',
       };
 
-      vi.mocked(mockIcsService.generateCancellation).mockReturnValue(
-        Result.ok(mockIcs)
-      );
+      vi.mocked(mockIcsService.generateCancellation).mockReturnValue(Result.ok(mockIcs));
 
       vi.mocked(mockNotificationService.sendEmail).mockResolvedValue(
         Result.ok({
@@ -327,11 +312,7 @@ describe('AppointmentIcsEventHandler', () => {
     it('should send email with cancelled subject', async () => {
       await handler['sequenceStore'].set(appointment.id.value, 1);
 
-      const event = new AppointmentCancelledEvent(
-        appointment.id,
-        'user-123',
-        'Cancelled'
-      );
+      const event = new AppointmentCancelledEvent(appointment.id, 'user-123', 'Cancelled');
 
       const mockIcs: GeneratedIcs = {
         content: 'BEGIN:VCALENDAR...',
@@ -343,9 +324,7 @@ describe('AppointmentIcsEventHandler', () => {
         uid: 'test-uid@example.com',
       };
 
-      vi.mocked(mockIcsService.generateCancellation).mockReturnValue(
-        Result.ok(mockIcs)
-      );
+      vi.mocked(mockIcsService.generateCancellation).mockReturnValue(Result.ok(mockIcs));
 
       vi.mocked(mockNotificationService.sendEmail).mockResolvedValue(
         Result.ok({
@@ -368,11 +347,7 @@ describe('AppointmentIcsEventHandler', () => {
       await handler['sequenceStore'].set(appointment.id.value, 0);
 
       const cancellationReason = 'Emergency situation';
-      const event = new AppointmentCancelledEvent(
-        appointment.id,
-        'user-123',
-        cancellationReason
-      );
+      const event = new AppointmentCancelledEvent(appointment.id, 'user-123', cancellationReason);
 
       const mockIcs: GeneratedIcs = {
         content: 'BEGIN:VCALENDAR...',
@@ -384,9 +359,7 @@ describe('AppointmentIcsEventHandler', () => {
         uid: 'test-uid@example.com',
       };
 
-      vi.mocked(mockIcsService.generateCancellation).mockReturnValue(
-        Result.ok(mockIcs)
-      );
+      vi.mocked(mockIcsService.generateCancellation).mockReturnValue(Result.ok(mockIcs));
 
       vi.mocked(mockNotificationService.sendEmail).mockResolvedValue(
         Result.ok({

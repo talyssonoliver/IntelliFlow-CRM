@@ -42,7 +42,9 @@ function createConfig(): StripeConfig {
   };
 }
 
-function createSubscriptionApiResponse(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+function createSubscriptionApiResponse(
+  overrides: Record<string, unknown> = {}
+): Record<string, unknown> {
   return {
     id: 'sub_123',
     customer: 'cus_456',
@@ -86,7 +88,9 @@ describe('Stripe Subscription Handlers', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     config = createConfig();
-    mockMapToSubscription.mockImplementation((data: Record<string, unknown>) => createMappedSubscription({ id: data.id }));
+    mockMapToSubscription.mockImplementation((data: Record<string, unknown>) =>
+      createMappedSubscription({ id: data.id })
+    );
   });
 
   describe('createSubscription', () => {
@@ -308,11 +312,7 @@ describe('Stripe Subscription Handlers', () => {
       const result = await cancelSubscription(config, 'sub_123', false);
 
       expect(result.isSuccess).toBe(true);
-      expect(mockMakeRequest).toHaveBeenCalledWith(
-        config,
-        'DELETE',
-        '/subscriptions/sub_123'
-      );
+      expect(mockMakeRequest).toHaveBeenCalledWith(config, 'DELETE', '/subscriptions/sub_123');
     });
 
     it('should cancel at period end with POST when atPeriodEnd is true', async () => {
@@ -340,11 +340,7 @@ describe('Stripe Subscription Handlers', () => {
       const result = await cancelSubscription(config, 'sub_123');
 
       expect(result.isSuccess).toBe(true);
-      expect(mockMakeRequest).toHaveBeenCalledWith(
-        config,
-        'DELETE',
-        '/subscriptions/sub_123'
-      );
+      expect(mockMakeRequest).toHaveBeenCalledWith(config, 'DELETE', '/subscriptions/sub_123');
     });
 
     it('should return error on API failure (immediate cancel)', async () => {
@@ -392,11 +388,7 @@ describe('Stripe Subscription Handlers', () => {
       const result = await getSubscription(config, 'sub_123');
 
       expect(result.isSuccess).toBe(true);
-      expect(mockMakeRequest).toHaveBeenCalledWith(
-        config,
-        'GET',
-        '/subscriptions/sub_123'
-      );
+      expect(mockMakeRequest).toHaveBeenCalledWith(config, 'GET', '/subscriptions/sub_123');
     });
 
     it('should return null for STRIPE_INVALID_REQUEST (not found)', async () => {

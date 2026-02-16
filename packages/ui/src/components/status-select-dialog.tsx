@@ -47,13 +47,18 @@ export interface StatusSelectDialogProps {
 }
 
 const colorClasses: Record<string, string> = {
-  slate: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-700/50 dark:text-slate-300 dark:border-slate-600',
-  green: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800',
+  slate:
+    'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-700/50 dark:text-slate-300 dark:border-slate-600',
+  green:
+    'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800',
   blue: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800',
-  amber: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800',
+  amber:
+    'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800',
   red: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800',
-  purple: 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800',
-  orange: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800',
+  purple:
+    'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800',
+  orange:
+    'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800',
 };
 
 /**
@@ -150,9 +155,7 @@ export function StatusSelectDialog({
                 )}
               >
                 {option.icon && (
-                  <span className="material-symbols-outlined text-sm mr-1">
-                    {option.icon}
-                  </span>
+                  <span className="material-symbols-outlined text-sm mr-1">{option.icon}</span>
                 )}
                 {option.label}
               </span>
@@ -166,9 +169,7 @@ export function StatusSelectDialog({
 
               {/* Check indicator */}
               {selectedStatus === option.value && (
-                <span className="material-symbols-outlined text-primary ml-auto">
-                  check_circle
-                </span>
+                <span className="material-symbols-outlined text-primary ml-auto">check_circle</span>
               )}
             </button>
           ))}
@@ -183,11 +184,7 @@ export function StatusSelectDialog({
           >
             Cancel
           </Button>
-          <Button
-            type="button"
-            onClick={handleConfirm}
-            disabled={loading || !selectedStatus}
-          >
+          <Button type="button" onClick={handleConfirm} disabled={loading || !selectedStatus}>
             {loading ? (
               <>
                 <span className="material-symbols-outlined text-lg animate-spin mr-2">

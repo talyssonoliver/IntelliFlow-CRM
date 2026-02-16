@@ -222,18 +222,14 @@ export const CustomFallback: Story = {
       <EntityAvatar
         name="Company Logo"
         fallback={
-          <span className="material-symbols-outlined text-xl text-muted-foreground">
-            business
-          </span>
+          <span className="material-symbols-outlined text-xl text-muted-foreground">business</span>
         }
         colorHash={false}
       />
       <EntityAvatar
         name="Unknown User"
         fallback={
-          <span className="material-symbols-outlined text-xl text-muted-foreground">
-            person
-          </span>
+          <span className="material-symbols-outlined text-xl text-muted-foreground">person</span>
         }
         colorHash={false}
       />

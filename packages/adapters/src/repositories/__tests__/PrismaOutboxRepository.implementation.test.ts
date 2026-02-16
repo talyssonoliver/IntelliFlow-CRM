@@ -72,9 +72,7 @@ describe('PrismaOutboxRepository', () => {
 
   describe('fetchPendingEvents()', () => {
     it('should execute raw SQL query with correct limit', async () => {
-      mockPrisma.$queryRaw.mockResolvedValue([
-        createMockDbEvent(),
-      ]);
+      mockPrisma.$queryRaw.mockResolvedValue([createMockDbEvent()]);
 
       const result = await repository.fetchPendingEvents(10);
 
@@ -83,9 +81,7 @@ describe('PrismaOutboxRepository', () => {
     });
 
     it('should map raw query results to OutboxEvent objects', async () => {
-      mockPrisma.$queryRaw.mockResolvedValue([
-        createMockDbEvent(),
-      ]);
+      mockPrisma.$queryRaw.mockResolvedValue([createMockDbEvent()]);
 
       const result = await repository.fetchPendingEvents(10);
 
@@ -416,9 +412,7 @@ describe('PrismaOutboxRepository', () => {
     // Test status mapping via getEventById which uses mapToOutboxEvent/mapPrismaStatus
 
     it('should map PENDING to pending', async () => {
-      mockPrisma.domainEvent.findUnique.mockResolvedValue(
-        createMockDbEvent({ status: 'PENDING' })
-      );
+      mockPrisma.domainEvent.findUnique.mockResolvedValue(createMockDbEvent({ status: 'PENDING' }));
       const result = await repository.getEventById('test');
       expect(result!.status).toBe('pending');
     });
@@ -440,9 +434,7 @@ describe('PrismaOutboxRepository', () => {
     });
 
     it('should map FAILED to failed', async () => {
-      mockPrisma.domainEvent.findUnique.mockResolvedValue(
-        createMockDbEvent({ status: 'FAILED' })
-      );
+      mockPrisma.domainEvent.findUnique.mockResolvedValue(createMockDbEvent({ status: 'FAILED' }));
       const result = await repository.getEventById('test');
       expect(result!.status).toBe('failed');
     });
@@ -466,9 +458,7 @@ describe('PrismaOutboxRepository', () => {
 
   describe('metadata mapping (mapToOutboxEvent)', () => {
     it('should use default values for missing metadata fields', async () => {
-      mockPrisma.domainEvent.findUnique.mockResolvedValue(
-        createMockDbEvent({ metadata: {} })
-      );
+      mockPrisma.domainEvent.findUnique.mockResolvedValue(createMockDbEvent({ metadata: {} }));
 
       const result = await repository.getEventById('test');
 
@@ -482,9 +472,7 @@ describe('PrismaOutboxRepository', () => {
     });
 
     it('should handle null metadata', async () => {
-      mockPrisma.domainEvent.findUnique.mockResolvedValue(
-        createMockDbEvent({ metadata: null })
-      );
+      mockPrisma.domainEvent.findUnique.mockResolvedValue(createMockDbEvent({ metadata: null }));
 
       const result = await repository.getEventById('test');
 
@@ -493,9 +481,7 @@ describe('PrismaOutboxRepository', () => {
     });
 
     it('should handle null payload', async () => {
-      mockPrisma.domainEvent.findUnique.mockResolvedValue(
-        createMockDbEvent({ payload: null })
-      );
+      mockPrisma.domainEvent.findUnique.mockResolvedValue(createMockDbEvent({ payload: null }));
 
       const result = await repository.getEventById('test');
 

@@ -208,7 +208,10 @@ export interface IcsGenerationServicePort {
    * Generate ICS file with custom options
    * For advanced use cases
    */
-  generate(appointment: Appointment, options: IcsGenerationOptions): Result<GeneratedIcs, DomainError>;
+  generate(
+    appointment: Appointment,
+    options: IcsGenerationOptions
+  ): Result<GeneratedIcs, DomainError>;
 
   /**
    * Validate ICS file content for RFC 5545 compliance
@@ -218,15 +221,18 @@ export interface IcsGenerationServicePort {
   /**
    * Parse ICS file to extract key information
    */
-  parse(icsContent: string): Result<{
-    uid: string;
-    sequence: number;
-    method: IcsMethod;
-    summary: string;
-    startTime: Date;
-    endTime: Date;
-    attendees: string[];
-  }, DomainError>;
+  parse(icsContent: string): Result<
+    {
+      uid: string;
+      sequence: number;
+      method: IcsMethod;
+      summary: string;
+      startTime: Date;
+      endTime: Date;
+      attendees: string[];
+    },
+    DomainError
+  >;
 
   /**
    * Generate unique UID for ICS file

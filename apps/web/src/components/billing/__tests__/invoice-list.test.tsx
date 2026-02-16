@@ -131,9 +131,7 @@ describe('InvoiceList', () => {
       );
 
       expect(screen.getByText('No invoices yet')).toBeInTheDocument();
-      expect(
-        screen.getByText(/When you subscribe to a plan/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/When you subscribe to a plan/)).toBeInTheDocument();
     });
   });
 
@@ -494,12 +492,8 @@ describe('InvoiceList', () => {
         />
       );
 
-      expect(
-        screen.getByLabelText('Download invoice in_acc_test')
-      ).toBeInTheDocument();
-      expect(
-        screen.getByLabelText('View invoice in_acc_test')
-      ).toBeInTheDocument();
+      expect(screen.getByLabelText('Download invoice in_acc_test')).toBeInTheDocument();
+      expect(screen.getByLabelText('View invoice in_acc_test')).toBeInTheDocument();
     });
 
     it('has proper table structure', () => {

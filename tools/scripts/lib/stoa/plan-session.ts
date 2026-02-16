@@ -25,11 +25,7 @@ import type {
   PlanEffortEstimate,
   SpecComponent,
 } from './types.js';
-import {
-  getPlanningDir,
-  getPlanPath,
-  getPlanSessionPath,
-} from './paths.js';
+import { getPlanningDir, getPlanPath, getPlanSessionPath } from './paths.js';
 
 // ============================================================================
 // Constants
@@ -51,10 +47,7 @@ const DEFAULT_VALIDATION_COMMANDS: Record<string, string> = {
 /**
  * Create a new plan session
  */
-export function createPlanSession(
-  taskId: string,
-  specificationPath: string
-): PlanSession {
+export function createPlanSession(taskId: string, specificationPath: string): PlanSession {
   return {
     sessionId: `plan-${taskId}-${randomUUID().slice(0, 8)}`,
     taskId,
@@ -67,7 +60,10 @@ export function createPlanSession(
 /**
  * Load specification from file
  */
-export function loadSpecification(specPath: string, repoRoot: string): SpecificationDocument | null {
+export function loadSpecification(
+  specPath: string,
+  repoRoot: string
+): SpecificationDocument | null {
   const fullPath = join(repoRoot, specPath);
 
   if (!existsSync(fullPath)) {
@@ -96,11 +92,16 @@ function parseSpecificationMarkdown(content: string): SpecificationDocument {
 
   // Parse components table
   const components: SpecComponent[] = [];
-  const componentsMatch = content.match(/## Components\s*\n\n[^\n]+\n[^\n]+\n([^#]+?)(?=\n---|\n##)/s);
+  const componentsMatch = content.match(
+    /## Components\s*\n\n[^\n]+\n[^\n]+\n([^#]+?)(?=\n---|\n##)/s
+  );
   if (componentsMatch) {
     const rows = componentsMatch[1].trim().split('\n');
     for (const row of rows) {
-      const cells = row.split('|').map(c => c.trim()).filter(Boolean);
+      const cells = row
+        .split('|')
+        .map((c) => c.trim())
+        .filter(Boolean);
       if (cells.length >= 4 && !cells[0].includes('---')) {
         components.push({
           name: cells[0],
@@ -178,10 +179,7 @@ export function generatePlan(
 /**
  * Complete plan session with generated plan
  */
-export function completePlanSession(
-  session: PlanSession,
-  plan: PlanDocument
-): PlanSession {
+export function completePlanSession(session: PlanSession, plan: PlanDocument): PlanSession {
   return {
     ...session,
     plan,
@@ -209,16 +207,20 @@ export function generatePreflightChecks(
   checks.push('Verify existing tests pass: `pnpm run test`');
 
   // Check for database migrations
-  if (spec.technicalApproach.toLowerCase().includes('prisma') ||
-      spec.technicalApproach.toLowerCase().includes('database') ||
-      spec.technicalApproach.toLowerCase().includes('migration')) {
+  if (
+    spec.technicalApproach.toLowerCase().includes('prisma') ||
+    spec.technicalApproach.toLowerCase().includes('database') ||
+    spec.technicalApproach.toLowerCase().includes('migration')
+  ) {
     checks.push('Generate Prisma client: `pnpm run db:generate`');
     checks.push('Apply any pending migrations: `pnpm run db:migrate`');
   }
 
   // Check for environment variables
-  if (spec.technicalApproach.toLowerCase().includes('env') ||
-      spec.technicalApproach.toLowerCase().includes('environment')) {
+  if (
+    spec.technicalApproach.toLowerCase().includes('env') ||
+    spec.technicalApproach.toLowerCase().includes('environment')
+  ) {
     checks.push('Verify required environment variables are set');
   }
 
@@ -226,7 +228,9 @@ export function generatePreflightChecks(
   if (context?.dependencyArtifacts.length) {
     for (const dep of context.dependencyArtifacts) {
       if (dep.status !== 'Completed') {
-        checks.push(`Verify dependency ${dep.taskId} is complete (current: ${dep.status || 'Unknown'})`);
+        checks.push(
+          `Verify dependency ${dep.taskId} is complete (current: ${dep.status || 'Unknown'})`
+        );
       }
     }
   }
@@ -256,16 +260,21 @@ export function decomposeToTddSteps(
   let stepNumber = 0;
 
   // Group criteria by domain/type
-  const testCriteria = acceptanceCriteria.filter(c =>
-    c.toLowerCase().includes('test') ||
-    c.toLowerCase().includes('coverage') ||
-    c.toLowerCase().includes('validate')
+  const testCriteria = acceptanceCriteria.filter(
+    (c) =>
+      c.toLowerCase().includes('test') ||
+      c.toLowerCase().includes('coverage') ||
+      c.toLowerCase().includes('validate')
   );
-  const implCriteria = acceptanceCriteria.filter(c => !testCriteria.includes(c));
+  const implCriteria = acceptanceCriteria.filter((c) => !testCriteria.includes(c));
 
   // Phase 1: Create test files (RED phase)
   for (const component of components) {
-    if (component.type === 'Module' || component.type === 'Component' || component.type === 'Service') {
+    if (
+      component.type === 'Module' ||
+      component.type === 'Component' ||
+      component.type === 'Service'
+    ) {
       stepNumber++;
       const testFile = generateTestFilePath(component.location);
 
@@ -297,14 +306,12 @@ export function decomposeToTddSteps(
       tddPhase: 'GREEN',
       filesToCreate: isNew ? [component.location] : [],
       filesToModify: isNew ? [] : [component.location],
-      acceptanceCriteriaAddressed: implCriteria.filter(c =>
-        c.toLowerCase().includes(component.name.toLowerCase()) ||
-        c.toLowerCase().includes(component.type.toLowerCase())
+      acceptanceCriteriaAddressed: implCriteria.filter(
+        (c) =>
+          c.toLowerCase().includes(component.name.toLowerCase()) ||
+          c.toLowerCase().includes(component.type.toLowerCase())
       ),
-      validationChecks: [
-        'TypeScript compiles without errors',
-        'Related tests pass',
-      ],
+      validationChecks: ['TypeScript compiles without errors', 'Related tests pass'],
     });
   }
 
@@ -317,16 +324,11 @@ export function decomposeToTddSteps(
       type: 'integration',
       tddPhase: 'GREEN',
       filesToCreate: [],
-      filesToModify: components.map(c => c.location),
-      acceptanceCriteriaAddressed: implCriteria.filter(c =>
-        c.toLowerCase().includes('integration') ||
-        c.toLowerCase().includes('connect')
+      filesToModify: components.map((c) => c.location),
+      acceptanceCriteriaAddressed: implCriteria.filter(
+        (c) => c.toLowerCase().includes('integration') || c.toLowerCase().includes('connect')
       ),
-      validationChecks: [
-        'All unit tests pass',
-        'Integration tests pass',
-        'TypeScript compiles',
-      ],
+      validationChecks: ['All unit tests pass', 'Integration tests pass', 'TypeScript compiles'],
     });
   }
 
@@ -338,7 +340,7 @@ export function decomposeToTddSteps(
     type: 'implementation',
     tddPhase: 'REFACTOR',
     filesToCreate: [],
-    filesToModify: components.map(c => c.location),
+    filesToModify: components.map((c) => c.location),
     acceptanceCriteriaAddressed: [
       'Code follows project patterns',
       'No duplication',
@@ -401,7 +403,7 @@ export function generateCheckpoints(steps: PlanStep[]): IntegrationCheckpoint[] 
   const checkpoints: IntegrationCheckpoint[] = [];
 
   // Checkpoint after RED phase (tests written)
-  const redSteps = steps.filter(s => s.tddPhase === 'RED');
+  const redSteps = steps.filter((s) => s.tddPhase === 'RED');
   if (redSteps.length > 0) {
     const lastRedStep = redSteps[redSteps.length - 1];
     checkpoints.push({
@@ -412,7 +414,7 @@ export function generateCheckpoints(steps: PlanStep[]): IntegrationCheckpoint[] 
   }
 
   // Checkpoint after GREEN phase (implementation done)
-  const greenSteps = steps.filter(s => s.tddPhase === 'GREEN');
+  const greenSteps = steps.filter((s) => s.tddPhase === 'GREEN');
   if (greenSteps.length > 0) {
     const lastGreenStep = greenSteps[greenSteps.length - 1];
     checkpoints.push({
@@ -423,7 +425,7 @@ export function generateCheckpoints(steps: PlanStep[]): IntegrationCheckpoint[] 
   }
 
   // Checkpoint after integration step
-  const integrationStep = steps.find(s => s.type === 'integration');
+  const integrationStep = steps.find((s) => s.type === 'integration');
   if (integrationStep) {
     checkpoints.push({
       afterStep: integrationStep.stepNumber,
@@ -433,7 +435,7 @@ export function generateCheckpoints(steps: PlanStep[]): IntegrationCheckpoint[] 
   }
 
   // Checkpoint after refactor
-  const refactorStep = steps.find(s => s.tddPhase === 'REFACTOR');
+  const refactorStep = steps.find((s) => s.tddPhase === 'REFACTOR');
   if (refactorStep) {
     checkpoints.push({
       afterStep: refactorStep.stepNumber,
@@ -470,17 +472,21 @@ export function generateFinalValidation(spec: SpecificationDocument): string[] {
   }
 
   // Security checks for sensitive components
-  if (spec.technicalApproach.toLowerCase().includes('auth') ||
-      spec.technicalApproach.toLowerCase().includes('security') ||
-      spec.technicalApproach.toLowerCase().includes('encrypt')) {
+  if (
+    spec.technicalApproach.toLowerCase().includes('auth') ||
+    spec.technicalApproach.toLowerCase().includes('security') ||
+    spec.technicalApproach.toLowerCase().includes('encrypt')
+  ) {
     validations.push('Security review: Check for OWASP Top 10 vulnerabilities');
     validations.push('Verify secrets are not hardcoded');
   }
 
   // API-specific validations
-  if (spec.technicalApproach.toLowerCase().includes('api') ||
-      spec.technicalApproach.toLowerCase().includes('trpc') ||
-      spec.technicalApproach.toLowerCase().includes('endpoint')) {
+  if (
+    spec.technicalApproach.toLowerCase().includes('api') ||
+    spec.technicalApproach.toLowerCase().includes('trpc') ||
+    spec.technicalApproach.toLowerCase().includes('endpoint')
+  ) {
     validations.push('API contract tests pass');
     validations.push('Response time within p95 <100ms requirement');
   }
@@ -496,22 +502,26 @@ export function generateFinalValidation(spec: SpecificationDocument): string[] {
  * Estimate effort for plan execution
  */
 export function estimateEffort(steps: PlanStep[]): PlanEffortEstimate {
-  const testSteps = steps.filter(s => s.type === 'test');
-  const implSteps = steps.filter(s => s.type === 'implementation');
-  const integrationSteps = steps.filter(s => s.type === 'integration');
-  const validationSteps = steps.filter(s => s.type === 'validation');
+  const testSteps = steps.filter((s) => s.type === 'test');
+  const implSteps = steps.filter((s) => s.type === 'implementation');
+  const integrationSteps = steps.filter((s) => s.type === 'integration');
+  const validationSteps = steps.filter((s) => s.type === 'validation');
 
   // Rough estimation based on step count and file count
   const testFiles = testSteps.reduce((sum, s) => sum + s.filesToCreate.length, 0);
-  const implFiles = implSteps.reduce((sum, s) => sum + s.filesToCreate.length + s.filesToModify.length, 0);
+  const implFiles = implSteps.reduce(
+    (sum, s) => sum + s.filesToCreate.length + s.filesToModify.length,
+    0
+  );
   const integrationFiles = integrationSteps.reduce((sum, s) => sum + s.filesToModify.length, 0);
 
   return {
     tests: `~${Math.max(1, testFiles)} test file(s) - ${estimateTimeRange(testFiles, 15, 30)}`,
     implementation: `~${Math.max(1, implFiles)} file(s) - ${estimateTimeRange(implFiles, 20, 45)}`,
-    integration: integrationFiles > 0
-      ? `~${integrationFiles} file(s) to integrate - ${estimateTimeRange(integrationFiles, 10, 20)}`
-      : 'N/A - no integration steps',
+    integration:
+      integrationFiles > 0
+        ? `~${integrationFiles} file(s) to integrate - ${estimateTimeRange(integrationFiles, 10, 20)}`
+        : 'N/A - no integration steps',
     total: calculateTotalEstimate(testFiles, implFiles, integrationFiles),
   };
 }
@@ -527,22 +537,26 @@ function estimateTimeRange(fileCount: number, minPerFile: number, maxPerFile: nu
     return `${min}-${max} minutes`;
   }
 
-  const minHours = Math.round(min / 60 * 10) / 10;
-  const maxHours = Math.round(max / 60 * 10) / 10;
+  const minHours = Math.round((min / 60) * 10) / 10;
+  const maxHours = Math.round((max / 60) * 10) / 10;
   return `${minHours}-${maxHours} hours`;
 }
 
 /**
  * Calculate total effort estimate
  */
-function calculateTotalEstimate(testFiles: number, implFiles: number, integrationFiles: number): string {
-  const minTotal = (testFiles * 15) + (implFiles * 20) + (integrationFiles * 10) + 30; // +30 for validation
-  const maxTotal = (testFiles * 30) + (implFiles * 45) + (integrationFiles * 20) + 60; // +60 for validation
+function calculateTotalEstimate(
+  testFiles: number,
+  implFiles: number,
+  integrationFiles: number
+): string {
+  const minTotal = testFiles * 15 + implFiles * 20 + integrationFiles * 10 + 30; // +30 for validation
+  const maxTotal = testFiles * 30 + implFiles * 45 + integrationFiles * 20 + 60; // +60 for validation
 
   // Convert to hours if > 120 minutes
   if (maxTotal > 120) {
-    const minHours = Math.round(minTotal / 60 * 10) / 10;
-    const maxHours = Math.round(maxTotal / 60 * 10) / 10;
+    const minHours = Math.round((minTotal / 60) * 10) / 10;
+    const maxHours = Math.round((maxTotal / 60) * 10) / 10;
     return `${minHours}-${maxHours} hours`;
   }
 
@@ -586,7 +600,13 @@ export function writePlanSession(
 ): string {
   const fullSpecifyDir = join(repoRoot, specifyDir);
   const outputPath = getPlanSessionPath(fullSpecifyDir, sprintNumber, session.taskId);
-  const outputDir = join(fullSpecifyDir, 'sprints', `sprint-${sprintNumber}`, 'context', session.taskId);
+  const outputDir = join(
+    fullSpecifyDir,
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'context',
+    session.taskId
+  );
   mkdirSync(outputDir, { recursive: true });
 
   writeFileSync(outputPath, JSON.stringify(session, null, 2));
@@ -656,32 +676,32 @@ ${plan.preflightChecks.map((c, i) => `${i + 1}. ${c}`).join('\n')}
       if (step.filesToCreate.length > 0) {
         md += `
 **Files to Create:**
-${step.filesToCreate.map(f => `- \`${f}\``).join('\n')}
+${step.filesToCreate.map((f) => `- \`${f}\``).join('\n')}
 `;
       }
 
       if (step.filesToModify.length > 0) {
         md += `
 **Files to Modify:**
-${step.filesToModify.map(f => `- \`${f}\``).join('\n')}
+${step.filesToModify.map((f) => `- \`${f}\``).join('\n')}
 `;
       }
 
       if (step.acceptanceCriteriaAddressed.length > 0) {
         md += `
 **Acceptance Criteria Addressed:**
-${step.acceptanceCriteriaAddressed.map(c => `- ${c}`).join('\n')}
+${step.acceptanceCriteriaAddressed.map((c) => `- ${c}`).join('\n')}
 `;
       }
 
       md += `
 **Validation:**
-${step.validationChecks.map(v => `- [ ] ${v}`).join('\n')}
+${step.validationChecks.map((v) => `- [ ] ${v}`).join('\n')}
 
 `;
 
       // Add checkpoint if exists
-      const checkpoint = plan.integrationCheckpoints.find(c => c.afterStep === step.stepNumber);
+      const checkpoint = plan.integrationCheckpoints.find((c) => c.afterStep === step.stepNumber);
       if (checkpoint) {
         md += `> **Checkpoint:** ${checkpoint.verify}
 > \`${checkpoint.command}\`
@@ -705,7 +725,7 @@ ${plan.finalValidation.map((v, i) => `${i + 1}. ${v}`).join('\n')}
 
 | After Step | Verification | Command |
 |------------|--------------|---------|
-${plan.integrationCheckpoints.map(c => `| ${c.afterStep} | ${c.verify} | \`${c.command}\` |`).join('\n')}
+${plan.integrationCheckpoints.map((c) => `| ${c.afterStep} | ${c.verify} | \`${c.command}\` |`).join('\n')}
 
 ---
 

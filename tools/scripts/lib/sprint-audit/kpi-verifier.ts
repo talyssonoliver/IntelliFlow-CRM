@@ -45,7 +45,8 @@ const KPI_PATTERNS: Array<{
   },
   // Load time <1s, First Contentful Paint <1s
   {
-    pattern: /(?:load\s+time|fcp|lcp|first\s+contentful\s+paint)\s*([><=!]+)\s*(\d+(?:\.\d+)?)\s*(ms|s|sec)/i,
+    pattern:
+      /(?:load\s+time|fcp|lcp|first\s+contentful\s+paint)\s*([><=!]+)\s*(\d+(?:\.\d+)?)\s*(ms|s|sec)/i,
     extract: (m) => ({
       metric: 'load_time',
       operator: normalizeOperator(m[1]),
@@ -325,10 +326,7 @@ function extractMetricValue(metric: string, output: string): number | null {
       /(\d+)\s+errors?/i,
       // Zero errors = successful exit with no error count
     ],
-    lint_errors: [
-      /(\d+)\s+problems?/i,
-      /(\d+)\s+errors?/i,
-    ],
+    lint_errors: [/(\d+)\s+problems?/i, /(\d+)\s+errors?/i],
   };
 
   const metricPatterns = patterns[metric] || [];
@@ -355,11 +353,7 @@ function extractMetricValue(metric: string, output: string): number | null {
 /**
  * Compares actual value against target using operator
  */
-export function compareKpiValue(
-  actual: number,
-  target: number,
-  operator: KpiOperator
-): boolean {
+export function compareKpiValue(actual: number, target: number, operator: KpiOperator): boolean {
   switch (operator) {
     case '>':
       return actual > target;

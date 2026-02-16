@@ -12,12 +12,40 @@ export function getAccountTier(revenue: number | null | undefined): AccountTier 
   return 'STARTUP';
 }
 
-export const TIER_CONFIG: Record<AccountTier, { label: string; color: string; dot: string; avatarBg: string }> = {
-  ENTERPRISE: { label: 'Enterprise', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', dot: 'bg-purple-500', avatarBg: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' },
-  MID_MARKET: { label: 'Mid-Market', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', dot: 'bg-blue-500', avatarBg: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' },
-  SMB: { label: 'SMB', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', dot: 'bg-green-500', avatarBg: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300' },
-  STARTUP: { label: 'Startup', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400', dot: 'bg-yellow-500', avatarBg: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300' },
-  UNKNOWN: { label: 'Unknown', color: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400', dot: 'bg-slate-400', avatarBg: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' },
+export const TIER_CONFIG: Record<
+  AccountTier,
+  { label: string; color: string; dot: string; avatarBg: string }
+> = {
+  ENTERPRISE: {
+    label: 'Enterprise',
+    color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
+    dot: 'bg-purple-500',
+    avatarBg: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+  },
+  MID_MARKET: {
+    label: 'Mid-Market',
+    color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+    dot: 'bg-blue-500',
+    avatarBg: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
+  },
+  SMB: {
+    label: 'SMB',
+    color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    dot: 'bg-green-500',
+    avatarBg: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
+  },
+  STARTUP: {
+    label: 'Startup',
+    color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+    dot: 'bg-yellow-500',
+    avatarBg: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300',
+  },
+  UNKNOWN: {
+    label: 'Unknown',
+    color: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
+    dot: 'bg-slate-400',
+    avatarBg: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
+  },
 };
 
 export interface AccountRow {
@@ -93,13 +121,18 @@ export function createAccountColumns(handlers: AccountRowHandlers): ColumnDef<Ac
 
         return (
           <div className="flex items-center gap-3">
-            <div className={`size-9 rounded-lg ${config.avatarBg} flex items-center justify-center text-xs font-semibold shrink-0`}>
+            <div
+              className={`size-9 rounded-lg ${config.avatarBg} flex items-center justify-center text-xs font-semibold shrink-0`}
+            >
               {initials}
             </div>
             <div className="flex flex-col min-w-0">
               <button
                 className="text-sm font-semibold text-foreground hover:text-primary text-left truncate"
-                onClick={(e) => { e.stopPropagation(); handlers.onView(account.id); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlers.onView(account.id);
+                }}
               >
                 {account.name}
               </button>
@@ -116,9 +149,7 @@ export function createAccountColumns(handlers: AccountRowHandlers): ColumnDef<Ac
       header: 'Industry',
       size: 140,
       cell: ({ row }) => (
-        <span className="text-sm text-foreground">
-          {row.original.industry ?? '—'}
-        </span>
+        <span className="text-sm text-foreground">{row.original.industry ?? '—'}</span>
       ),
     },
     {
@@ -187,17 +218,27 @@ export function createAccountColumns(handlers: AccountRowHandlers): ColumnDef<Ac
           <div className="flex items-center gap-1">
             <button
               className="p-1 rounded hover:bg-muted"
-              onClick={(e) => { e.stopPropagation(); handlers.onEdit(account.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handlers.onEdit(account.id);
+              }}
               title="Edit account"
             >
-              <span className="material-symbols-outlined text-base text-muted-foreground">edit</span>
+              <span className="material-symbols-outlined text-base text-muted-foreground">
+                edit
+              </span>
             </button>
             <button
               className="p-1 rounded hover:bg-destructive/10"
-              onClick={(e) => { e.stopPropagation(); handlers.onDelete(account.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handlers.onDelete(account.id);
+              }}
               title="Delete account"
             >
-              <span className="material-symbols-outlined text-base text-muted-foreground hover:text-destructive">delete</span>
+              <span className="material-symbols-outlined text-base text-muted-foreground hover:text-destructive">
+                delete
+              </span>
             </button>
           </div>
         );

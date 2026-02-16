@@ -11,10 +11,7 @@
  * Task: IFC-025 - A/B Testing Framework
  */
 
-import {
-  EXPERIMENT_DEFAULTS,
-  EFFECT_SIZE_THRESHOLDS,
-} from '@intelliflow/domain';
+import { EXPERIMENT_DEFAULTS, EFFECT_SIZE_THRESHOLDS } from '@intelliflow/domain';
 
 // =============================================================================
 // Types
@@ -74,10 +71,7 @@ export function calculateDescriptiveStats(data: number[]): DescriptiveStats {
   const mean = data.reduce((sum, x) => sum + x, 0) / n;
 
   // Bessel's correction (n-1) for sample variance
-  const variance =
-    n > 1
-      ? data.reduce((sum, x) => sum + Math.pow(x - mean, 2), 0) / (n - 1)
-      : 0;
+  const variance = n > 1 ? data.reduce((sum, x) => sum + Math.pow(x - mean, 2), 0) / (n - 1) : 0;
 
   return {
     n,
@@ -166,8 +160,7 @@ export function welchTTestFromStats(
 
   // Welch-Satterthwaite degrees of freedom
   const numerator = Math.pow(se1 + se2, 2);
-  const denominator =
-    Math.pow(se1, 2) / (n1 - 1) + Math.pow(se2, 2) / (n2 - 1);
+  const denominator = Math.pow(se1, 2) / (n1 - 1) + Math.pow(se2, 2) / (n2 - 1);
   const df = denominator > 0 ? numerator / denominator : 1;
 
   // p-value (two-tailed) using t-distribution approximation
@@ -307,8 +300,7 @@ export function cohensDFromStats(
   if (n1 < 2 || n2 < 2) return 0;
 
   // Pooled standard deviation
-  const pooledVar =
-    ((n1 - 1) * var1 + (n2 - 1) * var2) / (n1 + n2 - 2);
+  const pooledVar = ((n1 - 1) * var1 + (n2 - 1) * var2) / (n1 + n2 - 2);
   const pooledStd = Math.sqrt(pooledVar);
 
   if (pooledStd === 0) return 0;
@@ -319,9 +311,7 @@ export function cohensDFromStats(
 /**
  * Interpret Cohen's d effect size
  */
-export function interpretEffectSize(
-  d: number
-): 'NEGLIGIBLE' | 'SMALL' | 'MEDIUM' | 'LARGE' {
+export function interpretEffectSize(d: number): 'NEGLIGIBLE' | 'SMALL' | 'MEDIUM' | 'LARGE' {
   const absD = Math.abs(d);
   if (absD < EFFECT_SIZE_THRESHOLDS.SMALL) return 'NEGLIGIBLE';
   if (absD < EFFECT_SIZE_THRESHOLDS.MEDIUM) return 'SMALL';
@@ -424,10 +414,7 @@ export function analyzeExperiment(
 
   // Chi-square test for conversions (if provided)
   let chiSquare: ChiSquareResult | undefined;
-  if (
-    controlConversions !== undefined &&
-    treatmentConversions !== undefined
-  ) {
+  if (controlConversions !== undefined && treatmentConversions !== undefined) {
     chiSquare = chiSquareTest(
       controlConversions,
       controlStats.n,
@@ -532,7 +519,7 @@ function normalDistributionCDF(z: number): number {
   const sign = z < 0 ? -1 : 1;
   z = Math.abs(z);
 
-  const b1 = 0.319381530;
+  const b1 = 0.31938153;
   const b2 = -0.356563782;
   const b3 = 1.781477937;
   const b4 = -1.821255978;
@@ -560,34 +547,18 @@ function normalDistributionQuantile(p: number): number {
   if (p >= 1) return Infinity;
 
   const a = [
-    -3.969683028665376e1,
-    2.209460984245205e2,
-    -2.759285104469687e2,
-    1.383577518672690e2,
-    -3.066479806614716e1,
-    2.506628277459239e0,
+    -3.969683028665376e1, 2.209460984245205e2, -2.759285104469687e2, 1.38357751867269e2,
+    -3.066479806614716e1, 2.506628277459239,
   ];
   const b = [
-    -5.447609879822406e1,
-    1.615858368580409e2,
-    -1.556989798598866e2,
-    6.680131188771972e1,
+    -5.447609879822406e1, 1.615858368580409e2, -1.556989798598866e2, 6.680131188771972e1,
     -1.328068155288572e1,
   ];
   const c = [
-    -7.784894002430293e-3,
-    -3.223964580411365e-1,
-    -2.400758277161838,
-    -2.549732539343734,
-    4.374664141464968,
-    2.938163982698783,
+    -7.784894002430293e-3, -3.223964580411365e-1, -2.400758277161838, -2.549732539343734,
+    4.374664141464968, 2.938163982698783,
   ];
-  const d = [
-    7.784695709041462e-3,
-    3.224671290700398e-1,
-    2.445134137142996,
-    3.754408661907416,
-  ];
+  const d = [7.784695709041462e-3, 3.224671290700398e-1, 2.445134137142996, 3.754408661907416];
 
   const pLow = 0.02425;
   const pHigh = 1 - pLow;
@@ -625,14 +596,9 @@ function incompleteBeta(x: number, a: number, b: number): number {
   if (x === 1) return 1;
 
   // Use continued fraction representation
-  const bt =
-    Math.exp(
-      gammaLn(a + b) -
-        gammaLn(a) -
-        gammaLn(b) +
-        a * Math.log(x) +
-        b * Math.log(1 - x)
-    );
+  const bt = Math.exp(
+    gammaLn(a + b) - gammaLn(a) - gammaLn(b) + a * Math.log(x) + b * Math.log(1 - x)
+  );
 
   if (x < (a + 1) / (a + b + 2)) {
     return (bt * betaCF(x, a, b)) / a;
@@ -687,12 +653,8 @@ function betaCF(x: number, a: number, b: number): number {
  */
 function gammaLn(x: number): number {
   const coefficients = [
-    76.18009172947146,
-    -86.5053203294168,
-    24.01409824083091,
-    -1.231739572450155,
-    0.1208650973866179e-2,
-    -0.5395239384953e-5,
+    76.18009172947146, -86.5053203294168, 24.01409824083091, -1.231739572450155,
+    0.1208650973866179e-2, -0.5395239384953e-5,
   ];
 
   let y = x;

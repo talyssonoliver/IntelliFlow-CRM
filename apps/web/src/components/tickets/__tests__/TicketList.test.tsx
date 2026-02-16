@@ -27,11 +27,7 @@ vi.mock('@intelliflow/ui', async () => {
           <table>
             <tbody>
               {data.map((item: any) => (
-                <tr
-                  key={item.id}
-                  data-testid={`row-${item.id}`}
-                  onClick={() => onRowClick?.(item)}
-                >
+                <tr key={item.id} data-testid={`row-${item.id}`} onClick={() => onRowClick?.(item)}>
                   <td>{item.subject}</td>
                   <td data-testid="priority">{item.priority}</td>
                 </tr>
@@ -60,7 +56,9 @@ vi.mock('@/components/shared', () => ({
 // Mock SLAIndicator
 vi.mock('../SLAIndicator', () => ({
   SLAIndicator: ({ slaStatus, slaTimeRemaining }: any) => (
-    <div data-testid="sla-indicator">{slaStatus} - {slaTimeRemaining}m</div>
+    <div data-testid="sla-indicator">
+      {slaStatus} - {slaTimeRemaining}m
+    </div>
   ),
 }));
 

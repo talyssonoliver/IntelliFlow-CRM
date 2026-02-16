@@ -42,7 +42,9 @@ describe('AccountContactsList', () => {
 
   it('shows loading skeletons while fetching', () => {
     useQueryMock.mockReturnValue({ data: null, isLoading: true, error: null });
-    const { container } = render(<AccountContactsList accountId="00000000-0000-4000-8000-000000000001" />);
+    const { container } = render(
+      <AccountContactsList accountId="00000000-0000-4000-8000-000000000001" />
+    );
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 
@@ -53,7 +55,11 @@ describe('AccountContactsList', () => {
   });
 
   it('shows empty state when no contacts and no filter', () => {
-    useQueryMock.mockReturnValue({ data: { contacts: [], nextCursor: null }, isLoading: false, error: null });
+    useQueryMock.mockReturnValue({
+      data: { contacts: [], nextCursor: null },
+      isLoading: false,
+      error: null,
+    });
     render(<AccountContactsList accountId="00000000-0000-4000-8000-000000000001" />);
     expect(screen.getByText('No contacts linked to this account')).toBeInTheDocument();
   });
@@ -62,8 +68,20 @@ describe('AccountContactsList', () => {
     useQueryMock.mockReturnValue({
       data: {
         contacts: [
-          { id: 'c1', firstName: 'John', lastName: 'Doe', email: 'john@test.com', status: 'ACTIVE' },
-          { id: 'c2', firstName: 'Jane', lastName: 'Smith', email: 'jane@test.com', status: 'LEAD' },
+          {
+            id: 'c1',
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john@test.com',
+            status: 'ACTIVE',
+          },
+          {
+            id: 'c2',
+            firstName: 'Jane',
+            lastName: 'Smith',
+            email: 'jane@test.com',
+            status: 'LEAD',
+          },
         ],
         nextCursor: null,
       },
@@ -81,7 +99,13 @@ describe('AccountContactsList', () => {
     useQueryMock.mockReturnValue({
       data: {
         contacts: [
-          { id: 'c1', firstName: 'John', lastName: 'Doe', email: 'john@test.com', status: 'ACTIVE' },
+          {
+            id: 'c1',
+            firstName: 'John',
+            lastName: 'Doe',
+            email: 'john@test.com',
+            status: 'ACTIVE',
+          },
         ],
         nextCursor: null,
       },

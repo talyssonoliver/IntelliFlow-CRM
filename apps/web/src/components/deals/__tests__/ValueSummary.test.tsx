@@ -12,8 +12,18 @@ import { createMockPipelineStats } from './deal-test-utils';
 
 // Mock @intelliflow/ui
 vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, className, ...props }: { children: React.ReactNode; className?: string; [key: string]: unknown }) => (
-    <div data-testid="card" className={className} {...props}>{children}</div>
+  Card: ({
+    children,
+    className,
+    ...props
+  }: {
+    children: React.ReactNode;
+    className?: string;
+    [key: string]: unknown;
+  }) => (
+    <div data-testid="card" className={className} {...props}>
+      {children}
+    </div>
   ),
 }));
 

@@ -90,7 +90,14 @@ describe('Slider', () => {
     it('should have base slider styles', () => {
       render(<Slider aria-label="Volume" data-testid="slider-root" />);
       const slider = screen.getByTestId('slider-root');
-      expect(slider).toHaveClass('relative', 'flex', 'w-full', 'touch-none', 'select-none', 'items-center');
+      expect(slider).toHaveClass(
+        'relative',
+        'flex',
+        'w-full',
+        'touch-none',
+        'select-none',
+        'items-center'
+      );
     });
   });
 

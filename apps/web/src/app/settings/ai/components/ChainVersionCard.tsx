@@ -34,12 +34,15 @@ export interface ChainVersionCardProps {
 }
 
 // Status configuration
-const STATUS_CONFIG: Record<ChainVersionStatus, {
-  color: string;
-  bgColor: string;
-  icon: string;
-  label: string;
-}> = {
+const STATUS_CONFIG: Record<
+  ChainVersionStatus,
+  {
+    color: string;
+    bgColor: string;
+    icon: string;
+    label: string;
+  }
+> = {
   DRAFT: {
     color: 'text-gray-700 dark:text-gray-300',
     bgColor: 'bg-gray-100 dark:bg-gray-800',
@@ -128,9 +131,7 @@ export function ChainVersionCard({
               {statusConfig.label}
             </Badge>
           </div>
-          <p className="text-xs text-muted-foreground font-mono truncate">
-            {id.slice(0, 8)}...
-          </p>
+          <p className="text-xs text-muted-foreground font-mono truncate">{id.slice(0, 8)}...</p>
         </div>
       </div>
 

@@ -23,28 +23,29 @@ export class InMemoryNotificationRepository implements NotificationRepository {
   }
 
   async findByQuery(options: NotificationQueryOptions): Promise<Notification[]> {
-    let results = Array.from(this.notifications.values())
-      .filter(n => n.tenantId === options.tenantId);
+    let results = Array.from(this.notifications.values()).filter(
+      (n) => n.tenantId === options.tenantId
+    );
 
     if (options.recipientId) {
-      results = results.filter(n => n.recipientId === options.recipientId);
+      results = results.filter((n) => n.recipientId === options.recipientId);
     }
 
     if (options.channel) {
-      results = results.filter(n => n.channel === options.channel);
+      results = results.filter((n) => n.channel === options.channel);
     }
 
     if (options.status) {
       const statuses = Array.isArray(options.status) ? options.status : [options.status];
-      results = results.filter(n => statuses.includes(n.status));
+      results = results.filter((n) => statuses.includes(n.status));
     }
 
     if (options.fromDate) {
-      results = results.filter(n => n.createdAt >= options.fromDate!);
+      results = results.filter((n) => n.createdAt >= options.fromDate!);
     }
 
     if (options.toDate) {
-      results = results.filter(n => n.createdAt <= options.toDate!);
+      results = results.filter((n) => n.createdAt <= options.toDate!);
     }
 
     // Sort by createdAt desc
@@ -56,16 +57,14 @@ export class InMemoryNotificationRepository implements NotificationRepository {
     return results.slice(offset, offset + limit);
   }
 
-  async findPendingForDelivery(
-    tenantId: string,
-    limit: number = 100
-  ): Promise<Notification[]> {
+  async findPendingForDelivery(tenantId: string, limit: number = 100): Promise<Notification[]> {
     const now = new Date();
     return Array.from(this.notifications.values())
-      .filter(n =>
-        n.tenantId === tenantId &&
-        n.status === 'pending' &&
-        (!n.scheduledAt || n.scheduledAt <= now)
+      .filter(
+        (n) =>
+          n.tenantId === tenantId &&
+          n.status === 'pending' &&
+          (!n.scheduledAt || n.scheduledAt <= now)
       )
       .sort((a, b) => {
         // Sort by priority then by createdAt
@@ -78,16 +77,9 @@ export class InMemoryNotificationRepository implements NotificationRepository {
       .slice(0, limit);
   }
 
-  async findScheduledReadyToSend(
-    now: Date,
-    limit: number = 100
-  ): Promise<Notification[]> {
+  async findScheduledReadyToSend(now: Date, limit: number = 100): Promise<Notification[]> {
     return Array.from(this.notifications.values())
-      .filter(n =>
-        n.status === 'pending' &&
-        n.scheduledAt &&
-        n.scheduledAt <= now
-      )
+      .filter((n) => n.status === 'pending' && n.scheduledAt && n.scheduledAt <= now)
       .sort((a, b) => {
         const priorityOrder = { high: 0, normal: 1, low: 2 };
         const aPriority = priorityOrder[a.priority];
@@ -98,15 +90,9 @@ export class InMemoryNotificationRepository implements NotificationRepository {
       .slice(0, limit);
   }
 
-  async findFailedForRetry(
-    maxRetries: number,
-    limit: number = 100
-  ): Promise<Notification[]> {
+  async findFailedForRetry(maxRetries: number, limit: number = 100): Promise<Notification[]> {
     return Array.from(this.notifications.values())
-      .filter(n =>
-        n.status === 'failed' &&
-        n.retryCount < maxRetries
-      )
+      .filter((n) => n.status === 'failed' && n.retryCount < maxRetries)
       .sort((a, b) => {
         const priorityOrder = { high: 0, normal: 1, low: 2 };
         const aPriority = priorityOrder[a.priority];
@@ -117,18 +103,15 @@ export class InMemoryNotificationRepository implements NotificationRepository {
       .slice(0, limit);
   }
 
-  async countUnread(
-    tenantId: string,
-    recipientId: string
-  ): Promise<number> {
-    return Array.from(this.notifications.values())
-      .filter(n =>
+  async countUnread(tenantId: string, recipientId: string): Promise<number> {
+    return Array.from(this.notifications.values()).filter(
+      (n) =>
         n.tenantId === tenantId &&
         n.recipientId === recipientId &&
         n.channel === 'in_app' &&
         (n.status === 'sent' || n.status === 'delivered') &&
         !n.readAt
-      ).length;
+    ).length;
   }
 
   async getRecentForRecipient(
@@ -138,19 +121,14 @@ export class InMemoryNotificationRepository implements NotificationRepository {
     limit: number = 50
   ): Promise<Notification[]> {
     return Array.from(this.notifications.values())
-      .filter(n =>
-        n.tenantId === tenantId &&
-        n.recipientId === recipientId &&
-        n.channel === channel
+      .filter(
+        (n) => n.tenantId === tenantId && n.recipientId === recipientId && n.channel === channel
       )
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, limit);
   }
 
-  async markAllAsRead(
-    tenantId: string,
-    recipientId: string
-  ): Promise<number> {
+  async markAllAsRead(tenantId: string, recipientId: string): Promise<number> {
     let count = 0;
     for (const notification of this.notifications.values()) {
       if (

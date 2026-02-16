@@ -109,10 +109,7 @@ export class HealthServer {
       });
 
       this.server.listen(this.config.port, () => {
-        this.logger.info(
-          { port: this.config.port },
-          'Health check server started'
-        );
+        this.logger.info({ port: this.config.port }, 'Health check server started');
         resolve();
       });
     });
@@ -253,7 +250,10 @@ export function createDefaultHealthProvider(
   version: string,
   getDependencyHealth: () => Promise<Record<string, ComponentHealth>>,
   getQueueStats: () => Promise<
-    Record<string, { waiting: number; active: number; completed: number; failed: number; delayed: number }>
+    Record<
+      string,
+      { waiting: number; active: number; completed: number; failed: number; delayed: number }
+    >
   >
 ): HealthProvider {
   const startTime = Date.now();

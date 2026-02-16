@@ -95,12 +95,20 @@ interface LogEntry {
 function applyProgressEvent(
   prevState: ProgressState,
   data: TestProgress
-): { state: ProgressState; logs: LogEntry[]; error?: string; isComplete?: boolean; coverage?: { lines: number; statements: number; functions: number; branches: number } } {
+): {
+  state: ProgressState;
+  logs: LogEntry[];
+  error?: string;
+  isComplete?: boolean;
+  coverage?: { lines: number; statements: number; functions: number; branches: number };
+} {
   const logs: LogEntry[] = [];
   let newState = { ...prevState };
   let error: string | undefined;
   let isComplete = false;
-  let coverage: { lines: number; statements: number; functions: number; branches: number } | undefined;
+  let coverage:
+    | { lines: number; statements: number; functions: number; branches: number }
+    | undefined;
 
   switch (data.type) {
     case 'test_pass':

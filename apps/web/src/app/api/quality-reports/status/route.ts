@@ -6,10 +6,13 @@ export async function GET(request: NextRequest) {
   const jobId = searchParams.get('jobId');
 
   if (!jobId) {
-    return NextResponse.json({
-      success: false,
-      error: 'Missing jobId parameter',
-    }, { status: 400 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Missing jobId parameter',
+      },
+      { status: 400 }
+    );
   }
 
   const job = getJob(jobId);

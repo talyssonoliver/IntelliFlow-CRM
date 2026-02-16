@@ -209,11 +209,7 @@ function createGlobalLimiter() {
   };
 
   return {
-    async checkLimit(
-      key: string,
-      limit: number,
-      windowMs: number,
-    ): Promise<boolean> {
+    async checkLimit(key: string, limit: number, windowMs: number): Promise<boolean> {
       const now = Date.now();
       let w = state.windows.get(key);
       if (w && now - w.windowStart >= windowMs) {
@@ -232,7 +228,7 @@ function createGlobalLimiter() {
     async checkLimitWithDDoS(
       key: string,
       limit: number,
-      windowMs: number,
+      windowMs: number
     ): Promise<RateLimitResult> {
       const now = Date.now();
       let w = state.windows.get(key);

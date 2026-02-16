@@ -83,10 +83,7 @@ export function EmailInput({
 }: EmailInputProps) {
   return (
     <div className={cn('space-y-1.5', className)}>
-      <label
-        htmlFor="reset-email"
-        className="block text-sm font-medium text-slate-200"
-      >
+      <label htmlFor="reset-email" className="block text-sm font-medium text-slate-200">
         Email address
       </label>
       <div className="relative">
@@ -276,23 +273,24 @@ export function ResetEmailSent({
       {/* Success Message */}
       <div className="text-center space-y-2">
         <h2 className="text-xl font-semibold text-white">Check your email</h2>
-        <p className="text-slate-300">
-          We sent a password reset link to
-        </p>
+        <p className="text-slate-300">We sent a password reset link to</p>
         <p className="text-white font-medium">{maskedEmail}</p>
       </div>
 
       {/* Instructions */}
       <div className="bg-slate-800/50 rounded-lg p-4 space-y-3">
         <div className="flex items-start gap-3">
-          <span className="material-symbols-outlined text-[#137fec] flex-shrink-0" aria-hidden="true">
+          <span
+            className="material-symbols-outlined text-[#137fec] flex-shrink-0"
+            aria-hidden="true"
+          >
             info
           </span>
           <div className="text-sm text-slate-300">
-            <p>The link will expire in <span className="text-white font-medium">1 hour</span>.</p>
-            <p className="mt-1">
-              If you don&apos;t see the email, check your spam folder.
+            <p>
+              The link will expire in <span className="text-white font-medium">1 hour</span>.
             </p>
+            <p className="mt-1">If you don&apos;t see the email, check your spam folder.</p>
           </div>
         </div>
       </div>

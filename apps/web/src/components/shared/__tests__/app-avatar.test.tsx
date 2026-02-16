@@ -22,12 +22,16 @@ describe('AppAvatar', () => {
   });
 
   it('proxies known external avatar hosts before rendering image source', () => {
-    const raw = 'https://lh3.googleusercontent.com/a/ACg8ocI1tAWmpksfd_bBrwfQ3yUxXxjaOpMU2BTlBd32zDO0WQIG9IDGWA=s96-c';
+    const raw =
+      'https://lh3.googleusercontent.com/a/ACg8ocI1tAWmpksfd_bBrwfQ3yUxXxjaOpMU2BTlBd32zDO0WQIG9IDGWA=s96-c';
     const encoded = encodeURIComponent(raw);
 
     render(<AppAvatar name="Sarah Jenkins" src={raw} />);
 
-    expect(screen.getByRole('img', { name: 'Sarah Jenkins' })).toHaveAttribute('src', `/api/avatar-proxy?src=${encoded}`);
+    expect(screen.getByRole('img', { name: 'Sarah Jenkins' })).toHaveAttribute(
+      'src',
+      `/api/avatar-proxy?src=${encoded}`
+    );
   });
 
   it('prefers explicit fallbackText over derived initials', () => {

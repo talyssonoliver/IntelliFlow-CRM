@@ -224,7 +224,11 @@ describe('IngestionOrchestrator', () => {
 
     it('should assign PUBLIC classification by default', async () => {
       const file = Buffer.from('public content');
-      const metadata = await orchestrator['extractMetadata'](file, 'invoice.pdf', 'application/pdf');
+      const metadata = await orchestrator['extractMetadata'](
+        file,
+        'invoice.pdf',
+        'application/pdf'
+      );
 
       expect(metadata.classification).toBe('PUBLIC');
     });

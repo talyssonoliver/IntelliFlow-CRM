@@ -76,7 +76,10 @@ interface ManifestResult {
 // Default Configurations (Fallback when no DB available)
 // =============================================================================
 
-const DEFAULT_CHAIN_CONFIGS: Record<string, { description: string; prompt: string; temperature: number; maxTokens: number }> = {
+const DEFAULT_CHAIN_CONFIGS: Record<
+  string,
+  { description: string; prompt: string; temperature: number; maxTokens: number }
+> = {
   SCORING: {
     description: 'Lead scoring chain - Analyzes leads and assigns quality scores',
     prompt: `You are an expert B2B lead scoring assistant. Your task is to analyze lead information and provide a comprehensive score based on multiple factors.
@@ -220,7 +223,8 @@ async function getChainVersionsFromDatabase(): Promise<Record<string, ChainConfi
         description: defaultConfig?.description || `${chainType} chain`,
         activeVersion: activeVersion?.id || chainVersions[0].id,
         defaultModel: CHAIN_VERSION_DEFAULTS.DEFAULT_MODEL,
-        defaultTemperature: defaultConfig?.temperature || CHAIN_VERSION_DEFAULTS.DEFAULT_TEMPERATURE,
+        defaultTemperature:
+          defaultConfig?.temperature || CHAIN_VERSION_DEFAULTS.DEFAULT_TEMPERATURE,
         defaultMaxTokens: defaultConfig?.maxTokens || CHAIN_VERSION_DEFAULTS.DEFAULT_MAX_TOKENS,
         versions: chainVersions.map((v) => ({
           id: v.id,
@@ -421,7 +425,9 @@ function hashContent(content: string): string {
   return hash.toString(16);
 }
 
-async function writeManifest(result: ManifestResult): Promise<{ timestampedPath: string | null; latestPath: string; skipped: boolean }> {
+async function writeManifest(
+  result: ManifestResult
+): Promise<{ timestampedPath: string | null; latestPath: string; skipped: boolean }> {
   const dir = path.join(process.cwd(), 'artifacts/misc/prompt-versions');
   await fs.promises.mkdir(dir, { recursive: true });
 

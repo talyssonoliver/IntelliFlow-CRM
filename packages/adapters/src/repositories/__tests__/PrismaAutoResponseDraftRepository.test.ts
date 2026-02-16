@@ -1,11 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { PrismaClient } from '@intelliflow/db';
-import { PrismaAutoResponseDraftRepository, OptimisticLockError } from '../PrismaAutoResponseDraftRepository';
 import {
-  AutoResponseDraft,
-  AutoResponseDraftId,
-  ResponseContent,
-} from '@intelliflow/domain';
+  PrismaAutoResponseDraftRepository,
+  OptimisticLockError,
+} from '../PrismaAutoResponseDraftRepository';
+import { AutoResponseDraft, AutoResponseDraftId, ResponseContent } from '@intelliflow/domain';
 import { randomUUID } from 'crypto';
 
 // Generate valid UUIDs for tests
@@ -76,7 +75,15 @@ describe('PrismaAutoResponseDraftRepository', () => {
       aiConfidence: data.aiConfidence as number,
       modelVersion: data.modelVersion as string,
       triggerType: data.triggerType as 'EMAIL_RECEIVED' | 'FORM_SUBMIT' | 'CHAT_MESSAGE' | 'MANUAL',
-      status: data.status as 'DRAFT' | 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'ESCALATED' | 'SENT' | 'FAILED' | 'INVALIDATED',
+      status: data.status as
+        | 'DRAFT'
+        | 'PENDING_APPROVAL'
+        | 'APPROVED'
+        | 'REJECTED'
+        | 'ESCALATED'
+        | 'SENT'
+        | 'FAILED'
+        | 'INVALIDATED',
       expiresAt: data.expiresAt as Date,
       statusHistory: [],
       createdAt: data.createdAt as Date,
@@ -90,10 +97,7 @@ describe('PrismaAutoResponseDraftRepository', () => {
       const mockData = createMockDraftData();
       vi.mocked(mockPrisma.autoResponseDraft.findUnique).mockResolvedValue(mockData as never);
 
-      const result = await repository.findById(
-        AutoResponseDraftId.create(DRAFT_ID_1),
-        'tenant-1'
-      );
+      const result = await repository.findById(AutoResponseDraftId.create(DRAFT_ID_1), 'tenant-1');
 
       expect(result).not.toBeNull();
       expect(result!.id.toString()).toBe(DRAFT_ID_1);
@@ -127,10 +131,7 @@ describe('PrismaAutoResponseDraftRepository', () => {
       });
       vi.mocked(mockPrisma.autoResponseDraft.findUnique).mockResolvedValue(mockData as never);
 
-      const result = await repository.findById(
-        AutoResponseDraftId.create(DRAFT_ID_1),
-        'tenant-1'
-      );
+      const result = await repository.findById(AutoResponseDraftId.create(DRAFT_ID_1), 'tenant-1');
 
       expect(result!.status).toBe('PENDING_APPROVAL');
       expect(result!.statusHistory).toHaveLength(2);
@@ -187,9 +188,7 @@ describe('PrismaAutoResponseDraftRepository', () => {
 
   describe('findPendingForApprover', () => {
     it('should return drafts with PENDING_APPROVAL status', async () => {
-      const mockData = [
-        createMockDraftData({ status: 'PENDING_APPROVAL' }),
-      ];
+      const mockData = [createMockDraftData({ status: 'PENDING_APPROVAL' })];
       vi.mocked(mockPrisma.autoResponseDraft.findMany).mockResolvedValue(mockData as never);
 
       const result = await repository.findPendingForApprover('approver-1', 'tenant-1');
@@ -218,7 +217,9 @@ describe('PrismaAutoResponseDraftRepository', () => {
     it('should persist new draft', async () => {
       const draft = createMockDraft();
       vi.mocked(mockPrisma.autoResponseDraft.findUnique).mockResolvedValue(null);
-      vi.mocked(mockPrisma.autoResponseDraft.create).mockResolvedValue(createMockDraftData() as never);
+      vi.mocked(mockPrisma.autoResponseDraft.create).mockResolvedValue(
+        createMockDraftData() as never
+      );
 
       await repository.save(draft);
 
@@ -407,12 +408,11 @@ describe('PrismaAutoResponseDraftRepository', () => {
 
   describe('delete', () => {
     it('should delete draft by id and tenantId', async () => {
-      vi.mocked(mockPrisma.autoResponseDraft.delete).mockResolvedValue(createMockDraftData() as never);
-
-      await repository.delete(
-        AutoResponseDraftId.create(DRAFT_ID_1),
-        'tenant-1'
+      vi.mocked(mockPrisma.autoResponseDraft.delete).mockResolvedValue(
+        createMockDraftData() as never
       );
+
+      await repository.delete(AutoResponseDraftId.create(DRAFT_ID_1), 'tenant-1');
 
       expect(mockPrisma.autoResponseDraft.delete).toHaveBeenCalledWith({
         where: {

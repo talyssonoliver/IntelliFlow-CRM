@@ -167,10 +167,7 @@ const MetricCard = React.forwardRef<HTMLDivElement, MetricCardProps>(
             {/* Icon Badge */}
             {icon && (
               <div
-                className={cn(
-                  'h-10 w-10 rounded-lg flex items-center justify-center',
-                  iconBgClass
-                )}
+                className={cn('h-10 w-10 rounded-lg flex items-center justify-center', iconBgClass)}
               >
                 <span
                   className={cn('material-symbols-outlined text-xl', iconColorClass)}
@@ -208,9 +205,7 @@ const MetricCard = React.forwardRef<HTMLDivElement, MetricCardProps>(
 
           {/* Description or Change Label */}
           {(description || change?.label) && (
-            <p className="text-xs text-muted-foreground mt-1">
-              {description || change?.label}
-            </p>
+            <p className="text-xs text-muted-foreground mt-1">{description || change?.label}</p>
           )}
         </div>
       </div>

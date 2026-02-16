@@ -1,19 +1,20 @@
 # Notification Service Runbook - IntelliFlow CRM
 
-**Document ID**: IFC-157-NOTIFICATION-RUNBOOK
-**Version**: 1.0.0
-**Last Updated**: 2025-12-31
-**Owner**: STOA-Domain (Backend Dev + SRE)
+**Document ID**: IFC-157-NOTIFICATION-RUNBOOK **Version**: 1.0.0 **Last
+Updated**: 2025-12-31 **Owner**: STOA-Domain (Backend Dev + SRE)
 
 ---
 
 ## 1. Overview
 
-This runbook provides operational procedures for the IntelliFlow CRM Notification Service, a unified notification delivery system supporting multiple channels with preference management and audit logging.
+This runbook provides operational procedures for the IntelliFlow CRM
+Notification Service, a unified notification delivery system supporting multiple
+channels with preference management and audit logging.
 
 ### 1.1 Service Description
 
 The Notification Service provides:
+
 - **Multi-channel delivery**: In-app, Email, SMS, Push, Webhook
 - **User preferences**: Channel/category toggles, quiet hours, DND
 - **Template system**: Consistent messaging with variable substitution
@@ -51,18 +52,19 @@ The Notification Service provides:
 
 ### 2.1 Prometheus Metrics
 
-| Metric | Description | Target |
-|--------|-------------|--------|
-| `notification_sent_total` | Total notifications sent | - |
-| `notification_failed_total` | Total notifications failed | <1% of sent |
-| `notification_filtered_total` | Notifications filtered by preferences | - |
-| `notification_delivery_duration_seconds` | Delivery latency | p99 < 5s |
-| `notification_retry_count` | Retry attempts | - |
-| `notification_dlq_depth` | DLQ queue depth | 0 |
+| Metric                                   | Description                           | Target      |
+| ---------------------------------------- | ------------------------------------- | ----------- |
+| `notification_sent_total`                | Total notifications sent              | -           |
+| `notification_failed_total`              | Total notifications failed            | <1% of sent |
+| `notification_filtered_total`            | Notifications filtered by preferences | -           |
+| `notification_delivery_duration_seconds` | Delivery latency                      | p99 < 5s    |
+| `notification_retry_count`               | Retry attempts                        | -           |
+| `notification_dlq_depth`                 | DLQ queue depth                       | 0           |
 
 ### 2.2 Prometheus Queries
 
 **Delivery Success Rate**:
+
 ```promql
 (
   sum(rate(notification_sent_total[5m]))
@@ -72,11 +74,13 @@ The Notification Service provides:
 ```
 
 **Delivery Latency (p99)**:
+
 ```promql
 histogram_quantile(0.99, sum(rate(notification_delivery_duration_seconds_bucket[5m])) by (le, channel))
 ```
 
 **Filter Rate by Reason**:
+
 ```promql
 sum by (reason) (rate(notification_filtered_total[5m]))
 ```
@@ -94,7 +98,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Notification delivery failure rate above 5%"
+          summary: 'Notification delivery failure rate above 5%'
 
       - alert: NotificationDLQGrowing
         expr: notification_dlq_depth > 10
@@ -102,7 +106,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Notification DLQ depth exceeds 10"
+          summary: 'Notification DLQ depth exceeds 10'
 
       - alert: NotificationLatencyHigh
         expr: |
@@ -111,7 +115,7 @@ groups:
         labels:
           severity: warning
         annotations:
-          summary: "Notification p99 latency exceeds 10 seconds"
+          summary: 'Notification p99 latency exceeds 10 seconds'
 ```
 
 ---
@@ -123,6 +127,7 @@ groups:
 **API Endpoint**: `POST /api/notifications/send`
 
 **Request Body**:
+
 ```json
 {
   "recipientId": "user-123",
@@ -135,6 +140,7 @@ groups:
 ```
 
 **Response**:
+
 ```json
 {
   "notificationId": "notif-abc123",
@@ -144,6 +150,7 @@ groups:
 ```
 
 **Status Values**:
+
 - `sent`: Notification delivered to provider
 - `scheduled`: Notification scheduled for future delivery
 - `filtered`: Notification blocked by user preferences
@@ -154,6 +161,7 @@ groups:
 **API Endpoint**: `GET /api/notifications/preferences/:userId`
 
 **Response**:
+
 ```json
 {
   "channels": {
@@ -183,6 +191,7 @@ groups:
 **API Endpoint**: `PUT /api/notifications/preferences/:userId`
 
 **Request Body**:
+
 ```json
 {
   "channel": { "channel": "email", "enabled": false },
@@ -201,6 +210,7 @@ groups:
 **Diagnosis Steps**:
 
 1. Check notification status in database:
+
 ```sql
 SELECT id, status, channel, error, retry_count, created_at
 FROM notifications
@@ -210,6 +220,7 @@ LIMIT 10;
 ```
 
 2. Check user preferences:
+
 ```sql
 SELECT *
 FROM notification_preferences
@@ -217,12 +228,14 @@ WHERE user_id = 'user-123';
 ```
 
 3. Check if filtered:
+
 ```bash
 # Check filter metrics
 curl http://localhost:3000/metrics | grep notification_filtered
 ```
 
 **Common Causes**:
+
 - Channel disabled in preferences
 - Do Not Disturb enabled
 - Quiet hours active
@@ -236,6 +249,7 @@ curl http://localhost:3000/metrics | grep notification_filtered
 **Diagnosis Steps**:
 
 1. Check error distribution:
+
 ```sql
 SELECT error, COUNT(*) as count
 FROM notifications
@@ -251,12 +265,14 @@ ORDER BY count DESC;
    - FCM: https://status.firebase.google.com/
 
 3. Check rate limits:
+
 ```bash
 # Check for rate limit errors
 grep "rate limit" /var/log/api-server.log | tail -20
 ```
 
 **Resolution**:
+
 - If provider issue: Wait for recovery, messages will be retried
 - If rate limit: Increase backoff intervals or request limit increase
 - If configuration: Fix and redeploy
@@ -268,6 +284,7 @@ grep "rate limit" /var/log/api-server.log | tail -20
 See [DLQ Triage Runbook](./dlq-triage.md) for detailed procedures.
 
 **Quick Actions**:
+
 ```bash
 # Check DLQ depth
 psql $DATABASE_URL -c "SELECT COUNT(*) FROM notification_dlq WHERE status = 'PENDING';"
@@ -298,10 +315,12 @@ const RETRY_CONFIG = {
 ### 5.2 DLQ Processing
 
 Notifications move to DLQ when:
+
 - Exceeded `maxRetries` (3)
 - Permanent failure detected (invalid recipient, etc.)
 
 **DLQ Status Values**:
+
 - `PENDING`: Awaiting triage
 - `RETRYING`: Being retried
 - `RESOLVED`: Successfully processed
@@ -310,6 +329,7 @@ Notifications move to DLQ when:
 ### 5.3 Manual DLQ Operations
 
 **Retry specific message**:
+
 ```bash
 curl -X POST http://localhost:3000/admin/notification-dlq/retry \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
@@ -317,6 +337,7 @@ curl -X POST http://localhost:3000/admin/notification-dlq/retry \
 ```
 
 **Discard message** (when data loss is acceptable):
+
 ```bash
 curl -X POST http://localhost:3000/admin/notification-dlq/discard \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
@@ -337,7 +358,8 @@ notificationService.registerTemplate({
   name: 'Lead Qualified Notification',
   channel: 'email',
   subject: 'Lead {{leadName}} has been qualified',
-  bodyText: 'Hello {{userName}}, lead {{leadName}} from {{company}} has been qualified.',
+  bodyText:
+    'Hello {{userName}}, lead {{leadName}} from {{company}} has been qualified.',
   bodyHtml: '<h1>Lead Qualified</h1><p>{{leadName}} from {{company}}</p>',
   variables: ['userName', 'leadName', 'company'],
 });
@@ -347,14 +369,14 @@ notificationService.registerTemplate({
 
 Use `{{variableName}}` syntax for variable substitution:
 
-| Variable | Description |
-|----------|-------------|
-| `{{userName}}` | Recipient's name |
-| `{{leadName}}` | Lead's full name |
-| `{{company}}` | Company name |
+| Variable        | Description            |
+| --------------- | ---------------------- |
+| `{{userName}}`  | Recipient's name       |
+| `{{leadName}}`  | Lead's full name       |
+| `{{company}}`   | Company name           |
 | `{{dealValue}}` | Deal value (formatted) |
-| `{{taskName}}` | Task title |
-| `{{dueDate}}` | Due date (formatted) |
+| `{{taskName}}`  | Task title             |
+| `{{dueDate}}`   | Due date (formatted)   |
 
 ### 6.3 Listing Templates
 
@@ -380,6 +402,7 @@ await notificationService.sendBatch([
 ### 7.2 Rate Limiting
 
 Default rate limits per channel:
+
 - Email: 100/second (SendGrid limit)
 - SMS: 10/second (Twilio limit)
 - Push: 500/second (FCM limit)
@@ -409,6 +432,7 @@ ON notifications (failed_at) WHERE status = 'FAILED';
 All notification events are logged to the audit system:
 
 **Find notification history for a user**:
+
 ```sql
 SELECT *
 FROM audit_log_entries
@@ -418,6 +442,7 @@ ORDER BY timestamp DESC;
 ```
 
 **Find preference changes**:
+
 ```sql
 SELECT *
 FROM audit_log_entries
@@ -459,11 +484,13 @@ curl -X POST http://localhost:3000/admin/feature-flags \
 If primary email provider fails:
 
 1. Update environment variable:
+
 ```bash
 export EMAIL_PROVIDER=backup-provider
 ```
 
 2. Restart API server:
+
 ```bash
 kubectl rollout restart deployment/api-server
 ```
@@ -488,12 +515,12 @@ VALUES ('EmergencyCleanup', 'BULK_UPDATE', 'notification', '{"reason": "Erroneou
 
 ## 10. On-Call Contacts
 
-| Role | Slack Handle | Escalation |
-|------|--------------|------------|
-| Notification Service Owner | @notification-team | First responder |
-| Backend Lead | @backend-lead | 10 min |
-| SRE Lead | @sre-lead | 20 min |
-| CTO | @cto-oncall | 30 min (critical only) |
+| Role                       | Slack Handle       | Escalation             |
+| -------------------------- | ------------------ | ---------------------- |
+| Notification Service Owner | @notification-team | First responder        |
+| Backend Lead               | @backend-lead      | 10 min                 |
+| SRE Lead                   | @sre-lead          | 20 min                 |
+| CTO                        | @cto-oncall        | 30 min (critical only) |
 
 ---
 
@@ -501,31 +528,31 @@ VALUES ('EmergencyCleanup', 'BULK_UPDATE', 'notification', '{"reason": "Erroneou
 
 ### Status Codes
 
-| Status | Description |
-|--------|-------------|
-| PENDING | Awaiting delivery |
-| SENT | Delivered to provider |
-| DELIVERED | Confirmed delivery |
-| FAILED | Delivery failed |
-| READ | Marked as read (in-app) |
-| BOUNCED | Email bounced |
+| Status    | Description             |
+| --------- | ----------------------- |
+| PENDING   | Awaiting delivery       |
+| SENT      | Delivered to provider   |
+| DELIVERED | Confirmed delivery      |
+| FAILED    | Delivery failed         |
+| READ      | Marked as read (in-app) |
+| BOUNCED   | Email bounced           |
 
 ### Channel Types
 
 | Channel | Provider | Rate Limit |
-|---------|----------|------------|
-| in_app | Internal | Unlimited |
-| email | SendGrid | 100/s |
-| sms | Twilio | 10/s |
-| push | FCM | 500/s |
-| webhook | Internal | 50/s |
+| ------- | -------- | ---------- |
+| in_app  | Internal | Unlimited  |
+| email   | SendGrid | 100/s      |
+| sms     | Twilio   | 10/s       |
+| push    | FCM      | 500/s      |
+| webhook | Internal | 50/s       |
 
 ### Common Errors
 
-| Error | Cause | Resolution |
-|-------|-------|------------|
-| `CHANNEL_DISABLED` | User disabled channel | Check preferences |
-| `INVALID_RECIPIENT` | Bad email/phone | Validate before send |
-| `RATE_LIMIT_EXCEEDED` | Too many requests | Increase backoff |
-| `PROVIDER_ERROR` | External service down | Wait and retry |
-| `TEMPLATE_NOT_FOUND` | Unknown template ID | Register template |
+| Error                 | Cause                 | Resolution           |
+| --------------------- | --------------------- | -------------------- |
+| `CHANNEL_DISABLED`    | User disabled channel | Check preferences    |
+| `INVALID_RECIPIENT`   | Bad email/phone       | Validate before send |
+| `RATE_LIMIT_EXCEEDED` | Too many requests     | Increase backoff     |
+| `PROVIDER_ERROR`      | External service down | Wait and retry       |
+| `TEMPLATE_NOT_FOUND`  | Unknown template ID   | Register template    |

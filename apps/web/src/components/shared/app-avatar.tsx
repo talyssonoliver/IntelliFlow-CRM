@@ -72,7 +72,9 @@ export function AppAvatar({
     <div
       className={cn(
         'relative flex shrink-0 items-center justify-center overflow-hidden rounded-full',
-        showImage ? 'bg-transparent' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-200',
+        showImage
+          ? 'bg-transparent'
+          : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-200',
         !showImage && fallbackClassName,
         className
       )}
@@ -90,11 +92,7 @@ export function AppAvatar({
           }}
         />
       ) : null}
-      {!showImage ? (
-        <span className="font-semibold">
-          {fallbackLabel}
-        </span>
-      ) : null}
+      {!showImage ? <span className="font-semibold">{fallbackLabel}</span> : null}
     </div>
   );
 }

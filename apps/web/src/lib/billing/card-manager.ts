@@ -29,13 +29,15 @@ export interface CardDisplayInfo {
   isDefault: boolean;
 }
 
-export type CardActionResult = {
-  ok: true;
-  message: string;
-} | {
-  ok: false;
-  error: string;
-};
+export type CardActionResult =
+  | {
+      ok: true;
+      message: string;
+    }
+  | {
+      ok: false;
+      error: string;
+    };
 
 // ============================================
 // Constants

@@ -33,9 +33,9 @@ export const TASK_STATUSES = {
   NEEDS_HUMAN: 'Needs Human',
   IN_REVIEW: 'In Review',
   // Workflow statuses (SESSION 1-3)
-  SPECIFYING: 'Specifying',       // SESSION 1 in progress
+  SPECIFYING: 'Specifying', // SESSION 1 in progress
   SPEC_COMPLETE: 'Spec Complete', // SESSION 1 done, ready for SESSION 2
-  PLANNING: 'Planning',           // SESSION 2 in progress
+  PLANNING: 'Planning', // SESSION 2 in progress
   PLAN_COMPLETE: 'Plan Complete', // SESSION 2 done, ready for SESSION 3
 } as const;
 
@@ -107,14 +107,14 @@ export const STATUS_GROUPS = {
   backlog: [TASK_STATUSES.BACKLOG, TASK_STATUSES.IN_REVIEW] as TaskStatus[],
   planned: [
     TASK_STATUSES.PLANNED,
-    TASK_STATUSES.SPEC_COMPLETE,  // Ready for SESSION 2
-    TASK_STATUSES.PLAN_COMPLETE,  // Ready for SESSION 3
+    TASK_STATUSES.SPEC_COMPLETE, // Ready for SESSION 2
+    TASK_STATUSES.PLAN_COMPLETE, // Ready for SESSION 3
   ] as TaskStatus[],
   active: [
     TASK_STATUSES.IN_PROGRESS,
     TASK_STATUSES.VALIDATING,
-    TASK_STATUSES.SPECIFYING,     // SESSION 1 in progress
-    TASK_STATUSES.PLANNING,       // SESSION 2 in progress
+    TASK_STATUSES.SPECIFYING, // SESSION 1 in progress
+    TASK_STATUSES.PLANNING, // SESSION 2 in progress
   ] as TaskStatus[],
   blocked: [TASK_STATUSES.BLOCKED, TASK_STATUSES.NEEDS_HUMAN, TASK_STATUSES.FAILED] as TaskStatus[],
   completed: [TASK_STATUSES.COMPLETED] as TaskStatus[],
@@ -741,6 +741,20 @@ export interface PlanDeliverablesVerification {
 }
 
 // =============================================================================
+// CONTEXT ACK STATUS TYPE
+// =============================================================================
+
+/**
+ * Status of context_ack.json for lifecycle flow gate
+ */
+export interface ContextAckStatus {
+  exists: boolean;
+  path: string | null;
+  filesRead: number;
+  invariantsCount: number;
+}
+
+// =============================================================================
 // COMPLETION GATES ENFORCEMENT TYPES
 // =============================================================================
 
@@ -823,6 +837,9 @@ export interface TaskValidationSummary {
     validationsPassed?: number;
     gatesPassed?: number;
   };
+
+  // Context ack status
+  contextAck?: ContextAckStatus;
 
   // Completion gates enforcement status
   completionGates?: CompletionGatesStatus;

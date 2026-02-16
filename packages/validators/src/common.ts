@@ -63,21 +63,19 @@ export const moneySchema = z
   });
 
 // Percentage schema - transforms to Percentage Value Object
-export const percentageSchema = z
-  .number()
-  .transform((val, ctx) => {
-    const result = Percentage.create(val);
+export const percentageSchema = z.number().transform((val, ctx) => {
+  const result = Percentage.create(val);
 
-    if (result.isFailure) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: result.error.message,
-      });
-      return z.NEVER;
-    }
+  if (result.isFailure) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: result.error.message,
+    });
+    return z.NEVER;
+  }
 
-    return result.value;
-  });
+  return result.value;
+});
 
 // URL schema - transforms to WebsiteUrl Value Object
 export const urlSchema = z

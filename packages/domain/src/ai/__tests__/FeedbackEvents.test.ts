@@ -16,18 +16,27 @@ import {
 } from '../FeedbackEvents';
 
 describe('ScoreFeedbackSubmittedEvent', () => {
-  const createEvent = (overrides?: Partial<{
-    feedbackId: string;
-    leadId: string;
-    feedbackType: 'THUMBS_UP' | 'THUMBS_DOWN' | 'SCORE_CORRECTION';
-    originalScore: number;
-    correctedScore: number | null;
-    correctionMagnitude: number | null;
-    correctionCategory: 'SCORE_TOO_HIGH' | 'SCORE_TOO_LOW' | 'WRONG_FACTORS' | 'MISSING_CONTEXT' | 'DATA_QUALITY' | 'OTHER' | null;
-    modelVersion: string;
-    userId: string;
-    tenantId: string;
-  }>) => {
+  const createEvent = (
+    overrides?: Partial<{
+      feedbackId: string;
+      leadId: string;
+      feedbackType: 'THUMBS_UP' | 'THUMBS_DOWN' | 'SCORE_CORRECTION';
+      originalScore: number;
+      correctedScore: number | null;
+      correctionMagnitude: number | null;
+      correctionCategory:
+        | 'SCORE_TOO_HIGH'
+        | 'SCORE_TOO_LOW'
+        | 'WRONG_FACTORS'
+        | 'MISSING_CONTEXT'
+        | 'DATA_QUALITY'
+        | 'OTHER'
+        | null;
+      modelVersion: string;
+      userId: string;
+      tenantId: string;
+    }>
+  ) => {
     return new ScoreFeedbackSubmittedEvent(
       overrides?.feedbackId ?? 'feedback-001',
       overrides?.leadId ?? 'lead-123',
@@ -80,9 +89,16 @@ describe('ScoreFeedbackSubmittedEvent', () => {
 
   it('should handle THUMBS_UP feedback with null corrected values', () => {
     const event = new ScoreFeedbackSubmittedEvent(
-      'feedback-001', 'lead-123', 'THUMBS_UP', 85,
-      null, null, null,
-      'v1.0.0', 'user-456', 'tenant-789'
+      'feedback-001',
+      'lead-123',
+      'THUMBS_UP',
+      85,
+      null,
+      null,
+      null,
+      'v1.0.0',
+      'user-456',
+      'tenant-789'
     );
     expect(event.feedbackType).toBe('THUMBS_UP');
     expect(event.correctedScore).toBeNull();
@@ -123,9 +139,16 @@ describe('ScoreFeedbackSubmittedEvent', () => {
 
   it('should serialize to payload with null corrected values', () => {
     const event = new ScoreFeedbackSubmittedEvent(
-      'feedback-001', 'lead-123', 'THUMBS_DOWN', 85,
-      null, null, null,
-      'v1.0.0', 'user-456', 'tenant-789'
+      'feedback-001',
+      'lead-123',
+      'THUMBS_DOWN',
+      85,
+      null,
+      null,
+      null,
+      'v1.0.0',
+      'user-456',
+      'tenant-789'
     );
     const payload = event.toPayload();
 
@@ -175,13 +198,13 @@ describe('RetrainingRecommendedEvent', () => {
       'v2.1.0',
       'Excessive correction magnitudes',
       200,
-      0.40,
+      0.4,
       30.0
     );
     expect(event.modelVersion).toBe('v2.1.0');
     expect(event.reason).toBe('Excessive correction magnitudes');
     expect(event.feedbackCount).toBe(200);
-    expect(event.negativeRatio).toBe(0.40);
+    expect(event.negativeRatio).toBe(0.4);
     expect(event.avgCorrectionMagnitude).toBe(30.0);
   });
 
@@ -196,9 +219,7 @@ describe('RetrainingRecommendedEvent', () => {
 
   it('should accept custom recommendedAt date', () => {
     const customDate = new Date('2025-06-15T10:00:00Z');
-    const event = new RetrainingRecommendedEvent(
-      'v1.0', 'reason', 100, 0.3, 20, customDate
-    );
+    const event = new RetrainingRecommendedEvent('v1.0', 'reason', 100, 0.3, 20, customDate);
     expect(event.recommendedAt).toBe(customDate);
   });
 
@@ -315,14 +336,24 @@ describe('FeedbackAnalyticsGeneratedEvent', () => {
 
   it('should create event with correct eventType', () => {
     const event = new FeedbackAnalyticsGeneratedEvent(
-      periodStart, periodEnd, 500, 0.75, 12.5, false
+      periodStart,
+      periodEnd,
+      500,
+      0.75,
+      12.5,
+      false
     );
     expect(event.eventType).toBe('ai.feedback_analytics.generated');
   });
 
   it('should expose all constructor properties', () => {
     const event = new FeedbackAnalyticsGeneratedEvent(
-      periodStart, periodEnd, 1000, 0.65, 18.3, true
+      periodStart,
+      periodEnd,
+      1000,
+      0.65,
+      18.3,
+      true
     );
     expect(event.periodStart).toBe(periodStart);
     expect(event.periodEnd).toBe(periodEnd);
@@ -348,7 +379,12 @@ describe('FeedbackAnalyticsGeneratedEvent', () => {
 
   it('should serialize to payload with ISO date strings', () => {
     const event = new FeedbackAnalyticsGeneratedEvent(
-      periodStart, periodEnd, 250, 0.80, 10.0, false
+      periodStart,
+      periodEnd,
+      250,
+      0.8,
+      10.0,
+      false
     );
     const payload = event.toPayload();
 
@@ -356,7 +392,7 @@ describe('FeedbackAnalyticsGeneratedEvent', () => {
       periodStart: '2025-06-01T00:00:00.000Z',
       periodEnd: '2025-06-07T23:59:59.000Z',
       totalFeedback: 250,
-      positiveRatio: 0.80,
+      positiveRatio: 0.8,
       avgCorrectionMagnitude: 10.0,
       retrainingRecommended: false,
     });
@@ -364,28 +400,34 @@ describe('FeedbackAnalyticsGeneratedEvent', () => {
 
   it('should serialize retrainingRecommended=true correctly', () => {
     const event = new FeedbackAnalyticsGeneratedEvent(
-      periodStart, periodEnd, 500, 0.55, 25.0, true
+      periodStart,
+      periodEnd,
+      500,
+      0.55,
+      25.0,
+      true
     );
     const payload = event.toPayload();
     expect(payload.retrainingRecommended).toBe(true);
   });
 
   it('should handle edge case: zero total feedback', () => {
-    const event = new FeedbackAnalyticsGeneratedEvent(
-      periodStart, periodEnd, 0, 0, 0, false
-    );
+    const event = new FeedbackAnalyticsGeneratedEvent(periodStart, periodEnd, 0, 0, 0, false);
     expect(event.totalFeedback).toBe(0);
     expect(event.toPayload().totalFeedback).toBe(0);
   });
 
   it('should handle edge case: positive ratio at boundaries', () => {
-    const eventZero = new FeedbackAnalyticsGeneratedEvent(
-      periodStart, periodEnd, 100, 0, 30, true
-    );
+    const eventZero = new FeedbackAnalyticsGeneratedEvent(periodStart, periodEnd, 100, 0, 30, true);
     expect(eventZero.positiveRatio).toBe(0);
 
     const eventOne = new FeedbackAnalyticsGeneratedEvent(
-      periodStart, periodEnd, 100, 1.0, 0, false
+      periodStart,
+      periodEnd,
+      100,
+      1.0,
+      0,
+      false
     );
     expect(eventOne.positiveRatio).toBe(1.0);
   });
@@ -394,7 +436,18 @@ describe('FeedbackAnalyticsGeneratedEvent', () => {
 describe('FeedbackEvents - Common DomainEvent behavior', () => {
   it('all event types should extend DomainEvent (have eventId, occurredAt, toPayload)', () => {
     const events = [
-      new ScoreFeedbackSubmittedEvent('f1', 'l1', 'THUMBS_UP', 50, null, null, null, 'v1', 'u1', 't1'),
+      new ScoreFeedbackSubmittedEvent(
+        'f1',
+        'l1',
+        'THUMBS_UP',
+        50,
+        null,
+        null,
+        null,
+        'v1',
+        'u1',
+        't1'
+      ),
       new RetrainingRecommendedEvent('v1', 'reason', 100, 0.3, 20),
       new TrainingDataExportedEvent('v1', 100, new Date(), new Date(), 'admin'),
       new FeedbackAnalyticsGeneratedEvent(new Date(), new Date(), 100, 0.8, 10, false),
@@ -411,7 +464,16 @@ describe('FeedbackEvents - Common DomainEvent behavior', () => {
 
   it('toPayload should return a Record<string, unknown>', () => {
     const event = new ScoreFeedbackSubmittedEvent(
-      'f1', 'l1', 'THUMBS_UP', 50, null, null, null, 'v1', 'u1', 't1'
+      'f1',
+      'l1',
+      'THUMBS_UP',
+      50,
+      null,
+      null,
+      null,
+      'v1',
+      'u1',
+      't1'
     );
     const payload = event.toPayload();
     expect(typeof payload).toBe('object');

@@ -101,7 +101,7 @@ export class PrismaAIOutputReviewRepository implements IAIOutputReviewRepository
       record.lockedAt ?? undefined,
       record.lockExpiresAt ?? undefined,
       record.reviewerId ?? undefined,
-      record.reviewDecision as ReviewDecision | undefined ?? undefined,
+      (record.reviewDecision as ReviewDecision | undefined) ?? undefined,
       record.reviewNotes ?? undefined
     );
   }
@@ -140,7 +140,7 @@ export class PrismaAIOutputReviewRepository implements IAIOutputReviewRepository
       lockedAt: review.lockedAt ?? null,
       lockExpiresAt: review.lockExpiresAt ?? null,
       reviewerId: review.reviewerId ?? null,
-      reviewDecision: review.reviewDecision as PrismaReviewDecision ?? null,
+      reviewDecision: (review.reviewDecision as PrismaReviewDecision) ?? null,
       reviewNotes: review.reviewNotes ?? null,
       updatedAt: new Date(),
     };
@@ -271,10 +271,7 @@ export class PrismaAIOutputReviewRepository implements IAIOutputReviewRepository
    * Filters by PENDING and ESCALATED statuses (items in queue).
    * Supports filtering by output type and pagination.
    */
-  async findPending(
-    tenantId: string,
-    options?: AIReviewQueryOptions
-  ): Promise<AIOutputReview[]> {
+  async findPending(tenantId: string, options?: AIReviewQueryOptions): Promise<AIOutputReview[]> {
     const records = await this.prisma.aIOutputReview.findMany({
       where: {
         tenantId,

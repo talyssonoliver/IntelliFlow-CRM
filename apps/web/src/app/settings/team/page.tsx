@@ -5,7 +5,12 @@ import { Card } from '@intelliflow/ui';
 
 const teamMembers = [
   { name: 'Alex Johnson', email: 'alex@intelliflow.ai', role: 'Admin', status: 'Active' },
-  { name: 'Jane Anderson', email: 'jane@intelliflow.ai', role: 'Compliance Officer', status: 'Active' },
+  {
+    name: 'Jane Anderson',
+    email: 'jane@intelliflow.ai',
+    role: 'Compliance Officer',
+    status: 'Active',
+  },
   { name: 'Mike Chen', email: 'mike@intelliflow.ai', role: 'Developer', status: 'Active' },
   { name: 'Sarah Wilson', email: 'sarah@intelliflow.ai', role: 'Sales', status: 'Active' },
 ];
@@ -26,9 +31,7 @@ export default function TeamPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">Team</h1>
-              <p className="text-muted-foreground mt-1">
-                Manage team members and roles
-              </p>
+              <p className="text-muted-foreground mt-1">Manage team members and roles</p>
             </div>
             <button className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium">
               <span className="material-symbols-outlined text-lg">person_add</span>
@@ -64,7 +67,10 @@ export default function TeamPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
                           <span className="text-sm font-medium text-muted-foreground">
-                            {member.name.split(' ').map(n => n[0]).join('')}
+                            {member.name
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')}
                           </span>
                         </div>
                         <div>

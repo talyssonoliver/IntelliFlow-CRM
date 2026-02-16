@@ -132,9 +132,7 @@ function SuccessContent() {
   }, []);
 
   // Mask email for display
-  const maskedEmail = email
-    ? email.replace(/(.{2})(.*)(@.*)/, '$1***$3')
-    : 'your email';
+  const maskedEmail = email ? email.replace(/(.{2})(.*)(@.*)/, '$1***$3') : 'your email';
 
   return (
     <>
@@ -149,32 +147,32 @@ function SuccessContent() {
             <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-b border-green-500/20 p-8 text-center">
               {/* Success Icon */}
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-500/20 border-2 border-green-500 mb-4">
-                <span className="material-symbols-outlined text-4xl text-green-400" aria-hidden="true">
+                <span
+                  className="material-symbols-outlined text-4xl text-green-400"
+                  aria-hidden="true"
+                >
                   check_circle
                 </span>
               </div>
 
-              <h1 className="text-2xl font-bold text-white mb-2">
-                Welcome to IntelliFlow!
-              </h1>
-              <p className="text-slate-300">
-                Your account has been created successfully.
-              </p>
+              <h1 className="text-2xl font-bold text-white mb-2">Welcome to IntelliFlow!</h1>
+              <p className="text-slate-300">Your account has been created successfully.</p>
             </div>
 
             {/* Email Verification Notice */}
             <div className="bg-blue-500/10 border-b border-blue-500/20 p-4">
               <div className="flex items-start gap-3">
-                <span className="material-symbols-outlined text-blue-400 flex-shrink-0" aria-hidden="true">
+                <span
+                  className="material-symbols-outlined text-blue-400 flex-shrink-0"
+                  aria-hidden="true"
+                >
                   mark_email_read
                 </span>
                 <div>
-                  <p className="text-sm text-slate-200 font-medium">
-                    Verification email sent
-                  </p>
+                  <p className="text-sm text-slate-200 font-medium">Verification email sent</p>
                   <p className="text-sm text-slate-400 mt-0.5">
-                    We sent a verification link to <span className="text-white">{maskedEmail}</span>.
-                    Please check your inbox.
+                    We sent a verification link to <span className="text-white">{maskedEmail}</span>
+                    . Please check your inbox.
                   </p>
                 </div>
               </div>
@@ -182,9 +180,7 @@ function SuccessContent() {
 
             {/* Onboarding Flow */}
             <div className="p-6">
-              <h2 className="text-lg font-semibold text-white mb-4">
-                Get started in 4 easy steps
-              </h2>
+              <h2 className="text-lg font-semibold text-white mb-4">Get started in 4 easy steps</h2>
               <OnboardingFlow
                 steps={DEFAULT_ONBOARDING_STEPS}
                 currentStep={0}

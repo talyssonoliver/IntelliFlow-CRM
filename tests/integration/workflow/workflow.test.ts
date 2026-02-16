@@ -56,16 +56,16 @@ class MockEventPublisher implements DomainEventPublisher {
     });
   }
 
-  async publishAll(events: Array<{ eventType: string; toPayload(): Record<string, unknown> }>): Promise<void> {
+  async publishAll(
+    events: Array<{ eventType: string; toPayload(): Record<string, unknown> }>
+  ): Promise<void> {
     for (const event of events) {
       await this.publish(event);
     }
   }
 
   getEventsByType(eventType: string): Array<Record<string, unknown>> {
-    return this.publishedEvents
-      .filter((e) => e.eventType === eventType)
-      .map((e) => e.payload);
+    return this.publishedEvents.filter((e) => e.eventType === eventType).map((e) => e.payload);
   }
 
   clear(): void {
@@ -100,7 +100,9 @@ class MockWorkflowEngine implements IWorkflowEngine {
     return (this.workflows.get(workflowId) as unknown as WorkflowHandle<TOutput>) ?? null;
   }
 
-  async listWorkflows(): Promise<Array<{ id: string; status: WorkflowStatus; definitionId: string }>> {
+  async listWorkflows(): Promise<
+    Array<{ id: string; status: WorkflowStatus; definitionId: string }>
+  > {
     return Array.from(this.workflows.entries()).map(([id, handle]) => ({
       id,
       status: handle.status,
@@ -132,7 +134,11 @@ class MockWorkflowHandle implements WorkflowHandle<unknown> {
   private _result: unknown = null;
   private readonly signals: Array<{ signalName: string; payload?: unknown }> = [];
 
-  constructor(workflowId: string, workflowName: string, private readonly input: unknown) {
+  constructor(
+    workflowId: string,
+    workflowName: string,
+    private readonly input: unknown
+  ) {
     this.workflowId = workflowId;
     this.workflowName = workflowName;
   }
@@ -204,11 +210,9 @@ describe('Workflow Engine', () => {
     });
 
     it('should start a workflow and return a handle', async () => {
-      const handle = await engine.startWorkflow(
-        'test-workflow-1',
-        'caseLifecycleWorkflow',
-        { caseId: 'case-123' }
-      );
+      const handle = await engine.startWorkflow('test-workflow-1', 'caseLifecycleWorkflow', {
+        caseId: 'case-123',
+      });
 
       expect(handle.workflowId).toBe('test-workflow-1');
       expect(await handle.getStatus()).toBe('running');
@@ -811,7 +815,11 @@ describe('Complete Workflow Lifecycle', () => {
 
   it('should route events to correct engines based on CASE_EVENT_WORKFLOW_ROUTING', async () => {
     const caseId = '123e4567-e89b-12d3-a456-426614174002';
-    const routingResults: Array<{ eventType: string; expectedEngine: string; actualEngine?: string }> = [];
+    const routingResults: Array<{
+      eventType: string;
+      expectedEngine: string;
+      actualEngine?: string;
+    }> = [];
 
     // Test temporal events
     for (const eventType of ['case.created', 'case.status_changed', 'case.closed']) {
@@ -952,7 +960,9 @@ describe('CASE_EVENT_WORKFLOW_ROUTING Configuration', () => {
     ];
 
     for (const eventType of durableEvents) {
-      expect(CASE_EVENT_WORKFLOW_ROUTING[eventType as keyof typeof CASE_EVENT_WORKFLOW_ROUTING]).toBe('temporal');
+      expect(
+        CASE_EVENT_WORKFLOW_ROUTING[eventType as keyof typeof CASE_EVENT_WORKFLOW_ROUTING]
+      ).toBe('temporal');
     }
   });
 
@@ -966,7 +976,9 @@ describe('CASE_EVENT_WORKFLOW_ROUTING Configuration', () => {
     ];
 
     for (const eventType of rulesEvents) {
-      expect(CASE_EVENT_WORKFLOW_ROUTING[eventType as keyof typeof CASE_EVENT_WORKFLOW_ROUTING]).toBe('rules');
+      expect(
+        CASE_EVENT_WORKFLOW_ROUTING[eventType as keyof typeof CASE_EVENT_WORKFLOW_ROUTING]
+      ).toBe('rules');
     }
   });
 
@@ -981,7 +993,9 @@ describe('CASE_EVENT_WORKFLOW_ROUTING Configuration', () => {
     ];
 
     for (const eventType of bullmqEvents) {
-      expect(CASE_EVENT_WORKFLOW_ROUTING[eventType as keyof typeof CASE_EVENT_WORKFLOW_ROUTING]).toBe('bullmq');
+      expect(
+        CASE_EVENT_WORKFLOW_ROUTING[eventType as keyof typeof CASE_EVENT_WORKFLOW_ROUTING]
+      ).toBe('bullmq');
     }
   });
 });

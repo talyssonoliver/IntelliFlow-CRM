@@ -21,19 +21,19 @@ import type { ArtifactVerification, ArtifactStatus } from './types';
  * Minimum file size in bytes to consider non-empty (adjustable per file type)
  */
 const MIN_FILE_SIZES: Record<string, number> = {
-  '.ts': 50,    // TypeScript
-  '.tsx': 50,   // TypeScript React
-  '.js': 50,    // JavaScript
-  '.jsx': 50,   // JavaScript React
-  '.json': 20,  // JSON (can be small like {})
-  '.md': 100,   // Markdown (should have some content)
-  '.yml': 20,   // YAML
-  '.yaml': 20,  // YAML
-  '.csv': 50,   // CSV (header + some data)
-  '.sql': 30,   // SQL
-  '.sh': 30,    // Shell scripts
-  '.py': 50,    // Python
-  default: 10,  // Default minimum
+  '.ts': 50, // TypeScript
+  '.tsx': 50, // TypeScript React
+  '.js': 50, // JavaScript
+  '.jsx': 50, // JavaScript React
+  '.json': 20, // JSON (can be small like {})
+  '.md': 100, // Markdown (should have some content)
+  '.yml': 20, // YAML
+  '.yaml': 20, // YAML
+  '.csv': 50, // CSV (header + some data)
+  '.sql': 30, // SQL
+  '.sh': 30, // Shell scripts
+  '.py': 50, // Python
+  default: 10, // Default minimum
 };
 
 /**
@@ -62,8 +62,16 @@ const STUB_CONTENT_PATTERNS = [
  * File extensions that should be checked for stub content
  */
 const CHECK_STUB_CONTENT_EXTENSIONS = [
-  '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs',
-  '.json', '.md', '.py', '.sh',
+  '.ts',
+  '.tsx',
+  '.js',
+  '.jsx',
+  '.mjs',
+  '.cjs',
+  '.json',
+  '.md',
+  '.py',
+  '.sh',
 ];
 
 // =============================================================================

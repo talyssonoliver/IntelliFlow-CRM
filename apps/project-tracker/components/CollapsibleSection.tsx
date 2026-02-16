@@ -97,10 +97,7 @@ export function CollapsibleSection({
 
           {/* Section Icon */}
           {icon && (
-            <Icon
-              name={icon}
-              className={`w-5 h-5 ${hasGradient ? 'text-white' : iconColor}`}
-            />
+            <Icon name={icon} className={`w-5 h-5 ${hasGradient ? 'text-white' : iconColor}`} />
           )}
 
           {/* Title */}
@@ -113,9 +110,7 @@ export function CollapsibleSection({
         {count !== undefined && (
           <span
             className={`px-2.5 py-0.5 rounded-full text-sm font-medium ${
-              hasGradient
-                ? 'bg-white/20 text-white'
-                : 'bg-gray-100 text-gray-700'
+              hasGradient ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-700'
             }`}
           >
             {count}

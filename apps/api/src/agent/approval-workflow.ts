@@ -59,9 +59,7 @@ class PendingActionsStore {
     const now = new Date();
     return Array.from(this.actions.values()).filter(
       (action) =>
-        action.createdBy === userId &&
-        action.status === 'PENDING' &&
-        action.expiresAt > now
+        action.createdBy === userId && action.status === 'PENDING' && action.expiresAt > now
     );
   }
 
@@ -69,9 +67,7 @@ class PendingActionsStore {
     const now = new Date();
     return Array.from(this.actions.values()).filter(
       (action) =>
-        action.agentSessionId === sessionId &&
-        action.status === 'PENDING' &&
-        action.expiresAt > now
+        action.agentSessionId === sessionId && action.status === 'PENDING' && action.expiresAt > now
     );
   }
 
@@ -449,9 +445,7 @@ export class ApprovalWorkflowService {
   /**
    * Get statistics about pending/executed actions
    */
-  async getActionStatistics(
-    userId?: string
-  ): Promise<{
+  async getActionStatistics(userId?: string): Promise<{
     pending: number;
     approved: number;
     rejected: number;

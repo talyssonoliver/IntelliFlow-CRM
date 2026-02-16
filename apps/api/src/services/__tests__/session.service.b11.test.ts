@@ -21,11 +21,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import {
-  SessionService,
-  getSessionService,
-  resetSessionService,
-} from '../session.service';
+import { SessionService, getSessionService, resetSessionService } from '../session.service';
 
 describe('SessionService b11 - uncovered branches', () => {
   describe('parseDeviceInfo - browser detection', () => {
@@ -37,14 +33,16 @@ describe('SessionService b11 - uncovered branches', () => {
     });
 
     it('should detect Edge browser', () => {
-      const ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.2210.91';
+      const ua =
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.2210.91';
       const info = service.parseDeviceInfo(ua);
       expect(info.browser).toBe('Edge');
       expect(info.browserVersion).toBe('120.0.2210.91');
     });
 
     it('should detect Safari browser', () => {
-      const ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15';
+      const ua =
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15';
       const info = service.parseDeviceInfo(ua);
       expect(info.browser).toBe('Safari');
       expect(info.browserVersion).toBe('17.2');
@@ -74,7 +72,8 @@ describe('SessionService b11 - uncovered branches', () => {
     });
 
     it('should detect Linux', () => {
-      const ua = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+      const ua =
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
       const info = service.parseDeviceInfo(ua);
       expect(info.os).toBe('Linux');
       expect(info.isMobile).toBe(false);
@@ -89,7 +88,8 @@ describe('SessionService b11 - uncovered branches', () => {
     });
 
     it('should detect Android with version from proper UA', () => {
-      const ua = 'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36';
+      const ua =
+        'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36';
       const info = service.parseDeviceInfo(ua);
       // Android check comes after Linux check, so Linux matches first
       // unless the code checks Android before Linux
@@ -97,7 +97,8 @@ describe('SessionService b11 - uncovered branches', () => {
     });
 
     it('should detect iOS from iPhone UA', () => {
-      const ua = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1';
+      const ua =
+        'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1';
       const info = service.parseDeviceInfo(ua);
       expect(info.isMobile).toBe(true);
       expect(info.device).toBe('Mobile');

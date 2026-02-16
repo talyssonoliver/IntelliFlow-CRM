@@ -6,15 +6,15 @@
   "completed_at": null,
   "phases": [],
   "task_summary": {
-    "total": 11,
+    "total": 12,
     "done": 0,
     "in_progress": 0,
     "blocked": 0,
-    "not_started": 11,
+    "not_started": 12,
     "failed": 0
   },
   "completed_tasks": [],
-  "notes": "0/11 tasks DONE (0%). Last synced: 2026-02-15T16:58:55.413Z",
+  "notes": "0/12 tasks DONE (0%). Last synced: 2026-02-16T20:49:51.418Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
@@ -34,10 +34,10 @@
       "bottleneck_task_id": "IFC-071"
     },
     "schedule_variance": {
-      "sv_minutes": -2730,
+      "sv_minutes": -3210,
       "spi": 0,
       "status": "critical"
     },
-    "calculated_at": "2026-02-15T16:58:55.444Z"
+    "calculated_at": "2026-02-16T20:50:01.311Z"
   }
 }

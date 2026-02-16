@@ -13,10 +13,20 @@ const mockMakeRequest = vi.mocked(makeRequest);
 const mockMapToCustomer = vi.mocked(mapToCustomer);
 
 const config: StripeConfig = { secretKey: 'sk_test_abc' };
-const mockCust: StripeCustomer = { id: 'cus_123', email: 'john@example.com', name: 'John Doe', balance: 0, currency: 'usd', created: new Date('2025-01-01') };
+const mockCust: StripeCustomer = {
+  id: 'cus_123',
+  email: 'john@example.com',
+  name: 'John Doe',
+  balance: 0,
+  currency: 'usd',
+  created: new Date('2025-01-01'),
+};
 
 describe('customers handler', () => {
-  beforeEach(() => { vi.clearAllMocks(); mockMapToCustomer.mockReturnValue(mockCust); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockMapToCustomer.mockReturnValue(mockCust);
+  });
 
   describe('createCustomer', () => {
     it('should create with email and name', async () => {
@@ -37,7 +47,9 @@ describe('customers handler', () => {
     it('should include metadata', async () => {
       mockMakeRequest.mockResolvedValue(Result.ok({ id: 'cus_123' }));
       await createCustomer(config, { metadata: { plan: 'premium' } });
-      expect((mockMakeRequest.mock.calls[0][3] as URLSearchParams).get('metadata[plan]')).toBe('premium');
+      expect((mockMakeRequest.mock.calls[0][3] as URLSearchParams).get('metadata[plan]')).toBe(
+        'premium'
+      );
     });
 
     it('should propagate failure', async () => {
@@ -47,12 +59,16 @@ describe('customers handler', () => {
 
     it('should handle thrown Error', async () => {
       mockMakeRequest.mockRejectedValue(new Error('Fetch failed'));
-      expect(((await createCustomer(config, { email: 't@t.com' })).error as any).message).toBe('Fetch failed');
+      expect(((await createCustomer(config, { email: 't@t.com' })).error as any).message).toBe(
+        'Fetch failed'
+      );
     });
 
     it('should handle thrown non-Error', async () => {
       mockMakeRequest.mockRejectedValue(123);
-      expect(((await createCustomer(config, { email: 't@t.com' })).error as any).message).toBe('Unknown error');
+      expect(((await createCustomer(config, { email: 't@t.com' })).error as any).message).toBe(
+        'Unknown error'
+      );
     });
   });
 
@@ -63,14 +79,18 @@ describe('customers handler', () => {
     });
 
     it('should return null for STRIPE_INVALID_REQUEST', async () => {
-      mockMakeRequest.mockResolvedValue(Result.fail({ message: 'x', code: 'STRIPE_INVALID_REQUEST' } as any));
+      mockMakeRequest.mockResolvedValue(
+        Result.fail({ message: 'x', code: 'STRIPE_INVALID_REQUEST' } as any)
+      );
       const r = await getCustomer(config, 'cus_x');
       expect(r.isSuccess).toBe(true);
       expect(r.value).toBeNull();
     });
 
     it('should propagate non-STRIPE_INVALID_REQUEST', async () => {
-      mockMakeRequest.mockResolvedValue(Result.fail({ message: 'x', code: 'STRIPE_RATE_LIMIT' } as any));
+      mockMakeRequest.mockResolvedValue(
+        Result.fail({ message: 'x', code: 'STRIPE_RATE_LIMIT' } as any)
+      );
       expect((await getCustomer(config, 'cus_123')).isFailure).toBe(true);
     });
 
@@ -98,7 +118,9 @@ describe('customers handler', () => {
 
     it('should handle thrown non-Error', async () => {
       mockMakeRequest.mockRejectedValue({});
-      expect(((await updateCustomer(config, 'cus_123', { name: 'X' })).error as any).message).toBe('Unknown error');
+      expect(((await updateCustomer(config, 'cus_123', { name: 'X' })).error as any).message).toBe(
+        'Unknown error'
+      );
     });
   });
 
@@ -113,7 +135,9 @@ describe('customers handler', () => {
 
     it('should handle thrown non-Error', async () => {
       mockMakeRequest.mockRejectedValue(null);
-      expect(((await deleteCustomer(config, 'cus_123')).error as any).message).toBe('Unknown error');
+      expect(((await deleteCustomer(config, 'cus_123')).error as any).message).toBe(
+        'Unknown error'
+      );
     });
   });
 });

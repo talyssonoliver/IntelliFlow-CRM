@@ -24,10 +24,7 @@ import {
   validateStageDeactivation,
 } from '@intelliflow/validators/opportunity';
 import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
-import {
-  getTenantContext,
-  type TenantAwareContext,
-} from '../../security/tenant-context';
+import { getTenantContext, type TenantAwareContext } from '../../security/tenant-context';
 
 /**
  * Get default configuration for a stage
@@ -59,9 +56,7 @@ export const pipelineConfigRouter = createTRPCRouter({
     });
 
     // Create a map for quick lookup
-    const configMap = new Map(
-      existingConfigs.map((config) => [config.stageKey, config])
-    );
+    const configMap = new Map(existingConfigs.map((config) => [config.stageKey, config]));
 
     // Build complete config array with defaults for missing stages
     const stages = OPPORTUNITY_STAGES.map((stageKey, index) => {
@@ -158,52 +153,50 @@ export const pipelineConfigRouter = createTRPCRouter({
    * Batch update all pipeline stages
    * Used for drag-and-drop reordering and bulk edits
    */
-  updateAll: tenantProcedure
-    .input(updatePipelineConfigSchema)
-    .mutation(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const { tenantId } = typedCtx.tenant;
+  updateAll: tenantProcedure.input(updatePipelineConfigSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const { tenantId } = typedCtx.tenant;
 
-      // Validate protected stage deactivation for all stages
-      for (const stageInput of input.stages) {
-        if (stageInput.isActive === false) {
-          validateStageDeactivation(stageInput.stage, stageInput.isActive);
-        }
+    // Validate protected stage deactivation for all stages
+    for (const stageInput of input.stages) {
+      if (stageInput.isActive === false) {
+        validateStageDeactivation(stageInput.stage, stageInput.isActive);
       }
+    }
 
-      // Use transaction to ensure atomicity
-      const results = await typedCtx.prismaWithTenant.$transaction(
-        input.stages.map((stageInput) => {
-          const stageKey = stageInput.stage; // Use stage enum as key
-          return typedCtx.prismaWithTenant.pipelineStageConfig.upsert({
-            where: {
-              tenantId_stageKey: {
-                tenantId,
-                stageKey,
-              },
-            },
-            create: {
+    // Use transaction to ensure atomicity
+    const results = await typedCtx.prismaWithTenant.$transaction(
+      input.stages.map((stageInput) => {
+        const stageKey = stageInput.stage; // Use stage enum as key
+        return typedCtx.prismaWithTenant.pipelineStageConfig.upsert({
+          where: {
+            tenantId_stageKey: {
               tenantId,
               stageKey,
-              displayName: stageInput.displayName ?? DEFAULT_STAGE_NAMES[stageKey] ?? stageKey,
-              color: stageInput.color ?? DEFAULT_STAGE_COLORS[stageKey] ?? '#6366f1',
-              order: stageInput.sortOrder ?? OPPORTUNITY_STAGES.indexOf(stageKey),
-              probability: stageInput.probability ?? DEFAULT_STAGE_PROBABILITIES[stageKey] ?? 0,
-              isActive: stageInput.isActive ?? true,
             },
-            update: {
-              ...(stageInput.displayName !== undefined && { displayName: stageInput.displayName }),
-              ...(stageInput.color !== undefined && { color: stageInput.color }),
-              ...(stageInput.sortOrder !== undefined && { order: stageInput.sortOrder }),
-              ...(stageInput.probability !== undefined && { probability: stageInput.probability }),
-              ...(stageInput.isActive !== undefined && { isActive: stageInput.isActive }),
-            },
-          });
-        })
-      );
+          },
+          create: {
+            tenantId,
+            stageKey,
+            displayName: stageInput.displayName ?? DEFAULT_STAGE_NAMES[stageKey] ?? stageKey,
+            color: stageInput.color ?? DEFAULT_STAGE_COLORS[stageKey] ?? '#6366f1',
+            order: stageInput.sortOrder ?? OPPORTUNITY_STAGES.indexOf(stageKey),
+            probability: stageInput.probability ?? DEFAULT_STAGE_PROBABILITIES[stageKey] ?? 0,
+            isActive: stageInput.isActive ?? true,
+          },
+          update: {
+            ...(stageInput.displayName !== undefined && { displayName: stageInput.displayName }),
+            ...(stageInput.color !== undefined && { color: stageInput.color }),
+            ...(stageInput.sortOrder !== undefined && { order: stageInput.sortOrder }),
+            ...(stageInput.probability !== undefined && { probability: stageInput.probability }),
+            ...(stageInput.isActive !== undefined && { isActive: stageInput.isActive }),
+          },
+        });
+      })
+    );
 
-      return { success: true, updatedCount: results.length };
-    }),
+    return { success: true, updatedCount: results.length };
+  }),
 
   /**
    * Reset all pipeline stages to defaults

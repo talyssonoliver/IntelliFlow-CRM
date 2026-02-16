@@ -67,7 +67,10 @@ export class IcsGenerationService implements IcsGenerationServicePort {
   /**
    * Generate ICS file with custom options
    */
-  generate(appointment: Appointment, options: IcsGenerationOptions): Result<GeneratedIcs, IcsGenerationError> {
+  generate(
+    appointment: Appointment,
+    options: IcsGenerationOptions
+  ): Result<GeneratedIcs, IcsGenerationError> {
     try {
       const uid = this.generateUid(appointment.id.value);
 
@@ -158,9 +161,7 @@ export class IcsGenerationService implements IcsGenerationServicePort {
 
       for (const field of requiredFields) {
         if (!icsContent.includes(field)) {
-          return Result.fail(
-            new IcsValidationError(`Missing required field: ${field}`)
-          );
+          return Result.fail(new IcsValidationError(`Missing required field: ${field}`));
         }
       }
 
@@ -169,9 +170,7 @@ export class IcsGenerationService implements IcsGenerationServicePort {
       const dateMatches = icsContent.match(dateRegex);
 
       if (!dateMatches || dateMatches.length < 2) {
-        return Result.fail(
-          new IcsValidationError('Invalid or missing date fields')
-        );
+        return Result.fail(new IcsValidationError('Invalid or missing date fields'));
       }
 
       return Result.ok(true);
@@ -184,15 +183,18 @@ export class IcsGenerationService implements IcsGenerationServicePort {
   /**
    * Parse ICS file to extract key information
    */
-  parse(icsContent: string): Result<{
-    uid: string;
-    sequence: number;
-    method: IcsMethod;
-    summary: string;
-    startTime: Date;
-    endTime: Date;
-    attendees: string[];
-  }, IcsGenerationError> {
+  parse(icsContent: string): Result<
+    {
+      uid: string;
+      sequence: number;
+      method: IcsMethod;
+      summary: string;
+      startTime: Date;
+      endTime: Date;
+      attendees: string[];
+    },
+    IcsGenerationError
+  > {
     try {
       // Simple regex-based parsing (for basic use cases)
       const uid = this.extractField(icsContent, 'UID');
@@ -270,7 +272,9 @@ export class IcsGenerationService implements IcsGenerationServicePort {
     let description = appointment.description || '';
 
     if (options.method === 'CANCEL' && options.cancellationReason) {
-      description = options.cancellationReason + (description ? `\n\nOriginal description: ${description}` : '');
+      description =
+        options.cancellationReason +
+        (description ? `\n\nOriginal description: ${description}` : '');
     }
 
     return description;

@@ -78,14 +78,22 @@ function getTaskSprint(taskId: string): number {
   }
 
   const projectRoot = getProjectRoot();
-  const csvPath = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+  const csvPath = join(
+    projectRoot,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    '_global',
+    'Sprint_plan.csv'
+  );
 
   try {
     const content = readFileSync(csvPath, 'utf-8');
     const lines = content.split('\n');
     const headers = lines[0].split(',');
-    const taskIdIndex = headers.findIndex(h => h.includes('Task ID'));
-    const sprintIndex = headers.findIndex(h => h.includes('Target Sprint'));
+    const taskIdIndex = headers.findIndex((h) => h.includes('Task ID'));
+    const sprintIndex = headers.findIndex((h) => h.includes('Target Sprint'));
 
     for (let i = 1; i < lines.length; i++) {
       const row = lines[i].split(',');
@@ -109,7 +117,14 @@ function findAttestation(taskId: string): TraceLink | null {
   const sprintNumber = getTaskSprint(taskId);
 
   // Sprint-based attestation path
-  const attestationDir = join(projectRoot, '.specify', 'sprints', `sprint-${sprintNumber}`, 'attestations', taskId);
+  const attestationDir = join(
+    projectRoot,
+    '.specify',
+    'sprints',
+    `sprint-${sprintNumber}`,
+    'attestations',
+    taskId
+  );
   const attestationFile = join(attestationDir, 'attestation.json');
 
   try {
@@ -161,7 +176,11 @@ function findRelatedTests(taskId: string): TraceLink[] {
       const files = readdirSync(fullDir, { recursive: true });
       for (const file of files) {
         const fileName = String(file).toLowerCase();
-        if (fileName.includes('.test.') || fileName.includes('.spec.') || fileName.includes('__tests__')) {
+        if (
+          fileName.includes('.test.') ||
+          fileName.includes('.spec.') ||
+          fileName.includes('__tests__')
+        ) {
           for (const pattern of patterns) {
             if (fileName.includes(pattern)) {
               const filePath = join(testDir, String(file));
@@ -201,7 +220,10 @@ function findRelatedDocs(taskId: string, _section: string): TraceLink[] {
       const files = readdirSync(adrDir);
       for (const file of files) {
         const fileName = String(file).toLowerCase();
-        if (fileName.includes(taskId.toLowerCase()) || fileName.includes(taskId.replace(/-/g, '_').toLowerCase())) {
+        if (
+          fileName.includes(taskId.toLowerCase()) ||
+          fileName.includes(taskId.replace(/-/g, '_').toLowerCase())
+        ) {
           const filePath = `docs/planning/adr/${file}`;
           const info = getFileInfo(filePath);
           docs.push({
@@ -355,7 +377,9 @@ export async function GET(request: NextRequest) {
         (coverage.artifacts.found / coverage.artifacts.total) * weights.artifacts * 100 +
           (coverage.attestations.found / coverage.attestations.total) * weights.attestations * 100 +
           (coverage.tests.found / coverage.tests.total) * weights.tests * 100 +
-          (coverage.documentation.found / coverage.documentation.total) * weights.documentation * 100
+          (coverage.documentation.found / coverage.documentation.total) *
+            weights.documentation *
+            100
       );
 
       traceabilityMatrix.push({
@@ -376,7 +400,9 @@ export async function GET(request: NextRequest) {
       if (coverageFilter === 'low') {
         finalMatrix = traceabilityMatrix.filter((t) => t.overallCoverage < 33);
       } else if (coverageFilter === 'medium') {
-        finalMatrix = traceabilityMatrix.filter((t) => t.overallCoverage >= 33 && t.overallCoverage < 66);
+        finalMatrix = traceabilityMatrix.filter(
+          (t) => t.overallCoverage >= 33 && t.overallCoverage < 66
+        );
       } else if (coverageFilter === 'high') {
         finalMatrix = traceabilityMatrix.filter((t) => t.overallCoverage >= 66);
       }

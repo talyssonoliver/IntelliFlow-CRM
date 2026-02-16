@@ -47,12 +47,15 @@ export default defineConfig({
 
     // Handle worker exit errors gracefully - uses generic type to match Vitest's callback signature
     onUnhandledError(error): boolean | void {
-      const msg = typeof error === 'object' && error !== null && 'message' in error
-        ? String((error as { message?: unknown }).message)
-        : '';
-      if (msg.includes('Worker exited unexpectedly') ||
-          msg.includes('vitest-pool') ||
-          msg.includes('[vitest-pool]')) {
+      const msg =
+        typeof error === 'object' && error !== null && 'message' in error
+          ? String((error as { message?: unknown }).message)
+          : '';
+      if (
+        msg.includes('Worker exited unexpectedly') ||
+        msg.includes('vitest-pool') ||
+        msg.includes('[vitest-pool]')
+      ) {
         return false;
       }
     },
@@ -60,8 +63,14 @@ export default defineConfig({
   resolve: {
     alias: [
       // Stub uninstalled optional dependencies — CSS sub-path must come before package alias
-      { find: /^@scalar\/api-reference-react\/style\.css$/, replacement: path.resolve(__dirname, './src/test/__mocks__/empty.ts') },
-      { find: /^@scalar\/api-reference-react$/, replacement: path.resolve(__dirname, './src/test/__mocks__/scalar-stub.ts') },
+      {
+        find: /^@scalar\/api-reference-react\/style\.css$/,
+        replacement: path.resolve(__dirname, './src/test/__mocks__/empty.ts'),
+      },
+      {
+        find: /^@scalar\/api-reference-react$/,
+        replacement: path.resolve(__dirname, './src/test/__mocks__/scalar-stub.ts'),
+      },
       { find: '@/components', replacement: path.resolve(__dirname, './src/components') },
       { find: '@/lib', replacement: path.resolve(__dirname, './src/lib') },
       { find: '@', replacement: path.resolve(__dirname, './src') },

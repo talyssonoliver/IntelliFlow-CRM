@@ -59,10 +59,7 @@ describe('ApplyButton', () => {
       render(<ApplyButton {...defaultProps} />);
 
       const link = screen.getByRole('link');
-      expect(link).toHaveAttribute(
-        'aria-label',
-        'Apply for Senior Full-Stack Engineer position'
-      );
+      expect(link).toHaveAttribute('aria-label', 'Apply for Senior Full-Stack Engineer position');
     });
 
     it('should show icon by default', () => {
@@ -74,9 +71,7 @@ describe('ApplyButton', () => {
     });
 
     it('should hide icon when showIcon is false', () => {
-      const { container } = render(
-        <ApplyButton {...defaultProps} showIcon={false} />
-      );
+      const { container } = render(<ApplyButton {...defaultProps} showIcon={false} />);
 
       const icons = container.querySelectorAll('.material-symbols-outlined');
       expect(icons.length).toBe(0);
@@ -180,10 +175,7 @@ describe('SaveJobButton', () => {
       render(<SaveJobButton {...defaultProps} />);
 
       const button = screen.getByRole('button');
-      expect(button).toHaveAttribute(
-        'aria-label',
-        'Save Senior Full-Stack Engineer for later'
-      );
+      expect(button).toHaveAttribute('aria-label', 'Save Senior Full-Stack Engineer for later');
     });
 
     it('should show bookmark_border icon when unsaved', () => {

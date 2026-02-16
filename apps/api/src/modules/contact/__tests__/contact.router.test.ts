@@ -969,9 +969,7 @@ describe('Contact Router', () => {
 
       prismaMock.contact.findUnique.mockResolvedValue(null);
 
-      await expect(
-        caller.getTimeline({ contactId: TEST_UUIDS.nonExistent })
-      ).rejects.toThrow(
+      await expect(caller.getTimeline({ contactId: TEST_UUIDS.nonExistent })).rejects.toThrow(
         expect.objectContaining({
           code: 'NOT_FOUND',
           message: 'Contact not found',

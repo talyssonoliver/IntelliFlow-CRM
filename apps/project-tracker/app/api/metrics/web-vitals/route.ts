@@ -67,11 +67,18 @@ function loadLatestLighthouseReport(): WebVitalsReport | null {
               seo: content.scores.seo || 0,
             },
             overallScore: Math.round(
-              (content.scores.performance + content.scores.accessibility +
-               content.scores.bestPractices + content.scores.seo) / 4
+              (content.scores.performance +
+                content.scores.accessibility +
+                content.scores.bestPractices +
+                content.scores.seo) /
+                4
             ),
-            status: content.scores.performance >= 90 ? 'passing' :
-                    content.scores.performance >= 70 ? 'warning' : 'failing',
+            status:
+              content.scores.performance >= 90
+                ? 'passing'
+                : content.scores.performance >= 70
+                  ? 'warning'
+                  : 'failing',
           };
         } else if (content.categories) {
           // Raw Lighthouse format
@@ -87,16 +94,22 @@ function loadLatestLighthouseReport(): WebVitalsReport | null {
             timestamp: content.fetchTime || new Date().toISOString(),
             metrics,
             overallScore: Math.round(
-              (metrics.performance + metrics.accessibility +
-               metrics.bestPractices + metrics.seo) / 4
+              (metrics.performance + metrics.accessibility + metrics.bestPractices + metrics.seo) /
+                4
             ),
-            status: metrics.performance >= 90 ? 'passing' :
-                    metrics.performance >= 70 ? 'warning' : 'failing',
-            coreWebVitals: content.audits ? {
-              lcp: content.audits['largest-contentful-paint']?.numericValue || 0,
-              fid: content.audits['max-potential-fid']?.numericValue || 0,
-              cls: content.audits['cumulative-layout-shift']?.numericValue || 0,
-            } : undefined,
+            status:
+              metrics.performance >= 90
+                ? 'passing'
+                : metrics.performance >= 70
+                  ? 'warning'
+                  : 'failing',
+            coreWebVitals: content.audits
+              ? {
+                  lcp: content.audits['largest-contentful-paint']?.numericValue || 0,
+                  fid: content.audits['max-potential-fid']?.numericValue || 0,
+                  cls: content.audits['cumulative-layout-shift']?.numericValue || 0,
+                }
+              : undefined,
           };
         }
       }
@@ -117,7 +130,7 @@ function loadHistoricalReports(): WebVitalsReport[] {
   try {
     if (existsSync(lighthouseDir)) {
       const files = readdirSync(lighthouseDir)
-        .filter(f => f.endsWith('.json') && f.includes('lighthouse'))
+        .filter((f) => f.endsWith('.json') && f.includes('lighthouse'))
         .slice(-10); // Last 10 reports
 
       for (const _file of files) {
@@ -148,7 +161,8 @@ export async function GET(request: NextRequest) {
           source: 'unavailable',
           timestamp: new Date().toISOString(),
           pattern: 'RSI',
-          message: 'No Lighthouse report found. Run POST to generate one, or run: npx lighthouse http://localhost:3000 --output=json',
+          message:
+            'No Lighthouse report found. Run POST to generate one, or run: npx lighthouse http://localhost:3000 --output=json',
           placeholder: {
             metrics: {
               performance: 0,

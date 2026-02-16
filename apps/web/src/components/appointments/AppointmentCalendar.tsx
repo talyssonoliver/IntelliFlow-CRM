@@ -1,7 +1,12 @@
 'use client';
 
 import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
-import { getTypeConfig, getStatusConfig, formatTimeRange, formatDuration } from '@/lib/appointments/appointment-utils';
+import {
+  getTypeConfig,
+  getStatusConfig,
+  formatTimeRange,
+  formatDuration,
+} from '@/lib/appointments/appointment-utils';
 import type { CalendarAppointment } from './types';
 
 export interface AppointmentCalendarProps {
@@ -44,7 +49,11 @@ function getWeekDays(date: Date): Date[] {
 }
 
 function isSameDay(a: Date, b: Date): boolean {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
 }
 
 const MAX_CHIPS = 3;
@@ -96,46 +105,52 @@ export function AppointmentCalendar({
     onDateChange(new Date());
   }, [onDateChange]);
 
-  const handleCellClick = useCallback((date: Date) => {
-    const start = new Date(date);
-    start.setHours(9, 0, 0, 0);
-    const end = new Date(date);
-    end.setHours(10, 0, 0, 0);
-    onCreateWithSlot(start, end);
-  }, [onCreateWithSlot]);
+  const handleCellClick = useCallback(
+    (date: Date) => {
+      const start = new Date(date);
+      start.setHours(9, 0, 0, 0);
+      const end = new Date(date);
+      end.setHours(10, 0, 0, 0);
+      onCreateWithSlot(start, end);
+    },
+    [onCreateWithSlot]
+  );
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent, date: Date, dayIndex: number) => {
-    let newDate: Date | null = null;
-    switch (e.key) {
-      case 'ArrowLeft':
-        newDate = new Date(date);
-        newDate.setDate(newDate.getDate() - 1);
-        break;
-      case 'ArrowRight':
-        newDate = new Date(date);
-        newDate.setDate(newDate.getDate() + 1);
-        break;
-      case 'ArrowUp':
-        newDate = new Date(date);
-        newDate.setDate(newDate.getDate() - 7);
-        break;
-      case 'ArrowDown':
-        newDate = new Date(date);
-        newDate.setDate(newDate.getDate() + 7);
-        break;
-      case 'Enter':
-      case ' ':
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent, date: Date, dayIndex: number) => {
+      let newDate: Date | null = null;
+      switch (e.key) {
+        case 'ArrowLeft':
+          newDate = new Date(date);
+          newDate.setDate(newDate.getDate() - 1);
+          break;
+        case 'ArrowRight':
+          newDate = new Date(date);
+          newDate.setDate(newDate.getDate() + 1);
+          break;
+        case 'ArrowUp':
+          newDate = new Date(date);
+          newDate.setDate(newDate.getDate() - 7);
+          break;
+        case 'ArrowDown':
+          newDate = new Date(date);
+          newDate.setDate(newDate.getDate() + 7);
+          break;
+        case 'Enter':
+        case ' ':
+          e.preventDefault();
+          handleCellClick(date);
+          return;
+        default:
+          return;
+      }
+      if (newDate) {
         e.preventDefault();
-        handleCellClick(date);
-        return;
-      default:
-        return;
-    }
-    if (newDate) {
-      e.preventDefault();
-      setFocusedCell(toDateKey(newDate));
-    }
-  }, [handleCellClick]);
+        setFocusedCell(toDateKey(newDate));
+      }
+    },
+    [handleCellClick]
+  );
 
   // Focus management
   useEffect(() => {
@@ -145,9 +160,15 @@ export function AppointmentCalendar({
     }
   }, [focusedCell]);
 
-  const headerText = view === 'day'
-    ? currentDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-    : currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const headerText =
+    view === 'day'
+      ? currentDate.toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        })
+      : currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 
   if (isLoading) {
     return (
@@ -198,14 +219,20 @@ export function AppointmentCalendar({
         </div>
 
         {/* View Switcher */}
-        <div className="flex rounded-md border border-gray-300 overflow-hidden" role="group" aria-label="Calendar view">
+        <div
+          className="flex rounded-md border border-gray-300 overflow-hidden"
+          role="group"
+          aria-label="Calendar view"
+        >
           {(['month', 'week', 'day'] as const).map((v) => (
             <button
               key={v}
               type="button"
               onClick={() => onViewChange(v)}
               className={`px-3 py-1.5 text-sm capitalize ${
-                view === v ? 'bg-blue-100 text-blue-800 font-medium' : 'bg-white text-gray-700 hover:bg-gray-50'
+                view === v
+                  ? 'bg-blue-100 text-blue-800 font-medium'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
               }`}
               aria-pressed={view === v}
             >
@@ -217,37 +244,40 @@ export function AppointmentCalendar({
 
       {/* Calendar Grid */}
       {view === 'month' && (
-        <div data-testid="month-view"><MonthView
-          ref={gridRef}
-          currentDate={currentDate}
-          todayKey={todayKey}
-          appointmentsByDate={appointmentsByDate}
-          focusedCell={focusedCell}
-          onCellClick={handleCellClick}
-          onAppointmentClick={onAppointmentClick}
-          onKeyDown={handleKeyDown}
-        />
+        <div data-testid="month-view">
+          <MonthView
+            ref={gridRef}
+            currentDate={currentDate}
+            todayKey={todayKey}
+            appointmentsByDate={appointmentsByDate}
+            focusedCell={focusedCell}
+            onCellClick={handleCellClick}
+            onAppointmentClick={onAppointmentClick}
+            onKeyDown={handleKeyDown}
+          />
         </div>
       )}
 
       {view === 'week' && (
-        <div data-testid="week-view"><WeekView
-          currentDate={currentDate}
-          todayKey={todayKey}
-          appointments={appointments}
-          onAppointmentClick={onAppointmentClick}
-          onCellClick={handleCellClick}
-        />
+        <div data-testid="week-view">
+          <WeekView
+            currentDate={currentDate}
+            todayKey={todayKey}
+            appointments={appointments}
+            onAppointmentClick={onAppointmentClick}
+            onCellClick={handleCellClick}
+          />
         </div>
       )}
 
       {view === 'day' && (
-        <div data-testid="day-view"><DayView
-          currentDate={currentDate}
-          appointments={appointments}
-          onAppointmentClick={onAppointmentClick}
-          onCellClick={handleCellClick}
-        />
+        <div data-testid="day-view">
+          <DayView
+            currentDate={currentDate}
+            appointments={appointments}
+            onAppointmentClick={onAppointmentClick}
+            onCellClick={handleCellClick}
+          />
         </div>
       )}
 
@@ -276,7 +306,15 @@ interface MonthViewProps {
 }
 
 const MonthView = forwardRef<HTMLDivElement, MonthViewProps>(function MonthView(
-  { currentDate, todayKey, appointmentsByDate, focusedCell, onCellClick, onAppointmentClick, onKeyDown },
+  {
+    currentDate,
+    todayKey,
+    appointmentsByDate,
+    focusedCell,
+    onCellClick,
+    onAppointmentClick,
+    onKeyDown,
+  },
   ref
 ) {
   const days = getMonthDays(currentDate.getFullYear(), currentDate.getMonth());
@@ -285,7 +323,11 @@ const MonthView = forwardRef<HTMLDivElement, MonthViewProps>(function MonthView(
     <div ref={ref} role="grid" aria-label="Appointment calendar">
       <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-t-lg overflow-hidden">
         {DAY_HEADERS.map((day) => (
-          <div key={day} role="columnheader" className="bg-gray-50 px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+          <div
+            key={day}
+            role="columnheader"
+            className="bg-gray-50 px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase"
+          >
             {day}
           </div>
         ))}
@@ -311,7 +353,9 @@ const MonthView = forwardRef<HTMLDivElement, MonthViewProps>(function MonthView(
               onClick={() => onCellClick(date)}
               onKeyDown={(e) => onKeyDown(e, date, i)}
             >
-              <span className={`text-xs font-medium ${isToday ? 'text-blue-600' : 'text-gray-700'}`}>
+              <span
+                className={`text-xs font-medium ${isToday ? 'text-blue-600' : 'text-gray-700'}`}
+              >
                 {date.getDate()}
               </span>
               <div className="mt-1 space-y-0.5">
@@ -331,7 +375,9 @@ const MonthView = forwardRef<HTMLDivElement, MonthViewProps>(function MonthView(
                       title={appt.title}
                     >
                       {appt.hasConflict && (
-                        <span className="material-symbols-outlined text-xs text-red-600 mr-0.5">warning</span>
+                        <span className="material-symbols-outlined text-xs text-red-600 mr-0.5">
+                          warning
+                        </span>
                       )}
                       {appt.title}
                     </button>
@@ -359,11 +405,21 @@ interface WeekViewProps {
   onCellClick: (date: Date) => void;
 }
 
-function WeekView({ currentDate, todayKey, appointments, onAppointmentClick, onCellClick }: WeekViewProps) {
+function WeekView({
+  currentDate,
+  todayKey,
+  appointments,
+  onAppointmentClick,
+  onCellClick,
+}: WeekViewProps) {
   const weekDays = getWeekDays(currentDate);
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden" role="grid" aria-label="Week view">
+    <div
+      className="border border-gray-200 rounded-lg overflow-hidden"
+      role="grid"
+      aria-label="Week view"
+    >
       {/* Day headers */}
       <div className="grid grid-cols-[60px_repeat(7,1fr)] bg-gray-50 border-b">
         <div className="p-2" />
@@ -371,7 +427,11 @@ function WeekView({ currentDate, todayKey, appointments, onAppointmentClick, onC
           const key = toDateKey(d);
           const isToday = key === todayKey;
           return (
-            <div key={key} role="columnheader" className={`p-2 text-center text-xs font-medium ${isToday ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}>
+            <div
+              key={key}
+              role="columnheader"
+              className={`p-2 text-center text-xs font-medium ${isToday ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}
+            >
               <div>{DAY_HEADERS[d.getDay()]}</div>
               <div className="text-lg font-semibold">{d.getDate()}</div>
             </div>
@@ -410,12 +470,19 @@ function WeekView({ currentDate, todayKey, appointments, onAppointmentClick, onC
                     <button
                       key={appt.id}
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); onAppointmentClick(appt.id); }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAppointmentClick(appt.id);
+                      }}
                       className={`w-full text-left text-xs px-1.5 py-1 rounded mb-0.5 truncate ${typeConfig.bgColor} ${typeConfig.color} ${
                         appt.hasConflict ? 'ring-2 ring-red-400' : ''
                       }`}
                     >
-                      {appt.hasConflict && <span className="material-symbols-outlined text-xs text-red-600 mr-0.5">warning</span>}
+                      {appt.hasConflict && (
+                        <span className="material-symbols-outlined text-xs text-red-600 mr-0.5">
+                          warning
+                        </span>
+                      )}
                       {appt.title}
                     </button>
                   );
@@ -442,7 +509,11 @@ function DayView({ currentDate, appointments, onAppointmentClick, onCellClick }:
   const dayAppts = appointments.filter((a) => isSameDay(new Date(a.startTime), currentDate));
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden" role="grid" aria-label="Day view">
+    <div
+      className="border border-gray-200 rounded-lg overflow-hidden"
+      role="grid"
+      aria-label="Day view"
+    >
       {HOURS.map((hour) => {
         const hourAppts = dayAppts.filter((a) => new Date(a.startTime).getHours() === hour);
         return (
@@ -468,19 +539,27 @@ function DayView({ currentDate, appointments, onAppointmentClick, onCellClick }:
                   <button
                     key={appt.id}
                     type="button"
-                    onClick={(e) => { e.stopPropagation(); onAppointmentClick(appt.id); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAppointmentClick(appt.id);
+                    }}
                     className={`w-full text-left p-2 rounded mb-1 ${typeConfig.bgColor} ${
                       appt.hasConflict ? 'ring-2 ring-red-400' : ''
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className={`text-sm font-medium ${typeConfig.color}`}>{appt.title}</span>
-                      <span className={`text-xs px-1.5 py-0.5 rounded ${statusConfig.bgColor} ${statusConfig.color}`}>
+                      <span className={`text-sm font-medium ${typeConfig.color}`}>
+                        {appt.title}
+                      </span>
+                      <span
+                        className={`text-xs px-1.5 py-0.5 rounded ${statusConfig.bgColor} ${statusConfig.color}`}
+                      >
                         {statusConfig.label}
                       </span>
                     </div>
                     <div className="text-xs text-gray-600 mt-0.5">
-                      {formatTimeRange(appt.startTime, appt.endTime)} · {formatDuration(appt.startTime, appt.endTime)}
+                      {formatTimeRange(appt.startTime, appt.endTime)} ·{' '}
+                      {formatDuration(appt.startTime, appt.endTime)}
                     </div>
                     {appt.hasConflict && (
                       <div className="flex items-center gap-1 text-xs text-red-600 mt-1">

@@ -246,11 +246,7 @@ export class SLATrackingService {
    */
   generateBreachAlert(ticket: Ticket, isWarning: boolean = false): SLABreachAlert {
     const dueTime = ticket.slaResolutionDue || new Date();
-    const timerResult = this.calculateSLATimer(
-      dueTime,
-      ticket.slaPolicy,
-      ticket.status
-    );
+    const timerResult = this.calculateSLATimer(dueTime, ticket.slaPolicy, ticket.status);
 
     return {
       ticketId: ticket.id,
@@ -349,10 +345,7 @@ export class SLATrackingService {
         }
 
         // Skip paused tickets
-        if (
-          ticket.status === 'WAITING_ON_CUSTOMER' ||
-          ticket.status === 'WAITING_ON_THIRD_PARTY'
-        ) {
+        if (ticket.status === 'WAITING_ON_CUSTOMER' || ticket.status === 'WAITING_ON_THIRD_PARTY') {
           continue;
         }
 

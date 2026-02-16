@@ -230,9 +230,7 @@ function LogoutContent() {
                       verified_user
                     </span>
                     <div>
-                      <p className="text-sm text-slate-200 font-medium">
-                        Session cleared securely
-                      </p>
+                      <p className="text-sm text-slate-200 font-medium">Session cleared securely</p>
                       <p className="text-sm text-slate-400 mt-0.5">
                         All session data has been removed from this device.
                       </p>
@@ -242,8 +240,7 @@ function LogoutContent() {
 
                 {/* Redirect Notice */}
                 <div className="text-center text-sm text-slate-400">
-                  Redirecting to login in{' '}
-                  <Countdown seconds={5} onComplete={handleRedirect} />
+                  Redirecting to login in <Countdown seconds={5} onComplete={handleRedirect} />
                 </div>
 
                 {/* Manual Redirect Button */}
@@ -269,8 +266,8 @@ function LogoutContent() {
               <>
                 <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
                   <p className="text-sm text-red-300">
-                    There was a problem signing you out. Your local session has been cleared,
-                    but the server session may still be active.
+                    There was a problem signing you out. Your local session has been cleared, but
+                    the server session may still be active.
                   </p>
                 </div>
 
@@ -332,10 +329,7 @@ function LogoutContent() {
             </Link>
           </p>
           <p className="text-sm text-slate-500">
-            <Link
-              href="/"
-              className="hover:text-slate-300 transition-colors"
-            >
+            <Link href="/" className="hover:text-slate-300 transition-colors">
               Return to home page
             </Link>
           </p>

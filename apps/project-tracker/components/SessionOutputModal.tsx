@@ -5,7 +5,14 @@ import { clsx } from 'clsx';
 import { Icon } from '@/lib/icons';
 
 export type SessionType = 'spec' | 'plan' | 'exec' | 'hydrate';
-export type SessionStatus = 'running' | 'completed' | 'failed' | 'timeout' | 'stuck' | 'needs_human' | 'not_started';
+export type SessionStatus =
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | 'timeout'
+  | 'stuck'
+  | 'needs_human'
+  | 'not_started';
 
 interface SessionOutputModalProps {
   open: boolean;
@@ -97,27 +104,19 @@ export function SessionOutputModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
       <div className="relative z-10 w-full max-w-4xl max-h-[90vh] mx-4 bg-white rounded-xl shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <Icon
-              name="smart_toy"
-              className="w-6 h-6 text-indigo-600"
-            />
+            <Icon name="smart_toy" className="w-6 h-6 text-indigo-600" />
             <div>
               <h2 className="text-lg font-semibold text-gray-900">
                 {SESSION_NAMES[sessionType]} - {taskId}
               </h2>
-              {phase && (
-                <p className="text-sm text-gray-500">Phase: {phase}</p>
-              )}
+              {phase && <p className="text-sm text-gray-500">Phase: {phase}</p>}
             </div>
           </div>
           <div className="flex items-center gap-3">

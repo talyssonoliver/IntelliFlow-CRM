@@ -35,9 +35,9 @@ test.describe('Material Symbols Icons Loading', () => {
       const count = await iconElements.count();
 
       if (count > 0) {
-        const fontFamily = await iconElements.first().evaluate(
-          (el) => getComputedStyle(el).fontFamily
-        );
+        const fontFamily = await iconElements
+          .first()
+          .evaluate((el) => getComputedStyle(el).fontFamily);
         expect(fontFamily).toContain('Material Symbols Outlined');
       }
     });
@@ -100,7 +100,9 @@ test.describe('Material Symbols Icons Loading', () => {
           for (const entry of list.getEntries()) {
             const layoutShiftEntry = entry as PerformanceEntry & { value: number };
             if (layoutShiftEntry.value !== undefined) {
-              (window as unknown as { layoutShifts: number[] }).layoutShifts.push(layoutShiftEntry.value);
+              (window as unknown as { layoutShifts: number[] }).layoutShifts.push(
+                layoutShiftEntry.value
+              );
             }
           }
         }).observe({ entryTypes: ['layout-shift'] });

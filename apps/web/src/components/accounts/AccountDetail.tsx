@@ -77,39 +77,43 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const isValidId = UUID_RE.test(accountId);
 
-  const { data: account, isLoading, error } = api.account.getById.useQuery(
-    { id: accountId },
-    { enabled: isValidId && isAuthenticated },
-  );
+  const {
+    data: account,
+    isLoading,
+    error,
+  } = api.account.getById.useQuery({ id: accountId }, { enabled: isValidId && isAuthenticated });
 
   const activityQuery = api.account.getActivity.useQuery(
     { accountId, limit: 20 },
-    { enabled: activeTab === 'activity' && isAuthenticated },
+    { enabled: activeTab === 'activity' && isAuthenticated }
   );
 
   const oppsQuery = api.account.getOpportunities.useQuery(
     { accountId, limit: 100 },
-    { enabled: activeTab === 'pipeline' && isAuthenticated },
+    { enabled: activeTab === 'pipeline' && isAuthenticated }
   );
 
   // Derived data
   const tier = useMemo(
     () => getAccountTier(account?.revenue ? Number(account.revenue) : null),
-    [account?.revenue],
+    [account?.revenue]
   );
   const tierConfig = TIER_CONFIG[tier];
   const contactCount = account?._count?.contacts ?? 0;
   const opportunityCount = account?._count?.opportunities ?? 0;
   const website = useMemo(() => resolveWebsite(account?.website), [account?.website]);
 
-  const tabs: Tab[] = useMemo(() => [
-    { id: 'overview', label: 'Overview' },
-    { id: 'contacts', label: 'Contacts', count: contactCount },
-    { id: 'opportunities', label: 'Opportunities', count: opportunityCount },
-    { id: 'activity', label: 'Activity' },
-    { id: 'pipeline', label: 'Pipeline' },
-    { id: 'hierarchy', label: 'Hierarchy' },
-  ], [contactCount, opportunityCount]);
+  const tabs: Tab[] = useMemo(
+    () => [
+      { id: 'overview', label: 'Overview' },
+      { id: 'contacts', label: 'Contacts', count: contactCount },
+      { id: 'opportunities', label: 'Opportunities', count: opportunityCount },
+      { id: 'activity', label: 'Activity' },
+      { id: 'pipeline', label: 'Pipeline' },
+      { id: 'hierarchy', label: 'Hierarchy' },
+    ],
+    [contactCount, opportunityCount]
+  );
 
   // ─── Loading skeleton (3-column) ──────────────────────────────────
   if (isLoading) {
@@ -152,9 +156,12 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
       <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         <Card className="p-8 text-center">
           <span className="material-symbols-outlined text-5xl text-red-500 mb-4">error</span>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Account Not Found</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+            Account Not Found
+          </h2>
           <p className="text-slate-500 dark:text-slate-400 mb-4">
-            {error?.message ?? 'The account could not be loaded or you don\'t have permission to view it.'}
+            {error?.message ??
+              "The account could not be loaded or you don't have permission to view it."}
           </p>
           <Link
             href="/accounts"
@@ -176,7 +183,9 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
           <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-            <Link href="/accounts" className="hover:text-[#137fec] transition-colors">Accounts</Link>
+            <Link href="/accounts" className="hover:text-[#137fec] transition-colors">
+              Accounts
+            </Link>
             <span className="material-symbols-outlined !text-sm">chevron_right</span>
             <span className="font-medium text-slate-900 dark:text-white">{account.name}</span>
           </div>
@@ -229,14 +238,18 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
             <div className={`h-24 bg-gradient-to-r ${TIER_GRADIENTS[tier]}`} />
             <div className="px-5 pb-6 relative">
               <div className="relative -mt-10 mb-3">
-                <div className={`w-20 h-20 rounded-xl border-4 border-white dark:border-slate-900 ${tierConfig.avatarBg} flex items-center justify-center text-2xl font-bold shadow-sm`}>
+                <div
+                  className={`w-20 h-20 rounded-xl border-4 border-white dark:border-slate-900 ${tierConfig.avatarBg} flex items-center justify-center text-2xl font-bold shadow-sm`}
+                >
                   {initials}
                 </div>
               </div>
               <div className="mb-4">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">{account.name}</h2>
                 {account.industry && (
-                  <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{account.industry}</p>
+                  <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
+                    {account.industry}
+                  </p>
                 )}
               </div>
               <div className="flex flex-wrap gap-2 mb-6">
@@ -250,9 +263,13 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
               <div className="space-y-4">
                 {website && (
                   <div className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">language</span>
+                    <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">
+                      language
+                    </span>
                     <div className="flex flex-col">
-                      <span className="text-xs text-slate-400 uppercase font-semibold">Website</span>
+                      <span className="text-xs text-slate-400 uppercase font-semibold">
+                        Website
+                      </span>
                       <a
                         href={website.href}
                         target="_blank"
@@ -265,16 +282,22 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
                   </div>
                 )}
                 <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">groups</span>
+                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">
+                    groups
+                  </span>
                   <div className="flex flex-col">
-                    <span className="text-xs text-slate-400 uppercase font-semibold">Employees</span>
+                    <span className="text-xs text-slate-400 uppercase font-semibold">
+                      Employees
+                    </span>
                     <span className="text-sm text-slate-700 dark:text-slate-300">
                       {account.employees?.toLocaleString() ?? '—'}
                     </span>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">payments</span>
+                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">
+                    payments
+                  </span>
                   <div className="flex flex-col">
                     <span className="text-xs text-slate-400 uppercase font-semibold">Revenue</span>
                     <span className="text-sm text-slate-700 dark:text-slate-300">
@@ -283,7 +306,9 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">calendar_today</span>
+                  <span className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5">
+                    calendar_today
+                  </span>
                   <div className="flex flex-col">
                     <span className="text-xs text-slate-400 uppercase font-semibold">Created</span>
                     <span className="text-sm text-slate-700 dark:text-slate-300">
@@ -296,7 +321,9 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
               <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
                   <p className="text-lg font-bold text-slate-900 dark:text-white">
-                    {account.revenue ? `$${(Number(account.revenue) / 1_000_000).toFixed(1)}M` : '—'}
+                    {account.revenue
+                      ? `$${(Number(account.revenue) / 1_000_000).toFixed(1)}M`
+                      : '—'}
                   </p>
                   <p className="text-xs text-slate-500">Revenue</p>
                 </div>
@@ -305,7 +332,9 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
                   <p className="text-xs text-slate-500">Contacts</p>
                 </div>
                 <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <p className="text-lg font-bold text-slate-900 dark:text-white">{opportunityCount}</p>
+                  <p className="text-lg font-bold text-slate-900 dark:text-white">
+                    {opportunityCount}
+                  </p>
                   <p className="text-xs text-slate-500">Opportunities</p>
                 </div>
                 <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
@@ -320,7 +349,9 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
 
           {/* Account Owner */}
           <Card className="p-5">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase mb-3 tracking-wider">Account Owner</h3>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase mb-3 tracking-wider">
+              Account Owner
+            </h3>
             {account.ownerId ? (
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-medium">
@@ -366,7 +397,9 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <Card className="p-6">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">Account Details</h3>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">
+                Account Details
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Name</p>
@@ -389,11 +422,15 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Industry</p>
-                  <p className="text-sm text-slate-900 dark:text-white">{account.industry ?? '—'}</p>
+                  <p className="text-sm text-slate-900 dark:text-white">
+                    {account.industry ?? '—'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Employees</p>
-                  <p className="text-sm text-slate-900 dark:text-white">{account.employees?.toLocaleString() ?? '—'}</p>
+                  <p className="text-sm text-slate-900 dark:text-white">
+                    {account.employees?.toLocaleString() ?? '—'}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Revenue</p>
@@ -407,31 +444,37 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
                 </div>
                 {account.description && (
                   <div className="sm:col-span-2">
-                    <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Description</p>
-                    <p className="text-sm text-slate-900 dark:text-white whitespace-pre-wrap">{account.description}</p>
+                    <p className="text-xs text-slate-400 uppercase font-semibold mb-1">
+                      Description
+                    </p>
+                    <p className="text-sm text-slate-900 dark:text-white whitespace-pre-wrap">
+                      {account.description}
+                    </p>
                   </div>
                 )}
                 <div>
                   <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Created</p>
-                  <p className="text-sm text-slate-900 dark:text-white">{formatDate(account.createdAt)}</p>
+                  <p className="text-sm text-slate-900 dark:text-white">
+                    {formatDate(account.createdAt)}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Last Updated</p>
-                  <p className="text-sm text-slate-900 dark:text-white">{formatDate(account.updatedAt)}</p>
+                  <p className="text-xs text-slate-400 uppercase font-semibold mb-1">
+                    Last Updated
+                  </p>
+                  <p className="text-sm text-slate-900 dark:text-white">
+                    {formatDate(account.updatedAt)}
+                  </p>
                 </div>
               </div>
             </Card>
           )}
 
           {/* Contacts Tab */}
-          {activeTab === 'contacts' && (
-            <AccountContactsList accountId={accountId} />
-          )}
+          {activeTab === 'contacts' && <AccountContactsList accountId={accountId} />}
 
           {/* Opportunities Tab */}
-          {activeTab === 'opportunities' && (
-            <AccountOpportunitiesList accountId={accountId} />
-          )}
+          {activeTab === 'opportunities' && <AccountOpportunitiesList accountId={accountId} />}
 
           {/* Activity Tab */}
           {activeTab === 'activity' && (
@@ -450,7 +493,9 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
               )}
               {activityQuery.data?.activities && activityQuery.data.activities.length === 0 && (
                 <div className="text-center py-12">
-                  <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-3">history</span>
+                  <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-3">
+                    history
+                  </span>
                   <p className="text-slate-500 dark:text-slate-400">No activity recorded yet</p>
                 </div>
               )}
@@ -464,7 +509,9 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-slate-900 dark:text-white">{activity.description}</p>
+                        <p className="text-sm text-slate-900 dark:text-white">
+                          {activity.description}
+                        </p>
                         <p className="text-xs text-slate-500 mt-0.5">
                           {new Date(activity.createdAt).toLocaleString()}
                           {activity.performedBy && ` by ${activity.performedBy.name}`}
@@ -491,9 +538,7 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
           )}
 
           {/* Hierarchy Tab */}
-          {activeTab === 'hierarchy' && (
-            <AccountHierarchy accountId={accountId} />
-          )}
+          {activeTab === 'hierarchy' && <AccountHierarchy accountId={accountId} />}
         </section>
 
         {/* ─── Right Sidebar ─── */}
@@ -507,8 +552,12 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between mb-1.5">
-                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Contacts</span>
-                  <span className="text-sm font-bold text-slate-900 dark:text-white">{contactCount}</span>
+                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                    Contacts
+                  </span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">
+                    {contactCount}
+                  </span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
                   <div
@@ -519,8 +568,12 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
               </div>
               <div>
                 <div className="flex justify-between mb-1.5">
-                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Opportunities</span>
-                  <span className="text-sm font-bold text-slate-900 dark:text-white">{opportunityCount}</span>
+                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                    Opportunities
+                  </span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">
+                    {opportunityCount}
+                  </span>
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
                   <div
@@ -532,13 +585,17 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
               <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
               <div>
                 <div className="flex justify-between">
-                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Tier</span>
+                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                    Tier
+                  </span>
                   <Badge className={tierConfig.color}>{tierConfig.label}</Badge>
                 </div>
               </div>
               <div>
                 <div className="flex justify-between">
-                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Revenue</span>
+                  <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                    Revenue
+                  </span>
                   <span className="text-sm font-bold text-slate-900 dark:text-white">
                     {account.revenue ? formatCurrency(Number(account.revenue)) : '—'}
                   </span>
@@ -549,14 +606,18 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
 
           {/* Quick Actions */}
           <Card className="p-5">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase mb-3 tracking-wider">Quick Actions</h3>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase mb-3 tracking-wider">
+              Quick Actions
+            </h3>
             <div className="space-y-2">
               <button
                 onClick={() => setActiveTab('contacts')}
                 className="w-full text-left p-2 rounded border bg-blue-50 dark:bg-slate-800/50 border-blue-100 dark:border-slate-700 hover:border-[#137fec]/50 transition-colors group"
               >
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined !text-[18px] text-[#137fec]">person_add</span>
+                  <span className="material-symbols-outlined !text-[18px] text-[#137fec]">
+                    person_add
+                  </span>
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-[#137fec]">
                     View Contacts
                   </span>
@@ -567,7 +628,9 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
                 className="w-full text-left p-2 rounded border bg-slate-50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700 hover:border-slate-300 transition-colors group"
               >
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined !text-[18px] text-slate-500">trending_up</span>
+                  <span className="material-symbols-outlined !text-[18px] text-slate-500">
+                    trending_up
+                  </span>
                   <span className="text-sm font-medium text-slate-600 dark:text-slate-300 group-hover:text-slate-900">
                     View Opportunities
                   </span>
@@ -578,7 +641,9 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
                 className="w-full text-left p-2 rounded border bg-slate-50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700 hover:border-slate-300 transition-colors group"
               >
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined !text-[18px] text-slate-500">account_tree</span>
+                  <span className="material-symbols-outlined !text-[18px] text-slate-500">
+                    account_tree
+                  </span>
                   <span className="text-sm font-medium text-slate-600 dark:text-slate-300 group-hover:text-slate-900">
                     View Hierarchy
                   </span>
@@ -607,11 +672,15 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
               </button>
             </div>
             <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-              <div className={`w-10 h-10 rounded-lg ${tierConfig.avatarBg} flex items-center justify-center text-sm font-bold shrink-0`}>
+              <div
+                className={`w-10 h-10 rounded-lg ${tierConfig.avatarBg} flex items-center justify-center text-sm font-bold shrink-0`}
+              >
                 {initials}
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{account.name}</p>
+                <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                  {account.name}
+                </p>
                 <p className="text-xs text-slate-500">{tierConfig.label} Account</p>
               </div>
             </div>

@@ -15,10 +15,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { DurableAuditLogAdapter } from '../DurableAuditLogAdapter';
 import { CrossTenantViolationError } from '../errors';
-import type {
-  AISecurityEventInput,
-  TenantContext,
-} from '@intelliflow/application';
+import type { AISecurityEventInput, TenantContext } from '@intelliflow/application';
 
 // Mock Prisma client
 const mockPrismaClient = () => ({
@@ -449,9 +446,7 @@ describe('DurableAuditLogAdapter', () => {
 
       adapter = new DurableAuditLogAdapter(prisma as any, signingKey);
 
-      const results = await Promise.all(
-        events.map((e) => adapter.logSecurityEvent(e, context))
-      );
+      const results = await Promise.all(events.map((e) => adapter.logSecurityEvent(e, context)));
 
       expect(results.filter((r) => r.status === 'PERSISTED')).toHaveLength(10);
       expect(persistedCount).toBe(10);

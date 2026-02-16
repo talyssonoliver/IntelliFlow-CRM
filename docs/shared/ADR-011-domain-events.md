@@ -268,7 +268,7 @@ export class PrismaEventPublisher implements EventPublisher {
     }
 
     // Write to outbox within transaction
-    const entries = events.map(e => e.toOutboxEntry(tenantId));
+    const entries = events.map((e) => e.toOutboxEntry(tenantId));
 
     await this.prisma.domainEventOutbox.createMany({
       data: entries,
@@ -337,7 +337,7 @@ export class OutboxPoller {
       // Mark as processing
       await tx.domainEventOutbox.updateMany({
         where: {
-          id: { in: pending.map(e => e.id) },
+          id: { in: pending.map((e) => e.id) },
           status: 'pending',
         },
         data: { status: 'processing' },
@@ -358,12 +358,14 @@ export class OutboxPoller {
     try {
       // Execute all handlers
       await Promise.all(
-        handlers.map(h => h.handle(outboxEntry.payload, {
-          eventId: outboxEntry.event_id,
-          eventType: outboxEntry.event_type,
-          tenantId: outboxEntry.tenant_id,
-          occurredAt: outboxEntry.created_at,
-        }))
+        handlers.map((h) =>
+          h.handle(outboxEntry.payload, {
+            eventId: outboxEntry.event_id,
+            eventType: outboxEntry.event_type,
+            tenantId: outboxEntry.tenant_id,
+            occurredAt: outboxEntry.created_at,
+          })
+        )
       );
 
       // Mark as published
@@ -376,7 +378,6 @@ export class OutboxPoller {
       });
 
       publishedEventsCounter.inc({ event_type: outboxEntry.event_type });
-
     } catch (error) {
       await this.handleError(outboxEntry, error);
     }
@@ -401,7 +402,6 @@ export class OutboxPoller {
       });
 
       deadLetterCounter.inc({ event_type: outboxEntry.event_type });
-
     } else {
       // Schedule retry with exponential backoff
       const backoffMs = [1000, 5000, 30000][retryCount - 1] ?? 30000;
@@ -419,7 +419,7 @@ export class OutboxPoller {
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 ```
@@ -429,14 +429,9 @@ export class OutboxPoller {
 ```typescript
 // packages/application/src/events/idempotent-handler.ts
 export abstract class IdempotentEventHandler implements EventHandler {
-  constructor(
-    private readonly processedCache: ProcessedEventCache
-  ) {}
+  constructor(private readonly processedCache: ProcessedEventCache) {}
 
-  async handle(
-    payload: unknown,
-    context: EventContext
-  ): Promise<void> {
+  async handle(payload: unknown, context: EventContext): Promise<void> {
     const idempotencyKey = `${context.eventType}:${context.eventId}`;
 
     // Check if already processed
@@ -476,10 +471,7 @@ let contractsCache: EventContracts | null = null;
 export async function loadEventContracts(): Promise<EventContracts> {
   if (contractsCache) return contractsCache;
 
-  const yamlContent = await readFile(
-    'docs/events/contracts-v1.yaml',
-    'utf-8'
-  );
+  const yamlContent = await readFile('docs/events/contracts-v1.yaml', 'utf-8');
   contractsCache = load(yamlContent) as EventContracts;
   return contractsCache;
 }
@@ -502,7 +494,7 @@ export async function validateEventSchema(
     return {
       valid: false,
       errors: [
-        `Version mismatch: event=${event.version}, contract=${eventDef.version}`
+        `Version mismatch: event=${event.version}, contract=${eventDef.version}`,
       ],
     };
   }
@@ -515,7 +507,8 @@ export async function validateEventSchema(
   if (!valid) {
     return {
       valid: false,
-      errors: validate.errors?.map(e => `${e.instancePath}: ${e.message}`) ?? [],
+      errors:
+        validate.errors?.map((e) => `${e.instancePath}: ${e.message}`) ?? [],
     };
   }
 
@@ -532,13 +525,13 @@ export async function validateEventSchema(
 
 ### Target KPIs
 
-| KPI | Target | Measurement |
-|-----|--------|-------------|
-| Lost Events | 0 | Count of events not reaching outbox |
-| Publish Latency | p95 <200ms | Time from event creation to outbox write |
-| Schema Validation | 100% | All events validated before publish |
-| Dead Letter Rate | <0.1% | Failed events after max retries |
-| Processing Latency | p95 <500ms | Time from outbox to handler completion |
+| KPI                | Target     | Measurement                              |
+| ------------------ | ---------- | ---------------------------------------- |
+| Lost Events        | 0          | Count of events not reaching outbox      |
+| Publish Latency    | p95 <200ms | Time from event creation to outbox write |
+| Schema Validation  | 100%       | All events validated before publish      |
+| Dead Letter Rate   | <0.1%      | Failed events after max retries          |
+| Processing Latency | p95 <500ms | Time from outbox to handler completion   |
 
 ### Prometheus Metrics
 
@@ -601,12 +594,20 @@ export const schemaValidationCounter = new Counter({
 ```typescript
 describe('LeadCreatedEvent', () => {
   it('generates correct idempotency key', () => {
-    const event = new LeadCreatedEvent('lead-123', { email: 'test@example.com', source: 'web', tenantId: 'tenant-1' });
+    const event = new LeadCreatedEvent('lead-123', {
+      email: 'test@example.com',
+      source: 'web',
+      tenantId: 'tenant-1',
+    });
     expect(event.idempotencyKey).toBe('LeadCreated:lead-123');
   });
 
   it('validates against schema', async () => {
-    const event = new LeadCreatedEvent('lead-123', { email: 'test@example.com', source: 'web', tenantId: 'tenant-1' });
+    const event = new LeadCreatedEvent('lead-123', {
+      email: 'test@example.com',
+      source: 'web',
+      tenantId: 'tenant-1',
+    });
     const result = await validateEventSchema(event);
     expect(result.valid).toBe(true);
   });

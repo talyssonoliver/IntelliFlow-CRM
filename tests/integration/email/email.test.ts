@@ -67,9 +67,7 @@ import {
 
 const sampleEmail: OutboundEmail = {
   from: { email: 'sender@example.com', name: 'Sender Name' },
-  recipients: [
-    { email: 'recipient@example.com', name: 'Recipient Name', type: 'to' },
-  ],
+  recipients: [{ email: 'recipient@example.com', name: 'Recipient Name', type: 'to' }],
   subject: 'Test Email Subject',
   textBody: 'This is a plain text body.',
   htmlBody: '<p>This is an HTML body.</p>',
@@ -229,9 +227,9 @@ describe('Outbound Email Service', () => {
     });
 
     it('should throw on missing template', async () => {
-      await expect(
-        service.sendTemplatedEmail('nonexistent', {}, sampleEmail)
-      ).rejects.toThrow('Template not found');
+      await expect(service.sendTemplatedEmail('nonexistent', {}, sampleEmail)).rejects.toThrow(
+        'Template not found'
+      );
     });
   });
 
@@ -273,7 +271,7 @@ describe('Outbound Email Service', () => {
       });
 
       expect(results.length).toBe(10);
-      expect(results.every(r => r.status === 'sent')).toBe(true);
+      expect(results.every((r) => r.status === 'sent')).toBe(true);
     });
   });
 
@@ -332,9 +330,7 @@ describe('Inbound Email Parser', () => {
 
   describe('MIME Parsing', () => {
     it('should extract MIME boundary', () => {
-      const boundary = parseMimeBoundary(
-        'multipart/mixed; boundary="----=_Part_0_1234567890"'
-      );
+      const boundary = parseMimeBoundary('multipart/mixed; boundary="----=_Part_0_1234567890"');
       expect(boundary).toBe('----=_Part_0_1234567890');
     });
 
@@ -499,12 +495,12 @@ describe('Attachment Handler', () => {
 
   describe('MIME Type Detection', () => {
     it('should detect JPEG image', () => {
-      const jpeg = Buffer.from([0xFF, 0xD8, 0xFF, 0xE0, 0x00, 0x10]);
+      const jpeg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10]);
       expect(detectMimeType(jpeg)).toBe('image/jpeg');
     });
 
     it('should detect PNG image', () => {
-      const png = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+      const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
       expect(detectMimeType(png)).toBe('image/png');
     });
 
@@ -514,7 +510,7 @@ describe('Attachment Handler', () => {
     });
 
     it('should detect ZIP', () => {
-      const zip = Buffer.from([0x50, 0x4B, 0x03, 0x04]);
+      const zip = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
       expect(detectMimeType(zip)).toBe('application/zip');
     });
   });
@@ -545,7 +541,7 @@ describe('Attachment Handler', () => {
     });
 
     it('should warn on MIME type mismatch', () => {
-      const jpegContent = Buffer.from([0xFF, 0xD8, 0xFF, 0xE0]);
+      const jpegContent = Buffer.from([0xff, 0xd8, 0xff, 0xe0]);
       const result = handler.validate(jpegContent, 'image.png', 'image/png');
 
       expect(result.warnings.length).toBeGreaterThan(0);
@@ -783,7 +779,7 @@ describe('Email System Integration', () => {
     const attachmentHandler = new AttachmentHandler();
     if (parsed.attachments.length > 0) {
       const attachmentResult = await attachmentHandler.processEmailAttachments(
-        parsed.attachments.map(a => ({
+        parsed.attachments.map((a) => ({
           filename: a.filename,
           content: a.content,
           contentType: a.contentType,
@@ -826,7 +822,7 @@ describe('Email System Integration', () => {
     }));
 
     const results = await service.sendBulkEmails(emails);
-    const sent = results.filter(r => r.status === 'sent').length;
+    const sent = results.filter((r) => r.status === 'sent').length;
     const deliverabilityRate = sent / emails.length;
 
     expect(deliverabilityRate).toBeGreaterThanOrEqual(0.95);

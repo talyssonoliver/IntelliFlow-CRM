@@ -31,9 +31,7 @@ export const workflowRouter = createTRPCRouter({
     }),
 
   /** Get a single workflow by ID */
-  getById: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .query(async ({ input }) => {
-      return null;
-    }),
+  getById: protectedProcedure.input(z.object({ id: z.string() })).query(async ({ input }) => {
+    return null;
+  }),
 });

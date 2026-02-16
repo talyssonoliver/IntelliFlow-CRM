@@ -9,6 +9,7 @@
  */
 
 import { Queue, Worker, Job, QueueEvents } from 'bullmq';
+import type { ConnectionOptions } from 'bullmq';
 import IORedis from 'ioredis';
 import pino from 'pino';
 import type { RedisConfig, QueueConfig } from './worker-config';
@@ -99,6 +100,17 @@ export class QueueConnector {
   }
 
   /**
+   * BullMQ and direct ioredis imports may resolve to different module instances in monorepos.
+   * Bridge the duplicate client to BullMQ's accepted connection shape.
+   */
+  private getBullConnection(): ConnectionOptions {
+    if (!this.connection) {
+      throw new Error('Not connected to Redis. Call connect() first.');
+    }
+    return this.connection.duplicate() as unknown as ConnectionOptions;
+  }
+
+  /**
    * Get or create a queue
    */
   getQueue(name: string): Queue {
@@ -106,12 +118,8 @@ export class QueueConnector {
       return this.queues.get(name)!;
     }
 
-    if (!this.connection) {
-      throw new Error('Not connected to Redis. Call connect() first.');
-    }
-
     const queue = new Queue(name, {
-      connection: this.connection.duplicate(),
+      connection: this.getBullConnection(),
     });
 
     this.queues.set(name, queue);
@@ -127,12 +135,8 @@ export class QueueConnector {
     queueName: string,
     processor: JobProcessor<TData, TResult>
   ): Worker<TData, TResult> {
-    if (!this.connection) {
-      throw new Error('Not connected to Redis. Call connect() first.');
-    }
-
     const worker = new Worker<TData, TResult>(queueName, processor, {
-      connection: this.connection.duplicate(),
+      connection: this.getBullConnection(),
       concurrency: this.queueConfig.concurrency,
       lockDuration: this.queueConfig.lockDuration,
       stalledInterval: this.queueConfig.stalledInterval,
@@ -162,10 +166,7 @@ export class QueueConnector {
     });
 
     worker.on('error', (error) => {
-      this.logger.error(
-        { queue: queueName, error: error.message },
-        'Worker error'
-      );
+      this.logger.error({ queue: queueName, error: error.message }, 'Worker error');
     });
 
     this.workers.set(queueName, worker as Worker);
@@ -182,12 +183,8 @@ export class QueueConnector {
       return this.events.get(queueName)!;
     }
 
-    if (!this.connection) {
-      throw new Error('Not connected to Redis. Call connect() first.');
-    }
-
     const queueEvents = new QueueEvents(queueName, {
-      connection: this.connection.duplicate(),
+      connection: this.getBullConnection(),
     });
 
     this.events.set(queueName, queueEvents);

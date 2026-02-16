@@ -27,9 +27,14 @@ export class PaymentTerms extends ValueObject<PaymentTermsProps> {
     return this.props.description;
   }
 
-  static create(daysUntilDue: number, description: string): Result<PaymentTerms, InvalidPaymentTermsError> {
+  static create(
+    daysUntilDue: number,
+    description: string
+  ): Result<PaymentTerms, InvalidPaymentTermsError> {
     if (daysUntilDue < 0) {
-      return Result.fail(new InvalidPaymentTermsError(`Days until due cannot be negative: ${daysUntilDue}`));
+      return Result.fail(
+        new InvalidPaymentTermsError(`Days until due cannot be negative: ${daysUntilDue}`)
+      );
     }
 
     if (!description || description.trim().length === 0) {

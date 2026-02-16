@@ -141,7 +141,7 @@ export function ReviewCard({
       className={cn(
         'border-l-4 transition-all',
         borderColor,
-        slaClock.isBreached && 'ring-1 ring-red-200 dark:ring-red-800',
+        slaClock.isBreached && 'ring-1 ring-red-200 dark:ring-red-800'
       )}
     >
       <div className="p-4 sm:p-5">
@@ -154,13 +154,10 @@ export function ReviewCard({
               'gap-1.5 font-medium',
               outputConfig.bgClass,
               outputConfig.textClass,
-              'border-0',
+              'border-0'
             )}
           >
-            <span
-              className="material-symbols-outlined text-sm"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">
               {outputConfig.icon}
             </span>
             {outputConfig.label}
@@ -174,7 +171,7 @@ export function ReviewCard({
               'ml-auto text-xs font-mono tabular-nums',
               slaClock.isBreached
                 ? 'text-red-600 dark:text-red-400 font-semibold'
-                : 'text-muted-foreground',
+                : 'text-muted-foreground'
             )}
             aria-label={`SLA ${slaClock.isBreached ? 'breached' : 'remaining'}: ${slaClock.display}`}
           >
@@ -192,20 +189,14 @@ export function ReviewCard({
 
         {/* Confidence */}
         <div className="mb-3">
-          <ConfidenceIndicator
-            confidence={review.confidence}
-            showLabel
-            size="sm"
-          />
+          <ConfidenceIndicator confidence={review.confidence} showLabel size="sm" />
         </div>
 
         {/* Metadata */}
         <p className="text-xs text-muted-foreground mb-4">
           Created {formatTimeAgo(review.createdAt)}
           {review.escalationDepth > 0 && (
-            <span className="ml-2">
-              Escalation depth: {review.escalationDepth}
-            </span>
+            <span className="ml-2">Escalation depth: {review.escalationDepth}</span>
           )}
         </p>
 
@@ -220,20 +211,17 @@ export function ReviewCard({
                 disabled={isMutating}
                 aria-label="Claim this review"
               >
-                <span
-                  className="material-symbols-outlined text-sm mr-1"
-                  aria-hidden="true"
-                >
+                <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                   lock
                 </span>
                 Claim
               </Button>
               <Button size="sm" variant="outline" asChild>
-                <Link href={`/agent-approvals/ai-review/${review.id}`} aria-label="Preview review details">
-                  <span
-                    className="material-symbols-outlined text-sm mr-1"
-                    aria-hidden="true"
-                  >
+                <Link
+                  href={`/agent-approvals/ai-review/${review.id}`}
+                  aria-label="Preview review details"
+                >
+                  <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                     visibility
                   </span>
                   Preview
@@ -252,10 +240,7 @@ export function ReviewCard({
                 disabled={isMutating}
                 aria-label="Approve this review"
               >
-                <span
-                  className="material-symbols-outlined text-sm mr-1"
-                  aria-hidden="true"
-                >
+                <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                   check_circle
                 </span>
                 Approve
@@ -271,10 +256,7 @@ export function ReviewCard({
                 disabled={isMutating}
                 aria-label="Reject this review"
               >
-                <span
-                  className="material-symbols-outlined text-sm mr-1"
-                  aria-hidden="true"
-                >
+                <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                   cancel
                 </span>
                 Reject
@@ -290,10 +272,7 @@ export function ReviewCard({
                 disabled={isMutating}
                 aria-label="Escalate this review"
               >
-                <span
-                  className="material-symbols-outlined text-sm mr-1"
-                  aria-hidden="true"
-                >
+                <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                   arrow_upward
                 </span>
                 Escalate
@@ -304,10 +283,7 @@ export function ReviewCard({
           {/* IN_REVIEW (other claim) → Claimed badge */}
           {review.status === 'IN_REVIEW' && isOtherClaim && (
             <Badge variant="outline" className="text-muted-foreground">
-              <span
-                className="material-symbols-outlined text-xs mr-1"
-                aria-hidden="true"
-              >
+              <span className="material-symbols-outlined text-xs mr-1" aria-hidden="true">
                 lock
               </span>
               Claimed by another reviewer
@@ -322,10 +298,7 @@ export function ReviewCard({
               disabled={isMutating}
               aria-label="Claim escalated review"
             >
-              <span
-                className="material-symbols-outlined text-sm mr-1"
-                aria-hidden="true"
-              >
+              <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                 lock
               </span>
               Claim
@@ -337,11 +310,11 @@ export function ReviewCard({
             review.status === 'REJECTED' ||
             review.status === 'EXPIRED') && (
             <Button size="sm" variant="outline" asChild>
-              <Link href={`/agent-approvals/ai-review/${review.id}`} aria-label="View review details">
-                <span
-                  className="material-symbols-outlined text-sm mr-1"
-                  aria-hidden="true"
-                >
+              <Link
+                href={`/agent-approvals/ai-review/${review.id}`}
+                aria-label="View review details"
+              >
+                <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                   visibility
                 </span>
                 View

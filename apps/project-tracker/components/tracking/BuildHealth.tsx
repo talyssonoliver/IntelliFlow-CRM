@@ -89,20 +89,18 @@ export default function BuildHealth() {
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
         </div>
-        <button
-          onClick={fetchData}
-          className="mt-2 text-sm underline hover:no-underline"
-        >
+        <button onClick={fetchData} className="mt-2 text-sm underline hover:no-underline">
           Try again
         </button>
       </div>
     );
   }
 
-  const allPassing = (data?.turbo.success ?? true) &&
+  const allPassing =
+    (data?.turbo.success ?? true) &&
     (data?.typecheck.success ?? true) &&
     (data?.lint.success ?? true) &&
-    ((data?.tests.failed ?? 0) === 0);
+    (data?.tests.failed ?? 0) === 0;
 
   const cacheHitRate = data?.turbo.tasks_run
     ? Math.round((data.turbo.tasks_cached / data.turbo.tasks_run) * 100)
@@ -117,15 +115,15 @@ export default function BuildHealth() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Icon name="hardware" className={allPassing ? 'text-green-600' : 'text-red-600'} size="xl" />
+          <Icon
+            name="hardware"
+            className={allPassing ? 'text-green-600' : 'text-red-600'}
+            size="xl"
+          />
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Build Health</h3>
             {data?.turbo.lastRun && (
-              <StaleIndicator
-                lastUpdated={data.turbo.lastRun}
-                thresholdMinutes={60}
-                showTime
-              />
+              <StaleIndicator lastUpdated={data.turbo.lastRun} thresholdMinutes={60} showTime />
             )}
           </div>
         </div>
@@ -137,11 +135,11 @@ export default function BuildHealth() {
       </div>
 
       {/* Overall Status */}
-      <div className={`rounded-lg p-4 border ${
-        allPassing
-          ? 'bg-green-50 border-green-200'
-          : 'bg-red-50 border-red-200'
-      }`}>
+      <div
+        className={`rounded-lg p-4 border ${
+          allPassing ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+        }`}
+      >
         <div className="flex items-center gap-3">
           <Icon
             name={allPassing ? 'check_circle' : 'cancel'}
@@ -149,7 +147,9 @@ export default function BuildHealth() {
             size="2xl"
           />
           <div>
-            <div className={`text-lg font-semibold ${allPassing ? 'text-green-600' : 'text-red-600'}`}>
+            <div
+              className={`text-lg font-semibold ${allPassing ? 'text-green-600' : 'text-red-600'}`}
+            >
               {allPassing ? 'All Checks Passing' : 'Build Issues Detected'}
             </div>
             <div className="text-sm text-gray-500">
@@ -204,7 +204,9 @@ export default function BuildHealth() {
             <div className="text-sm text-red-600 font-medium mb-2">Build Errors:</div>
             <ul className="text-sm text-gray-700 space-y-1">
               {data.turbo.errors.slice(0, 5).map((err, idx) => (
-                <li key={idx} className="font-mono text-xs">{err}</li>
+                <li key={idx} className="font-mono text-xs">
+                  {err}
+                </li>
               ))}
             </ul>
           </div>
@@ -220,10 +222,7 @@ export default function BuildHealth() {
           </h4>
           <div className="flex items-center gap-2">
             {data?.typecheck.lastRun && (
-              <StaleIndicator
-                lastUpdated={data.typecheck.lastRun}
-                thresholdMinutes={60}
-              />
+              <StaleIndicator lastUpdated={data.typecheck.lastRun} thresholdMinutes={60} />
             )}
             <button
               onClick={() => handleValidation('typecheck')}
@@ -235,15 +234,21 @@ export default function BuildHealth() {
           </div>
         </div>
         <div className="flex items-center gap-6">
-          <div className={`flex items-center gap-2 ${data?.typecheck.success ? 'text-green-600' : 'text-red-600'}`}>
+          <div
+            className={`flex items-center gap-2 ${data?.typecheck.success ? 'text-green-600' : 'text-red-600'}`}
+          >
             <Icon name={data?.typecheck.success ? 'check_circle' : 'cancel'} size="lg" />
             <span className="font-medium">{data?.typecheck.success ? 'Passing' : 'Failing'}</span>
           </div>
           <div className="flex items-center gap-4 text-sm">
-            <span className={`${(data?.typecheck.errors ?? 0) > 0 ? 'text-red-600' : 'text-gray-500'}`}>
+            <span
+              className={`${(data?.typecheck.errors ?? 0) > 0 ? 'text-red-600' : 'text-gray-500'}`}
+            >
               {data?.typecheck.errors ?? 0} errors
             </span>
-            <span className={`${(data?.typecheck.warnings ?? 0) > 0 ? 'text-yellow-600' : 'text-gray-500'}`}>
+            <span
+              className={`${(data?.typecheck.warnings ?? 0) > 0 ? 'text-yellow-600' : 'text-gray-500'}`}
+            >
               {data?.typecheck.warnings ?? 0} warnings
             </span>
           </div>
@@ -259,10 +264,7 @@ export default function BuildHealth() {
           </h4>
           <div className="flex items-center gap-2">
             {data?.lint.lastRun && (
-              <StaleIndicator
-                lastUpdated={data.lint.lastRun}
-                thresholdMinutes={60}
-              />
+              <StaleIndicator lastUpdated={data.lint.lastRun} thresholdMinutes={60} />
             )}
             <button
               onClick={() => handleValidation('lint')}
@@ -274,7 +276,9 @@ export default function BuildHealth() {
           </div>
         </div>
         <div className="flex items-center gap-6">
-          <div className={`flex items-center gap-2 ${data?.lint.success ? 'text-green-600' : 'text-red-600'}`}>
+          <div
+            className={`flex items-center gap-2 ${data?.lint.success ? 'text-green-600' : 'text-red-600'}`}
+          >
             <Icon name={data?.lint.success ? 'check_circle' : 'cancel'} size="lg" />
             <span className="font-medium">{data?.lint.success ? 'Passing' : 'Failing'}</span>
           </div>
@@ -282,7 +286,9 @@ export default function BuildHealth() {
             <span className={`${(data?.lint.errors ?? 0) > 0 ? 'text-red-600' : 'text-gray-500'}`}>
               {data?.lint.errors ?? 0} errors
             </span>
-            <span className={`${(data?.lint.warnings ?? 0) > 0 ? 'text-yellow-600' : 'text-gray-500'}`}>
+            <span
+              className={`${(data?.lint.warnings ?? 0) > 0 ? 'text-yellow-600' : 'text-gray-500'}`}
+            >
               {data?.lint.warnings ?? 0} warnings
             </span>
           </div>
@@ -297,19 +303,11 @@ export default function BuildHealth() {
             Test Results
           </h4>
           {data?.tests.lastRun && (
-            <StaleIndicator
-              lastUpdated={data.tests.lastRun}
-              thresholdMinutes={1440}
-            />
+            <StaleIndicator lastUpdated={data.tests.lastRun} thresholdMinutes={1440} />
           )}
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
-          <MetricCard
-            title="Total"
-            value={data?.tests.total ?? 0}
-            icon="tag"
-            variant="info"
-          />
+          <MetricCard title="Total" value={data?.tests.total ?? 0} icon="tag" variant="info" />
           <MetricCard
             title="Passed"
             value={data?.tests.passed ?? 0}
@@ -332,7 +330,13 @@ export default function BuildHealth() {
             title="Coverage"
             value={`${data?.tests.coverage.toFixed(1) ?? 0}%`}
             icon="pie_chart"
-            variant={(data?.tests.coverage ?? 0) >= 80 ? 'success' : (data?.tests.coverage ?? 0) >= 60 ? 'warning' : 'error'}
+            variant={
+              (data?.tests.coverage ?? 0) >= 80
+                ? 'success'
+                : (data?.tests.coverage ?? 0) >= 60
+                  ? 'warning'
+                  : 'error'
+            }
           />
         </div>
         <div className="flex items-center gap-2">
@@ -343,7 +347,9 @@ export default function BuildHealth() {
               style={{ width: `${testPassRate}%` }}
             />
           </div>
-          <span className={`text-sm font-medium ${testPassRate >= 90 ? 'text-green-600' : testPassRate >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
+          <span
+            className={`text-sm font-medium ${testPassRate >= 90 ? 'text-green-600' : testPassRate >= 70 ? 'text-yellow-600' : 'text-red-600'}`}
+          >
             {testPassRate}%
           </span>
         </div>

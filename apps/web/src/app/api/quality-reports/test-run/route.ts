@@ -56,7 +56,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Failed to start test run:', error);
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : 'Failed to start test run' },
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to start test run',
+      },
       { status: 500 }
     );
   }

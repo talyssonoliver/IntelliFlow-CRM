@@ -11,6 +11,7 @@ export { DealCard } from './DealCard';
 export { DealFilters } from './DealFilters';
 export { ValueSummary } from './ValueSummary';
 export { DealQuickView } from './DealQuickView';
+export { DealListView } from './DealListView';
 export type { Deal, PipelineStats, DealFiltersValue } from './types';
 export {
   formatCurrencyFull,

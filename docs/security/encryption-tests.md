@@ -2,7 +2,8 @@
 
 ## Overview
 
-This document describes the encryption testing strategy for IntelliFlow CRM, implementing IFC-113 (Secrets Management & Encryption).
+This document describes the encryption testing strategy for IntelliFlow CRM,
+implementing IFC-113 (Secrets Management & Encryption).
 
 ## Test Categories
 
@@ -12,7 +13,9 @@ This document describes the encryption testing strategy for IntelliFlow CRM, imp
 describe('EncryptionService', () => {
   describe('encrypt/decrypt', () => {
     it('should encrypt and decrypt plaintext correctly');
-    it('should produce different ciphertext for same plaintext (IV uniqueness)');
+    it(
+      'should produce different ciphertext for same plaintext (IV uniqueness)'
+    );
     it('should fail decryption with wrong key');
     it('should fail decryption with tampered ciphertext');
     it('should fail decryption with tampered auth tag');
@@ -81,25 +84,25 @@ pnpm --filter @intelliflow/api test:coverage -- --grep "encryption"
 
 ## Security Verification Checklist
 
-| Test Area | Status | Last Verified |
-|-----------|--------|---------------|
-| Key length (256-bit) | PASS | 2025-12-29 |
-| IV uniqueness | PASS | 2025-12-29 |
-| Auth tag verification | PASS | 2025-12-29 |
-| Timing-safe comparison | PASS | 2025-12-29 |
-| No key in logs | PASS | 2025-12-29 |
-| Key rotation support | PASS | 2025-12-29 |
-| Vault integration | PASS | 2025-12-29 |
+| Test Area              | Status | Last Verified |
+| ---------------------- | ------ | ------------- |
+| Key length (256-bit)   | PASS   | 2025-12-29    |
+| IV uniqueness          | PASS   | 2025-12-29    |
+| Auth tag verification  | PASS   | 2025-12-29    |
+| Timing-safe comparison | PASS   | 2025-12-29    |
+| No key in logs         | PASS   | 2025-12-29    |
+| Key rotation support   | PASS   | 2025-12-29    |
+| Vault integration      | PASS   | 2025-12-29    |
 
 ## Performance Benchmarks
 
-| Operation | Payload Size | Avg Time | Target |
-|-----------|--------------|----------|--------|
-| Encrypt | 1 KB | 0.5ms | <10ms |
-| Encrypt | 1 MB | 15ms | <100ms |
-| Decrypt | 1 KB | 0.4ms | <10ms |
-| Decrypt | 1 MB | 12ms | <100ms |
-| Key derivation | - | 85ms | <200ms |
+| Operation      | Payload Size | Avg Time | Target |
+| -------------- | ------------ | -------- | ------ |
+| Encrypt        | 1 KB         | 0.5ms    | <10ms  |
+| Encrypt        | 1 MB         | 15ms     | <100ms |
+| Decrypt        | 1 KB         | 0.4ms    | <10ms  |
+| Decrypt        | 1 MB         | 12ms     | <100ms |
+| Key derivation | -            | 85ms     | <200ms |
 
 ## Related Files
 
@@ -109,5 +112,4 @@ pnpm --filter @intelliflow/api test:coverage -- --grep "encryption"
 
 ---
 
-*Task: IFC-113 - Secrets Management & Encryption*
-*Created: 2025-12-29*
+_Task: IFC-113 - Secrets Management & Encryption_ _Created: 2025-12-29_

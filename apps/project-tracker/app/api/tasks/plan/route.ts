@@ -66,12 +66,15 @@ export async function POST(request: Request) {
 
     // SESSION 2: Plan requires spec to exist first (created in SESSION 1: Spec)
     if (!specExists) {
-      return NextResponse.json({
-        success: false,
-        taskId,
-        error: 'spec_required',
-        message: `Spec must be completed first. Run SESSION 1: Spec for ${taskId}.`,
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          success: false,
+          taskId,
+          error: 'spec_required',
+          message: `Spec must be completed first. Run SESSION 1: Spec for ${taskId}.`,
+        },
+        { status: 400 }
+      );
     }
 
     // Plan already exists
@@ -229,11 +232,11 @@ ${artifacts.map((a, i) => `${i + 1}. [ ] \`${a}\``).join('\n') || '- No specific
 Based on the Definition of Done and artifacts:
 
 ${dodItems.map((d, i) => `${i + 1}. [ ] ${d}`).join('\n') || '- No Definition of Done provided'}
-${artifacts.length
-    ? artifacts
-        .map((a, i) => `${i + 1 + dodItems.length}. [ ] Produce artifact: ${a}`)
-        .join('\n')
-    : ''}
+${
+  artifacts.length
+    ? artifacts.map((a, i) => `${i + 1 + dodItems.length}. [ ] Produce artifact: ${a}`).join('\n')
+    : ''
+}
 
 ## Phase 2.5: TDD Harness
 

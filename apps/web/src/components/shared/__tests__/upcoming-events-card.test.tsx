@@ -82,7 +82,11 @@ describe('UpcomingEventsCard', () => {
   });
 
   it('renders attendee avatars', () => {
-    mockUseQuery.mockReturnValue({ data: apiResponse([mockEvents[0]]), isLoading: false, error: null });
+    mockUseQuery.mockReturnValue({
+      data: apiResponse([mockEvents[0]]),
+      isLoading: false,
+      error: null,
+    });
     render(<UpcomingEventsCard />);
     // Should render avatar fallbacks for Alice and Bob
     expect(screen.getByText('A')).toBeInTheDocument();
@@ -107,7 +111,7 @@ describe('UpcomingEventsCard', () => {
     render(<UpcomingEventsCard entityType="case" entityId="case-123" />);
     expect(mockUseQuery).toHaveBeenCalledWith(
       expect.objectContaining({ caseId: 'case-123' }),
-      expect.anything(),
+      expect.anything()
     );
   });
 
@@ -126,7 +130,11 @@ describe('UpcomingEventsCard', () => {
   });
 
   it('links events to calendar detail page', () => {
-    mockUseQuery.mockReturnValue({ data: apiResponse([mockEvents[0]]), isLoading: false, error: null });
+    mockUseQuery.mockReturnValue({
+      data: apiResponse([mockEvents[0]]),
+      isLoading: false,
+      error: null,
+    });
     render(<UpcomingEventsCard />);
     const eventLink = screen.getByText('Product Demo').closest('a');
     expect(eventLink).toHaveAttribute('href', '/calendar/appt-1');

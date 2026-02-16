@@ -43,17 +43,20 @@ function getAvatarColor(name: string) {
 const statusConfig: Record<ContactStatus, { label: string; className: string; icon: string }> = {
   ACTIVE: {
     label: 'Active',
-    className: 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800',
+    className:
+      'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800',
     icon: 'check_circle',
   },
   INACTIVE: {
     label: 'Inactive',
-    className: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
+    className:
+      'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700',
     icon: 'pause_circle',
   },
   ARCHIVED: {
     label: 'Archived',
-    className: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800',
+    className:
+      'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800',
     icon: 'archive',
   },
 };
@@ -62,7 +65,8 @@ const statusConfig: Record<ContactStatus, { label: string; className: string; ic
 
 export function ContactCard({ contact, onClick, onCall, onEmail, compact }: ContactCardProps) {
   const fullName = `${contact.firstName} ${contact.lastName}`;
-  const initials = `${contact.firstName?.[0] || ''}${contact.lastName?.[0] || ''}`.toUpperCase() || '?';
+  const initials =
+    `${contact.firstName?.[0] || ''}${contact.lastName?.[0] || ''}`.toUpperCase() || '?';
   const status = statusConfig[contact.status] || statusConfig.ACTIVE;
   const opportunities = contact._count?.opportunities ?? 0;
   const tasks = contact._count?.tasks ?? 0;
@@ -94,8 +98,12 @@ export function ContactCard({ contact, onClick, onCall, onEmail, compact }: Cont
           )}
 
           {/* Status Badge */}
-          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs font-semibold mt-2 ${status.className}`}>
-            <span className="material-symbols-outlined text-xs" aria-hidden="true">{status.icon}</span>
+          <span
+            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs font-semibold mt-2 ${status.className}`}
+          >
+            <span className="material-symbols-outlined text-xs" aria-hidden="true">
+              {status.icon}
+            </span>
             {status.label}
           </span>
 
@@ -104,13 +112,17 @@ export function ContactCard({ contact, onClick, onCall, onEmail, compact }: Cont
             <div className="flex gap-2 mt-2">
               {opportunities > 0 && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                  <span className="material-symbols-outlined text-xs" aria-hidden="true">handshake</span>
+                  <span className="material-symbols-outlined text-xs" aria-hidden="true">
+                    handshake
+                  </span>
                   {opportunities} {opportunities === 1 ? 'Deal' : 'Deals'}
                 </span>
               )}
               {tasks > 0 && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                  <span className="material-symbols-outlined text-xs" aria-hidden="true">task_alt</span>
+                  <span className="material-symbols-outlined text-xs" aria-hidden="true">
+                    task_alt
+                  </span>
                   {tasks} {tasks === 1 ? 'Task' : 'Tasks'}
                 </span>
               )}
@@ -125,7 +137,10 @@ export function ContactCard({ contact, onClick, onCall, onEmail, compact }: Cont
               <button
                 aria-label={`Send email to ${fullName}`}
                 className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/10 rounded transition-colors"
-                onClick={(e) => { e.stopPropagation(); onEmail(contact); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEmail(contact);
+                }}
               >
                 <span className="material-symbols-outlined text-lg">mail</span>
               </button>
@@ -134,7 +149,10 @@ export function ContactCard({ contact, onClick, onCall, onEmail, compact }: Cont
               <button
                 aria-label={`Call ${fullName}`}
                 className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors"
-                onClick={(e) => { e.stopPropagation(); onCall(contact); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCall(contact);
+                }}
               >
                 <span className="material-symbols-outlined text-lg">phone</span>
               </button>

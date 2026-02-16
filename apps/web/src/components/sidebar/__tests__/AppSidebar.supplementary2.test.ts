@@ -8,16 +8,17 @@
  */
 import { describe, it, expect } from 'vitest';
 import { MODULE_COLORS } from '../icon-reference';
-import type { SidebarItem, SidebarConfig, SidebarSection, SidebarAnnouncement } from '../sidebar-types';
+import type {
+  SidebarItem,
+  SidebarConfig,
+  SidebarSection,
+  SidebarAnnouncement,
+} from '../sidebar-types';
 
 // ---------------------------------------------------------------------------
 // isItemActive logic (extracted from AppSidebar)
 // ---------------------------------------------------------------------------
-function isItemActive(
-  item: SidebarItem,
-  pathname: string,
-  searchParams: URLSearchParams
-): boolean {
+function isItemActive(item: SidebarItem, pathname: string, searchParams: URLSearchParams): boolean {
   const itemUrl = new URL(item.href, 'http://localhost');
   const itemPath = itemUrl.pathname;
   const itemParams = itemUrl.searchParams;
@@ -290,7 +291,13 @@ describe('AppSidebar logic', () => {
   // ===================== SidebarItem isSegment logic =====================
   describe('isSegment detection', () => {
     it('item with color is a segment', () => {
-      const item: SidebarItem = { id: '1', label: 'Hot', icon: 'dot', href: '/leads?segment=hot', color: 'text-red-500' };
+      const item: SidebarItem = {
+        id: '1',
+        label: 'Hot',
+        icon: 'dot',
+        href: '/leads?segment=hot',
+        color: 'text-red-500',
+      };
       expect(Boolean(item.color)).toBe(true);
     });
 

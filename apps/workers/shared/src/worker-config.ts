@@ -148,7 +148,9 @@ export function loadWorkerConfig(workerName: string): WorkerConfig {
       password: process.env.REDIS_PASSWORD,
       tls: process.env.REDIS_TLS === 'true',
       db: parseInt(process.env.REDIS_DB || '0', 10),
-      maxRetriesPerRequest: process.env.REDIS_MAX_RETRIES ? parseInt(process.env.REDIS_MAX_RETRIES, 10) : null,
+      maxRetriesPerRequest: process.env.REDIS_MAX_RETRIES
+        ? parseInt(process.env.REDIS_MAX_RETRIES, 10)
+        : null,
       enableOfflineQueue: process.env.REDIS_OFFLINE_QUEUE === 'true',
       lazyConnect: process.env.REDIS_LAZY_CONNECT !== 'false',
     },
@@ -211,7 +213,9 @@ export function getRedisConfig(): RedisConfig {
     password: process.env.REDIS_PASSWORD,
     tls: process.env.REDIS_TLS === 'true',
     db: parseInt(process.env.REDIS_DB || '0', 10),
-    maxRetriesPerRequest: process.env.REDIS_MAX_RETRIES ? parseInt(process.env.REDIS_MAX_RETRIES, 10) : null,
+    maxRetriesPerRequest: process.env.REDIS_MAX_RETRIES
+      ? parseInt(process.env.REDIS_MAX_RETRIES, 10)
+      : null,
     enableOfflineQueue: process.env.REDIS_OFFLINE_QUEUE === 'true',
     lazyConnect: process.env.REDIS_LAZY_CONNECT !== 'false',
   };

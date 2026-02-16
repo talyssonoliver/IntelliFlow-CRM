@@ -200,7 +200,12 @@ describe('Agent Tools', () => {
 
       it('should generate preview', async () => {
         const context = createTestContext();
-        const input = { query: 'test query', status: ['NEW', 'CONTACTED'] as ('NEW' | 'CONTACTED')[], limit: 20, offset: 0 };
+        const input = {
+          query: 'test query',
+          status: ['NEW', 'CONTACTED'] as ('NEW' | 'CONTACTED')[],
+          limit: 20,
+          offset: 0,
+        };
 
         const preview = await searchLeadsTool.generatePreview(input, context);
 

@@ -335,9 +335,7 @@ export function OnboardingFlow({
       {/* Steps */}
       <div
         className={cn(
-          variant === 'horizontal'
-            ? 'grid grid-cols-2 md:grid-cols-4 gap-4'
-            : 'space-y-0'
+          variant === 'horizontal' ? 'grid grid-cols-2 md:grid-cols-4 gap-4' : 'space-y-0'
         )}
       >
         {steps.map((step, index) => (

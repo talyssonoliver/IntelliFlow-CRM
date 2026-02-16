@@ -257,16 +257,38 @@ export default function PerformanceReportView() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">IntelliFlow CRM - Performance Benchmark Report</h1>
-            <p className="text-blue-100 mt-1">Task: IFC-007 - Performance Benchmarks - Modern Stack</p>
+            <p className="text-blue-100 mt-1">
+              Task: IFC-007 - Performance Benchmarks - Modern Stack
+            </p>
             <div className="flex gap-6 mt-3 text-sm text-blue-100">
-              <span>Generated: <strong className="text-white">{new Date(data.last_updated).toLocaleDateString()}</strong></span>
-              <span>Target Users: <strong className="text-white">1000 Concurrent</strong></span>
-              <span>Duration: <strong className="text-white">15 minutes</strong></span>
-              <span>Status: <strong className={`px-2 py-0.5 rounded text-xs uppercase ${
-                performanceStatus === 'completed' ? 'bg-green-500' :
-                performanceStatus === 'running' ? 'bg-yellow-500' :
-                performanceStatus === 'failed' ? 'bg-red-500' : 'bg-gray-500'
-              }`}>{performanceStatus}</strong></span>
+              <span>
+                Generated:{' '}
+                <strong className="text-white">
+                  {new Date(data.last_updated).toLocaleDateString()}
+                </strong>
+              </span>
+              <span>
+                Target Users: <strong className="text-white">1000 Concurrent</strong>
+              </span>
+              <span>
+                Duration: <strong className="text-white">15 minutes</strong>
+              </span>
+              <span>
+                Status:{' '}
+                <strong
+                  className={`px-2 py-0.5 rounded text-xs uppercase ${
+                    performanceStatus === 'completed'
+                      ? 'bg-green-500'
+                      : performanceStatus === 'running'
+                        ? 'bg-yellow-500'
+                        : performanceStatus === 'failed'
+                          ? 'bg-red-500'
+                          : 'bg-gray-500'
+                  }`}
+                >
+                  {performanceStatus}
+                </strong>
+              </span>
             </div>
           </div>
           <button
@@ -294,8 +316,8 @@ export default function PerformanceReportView() {
                 isRunningTest === 'quick'
                   ? 'bg-blue-400 text-white cursor-wait'
                   : isRunningTest !== null
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
               }`}
             >
               {isRunningTest === 'quick' ? (
@@ -317,8 +339,8 @@ export default function PerformanceReportView() {
                 isRunningTest === 'comprehensive'
                   ? 'bg-green-400 text-white cursor-wait'
                   : isRunningTest !== null
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-green-600 hover:bg-green-700 text-white'
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-green-600 hover:bg-green-700 text-white'
               }`}
             >
               {isRunningTest === 'comprehensive' ? (
@@ -344,9 +366,7 @@ export default function PerformanceReportView() {
                 Running {isRunningTest} test... This may take 30-60 seconds.
               </div>
             )}
-            {testOutput && (
-              <pre className="whitespace-pre-wrap">{testOutput}</pre>
-            )}
+            {testOutput && <pre className="whitespace-pre-wrap">{testOutput}</pre>}
           </div>
         )}
         {/* Last test info */}
@@ -375,8 +395,8 @@ export default function PerformanceReportView() {
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
               <h3 className="font-semibold text-amber-700">Benchmarks Not Yet Executed</h3>
               <p className="text-amber-600 text-sm mt-1">
-                No production API, database, or frontend available for real performance measurements.
-                Requires running web app, API server, and database.
+                No production API, database, or frontend available for real performance
+                measurements. Requires running web app, API server, and database.
               </p>
             </div>
           )}
@@ -410,7 +430,11 @@ export default function PerformanceReportView() {
               status={performanceStatus}
             />
             <KPICard
-              value={data.performance_metrics?.error_rate != null ? formatNumber(data.performance_metrics.error_rate) : '--'}
+              value={
+                data.performance_metrics?.error_rate != null
+                  ? formatNumber(data.performance_metrics.error_rate)
+                  : '--'
+              }
               label="Error Rate"
               target="< 1%"
               unit="%"
@@ -554,7 +578,11 @@ export default function PerformanceReportView() {
             title="Middleware Stack"
             icon="layers"
             color="amber"
-            summary={`${data.middleware_inventory.total_middleware} components (${Object.entries(data.middleware_inventory.by_type).map(([k, v]) => `${v} ${k}`).join(', ')})`}
+            summary={`${data.middleware_inventory.total_middleware} components (${Object.entries(
+              data.middleware_inventory.by_type
+            )
+              .map(([k, v]) => `${v} ${k}`)
+              .join(', ')})`}
             isExpanded={expandedSection === 'middleware'}
             onToggle={() => toggleSection('middleware')}
           >
@@ -617,7 +645,11 @@ export default function PerformanceReportView() {
             title="External Integrations"
             icon="cloud"
             color="green"
-            summary={`${data.integrations_inventory.total_integrations} services (${Object.entries(data.integrations_inventory.by_category).map(([k, v]) => `${v} ${k}`).join(', ')})`}
+            summary={`${data.integrations_inventory.total_integrations} services (${Object.entries(
+              data.integrations_inventory.by_category
+            )
+              .map(([k, v]) => `${v} ${k}`)
+              .join(', ')})`}
             isExpanded={expandedSection === 'integrations'}
             onToggle={() => toggleSection('integrations')}
           >
@@ -646,7 +678,11 @@ export default function PerformanceReportView() {
             title="Domain Events"
             icon="bolt"
             color="red"
-            summary={`${data.domain_events_inventory.total_events} events (${Object.entries(data.domain_events_inventory.by_aggregate).map(([k, v]) => `${v} ${k}`).join(', ')})`}
+            summary={`${data.domain_events_inventory.total_events} events (${Object.entries(
+              data.domain_events_inventory.by_aggregate
+            )
+              .map(([k, v]) => `${v} ${k}`)
+              .join(', ')})`}
             isExpanded={expandedSection === 'events'}
             onToggle={() => toggleSection('events')}
           >
@@ -679,7 +715,11 @@ export default function PerformanceReportView() {
             title="Validation Schemas"
             icon="check_circle"
             color="indigo"
-            summary={`${data.validators_inventory.total_validators} files, ${data.validators_inventory.total_schemas} schemas (${Object.entries(data.validators_inventory.by_complexity).map(([k, v]) => `${v} ${k}`).join(', ')})`}
+            summary={`${data.validators_inventory.total_validators} files, ${data.validators_inventory.total_schemas} schemas (${Object.entries(
+              data.validators_inventory.by_complexity
+            )
+              .map(([k, v]) => `${v} ${k}`)
+              .join(', ')})`}
             isExpanded={expandedSection === 'validators'}
             onToggle={() => toggleSection('validators')}
           >
@@ -729,7 +769,9 @@ export default function PerformanceReportView() {
                   <span className="font-medium">
                     {data.cache_inventory.enabled ? 'Cache Enabled' : 'Cache Disabled'}
                   </span>
-                  <span className="text-gray-500 ml-2">Provider: {data.cache_inventory.provider}</span>
+                  <span className="text-gray-500 ml-2">
+                    Provider: {data.cache_inventory.provider}
+                  </span>
                 </div>
               </div>
               {data.cache_inventory.keys.length > 0 && (
@@ -763,11 +805,16 @@ export default function PerformanceReportView() {
               Run benchmarks to see actual response time data
             </p>
           )}
-          {performanceStatus === 'completed' && data.endpoint_metrics && data.endpoint_metrics.length > 0 ? (
+          {performanceStatus === 'completed' &&
+          data.endpoint_metrics &&
+          data.endpoint_metrics.length > 0 ? (
             <>
               {(() => {
                 // Group endpoints by section (router name)
-                const sections: Record<string, { p50: number[]; p95: number[]; p99: number[]; count: number }> = {};
+                const sections: Record<
+                  string,
+                  { p50: number[]; p95: number[]; p99: number[]; count: number }
+                > = {};
                 data.endpoint_metrics.forEach((endpoint) => {
                   const section = endpoint.name.split('-')[0]; // e.g., "health-ping" -> "health"
                   if (!sections[section]) {
@@ -780,13 +827,15 @@ export default function PerformanceReportView() {
                 });
 
                 // Calculate averages for each section
-                const sectionData = Object.entries(sections).map(([name, data]) => ({
-                  name,
-                  p50: data.p50.reduce((a, b) => a + b, 0) / data.p50.length,
-                  p95: data.p95.reduce((a, b) => a + b, 0) / data.p95.length,
-                  p99: data.p99.reduce((a, b) => a + b, 0) / data.p99.length,
-                  count: data.count,
-                })).sort((a, b) => a.p50 - b.p50); // Sort by fastest
+                const sectionData = Object.entries(sections)
+                  .map(([name, data]) => ({
+                    name,
+                    p50: data.p50.reduce((a, b) => a + b, 0) / data.p50.length,
+                    p95: data.p95.reduce((a, b) => a + b, 0) / data.p95.length,
+                    p99: data.p99.reduce((a, b) => a + b, 0) / data.p99.length,
+                    count: data.count,
+                  }))
+                  .sort((a, b) => a.p50 - b.p50); // Sort by fastest
 
                 const maxTime = 120; // Scale to 120ms max for sections
 
@@ -797,22 +846,42 @@ export default function PerformanceReportView() {
                       const p95Height = Math.min((section.p95 / maxTime) * 160, 160);
                       const p99Height = Math.min((section.p99 / maxTime) * 160, 160);
                       return (
-                        <div key={section.name} className="flex flex-col items-center gap-2 min-w-[70px]">
+                        <div
+                          key={section.name}
+                          className="flex flex-col items-center gap-2 min-w-[70px]"
+                        >
                           <div className="flex items-end gap-1 h-40">
                             <div className="flex flex-col items-center">
-                              <span className="text-xs text-gray-500 mb-1">{section.p50.toFixed(0)}</span>
-                              <div className="w-5 bg-green-500 rounded-t" style={{ height: `${p50Height}px` }} />
+                              <span className="text-xs text-gray-500 mb-1">
+                                {section.p50.toFixed(0)}
+                              </span>
+                              <div
+                                className="w-5 bg-green-500 rounded-t"
+                                style={{ height: `${p50Height}px` }}
+                              />
                             </div>
                             <div className="flex flex-col items-center">
-                              <span className="text-xs text-gray-500 mb-1">{section.p95.toFixed(0)}</span>
-                              <div className="w-5 bg-yellow-500 rounded-t" style={{ height: `${p95Height}px` }} />
+                              <span className="text-xs text-gray-500 mb-1">
+                                {section.p95.toFixed(0)}
+                              </span>
+                              <div
+                                className="w-5 bg-yellow-500 rounded-t"
+                                style={{ height: `${p95Height}px` }}
+                              />
                             </div>
                             <div className="flex flex-col items-center">
-                              <span className="text-xs text-gray-500 mb-1">{section.p99.toFixed(0)}</span>
-                              <div className="w-5 bg-orange-500 rounded-t" style={{ height: `${p99Height}px` }} />
+                              <span className="text-xs text-gray-500 mb-1">
+                                {section.p99.toFixed(0)}
+                              </span>
+                              <div
+                                className="w-5 bg-orange-500 rounded-t"
+                                style={{ height: `${p99Height}px` }}
+                              />
                             </div>
                           </div>
-                          <span className="text-xs text-gray-700 font-medium text-center capitalize">{section.name}</span>
+                          <span className="text-xs text-gray-700 font-medium text-center capitalize">
+                            {section.name}
+                          </span>
                           <span className="text-xs text-gray-400">({section.count})</span>
                         </div>
                       );
@@ -880,20 +949,31 @@ export default function PerformanceReportView() {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-amber-800">Load Test Coverage</span>
                 <span className="text-sm text-amber-700">
-                  {data.k6_tested_endpoints?.length ?? 0} of {data.api_inventory.total_endpoints} endpoints tested
+                  {data.k6_tested_endpoints?.length ?? 0} of {data.api_inventory.total_endpoints}{' '}
+                  endpoints tested
                 </span>
               </div>
               <div className="w-full bg-amber-200 rounded-full h-3">
                 <div
                   className="bg-amber-500 h-3 rounded-full transition-all"
                   style={{
-                    width: `${((data.k6_tested_endpoints?.length ?? 0) / data.api_inventory.total_endpoints) * 100}%`
+                    width: `${((data.k6_tested_endpoints?.length ?? 0) / data.api_inventory.total_endpoints) * 100}%`,
                   }}
                 />
               </div>
               <p className="text-xs text-amber-700 mt-2">
-                <strong>Coverage: {(((data.k6_tested_endpoints?.length ?? 0) / data.api_inventory.total_endpoints) * 100).toFixed(1)}%</strong>
-                {' '}| To test all endpoints, add them to <code className="bg-amber-100 px-1 rounded">artifacts/misc/k6/scripts/quick-test.js</code>
+                <strong>
+                  Coverage:{' '}
+                  {(
+                    ((data.k6_tested_endpoints?.length ?? 0) / data.api_inventory.total_endpoints) *
+                    100
+                  ).toFixed(1)}
+                  %
+                </strong>{' '}
+                | To test all endpoints, add them to{' '}
+                <code className="bg-amber-100 px-1 rounded">
+                  artifacts/misc/k6/scripts/quick-test.js
+                </code>
               </p>
             </div>
 
@@ -915,36 +995,71 @@ export default function PerformanceReportView() {
                 <tbody>
                   {data.api_inventory.routers.map((router) => {
                     // Get k6 tested endpoint names for matching
-                    const testedEndpointNames = data.k6_tested_endpoints?.map(e =>
-                      e.name.replace(' status 200', '').toLowerCase()
-                    ) || [];
+                    const testedEndpointNames =
+                      data.k6_tested_endpoints?.map((e) =>
+                        e.name.replace(' status 200', '').toLowerCase()
+                      ) || [];
 
                     return (
                       <Fragment key={router.name}>
                         <tr className="bg-gray-100">
-                          <td colSpan={5} className="px-4 py-2 font-semibold uppercase text-xs tracking-wide text-gray-700">
+                          <td
+                            colSpan={5}
+                            className="px-4 py-2 font-semibold uppercase text-xs tracking-wide text-gray-700"
+                          >
                             {router.name} ({router.endpoints} endpoints)
                           </td>
                           <td></td>
                         </tr>
                         {[...Array(router.endpoints)].map((_, i) => {
-                          const endpointName = ['list', 'getById', 'create', 'update', 'delete', 'search', 'count', 'export', 'import', 'validate', 'archive', 'restore', 'duplicate', 'merge', 'split', 'transfer', 'assign', 'unassign', 'activate', 'deactivate'][i] || `action${i + 1}`;
+                          const endpointName =
+                            [
+                              'list',
+                              'getById',
+                              'create',
+                              'update',
+                              'delete',
+                              'search',
+                              'count',
+                              'export',
+                              'import',
+                              'validate',
+                              'archive',
+                              'restore',
+                              'duplicate',
+                              'merge',
+                              'split',
+                              'transfer',
+                              'assign',
+                              'unassign',
+                              'activate',
+                              'deactivate',
+                            ][i] || `action${i + 1}`;
                           const fullEndpointName = `${router.name}.${endpointName}`;
 
                           // Check if this endpoint was tested by k6
-                          const isK6Tested = testedEndpointNames.some(name =>
-                            name === fullEndpointName.toLowerCase() ||
-                            name === `${router.name}.${endpointName}`.toLowerCase() ||
-                            (router.name.toLowerCase() === 'health' && i === 0 && name.includes('health')) ||
-                            (router.name.toLowerCase() === 'lead' && endpointName === 'list' && name.includes('lead.list')) ||
-                            (router.name.toLowerCase() === 'contact' && endpointName === 'list' && name.includes('contact.list'))
+                          const isK6Tested = testedEndpointNames.some(
+                            (name) =>
+                              name === fullEndpointName.toLowerCase() ||
+                              name === `${router.name}.${endpointName}`.toLowerCase() ||
+                              (router.name.toLowerCase() === 'health' &&
+                                i === 0 &&
+                                name.includes('health')) ||
+                              (router.name.toLowerCase() === 'lead' &&
+                                endpointName === 'list' &&
+                                name.includes('lead.list')) ||
+                              (router.name.toLowerCase() === 'contact' &&
+                                endpointName === 'list' &&
+                                name.includes('contact.list'))
                           );
 
                           // Get benchmark data if available
                           const benchmarkData = data.endpoint_metrics?.find(
-                            (m) => m.name.toLowerCase() === router.name.toLowerCase() ||
-                                   m.name.toLowerCase() === `${router.name}-${endpointName}`.toLowerCase() ||
-                                   m.name.toLowerCase().includes(router.name.toLowerCase())
+                            (m) =>
+                              m.name.toLowerCase() === router.name.toLowerCase() ||
+                              m.name.toLowerCase() ===
+                                `${router.name}-${endpointName}`.toLowerCase() ||
+                              m.name.toLowerCase().includes(router.name.toLowerCase())
                           );
                           const isFirstEndpoint = i === 0;
                           const hasBenchmark = isFirstEndpoint && benchmarkData;
@@ -957,30 +1072,52 @@ export default function PerformanceReportView() {
                               <td className="px-4 py-2">
                                 <span className="font-medium">{fullEndpointName}</span>
                                 {isCritical && (
-                                  <span className="ml-2 text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded">CRITICAL</span>
+                                  <span className="ml-2 text-xs bg-red-50 text-red-600 px-1.5 py-0.5 rounded">
+                                    CRITICAL
+                                  </span>
                                 )}
                               </td>
                               <td className="px-4 py-2 text-center">
-                                <span className={`px-2 py-0.5 rounded text-xs ${isQuery ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                <span
+                                  className={`px-2 py-0.5 rounded text-xs ${isQuery ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}
+                                >
                                   {isQuery ? 'GET' : 'POST'}
                                 </span>
                               </td>
                               <td className="px-4 py-2 text-center">
-                                {hasBenchmark ? `${formatNumber(benchmarkData.p50)}ms` : <span className="text-gray-400">--</span>}
+                                {hasBenchmark ? (
+                                  `${formatNumber(benchmarkData.p50)}ms`
+                                ) : (
+                                  <span className="text-gray-400">--</span>
+                                )}
                               </td>
                               <td className="px-4 py-2 text-center">
-                                {hasBenchmark ? `${formatNumber(benchmarkData.p95)}ms` : <span className="text-gray-400">--</span>}
+                                {hasBenchmark ? (
+                                  `${formatNumber(benchmarkData.p95)}ms`
+                                ) : (
+                                  <span className="text-gray-400">--</span>
+                                )}
                               </td>
                               <td className="px-4 py-2 text-center">
-                                {hasBenchmark ? `${Math.round(1000 / benchmarkData.avg)}` : <span className="text-gray-400">--</span>}
+                                {hasBenchmark ? (
+                                  `${Math.round(1000 / benchmarkData.avg)}`
+                                ) : (
+                                  <span className="text-gray-400">--</span>
+                                )}
                               </td>
                               <td className="px-4 py-2 text-center">
                                 {isK6Tested ? (
-                                  <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">TESTED</span>
+                                  <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-700">
+                                    TESTED
+                                  </span>
                                 ) : hasBenchmark ? (
-                                  <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">BENCHMARKED</span>
+                                  <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">
+                                    BENCHMARKED
+                                  </span>
                                 ) : (
-                                  <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">PENDING</span>
+                                  <span className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
+                                    PENDING
+                                  </span>
                                 )}
                               </td>
                             </tr>
@@ -1006,7 +1143,9 @@ export default function PerformanceReportView() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div className="bg-gray-50 p-4 rounded-lg text-center">
-                  <div className={`text-3xl font-bold ${data.k6_error_analysis.error_rate_percent === 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div
+                    className={`text-3xl font-bold ${data.k6_error_analysis.error_rate_percent === 0 ? 'text-green-600' : 'text-red-600'}`}
+                  >
                     {data.k6_error_analysis.error_rate_percent.toFixed(2)}%
                   </div>
                   <div className="text-sm text-gray-600 mt-1">Total Error Rate</div>
@@ -1018,7 +1157,9 @@ export default function PerformanceReportView() {
                   <div className="text-sm text-gray-600 mt-1">Checks Passed</div>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-lg text-center">
-                  <div className={`text-3xl font-bold ${data.k6_error_analysis.total_checks_failed === 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  <div
+                    className={`text-3xl font-bold ${data.k6_error_analysis.total_checks_failed === 0 ? 'text-green-600' : 'text-red-600'}`}
+                  >
                     {data.k6_error_analysis.total_checks_failed.toLocaleString()}
                   </div>
                   <div className="text-sm text-gray-600 mt-1">Checks Failed</div>
@@ -1031,24 +1172,40 @@ export default function PerformanceReportView() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="bg-gray-50">
-                        <th className="px-4 py-3 text-left font-semibold text-gray-600">Endpoint Check</th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-600">Passes</th>
+                        <th className="px-4 py-3 text-left font-semibold text-gray-600">
+                          Endpoint Check
+                        </th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-600">
+                          Passes
+                        </th>
                         <th className="px-4 py-3 text-center font-semibold text-gray-600">Fails</th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-600">Success Rate</th>
-                        <th className="px-4 py-3 text-center font-semibold text-gray-600">Status</th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-600">
+                          Success Rate
+                        </th>
+                        <th className="px-4 py-3 text-center font-semibold text-gray-600">
+                          Status
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {data.k6_tested_endpoints.map((endpoint) => (
                         <tr key={endpoint.name} className="border-t hover:bg-gray-50">
                           <td className="px-4 py-3 font-medium">{endpoint.name}</td>
-                          <td className="px-4 py-3 text-center text-green-600">{endpoint.passes.toLocaleString()}</td>
+                          <td className="px-4 py-3 text-center text-green-600">
+                            {endpoint.passes.toLocaleString()}
+                          </td>
                           <td className="px-4 py-3 text-center text-red-600">{endpoint.fails}</td>
-                          <td className="px-4 py-3 text-center">{endpoint.success_rate.toFixed(1)}%</td>
                           <td className="px-4 py-3 text-center">
-                            <span className={`px-2 py-0.5 rounded text-xs ${
-                              endpoint.fails === 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                            }`}>
+                            {endpoint.success_rate.toFixed(1)}%
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span
+                              className={`px-2 py-0.5 rounded text-xs ${
+                                endpoint.fails === 0
+                                  ? 'bg-green-100 text-green-700'
+                                  : 'bg-red-100 text-red-700'
+                              }`}
+                            >
                               {endpoint.fails === 0 ? 'PASS' : 'FAIL'}
                             </span>
                           </td>
@@ -1060,8 +1217,11 @@ export default function PerformanceReportView() {
               )}
 
               <p className="mt-4 text-sm text-gray-700">
-                <strong>Check Success Rate: {(data.k6_error_analysis.check_success_rate * 100).toFixed(1)}%</strong>
-                {' '}| HTTP Failed Requests: {data.k6_error_analysis.http_failed_count}
+                <strong>
+                  Check Success Rate: {(data.k6_error_analysis.check_success_rate * 100).toFixed(1)}
+                  %
+                </strong>{' '}
+                | HTTP Failed Requests: {data.k6_error_analysis.http_failed_count}
               </p>
             </>
           ) : (
@@ -1071,7 +1231,11 @@ export default function PerformanceReportView() {
               </p>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <p className="text-sm text-amber-800">
-                  <strong>To run load tests:</strong> Execute <code className="bg-amber-100 px-1 rounded">.\artifacts\misc\k6\run-quick-test.ps1</code> from project root
+                  <strong>To run load tests:</strong> Execute{' '}
+                  <code className="bg-amber-100 px-1 rounded">
+                    .\artifacts\misc\k6\run-quick-test.ps1
+                  </code>{' '}
+                  from project root
                 </p>
               </div>
             </>
@@ -1128,23 +1292,31 @@ export default function PerformanceReportView() {
                     <tr className="bg-gray-50">
                       <th className="px-4 py-3 text-left font-semibold text-gray-600">Parameter</th>
                       <th className="px-4 py-3 text-left font-semibold text-gray-600">Value</th>
-                      <th className="px-4 py-3 text-left font-semibold text-gray-600">Description</th>
+                      <th className="px-4 py-3 text-left font-semibold text-gray-600">
+                        Description
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr className="border-t hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium">Load Testing Tool</td>
                       <td className="px-4 py-3 text-blue-600">k6 v0.49.0</td>
-                      <td className="px-4 py-3 text-gray-600">Modern load testing tool by Grafana Labs</td>
+                      <td className="px-4 py-3 text-gray-600">
+                        Modern load testing tool by Grafana Labs
+                      </td>
                     </tr>
                     <tr className="border-t hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium">Test Type</td>
-                      <td className="px-4 py-3 text-blue-600">{data.k6_test_config.test_type.replace(/_/g, ' ')}</td>
+                      <td className="px-4 py-3 text-blue-600">
+                        {data.k6_test_config.test_type.replace(/_/g, ' ')}
+                      </td>
                       <td className="px-4 py-3 text-gray-600">Quick feedback load test</td>
                     </tr>
                     <tr className="border-t hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium">Test Duration</td>
-                      <td className="px-4 py-3 text-blue-600">{data.k6_test_config.duration_seconds} seconds</td>
+                      <td className="px-4 py-3 text-blue-600">
+                        {data.k6_test_config.duration_seconds} seconds
+                      </td>
                       <td className="px-4 py-3 text-gray-600">Total test execution time</td>
                     </tr>
                     <tr className="border-t hover:bg-gray-50">
@@ -1154,17 +1326,25 @@ export default function PerformanceReportView() {
                     </tr>
                     <tr className="border-t hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium">Total Requests</td>
-                      <td className="px-4 py-3 text-blue-600">{data.k6_test_config.total_requests?.toLocaleString() ?? '--'}</td>
+                      <td className="px-4 py-3 text-blue-600">
+                        {data.k6_test_config.total_requests?.toLocaleString() ?? '--'}
+                      </td>
                       <td className="px-4 py-3 text-gray-600">Total HTTP requests executed</td>
                     </tr>
                     <tr className="border-t hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium">Avg Response Time</td>
-                      <td className="px-4 py-3 text-blue-600">{data.k6_test_config.avg_response_time?.toFixed(2) ?? '--'} ms</td>
-                      <td className="px-4 py-3 text-gray-600">Mean response time across all requests</td>
+                      <td className="px-4 py-3 text-blue-600">
+                        {data.k6_test_config.avg_response_time?.toFixed(2) ?? '--'} ms
+                      </td>
+                      <td className="px-4 py-3 text-gray-600">
+                        Mean response time across all requests
+                      </td>
                     </tr>
                     <tr className="border-t hover:bg-gray-50">
                       <td className="px-4 py-3 font-medium">Test Timestamp</td>
-                      <td className="px-4 py-3 text-blue-600">{new Date(data.k6_test_config.timestamp).toLocaleString()}</td>
+                      <td className="px-4 py-3 text-blue-600">
+                        {new Date(data.k6_test_config.timestamp).toLocaleString()}
+                      </td>
                       <td className="px-4 py-3 text-gray-600">When the test was executed</td>
                     </tr>
                   </tbody>
@@ -1177,12 +1357,17 @@ export default function PerformanceReportView() {
                   <h3 className="text-md font-semibold text-gray-700 mb-3">Threshold Results</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {Object.entries(data.k6_test_config.thresholds).map(([name, result]) => (
-                      <div key={name} className={`p-3 rounded-lg ${result.ok ? 'bg-green-50' : 'bg-red-50'}`}>
+                      <div
+                        key={name}
+                        className={`p-3 rounded-lg ${result.ok ? 'bg-green-50' : 'bg-red-50'}`}
+                      >
                         <div className="flex items-center justify-between">
                           <code className="text-sm font-mono">{name}</code>
-                          <span className={`px-2 py-0.5 rounded text-xs ${
-                            result.ok ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                          }`}>
+                          <span
+                            className={`px-2 py-0.5 rounded text-xs ${
+                              result.ok ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                            }`}
+                          >
                             {result.ok ? 'PASS' : 'FAIL'}
                           </span>
                         </div>
@@ -1199,7 +1384,11 @@ export default function PerformanceReportView() {
               </p>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <p className="text-sm text-amber-800">
-                  <strong>To run load tests:</strong> Execute <code className="bg-amber-100 px-1 rounded">.\artifacts\misc\k6\run-quick-test.ps1</code> from project root
+                  <strong>To run load tests:</strong> Execute{' '}
+                  <code className="bg-amber-100 px-1 rounded">
+                    .\artifacts\misc\k6\run-quick-test.ps1
+                  </code>{' '}
+                  from project root
                 </p>
               </div>
             </>
@@ -1288,10 +1477,15 @@ export default function PerformanceReportView() {
                   <div key={rec.title} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
-                        rec.priority === 'high' ? 'bg-red-500' :
-                        rec.priority === 'medium' ? 'bg-amber-500' :
-                        rec.priority === 'success' ? 'bg-green-500' :
-                        rec.priority === 'info' ? 'bg-cyan-500' : 'bg-blue-500'
+                        rec.priority === 'high'
+                          ? 'bg-red-500'
+                          : rec.priority === 'medium'
+                            ? 'bg-amber-500'
+                            : rec.priority === 'success'
+                              ? 'bg-green-500'
+                              : rec.priority === 'info'
+                                ? 'bg-cyan-500'
+                                : 'bg-blue-500'
                       }`}
                     >
                       {rec.icon}
@@ -1311,7 +1505,11 @@ export default function PerformanceReportView() {
               </p>
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <p className="text-sm text-amber-800">
-                  <strong>To get recommendations:</strong> Execute <code className="bg-amber-100 px-1 rounded">.\artifacts\misc\k6\run-quick-test.ps1</code> from project root
+                  <strong>To get recommendations:</strong> Execute{' '}
+                  <code className="bg-amber-100 px-1 rounded">
+                    .\artifacts\misc\k6\run-quick-test.ps1
+                  </code>{' '}
+                  from project root
                 </p>
               </div>
             </>
@@ -1340,21 +1538,60 @@ export default function PerformanceReportView() {
               </thead>
               <tbody>
                 {[
-                  { kpi: 'Concurrent Users Support', target: '1000 users', actual: data.performance_metrics?.max_concurrent_users },
-                  { kpi: 'Response Time (p99)', target: '< 100ms', actual: data.performance_metrics?.p99_response_time ? `${formatNumber(data.performance_metrics.p99_response_time)}ms` : null },
-                  { kpi: 'Response Time (p95)', target: '< 80ms', actual: data.performance_metrics?.p95_response_time ? `${formatNumber(data.performance_metrics.p95_response_time)}ms` : null },
-                  { kpi: 'Response Time (p50)', target: '< 50ms', actual: data.performance_metrics?.p50_response_time ? `${formatNumber(data.performance_metrics.p50_response_time)}ms` : null },
-                  { kpi: 'Error Rate', target: '< 1%', actual: data.performance_metrics?.error_rate !== undefined ? `${formatNumber(data.performance_metrics.error_rate)}%` : null },
-                  { kpi: 'Request Rate', target: '> 100 rps', actual: data.performance_metrics?.requests_per_second ? `${data.performance_metrics.requests_per_second} rps` : null },
+                  {
+                    kpi: 'Concurrent Users Support',
+                    target: '1000 users',
+                    actual: data.performance_metrics?.max_concurrent_users,
+                  },
+                  {
+                    kpi: 'Response Time (p99)',
+                    target: '< 100ms',
+                    actual: data.performance_metrics?.p99_response_time
+                      ? `${formatNumber(data.performance_metrics.p99_response_time)}ms`
+                      : null,
+                  },
+                  {
+                    kpi: 'Response Time (p95)',
+                    target: '< 80ms',
+                    actual: data.performance_metrics?.p95_response_time
+                      ? `${formatNumber(data.performance_metrics.p95_response_time)}ms`
+                      : null,
+                  },
+                  {
+                    kpi: 'Response Time (p50)',
+                    target: '< 50ms',
+                    actual: data.performance_metrics?.p50_response_time
+                      ? `${formatNumber(data.performance_metrics.p50_response_time)}ms`
+                      : null,
+                  },
+                  {
+                    kpi: 'Error Rate',
+                    target: '< 1%',
+                    actual:
+                      data.performance_metrics?.error_rate !== undefined
+                        ? `${formatNumber(data.performance_metrics.error_rate)}%`
+                        : null,
+                  },
+                  {
+                    kpi: 'Request Rate',
+                    target: '> 100 rps',
+                    actual: data.performance_metrics?.requests_per_second
+                      ? `${data.performance_metrics.requests_per_second} rps`
+                      : null,
+                  },
                 ].map((item) => (
                   <tr key={item.kpi} className="border-t hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium">{item.kpi}</td>
                     <td className="px-4 py-3 text-center text-gray-700">{item.target}</td>
                     <td className="px-4 py-3 text-center text-gray-400">{item.actual ?? '--'}</td>
                     <td className="px-4 py-3 text-center">
-                      <span className={`px-2 py-0.5 rounded text-xs ${
-                        performanceStatus === 'completed' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
-                      }`}>
+                      <span
+                        className={`px-2 py-0.5 rounded text-xs ${
+                          performanceStatus === 'completed'
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-gray-100 text-gray-600'
+                        }`}
+                      >
                         {performanceStatus === 'completed' ? 'PASS' : 'PENDING'}
                       </span>
                     </td>
@@ -1399,13 +1636,16 @@ function KPICard({
   const isPending = status === 'pending' || formattedValue === '--';
 
   return (
-    <div className={`rounded-lg p-4 text-center border ${
-      isPending
-        ? 'bg-gray-50 border-gray-200'
-        : 'bg-green-50 border-green-200'
-    }`}>
+    <div
+      className={`rounded-lg p-4 text-center border ${
+        isPending ? 'bg-gray-50 border-gray-200' : 'bg-green-50 border-green-200'
+      }`}
+    >
       <div className={`text-2xl font-bold ${isPending ? 'text-gray-400' : 'text-gray-900'}`}>
-        {formattedValue}{formattedValue !== '--' && unit && <span className="text-sm font-normal ml-1">{unit}</span>}
+        {formattedValue}
+        {formattedValue !== '--' && unit && (
+          <span className="text-sm font-normal ml-1">{unit}</span>
+        )}
       </div>
       <div className="text-sm text-gray-600 mt-1">{label}</div>
       <div className="text-xs text-gray-500 mt-2">Target: {target}</div>
@@ -1438,7 +1678,9 @@ function SummaryCard({
 
   return (
     <div className="bg-white rounded-lg shadow p-4">
-      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${colorClasses[color]}`}>
+      <div
+        className={`w-10 h-10 rounded-lg flex items-center justify-center ${colorClasses[color]}`}
+      >
         <Icon name={icon} size="sm" />
       </div>
       <div className="mt-3">
@@ -1485,7 +1727,9 @@ function InventorySection({
         className="w-full px-4 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-white ${colorClasses[color]}`}>
+          <div
+            className={`w-8 h-8 rounded-lg flex items-center justify-center text-white ${colorClasses[color]}`}
+          >
             <Icon name={icon} size="sm" />
           </div>
           <div className="text-left">
@@ -1493,7 +1737,11 @@ function InventorySection({
             <div className="text-sm text-gray-500">{summary}</div>
           </div>
         </div>
-        <Icon name={isExpanded ? 'expand_less' : 'expand_more'} size="lg" className="text-gray-400" />
+        <Icon
+          name={isExpanded ? 'expand_less' : 'expand_more'}
+          size="lg"
+          className="text-gray-400"
+        />
       </button>
       {isExpanded && <div className="px-4 pb-4 border-t">{children}</div>}
     </div>

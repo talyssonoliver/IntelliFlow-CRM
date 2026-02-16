@@ -72,7 +72,14 @@ describe('NotificationEvents', () => {
     });
 
     it('should serialize to payload', () => {
-      const payload = new NotificationFailedEvent('n_1', 't_1', 'u_1', 'email', 'Bounce', 1).toPayload();
+      const payload = new NotificationFailedEvent(
+        'n_1',
+        't_1',
+        'u_1',
+        'email',
+        'Bounce',
+        1
+      ).toPayload();
       expect(payload.error).toBe('Bounce');
       expect(payload.retryCount).toBe(1);
     });
@@ -102,7 +109,12 @@ describe('NotificationEvents', () => {
     });
 
     it('should serialize to payload', () => {
-      const payload = new NotificationPreferenceUpdatedEvent('u_1', 't_1', 'sms', false).toPayload();
+      const payload = new NotificationPreferenceUpdatedEvent(
+        'u_1',
+        't_1',
+        'sms',
+        false
+      ).toPayload();
       expect(payload.channel).toBe('sms');
       expect(payload.enabled).toBe(false);
     });
@@ -125,7 +137,13 @@ describe('NotificationEvents', () => {
 
   describe('NotificationMovedToDLQEvent', () => {
     it('should create with error and retryCount', () => {
-      const event = new NotificationMovedToDLQEvent('n_1', 't_1', 'email', 'Max retries exceeded', 3);
+      const event = new NotificationMovedToDLQEvent(
+        'n_1',
+        't_1',
+        'email',
+        'Max retries exceeded',
+        3
+      );
       expect(event.eventType).toBe('NotificationMovedToDLQ');
       expect(event.error).toBe('Max retries exceeded');
       expect(event.retryCount).toBe(3);

@@ -17,8 +17,18 @@ import { createMockRelationshipData } from './contact-test-utils';
 
 // Mock next/link
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -298,11 +308,11 @@ describe('RelationshipGraph', () => {
       const { container } = render(<RelationshipGraph {...data} />);
 
       const listItems = container.querySelectorAll('li');
-      const order = Array.from(listItems).map(li => li.textContent);
+      const order = Array.from(listItems).map((li) => li.textContent);
 
       // Account should come before lead
-      const accountIndex = order.findIndex(text => text?.includes('Account'));
-      const leadIndex = order.findIndex(text => text?.includes('Converted from Lead'));
+      const accountIndex = order.findIndex((text) => text?.includes('Account'));
+      const leadIndex = order.findIndex((text) => text?.includes('Converted from Lead'));
       expect(accountIndex).toBeLessThan(leadIndex);
     });
   });

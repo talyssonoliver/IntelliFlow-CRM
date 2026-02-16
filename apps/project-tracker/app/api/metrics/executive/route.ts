@@ -3,8 +3,9 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parse } from 'csv-parse/sync';
 import { access, readdir } from 'node:fs/promises';
+import { existsSync, readdirSync } from 'node:fs';
 import { normalizeStatus, STATUS_GROUPS } from '@/lib/csv-parser';
-import { PATHS } from '@/lib/paths';
+import { PATHS, MONOREPO_ROOT } from '@/lib/paths';
 import { NO_CACHE_HEADERS } from '@/lib/api-types';
 
 export const dynamic = 'force-dynamic';
@@ -56,6 +57,30 @@ interface TaskRequiringRevert {
   missing_evidence: string[];
 }
 
+interface ContextGapDetail {
+  task_id: string;
+  description: string;
+  missing_pack: boolean;
+  missing_ack: boolean;
+}
+
+interface PlanGapDetail {
+  task_id: string;
+  description: string;
+  plan_path: string;
+  total_files: number;
+  verified_files: number;
+  missing_files: string[];
+}
+
+interface HashMismatchDetail {
+  task_id: string;
+  description: string;
+  mismatched_files: string[];
+  total_files: number;
+  matched_count: number;
+}
+
 interface ExecutiveMetrics {
   total_tasks: number;
   completed: { count: number; percentage: number };
@@ -71,6 +96,12 @@ interface ExecutiveMetrics {
   forward_dependencies_details: ForwardDependencyDetail[];
   sprint_bottlenecks: string;
   sprint_bottlenecks_details: BottleneckDetail[];
+  missing_context_tasks: number;
+  missing_context_tasks_details: ContextGapDetail[];
+  incomplete_plan_deliverables: number;
+  incomplete_plan_deliverables_details: PlanGapDetail[];
+  context_hash_mismatches: number;
+  context_hash_mismatches_details: HashMismatchDetail[];
   generated_at: string;
 }
 
@@ -100,7 +131,15 @@ interface ParsedArtifacts {
 }
 
 function parseArtifactsWithPrefixes(artifactsStr: string): ParsedArtifacts {
-  const result: ParsedArtifacts = { artifacts: [], evidence: [], specs: [], plans: [], contexts: [], prds: [], raw: [] };
+  const result: ParsedArtifacts = {
+    artifacts: [],
+    evidence: [],
+    specs: [],
+    plans: [],
+    contexts: [],
+    prds: [],
+    raw: [],
+  };
 
   if (
     !artifactsStr ||
@@ -227,6 +266,225 @@ async function getUntrackedArtifactsWithDetails(
   return { count: details.length, details };
 }
 
+// --- Context & Plan deliverable helpers ---
+
+function getAttestationDirs(taskId: string, sprintNumber: number | null, allSprintDirs: string[]): string[] {
+  const dirs: string[] = [];
+  const root = join(MONOREPO_ROOT, '.specify', 'sprints');
+
+  // 1. Try CSV sprint first (most likely location)
+  if (sprintNumber !== null) {
+    dirs.push(join(root, `sprint-${sprintNumber}`, 'attestations', taskId));
+  }
+
+  // 2. Scan all other sprint dirs for cross-sprint matches
+  for (const sd of allSprintDirs) {
+    const dir = join(root, sd, 'attestations', taskId);
+    if (!dirs.includes(dir) && existsSync(dir)) {
+      dirs.push(dir);
+    }
+  }
+
+  // 3. Legacy location
+  dirs.push(join(MONOREPO_ROOT, 'artifacts', 'attestations', taskId));
+
+  return dirs;
+}
+
+function checkContextExists(taskId: string, sprintNumber: number | null, allSprintDirs: string[]): { hasPack: boolean; hasAck: boolean } {
+  const dirs = getAttestationDirs(taskId, sprintNumber, allSprintDirs);
+
+  let hasPack = false;
+  let hasAck = false;
+
+  for (const dir of dirs) {
+    if (!hasPack) {
+      if (existsSync(join(dir, 'context_pack.manifest.json')) ||
+          existsSync(join(dir, `${taskId}-context_pack.manifest.json`))) {
+        hasPack = true;
+      }
+    }
+    if (!hasAck) {
+      // Check attestation.json OR {taskId}-attestation.json for context_acknowledgment section
+      const attestNames = ['attestation.json', `${taskId}-attestation.json`];
+      for (const attestName of attestNames) {
+        if (hasAck) break;
+        const attestPath = join(dir, attestName);
+        if (existsSync(attestPath)) {
+          try {
+            const content = require('node:fs').readFileSync(attestPath, 'utf-8');
+            const parsed = JSON.parse(content);
+            if (parsed.context_acknowledgment) {
+              hasAck = true;
+            }
+          } catch { /* invalid JSON */ }
+        }
+      }
+      // Also check standalone context_ack.json OR {taskId}-context_ack.json
+      if (!hasAck && (existsSync(join(dir, 'context_ack.json')) ||
+                      existsSync(join(dir, `${taskId}-context_ack.json`)))) {
+        hasAck = true;
+      }
+    }
+    if (hasPack && hasAck) break;
+  }
+
+  return { hasPack, hasAck };
+}
+
+function checkPlanDeliverables(
+  taskId: string,
+  sprintNumber: number | null,
+  allSprintDirs: string[]
+): { planExists: boolean; planPath: string; total: number; verified: number; missingFiles: string[] } {
+  const result = { planExists: false, planPath: '', total: 0, verified: 0, missingFiles: [] as string[] };
+
+  // Look for plan file in sprint-based planning dir and legacy locations
+  const root = join(MONOREPO_ROOT, '.specify', 'sprints');
+  const candidates: string[] = [];
+  if (sprintNumber !== null) {
+    candidates.push(join(root, `sprint-${sprintNumber}`, 'planning', `${taskId}-plan.md`));
+  }
+  // Scan all sprint dirs for cross-sprint plan files
+  for (const sd of allSprintDirs) {
+    const candidate = join(root, sd, 'planning', `${taskId}-plan.md`);
+    if (!candidates.includes(candidate)) {
+      candidates.push(candidate);
+    }
+  }
+  candidates.push(join(MONOREPO_ROOT, '.specify', taskId, `${taskId}-plan.md`));
+
+  let planContent: string | null = null;
+  for (const candidate of candidates) {
+    if (existsSync(candidate)) {
+      try {
+        planContent = require('node:fs').readFileSync(candidate, 'utf-8');
+        result.planPath = candidate.replace(MONOREPO_ROOT + '/', '').replace(MONOREPO_ROOT + '\\', '');
+        result.planExists = true;
+        break;
+      } catch { /* can't read */ }
+    }
+  }
+
+  if (!planContent) return result;
+
+  // Extract files from "Files to Create:" and "Files to Modify:" sections
+  const fileRegex = /\*\*Files to (?:Create|Modify):\*\*\s*\n((?:\s*-\s*`[^`]+`.*\n?)*)/gi;
+  const pathRegex = /`([^`]+)`/g;
+  const filePaths: string[] = [];
+
+  let sectionMatch;
+  while ((sectionMatch = fileRegex.exec(planContent)) !== null) {
+    const section = sectionMatch[1];
+    let pathMatch;
+    while ((pathMatch = pathRegex.exec(section)) !== null) {
+      filePaths.push(pathMatch[1]);
+    }
+  }
+
+  result.total = filePaths.length;
+  for (const fp of filePaths) {
+    if (existsSync(join(MONOREPO_ROOT, fp))) {
+      result.verified++;
+    } else {
+      result.missingFiles.push(fp);
+    }
+  }
+
+  return result;
+}
+
+function checkContextHashes(
+  taskId: string,
+  sprintNumber: number | null,
+  allSprintDirs: string[]
+): { hasBoth: boolean; mismatched: string[]; total: number; matched: number } {
+  const result = { hasBoth: false, mismatched: [] as string[], total: 0, matched: 0 };
+
+  const dirs = getAttestationDirs(taskId, sprintNumber, allSprintDirs);
+
+  let manifestFiles: Array<{ path: string; sha256: string }> | null = null;
+  let ackFiles: Array<{ path: string; sha256: string }> | null = null;
+
+  for (const dir of dirs) {
+    // Load manifest (check both unprefixed and prefixed names)
+    if (!manifestFiles) {
+      const manifestNames = ['context_pack.manifest.json', `${taskId}-context_pack.manifest.json`];
+      for (const name of manifestNames) {
+        if (manifestFiles) break;
+        const manifestPath = join(dir, name);
+        if (existsSync(manifestPath)) {
+          try {
+            const raw = JSON.parse(require('node:fs').readFileSync(manifestPath, 'utf-8'));
+            manifestFiles = (raw.files || []).map((f: { path: string; sha256?: string; hash?: string }) => ({
+              path: f.path,
+              sha256: f.sha256 || f.hash || '',
+            }));
+          } catch { /* invalid */ }
+        }
+      }
+    }
+
+    // Load ack (check attestation.json and prefixed variant)
+    if (!ackFiles) {
+      const attestNames = ['attestation.json', `${taskId}-attestation.json`];
+      for (const name of attestNames) {
+        if (ackFiles) break;
+        const attestPath = join(dir, name);
+        if (existsSync(attestPath)) {
+          try {
+            const raw = JSON.parse(require('node:fs').readFileSync(attestPath, 'utf-8'));
+            if (raw.context_acknowledgment?.files_read) {
+              ackFiles = raw.context_acknowledgment.files_read.map((f: { path: string; sha256?: string; hash?: string }) => ({
+                path: f.path,
+                sha256: f.sha256 || f.hash || '',
+              }));
+            }
+          } catch { /* invalid */ }
+        }
+      }
+      // Check standalone context_ack.json and prefixed variant
+      if (!ackFiles) {
+        const ackNames = ['context_ack.json', `${taskId}-context_ack.json`];
+        for (const name of ackNames) {
+          if (ackFiles) break;
+          const ackPath = join(dir, name);
+          if (existsSync(ackPath)) {
+            try {
+              const raw = JSON.parse(require('node:fs').readFileSync(ackPath, 'utf-8'));
+              ackFiles = (raw.files_read || []).map((f: { path: string; sha256?: string; hash?: string }) => ({
+                path: f.path,
+                sha256: f.sha256 || f.hash || '',
+              }));
+            } catch { /* invalid */ }
+          }
+        }
+      }
+    }
+
+    if (manifestFiles && ackFiles) break;
+  }
+
+  if (!manifestFiles || !ackFiles) return result;
+
+  result.hasBoth = true;
+  const ackMap = new Map(ackFiles.map((f) => [f.path, f.sha256]));
+
+  for (const mf of manifestFiles) {
+    if (!mf.sha256) continue; // Skip files without hashes
+    result.total++;
+    const ackHash = ackMap.get(mf.path);
+    if (ackHash && ackHash === mf.sha256) {
+      result.matched++;
+    } else if (ackHash && ackHash !== mf.sha256) {
+      result.mismatched.push(mf.path);
+    }
+    // If ackHash is undefined (file not in ack), it's not a "mismatch" per se, just missing
+  }
+
+  return result;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -318,9 +576,13 @@ export async function GET(request: Request) {
       }
 
       // Only check completed tasks for mismatches
-      const hasPathsToCheck = parsed.artifacts.length > 0 || parsed.evidence.length > 0 ||
-                              parsed.specs.length > 0 || parsed.plans.length > 0 || parsed.contexts.length > 0 ||
-                              parsed.prds.length > 0;
+      const hasPathsToCheck =
+        parsed.artifacts.length > 0 ||
+        parsed.evidence.length > 0 ||
+        parsed.specs.length > 0 ||
+        parsed.plans.length > 0 ||
+        parsed.contexts.length > 0 ||
+        parsed.prds.length > 0;
       if (isCompleted && hasPathsToCheck) {
         const missingArtifacts: string[] = [];
         const missingEvidence: string[] = [];
@@ -379,10 +641,7 @@ export async function GET(request: Request) {
           mismatchDetails.push({
             task_id: task['Task ID'],
             description: task.Description?.substring(0, 50) + '...' || '',
-            missing_artifacts: [
-              ...missingArtifacts,
-              ...missingEvidence,
-            ],
+            missing_artifacts: [...missingArtifacts, ...missingEvidence],
           });
 
           // Add to tasks requiring revert (new governance feature)
@@ -390,8 +649,93 @@ export async function GET(request: Request) {
             task_id: task['Task ID'],
             description: task.Description?.substring(0, 50) + '...' || '',
             current_status: task.Status,
-            missing_artifacts: missingArtifacts.filter(a => !a.startsWith('SPEC:') && !a.startsWith('PLAN:')),
+            missing_artifacts: missingArtifacts.filter(
+              (a) => !a.startsWith('SPEC:') && !a.startsWith('PLAN:')
+            ),
             missing_evidence: missingEvidence,
+          });
+        }
+      }
+    }
+
+    // --- New context, plan deliverables, and hash checks ---
+    // Cache all sprint attestation dirs for cross-sprint lookup
+    const sprintAttestationRoot = join(MONOREPO_ROOT, '.specify', 'sprints');
+    let allSprintDirs: string[] = [];
+    try {
+      const entries = readdirSync(sprintAttestationRoot, { withFileTypes: true });
+      allSprintDirs = entries
+        .filter(e => e.isDirectory() && e.name.startsWith('sprint-'))
+        .map(e => e.name);
+    } catch { /* .specify/sprints/ doesn't exist */ }
+
+    // Only check tasks that have EVIDENCE: artifacts (went through formal attestation workflow).
+    // Tasks without EVIDENCE: are legacy/simple tasks that predate the context pack system.
+    const contextGapDetails: ContextGapDetail[] = [];
+    const planGapDetails: PlanGapDetail[] = [];
+    const hashMismatchDetails: HashMismatchDetail[] = [];
+
+    for (const task of tasks) {
+      const status = (task.Status || '').toLowerCase().trim();
+      const isCompleted = status === 'completed' || status === 'done';
+      if (!isCompleted) continue;
+
+      const parsed = parseArtifactsWithPrefixes(task['Artifacts To Track']);
+      const hasEvidenceArtifacts = parsed.evidence.length > 0;
+
+      const taskId = task['Task ID'];
+      const sprintNum = taskSprintMap.get(taskId) ?? null;
+      const desc = (task.Description || '').substring(0, 50) + '...';
+
+      // a) Context Pack & Acknowledgment Check — only for tasks with EVIDENCE: artifacts
+      //    Missing ack = no attestation ceremony (always flagged).
+      //    Missing pack only = hydration skipped (only flagged for sprint >= 5 where
+      //    the hydration workflow was established; older tasks predate it).
+      const PACK_REQUIRED_FROM_SPRINT = 5;
+      if (hasEvidenceArtifacts) {
+        const ctx = checkContextExists(taskId, sprintNum, allSprintDirs);
+        if (!ctx.hasAck) {
+          // Missing ack = no attestation ceremony at all — always flag
+          contextGapDetails.push({
+            task_id: taskId,
+            description: desc,
+            missing_pack: !ctx.hasPack,
+            missing_ack: true,
+          });
+        } else if (!ctx.hasPack && sprintNum !== null && sprintNum >= PACK_REQUIRED_FROM_SPRINT) {
+          // Has ack but no pack — only flag for recent sprints where hydration is expected
+          contextGapDetails.push({
+            task_id: taskId,
+            description: desc,
+            missing_pack: true,
+            missing_ack: false,
+          });
+        }
+      }
+
+      // b) Plan Deliverables Check — any completed task with a plan file
+      const plan = checkPlanDeliverables(taskId, sprintNum, allSprintDirs);
+      if (plan.planExists && plan.total > 0 && plan.verified < plan.total) {
+        planGapDetails.push({
+          task_id: taskId,
+          description: desc,
+          plan_path: plan.planPath,
+          total_files: plan.total,
+          verified_files: plan.verified,
+          missing_files: plan.missingFiles.slice(0, 5),
+        });
+      }
+
+      // c) Context Hash Verification — only for tasks with EVIDENCE: artifacts
+      if (hasEvidenceArtifacts) {
+        const hashes = checkContextHashes(taskId, sprintNum, allSprintDirs);
+        if (hashes.hasBoth && hashes.mismatched.length > 0) {
+          hashMismatchDetails.push({
+            task_id: taskId,
+            description: desc,
+            mismatched_files: hashes.mismatched.slice(0, 5),
+            total_files: hashes.total,
+            matched_count: hashes.matched,
           });
         }
       }
@@ -458,6 +802,12 @@ export async function GET(request: Request) {
       forward_dependencies_details: forwardDepsDetails,
       sprint_bottlenecks: bottleneckStr,
       sprint_bottlenecks_details: bottleneckDetails,
+      missing_context_tasks: contextGapDetails.length,
+      missing_context_tasks_details: contextGapDetails,
+      incomplete_plan_deliverables: planGapDetails.length,
+      incomplete_plan_deliverables_details: planGapDetails,
+      context_hash_mismatches: hashMismatchDetails.length,
+      context_hash_mismatches_details: hashMismatchDetails,
       generated_at: new Date().toISOString(),
     };
 

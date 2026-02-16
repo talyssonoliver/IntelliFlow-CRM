@@ -40,14 +40,17 @@ export interface PlanOverrides {
     fanout_threshold?: number;
     waiver_warning_days?: number;
   };
-  gate_profiles?: Record<string, {
-    command: string | null;
-    description: string;
-    required: boolean;
-    timeout?: number;
-    type?: string;
-    threshold?: Record<string, number>;
-  }>;
+  gate_profiles?: Record<
+    string,
+    {
+      command: string | null;
+      description: string;
+      required: boolean;
+      timeout?: number;
+      type?: string;
+      threshold?: Record<string, number>;
+    }
+  >;
   [taskId: string]: TaskOverride | string | Record<string, unknown>;
 }
 
@@ -109,9 +112,14 @@ export function getTaskOverride(repoRoot: string, taskId: string): TaskOverride 
   }
 
   // Skip metadata keys
-  if (taskId.startsWith('_') || taskId === 'schema_version' ||
-      taskId === 'last_updated' || taskId === 'maintainer' ||
-      taskId === 'linter_config' || taskId === 'gate_profiles') {
+  if (
+    taskId.startsWith('_') ||
+    taskId === 'schema_version' ||
+    taskId === 'last_updated' ||
+    taskId === 'maintainer' ||
+    taskId === 'linter_config' ||
+    taskId === 'gate_profiles'
+  ) {
     return null;
   }
 
@@ -288,7 +296,9 @@ export function getExpiringWaivers(
 /**
  * Lists tasks with expired waivers
  */
-export function getExpiredWaivers(repoRoot: string): Array<{ taskId: string; expiryDate: string; daysOverdue: number }> {
+export function getExpiredWaivers(
+  repoRoot: string
+): Array<{ taskId: string; expiryDate: string; daysOverdue: number }> {
   const overrides = loadPlanOverrides(repoRoot);
   const expired: Array<{ taskId: string; expiryDate: string; daysOverdue: number }> = [];
 
@@ -337,12 +347,15 @@ export function getRequiredEvidence(repoRoot: string, taskId: string): string[] 
 /**
  * Gets gate profile definitions
  */
-export function getGateProfiles(repoRoot: string): Record<string, {
-  command: string | null;
-  description: string;
-  required: boolean;
-  timeout?: number;
-}> {
+export function getGateProfiles(repoRoot: string): Record<
+  string,
+  {
+    command: string | null;
+    description: string;
+    required: boolean;
+    timeout?: number;
+  }
+> {
   const overrides = loadPlanOverrides(repoRoot);
   return overrides.gate_profiles || {};
 }

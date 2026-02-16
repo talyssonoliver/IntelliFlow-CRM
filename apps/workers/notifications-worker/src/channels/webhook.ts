@@ -246,7 +246,9 @@ export class WebhookChannel {
           attempts <= this.config.maxRetries;
 
         if (shouldRetry) {
-          const backoffMs = this.config.retryBackoff[attempts - 1] || this.config.retryBackoff[this.config.retryBackoff.length - 1];
+          const backoffMs =
+            this.config.retryBackoff[attempts - 1] ||
+            this.config.retryBackoff[this.config.retryBackoff.length - 1];
           this.logger.warn(
             {
               requestId,
@@ -297,10 +299,7 @@ export class WebhookChannel {
     requestId: string,
     metadata: Record<string, unknown>
   ): Promise<Omit<WebhookDeliveryResult, 'requestId' | 'deliveryTimeMs' | 'attempts'>> {
-    const body =
-      typeof payload.body === 'string'
-        ? payload.body
-        : JSON.stringify(payload.body);
+    const body = typeof payload.body === 'string' ? payload.body : JSON.stringify(payload.body);
 
     // Build headers
     const headers: Record<string, string> = {
@@ -342,7 +341,9 @@ export class WebhookChannel {
       const responseBody = await response.text();
 
       if (!response.ok) {
-        const error = new Error(`HTTP ${response.status}: ${response.statusText}`) as Error & { statusCode: number };
+        const error = new Error(`HTTP ${response.status}: ${response.statusText}`) as Error & {
+          statusCode: number;
+        };
         error.statusCode = response.status;
         throw error;
       }
@@ -372,9 +373,7 @@ export class WebhookChannel {
   private signPayload(payload: string, secret: string): string {
     const timestamp = Math.floor(Date.now() / 1000);
     const signaturePayload = `${timestamp}.${payload}`;
-    const signature = createHmac('sha256', secret)
-      .update(signaturePayload)
-      .digest('hex');
+    const signature = createHmac('sha256', secret).update(signaturePayload).digest('hex');
     return `t=${timestamp},v1=${signature}`;
   }
 

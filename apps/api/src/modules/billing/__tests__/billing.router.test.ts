@@ -138,7 +138,9 @@ describe('billingRouter', () => {
       };
 
       // Create a caller for testing
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.getSubscription();
       expect(result).toBeNull();
@@ -162,7 +164,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.getSubscription();
       expect(result).toEqual(mockSubscription);
@@ -186,7 +190,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.getSubscription();
       expect(result).toBeNull();
@@ -210,7 +216,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.listInvoices({ page: 1, limit: 10 });
       expect(result.invoices).toEqual([]);
@@ -235,7 +243,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.listInvoices({ page: 1, limit: 10 });
       expect(result.invoices).toHaveLength(1);
@@ -261,7 +271,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.getPaymentMethods();
       expect(result).toEqual([]);
@@ -291,7 +303,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.getPaymentMethods();
       expect(result).toHaveLength(1);
@@ -316,11 +330,11 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
-      await expect(
-        caller.cancelSubscription({ atPeriodEnd: true })
-      ).rejects.toThrow(TRPCError);
+      await expect(caller.cancelSubscription({ atPeriodEnd: true })).rejects.toThrow(TRPCError);
     });
 
     it('cancels subscription at period end', async () => {
@@ -352,7 +366,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.cancelSubscription({ atPeriodEnd: true });
       expect(result.cancelAtPeriodEnd).toBe(true);
@@ -377,7 +393,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.getUsageMetrics();
       expect(result).toBeNull();
@@ -395,7 +413,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.getUsageMetrics();
       expect(result).not.toBeNull();
@@ -422,11 +442,13 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
-      await expect(
-        caller.updatePaymentMethod({ paymentMethodId: 'pm_new_123' })
-      ).rejects.toThrow(TRPCError);
+      await expect(caller.updatePaymentMethod({ paymentMethodId: 'pm_new_123' })).rejects.toThrow(
+        TRPCError
+      );
     });
 
     it('attaches payment method successfully', async () => {
@@ -452,12 +474,17 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.updatePaymentMethod({ paymentMethodId: 'pm_new_123' });
       expect(result.success).toBe(true);
       expect(result.paymentMethod.id).toBe('pm_new_123');
-      expect(mockStripeAdapterMethods.attachPaymentMethod).toHaveBeenCalledWith('pm_new_123', 'cus_123');
+      expect(mockStripeAdapterMethods.attachPaymentMethod).toHaveBeenCalledWith(
+        'pm_new_123',
+        'cus_123'
+      );
     });
 
     it('throws error when Stripe fails to attach payment method', async () => {
@@ -478,11 +505,13 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
-      await expect(
-        caller.updatePaymentMethod({ paymentMethodId: 'pm_invalid' })
-      ).rejects.toThrow(TRPCError);
+      await expect(caller.updatePaymentMethod({ paymentMethodId: 'pm_invalid' })).rejects.toThrow(
+        TRPCError
+      );
     });
   });
 
@@ -503,11 +532,13 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
-      await expect(
-        caller.removePaymentMethod({ paymentMethodId: 'pm_123' })
-      ).rejects.toThrow(TRPCError);
+      await expect(caller.removePaymentMethod({ paymentMethodId: 'pm_123' })).rejects.toThrow(
+        TRPCError
+      );
     });
 
     it('detaches payment method successfully', async () => {
@@ -528,7 +559,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.removePaymentMethod({ paymentMethodId: 'pm_123' });
       expect(result.success).toBe(true);
@@ -553,7 +586,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       await expect(
         caller.removePaymentMethod({ paymentMethodId: 'pm_nonexistent' })
@@ -578,7 +613,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       await expect(
         caller.updateSubscription({ priceId: 'price_enterprise_monthly' })
@@ -603,7 +640,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       await expect(
         caller.updateSubscription({ priceId: 'price_enterprise_monthly' })
@@ -639,7 +678,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.updateSubscription({ priceId: 'price_enterprise_monthly' });
       expect(result.priceId).toBe('price_enterprise_monthly');
@@ -678,7 +719,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.updateSubscription({ quantity: 10 });
       expect(result.quantity).toBe(10);
@@ -708,11 +751,13 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
-      await expect(
-        caller.updateSubscription({ priceId: 'price_invalid' })
-      ).rejects.toThrow('Invalid price ID');
+      await expect(caller.updateSubscription({ priceId: 'price_invalid' })).rejects.toThrow(
+        'Invalid price ID'
+      );
     });
 
     it('throws error when listing subscriptions fails', async () => {
@@ -733,7 +778,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       await expect(
         caller.updateSubscription({ priceId: 'price_enterprise_monthly' })
@@ -758,7 +805,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.getUpcomingInvoice({});
       expect(result).toBeNull();
@@ -776,7 +825,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.getUpcomingInvoice({});
       expect(result).not.toBeNull();
@@ -815,7 +866,9 @@ describe('billingRouter', () => {
         } as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.ensureCustomer();
       expect(result.id).toBe('cus_123');
@@ -852,7 +905,9 @@ describe('billingRouter', () => {
         } as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.ensureCustomer();
       expect(result.id).toBe('cus_new_123');
@@ -876,7 +931,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       await expect(caller.ensureCustomer()).rejects.toThrow('Authentication required');
     });
@@ -916,7 +973,9 @@ describe('billingRouter', () => {
         } as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.ensureCustomer();
       expect(result.id).toBe('cus_recreated_123');
@@ -946,7 +1005,9 @@ describe('billingRouter', () => {
         } as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       await expect(caller.ensureCustomer()).rejects.toThrow('Stripe customer creation failed');
     });
@@ -963,7 +1024,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       await expect(
         caller.createCheckoutSubscription({
@@ -997,7 +1060,9 @@ describe('billingRouter', () => {
         } as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.createCheckoutSubscription({
         planId: 'plan_pro',
@@ -1010,7 +1075,10 @@ describe('billingRouter', () => {
       expect(result.billingCycle).toBe('monthly');
       expect(result.subscriptionId).toContain('sub_');
       expect(mockStripeAdapterMethods.createCustomer).not.toHaveBeenCalled();
-      expect(mockStripeAdapterMethods.attachPaymentMethod).toHaveBeenCalledWith('pm_123', 'cus_123');
+      expect(mockStripeAdapterMethods.attachPaymentMethod).toHaveBeenCalledWith(
+        'pm_123',
+        'cus_123'
+      );
     });
 
     it('creates new customer when user has no stripeCustomerId', async () => {
@@ -1048,7 +1116,9 @@ describe('billingRouter', () => {
         } as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.createCheckoutSubscription({
         planId: 'plan_enterprise',
@@ -1096,7 +1166,9 @@ describe('billingRouter', () => {
         } as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       await expect(
         caller.createCheckoutSubscription({
@@ -1126,7 +1198,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       await expect(
         caller.createCheckoutSubscription({
@@ -1161,7 +1235,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       await expect(caller.getSubscription()).rejects.toThrow('An unexpected error occurred');
     });
@@ -1184,9 +1260,13 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
-      await expect(caller.listInvoices({ page: 1, limit: 10 })).rejects.toThrow('Failed to fetch invoices');
+      await expect(caller.listInvoices({ page: 1, limit: 10 })).rejects.toThrow(
+        'Failed to fetch invoices'
+      );
     });
 
     it('getPaymentMethods throws error when Stripe API fails', async () => {
@@ -1207,7 +1287,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       await expect(caller.getPaymentMethods()).rejects.toThrow('Failed to fetch payment methods');
     });
@@ -1230,11 +1312,13 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
-      await expect(
-        caller.cancelSubscription({ atPeriodEnd: true })
-      ).rejects.toThrow('No active subscription found');
+      await expect(caller.cancelSubscription({ atPeriodEnd: true })).rejects.toThrow(
+        'No active subscription found'
+      );
     });
 
     it('cancelSubscription throws error when Stripe cancellation fails', async () => {
@@ -1261,11 +1345,13 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
-      await expect(
-        caller.cancelSubscription({ atPeriodEnd: true })
-      ).rejects.toThrow('Subscription already canceled');
+      await expect(caller.cancelSubscription({ atPeriodEnd: true })).rejects.toThrow(
+        'Subscription already canceled'
+      );
     });
 
     it('cancelSubscription throws error when listing subscriptions fails', async () => {
@@ -1286,11 +1372,13 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
-      await expect(
-        caller.cancelSubscription({ atPeriodEnd: true })
-      ).rejects.toThrow('Stripe connection error');
+      await expect(caller.cancelSubscription({ atPeriodEnd: true })).rejects.toThrow(
+        'Stripe connection error'
+      );
     });
   });
 
@@ -1322,7 +1410,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.getSubscription();
       expect(result?.status).toBe('past_due');
@@ -1330,7 +1420,11 @@ describe('billingRouter', () => {
 
     it('getSubscription returns active subscription over past_due', async () => {
       const activeSubscription = { ...mockSubscription, status: 'active' as const };
-      const pastDueSubscription = { ...mockSubscription, id: 'sub_456', status: 'past_due' as const };
+      const pastDueSubscription = {
+        ...mockSubscription,
+        id: 'sub_456',
+        status: 'past_due' as const,
+      };
 
       mockStripeAdapterMethods.listSubscriptions.mockResolvedValue({
         isSuccess: true,
@@ -1349,7 +1443,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.getSubscription();
       expect(result?.status).toBe('active');
@@ -1380,7 +1476,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.getSubscription();
       expect(result?.status).toBe('trialing');
@@ -1409,7 +1507,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       // First page
       const page1 = await caller.listInvoices({ page: 1, limit: 10 });
@@ -1457,7 +1557,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.getPaymentMethods();
       expect(result[0].isDefault).toBe(false);
@@ -1487,7 +1589,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.getPaymentMethods();
       expect(result).toHaveLength(1);
@@ -1524,7 +1628,9 @@ describe('billingRouter', () => {
         } as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.ensureCustomer();
       expect(mockStripeAdapterMethods.createCustomer).toHaveBeenCalledWith({
@@ -1572,7 +1678,9 @@ describe('billingRouter', () => {
         prisma: {} as unknown,
       };
 
-      const caller = billingRouter.createCaller(mockContext as Parameters<typeof billingRouter.createCaller>[0]);
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
 
       const result = await caller.updateSubscription({ priceId: 'price_enterprise_monthly' });
       expect(result.status).toBe('trialing');

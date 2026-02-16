@@ -30,7 +30,10 @@ function deterministicRatio(seedInput: string): number {
 }
 
 // Generate uptime bars for the last 90 days using deterministic pseudo-randomness
-function generateUptimeBars(serviceId: string, uptime: number): { day: number; status: ServiceStatus }[] {
+function generateUptimeBars(
+  serviceId: string,
+  uptime: number
+): { day: number; status: ServiceStatus }[] {
   const bars: { day: number; status: ServiceStatus }[] = [];
 
   for (let i = 0; i < 90; i++) {
@@ -62,10 +65,7 @@ function getStatusColor(status: ServiceStatus): string {
   }
 }
 
-export function StatusMonitor({
-  services,
-  refreshInterval = 30000,
-}: StatusMonitorProps) {
+export function StatusMonitor({ services, refreshInterval = 30000 }: StatusMonitorProps) {
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -89,18 +89,14 @@ export function StatusMonitor({
       {/* Uptime Overview */}
       <Card className="p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-            90-Day Uptime
-          </h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">90-Day Uptime</h3>
           <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
             {isRefreshing && (
               <span className="material-symbols-outlined animate-spin text-base" aria-hidden="true">
                 refresh
               </span>
             )}
-            <span>
-              Updated {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Loading...'}
-            </span>
+            <span>Updated {lastUpdated ? lastUpdated.toLocaleTimeString() : 'Loading...'}</span>
           </div>
         </div>
 

@@ -28,7 +28,7 @@ import { type Context } from '../../context';
 import {
   getTenantContext,
   createTenantWhereClause,
-  type TenantAwareContext
+  type TenantAwareContext,
 } from '../../security/tenant-context';
 
 /**
@@ -167,8 +167,10 @@ export const accountRouter = createTRPCRouter({
 
     if (minEmployees !== undefined || maxEmployees !== undefined) {
       baseWhere.employees = {};
-      if (minEmployees !== undefined) (baseWhere.employees as Record<string, number>).gte = minEmployees;
-      if (maxEmployees !== undefined) (baseWhere.employees as Record<string, number>).lte = maxEmployees;
+      if (minEmployees !== undefined)
+        (baseWhere.employees as Record<string, number>).gte = minEmployees;
+      if (maxEmployees !== undefined)
+        (baseWhere.employees as Record<string, number>).lte = maxEmployees;
     }
 
     // Apply tenant filtering
@@ -250,11 +252,7 @@ export const accountRouter = createTRPCRouter({
       website: data.website?.toValue?.() ?? (data.website as string | undefined),
     };
 
-    const result = await accountService.updateAccountInfo(
-      id,
-      updateData,
-      typedCtx.tenant.userId
-    );
+    const result = await accountService.updateAccountInfo(id, updateData, typedCtx.tenant.userId);
 
     if (result.isFailure) {
       const errorCode = result.error.code;
@@ -339,7 +337,7 @@ export const accountRouter = createTRPCRouter({
    * Uses Prisma for aggregations (read-side CQRS pattern)
    */
   stats: tenantProcedure.query(async ({ ctx }) => {
-   const typedCtx = getTenantContext(ctx);
+    const typedCtx = getTenantContext(ctx);
     const [total, byIndustry, withContacts, withOpportunities, totalRevenue] = await Promise.all([
       typedCtx.prismaWithTenant.account.count(),
       typedCtx.prismaWithTenant.account.groupBy({
@@ -394,11 +392,13 @@ export const accountRouter = createTRPCRouter({
    */
   filterOptions: tenantProcedure
     .input(
-      z.object({
-        search: z.string().optional(),
-        industry: z.string().optional(),
-        ownerId: z.string().optional(),
-      }).optional()
+      z
+        .object({
+          search: z.string().optional(),
+          industry: z.string().optional(),
+          ownerId: z.string().optional(),
+        })
+        .optional()
     )
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
@@ -439,26 +439,27 @@ export const accountRouter = createTRPCRouter({
       ]);
 
       // Get owner names for display
-      const ownerIds = ownerCounts.map(o => o.ownerId).filter(Boolean) as string[];
-      const owners = ownerIds.length > 0
-        ? await ctx.prisma.user.findMany({
-            where: { id: { in: ownerIds } },
-            select: { id: true, name: true, email: true },
-          })
-        : [];
-      const ownerMap = new Map(owners.map(o => [o.id, o.name || o.email]));
+      const ownerIds = ownerCounts.map((o) => o.ownerId).filter(Boolean) as string[];
+      const owners =
+        ownerIds.length > 0
+          ? await ctx.prisma.user.findMany({
+              where: { id: { in: ownerIds } },
+              select: { id: true, name: true, email: true },
+            })
+          : [];
+      const ownerMap = new Map(owners.map((o) => [o.id, o.name || o.email]));
 
       return {
         industries: industryCounts
-          .filter(i => i.industry)
-          .map(i => ({
+          .filter((i) => i.industry)
+          .map((i) => ({
             value: i.industry as string,
             label: i.industry as string,
             count: i._count,
           })),
         owners: ownerCounts
-          .filter(o => o.ownerId)
-          .map(o => ({
+          .filter((o) => o.ownerId)
+          .map((o) => ({
             value: o.ownerId as string,
             label: ownerMap.get(o.ownerId as string) || o.ownerId,
             count: o._count,
@@ -560,52 +561,48 @@ export const accountRouter = createTRPCRouter({
    * Get account hierarchy (PG-134)
    * Returns ancestors, current node with children tree
    */
-  getHierarchy: tenantProcedure
-    .input(getHierarchyInputSchema)
-    .query(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const accountService = getAccountService(ctx);
+  getHierarchy: tenantProcedure.input(getHierarchyInputSchema).query(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const accountService = getAccountService(ctx);
 
-      const result = await accountService.getHierarchy(
-        input.accountId,
-        typedCtx.tenant.tenantId,
-        input.maxDepth
-      );
+    const result = await accountService.getHierarchy(
+      input.accountId,
+      typedCtx.tenant.tenantId,
+      input.maxDepth
+    );
 
-      if (result.isFailure) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: result.error.message,
-        });
-      }
+    if (result.isFailure) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: result.error.message,
+      });
+    }
 
-      return result.value;
-    }),
+    return result.value;
+  }),
 
   /**
    * Set or remove parent account (PG-134)
    * Includes cycle detection and max depth enforcement
    */
-  setParent: tenantProcedure
-    .input(setParentSchema)
-    .mutation(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const accountService = getAccountService(ctx);
+  setParent: tenantProcedure.input(setParentSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const accountService = getAccountService(ctx);
 
-      const result = await accountService.setParent(
-        input.accountId,
-        input.parentAccountId,
-        typedCtx.tenant.tenantId,
-        typedCtx.user!.userId
-      );
+    const result = await accountService.setParent(
+      input.accountId,
+      input.parentAccountId,
+      typedCtx.tenant.tenantId,
+      typedCtx.user!.userId
+    );
 
-      if (result.isFailure) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: result.error.message,
-        });
-      }
+    if (result.isFailure) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: result.error.message,
+      });
+    }
 
-      return mapAccountToResponse(result.value);
-    }),
+    return mapAccountToResponse(result.value);
+  }),
 });

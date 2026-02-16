@@ -23,9 +23,15 @@ const store = vi.hoisted(() => {
   return {
     data,
     getItem: vi.fn((key: string) => data[key] ?? null),
-    setItem: vi.fn((key: string, val: string) => { data[key] = val; }),
-    removeItem: vi.fn((key: string) => { delete data[key]; }),
-    clear: vi.fn(() => { for (const k of Object.keys(data)) delete data[k]; }),
+    setItem: vi.fn((key: string, val: string) => {
+      data[key] = val;
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete data[key];
+    }),
+    clear: vi.fn(() => {
+      for (const k of Object.keys(data)) delete data[k];
+    }),
   };
 });
 
@@ -157,7 +163,9 @@ describe('PinnedItemsSheet utility functions (supplementary2)', () => {
     });
 
     it('returns defaults when localStorage throws on getItem', () => {
-      store.getItem.mockImplementationOnce(() => { throw new Error('quota exceeded'); });
+      store.getItem.mockImplementationOnce(() => {
+        throw new Error('quota exceeded');
+      });
       const result = loadEnabledActions();
       expect(result.has('action-call')).toBe(true);
     });

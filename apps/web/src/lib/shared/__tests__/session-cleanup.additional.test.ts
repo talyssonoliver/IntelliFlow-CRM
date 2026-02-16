@@ -236,9 +236,7 @@ describe('session-cleanup (additional coverage)', () => {
     it('handles deleteDatabase error', async () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      const mockDatabases = vi.fn().mockResolvedValue([
-        { name: 'auth_db', version: 1 },
-      ]);
+      const mockDatabases = vi.fn().mockResolvedValue([{ name: 'auth_db', version: 1 }]);
 
       const mockDeleteDatabase = vi.fn().mockImplementation(() => {
         const request = {
@@ -265,9 +263,7 @@ describe('session-cleanup (additional coverage)', () => {
     it('handles blocked database deletion', async () => {
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      const mockDatabases = vi.fn().mockResolvedValue([
-        { name: 'auth_db', version: 1 },
-      ]);
+      const mockDatabases = vi.fn().mockResolvedValue([{ name: 'auth_db', version: 1 }]);
 
       const mockDeleteDatabase = vi.fn().mockImplementation(() => {
         const request = {
@@ -360,30 +356,34 @@ describe('session-cleanup (additional coverage)', () => {
       const postMessageFn = vi.fn();
       const closeFn = vi.fn();
 
-      vi.stubGlobal('BroadcastChannel', class MockBroadcastChannel {
-        postMessage = postMessageFn;
-        close = closeFn;
-        addEventListener = vi.fn();
-        removeEventListener = vi.fn();
-      });
+      vi.stubGlobal(
+        'BroadcastChannel',
+        class MockBroadcastChannel {
+          postMessage = postMessageFn;
+          close = closeFn;
+          addEventListener = vi.fn();
+          removeEventListener = vi.fn();
+        }
+      );
 
       broadcastLogout();
 
-      expect(postMessageFn).toHaveBeenCalledWith(
-        expect.objectContaining({ type: 'logout' })
-      );
+      expect(postMessageFn).toHaveBeenCalledWith(expect.objectContaining({ type: 'logout' }));
       expect(closeFn).toHaveBeenCalled();
     });
 
     it('handles BroadcastChannel errors gracefully', () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      vi.stubGlobal('BroadcastChannel', class MockBroadcastChannel {
-        postMessage = vi.fn().mockImplementation(() => {
-          throw new Error('Channel error');
-        });
-        close = vi.fn();
-      });
+      vi.stubGlobal(
+        'BroadcastChannel',
+        class MockBroadcastChannel {
+          postMessage = vi.fn().mockImplementation(() => {
+            throw new Error('Channel error');
+          });
+          close = vi.fn();
+        }
+      );
 
       expect(() => broadcastLogout()).not.toThrow();
       expect(consoleSpy).toHaveBeenCalled();
@@ -398,13 +398,16 @@ describe('session-cleanup (additional coverage)', () => {
       let messageHandler: ((event: any) => void) | null = null;
       const closeFn = vi.fn();
 
-      vi.stubGlobal('BroadcastChannel', class MockBroadcastChannel {
-        close = closeFn;
-        addEventListener = vi.fn().mockImplementation((_event: string, handler: any) => {
-          messageHandler = handler;
-        });
-        removeEventListener = vi.fn();
-      });
+      vi.stubGlobal(
+        'BroadcastChannel',
+        class MockBroadcastChannel {
+          close = closeFn;
+          addEventListener = vi.fn().mockImplementation((_event: string, handler: any) => {
+            messageHandler = handler;
+          });
+          removeEventListener = vi.fn();
+        }
+      );
 
       const callback = vi.fn();
       const cleanup = onLogoutBroadcast(callback);
@@ -424,13 +427,16 @@ describe('session-cleanup (additional coverage)', () => {
     it('ignores non-logout messages on BroadcastChannel', () => {
       let messageHandler: ((event: any) => void) | null = null;
 
-      vi.stubGlobal('BroadcastChannel', class MockBroadcastChannel {
-        close = vi.fn();
-        addEventListener = vi.fn().mockImplementation((_event: string, handler: any) => {
-          messageHandler = handler;
-        });
-        removeEventListener = vi.fn();
-      });
+      vi.stubGlobal(
+        'BroadcastChannel',
+        class MockBroadcastChannel {
+          close = vi.fn();
+          addEventListener = vi.fn().mockImplementation((_event: string, handler: any) => {
+            messageHandler = handler;
+          });
+          removeEventListener = vi.fn();
+        }
+      );
 
       const callback = vi.fn();
       onLogoutBroadcast(callback);
@@ -518,9 +524,7 @@ describe('session-cleanup (additional coverage)', () => {
       });
 
       // Should not have called setItem for logout-event
-      const logoutCalls = setItemSpy.mock.calls.filter(
-        ([key]) => key === 'logout-event'
-      );
+      const logoutCalls = setItemSpy.mock.calls.filter(([key]) => key === 'logout-event');
       expect(logoutCalls).toHaveLength(0);
     });
 

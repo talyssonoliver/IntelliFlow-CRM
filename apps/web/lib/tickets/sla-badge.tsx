@@ -14,7 +14,13 @@
  */
 
 import { useEffect, useState } from 'react';
-import { SLAStatus, SLATimerResult, slaTrackingService, SLAPolicy, TicketStatus } from './sla-service';
+import {
+  SLAStatus,
+  SLATimerResult,
+  slaTrackingService,
+  SLAPolicy,
+  TicketStatus,
+} from './sla-service';
 
 interface SLABadgeProps {
   dueTime: Date;
@@ -73,10 +79,7 @@ export function SLATimerBadge({
         ${colors.darkBg} ${colors.darkText} ${colors.darkBorder}
         ${sizeClasses[size]} ${className}`}
     >
-      <span
-        className="material-symbols-outlined"
-        style={{ fontSize: iconSizes[size] }}
-      >
+      <span className="material-symbols-outlined" style={{ fontSize: iconSizes[size] }}>
         {icon}
       </span>
       {showTimer && <span>{timerResult.remainingFormatted}</span>}
@@ -93,11 +96,7 @@ interface SLAStatusBadgeProps {
 /**
  * SLA Status Badge - Shows status label with color
  */
-export function SLAStatusBadge({
-  status,
-  size = 'md',
-  className = '',
-}: SLAStatusBadgeProps) {
+export function SLAStatusBadge({ status, size = 'md', className = '' }: SLAStatusBadgeProps) {
   const colors = slaTrackingService.getSLABadgeColor(status);
 
   const sizeClasses = {
@@ -172,7 +171,9 @@ export function SLAProgressBar({
           </span>
         </div>
       )}
-      <div className={`w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden ${heightClasses[height]}`}>
+      <div
+        className={`w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden ${heightClasses[height]}`}
+      >
         <div
           className={`${progressColors[timerResult.status]} ${heightClasses[height]} transition-all duration-500 ease-out`}
           style={{ width: `${progressPercent}%` }}
@@ -277,12 +278,7 @@ export function SLAQuickView({
         <SLAIndicatorDot status={timerResult.status} />
       </div>
       <div className="flex items-center gap-2 mb-2">
-        <SLATimerBadge
-          dueTime={dueTime}
-          policy={policy}
-          ticketStatus={ticketStatus}
-          size="sm"
-        />
+        <SLATimerBadge dueTime={dueTime} policy={policy} ticketStatus={ticketStatus} size="sm" />
         <span className={`text-xs font-semibold uppercase ${priorityColors[priority]}`}>
           {priority}
         </span>

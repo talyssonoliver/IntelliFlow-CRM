@@ -117,20 +117,27 @@ export default function GanttChart({
   const totalDays = useMemo(() => getDaysBetween(startDate, endDate) + 1, [startDate, endDate]);
   const dayWidth = useMemo(() => {
     switch (zoomLevel) {
-      case 'day': return 40;
-      case 'week': return 20;
-      case 'sprint': return 10;
-      default: return 20;
+      case 'day':
+        return 40;
+      case 'week':
+        return 20;
+      case 'sprint':
+        return 10;
+      default:
+        return 20;
     }
   }, [zoomLevel]);
   const chartWidth = useMemo(() => totalDays * dayWidth, [totalDays, dayWidth]);
   const chartHeight = useMemo(() => tasks.length * ROW_HEIGHT, [tasks.length]);
 
   // Get position for a date - memoized to depend on dayWidth
-  const getXPosition = useCallback((date: Date): number => {
-    const daysDiff = getDaysBetween(startDate, date);
-    return daysDiff * dayWidth;
-  }, [startDate, dayWidth]);
+  const getXPosition = useCallback(
+    (date: Date): number => {
+      const daysDiff = getDaysBetween(startDate, date);
+      return daysDiff * dayWidth;
+    },
+    [startDate, dayWidth]
+  );
 
   // Sort tasks by early start
   const sortedTasks = useMemo(() => {
@@ -145,10 +152,7 @@ export default function GanttChart({
     sortedTasks.forEach((task, index) => {
       const x = getXPosition(new Date(task.earlyStart));
       const y = index * ROW_HEIGHT + (ROW_HEIGHT - TASK_BAR_HEIGHT) / 2;
-      const width = Math.max(
-        dayWidth,
-        getXPosition(new Date(task.earlyFinish)) - x
-      );
+      const width = Math.max(dayWidth, getXPosition(new Date(task.earlyFinish)) - x);
       positions.set(task.taskId, { x: LEFT_PANEL_WIDTH + x, y, width });
     });
     return positions;
@@ -170,25 +174,28 @@ export default function GanttChart({
   }, []);
 
   // Find the first task active around a given date
-  const findTaskIndexForDate = useCallback((targetDate: Date): number => {
-    // First, find tasks that are currently in progress (start <= today <= finish)
-    const activeIndex = sortedTasks.findIndex((task) => {
-      const taskStart = new Date(task.earlyStart);
-      const taskFinish = new Date(task.earlyFinish);
-      return taskStart <= targetDate && targetDate <= taskFinish;
-    });
-    if (activeIndex >= 0) return activeIndex;
+  const findTaskIndexForDate = useCallback(
+    (targetDate: Date): number => {
+      // First, find tasks that are currently in progress (start <= today <= finish)
+      const activeIndex = sortedTasks.findIndex((task) => {
+        const taskStart = new Date(task.earlyStart);
+        const taskFinish = new Date(task.earlyFinish);
+        return taskStart <= targetDate && targetDate <= taskFinish;
+      });
+      if (activeIndex >= 0) return activeIndex;
 
-    // If no active task, find the first task starting after today
-    const upcomingIndex = sortedTasks.findIndex((task) => {
-      const taskStart = new Date(task.earlyStart);
-      return taskStart > targetDate;
-    });
-    if (upcomingIndex >= 0) return Math.max(0, upcomingIndex - 1); // Show one task before
+      // If no active task, find the first task starting after today
+      const upcomingIndex = sortedTasks.findIndex((task) => {
+        const taskStart = new Date(task.earlyStart);
+        return taskStart > targetDate;
+      });
+      if (upcomingIndex >= 0) return Math.max(0, upcomingIndex - 1); // Show one task before
 
-    // If all tasks are in the past, show the last tasks
-    return Math.max(0, sortedTasks.length - 10);
-  }, [sortedTasks]);
+      // If all tasks are in the past, show the last tasks
+      return Math.max(0, sortedTasks.length - 10);
+    },
+    [sortedTasks]
+  );
 
   // Scroll to today's date on initial load (both horizontal and vertical)
   useEffect(() => {
@@ -210,7 +217,16 @@ export default function GanttChart({
 
       setHasScrolledToToday(true);
     }
-  }, [hasScrolledToToday, sortedTasks, startDate, endDate, getXPosition, chartWidth, scrollToPositionXY, findTaskIndexForDate]);
+  }, [
+    hasScrolledToToday,
+    sortedTasks,
+    startDate,
+    endDate,
+    getXPosition,
+    chartWidth,
+    scrollToPositionXY,
+    findTaskIndexForDate,
+  ]);
 
   // Reset scroll flag when zoom level changes to re-center
   useEffect(() => {
@@ -218,41 +234,44 @@ export default function GanttChart({
   }, [zoomLevel]);
 
   // Handle header click - open modal with period overview
-  const handleHeaderClick = useCallback((xPosition: number, headerInfo?: { label: string; width: number }) => {
-    // Calculate the date at this X position
-    const daysFromStart = Math.floor(xPosition / dayWidth);
-    const periodStartDate = new Date(startDate);
-    periodStartDate.setDate(periodStartDate.getDate() + daysFromStart);
+  const handleHeaderClick = useCallback(
+    (xPosition: number, headerInfo?: { label: string; width: number }) => {
+      // Calculate the date at this X position
+      const daysFromStart = Math.floor(xPosition / dayWidth);
+      const periodStartDate = new Date(startDate);
+      periodStartDate.setDate(periodStartDate.getDate() + daysFromStart);
 
-    let periodEndDate: Date;
-    let label: string;
+      let periodEndDate: Date;
+      let label: string;
 
-    if (zoomLevel === 'day') {
-      // For day view, the period is just that day
-      periodEndDate = new Date(periodStartDate);
-      label = formatDate(periodStartDate);
-    } else if (zoomLevel === 'week') {
-      // For week view, calculate the week end (7 days)
-      periodEndDate = new Date(periodStartDate);
-      periodEndDate.setDate(periodEndDate.getDate() + 6);
-      if (periodEndDate > endDate) periodEndDate = endDate;
-      label = headerInfo?.label || `Week of ${formatDate(periodStartDate)}`;
-    } else {
-      // For sprint view, calculate sprint end (14 days)
-      periodEndDate = new Date(periodStartDate);
-      periodEndDate.setDate(periodEndDate.getDate() + 13);
-      if (periodEndDate > endDate) periodEndDate = endDate;
-      label = headerInfo?.label || `Sprint ${Math.floor(daysFromStart / 14)}`;
-    }
+      if (zoomLevel === 'day') {
+        // For day view, the period is just that day
+        periodEndDate = new Date(periodStartDate);
+        label = formatDate(periodStartDate);
+      } else if (zoomLevel === 'week') {
+        // For week view, calculate the week end (7 days)
+        periodEndDate = new Date(periodStartDate);
+        periodEndDate.setDate(periodEndDate.getDate() + 6);
+        if (periodEndDate > endDate) periodEndDate = endDate;
+        label = headerInfo?.label || `Week of ${formatDate(periodStartDate)}`;
+      } else {
+        // For sprint view, calculate sprint end (14 days)
+        periodEndDate = new Date(periodStartDate);
+        periodEndDate.setDate(periodEndDate.getDate() + 13);
+        if (periodEndDate > endDate) periodEndDate = endDate;
+        label = headerInfo?.label || `Sprint ${Math.floor(daysFromStart / 14)}`;
+      }
 
-    setSelectedPeriod({
-      type: zoomLevel,
-      start: periodStartDate,
-      end: periodEndDate,
-      label,
-    });
-    setModalOpen(true);
-  }, [dayWidth, startDate, endDate, zoomLevel]);
+      setSelectedPeriod({
+        type: zoomLevel,
+        start: periodStartDate,
+        end: periodEndDate,
+        label,
+      });
+      setModalOpen(true);
+    },
+    [dayWidth, startDate, endDate, zoomLevel]
+  );
 
   // Get tasks for the selected period
   const tasksInPeriod = useMemo(() => {
@@ -349,7 +368,9 @@ export default function GanttChart({
               fill="none"
               stroke={hoveredTask === task.taskId || hoveredTask === depId ? '#3b82f6' : '#94a3b8'}
               strokeWidth={hoveredTask === task.taskId || hoveredTask === depId ? 2 : 1}
-              strokeDasharray={hoveredTask === task.taskId || hoveredTask === depId ? 'none' : '4,2'}
+              strokeDasharray={
+                hoveredTask === task.taskId || hoveredTask === depId ? 'none' : '4,2'
+              }
             />
             {/* Arrow head */}
             <polygon
@@ -458,10 +479,7 @@ export default function GanttChart({
           Task
         </div>
         {/* Time headers - scrollable, synced with main content */}
-        <div
-          className="flex-1 overflow-hidden"
-          style={{ height: HEADER_HEIGHT }}
-        >
+        <div className="flex-1 overflow-hidden" style={{ height: HEADER_HEIGHT }}>
           <svg
             width={chartWidth}
             height={HEADER_HEIGHT}
@@ -546,12 +564,7 @@ export default function GanttChart({
 
           {/* Right panel - Gantt bars */}
           <div className="flex-1">
-            <svg
-              ref={svgRef}
-              width={chartWidth}
-              height={chartHeight}
-              className="block"
-            >
+            <svg ref={svgRef} width={chartWidth} height={chartHeight} className="block">
               {/* Grid lines */}
               <g>
                 {timeHeaders.map((header, index) => (
@@ -595,19 +608,21 @@ export default function GanttChart({
                 const width = Math.max(dayWidth, endX - startX);
 
                 // Float bar (extends beyond task bar)
-                const floatWidth = showFloat && task.totalFloat > 0
-                  ? Math.min(task.totalFloat / 60 * (dayWidth / 8), chartWidth - startX - width)
-                  : 0;
+                const floatWidth =
+                  showFloat && task.totalFloat > 0
+                    ? Math.min((task.totalFloat / 60) * (dayWidth / 8), chartWidth - startX - width)
+                    : 0;
 
                 // Progress fill
                 const progressWidth = (width * task.percentComplete) / 100;
 
                 // Determine bar color
-                const barColor = task.percentComplete >= 100
-                  ? '#22c55e' // green
-                  : task.isCritical
-                    ? '#ef4444' // red
-                    : '#3b82f6'; // blue
+                const barColor =
+                  task.percentComplete >= 100
+                    ? '#22c55e' // green
+                    : task.isCritical
+                      ? '#ef4444' // red
+                      : '#3b82f6'; // blue
 
                 return (
                   <g
@@ -732,8 +747,8 @@ export default function GanttChart({
                   {formatDate(selectedPeriod.start)}
                   {selectedPeriod.start.getTime() !== selectedPeriod.end.getTime() && (
                     <> - {formatDate(selectedPeriod.end)}</>
-                  )}
-                  {' '}({getDaysBetween(selectedPeriod.start, selectedPeriod.end) + 1} days)
+                  )}{' '}
+                  ({getDaysBetween(selectedPeriod.start, selectedPeriod.end) + 1} days)
                 </p>
               </div>
               <button
@@ -766,7 +781,10 @@ export default function GanttChart({
                 </div>
                 <div className="bg-amber-50 rounded-lg p-3 text-center">
                   <div className="text-2xl font-bold text-amber-600">
-                    {tasksInPeriod.filter((t) => t.percentComplete > 0 && t.percentComplete < 100).length}
+                    {
+                      tasksInPeriod.filter((t) => t.percentComplete > 0 && t.percentComplete < 100)
+                        .length
+                    }
                   </div>
                   <div className="text-xs text-amber-600">In Progress</div>
                 </div>
@@ -792,19 +810,25 @@ export default function GanttChart({
                       <div
                         className={clsx(
                           'w-3 h-3 rounded-full flex-shrink-0',
-                          task.percentComplete >= 100 ? 'bg-green-500' :
-                          task.isCritical ? 'bg-red-500' :
-                          task.percentComplete > 0 ? 'bg-amber-500' : 'bg-gray-300'
+                          task.percentComplete >= 100
+                            ? 'bg-green-500'
+                            : task.isCritical
+                              ? 'bg-red-500'
+                              : task.percentComplete > 0
+                                ? 'bg-amber-500'
+                                : 'bg-gray-300'
                         )}
                       />
 
                       {/* Task Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className={clsx(
-                            'font-medium text-sm',
-                            task.isCritical ? 'text-red-700' : 'text-gray-900'
-                          )}>
+                          <span
+                            className={clsx(
+                              'font-medium text-sm',
+                              task.isCritical ? 'text-red-700' : 'text-gray-900'
+                            )}
+                          >
                             {task.taskId}
                           </span>
                           {task.isCritical && (
@@ -825,18 +849,26 @@ export default function GanttChart({
                             <div
                               className={clsx(
                                 'h-full rounded-full transition-all',
-                                task.percentComplete >= 100 ? 'bg-green-500' :
-                                task.isCritical ? 'bg-red-500' : 'bg-blue-500'
+                                task.percentComplete >= 100
+                                  ? 'bg-green-500'
+                                  : task.isCritical
+                                    ? 'bg-red-500'
+                                    : 'bg-blue-500'
                               )}
                               style={{ width: `${task.percentComplete}%` }}
                             />
                           </div>
                         </div>
-                        <span className={clsx(
-                          'text-sm font-medium w-12 text-right',
-                          task.percentComplete >= 100 ? 'text-green-600' :
-                          task.isCritical ? 'text-red-600' : 'text-gray-600'
-                        )}>
+                        <span
+                          className={clsx(
+                            'text-sm font-medium w-12 text-right',
+                            task.percentComplete >= 100
+                              ? 'text-green-600'
+                              : task.isCritical
+                                ? 'text-red-600'
+                                : 'text-gray-600'
+                          )}
+                        >
                           {task.percentComplete}%
                         </span>
                       </div>

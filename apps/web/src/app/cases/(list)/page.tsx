@@ -28,15 +28,8 @@ const defaultFilterOptions: CaseFilterOptions = { statuses: [], priorities: [] }
 export default function CasesPage() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
   const router = useRouter();
-  const {
-    filters,
-    queryParams,
-    setSearch,
-    setStatusFilter,
-    setPriorityFilter,
-    setSort,
-    setPage,
-  } = useCaseFilters();
+  const { filters, queryParams, setSearch, setStatusFilter, setPriorityFilter, setSort, setPage } =
+    useCaseFilters();
 
   // tRPC queries
   const { data, isLoading } = api.cases.list.useQuery(queryParams as never, {
@@ -82,7 +75,9 @@ export default function CasesPage() {
       <div className="flex flex-col gap-6">
         <Skeleton className="h-20 w-full rounded-xl" />
         <div className="grid grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-28 rounded-xl" />
+          ))}
         </div>
         <Skeleton className="h-64 w-full rounded-xl" />
       </div>
@@ -92,10 +87,7 @@ export default function CasesPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Cases' },
-        ]}
+        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Cases' }]}
         title="Case Management"
         description="Manage and track all legal service cases across your organization"
         actions={[

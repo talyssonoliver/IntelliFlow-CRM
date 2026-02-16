@@ -660,7 +660,9 @@ export class TaskService {
     // Business rule: Cannot delete completed or archived tasks (audit trail)
     if (task.isCompleted) {
       return Result.fail(
-        new ValidationError('Cannot delete completed tasks. Use archive instead to remove from active views.')
+        new ValidationError(
+          'Cannot delete completed tasks. Use archive instead to remove from active views.'
+        )
       );
     }
 
@@ -672,7 +674,9 @@ export class TaskService {
 
     if (task.status === 'CANCELLED') {
       return Result.fail(
-        new ValidationError('Cannot delete cancelled tasks. Use archive instead to remove from active views.')
+        new ValidationError(
+          'Cannot delete cancelled tasks. Use archive instead to remove from active views.'
+        )
       );
     }
 

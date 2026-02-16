@@ -49,7 +49,9 @@ describe('AccountOpportunitiesList', () => {
 
   it('shows loading skeletons while fetching', () => {
     useQueryMock.mockReturnValue({ data: null, isLoading: true, error: null });
-    const { container } = render(<AccountOpportunitiesList accountId="00000000-0000-4000-8000-000000000001" />);
+    const { container } = render(
+      <AccountOpportunitiesList accountId="00000000-0000-4000-8000-000000000001" />
+    );
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 

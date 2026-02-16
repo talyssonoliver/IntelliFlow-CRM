@@ -98,8 +98,8 @@ describe('Risk Register API Route', () => {
       const data = await response.json();
 
       expect(data.risks[0].score).toBe(16); // High (4*4)
-      expect(data.risks[1].score).toBe(6);  // Medium (2*3)
-      expect(data.risks[4].score).toBe(5);  // Low (5*1)
+      expect(data.risks[1].score).toBe(6); // Medium (2*3)
+      expect(data.risks[4].score).toBe(5); // Low (5*1)
     });
 
     it('parses status values correctly', async () => {
@@ -267,9 +267,7 @@ Total Risks,5`;
   // Note: Export action not yet implemented in the route
   describe.skip('POST /api/tracking/risks - Export', () => {
     it('exports risks as CSV', async () => {
-      mockFs.readFile
-        .mockResolvedValueOnce(SAMPLE_RISK_CSV)
-        .mockResolvedValueOnce(SAMPLE_RISK_CSV);
+      mockFs.readFile.mockResolvedValueOnce(SAMPLE_RISK_CSV).mockResolvedValueOnce(SAMPLE_RISK_CSV);
       mockFs.stat.mockResolvedValueOnce({ mtime: new Date() });
 
       const request = new NextRequest('http://localhost:3002/api/tracking/risks', {

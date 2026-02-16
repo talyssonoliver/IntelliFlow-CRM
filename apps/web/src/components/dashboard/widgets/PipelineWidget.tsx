@@ -11,9 +11,21 @@ interface PipelineStage {
 }
 
 const stages: PipelineStage[] = [
-  { name: 'Qualification', value: '$12,400', deals: 8, percentage: 15, color: 'bg-stage-qualification' },
+  {
+    name: 'Qualification',
+    value: '$12,400',
+    deals: 8,
+    percentage: 15,
+    color: 'bg-stage-qualification',
+  },
   { name: 'Proposal', value: '$34,200', deals: 12, percentage: 40, color: 'bg-stage-proposal' },
-  { name: 'Negotiation', value: '$120,000', deals: 4, percentage: 25, color: 'bg-stage-negotiation' },
+  {
+    name: 'Negotiation',
+    value: '$120,000',
+    deals: 4,
+    percentage: 25,
+    color: 'bg-stage-negotiation',
+  },
   { name: 'Closed Won', value: '$40,000', deals: 2, percentage: 20, color: 'bg-stage-won' },
 ];
 
@@ -29,9 +41,7 @@ export function PipelineWidget(_props: WidgetProps) {
         {stages.map((stage) => (
           <div key={stage.name}>
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-foreground">
-                {stage.name}
-              </span>
+              <span className="text-sm font-medium text-foreground">{stage.name}</span>
               <span className="text-sm text-muted-foreground">
                 {stage.value} ({stage.deals} Deals)
               </span>

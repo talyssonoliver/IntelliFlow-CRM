@@ -20,16 +20,13 @@ export default function AboutPage() {
               We're Building the Future of CRM
             </h1>
             <p className="text-lg text-slate-600 dark:text-slate-400 mb-8">
-              Modern, AI-first CRM that pairs automation with governance-grade
-              validation
+              Modern, AI-first CRM that pairs automation with governance-grade validation
             </p>
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec]/10 dark:bg-[#137fec]/20 rounded-full">
               <span className="material-symbols-outlined text-[#137fec] text-sm">
                 rocket_launch
               </span>
-              <span className="text-sm font-medium text-[#137fec]">
-                Founded in 2024
-              </span>
+              <span className="text-sm font-medium text-[#137fec]">Founded in 2024</span>
             </div>
           </div>
         </div>
@@ -50,10 +47,9 @@ export default function AboutPage() {
                 Our Mission
               </h2>
               <p className="text-base text-slate-600 dark:text-slate-400">
-                Our mission is to transform how teams manage customer
-                relationships by providing modern, AI-first CRM that pairs
-                automation with governance-grade validation, so teams can move
-                fast without losing control.
+                Our mission is to transform how teams manage customer relationships by providing
+                modern, AI-first CRM that pairs automation with governance-grade validation, so
+                teams can move fast without losing control.
               </p>
             </Card>
 
@@ -68,10 +64,9 @@ export default function AboutPage() {
                 Our Vision
               </h2>
               <p className="text-base text-slate-600 dark:text-slate-400">
-                We envision a future where CRM systems augment human expertise
-                rather than replace it, where automation is transparent and
-                trustworthy, and where teams spend their time building
-                relationships instead of updating databases.
+                We envision a future where CRM systems augment human expertise rather than replace
+                it, where automation is transparent and trustworthy, and where teams spend their
+                time building relationships instead of updating databases.
               </p>
             </Card>
           </div>
@@ -94,68 +89,56 @@ export default function AboutPage() {
             {/* Value 1: Automation with Integrity */}
             <Card className="p-6 hover:border-[#137fec] hover:shadow-lg transition-all">
               <div className="w-12 h-12 bg-[#137fec]/10 dark:bg-[#137fec]/20 rounded-lg flex items-center justify-center mb-4">
-                <span className="material-symbols-outlined text-2xl text-[#137fec]">
-                  verified
-                </span>
+                <span className="material-symbols-outlined text-2xl text-[#137fec]">verified</span>
               </div>
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
                 Automation with Integrity
               </h3>
               <p className="text-base text-slate-600 dark:text-slate-400">
-                We believe in AI-powered automation, but always with
-                transparency. Every AI decision includes an explanation,
-                confidence score, and human override capability.
+                We believe in AI-powered automation, but always with transparency. Every AI decision
+                includes an explanation, confidence score, and human override capability.
               </p>
             </Card>
 
             {/* Value 2: Developer-First Thinking */}
             <Card className="p-6 hover:border-[#137fec] hover:shadow-lg transition-all">
               <div className="w-12 h-12 bg-[#137fec]/10 dark:bg-[#137fec]/20 rounded-lg flex items-center justify-center mb-4">
-                <span className="material-symbols-outlined text-2xl text-[#137fec]">
-                  code
-                </span>
+                <span className="material-symbols-outlined text-2xl text-[#137fec]">code</span>
               </div>
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
                 Developer-First Thinking
               </h3>
               <p className="text-base text-slate-600 dark:text-slate-400">
-                We build with modern technologies and developer-friendly
-                workflows. Our stack is open, observable, and designed for
-                teams that value quality code.
+                We build with modern technologies and developer-friendly workflows. Our stack is
+                open, observable, and designed for teams that value quality code.
               </p>
             </Card>
 
             {/* Value 3: Evidence-Driven Decisions */}
             <Card className="p-6 hover:border-[#137fec] hover:shadow-lg transition-all">
               <div className="w-12 h-12 bg-[#137fec]/10 dark:bg-[#137fec]/20 rounded-lg flex items-center justify-center mb-4">
-                <span className="material-symbols-outlined text-2xl text-[#137fec]">
-                  analytics
-                </span>
+                <span className="material-symbols-outlined text-2xl text-[#137fec]">analytics</span>
               </div>
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
                 Evidence-Driven Decisions
               </h3>
               <p className="text-base text-slate-600 dark:text-slate-400">
-                We don't guess—we measure. Every feature includes metrics,
-                every process has validation gates, and every decision is
-                backed by data.
+                We don't guess—we measure. Every feature includes metrics, every process has
+                validation gates, and every decision is backed by data.
               </p>
             </Card>
 
             {/* Value 4: Customer Success */}
             <Card className="p-6 hover:border-[#137fec] hover:shadow-lg transition-all">
               <div className="w-12 h-12 bg-[#137fec]/10 dark:bg-[#137fec]/20 rounded-lg flex items-center justify-center mb-4">
-                <span className="material-symbols-outlined text-2xl text-[#137fec]">
-                  favorite
-                </span>
+                <span className="material-symbols-outlined text-2xl text-[#137fec]">favorite</span>
               </div>
               <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">
                 Customer Success
               </h3>
               <p className="text-base text-slate-600 dark:text-slate-400">
-                We build tools teams actually want to use, not tolerate. Our
-                success is measured by how much time we save our customers, not
-                how many features we ship.
+                We build tools teams actually want to use, not tolerate. Our success is measured by
+                how much time we save our customers, not how many features we ship.
               </p>
             </Card>
           </div>
@@ -189,9 +172,7 @@ export default function AboutPage() {
                   {member.name}
                 </h3>
                 <p className="text-sm text-[#137fec] mb-3">{member.role}</p>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                  {member.bio}
-                </p>
+                <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">{member.bio}</p>
 
                 {/* Social links */}
                 <div className="flex items-center justify-center gap-2">
@@ -203,9 +184,7 @@ export default function AboutPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <span className="material-symbols-outlined text-xl">
-                        work
-                      </span>
+                      <span className="material-symbols-outlined text-xl">work</span>
                     </a>
                   )}
                   {member.socialLinks.twitter && (
@@ -216,9 +195,7 @@ export default function AboutPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <span className="material-symbols-outlined text-xl">
-                        tag
-                      </span>
+                      <span className="material-symbols-outlined text-xl">tag</span>
                     </a>
                   )}
                 </div>
@@ -238,8 +215,7 @@ export default function AboutPage() {
             Ready to Transform Your Sales?
           </h2>
           <p className="text-lg text-white/90 mb-8">
-            Join modern sales teams using IntelliFlow CRM. Start your free
-            14-day trial today.
+            Join modern sales teams using IntelliFlow CRM. Start your free 14-day trial today.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button

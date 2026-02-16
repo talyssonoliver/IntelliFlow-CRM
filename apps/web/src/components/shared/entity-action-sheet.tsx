@@ -1,13 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@intelliflow/ui';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@intelliflow/ui';
 import { useEntityPin, type UseEntityPinOptions } from '@/hooks/use-entity-pin';
 
 export interface EntityActionSheetEntity {
@@ -33,7 +27,12 @@ interface EntityActionSheetProps {
   extraActions?: ExtraAction[];
 }
 
-export function EntityActionSheet({ open, onOpenChange, entity, extraActions }: EntityActionSheetProps) {
+export function EntityActionSheet({
+  open,
+  onOpenChange,
+  entity,
+  extraActions,
+}: EntityActionSheetProps) {
   const { isPinned, isLoading, togglePin } = useEntityPin({
     entityType: entity.type,
     entityId: entity.id,
@@ -53,9 +52,7 @@ export function EntityActionSheet({ open, onOpenChange, entity, extraActions }: 
       <SheetContent side="right" className="w-[340px] sm:max-w-[340px]">
         <SheetHeader className="mb-6">
           <SheetTitle className="text-lg">{entity.title}</SheetTitle>
-          {entity.subtitle && (
-            <SheetDescription>{entity.subtitle}</SheetDescription>
-          )}
+          {entity.subtitle && <SheetDescription>{entity.subtitle}</SheetDescription>}
         </SheetHeader>
 
         <div className="flex flex-col gap-1">

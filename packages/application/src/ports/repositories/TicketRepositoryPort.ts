@@ -174,7 +174,14 @@ export interface TicketStats {
 
 export interface CreateActivityData {
   ticketId: string;
-  type: 'CUSTOMER_MESSAGE' | 'AGENT_REPLY' | 'INTERNAL_NOTE' | 'SYSTEM_EVENT' | 'SLA_ALERT' | 'ASSIGNMENT' | 'STATUS_CHANGE';
+  type:
+    | 'CUSTOMER_MESSAGE'
+    | 'AGENT_REPLY'
+    | 'INTERNAL_NOTE'
+    | 'SYSTEM_EVENT'
+    | 'SLA_ALERT'
+    | 'ASSIGNMENT'
+    | 'STATUS_CHANGE';
   content: string;
   authorName: string;
   authorRole: string;

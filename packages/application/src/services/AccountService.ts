@@ -512,19 +512,24 @@ export class AccountService {
       cursor?: string;
       status?: string[];
     }
-  ): Promise<Result<{
-    contacts: Array<{
-      id: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      phone?: string;
-      status: string;
-      createdAt: Date;
-    }>;
-    nextCursor?: string;
-    total: number;
-  }, DomainError>> {
+  ): Promise<
+    Result<
+      {
+        contacts: Array<{
+          id: string;
+          firstName: string;
+          lastName: string;
+          email: string;
+          phone?: string;
+          status: string;
+          createdAt: Date;
+        }>;
+        nextCursor?: string;
+        total: number;
+      },
+      DomainError
+    >
+  > {
     // Validate account ID
     const accountIdResult = AccountId.create(accountId);
     if (accountIdResult.isFailure) {
@@ -548,15 +553,13 @@ export class AccountService {
     // Apply status filter if provided
     let filteredContacts = contacts;
     if (options.status && options.status.length > 0) {
-      filteredContacts = contacts.filter(c =>
-        options.status!.includes(c.status)
-      );
+      filteredContacts = contacts.filter((c) => options.status!.includes(c.status));
     }
 
     // Apply cursor-based pagination
     let startIndex = 0;
     if (options.cursor) {
-      const cursorIndex = filteredContacts.findIndex(c => c.id.toString() === options.cursor);
+      const cursorIndex = filteredContacts.findIndex((c) => c.id.toString() === options.cursor);
       if (cursorIndex !== -1) {
         startIndex = cursorIndex + 1;
       }
@@ -567,7 +570,7 @@ export class AccountService {
     const results = hasMore ? paginatedContacts.slice(0, -1) : paginatedContacts;
 
     return Result.ok({
-      contacts: results.map(c => ({
+      contacts: results.map((c) => ({
         id: c.id.toString(),
         firstName: c.firstName,
         lastName: c.lastName,
@@ -593,24 +596,29 @@ export class AccountService {
       cursor?: string;
       stage?: string[];
     }
-  ): Promise<Result<{
-    opportunities: Array<{
-      id: string;
-      name: string;
-      stage: string;
-      value: number;
-      probability: number;
-      expectedCloseDate?: Date;
-      createdAt: Date;
-    }>;
-    nextCursor?: string;
-    total: number;
-    summary: {
-      totalValue: number;
-      weightedValue: number;
-      stageBreakdown: Record<string, number>;
-    };
-  }, DomainError>> {
+  ): Promise<
+    Result<
+      {
+        opportunities: Array<{
+          id: string;
+          name: string;
+          stage: string;
+          value: number;
+          probability: number;
+          expectedCloseDate?: Date;
+          createdAt: Date;
+        }>;
+        nextCursor?: string;
+        total: number;
+        summary: {
+          totalValue: number;
+          weightedValue: number;
+          stageBreakdown: Record<string, number>;
+        };
+      },
+      DomainError
+    >
+  > {
     // Validate account ID
     const accountIdResult = AccountId.create(accountId);
     if (accountIdResult.isFailure) {
@@ -634,37 +642,43 @@ export class AccountService {
     // Apply stage filter if provided
     let filteredOpportunities = opportunities;
     if (options.stage && options.stage.length > 0) {
-      filteredOpportunities = opportunities.filter(o =>
-        options.stage!.includes(o.stage)
-      );
+      filteredOpportunities = opportunities.filter((o) => options.stage!.includes(o.stage));
     }
 
     // Calculate summary
     const totalValue = filteredOpportunities.reduce((sum, o) => sum + o.value.amount, 0);
     const weightedValue = filteredOpportunities.reduce(
-      (sum, o) => sum + (o.value.amount * o.probability.value / 100),
+      (sum, o) => sum + (o.value.amount * o.probability.value) / 100,
       0
     );
-    const stageBreakdown = filteredOpportunities.reduce((acc, o) => {
-      acc[o.stage] = (acc[o.stage] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const stageBreakdown = filteredOpportunities.reduce(
+      (acc, o) => {
+        acc[o.stage] = (acc[o.stage] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
     // Apply cursor-based pagination
     let startIndex = 0;
     if (options.cursor) {
-      const cursorIndex = filteredOpportunities.findIndex(o => o.id.toString() === options.cursor);
+      const cursorIndex = filteredOpportunities.findIndex(
+        (o) => o.id.toString() === options.cursor
+      );
       if (cursorIndex !== -1) {
         startIndex = cursorIndex + 1;
       }
     }
 
-    const paginatedOpportunities = filteredOpportunities.slice(startIndex, startIndex + options.limit + 1);
+    const paginatedOpportunities = filteredOpportunities.slice(
+      startIndex,
+      startIndex + options.limit + 1
+    );
     const hasMore = paginatedOpportunities.length > options.limit;
     const results = hasMore ? paginatedOpportunities.slice(0, -1) : paginatedOpportunities;
 
     return Result.ok({
-      opportunities: results.map(o => ({
+      opportunities: results.map((o) => ({
         id: o.id.toString(),
         name: o.name,
         stage: o.stage,
@@ -691,18 +705,23 @@ export class AccountService {
       cursor?: string;
       types?: string[];
     }
-  ): Promise<Result<{
-    activities: Array<{
-      id: string;
-      type: string;
-      description: string;
-      entityType: 'CONTACT' | 'OPPORTUNITY';
-      entityId: string;
-      entityName: string;
-      createdAt: Date;
-    }>;
-    nextCursor?: string;
-  }, DomainError>> {
+  ): Promise<
+    Result<
+      {
+        activities: Array<{
+          id: string;
+          type: string;
+          description: string;
+          entityType: 'CONTACT' | 'OPPORTUNITY';
+          entityId: string;
+          entityName: string;
+          createdAt: Date;
+        }>;
+        nextCursor?: string;
+      },
+      DomainError
+    >
+  > {
     // Validate account ID
     const accountIdResult = AccountId.create(accountId);
     if (accountIdResult.isFailure) {
@@ -771,20 +790,23 @@ export class AccountService {
     // Apply type filter if provided
     let filteredActivities = activities;
     if (options.types && options.types.length > 0) {
-      filteredActivities = activities.filter(a => options.types!.includes(a.type));
+      filteredActivities = activities.filter((a) => options.types!.includes(a.type));
     }
 
     // Apply cursor-based pagination
     let startIndex = 0;
     if (options.cursor) {
       const cursorDate = new Date(options.cursor);
-      const cursorIndex = filteredActivities.findIndex(a => a.createdAt < cursorDate);
+      const cursorIndex = filteredActivities.findIndex((a) => a.createdAt < cursorDate);
       if (cursorIndex !== -1) {
         startIndex = cursorIndex;
       }
     }
 
-    const paginatedActivities = filteredActivities.slice(startIndex, startIndex + options.limit + 1);
+    const paginatedActivities = filteredActivities.slice(
+      startIndex,
+      startIndex + options.limit + 1
+    );
     const hasMore = paginatedActivities.length > options.limit;
     const results = hasMore ? paginatedActivities.slice(0, -1) : paginatedActivities;
 
@@ -804,7 +826,8 @@ export class AccountService {
 
     const rawRecord = await this.accountRepository.findWithChildren(id.value, maxDepth);
     if (!rawRecord) return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
-    if (rawRecord.tenantId !== tenantId) return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
+    if (rawRecord.tenantId !== tenantId)
+      return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
 
     const ancestors = await this.accountRepository.findAncestors(id.value);
     const ancestorList = ancestors.map((a) => ({ id: a.id.value, name: a.name }));
@@ -819,9 +842,7 @@ export class AccountService {
     });
 
     const current = mapToNode(rawRecord);
-    const rootAccount = ancestorList.length > 0
-      ? ancestorList[ancestorList.length - 1]
-      : null;
+    const rootAccount = ancestorList.length > 0 ? ancestorList[ancestorList.length - 1] : null;
 
     return Result.ok({ ancestors: ancestorList, current, rootAccount });
   }
@@ -837,7 +858,8 @@ export class AccountService {
 
     const account = await this.accountRepository.findById(id.value);
     if (!account) return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
-    if (account.tenantId !== tenantId) return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
+    if (account.tenantId !== tenantId)
+      return Result.fail(new NotFoundError(`Account not found: ${accountId}`));
 
     if (parentAccountId === null) {
       account.removeParent(userId);
@@ -850,7 +872,8 @@ export class AccountService {
     if (parentId.isFailure) return Result.fail(new ValidationError(parentId.error.message));
 
     const parent = await this.accountRepository.findById(parentId.value);
-    if (!parent) return Result.fail(new NotFoundError(`Parent account not found: ${parentAccountId}`));
+    if (!parent)
+      return Result.fail(new NotFoundError(`Parent account not found: ${parentAccountId}`));
     if (parent.tenantId !== tenantId) {
       return Result.fail(new ValidationError('Cannot set parent from different tenant'));
     }

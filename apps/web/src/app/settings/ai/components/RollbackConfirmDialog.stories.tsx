@@ -24,7 +24,8 @@ const meta: Meta<typeof RollbackConfirmDialog> = {
     layout: 'centered',
     docs: {
       description: {
-        component: 'Confirmation dialog for rolling back to a previous chain version. Requires a reason to be provided.',
+        component:
+          'Confirmation dialog for rolling back to a previous chain version. Requires a reason to be provided.',
       },
     },
   },

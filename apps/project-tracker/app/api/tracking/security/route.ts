@@ -328,10 +328,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error reading security metrics:', error);
-    return NextResponse.json(
-      { status: 'error', message: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ status: 'error', message: String(error) }, { status: 500 });
   }
 }
 
@@ -385,9 +382,6 @@ export async function POST(_request: NextRequest) {
     });
   } catch (error) {
     console.error('Error starting security scan:', error);
-    return NextResponse.json(
-      { status: 'error', message: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ status: 'error', message: String(error) }, { status: 500 });
   }
 }

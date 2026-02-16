@@ -12,7 +12,15 @@
  */
 
 import { join, dirname, basename } from 'node:path';
-import { existsSync, readdirSync, statSync, mkdirSync, renameSync, rmSync, copyFileSync } from 'node:fs';
+import {
+  existsSync,
+  readdirSync,
+  statSync,
+  mkdirSync,
+  renameSync,
+  rmSync,
+  copyFileSync,
+} from 'node:fs';
 import { readFileSync } from 'node:fs';
 import { parse } from 'csv-parse/sync';
 
@@ -20,7 +28,15 @@ import { parse } from 'csv-parse/sync';
 const PROJECT_ROOT = join(__dirname, '..', '..');
 const SPECIFY_DIR = join(PROJECT_ROOT, '.specify');
 const SPRINTS_DIR = join(SPECIFY_DIR, 'sprints');
-const SPRINT_PLAN_CSV = join(PROJECT_ROOT, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+const SPRINT_PLAN_CSV = join(
+  PROJECT_ROOT,
+  'apps',
+  'project-tracker',
+  'docs',
+  'metrics',
+  '_global',
+  'Sprint_plan.csv'
+);
 
 // CLI flags
 const DRY_RUN = process.argv.includes('--dry-run');
@@ -324,7 +340,9 @@ async function main(): Promise<void> {
 
   for (const result of results) {
     const status = result.errors.length === 0 ? colors.green + 'OK' : colors.red + 'ERRORS';
-    log(`${result.taskId}: ${result.filesMoved} moved, ${result.filesSkipped} skipped ${status}${colors.reset}`);
+    log(
+      `${result.taskId}: ${result.filesMoved} moved, ${result.filesSkipped} skipped ${status}${colors.reset}`
+    );
     if (result.errors.length > 0) {
       for (const error of result.errors) {
         log(`  - ${error}`, 'red');

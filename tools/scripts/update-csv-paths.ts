@@ -35,7 +35,9 @@ for (const record of records) {
 console.log(`Loaded ${taskSprintMap.size} task -> sprint mappings`);
 
 // Count original occurrences of old-style paths
-const oldFlatCount = (content.match(/EVIDENCE:\.specify\/[A-Z]+-\d+(?:-AI)?\/attestations\//g) || []).length;
+const oldFlatCount = (
+  content.match(/EVIDENCE:\.specify\/[A-Z]+-\d+(?:-AI)?\/attestations\//g) || []
+).length;
 const oldArtifactCount = (content.match(/EVIDENCE:artifacts\/attestations\//g) || []).length;
 console.log(`Found ${oldFlatCount} EVIDENCE:.specify/{TASK_ID}/attestations/ references`);
 console.log(`Found ${oldArtifactCount} EVIDENCE:artifacts/attestations/ references`);
@@ -43,10 +45,7 @@ console.log(`Found ${oldArtifactCount} EVIDENCE:artifacts/attestations/ referenc
 // Replace old flat structure with sprint-based structure
 // EVIDENCE:.specify/{TASK_ID}/attestations/file -> EVIDENCE:.specify/sprints/sprint-{N}/attestations/{TASK_ID}/file
 for (const [taskId, sprint] of taskSprintMap) {
-  const oldPattern = new RegExp(
-    `EVIDENCE:\\.specify/${taskId}/attestations/([^;\"]+)`,
-    'g'
-  );
+  const oldPattern = new RegExp(`EVIDENCE:\\.specify/${taskId}/attestations/([^;\"]+)`, 'g');
   content = content.replace(
     oldPattern,
     `EVIDENCE:.specify/sprints/sprint-${sprint}/attestations/${taskId}/$1`

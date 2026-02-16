@@ -154,7 +154,10 @@ describe('Task Router', () => {
       ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'VALIDATION_ERROR', message: `Contact not found: ${TEST_UUIDS.nonExistent}` },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: `Contact not found: ${TEST_UUIDS.nonExistent}`,
+        },
       });
 
       await expect(
@@ -194,7 +197,10 @@ describe('Task Router', () => {
       ctx.services!.task!.createTask = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'VALIDATION_ERROR', message: `Opportunity not found: ${TEST_UUIDS.nonExistent}` },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: `Opportunity not found: ${TEST_UUIDS.nonExistent}`,
+        },
       });
 
       await expect(
@@ -239,7 +245,10 @@ describe('Task Router', () => {
   });
 
   describe('list', () => {
-    const mockTaskList = [mockTaskWithRelations, { ...mockTaskWithRelations, id: TEST_UUIDS.task2 }];
+    const mockTaskList = [
+      mockTaskWithRelations,
+      { ...mockTaskWithRelations, id: TEST_UUIDS.task2 },
+    ];
 
     it('should return paginated list of tasks', async () => {
       prismaMock.task.findMany.mockResolvedValue(mockTaskList);
@@ -552,7 +561,10 @@ describe('Task Router', () => {
       ctx.services!.task!.deleteTask = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'VALIDATION_ERROR', message: 'Cannot delete completed tasks. They are kept for audit purposes.' },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Cannot delete completed tasks. They are kept for audit purposes.',
+        },
       });
 
       await expect(caller.delete({ id: TEST_UUIDS.task1 })).rejects.toThrow(
@@ -580,7 +592,10 @@ describe('Task Router', () => {
 
       expect(result.status).toBe('COMPLETED');
       expect(result.isCompleted).toBe(true);
-      expect(ctx.services!.task!.completeTask).toHaveBeenCalledWith(TEST_UUIDS.task1, TEST_UUIDS.user1);
+      expect(ctx.services!.task!.completeTask).toHaveBeenCalledWith(
+        TEST_UUIDS.task1,
+        TEST_UUIDS.user1
+      );
     });
 
     it('should throw NOT_FOUND for non-existent task', async () => {
@@ -632,8 +647,12 @@ describe('Task Router', () => {
 
     it('should return task statistics', async () => {
       prismaMock.task.count.mockResolvedValueOnce(mockStats.total); // total
-      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockStats.byStatus); // byStatus
-      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockStats.byPriority); // byPriority
+      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+        mockStats.byStatus
+      ); // byStatus
+      (prismaMock.task.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+        mockStats.byPriority
+      ); // byPriority
       prismaMock.task.count.mockResolvedValueOnce(10); // overdue
       prismaMock.task.count.mockResolvedValueOnce(5); // dueToday
 
@@ -792,16 +811,17 @@ describe('Task Router', () => {
           entityType: 'lead',
           entityId: TEST_UUIDS.lead1,
         })
-      ).rejects.toThrow(
-        expect.objectContaining({ code: 'NOT_FOUND' })
-      );
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
     });
 
     it('should throw BAD_REQUEST for completed task', async () => {
       ctx.services!.task!.assignToLead = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { code: 'VALIDATION_ERROR', message: 'Cannot reassign completed or cancelled tasks' },
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Cannot reassign completed or cancelled tasks',
+        },
       });
 
       await expect(
@@ -810,9 +830,7 @@ describe('Task Router', () => {
           entityType: 'lead',
           entityId: TEST_UUIDS.lead1,
         })
-      ).rejects.toThrow(
-        expect.objectContaining({ code: 'BAD_REQUEST' })
-      );
+      ).rejects.toThrow(expect.objectContaining({ code: 'BAD_REQUEST' }));
     });
   });
 
@@ -852,9 +870,7 @@ describe('Task Router', () => {
           taskId: TEST_UUIDS.nonExistent,
           newDueDate: new Date('2025-02-15'),
         })
-      ).rejects.toThrow(
-        expect.objectContaining({ code: 'NOT_FOUND' })
-      );
+      ).rejects.toThrow(expect.objectContaining({ code: 'NOT_FOUND' }));
     });
 
     it('should throw BAD_REQUEST for past date', async () => {
@@ -869,9 +885,7 @@ describe('Task Router', () => {
           taskId: TEST_UUIDS.task1,
           newDueDate: new Date('2020-01-01'),
         })
-      ).rejects.toThrow(
-        expect.objectContaining({ code: 'BAD_REQUEST' })
-      );
+      ).rejects.toThrow(expect.objectContaining({ code: 'BAD_REQUEST' }));
     });
   });
 

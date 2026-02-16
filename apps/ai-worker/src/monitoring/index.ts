@@ -15,10 +15,7 @@ import {
   hallucinationChecker as _hallucinationChecker,
   getHallucinationMetrics as _getHallucinationMetrics,
 } from './hallucination-checker';
-import {
-  roiTracker as _roiTracker,
-  getROIMetrics as _getROIMetrics,
-} from './roi-tracker';
+import { roiTracker as _roiTracker, getROIMetrics as _getROIMetrics } from './roi-tracker';
 import {
   latencyMonitor as _latencyMonitor,
   getLatencyMetrics as _getLatencyMetrics,
@@ -54,12 +51,7 @@ export type {
 } from './hallucination-checker';
 
 // ROI Tracking
-export {
-  ROITracker,
-  roiTracker,
-  defaultROIConfig,
-  getROIMetrics,
-} from './roi-tracker';
+export { ROITracker, roiTracker, defaultROIConfig, getROIMetrics } from './roi-tracker';
 export type {
   ValueType,
   AICost,
@@ -95,10 +87,7 @@ export {
   withMonitoring,
   sanitizeMetricLabel,
 } from './chain-monitor';
-export type {
-  ChainMonitorConfig,
-  MonitoredResult,
-} from './chain-monitor';
+export type { ChainMonitorConfig, MonitoredResult } from './chain-monitor';
 
 /**
  * Get all Prometheus metrics from monitoring modules
@@ -142,7 +131,9 @@ export function getMonitoringStatus(): {
 
   // Check hallucination rate
   if (!hallucinationStats.kpiCompliant) {
-    issues.push(`Hallucination rate ${(hallucinationStats.hallucinationRate * 100).toFixed(1)}% exceeds 5% target`);
+    issues.push(
+      `Hallucination rate ${(hallucinationStats.hallucinationRate * 100).toFixed(1)}% exceeds 5% target`
+    );
   }
 
   // Check ROI
@@ -152,7 +143,9 @@ export function getMonitoringStatus(): {
 
   // Check latency SLO
   if (!latencyStats.sloCompliance.overallCompliant) {
-    issues.push(`Latency SLO violation: P95=${latencyStats.sloCompliance.p95Actual.toFixed(0)}ms (target: ${latencyStats.sloCompliance.p95Target}ms)`);
+    issues.push(
+      `Latency SLO violation: P95=${latencyStats.sloCompliance.p95Actual.toFixed(0)}ms (target: ${latencyStats.sloCompliance.p95Target}ms)`
+    );
   }
 
   return {

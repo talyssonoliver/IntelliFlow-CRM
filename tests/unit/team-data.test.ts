@@ -32,7 +32,7 @@ describe('Team Data Validation', () => {
     });
 
     it('should have required fields for each member', () => {
-      teamData.members.forEach(member => {
+      teamData.members.forEach((member) => {
         expect(member.id).toBeDefined();
         expect(member.name).toBeDefined();
         expect(member.role).toBeDefined();
@@ -43,13 +43,13 @@ describe('Team Data Validation', () => {
     });
 
     it('should have unique member IDs', () => {
-      const ids = teamData.members.map(m => m.id);
+      const ids = teamData.members.map((m) => m.id);
       const uniqueIds = new Set(ids);
       expect(uniqueIds.size).toBe(ids.length);
     });
 
     it('should have the expected team members', () => {
-      const names = teamData.members.map(m => m.name);
+      const names = teamData.members.map((m) => m.name);
       expect(names).toContain('Alex Chen');
       expect(names).toContain('Jordan Smith');
       expect(names).toContain('Riley Patel');
@@ -59,19 +59,19 @@ describe('Team Data Validation', () => {
 
   describe('Content Validation', () => {
     it('should have valid photo URLs', () => {
-      teamData.members.forEach(member => {
+      teamData.members.forEach((member) => {
         expect(member.photo).toMatch(/^https?:\/\//);
       });
     });
 
     it('should have non-empty bios (minimum 50 characters)', () => {
-      teamData.members.forEach(member => {
+      teamData.members.forEach((member) => {
         expect(member.bio.length).toBeGreaterThan(50);
       });
     });
 
     it('should have descriptive role titles', () => {
-      teamData.members.forEach(member => {
+      teamData.members.forEach((member) => {
         expect(member.role.length).toBeGreaterThan(5);
         // Should not be just a generic "Member"
         expect(member.role.toLowerCase()).not.toBe('member');
@@ -79,14 +79,14 @@ describe('Team Data Validation', () => {
     });
 
     it('should have social links for each member', () => {
-      teamData.members.forEach(member => {
+      teamData.members.forEach((member) => {
         expect(member.socialLinks).toBeDefined();
         expect(member.socialLinks.linkedin || member.socialLinks.twitter).toBeTruthy();
       });
     });
 
     it('should have valid LinkedIn URLs', () => {
-      teamData.members.forEach(member => {
+      teamData.members.forEach((member) => {
         if (member.socialLinks.linkedin) {
           expect(member.socialLinks.linkedin).toMatch(/^https:\/\/(www\.)?linkedin\.com\//);
         }
@@ -94,7 +94,7 @@ describe('Team Data Validation', () => {
     });
 
     it('should have valid Twitter URLs', () => {
-      teamData.members.forEach(member => {
+      teamData.members.forEach((member) => {
         if (member.socialLinks.twitter) {
           expect(member.socialLinks.twitter).toMatch(/^https:\/\/(www\.)?twitter\.com\//);
         }
@@ -104,23 +104,23 @@ describe('Team Data Validation', () => {
 
   describe('Team Roles', () => {
     it('should have CEO/Co-Founder', () => {
-      const roles = teamData.members.map(m => m.role);
-      expect(roles.some(r => r.includes('CEO'))).toBe(true);
+      const roles = teamData.members.map((m) => m.role);
+      expect(roles.some((r) => r.includes('CEO'))).toBe(true);
     });
 
     it('should have CTO/Co-Founder', () => {
-      const roles = teamData.members.map(m => m.role);
-      expect(roles.some(r => r.includes('CTO'))).toBe(true);
+      const roles = teamData.members.map((m) => m.role);
+      expect(roles.some((r) => r.includes('CTO'))).toBe(true);
     });
 
     it('should have Head of Product', () => {
-      const roles = teamData.members.map(m => m.role);
-      expect(roles.some(r => r.includes('Product'))).toBe(true);
+      const roles = teamData.members.map((m) => m.role);
+      expect(roles.some((r) => r.includes('Product'))).toBe(true);
     });
 
     it('should have VP of Customer Success', () => {
-      const roles = teamData.members.map(m => m.role);
-      expect(roles.some(r => r.includes('Customer Success'))).toBe(true);
+      const roles = teamData.members.map((m) => m.role);
+      expect(roles.some((r) => r.includes('Customer Success'))).toBe(true);
     });
   });
 });

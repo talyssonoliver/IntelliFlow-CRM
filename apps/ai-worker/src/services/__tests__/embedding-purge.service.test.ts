@@ -44,7 +44,8 @@ describe('EmbeddingPurgeService (IFC-155)', () => {
       prisma.$queryRaw.mockResolvedValue([]);
       prisma.$transaction.mockImplementation(async (fn) => {
         const tx = {
-          $executeRaw: vi.fn()
+          $executeRaw: vi
+            .fn()
             .mockResolvedValueOnce(5) // documents purged
             .mockResolvedValueOnce(3), // notes purged
           auditLogEntry: {
@@ -69,7 +70,8 @@ describe('EmbeddingPurgeService (IFC-155)', () => {
       prisma.$queryRaw.mockResolvedValue([]);
       prisma.$transaction.mockImplementation(async (fn) => {
         const tx = {
-          $executeRaw: vi.fn()
+          $executeRaw: vi
+            .fn()
             .mockResolvedValueOnce(0) // no documents
             .mockResolvedValueOnce(10), // notes purged
           auditLogEntry: {
@@ -93,20 +95,24 @@ describe('EmbeddingPurgeService (IFC-155)', () => {
       prisma.$transaction.mockRejectedValue(new Error('Transaction failed'));
 
       // Act & Assert
-      await expect(service.purgeForSubject(testSubjectId, testTenantId))
-        .rejects.toThrow('Transaction failed');
+      await expect(service.purgeForSubject(testSubjectId, testTenantId)).rejects.toThrow(
+        'Transaction failed'
+      );
     });
 
     it('should respect legal hold', async () => {
       // Arrange - legal hold exists
-      prisma.$queryRaw.mockResolvedValue([{
-        id: 'hold-123',
-        retention_until: new Date('2027-01-01'),
-      }]);
+      prisma.$queryRaw.mockResolvedValue([
+        {
+          id: 'hold-123',
+          retention_until: new Date('2027-01-01'),
+        },
+      ]);
 
       // Act & Assert
-      await expect(service.purgeForSubject(testSubjectId, testTenantId))
-        .rejects.toThrow(LegalHoldError);
+      await expect(service.purgeForSubject(testSubjectId, testTenantId)).rejects.toThrow(
+        LegalHoldError
+      );
     });
 
     it('should create audit log entry', async () => {
@@ -115,9 +121,7 @@ describe('EmbeddingPurgeService (IFC-155)', () => {
       let auditCreateCalled = false;
       prisma.$transaction.mockImplementation(async (fn) => {
         const tx = {
-          $executeRaw: vi.fn()
-            .mockResolvedValueOnce(2)
-            .mockResolvedValueOnce(1),
+          $executeRaw: vi.fn().mockResolvedValueOnce(2).mockResolvedValueOnce(1),
           auditLogEntry: {
             create: vi.fn().mockImplementation(() => {
               auditCreateCalled = true;
@@ -129,7 +133,11 @@ describe('EmbeddingPurgeService (IFC-155)', () => {
       });
 
       // Act
-      const result = await service.purgeForSubject(testSubjectId, testTenantId, 'Test DSAR Request');
+      const result = await service.purgeForSubject(
+        testSubjectId,
+        testTenantId,
+        'Test DSAR Request'
+      );
 
       // Assert
       expect(auditCreateCalled).toBe(true);
@@ -141,9 +149,7 @@ describe('EmbeddingPurgeService (IFC-155)', () => {
       prisma.$queryRaw.mockResolvedValue([]);
       prisma.$transaction.mockImplementation(async (fn) => {
         const tx = {
-          $executeRaw: vi.fn()
-            .mockResolvedValueOnce(0)
-            .mockResolvedValueOnce(0),
+          $executeRaw: vi.fn().mockResolvedValueOnce(0).mockResolvedValueOnce(0),
           auditLogEntry: {
             create: vi.fn().mockResolvedValue({ id: 'audit-empty' }),
           },
@@ -165,9 +171,7 @@ describe('EmbeddingPurgeService (IFC-155)', () => {
       prisma.$queryRaw.mockRejectedValue(new Error('relation "legal_holds" does not exist'));
       prisma.$transaction.mockImplementation(async (fn) => {
         const tx = {
-          $executeRaw: vi.fn()
-            .mockResolvedValueOnce(1)
-            .mockResolvedValueOnce(1),
+          $executeRaw: vi.fn().mockResolvedValueOnce(1).mockResolvedValueOnce(1),
           auditLogEntry: {
             create: vi.fn().mockResolvedValue({ id: 'audit-fallback' }),
           },
@@ -186,14 +190,17 @@ describe('EmbeddingPurgeService (IFC-155)', () => {
 
     it('should handle legal hold with null retention_until', async () => {
       // Arrange - legal hold exists with no expiry
-      prisma.$queryRaw.mockResolvedValue([{
-        id: 'hold-indefinite',
-        retention_until: null,
-      }]);
+      prisma.$queryRaw.mockResolvedValue([
+        {
+          id: 'hold-indefinite',
+          retention_until: null,
+        },
+      ]);
 
       // Act & Assert
-      await expect(service.purgeForSubject(testSubjectId, testTenantId))
-        .rejects.toThrow('indefinite');
+      await expect(service.purgeForSubject(testSubjectId, testTenantId)).rejects.toThrow(
+        'indefinite'
+      );
     });
   });
 

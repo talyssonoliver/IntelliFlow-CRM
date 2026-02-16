@@ -95,7 +95,9 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
     } else {
       // Use in-memory repository for development/testing
       this.repository = new InMemoryOutboxRepository();
-      this.logger.info('Using InMemoryOutboxRepository (set EVENTS_WORKER_USE_DATABASE=true for production)');
+      this.logger.info(
+        'Using InMemoryOutboxRepository (set EVENTS_WORKER_USE_DATABASE=true for production)'
+      );
     }
   }
 
@@ -151,10 +153,7 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
   protected async processJob(job: Job<EventJobData>): Promise<EventJobResult> {
     const { eventId, eventType, aggregateId, payload } = job.data;
 
-    this.logger.debug(
-      { eventId, eventType, aggregateId },
-      'Processing event job'
-    );
+    this.logger.debug({ eventId, eventType, aggregateId }, 'Processing event job');
 
     // Create outbox event from job data
     const event: OutboxEvent = {
@@ -214,26 +213,32 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
   private registerRules(): void {
     const engine = getRulesEngine();
 
-    engine.registerRule(createLeadScoringRule({
-      id: 'default-lead-scoring',
-      triggerOnCreate: true,
-      triggerOnUpdate: true,
-    }));
+    engine.registerRule(
+      createLeadScoringRule({
+        id: 'default-lead-scoring',
+        triggerOnCreate: true,
+        triggerOnUpdate: true,
+      })
+    );
 
-    engine.registerRule(createCaseEscalationRule({
-      id: 'default-case-escalation',
-      priority: 'HIGH',
-      daysOverdue: 3,
-      notifyUsers: [],
-    }));
+    engine.registerRule(
+      createCaseEscalationRule({
+        id: 'default-case-escalation',
+        priority: 'HIGH',
+        daysOverdue: 3,
+        notifyUsers: [],
+      })
+    );
 
-    engine.registerRule(createTaskAssignmentRule({
-      id: 'default-task-on-lead-qualified',
-      eventType: 'lead.qualified',
-      assigneeField: 'qualifiedBy',
-      taskTitle: 'Follow up with qualified lead',
-      priority: 'HIGH',
-    }));
+    engine.registerRule(
+      createTaskAssignmentRule({
+        id: 'default-task-on-lead-qualified',
+        eventType: 'lead.qualified',
+        assigneeField: 'qualifiedBy',
+        taskTitle: 'Follow up with qualified lead',
+        priority: 'HIGH',
+      })
+    );
 
     this.logger.info('Rules engine initialized with default rules');
   }
@@ -247,13 +252,14 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
       DOMAIN_EVENT_TYPES.LEAD_CREATED,
       this.createHandler('lead.created', async (event) => {
         const leadId = event.aggregateId;
-        const { email, name, source } = event.payload as { email?: string; name?: string; source?: string };
+        const { email, name, source } = event.payload as {
+          email?: string;
+          name?: string;
+          source?: string;
+        };
 
         // Trigger lead scoring by publishing to AI scoring queue
-        this.logger.info(
-          { leadId, source },
-          'Triggering AI lead scoring'
-        );
+        this.logger.info({ leadId, source }, 'Triggering AI lead scoring');
 
         // Queue welcome notification if email is present
         if (email) {
@@ -263,10 +269,7 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
           );
         }
 
-        this.logger.info(
-          { leadId, name, source },
-          'Lead created event handled'
-        );
+        this.logger.info({ leadId, name, source }, 'Lead created event handled');
       }),
       'lead-created-handler'
     );
@@ -289,10 +292,7 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
 
         // Trigger automation workflows based on score thresholds
         if (score !== undefined && score >= 80) {
-          this.logger.info(
-            { leadId, score },
-            'High score detected - triggering hot lead workflow'
-          );
+          this.logger.info({ leadId, score }, 'High score detected - triggering hot lead workflow');
         } else if (score !== undefined && score >= 50) {
           this.logger.info(
             { leadId, score },
@@ -300,10 +300,7 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
           );
         }
 
-        this.logger.info(
-          { leadId, score },
-          'Lead scored event handled'
-        );
+        this.logger.info({ leadId, score }, 'Lead scored event handled');
       }),
       'lead-scored-handler'
     );
@@ -327,10 +324,7 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
           createdAt: new Date().toISOString(),
         };
 
-        this.logger.info(
-          { leadId, opportunityData },
-          'Creating opportunity from qualified lead'
-        );
+        this.logger.info({ leadId, opportunityData }, 'Creating opportunity from qualified lead');
 
         // Notify sales team about the new opportunity
         this.logger.info(
@@ -338,10 +332,7 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
           'Notifying sales team of qualified lead'
         );
 
-        this.logger.info(
-          { leadId },
-          'Lead qualified event handled'
-        );
+        this.logger.info({ leadId }, 'Lead qualified event handled');
       }),
       'lead-qualified-handler'
     );
@@ -378,10 +369,7 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
           'Sending celebration notification for won deal'
         );
 
-        this.logger.info(
-          { opportunityId },
-          'Opportunity won event handled'
-        );
+        this.logger.info({ opportunityId }, 'Opportunity won event handled');
       }),
       'opportunity-won-handler'
     );
@@ -414,15 +402,9 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
         );
 
         // Log delivery job details (would be sent to notification worker)
-        this.logger.debug(
-          { deliveryJob },
-          'Notification delivery job created'
-        );
+        this.logger.debug({ deliveryJob }, 'Notification delivery job created');
 
-        this.logger.info(
-          { notificationId },
-          'Notification created event handled'
-        );
+        this.logger.info({ notificationId }, 'Notification created event handled');
       }),
       'notification-created-handler'
     );
@@ -540,7 +522,8 @@ if (require.main === module) {
     .then(() => {
       logger.info('Events worker is running. Press Ctrl+C to stop.');
     })
-    .catch((error: Error) => { // NOSONAR: S7785
+    .catch((error: Error) => {
+      // NOSONAR: S7785
       logger.error({ error: error.message }, 'Failed to start events worker');
       process.exit(1);
     });

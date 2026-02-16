@@ -424,9 +424,13 @@ describe('Webhook Handler', () => {
         'x-signature': createHmacSignature(JSON.stringify(allowedPayload), testSecret),
       });
 
-      const blockedResult = await handler.handleRequest('filtered', JSON.stringify(blockedPayload), {
-        'x-signature': createHmacSignature(JSON.stringify(blockedPayload), testSecret),
-      });
+      const blockedResult = await handler.handleRequest(
+        'filtered',
+        JSON.stringify(blockedPayload),
+        {
+          'x-signature': createHmacSignature(JSON.stringify(blockedPayload), testSecret),
+        }
+      );
 
       expect(processCount).toBe(1);
       expect(blockedResult.success).toBe(true);
@@ -565,7 +569,9 @@ describe('Idempotency Middleware', () => {
       const result2 = await wrapped(input);
 
       expect(callCount).toBe(1);
-      expect((result1 as { result: { processed: boolean }; fromCache: boolean }).result).toEqual({ processed: true });
+      expect((result1 as { result: { processed: boolean }; fromCache: boolean }).result).toEqual({
+        processed: true,
+      });
       expect((result1 as { fromCache: boolean }).fromCache).toBe(false);
       expect((result2 as { fromCache: boolean }).fromCache).toBe(true);
     });
@@ -583,7 +589,7 @@ describe('Idempotency Middleware', () => {
       await shortTtlMiddleware.completeProcessing(key);
 
       // Wait for TTL to expire
-      await new Promise(resolve => setTimeout(resolve, 10));
+      await new Promise((resolve) => setTimeout(resolve, 10));
 
       const removed = await shortTtlMiddleware.cleanup();
       expect(removed).toBeGreaterThanOrEqual(1);
@@ -814,7 +820,7 @@ describe('Retry Logic', () => {
       await shortDelayManager.scheduleRetry('test', 'evt_2', 'test.event', {});
 
       // Wait for retry to be ready (baseDelayMs is 10ms, wait a bit more)
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       const result = await shortDelayManager.processPending({
         handler: async () => {
@@ -861,7 +867,7 @@ describe('Retry Logic', () => {
       expect(breaker.getState().status).toBe('open');
 
       // Wait for open duration
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       expect(breaker.canRequest()).toBe(true);
       expect(breaker.getState().status).toBe('half_open');
@@ -872,7 +878,7 @@ describe('Retry Logic', () => {
       breaker.recordFailure();
       breaker.recordFailure();
 
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       // Call canRequest to trigger state transition from open to half_open
       expect(breaker.canRequest()).toBe(true);
@@ -889,7 +895,7 @@ describe('Retry Logic', () => {
       breaker.recordFailure();
       breaker.recordFailure();
 
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise((resolve) => setTimeout(resolve, 150));
 
       // Call canRequest to trigger state transition from open to half_open
       expect(breaker.canRequest()).toBe(true);
@@ -1008,7 +1014,7 @@ describe('Webhook Framework', () => {
 
     it('should track processing time', async () => {
       framework.on('timed.event', async () => {
-        await new Promise(resolve => setTimeout(resolve, 10));
+        await new Promise((resolve) => setTimeout(resolve, 10));
       });
 
       const payload = createTestPayload('timed.event');
@@ -1043,7 +1049,7 @@ describe('Webhook Framework', () => {
 
       // Process retries until DLQ
       for (let i = 0; i < 10; i++) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
         await framework.processRetries();
       }
 
@@ -1137,7 +1143,7 @@ describe('Webhook System Integration', () => {
     expect(attempts).toBe(1);
 
     // Wait for retry delay (2 seconds + buffer)
-    await new Promise(resolve => setTimeout(resolve, 2500));
+    await new Promise((resolve) => setTimeout(resolve, 2500));
     await framework.processRetries();
 
     expect(attempts).toBe(successOnAttempt);
@@ -1146,13 +1152,13 @@ describe('Webhook System Integration', () => {
   it('should meet KPI: API coverage 100%', () => {
     // Verify all required API endpoints are implemented
     const requiredEndpoints = [
-      'handleRequest',      // Main webhook handler
-      'registerSource',     // Source registration
-      'removeSource',       // Source removal
-      'getRouter',          // Event router access
-      'wasProcessed',       // Idempotency check
-      'getEventResult',     // Get previous result
-      'getSources',         // List sources
+      'handleRequest', // Main webhook handler
+      'registerSource', // Source registration
+      'removeSource', // Source removal
+      'getRouter', // Event router access
+      'wasProcessed', // Idempotency check
+      'getEventResult', // Get previous result
+      'getSources', // List sources
     ];
 
     const handler = createWebhookHandler();

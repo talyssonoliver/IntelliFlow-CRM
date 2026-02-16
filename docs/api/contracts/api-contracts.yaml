@@ -7,19 +7,19 @@
 # Validators in packages/validators/__tests__/api-contract-consistency.spec.ts
 # will fail CI if code deviates from this specification.
 
-version: "1.0.0"
-updated: "2026-01-05"
+version: '1.0.0'
+updated: '2026-01-05'
 
 # Procedure Types - Define access control levels
 procedures:
   publicProcedure:
-    description: "No authentication required"
+    description: 'No authentication required'
     requiresAuth: false
     requiresTenant: false
     scope: public
 
   protectedProcedure:
-    description: "Requires authentication, tenant filter only"
+    description: 'Requires authentication, tenant filter only'
     requiresAuth: true
     requiresTenant: true
     scope: tenant_only
@@ -28,7 +28,7 @@ procedures:
       ownerId: none
 
   tenantProcedure:
-    description: "Requires auth + owner filtering by role"
+    description: 'Requires auth + owner filtering by role'
     requiresAuth: true
     requiresTenant: true
     scope: tenant_with_owner
@@ -42,7 +42,7 @@ procedures:
       USER: own_records_only
 
   adminProcedure:
-    description: "Requires ADMIN role"
+    description: 'Requires ADMIN role'
     requiresAuth: true
     requiresTenant: true
     scope: admin_only
@@ -54,7 +54,7 @@ routers:
   # CRM CORE - Lead, Contact, Account, Opportunity
   # ============================================================================
   lead:
-    description: "Lead management - capture, score, qualify, convert"
+    description: 'Lead management - capture, score, qualify, convert'
     defaultProcedure: tenantProcedure
     endpoints:
       create:
@@ -71,7 +71,21 @@ routers:
         procedure: tenantProcedure
         type: query
         ownerFilter: true
-        inputs: [page, limit, status, source, minScore, maxScore, search, ownerId, dateFrom, dateTo, sortBy, sortOrder]
+        inputs:
+          [
+            page,
+            limit,
+            status,
+            source,
+            minScore,
+            maxScore,
+            search,
+            ownerId,
+            dateFrom,
+            dateTo,
+            sortBy,
+            sortOrder,
+          ]
       update:
         procedure: tenantProcedure
         type: mutation
@@ -98,13 +112,13 @@ routers:
         ownerFilter: true
         inputs: [leadId]
       stats:
-        procedure: tenantProcedure  # REQUIRED: Must match list scope
+        procedure: tenantProcedure # REQUIRED: Must match list scope
         type: query
-        ownerFilter: true  # REQUIRED: Must be consistent with list
+        ownerFilter: true # REQUIRED: Must be consistent with list
         inputs: []
         consistency:
           mustMatchScope: [list, getById, create]
-          reason: "Stats must reflect same data scope as list endpoint"
+          reason: 'Stats must reflect same data scope as list endpoint'
       getHotLeads:
         procedure: tenantProcedure
         type: query
@@ -142,7 +156,7 @@ routers:
         inputs: [ids]
 
   contact:
-    description: "Contact management - 360-degree view"
+    description: 'Contact management - 360-degree view'
     defaultProcedure: tenantProcedure
     endpoints:
       create:
@@ -219,7 +233,7 @@ routers:
         inputs: [ids]
 
   account:
-    description: "Account/Company management"
+    description: 'Account/Company management'
     defaultProcedure: tenantProcedure
     endpoints:
       create:
@@ -236,7 +250,20 @@ routers:
         procedure: tenantProcedure
         type: query
         ownerFilter: true
-        inputs: [page, limit, search, industry, ownerId, minRevenue, maxRevenue, minEmployees, maxEmployees, sortBy, sortOrder]
+        inputs:
+          [
+            page,
+            limit,
+            search,
+            industry,
+            ownerId,
+            minRevenue,
+            maxRevenue,
+            minEmployees,
+            maxEmployees,
+            sortBy,
+            sortOrder,
+          ]
       update:
         procedure: tenantProcedure
         type: mutation
@@ -256,14 +283,15 @@ routers:
           mustMatchScope: [list]
 
   opportunity:
-    description: "Deal/Opportunity pipeline management"
+    description: 'Deal/Opportunity pipeline management'
     defaultProcedure: tenantProcedure
     endpoints:
       create:
         procedure: tenantProcedure
         type: mutation
         ownerFilter: true
-        inputs: [name, description, value, probability, stage, expectedCloseDate, accountId, contactId]
+        inputs:
+          [name, description, value, probability, stage, expectedCloseDate, accountId, contactId]
       getById:
         procedure: tenantProcedure
         type: query
@@ -273,7 +301,24 @@ routers:
         procedure: tenantProcedure
         type: query
         ownerFilter: true
-        inputs: [page, limit, search, stage, ownerId, accountId, contactId, minValue, maxValue, minProbability, maxProbability, dateFrom, dateTo, sortBy, sortOrder]
+        inputs:
+          [
+            page,
+            limit,
+            search,
+            stage,
+            ownerId,
+            accountId,
+            contactId,
+            minValue,
+            maxValue,
+            minProbability,
+            maxProbability,
+            dateFrom,
+            dateTo,
+            sortBy,
+            sortOrder,
+          ]
       update:
         procedure: tenantProcedure
         type: mutation
@@ -301,7 +346,7 @@ routers:
   # CRM SUPPORT - Task, Ticket
   # ============================================================================
   task:
-    description: "Task management across CRM entities"
+    description: 'Task management across CRM entities'
     defaultProcedure: tenantProcedure
     endpoints:
       create:
@@ -318,12 +363,29 @@ routers:
         procedure: tenantProcedure
         type: query
         ownerFilter: true
-        inputs: [page, limit, search, status, priority, ownerId, leadId, contactId, opportunityId, dueDateFrom, dueDateTo, overdue, sortBy, sortOrder]
+        inputs:
+          [
+            page,
+            limit,
+            search,
+            status,
+            priority,
+            ownerId,
+            leadId,
+            contactId,
+            opportunityId,
+            dueDateFrom,
+            dueDateTo,
+            overdue,
+            sortBy,
+            sortOrder,
+          ]
       update:
         procedure: tenantProcedure
         type: mutation
         ownerFilter: true
-        inputs: [id, title, description, status, priority, dueDate, leadId, contactId, opportunityId]
+        inputs:
+          [id, title, description, status, priority, dueDate, leadId, contactId, opportunityId]
       delete:
         procedure: tenantProcedure
         type: mutation
@@ -343,13 +405,13 @@ routers:
           mustMatchScope: [list]
 
   ticket:
-    description: "Support ticket management"
+    description: 'Support ticket management'
     defaultProcedure: tenantProcedure
     endpoints:
       create:
         procedure: tenantProcedure
         type: mutation
-        ownerFilter: false  # Tickets visible to assignees, not owners
+        ownerFilter: false # Tickets visible to assignees, not owners
         inputs: [subject, description, priority, assigneeId]
       getById:
         procedure: tenantProcedure
@@ -413,9 +475,9 @@ routers:
   # ANALYTICS - Dashboard metrics
   # ============================================================================
   analytics:
-    description: "Dashboard analytics - aggregated metrics"
+    description: 'Dashboard analytics - aggregated metrics'
     defaultProcedure: protectedProcedure
-    note: "Analytics endpoints aggregate across all accessible data for the user"
+    note: 'Analytics endpoints aggregate across all accessible data for the user'
     endpoints:
       dealsWonTrend:
         procedure: protectedProcedure
@@ -442,13 +504,13 @@ routers:
         type: query
         ownerFilter: false
         inputs: []
-        warning: "Returns tenant-wide stats - for dashboard only, not entity pages"
+        warning: 'Returns tenant-wide stats - for dashboard only, not entity pages'
 
   # ============================================================================
   # AI - Agent tools, conversations, feedback
   # ============================================================================
   agent:
-    description: "AI agent tool execution and approval workflow"
+    description: 'AI agent tool execution and approval workflow'
     defaultProcedure: protectedProcedure
     endpoints:
       listTools:
@@ -493,14 +555,25 @@ routers:
         inputs: []
 
   conversation:
-    description: "AI conversation records with tool tracking"
+    description: 'AI conversation records with tool tracking'
     defaultProcedure: protectedProcedure
     endpoints:
       create:
         procedure: protectedProcedure
         type: mutation
         ownerFilter: false
-        inputs: [sessionId, title, agentId, agentName, agentModel, contextType, contextId, contextName, channel]
+        inputs:
+          [
+            sessionId,
+            title,
+            agentId,
+            agentName,
+            agentModel,
+            contextType,
+            contextId,
+            contextName,
+            channel,
+          ]
       getById:
         procedure: protectedProcedure
         type: query
@@ -515,17 +588,57 @@ routers:
         procedure: protectedProcedure
         type: query
         ownerFilter: false
-        inputs: [userId, agentId, contextType, contextId, channel, status, startDate, endDate, searchQuery, limit, offset]
+        inputs:
+          [
+            userId,
+            agentId,
+            contextType,
+            contextId,
+            channel,
+            status,
+            startDate,
+            endDate,
+            searchQuery,
+            limit,
+            offset,
+          ]
       addMessage:
         procedure: protectedProcedure
         type: mutation
         ownerFilter: false
-        inputs: [conversationId, role, content, contentType, modelUsed, finishReason, tokenCount, promptTokens, completionTokens, confidence, attachments]
+        inputs:
+          [
+            conversationId,
+            role,
+            content,
+            contentType,
+            modelUsed,
+            finishReason,
+            tokenCount,
+            promptTokens,
+            completionTokens,
+            confidence,
+            attachments,
+          ]
       recordToolCall:
         procedure: protectedProcedure
         type: mutation
         ownerFilter: false
-        inputs: [conversationId, messageId, toolName, toolType, toolVersion, inputParameters, requiresApproval, affectedEntityType, affectedEntityId, changeDescription, isReversible, rollbackData]
+        inputs:
+          [
+            conversationId,
+            messageId,
+            toolName,
+            toolType,
+            toolVersion,
+            inputParameters,
+            requiresApproval,
+            affectedEntityType,
+            affectedEntityId,
+            changeDescription,
+            isReversible,
+            rollbackData,
+          ]
       updateToolCall:
         procedure: protectedProcedure
         type: mutation
@@ -563,7 +676,7 @@ routers:
         inputs: [olderThanDays]
 
   feedback:
-    description: "Human-in-the-loop AI feedback"
+    description: 'Human-in-the-loop AI feedback'
     defaultProcedure: tenantProcedure
     endpoints:
       submitSimple:
@@ -601,14 +714,29 @@ routers:
   # LEGAL - Appointments, Documents
   # ============================================================================
   appointments:
-    description: "Appointment scheduling with conflict detection"
+    description: 'Appointment scheduling with conflict detection'
     defaultProcedure: protectedProcedure
     endpoints:
       create:
         procedure: protectedProcedure
         type: mutation
         ownerFilter: false
-        inputs: [title, description, startTime, endTime, appointmentType, location, attendeeIds, linkedCaseIds, bufferMinutesBefore, bufferMinutesAfter, recurrence, reminderMinutes, forceOverrideConflicts]
+        inputs:
+          [
+            title,
+            description,
+            startTime,
+            endTime,
+            appointmentType,
+            location,
+            attendeeIds,
+            linkedCaseIds,
+            bufferMinutesBefore,
+            bufferMinutesAfter,
+            recurrence,
+            reminderMinutes,
+            forceOverrideConflicts,
+          ]
       getById:
         procedure: protectedProcedure
         type: query
@@ -618,7 +746,18 @@ routers:
         procedure: protectedProcedure
         type: query
         ownerFilter: false
-        inputs: [page, limit, status, appointmentType, startTimeFrom, startTimeTo, caseId, sortBy, sortOrder]
+        inputs:
+          [
+            page,
+            limit,
+            status,
+            appointmentType,
+            startTimeFrom,
+            startTimeTo,
+            caseId,
+            sortBy,
+            sortOrder,
+          ]
       update:
         procedure: protectedProcedure
         type: mutation
@@ -658,7 +797,15 @@ routers:
         procedure: protectedProcedure
         type: query
         ownerFilter: false
-        inputs: [startTime, endTime, attendeeIds, bufferMinutesBefore, bufferMinutesAfter, excludeAppointmentId]
+        inputs:
+          [
+            startTime,
+            endTime,
+            attendeeIds,
+            bufferMinutesBefore,
+            bufferMinutesAfter,
+            excludeAppointmentId,
+          ]
       checkAvailability:
         procedure: protectedProcedure
         type: query
@@ -668,7 +815,15 @@ routers:
         procedure: protectedProcedure
         type: query
         ownerFilter: false
-        inputs: [attendeeId, startFrom, durationMinutes, maxDaysAhead, bufferMinutesBefore, bufferMinutesAfter]
+        inputs:
+          [
+            attendeeId,
+            startFrom,
+            durationMinutes,
+            maxDaysAhead,
+            bufferMinutesBefore,
+            bufferMinutesAfter,
+          ]
       linkToCase:
         procedure: protectedProcedure
         type: mutation
@@ -701,15 +856,28 @@ routers:
         inputs: []
 
   documents:
-    description: "Case document management with versioning and e-signature"
+    description: 'Case document management with versioning and e-signature'
     defaultProcedure: protectedProcedure
-    accessControl: domain_based  # Uses ACL, not owner filtering
+    accessControl: domain_based # Uses ACL, not owner filtering
     endpoints:
       create:
         procedure: protectedProcedure
         type: mutation
         ownerFilter: false
-        inputs: [title, description, documentType, classification, tags, relatedCaseId, relatedContactId, storageKey, contentHash, mimeType, sizeBytes]
+        inputs:
+          [
+            title,
+            description,
+            documentType,
+            classification,
+            tags,
+            relatedCaseId,
+            relatedContactId,
+            storageKey,
+            contentHash,
+            mimeType,
+            sizeBytes,
+          ]
       createVersion:
         procedure: protectedProcedure
         type: mutation
@@ -800,7 +968,7 @@ routers:
   # INFRASTRUCTURE - Health, Auth, Billing
   # ============================================================================
   health:
-    description: "Health check and monitoring"
+    description: 'Health check and monitoring'
     defaultProcedure: publicProcedure
     endpoints:
       ping:
@@ -830,7 +998,7 @@ routers:
         inputs: []
 
   auth:
-    description: "Authentication and session management"
+    description: 'Authentication and session management'
     defaultProcedure: publicProcedure
     endpoints:
       login:
@@ -905,7 +1073,7 @@ routers:
         inputs: [email]
 
   billing:
-    description: "Billing and subscription management (Stripe)"
+    description: 'Billing and subscription management (Stripe)'
     defaultProcedure: protectedProcedure
     endpoints:
       getSubscription:
@@ -965,7 +1133,7 @@ routers:
         inputs: [planId, billingCycle, paymentMethodId]
 
   timeline:
-    description: "Unified activity timeline"
+    description: 'Unified activity timeline'
     defaultProcedure: tenantProcedure
     endpoints:
       list:
@@ -975,7 +1143,7 @@ routers:
         inputs: [entityType, entityId, page, limit, activityTypes, dateFrom, dateTo]
 
   system:
-    description: "System information and metadata endpoints"
+    description: 'System information and metadata endpoints'
     defaultProcedure: publicProcedure
     endpoints:
       version:
@@ -998,13 +1166,13 @@ routers:
         type: query
         ownerFilter: false
         inputs: []
-        note: "Non-sensitive system configuration - admin only"
+        note: 'Non-sensitive system configuration - admin only'
       metrics:
         procedure: adminProcedure
         type: query
         ownerFilter: false
         inputs: []
-        note: "Process metrics - admin only"
+        note: 'Process metrics - admin only'
       capabilities:
         procedure: publicProcedure
         type: query
@@ -1012,7 +1180,7 @@ routers:
         inputs: []
 
   upload:
-    description: "File upload through ingestion pipeline"
+    description: 'File upload through ingestion pipeline'
     defaultProcedure: protectedProcedure
     endpoints:
       upload:
@@ -1020,7 +1188,7 @@ routers:
         type: mutation
         ownerFilter: false
         inputs: [filename, mimeType, content, relatedCaseId, relatedContactId]
-        note: "Base64 encoded content, processed via ingestion orchestrator"
+        note: 'Base64 encoded content, processed via ingestion orchestrator'
       getUploadStatus:
         procedure: protectedProcedure
         type: query
@@ -1028,10 +1196,10 @@ routers:
         inputs: [documentId]
 
   cases:
-    description: "Legal case management - STUB pending Prisma schema"
+    description: 'Legal case management - STUB pending Prisma schema'
     status: stub
     defaultProcedure: tenantProcedure
-    note: "Router is stubbed pending Case and CaseTask Prisma models"
+    note: 'Router is stubbed pending Case and CaseTask Prisma models'
     endpoints: {}
 
 # ============================================================================
@@ -1039,18 +1207,18 @@ routers:
 # ============================================================================
 validationRules:
   scopeConsistency:
-    description: "Endpoints within same router should have consistent scope"
-    rule: "If router has list endpoint with ownerFilter:true, stats must also have ownerFilter:true"
+    description: 'Endpoints within same router should have consistent scope'
+    rule: 'If router has list endpoint with ownerFilter:true, stats must also have ownerFilter:true'
     affectedRouters: [lead, contact, account, opportunity, task]
 
   procedureMatching:
-    description: "CRUD endpoints should use same procedure type"
-    rule: "create, getById, list, update, delete should all use same procedure"
+    description: 'CRUD endpoints should use same procedure type'
+    rule: 'create, getById, list, update, delete should all use same procedure'
 
   statsAlignment:
-    description: "Stats endpoints must match list scope"
-    rule: "stats.ownerFilter MUST equal list.ownerFilter"
-    violations: []  # All violations resolved
+    description: 'Stats endpoints must match list scope'
+    rule: 'stats.ownerFilter MUST equal list.ownerFilter'
+    violations: [] # All violations resolved
 
 # ============================================================================
 # RESOLVED VIOLATIONS - History of fixed issues
@@ -1060,28 +1228,28 @@ resolvedViolations:
     severity: critical
     router: lead
     endpoint: stats
-    issue: "Uses protectedProcedure instead of tenantProcedure"
-    impact: "Dashboard shows 5 leads, Leads page shows 2 for non-admin users"
-    resolution: "Changed to tenantProcedure with createTenantWhereClause"
-    resolvedAt: "2026-01-05"
-    file: "apps/api/src/modules/lead/lead.router.ts"
+    issue: 'Uses protectedProcedure instead of tenantProcedure'
+    impact: 'Dashboard shows 5 leads, Leads page shows 2 for non-admin users'
+    resolution: 'Changed to tenantProcedure with createTenantWhereClause'
+    resolvedAt: '2026-01-05'
+    file: 'apps/api/src/modules/lead/lead.router.ts'
     line: 405
 
   - id: VIOLATION-002
     severity: critical
     router: documents
     endpoint: create, list
-    issue: "Uses userId as tenantId instead of ctx.user.tenantId"
-    impact: "Documents stored with wrong tenantId, breaks multi-tenant isolation"
-    resolution: "Changed to use ctx.user?.tenantId ?? userId as fallback"
-    resolvedAt: "2026-01-05"
-    file: "apps/api/src/modules/legal/documents.router.ts"
+    issue: 'Uses userId as tenantId instead of ctx.user.tenantId'
+    impact: 'Documents stored with wrong tenantId, breaks multi-tenant isolation'
+    resolution: 'Changed to use ctx.user?.tenantId ?? userId as fallback'
+    resolvedAt: '2026-01-05'
+    file: 'apps/api/src/modules/legal/documents.router.ts'
     lines: [85, 213]
 
 # ============================================================================
 # KNOWN VIOLATIONS - Current bugs to fix
 # ============================================================================
-knownViolations: []  # No known violations
+knownViolations: [] # No known violations
 
 # ============================================================================
 # METADATA - For LLM and tooling
@@ -1091,11 +1259,11 @@ metadata:
   totalEndpoints: 170
   procedureDistribution:
     publicProcedure: 18
-    protectedProcedure: 105  # -1: lead.stats moved to tenantProcedure
-    tenantProcedure: 53      # +1: lead.stats fixed (VIOLATION-001)
+    protectedProcedure: 105 # -1: lead.stats moved to tenantProcedure
+    tenantProcedure: 53 # +1: lead.stats fixed (VIOLATION-001)
     adminProcedure: 4
-  stubRouters: 1  # cases router pending Prisma schema
-  lastValidated: "2026-01-05"
-  validatorPath: "packages/validators/__tests__/api-contract-consistency.spec.ts"
+  stubRouters: 1 # cases router pending Prisma schema
+  lastValidated: '2026-01-05'
+  validatorPath: 'packages/validators/__tests__/api-contract-consistency.spec.ts'
   sourceOfTruth: true
-  llmFriendlyRef: "docs/api/contracts/README.md"
+  llmFriendlyRef: 'docs/api/contracts/README.md'

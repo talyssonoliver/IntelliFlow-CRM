@@ -2,18 +2,9 @@
  * Stripe Handler Modules
  */
 
-export {
-  createCustomer,
-  getCustomer,
-  updateCustomer,
-  deleteCustomer,
-} from './customers';
+export { createCustomer, getCustomer, updateCustomer, deleteCustomer } from './customers';
 
-export {
-  attachPaymentMethod,
-  detachPaymentMethod,
-  listPaymentMethods,
-} from './payment-methods';
+export { attachPaymentMethod, detachPaymentMethod, listPaymentMethods } from './payment-methods';
 
 export {
   createPaymentIntent,
@@ -23,10 +14,7 @@ export {
   getPaymentIntent,
 } from './payment-intents';
 
-export {
-  createRefund,
-  getRefund,
-} from './refunds';
+export { createRefund, getRefund } from './refunds';
 
 export {
   createSubscription,
@@ -36,11 +24,7 @@ export {
   listSubscriptions,
 } from './subscriptions';
 
-export {
-  getInvoice,
-  listInvoices,
-  payInvoice,
-} from './invoices';
+export { getInvoice, listInvoices, payInvoice } from './invoices';
 
 export { constructWebhookEvent } from './webhooks';
 

@@ -345,36 +345,52 @@ describe('providers supplementary - retry logic', () => {
 describe('providers supplementary - QueryCache auth status query skip logic', () => {
   it('identifies auth status query key pattern', () => {
     const queryKey = [['auth', 'getStatus']] as unknown[];
-    const isAuthStatusQuery = Array.isArray(queryKey) &&
-      queryKey.some((k: unknown) =>
-        Array.isArray(k) && (k as string[]).includes('auth') && (k as string[]).includes('getStatus')
+    const isAuthStatusQuery =
+      Array.isArray(queryKey) &&
+      queryKey.some(
+        (k: unknown) =>
+          Array.isArray(k) &&
+          (k as string[]).includes('auth') &&
+          (k as string[]).includes('getStatus')
       );
     expect(isAuthStatusQuery).toBe(true);
   });
 
   it('does not match non-auth query keys', () => {
     const queryKey = [['users', 'list']] as unknown[];
-    const isAuthStatusQuery = Array.isArray(queryKey) &&
-      queryKey.some((k: unknown) =>
-        Array.isArray(k) && (k as string[]).includes('auth') && (k as string[]).includes('getStatus')
+    const isAuthStatusQuery =
+      Array.isArray(queryKey) &&
+      queryKey.some(
+        (k: unknown) =>
+          Array.isArray(k) &&
+          (k as string[]).includes('auth') &&
+          (k as string[]).includes('getStatus')
       );
     expect(isAuthStatusQuery).toBe(false);
   });
 
   it('does not match partial auth query keys', () => {
     const queryKey = [['auth', 'login']] as unknown[];
-    const isAuthStatusQuery = Array.isArray(queryKey) &&
-      queryKey.some((k: unknown) =>
-        Array.isArray(k) && (k as string[]).includes('auth') && (k as string[]).includes('getStatus')
+    const isAuthStatusQuery =
+      Array.isArray(queryKey) &&
+      queryKey.some(
+        (k: unknown) =>
+          Array.isArray(k) &&
+          (k as string[]).includes('auth') &&
+          (k as string[]).includes('getStatus')
       );
     expect(isAuthStatusQuery).toBe(false);
   });
 
   it('does not match empty query key', () => {
     const queryKey = [] as unknown[];
-    const isAuthStatusQuery = Array.isArray(queryKey) &&
-      queryKey.some((k: unknown) =>
-        Array.isArray(k) && (k as string[]).includes('auth') && (k as string[]).includes('getStatus')
+    const isAuthStatusQuery =
+      Array.isArray(queryKey) &&
+      queryKey.some(
+        (k: unknown) =>
+          Array.isArray(k) &&
+          (k as string[]).includes('auth') &&
+          (k as string[]).includes('getStatus')
       );
     expect(isAuthStatusQuery).toBe(false);
   });
@@ -382,9 +398,13 @@ describe('providers supplementary - QueryCache auth status query skip logic', ()
   it('handles nested array formats', () => {
     // tRPC sometimes nests keys differently
     const queryKey = [['auth'], ['getStatus']] as unknown[];
-    const isAuthStatusQuery = Array.isArray(queryKey) &&
-      queryKey.some((k: unknown) =>
-        Array.isArray(k) && (k as string[]).includes('auth') && (k as string[]).includes('getStatus')
+    const isAuthStatusQuery =
+      Array.isArray(queryKey) &&
+      queryKey.some(
+        (k: unknown) =>
+          Array.isArray(k) &&
+          (k as string[]).includes('auth') &&
+          (k as string[]).includes('getStatus')
       );
     // Each sub-array only contains one element, so this should NOT match
     expect(isAuthStatusQuery).toBe(false);

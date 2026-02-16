@@ -10,9 +10,9 @@ optimized for AI-first development. The project emphasizes automation, type
 safety, and AI-assisted workflows throughout the development lifecycle.
 
 **Project Status**: Currently in Sprint 6 (MVP implementation phase). IFC-010
-(Phase 1 Go/No-Go Decision) passed on 2025-12-27 with unanimous GO decision.
-The codebase will be built incrementally following the comprehensive sprint plan
-in `Sprint_plan.csv` (316 tasks across 34 sprints).
+(Phase 1 Go/No-Go Decision) passed on 2025-12-27 with unanimous GO decision. The
+codebase will be built incrementally following the comprehensive sprint plan in
+`Sprint_plan.csv` (316 tasks across 34 sprints).
 
 ### Sprint Plan Structure
 
@@ -31,7 +31,8 @@ All project tasks are tracked in `Sprint_plan.csv` with the following structure:
 - **Key CSV Columns**:
   - `Section`: Feature area (AI Foundation, Validation, Core CRM, etc.)
   - `Dependencies`: Task IDs that must complete first
-  - `Pre-requisites`: Files, policies, and environment requirements (see prefixes below)
+  - `Pre-requisites`: Files, policies, and environment requirements (see
+    prefixes below)
   - `Definition of Done`: Specific completion criteria
   - `KPIs`: Measurable success metrics (e.g., "Coverage >90%", "Response
     <200ms")
@@ -44,11 +45,13 @@ All project tasks are tracked in `Sprint_plan.csv` with the following structure:
   - `ENV:description` - Environment/configuration requirement
   - `POLICY:description` - Policy or process requirement
   - `IMPLEMENTS:FLOW-XXX` - Implements a specific flow
-  - `DESIGN:path/to/mockup.png` - **UI Design mockup to match** (CRITICAL for UI tasks)
+  - `DESIGN:path/to/mockup.png` - **UI Design mockup to match** (CRITICAL for UI
+    tasks)
 
-**IMPORTANT - UI Tasks**: All UI/page tasks (IFC-090, IFC-091, PG-*) **MUST**
+**IMPORTANT - UI Tasks**: All UI/page tasks (IFC-090, IFC-091, PG-\*) **MUST**
 reference design mockups via `DESIGN:` prefix. Implementation must match the
-design. See `docs/design/README.md` for mockup locations and component checklists.
+design. See `docs/design/README.md` for mockup locations and component
+checklists.
 
 **Important**: When implementing any task from the sprint plan, always reference
 the CSV for the exact artifacts expected, KPIs to meet, and validation methods
@@ -74,7 +77,8 @@ apps/project-tracker/docs/metrics/_global/
 - **To READ**: Use `Sprint_plan_A.csv` through `E` based on the task range
 - **To EDIT**: Only edit `Sprint_plan.csv` (source of truth)
 - **Not committed**: Split files are gitignored (local only, derived data)
-- **Token-based splitting**: Files are split by token count (~18k each) not row count
+- **Token-based splitting**: Files are split by token count (~18k each) not row
+  count
 - **Auto-regeneration**: Split files are auto-regenerated:
   - On git commit (pre-commit hook detects CSV changes)
   - On data-sync (UI sync button or API call)
@@ -84,7 +88,8 @@ apps/project-tracker/docs/metrics/_global/
 **Finding a task by ID**:
 
 - Sprint 0 tasks: Usually in `Sprint_plan_A.csv` or `Sprint_plan_B.csv`
-- Sprint 1-3 tasks: Check `Sprint_plan_B.csv`, `Sprint_plan_C.csv`, or `Sprint_plan_D.csv`
+- Sprint 1-3 tasks: Check `Sprint_plan_B.csv`, `Sprint_plan_C.csv`, or
+  `Sprint_plan_D.csv`
 - Sprint 4-12 tasks: Check `Sprint_plan_D.csv`
 - Sprint 12+ tasks: Check `Sprint_plan_D.csv` and `Sprint_plan_E.csv`
 
@@ -470,9 +475,11 @@ Coverage requirements:
 
 **Enum Types - Single Source of Truth Pattern**
 
-All enum types follow the DRY (Don't Repeat Yourself) principle with domain constants as the canonical source:
+All enum types follow the DRY (Don't Repeat Yourself) principle with domain
+constants as the canonical source:
 
 1. **Domain Layer** (packages/domain/) - Defines const arrays:
+
    ```typescript
    // packages/domain/src/crm/lead/Lead.ts
    export const LEAD_STATUSES = ['NEW', 'CONTACTED', 'QUALIFIED', ...] as const;
@@ -483,6 +490,7 @@ All enum types follow the DRY (Don't Repeat Yourself) principle with domain cons
    ```
 
 2. **Validator Layer** (packages/validators/) - Derives Zod schemas:
+
    ```typescript
    // packages/validators/src/lead.ts
    import { LEAD_STATUSES, LEAD_SOURCES } from '@intelliflow/domain';
@@ -492,6 +500,7 @@ All enum types follow the DRY (Don't Repeat Yourself) principle with domain cons
    ```
 
 3. **Application Layer** - Uses schemas from validators:
+
    ```typescript
    // apps/api/src/agent/types.ts
    import { leadStatusSchema, leadSourceSchema } from '@intelliflow/validators';
@@ -503,11 +512,14 @@ All enum types follow the DRY (Don't Repeat Yourself) principle with domain cons
    ```
 
 **Benefits**:
+
 - Adding new enum values requires editing only ONE location (domain layer)
 - Type safety maintained throughout the stack
-- Architecture tests enforce consistency (`packages/validators/__tests__/enum-consistency.test.ts`)
+- Architecture tests enforce consistency
+  (`packages/validators/__tests__/enum-consistency.test.ts`)
 
 **Entities with DRY enum pattern**:
+
 - ✅ Lead (LeadStatus, LeadSource)
 - ✅ Contact (ContactStatus)
 - ✅ Opportunity (OpportunityStage)
@@ -518,7 +530,8 @@ All enum types follow the DRY (Don't Repeat Yourself) principle with domain cons
 
 ### Architecture Enforcement
 
-Architecture boundaries are enforced via tests (`packages/architecture-tests/` and `packages/validators/__tests__/`):
+Architecture boundaries are enforced via tests (`packages/architecture-tests/`
+and `packages/validators/__tests__/`):
 
 ```typescript
 // Example: Domain cannot depend on infrastructure
@@ -533,36 +546,39 @@ Breaking these tests will fail CI.
 
 **Location**: `docs/design/diagrams/`
 
-All 36 entities/features have documented dependency chains showing the hexagonal architecture implementation path:
+All 36 entities/features have documented dependency chains showing the hexagonal
+architecture implementation path:
 
 ```
 Domain → Validators → Application → Database → Adapters → API → UI
 ```
 
 **Master Document**: `docs/design/diagrams/complete-dependency-chains.md`
+
 - Contains all 36 dependency chains with ASCII diagrams
 - Shows task IDs, status indicators (✅/⏳/⬜), and dependencies
 - Links to domain-specific files for detailed reference
 
-**Domain-Specific Files**:
-| File | Chains |
-|------|--------|
-| `core-crm-dependency-chain.md` | Lead, Contact, Account, Opportunity, Task, Ticket |
-| `legal-scheduling-dependency-chain.md` | Case, Appointment, Document, Email |
-| `ai-intelligence-dependency-chain.md` | AI Scoring, Agents, RAG, NBA, Monitoring, etc. |
-| `ai-output-review-dependency-chain.md` | Review Queue, Review API, Feedback Loop |
-| `security-platform-dependency-chain.md` | RBAC/Audit, Analytics |
-| `auth-public-pages-dependency-chain.md` | Home Page, Notifications |
-| `platform-infrastructure-dependency-chain.md` | Workflow Engine, Multi-Tenancy, Caching, etc. |
-| `integrations-dependency-chain.md` | Webhooks, Observability |
-| `business-workflows-dependency-chain.md` | Lead Qualification, Routing, DSAR, Legal Workflows |
+**Domain-Specific Files**: | File | Chains | |------|--------| |
+`core-crm-dependency-chain.md` | Lead, Contact, Account, Opportunity, Task,
+Ticket | | `legal-scheduling-dependency-chain.md` | Case, Appointment, Document,
+Email | | `ai-intelligence-dependency-chain.md` | AI Scoring, Agents, RAG, NBA,
+Monitoring, etc. | | `ai-output-review-dependency-chain.md` | Review Queue,
+Review API, Feedback Loop | | `security-platform-dependency-chain.md` |
+RBAC/Audit, Analytics | | `auth-public-pages-dependency-chain.md` | Home Page,
+Notifications | | `platform-infrastructure-dependency-chain.md` | Workflow
+Engine, Multi-Tenancy, Caching, etc. | | `integrations-dependency-chain.md` |
+Webhooks, Observability | | `business-workflows-dependency-chain.md` | Lead
+Qualification, Routing, DSAR, Legal Workflows |
 
 **When to Update**:
+
 - When completing a task from Sprint_plan.csv → Mark as ✅ in dependency chain
 - When starting a task → Mark as ⏳ with progress percentage
 - When adding new entities/features → Add new dependency chain diagram
 
 **Workflow Integration**:
+
 - `/spec-session`: Validates dependency chain exists before spec generation
 - `/plan-session`: Ensures plan follows hexagonal layer order
 - `/exec`: Updates dependency chain status on task completion
@@ -1045,16 +1061,17 @@ $sprint0 | Group-Object Status | Select-Object Name, Count
 - **ADRs**: Architecture decisions in `docs/planning/adr/`
 - **API Docs**: Auto-generated from tRPC routers (run `pnpm run docs:api`)
 - **Domain Docs**: Docusaurus site at `docs/`
-- **Dependency Chains**: `docs/design/diagrams/complete-dependency-chains.md` - Hexagonal
-  architecture implementation paths for all 36 entities/features
+- **Dependency Chains**: `docs/design/diagrams/complete-dependency-chains.md` -
+  Hexagonal architecture implementation paths for all 36 entities/features
 - **Dependency Graph**: Task dependencies tracked in CSV `Dependencies` column
 
 ## Critical Development Rules
 
 ### Never Mock or Simulate Data
 
-**CRITICAL**: Never simulate, mock, or fabricate data for demonstrations or testing
-purposes. All data displayed in the application must come from real sources:
+**CRITICAL**: Never simulate, mock, or fabricate data for demonstrations or
+testing purposes. All data displayed in the application must come from real
+sources:
 
 - **Performance metrics**: Must come from actual benchmark execution
 - **API responses**: Must come from real API calls
@@ -1062,8 +1079,10 @@ purposes. All data displayed in the application must come from real sources:
 - **Inventory data**: Must be extracted from real codebase analysis
 
 If infrastructure is unavailable:
+
 - Display "pending" or "not available" status
 - Show clear instructions on how to run the real data collection
 - Never populate fields with fake/sample values
 
-This ensures data integrity and prevents false impressions of system capabilities.
+This ensures data integrity and prevents false impressions of system
+capabilities.

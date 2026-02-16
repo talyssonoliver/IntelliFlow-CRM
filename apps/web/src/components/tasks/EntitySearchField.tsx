@@ -26,7 +26,13 @@ const ENTITY_LABELS: Record<string, string> = {
   opportunity: 'Deal',
 };
 
-export function EntitySearchField({ entityType, value, valueName, onChange, disabled }: EntitySearchFieldProps) {
+export function EntitySearchField({
+  entityType,
+  value,
+  valueName,
+  onChange,
+  disabled,
+}: EntitySearchFieldProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 300);
@@ -49,43 +55,52 @@ export function EntitySearchField({ entityType, value, valueName, onChange, disa
   // Query based on entity type
   const leadQuery = api.lead.list.useQuery(
     { search: debouncedSearch, limit: 5, page: 1 },
-    { enabled: entityType === 'lead' && open && debouncedSearch.length > 0 },
+    { enabled: entityType === 'lead' && open && debouncedSearch.length > 0 }
   );
   const contactQuery = api.contact.list.useQuery(
     { search: debouncedSearch, limit: 5, page: 1 },
-    { enabled: entityType === 'contact' && open && debouncedSearch.length > 0 },
+    { enabled: entityType === 'contact' && open && debouncedSearch.length > 0 }
   );
   const opportunityQuery = api.opportunity.list.useQuery(
     { search: debouncedSearch, limit: 5, page: 1 },
-    { enabled: entityType === 'opportunity' && open && debouncedSearch.length > 0 },
+    { enabled: entityType === 'opportunity' && open && debouncedSearch.length > 0 }
   );
 
   const getResults = useCallback((): Array<{ id: string; name: string }> => {
     if (entityType === 'lead' && leadQuery.data) {
-      return (leadQuery.data as any).leads?.map((l: any) => ({
-        id: l.id,
-        name: `${l.firstName} ${l.lastName}`,
-      })) ?? [];
+      return (
+        (leadQuery.data as any).leads?.map((l: any) => ({
+          id: l.id,
+          name: `${l.firstName} ${l.lastName}`,
+        })) ?? []
+      );
     }
     if (entityType === 'contact' && contactQuery.data) {
-      return (contactQuery.data as any).contacts?.map((c: any) => ({
-        id: c.id,
-        name: `${c.firstName} ${c.lastName}`,
-      })) ?? [];
+      return (
+        (contactQuery.data as any).contacts?.map((c: any) => ({
+          id: c.id,
+          name: `${c.firstName} ${c.lastName}`,
+        })) ?? []
+      );
     }
     if (entityType === 'opportunity' && opportunityQuery.data) {
-      return (opportunityQuery.data as any).opportunities?.map((o: any) => ({
-        id: o.id,
-        name: o.name,
-      })) ?? [];
+      return (
+        (opportunityQuery.data as any).opportunities?.map((o: any) => ({
+          id: o.id,
+          name: o.name,
+        })) ?? []
+      );
     }
     return [];
   }, [entityType, leadQuery.data, contactQuery.data, opportunityQuery.data]);
 
   const results = getResults();
-  const isLoading = entityType === 'lead' ? leadQuery.isLoading
-    : entityType === 'contact' ? contactQuery.isLoading
-    : opportunityQuery.isLoading;
+  const isLoading =
+    entityType === 'lead'
+      ? leadQuery.isLoading
+      : entityType === 'contact'
+        ? contactQuery.isLoading
+        : opportunityQuery.isLoading;
 
   function handleSelect(id: string, name: string) {
     onChange(id, name);
@@ -140,23 +155,22 @@ export function EntitySearchField({ entityType, value, valueName, onChange, disa
           className="absolute z-50 mt-1 w-full rounded-md border border-input bg-background shadow-lg max-h-48 overflow-y-auto"
           role="listbox"
         >
-          {isLoading && (
-            <div className="px-3 py-2 text-sm text-muted-foreground">Searching...</div>
-          )}
+          {isLoading && <div className="px-3 py-2 text-sm text-muted-foreground">Searching...</div>}
           {!isLoading && results.length === 0 && (
             <div className="px-3 py-2 text-sm text-muted-foreground">No results found</div>
           )}
-          {!isLoading && results.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => handleSelect(item.id, item.name)}
-              className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
-              role="option"
-            >
-              {item.name}
-            </button>
-          ))}
+          {!isLoading &&
+            results.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                onClick={() => handleSelect(item.id, item.name)}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
+                role="option"
+              >
+                {item.name}
+              </button>
+            ))}
         </div>
       )}
     </div>

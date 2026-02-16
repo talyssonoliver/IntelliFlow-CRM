@@ -113,30 +113,20 @@ describe('Experiment Validators', () => {
     });
 
     it('should reject empty name', () => {
-      expect(() =>
-        createExperimentSchema.parse({ ...validInput, name: '' })
-      ).toThrow();
+      expect(() => createExperimentSchema.parse({ ...validInput, name: '' })).toThrow();
     });
 
     it('should reject short hypothesis', () => {
-      expect(() =>
-        createExperimentSchema.parse({ ...validInput, hypothesis: 'Short' })
-      ).toThrow();
+      expect(() => createExperimentSchema.parse({ ...validInput, hypothesis: 'Short' })).toThrow();
     });
 
     it('should reject invalid traffic percent', () => {
-      expect(() =>
-        createExperimentSchema.parse({ ...validInput, trafficPercent: 0 })
-      ).toThrow();
-      expect(() =>
-        createExperimentSchema.parse({ ...validInput, trafficPercent: 100 })
-      ).toThrow();
+      expect(() => createExperimentSchema.parse({ ...validInput, trafficPercent: 0 })).toThrow();
+      expect(() => createExperimentSchema.parse({ ...validInput, trafficPercent: 100 })).toThrow();
     });
 
     it('should reject invalid significance level', () => {
-      expect(() =>
-        createExperimentSchema.parse({ ...validInput, significanceLevel: 0 })
-      ).toThrow();
+      expect(() => createExperimentSchema.parse({ ...validInput, significanceLevel: 0 })).toThrow();
       expect(() =>
         createExperimentSchema.parse({ ...validInput, significanceLevel: 0.5 })
       ).toThrow();
@@ -159,9 +149,7 @@ describe('Experiment Validators', () => {
     });
 
     it('should validate fields when provided', () => {
-      expect(() =>
-        updateExperimentSchema.parse({ hypothesis: 'Short' })
-      ).toThrow();
+      expect(() => updateExperimentSchema.parse({ hypothesis: 'Short' })).toThrow();
     });
   });
 
@@ -214,18 +202,12 @@ describe('Experiment Validators', () => {
     });
 
     it('should reject score outside 0-100', () => {
-      expect(() =>
-        recordScoreInputSchema.parse({ ...validInput, score: -1 })
-      ).toThrow();
-      expect(() =>
-        recordScoreInputSchema.parse({ ...validInput, score: 101 })
-      ).toThrow();
+      expect(() => recordScoreInputSchema.parse({ ...validInput, score: -1 })).toThrow();
+      expect(() => recordScoreInputSchema.parse({ ...validInput, score: 101 })).toThrow();
     });
 
     it('should reject confidence outside 0-1', () => {
-      expect(() =>
-        recordScoreInputSchema.parse({ ...validInput, confidence: 1.5 })
-      ).toThrow();
+      expect(() => recordScoreInputSchema.parse({ ...validInput, confidence: 1.5 })).toThrow();
     });
   });
 
@@ -246,9 +228,9 @@ describe('Experiment Validators', () => {
       const result = recordConversionInputSchema.parse({
         experimentId: 'clr4abc123def456ghi789',
         leadId: 'clr4xyz789uvw012rst345',
-        conversionValue: 1500.00,
+        conversionValue: 1500.0,
       });
-      expect(result.conversionValue).toBe(1500.00);
+      expect(result.conversionValue).toBe(1500.0);
     });
 
     it('should reject negative conversion value', () => {
@@ -306,9 +288,7 @@ describe('Experiment Validators', () => {
     });
 
     it('should reject invalid pValue', () => {
-      expect(() =>
-        experimentResultSchema.parse({ ...validResult, pValue: 1.5 })
-      ).toThrow();
+      expect(() => experimentResultSchema.parse({ ...validResult, pValue: 1.5 })).toThrow();
     });
   });
 
@@ -399,21 +379,15 @@ describe('Experiment Validators', () => {
 
   describe('getSignificanceDescription', () => {
     it('should describe highly significant results', () => {
-      expect(getSignificanceDescription(0.0001, 0.05)).toBe(
-        'Highly significant (p < 0.001)'
-      );
+      expect(getSignificanceDescription(0.0001, 0.05)).toBe('Highly significant (p < 0.001)');
     });
 
     it('should describe very significant results', () => {
-      expect(getSignificanceDescription(0.005, 0.05)).toBe(
-        'Very significant (p < 0.01)'
-      );
+      expect(getSignificanceDescription(0.005, 0.05)).toBe('Very significant (p < 0.01)');
     });
 
     it('should describe significant results', () => {
-      expect(getSignificanceDescription(0.03, 0.05)).toBe(
-        'Significant (p < 0.05)'
-      );
+      expect(getSignificanceDescription(0.03, 0.05)).toBe('Significant (p < 0.05)');
     });
 
     it('should describe non-significant results', () => {

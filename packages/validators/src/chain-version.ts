@@ -32,11 +32,7 @@ export const chainVersionAuditActionSchema = z.enum(CHAIN_VERSION_AUDIT_ACTIONS)
 export const chainConfigSchema = z.object({
   prompt: z.string().min(10).max(50000),
   model: z.string().min(1).max(100).default(CHAIN_VERSION_DEFAULTS.DEFAULT_MODEL),
-  temperature: z
-    .number()
-    .min(0)
-    .max(2)
-    .default(CHAIN_VERSION_DEFAULTS.DEFAULT_TEMPERATURE),
+  temperature: z.number().min(0).max(2).default(CHAIN_VERSION_DEFAULTS.DEFAULT_TEMPERATURE),
   maxTokens: z
     .number()
     .int()
@@ -56,11 +52,7 @@ export const createChainVersionSchema = z.object({
   chainType: chainTypeSchema,
   prompt: z.string().min(10).max(50000),
   model: z.string().min(1).max(100).default(CHAIN_VERSION_DEFAULTS.DEFAULT_MODEL),
-  temperature: z
-    .number()
-    .min(0)
-    .max(2)
-    .default(CHAIN_VERSION_DEFAULTS.DEFAULT_TEMPERATURE),
+  temperature: z.number().min(0).max(2).default(CHAIN_VERSION_DEFAULTS.DEFAULT_TEMPERATURE),
   maxTokens: z
     .number()
     .int()
@@ -286,7 +278,8 @@ export function formatVersionInfo(version: ChainVersion): string {
  */
 export function getVersionAge(version: ChainVersion): string {
   const now = new Date();
-  const createdAt = version.createdAt instanceof Date ? version.createdAt : new Date(version.createdAt);
+  const createdAt =
+    version.createdAt instanceof Date ? version.createdAt : new Date(version.createdAt);
   const diffMs = now.getTime() - createdAt.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 

@@ -156,8 +156,9 @@ describe('generateIdempotencyKey', () => {
   it('should handle various event types', () => {
     expect(generateIdempotencyKey('contact.updated', 'c1', 'e1')).toBe('contact.updated:c1:e1');
     expect(generateIdempotencyKey('deal.closed', 'd1', 'e2')).toBe('deal.closed:d1:e2');
-    expect(generateIdempotencyKey('ai.score_feedback.submitted', 'f1', 'e3'))
-      .toBe('ai.score_feedback.submitted:f1:e3');
+    expect(generateIdempotencyKey('ai.score_feedback.submitted', 'f1', 'e3')).toBe(
+      'ai.score_feedback.submitted:f1:e3'
+    );
   });
 
   it('should handle empty strings', () => {

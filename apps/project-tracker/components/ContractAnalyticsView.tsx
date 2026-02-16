@@ -29,14 +29,24 @@ const TAG_CONFIG: Record<
   ContractTagType,
   { icon: IconName; color: string; bgColor: string; barColor: string }
 > = {
-  FILE: { icon: 'description', color: 'text-blue-700', bgColor: 'bg-blue-100', barColor: 'bg-blue-500' },
+  FILE: {
+    icon: 'description',
+    color: 'text-blue-700',
+    bgColor: 'bg-blue-100',
+    barColor: 'bg-blue-500',
+  },
   DIR: {
     icon: 'folder',
     color: 'text-indigo-700',
     bgColor: 'bg-indigo-100',
     barColor: 'bg-indigo-500',
   },
-  ENV: { icon: 'vpn_key', color: 'text-purple-700', bgColor: 'bg-purple-100', barColor: 'bg-purple-500' },
+  ENV: {
+    icon: 'vpn_key',
+    color: 'text-purple-700',
+    bgColor: 'bg-purple-100',
+    barColor: 'bg-purple-500',
+  },
   POLICY: {
     icon: 'shield',
     color: 'text-orange-700',

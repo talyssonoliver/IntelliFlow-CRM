@@ -13,7 +13,12 @@ export const dealsSidebarConfig: SidebarConfig = {
       title: 'Deal Views',
       items: [
         { id: 'list', label: 'List View', icon: ACTION_ICONS.list, href: '/deals' },
-        { id: 'pipeline', label: 'Pipeline Board', icon: ACTION_ICONS.kanban, href: '/deals?view=pipeline' },
+        {
+          id: 'pipeline',
+          label: 'Pipeline Board',
+          icon: ACTION_ICONS.kanban,
+          href: '/deals?view=pipeline',
+        },
         {
           id: 'forecast',
           label: 'Forecast',

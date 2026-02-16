@@ -95,9 +95,13 @@ function ActionButton({ action }: ActionButtonProps) {
   const content = (
     <>
       {loading ? (
-        <span className="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
+        <span className="material-symbols-outlined text-[20px] animate-spin">
+          progress_activity
+        </span>
       ) : icon ? (
-        <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">{icon}</span>
+        <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">
+          {icon}
+        </span>
       ) : null}
       <span className={cn(hideOnMobile && 'hidden sm:inline')}>{label}</span>
     </>
@@ -112,12 +116,7 @@ function ActionButton({ action }: ActionButtonProps) {
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled || loading}
-      className={baseClasses}
-    >
+    <button type="button" onClick={onClick} disabled={disabled || loading} className={baseClasses}>
       {content}
     </button>
   );
@@ -174,18 +173,16 @@ export function EntityHeader({
   className,
 }: EntityHeaderProps) {
   return (
-    <div className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-4', className)}>
+    <div
+      className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-4', className)}
+    >
       {/* Left side: Breadcrumbs, Title with badges */}
       <div className="min-w-0 flex-1">
-        {breadcrumbs && breadcrumbs.length > 0 && (
-          <Breadcrumbs items={breadcrumbs} />
-        )}
+        {breadcrumbs && breadcrumbs.length > 0 && <Breadcrumbs items={breadcrumbs} />}
 
         {/* Title Row with ID and Badges */}
         <div className="flex items-center gap-3 flex-wrap mt-1">
-          <h1 className="text-2xl font-bold text-foreground">
-            {title}
-          </h1>
+          <h1 className="text-2xl font-bold text-foreground">{title}</h1>
 
           {/* Entity ID Badge */}
           {entityId && (
@@ -217,7 +214,7 @@ export function EntityHeader({
       </div>
 
       {/* Right side: Actions */}
-      {(actions && actions.length > 0 || endContent) && (
+      {((actions && actions.length > 0) || endContent) && (
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap flex-shrink-0">
           {actions?.map((action, index) => (
             <ActionButton key={action.label + index} action={action} />

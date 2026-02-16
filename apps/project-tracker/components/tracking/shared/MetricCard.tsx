@@ -69,22 +69,11 @@ export default function MetricCard({
     <div className={`rounded-lg border p-4 shadow-sm ${variantStyles[variant]}`}>
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2">
-          {icon && (
-            <Icon
-              name={icon}
-              size="lg"
-              className={iconColors[variant]}
-            />
-          )}
+          {icon && <Icon name={icon} size="lg" className={iconColors[variant]} />}
           <h3 className="text-sm font-medium text-gray-600">{title}</h3>
         </div>
         {onRefresh && (
-          <RefreshButton
-            onRefresh={onRefresh}
-            size="sm"
-            variant="ghost"
-            showLabel={false}
-          />
+          <RefreshButton onRefresh={onRefresh} size="sm" variant="ghost" showLabel={false} />
         )}
       </div>
 
@@ -95,19 +84,11 @@ export default function MetricCard({
 
       {trend && (
         <div className="mt-3 flex items-center gap-1.5">
-          <Icon
-            name={trendIcons[trend]}
-            size="sm"
-            className={trendColors[trend]}
-          />
+          <Icon name={trendIcons[trend]} size="sm" className={trendColors[trend]} />
           {trendValue && (
-            <span className={`text-sm font-medium ${trendColors[trend]}`}>
-              {trendValue}
-            </span>
+            <span className={`text-sm font-medium ${trendColors[trend]}`}>{trendValue}</span>
           )}
-          {trendLabel && (
-            <span className="text-xs text-gray-500">{trendLabel}</span>
-          )}
+          {trendLabel && <span className="text-xs text-gray-500">{trendLabel}</span>}
         </div>
       )}
 

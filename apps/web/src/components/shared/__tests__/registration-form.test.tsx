@@ -30,8 +30,14 @@ describe('RegistrationForm', () => {
   it('renders terms and privacy policy links', () => {
     render(<RegistrationForm onSubmit={mockOnSubmit} />);
 
-    expect(screen.getByRole('link', { name: /terms of service/i })).toHaveAttribute('href', '/terms');
-    expect(screen.getByRole('link', { name: /privacy policy/i })).toHaveAttribute('href', '/privacy');
+    expect(screen.getByRole('link', { name: /terms of service/i })).toHaveAttribute(
+      'href',
+      '/terms'
+    );
+    expect(screen.getByRole('link', { name: /privacy policy/i })).toHaveAttribute(
+      'href',
+      '/privacy'
+    );
   });
 
   it('shows validation errors on submit with empty fields', async () => {

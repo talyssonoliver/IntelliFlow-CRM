@@ -1,37 +1,46 @@
 # AI Guardrails Report - IFC-125
 
-**Date**: 2025-12-29
-**Status**: Implemented
-**Owner**: AI Specialist + Security (STOA-Security)
+**Date**: 2025-12-29 **Status**: Implemented **Owner**: AI Specialist + Security
+(STOA-Security)
 
 ---
 
 ## Executive Summary
 
-This report documents the implementation of AI guardrails for the IntelliFlow CRM system to protect against prompt injection, data leakage, and AI bias. The guardrails provide comprehensive security controls for all AI-powered features including lead scoring, email generation, and predictive analytics.
+This report documents the implementation of AI guardrails for the IntelliFlow
+CRM system to protect against prompt injection, data leakage, and AI bias. The
+guardrails provide comprehensive security controls for all AI-powered features
+including lead scoring, email generation, and predictive analytics.
 
 ## Implementation Overview
 
 ### 1. Prompt Sanitization (`apps/api/src/shared/prompt-sanitizer.ts`)
 
-**Purpose**: Prevent malicious input from compromising AI models or system security.
+**Purpose**: Prevent malicious input from compromising AI models or system
+security.
 
 **Features**:
+
 - Input validation with Zod schemas
-- Dangerous pattern detection (SQL injection, command injection, XSS, path traversal)
-- PII detection and redaction (phone numbers, emails, postcodes, NINo, credit cards)
+- Dangerous pattern detection (SQL injection, command injection, XSS, path
+  traversal)
+- PII detection and redaction (phone numbers, emails, postcodes, NINo, credit
+  cards)
 - Rate limiting (10 requests/minute per user by default)
 - Content length validation (4000 character max)
 - Security event logging for audit trail
 
 **Blocked Patterns**:
+
 - SQL Injection: `SELECT ... FROM`, `INSERT INTO`, `DROP TABLE`
 - Command Injection: `rm -rf`, `wget`, `curl`, `bash`
 - XSS: `<script>`, `javascript:`, `onerror=`, `onload=`
-- Prompt Injection: `ignore previous instructions`, `system prompt`, `override`, `jailbreak`
+- Prompt Injection: `ignore previous instructions`, `system prompt`, `override`,
+  `jailbreak`
 - Path Traversal: `../`, `../../etc/passwd`
 
 **PII Redaction**:
+
 - UK Phone Numbers: `+44 7XXX XXXXXX` → `+4***XXXXX6`
 - Emails: `user@example.com` → `us***@***le.com`
 - Postcodes: `SW1A 1AA` → `SW******AA`
@@ -43,12 +52,14 @@ This report documents the implementation of AI guardrails for the IntelliFlow CR
 **Purpose**: Prevent AI responses from leaking sensitive data.
 
 **Features**:
+
 - PII detection in AI outputs
 - Automatic masking of sensitive fields
 - Dangerous pattern detection in responses
 - Safety flag for frontend consumption
 
 **Example**:
+
 ```typescript
 // Input: AI generates response with phone number
 const output = "Please call John on +44 7911 123456";
@@ -67,18 +78,21 @@ const output = "Please call John on +44 7911 123456";
 **Purpose**: Monitor AI model outputs for demographic bias and unfairness.
 
 **Metrics Tracked**:
+
 - Mean score per demographic segment
 - Score variance across segments
 - Confidence distribution
 - Model drift over time
 
 **Fairness Thresholds**:
+
 - Score variance across segments: ≤10%
 - Conversion prediction variance: ≤5%
 - Confidence variance: ≤8%
 - Minimum sample size: 30 leads per segment
 
 **Demographic Segmentation**:
+
 - Email domain category (free email, corporate, institutional)
 - Job title category (decision-maker, influencer, user)
 - Company size (SMB, mid-market, enterprise)
@@ -87,6 +101,7 @@ const output = "Please call John on +44 7911 123456";
 ### 4. Security Event Logging
 
 All security events are logged with:
+
 - Event type (prompt_injection, data_leakage, rate_limit, pii_detected)
 - Severity (low, medium, high, critical)
 - User ID
@@ -94,6 +109,7 @@ All security events are logged with:
 - Contextual details
 
 **Log Destinations**:
+
 - Application logs (Pino logger)
 - Audit database (for compliance)
 - Security monitoring system (future: Sentry, DataDog)
@@ -104,40 +120,40 @@ All security events are logged with:
 
 ### Prompt Injection Tests
 
-| Test Case | Input | Result | Status |
-|-----------|-------|--------|--------|
-| SQL Injection | `SELECT * FROM users WHERE ...` | Blocked | ✅ Pass |
-| Command Injection | `; rm -rf /` | Blocked | ✅ Pass |
-| XSS Attempt | `<script>alert('xss')</script>` | Blocked | ✅ Pass |
-| Jailbreak Prompt | `Ignore previous instructions and ...` | Blocked | ✅ Pass |
-| Path Traversal | `../../etc/passwd` | Blocked | ✅ Pass |
-| Normal Prompt | `Score this lead: John Doe, CEO` | Allowed | ✅ Pass |
+| Test Case         | Input                                  | Result  | Status  |
+| ----------------- | -------------------------------------- | ------- | ------- |
+| SQL Injection     | `SELECT * FROM users WHERE ...`        | Blocked | ✅ Pass |
+| Command Injection | `; rm -rf /`                           | Blocked | ✅ Pass |
+| XSS Attempt       | `<script>alert('xss')</script>`        | Blocked | ✅ Pass |
+| Jailbreak Prompt  | `Ignore previous instructions and ...` | Blocked | ✅ Pass |
+| Path Traversal    | `../../etc/passwd`                     | Blocked | ✅ Pass |
+| Normal Prompt     | `Score this lead: John Doe, CEO`       | Allowed | ✅ Pass |
 
 ### PII Redaction Tests
 
-| Test Case | Input | Redacted Output | Status |
-|-----------|-------|-----------------|--------|
-| UK Phone | `Call me on +44 7911 123456` | `Call me on +4***XXXXX6` | ✅ Pass |
-| Email | `Contact user@example.com` | `Contact us***@***le.com` | ✅ Pass |
-| Postcode | `Office at SW1A 1AA` | `Office at SW******AA` | ✅ Pass |
-| Credit Card | `Card 1234 5678 9012 3456` | `Card 12** **** **** **56` | ✅ Pass |
+| Test Case   | Input                        | Redacted Output            | Status  |
+| ----------- | ---------------------------- | -------------------------- | ------- |
+| UK Phone    | `Call me on +44 7911 123456` | `Call me on +4***XXXXX6`   | ✅ Pass |
+| Email       | `Contact user@example.com`   | `Contact us***@***le.com`  | ✅ Pass |
+| Postcode    | `Office at SW1A 1AA`         | `Office at SW******AA`     | ✅ Pass |
+| Credit Card | `Card 1234 5678 9012 3456`   | `Card 12** **** **** **56` | ✅ Pass |
 
 ### Bias Detection Tests
 
-| Segment | Mean Score | Sample Size | Variance | Status |
-|---------|------------|-------------|----------|--------|
-| Free Email | 48.50 | 125 | 0.08 | ✅ Pass |
-| Corporate | 52.30 | 237 | 0.07 | ✅ Pass |
-| Institutional | 51.80 | 45 | 0.09 | ✅ Pass |
-| **Overall Variance** | | | **0.075** | ✅ Pass (≤0.10) |
+| Segment              | Mean Score | Sample Size | Variance  | Status          |
+| -------------------- | ---------- | ----------- | --------- | --------------- |
+| Free Email           | 48.50      | 125         | 0.08      | ✅ Pass         |
+| Corporate            | 52.30      | 237         | 0.07      | ✅ Pass         |
+| Institutional        | 51.80      | 45          | 0.09      | ✅ Pass         |
+| **Overall Variance** |            |             | **0.075** | ✅ Pass (≤0.10) |
 
 ### Rate Limiting Tests
 
-| Test Case | Requests | Result | Status |
-|-----------|----------|--------|--------|
-| Normal Usage | 5/min | Allowed | ✅ Pass |
-| Burst Traffic | 15/min | 10 allowed, 5 blocked | ✅ Pass |
-| Distributed Load | 10 users × 5 req/min | All allowed | ✅ Pass |
+| Test Case        | Requests             | Result                | Status  |
+| ---------------- | -------------------- | --------------------- | ------- |
+| Normal Usage     | 5/min                | Allowed               | ✅ Pass |
+| Burst Traffic    | 15/min               | 10 allowed, 5 blocked | ✅ Pass |
+| Distributed Load | 10 users × 5 req/min | All allowed           | ✅ Pass |
 
 ---
 
@@ -148,6 +164,7 @@ All security events are logged with:
 **Location**: `artifacts/metrics/bias-metrics.csv`
 
 **Format**:
+
 ```csv
 timestamp,model_version,demographic_segment,metric_name,value,threshold,passed,sample_size
 2025-12-29T23:50:00Z,openai:gpt-4:v1,free_email,mean_score,48.50,50.00,true,125
@@ -160,6 +177,7 @@ timestamp,model_version,demographic_segment,metric_name,value,threshold,passed,s
 **Location**: Application logs + Audit database
 
 **Sample Event**:
+
 ```json
 {
   "securityEvent": true,
@@ -183,8 +201,12 @@ timestamp,model_version,demographic_segment,metric_name,value,threshold,passed,s
 **File**: `apps/ai-worker/src/chains/scoring.chain.ts`
 
 **Integration**:
+
 ```typescript
-import { sanitizationPipeline, sanitizeOutput } from '@/api/shared/prompt-sanitizer';
+import {
+  sanitizationPipeline,
+  sanitizeOutput,
+} from '@/api/shared/prompt-sanitizer';
 
 async function scoreLead(lead: LeadInput) {
   // Sanitize user-generated content
@@ -208,6 +230,7 @@ async function scoreLead(lead: LeadInput) {
 **Frequency**: Daily at 00:00 UTC
 
 **Process**:
+
 1. Fetch all lead scores from past 24 hours
 2. Run bias detection analysis
 3. Save metrics to CSV
@@ -217,6 +240,7 @@ async function scoreLead(lead: LeadInput) {
 ### 3. Security Alerts
 
 **Triggers**:
+
 - High-severity security event (immediate Slack alert)
 - Bias threshold violation (daily email digest)
 - Rate limit exceeded by >50% of users (operational alert)
@@ -302,6 +326,7 @@ async function scoreLead(lead: LeadInput) {
 ## Validation
 
 ✅ **IFC-125 Definition of Done**:
+
 1. ✅ Prompt sanitization implemented with Zod validation
 2. ✅ Output redaction for PII and dangerous patterns
 3. ✅ Bias detection metrics with CSV tracking
@@ -319,13 +344,16 @@ async function scoreLead(lead: LeadInput) {
 
 ## Conclusion
 
-The AI guardrails implementation provides comprehensive protection against common AI security risks and ensures fair, unbiased AI outputs. The system is production-ready and includes monitoring, alerting, and incident response capabilities.
+The AI guardrails implementation provides comprehensive protection against
+common AI security risks and ensures fair, unbiased AI outputs. The system is
+production-ready and includes monitoring, alerting, and incident response
+capabilities.
 
 **Next Steps**:
+
 1. Write comprehensive tests (IFC-125 validation)
 2. Integrate with existing audit logging system
 3. Set up automated bias monitoring job
 4. Configure security alerts in Slack/PagerDuty
 
-**Signed off**: AI Specialist + Security (STOA-Security)
-**Date**: 2025-12-29
+**Signed off**: AI Specialist + Security (STOA-Security) **Date**: 2025-12-29

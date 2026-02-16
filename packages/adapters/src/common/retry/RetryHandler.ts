@@ -104,16 +104,12 @@ export class RetryHandler {
       } catch (unexpectedError) {
         // Handle unexpected errors (not Result failures)
         const error =
-          unexpectedError instanceof Error
-            ? unexpectedError
-            : new Error(String(unexpectedError));
+          unexpectedError instanceof Error ? unexpectedError : new Error(String(unexpectedError));
 
         context.lastError = error;
 
         if (attempt === this.config.maxRetries) {
-          return Result.fail(
-            new UnexpectedAdapterError(error.message, this.provider)
-          );
+          return Result.fail(new UnexpectedAdapterError(error.message, this.provider));
         }
 
         const delay = this.calculateDelay(attempt);
@@ -179,9 +175,7 @@ export class RetryHandler {
     }
 
     // Exponential backoff with jitter
-    const baseDelay =
-      this.config.initialDelayMs *
-      Math.pow(this.config.backoffMultiplier, attempt);
+    const baseDelay = this.config.initialDelayMs * Math.pow(this.config.backoffMultiplier, attempt);
 
     // Add random jitter (0-25% of base delay)
     const jitter = baseDelay * Math.random() * 0.25;

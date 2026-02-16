@@ -9,7 +9,9 @@ function decodeJwtPayload(token: string): { exp?: number; sub?: string } | null 
     const parts = token.split('.');
     if (parts.length !== 3) return null;
     return JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 function tokenNeedsRefresh(token: string, thresholdMs: number = 5 * 60 * 1000): boolean {
   const payload = decodeJwtPayload(token);

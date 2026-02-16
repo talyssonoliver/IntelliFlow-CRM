@@ -19,10 +19,7 @@ import crypto from 'crypto';
  */
 export function generateLockToken(secret: string): string {
   const value = crypto.randomBytes(32).toString('hex');
-  const signature = crypto
-    .createHmac('sha256', secret)
-    .update(value)
-    .digest('hex');
+  const signature = crypto.createHmac('sha256', secret).update(value).digest('hex');
   return `${value}.${signature}`;
 }
 
@@ -42,10 +39,7 @@ export function verifyLockToken(providedToken: string, secret: string): boolean 
   if (!value || !providedSig) return false;
 
   try {
-    const expectedSig = crypto
-      .createHmac('sha256', secret)
-      .update(value)
-      .digest('hex');
+    const expectedSig = crypto.createHmac('sha256', secret).update(value).digest('hex');
 
     const providedSigBuf = Buffer.from(providedSig, 'hex');
     const expectedSigBuf = Buffer.from(expectedSig, 'hex');

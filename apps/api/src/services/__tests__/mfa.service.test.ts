@@ -147,10 +147,7 @@ describe('MfaService', () => {
     it('rejects incorrect code', async () => {
       const sendResult = await mfaService.sendSmsOtp('+1234567890', 'user-id-123');
 
-      const result = await mfaService.verifyChallenge(
-        sendResult.challengeId!,
-        '000000'
-      );
+      const result = await mfaService.verifyChallenge(sendResult.challengeId!, '000000');
 
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
@@ -162,20 +159,14 @@ describe('MfaService', () => {
       // Advance time past expiry (6 minutes, SMS is 5 minutes)
       vi.advanceTimersByTime(6 * 60 * 1000);
 
-      const result = await mfaService.verifyChallenge(
-        sendResult.challengeId!,
-        '123456'
-      );
+      const result = await mfaService.verifyChallenge(sendResult.challengeId!, '123456');
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('expired');
     });
 
     it('rejects non-existent challenge', async () => {
-      const result = await mfaService.verifyChallenge(
-        '00000000000000000000000000000000',
-        '123456'
-      );
+      const result = await mfaService.verifyChallenge('00000000000000000000000000000000', '123456');
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('not found');
@@ -190,10 +181,7 @@ describe('MfaService', () => {
       }
 
       // Challenge should be invalidated
-      const result = await mfaService.verifyChallenge(
-        sendResult.challengeId!,
-        '123456'
-      );
+      const result = await mfaService.verifyChallenge(sendResult.challengeId!, '123456');
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('not found');

@@ -37,7 +37,10 @@ test.describe('Agent Approval Workflow - Extended', () => {
   test.describe('Page Loading', () => {
     test('should load agent approvals page within 3 seconds', async ({ page, browserName }) => {
       // Skip Firefox and webkit - cold start performance differs significantly
-      test.skip(browserName === 'firefox' || browserName === 'webkit', 'Non-chromium cold start differs');
+      test.skip(
+        browserName === 'firefox' || browserName === 'webkit',
+        'Non-chromium cold start differs'
+      );
 
       const loadTime = await measureLoadTime(page, '/agent-approvals');
 
@@ -46,7 +49,13 @@ test.describe('Agent Approval Workflow - Extended', () => {
     });
 
     test('should display all metrics cards on load', async ({ page }) => {
-      const metricsCards = ['Total Actions', 'Approved', 'Rejected', 'Rolled Back', 'Avg Review Time'];
+      const metricsCards = [
+        'Total Actions',
+        'Approved',
+        'Rejected',
+        'Rolled Back',
+        'Avg Review Time',
+      ];
 
       for (const metric of metricsCards) {
         await expect(page.locator(`text=${metric}`).first()).toBeVisible();
@@ -121,7 +130,10 @@ test.describe('Agent Approval Workflow - Extended', () => {
   });
 
   test.describe('AI Reasoning', () => {
-    test('should display AI reasoning section when card expanded', async ({ page, browserName }) => {
+    test('should display AI reasoning section when card expanded', async ({
+      page,
+      browserName,
+    }) => {
       // AC-8: E2E tests verify AI reasoning section is displayed
       // Skip on Firefox - expansion timing differs
       test.skip(browserName === 'firefox', 'Firefox has different expansion timing');

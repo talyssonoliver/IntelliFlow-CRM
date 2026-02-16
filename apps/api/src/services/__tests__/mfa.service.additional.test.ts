@@ -21,12 +21,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import {
-  MfaService,
-  getMfaService,
-  resetMfaService,
-  type MfaUserSettings,
-} from '../mfa.service';
+import { MfaService, getMfaService, resetMfaService, type MfaUserSettings } from '../mfa.service';
 
 describe('MfaService - Additional Coverage', () => {
   let mfaService: MfaService;
@@ -132,9 +127,7 @@ describe('MfaService - Additional Coverage', () => {
         expect.stringContaining('[MFA-DEV] SMS challenge created')
       );
       // Should only show last 4 digits
-      expect(debugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('7890')
-      );
+      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('7890'));
 
       debugSpy.mockRestore();
       process.env.NODE_ENV = originalEnv;
@@ -171,9 +164,7 @@ describe('MfaService - Additional Coverage', () => {
         expect.stringContaining('[MFA-DEV] Email challenge created')
       );
       // Email should be masked
-      expect(debugSpy).toHaveBeenCalledWith(
-        expect.stringContaining('te***@example.com')
-      );
+      expect(debugSpy).toHaveBeenCalledWith(expect.stringContaining('te***@example.com'));
 
       debugSpy.mockRestore();
       process.env.NODE_ENV = originalEnv;
@@ -230,11 +221,7 @@ describe('MfaService - Additional Coverage', () => {
         emailEnabled: false,
       };
 
-      const result = await mfaService.verifyChallenge(
-        challenge.id,
-        code,
-        userSettings
-      );
+      const result = await mfaService.verifyChallenge(challenge.id, code, userSettings);
 
       expect(result.success).toBe(true);
     });
@@ -250,11 +237,7 @@ describe('MfaService - Additional Coverage', () => {
         emailEnabled: false,
       };
 
-      const result = await mfaService.verifyChallenge(
-        challenge.id,
-        '123456',
-        userSettings
-      );
+      const result = await mfaService.verifyChallenge(challenge.id, '123456', userSettings);
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('attempts remaining');
@@ -290,26 +273,17 @@ describe('MfaService - Additional Coverage', () => {
       expect(challengeInfo.attemptsRemaining).toBe(3);
 
       // First wrong attempt
-      const result1 = await mfaService.verifyChallenge(
-        sendResult.challengeId,
-        '000001'
-      );
+      const result1 = await mfaService.verifyChallenge(sendResult.challengeId, '000001');
       expect(result1.success).toBe(false);
       expect(result1.error).toContain('2 attempts remaining');
 
       // Second wrong attempt
-      const result2 = await mfaService.verifyChallenge(
-        sendResult.challengeId,
-        '000002'
-      );
+      const result2 = await mfaService.verifyChallenge(sendResult.challengeId, '000002');
       expect(result2.success).toBe(false);
       expect(result2.error).toContain('1 attempts remaining');
 
       // Third wrong attempt - should lock out
-      const result3 = await mfaService.verifyChallenge(
-        sendResult.challengeId,
-        '000003'
-      );
+      const result3 = await mfaService.verifyChallenge(sendResult.challengeId, '000003');
       expect(result3.success).toBe(false);
       expect(result3.error).toContain('Too many failed attempts');
     });
@@ -317,10 +291,7 @@ describe('MfaService - Additional Coverage', () => {
     it('should verify email challenge code hash path (wrong code shows remaining)', async () => {
       const sendResult = await mfaService.sendEmailOtp('user@example.com', 'user-1');
 
-      const result = await mfaService.verifyChallenge(
-        sendResult.challengeId,
-        'WRONGCODE'
-      );
+      const result = await mfaService.verifyChallenge(sendResult.challengeId, 'WRONGCODE');
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('attempts remaining');
@@ -345,11 +316,7 @@ describe('MfaService - Additional Coverage', () => {
         backupCodes: hashedCodes,
       };
 
-      const result = await mfaService.verifyChallenge(
-        challenge.id,
-        codes[0],
-        userSettings
-      );
+      const result = await mfaService.verifyChallenge(challenge.id, codes[0], userSettings);
 
       expect(result.success).toBe(true);
       // Backup codes should have been updated (one removed)
@@ -370,11 +337,7 @@ describe('MfaService - Additional Coverage', () => {
         backupCodes: hashedCodes,
       };
 
-      const result = await mfaService.verifyChallenge(
-        challenge.id,
-        'INVALIDCODE',
-        userSettings
-      );
+      const result = await mfaService.verifyChallenge(challenge.id, 'INVALIDCODE', userSettings);
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('attempts remaining');
@@ -393,11 +356,7 @@ describe('MfaService - Additional Coverage', () => {
         // No backupCodes
       };
 
-      const result = await mfaService.verifyChallenge(
-        challenge.id,
-        'SOMECODE',
-        userSettings
-      );
+      const result = await mfaService.verifyChallenge(challenge.id, 'SOMECODE', userSettings);
 
       expect(result.success).toBe(false);
     });
@@ -819,7 +778,8 @@ describe('MfaService - Additional Coverage', () => {
       const hashedCodes = mfaService.hashBackupCodes(codes);
 
       // Add spaces and lowercase
-      const codeWithSpaces = codes[0].toLowerCase().slice(0, 5) + ' ' + codes[0].toLowerCase().slice(5);
+      const codeWithSpaces =
+        codes[0].toLowerCase().slice(0, 5) + ' ' + codes[0].toLowerCase().slice(5);
       const result = mfaService.verifyBackupCode(codeWithSpaces, hashedCodes);
       expect(result.valid).toBe(true);
     });

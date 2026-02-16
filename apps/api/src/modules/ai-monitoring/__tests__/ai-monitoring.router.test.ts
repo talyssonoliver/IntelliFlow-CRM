@@ -54,7 +54,9 @@ import { aiMonitoringRouter } from '../ai-monitoring.router';
 // Mock Data Factories
 // ============================================================
 
-function createMockMonitoringStatus(overrides: Partial<ReturnType<typeof getMonitoringStatus>> = {}) {
+function createMockMonitoringStatus(
+  overrides: Partial<ReturnType<typeof getMonitoringStatus>> = {}
+) {
   return {
     healthy: true,
     issues: [],
@@ -91,7 +93,17 @@ function createMockMonitoringStatus(overrides: Partial<ReturnType<typeof getMoni
       periodEnd: new Date('2026-02-10T00:00:00Z'),
       sampleCount: 500,
       successRate: 0.99,
-      percentiles: { p50: 150, p75: 250, p90: 400, p95: 500, p99: 800, max: 1200, min: 50, mean: 200, stdDev: 100 },
+      percentiles: {
+        p50: 150,
+        p75: 250,
+        p90: 400,
+        p95: 500,
+        p99: 800,
+        max: 1200,
+        min: 50,
+        mean: 200,
+        stdDev: 100,
+      },
       byModel: {},
       byOperation: {},
       byPhase: {},
@@ -115,8 +127,26 @@ function createMockDriftHistory(count: number = 3) {
     detected: i === 0,
     severity: (i === 0 ? 'medium' : 'none') as 'none' | 'low' | 'medium' | 'high' | 'critical',
     metric: `score_distribution`,
-    baselineWindow: { startTime: new Date(), endTime: new Date(), sampleCount: 50, mean: 0.5, variance: 0.01, min: 0, max: 1, distribution: [] },
-    currentWindow: { startTime: new Date(), endTime: new Date(), sampleCount: 50, mean: 0.55, variance: 0.02, min: 0, max: 1, distribution: [] },
+    baselineWindow: {
+      startTime: new Date(),
+      endTime: new Date(),
+      sampleCount: 50,
+      mean: 0.5,
+      variance: 0.01,
+      min: 0,
+      max: 1,
+      distribution: [],
+    },
+    currentWindow: {
+      startTime: new Date(),
+      endTime: new Date(),
+      sampleCount: 50,
+      mean: 0.55,
+      variance: 0.02,
+      min: 0,
+      max: 1,
+      distribution: [],
+    },
     pValue: i === 0 ? 0.03 : 0.5,
     driftScore: i === 0 ? 0.35 : 0.05,
     timestamp: new Date(`2026-02-10T0${i}:00:00Z`),
@@ -138,11 +168,28 @@ function createMockConversation(overrides: Record<string, unknown> = {}) {
     tenantId: 'test-tenant-id',
     userId: 'user-1',
     messages: [
-      { id: 'msg-1', role: 'user', content: 'Score this lead', createdAt: new Date('2026-02-10T08:00:00Z') },
-      { id: 'msg-2', role: 'assistant', content: 'Score: 85/100', createdAt: new Date('2026-02-10T08:01:00Z') },
+      {
+        id: 'msg-1',
+        role: 'user',
+        content: 'Score this lead',
+        createdAt: new Date('2026-02-10T08:00:00Z'),
+      },
+      {
+        id: 'msg-2',
+        role: 'assistant',
+        content: 'Score: 85/100',
+        createdAt: new Date('2026-02-10T08:01:00Z'),
+      },
     ],
     toolCalls: [
-      { id: 'tc-1', toolName: 'scoreLead', toolInput: { leadId: 'l1' }, toolOutput: { score: 85 }, status: 'SUCCESS', createdAt: new Date('2026-02-10T08:00:30Z') },
+      {
+        id: 'tc-1',
+        toolName: 'scoreLead',
+        toolInput: { leadId: 'l1' },
+        toolOutput: { score: 85 },
+        status: 'SUCCESS',
+        createdAt: new Date('2026-02-10T08:00:30Z'),
+      },
     ],
     ...overrides,
   };
@@ -394,17 +441,13 @@ describe('AI Monitoring Router (IFC-197)', () => {
     it('getDriftMetrics with limit: 0 — BAD_REQUEST', async () => {
       const caller = createCaller();
 
-      await expect(
-        caller.getDriftMetrics({ limit: 0 })
-      ).rejects.toThrow();
+      await expect(caller.getDriftMetrics({ limit: 0 })).rejects.toThrow();
     });
 
     it('getDriftMetrics with limit: 101 — BAD_REQUEST', async () => {
       const caller = createCaller();
 
-      await expect(
-        caller.getDriftMetrics({ limit: 101 })
-      ).rejects.toThrow();
+      await expect(caller.getDriftMetrics({ limit: 101 })).rejects.toThrow();
     });
 
     it('getAgentLogs with invalid UUID — rejected', async () => {
@@ -476,12 +519,28 @@ describe('AI Monitoring Router (IFC-197)', () => {
       vi.mocked(getMonitoringStatus).mockReturnValue(createMockMonitoringStatus() as any);
 
       // Create two callers with different tenants
-      const caller1 = createCaller(createTestContext({
-        tenant: { tenantId: 'tenant-A', tenantType: 'user' as const, userId: 'u1', role: 'USER', canAccessAllTenantData: false },
-      }));
-      const caller2 = createCaller(createTestContext({
-        tenant: { tenantId: 'tenant-B', tenantType: 'user' as const, userId: 'u2', role: 'USER', canAccessAllTenantData: false },
-      }));
+      const caller1 = createCaller(
+        createTestContext({
+          tenant: {
+            tenantId: 'tenant-A',
+            tenantType: 'user' as const,
+            userId: 'u1',
+            role: 'USER',
+            canAccessAllTenantData: false,
+          },
+        })
+      );
+      const caller2 = createCaller(
+        createTestContext({
+          tenant: {
+            tenantId: 'tenant-B',
+            tenantType: 'user' as const,
+            userId: 'u2',
+            role: 'USER',
+            canAccessAllTenantData: false,
+          },
+        })
+      );
 
       const result1 = await caller1.getStatus();
       const result2 = await caller2.getStatus();
@@ -500,14 +559,63 @@ describe('AI Monitoring Router (IFC-197)', () => {
       vi.mocked(getMonitoringStatus).mockReturnValue({
         healthy: true,
         issues: [],
-        drift: { trackedMetrics: 0, totalSamples: 0, driftDetected: false, highSeverityCount: 0, lastCheck: null },
-        hallucination: { totalChecks: 0, hallucinationsDetected: 0, hallucinationRate: 0, kpiCompliant: true, byType: {}, byModel: {}, averageConfidence: 0, periodStart: new Date(), periodEnd: new Date() },
-        roi: { totalCostsTracked: 0, totalValuesTracked: 0, currentROI: 0, averageCostPerOperation: 0, averageValuePerOperation: 0, roiTrend: [], topPerformingOperations: [], underperformingOperations: [] },
+        drift: {
+          trackedMetrics: 0,
+          totalSamples: 0,
+          driftDetected: false,
+          highSeverityCount: 0,
+          lastCheck: null,
+        },
+        hallucination: {
+          totalChecks: 0,
+          hallucinationsDetected: 0,
+          hallucinationRate: 0,
+          kpiCompliant: true,
+          byType: {},
+          byModel: {},
+          averageConfidence: 0,
+          periodStart: new Date(),
+          periodEnd: new Date(),
+        },
+        roi: {
+          totalCostsTracked: 0,
+          totalValuesTracked: 0,
+          currentROI: 0,
+          averageCostPerOperation: 0,
+          averageValuePerOperation: 0,
+          roiTrend: [],
+          topPerformingOperations: [],
+          underperformingOperations: [],
+        },
         latency: {
-          periodStart: new Date(), periodEnd: new Date(), sampleCount: 0, successRate: 1,
-          percentiles: { p50: 0, p75: 0, p90: 0, p95: 0, p99: 0, max: 0, min: 0, mean: 0, stdDev: 0 },
-          byModel: {}, byOperation: {}, byPhase: {} as any,
-          sloCompliance: { p95Target: 2000, p99Target: 5000, p95Actual: 0, p99Actual: 0, p95Compliant: true, p99Compliant: true, overallCompliant: true, complianceRate: 1 },
+          periodStart: new Date(),
+          periodEnd: new Date(),
+          sampleCount: 0,
+          successRate: 1,
+          percentiles: {
+            p50: 0,
+            p75: 0,
+            p90: 0,
+            p95: 0,
+            p99: 0,
+            max: 0,
+            min: 0,
+            mean: 0,
+            stdDev: 0,
+          },
+          byModel: {},
+          byOperation: {},
+          byPhase: {} as any,
+          sloCompliance: {
+            p95Target: 2000,
+            p99Target: 5000,
+            p95Actual: 0,
+            p99Actual: 0,
+            p95Compliant: true,
+            p99Compliant: true,
+            overallCompliant: true,
+            complianceRate: 1,
+          },
         },
       } as any);
 

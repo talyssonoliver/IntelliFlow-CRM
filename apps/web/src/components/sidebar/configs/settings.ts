@@ -48,6 +48,12 @@ export const settingsSidebarConfig: SidebarConfig = {
           href: '/settings/pipeline',
         },
         {
+          id: 'routing',
+          label: 'Lead Routing',
+          icon: 'alt_route',
+          href: '/settings/routing',
+        },
+        {
           id: 'security',
           label: 'Security',
           icon: 'security',

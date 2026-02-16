@@ -13,15 +13,11 @@ import { HomePageContent } from '../HomePageContent';
 
 // Mock child components to isolate routing logic
 vi.mock('../AuthenticatedHomePage', () => ({
-  AuthenticatedHomePage: () => (
-    <div data-testid="authenticated-home">Authenticated Dashboard</div>
-  ),
+  AuthenticatedHomePage: () => <div data-testid="authenticated-home">Authenticated Dashboard</div>,
 }));
 
 vi.mock('../PublicHomePage', () => ({
-  PublicHomePage: () => (
-    <div data-testid="public-home">Public Landing Page</div>
-  ),
+  PublicHomePage: () => <div data-testid="public-home">Public Landing Page</div>,
 }));
 
 // Mock auth context - will be overridden per test

@@ -28,10 +28,7 @@ export interface AutoResponseDraftRepository {
   /**
    * Find by ID
    */
-  findById(
-    id: AutoResponseDraftId,
-    tenantId: string
-  ): Promise<AutoResponseDraft | null>;
+  findById(id: AutoResponseDraftId, tenantId: string): Promise<AutoResponseDraft | null>;
 
   /**
    * Find by query
@@ -51,18 +48,12 @@ export interface AutoResponseDraftRepository {
   /**
    * Find all pending approval drafts for an approver
    */
-  findPendingForApprover(
-    approverId: string,
-    tenantId: string
-  ): Promise<AutoResponseDraft[]>;
+  findPendingForApprover(approverId: string, tenantId: string): Promise<AutoResponseDraft[]>;
 
   /**
    * Find all pending drafts for a lead (for invalidation on status change)
    */
-  findPendingByLeadId(
-    leadId: string,
-    tenantId: string
-  ): Promise<AutoResponseDraft[]>;
+  findPendingByLeadId(leadId: string, tenantId: string): Promise<AutoResponseDraft[]>;
 
   /**
    * Find expired drafts that need cleanup
@@ -77,8 +68,5 @@ export interface AutoResponseDraftRepository {
   /**
    * Count drafts by status
    */
-  countByStatus(
-    tenantId: string,
-    status: AutoResponseStatus
-  ): Promise<number>;
+  countByStatus(tenantId: string, status: AutoResponseStatus): Promise<number>;
 }

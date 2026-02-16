@@ -18,12 +18,7 @@ describe('DealFilters', () => {
   });
 
   it('renders owner filter dropdown', () => {
-    render(
-      <DealFilters
-        value={createMockDealFilters()}
-        onChange={mockOnChange}
-      />,
-    );
+    render(<DealFilters value={createMockDealFilters()} onChange={mockOnChange} />);
 
     const ownerSelect = screen.getByLabelText('Filter by owner');
     expect(ownerSelect).toBeInTheDocument();
@@ -31,12 +26,7 @@ describe('DealFilters', () => {
   });
 
   it('renders date range dropdown with "All Time" default', () => {
-    render(
-      <DealFilters
-        value={createMockDealFilters()}
-        onChange={mockOnChange}
-      />,
-    );
+    render(<DealFilters value={createMockDealFilters()} onChange={mockOnChange} />);
 
     const dateSelect = screen.getByLabelText('Filter by date range');
     expect(dateSelect).toBeInTheDocument();
@@ -49,7 +39,7 @@ describe('DealFilters', () => {
         value={createMockDealFilters()}
         onChange={mockOnChange}
         onViewModeChange={mockOnViewModeChange}
-      />,
+      />
     );
 
     const kanbanBtn = screen.getByLabelText('Kanban view');
@@ -57,68 +47,50 @@ describe('DealFilters', () => {
   });
 
   it('owner dropdown change calls onChange with updated ownerId', () => {
-    render(
-      <DealFilters
-        value={createMockDealFilters()}
-        onChange={mockOnChange}
-      />,
-    );
+    render(<DealFilters value={createMockDealFilters()} onChange={mockOnChange} />);
 
     const ownerSelect = screen.getByLabelText('Filter by owner');
     fireEvent.change(ownerSelect, { target: { value: 'me' } });
 
-    expect(mockOnChange).toHaveBeenCalledWith(
-      expect.objectContaining({ ownerId: 'me' }),
-    );
+    expect(mockOnChange).toHaveBeenCalledWith(expect.objectContaining({ ownerId: 'me' }));
   });
 
   it('date range dropdown change calls onChange with dateRange value', () => {
-    render(
-      <DealFilters
-        value={createMockDealFilters()}
-        onChange={mockOnChange}
-      />,
-    );
+    render(<DealFilters value={createMockDealFilters()} onChange={mockOnChange} />);
 
     const dateSelect = screen.getByLabelText('Filter by date range');
     fireEvent.change(dateSelect, { target: { value: 'this_quarter' } });
 
     expect(mockOnChange).toHaveBeenCalledWith(
-      expect.objectContaining({ dateRange: 'this_quarter' }),
+      expect.objectContaining({ dateRange: 'this_quarter' })
     );
   });
 
-  it('list view button present but disabled with "Coming soon" tooltip', () => {
+  it('list view button is enabled and triggers view mode change', () => {
+    const mockViewModeChange = vi.fn();
     render(
       <DealFilters
         value={createMockDealFilters()}
         onChange={mockOnChange}
-      />,
+        viewMode="kanban"
+        onViewModeChange={mockViewModeChange}
+      />
     );
 
-    const listBtn = screen.getByLabelText('List view (coming soon)');
-    expect(listBtn).toBeDisabled();
-    expect(listBtn).toHaveAttribute('title', 'Coming soon');
+    const listBtn = screen.getByLabelText('List view');
+    expect(listBtn).not.toBeDisabled();
+    fireEvent.click(listBtn);
+    expect(mockViewModeChange).toHaveBeenCalledWith('list');
   });
 
   it('renders "More Filters" button', () => {
-    render(
-      <DealFilters
-        value={createMockDealFilters()}
-        onChange={mockOnChange}
-      />,
-    );
+    render(<DealFilters value={createMockDealFilters()} onChange={mockOnChange} />);
 
     expect(screen.getByText('More Filters')).toBeInTheDocument();
   });
 
   it('component has accessible toolbar role', () => {
-    render(
-      <DealFilters
-        value={createMockDealFilters()}
-        onChange={mockOnChange}
-      />,
-    );
+    render(<DealFilters value={createMockDealFilters()} onChange={mockOnChange} />);
 
     expect(screen.getByRole('toolbar')).toBeInTheDocument();
   });
@@ -129,7 +101,7 @@ describe('DealFilters', () => {
         value={createMockDealFilters()}
         onChange={mockOnChange}
         onViewModeChange={mockOnViewModeChange}
-      />,
+      />
     );
 
     expect(screen.getByRole('group', { name: 'View mode' })).toBeInTheDocument();

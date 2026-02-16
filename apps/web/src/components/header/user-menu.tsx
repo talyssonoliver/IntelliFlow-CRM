@@ -17,10 +17,7 @@ interface UserMenuProps {
   className?: string;
 }
 
-export function UserMenu({
-  user: propUser,
-  className
-}: UserMenuProps) {
+export function UserMenu({ user: propUser, className }: UserMenuProps) {
   // IFC-007: Connect to auth context for real user data
   const { user: authUser } = useAuth();
   const { logout, isLoggingOut } = useLogout();
@@ -84,9 +81,7 @@ export function UserMenu({
           className="w-8 h-8"
           fallbackClassName="text-sm font-medium text-muted-foreground bg-muted"
         />
-        <span className="hidden sm:inline text-sm font-medium text-foreground">
-          {user.name}
-        </span>
+        <span className="hidden sm:inline text-sm font-medium text-foreground">{user.name}</span>
         <span className="material-symbols-outlined text-lg text-muted-foreground">
           {isOpen ? 'expand_less' : 'expand_more'}
         </span>
@@ -126,7 +121,9 @@ export function UserMenu({
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
             >
-              <span className="material-symbols-outlined text-lg text-muted-foreground">person</span>
+              <span className="material-symbols-outlined text-lg text-muted-foreground">
+                person
+              </span>
               Profile
             </Link>
 
@@ -135,7 +132,9 @@ export function UserMenu({
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
             >
-              <span className="material-symbols-outlined text-lg text-muted-foreground">settings</span>
+              <span className="material-symbols-outlined text-lg text-muted-foreground">
+                settings
+              </span>
               Settings
             </Link>
 
@@ -144,7 +143,9 @@ export function UserMenu({
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
             >
-              <span className="material-symbols-outlined text-lg text-muted-foreground">policy</span>
+              <span className="material-symbols-outlined text-lg text-muted-foreground">
+                policy
+              </span>
               Governance
             </Link>
           </div>

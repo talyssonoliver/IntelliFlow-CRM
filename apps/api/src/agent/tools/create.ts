@@ -176,10 +176,7 @@ export const createCaseTool: AgentToolDefinition<CreateCaseInput, CreatedCaseRes
     }
   },
 
-  async generatePreview(
-    input: CreateCaseInput,
-    context: AgentAuthContext
-  ): Promise<ActionPreview> {
+  async generatePreview(input: CreateCaseInput, context: AgentAuthContext): Promise<ActionPreview> {
     const warnings: string[] = [];
 
     // Check for urgent priority

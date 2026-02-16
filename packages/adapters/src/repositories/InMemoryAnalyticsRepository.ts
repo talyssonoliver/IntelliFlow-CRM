@@ -23,10 +23,7 @@ export class InMemoryAnalyticsRepository implements AnalyticsRepository {
   /**
    * Get deals won grouped by month for trend chart
    */
-  async getDealsWonByMonth(
-    tenantId: string,
-    months: number
-  ): Promise<OpportunityGroupByResult[]> {
+  async getDealsWonByMonth(tenantId: string, months: number): Promise<OpportunityGroupByResult[]> {
     const cutoff = new Date();
     cutoff.setMonth(cutoff.getMonth() - months);
 
@@ -63,10 +60,7 @@ export class InMemoryAnalyticsRepository implements AnalyticsRepository {
   /**
    * Get monthly revenue from closed won opportunities
    */
-  async getMonthlyRevenue(
-    tenantId: string,
-    dateRange: DateRangeQuery
-  ): Promise<number> {
+  async getMonthlyRevenue(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
     return this.opportunities
       .filter(
         (opp) =>
@@ -82,10 +76,7 @@ export class InMemoryAnalyticsRepository implements AnalyticsRepository {
   /**
    * Count leads created in date range
    */
-  async countLeadsInRange(
-    tenantId: string,
-    dateRange: DateRangeQuery
-  ): Promise<number> {
+  async countLeadsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
     return this.leads.filter(
       (lead) =>
         lead.tenantId === tenantId &&
@@ -97,10 +88,7 @@ export class InMemoryAnalyticsRepository implements AnalyticsRepository {
   /**
    * Count opportunities created in date range
    */
-  async countOpportunitiesInRange(
-    tenantId: string,
-    dateRange: DateRangeQuery
-  ): Promise<number> {
+  async countOpportunitiesInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
     return this.opportunities.filter(
       (opp) =>
         opp.tenantId === tenantId &&
@@ -112,10 +100,7 @@ export class InMemoryAnalyticsRepository implements AnalyticsRepository {
   /**
    * Count contacts created in date range
    */
-  async countContactsInRange(
-    tenantId: string,
-    dateRange: DateRangeQuery
-  ): Promise<number> {
+  async countContactsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
     return this.contacts.filter(
       (contact) =>
         contact.tenantId === tenantId &&
@@ -188,11 +173,8 @@ export class InMemoryAnalyticsRepository implements AnalyticsRepository {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    return this.leads.filter(
-      (lead) =>
-        lead.tenantId === tenantId &&
-        lead.createdAt >= startOfMonth
-    ).length;
+    return this.leads.filter((lead) => lead.tenantId === tenantId && lead.createdAt >= startOfMonth)
+      .length;
   }
 
   // ============================================
@@ -301,10 +283,7 @@ export class InMemoryAnalyticsRepository implements AnalyticsRepository {
     return iconMap[action] || 'event';
   }
 
-  private getDescriptionForAction(
-    action: string,
-    metadata?: Record<string, unknown>
-  ): string {
+  private getDescriptionForAction(action: string, metadata?: Record<string, unknown>): string {
     const data = metadata || {};
 
     switch (action) {

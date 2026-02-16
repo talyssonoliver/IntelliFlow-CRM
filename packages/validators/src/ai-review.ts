@@ -158,12 +158,7 @@ export const reviewListFilterSchema = z.object({
   /** Filter by SLA breach status */
   slaBreached: z.boolean().optional(),
   /** Filter by escalation depth */
-  escalationDepth: z
-    .number()
-    .int()
-    .min(0)
-    .max(REVIEW_SLA_CONFIG.MAX_ESCALATION_DEPTH)
-    .optional(),
+  escalationDepth: z.number().int().min(0).max(REVIEW_SLA_CONFIG.MAX_ESCALATION_DEPTH).optional(),
   /** Filter by tenant */
   tenantId: idSchema.optional(),
   /** Filter by reviewer */

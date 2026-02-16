@@ -238,7 +238,11 @@ describe('Tenant Resource Limiter - IFC-127', () => {
     it('should check opportunities usage', async () => {
       mockPrismaClient.opportunity.count.mockResolvedValue(50);
 
-      const usage = await checkResourceUsage(mockPrismaClient as any, 'tenant-123', 'opportunities');
+      const usage = await checkResourceUsage(
+        mockPrismaClient as any,
+        'tenant-123',
+        'opportunities'
+      );
 
       expect(usage.type).toBe('opportunities');
       expect(usage.current).toBe(50);
@@ -264,7 +268,11 @@ describe('Tenant Resource Limiter - IFC-127', () => {
     });
 
     it('should check api_requests_per_minute usage', async () => {
-      const usage = await checkResourceUsage(mockPrismaClient as any, 'tenant-123', 'api_requests_per_minute');
+      const usage = await checkResourceUsage(
+        mockPrismaClient as any,
+        'tenant-123',
+        'api_requests_per_minute'
+      );
 
       expect(usage.type).toBe('api_requests_per_minute');
       expect(usage.current).toBe(0);
@@ -272,14 +280,22 @@ describe('Tenant Resource Limiter - IFC-127', () => {
     });
 
     it('should check api_requests_per_day usage', async () => {
-      const usage = await checkResourceUsage(mockPrismaClient as any, 'tenant-123', 'api_requests_per_day');
+      const usage = await checkResourceUsage(
+        mockPrismaClient as any,
+        'tenant-123',
+        'api_requests_per_day'
+      );
 
       expect(usage.type).toBe('api_requests_per_day');
       expect(usage.current).toBe(0);
     });
 
     it('should check concurrent_requests usage', async () => {
-      const usage = await checkResourceUsage(mockPrismaClient as any, 'tenant-123', 'concurrent_requests');
+      const usage = await checkResourceUsage(
+        mockPrismaClient as any,
+        'tenant-123',
+        'concurrent_requests'
+      );
 
       expect(usage.type).toBe('concurrent_requests');
       expect(usage.current).toBe(0);
@@ -443,9 +459,9 @@ describe('Tenant Resource Limiter - IFC-127', () => {
         prisma: mockPrismaClient,
       };
 
-      await expect(
-        middleware({ ctx, next, path: 'test', type: 'query' } as any)
-      ).rejects.toThrow(TRPCError);
+      await expect(middleware({ ctx, next, path: 'test', type: 'query' } as any)).rejects.toThrow(
+        TRPCError
+      );
     });
 
     it('should use custom error message', async () => {
@@ -522,9 +538,9 @@ describe('Tenant Resource Limiter - IFC-127', () => {
         prisma: mockPrismaClient,
       };
 
-      await expect(
-        middleware({ ctx, next, path: 'test', type: 'query' } as any)
-      ).rejects.toThrow('Test error');
+      await expect(middleware({ ctx, next, path: 'test', type: 'query' } as any)).rejects.toThrow(
+        'Test error'
+      );
     });
 
     it('should throw when concurrent limit exceeded', async () => {
@@ -542,9 +558,9 @@ describe('Tenant Resource Limiter - IFC-127', () => {
         prisma: mockPrismaClient,
       };
 
-      await expect(
-        middleware({ ctx, next, path: 'test', type: 'query' } as any)
-      ).rejects.toThrow(TRPCError);
+      await expect(middleware({ ctx, next, path: 'test', type: 'query' } as any)).rejects.toThrow(
+        TRPCError
+      );
     });
   });
 
@@ -618,9 +634,9 @@ describe('Tenant Resource Limiter - IFC-127', () => {
       const usages = await getAllResourceUsage(mockPrismaClient as any, 'tenant-123');
 
       expect(usages.length).toBe(9); // All resource types except storage_mb
-      expect(usages.find(u => u.type === 'leads')).toBeDefined();
-      expect(usages.find(u => u.type === 'contacts')).toBeDefined();
-      expect(usages.find(u => u.type === 'accounts')).toBeDefined();
+      expect(usages.find((u) => u.type === 'leads')).toBeDefined();
+      expect(usages.find((u) => u.type === 'contacts')).toBeDefined();
+      expect(usages.find((u) => u.type === 'accounts')).toBeDefined();
     });
   });
 
@@ -637,8 +653,8 @@ describe('Tenant Resource Limiter - IFC-127', () => {
       const approaching = await checkApproachingLimits(mockPrismaClient as any, 'tenant-123', 80);
 
       expect(approaching.length).toBeGreaterThan(0);
-      expect(approaching.some(u => u.type === 'leads')).toBe(true);
-      expect(approaching.some(u => u.type === 'opportunities')).toBe(true);
+      expect(approaching.some((u) => u.type === 'leads')).toBe(true);
+      expect(approaching.some((u) => u.type === 'opportunities')).toBe(true);
     });
 
     it('should use default threshold of 80%', async () => {
@@ -652,7 +668,7 @@ describe('Tenant Resource Limiter - IFC-127', () => {
 
       const approaching = await checkApproachingLimits(mockPrismaClient as any, 'tenant-123');
 
-      expect(approaching.every(u => u.percentUsed >= 80)).toBe(true);
+      expect(approaching.every((u) => u.percentUsed >= 80)).toBe(true);
     });
 
     it('should return empty array when no limits approaching', async () => {
@@ -680,7 +696,11 @@ describe('Tenant Resource Limiter - IFC-127', () => {
       }
 
       // Check current usage
-      const usage = await checkResourceUsage(mockPrismaClient as any, 'tenant-window', 'api_requests_per_minute');
+      const usage = await checkResourceUsage(
+        mockPrismaClient as any,
+        'tenant-window',
+        'api_requests_per_minute'
+      );
       expect(usage.current).toBe(50);
     });
   });
@@ -693,7 +713,11 @@ describe('Tenant Resource Limiter - IFC-127', () => {
       incrementDailyRequests('tenant-daily');
       incrementDailyRequests('tenant-daily');
 
-      const usage = await checkResourceUsage(mockPrismaClient as any, 'tenant-daily', 'api_requests_per_day');
+      const usage = await checkResourceUsage(
+        mockPrismaClient as any,
+        'tenant-daily',
+        'api_requests_per_day'
+      );
       expect(usage.current).toBe(3);
     });
   });

@@ -35,7 +35,8 @@ export default function Error({
           Something went wrong
         </h1>
         <p className="text-slate-600 dark:text-slate-400 mb-6">
-          We encountered an error while loading the page. This has been logged and we'll look into it.
+          We encountered an error while loading the page. This has been logged and we'll look into
+          it.
         </p>
 
         {/* Error Details (dev only) */}
@@ -73,10 +74,7 @@ export default function Error({
         {/* Support Link */}
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-6">
           Need help?{' '}
-          <Link
-            href="/support"
-            className="text-[#137fec] hover:underline font-medium"
-          >
+          <Link href="/support" className="text-[#137fec] hover:underline font-medium">
             Contact Support
           </Link>
         </p>

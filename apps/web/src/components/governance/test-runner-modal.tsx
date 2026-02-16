@@ -102,7 +102,13 @@ export function TestRunnerModal({ isOpen, onClose, onComplete }: Readonly<TestRu
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
-      setProgress({ testsRun: 0, testsPassed: 0, testsFailed: 0, testsSkipped: 0, currentTest: '' });
+      setProgress({
+        testsRun: 0,
+        testsPassed: 0,
+        testsFailed: 0,
+        testsSkipped: 0,
+        currentTest: '',
+      });
       setLogs([]);
       setError(null);
       setCoverage(null);
@@ -203,7 +209,10 @@ export function TestRunnerModal({ isOpen, onClose, onComplete }: Readonly<TestRu
 
       case 'suite_start':
         if (data.data?.file) {
-          setLogs((prev) => [...prev, { type: 'info', text: `Running: ${data.data?.suiteName || data.data?.file}` }]);
+          setLogs((prev) => [
+            ...prev,
+            { type: 'info', text: `Running: ${data.data?.suiteName || data.data?.file}` },
+          ]);
         }
         break;
 
@@ -278,9 +287,7 @@ export function TestRunnerModal({ isOpen, onClose, onComplete }: Readonly<TestRu
   if (!isOpen) return null;
 
   const progressPercent =
-    progress.testsRun > 0
-      ? Math.round((progress.testsPassed / progress.testsRun) * 100)
-      : 0;
+    progress.testsRun > 0 ? Math.round((progress.testsPassed / progress.testsRun) * 100) : 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">

@@ -40,8 +40,24 @@ export async function POST(request: Request) {
     }
 
     const projectRoot = join(process.cwd(), '..', '..');
-    const csvPath = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
-    const graphPath = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'dependency-graph.json');
+    const csvPath = join(
+      projectRoot,
+      'apps',
+      'project-tracker',
+      'docs',
+      'metrics',
+      '_global',
+      'Sprint_plan.csv'
+    );
+    const graphPath = join(
+      projectRoot,
+      'apps',
+      'project-tracker',
+      'docs',
+      'metrics',
+      '_global',
+      'dependency-graph.json'
+    );
 
     if (!existsSync(csvPath)) {
       return NextResponse.json({ error: 'Sprint_plan.csv not found' }, { status: 404 });
@@ -57,7 +73,10 @@ export async function POST(request: Request) {
     const selected = tasks.filter((t) => taskIds.includes(t['Task ID']));
 
     if (selected.length === 0) {
-      return NextResponse.json({ error: `Tasks not found: ${taskIds.join(', ')}` }, { status: 404 });
+      return NextResponse.json(
+        { error: `Tasks not found: ${taskIds.join(', ')}` },
+        { status: 404 }
+      );
     }
 
     let dependencyGraph: any | null = null;
@@ -154,7 +173,9 @@ function buildTaskPrompt(tasks: CsvTask[], dependencyGraph: any | null): string 
     lines.push(`**Owner:** ${task.Owner}`);
     lines.push(`**Status:** ${task.Status}`);
     lines.push('');
-    lines.push('You must adhere to the following guidelines while implementing this task: .specify/memory/constitution.md');
+    lines.push(
+      'You must adhere to the following guidelines while implementing this task: .specify/memory/constitution.md'
+    );
     lines.push('');
     lines.push('### Dependencies');
     lines.push(deps.length ? deps.map((d) => `- ${d}`).join('\n') : '- None');
@@ -168,7 +189,9 @@ function buildTaskPrompt(tasks: CsvTask[], dependencyGraph: any | null): string 
     lines.push(task['Pre-requisites'] || 'None specified');
     lines.push('');
     lines.push('### Definition of Done');
-    lines.push(dodItems.length ? dodItems.map((d, i) => `${i + 1}. ${d}`).join('\n') : '- None specified');
+    lines.push(
+      dodItems.length ? dodItems.map((d, i) => `${i + 1}. ${d}`).join('\n') : '- None specified'
+    );
     lines.push('');
     lines.push('### Artifacts to Track');
     lines.push(artifacts.length ? artifacts.map((a) => `- ${a}`).join('\n') : '- None specified');

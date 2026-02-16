@@ -15,7 +15,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const mockSetState = vi.hoisted(() => vi.fn());
 
 vi.mock('react', () => ({
-  useState: vi.fn((initial: any) => [typeof initial === 'function' ? initial() : initial, mockSetState]),
+  useState: vi.fn((initial: any) => [
+    typeof initial === 'function' ? initial() : initial,
+    mockSetState,
+  ]),
   useCallback: vi.fn((fn: any) => fn),
   useId: vi.fn(() => ':test-id:'),
 }));
@@ -191,7 +194,11 @@ describe('search-filter-bar logic', () => {
   // ===================== Filter chips rendering condition =====================
   describe('filter chips rendering condition', () => {
     it('shown when filterChips exists and has options', () => {
-      const filterChips = { options: [{ id: 'all', label: 'All' }], value: 'all', onChange: vi.fn() };
+      const filterChips = {
+        options: [{ id: 'all', label: 'All' }],
+        value: 'all',
+        onChange: vi.fn(),
+      };
       const shouldShow = filterChips && filterChips.options.length > 0;
       expect(shouldShow).toBe(true);
     });

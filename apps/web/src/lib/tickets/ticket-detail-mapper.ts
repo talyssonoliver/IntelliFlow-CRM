@@ -55,7 +55,9 @@ function asOptionalString(value: unknown): string | undefined {
 }
 
 function isUuidOrCuid(value: string): boolean {
-  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value
+  );
   const isCuid = /^c[a-z0-9]{24,}$/i.test(value);
   return isUuid || isCuid;
 }
@@ -319,7 +321,10 @@ function inferCompanyFromEmail(email: string): string {
     return '';
   }
 
-  const domain = email.slice(atIndex + 1).trim().toLowerCase();
+  const domain = email
+    .slice(atIndex + 1)
+    .trim()
+    .toLowerCase();
   const base = domain.split('.')[0] || '';
   if (!base) {
     return '';
@@ -514,8 +519,9 @@ export function mapTicketToListItem(rawTicket: unknown): TicketListItem {
     ],
     ''
   );
-  const assigneeAvatar = normalizeAvatarSource(asOptionalString(ticket.assigneeAvatar))
-    ?? (assigneeName ? initialsFromName(assigneeName) : null);
+  const assigneeAvatar =
+    normalizeAvatarSource(asOptionalString(ticket.assigneeAvatar)) ??
+    (assigneeName ? initialsFromName(assigneeName) : null);
 
   return {
     id: asString(ticket.id, 'unknown-ticket'),
@@ -569,7 +575,9 @@ export function mapTicketToDetailData(rawTicket: unknown): TicketDetailData {
   const firstResponseMet =
     firstResponseActual !== null
       ? responseDue
-        ? Boolean(inferredFirstResponseAt && inferredFirstResponseAt.getTime() <= responseDue.getTime())
+        ? Boolean(
+            inferredFirstResponseAt && inferredFirstResponseAt.getTime() <= responseDue.getTime()
+          )
         : firstResponseActual <= firstResponseTarget
       : false;
   const resolutionRemaining = minutesUntil(resolutionDue);
@@ -585,8 +593,9 @@ export function mapTicketToDetailData(rawTicket: unknown): TicketDetailData {
     ''
   );
   const assigneeTitle = sanitizeAssigneeTitle(ticket.assigneeTitle);
-  const assigneeAvatar = normalizeAvatarSource(asOptionalString(ticket.assigneeAvatar))
-    ?? (assigneeName ? initialsFromName(assigneeName) : null);
+  const assigneeAvatar =
+    normalizeAvatarSource(asOptionalString(ticket.assigneeAvatar)) ??
+    (assigneeName ? initialsFromName(assigneeName) : null);
 
   const accountName = firstNonEmpty(
     [
@@ -629,13 +638,7 @@ export function mapTicketToDetailData(rawTicket: unknown): TicketDetailData {
     tags: asStringArray(ticket.tags),
     type: asString(ticket.type, 'Support'),
     customer: {
-      id: firstNonEmpty(
-        [
-          asString(ticket.contactId),
-          asString(contact.id),
-        ],
-        'unknown-contact'
-      ),
+      id: firstNonEmpty([asString(ticket.contactId), asString(contact.id)], 'unknown-contact'),
       name: asString(ticket.contactName, 'Unknown Customer'),
       email: asString(ticket.contactEmail, 'unknown@example.com'),
       phone: asString(ticket.contactPhone, 'Not provided'),
@@ -647,11 +650,7 @@ export function mapTicketToDetailData(rawTicket: unknown): TicketDetailData {
     },
     account: {
       id: firstNonEmpty(
-        [
-          asString(ticket.accountId),
-          asString(account.id),
-          asString(ticket.tenantId),
-        ],
+        [asString(ticket.accountId), asString(account.id), asString(ticket.tenantId)],
         'unknown-account'
       ),
       name: accountName,
@@ -703,7 +702,9 @@ export function mapTicketToDetailData(rawTicket: unknown): TicketDetailData {
       ),
       similarResolvedTickets: asNumber(aiInsight.similarResolvedTickets, relatedTickets.length),
       escalationRisk:
-        aiInsight.escalationRisk === 'low' || aiInsight.escalationRisk === 'medium' || aiInsight.escalationRisk === 'high'
+        aiInsight.escalationRisk === 'low' ||
+        aiInsight.escalationRisk === 'medium' ||
+        aiInsight.escalationRisk === 'high'
           ? aiInsight.escalationRisk
           : inferEscalationRisk(normalizedSlaStatus),
     },

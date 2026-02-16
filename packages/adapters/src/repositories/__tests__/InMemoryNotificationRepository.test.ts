@@ -7,10 +7,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { InMemoryNotificationRepository } from '../InMemoryNotificationRepository';
-import {
-  Notification,
-  NotificationId,
-} from '@intelliflow/domain';
+import { Notification, NotificationId } from '@intelliflow/domain';
 
 describe('InMemoryNotificationRepository', () => {
   let repo: InMemoryNotificationRepository;
@@ -18,15 +15,17 @@ describe('InMemoryNotificationRepository', () => {
   const TENANT_ID = 'tenant-1';
   const RECIPIENT_ID = 'user-1';
 
-  function createNotification(overrides: {
-    id?: string;
-    tenantId?: string;
-    recipientId?: string;
-    channel?: 'in_app' | 'email' | 'sms' | 'push' | 'webhook';
-    priority?: 'high' | 'normal' | 'low';
-    subject?: string;
-    scheduledAt?: Date;
-  } = {}): Notification {
+  function createNotification(
+    overrides: {
+      id?: string;
+      tenantId?: string;
+      recipientId?: string;
+      channel?: 'in_app' | 'email' | 'sms' | 'push' | 'webhook';
+      priority?: 'high' | 'normal' | 'low';
+      subject?: string;
+      scheduledAt?: Date;
+    } = {}
+  ): Notification {
     return Notification.create({
       id: NotificationId.create(overrides.id ?? `notif-${Math.random().toString(36).slice(2, 8)}`),
       tenantId: overrides.tenantId ?? TENANT_ID,
@@ -298,11 +297,13 @@ describe('InMemoryNotificationRepository', () => {
 
     it('should sort by priority then scheduledAt', async () => {
       const low = createNotification({
-        id: 'sr-low', priority: 'low',
+        id: 'sr-low',
+        priority: 'low',
         scheduledAt: new Date('2026-01-01'),
       });
       const high = createNotification({
-        id: 'sr-high', priority: 'high',
+        id: 'sr-high',
+        priority: 'high',
         scheduledAt: new Date('2026-01-02'),
       });
 
@@ -316,10 +317,12 @@ describe('InMemoryNotificationRepository', () => {
 
     it('should apply limit', async () => {
       for (let i = 0; i < 5; i++) {
-        await repo.save(createNotification({
-          id: `sr-lim-${i}`,
-          scheduledAt: new Date('2020-01-01'),
-        }));
+        await repo.save(
+          createNotification({
+            id: `sr-lim-${i}`,
+            scheduledAt: new Date('2020-01-01'),
+          })
+        );
       }
 
       const result = await repo.findScheduledReadyToSend(new Date(), 2);
@@ -437,7 +440,11 @@ describe('InMemoryNotificationRepository', () => {
     });
 
     it('should scope by tenantId and recipientId', async () => {
-      const n1 = createNotification({ id: 'ur-other', channel: 'in_app', recipientId: 'user-other' });
+      const n1 = createNotification({
+        id: 'ur-other',
+        channel: 'in_app',
+        recipientId: 'user-other',
+      });
       n1.markAsSent('p-1');
       await repo.save(n1);
 
@@ -547,7 +554,11 @@ describe('InMemoryNotificationRepository', () => {
     });
 
     it('should scope by tenantId and recipientId', async () => {
-      const n1 = createNotification({ id: 'mar-other', channel: 'in_app', recipientId: 'user-other' });
+      const n1 = createNotification({
+        id: 'mar-other',
+        channel: 'in_app',
+        recipientId: 'user-other',
+      });
       n1.markAsSent('p-1');
       await repo.save(n1);
 

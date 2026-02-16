@@ -413,10 +413,7 @@ describe('landing-builder logic', () => {
       const section: LogoCloudSection = {
         type: 'logo-cloud',
         title: 'Trusted by',
-        logos: [
-          { name: 'Company A' },
-          { name: 'Company B', src: '/logos/b.png' },
-        ],
+        logos: [{ name: 'Company A' }, { name: 'Company B', src: '/logos/b.png' }],
       };
       expect(section.logos).toHaveLength(2);
       expect(section.logos[0].src).toBeUndefined();

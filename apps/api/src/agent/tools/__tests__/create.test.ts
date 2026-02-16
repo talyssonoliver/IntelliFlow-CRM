@@ -28,7 +28,13 @@ vi.mock('../../approval-workflow', () => ({
 const createMockContext = (overrides?: Partial<AgentAuthContext>): AgentAuthContext => ({
   userId: 'user-123',
   userRole: 'SALES_REP',
-  permissions: ['create:lead', 'create:contact', 'create:opportunity', 'create:case', 'create:appointment'],
+  permissions: [
+    'create:lead',
+    'create:contact',
+    'create:opportunity',
+    'create:case',
+    'create:appointment',
+  ],
   agentSessionId: 'session-123',
   allowedActionTypes: ['CREATE', 'SEARCH', 'UPDATE', 'DELETE'],
   allowedEntityTypes: ['LEAD', 'CONTACT', 'OPPORTUNITY', 'CASE', 'APPOINTMENT'],

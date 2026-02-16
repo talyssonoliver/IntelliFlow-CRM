@@ -6,7 +6,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as React from 'react';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { StageColumn } from '../StageColumn';
 import { createMockDeal, createMockDeals } from './deal-test-utils';
 import type { OpportunityStage } from '../types';
@@ -55,7 +55,7 @@ describe('StageColumn', () => {
         stage={'QUALIFICATION' as OpportunityStage}
         deals={[]}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     expect(screen.getByText('Qualification')).toBeInTheDocument();
@@ -67,7 +67,7 @@ describe('StageColumn', () => {
         stage={'QUALIFICATION' as OpportunityStage}
         deals={[]}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     const dot = container.querySelector('.rounded-full[style]');
@@ -81,7 +81,7 @@ describe('StageColumn', () => {
         stage={'QUALIFICATION' as OpportunityStage}
         deals={deals}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     expect(screen.getByText('3')).toBeInTheDocument();
@@ -97,7 +97,7 @@ describe('StageColumn', () => {
         stage={'QUALIFICATION' as OpportunityStage}
         deals={deals}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     expect(screen.getByText('$200K')).toBeInTheDocument();
@@ -113,7 +113,7 @@ describe('StageColumn', () => {
         stage={'PROPOSAL' as OpportunityStage}
         deals={deals}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     expect(screen.getByText('Deal Alpha')).toBeInTheDocument();
@@ -126,7 +126,7 @@ describe('StageColumn', () => {
         stage={'PROSPECTING' as OpportunityStage}
         deals={[]}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     expect(screen.getByText('Drop deals here')).toBeInTheDocument();
@@ -138,7 +138,7 @@ describe('StageColumn', () => {
         stage={'NEGOTIATION' as OpportunityStage}
         deals={[]}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     const region = screen.getByRole('region');
@@ -152,7 +152,7 @@ describe('StageColumn', () => {
         stage={'PROPOSAL' as OpportunityStage}
         deals={deals}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     expect(screen.getByRole('list')).toBeInTheDocument();
@@ -165,7 +165,7 @@ describe('StageColumn', () => {
         stage={'PROPOSAL' as OpportunityStage}
         deals={deals}
         onDealNavigate={mockOnDealNavigate}
-      />,
+      />
     );
 
     const listItems = screen.getAllByRole('listitem');

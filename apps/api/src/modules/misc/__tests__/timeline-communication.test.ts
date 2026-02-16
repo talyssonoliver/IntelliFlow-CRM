@@ -1059,41 +1059,45 @@ describe('TimelineCommunicationService', () => {
       const emailCreatedAt = new Date('2025-06-01T10:00:00Z');
       const callCreatedAt = new Date('2025-06-01T09:00:00Z');
 
-      mockPrisma.emailRecord.findMany.mockResolvedValue([{
-        id: 'email-1',
-        subject: 'Test',
-        body: null,
-        fromEmail: null,
-        toEmail: null,
-        sentAt: emailCreatedAt,
-        createdAt: emailCreatedAt,
-        status: 'SENT',
-        openCount: 0,
-        clickCount: 0,
-        userId: null,
-        ccEmails: [],
-        bccEmails: [],
-        attachments: [],
-      }]);
+      mockPrisma.emailRecord.findMany.mockResolvedValue([
+        {
+          id: 'email-1',
+          subject: 'Test',
+          body: null,
+          fromEmail: null,
+          toEmail: null,
+          sentAt: emailCreatedAt,
+          createdAt: emailCreatedAt,
+          status: 'SENT',
+          openCount: 0,
+          clickCount: 0,
+          userId: null,
+          ccEmails: [],
+          bccEmails: [],
+          attachments: [],
+        },
+      ]);
       mockPrisma.chatConversation.findMany.mockResolvedValue([]);
-      mockPrisma.callRecord.findMany.mockResolvedValue([{
-        id: 'call-1',
-        direction: 'inbound',
-        fromNumber: '+111',
-        toNumber: '+222',
-        contactName: null,
-        summary: null,
-        notes: null,
-        startedAt: callCreatedAt,
-        duration: 30,
-        outcome: 'CONNECTED',
-        status: 'COMPLETED',
-        recordingUrl: null,
-        transcription: null,
-        sentiment: null,
-        userId: null,
-        userName: null,
-      }]);
+      mockPrisma.callRecord.findMany.mockResolvedValue([
+        {
+          id: 'call-1',
+          direction: 'inbound',
+          fromNumber: '+111',
+          toNumber: '+222',
+          contactName: null,
+          summary: null,
+          notes: null,
+          startedAt: callCreatedAt,
+          duration: 30,
+          outcome: 'CONNECTED',
+          status: 'COMPLETED',
+          recordingUrl: null,
+          transcription: null,
+          sentiment: null,
+          userId: null,
+          userName: null,
+        },
+      ]);
 
       const result = await service.getAllCommunicationEvents({
         sortOrder: 'asc',

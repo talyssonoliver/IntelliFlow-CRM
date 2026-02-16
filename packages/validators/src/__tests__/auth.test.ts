@@ -222,18 +222,12 @@ describe('Auth Validators', () => {
     });
 
     it('validates E.164 phone format', () => {
-      expect(
-        mfaSetupSchema.safeParse({ method: 'sms', phone: '+12025551234' }).success
-      ).toBe(true);
-      expect(
-        mfaSetupSchema.safeParse({ method: 'sms', phone: '12025551234' }).success
-      ).toBe(true);
+      expect(mfaSetupSchema.safeParse({ method: 'sms', phone: '+12025551234' }).success).toBe(true);
+      expect(mfaSetupSchema.safeParse({ method: 'sms', phone: '12025551234' }).success).toBe(true);
     });
 
     it('rejects invalid phone format', () => {
-      expect(
-        mfaSetupSchema.safeParse({ method: 'sms', phone: 'not-a-phone' }).success
-      ).toBe(false);
+      expect(mfaSetupSchema.safeParse({ method: 'sms', phone: 'not-a-phone' }).success).toBe(false);
     });
   });
 

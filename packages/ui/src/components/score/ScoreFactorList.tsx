@@ -9,11 +9,7 @@
 import * as React from 'react';
 import { cn } from '../../lib/utils';
 import { ScoreFactor as ScoreFactorComponent } from './ScoreFactor';
-import {
-  sortFactorsByImpact,
-  getTotalPositiveImpact,
-  getTotalNegativeImpact,
-} from './utils';
+import { sortFactorsByImpact, getTotalPositiveImpact, getTotalNegativeImpact } from './utils';
 import type { ScoreFactor } from './types';
 
 export interface ScoreFactorListProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -50,9 +46,7 @@ function ScoreFactorList({
   const sortedFactors = sortByImpact ? sortFactorsByImpact(factors) : factors;
 
   // Determine which factors to show
-  const visibleFactors = isExpanded
-    ? sortedFactors
-    : sortedFactors.slice(0, collapsedLimit);
+  const visibleFactors = isExpanded ? sortedFactors : sortedFactors.slice(0, collapsedLimit);
 
   const hasMore = factors.length > collapsedLimit;
   const remainingCount = factors.length - collapsedLimit;
@@ -86,10 +80,7 @@ function ScoreFactorList({
       <ul role="list" className="space-y-2">
         {visibleFactors.map((factor, index) => (
           <li key={`${factor.name}-${index}`}>
-            <ScoreFactorComponent
-              factor={factor}
-              showImpactBar={showImpactBars}
-            />
+            <ScoreFactorComponent factor={factor} showImpactBar={showImpactBars} />
           </li>
         ))}
       </ul>

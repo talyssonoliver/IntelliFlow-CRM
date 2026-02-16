@@ -2,19 +2,24 @@
 
 ## Summary
 
-Core billing domain layer for IntelliFlow CRM following DDD principles. Provides Invoice and Receipt aggregate roots with payment state machines, tax/refund business rules, and application services for orchestrating billing operations.
+Core billing domain layer for IntelliFlow CRM following DDD principles. Provides
+Invoice and Receipt aggregate roots with payment state machines, tax/refund
+business rules, and application services for orchestrating billing operations.
 
 ## Goals
 
-1. Implement Invoice aggregate root with full lifecycle management (DRAFT → OPEN → PAID/VOID/UNCOLLECTIBLE)
+1. Implement Invoice aggregate root with full lifecycle management (DRAFT → OPEN
+   → PAID/VOID/UNCOLLECTIBLE)
 2. Implement Receipt aggregate root as immutable proof-of-payment records
-3. Enforce all billing invariants (totals, payment limits, refund limits, currency consistency)
+3. Enforce all billing invariants (totals, payment limits, refund limits,
+   currency consistency)
 4. Provide BillingDomainService for application-layer orchestration
 5. Define repository ports for future persistence implementation
 
 ## Entities
 
 ### Invoice (Aggregate Root)
+
 - Status state machine: DRAFT → OPEN → PAID | VOID | UNCOLLECTIBLE
 - Embedded line items with quantity × unitPrice calculation
 - Tax calculation via TaxRate value object
@@ -22,11 +27,13 @@ Core billing domain layer for IntelliFlow CRM following DDD principles. Provides
 - Invariants: totalAmount = subtotal + tax, amountDue = total - paid + refunded
 
 ### Receipt (Aggregate Root)
+
 - Immutable proof-of-payment record
 - One receipt per payment transaction
 - Links to invoice via invoiceId
 
 ### Value Objects
+
 - **LineItem**: description, quantity, unitPrice, total, type
 - **TaxRate**: rate (0-100%), type (VAT/SALES_TAX/GST/NONE), jurisdiction
 - **PaymentTerms**: daysUntilDue, due date calculation

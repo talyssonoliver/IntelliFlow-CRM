@@ -48,11 +48,7 @@ export class IdempotencyManager {
    * Generate idempotency key with content hash
    * Ensures updates only happen when content actually changes
    */
-  generateContentKey(
-    resourceId: string,
-    operation: string,
-    contentHash: string
-  ): string {
+  generateContentKey(resourceId: string, operation: string, contentHash: string): string {
     const data = `${resourceId}:${operation}:${this.provider}:${contentHash}`;
     const hash = createHash('sha256').update(data).digest('hex').substring(0, 16);
     return `idem_${hash}`;
@@ -115,9 +111,7 @@ export class IdempotencyManager {
       operation,
       resourceId,
       createdAt: now,
-      expiresAt: new Date(
-        now.getTime() + this.config.failureTtlMinutes * 60 * 1000
-      ),
+      expiresAt: new Date(now.getTime() + this.config.failureTtlMinutes * 60 * 1000),
       result: 'failure',
       error,
     });

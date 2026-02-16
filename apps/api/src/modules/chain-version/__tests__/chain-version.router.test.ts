@@ -92,14 +92,38 @@ describe('Chain Version Router', () => {
     vi.clearAllMocks();
 
     // Reset mock return values AFTER clearAllMocks
-    mockChainVersionService.createVersion.mockResolvedValue({ id: TEST_VERSION_ID, status: 'DRAFT' });
-    mockChainVersionService.updateVersion.mockResolvedValue({ id: TEST_VERSION_ID, status: 'DRAFT' });
-    mockChainVersionService.activateVersion.mockResolvedValue({ id: TEST_VERSION_ID, status: 'ACTIVE' });
-    mockChainVersionService.deprecateVersion.mockResolvedValue({ id: TEST_VERSION_ID, status: 'DEPRECATED' });
-    mockChainVersionService.archiveVersion.mockResolvedValue({ id: TEST_VERSION_ID, status: 'ARCHIVED' });
-    mockChainVersionService.rollbackToVersion.mockResolvedValue({ id: TEST_VERSION_ID, status: 'ACTIVE' });
-    mockChainVersionService.getVersion.mockResolvedValue({ id: TEST_VERSION_ID, chainType: 'SCORING' });
-    mockChainVersionService.getActiveVersion.mockResolvedValue({ id: TEST_VERSION_ID, status: 'ACTIVE' });
+    mockChainVersionService.createVersion.mockResolvedValue({
+      id: TEST_VERSION_ID,
+      status: 'DRAFT',
+    });
+    mockChainVersionService.updateVersion.mockResolvedValue({
+      id: TEST_VERSION_ID,
+      status: 'DRAFT',
+    });
+    mockChainVersionService.activateVersion.mockResolvedValue({
+      id: TEST_VERSION_ID,
+      status: 'ACTIVE',
+    });
+    mockChainVersionService.deprecateVersion.mockResolvedValue({
+      id: TEST_VERSION_ID,
+      status: 'DEPRECATED',
+    });
+    mockChainVersionService.archiveVersion.mockResolvedValue({
+      id: TEST_VERSION_ID,
+      status: 'ARCHIVED',
+    });
+    mockChainVersionService.rollbackToVersion.mockResolvedValue({
+      id: TEST_VERSION_ID,
+      status: 'ACTIVE',
+    });
+    mockChainVersionService.getVersion.mockResolvedValue({
+      id: TEST_VERSION_ID,
+      chainType: 'SCORING',
+    });
+    mockChainVersionService.getActiveVersion.mockResolvedValue({
+      id: TEST_VERSION_ID,
+      status: 'ACTIVE',
+    });
     mockChainVersionService.getChainConfig.mockResolvedValue({ model: 'gpt-4', temperature: 0.7 });
     mockChainVersionService.listVersions.mockResolvedValue({ items: [], total: 0 });
     mockChainVersionService.getVersionHistory.mockResolvedValue([]);
@@ -128,21 +152,27 @@ describe('Chain Version Router', () => {
 
   describe('getChainVersionService helper', () => {
     it('should throw INTERNAL_SERVER_ERROR when chainVersion service is not available', async () => {
-      const caller = testRouter.createCaller(createTestContext({
-        services: {} as any,
-      }));
+      const caller = testRouter.createCaller(
+        createTestContext({
+          services: {} as any,
+        })
+      );
 
-      await expect(caller.chainVersion.getById({ versionId: TEST_VERSION_ID }))
-        .rejects.toThrow('ChainVersion service not initialized');
+      await expect(caller.chainVersion.getById({ versionId: TEST_VERSION_ID })).rejects.toThrow(
+        'ChainVersion service not initialized'
+      );
     });
 
     it('should throw INTERNAL_SERVER_ERROR when services is undefined', async () => {
-      const caller = testRouter.createCaller(createTestContext({
-        services: undefined as any,
-      }));
+      const caller = testRouter.createCaller(
+        createTestContext({
+          services: undefined as any,
+        })
+      );
 
-      await expect(caller.chainVersion.getById({ versionId: TEST_VERSION_ID }))
-        .rejects.toThrow('ChainVersion service not initialized');
+      await expect(caller.chainVersion.getById({ versionId: TEST_VERSION_ID })).rejects.toThrow(
+        'ChainVersion service not initialized'
+      );
     });
   });
 
@@ -165,7 +195,7 @@ describe('Chain Version Router', () => {
             name: 'v1.0.0',
           }),
           expect.any(String), // userId
-          'test-tenant-id', // tenantId
+          'test-tenant-id' // tenantId
         );
       });
     });
@@ -183,7 +213,7 @@ describe('Chain Version Router', () => {
         expect(mockChainVersionService.updateVersion).toHaveBeenCalledWith(
           TEST_VERSION_ID,
           { name: 'v1.1.0' },
-          expect.any(String), // userId
+          expect.any(String) // userId
         );
       });
     });

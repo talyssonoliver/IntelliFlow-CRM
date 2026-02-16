@@ -90,7 +90,7 @@ describe('Real-time Subscription System', () => {
         }
       });
 
-      await new Promise(resolve => setTimeout(resolve, 20));
+      await new Promise((resolve) => setTimeout(resolve, 20));
 
       expect(onStatus).toHaveBeenCalledWith('connected');
     });
@@ -109,7 +109,7 @@ describe('Real-time Subscription System', () => {
         }
       });
 
-      await new Promise(resolve => setTimeout(resolve, 20));
+      await new Promise((resolve) => setTimeout(resolve, 20));
 
       expect(onError).toHaveBeenCalledWith('error', 'Connection failed');
     });
@@ -195,9 +195,7 @@ describe('Real-time Subscription System', () => {
         console.warn(`Latency exceeded target: ${latency}ms (target: <100ms)`);
       }
 
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Latency exceeded target')
-      );
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('Latency exceeded target'));
 
       warnSpy.mockRestore();
     });

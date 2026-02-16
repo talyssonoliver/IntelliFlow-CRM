@@ -77,7 +77,15 @@ function saveFallback(sprintNumber: number, data: any): void {
 // Load all attestations for a sprint
 function loadSprintAttestations(sprintNumber: number): Map<string, any> {
   const projectRoot = getProjectRoot();
-  const csvPath = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+  const csvPath = join(
+    projectRoot,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    '_global',
+    'Sprint_plan.csv'
+  );
   const attestationsDir = join(projectRoot, 'artifacts', 'attestations');
   const attestations = new Map<string, any>();
 
@@ -171,7 +179,12 @@ function extractKpiValidations(attestations: Map<string, any>): KpiValidation[] 
 // Load validation file if exists
 function loadValidationFile(sprintNumber: number): any | null {
   const projectRoot = getProjectRoot();
-  const validationPath = join(projectRoot, 'artifacts', 'reports', `sprint${sprintNumber}-validation-results.json`);
+  const validationPath = join(
+    projectRoot,
+    'artifacts',
+    'reports',
+    `sprint${sprintNumber}-validation-results.json`
+  );
 
   try {
     if (existsSync(validationPath)) {
@@ -188,7 +201,15 @@ function loadValidationFile(sprintNumber: number): any | null {
 // Load sprint summary for additional context
 function loadSprintSummary(sprintNumber: number): any | null {
   const projectRoot = getProjectRoot();
-  const summaryPath = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', `sprint-${sprintNumber}`, '_summary.json');
+  const summaryPath = join(
+    projectRoot,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    `sprint-${sprintNumber}`,
+    '_summary.json'
+  );
 
   try {
     if (existsSync(summaryPath)) {
@@ -212,19 +233,16 @@ export async function GET(request: NextRequest) {
     const sprintSummary = loadSprintSummary(sprintNumber);
 
     // Calculate validation metrics
-    const passedValidations = validations.filter(v => v.passed).length;
-    const failedValidations = validations.filter(v => !v.passed).length;
+    const passedValidations = validations.filter((v) => v.passed).length;
+    const failedValidations = validations.filter((v) => !v.passed).length;
     const totalValidations = validations.length;
-    const validationScore = totalValidations > 0
-      ? Math.round((passedValidations / totalValidations) * 100)
-      : 0;
+    const validationScore =
+      totalValidations > 0 ? Math.round((passedValidations / totalValidations) * 100) : 0;
 
     // Calculate KPI metrics
-    const passedKpis = kpiValidations.filter(k => k.met).length;
+    const passedKpis = kpiValidations.filter((k) => k.met).length;
     const totalKpis = kpiValidations.length;
-    const kpiScore = totalKpis > 0
-      ? Math.round((passedKpis / totalKpis) * 100)
-      : 0;
+    const kpiScore = totalKpis > 0 ? Math.round((passedKpis / totalKpis) * 100) : 0;
 
     // Determine overall status
     let overallStatus: SprintValidation['overallStatus'] = 'pending';
@@ -239,20 +257,23 @@ export async function GET(request: NextRequest) {
     }
 
     // Group validations by type
-    const byType = validations.reduce((acc, v) => {
-      if (!acc[v.validationType]) acc[v.validationType] = { passed: 0, failed: 0 };
-      if (v.passed) {
-        acc[v.validationType].passed++;
-      } else {
-        acc[v.validationType].failed++;
-      }
-      return acc;
-    }, {} as Record<string, { passed: number; failed: number }>);
+    const byType = validations.reduce(
+      (acc, v) => {
+        if (!acc[v.validationType]) acc[v.validationType] = { passed: 0, failed: 0 };
+        if (v.passed) {
+          acc[v.validationType].passed++;
+        } else {
+          acc[v.validationType].failed++;
+        }
+        return acc;
+      },
+      {} as Record<string, { passed: number; failed: number }>
+    );
 
     // Find failed KPIs for reporting
     const failedKpis = kpiValidations
-      .filter(k => !k.met)
-      .map(k => ({
+      .filter((k) => !k.met)
+      .map((k) => ({
         taskId: k.taskId,
         kpi: k.kpi,
         target: k.target,
@@ -295,32 +316,37 @@ export async function GET(request: NextRequest) {
         count: attestedTasks.length,
         tasks: taskVerdict,
       },
-      validationFile: validationFile ? {
-        exists: true,
-        timestamp: validationFile.fileTimestamp,
-        summary: validationFile.summary || null,
-      } : { exists: false },
-      sprintContext: sprintSummary ? {
-        totalTasks: sprintSummary.total_tasks,
-        completedTasks: sprintSummary.completed_tasks,
-        lastUpdated: sprintSummary.updated_at,
-      } : null,
+      validationFile: validationFile
+        ? {
+            exists: true,
+            timestamp: validationFile.fileTimestamp,
+            summary: validationFile.summary || null,
+          }
+        : { exists: false },
+      sprintContext: sprintSummary
+        ? {
+            totalTasks: sprintSummary.total_tasks,
+            completedTasks: sprintSummary.completed_tasks,
+            lastUpdated: sprintSummary.updated_at,
+          }
+        : null,
       recentValidations: validations
         .sort((a, b) => b.timestamp.localeCompare(a.timestamp))
         .slice(0, 15)
-        .map(v => ({
+        .map((v) => ({
           taskId: v.taskId,
           type: v.validationType,
           passed: v.passed,
           timestamp: v.timestamp,
         })),
-      recommendation: overallStatus === 'passed'
-        ? 'All validations passed - sprint is validated'
-        : overallStatus === 'failed'
-        ? 'CRITICAL: All validations failed - review required'
-        : overallStatus === 'partial'
-        ? `${failedValidations} validations failed - address before sprint close`
-        : 'Run validations to verify sprint completion',
+      recommendation:
+        overallStatus === 'passed'
+          ? 'All validations passed - sprint is validated'
+          : overallStatus === 'failed'
+            ? 'CRITICAL: All validations failed - review required'
+            : overallStatus === 'partial'
+              ? `${failedValidations} validations failed - address before sprint close`
+              : 'Run validations to verify sprint completion',
     };
 
     // If no attestations available, try fallback

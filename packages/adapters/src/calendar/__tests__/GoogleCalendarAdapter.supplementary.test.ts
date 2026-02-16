@@ -226,11 +226,7 @@ describe('GoogleCalendarAdapter - Supplementary Coverage', () => {
       });
 
       const appointment = createMockAppointment();
-      const result = await adapter.createEvent(
-        mockTokens,
-        appointment as any,
-        'idem-json-fail'
-      );
+      const result = await adapter.createEvent(mockTokens, appointment as any, 'idem-json-fail');
 
       expect(result.isFailure).toBe(true);
     });
@@ -267,11 +263,7 @@ describe('GoogleCalendarAdapter - Supplementary Coverage', () => {
       mockFetch.mockRejectedValueOnce(null);
 
       const appointment = createMockAppointment();
-      const result = await adapter.createEvent(
-        mockTokens,
-        appointment as any,
-        'idem-non-error'
-      );
+      const result = await adapter.createEvent(mockTokens, appointment as any, 'idem-non-error');
 
       expect(result.isFailure).toBe(true);
       expect(result.error?.message).toContain('Unknown error');

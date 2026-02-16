@@ -2,7 +2,8 @@
 
 ## Overview
 
-Following **2025 best practices**, this package validates environment variables at application startup to prevent silent failures in production.
+Following **2025 best practices**, this package validates environment variables
+at application startup to prevent silent failures in production.
 
 ## Quick Start
 
@@ -23,6 +24,7 @@ console.log(`AI scoring enabled: ${env.ENABLE_AI_SCORING}`);
 ```
 
 **Why this works**:
+
 - Fails fast on startup (not at runtime)
 - TypeScript provides autocomplete for all env vars
 - Different validation for dev/test/production
@@ -50,6 +52,7 @@ const env = result.data;
 The validation automatically adjusts based on `NODE_ENV`:
 
 ### Development
+
 ```bash
 # Minimal requirements
 NODE_ENV=development
@@ -58,6 +61,7 @@ DATABASE_URL=postgresql://localhost:5432/intelliflow_dev
 ```
 
 ### Test
+
 ```bash
 # Even more minimal
 NODE_ENV=test
@@ -65,6 +69,7 @@ NODE_ENV=test
 ```
 
 ### Production
+
 ```bash
 # Strict validation - NO defaults for secrets
 NODE_ENV=production
@@ -78,22 +83,26 @@ CORS_ORIGIN=https://yourapp.com  # Cannot be '*' in production
 ## Full Environment Schema
 
 ### Required (All Environments)
+
 - `DATABASE_URL` - PostgreSQL connection string
 
 ### API Configuration
+
 - `PORT` (default: 3000) - API server port
 - `API_URL` (optional) - Public API URL
-- `CORS_ORIGIN` (default: '*') - CORS allowed origins
+- `CORS_ORIGIN` (default: '\*') - CORS allowed origins
 - `RATE_LIMIT_MAX` (default: 100) - Max requests per window
 - `RATE_LIMIT_WINDOW_MS` (default: 900000) - Rate limit window (15min)
 
 ### Authentication
+
 - `JWT_SECRET` - JWT signing secret (min 32 chars)
 - `JWT_EXPIRES_IN` (default: '7d') - JWT expiration
 - `SESSION_SECRET` - Session signing secret (min 32 chars)
 - `BCRYPT_ROUNDS` (default: 12) - Password hashing rounds
 
 ### AI/LLM
+
 - `OPENAI_API_KEY` (optional) - OpenAI API key
 - `OPENAI_MODEL` (default: 'gpt-4') - Default model
 - `OLLAMA_BASE_URL` (default: 'http://localhost:11434') - Ollama server
@@ -101,6 +110,7 @@ CORS_ORIGIN=https://yourapp.com  # Cannot be '*' in production
 - `AI_MAX_RETRIES` (default: 3) - Max retry attempts
 
 ### Email (Optional)
+
 - `SMTP_HOST`
 - `SMTP_PORT`
 - `SMTP_USER`
@@ -108,21 +118,25 @@ CORS_ORIGIN=https://yourapp.com  # Cannot be '*' in production
 - `EMAIL_FROM`
 
 ### Observability
+
 - `SENTRY_DSN` (optional, required in production)
 - `OTEL_ENABLED` (default: false) - OpenTelemetry enabled
 - `OTEL_ENDPOINT` (optional) - OTEL collector endpoint
 - `LOG_LEVEL` (default: 'info') - Log level
 
 ### Cache
+
 - `REDIS_URL` (optional) - Redis connection string
 - `CACHE_TTL_SECONDS` (default: 3600) - Default cache TTL
 
 ### Supabase
+
 - `SUPABASE_URL` (optional)
 - `SUPABASE_ANON_KEY` (optional)
 - `SUPABASE_SERVICE_ROLE_KEY` (optional)
 
 ### Feature Flags
+
 - `ENABLE_AI_SCORING` (default: true)
 - `ENABLE_EMAIL_NOTIFICATIONS` (default: false)
 - `ENABLE_WEBHOOKS` (default: false)
@@ -152,14 +166,10 @@ When validation fails, you get detailed error messages:
 ```json
 {
   "JWT_SECRET": {
-    "_errors": [
-      "JWT secret must be at least 32 characters"
-    ]
+    "_errors": ["JWT secret must be at least 32 characters"]
   },
   "DATABASE_URL": {
-    "_errors": [
-      "Invalid url"
-    ]
+    "_errors": ["Invalid url"]
   }
 }
 ```
@@ -167,12 +177,15 @@ When validation fails, you get detailed error messages:
 ## Best Practices
 
 ### ✅ DO
+
 - Validate environment on startup (first line of `index.ts`)
 - Use strict validation in production (`prodEnvSchema`)
 - Keep secrets in `.env` files (never commit)
-- Use different `.env` files per environment (`.env.development`, `.env.production`)
+- Use different `.env` files per environment (`.env.development`,
+  `.env.production`)
 
 ### ❌ DON'T
+
 - Don't skip validation in production
 - Don't use default secrets in production
 - Don't commit `.env` files to git
@@ -181,6 +194,7 @@ When validation fails, you get detailed error messages:
 ## Example `.env` Files
 
 ### `.env.development`
+
 ```bash
 NODE_ENV=development
 DATABASE_URL=postgresql://localhost:5432/intelliflow_dev
@@ -190,6 +204,7 @@ OPENAI_API_KEY=sk-...
 ```
 
 ### `.env.production`
+
 ```bash
 NODE_ENV=production
 DATABASE_URL=postgresql://prod-db:5432/intelliflow
@@ -205,6 +220,7 @@ OPENAI_API_KEY=sk-prod-...
 If you're adding validation to an existing project:
 
 1. **Start with graceful validation**:
+
    ```typescript
    const result = safeValidateEnv(process.env);
    if (!result.success) {
@@ -223,15 +239,19 @@ If you're adding validation to an existing project:
 ## Common Errors
 
 ### "JWT secret must be at least 32 characters"
+
 **Fix**: Generate a strong secret:
+
 ```bash
 openssl rand -base64 32
 ```
 
 ### "Invalid url" for DATABASE_URL
+
 **Fix**: Ensure format is `postgresql://user:pass@host:port/database`
 
-### "CORS_ORIGIN must be specific in production (not *)"
+### "CORS_ORIGIN must be specific in production (not \*)"
+
 **Fix**: Set specific origin like `https://yourapp.com`
 
 ## Testing

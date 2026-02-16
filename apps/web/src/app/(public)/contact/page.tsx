@@ -16,7 +16,7 @@ import { ContactForm } from '@/components/shared/contact-form';
 export const metadata: Metadata = {
   title: 'Contact Us | IntelliFlow CRM',
   description:
-    'Get in touch with the IntelliFlow CRM team. We\'re here to answer your questions about our AI-powered CRM solution.',
+    "Get in touch with the IntelliFlow CRM team. We're here to answer your questions about our AI-powered CRM solution.",
   openGraph: {
     title: 'Contact IntelliFlow CRM',
     description:
@@ -50,13 +50,11 @@ export default function ContactPage() {
               We're here to help
             </div>
 
-            <h1 className="text-4xl lg:text-5xl font-bold text-white mb-6">
-              Get in Touch
-            </h1>
+            <h1 className="text-4xl lg:text-5xl font-bold text-white mb-6">Get in Touch</h1>
 
             <p className="text-lg text-slate-200 max-w-2xl mx-auto">
-              Have questions about IntelliFlow CRM? Want to see a demo? Our team is ready to help you discover
-              how our AI-powered platform can transform your sales process.
+              Have questions about IntelliFlow CRM? Want to see a demo? Our team is ready to help
+              you discover how our AI-powered platform can transform your sales process.
             </p>
           </div>
         </div>
@@ -73,8 +71,8 @@ export default function ContactPage() {
                   Let's Talk
                 </h2>
                 <p className="text-slate-600 dark:text-slate-400">
-                  Fill out the form and our team will get back to you within 24 hours. You can also reach
-                  us through the channels below.
+                  Fill out the form and our team will get back to you within 24 hours. You can also
+                  reach us through the channels below.
                 </p>
               </div>
 
@@ -104,7 +102,9 @@ export default function ContactPage() {
                     </span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Response Time</h3>
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
+                      Response Time
+                    </h3>
                     <p className="text-slate-600 dark:text-slate-400">
                       We typically respond within 24 hours during business days
                     </p>
@@ -118,7 +118,9 @@ export default function ContactPage() {
                     </span>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-900 dark:text-white mb-1">Live Support</h3>
+                    <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
+                      Live Support
+                    </h3>
                     <p className="text-slate-600 dark:text-slate-400">
                       Monday - Friday, 9:00 AM - 6:00 PM EST
                     </p>
@@ -133,7 +135,10 @@ export default function ContactPage() {
                 </h3>
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-[#137fec] text-lg mt-0.5" aria-hidden="true">
+                    <span
+                      className="material-symbols-outlined text-[#137fec] text-lg mt-0.5"
+                      aria-hidden="true"
+                    >
                       check_circle
                     </span>
                     <span className="text-sm text-slate-600 dark:text-slate-400">
@@ -141,7 +146,10 @@ export default function ContactPage() {
                     </span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-[#137fec] text-lg mt-0.5" aria-hidden="true">
+                    <span
+                      className="material-symbols-outlined text-[#137fec] text-lg mt-0.5"
+                      aria-hidden="true"
+                    >
                       check_circle
                     </span>
                     <span className="text-sm text-slate-600 dark:text-slate-400">
@@ -149,7 +157,10 @@ export default function ContactPage() {
                     </span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-[#137fec] text-lg mt-0.5" aria-hidden="true">
+                    <span
+                      className="material-symbols-outlined text-[#137fec] text-lg mt-0.5"
+                      aria-hidden="true"
+                    >
                       check_circle
                     </span>
                     <span className="text-sm text-slate-600 dark:text-slate-400">
@@ -157,7 +168,10 @@ export default function ContactPage() {
                     </span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <span className="material-symbols-outlined text-[#137fec] text-lg mt-0.5" aria-hidden="true">
+                    <span
+                      className="material-symbols-outlined text-[#137fec] text-lg mt-0.5"
+                      aria-hidden="true"
+                    >
                       check_circle
                     </span>
                     <span className="text-sm text-slate-600 dark:text-slate-400">
@@ -190,13 +204,16 @@ export default function ContactPage() {
                   <span className="font-semibold text-slate-900 dark:text-white">
                     How quickly can we get started?
                   </span>
-                  <span className="material-symbols-outlined text-slate-500 group-open:rotate-180 transition-transform" aria-hidden="true">
+                  <span
+                    className="material-symbols-outlined text-slate-500 group-open:rotate-180 transition-transform"
+                    aria-hidden="true"
+                  >
                     expand_more
                   </span>
                 </summary>
                 <div className="p-4 text-slate-600 dark:text-slate-400">
-                  Most teams are up and running within 48 hours. We provide guided onboarding,
-                  data migration support, and training to ensure a smooth transition.
+                  Most teams are up and running within 48 hours. We provide guided onboarding, data
+                  migration support, and training to ensure a smooth transition.
                 </div>
               </details>
 
@@ -205,7 +222,10 @@ export default function ContactPage() {
                   <span className="font-semibold text-slate-900 dark:text-white">
                     Do you offer a free trial?
                   </span>
-                  <span className="material-symbols-outlined text-slate-500 group-open:rotate-180 transition-transform" aria-hidden="true">
+                  <span
+                    className="material-symbols-outlined text-slate-500 group-open:rotate-180 transition-transform"
+                    aria-hidden="true"
+                  >
                     expand_more
                   </span>
                 </summary>
@@ -220,7 +240,10 @@ export default function ContactPage() {
                   <span className="font-semibold text-slate-900 dark:text-white">
                     Can IntelliFlow CRM integrate with our existing tools?
                   </span>
-                  <span className="material-symbols-outlined text-slate-500 group-open:rotate-180 transition-transform" aria-hidden="true">
+                  <span
+                    className="material-symbols-outlined text-slate-500 group-open:rotate-180 transition-transform"
+                    aria-hidden="true"
+                  >
                     expand_more
                   </span>
                 </summary>
@@ -235,13 +258,17 @@ export default function ContactPage() {
                   <span className="font-semibold text-slate-900 dark:text-white">
                     Is my data secure?
                   </span>
-                  <span className="material-symbols-outlined text-slate-500 group-open:rotate-180 transition-transform" aria-hidden="true">
+                  <span
+                    className="material-symbols-outlined text-slate-500 group-open:rotate-180 transition-transform"
+                    aria-hidden="true"
+                  >
                     expand_more
                   </span>
                 </summary>
                 <div className="p-4 text-slate-600 dark:text-slate-400">
-                  Security is our top priority. We use enterprise-grade encryption, SOC 2 compliance,
-                  and follow best practices for data protection. Your data is always yours.
+                  Security is our top priority. We use enterprise-grade encryption, SOC 2
+                  compliance, and follow best practices for data protection. Your data is always
+                  yours.
                 </div>
               </details>
             </div>

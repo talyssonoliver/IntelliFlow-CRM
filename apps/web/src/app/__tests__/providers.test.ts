@@ -22,7 +22,9 @@ function isTokenValid(token: string | null): boolean {
     if (!payload.exp) return false;
     const expiryTime = payload.exp * 1000;
     return Date.now() < expiryTime - 30000;
-  } catch { return false; }
+  } catch {
+    return false;
+  }
 }
 
 function getValidAccessToken(): string | null {

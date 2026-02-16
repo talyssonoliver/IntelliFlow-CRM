@@ -19,12 +19,22 @@ import { useState, useMemo, useCallback } from 'react';
 import { Skeleton } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { AppointmentList, AppointmentCalendar } from '@/components/appointments';
-import type { AppointmentStats, CalendarAppointment, AppointmentListItem } from '@/components/appointments/types';
+import type {
+  AppointmentStats,
+  CalendarAppointment,
+  AppointmentListItem,
+} from '@/components/appointments/types';
 import { useAppointmentFilters } from '@/hooks/useAppointmentFilters';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
 
-const defaultStats: AppointmentStats = { total: 0, byStatus: {}, byType: {}, upcoming: 0, overdue: 0 };
+const defaultStats: AppointmentStats = {
+  total: 0,
+  byStatus: {},
+  byType: {},
+  upcoming: 0,
+  overdue: 0,
+};
 
 export default function CalendarPage() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
@@ -42,15 +52,21 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(() => new Date());
 
   // tRPC queries
-  const { data, isLoading } = (api as Record<string, any>).appointments?.list?.useQuery?.(queryParams, {
-    staleTime: 30_000,
-  }) ?? { data: undefined, isLoading: false };
+  const { data, isLoading } = (api as Record<string, any>).appointments?.list?.useQuery?.(
+    queryParams,
+    {
+      staleTime: 30_000,
+    }
+  ) ?? { data: undefined, isLoading: false };
 
-  const { data: rawStats } = (api as Record<string, any>).appointments?.stats?.useQuery?.(undefined, {
-    staleTime: 5 * 60_000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-  }) ?? { data: undefined };
+  const { data: rawStats } = (api as Record<string, any>).appointments?.stats?.useQuery?.(
+    undefined,
+    {
+      staleTime: 5 * 60_000,
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+    }
+  ) ?? { data: undefined };
 
   const appointments = useMemo(() => {
     if (!data) return [];
@@ -80,20 +96,28 @@ export default function CalendarPage() {
     }));
   }, [appointments]);
 
-  const handleRowClick = useCallback((id: string) => {
-    router.push(`/calendar/${id}`);
-  }, [router]);
+  const handleRowClick = useCallback(
+    (id: string) => {
+      router.push(`/calendar/${id}`);
+    },
+    [router]
+  );
 
-  const handleCreateWithSlot = useCallback((_startTime: Date, _endTime: Date) => {
-    router.push('/calendar/new');
-  }, [router]);
+  const handleCreateWithSlot = useCallback(
+    (_startTime: Date, _endTime: Date) => {
+      router.push('/calendar/new');
+    },
+    [router]
+  );
 
   if (authLoading || !isAuthenticated) {
     return (
       <div className="flex flex-col gap-6">
         <Skeleton className="h-20 w-full rounded-xl" />
         <div className="grid grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-28 rounded-xl" />
+          ))}
         </div>
         <Skeleton className="h-64 w-full rounded-xl" />
       </div>
@@ -103,10 +127,7 @@ export default function CalendarPage() {
   return (
     <>
       <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Calendar' },
-        ]}
+        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Calendar' }]}
         title="Appointment Scheduling"
         description="Manage appointments, hearings, and consultations"
         actions={[

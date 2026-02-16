@@ -22,26 +22,27 @@ const mockPrisma = {
 };
 
 // Create a minimal context for testing
-const createTestContext = (overrides: Partial<Context> = {}): Context => ({
-  prisma: mockPrisma as unknown as Context['prisma'],
-  user: {
-    userId: 'test-user-id',
-    tenantId: 'test-tenant-id',
-    email: 'test@example.com',
-    role: 'ADMIN',
-  } as Context['user'],
-  session: {
-    id: 'test-session-id',
-    userId: 'test-user-id',
-    tenantId: 'test-tenant-id',
-    email: 'test@example.com',
-    role: 'ADMIN',
-    permissions: [],
-    expiresAt: new Date(Date.now() + 3600000),
-  } as Context['session'],
-  services: {} as Context['services'],
-  ...overrides,
-} as Context);
+const createTestContext = (overrides: Partial<Context> = {}): Context =>
+  ({
+    prisma: mockPrisma as unknown as Context['prisma'],
+    user: {
+      userId: 'test-user-id',
+      tenantId: 'test-tenant-id',
+      email: 'test@example.com',
+      role: 'ADMIN',
+    } as Context['user'],
+    session: {
+      id: 'test-session-id',
+      userId: 'test-user-id',
+      tenantId: 'test-tenant-id',
+      email: 'test@example.com',
+      role: 'ADMIN',
+      permissions: [],
+      expiresAt: new Date(Date.now() + 3600000),
+    } as Context['session'],
+    services: {} as Context['services'],
+    ...overrides,
+  }) as Context;
 
 // Create tRPC caller for testing - cast to any for test compatibility
 const t = initTRPC.context<Context>().create();

@@ -144,9 +144,21 @@ describe('ContactService (additional coverage)', () => {
       await accountRepository.save(account);
 
       const contacts = [
-        { email: 'alice@corp.com', firstName: 'Alice', lastName: 'Smith', department: 'Sales', accountId: account.id.value },
+        {
+          email: 'alice@corp.com',
+          firstName: 'Alice',
+          lastName: 'Smith',
+          department: 'Sales',
+          accountId: account.id.value,
+        },
         { email: 'bob@corp.com', firstName: 'Bob', lastName: 'Jones', department: 'Engineering' },
-        { email: 'carol@corp.com', firstName: 'Carol', lastName: 'White', department: 'Sales', title: 'VP Sales' },
+        {
+          email: 'carol@corp.com',
+          firstName: 'Carol',
+          lastName: 'White',
+          department: 'Sales',
+          title: 'VP Sales',
+        },
       ];
 
       for (const c of contacts) {
@@ -328,7 +340,11 @@ describe('ContactService (additional coverage)', () => {
     });
 
     it('should fail with invalid contact ID', async () => {
-      const result = await service.linkToLead('bad-id', '00000000-0000-0000-0000-000000000000', 'linker');
+      const result = await service.linkToLead(
+        'bad-id',
+        '00000000-0000-0000-0000-000000000000',
+        'linker'
+      );
 
       expect(result.isFailure).toBe(true);
     });
@@ -652,7 +668,11 @@ describe('ContactService (additional coverage)', () => {
     });
 
     it('should fail associateWithAccount with invalid contact ID', async () => {
-      const result = await service.associateWithAccount('bad-id', '00000000-0000-0000-0000-000000000000', 'u');
+      const result = await service.associateWithAccount(
+        'bad-id',
+        '00000000-0000-0000-0000-000000000000',
+        'u'
+      );
       expect(result.isFailure).toBe(true);
     });
 
@@ -680,12 +700,20 @@ describe('ContactService (additional coverage)', () => {
     });
 
     it('should fail mergeContacts with invalid primary ID', async () => {
-      const result = await service.mergeContacts('bad-id', '00000000-0000-0000-0000-000000000000', 'u');
+      const result = await service.mergeContacts(
+        'bad-id',
+        '00000000-0000-0000-0000-000000000000',
+        'u'
+      );
       expect(result.isFailure).toBe(true);
     });
 
     it('should fail mergeContacts with invalid secondary ID', async () => {
-      const result = await service.mergeContacts('00000000-0000-0000-0000-000000000000', 'bad-id', 'u');
+      const result = await service.mergeContacts(
+        '00000000-0000-0000-0000-000000000000',
+        'bad-id',
+        'u'
+      );
       expect(result.isFailure).toBe(true);
     });
   });

@@ -44,11 +44,7 @@ export function objectsToCSV<T extends Record<string, unknown>>(
   data: T[],
   options: CSVExportOptions = {}
 ): string {
-  const {
-    headers,
-    delimiter = ',',
-    includeHeaders = true,
-  } = options;
+  const { headers, delimiter = ',', includeHeaders = true } = options;
 
   if (data.length === 0) {
     return '';
@@ -61,12 +57,12 @@ export function objectsToCSV<T extends Record<string, unknown>>(
 
   // Add header row
   if (includeHeaders) {
-    rows.push(columnHeaders.map(h => escapeCSVField(h, delimiter)).join(delimiter));
+    rows.push(columnHeaders.map((h) => escapeCSVField(h, delimiter)).join(delimiter));
   }
 
   // Add data rows
   for (const item of data) {
-    const row = columnHeaders.map(header => {
+    const row = columnHeaders.map((header) => {
       const value = item[header];
       return escapeCSVField(value, delimiter);
     });
@@ -79,14 +75,11 @@ export function objectsToCSV<T extends Record<string, unknown>>(
 /**
  * Convert 2D array to CSV string
  */
-export function arrayToCSV(
-  data: unknown[][],
-  options: CSVExportOptions = {}
-): string {
+export function arrayToCSV(data: unknown[][], options: CSVExportOptions = {}): string {
   const { delimiter = ',' } = options;
 
   return data
-    .map(row => row.map(cell => escapeCSVField(cell, delimiter)).join(delimiter))
+    .map((row) => row.map((cell) => escapeCSVField(cell, delimiter)).join(delimiter))
     .join('\n');
 }
 
@@ -141,7 +134,7 @@ export function exportAnalyticsToCSV(
   filename = 'analytics-report'
 ): void {
   const headers = ['Metric', 'Value', 'Trend', 'Period'];
-  const data = metrics.map(m => ({
+  const data = metrics.map((m) => ({
     Metric: m.name,
     Value: m.value,
     Trend: m.trend,
@@ -164,12 +157,9 @@ export interface PipelineStage {
 // Re-export for convenience
 export type { PipelineStage as PipelineStageExport };
 
-export function exportPipelineToCSV(
-  stages: PipelineStage[],
-  filename = 'pipeline-report'
-): void {
+export function exportPipelineToCSV(stages: PipelineStage[], filename = 'pipeline-report'): void {
   const headers = ['Stage', 'Value', 'Deals', 'Percentage'];
-  const data = stages.map(s => ({
+  const data = stages.map((s) => ({
     Stage: s.stage,
     Value: s.value,
     Deals: s.deals,

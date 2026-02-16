@@ -4,9 +4,10 @@
  * Provides type-safe tRPC endpoints for the authenticated home page:
  * - Welcome summary with daily stats
  * - AI insights
- * - Activity feed (paginated)
  * - Daily goal progress
  * - Pinned items management
+ *
+ * Note: Activity feed is served by activityFeed.getUnifiedFeed (IFC-069).
  *
  * Task: IFC-182 - Home Page tRPC Router
  * KPIs: All endpoints <200ms; test coverage >=90%
@@ -16,13 +17,11 @@ import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '../../trpc';
 import { type Context } from '../../context';
 import {
-  activityFeedQuerySchema,
   pinItemInputSchema,
   unpinItemInputSchema,
   reorderPinnedItemsInputSchema,
   type WelcomeSummary,
   type AIInsightsResponse,
-  type ActivityFeedResponse,
   type DailyGoalResponse,
   type PinnedItemsResponse,
 } from '@intelliflow/validators';
@@ -58,28 +57,6 @@ function getGreeting(): string {
   return 'Good evening';
 }
 
-function getRelativeTime(date: Date): string {
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
-}
-
-function getInitials(name: string | null | undefined): string {
-  if (!name) return '??';
-  const parts = name.split(' ').filter(Boolean);
-  if (parts.length === 0) return '??';
-  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-  const lastPart = parts.at(-1);
-  return (parts[0][0] + (lastPart?.[0] ?? '')).toUpperCase();
-}
 
 // =============================================================================
 // Constants
@@ -228,7 +205,8 @@ export const homeRouter = createTRPCRouter({
 
     // Progressive fallback for leads: yesterday -> this week -> this month -> all time
     let newLeadsCount = 0;
-    let newLeadsPeriod: 'today' | 'yesterday' | 'this_week' | 'this_month' | 'all_time' = 'yesterday';
+    let newLeadsPeriod: 'today' | 'yesterday' | 'this_week' | 'this_month' | 'all_time' =
+      'yesterday';
 
     if (newLeadsSinceYesterday > 0) {
       newLeadsCount = newLeadsSinceYesterday;
@@ -246,7 +224,8 @@ export const homeRouter = createTRPCRouter({
 
     // Progressive fallback for deal trends: weekly -> monthly
     let dealClosingRateTrend = 0;
-    let dealsTrendPeriod: 'today' | 'yesterday' | 'this_week' | 'this_month' | 'all_time' = 'this_week';
+    let dealsTrendPeriod: 'today' | 'yesterday' | 'this_week' | 'this_month' | 'all_time' =
+      'this_week';
 
     // Try weekly comparison first
     if (dealsClosedLastWeek > 0) {
@@ -344,7 +323,8 @@ export const homeRouter = createTRPCRouter({
     });
 
     hotLeads.forEach((lead) => {
-      const name = `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || lead.company || 'Lead';
+      const name =
+        `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || lead.company || 'Lead';
       insights.push({
         id: `hot-lead-${lead.id}`,
         type: 'opportunity',
@@ -409,126 +389,6 @@ export const homeRouter = createTRPCRouter({
       lastRefreshed: now,
     };
   }),
-
-  /**
-   * Get activity feed for home page
-   * @deprecated Use activityFeed.getUnifiedFeed instead (IFC-069).
-   * This endpoint queries only AuditLogEntry. The new IFC-069 endpoint
-   * aggregates 7 activity sources with proper cursor pagination.
-   */
-  getActivityFeed: protectedProcedure
-    .input(activityFeedQuerySchema)
-    .query(async ({ ctx, input }): Promise<ActivityFeedResponse> => {
-      const startTime = performance.now();
-      const tenantId = getTenantId(ctx);
-      const userId = getUserId(ctx);
-      const { limit, cursor, types } = input;
-
-      // Build where clause for audit log entries (consolidated table per ADR-008)
-      // Filter by tenant (required for multi-tenancy) and optionally by user
-      const where: any = {
-        tenantId, // Required: tenant isolation
-        OR: [
-          { actorId: userId }, // User's own actions
-          // Future: add mentionedUserIds via metadata JSON field
-        ],
-      };
-
-      if (cursor) {
-        where.id = { lt: cursor };
-      }
-
-      // Apply activity type filter
-      if (types && types.length > 0) {
-        const typePatterns: Record<string, string[]> = {
-          mention: ['mention'],
-          call: ['call'],
-          email: ['email'],
-          task: ['task'],
-          deal: ['deal', 'opportunity'],
-          lead: ['lead'],
-          ai: ['ai', 'agent'],
-          system: ['system'],
-        };
-        const orConditions: any[] = [];
-        for (const t of types) {
-          const patterns = typePatterns[t] || [t];
-          for (const pattern of patterns) {
-            orConditions.push({
-              eventType: { contains: pattern, mode: 'insensitive' as const },
-            });
-          }
-          // For 'ai' type, also match by actorType
-          if (t === 'ai') {
-            orConditions.push({ actorType: 'AI_AGENT' });
-          }
-        }
-        where.AND = [{ OR: orConditions }];
-      }
-
-      // Fetch from audit log entries (comprehensive table)
-      const auditLogs = await ctx.prisma.auditLogEntry.findMany({
-        where,
-        orderBy: { timestamp: 'desc' },
-        take: limit + 1,
-        include: {
-          user: {
-            select: { id: true, name: true, avatarUrl: true },
-          },
-        },
-      });
-
-      const hasMore = auditLogs.length > limit;
-      const items = auditLogs.slice(0, limit);
-
-      // Map to activity feed items
-      const feedItems = items.map((log) => {
-        // Determine activity type from eventType or action
-        type FeedType = 'mention' | 'call' | 'email' | 'task' | 'deal' | 'lead' | 'system' | 'ai';
-        let type: FeedType = 'system';
-        const eventType = log.eventType.toLowerCase();
-
-        if (eventType.includes('mention')) type = 'mention';
-        else if (eventType.includes('call')) type = 'call';
-        else if (eventType.includes('email')) type = 'email';
-        else if (eventType.includes('task')) type = 'task';
-        else if (eventType.includes('deal') || eventType.includes('opportunity')) type = 'deal';
-        else if (eventType.includes('lead')) type = 'lead';
-        else if (eventType.includes('ai') || eventType.includes('agent') || log.actorType === 'AI_AGENT') type = 'ai';
-
-        return {
-          id: log.id,
-          type,
-          title: log.eventType,
-          description: `${log.resourceType} ${log.resourceId}`,
-          timestamp: log.timestamp,
-          relativeTime: getRelativeTime(log.timestamp),
-          actor: (log.actorId || (log as any).user)
-            ? {
-                id: log.actorId ?? (log as any).user?.id ?? '',
-                name: (log as any).user?.name ?? log.actorEmail ?? log.actorId ?? '',
-                avatarUrl: (log as any).user?.avatarUrl ?? null,
-                initials: getInitials((log as any).user?.name ?? log.actorEmail),
-              }
-            : null,
-          attachment: null,
-          badges: [],
-          actionUrl: log.resourceId ? `/${log.resourceType?.toLowerCase()}s/${log.resourceId}` : null,
-          isActionable: false,
-        };
-      });
-
-      const duration = performance.now() - startTime;
-      if (duration > 200) {
-        console.warn(`[home.getActivityFeed] SLOW: ${duration.toFixed(2)}ms (target: <200ms)`);
-      }
-
-      return {
-        items: feedItems,
-        nextCursor: hasMore ? items.at(-1)?.id ?? null : null,
-        hasMore,
-      };
-    }),
 
   /**
    * Get daily goal progress
@@ -730,8 +590,7 @@ export const homeRouter = createTRPCRouter({
       const reorderedItems = newOrder
         .map((orderItem) => {
           const existing = pinnedItems.find(
-            (p: any) =>
-              p.entityType === orderItem.entityType && p.entityId === orderItem.entityId
+            (p: any) => p.entityType === orderItem.entityType && p.entityId === orderItem.entityId
           );
           return existing ? { ...existing, position: orderItem.position } : null;
         })

@@ -28,6 +28,11 @@ export interface UpcomingEventsCardProps {
   readonly onViewAll?: () => void;
   /** Link for "View All" */
   readonly viewAllHref?: string;
+  /**
+   * When true (default), wraps content in a <Card>.
+   * Set to false when used inside a dashboard widget grid that already provides its own Card wrapper.
+   */
+  readonly standalone?: boolean;
 }
 
 interface AppointmentEvent {
@@ -78,12 +83,13 @@ function getAddHref(entityType?: string, entityId?: string): string {
 export function UpcomingEventsCard({
   entityType,
   entityId,
-  title = 'Upcoming',
+  title = 'Upcoming Events',
   maxItems = 3,
   showAddButton = true,
   compact = false,
   onViewAll,
   viewAllHref,
+  standalone = true,
 }: UpcomingEventsCardProps) {
   // Stable reference for "now" — prevents infinite re-fetch loop.
   // new Date() in the query input would create a different value every render,
@@ -101,7 +107,7 @@ export function UpcomingEventsCard({
       startTimeFrom: now,
       ...(entityType === 'case' && entityId ? { caseId: entityId } : {}),
     },
-    { enabled: true },
+    { enabled: true }
   ) ?? { data: undefined, isLoading: false, error: null };
 
   const events: AppointmentEvent[] = useMemo(() => {
@@ -116,14 +122,22 @@ export function UpcomingEventsCard({
     return items.length > maxItems;
   }, [data, maxItems]);
 
-  const calendarHref = entityType && entityId
-    ? `/calendar?entity=${entityType}&entityId=${entityId}`
-    : '/calendar';
+  const calendarHref =
+    entityType && entityId ? `/calendar?entity=${entityType}&entityId=${entityId}` : '/calendar';
+
+  // Wrapper: Card for standalone usage, plain div for dashboard widget context
+  const Wrapper = standalone ? Card : 'div';
+  const wrapperProps = standalone
+    ? { className: compact ? 'p-4' : 'p-6', 'data-testid': 'upcoming-events-card' }
+    : {
+        className: `${compact ? 'p-4' : 'p-6'} h-full flex flex-col`,
+        'data-testid': 'upcoming-events-card',
+      };
 
   // ─── Loading ──────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <Card className={compact ? 'p-4' : 'p-5'} data-testid="upcoming-events-card">
+      <Wrapper {...(wrapperProps as any)}>
         <div className="flex items-center justify-between mb-4">
           <Skeleton className="h-5 w-24" />
         </div>
@@ -132,47 +146,51 @@ export function UpcomingEventsCard({
             <Skeleton key={i} className="h-14 w-full rounded-lg" />
           ))}
         </div>
-      </Card>
+      </Wrapper>
     );
   }
 
   // ─── Error ────────────────────────────────────────────────────────────
   if (error) {
     return (
-      <Card className={compact ? 'p-4' : 'p-5'} data-testid="upcoming-events-card">
+      <Wrapper {...(wrapperProps as any)}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className={`font-bold text-slate-900 dark:text-white ${compact ? 'text-sm' : 'text-base'}`}>
-            {title}
-          </h3>
+          <h3 className="font-semibold text-foreground">{title}</h3>
         </div>
         <p className="text-sm text-destructive text-center py-2">Failed to load events</p>
-      </Card>
+      </Wrapper>
     );
   }
 
   // ─── Render ───────────────────────────────────────────────────────────
   return (
-    <Card className={compact ? 'p-4' : 'p-5'} data-testid="upcoming-events-card">
-      {/* Header */}
+    <Wrapper {...(wrapperProps as any)}>
+      {/* Header — matches UpcomingTasksWidget pattern */}
       <div className="flex items-center justify-between mb-4">
-        <h3 className={`font-bold text-slate-900 dark:text-white ${compact ? 'text-sm' : 'text-base'}`}>
+        <h3 className="font-semibold text-foreground flex items-center gap-2">
+          <span className="material-symbols-outlined text-muted-foreground">calendar_month</span>
           {title}
         </h3>
         <div className="flex items-center gap-2">
-          {(onViewAll || viewAllHref) && hasMore && (
-            viewAllHref ? (
-              <Link href={viewAllHref} className="text-xs text-primary hover:underline">View All</Link>
+          {(onViewAll || viewAllHref) &&
+            (viewAllHref ? (
+              <Link href={viewAllHref} className="text-sm text-ds-primary hover:underline">
+                View All
+              </Link>
             ) : (
-              <button onClick={onViewAll} className="text-xs text-primary hover:underline">View All</button>
-            )
-          )}
+              <button onClick={onViewAll} className="text-sm text-ds-primary hover:underline">
+                View All
+              </button>
+            ))}
           {showAddButton && (
             <Link
               href={getAddHref(entityType, entityId)}
-              className="w-6 h-6 rounded hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-500"
+              className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
               aria-label="Schedule event"
             >
-              <span className="material-symbols-outlined !text-[20px]">calendar_add_on</span>
+              <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                add
+              </span>
             </Link>
           )}
         </div>
@@ -181,7 +199,6 @@ export function UpcomingEventsCard({
       {/* Empty state */}
       {events.length === 0 && (
         <div className="text-center py-4">
-          <span className="material-symbols-outlined text-3xl text-muted-foreground/40 mb-2">event_busy</span>
           <p className="text-sm text-muted-foreground">No upcoming events</p>
           {showAddButton && (
             <Link
@@ -194,9 +211,9 @@ export function UpcomingEventsCard({
         </div>
       )}
 
-      {/* Event list */}
+      {/* Event list — matches hover/spacing pattern of other widgets */}
       {events.length > 0 && (
-        <div className={compact ? 'space-y-2' : 'space-y-3'}>
+        <div className={`${compact ? 'space-y-2' : 'space-y-1'} flex-1`}>
           {events.map((event) => {
             const date = new Date(event.startTime);
             const { month, day, time } = formatEventDate(date);
@@ -212,50 +229,63 @@ export function UpcomingEventsCard({
               <Link
                 key={event.id}
                 href={`/calendar/${event.id}`}
-                className="flex gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800 hover:border-primary/30 transition-colors group"
+                className="flex items-start gap-3 p-3 rounded-lg hover:bg-muted transition-colors group"
               >
                 {/* Date badge */}
-                <div className="flex flex-col items-center justify-center bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded w-12 h-12 flex-shrink-0">
-                  <span className="text-[10px] font-bold text-red-500 uppercase">{month}</span>
-                  <span className="text-lg font-bold text-slate-900 dark:text-white leading-none">{day}</span>
+                <div className="flex flex-col items-center justify-center bg-muted rounded w-10 h-10 flex-shrink-0">
+                  <span className="text-[10px] font-bold text-destructive uppercase leading-tight">
+                    {month}
+                  </span>
+                  <span className="text-base font-bold text-foreground leading-none">{day}</span>
                 </div>
 
                 {/* Event info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <div className={`size-5 rounded-full flex items-center justify-center ${typeInfo.color}`}>
-                      <span className="material-symbols-outlined !text-[14px]">{typeInfo.icon}</span>
+                    <div
+                      className={`size-5 rounded-full flex items-center justify-center ${typeInfo.color}`}
+                    >
+                      <span className="material-symbols-outlined !text-[14px]">
+                        {typeInfo.icon}
+                      </span>
                     </div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover:text-primary transition-colors">
+                    <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
                       {event.title}
                     </p>
                   </div>
-                  <p className="text-xs text-slate-500 mt-0.5">{time}</p>
-                  {attendeeAvatars.length > 0 && (
-                    <div className="flex -space-x-1.5 mt-1.5">
-                      {attendeeAvatars.map((avatar, idx) => (
-                        <AppAvatar
-                          key={idx}
-                          name={avatar.name}
-                          src={avatar.src}
-                          fallbackText={avatar.name.charAt(0)}
-                          className="w-5 h-5 ring-2 ring-white dark:ring-slate-900"
-                          fallbackClassName="text-[10px] bg-slate-200 dark:bg-slate-700"
-                        />
-                      ))}
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-xs text-muted-foreground">{time}</p>
+                    {attendeeAvatars.length > 0 && (
+                      <div className="flex -space-x-1.5">
+                        {attendeeAvatars.map((avatar, idx) => (
+                          <AppAvatar
+                            key={idx}
+                            name={avatar.name}
+                            src={avatar.src}
+                            fallbackText={avatar.name.charAt(0)}
+                            className="w-4 h-4 ring-1 ring-background"
+                            fallbackClassName="text-[8px] bg-muted"
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </Link>
             );
           })}
-          {hasMore && !onViewAll && !viewAllHref && (
-            <Link href={calendarHref} className="text-xs text-primary hover:underline text-center block pt-1">
-              View all events
-            </Link>
-          )}
         </div>
       )}
-    </Card>
+
+      {/* Footer link — matches other widgets */}
+      {hasMore && !onViewAll && !viewAllHref && (
+        <Link
+          href={calendarHref}
+          className="text-xs text-primary hover:underline text-center block mt-2"
+        >
+          View all events
+        </Link>
+      )}
+    </Wrapper>
   );
 }

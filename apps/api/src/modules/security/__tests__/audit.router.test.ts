@@ -12,12 +12,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { auditRouter } from '../audit.router';
-import {
-  prismaMock,
-  createTestContext,
-  createAdminContext,
-  TEST_UUIDS,
-} from '../../../test/setup';
+import { prismaMock, createTestContext, createAdminContext, TEST_UUIDS } from '../../../test/setup';
 import type { BaseContext } from '../../../context';
 
 describe('Audit Router', () => {
@@ -431,8 +426,18 @@ describe('Audit Router', () => {
   describe('getSecurityEvents', () => {
     const securityLogs = [
       { ...mockAuditLog, id: 'sec-1', eventType: 'auth.login', action: 'LOGIN' as const },
-      { ...mockAuditLog, id: 'sec-2', eventType: 'auth.login_failed', action: 'LOGIN_FAILED' as const },
-      { ...mockAuditLog, id: 'sec-3', eventType: 'auth.permission_denied', action: 'PERMISSION_DENIED' as const },
+      {
+        ...mockAuditLog,
+        id: 'sec-2',
+        eventType: 'auth.login_failed',
+        action: 'LOGIN_FAILED' as const,
+      },
+      {
+        ...mockAuditLog,
+        id: 'sec-3',
+        eventType: 'auth.permission_denied',
+        action: 'PERMISSION_DENIED' as const,
+      },
     ];
 
     it('should return security events for admin', async () => {
@@ -534,9 +539,15 @@ describe('Audit Router', () => {
       const caller = auditRouter.createCaller(createAdminContext());
 
       prismaMock.auditLogEntry.count.mockResolvedValue(mockStats.total);
-      (prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockStats.byAction);
-      (prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockStats.byResource);
-      (prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(mockStats.byUser);
+      (
+        prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce(mockStats.byAction);
+      (
+        prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce(mockStats.byResource);
+      (
+        prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>
+      ).mockResolvedValueOnce(mockStats.byUser);
 
       const result = await caller.getStats({});
 
@@ -572,7 +583,9 @@ describe('Audit Router', () => {
       const endDate = new Date('2025-01-31');
 
       prismaMock.auditLogEntry.count.mockResolvedValue(50);
-      (prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+      (prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        []
+      );
 
       await caller.getStats({ startDate, endDate });
 
@@ -590,7 +603,9 @@ describe('Audit Router', () => {
       const caller = auditRouter.createCaller(createAdminContext());
 
       prismaMock.auditLogEntry.count.mockResolvedValue(mockStats.total);
-      (prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+      (prismaMock.auditLogEntry.groupBy as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+        []
+      );
 
       await caller.getStats({});
 

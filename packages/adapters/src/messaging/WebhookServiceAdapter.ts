@@ -174,8 +174,4 @@ export function createWebhookServiceAdapter(
 }
 
 // Re-export domain errors for convenience
-export {
-  WebhookVerificationError,
-  WebhookProcessingError,
-  WebhookSourceNotFoundError,
-};
+export { WebhookVerificationError, WebhookProcessingError, WebhookSourceNotFoundError };

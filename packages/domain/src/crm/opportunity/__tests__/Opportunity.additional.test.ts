@@ -2,7 +2,14 @@ import { describe, it, expect } from 'vitest';
 import { Opportunity } from '../Opportunity';
 
 function createOpp(overrides = {}) {
-  return Opportunity.create({ name: 'Deal', value: 10000, accountId: 'acc_1', ownerId: 'user_1', tenantId: 'tenant_1', ...overrides });
+  return Opportunity.create({
+    name: 'Deal',
+    value: 10000,
+    accountId: 'acc_1',
+    ownerId: 'user_1',
+    tenantId: 'tenant_1',
+    ...overrides,
+  });
 }
 
 describe('Opportunity aggregate - additional', () => {
@@ -34,7 +41,11 @@ describe('Opportunity aggregate - additional', () => {
     });
 
     it('should accept optional description and contactId', () => {
-      const r = createOpp({ description: 'Big deal', contactId: 'c_1', expectedCloseDate: new Date('2026-06-01') });
+      const r = createOpp({
+        description: 'Big deal',
+        contactId: 'c_1',
+        expectedCloseDate: new Date('2026-06-01'),
+      });
       expect(r.value.description).toBe('Big deal');
       expect(r.value.contactId).toBe('c_1');
     });
@@ -58,7 +69,9 @@ describe('Opportunity aggregate - additional', () => {
       const opp = createOpp().value;
       opp.clearDomainEvents();
       opp.changeStage('NEEDS_ANALYSIS', 'user_1');
-      expect(opp.getDomainEvents().some(e => e.eventType === 'opportunity.stage_changed')).toBe(true);
+      expect(opp.getDomainEvents().some((e) => e.eventType === 'opportunity.stage_changed')).toBe(
+        true
+      );
     });
   });
 

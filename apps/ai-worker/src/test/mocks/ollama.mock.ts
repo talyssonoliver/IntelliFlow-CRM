@@ -30,7 +30,9 @@ export function createMockChatOllama(response: unknown = DEFAULT_SCORING_RESPONS
 /**
  * Create a mock OllamaEmbeddings instance
  */
-export function createMockOllamaEmbeddings(embedding: number[] = DEFAULT_EMBEDDING_RESPONSE.embedding) {
+export function createMockOllamaEmbeddings(
+  embedding: number[] = DEFAULT_EMBEDDING_RESPONSE.embedding
+) {
   const MockOllamaEmbeddings = function (this: Record<string, unknown>) {
     this.embedQuery = vi.fn().mockResolvedValue(embedding);
     this.embedDocuments = vi.fn().mockImplementation(async (docs: string[]) => {

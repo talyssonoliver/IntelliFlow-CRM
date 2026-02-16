@@ -41,10 +41,38 @@ describe('InMemoryAnalyticsRepository', () => {
       veryOld.setMonth(now.getMonth() - 12);
 
       repo.seedOpportunities([
-        { id: 'o1', tenantId: TENANT_ID, stage: 'CLOSED_WON', value: 5000, createdAt: twoMonthsAgo, closedAt: twoMonthsAgo },
-        { id: 'o2', tenantId: TENANT_ID, stage: 'CLOSED_WON', value: 3000, createdAt: veryOld, closedAt: veryOld }, // too old
-        { id: 'o3', tenantId: TENANT_ID, stage: 'OPEN', value: 1000, createdAt: now, closedAt: null }, // not closed_won
-        { id: 'o4', tenantId: 'other', stage: 'CLOSED_WON', value: 2000, createdAt: now, closedAt: now }, // different tenant
+        {
+          id: 'o1',
+          tenantId: TENANT_ID,
+          stage: 'CLOSED_WON',
+          value: 5000,
+          createdAt: twoMonthsAgo,
+          closedAt: twoMonthsAgo,
+        },
+        {
+          id: 'o2',
+          tenantId: TENANT_ID,
+          stage: 'CLOSED_WON',
+          value: 3000,
+          createdAt: veryOld,
+          closedAt: veryOld,
+        }, // too old
+        {
+          id: 'o3',
+          tenantId: TENANT_ID,
+          stage: 'OPEN',
+          value: 1000,
+          createdAt: now,
+          closedAt: null,
+        }, // not closed_won
+        {
+          id: 'o4',
+          tenantId: 'other',
+          stage: 'CLOSED_WON',
+          value: 2000,
+          createdAt: now,
+          closedAt: now,
+        }, // different tenant
       ]);
 
       const result = await repo.getDealsWonByMonth(TENANT_ID, 6);
@@ -58,9 +86,30 @@ describe('InMemoryAnalyticsRepository', () => {
       const date2 = new Date('2026-01-20T10:00:00Z');
 
       repo.seedOpportunities([
-        { id: 'g1', tenantId: TENANT_ID, stage: 'CLOSED_WON', value: 1000, createdAt: date1, closedAt: date1 },
-        { id: 'g2', tenantId: TENANT_ID, stage: 'CLOSED_WON', value: 2000, createdAt: date1, closedAt: date1 },
-        { id: 'g3', tenantId: TENANT_ID, stage: 'CLOSED_WON', value: 500, createdAt: date2, closedAt: date2 },
+        {
+          id: 'g1',
+          tenantId: TENANT_ID,
+          stage: 'CLOSED_WON',
+          value: 1000,
+          createdAt: date1,
+          closedAt: date1,
+        },
+        {
+          id: 'g2',
+          tenantId: TENANT_ID,
+          stage: 'CLOSED_WON',
+          value: 2000,
+          createdAt: date1,
+          closedAt: date1,
+        },
+        {
+          id: 'g3',
+          tenantId: TENANT_ID,
+          stage: 'CLOSED_WON',
+          value: 500,
+          createdAt: date2,
+          closedAt: date2,
+        },
       ]);
 
       const result = await repo.getDealsWonByMonth(TENANT_ID, 12);
@@ -78,8 +127,12 @@ describe('InMemoryAnalyticsRepository', () => {
     it('should handle opportunities with null value', async () => {
       const now = new Date();
       repo.seedOpportunity({
-        id: 'nv1', tenantId: TENANT_ID, stage: 'CLOSED_WON',
-        value: null, createdAt: now, closedAt: now,
+        id: 'nv1',
+        tenantId: TENANT_ID,
+        stage: 'CLOSED_WON',
+        value: null,
+        createdAt: now,
+        closedAt: now,
       });
 
       const result = await repo.getDealsWonByMonth(TENANT_ID, 6);
@@ -91,8 +144,12 @@ describe('InMemoryAnalyticsRepository', () => {
       // Even though the filter should exclude them, verify the inner null guard
       const now = new Date();
       repo.seedOpportunity({
-        id: 'nc1', tenantId: TENANT_ID, stage: 'CLOSED_WON',
-        value: 100, createdAt: now, closedAt: now,
+        id: 'nc1',
+        tenantId: TENANT_ID,
+        stage: 'CLOSED_WON',
+        value: 100,
+        createdAt: now,
+        closedAt: now,
       });
 
       const result = await repo.getDealsWonByMonth(TENANT_ID, 6);
@@ -114,10 +171,38 @@ describe('InMemoryAnalyticsRepository', () => {
 
     it('should sum values of CLOSED_WON within date range', async () => {
       repo.seedOpportunities([
-        { id: 'r1', tenantId: TENANT_ID, stage: 'CLOSED_WON', value: 1000, createdAt: new Date('2026-01-10'), closedAt: new Date('2026-01-10') },
-        { id: 'r2', tenantId: TENANT_ID, stage: 'CLOSED_WON', value: 2000, createdAt: new Date('2026-01-20'), closedAt: new Date('2026-01-20') },
-        { id: 'r3', tenantId: TENANT_ID, stage: 'CLOSED_WON', value: 500, createdAt: new Date('2026-02-10'), closedAt: new Date('2026-02-10') }, // outside range
-        { id: 'r4', tenantId: TENANT_ID, stage: 'OPEN', value: 999, createdAt: new Date('2026-01-15'), closedAt: null }, // not closed_won
+        {
+          id: 'r1',
+          tenantId: TENANT_ID,
+          stage: 'CLOSED_WON',
+          value: 1000,
+          createdAt: new Date('2026-01-10'),
+          closedAt: new Date('2026-01-10'),
+        },
+        {
+          id: 'r2',
+          tenantId: TENANT_ID,
+          stage: 'CLOSED_WON',
+          value: 2000,
+          createdAt: new Date('2026-01-20'),
+          closedAt: new Date('2026-01-20'),
+        },
+        {
+          id: 'r3',
+          tenantId: TENANT_ID,
+          stage: 'CLOSED_WON',
+          value: 500,
+          createdAt: new Date('2026-02-10'),
+          closedAt: new Date('2026-02-10'),
+        }, // outside range
+        {
+          id: 'r4',
+          tenantId: TENANT_ID,
+          stage: 'OPEN',
+          value: 999,
+          createdAt: new Date('2026-01-15'),
+          closedAt: null,
+        }, // not closed_won
       ]);
 
       const revenue = await repo.getMonthlyRevenue(TENANT_ID, {
@@ -129,8 +214,12 @@ describe('InMemoryAnalyticsRepository', () => {
 
     it('should treat null values as 0 in sum', async () => {
       repo.seedOpportunity({
-        id: 'nv', tenantId: TENANT_ID, stage: 'CLOSED_WON',
-        value: null, createdAt: new Date('2026-01-10'), closedAt: new Date('2026-01-10'),
+        id: 'nv',
+        tenantId: TENANT_ID,
+        stage: 'CLOSED_WON',
+        value: null,
+        createdAt: new Date('2026-01-10'),
+        closedAt: new Date('2026-01-10'),
       });
 
       const revenue = await repo.getMonthlyRevenue(TENANT_ID, {
@@ -183,9 +272,30 @@ describe('InMemoryAnalyticsRepository', () => {
 
     it('should count opportunities created within the range', async () => {
       repo.seedOpportunities([
-        { id: 'o1', tenantId: TENANT_ID, stage: 'OPEN', value: 100, createdAt: new Date('2026-01-10'), closedAt: null },
-        { id: 'o2', tenantId: TENANT_ID, stage: 'CLOSED_WON', value: 200, createdAt: new Date('2026-01-15'), closedAt: new Date('2026-01-15') },
-        { id: 'o3', tenantId: TENANT_ID, stage: 'OPEN', value: 300, createdAt: new Date('2026-03-01'), closedAt: null }, // outside
+        {
+          id: 'o1',
+          tenantId: TENANT_ID,
+          stage: 'OPEN',
+          value: 100,
+          createdAt: new Date('2026-01-10'),
+          closedAt: null,
+        },
+        {
+          id: 'o2',
+          tenantId: TENANT_ID,
+          stage: 'CLOSED_WON',
+          value: 200,
+          createdAt: new Date('2026-01-15'),
+          closedAt: new Date('2026-01-15'),
+        },
+        {
+          id: 'o3',
+          tenantId: TENANT_ID,
+          stage: 'OPEN',
+          value: 300,
+          createdAt: new Date('2026-03-01'),
+          closedAt: null,
+        }, // outside
       ]);
 
       const count = await repo.countOpportunitiesInRange(TENANT_ID, {
@@ -265,9 +375,27 @@ describe('InMemoryAnalyticsRepository', () => {
 
     it('should return logs sorted by timestamp descending', async () => {
       repo.seedAuditLogs([
-        { id: 'a1', tenantId: TENANT_ID, action: 'CREATE', timestamp: new Date('2026-01-10'), metadata: { name: 'Lead1' } },
-        { id: 'a3', tenantId: TENANT_ID, action: 'UPDATE', timestamp: new Date('2026-01-12'), metadata: { name: 'Lead1' } },
-        { id: 'a2', tenantId: TENANT_ID, action: 'QUALIFY', timestamp: new Date('2026-01-11'), metadata: { name: 'Lead1' } },
+        {
+          id: 'a1',
+          tenantId: TENANT_ID,
+          action: 'CREATE',
+          timestamp: new Date('2026-01-10'),
+          metadata: { name: 'Lead1' },
+        },
+        {
+          id: 'a3',
+          tenantId: TENANT_ID,
+          action: 'UPDATE',
+          timestamp: new Date('2026-01-12'),
+          metadata: { name: 'Lead1' },
+        },
+        {
+          id: 'a2',
+          tenantId: TENANT_ID,
+          action: 'QUALIFY',
+          timestamp: new Date('2026-01-11'),
+          metadata: { name: 'Lead1' },
+        },
       ]);
 
       const result = await repo.getRecentAuditLogs(TENANT_ID, 10);
@@ -312,8 +440,11 @@ describe('InMemoryAnalyticsRepository', () => {
 
     it('should map known actions to correct icons and descriptions', async () => {
       repo.seedAuditLog({
-        id: 'icon1', tenantId: TENANT_ID, action: 'CREATE',
-        timestamp: new Date(), metadata: { resourceType: 'lead', name: 'TestLead' },
+        id: 'icon1',
+        tenantId: TENANT_ID,
+        action: 'CREATE',
+        timestamp: new Date(),
+        metadata: { resourceType: 'lead', name: 'TestLead' },
       });
 
       const result = await repo.getRecentAuditLogs(TENANT_ID, 10);
@@ -323,8 +454,11 @@ describe('InMemoryAnalyticsRepository', () => {
 
     it('should handle QUALIFY action', async () => {
       repo.seedAuditLog({
-        id: 'q1', tenantId: TENANT_ID, action: 'QUALIFY',
-        timestamp: new Date(), metadata: { name: 'Lead X' },
+        id: 'q1',
+        tenantId: TENANT_ID,
+        action: 'QUALIFY',
+        timestamp: new Date(),
+        metadata: { name: 'Lead X' },
       });
 
       const [item] = await repo.getRecentAuditLogs(TENANT_ID, 10);
@@ -334,8 +468,11 @@ describe('InMemoryAnalyticsRepository', () => {
 
     it('should handle CONVERT action', async () => {
       repo.seedAuditLog({
-        id: 'conv1', tenantId: TENANT_ID, action: 'CONVERT',
-        timestamp: new Date(), metadata: { name: 'Converted Lead' },
+        id: 'conv1',
+        tenantId: TENANT_ID,
+        action: 'CONVERT',
+        timestamp: new Date(),
+        metadata: { name: 'Converted Lead' },
       });
 
       const [item] = await repo.getRecentAuditLogs(TENANT_ID, 10);
@@ -345,8 +482,11 @@ describe('InMemoryAnalyticsRepository', () => {
 
     it('should handle UPDATE action', async () => {
       repo.seedAuditLog({
-        id: 'u1', tenantId: TENANT_ID, action: 'UPDATE',
-        timestamp: new Date(), metadata: { name: 'Updated Item' },
+        id: 'u1',
+        tenantId: TENANT_ID,
+        action: 'UPDATE',
+        timestamp: new Date(),
+        metadata: { name: 'Updated Item' },
       });
 
       const [item] = await repo.getRecentAuditLogs(TENANT_ID, 10);
@@ -356,7 +496,9 @@ describe('InMemoryAnalyticsRepository', () => {
 
     it('should handle DELETE action', async () => {
       repo.seedAuditLog({
-        id: 'd1', tenantId: TENANT_ID, action: 'DELETE',
+        id: 'd1',
+        tenantId: TENANT_ID,
+        action: 'DELETE',
         timestamp: new Date(),
       });
 
@@ -368,7 +510,11 @@ describe('InMemoryAnalyticsRepository', () => {
       const eventActions = [
         { action: 'lead.created', icon: 'person_add', desc: 'New lead: LeadName' },
         { action: 'lead.qualified', icon: 'check_circle', desc: 'Lead qualified: LeadName' },
-        { action: 'lead.converted', icon: 'swap_horiz', desc: 'Lead converted to contact: LeadName' },
+        {
+          action: 'lead.converted',
+          icon: 'swap_horiz',
+          desc: 'Lead converted to contact: LeadName',
+        },
         { action: 'opportunity.created', icon: 'handshake', desc: 'New deal: LeadName' },
         { action: 'contact.created', icon: 'contacts', desc: 'New contact: LeadName' },
       ];
@@ -376,8 +522,11 @@ describe('InMemoryAnalyticsRepository', () => {
       for (const ea of eventActions) {
         repo.clear();
         repo.seedAuditLog({
-          id: `ev-${ea.action}`, tenantId: TENANT_ID, action: ea.action,
-          timestamp: new Date(), metadata: { name: 'LeadName' },
+          id: `ev-${ea.action}`,
+          tenantId: TENANT_ID,
+          action: ea.action,
+          timestamp: new Date(),
+          metadata: { name: 'LeadName' },
         });
         const [item] = await repo.getRecentAuditLogs(TENANT_ID, 10);
         expect(item.icon).toBe(ea.icon);
@@ -387,8 +536,11 @@ describe('InMemoryAnalyticsRepository', () => {
 
     it('should handle opportunity.won action with value', async () => {
       repo.seedAuditLog({
-        id: 'ow1', tenantId: TENANT_ID, action: 'opportunity.won',
-        timestamp: new Date(), metadata: { name: 'BigDeal', value: 50000 },
+        id: 'ow1',
+        tenantId: TENANT_ID,
+        action: 'opportunity.won',
+        timestamp: new Date(),
+        metadata: { name: 'BigDeal', value: 50000 },
       });
 
       const [item] = await repo.getRecentAuditLogs(TENANT_ID, 10);
@@ -398,8 +550,11 @@ describe('InMemoryAnalyticsRepository', () => {
 
     it('should handle task.completed action', async () => {
       repo.seedAuditLog({
-        id: 'tc1', tenantId: TENANT_ID, action: 'task.completed',
-        timestamp: new Date(), metadata: { title: 'Follow Up' },
+        id: 'tc1',
+        tenantId: TENANT_ID,
+        action: 'task.completed',
+        timestamp: new Date(),
+        metadata: { title: 'Follow Up' },
       });
 
       const [item] = await repo.getRecentAuditLogs(TENANT_ID, 10);
@@ -409,7 +564,9 @@ describe('InMemoryAnalyticsRepository', () => {
 
     it('should fallback to default icon and action as description for unknown actions', async () => {
       repo.seedAuditLog({
-        id: 'unk1', tenantId: TENANT_ID, action: 'some.custom.action',
+        id: 'unk1',
+        tenantId: TENANT_ID,
+        action: 'some.custom.action',
         timestamp: new Date(),
       });
 
@@ -420,8 +577,11 @@ describe('InMemoryAnalyticsRepository', () => {
 
     it('should use "Unknown" fallback when metadata has no name', async () => {
       repo.seedAuditLog({
-        id: 'noname', tenantId: TENANT_ID, action: 'CREATE',
-        timestamp: new Date(), metadata: {},
+        id: 'noname',
+        tenantId: TENANT_ID,
+        action: 'CREATE',
+        timestamp: new Date(),
+        metadata: {},
       });
 
       const [item] = await repo.getRecentAuditLogs(TENANT_ID, 10);
@@ -430,7 +590,9 @@ describe('InMemoryAnalyticsRepository', () => {
 
     it('should handle missing metadata', async () => {
       repo.seedAuditLog({
-        id: 'nometa', tenantId: TENANT_ID, action: 'CREATE',
+        id: 'nometa',
+        tenantId: TENANT_ID,
+        action: 'CREATE',
         timestamp: new Date(),
       });
 
@@ -440,8 +602,11 @@ describe('InMemoryAnalyticsRepository', () => {
 
     it('should include eventType in results', async () => {
       repo.seedAuditLog({
-        id: 'et1', tenantId: TENANT_ID, action: 'CREATE',
-        eventType: 'lead.created', timestamp: new Date(),
+        id: 'et1',
+        tenantId: TENANT_ID,
+        action: 'CREATE',
+        eventType: 'lead.created',
+        timestamp: new Date(),
       });
 
       const [item] = await repo.getRecentAuditLogs(TENANT_ID, 10);
@@ -513,7 +678,14 @@ describe('InMemoryAnalyticsRepository', () => {
   describe('test helpers', () => {
     it('clear() should reset all data stores', () => {
       repo.seedLead({ id: 'l1', tenantId: TENANT_ID, source: 'WEB', createdAt: new Date() });
-      repo.seedOpportunity({ id: 'o1', tenantId: TENANT_ID, stage: 'OPEN', value: 100, createdAt: new Date(), closedAt: null });
+      repo.seedOpportunity({
+        id: 'o1',
+        tenantId: TENANT_ID,
+        stage: 'OPEN',
+        value: 100,
+        createdAt: new Date(),
+        closedAt: null,
+      });
       repo.seedContact({ id: 'c1', tenantId: TENANT_ID, createdAt: new Date() });
       repo.seedAuditLog({ id: 'a1', tenantId: TENANT_ID, action: 'CREATE', timestamp: new Date() });
 
@@ -524,14 +696,35 @@ describe('InMemoryAnalyticsRepository', () => {
     });
 
     it('seedOpportunity should add a single opportunity', () => {
-      repo.seedOpportunity({ id: 'o1', tenantId: TENANT_ID, stage: 'OPEN', value: 100, createdAt: new Date(), closedAt: null });
+      repo.seedOpportunity({
+        id: 'o1',
+        tenantId: TENANT_ID,
+        stage: 'OPEN',
+        value: 100,
+        createdAt: new Date(),
+        closedAt: null,
+      });
       expect(repo.getAllOpportunities().length).toBe(1);
     });
 
     it('seedOpportunities should add multiple opportunities', () => {
       repo.seedOpportunities([
-        { id: 'o1', tenantId: TENANT_ID, stage: 'OPEN', value: 100, createdAt: new Date(), closedAt: null },
-        { id: 'o2', tenantId: TENANT_ID, stage: 'OPEN', value: 200, createdAt: new Date(), closedAt: null },
+        {
+          id: 'o1',
+          tenantId: TENANT_ID,
+          stage: 'OPEN',
+          value: 100,
+          createdAt: new Date(),
+          closedAt: null,
+        },
+        {
+          id: 'o2',
+          tenantId: TENANT_ID,
+          stage: 'OPEN',
+          value: 200,
+          createdAt: new Date(),
+          closedAt: null,
+        },
       ]);
       expect(repo.getAllOpportunities().length).toBe(2);
     });
@@ -586,7 +779,14 @@ describe('InMemoryAnalyticsRepository', () => {
     });
 
     it('getAllOpportunities returns a copy', () => {
-      repo.seedOpportunity({ id: 'o1', tenantId: TENANT_ID, stage: 'OPEN', value: 100, createdAt: new Date(), closedAt: null });
+      repo.seedOpportunity({
+        id: 'o1',
+        tenantId: TENANT_ID,
+        stage: 'OPEN',
+        value: 100,
+        createdAt: new Date(),
+        closedAt: null,
+      });
       const all = repo.getAllOpportunities();
       all.pop();
       expect(repo.getAllOpportunities().length).toBe(1);

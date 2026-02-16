@@ -68,7 +68,10 @@ const syncOptionsSchema = z.object({
 const getConnectorStatus = async (connectorId: string): Promise<ConnectorHealthStatus> => {
   // In production, this would call the actual adapter's checkConnection method
   // For now, return mock status based on connector ID
-  const connectorInfo: Record<string, { name: string; type: ConnectorHealthStatus['type']; provider: string }> = {
+  const connectorInfo: Record<
+    string,
+    { name: string; type: ConnectorHealthStatus['type']; provider: string }
+  > = {
     'erp-sap': { name: 'SAP ERP', type: 'erp', provider: 'sap' },
     'payment-stripe': { name: 'Stripe', type: 'payment', provider: 'stripe' },
     'payment-paypal': { name: 'PayPal', type: 'payment', provider: 'paypal' },
@@ -130,9 +133,7 @@ export const integrationsRouter = createTRPCRouter({
       'messaging-teams',
     ];
 
-    const results = await Promise.all(
-      connectorIds.map((id) => getConnectorStatus(id))
-    );
+    const results = await Promise.all(connectorIds.map((id) => getConnectorStatus(id)));
 
     return {
       connectors: results,
@@ -150,9 +151,11 @@ export const integrationsRouter = createTRPCRouter({
    * Get connectors by type
    */
   getConnectorsByType: protectedProcedure
-    .input(z.object({
-      type: z.enum(['erp', 'payment', 'email', 'messaging'])
-    }))
+    .input(
+      z.object({
+        type: z.enum(['erp', 'payment', 'email', 'messaging']),
+      })
+    )
     .query(async ({ input }) => {
       const allConnectors = await Promise.all([
         getConnectorStatus('erp-sap'),
@@ -170,28 +173,26 @@ export const integrationsRouter = createTRPCRouter({
   /**
    * Trigger a sync operation for an ERP connector
    */
-  triggerSync: protectedProcedure
-    .input(syncOptionsSchema)
-    .mutation(async ({ input }) => {
-      // In production, this would trigger the actual sync
-      // For now, return mock result
-      const startTime = new Date();
+  triggerSync: protectedProcedure.input(syncOptionsSchema).mutation(async ({ input }) => {
+    // In production, this would trigger the actual sync
+    // For now, return mock result
+    const startTime = new Date();
 
-      // Simulate sync processing time
-      await new Promise((resolve) => setTimeout(resolve, 100));
+    // Simulate sync processing time
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-      const result: ConnectorSyncResult = {
-        connectorId: input.connectorId,
-        success: Math.random() > 0.05, // 95% success rate
-        recordsProcessed: Math.floor(Math.random() * 100) + 10,
-        recordsFailed: Math.random() > 0.8 ? Math.floor(Math.random() * 5) : 0,
-        startedAt: startTime,
-        completedAt: new Date(),
-        errors: [],
-      };
+    const result: ConnectorSyncResult = {
+      connectorId: input.connectorId,
+      success: Math.random() > 0.05, // 95% success rate
+      recordsProcessed: Math.floor(Math.random() * 100) + 10,
+      recordsFailed: Math.random() > 0.8 ? Math.floor(Math.random() * 5) : 0,
+      startedAt: startTime,
+      completedAt: new Date(),
+      errors: [],
+    };
 
-      return result;
-    }),
+    return result;
+  }),
 
   /**
    * Get the connector dashboard configuration
@@ -227,9 +228,10 @@ export const integrationsRouter = createTRPCRouter({
         connectorId: input.connectorId,
         success: status.status !== 'unhealthy',
         latencyMs: status.latencyMs,
-        message: status.status === 'unhealthy'
-          ? 'Connection failed: ' + (status.errorMessage || 'Unknown error')
-          : 'Connection successful',
+        message:
+          status.status === 'unhealthy'
+            ? 'Connection failed: ' + (status.errorMessage || 'Unknown error')
+            : 'Connection successful',
         testedAt: new Date(),
       };
     }),

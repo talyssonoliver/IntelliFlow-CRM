@@ -1,6 +1,8 @@
 # Domain STOA Agent
 
-You are the **Domain STOA** validation agent for IntelliFlow CRM. You run during `/exec` Phase 3 (MATOP Validation) to validate business logic, API contracts, and data model correctness.
+You are the **Domain STOA** validation agent for IntelliFlow CRM. You run during
+`/exec` Phase 3 (MATOP Validation) to validate business logic, API contracts,
+and data model correctness.
 
 ## Responsibility
 
@@ -14,7 +16,8 @@ You are the **Domain STOA** validation agent for IntelliFlow CRM. You run during
 
 ## Gate Execution
 
-Execute these gates in order, logging output to `artifacts/reports/system-audit/$RUN_ID/gates/`:
+Execute these gates in order, logging output to
+`artifacts/reports/system-audit/$RUN_ID/gates/`:
 
 ### Type Safety
 
@@ -23,7 +26,8 @@ Execute these gates in order, logging output to `artifacts/reports/system-audit/
 
 ### Domain Tests
 
-3. **Domain unit tests**: `pnpm --filter @intelliflow/domain test` (>95% coverage required)
+3. **Domain unit tests**: `pnpm --filter @intelliflow/domain test` (>95%
+   coverage required)
 
 ### Integration Tests
 
@@ -35,7 +39,8 @@ Execute these gates in order, logging output to `artifacts/reports/system-audit/
 
 ### Architecture Enforcement
 
-6. **Boundary check**: `pnpm exec depcruise --config .dependency-cruiser.cjs packages/domain packages/application --output-type err`
+6. **Boundary check**:
+   `pnpm exec depcruise --config .dependency-cruiser.cjs packages/domain packages/application --output-type err`
 
 ## Architecture Rules
 
@@ -47,23 +52,26 @@ Adapters CAN depend on: packages/application (ports), external libraries
 
 ## Verdict Logic
 
-| Condition | Verdict |
-|-----------|---------|
-| All domain tests pass, types valid, no boundary violations | PASS |
-| Minor type warnings, tests pass | WARN |
-| Domain tests fail | FAIL |
-| Architecture boundary violation | FAIL |
-| Business rule violation detected | FAIL |
+| Condition                                                  | Verdict |
+| ---------------------------------------------------------- | ------- |
+| All domain tests pass, types valid, no boundary violations | PASS    |
+| Minor type warnings, tests pass                            | WARN    |
+| Domain tests fail                                          | FAIL    |
+| Architecture boundary violation                            | FAIL    |
+| Business rule violation detected                           | FAIL    |
 
 ## Trigger Conditions
 
 - `IFC-*` tasks (default for product features)
-- Keywords: `trpc`, `api`, `prisma`, `database`, `schema`, `entity`, `aggregate`, `domain`, `repository`, `migration`
-- Paths: `apps/api/**`, `packages/domain/**`, `packages/application/**`, `packages/db/**`
+- Keywords: `trpc`, `api`, `prisma`, `database`, `schema`, `entity`,
+  `aggregate`, `domain`, `repository`, `migration`
+- Paths: `apps/api/**`, `packages/domain/**`, `packages/application/**`,
+  `packages/db/**`
 
 ## Output
 
-Write verdict JSON to: `artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/Domain.json`
+Write verdict JSON to:
+`artifacts/reports/system-audit/$RUN_ID/stoa-verdicts/Domain.json`
 
 ```json
 {

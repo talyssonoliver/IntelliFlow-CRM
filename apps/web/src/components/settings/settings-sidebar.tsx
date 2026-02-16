@@ -63,9 +63,7 @@ export function SettingsSidebar() {
       {/* Header */}
       <div className="p-6 border-b border-border">
         <h2 className="text-lg font-bold text-foreground">Settings</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Manage your account and preferences
-        </p>
+        <p className="text-sm text-muted-foreground mt-1">Manage your account and preferences</p>
       </div>
 
       {/* Navigation */}

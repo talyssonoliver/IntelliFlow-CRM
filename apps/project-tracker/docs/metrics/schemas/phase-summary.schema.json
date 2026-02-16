@@ -38,19 +38,10 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "NOT_STARTED",
-              "IN_PROGRESS",
-              "DONE",
-              "BLOCKED"
-            ]
+            "enum": ["NOT_STARTED", "IN_PROGRESS", "DONE", "BLOCKED"]
           }
         },
-        "required": [
-          "name",
-          "tasks",
-          "status"
-        ],
+        "required": ["name", "tasks", "status"],
         "additionalProperties": false
       }
     },
@@ -187,11 +178,6 @@
       }
     }
   },
-  "required": [
-    "phase",
-    "sprint",
-    "description",
-    "aggregated_metrics"
-  ],
+  "required": ["phase", "sprint", "description", "aggregated_metrics"],
   "additionalProperties": false
 }

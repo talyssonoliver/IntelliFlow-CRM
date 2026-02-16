@@ -87,7 +87,7 @@ describe('SentimentAnalysisChain', () => {
     it('should validate all source types', () => {
       const sources = ['email', 'chat', 'note', 'ticket', 'call_transcript', 'other'];
 
-      sources.forEach(source => {
+      sources.forEach((source) => {
         const input = { text: 'Test', source };
         const result = sentimentInputSchema.safeParse(input);
         expect(result.success).toBe(true);
@@ -203,7 +203,7 @@ describe('SentimentAnalysisChain', () => {
       const results = await chain.analyzeBatch(inputs);
 
       expect(results.length).toBe(inputs.length);
-      results.forEach(result => {
+      results.forEach((result) => {
         expect(SENTIMENT_LABELS).toContain(result.sentiment);
       });
     });
@@ -304,7 +304,7 @@ describe('SentimentAnalysisChain', () => {
       const result = await chain.analyze(input);
 
       expect(Array.isArray(result.keyPhrases)).toBe(true);
-      result.keyPhrases.forEach(phrase => {
+      result.keyPhrases.forEach((phrase) => {
         expect(phrase).toHaveProperty('phrase');
         expect(['positive', 'neutral', 'negative']).toContain(phrase.sentiment);
       });

@@ -27,4 +27,9 @@ export { humanDecisionSchema, workflowQuerySchema } from './types';
 export { WorkflowStateMachine, workflowEngine } from './state-machine';
 
 // DSAR Workflow
-export { DSARWorkflow, dsarRequestSchema, type DSARRequest, type DSARWorkflowState } from './dsar-workflow';
+export {
+  DSARWorkflow,
+  dsarRequestSchema,
+  type DSARRequest,
+  type DSARWorkflowState,
+} from './dsar-workflow';

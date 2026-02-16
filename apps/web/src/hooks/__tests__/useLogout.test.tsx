@@ -78,11 +78,7 @@ function createWrapper() {
   });
 
   return function Wrapper({ children }: { children: ReactNode }) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        {children}
-      </QueryClientProvider>
-    );
+    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
   };
 }
 
@@ -131,11 +127,7 @@ describe('useLogout', () => {
       const clearSpy = vi.spyOn(queryClient, 'clear');
 
       function Wrapper({ children }: { children: ReactNode }) {
-        return (
-          <QueryClientProvider client={queryClient}>
-            {children}
-          </QueryClientProvider>
-        );
+        return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
       }
 
       const { result } = renderHook(() => useLogout(), { wrapper: Wrapper });

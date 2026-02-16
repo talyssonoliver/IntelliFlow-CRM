@@ -37,14 +37,20 @@ interface VersionAuditLogProps {
 }
 
 // Action badge configuration - using design system compliant colors
-const ACTION_CONFIG: Record<ChainVersionAuditAction, {
-  color: string;
-  icon: string;
-}> = {
+const ACTION_CONFIG: Record<
+  ChainVersionAuditAction,
+  {
+    color: string;
+    icon: string;
+  }
+> = {
   CREATED: { color: 'bg-primary/10 text-primary', icon: '➕' },
   ACTIVATED: { color: 'bg-success/10 text-success', icon: '✅' },
   DEPRECATED: { color: 'bg-muted text-muted-foreground', icon: '⏳' },
-  ARCHIVED: { color: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400', icon: '📦' },
+  ARCHIVED: {
+    color: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
+    icon: '📦',
+  },
   ROLLED_BACK: { color: 'bg-accent/20 text-accent-foreground', icon: '↩️' },
 };
 
@@ -55,16 +61,12 @@ export function VersionAuditLog({ auditLog, isLoading }: VersionAuditLogProps) {
   const [actionFilter, setActionFilter] = useState<ChainVersionAuditAction | 'all'>('all');
 
   // Filter by action
-  const filteredLog = auditLog?.filter(
-    (entry) => actionFilter === 'all' || entry.action === actionFilter
-  ) ?? [];
+  const filteredLog =
+    auditLog?.filter((entry) => actionFilter === 'all' || entry.action === actionFilter) ?? [];
 
   // Pagination
   const totalPages = Math.ceil(filteredLog.length / PAGE_SIZE);
-  const paginatedLog = filteredLog.slice(
-    currentPage * PAGE_SIZE,
-    (currentPage + 1) * PAGE_SIZE
-  );
+  const paginatedLog = filteredLog.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
 
   if (isLoading) {
     return (
@@ -141,9 +143,7 @@ export function VersionAuditLog({ auditLog, isLoading }: VersionAuditLogProps) {
                     <TableCell className="font-mono text-sm">
                       {entry.versionId.slice(0, 8)}...
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {entry.performedBy}
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">{entry.performedBy}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {typeof entry.performedAt === 'string'
                         ? new Date(entry.performedAt).toLocaleString()

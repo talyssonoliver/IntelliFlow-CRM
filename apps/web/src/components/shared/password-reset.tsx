@@ -89,9 +89,7 @@ export function PasswordStrengthIndicator({
       {/* Progress bar header */}
       <div className="flex items-center justify-between mb-1">
         <span className="text-xs text-slate-400">Password strength</span>
-        <span className={cn('text-xs font-medium', config.textColor)}>
-          {config.label}
-        </span>
+        <span className={cn('text-xs font-medium', config.textColor)}>{config.label}</span>
       </div>
 
       {/* Progress bar */}
@@ -111,13 +109,9 @@ export function PasswordStrengthIndicator({
       </div>
 
       {/* Requirements feedback */}
-      {showRequirements &&
-        result.feedback.length > 0 &&
-        result.strength !== 'strong' && (
-          <p className="text-xs text-slate-400">
-            Add: {result.feedback.slice(0, 2).join(', ')}
-          </p>
-        )}
+      {showRequirements && result.feedback.length > 0 && result.strength !== 'strong' && (
+        <p className="text-xs text-slate-400">Add: {result.feedback.slice(0, 2).join(', ')}</p>
+      )}
     </div>
   );
 }
@@ -125,10 +119,7 @@ export function PasswordStrengthIndicator({
 /**
  * Token Expiry Warning
  */
-export function TokenExpiryWarning({
-  expiresAt,
-  className,
-}: TokenExpiryWarningProps) {
+export function TokenExpiryWarning({ expiresAt, className }: TokenExpiryWarningProps) {
   const [timeRemaining, setTimeRemaining] = useState(() => {
     const diff = expiresAt.getTime() - Date.now();
     return Math.max(0, Math.floor(diff / 1000));
@@ -158,10 +149,7 @@ export function TokenExpiryWarning({
       )}
       role="alert"
     >
-      <span
-        className="material-symbols-outlined text-yellow-400"
-        aria-hidden="true"
-      >
+      <span className="material-symbols-outlined text-yellow-400" aria-hidden="true">
         schedule
       </span>
       <span className="text-sm text-yellow-300">
@@ -204,10 +192,7 @@ export function ResetSuccess({ onContinue, className }: ResetSuccessProps) {
       {/* Success Icon */}
       <div className="flex justify-center">
         <div className="w-16 h-16 rounded-full bg-green-500/20 border-2 border-green-500 flex items-center justify-center">
-          <span
-            className="material-symbols-outlined text-3xl text-green-400"
-            aria-hidden="true"
-          >
+          <span className="material-symbols-outlined text-3xl text-green-400" aria-hidden="true">
             check_circle
           </span>
         </div>
@@ -215,19 +200,14 @@ export function ResetSuccess({ onContinue, className }: ResetSuccessProps) {
 
       {/* Success Message */}
       <div className="space-y-2">
-        <h2 className="text-xl font-semibold text-white">
-          Password Reset Successful
-        </h2>
+        <h2 className="text-xl font-semibold text-white">Password Reset Successful</h2>
         <p className="text-slate-300">
-          Your password has been updated. You can now sign in with your new
-          password.
+          Your password has been updated. You can now sign in with your new password.
         </p>
       </div>
 
       {/* Auto-redirect countdown */}
-      <p className="text-sm text-slate-400">
-        Redirecting to sign in in {countdown}...
-      </p>
+      <p className="text-sm text-slate-400">Redirecting to sign in in {countdown}...</p>
 
       {/* Manual continue button */}
       <Link
@@ -240,10 +220,7 @@ export function ResetSuccess({ onContinue, className }: ResetSuccessProps) {
         )}
       >
         Continue to Sign In
-        <span
-          className="material-symbols-outlined text-lg"
-          aria-hidden="true"
-        >
+        <span className="material-symbols-outlined text-lg" aria-hidden="true">
           arrow_forward
         </span>
       </Link>
@@ -263,8 +240,7 @@ export function TokenInvalid({ reason, className }: TokenInvalidProps) {
     },
     expired: {
       title: 'Link Expired',
-      description:
-        'This password reset link has expired. Please request a new one.',
+      description: 'This password reset link has expired. Please request a new one.',
       icon: 'schedule',
     },
     used: {
@@ -282,10 +258,7 @@ export function TokenInvalid({ reason, className }: TokenInvalidProps) {
       {/* Error Icon */}
       <div className="flex justify-center">
         <div className="w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500 flex items-center justify-center">
-          <span
-            className="material-symbols-outlined text-3xl text-red-400"
-            aria-hidden="true"
-          >
+          <span className="material-symbols-outlined text-3xl text-red-400" aria-hidden="true">
             {icon}
           </span>
         </div>
@@ -308,10 +281,7 @@ export function TokenInvalid({ reason, className }: TokenInvalidProps) {
         )}
       >
         Request New Reset Link
-        <span
-          className="material-symbols-outlined text-lg"
-          aria-hidden="true"
-        >
+        <span className="material-symbols-outlined text-lg" aria-hidden="true">
           mail
         </span>
       </Link>
@@ -431,9 +401,7 @@ export function PasswordResetForm({
         console.error('[PasswordReset] Error:', err);
         setErrors({
           general:
-            err instanceof Error
-              ? err.message
-              : 'Failed to reset password. Please try again.',
+            err instanceof Error ? err.message : 'Failed to reset password. Please try again.',
         });
         setIsSubmitting(false);
       }
@@ -526,10 +494,7 @@ export function PasswordResetForm({
         ) : (
           <>
             Reset Password
-            <span
-              className="material-symbols-outlined text-lg"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">
               lock_reset
             </span>
           </>
@@ -538,10 +503,7 @@ export function PasswordResetForm({
 
       {/* Security info */}
       <p className="text-xs text-slate-500 text-center">
-        <span
-          className="material-symbols-outlined text-sm align-middle mr-1"
-          aria-hidden="true"
-        >
+        <span className="material-symbols-outlined text-sm align-middle mr-1" aria-hidden="true">
           shield
         </span>
         Your password is encrypted and stored securely.

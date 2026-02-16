@@ -172,7 +172,9 @@ export function splitSprintPlan(): SplitResult {
     console.log('SPRINT PLAN SPLIT COMPLETE (Token-Based)');
     console.log('='.repeat(70));
     console.log(`Source: Sprint_plan.csv (${dataLines.length} rows)`);
-    console.log(`Token limit per file: ~${MAX_TOKENS_PER_FILE} tokens (~${MAX_CHARS_PER_FILE} chars)`);
+    console.log(
+      `Token limit per file: ~${MAX_TOKENS_PER_FILE} tokens (~${MAX_CHARS_PER_FILE} chars)`
+    );
     console.log('');
     console.log('Generated Parts:');
     for (const part of parts) {

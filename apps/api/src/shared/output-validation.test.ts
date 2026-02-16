@@ -81,9 +81,7 @@ function createValidQualificationOutput(
 /**
  * Create valid scoring response
  */
-function createValidScoringResponse(
-  overrides?: Partial<z.infer<typeof scoringResponseSchema>>
-) {
+function createValidScoringResponse(overrides?: Partial<z.infer<typeof scoringResponseSchema>>) {
   return {
     leadId: TEST_UUIDS.lead1,
     scoring: createValidLeadScore(),

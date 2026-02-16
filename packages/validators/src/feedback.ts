@@ -67,19 +67,20 @@ export type SubmitSimpleFeedbackInput = z.infer<typeof submitSimpleFeedbackSchem
 /**
  * Submit score correction with reason
  */
-export const submitScoreCorrectionSchema = z.object({
-  leadId: z.string().min(1),
-  aiScoreId: z.string().min(1).optional(),
-  originalScore: scoreValueSchema,
-  originalConfidence: confidenceValueSchema,
-  correctedScore: scoreValueSchema,
-  reason: z.string().min(10).max(1000).optional(),
-  correctionCategory: feedbackCategorySchema,
-  modelVersion: modelVersionSchema,
-}).refine(
-  (data) => data.correctedScore !== data.originalScore,
-  { message: 'Corrected score must be different from original score' }
-);
+export const submitScoreCorrectionSchema = z
+  .object({
+    leadId: z.string().min(1),
+    aiScoreId: z.string().min(1).optional(),
+    originalScore: scoreValueSchema,
+    originalConfidence: confidenceValueSchema,
+    correctedScore: scoreValueSchema,
+    reason: z.string().min(10).max(1000).optional(),
+    correctionCategory: feedbackCategorySchema,
+    modelVersion: modelVersionSchema,
+  })
+  .refine((data) => data.correctedScore !== data.originalScore, {
+    message: 'Corrected score must be different from original score',
+  });
 
 export type SubmitScoreCorrectionInput = z.infer<typeof submitScoreCorrectionSchema>;
 

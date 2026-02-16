@@ -132,7 +132,7 @@ describe('job-storage', () => {
 
       const all = getAllJobs();
       expect(all).toHaveLength(3);
-      expect(all.map(j => j.id).sort()).toEqual(['job-a', 'job-b', 'job-c']);
+      expect(all.map((j) => j.id).sort()).toEqual(['job-a', 'job-b', 'job-c']);
     });
   });
 
@@ -140,21 +140,27 @@ describe('job-storage', () => {
     it('should remove completed jobs older than threshold', () => {
       // Job completed 10 minutes ago
       const oldTime = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-      setJob(makeJob('old-job', {
-        status: 'completed',
-        completedAt: oldTime,
-      }));
+      setJob(
+        makeJob('old-job', {
+          status: 'completed',
+          completedAt: oldTime,
+        })
+      );
 
       // Job completed just now
-      setJob(makeJob('new-job', {
-        status: 'completed',
-        completedAt: new Date().toISOString(),
-      }));
+      setJob(
+        makeJob('new-job', {
+          status: 'completed',
+          completedAt: new Date().toISOString(),
+        })
+      );
 
       // Job still running (no completedAt)
-      setJob(makeJob('running-job', {
-        status: 'running',
-      }));
+      setJob(
+        makeJob('running-job', {
+          status: 'running',
+        })
+      );
 
       cleanupOldJobs(5); // 5 minutes
 
@@ -166,10 +172,12 @@ describe('job-storage', () => {
     it('should use default maxAgeMinutes of 5', () => {
       // Job completed 6 minutes ago
       const oldTime = new Date(Date.now() - 6 * 60 * 1000).toISOString();
-      setJob(makeJob('default-old', {
-        status: 'completed',
-        completedAt: oldTime,
-      }));
+      setJob(
+        makeJob('default-old', {
+          status: 'completed',
+          completedAt: oldTime,
+        })
+      );
 
       cleanupOldJobs();
 

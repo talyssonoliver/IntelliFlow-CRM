@@ -8,7 +8,9 @@ import { makeRequest } from '../http-client';
 
 export async function checkConnection(
   config: StripeConfig
-): Promise<Result<{ status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number }, DomainError>> {
+): Promise<
+  Result<{ status: 'healthy' | 'degraded' | 'unhealthy'; latencyMs: number }, DomainError>
+> {
   const start = Date.now();
 
   try {

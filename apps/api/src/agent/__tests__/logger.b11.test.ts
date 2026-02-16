@@ -60,13 +60,10 @@ describe('AgentActionLogger b11 - uncovered branches', () => {
       await logger.log(makeEntry());
       await logger.flush();
 
-      expect(mockMkdir).toHaveBeenCalledWith(
-        expect.any(String),
-        { recursive: true },
-      );
+      expect(mockMkdir).toHaveBeenCalledWith(expect.any(String), { recursive: true });
       expect(mockAppendFile).toHaveBeenCalledWith(
         expect.any(String),
-        expect.stringContaining('"userId":"user-1"'),
+        expect.stringContaining('"userId":"user-1"')
       );
 
       await logger.stop();
@@ -89,7 +86,7 @@ describe('AgentActionLogger b11 - uncovered branches', () => {
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         '[AGENT-LOGGER] Failed to write to log file:',
-        expect.any(Error),
+        expect.any(Error)
       );
 
       consoleErrorSpy.mockRestore();
@@ -130,14 +127,14 @@ describe('AgentActionLogger b11 - uncovered branches', () => {
         minLevel: 'INFO',
       });
 
-      await logger.log(makeEntry({
-        approvalRequired: true,
-        // No approvalStatus set => should show PENDING
-      }));
-
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('approval=PENDING'),
+      await logger.log(
+        makeEntry({
+          approvalRequired: true,
+          // No approvalStatus set => should show PENDING
+        })
       );
+
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('approval=PENDING'));
 
       consoleSpy.mockRestore();
       await logger.stop();
@@ -153,9 +150,11 @@ describe('AgentActionLogger b11 - uncovered branches', () => {
         minLevel: 'DEBUG',
       });
 
-      await logger.log(makeEntry({
-        input: { password: 'mysecret', name: 'test' },
-      }));
+      await logger.log(
+        makeEntry({
+          input: { password: 'mysecret', name: 'test' },
+        })
+      );
 
       const logs = await logger.getRecentLogs({ userId: 'user-1' });
       expect(logs[0].input.password).toBe('mysecret');
@@ -174,13 +173,15 @@ describe('AgentActionLogger b11 - uncovered branches', () => {
         minLevel: 'DEBUG',
       });
 
-      await logger.log(makeEntry({
-        input: {
-          tags: ['a', 'b', 'c'],
-          count: 42,
-          password: 'secret',
-        },
-      }));
+      await logger.log(
+        makeEntry({
+          input: {
+            tags: ['a', 'b', 'c'],
+            count: 42,
+            password: 'secret',
+          },
+        })
+      );
 
       const logs = await logger.getRecentLogs({ userId: 'user-1' });
       expect(logs[0].input.tags).toEqual(['a', 'b', 'c']);
@@ -201,9 +202,11 @@ describe('AgentActionLogger b11 - uncovered branches', () => {
         minLevel: 'DEBUG',
       });
 
-      await logger.log(makeEntry({
-        output: 'just a string',
-      }));
+      await logger.log(
+        makeEntry({
+          output: 'just a string',
+        })
+      );
 
       const logs = await logger.getRecentLogs({ userId: 'user-1' });
       expect(logs[0].output).toBe('just a string');
@@ -236,7 +239,7 @@ describe('AgentActionLogger b11 - uncovered branches', () => {
       // The error should be caught and logged
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         '[AGENT-LOGGER] Failed to write to log file:',
-        expect.any(Error),
+        expect.any(Error)
       );
 
       consoleErrorSpy.mockRestore();

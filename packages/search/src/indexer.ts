@@ -95,8 +95,14 @@ export interface IDocumentIndexer {
   indexNote(noteId: string): Promise<IndexResult>;
   indexBatch(documentIds: string[]): Promise<BatchIndexResult>;
   indexNotesBatch(noteIds: string[]): Promise<BatchIndexResult>;
-  reindexAll(tenantId?: string, onProgress?: (progress: ReindexProgress) => void): Promise<BatchIndexResult>;
-  reindexAllNotes(tenantId?: string, onProgress?: (progress: ReindexProgress) => void): Promise<BatchIndexResult>;
+  reindexAll(
+    tenantId?: string,
+    onProgress?: (progress: ReindexProgress) => void
+  ): Promise<BatchIndexResult>;
+  reindexAllNotes(
+    tenantId?: string,
+    onProgress?: (progress: ReindexProgress) => void
+  ): Promise<BatchIndexResult>;
   getUnindexedDocuments(tenantId?: string, limit?: number): Promise<string[]>;
   getUnindexedNotes(tenantId?: string, limit?: number): Promise<string[]>;
   getIndexStats(tenantId?: string): Promise<{

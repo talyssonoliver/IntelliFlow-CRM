@@ -227,10 +227,7 @@ function getScopeTimeMultiplier(scope: ReportScope): { min: number; max: number 
   }
 }
 
-function calculateTimeEstimate(
-  selectedReports: string[],
-  selectedScope: ReportScope
-): string {
+function calculateTimeEstimate(selectedReports: string[], selectedScope: ReportScope): string {
   if (selectedReports.length === 1) {
     return reportConfigs[selectedReports[0]]?.estimatedTime[selectedScope] || 'Unknown';
   }
@@ -251,7 +248,11 @@ function getScopeDescription(scope: ReportScope): string {
   }
 }
 
-function getSourceDisplay(source: QualityReport['source']): { icon: string; label: string; className?: string } {
+function getSourceDisplay(source: QualityReport['source']): {
+  icon: string;
+  label: string;
+  className?: string;
+} {
   switch (source) {
     case 'ci':
       return { icon: 'build', label: 'CI Generated' };
@@ -272,7 +273,9 @@ function GenerationProgressBanner({ job, onDismiss }: Readonly<GenerationProgres
   return (
     <Card className={`mb-6 p-4 ${getJobBorderClass(job.status)}`}>
       <div className="flex items-start gap-4">
-        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getJobBgClass(job.status)}`}>
+        <div
+          className={`w-10 h-10 rounded-lg flex items-center justify-center ${getJobBgClass(job.status)}`}
+        >
           <span className={`material-symbols-outlined ${getJobTextClass(job.status)}`}>
             {getJobIcon(job.status)}
           </span>
@@ -280,9 +283,7 @@ function GenerationProgressBanner({ job, onDismiss }: Readonly<GenerationProgres
 
         <div className="flex-1">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-foreground">
-              {getJobTitle(job.status)}
-            </h3>
+            <h3 className="font-semibold text-foreground">{getJobTitle(job.status)}</h3>
             <button
               type="button"
               onClick={onDismiss}
@@ -311,13 +312,17 @@ function GenerationProgressBanner({ job, onDismiss }: Readonly<GenerationProgres
             <div className="space-y-2 mt-2">
               {job.results.map((result) => (
                 <div key={result.report} className="flex items-center gap-2 text-sm">
-                  <span className={`material-symbols-outlined text-sm ${result.success ? 'text-emerald-500' : 'text-red-500'}`}>
+                  <span
+                    className={`material-symbols-outlined text-sm ${result.success ? 'text-emerald-500' : 'text-red-500'}`}
+                  >
                     {result.success ? 'check' : 'close'}
                   </span>
                   <span className="capitalize font-medium">{result.report}</span>
                   <span className="text-muted-foreground">- {result.message}</span>
                   {result.duration > 0 && (
-                    <span className="text-xs text-muted-foreground">({(result.duration / 1000).toFixed(1)}s)</span>
+                    <span className="text-xs text-muted-foreground">
+                      ({(result.duration / 1000).toFixed(1)}s)
+                    </span>
                   )}
                 </div>
               ))}
@@ -348,15 +353,11 @@ function ScopeSelectorButton({ scope, isSelected, onClick }: Readonly<ScopeSelec
       type="button"
       onClick={onClick}
       className={`p-3 rounded-lg border text-left transition-colors ${
-        isSelected
-          ? 'border-primary bg-primary/5'
-          : 'border-border hover:border-primary/50'
+        isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
       }`}
     >
       <p className="font-medium text-foreground capitalize">{scope}</p>
-      <p className="text-xs text-muted-foreground mt-1">
-        {getScopeDescription(scope)}
-      </p>
+      <p className="text-xs text-muted-foreground mt-1">{getScopeDescription(scope)}</p>
     </button>
   );
 }
@@ -382,9 +383,7 @@ function ReportSelectorCard({
   return (
     <label
       className={`flex items-start gap-3 p-4 rounded-lg border cursor-pointer transition-colors ${
-        isSelected
-          ? 'border-primary bg-primary/5'
-          : 'border-border hover:border-primary/50'
+        isSelected ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
       }`}
     >
       <input
@@ -394,10 +393,10 @@ function ReportSelectorCard({
         className="w-4 h-4 rounded border-border mt-1"
         aria-label={`Select ${reportKey} report`}
       />
-      <div className={`w-10 h-10 ${config.color} rounded-lg flex items-center justify-center flex-shrink-0`}>
-        <span className="material-symbols-outlined text-white">
-          {config.icon}
-        </span>
+      <div
+        className={`w-10 h-10 ${config.color} rounded-lg flex items-center justify-center flex-shrink-0`}
+      >
+        <span className="material-symbols-outlined text-white">{config.icon}</span>
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
@@ -469,7 +468,7 @@ export default function QualityReportsPage() {
 
           if (updatedJob.status === 'completed' || updatedJob.status === 'failed') {
             // Mark reports as cached
-            for (const result of updatedJob.results.filter(r => r.success)) {
+            for (const result of updatedJob.results.filter((r) => r.success)) {
               setCached(result.report);
             }
             fetchReports();
@@ -487,7 +486,7 @@ export default function QualityReportsPage() {
     if (selectedReports.length === 0) return;
 
     // Check cache and warn
-    const cachedReports = selectedReports.filter(r => isCached(r));
+    const cachedReports = selectedReports.filter((r) => isCached(r));
     if (cachedReports.length > 0 && showCacheWarning.length === 0) {
       setShowCacheWarning(cachedReports);
       return;
@@ -538,7 +537,7 @@ export default function QualityReportsPage() {
       storeGeneration(completedJob);
 
       // Mark successful reports as cached
-      for (const result of completedJob.results.filter(r => r.success)) {
+      for (const result of completedJob.results.filter((r) => r.success)) {
         setCached(result.report);
       }
 
@@ -550,12 +549,14 @@ export default function QualityReportsPage() {
         ...newJob,
         status: 'failed',
         progress: 0,
-        results: [{
-          report: 'error',
-          success: false,
-          message: error instanceof Error ? error.message : 'Generation failed',
-          duration: 0,
-        }],
+        results: [
+          {
+            report: 'error',
+            success: false,
+            message: error instanceof Error ? error.message : 'Generation failed',
+            duration: 0,
+          },
+        ],
         completedAt: new Date().toISOString(),
       };
 
@@ -666,8 +667,9 @@ export default function QualityReportsPage() {
                       Reports already generated today
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      The following reports were already generated today: <strong>{showCacheWarning.join(', ')}</strong>.
-                      Running again will overwrite the cached results.
+                      The following reports were already generated today:{' '}
+                      <strong>{showCacheWarning.join(', ')}</strong>. Running again will overwrite
+                      the cached results.
                     </p>
                     <div className="flex gap-2 mt-3">
                       <Button size="sm" variant="outline" onClick={() => setShowCacheWarning([])}>
@@ -722,7 +724,10 @@ export default function QualityReportsPage() {
             {/* Lighthouse URL (conditional) */}
             {selectedReports.includes('lighthouse') && (
               <div className="mb-6">
-                <label htmlFor="lighthouse-url" className="block text-sm font-medium text-foreground mb-2">
+                <label
+                  htmlFor="lighthouse-url"
+                  className="block text-sm font-medium text-foreground mb-2"
+                >
                   Lighthouse Target URL
                 </label>
                 <input
@@ -855,7 +860,9 @@ export default function QualityReportsPage() {
 
           return (
             <Link key={report.id} href={`/governance/quality-reports/${report.id}`}>
-              <Card className={`p-6 h-full hover:border-primary hover:shadow-md transition-all cursor-pointer ${report.isPlaceholder ? 'border-amber-500/50' : ''}`}>
+              <Card
+                className={`p-6 h-full hover:border-primary hover:shadow-md transition-all cursor-pointer ${report.isPlaceholder ? 'border-amber-500/50' : ''}`}
+              >
                 {/* Placeholder Warning Banner */}
                 {report.isPlaceholder && (
                   <div className="flex items-center gap-2 mb-4 p-2 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-600 dark:text-amber-400 text-xs">
@@ -869,7 +876,9 @@ export default function QualityReportsPage() {
                     <div
                       className={`w-12 h-12 ${report.isPlaceholder ? 'bg-muted' : config.color} rounded-lg flex items-center justify-center`}
                     >
-                      <span className={`material-symbols-outlined text-2xl ${report.isPlaceholder ? 'text-muted-foreground' : 'text-white'}`}>
+                      <span
+                        className={`material-symbols-outlined text-2xl ${report.isPlaceholder ? 'text-muted-foreground' : 'text-white'}`}
+                      >
                         {config.icon}
                       </span>
                     </div>
@@ -877,7 +886,10 @@ export default function QualityReportsPage() {
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold text-foreground">{report.name}</h3>
                         {hasCached && !report.isPlaceholder && (
-                          <span className="material-symbols-outlined text-xs text-emerald-500" title="Cached today">
+                          <span
+                            className="material-symbols-outlined text-xs text-emerald-500"
+                            title="Cached today"
+                          >
                             cached
                           </span>
                         )}
@@ -923,7 +935,9 @@ export default function QualityReportsPage() {
 
                 {report.isPlaceholder && (
                   <div className="mb-4 text-center py-4">
-                    <span className="text-muted-foreground text-sm">Click &quot;Generate Reports&quot; to create real data</span>
+                    <span className="text-muted-foreground text-sm">
+                      Click &quot;Generate Reports&quot; to create real data
+                    </span>
                   </div>
                 )}
 
@@ -933,7 +947,9 @@ export default function QualityReportsPage() {
                       const source = getSourceDisplay(report.source);
                       return (
                         <>
-                          <span className={`material-symbols-outlined text-sm ${source.className || ''}`}>
+                          <span
+                            className={`material-symbols-outlined text-sm ${source.className || ''}`}
+                          >
                             {source.icon}
                           </span>
                           <span className={source.className}>{source.label}</span>

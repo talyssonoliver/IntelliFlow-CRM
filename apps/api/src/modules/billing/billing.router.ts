@@ -14,7 +14,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure } from '../../trpc';
+import { createTRPCRouter, protectedProcedure, publicProcedure } from '../../trpc';
 import {
   listInvoicesInputSchema,
   updatePaymentMethodInputSchema,
@@ -25,6 +25,7 @@ import {
 } from '@intelliflow/validators';
 import { callStripeAPI } from '../../shared/external-service-wrapper';
 import { mapErrorToTRPCError } from '../../shared/error-mapper';
+import { PLAN_TIERS, type PlanTier } from '@intelliflow/domain';
 
 // ============================================
 // Local Type Definitions (from StripeAdapter)
@@ -39,8 +40,15 @@ export interface StripeConfig {
 export interface StripeSubscription {
   id: string;
   customerId: string;
-  status: 'incomplete' | 'incomplete_expired' | 'trialing' | 'active' |
-          'past_due' | 'canceled' | 'unpaid' | 'paused';
+  status:
+    | 'incomplete'
+    | 'incomplete_expired'
+    | 'trialing'
+    | 'active'
+    | 'past_due'
+    | 'canceled'
+    | 'unpaid'
+    | 'paused';
   priceId: string;
   quantity: number;
   currency: string;
@@ -115,15 +123,28 @@ interface StripeResult<T> {
 
 // Mock StripeAdapter interface for type safety
 interface IStripeAdapter {
-  createCustomer(params: { email?: string; name?: string; metadata?: Record<string, string> }): Promise<StripeResult<StripeCustomer>>;
+  createCustomer(params: {
+    email?: string;
+    name?: string;
+    metadata?: Record<string, string>;
+  }): Promise<StripeResult<StripeCustomer>>;
   getCustomer(customerId: string): Promise<StripeResult<StripeCustomer | null>>;
   listSubscriptions(customerId: string): Promise<StripeResult<StripeSubscription[]>>;
   listInvoices(customerId: string): Promise<StripeResult<StripeInvoice[]>>;
   listPaymentMethods(customerId: string): Promise<StripeResult<StripePaymentMethod[]>>;
-  attachPaymentMethod(paymentMethodId: string, customerId: string): Promise<StripeResult<StripePaymentMethod>>;
+  attachPaymentMethod(
+    paymentMethodId: string,
+    customerId: string
+  ): Promise<StripeResult<StripePaymentMethod>>;
   detachPaymentMethod(paymentMethodId: string): Promise<StripeResult<StripePaymentMethod>>;
-  updateSubscription(subscriptionId: string, params: { priceId?: string; quantity?: number }): Promise<StripeResult<StripeSubscription>>;
-  cancelSubscription(subscriptionId: string, atPeriodEnd?: boolean): Promise<StripeResult<StripeSubscription>>;
+  updateSubscription(
+    subscriptionId: string,
+    params: { priceId?: string; quantity?: number }
+  ): Promise<StripeResult<StripeSubscription>>;
+  cancelSubscription(
+    subscriptionId: string,
+    atPeriodEnd?: boolean
+  ): Promise<StripeResult<StripeSubscription>>;
 }
 
 // ============================================
@@ -135,8 +156,7 @@ let StripeAdapterClass: new (config: StripeConfig) => IStripeAdapter;
 
 async function loadStripeAdapter(): Promise<void> {
   if (!StripeAdapterClass) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const adapters = await import('@intelliflow/adapters') as any;
+    const adapters = (await import('@intelliflow/adapters')) as any;
     StripeAdapterClass = adapters.StripeAdapter;
   }
 }
@@ -187,9 +207,7 @@ export const billingRouter = createTRPCRouter({
       }
 
       // Wrap Stripe API call with ExternalServiceError handling
-      const result = await callStripeAPI(() =>
-        stripe.listSubscriptions(user.stripeCustomerId!)
-      );
+      const result = await callStripeAPI(() => stripe.listSubscriptions(user.stripeCustomerId!));
 
       if (result.isFailure) {
         throw mapErrorToTRPCError(result.error);
@@ -214,44 +232,42 @@ export const billingRouter = createTRPCRouter({
   /**
    * List invoices with pagination
    */
-  listInvoices: protectedProcedure
-    .input(listInvoicesInputSchema)
-    .query(async ({ ctx, input }) => {
-      const stripe = await getStripeAdapter();
-      const user = ctx.user;
+  listInvoices: protectedProcedure.input(listInvoicesInputSchema).query(async ({ ctx, input }) => {
+    const stripe = await getStripeAdapter();
+    const user = ctx.user;
 
-      if (!user?.stripeCustomerId) {
-        return {
-          invoices: [] as StripeInvoice[],
-          total: 0,
-          page: input.page,
-          limit: input.limit,
-          hasMore: false,
-        };
-      }
-
-      const result = await stripe.listInvoices(user.stripeCustomerId);
-
-      if (result.isFailure) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: result.error.message,
-        });
-      }
-
-      const allInvoices = result.value;
-      const { page, limit } = input;
-      const start = (page - 1) * limit;
-      const paginatedInvoices = allInvoices.slice(start, start + limit);
-
+    if (!user?.stripeCustomerId) {
       return {
-        invoices: paginatedInvoices,
-        total: allInvoices.length,
-        page,
-        limit,
-        hasMore: start + paginatedInvoices.length < allInvoices.length,
+        invoices: [] as StripeInvoice[],
+        total: 0,
+        page: input.page,
+        limit: input.limit,
+        hasMore: false,
       };
-    }),
+    }
+
+    const result = await stripe.listInvoices(user.stripeCustomerId);
+
+    if (result.isFailure) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: result.error.message,
+      });
+    }
+
+    const allInvoices = result.value;
+    const { page, limit } = input;
+    const start = (page - 1) * limit;
+    const paginatedInvoices = allInvoices.slice(start, start + limit);
+
+    return {
+      invoices: paginatedInvoices,
+      total: allInvoices.length,
+      page,
+      limit,
+      hasMore: start + paginatedInvoices.length < allInvoices.length,
+    };
+  }),
 
   /**
    * Get payment methods for the user
@@ -303,10 +319,7 @@ export const billingRouter = createTRPCRouter({
       }
 
       // Attach payment method to customer
-      const result = await stripe.attachPaymentMethod(
-        input.paymentMethodId,
-        user.stripeCustomerId
-      );
+      const result = await stripe.attachPaymentMethod(input.paymentMethodId, user.stripeCustomerId);
 
       if (result.isFailure) {
         throw new TRPCError({
@@ -398,6 +411,21 @@ export const billingRouter = createTRPCRouter({
         });
       }
 
+      // IFC-211: Sync modules after plan change
+      if (user.tenantId && input.priceId) {
+        try {
+          const moduleAccess = ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
+          if (moduleAccess) {
+            // Map Stripe priceId to PlanTier (lookup from workspace or metadata)
+            const plan = await moduleAccess.getTenantPlan(user.tenantId);
+            await moduleAccess.syncModulesToPlan(user.tenantId, plan);
+          }
+        } catch (err) {
+          // Module sync failure should not block subscription update
+          console.error('[Billing] Failed to sync modules after plan change:', err);
+        }
+      }
+
       return result.value;
     }),
 
@@ -438,10 +466,7 @@ export const billingRouter = createTRPCRouter({
         });
       }
 
-      const result = await stripe.cancelSubscription(
-        activeSubscription.id,
-        input.atPeriodEnd
-      );
+      const result = await stripe.cancelSubscription(activeSubscription.id, input.atPeriodEnd);
 
       if (result.isFailure) {
         throw new TRPCError({
@@ -676,11 +701,13 @@ export const billingRouter = createTRPCRouter({
    * In production, this would create a Stripe checkout session.
    */
   createCheckoutSubscription: protectedProcedure
-    .input(z.object({
-      planId: z.string(),
-      billingCycle: z.enum(['monthly', 'annual']),
-      paymentMethodId: z.string(),
-    }))
+    .input(
+      z.object({
+        planId: z.string(),
+        billingCycle: z.enum(['monthly', 'annual']),
+        paymentMethodId: z.string(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const stripe = await getStripeAdapter();
       const user = ctx.user;
@@ -721,10 +748,7 @@ export const billingRouter = createTRPCRouter({
       }
 
       // Attach payment method to customer
-      const attachResult = await stripe.attachPaymentMethod(
-        input.paymentMethodId,
-        customerId
-      );
+      const attachResult = await stripe.attachPaymentMethod(input.paymentMethodId, customerId);
 
       if (attachResult.isFailure) {
         throw new TRPCError({
@@ -743,5 +767,75 @@ export const billingRouter = createTRPCRouter({
         planId: input.planId,
         billingCycle: input.billingCycle,
       };
+    }),
+
+  /**
+   * Handle Stripe webhook for subscription changes
+   * IFC-211: Syncs tenant modules when plan changes via Stripe
+   *
+   * In production, this would verify the Stripe signature.
+   * Called by Stripe webhook endpoint.
+   */
+  handleSubscriptionWebhook: publicProcedure
+    .input(
+      z.object({
+        type: z.string(),
+        data: z.object({
+          object: z.object({
+            id: z.string(),
+            customer: z.string(),
+            metadata: z.record(z.string()).optional(),
+            items: z
+              .object({
+                data: z.array(
+                  z.object({
+                    price: z.object({
+                      metadata: z.record(z.string()).optional(),
+                    }),
+                  })
+                ),
+              })
+              .optional(),
+          }),
+        }),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      if (input.type !== 'customer.subscription.updated' && input.type !== 'customer.subscription.created') {
+        return { handled: false };
+      }
+
+      const subscription = input.data.object;
+      const tenantId = subscription.metadata?.tenantId;
+      if (!tenantId) {
+        console.warn('[Billing Webhook] No tenantId in subscription metadata');
+        return { handled: false };
+      }
+
+      // Extract plan tier from subscription price metadata
+      const priceMetadata = subscription.items?.data?.[0]?.price?.metadata;
+      const planTierRaw = priceMetadata?.planTier?.toUpperCase();
+      const planTier = PLAN_TIERS.includes(planTierRaw as PlanTier)
+        ? (planTierRaw as PlanTier)
+        : undefined;
+
+      if (!planTier) {
+        console.warn('[Billing Webhook] No valid planTier in price metadata');
+        return { handled: false };
+      }
+
+      // Sync modules for the tenant
+      try {
+        const moduleAccess = ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
+        if (moduleAccess) {
+          const enabledModules = await moduleAccess.syncModulesToPlan(tenantId, planTier);
+          console.log(`[Billing Webhook] Synced modules for tenant ${tenantId} to plan ${planTier}:`, enabledModules);
+          return { handled: true, enabledModules };
+        }
+      } catch (err) {
+        console.error('[Billing Webhook] Failed to sync modules:', err);
+      }
+
+      return { handled: false };
     }),
 });

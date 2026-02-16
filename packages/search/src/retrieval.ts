@@ -18,7 +18,9 @@ import { z } from 'zod';
 export const SearchConfigSchema = z.object({
   query: z.string().min(1),
   sources: z
-    .array(z.enum(['leads', 'contacts', 'accounts', 'opportunities', 'tickets', 'documents', 'notes']))
+    .array(
+      z.enum(['leads', 'contacts', 'accounts', 'opportunities', 'tickets', 'documents', 'notes'])
+    )
     .default(['leads', 'contacts']),
   limit: z.number().min(1).max(100).default(20),
   offset: z.number().min(0).default(0),

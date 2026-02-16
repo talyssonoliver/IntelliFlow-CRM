@@ -1,10 +1,13 @@
 # Error Handling Documentation
 
-This document describes the centralized error handling system for the IntelliFlow CRM API.
+This document describes the centralized error handling system for the
+IntelliFlow CRM API.
 
 ## Overview
 
-All domain and application layer errors are mapped to tRPC errors through a centralized error mapper. This ensures consistent error responses across all API endpoints.
+All domain and application layer errors are mapped to tRPC errors through a
+centralized error mapper. This ensures consistent error responses across all API
+endpoints.
 
 ## Centralized Error Mapper
 
@@ -14,17 +17,20 @@ The error mapper provides three main functions:
 
 1. `mapErrorToTRPCError(error)` - Maps any error to a TRPCError
 2. `isDomainError(error)` - Type guard for domain errors
-3. `getErrorCodeMapping(errorCode)` - Returns the TRPC code for a given error code
+3. `getErrorCodeMapping(errorCode)` - Returns the TRPC code for a given error
+   code
 
 ## Wired Error Classes
 
-All previously unused error classes from `@intelliflow/application` are now properly wired:
+All previously unused error classes from `@intelliflow/application` are now
+properly wired:
 
 ### 1. DuplicateWebhookError
 
 - **Source**: `packages/application/src/ports/external/WebhookServicePort.ts`
 - **Maps to**: `CONFLICT` (409)
-- **Usage**: Thrown when a webhook event with the same ID is received multiple times
+- **Usage**: Thrown when a webhook event with the same ID is received multiple
+  times
 - **Handled in**: `apps/api/src/modules/webhooks/webhooks.router.ts`
 - **Example**:
   ```typescript
@@ -36,7 +42,8 @@ All previously unused error classes from `@intelliflow/application` are now prop
 
 ### 2. NotificationDeliveryError
 
-- **Source**: `packages/application/src/ports/external/NotificationServicePort.ts`
+- **Source**:
+  `packages/application/src/ports/external/NotificationServicePort.ts`
 - **Maps to**: `INTERNAL_SERVER_ERROR` (500)
 - **Usage**: Thrown when email, SMS, or push notification delivery fails
 - **Handled in**: `apps/api/src/modules/notifications/notifications.router.ts`
@@ -52,9 +59,11 @@ All previously unused error classes from `@intelliflow/application` are now prop
 
 ### 3. NotificationSchedulingError
 
-- **Source**: `packages/application/src/ports/external/NotificationServicePort.ts`
+- **Source**:
+  `packages/application/src/ports/external/NotificationServicePort.ts`
 - **Maps to**: `BAD_REQUEST` (400)
-- **Usage**: Thrown when notification scheduling fails (invalid date, past date, etc.)
+- **Usage**: Thrown when notification scheduling fails (invalid date, past date,
+  etc.)
 - **Handled in**: `apps/api/src/modules/notifications/notifications.router.ts`
 - **Example**:
   ```typescript
@@ -74,7 +83,8 @@ All previously unused error classes from `@intelliflow/application` are now prop
 
 - **Source**: `packages/application/src/errors/ApplicationErrors.ts`
 - **Maps to**: `SERVICE_UNAVAILABLE` (503)
-- **Usage**: Thrown when external API calls fail (Stripe, OpenAI, SendGrid, etc.)
+- **Usage**: Thrown when external API calls fail (Stripe, OpenAI, SendGrid,
+  etc.)
 - **Handled in**:
   - `apps/api/src/shared/external-service-wrapper.ts` (utility functions)
   - `apps/api/src/modules/billing/billing.router.ts` (Stripe calls)
@@ -108,19 +118,19 @@ All previously unused error classes from `@intelliflow/application` are now prop
 
 ## Error Code Mappings
 
-| Domain Error Code | TRPC Code | HTTP Status | Use Case |
-|------------------|-----------|-------------|----------|
-| `DUPLICATE_WEBHOOK` | `CONFLICT` | 409 | Duplicate webhook event |
-| `WEBHOOK_VERIFICATION_ERROR` | `UNAUTHORIZED` | 401 | Invalid webhook signature |
-| `WEBHOOK_PROCESSING_ERROR` | `INTERNAL_SERVER_ERROR` | 500 | Webhook handler failed |
-| `WEBHOOK_SOURCE_NOT_FOUND` | `NOT_FOUND` | 404 | Unknown webhook source |
-| `NOTIFICATION_DELIVERY_ERROR` | `INTERNAL_SERVER_ERROR` | 500 | Email/SMS delivery failed |
-| `NOTIFICATION_SCHEDULING_ERROR` | `BAD_REQUEST` | 400 | Invalid schedule date |
-| `EXTERNAL_SERVICE_ERROR` | `SERVICE_UNAVAILABLE` | 503 | External API failure |
-| `AUTHORIZATION_ERROR` | `FORBIDDEN` | 403 | Insufficient permissions |
-| `PERSISTENCE_ERROR` | `INTERNAL_SERVER_ERROR` | 500 | Database error |
-| `VALIDATION_ERROR` | `BAD_REQUEST` | 400 | Invalid input |
-| `NOT_FOUND_ERROR` | `NOT_FOUND` | 404 | Resource not found |
+| Domain Error Code               | TRPC Code               | HTTP Status | Use Case                  |
+| ------------------------------- | ----------------------- | ----------- | ------------------------- |
+| `DUPLICATE_WEBHOOK`             | `CONFLICT`              | 409         | Duplicate webhook event   |
+| `WEBHOOK_VERIFICATION_ERROR`    | `UNAUTHORIZED`          | 401         | Invalid webhook signature |
+| `WEBHOOK_PROCESSING_ERROR`      | `INTERNAL_SERVER_ERROR` | 500         | Webhook handler failed    |
+| `WEBHOOK_SOURCE_NOT_FOUND`      | `NOT_FOUND`             | 404         | Unknown webhook source    |
+| `NOTIFICATION_DELIVERY_ERROR`   | `INTERNAL_SERVER_ERROR` | 500         | Email/SMS delivery failed |
+| `NOTIFICATION_SCHEDULING_ERROR` | `BAD_REQUEST`           | 400         | Invalid schedule date     |
+| `EXTERNAL_SERVICE_ERROR`        | `SERVICE_UNAVAILABLE`   | 503         | External API failure      |
+| `AUTHORIZATION_ERROR`           | `FORBIDDEN`             | 403         | Insufficient permissions  |
+| `PERSISTENCE_ERROR`             | `INTERNAL_SERVER_ERROR` | 500         | Database error            |
+| `VALIDATION_ERROR`              | `BAD_REQUEST`           | 400         | Invalid input             |
+| `NOT_FOUND_ERROR`               | `NOT_FOUND`             | 404         | Resource not found        |
 
 ## Usage Patterns
 
@@ -130,24 +140,23 @@ All previously unused error classes from `@intelliflow/application` are now prop
 import { mapErrorToTRPCError } from '../../shared/error-mapper';
 
 export const exampleRouter = createTRPCRouter({
-  doSomething: protectedProcedure
-    .mutation(async ({ ctx, input }) => {
-      try {
-        const result = await service.performAction(input);
+  doSomething: protectedProcedure.mutation(async ({ ctx, input }) => {
+    try {
+      const result = await service.performAction(input);
 
-        if (result.isFailure) {
-          // Maps domain error to appropriate TRPC error
-          throw mapErrorToTRPCError(result.error);
-        }
-
-        return result.value;
-      } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-        throw mapErrorToTRPCError(error);
+      if (result.isFailure) {
+        // Maps domain error to appropriate TRPC error
+        throw mapErrorToTRPCError(result.error);
       }
-    }),
+
+      return result.value;
+    } catch (error) {
+      if (error instanceof TRPCError) {
+        throw error;
+      }
+      throw mapErrorToTRPCError(error);
+    }
+  }),
 });
 ```
 
@@ -192,15 +201,20 @@ const completion = await callOpenAI(() =>
 
 1. **Created**:
    - `apps/api/src/shared/error-mapper.ts` - Centralized error mapping
-   - `apps/api/src/shared/external-service-wrapper.ts` - External service utilities
-   - `apps/api/src/modules/webhooks/webhooks.router.ts` - Webhook management router
+   - `apps/api/src/shared/external-service-wrapper.ts` - External service
+     utilities
+   - `apps/api/src/modules/webhooks/webhooks.router.ts` - Webhook management
+     router
    - `apps/api/src/shared/__tests__/error-mapper.test.ts` - Comprehensive tests
 
 2. **Modified**:
    - `apps/api/src/middleware/auth.ts` - Added AuthorizationError handling
-   - `apps/api/src/modules/notifications/notifications.router.ts` - Added notification service endpoints
-   - `apps/api/src/modules/billing/billing.router.ts` - Added ExternalServiceError handling
-   - `apps/api/src/modules/ai-review/ai-review.router.ts` - Delegated to centralized mapper
+   - `apps/api/src/modules/notifications/notifications.router.ts` - Added
+     notification service endpoints
+   - `apps/api/src/modules/billing/billing.router.ts` - Added
+     ExternalServiceError handling
+   - `apps/api/src/modules/ai-review/ai-review.router.ts` - Delegated to
+     centralized mapper
    - `apps/api/src/router.ts` - Registered webhooks router
 
 ## Testing
@@ -213,6 +227,7 @@ pnpm --filter @intelliflow/api test src/shared/__tests__/error-mapper.test.ts
 ```
 
 **Test Coverage**: 23 tests covering:
+
 - Webhook error mappings (4 tests)
 - Notification error mappings (2 tests)
 - Application error mappings (5 tests)

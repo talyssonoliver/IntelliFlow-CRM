@@ -1,25 +1,27 @@
 # AI/Intelligence Domain - Dependency Chain Analysis
 
-**Generated**: 2026-02-03
-**Updated**: 2026-02-08
-**Purpose**: Ensure complete AI feature chains from chains to UI with no orphaned tasks
+**Generated**: 2026-02-03 **Updated**: 2026-02-08 **Purpose**: Ensure complete
+AI feature chains from chains to UI with no orphaned tasks
 
 ---
 
 ## Executive Summary
 
-The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Risk, RAG/Search, Auto-Response, AI Output Review, and AI Monitoring features. All chains now have UI tasks assigned via the unified **AI & Agents** sidebar at `/agent-approvals/*`.
+The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn
+Risk, RAG/Search, Auto-Response, AI Output Review, and AI Monitoring features.
+All chains now have UI tasks assigned via the unified **AI & Agents** sidebar at
+`/agent-approvals/*`.
 
-| Feature | AI Chain | Router | Frontend UI | Route | Status |
-|---------|----------|--------|-------------|-------|--------|
-| Lead Scoring | IFC-005 | IFC-013 | IFC-023 + PG-148 | `/agent-approvals/lead-scoring` | COMPLETE (dashboard pending) |
-| Sentiment Analysis | IFC-039 | Partial | PG-142 | `/agent-approvals/sentiment` | ✅ COMPLETE |
-| Churn Risk | IFC-095 | Partial | PG-143 | `/agent-approvals/churn-risk` | UI PLANNED (Sprint 7) |
-| RAG/Search | IFC-039 | IFC-156 | PG-144 | `/agent-approvals/ai-search` | UI PLANNED (Sprint 7) |
-| Auto-Response | IFC-029 | IFC-029 | IFC-149 | `/agent-approvals` | COMPLETE |
-| AI Output Review | IFC-128 | IFC-180 ✅ | IFC-181 ✅ + PG-150 | `/agent-approvals/ai-review` | COMPLETE (history pending) |
-| AI Monitoring | IFC-117 | IFC-197 ✅ | PG-146/151/152/153 | `/agent-approvals/drift,agents,logs,latency` | ROUTER COMPLETE |
-| Experiments | IFC-025 | IFC-025 | PG-149 | `/agent-approvals/experiments` | UI PLANNED (Sprint 7) |
+| Feature            | AI Chain | Router     | Frontend UI         | Route                                        | Status                       |
+| ------------------ | -------- | ---------- | ------------------- | -------------------------------------------- | ---------------------------- |
+| Lead Scoring       | IFC-005  | IFC-013    | IFC-023 + PG-148    | `/agent-approvals/lead-scoring`              | COMPLETE (dashboard pending) |
+| Sentiment Analysis | IFC-039  | Partial    | PG-142              | `/agent-approvals/sentiment`                 | ✅ COMPLETE                  |
+| Churn Risk         | IFC-095  | Partial    | PG-143              | `/agent-approvals/churn-risk`                | UI PLANNED (Sprint 7)        |
+| RAG/Search         | IFC-039  | IFC-156    | PG-144              | `/agent-approvals/ai-search`                 | ✅ COMPLETE                  |
+| Auto-Response      | IFC-029  | IFC-029    | IFC-149             | `/agent-approvals`                           | COMPLETE                     |
+| AI Output Review   | IFC-128  | IFC-180 ✅ | IFC-181 ✅ + PG-150 | `/agent-approvals/ai-review`                 | COMPLETE (history pending)   |
+| AI Monitoring      | IFC-117  | IFC-197 ✅ | PG-146/151/152/153  | `/agent-approvals/drift,agents,logs,latency` | ROUTER COMPLETE              |
+| Experiments        | IFC-025  | IFC-025    | PG-149              | `/agent-approvals/experiments`               | UI PLANNED (Sprint 7)        |
 
 ---
 
@@ -266,7 +268,7 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
     - AI Chain: IFC-039 ✅
     - Indexing: IFC-155 ✅
     - RAG Tool: IFC-156 ✅
-    - Frontend: PG-144 (Sprint 7) ⏳
+    - Frontend: PG-144 (Sprint 7) ✅
 ```
 
 ---
@@ -453,45 +455,46 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
 
 ### All AI & Agents Sidebar Tasks
 
-| Task ID | Feature | Route | Dependencies | Sprint | Status |
-|---------|---------|-------|--------------|--------|--------|
-| IFC-149 | Agent Approvals | `/agent-approvals` | IFC-139 | 6 | COMPLETED ✅ |
-| IFC-181 | AI Review Queue | `/agent-approvals/ai-review` | IFC-180, IFC-149 | 6 | COMPLETED ✅ |
-| PG-142 | Sentiment Dashboard | `/agent-approvals/sentiment` | IFC-039, IFC-181 | 7 | COMPLETED ✅ |
-| PG-143 | Churn Risk Dashboard | `/agent-approvals/churn-risk` | IFC-095, IFC-181 | 7 | BACKLOG |
-| PG-144 | AI Search | `/agent-approvals/ai-search` | IFC-156, IFC-155, IFC-181 | 7 | BACKLOG |
-| PG-148 | Lead Scoring Dashboard | `/agent-approvals/lead-scoring` | IFC-005, IFC-023, IFC-181 | 7 | BACKLOG |
-| PG-149 | Experiments Dashboard | `/agent-approvals/experiments` | IFC-025, IFC-181 | 7 | BACKLOG |
-| PG-150 | AI Review History | `/agent-approvals/history` | IFC-181, IFC-180 | 7 | BACKLOG |
-| IFC-197 | AI Monitoring Router | (tRPC) | IFC-117, IFC-125 | 7 | COMPLETE ✅ |
-| PG-146 | Drift Detection | `/agent-approvals/drift` | IFC-117, IFC-197 | 8 | BACKLOG |
-| PG-151 | Active Agents | `/agent-approvals/agents` | IFC-021, IFC-139, IFC-197 | 8 | BACKLOG |
-| PG-152 | Agent Logs | `/agent-approvals/logs` | IFC-148, IFC-197 | 8 | BACKLOG |
-| PG-153 | Latency Monitor | `/agent-approvals/latency` | IFC-117, IFC-197 | 8 | BACKLOG |
+| Task ID | Feature                | Route                           | Dependencies              | Sprint | Status       |
+| ------- | ---------------------- | ------------------------------- | ------------------------- | ------ | ------------ |
+| IFC-149 | Agent Approvals        | `/agent-approvals`              | IFC-139                   | 6      | COMPLETED ✅ |
+| IFC-181 | AI Review Queue        | `/agent-approvals/ai-review`    | IFC-180, IFC-149          | 6      | COMPLETED ✅ |
+| PG-142  | Sentiment Dashboard    | `/agent-approvals/sentiment`    | IFC-039, IFC-181          | 7      | COMPLETED ✅ |
+| PG-143  | Churn Risk Dashboard   | `/agent-approvals/churn-risk`   | IFC-095, IFC-181          | 7      | BACKLOG      |
+| PG-144  | AI Search              | `/agent-approvals/ai-search`    | IFC-156, IFC-155, IFC-181 | 7      | COMPLETED ✅ |
+| PG-148  | Lead Scoring Dashboard | `/agent-approvals/lead-scoring` | IFC-005, IFC-023, IFC-181 | 7      | COMPLETED ✅ |
+| PG-149  | Experiments Dashboard  | `/agent-approvals/experiments`  | IFC-025, IFC-181          | 7      | BACKLOG      |
+| PG-150  | AI Review History      | `/agent-approvals/history`      | IFC-181, IFC-180          | 7      | COMPLETED ✅ |
+| IFC-197 | AI Monitoring Router   | (tRPC)                          | IFC-117, IFC-125          | 7      | COMPLETE ✅  |
+| PG-146  | Drift Detection        | `/agent-approvals/drift`        | IFC-117, IFC-197          | 8      | BACKLOG      |
+| PG-151  | Active Agents          | `/agent-approvals/agents`       | IFC-021, IFC-139, IFC-197 | 8      | BACKLOG      |
+| PG-152  | Agent Logs             | `/agent-approvals/logs`         | IFC-148, IFC-197          | 8      | BACKLOG      |
+| PG-153  | Latency Monitor        | `/agent-approvals/latency`      | IFC-117, IFC-197          | 8      | BACKLOG      |
 
 ### Backend Infrastructure Tasks
 
-| Task ID | Feature | Status | Notes |
-|---------|---------|--------|-------|
+| Task ID | Feature                   | Status      | Notes                                               |
+| ------- | ------------------------- | ----------- | --------------------------------------------------- |
 | IFC-197 | AI Monitoring tRPC Router | COMPLETE ✅ | 7 endpoints operational, 22 tests, all gates passed |
 
 ---
 
 ## Orphan Status Summary (RESOLVED)
 
-| Feature | AI Chain | Router | Frontend | Status |
-|---------|----------|--------|----------|--------|
-| Lead Scoring | IFC-005 ✅ | IFC-013 ✅ | IFC-023 ✅ + PG-148 | COMPLETE + dashboard planned |
-| Sentiment | IFC-039 ✅ | Partial ⚠️ | PG-142 (Sprint 7) ✅ | COMPLETE |
-| Churn Risk | IFC-095 ✅ | Partial ⚠️ | PG-143 (Sprint 7) | UI PLANNED |
-| RAG/Search | IFC-039 ✅ | IFC-156 ✅ | PG-144 (Sprint 7) | UI PLANNED |
-| Auto-Response | IFC-029 ✅ | IFC-029 ✅ | IFC-149 ✅ | COMPLETE |
-| AI Review | IFC-128 ✅ | IFC-180 ✅ | IFC-181 ✅ + PG-150 | COMPLETE + history planned |
-| Versioning | IFC-086 ✅ | IFC-086 ✅ | PG-128 ✅ | COMPLETE |
-| AI Monitoring | IFC-117 ✅ | IFC-197 ✅ | PG-146/151/152/153 (Sprint 8) | ROUTER COMPLETE |
-| Experiments | IFC-025 ✅ | IFC-025 ✅ | PG-149 (Sprint 7) | UI PLANNED |
+| Feature       | AI Chain   | Router     | Frontend                      | Status                       |
+| ------------- | ---------- | ---------- | ----------------------------- | ---------------------------- |
+| Lead Scoring  | IFC-005 ✅ | IFC-013 ✅ | IFC-023 ✅ + PG-148 ✅        | COMPLETE                     |
+| Sentiment     | IFC-039 ✅ | Partial ⚠️ | PG-142 (Sprint 7) ✅          | COMPLETE                     |
+| Churn Risk    | IFC-095 ✅ | Partial ⚠️ | PG-143 (Sprint 7)             | UI PLANNED                   |
+| RAG/Search    | IFC-039 ✅ | IFC-156 ✅ | PG-144 (Sprint 7) ✅          | COMPLETE                     |
+| Auto-Response | IFC-029 ✅ | IFC-029 ✅ | IFC-149 ✅                    | COMPLETE                     |
+| AI Review     | IFC-128 ✅ | IFC-180 ✅ | IFC-181 ✅ + PG-150           | COMPLETE + history planned   |
+| Versioning    | IFC-086 ✅ | IFC-086 ✅ | PG-128 ✅                     | COMPLETE                     |
+| AI Monitoring | IFC-117 ✅ | IFC-197 ✅ | PG-146/151/152/153 (Sprint 8) | ROUTER COMPLETE              |
+| Experiments   | IFC-025 ✅ | IFC-025 ✅ | PG-149 (Sprint 7)             | UI PLANNED                   |
 
 **All orphans resolved.** Every AI feature now has a UI task assigned.
+
 - 0 orphaned chains (was 3)
 - 8 new tasks created (IFC-197, PG-142-144 updated, PG-148-153 new)
 - 4 existing tasks updated with correct `/agent-approvals/` routes
@@ -514,7 +517,7 @@ The **AI/Intelligence** domain covers Lead Scoring, Sentiment Analysis, Churn Ri
     │ SentimentAnalysisChain │ IFC-039     │ ✅ Chain + UI complete (PG-142, Sprint 7)        │
     │ ChurnRiskChain         │ IFC-095     │ ✅ Chain complete, UI planned (PG-143, Sprint 7) │
     │ EmbeddingChain         │ AI-SETUP-003│ ✅ Complete (internal use)                       │
-    │ RAGContextChain        │ IFC-039     │ ✅ Chain complete, UI planned (PG-144, Sprint 7) │
+    │ RAGContextChain        │ IFC-039     │ ✅ Chain complete, UI complete (PG-144) ✅       │
     └────────────────────────┴─────────────┴──────────────────────────────────────────────────┘
 
     ┌─────────────────────────────────────────────────────────────────────────────────────────┐

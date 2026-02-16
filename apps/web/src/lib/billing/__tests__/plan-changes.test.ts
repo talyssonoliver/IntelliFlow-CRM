@@ -193,9 +193,7 @@ describe('comparePlans', () => {
   it('marks features as lost when downgrading', () => {
     const result = comparePlans('professional', 'starter');
     expect(result).not.toBeNull();
-    const workflowFeature = result!.featureChanges.find(
-      (f) => f.name === 'Workflow automation'
-    );
+    const workflowFeature = result!.featureChanges.find((f) => f.name === 'Workflow automation');
     expect(workflowFeature).toBeDefined();
     expect(workflowFeature!.change).toBe('lost');
   });

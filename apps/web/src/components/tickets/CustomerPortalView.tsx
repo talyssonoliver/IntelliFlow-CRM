@@ -64,7 +64,9 @@ export function CustomerPortalView({
       <div>
         <div className="flex items-center gap-3 mb-2">
           <h1 className="text-xl font-bold text-foreground">{ticket.subject}</h1>
-          <span className={`px-2 py-0.5 rounded text-xs font-bold ${statusConfig?.bg} ${statusConfig?.text}`}>
+          <span
+            className={`px-2 py-0.5 rounded text-xs font-bold ${statusConfig?.bg} ${statusConfig?.text}`}
+          >
             {statusConfig?.label}
           </span>
         </div>
@@ -121,11 +123,13 @@ export function CustomerPortalView({
                 >
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
-                        isCustomer
-                          ? 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-                          : 'bg-[#137fec] text-white'
-                      }`}>
+                      <div
+                        className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                          isCustomer
+                            ? 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                            : 'bg-[#137fec] text-white'
+                        }`}
+                      >
                         {activity.author.name.charAt(0)}
                       </div>
                       <span className="text-sm font-medium text-foreground">
@@ -175,7 +179,9 @@ export function CustomerPortalView({
               className="px-4 py-1.5 bg-[#137fec] text-white text-sm font-bold rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isSending ? (
-                <span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+                <span className="material-symbols-outlined text-[16px] animate-spin">
+                  progress_activity
+                </span>
               ) : (
                 <span className="material-symbols-outlined text-[16px]">send</span>
               )}
@@ -193,13 +199,20 @@ export function CustomerPortalView({
             {ticket.attachments.map((file) => (
               <div key={file.id} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
                 <span className="material-symbols-outlined text-muted-foreground">
-                  {file.type === 'pdf' ? 'picture_as_pdf' : file.type === 'image' ? 'image' : 'description'}
+                  {file.type === 'pdf'
+                    ? 'picture_as_pdf'
+                    : file.type === 'image'
+                      ? 'image'
+                      : 'description'}
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
                   <p className="text-xs text-muted-foreground">{file.size}</p>
                 </div>
-                <button className="p-1 text-muted-foreground hover:text-primary transition-colors" aria-label={`Download ${file.name}`}>
+                <button
+                  className="p-1 text-muted-foreground hover:text-primary transition-colors"
+                  aria-label={`Download ${file.name}`}
+                >
                   <span className="material-symbols-outlined text-[18px]">download</span>
                 </button>
               </div>

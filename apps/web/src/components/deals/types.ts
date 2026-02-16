@@ -65,13 +65,13 @@ export function formatCurrencyCompact(value: number): string {
 // CSS variables defined in globals.css (Step 3.3).
 
 export const PIPELINE_STAGE_CONFIG: Record<OpportunityStage, { label: string; color: string }> = {
-  PROSPECTING:    { label: 'Prospecting',    color: 'hsl(var(--muted-foreground))' },
-  QUALIFICATION:  { label: 'Qualification',  color: 'hsl(var(--stage-qualification))' },
+  PROSPECTING: { label: 'Prospecting', color: 'hsl(var(--muted-foreground))' },
+  QUALIFICATION: { label: 'Qualification', color: 'hsl(var(--stage-qualification))' },
   NEEDS_ANALYSIS: { label: 'Needs Analysis', color: 'hsl(var(--stage-needs-analysis))' },
-  PROPOSAL:       { label: 'Proposal',       color: 'hsl(var(--stage-proposal))' },
-  NEGOTIATION:    { label: 'Negotiation',    color: 'hsl(var(--stage-negotiation))' },
-  CLOSED_WON:     { label: 'Closed Won',     color: 'hsl(var(--stage-won))' },
-  CLOSED_LOST:    { label: 'Closed Lost',    color: 'hsl(var(--stage-lost))' },
+  PROPOSAL: { label: 'Proposal', color: 'hsl(var(--stage-proposal))' },
+  NEGOTIATION: { label: 'Negotiation', color: 'hsl(var(--stage-negotiation))' },
+  CLOSED_WON: { label: 'Closed Won', color: 'hsl(var(--stage-won))' },
+  CLOSED_LOST: { label: 'Closed Lost', color: 'hsl(var(--stage-lost))' },
 };
 
 /** All opportunity stages re-exported for convenience */
@@ -82,7 +82,7 @@ export type { OpportunityStage };
 
 /** Map tRPC opportunity.list response items to Deal[] */
 export function transformDeals(
-  data: { opportunities?: Array<Record<string, unknown>> } | undefined,
+  data: { opportunities?: Array<Record<string, unknown>> } | undefined
 ): Deal[] {
   if (!data?.opportunities) return [];
   return data.opportunities.map((item) => ({
@@ -107,18 +107,11 @@ export function transformDeals(
 
 /** Compute pipeline stats from deal array */
 export function calculateStats(deals: Deal[]): PipelineStats {
-  const activeDeals = deals.filter(
-    (d) => d.stage !== 'CLOSED_WON' && d.stage !== 'CLOSED_LOST',
-  );
+  const activeDeals = deals.filter((d) => d.stage !== 'CLOSED_WON' && d.stage !== 'CLOSED_LOST');
   return {
     totalDeals: activeDeals.length,
     totalValue: activeDeals.reduce((sum, d) => sum + d.value, 0),
-    weightedValue: activeDeals.reduce(
-      (sum, d) => sum + d.value * (d.probability / 100),
-      0,
-    ),
-    wonValue: deals
-      .filter((d) => d.stage === 'CLOSED_WON')
-      .reduce((sum, d) => sum + d.value, 0),
+    weightedValue: activeDeals.reduce((sum, d) => sum + d.value * (d.probability / 100), 0),
+    wonValue: deals.filter((d) => d.stage === 'CLOSED_WON').reduce((sum, d) => sum + d.value, 0),
   };
 }

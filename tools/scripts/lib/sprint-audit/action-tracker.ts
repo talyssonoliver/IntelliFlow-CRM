@@ -18,7 +18,13 @@ import type { TaskAttestation } from './attestation-generator';
 
 export type ActionSeverity = 'critical' | 'high' | 'medium' | 'low';
 export type ActionStatus = 'open' | 'in_progress' | 'resolved' | 'wont_fix';
-export type ActionType = 'missing_artifact' | 'failed_validation' | 'missed_kpi' | 'placeholder' | 'waiver_expired' | 'blocked_dependency';
+export type ActionType =
+  | 'missing_artifact'
+  | 'failed_validation'
+  | 'missed_kpi'
+  | 'placeholder'
+  | 'waiver_expired'
+  | 'blocked_dependency';
 
 export interface ActionItem {
   id: string;
@@ -39,18 +45,21 @@ export interface DebtLedger {
   schema_version: string;
   last_updated: string;
   maintainer: string;
-  items: Record<string, {
-    origin_task: string;
-    owner: string;
-    severity: ActionSeverity;
-    description: string;
-    created_at: string;
-    expiry_date: string;
-    remediation_plan: string;
-    remediation_sprint: number;
-    status: ActionStatus;
-    notes?: string;
-  }>;
+  items: Record<
+    string,
+    {
+      origin_task: string;
+      owner: string;
+      severity: ActionSeverity;
+      description: string;
+      created_at: string;
+      expiry_date: string;
+      remediation_plan: string;
+      remediation_sprint: number;
+      status: ActionStatus;
+      notes?: string;
+    }
+  >;
   summary: {
     total_items: number;
     by_severity: Record<ActionSeverity, number>;
@@ -115,7 +124,8 @@ export function createActionsFromAttestation(
   let index = 1;
 
   // Missing/failed artifacts
-  const artifactIssues = Object.entries(attestation.artifact_hashes).length === 0 &&
+  const artifactIssues =
+    Object.entries(attestation.artifact_hashes).length === 0 &&
     attestation.evidence_summary.artifacts_verified === 0;
 
   if (artifactIssues) {
@@ -221,10 +231,7 @@ export async function saveDebtLedger(repoRoot: string, ledger: DebtLedger): Prom
 /**
  * Adds action items to debt ledger
  */
-export async function addToDebtLedger(
-  repoRoot: string,
-  actions: ActionItem[]
-): Promise<string[]> {
+export async function addToDebtLedger(repoRoot: string, actions: ActionItem[]): Promise<string[]> {
   let ledger = loadDebtLedger(repoRoot);
   const addedIds: string[] = [];
 
@@ -358,10 +365,7 @@ export function loadReviewQueue(repoRoot: string): ReviewQueueItem[] {
 /**
  * Saves the review queue
  */
-export async function saveReviewQueue(
-  repoRoot: string,
-  queue: ReviewQueueItem[]
-): Promise<void> {
+export async function saveReviewQueue(repoRoot: string, queue: ReviewQueueItem[]): Promise<void> {
   const queuePath = path.join(repoRoot, 'artifacts/reports/review-queue.json');
   await fs.promises.mkdir(path.dirname(queuePath), { recursive: true });
   await fs.promises.writeFile(queuePath, JSON.stringify(queue, null, 2), 'utf-8');
@@ -436,10 +440,7 @@ export async function addToReviewQueue(
 /**
  * Removes a task from the review queue (when issues are resolved)
  */
-export async function removeFromReviewQueue(
-  repoRoot: string,
-  taskId: string
-): Promise<boolean> {
+export async function removeFromReviewQueue(repoRoot: string, taskId: string): Promise<boolean> {
   const queue = loadReviewQueue(repoRoot);
   const initialLength = queue.length;
 

@@ -56,7 +56,10 @@ export async function POST(request: Request) {
     // Get task from CSV
     const task = await getTask(taskId);
     if (!task) {
-      return NextResponse.json({ error: `Task ${taskId} not found in Sprint_plan.csv` }, { status: 404 });
+      return NextResponse.json(
+        { error: `Task ${taskId} not found in Sprint_plan.csv` },
+        { status: 404 }
+      );
     }
 
     // Check prerequisites (skip for hydrate as it's Phase 0)

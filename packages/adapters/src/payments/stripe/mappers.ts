@@ -51,7 +51,9 @@ export function mapToPaymentMethod(data: Record<string, unknown>): StripePayment
       ? {
           bankName: String(bankAccount.bank_name ?? ''),
           last4: String(bankAccount.last4 ?? ''),
-          routingNumber: bankAccount.routing_number ? String(bankAccount.routing_number) : undefined,
+          routingNumber: bankAccount.routing_number
+            ? String(bankAccount.routing_number)
+            : undefined,
           accountHolderType: String(bankAccount.account_holder_type ?? 'individual') as
             | 'individual'
             | 'company',

@@ -18,9 +18,20 @@ import {
   ConvertLeadToContactInput,
   ConvertLeadToContactOutput,
 } from '../ConvertLeadToContactUseCase';
-import { Lead, Contact, Account, LeadConvertedEvent, LeadConversionAudit } from '@intelliflow/domain';
+import {
+  Lead,
+  Contact,
+  Account,
+  LeadConvertedEvent,
+  LeadConversionAudit,
+} from '@intelliflow/domain';
 import { Result, DomainError } from '@intelliflow/domain';
-import { LeadRepository, ContactRepository, AccountRepository, LeadConversionAuditRepository } from '../../../ports/repositories';
+import {
+  LeadRepository,
+  ContactRepository,
+  AccountRepository,
+  LeadConversionAuditRepository,
+} from '../../../ports/repositories';
 import { EventBusPort } from '../../../ports/external';
 import { ConversionSnapshot } from '../ConversionSnapshot';
 

@@ -142,20 +142,10 @@ export const DifferentIcons: Story = {
   render: () => (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       <div className="border border-border rounded-lg">
-        <EmptyState
-          size="sm"
-          icon="mail"
-          title="No emails"
-          description="Your inbox is empty."
-        />
+        <EmptyState size="sm" icon="mail" title="No emails" description="Your inbox is empty." />
       </div>
       <div className="border border-border rounded-lg">
-        <EmptyState
-          size="sm"
-          icon="event"
-          title="No events"
-          description="No upcoming events."
-        />
+        <EmptyState size="sm" icon="event" title="No events" description="No upcoming events." />
       </div>
       <div className="border border-border rounded-lg">
         <EmptyState

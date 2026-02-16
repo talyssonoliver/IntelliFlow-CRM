@@ -58,10 +58,13 @@ interface BillingPortalProps {
  */
 function SubscriptionOverviewCard() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data: subscription, isLoading, error } = trpc.billing.getSubscription.useQuery(
-    undefined,
-    { enabled: isAuthenticated && !authLoading }
-  );
+  const {
+    data: subscription,
+    isLoading,
+    error,
+  } = trpc.billing.getSubscription.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+  });
 
   if (isLoading || authLoading) {
     return (
@@ -85,7 +88,12 @@ function SubscriptionOverviewCard() {
       <Card>
         <CardContent className="py-12">
           <div className="text-center">
-            <span className="material-symbols-outlined text-4xl text-destructive mb-2 block" aria-hidden="true">error</span>
+            <span
+              className="material-symbols-outlined text-4xl text-destructive mb-2 block"
+              aria-hidden="true"
+            >
+              error
+            </span>
             <p className="text-muted-foreground">Failed to load subscription details</p>
           </div>
         </CardContent>
@@ -104,9 +112,7 @@ function SubscriptionOverviewCard() {
             >
               credit_card_off
             </span>
-            <h3 className="text-lg font-semibold text-foreground mb-2">
-              No Active Subscription
-            </h3>
+            <h3 className="text-lg font-semibold text-foreground mb-2">No Active Subscription</h3>
             <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
               Choose a plan to get started with IntelliFlow CRM and unlock powerful features.
             </p>
@@ -133,7 +139,9 @@ function SubscriptionOverviewCard() {
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <CardTitle className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary" aria-hidden="true">auto_awesome</span>
+            <span className="material-symbols-outlined text-primary" aria-hidden="true">
+              auto_awesome
+            </span>
             Subscription Overview
           </CardTitle>
           <Badge
@@ -209,10 +217,13 @@ function SubscriptionOverviewCard() {
  */
 function PaymentMethodSection() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data: paymentMethods, isLoading, error } = trpc.billing.getPaymentMethods.useQuery(
-    undefined,
-    { enabled: isAuthenticated && !authLoading }
-  );
+  const {
+    data: paymentMethods,
+    isLoading,
+    error,
+  } = trpc.billing.getPaymentMethods.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+  });
 
   if (isLoading || authLoading) {
     return (
@@ -232,7 +243,12 @@ function PaymentMethodSection() {
       <Card>
         <CardContent className="py-8">
           <div className="text-center">
-            <span className="material-symbols-outlined text-4xl text-destructive mb-2 block" aria-hidden="true">error</span>
+            <span
+              className="material-symbols-outlined text-4xl text-destructive mb-2 block"
+              aria-hidden="true"
+            >
+              error
+            </span>
             <p className="text-muted-foreground">Failed to load payment methods</p>
           </div>
         </CardContent>
@@ -244,12 +260,14 @@ function PaymentMethodSection() {
     <Card>
       <CardHeader className="pb-4">
         <CardTitle className="text-lg flex items-center gap-2">
-          <span className="material-symbols-outlined" aria-hidden="true">credit_card</span>
+          <span className="material-symbols-outlined" aria-hidden="true">
+            credit_card
+          </span>
           Payment Methods
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {(!paymentMethods || paymentMethods.length === 0) ? (
+        {!paymentMethods || paymentMethods.length === 0 ? (
           <div className="text-center py-6">
             <span
               className="material-symbols-outlined text-4xl text-slate-400 dark:text-slate-500 mb-2 block"
@@ -266,9 +284,7 @@ function PaymentMethodSection() {
               className="relative p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
             >
               {pm.isDefault && (
-                <Badge
-                  className="absolute top-2 right-2 bg-primary text-white rounded-full text-xs"
-                >
+                <Badge className="absolute top-2 right-2 bg-primary text-white rounded-full text-xs">
                   DEFAULT
                 </Badge>
               )}
@@ -286,8 +302,15 @@ function PaymentMethodSection() {
                     Expires {pm.card?.expMonth}/{pm.card?.expYear}
                   </p>
                 </div>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="Edit payment method">
-                  <span className="material-symbols-outlined text-lg" aria-hidden="true">edit</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  aria-label="Edit payment method"
+                >
+                  <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                    edit
+                  </span>
                 </Button>
               </div>
             </div>
@@ -315,10 +338,13 @@ function PaymentMethodSection() {
  */
 function BillingInformationCard() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data: billingInfo, isLoading, error } = trpc.billing.getBillingInformation.useQuery(
-    undefined,
-    { enabled: isAuthenticated && !authLoading }
-  );
+  const {
+    data: billingInfo,
+    isLoading,
+    error,
+  } = trpc.billing.getBillingInformation.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+  });
 
   if (isLoading || authLoading) {
     return (
@@ -346,7 +372,12 @@ function BillingInformationCard() {
       <Card>
         <CardContent className="py-8">
           <div className="text-center">
-            <span className="material-symbols-outlined text-4xl text-destructive mb-2 block" aria-hidden="true">error</span>
+            <span
+              className="material-symbols-outlined text-4xl text-destructive mb-2 block"
+              aria-hidden="true"
+            >
+              error
+            </span>
             <p className="text-muted-foreground">Failed to load billing information</p>
           </div>
         </CardContent>
@@ -359,7 +390,9 @@ function BillingInformationCard() {
       <Card>
         <CardHeader className="pb-4">
           <CardTitle className="text-lg flex items-center gap-2">
-            <span className="material-symbols-outlined" aria-hidden="true">receipt</span>
+            <span className="material-symbols-outlined" aria-hidden="true">
+              receipt
+            </span>
             Billing Information
           </CardTitle>
         </CardHeader>
@@ -389,27 +422,37 @@ function BillingInformationCard() {
     <Card>
       <CardHeader className="pb-4">
         <CardTitle className="text-lg flex items-center gap-2">
-          <span className="material-symbols-outlined" aria-hidden="true">receipt</span>
+          <span className="material-symbols-outlined" aria-hidden="true">
+            receipt
+          </span>
           Billing Information
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-start gap-3">
-          <span className="material-symbols-outlined text-muted-foreground" aria-hidden="true">business</span>
+          <span className="material-symbols-outlined text-muted-foreground" aria-hidden="true">
+            business
+          </span>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Organization</p>
-            <p className="text-sm font-medium text-foreground">{billingInfo.organization ?? '--'}</p>
+            <p className="text-sm font-medium text-foreground">
+              {billingInfo.organization ?? '--'}
+            </p>
           </div>
         </div>
         <div className="flex items-start gap-3">
-          <span className="material-symbols-outlined text-muted-foreground" aria-hidden="true">mail</span>
+          <span className="material-symbols-outlined text-muted-foreground" aria-hidden="true">
+            mail
+          </span>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Email</p>
             <p className="text-sm font-medium text-foreground">{billingInfo.email}</p>
           </div>
         </div>
         <div className="flex items-start gap-3">
-          <span className="material-symbols-outlined text-muted-foreground" aria-hidden="true">location_on</span>
+          <span className="material-symbols-outlined text-muted-foreground" aria-hidden="true">
+            location_on
+          </span>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Address</p>
             <p className="text-sm font-medium text-foreground">{formattedAddress ?? '--'}</p>
@@ -460,7 +503,12 @@ function BillingHistoryTable() {
       <Card>
         <CardContent className="py-8">
           <div className="text-center">
-            <span className="material-symbols-outlined text-4xl text-destructive mb-2 block" aria-hidden="true">error</span>
+            <span
+              className="material-symbols-outlined text-4xl text-destructive mb-2 block"
+              aria-hidden="true"
+            >
+              error
+            </span>
             <p className="text-muted-foreground">Failed to load billing history</p>
           </div>
         </CardContent>
@@ -475,7 +523,9 @@ function BillingHistoryTable() {
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
-            <span className="material-symbols-outlined" aria-hidden="true">history</span>
+            <span className="material-symbols-outlined" aria-hidden="true">
+              history
+            </span>
             Billing History
           </CardTitle>
           <Link
@@ -483,7 +533,9 @@ function BillingHistoryTable() {
             className="text-sm text-primary hover:underline flex items-center gap-1"
           >
             View All
-            <span className="material-symbols-outlined text-sm" aria-hidden="true">arrow_forward</span>
+            <span className="material-symbols-outlined text-sm" aria-hidden="true">
+              arrow_forward
+            </span>
           </Link>
         </div>
       </CardHeader>
@@ -506,7 +558,9 @@ function BillingHistoryTable() {
                   <TableHead scope="col">Invoice Date</TableHead>
                   <TableHead scope="col">Amount</TableHead>
                   <TableHead scope="col">Status</TableHead>
-                  <TableHead scope="col" className="text-right">Action</TableHead>
+                  <TableHead scope="col" className="text-right">
+                    Action
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -518,9 +572,7 @@ function BillingHistoryTable() {
                       <TableCell className="font-medium">
                         {formatBillingDate(invoice.created)}
                       </TableCell>
-                      <TableCell>
-                        {formatCurrency(invoice.amountPaid, invoice.currency)}
-                      </TableCell>
+                      <TableCell>{formatCurrency(invoice.amountPaid, invoice.currency)}</TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
@@ -539,12 +591,7 @@ function BillingHistoryTable() {
                       </TableCell>
                       <TableCell className="text-right">
                         {invoice.invoicePdf && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            asChild
-                            className="h-8 w-8 p-0"
-                          >
+                          <Button variant="ghost" size="sm" asChild className="h-8 w-8 p-0">
                             <a
                               href={invoice.invoicePdf}
                               target="_blank"
@@ -571,11 +618,7 @@ function BillingHistoryTable() {
 
         {data && data.hasMore && (
           <div className="mt-4 text-center">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => p + 1)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setPage((p) => p + 1)}>
               Load More
             </Button>
           </div>

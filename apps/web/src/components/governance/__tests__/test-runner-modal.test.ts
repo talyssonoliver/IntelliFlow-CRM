@@ -8,7 +8,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const scopeOptions = [
   { value: 'quick', label: 'Quick', description: 'Validators + Domain packages', time: '~15s' },
   { value: 'standard', label: 'Standard', description: 'All unit tests', time: '~1min' },
-  { value: 'comprehensive', label: 'Comprehensive', description: 'Unit + Integration tests', time: '~3min' },
+  {
+    value: 'comprehensive',
+    label: 'Comprehensive',
+    description: 'Unit + Integration tests',
+    time: '~3min',
+  },
 ];
 
 // Progress state type
@@ -21,7 +26,11 @@ interface Progress {
 }
 
 const INITIAL_PROGRESS: Progress = {
-  testsRun: 0, testsPassed: 0, testsFailed: 0, testsSkipped: 0, currentTest: '',
+  testsRun: 0,
+  testsPassed: 0,
+  testsFailed: 0,
+  testsSkipped: 0,
+  currentTest: '',
 };
 
 describe('TestRunnerModal - scope options', () => {
@@ -30,7 +39,7 @@ describe('TestRunnerModal - scope options', () => {
   });
   it('default scope is standard', () => {
     const defaultScope = 'standard';
-    expect(scopeOptions.find(o => o.value === defaultScope)).toBeDefined();
+    expect(scopeOptions.find((o) => o.value === defaultScope)).toBeDefined();
   });
   it('each option has label, description, time', () => {
     for (const opt of scopeOptions) {
@@ -48,20 +57,50 @@ describe('TestRunnerModal - progress event handling', () => {
     progress = { ...INITIAL_PROGRESS };
   });
 
-  function handleEvent(type: string, data?: { testName?: string; testsRun?: number; testsPassed?: number; testsFailed?: number; testsSkipped?: number }) {
+  function handleEvent(
+    type: string,
+    data?: {
+      testName?: string;
+      testsRun?: number;
+      testsPassed?: number;
+      testsFailed?: number;
+      testsSkipped?: number;
+    }
+  ) {
     switch (type) {
       case 'test_pass':
-        progress = { ...progress, testsRun: progress.testsRun + 1, testsPassed: progress.testsPassed + 1, currentTest: data?.testName || progress.currentTest };
+        progress = {
+          ...progress,
+          testsRun: progress.testsRun + 1,
+          testsPassed: progress.testsPassed + 1,
+          currentTest: data?.testName || progress.currentTest,
+        };
         break;
       case 'test_fail':
-        progress = { ...progress, testsRun: progress.testsRun + 1, testsFailed: progress.testsFailed + 1, currentTest: data?.testName || progress.currentTest };
+        progress = {
+          ...progress,
+          testsRun: progress.testsRun + 1,
+          testsFailed: progress.testsFailed + 1,
+          currentTest: data?.testName || progress.currentTest,
+        };
         break;
       case 'test_skip':
-        progress = { ...progress, testsRun: progress.testsRun + 1, testsSkipped: progress.testsSkipped + 1, currentTest: data?.testName || progress.currentTest };
+        progress = {
+          ...progress,
+          testsRun: progress.testsRun + 1,
+          testsSkipped: progress.testsSkipped + 1,
+          currentTest: data?.testName || progress.currentTest,
+        };
         break;
       case 'complete':
         if (data?.testsRun !== undefined) {
-          progress = { ...progress, testsRun: data.testsRun || progress.testsRun, testsPassed: data.testsPassed || progress.testsPassed, testsFailed: data.testsFailed || progress.testsFailed, testsSkipped: data.testsSkipped || progress.testsSkipped };
+          progress = {
+            ...progress,
+            testsRun: data.testsRun || progress.testsRun,
+            testsPassed: data.testsPassed || progress.testsPassed,
+            testsFailed: data.testsFailed || progress.testsFailed,
+            testsSkipped: data.testsSkipped || progress.testsSkipped,
+          };
         }
         break;
     }
@@ -108,8 +147,15 @@ describe('TestRunnerModal - progress event handling', () => {
 
 describe('TestRunnerModal - progress percentage', () => {
   it('calculates pass percentage correctly', () => {
-    const progress = { testsRun: 10, testsPassed: 8, testsFailed: 2, testsSkipped: 0, currentTest: '' };
-    const pct = progress.testsRun > 0 ? Math.round((progress.testsPassed / progress.testsRun) * 100) : 0;
+    const progress = {
+      testsRun: 10,
+      testsPassed: 8,
+      testsFailed: 2,
+      testsSkipped: 0,
+      currentTest: '',
+    };
+    const pct =
+      progress.testsRun > 0 ? Math.round((progress.testsPassed / progress.testsRun) * 100) : 0;
     expect(pct).toBe(80);
   });
   it('returns 0 when no tests run', () => {
@@ -117,7 +163,13 @@ describe('TestRunnerModal - progress percentage', () => {
     expect(pct).toBe(0);
   });
   it('returns 100 when all pass', () => {
-    const progress = { testsRun: 5, testsPassed: 5, testsFailed: 0, testsSkipped: 0, currentTest: '' };
+    const progress = {
+      testsRun: 5,
+      testsPassed: 5,
+      testsFailed: 0,
+      testsSkipped: 0,
+      currentTest: '',
+    };
     const pct = Math.round((progress.testsPassed / progress.testsRun) * 100);
     expect(pct).toBe(100);
   });
@@ -129,10 +181,18 @@ describe('TestRunnerModal - coverage metric color', () => {
     if (v >= 50) return 'text-amber-500';
     return 'text-red-500';
   }
-  it('green for >= 80%', () => { expect(getColor(80)).toBe('text-emerald-500'); });
-  it('green for 95%', () => { expect(getColor(95)).toBe('text-emerald-500'); });
-  it('amber for 50-79%', () => { expect(getColor(65)).toBe('text-amber-500'); });
-  it('red for < 50%', () => { expect(getColor(30)).toBe('text-red-500'); });
+  it('green for >= 80%', () => {
+    expect(getColor(80)).toBe('text-emerald-500');
+  });
+  it('green for 95%', () => {
+    expect(getColor(95)).toBe('text-emerald-500');
+  });
+  it('amber for 50-79%', () => {
+    expect(getColor(65)).toBe('text-amber-500');
+  });
+  it('red for < 50%', () => {
+    expect(getColor(30)).toBe('text-red-500');
+  });
 });
 
 describe('TestRunnerModal - state transitions', () => {
@@ -157,6 +217,6 @@ describe('TestRunnerModal - state transitions', () => {
       { type: 'skip', text: 'test skipped' },
       { type: 'info', text: 'starting...' },
     ];
-    expect(logs.map(l => l.type)).toEqual(['pass', 'fail', 'skip', 'info']);
+    expect(logs.map((l) => l.type)).toEqual(['pass', 'fail', 'skip', 'info']);
   });
 });

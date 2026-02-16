@@ -15,10 +15,7 @@ import type {
 export class PrismaAnalyticsRepository implements AnalyticsRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async getDealsWonByMonth(
-    tenantId: string,
-    months: number
-  ): Promise<OpportunityGroupByResult[]> {
+  async getDealsWonByMonth(tenantId: string, months: number): Promise<OpportunityGroupByResult[]> {
     const monthsAgo = new Date();
     monthsAgo.setMonth(monthsAgo.getMonth() - months);
 
@@ -46,10 +43,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
     }));
   }
 
-  async getMonthlyRevenue(
-    tenantId: string,
-    dateRange: DateRangeQuery
-  ): Promise<number> {
+  async getMonthlyRevenue(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
     const result = await this.prisma.opportunity.aggregate({
       where: {
         tenantId,
@@ -67,10 +61,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
     return result._sum.value ? Number(result._sum.value) : 0;
   }
 
-  async countLeadsInRange(
-    tenantId: string,
-    dateRange: DateRangeQuery
-  ): Promise<number> {
+  async countLeadsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
     return this.prisma.lead.count({
       where: {
         tenantId,
@@ -82,10 +73,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
     });
   }
 
-  async countOpportunitiesInRange(
-    tenantId: string,
-    dateRange: DateRangeQuery
-  ): Promise<number> {
+  async countOpportunitiesInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
     return this.prisma.opportunity.count({
       where: {
         tenantId,
@@ -97,10 +85,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
     });
   }
 
-  async countContactsInRange(
-    tenantId: string,
-    dateRange: DateRangeQuery
-  ): Promise<number> {
+  async countContactsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
     return this.prisma.contact.count({
       where: {
         tenantId,
@@ -154,10 +139,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
       action: activity.action,
       eventType: activity.eventType,
       icon: this.getIconForAction(activity.action),
-      description: this.getDescriptionForAction(
-        activity.action,
-        activity.metadata
-      ),
+      description: this.getDescriptionForAction(activity.action, activity.metadata),
       createdAt: activity.timestamp,
       metadata:
         typeof activity.metadata === 'object' && activity.metadata !== null
@@ -211,10 +193,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
     return iconMap[action] || 'event';
   }
 
-  private getDescriptionForAction(
-    action: string,
-    metadata: unknown
-  ): string {
+  private getDescriptionForAction(action: string, metadata: unknown): string {
     try {
       const data =
         typeof metadata === 'string'

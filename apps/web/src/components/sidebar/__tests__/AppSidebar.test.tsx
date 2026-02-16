@@ -19,8 +19,18 @@ vi.mock('next/navigation', () => ({
 
 // Mock next/link
 vi.mock('next/link', () => ({
-  default: ({ children, href, className }: { children: React.ReactNode; href: string; className?: string }) => (
-    <a href={href} className={className}>{children}</a>
+  default: ({
+    children,
+    href,
+    className,
+  }: {
+    children: React.ReactNode;
+    href: string;
+    className?: string;
+  }) => (
+    <a href={href} className={className}>
+      {children}
+    </a>
   ),
 }));
 
@@ -52,7 +62,13 @@ const testConfig: SidebarConfig = {
       id: 'segments',
       title: 'Segments',
       items: [
-        { id: 'hot', label: 'Hot Items', icon: 'fiber_manual_record', color: 'text-warning', href: '/test?segment=hot' },
+        {
+          id: 'hot',
+          label: 'Hot Items',
+          icon: 'fiber_manual_record',
+          color: 'text-warning',
+          href: '/test?segment=hot',
+        },
       ],
     },
   ],
@@ -271,8 +287,14 @@ describe('AppSidebar', () => {
       await user.hover(sidebar);
 
       expect(screen.getByRole('link', { name: /all items/i })).toHaveAttribute('href', '/test');
-      expect(screen.getByRole('link', { name: /my items/i })).toHaveAttribute('href', '/test?view=my');
-      expect(screen.getByRole('link', { name: /hot items/i })).toHaveAttribute('href', '/test?segment=hot');
+      expect(screen.getByRole('link', { name: /my items/i })).toHaveAttribute(
+        'href',
+        '/test?view=my'
+      );
+      expect(screen.getByRole('link', { name: /hot items/i })).toHaveAttribute(
+        'href',
+        '/test?segment=hot'
+      );
     });
 
     it('should have correct href for settings link', async () => {
@@ -286,7 +308,10 @@ describe('AppSidebar', () => {
       const sidebar = screen.getByRole('navigation');
       await user.hover(sidebar);
 
-      expect(screen.getByRole('link', { name: /module settings/i })).toHaveAttribute('href', '/settings/test');
+      expect(screen.getByRole('link', { name: /module settings/i })).toHaveAttribute(
+        'href',
+        '/settings/test'
+      );
     });
   });
 

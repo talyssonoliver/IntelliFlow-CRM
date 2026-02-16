@@ -54,9 +54,7 @@ describe('SignUp Security - XSS Prevention', () => {
     const errorWithHtml = 'Invalid email: <b>test</b>';
 
     // Verify HTML entities would be escaped
-    const escaped = errorWithHtml
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+    const escaped = errorWithHtml.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     expect(escaped).toContain('&lt;b&gt;');
     expect(escaped).not.toContain('<b>');

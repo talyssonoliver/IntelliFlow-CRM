@@ -91,7 +91,9 @@ describe('scoreBusinessValue', () => {
 
     it('scores planning/strategy section tasks high', () => {
       expect(scoreBusinessValue('MISC-001', 'Sprint Planning', 0, false)).toBeGreaterThanOrEqual(8);
-      expect(scoreBusinessValue('MISC-002', 'Product Strategy', 0, false)).toBeGreaterThanOrEqual(8);
+      expect(scoreBusinessValue('MISC-002', 'Product Strategy', 0, false)).toBeGreaterThanOrEqual(
+        8
+      );
     });
   });
 
@@ -166,44 +168,34 @@ describe('scoreTimeCriticality', () => {
 
   describe('totalFloat-based scoring (CPM)', () => {
     it('scores overdue tasks highest (negative float)', () => {
-      const map = new Map<string, ScheduleTaskInfo>([
-        ['T1', { taskId: 'T1', totalFloat: -120 }],
-      ]);
+      const map = new Map<string, ScheduleTaskInfo>([['T1', { taskId: 'T1', totalFloat: -120 }]]);
       const val = scoreTimeCriticality('T1', map, 5, 5);
       // Float score = 1.0, sprint score = 1.0, combined = 1.0 → Fibonacci 13
       expect(val).toBe(13);
     });
 
     it('scores zero float (critical path) as highest', () => {
-      const map = new Map<string, ScheduleTaskInfo>([
-        ['T1', { taskId: 'T1', totalFloat: 0 }],
-      ]);
+      const map = new Map<string, ScheduleTaskInfo>([['T1', { taskId: 'T1', totalFloat: 0 }]]);
       const val = scoreTimeCriticality('T1', map, 5, 5);
       expect(val).toBe(13);
     });
 
     it('scores tight float (1-60 min) as high', () => {
-      const map = new Map<string, ScheduleTaskInfo>([
-        ['T1', { taskId: 'T1', totalFloat: 30 }],
-      ]);
+      const map = new Map<string, ScheduleTaskInfo>([['T1', { taskId: 'T1', totalFloat: 30 }]]);
       const val = scoreTimeCriticality('T1', map, 5, 5);
       // Float 0.8, sprint 1.0, combined = 0.88 → Fibonacci 13
       expect(val).toBeGreaterThanOrEqual(8);
     });
 
     it('scores moderate float (60-480 min) as moderate', () => {
-      const map = new Map<string, ScheduleTaskInfo>([
-        ['T1', { taskId: 'T1', totalFloat: 240 }],
-      ]);
+      const map = new Map<string, ScheduleTaskInfo>([['T1', { taskId: 'T1', totalFloat: 240 }]]);
       const val = scoreTimeCriticality('T1', map, 5, 5);
       // Float 0.6, sprint 1.0, combined = 0.76 → Fibonacci 8
       expect(val).toBeGreaterThanOrEqual(5);
     });
 
     it('scores high float (5+ days) as low', () => {
-      const map = new Map<string, ScheduleTaskInfo>([
-        ['T1', { taskId: 'T1', totalFloat: 5000 }],
-      ]);
+      const map = new Map<string, ScheduleTaskInfo>([['T1', { taskId: 'T1', totalFloat: 5000 }]]);
       // Distant sprint to avoid sprint urgency boost
       const val = scoreTimeCriticality('T1', map, 20, 5);
       // Float 0.0, sprint 0.0, combined = 0.0 → Fibonacci 1
@@ -293,7 +285,14 @@ describe('scoreRiskReduction', () => {
   describe('phase health scoring', () => {
     it('boosts score when worst phase is below 50%', () => {
       const phases: PhaseProgress[] = [
-        { phaseId: 'p1', phaseName: 'Phase 1', total: 10, completed: 3, inProgress: 1, percentage: 30 },
+        {
+          phaseId: 'p1',
+          phaseName: 'Phase 1',
+          total: 10,
+          completed: 3,
+          inProgress: 1,
+          percentage: 30,
+        },
       ];
       const withPhase = scoreRiskReduction(2, phases);
       const withoutPhase = scoreRiskReduction(2, []);
@@ -302,7 +301,14 @@ describe('scoreRiskReduction', () => {
 
     it('moderately boosts when worst phase is between 50-75%', () => {
       const phases: PhaseProgress[] = [
-        { phaseId: 'p1', phaseName: 'Phase 1', total: 10, completed: 6, inProgress: 1, percentage: 60 },
+        {
+          phaseId: 'p1',
+          phaseName: 'Phase 1',
+          total: 10,
+          completed: 6,
+          inProgress: 1,
+          percentage: 60,
+        },
       ];
       const withPhase = scoreRiskReduction(2, phases);
       const withoutPhase = scoreRiskReduction(2, []);
@@ -311,7 +317,14 @@ describe('scoreRiskReduction', () => {
 
     it('no boost when all phases above 75%', () => {
       const phases: PhaseProgress[] = [
-        { phaseId: 'p1', phaseName: 'Phase 1', total: 10, completed: 8, inProgress: 1, percentage: 80 },
+        {
+          phaseId: 'p1',
+          phaseName: 'Phase 1',
+          total: 10,
+          completed: 8,
+          inProgress: 1,
+          percentage: 80,
+        },
       ];
       const withPhase = scoreRiskReduction(0, phases);
       const withoutPhase = scoreRiskReduction(0, []);
@@ -320,8 +333,22 @@ describe('scoreRiskReduction', () => {
 
     it('uses worst phase percentage', () => {
       const phases: PhaseProgress[] = [
-        { phaseId: 'p1', phaseName: 'Phase 1', total: 10, completed: 9, inProgress: 0, percentage: 90 },
-        { phaseId: 'p2', phaseName: 'Phase 2', total: 10, completed: 2, inProgress: 1, percentage: 20 },
+        {
+          phaseId: 'p1',
+          phaseName: 'Phase 1',
+          total: 10,
+          completed: 9,
+          inProgress: 0,
+          percentage: 90,
+        },
+        {
+          phaseId: 'p2',
+          phaseName: 'Phase 2',
+          total: 10,
+          completed: 2,
+          inProgress: 1,
+          percentage: 20,
+        },
       ];
       // Phase 2 is worst at 20% → boosts risk reduction
       const val = scoreRiskReduction(0, phases);
@@ -330,7 +357,14 @@ describe('scoreRiskReduction', () => {
 
     it('ignores phases with zero tasks', () => {
       const phases: PhaseProgress[] = [
-        { phaseId: 'p1', phaseName: 'Phase 1', total: 0, completed: 0, inProgress: 0, percentage: 0 },
+        {
+          phaseId: 'p1',
+          phaseName: 'Phase 1',
+          total: 0,
+          completed: 0,
+          inProgress: 0,
+          percentage: 0,
+        },
       ];
       const val = scoreRiskReduction(0, phases);
       expect(val).toBe(1);
@@ -374,22 +408,40 @@ describe('computePriorityScores', () => {
     it('calculates score as (BV + TC + RROE) / jobSizeProxy', () => {
       const tasks = [makeTask({ id: 'T1', sprint: 5 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       const { factors, score } = result[0];
-      const expected = (factors.businessValue + factors.timeCriticality + factors.riskReductionOpportunity) / factors.jobSizeProxy;
+      const expected =
+        (factors.businessValue + factors.timeCriticality + factors.riskReductionOpportunity) /
+        factors.jobSizeProxy;
       expect(score).toBeCloseTo(expected, 1);
     });
 
     it('exec-ready tasks score higher than needs-spec (lower jobSizeProxy)', () => {
       const tasks = [makeTask({ id: 'T1', sprint: 5 })];
       const needsSpec = computePriorityScores(
-        tasks, emptyGraph, new Set(), new Map(), emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(),
+        new Map(),
+        emptySchedule,
+        emptyPhases,
+        5
       );
       const execReady = computePriorityScores(
-        tasks, emptyGraph, new Set(),
+        tasks,
+        emptyGraph,
+        new Set(),
         new Map([['T1', { hasSpec: true, hasPlan: true }]]),
-        emptySchedule, emptyPhases, 5,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       expect(execReady[0].score).toBeGreaterThan(needsSpec[0].score);
     });
@@ -397,10 +449,22 @@ describe('computePriorityScores', () => {
     it('critical path tasks score higher than non-critical', () => {
       const tasks = [makeTask({ id: 'T1', sprint: 5 })];
       const nonCritical = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       const critical = computePriorityScores(
-        tasks, emptyGraph, new Set(['T1']), emptySessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(['T1']),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       expect(critical[0].score).toBeGreaterThan(nonCritical[0].score);
     });
@@ -408,12 +472,22 @@ describe('computePriorityScores', () => {
     it('overdue tasks score higher via time criticality', () => {
       const tasks = [makeTask({ id: 'T1', sprint: 5 })];
       const noSchedule = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       const overdue = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
         new Map([['T1', { taskId: 'T1', totalFloat: -100 }]]),
-        emptyPhases, 5,
+        emptyPhases,
+        5
       );
       expect(overdue[0].score).toBeGreaterThan(noSchedule[0].score);
     });
@@ -421,12 +495,15 @@ describe('computePriorityScores', () => {
 
   describe('sorting', () => {
     it('returns tasks sorted by score descending', () => {
-      const tasks = [
-        makeTask({ id: 'LOW', sprint: 20 }),
-        makeTask({ id: 'HIGH', sprint: 5 }),
-      ];
+      const tasks = [makeTask({ id: 'LOW', sprint: 20 }), makeTask({ id: 'HIGH', sprint: 5 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       expect(result[0].taskId).toBe('HIGH');
       expect(result[1].taskId).toBe('LOW');
@@ -434,12 +511,15 @@ describe('computePriorityScores', () => {
     });
 
     it('maintains stable order for equal scores', () => {
-      const tasks = [
-        makeTask({ id: 'A', sprint: 5 }),
-        makeTask({ id: 'B', sprint: 5 }),
-      ];
+      const tasks = [makeTask({ id: 'A', sprint: 5 }), makeTask({ id: 'B', sprint: 5 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       expect(result).toHaveLength(2);
       // Both should have same score
@@ -451,9 +531,13 @@ describe('computePriorityScores', () => {
     it('assigns NOW to overdue tasks (hard override)', () => {
       const tasks = [makeTask({ id: 'T1', sprint: 5 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
         new Map([['T1', { taskId: 'T1', totalFloat: -60 }]]),
-        emptyPhases, 5,
+        emptyPhases,
+        5
       );
       expect(result[0].bucket).toBe('now');
     });
@@ -462,7 +546,13 @@ describe('computePriorityScores', () => {
       // EXC-SEC-001 is Tier A (security), on critical path → hard override to NOW
       const tasks = [makeTask({ id: 'EXC-SEC-001', section: 'Security', sprint: 5 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(['EXC-SEC-001']), emptySessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(['EXC-SEC-001']),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       expect(result[0].bucket).toBe('now');
     });
@@ -473,7 +563,13 @@ describe('computePriorityScores', () => {
         makeTask({ id: `T${i}`, sprint: i < 2 ? 5 : 20 })
       );
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       const nowTasks = result.filter((r) => r.bucket === 'now');
       // top 20% of 10 = 2 tasks (at minimum)
@@ -483,11 +579,15 @@ describe('computePriorityScores', () => {
 
     it('assigns WAIT to lowest-scoring tasks', () => {
       // Create tasks with distant sprint and no other factors
-      const tasks = Array.from({ length: 5 }, (_, i) =>
-        makeTask({ id: `T${i}`, sprint: 20 })
-      );
+      const tasks = Array.from({ length: 5 }, (_, i) => makeTask({ id: `T${i}`, sprint: 20 }));
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       // Bottom 40% should be wait
       const waitTasks = result.filter((r) => r.bucket === 'wait');
@@ -497,7 +597,13 @@ describe('computePriorityScores', () => {
     it('handles single task (always NOW)', () => {
       const tasks = [makeTask({ id: 'T1', sprint: 20 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       // Single task → top 20% cutoff = max(1, ceil(1*0.2)) = 1 → NOW
       expect(result[0].bucket).toBe('now');
@@ -505,7 +611,13 @@ describe('computePriorityScores', () => {
 
     it('handles empty tasks array', () => {
       const result = computePriorityScores(
-        [], emptyGraph, new Set(), emptySessions, emptySchedule, emptyPhases, 5,
+        [],
+        emptyGraph,
+        new Set(),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       expect(result).toHaveLength(0);
     });
@@ -515,7 +627,13 @@ describe('computePriorityScores', () => {
     it('includes "Critical path" for critical path tasks', () => {
       const tasks = [makeTask({ id: 'T1', sprint: 5 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(['T1']), emptySessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(['T1']),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       expect(result[0].reason).toContain('Critical path');
     });
@@ -523,9 +641,13 @@ describe('computePriorityScores', () => {
     it('includes "Overdue" for negative float tasks', () => {
       const tasks = [makeTask({ id: 'T1', sprint: 5 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
         new Map([['T1', { taskId: 'T1', totalFloat: -30 }]]),
-        emptyPhases, 5,
+        emptyPhases,
+        5
       );
       expect(result[0].reason).toContain('Overdue');
     });
@@ -533,9 +655,13 @@ describe('computePriorityScores', () => {
     it('includes "Due today" for tight float tasks', () => {
       const tasks = [makeTask({ id: 'T1', sprint: 5 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
         new Map([['T1', { taskId: 'T1', totalFloat: 30 }]]),
-        emptyPhases, 5,
+        emptyPhases,
+        5
       );
       expect(result[0].reason).toContain('Due today');
     });
@@ -546,18 +672,28 @@ describe('computePriorityScores', () => {
       ]);
       const tasks = [makeTask({ id: 'T1', sprint: 5 })];
       const result = computePriorityScores(
-        tasks, nodes, new Set(), emptySessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        nodes,
+        new Set(),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       expect(result[0].reason).toContain('Unblocks 4 tasks');
     });
 
     it('includes "Exec ready" for exec-ready tasks', () => {
-      const sessions = new Map<string, SessionStatus>([
-        ['T1', { hasSpec: true, hasPlan: true }],
-      ]);
+      const sessions = new Map<string, SessionStatus>([['T1', { hasSpec: true, hasPlan: true }]]);
       const tasks = [makeTask({ id: 'T1', sprint: 5 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), sessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(),
+        sessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       expect(result[0].reason).toContain('Exec ready');
     });
@@ -565,7 +701,13 @@ describe('computePriorityScores', () => {
     it('includes "Tier A" for high business value tasks', () => {
       const tasks = [makeTask({ id: 'EXC-SEC-001', section: 'Security', sprint: 5 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       expect(result[0].reason).toContain('Tier A');
     });
@@ -573,7 +715,13 @@ describe('computePriorityScores', () => {
     it('returns "Ready" when no special factors apply', () => {
       const tasks = [makeTask({ id: 'IFC-050', sprint: 20 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       expect(result[0].reason).toBe('Ready');
     });
@@ -583,7 +731,13 @@ describe('computePriorityScores', () => {
     it('recommends spec when no session status', () => {
       const tasks = [makeTask({ id: 'T1', sprint: 5 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       expect(result[0].recommendedAction).toBe('spec');
     });
@@ -592,7 +746,13 @@ describe('computePriorityScores', () => {
       const sessions = new Map([['T1', { hasSpec: true, hasPlan: false }]]);
       const tasks = [makeTask({ id: 'T1', sprint: 5 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), sessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(),
+        sessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       expect(result[0].recommendedAction).toBe('plan');
     });
@@ -601,7 +761,13 @@ describe('computePriorityScores', () => {
       const sessions = new Map([['T1', { hasSpec: true, hasPlan: true }]]);
       const tasks = [makeTask({ id: 'T1', sprint: 5 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), sessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(),
+        sessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       expect(result[0].recommendedAction).toBe('exec');
     });
@@ -611,7 +777,13 @@ describe('computePriorityScores', () => {
     it('factors include all WSJF fields', () => {
       const tasks = [makeTask({ id: 'T1', sprint: 5 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions, emptySchedule, emptyPhases, 5,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
+        emptySchedule,
+        emptyPhases,
+        5
       );
       const { factors } = result[0];
       expect(factors).toHaveProperty('businessValue');
@@ -627,9 +799,13 @@ describe('computePriorityScores', () => {
     it('does not expose internal fields (_isCriticalPath, _totalFloat)', () => {
       const tasks = [makeTask({ id: 'T1', sprint: 5 })];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(['T1']), emptySessions,
+        tasks,
+        emptyGraph,
+        new Set(['T1']),
+        emptySessions,
         new Map([['T1', { taskId: 'T1', totalFloat: -100 }]]),
-        emptyPhases, 5,
+        emptyPhases,
+        5
       );
       const entry = result[0] as unknown as Record<string, unknown>;
       expect(entry).not.toHaveProperty('_isCriticalPath');
@@ -645,7 +821,12 @@ describe('computePriorityScores', () => {
         makeTask({ id: 'C', sprint: 12 }),
       ];
       const result = computePriorityScores(
-        tasks, emptyGraph, new Set(), emptySessions, emptySchedule, emptyPhases,
+        tasks,
+        emptyGraph,
+        new Set(),
+        emptySessions,
+        emptySchedule,
+        emptyPhases
       );
       // B (sprint 5) is closest to inferred current sprint → highest time criticality
       // A (sprint 8) and C (sprint 12) are further away

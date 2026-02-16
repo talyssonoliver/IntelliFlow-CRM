@@ -36,7 +36,10 @@ vi.mock('@langchain/openai', () => ({
         },
         callScript: {
           opening: 'Hi [Name], this is [Your Name] from IntelliFlow.',
-          keyQuestions: ['What is your timeline for implementation?', 'Who else is involved in the decision?'],
+          keyQuestions: [
+            'What is your timeline for implementation?',
+            'Who else is involved in the decision?',
+          ],
           objectionsToAnticipate: ['Budget concerns', 'Current vendor relationship'],
           closingStatement: 'Would you be available for a 30-minute demo next week?',
         },

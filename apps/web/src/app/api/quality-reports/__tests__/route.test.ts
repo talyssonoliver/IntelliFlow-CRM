@@ -35,14 +35,12 @@ function makeReq(params: Record<string, string> = {}) {
 
 describe('/api/quality-reports', () => {
   beforeEach(() => {
-    mockNextResponseJson.mockImplementation(
-      (body: unknown, init?: { status?: number }) => ({
-        json: () => Promise.resolve(body),
-        body,
-        status: init?.status || 200,
-        headers: new Map(),
-      }),
-    );
+    mockNextResponseJson.mockImplementation((body: unknown, init?: { status?: number }) => ({
+      json: () => Promise.resolve(body),
+      body,
+      status: init?.status || 200,
+      headers: new Map(),
+    }));
     mockExistsSync.mockReturnValue(false);
     mockReadFileSync.mockReturnValue('{}');
   });
@@ -93,14 +91,17 @@ describe('/api/quality-reports', () => {
   });
 
   it('returns lighthouse report with real data when file exists', async () => {
-    mockExistsSync.mockImplementation((p: string) =>
-      typeof p === 'string' && p.includes('lighthouse-summary.json'));
-    mockReadFileSync.mockReturnValue(JSON.stringify({
-      generatedAt: '2026-01-01T00:00:00Z',
-      source: 'ci',
-      type: 'real',
-      scores: { performance: 90, accessibility: 95, bestPractices: 85, seo: 92 },
-    }));
+    mockExistsSync.mockImplementation(
+      (p: string) => typeof p === 'string' && p.includes('lighthouse-summary.json')
+    );
+    mockReadFileSync.mockReturnValue(
+      JSON.stringify({
+        generatedAt: '2026-01-01T00:00:00Z',
+        source: 'ci',
+        type: 'real',
+        scores: { performance: 90, accessibility: 95, bestPractices: 85, seo: 92 },
+      })
+    );
     const res = await GET(makeReq({ action: 'detail', id: 'lighthouse' }));
     const d = await res.json();
     expect(d.data.score).toBeDefined();
@@ -108,16 +109,19 @@ describe('/api/quality-reports', () => {
   });
 
   it('returns coverage report with istanbul format data', async () => {
-    mockExistsSync.mockImplementation((p: string) =>
-      typeof p === 'string' && p.includes('coverage-summary.json'));
-    mockReadFileSync.mockReturnValue(JSON.stringify({
-      total: {
-        lines: { pct: 85 },
-        branches: { pct: 75 },
-        functions: { pct: 90 },
-        statements: { pct: 88 },
-      },
-    }));
+    mockExistsSync.mockImplementation(
+      (p: string) => typeof p === 'string' && p.includes('coverage-summary.json')
+    );
+    mockReadFileSync.mockReturnValue(
+      JSON.stringify({
+        total: {
+          lines: { pct: 85 },
+          branches: { pct: 75 },
+          functions: { pct: 90 },
+          statements: { pct: 88 },
+        },
+      })
+    );
     const res = await GET(makeReq({ action: 'detail', id: 'coverage' }));
     const d = await res.json();
     expect(d.data.score).toBeDefined();
@@ -125,14 +129,17 @@ describe('/api/quality-reports', () => {
   });
 
   it('returns performance report with benchmark data', async () => {
-    mockExistsSync.mockImplementation((p: string) =>
-      typeof p === 'string' && p.includes('performance-summary.json'));
-    mockReadFileSync.mockReturnValue(JSON.stringify({
-      score: 85,
-      passed: true,
-      generatedAt: '2026-01-01T00:00:00Z',
-      metrics: { jsonParse_p95: '0.5ms' },
-    }));
+    mockExistsSync.mockImplementation(
+      (p: string) => typeof p === 'string' && p.includes('performance-summary.json')
+    );
+    mockReadFileSync.mockReturnValue(
+      JSON.stringify({
+        score: 85,
+        passed: true,
+        generatedAt: '2026-01-01T00:00:00Z',
+        metrics: { jsonParse_p95: '0.5ms' },
+      })
+    );
     const res = await GET(makeReq({ action: 'detail', id: 'performance' }));
     const d = await res.json();
     expect(d.data.score).toBe(85);
@@ -140,15 +147,18 @@ describe('/api/quality-reports', () => {
   });
 
   it('returns debt report from code analysis', async () => {
-    mockExistsSync.mockImplementation((p: string) =>
-      typeof p === 'string' && p.includes('latest.json'));
-    mockReadFileSync.mockReturnValue(JSON.stringify({
-      debt: {
-        success: true,
-        data: { healthScore: 70, total: 5 },
-        summary: { healthScore: 70, total: 5, critical: 1, overdue: 0 },
-      },
-    }));
+    mockExistsSync.mockImplementation(
+      (p: string) => typeof p === 'string' && p.includes('latest.json')
+    );
+    mockReadFileSync.mockReturnValue(
+      JSON.stringify({
+        debt: {
+          success: true,
+          data: { healthScore: 70, total: 5 },
+          summary: { healthScore: 70, total: 5, critical: 1, overdue: 0 },
+        },
+      })
+    );
     const res = await GET(makeReq({ action: 'detail', id: 'debt' }));
     const d = await res.json();
     expect(d.data.id).toBe('debt');
@@ -156,15 +166,18 @@ describe('/api/quality-reports', () => {
   });
 
   it('returns sonarqube report when server available', async () => {
-    mockExistsSync.mockImplementation((p: string) =>
-      typeof p === 'string' && p.includes('latest.json'));
-    mockReadFileSync.mockReturnValue(JSON.stringify({
-      sonarqube: {
-        success: true,
-        data: { available: true, bugs: 2, vulnerabilities: 1, qualityGate: { status: 'OK' } },
-        summary: { gateStatus: 'OK', healthScore: 80, bugs: 2, vulnerabilities: 1, coverage: 85 },
-      },
-    }));
+    mockExistsSync.mockImplementation(
+      (p: string) => typeof p === 'string' && p.includes('latest.json')
+    );
+    mockReadFileSync.mockReturnValue(
+      JSON.stringify({
+        sonarqube: {
+          success: true,
+          data: { available: true, bugs: 2, vulnerabilities: 1, qualityGate: { status: 'OK' } },
+          summary: { gateStatus: 'OK', healthScore: 80, bugs: 2, vulnerabilities: 1, coverage: 85 },
+        },
+      })
+    );
     const res = await GET(makeReq({ action: 'detail', id: 'sonarqube' }));
     const d = await res.json();
     expect(d.data.id).toBe('sonarqube');
@@ -179,7 +192,9 @@ describe('/api/quality-reports', () => {
 
   it('handles readFileSync errors gracefully', async () => {
     mockExistsSync.mockReturnValue(true);
-    mockReadFileSync.mockImplementation(() => { throw new Error('ENOENT'); });
+    mockReadFileSync.mockImplementation(() => {
+      throw new Error('ENOENT');
+    });
     const res = await GET(makeReq());
     const d = await res.json();
     expect(d.success).toBe(true);

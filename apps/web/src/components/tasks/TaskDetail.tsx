@@ -64,14 +64,42 @@ function getDueDateStatus(date: Date | string | null): 'overdue' | 'today' | 'no
   return 'normal';
 }
 
-function getEntityInfo(task: TaskDetailData): { type: string; name: string; href: string; icon: string } | null {
-  if (task.lead) return { type: 'Lead', name: `${task.lead.firstName} ${task.lead.lastName}`, href: `/leads/${task.lead.id}`, icon: 'group' };
-  if (task.contact) return { type: 'Contact', name: `${task.contact.firstName} ${task.contact.lastName}`, href: `/contacts/${task.contact.id}`, icon: 'person' };
-  if (task.opportunity) return { type: 'Deal', name: task.opportunity.name, href: `/deals/${task.opportunity.id}`, icon: 'handshake' };
+function getEntityInfo(
+  task: TaskDetailData
+): { type: string; name: string; href: string; icon: string } | null {
+  if (task.lead)
+    return {
+      type: 'Lead',
+      name: `${task.lead.firstName} ${task.lead.lastName}`,
+      href: `/leads/${task.lead.id}`,
+      icon: 'group',
+    };
+  if (task.contact)
+    return {
+      type: 'Contact',
+      name: `${task.contact.firstName} ${task.contact.lastName}`,
+      href: `/contacts/${task.contact.id}`,
+      icon: 'person',
+    };
+  if (task.opportunity)
+    return {
+      type: 'Deal',
+      name: task.opportunity.name,
+      href: `/deals/${task.opportunity.id}`,
+      icon: 'handshake',
+    };
   return null;
 }
 
-export function TaskDetail({ task, isLoading, isNotFound, onComplete, onEdit, onDelete, onArchive }: TaskDetailProps) {
+export function TaskDetail({
+  task,
+  isLoading,
+  isNotFound,
+  onComplete,
+  onEdit,
+  onDelete,
+  onArchive,
+}: TaskDetailProps) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
 
@@ -88,11 +116,16 @@ export function TaskDetail({ task, isLoading, isNotFound, onComplete, onEdit, on
   if (isNotFound || !task) {
     return (
       <div className="flex flex-col items-center justify-center py-12" data-testid="task-not-found">
-        <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2" aria-hidden="true">
+        <span
+          className="material-symbols-outlined text-4xl text-muted-foreground mb-2"
+          aria-hidden="true"
+        >
           search_off
         </span>
         <p className="text-lg font-medium text-foreground">Task not found</p>
-        <p className="text-sm text-muted-foreground mt-1">The task may have been deleted or doesn&apos;t exist</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          The task may have been deleted or doesn&apos;t exist
+        </p>
       </div>
     );
   }
@@ -101,9 +134,12 @@ export function TaskDetail({ task, isLoading, isNotFound, onComplete, onEdit, on
   const priority = PRIORITY_STYLES[task.priority] ?? PRIORITY_STYLES.MEDIUM;
   const entity = getEntityInfo(task);
   const dueStatus = getDueDateStatus(task.dueDate);
-  const dueDateColor = dueStatus === 'overdue' ? 'text-red-600 dark:text-red-400' :
-    dueStatus === 'today' ? 'text-amber-600 dark:text-amber-400' :
-    'text-foreground';
+  const dueDateColor =
+    dueStatus === 'overdue'
+      ? 'text-red-600 dark:text-red-400'
+      : dueStatus === 'today'
+        ? 'text-amber-600 dark:text-amber-400'
+        : 'text-foreground';
 
   return (
     <div className="space-y-6">
@@ -112,11 +148,17 @@ export function TaskDetail({ task, isLoading, isNotFound, onComplete, onEdit, on
         <div>
           <h1 className="text-2xl font-bold text-foreground">{task.title}</h1>
           <div className="flex items-center gap-3 mt-2 flex-wrap">
-            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyle}`}>
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyle}`}
+            >
               {task.status.replace('_', ' ')}
             </span>
-            <span className={`inline-flex items-center gap-1 text-sm font-medium ${priority.color}`}>
-              <span className="material-symbols-outlined text-base" aria-hidden="true">{priority.icon}</span>
+            <span
+              className={`inline-flex items-center gap-1 text-sm font-medium ${priority.color}`}
+            >
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                {priority.icon}
+              </span>
               {task.priority}
             </span>
           </div>
@@ -127,7 +169,9 @@ export function TaskDetail({ task, isLoading, isNotFound, onComplete, onEdit, on
           className="px-3 py-1.5 text-sm rounded-md border hover:bg-accent"
           aria-label="Edit task"
         >
-          <span className="material-symbols-outlined text-base" aria-hidden="true">edit</span>
+          <span className="material-symbols-outlined text-base" aria-hidden="true">
+            edit
+          </span>
         </button>
       </div>
 
@@ -136,14 +180,19 @@ export function TaskDetail({ task, isLoading, isNotFound, onComplete, onEdit, on
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Due Date</p>
-            <p className={`text-sm font-medium mt-0.5 ${dueDateColor}`} data-testid={`due-${dueStatus}`}>
+            <p
+              className={`text-sm font-medium mt-0.5 ${dueDateColor}`}
+              data-testid={`due-${dueStatus}`}
+            >
               {formatDate(task.dueDate)}
               {dueStatus === 'overdue' && <span className="ml-1 text-xs">(overdue)</span>}
             </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Owner</p>
-            <p className="text-sm font-medium mt-0.5">{task.owner?.name ?? task.owner?.email ?? '—'}</p>
+            <p className="text-sm font-medium mt-0.5">
+              {task.owner?.name ?? task.owner?.email ?? '—'}
+            </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Created</p>
@@ -159,9 +208,16 @@ export function TaskDetail({ task, isLoading, isNotFound, onComplete, onEdit, on
       {/* Entity link */}
       {entity && (
         <Card className="p-4">
-          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Linked {entity.type}</p>
-          <a href={entity.href} className="inline-flex items-center gap-2 text-primary hover:underline">
-            <span className="material-symbols-outlined text-base" aria-hidden="true">{entity.icon}</span>
+          <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">
+            Linked {entity.type}
+          </p>
+          <a
+            href={entity.href}
+            className="inline-flex items-center gap-2 text-primary hover:underline"
+          >
+            <span className="material-symbols-outlined text-base" aria-hidden="true">
+              {entity.icon}
+            </span>
             {entity.name}
           </a>
         </Card>
@@ -177,19 +233,23 @@ export function TaskDetail({ task, isLoading, isNotFound, onComplete, onEdit, on
 
       {/* Actions */}
       <div className="flex items-center gap-3">
-        {task.status !== 'COMPLETED' && task.status !== 'CANCELLED' && task.status !== 'ARCHIVED' && (
-          <button
-            type="button"
-            onClick={() => onComplete(task.id)}
-            className="px-4 py-2 text-sm rounded-md bg-green-600 text-white hover:bg-green-700"
-            aria-label="Complete task"
-          >
-            <span className="inline-flex items-center gap-1">
-              <span className="material-symbols-outlined text-base" aria-hidden="true">check_circle</span>
-              Complete
-            </span>
-          </button>
-        )}
+        {task.status !== 'COMPLETED' &&
+          task.status !== 'CANCELLED' &&
+          task.status !== 'ARCHIVED' && (
+            <button
+              type="button"
+              onClick={() => onComplete(task.id)}
+              className="px-4 py-2 text-sm rounded-md bg-green-600 text-white hover:bg-green-700"
+              aria-label="Complete task"
+            >
+              <span className="inline-flex items-center gap-1">
+                <span className="material-symbols-outlined text-base" aria-hidden="true">
+                  check_circle
+                </span>
+                Complete
+              </span>
+            </button>
+          )}
         {(task.status === 'COMPLETED' || task.status === 'CANCELLED') && (
           <button
             type="button"
@@ -198,29 +258,37 @@ export function TaskDetail({ task, isLoading, isNotFound, onComplete, onEdit, on
             aria-label="Archive task"
           >
             <span className="inline-flex items-center gap-1">
-              <span className="material-symbols-outlined text-base" aria-hidden="true">archive</span>
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                archive
+              </span>
               Archive
             </span>
           </button>
         )}
-        {task.status !== 'COMPLETED' && task.status !== 'CANCELLED' && task.status !== 'ARCHIVED' && (
-          <button
-            type="button"
-            onClick={() => setShowDeleteConfirm(true)}
-            className="px-4 py-2 text-sm rounded-md border border-destructive text-destructive hover:bg-destructive/10"
-            aria-label="Delete task"
-          >
-            <span className="inline-flex items-center gap-1">
-              <span className="material-symbols-outlined text-base" aria-hidden="true">delete</span>
-              Delete
-            </span>
-          </button>
-        )}
+        {task.status !== 'COMPLETED' &&
+          task.status !== 'CANCELLED' &&
+          task.status !== 'ARCHIVED' && (
+            <button
+              type="button"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="px-4 py-2 text-sm rounded-md border border-destructive text-destructive hover:bg-destructive/10"
+              aria-label="Delete task"
+            >
+              <span className="inline-flex items-center gap-1">
+                <span className="material-symbols-outlined text-base" aria-hidden="true">
+                  delete
+                </span>
+                Delete
+              </span>
+            </button>
+          )}
       </div>
 
       <ConfirmationDialog
         open={showDeleteConfirm}
-        onOpenChange={(open) => { if (!open) setShowDeleteConfirm(false); }}
+        onOpenChange={(open) => {
+          if (!open) setShowDeleteConfirm(false);
+        }}
         onConfirm={() => {
           onDelete(task.id);
           setShowDeleteConfirm(false);
@@ -233,7 +301,9 @@ export function TaskDetail({ task, isLoading, isNotFound, onComplete, onEdit, on
 
       <ConfirmationDialog
         open={showArchiveConfirm}
-        onOpenChange={(open) => { if (!open) setShowArchiveConfirm(false); }}
+        onOpenChange={(open) => {
+          if (!open) setShowArchiveConfirm(false);
+        }}
         onConfirm={() => {
           onArchive(task.id);
           setShowArchiveConfirm(false);

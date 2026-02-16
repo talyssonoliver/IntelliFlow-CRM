@@ -1,21 +1,23 @@
 # Case RAG Tool Documentation
 
-**Task**: IFC-156
-**Status**: Implemented
-**Sprint**: 13
-**Section**: AI Assistant
+**Task**: IFC-156 **Status**: Implemented **Sprint**: 13 **Section**: AI
+Assistant
 
 ## Overview
 
-The Case RAG (Retrieval-Augmented Generation) tool enables AI agents to retrieve relevant context from legal cases with full permission enforcement, citation tracking, and security hardening.
+The Case RAG (Retrieval-Augmented Generation) tool enables AI agents to retrieve
+relevant context from legal cases with full permission enforcement, citation
+tracking, and security hardening.
 
 ## Features
 
 ### 1. Permission-Constrained Retrieval
 
 All retrievals are constrained by:
+
 - **Tenant isolation**: Queries scoped to `tenant_id` via RLS
-- **Case access verification**: User must be owner, assignee, or have role-based access
+- **Case access verification**: User must be owner, assignee, or have role-based
+  access
 - **Document ACL checks**: Each document's access control list is verified
 
 ```typescript
@@ -31,13 +33,13 @@ Every piece of retrieved content includes full citation metadata:
 
 ```typescript
 interface Citation {
-  id: string;                    // Unique citation ID
+  id: string; // Unique citation ID
   sourceType: 'case' | 'document' | 'task' | 'note' | 'conversation';
-  sourceId: string;              // Original source ID
-  title: string;                 // Human-readable title
-  retrievedAt: string;           // ISO timestamp
-  relevanceScore: number;        // 0-1 relevance score
-  snippet: string;               // Sanitized content snippet
+  sourceId: string; // Original source ID
+  title: string; // Human-readable title
+  retrievedAt: string; // ISO timestamp
+  relevanceScore: number; // 0-1 relevance score
+  snippet: string; // Sanitized content snippet
   metadata: Record<string, unknown>; // Source-specific metadata
 }
 ```
@@ -47,19 +49,23 @@ interface Citation {
 Retrieved content is sanitized to prevent prompt injection attacks:
 
 #### Dangerous Pattern Detection
+
 - `ignore previous instructions` patterns
 - `you are now` role injection patterns
 - System prompt markers (`[system]`, `<|im_start|>`, etc.)
 - HTML/script injection attempts
 
 #### Content Sanitization
+
 - Escapes dangerous characters: `< > { } [ ] \ ``
 - Replaces detected injection patterns with `[CONTENT_FILTERED]`
 - Limits consecutive newlines
 - Truncates excessively long content
 
 #### Boundary Markers
+
 Content is wrapped with clear boundaries:
+
 ```
 <<<RETRIEVED_CONTENT_START>>>[Source: doc-123]
 [Sanitized content here]
@@ -70,15 +76,15 @@ Content is wrapped with clear boundaries:
 
 Actions that affect external systems require human approval:
 
-| Action | Requires Approval |
-|--------|-------------------|
-| `send_email` | Yes |
-| `share_externally` | Yes |
-| `export_case` | Yes |
-| `delete_document` | Yes |
-| `change_case_status` | Yes |
-| `retrieve_context` | No |
-| `search` | No |
+| Action               | Requires Approval |
+| -------------------- | ----------------- |
+| `send_email`         | Yes               |
+| `share_externally`   | Yes               |
+| `export_case`        | Yes               |
+| `delete_document`    | Yes               |
+| `change_case_status` | Yes               |
+| `retrieve_context`   | No                |
+| `search`             | No                |
 
 ## Usage
 
@@ -161,18 +167,21 @@ All retrieval operations are logged to the audit table:
 ### Rate Limiting
 
 Consider implementing rate limiting at the API layer to prevent abuse:
+
 - Per-user: 100 retrievals/minute
 - Per-tenant: 1000 retrievals/minute
 
 ### Content Classification
 
-Documents with `PRIVILEGED` classification require additional attorney-client privilege checks.
+Documents with `PRIVILEGED` classification require additional attorney-client
+privilege checks.
 
 ## Performance
 
 **Target**: <2s response time
 
 Optimizations:
+
 - Parallel source retrieval
 - Early termination at `maxResults`
 - Relevance score filtering before processing
@@ -181,11 +190,13 @@ Optimizations:
 ## Testing
 
 Run tests with:
+
 ```bash
 pnpm --filter @intelliflow/ai test
 ```
 
 Test coverage includes:
+
 - Prompt injection pattern detection
 - Content sanitization edge cases
 - Schema validation

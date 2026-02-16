@@ -54,12 +54,7 @@
           },
           "status": {
             "type": "string",
-            "enum": [
-              "NOT_STARTED",
-              "IN_PROGRESS",
-              "DONE",
-              "BLOCKED"
-            ]
+            "enum": ["NOT_STARTED", "IN_PROGRESS", "DONE", "BLOCKED"]
           },
           "started_at": {
             "anyOf": [
@@ -86,10 +81,7 @@
             ]
           }
         },
-        "required": [
-          "id",
-          "status"
-        ],
+        "required": ["id", "status"],
         "additionalProperties": false
       }
     },
@@ -127,13 +119,7 @@
           "maximum": 9007199254740991
         }
       },
-      "required": [
-        "total",
-        "done",
-        "in_progress",
-        "blocked",
-        "not_started"
-      ],
+      "required": ["total", "done", "in_progress", "blocked", "not_started"],
       "additionalProperties": false
     },
     "kpi_summary": {
@@ -184,11 +170,7 @@
             "type": "string"
           }
         },
-        "required": [
-          "target",
-          "actual",
-          "status"
-        ],
+        "required": ["target", "actual", "status"],
         "additionalProperties": false
       }
     },
@@ -225,22 +207,11 @@
             ]
           }
         },
-        "required": [
-          "task_id",
-          "blocker",
-          "owner",
-          "raised_at"
-        ],
+        "required": ["task_id", "blocker", "owner", "raised_at"],
         "additionalProperties": false
       }
     }
   },
-  "required": [
-    "sprint",
-    "name",
-    "target_date",
-    "phases",
-    "task_summary"
-  ],
+  "required": ["sprint", "name", "target_date", "phases", "task_summary"],
   "additionalProperties": false
 }

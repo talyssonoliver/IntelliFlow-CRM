@@ -21,8 +21,7 @@ export class AuthenticationError extends AdapterError {
       message?: string;
     }
   ) {
-    const message =
-      options?.message ?? `Authentication failed for ${provider}`;
+    const message = options?.message ?? `Authentication failed for ${provider}`;
     super(message, provider, options?.requestId);
     this.code = code;
     this.authType = options?.authType ?? 'unknown';

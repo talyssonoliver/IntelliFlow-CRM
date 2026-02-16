@@ -22,33 +22,57 @@ const mockQueueClose = vi.fn().mockResolvedValue(undefined);
 const mockQueueEventsClose = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('bullmq', () => {
-  const MockWorker = vi.fn().mockImplementation(function (this: any, _name: string, processor: unknown, _opts: unknown) {
+  const MockWorker = vi.fn().mockImplementation(function (
+    this: any,
+    _name: string,
+    processor: unknown,
+    _opts: unknown
+  ) {
     capturedProcessor = processor;
     this.on = mockWorkerOn;
     this.close = mockWorkerClose;
   });
   const MockQueue = vi.fn().mockImplementation(function (this: any) {
-    this.add = mockQueueAdd; this.getJob = mockQueueGetJob;
-    this.getWaitingCount = mockQueueGetWaitingCount; this.getActiveCount = mockQueueGetActiveCount;
-    this.getCompletedCount = mockQueueGetCompletedCount; this.getFailedCount = mockQueueGetFailedCount;
-    this.getDelayedCount = mockQueueGetDelayedCount; this.close = mockQueueClose;
+    this.add = mockQueueAdd;
+    this.getJob = mockQueueGetJob;
+    this.getWaitingCount = mockQueueGetWaitingCount;
+    this.getActiveCount = mockQueueGetActiveCount;
+    this.getCompletedCount = mockQueueGetCompletedCount;
+    this.getFailedCount = mockQueueGetFailedCount;
+    this.getDelayedCount = mockQueueGetDelayedCount;
+    this.close = mockQueueClose;
   });
-  const MockQueueEvents = vi.fn().mockImplementation(function (this: any) { this.close = mockQueueEventsClose; });
+  const MockQueueEvents = vi.fn().mockImplementation(function (this: any) {
+    this.close = mockQueueEventsClose;
+  });
   return { Worker: MockWorker, Queue: MockQueue, QueueEvents: MockQueueEvents, Job: vi.fn() };
 });
 
-const { mockIndexBatch, mockIndexNotesBatch, mockReindexAll, mockReindexAllNotes } = vi.hoisted(() => ({
-  mockIndexBatch: vi.fn().mockResolvedValue({ total: 5, successful: 5, failed: 0, results: [], totalTimeMs: 200 }),
-  mockIndexNotesBatch: vi.fn().mockResolvedValue({ total: 3, successful: 3, failed: 0, results: [], totalTimeMs: 100 }),
-  mockReindexAll: vi.fn().mockResolvedValue({ total: 50, successful: 48, failed: 2, results: [], totalTimeMs: 5000 }),
-  mockReindexAllNotes: vi.fn().mockResolvedValue({ total: 30, successful: 30, failed: 0, results: [], totalTimeMs: 3000 }),
-}));
+const { mockIndexBatch, mockIndexNotesBatch, mockReindexAll, mockReindexAllNotes } = vi.hoisted(
+  () => ({
+    mockIndexBatch: vi
+      .fn()
+      .mockResolvedValue({ total: 5, successful: 5, failed: 0, results: [], totalTimeMs: 200 }),
+    mockIndexNotesBatch: vi
+      .fn()
+      .mockResolvedValue({ total: 3, successful: 3, failed: 0, results: [], totalTimeMs: 100 }),
+    mockReindexAll: vi
+      .fn()
+      .mockResolvedValue({ total: 50, successful: 48, failed: 2, results: [], totalTimeMs: 5000 }),
+    mockReindexAllNotes: vi
+      .fn()
+      .mockResolvedValue({ total: 30, successful: 30, failed: 0, results: [], totalTimeMs: 3000 }),
+  })
+);
 
 vi.mock('../../services/document-indexer', () => ({
   createDocumentIndexer: vi.fn().mockReturnValue({
-    indexBatch: mockIndexBatch, indexNotesBatch: mockIndexNotesBatch,
-    reindexAll: mockReindexAll, reindexAllNotes: mockReindexAllNotes,
-  }), DocumentIndexer: vi.fn(),
+    indexBatch: mockIndexBatch,
+    indexNotesBatch: mockIndexNotesBatch,
+    reindexAll: mockReindexAll,
+    reindexAllNotes: mockReindexAllNotes,
+  }),
+  DocumentIndexer: vi.fn(),
 }));
 
 vi.mock('@intelliflow/db', () => ({ PrismaClient: vi.fn() }));
@@ -64,13 +88,18 @@ describe('ReindexWorker - event handlers', () => {
   let mockPrisma: ReturnType<typeof createMockPrisma>;
   let worker: ReindexWorker;
   beforeEach(async () => {
-    vi.clearAllMocks(); capturedProcessor = null;
-    Object.keys(capturedEventHandlers).forEach(k => delete capturedEventHandlers[k]);
+    vi.clearAllMocks();
+    capturedProcessor = null;
+    Object.keys(capturedEventHandlers).forEach((k) => delete capturedEventHandlers[k]);
     mockPrisma = createMockPrisma();
     worker = new ReindexWorker(mockPrisma, redisConnection);
     await worker.start();
   });
-  afterEach(async () => { try { await worker.stop(); } catch (_e) {} });
+  afterEach(async () => {
+    try {
+      await worker.stop();
+    } catch (_e) {}
+  });
 
   it('should register completed, failed, and progress handlers', () => {
     expect(capturedEventHandlers.completed).toBeDefined();
@@ -79,18 +108,28 @@ describe('ReindexWorker - event handlers', () => {
   });
   it('should log on completed event', () => {
     const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    capturedEventHandlers.completed({ id: 'j1', name: 'reindex' }, { documents: { total: 5, successful: 5, failed: 0, results: [], totalTimeMs: 100 }, notes: { total: 3, successful: 3, failed: 0, results: [], totalTimeMs: 50 }, totalTimeMs: 150 });
-    expect(spy).toHaveBeenCalled(); spy.mockRestore();
+    capturedEventHandlers.completed(
+      { id: 'j1', name: 'reindex' },
+      {
+        documents: { total: 5, successful: 5, failed: 0, results: [], totalTimeMs: 100 },
+        notes: { total: 3, successful: 3, failed: 0, results: [], totalTimeMs: 50 },
+        totalTimeMs: 150,
+      }
+    );
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
   });
   it('should log on failed event', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     capturedEventHandlers.failed({ id: 'j2', name: 'reindex' }, new Error('fail'));
-    expect(spy).toHaveBeenCalled(); spy.mockRestore();
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
   });
   it('should log on progress event', () => {
     const spy = vi.spyOn(console, 'log').mockImplementation(() => {});
     capturedEventHandlers.progress({ id: 'j3' }, { stage: 'documents', overallProgress: 50 });
-    expect(spy).toHaveBeenCalled(); spy.mockRestore();
+    expect(spy).toHaveBeenCalled();
+    spy.mockRestore();
   });
 });
 
@@ -98,27 +137,56 @@ describe('ReindexWorker - processJob via captured processor', () => {
   let mockPrisma: ReturnType<typeof createMockPrisma>;
   let worker: ReindexWorker;
   beforeEach(async () => {
-    vi.clearAllMocks(); capturedProcessor = null;
+    vi.clearAllMocks();
+    capturedProcessor = null;
     mockPrisma = createMockPrisma();
     worker = new ReindexWorker(mockPrisma, redisConnection);
     await worker.start();
   });
-  afterEach(async () => { try { await worker.stop(); } catch (_e) {} });
+  afterEach(async () => {
+    try {
+      await worker.stop();
+    } catch (_e) {}
+  });
 
-  it('should capture the processor function', () => { expect(typeof capturedProcessor).toBe('function'); });
+  it('should capture the processor function', () => {
+    expect(typeof capturedProcessor).toBe('function');
+  });
   it('should process all-type job', async () => {
     if (capturedProcessor == null) return;
-    const j = { id: 'j-all', data: { indexType: 'all', batchSize: 10, forceRegenerate: false }, updateProgress: vi.fn().mockResolvedValue(undefined) };
+    const j = {
+      id: 'j-all',
+      data: { indexType: 'all', batchSize: 10, forceRegenerate: false },
+      updateProgress: vi.fn().mockResolvedValue(undefined),
+    };
     expect(await capturedProcessor(j)).toBeDefined();
   });
   it('should process documents with IDs', async () => {
     if (capturedProcessor == null) return;
-    const j = { id: 'j-d', data: { indexType: 'documents', batchSize: 5, forceRegenerate: false, documentIds: ['11111111-1111-1111-1111-111111111111'] }, updateProgress: vi.fn().mockResolvedValue(undefined) };
+    const j = {
+      id: 'j-d',
+      data: {
+        indexType: 'documents',
+        batchSize: 5,
+        forceRegenerate: false,
+        documentIds: ['11111111-1111-1111-1111-111111111111'],
+      },
+      updateProgress: vi.fn().mockResolvedValue(undefined),
+    };
     expect(await capturedProcessor(j)).toBeDefined();
   });
   it('should process notes with IDs', async () => {
     if (capturedProcessor == null) return;
-    const j = { id: 'j-n', data: { indexType: 'notes', batchSize: 5, forceRegenerate: false, noteIds: ['aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'] }, updateProgress: vi.fn().mockResolvedValue(undefined) };
+    const j = {
+      id: 'j-n',
+      data: {
+        indexType: 'notes',
+        batchSize: 5,
+        forceRegenerate: false,
+        noteIds: ['aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'],
+      },
+      updateProgress: vi.fn().mockResolvedValue(undefined),
+    };
     expect(await capturedProcessor(j)).toBeDefined();
   });
 });
@@ -127,18 +195,27 @@ describe('ReindexWorker - audit log failure', () => {
   let mockPrisma: ReturnType<typeof createMockPrisma>;
   let worker: ReindexWorker;
   beforeEach(async () => {
-    vi.clearAllMocks(); capturedProcessor = null;
+    vi.clearAllMocks();
+    capturedProcessor = null;
     mockPrisma = createMockPrisma();
     mockPrisma.auditLogEntry.create.mockRejectedValue(new Error('DB down'));
     worker = new ReindexWorker(mockPrisma, redisConnection);
     await worker.start();
   });
-  afterEach(async () => { try { await worker.stop(); } catch (_e) {} });
+  afterEach(async () => {
+    try {
+      await worker.stop();
+    } catch (_e) {}
+  });
 
   it('should not fail when audit log write fails', async () => {
     if (capturedProcessor == null) return;
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    const j = { id: 'j-af', data: { indexType: 'documents', batchSize: 10, forceRegenerate: false }, updateProgress: vi.fn().mockResolvedValue(undefined) };
+    const j = {
+      id: 'j-af',
+      data: { indexType: 'documents', batchSize: 10, forceRegenerate: false },
+      updateProgress: vi.fn().mockResolvedValue(undefined),
+    };
     expect(await capturedProcessor(j)).toBeDefined();
   });
 });

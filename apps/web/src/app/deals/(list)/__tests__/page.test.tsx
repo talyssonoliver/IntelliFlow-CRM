@@ -20,7 +20,7 @@ vi.mock('next/navigation', () => ({
     replace: mockReplace,
     prefetch: vi.fn(),
   }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams('view=pipeline'),
   usePathname: () => '/deals',
   useParams: () => ({}),
 }));
@@ -104,6 +104,12 @@ const mockQueryState = {
 
 vi.mock('@/lib/trpc', () => ({
   trpc: {
+    useUtils: () => ({
+      opportunity: {
+        list: { invalidate: vi.fn() },
+        stats: { invalidate: vi.fn() },
+      },
+    }),
     opportunity: {
       list: {
         useQuery: () => ({
@@ -126,8 +132,18 @@ vi.mock('@/lib/trpc', () => ({
 
 // Mock @intelliflow/ui
 vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, className, ...rest }: { children: React.ReactNode; className?: string; [key: string]: unknown }) => (
-    <div data-testid="card" className={className} {...rest}>{children}</div>
+  Card: ({
+    children,
+    className,
+    ...rest
+  }: {
+    children: React.ReactNode;
+    className?: string;
+    [key: string]: unknown;
+  }) => (
+    <div data-testid="card" className={className} {...rest}>
+      {children}
+    </div>
   ),
   cn: (...args: (string | undefined | boolean)[]) => args.filter(Boolean).join(' '),
   Skeleton: ({ className }: { className?: string }) => (
@@ -147,18 +163,19 @@ vi.mock('@/components/shared', () => ({
 
 // Mock extracted deal components — render minimal stubs that prove props flow through
 vi.mock('@/components/deals', () => ({
-  PipelineBoard: ({ deals, onStageChange, onDealNavigate }: {
+  DealListView: () => <div data-testid="deal-list-view">Deal List View</div>,
+  PipelineBoard: ({
+    deals,
+    onStageChange,
+    onDealNavigate,
+  }: {
     deals: Array<{ id: string; name: string; stage: string }>;
     onStageChange: (id: string, stage: string) => void;
     onDealNavigate: (id: string) => void;
   }) => (
     <div data-testid="pipeline-board" data-deal-count={deals.length}>
       {deals.map((d) => (
-        <button
-          key={d.id}
-          data-testid={`deal-${d.id}`}
-          onClick={() => onDealNavigate(d.id)}
-        >
+        <button key={d.id} data-testid={`deal-${d.id}`} onClick={() => onDealNavigate(d.id)}>
           {d.name}
         </button>
       ))}
@@ -175,7 +192,11 @@ vi.mock('@/components/deals', () => ({
       </button>
     </div>
   ),
-  ValueSummary: ({ stats }: { stats: { totalDeals: number; totalValue: number; weightedValue: number; wonValue: number } }) => (
+  ValueSummary: ({
+    stats,
+  }: {
+    stats: { totalDeals: number; totalValue: number; weightedValue: number; wonValue: number };
+  }) => (
     <div data-testid="value-summary">
       <span data-testid="total-deals">{stats.totalDeals}</span>
       <span data-testid="total-value">{stats.totalValue}</span>
@@ -183,15 +204,15 @@ vi.mock('@/components/deals', () => ({
       <span data-testid="won-value">{stats.wonValue}</span>
     </div>
   ),
-  DealFilters: ({ value, onChange }: {
+  DealFilters: ({
+    value,
+    onChange,
+  }: {
     value: Record<string, unknown>;
     onChange: (v: Record<string, unknown>) => void;
   }) => (
     <div data-testid="deal-filters">
-      <button
-        data-testid="set-filter"
-        onClick={() => onChange({ ...value, ownerId: 'me' })}
-      >
+      <button data-testid="set-filter" onClick={() => onChange({ ...value, ownerId: 'me' })}>
         Set Filter
       </button>
     </div>
@@ -220,7 +241,7 @@ vi.mock('recharts', () => ({
 }));
 
 // NOW import after all mocks
-import { render, screen, waitFor, act, cleanup } from '@testing-library/react';
+import { render, screen, act, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import DealsPage from '../page';
 

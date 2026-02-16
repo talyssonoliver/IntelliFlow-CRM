@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-15T18:58:15.172Z",
+  "last_updated": "2026-02-16T20:49:51.202Z",
   "total_tasks": 305,
   "sprints": {
     "sprint-0": {
@@ -130,10 +130,8 @@
       "PG-016",
       "PG-018",
       "PG-021",
-      "PG-025",
       "PG-031",
       "PG-032",
-      "PG-033",
       "DOC-001",
       "BRAND-001",
       "BRAND-002",
@@ -229,6 +227,7 @@
       "IFC-181",
       "IFC-182",
       "PG-129",
+      "PG-132",
       "IFC-184",
       "IFC-185",
       "IFC-186",
@@ -237,20 +236,28 @@
       "IFC-189",
       "PG-133",
       "PG-134",
-      "PG-136",
+      "PG-135",
       "PG-137",
       "PG-138",
       "PG-139",
       "PG-142",
       "PG-143",
+      "PG-144",
       "IFC-197",
-      "IFC-198"
+      "PG-148",
+      "IFC-198",
+      "IFC-205",
+      "IFC-206",
+      "IFC-207"
     ],
-    "IN_PROGRESS": [],
+    "IN_PROGRESS": [
+      "PG-136",
+      "PG-150"
+    ],
     "VALIDATING": [],
     "BLOCKED": [],
     "PLANNED": [
-      "PG-135"
+      "PG-149"
     ],
     "BACKLOG": [
       "IFC-030",
@@ -292,11 +299,13 @@
       "PG-022",
       "PG-023",
       "PG-024",
+      "PG-025",
       "PG-026",
       "PG-027",
       "PG-028",
       "PG-029",
       "PG-030",
+      "PG-033",
       "PG-034",
       "PG-035",
       "PG-036",
@@ -408,11 +417,9 @@
       "IFC-183",
       "PG-130",
       "PG-131",
-      "PG-132",
       "IFC-190",
       "PG-140",
       "PG-141",
-      "PG-144",
       "PG-145",
       "PG-146",
       "PG-147",
@@ -422,9 +429,6 @@
       "IFC-194",
       "IFC-195",
       "IFC-196",
-      "PG-148",
-      "PG-149",
-      "PG-150",
       "PG-151",
       "PG-152",
       "PG-153",
@@ -434,9 +438,6 @@
       "IFC-202",
       "IFC-203",
       "IFC-204",
-      "IFC-205",
-      "IFC-206",
-      "IFC-207",
       "PG-154",
       "PG-155",
       "PG-156",
@@ -1187,7 +1188,7 @@
       "description": "PHASE-002: Next.js 16.0.10 App Router UI",
       "owner": "Frontend Dev + UX (STOA-Domain)",
       "status": "DONE",
-      "sprint": 7,
+      "sprint": 6,
       "dependencies": [
         "IFC-013"
       ],
@@ -1204,7 +1205,7 @@
       "description": "PHASE-002: BullMQ Job Queue Setup",
       "owner": "Backend Dev + DevOps (STOA-Automation)",
       "status": "DONE",
-      "sprint": 7,
+      "sprint": 6,
       "dependencies": [
         "IFC-013"
       ],
@@ -1221,7 +1222,7 @@
       "description": "PHASE-002: Real-time Subscriptions",
       "owner": "Frontend Dev + Backend Dev (STOA-Domain)",
       "status": "DONE",
-      "sprint": 7,
+      "sprint": 6,
       "dependencies": [
         "IFC-014"
       ],
@@ -1256,7 +1257,7 @@
       "description": "PHASE-002: Vitest Testing Suite",
       "owner": "QA + Whole Team (STOA-Quality)",
       "status": "DONE",
-      "sprint": 7,
+      "sprint": 6,
       "dependencies": [
         "IFC-014",
         "IFC-015",
@@ -1275,7 +1276,7 @@
       "description": "PHASE-001: Gate 1 Review - £500 Investment",
       "owner": "CFO + CEO (STOA-Leadership)",
       "status": "DONE",
-      "sprint": 8,
+      "sprint": 6,
       "dependencies": [
         "IFC-018"
       ],
@@ -1292,7 +1293,7 @@
       "description": "PHASE-011: LangChain Pipeline Design",
       "owner": "AI Specialist + Data Scientist (STOA-Intelligence)",
       "status": "DONE",
-      "sprint": 12,
+      "sprint": 6,
       "dependencies": [
         "IFC-019"
       ],
@@ -1309,7 +1310,7 @@
       "description": "PHASE-011: CrewAI Agent Framework",
       "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
       "status": "DONE",
-      "sprint": 13,
+      "sprint": 6,
       "dependencies": [
         "IFC-020"
       ],
@@ -1326,7 +1327,7 @@
       "description": "PHASE-011: Structured AI Output Implementation",
       "owner": "AI Specialist + Backend Dev (STOA-Intelligence)",
       "status": "DONE",
-      "sprint": 13,
+      "sprint": 6,
       "dependencies": [
         "IFC-021"
       ],
@@ -1343,7 +1344,7 @@
       "description": "PHASE-011: AI Explainability UI",
       "owner": "Frontend Dev + UX (STOA-Domain)",
       "status": "DONE",
-      "sprint": 13,
+      "sprint": 6,
       "dependencies": [
         "IFC-022"
       ],
@@ -1377,7 +1378,7 @@
       "description": "PHASE-011: A/B Testing Framework",
       "owner": "Data Scientist + Backend Dev (STOA-Intelligence)",
       "status": "DONE",
-      "sprint": 14,
+      "sprint": 6,
       "dependencies": [
         "IFC-022"
       ],
@@ -1620,7 +1621,7 @@
       "description": "Advanced AI Features (RAG)",
       "owner": "AI Specialist + Full Team (STOA-Intelligence)",
       "status": "DONE",
-      "sprint": 23,
+      "sprint": 6,
       "dependencies": [
         "IFC-025"
       ],
@@ -2594,7 +2595,7 @@
       "description": "Documents Management - Upload & Sign",
       "owner": "Backend Dev + Integrations Eng (STOA-Domain)",
       "status": "DONE",
-      "sprint": 8,
+      "sprint": 6,
       "dependencies": [
         "IFC-090",
         "IFC-106"
@@ -2612,7 +2613,7 @@
       "description": "Churn Risk & Next Best Action",
       "owner": "AI Specialist + Backend Dev (STOA-Intelligence)",
       "status": "DONE",
-      "sprint": 8,
+      "sprint": 6,
       "dependencies": [
         "IFC-005",
         "IFC-090",
@@ -2702,7 +2703,7 @@
       "description": "ADR Registry & Compliance Reporting",
       "owner": "PM + CTO (STOA-Foundation)",
       "status": "DONE",
-      "sprint": 10,
+      "sprint": 6,
       "dependencies": [
         "IFC-008",
         "GOV-001"
@@ -3165,7 +3166,7 @@
       "section": "Billing Pages",
       "description": "Billing Portal",
       "owner": "Platform BE (STOA-Foundation)",
-      "status": "DONE",
+      "status": "BACKLOG",
       "sprint": 14,
       "dependencies": [
         "IFC-099",
@@ -3308,7 +3309,7 @@
       "section": "Developer Pages",
       "description": "API Docs",
       "owner": "DevRel (STOA-Foundation)",
-      "status": "DONE",
+      "status": "BACKLOG",
       "sprint": 15,
       "dependencies": [
         "PG-032"
@@ -5346,7 +5347,7 @@
       "description": "Monitor AI models for drift, latency, hallucination and ROI",
       "owner": "AI Specialist + SRE (STOA-Intelligence)",
       "status": "DONE",
-      "sprint": 10,
+      "sprint": 6,
       "dependencies": [
         "IFC-005",
         "AUTOMATION-002"
@@ -5562,7 +5563,7 @@
       "description": "Implement guardrails for prompt injection, data leakage, and monitor AI bias",
       "owner": "AI Specialist + Security (STOA-Security)",
       "status": "DONE",
-      "sprint": 11,
+      "sprint": 6,
       "dependencies": [
         "IFC-005",
         "IFC-008"
@@ -5580,7 +5581,7 @@
       "description": "Continuously maintain ADR registry and developer guide updates",
       "owner": "Tech Writer + PM (STOA-Foundation)",
       "status": "DONE",
-      "sprint": 12,
+      "sprint": 7,
       "dependencies": [
         "IFC-100",
         "GOV-001"
@@ -5598,7 +5599,7 @@
       "description": "Implement tenant isolation at database and application layers",
       "owner": "Backend Dev (STOA-Domain)",
       "status": "DONE",
-      "sprint": 10,
+      "sprint": 5,
       "dependencies": [
         "IFC-098",
         "IFC-072"
@@ -5904,7 +5905,7 @@
       "description": "Design and implement inbound/outbound email flows: SPF/DKIM/DMARC; inbound parsing; attachments; implement general webhook handling with idempotency and retries; publish public API specification (OpenAPI) with versioning; baseline inbound email feature delivered",
       "owner": "Integration Lead + Backend Dev (STOA-Domain)",
       "status": "DONE",
-      "sprint": 10,
+      "sprint": 6,
       "dependencies": [
         "IFC-137",
         "IFC-003",
@@ -5979,7 +5980,7 @@
       "description": "Implement conversation record entity: store chat transcripts; tool calls; actions per case; enable search and retrieval; integrate audit logging and data retention policies",
       "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
       "status": "DONE",
-      "sprint": 12,
+      "sprint": 7,
       "dependencies": [
         "IFC-139",
         "IFC-126"
@@ -6032,7 +6033,7 @@
       "description": "Domain events infrastructure: event contracts + versioning + outbox pattern + idempotent publishing",
       "owner": "Backend Dev + Architect (STOA-Domain)",
       "status": "DONE",
-      "sprint": 8,
+      "sprint": 5,
       "dependencies": [
         "IFC-002",
         "IFC-106",
@@ -6051,7 +6052,7 @@
       "description": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
       "owner": "Backend Dev + SRE (STOA-Domain)",
       "status": "DONE",
-      "sprint": 9,
+      "sprint": 6,
       "dependencies": [
         "IFC-150",
         "ENV-008-AI"
@@ -6069,7 +6070,7 @@
       "description": "Case document model: storage metadata, versioning, ACL mapping (tenant + case + role), and audit hooks",
       "owner": "Backend Dev + Domain Architect (STOA-Intelligence)",
       "status": "DONE",
-      "sprint": 11,
+      "sprint": 6,
       "dependencies": [
         "IFC-136",
         "IFC-127",
@@ -6088,7 +6089,7 @@
       "description": "Ingestion pipeline for case files: upload/email attachment intake, antivirus scan, metadata extraction, storage, and indexing triggers",
       "owner": "Backend Dev + Integration Eng (STOA-Domain)",
       "status": "DONE",
-      "sprint": 12,
+      "sprint": 6,
       "dependencies": [
         "IFC-152",
         "IFC-144",
@@ -6108,7 +6109,7 @@
       "description": "OCR + text extraction worker for scanned PDFs/images; normalized text artifacts stored for search and RAG",
       "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
       "status": "DONE",
-      "sprint": 12,
+      "sprint": 6,
       "dependencies": [
         "IFC-153"
       ],
@@ -6125,7 +6126,7 @@
       "description": "Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters",
       "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
       "status": "DONE",
-      "sprint": 12,
+      "sprint": 6,
       "dependencies": [
         "IFC-154",
         "IFC-127",
@@ -6144,7 +6145,7 @@
       "description": "Case RAG tool: agent retrieval tool constrained by tenant/case permissions; citations + source trace; prompt-injection hardening for retrieved content",
       "owner": "AI Specialist + Security (STOA-Security)",
       "status": "DONE",
-      "sprint": 13,
+      "sprint": 6,
       "dependencies": [
         "IFC-155",
         "IFC-139",
@@ -6929,13 +6930,13 @@
       "section": "Automation",
       "description": "Smart Lead Routing UI - Rules configuration assignment dashboard SLA monitoring",
       "owner": "Frontend Dev + Sales Ops (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 18,
       "dependencies": [
         "IFC-030"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/(settings)/settings/routing/page.tsx;ARTIFACT:apps/web/src/components/routing/RoutingRulesEditor.tsx;ARTIFACT:apps/web/src/components/routing/AssignmentDashboard.tsx;ARTIFACT:apps/web/src/components/routing/SLAMonitor.tsx;ARTIFACT:apps/web/src/components/routing/LeadQueueView.tsx;ARTIFACT:apps/web/src/components/routing/AgentWorkload.tsx;EVIDENCE:.specify/sprints/sprint-18/attestations/PG-132/context_ack.json"
+        "ARTIFACT:apps/web/src/app/settings/routing/page.tsx;ARTIFACT:apps/web/src/components/routing/RoutingRulesEditor.tsx;ARTIFACT:apps/web/src/components/routing/AssignmentDashboard.tsx;ARTIFACT:apps/web/src/components/routing/SLAMonitor.tsx;ARTIFACT:apps/web/src/components/routing/LeadQueueView.tsx;ARTIFACT:apps/web/src/components/routing/AgentWorkload.tsx;EVIDENCE:.specify/sprints/sprint-18/attestations/PG-132/attestation.json"
       ],
       "kpis": "Rules editor intuitive; assignments visible in real-time; SLA breaches highlighted; Lighthouse >=90",
       "definition_of_done": "Response <500ms, Lighthouse >=90; RoutingRulesEditor, AssignmentDashboard, SLAMonitor, LeadQueueView, AgentWorkload components; drag-drop rule priority; real-time assignment view; verified by: pnpm test",
@@ -7112,13 +7113,13 @@
       "section": "Core CRM",
       "description": "Deal Pipeline Page - Kanban board drag-drop stages value totals filtering",
       "owner": "Frontend Dev (STOA-Domain)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 6,
       "dependencies": [
         "IFC-186"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/deals/page.tsx;ARTIFACT:apps/web/src/components/deals/PipelineBoard.tsx;ARTIFACT:apps/web/src/components/deals/StageColumn.tsx;ARTIFACT:apps/web/src/components/deals/DealCard.tsx;ARTIFACT:apps/web/src/components/deals/DealFilters.tsx;ARTIFACT:apps/web/src/components/deals/ValueSummary.tsx;EVIDENCE:.specify/sprints/sprint-6/attestations/PG-135/context_ack.json"
+        "ARTIFACT:apps/web/src/app/deals/(list)/page.tsx;ARTIFACT:apps/web/src/components/deals/PipelineBoard.tsx;ARTIFACT:apps/web/src/components/deals/StageColumn.tsx;ARTIFACT:apps/web/src/components/deals/DealCard.tsx;ARTIFACT:apps/web/src/components/deals/DealFilters.tsx;ARTIFACT:apps/web/src/components/deals/ValueSummary.tsx;EVIDENCE:.specify/sprints/sprint-6/attestations/PG-135/attestation.json"
       ],
       "kpis": "Pipeline loads <500ms; drag-drop works; value totals accurate; Lighthouse >=90",
       "definition_of_done": "Response <500ms, Lighthouse >=90; PipelineBoard, StageColumn, DealCard, DealFilters, ValueSummary, DealQuickView components; drag-drop stage changes; verified by: pnpm test",
@@ -7129,7 +7130,7 @@
       "section": "Core CRM",
       "description": "Task Management Page - List calendar view assignments reminders entity linking",
       "owner": "Frontend Dev (STOA-Domain)",
-      "status": "DONE",
+      "status": "IN_PROGRESS",
       "sprint": 6,
       "dependencies": [
         "IFC-187"
@@ -7152,7 +7153,7 @@
         "IFC-189"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/tickets/page.tsx;ARTIFACT:apps/web/src/app/tickets/[id]/page.tsx;ARTIFACT:apps/web/src/components/tickets/TicketList.tsx;ARTIFACT:apps/web/src/components/tickets/TicketCard.tsx;ARTIFACT:apps/web/src/components/tickets/TicketDetail.tsx;ARTIFACT:apps/web/src/components/tickets/SLAIndicator.tsx;EVIDENCE:.specify/sprints/sprint-6/attestations/PG-137/context_ack.json"
+        "ARTIFACT:apps/web/src/app/tickets/(list)/page.tsx;ARTIFACT:apps/web/src/app/tickets/[id]/page.tsx;ARTIFACT:apps/web/src/components/tickets/TicketList.tsx;ARTIFACT:apps/web/src/components/tickets/TicketCard.tsx;ARTIFACT:apps/web/src/components/tickets/TicketDetail.tsx;ARTIFACT:apps/web/src/components/tickets/SLAIndicator.tsx;EVIDENCE:.specify/sprints/sprint-6/attestations/PG-137/context_ack.json"
       ],
       "kpis": "List loads <500ms; SLA indicators accurate; escalation alerts visible; Lighthouse >=90",
       "definition_of_done": "Response <500ms, Lighthouse >=90; TicketList, TicketCard, TicketDetail, SLAIndicator, EscalationAlert, TicketForm, CustomerPortalView components; verified by: pnpm test",
@@ -7169,7 +7170,7 @@
         "IFC-136"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/cases/page.tsx;ARTIFACT:apps/web/src/app/cases/[id]/page.tsx;ARTIFACT:apps/web/src/components/cases/CaseList.tsx;ARTIFACT:apps/web/src/components/cases/CaseDetail.tsx;ARTIFACT:apps/web/src/components/cases/PartyManager.tsx;ARTIFACT:apps/web/src/components/cases/DeadlineTracker.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-138/context_ack.json"
+        "ARTIFACT:apps/web/src/app/cases/(list)/page.tsx;ARTIFACT:apps/web/src/app/cases/[id]/page.tsx;ARTIFACT:apps/web/src/components/cases/CaseList.tsx;ARTIFACT:apps/web/src/components/cases/CaseDetail.tsx;ARTIFACT:apps/web/src/components/cases/PartyManager.tsx;ARTIFACT:apps/web/src/components/cases/DeadlineTracker.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-138/context_ack.json"
       ],
       "kpis": "List loads <500ms; parties editable; deadlines accurate; documents linked; Lighthouse >=90",
       "definition_of_done": "Response <500ms, Lighthouse >=90; CaseList, CaseCard, CaseDetail, PartyManager, DeadlineTracker, DocumentLinks, CaseTimeline components; verified by: pnpm test",
@@ -7186,7 +7187,7 @@
         "IFC-137"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/calendar/page.tsx;ARTIFACT:apps/web/src/app/calendar/[id]/page.tsx;ARTIFACT:apps/web/src/components/calendar/AppointmentCalendar.tsx;ARTIFACT:apps/web/src/components/calendar/AppointmentForm.tsx;ARTIFACT:apps/web/src/components/calendar/ConflictWarning.tsx;ARTIFACT:apps/web/src/components/calendar/RecurrenceEditor.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-139/context_ack.json"
+        "ARTIFACT:apps/web/src/app/calendar/(list)/page.tsx;ARTIFACT:apps/web/src/app/calendar/[id]/page.tsx;ARTIFACT:apps/web/src/components/appointments/AppointmentCalendar.tsx;ARTIFACT:apps/web/src/components/appointments/AppointmentForm.tsx;ARTIFACT:apps/web/src/components/appointments/ConflictWarning.tsx;ARTIFACT:apps/web/src/components/appointments/RecurrenceEditor.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-139/context_ack.json"
       ],
       "kpis": "Calendar loads <500ms; conflicts highlighted; case links work; reminders configurable; Lighthouse >=90",
       "definition_of_done": "Response <500ms, Lighthouse >=90; AppointmentCalendar, AppointmentForm, ConflictWarning, CaseLinkSelector, ReminderConfig, RecurrenceEditor components; verified by: pnpm test",
@@ -7268,7 +7269,7 @@
       "section": "AI Intelligence",
       "description": "AI Search (RAG) Page at /agent-approvals/ai-search - Universal search bar AI-powered results citations source highlighting",
       "owner": "Frontend Dev (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 7,
       "dependencies": [
         "IFC-156",
@@ -7463,7 +7464,7 @@
       "section": "AI Intelligence",
       "description": "Lead Scoring Dashboard at /agent-approvals/lead-scoring - Score distributions model accuracy top leads factor breakdown",
       "owner": "Frontend Dev (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 7,
       "dependencies": [
         "IFC-005",
@@ -7471,7 +7472,7 @@
         "IFC-181"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/agent-approvals/lead-scoring/page.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/LeadScoringDashboard.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/__tests__/LeadScoringDashboard.test.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-148/context_ack.json"
+        "ARTIFACT:apps/web/src/app/agent-approvals/lead-scoring/page.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/LeadScoringDashboard.tsx;ARTIFACT:apps/web/src/components/ai-intelligence/__tests__/LeadScoringDashboard.test.tsx;EVIDENCE:.specify/sprints/sprint-7/attestations/PG-148/attestation.json"
       ],
       "kpis": "Page loads <500ms; score data accurate; charts render correctly; reuses existing score components; Lighthouse >=90; test coverage >=90%",
       "definition_of_done": "Page renders at /agent-approvals/lead-scoring; score distribution chart; model accuracy metrics; top-scored leads list; factor breakdown per lead; reuses ConfidenceIndicator and ScoreCard components; Lighthouse >=90; verified by: pnpm test",
@@ -7482,7 +7483,7 @@
       "section": "AI Intelligence",
       "description": "Experiments Dashboard at /agent-approvals/experiments - A/B test management experiment results statistical analysis variant comparison",
       "owner": "Frontend Dev (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 7,
       "dependencies": [
         "IFC-025",
@@ -7500,7 +7501,7 @@
       "section": "AI Intelligence",
       "description": "AI Review History at /agent-approvals/history - Filterable history of all AI output reviews with timeline and audit trail",
       "owner": "Frontend Dev (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "sprint": 7,
       "dependencies": [
         "IFC-181",
@@ -7574,7 +7575,7 @@
       "description": "Billing Domain Core - Invoice/Receipt aggregates, payment state machine, tax/refund rules",
       "owner": "Backend Dev + FinOps (STOA-Domain)",
       "status": "DONE",
-      "sprint": 29,
+      "sprint": 13,
       "dependencies": [
         "IFC-099",
         "IFC-107"
@@ -7610,7 +7611,7 @@
       "description": "Analytics Adapter Layer - query builders and export pipeline for metrics router",
       "owner": "Data Eng + Backend Dev (STOA-Domain)",
       "status": "BACKLOG",
-      "sprint": 29,
+      "sprint": 13,
       "dependencies": [
         "IFC-096",
         "IFC-106"
@@ -7628,7 +7629,7 @@
       "description": "Settings Control Plane Foundations - domain models, adapters, and router for users/teams/roles/permissions/audit/integrations/webhooks/security",
       "owner": "Platform BE + Security Eng (STOA-Domain)",
       "status": "BACKLOG",
-      "sprint": 29,
+      "sprint": 25,
       "dependencies": [
         "IFC-072",
         "IFC-098",
@@ -7700,7 +7701,7 @@
       "section": "Core CRM",
       "description": "Ticket Full-Text Search - add search parameter to ticketQuerySchema and TicketService for subject ticketNumber contactName searching",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 6,
       "dependencies": [
         "IFC-189"
@@ -7717,7 +7718,7 @@
       "section": "Core CRM",
       "description": "Ticket Stats Enhancement - add SLA status breakdown time window filtering and sortBy sortOrder to ticket query schema",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 6,
       "dependencies": [
         "IFC-189"
@@ -7734,7 +7735,7 @@
       "section": "Core CRM",
       "description": "Ticket Query Performance Tracking - add queryDurationMs to ticket list and stats endpoints using performance.now pattern from timeline router",
       "owner": "Backend Dev (STOA-Quality)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 6,
       "dependencies": [
         "IFC-189"

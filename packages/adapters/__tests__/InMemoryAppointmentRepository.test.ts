@@ -17,16 +17,18 @@ describe('InMemoryAppointmentRepository', () => {
   });
 
   // Creates an appointment - if allowPast is true, uses reconstitute to bypass validation
-  function createAppointment(overrides: {
-    title?: string;
-    startTime?: Date;
-    endTime?: Date;
-    organizerId?: string;
-    attendeeIds?: string[];
-    linkedCaseIds?: CaseId[];
-    reminderMinutes?: number;
-    allowPast?: boolean;
-  } = {}): Appointment {
+  function createAppointment(
+    overrides: {
+      title?: string;
+      startTime?: Date;
+      endTime?: Date;
+      organizerId?: string;
+      attendeeIds?: string[];
+      linkedCaseIds?: CaseId[];
+      reminderMinutes?: number;
+      allowPast?: boolean;
+    } = {}
+  ): Appointment {
     const startTime = overrides.startTime ?? new Date(2025, 0, 16, 14, 0, 0);
     // Default endTime is 1 hour after startTime
     const endTime = overrides.endTime ?? new Date(startTime.getTime() + 60 * 60 * 1000);

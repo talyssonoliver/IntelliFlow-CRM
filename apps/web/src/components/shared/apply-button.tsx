@@ -34,8 +34,19 @@ export function ApplyButton({
 }: ApplyButtonProps) {
   const handleClick = () => {
     // Track analytics event (in production, integrate with analytics service)
-    if (typeof window !== 'undefined' && (window as Window & { gtag?: (cmd: string, event: string, data: Record<string, string>) => void }).gtag) {
-      (window as Window & { gtag?: (cmd: string, event: string, data: Record<string, string>) => void }).gtag?.('event', 'apply_click', {
+    if (
+      typeof window !== 'undefined' &&
+      (
+        window as Window & {
+          gtag?: (cmd: string, event: string, data: Record<string, string>) => void;
+        }
+      ).gtag
+    ) {
+      (
+        window as Window & {
+          gtag?: (cmd: string, event: string, data: Record<string, string>) => void;
+        }
+      ).gtag?.('event', 'apply_click', {
         job_id: jobId,
         job_title: jobTitle,
       });
@@ -50,8 +61,10 @@ export function ApplyButton({
 
   const variantClasses = {
     primary: 'bg-[#137fec] text-white hover:bg-[#0e6ac7] focus:ring-[#7cc4ff]',
-    secondary: 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 focus:ring-slate-400',
-    outline: 'bg-transparent border-2 border-[#137fec] text-[#137fec] hover:bg-[#137fec]/10 focus:ring-[#137fec]',
+    secondary:
+      'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 focus:ring-slate-400',
+    outline:
+      'bg-transparent border-2 border-[#137fec] text-[#137fec] hover:bg-[#137fec]/10 focus:ring-[#137fec]',
   };
 
   return (
@@ -102,10 +115,7 @@ export function SaveJobButton({ jobId, jobTitle, className }: SaveJobButtonProps
           JSON.stringify(savedJobs.filter((id: string) => id !== jobId))
         );
       } else {
-        localStorage.setItem(
-          'savedJobs',
-          JSON.stringify([...savedJobs, jobId])
-        );
+        localStorage.setItem('savedJobs', JSON.stringify([...savedJobs, jobId]));
       }
     }
   };
@@ -152,9 +162,10 @@ interface ShareJobButtonProps {
 export function ShareJobButton({ jobId, jobTitle, className }: ShareJobButtonProps) {
   const [showDropdown, setShowDropdown] = React.useState(false);
 
-  const jobUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/careers/${jobId}`
-    : `/careers/${jobId}`;
+  const jobUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/careers/${jobId}`
+      : `/careers/${jobId}`;
 
   const shareOptions = [
     {
@@ -222,22 +233,22 @@ export function ShareJobButton({ jobId, jobTitle, className }: ShareJobButtonPro
 
       {showDropdown && (
         <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setShowDropdown(false)}
-          />
+          <div className="fixed inset-0 z-10" onClick={() => setShowDropdown(false)} />
           <div
             role="menu"
             className="absolute right-0 mt-2 w-48 rounded-lg bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 z-20 py-1"
           >
-            {shareOptions.map(option => (
+            {shareOptions.map((option) => (
               <button
                 key={option.label}
                 onClick={option.action}
                 role="menuitem"
                 className="w-full px-4 py-2 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-3"
               >
-                <span className="material-symbols-outlined text-lg text-slate-500 dark:text-slate-400" aria-hidden="true">
+                <span
+                  className="material-symbols-outlined text-lg text-slate-500 dark:text-slate-400"
+                  aria-hidden="true"
+                >
                   {option.icon}
                 </span>
                 {option.label}

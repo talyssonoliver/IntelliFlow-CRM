@@ -186,10 +186,7 @@ export interface AgentToolDefinition<TInput = unknown, TOutput = unknown> {
   requiresApproval: boolean;
   // Allow Zod schemas with defaults (input type may differ from output type)
   inputSchema: z.ZodType<TInput, z.ZodTypeDef, unknown>;
-  execute: (
-    input: TInput,
-    context: AgentAuthContext
-  ) => Promise<AgentToolResult<TOutput>>;
+  execute: (input: TInput, context: AgentAuthContext) => Promise<AgentToolResult<TOutput>>;
   generatePreview: (input: TInput, context: AgentAuthContext) => Promise<ActionPreview>;
   rollback?: (
     actionId: string,
@@ -234,7 +231,18 @@ export type ContactSearchInput = z.infer<typeof ContactSearchInputSchema>;
  */
 export const OpportunitySearchInputSchema = z.object({
   query: z.string().optional(),
-  stage: z.array(z.enum(['PROSPECTING', 'QUALIFICATION', 'PROPOSAL', 'NEGOTIATION', 'CLOSED_WON', 'CLOSED_LOST'])).optional(),
+  stage: z
+    .array(
+      z.enum([
+        'PROSPECTING',
+        'QUALIFICATION',
+        'PROPOSAL',
+        'NEGOTIATION',
+        'CLOSED_WON',
+        'CLOSED_LOST',
+      ])
+    )
+    .optional(),
   minValue: z.number().min(0).optional(),
   maxValue: z.number().optional(),
   accountId: z.string().optional(),
@@ -303,7 +311,9 @@ export const UpdateAppointmentInputSchema = z.object({
   startTime: z.coerce.date().optional(),
   endTime: z.coerce.date().optional(),
   location: z.string().max(500).optional(),
-  appointmentType: z.enum(['MEETING', 'CALL', 'HEARING', 'CONSULTATION', 'DEPOSITION', 'OTHER']).optional(),
+  appointmentType: z
+    .enum(['MEETING', 'CALL', 'HEARING', 'CONSULTATION', 'DEPOSITION', 'OTHER'])
+    .optional(),
   notes: z.string().max(5000).optional(),
 });
 

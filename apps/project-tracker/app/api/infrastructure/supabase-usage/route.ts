@@ -108,14 +108,17 @@ export async function GET(_request: NextRequest) {
     const metrics = cachedReport?.metrics || estimatedMetrics;
 
     // Calculate overall usage
-    const avgUsage = metrics.reduce((sum: number, m: UsageMetric) => sum + m.percentage, 0) / metrics.length;
+    const avgUsage =
+      metrics.reduce((sum: number, m: UsageMetric) => sum + m.percentage, 0) / metrics.length;
 
     // Identify metrics approaching limits
-    const warnings = metrics.filter((m: UsageMetric) => m.percentage >= 80).map((m: UsageMetric) => ({
-      metric: m.name,
-      percentage: m.percentage,
-      action: m.percentage >= 90 ? 'Upgrade plan or optimize' : 'Monitor closely',
-    }));
+    const warnings = metrics
+      .filter((m: UsageMetric) => m.percentage >= 80)
+      .map((m: UsageMetric) => ({
+        metric: m.name,
+        percentage: m.percentage,
+        action: m.percentage >= 90 ? 'Upgrade plan or optimize' : 'Monitor closely',
+      }));
 
     // Billing estimate (free tier)
     const currentPlan = 'free';
@@ -128,7 +131,9 @@ export async function GET(_request: NextRequest) {
         timestamp: new Date().toISOString(),
         pattern: 'RSI',
         reportAge: cachedReport?.reportTimestamp
-          ? Math.round((Date.now() - new Date(cachedReport.reportTimestamp).getTime()) / (1000 * 60 * 60)) + ' hours'
+          ? Math.round(
+              (Date.now() - new Date(cachedReport.reportTimestamp).getTime()) / (1000 * 60 * 60)
+            ) + ' hours'
           : null,
         plan: {
           current: currentPlan,
@@ -145,12 +150,14 @@ export async function GET(_request: NextRequest) {
           withinLimits: avgUsage < 80,
           daysRemainingEstimate: Math.max(0, Math.round((1 - avgUsage / 100) * 30)),
         },
-        recommendation: avgUsage >= 80
-          ? 'Consider upgrading to Supabase Pro plan ($25/month)'
-          : avgUsage >= 50
-          ? 'Usage is moderate - continue monitoring'
-          : 'Usage well within free tier limits',
-        refreshCommand: 'curl -X POST /api/infrastructure/supabase-usage to refresh from Supabase API',
+        recommendation:
+          avgUsage >= 80
+            ? 'Consider upgrading to Supabase Pro plan ($25/month)'
+            : avgUsage >= 50
+              ? 'Usage is moderate - continue monitoring'
+              : 'Usage well within free tier limits',
+        refreshCommand:
+          'curl -X POST /api/infrastructure/supabase-usage to refresh from Supabase API',
       },
       {
         headers: {

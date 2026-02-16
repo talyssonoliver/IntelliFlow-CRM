@@ -1,6 +1,7 @@
 export { CaseList } from './CaseList';
 export type { CaseListProps } from './CaseList';
 export { CaseDetail } from './CaseDetail';
+export { CaseForm } from './CaseForm';
 export { DeadlineTracker } from './DeadlineTracker';
 export { PartyManager } from './PartyManager';
 export { DocumentLinks } from './DocumentLinks';

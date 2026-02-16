@@ -23,10 +23,75 @@ import {
   aiInsightsSummarySchema,
 } from '@intelliflow/validators';
 import { getTenantContext } from '../../security/tenant-context';
-import {
-  SIGNIFICANCE_LEVELS,
-  requiresHumanReview,
-} from '@intelliflow/domain';
+import { SIGNIFICANCE_LEVELS, requiresHumanReview } from '@intelliflow/domain';
+
+// ── Structured sentiment data stored inside the Json `recommendations` field ──
+
+const emotionEntrySchema = z.object({
+  emotion: z.string(),
+  intensity: z.number().min(0).max(1),
+});
+
+const keyPhraseEntrySchema = z.object({
+  phrase: z.string(),
+  sentiment: z.enum(['positive', 'neutral', 'negative']),
+});
+
+/** Shape written by updateLead/ContactInsights when sentiment data is available */
+const structuredRecommendationsSchema = z.object({
+  texts: z.array(z.string()).optional().default([]),
+  emotions: z.array(emotionEntrySchema).optional().default([]),
+  keyPhrases: z.array(keyPhraseEntrySchema).optional().default([]),
+  primaryEmotion: z.string().optional().default('NEUTRAL'),
+});
+
+type StructuredRecommendations = z.infer<typeof structuredRecommendationsSchema>;
+
+/**
+ * Parse the `recommendations` Json field.
+ *
+ * Legacy rows store a plain `string[]`.  New rows store a structured object
+ * `{ texts, emotions, keyPhrases, primaryEmotion }`.  This helper normalises
+ * both shapes into `StructuredRecommendations`.
+ */
+function parseRecommendations(raw: unknown): StructuredRecommendations {
+  if (raw == null) return { texts: [], emotions: [], keyPhrases: [], primaryEmotion: 'NEUTRAL' };
+
+  // Legacy: plain string[]
+  if (Array.isArray(raw)) {
+    return { texts: raw.filter((r): r is string => typeof r === 'string'), emotions: [], keyPhrases: [], primaryEmotion: 'NEUTRAL' };
+  }
+
+  // New: structured object
+  const parsed = structuredRecommendationsSchema.safeParse(raw);
+  if (parsed.success) return parsed.data;
+
+  return { texts: [], emotions: [], keyPhrases: [], primaryEmotion: 'NEUTRAL' };
+}
+
+/**
+ * Build the Json value to store in the `recommendations` field.
+ * If only plain string recommendations are provided (no emotions/keyPhrases),
+ * stores a legacy `string[]` for backward compatibility.
+ */
+function buildRecommendationsJson(
+  texts: string[] | undefined,
+  emotions: Array<{ emotion: string; intensity: number }> | undefined,
+  keyPhrases: Array<{ phrase: string; sentiment: string }> | undefined,
+  primaryEmotion: string | undefined,
+) {
+  const hasStructuredData = (emotions && emotions.length > 0) || (keyPhrases && keyPhrases.length > 0);
+  if (!hasStructuredData) {
+    // Backward-compatible: plain string[]
+    return texts ?? [];
+  }
+  return {
+    texts: texts ?? [],
+    emotions: emotions ?? [],
+    keyPhrases: keyPhrases ?? [],
+    primaryEmotion: primaryEmotion ?? 'NEUTRAL',
+  };
+}
 
 /**
  * Entity type for AI predictions
@@ -92,12 +157,14 @@ export const intelligenceRouter = createTRPCRouter({
    * ensuring consistency between the summary counts and the detail cards.
    */
   getSentimentDashboard: tenantProcedure
-    .input(z.object({
-      entityType: z.enum(['all', 'lead', 'contact']).default('all'),
-      dateRange: z.enum(['7d', '30d', '90d']).default('30d'),
-      page: z.number().min(1).default(1),
-      limit: z.number().min(1).max(100).default(20),
-    }))
+    .input(
+      z.object({
+        entityType: z.enum(['all', 'lead', 'contact']).default('all'),
+        dateRange: z.enum(['7d', '30d', '90d']).default('30d'),
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+      })
+    )
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const tenantId = typedCtx.tenant.tenantId;
@@ -135,11 +202,16 @@ export const intelligenceRouter = createTRPCRouter({
       if (input.entityType === 'all' || input.entityType === 'lead') {
         const leadInsights = await ctx.prisma.leadAIInsight.findMany({
           where: { tenantId, updatedAt: { gte: since } },
-          include: { lead: { select: { id: true, firstName: true, lastName: true, company: true } } },
+          include: {
+            lead: { select: { id: true, firstName: true, lastName: true, company: true } },
+          },
           orderBy: { updatedAt: 'desc' },
         });
         for (const li of leadInsights) {
-          const name = [li.lead.firstName, li.lead.lastName].filter(Boolean).join(' ') || li.lead.company || 'Unknown Lead';
+          const name =
+            [li.lead.firstName, li.lead.lastName].filter(Boolean).join(' ') ||
+            li.lead.company ||
+            'Unknown Lead';
           allInsights.push({
             id: li.id,
             entityType: 'lead',
@@ -159,11 +231,16 @@ export const intelligenceRouter = createTRPCRouter({
       if (input.entityType === 'all' || input.entityType === 'contact') {
         const contactInsights = await ctx.prisma.contactAIInsight.findMany({
           where: { tenantId, updatedAt: { gte: since } },
-          include: { contact: { select: { id: true, firstName: true, lastName: true, company: true } } },
+          include: {
+            contact: { select: { id: true, firstName: true, lastName: true, company: true } },
+          },
           orderBy: { updatedAt: 'desc' },
         });
         for (const ci of contactInsights) {
-          const name = [ci.contact.firstName, ci.contact.lastName].filter(Boolean).join(' ') || ci.contact.company || 'Unknown Contact';
+          const name =
+            [ci.contact.firstName, ci.contact.lastName].filter(Boolean).join(' ') ||
+            ci.contact.company ||
+            'Unknown Contact';
           allInsights.push({
             id: ci.id,
             entityType: 'contact',
@@ -185,7 +262,13 @@ export const intelligenceRouter = createTRPCRouter({
 
       // ----- Stats (derived from same rows) -----
 
-      const sentimentCounts = { VERY_POSITIVE: 0, POSITIVE: 0, NEUTRAL: 0, NEGATIVE: 0, VERY_NEGATIVE: 0 };
+      const sentimentCounts = {
+        VERY_POSITIVE: 0,
+        POSITIVE: 0,
+        NEUTRAL: 0,
+        NEGATIVE: 0,
+        VERY_NEGATIVE: 0,
+      };
       let urgentCount = 0;
 
       for (const row of allInsights) {
@@ -206,27 +289,37 @@ export const intelligenceRouter = createTRPCRouter({
       const paginatedInsights = allInsights.slice(offset, offset + input.limit);
 
       const sentimentScoreMap: Record<string, number> = {
-        VERY_POSITIVE: 0.9, POSITIVE: 0.7, NEUTRAL: 0.5, NEGATIVE: 0.3, VERY_NEGATIVE: 0.1,
+        VERY_POSITIVE: 0.9,
+        POSITIVE: 0.7,
+        NEUTRAL: 0.5,
+        NEGATIVE: 0.3,
+        VERY_NEGATIVE: 0.1,
       };
 
-      const recentAnalyses = paginatedInsights.map((row) => ({
-        id: row.id,
-        entityType: row.entityType,
-        entityId: row.entityId,
-        entityName: row.entityName,
-        sentiment: row.sentiment,
-        sentimentScore: sentimentScoreMap[row.sentiment] ?? 0.5,
-        emotions: [] as Array<{ emotion: string; intensity: number }>,
-        primaryEmotion: 'NEUTRAL',
-        urgency: churnToUrgency(row.churnRisk),
-        keyPhrases: [] as Array<{ phrase: string; sentiment: string }>,
-        confidence: row.engagementScore / 100,
-        analyzedAt: row.updatedAt.toISOString(),
-      }));
+      const recentAnalyses = paginatedInsights.map((row) => {
+        const recs = parseRecommendations(row.recommendations);
+        return {
+          id: row.id,
+          entityType: row.entityType,
+          entityId: row.entityId,
+          entityName: row.entityName,
+          sentiment: row.sentiment,
+          sentimentScore: sentimentScoreMap[row.sentiment] ?? 0.5,
+          emotions: recs.emotions,
+          primaryEmotion: recs.primaryEmotion,
+          urgency: churnToUrgency(row.churnRisk),
+          keyPhrases: recs.keyPhrases,
+          confidence: row.engagementScore / 100,
+          analyzedAt: row.updatedAt.toISOString(),
+        };
+      });
 
       // ----- Trends (grouped by date from same rows) -----
 
-      const trendMap = new Map<string, { positive: number; neutral: number; negative: number; total: number }>();
+      const trendMap = new Map<
+        string,
+        { positive: number; neutral: number; negative: number; total: number }
+      >();
       for (const row of allInsights) {
         const dateKey = row.updatedAt.toISOString().split('T')[0];
         if (!trendMap.has(dateKey)) {
@@ -240,9 +333,7 @@ export const intelligenceRouter = createTRPCRouter({
       }
 
       // Sort trend entries chronologically
-      const trendEntries = Array.from(trendMap.entries()).sort(
-        ([a], [b]) => a.localeCompare(b),
-      );
+      const trendEntries = Array.from(trendMap.entries()).sort(([a], [b]) => a.localeCompare(b));
 
       const trends = trendEntries.map(([date, b]) => ({
         date,
@@ -253,7 +344,14 @@ export const intelligenceRouter = createTRPCRouter({
       }));
 
       return {
-        stats: { total, positive: posCount, neutral: neutralCount, negative: negCount, avgScore, urgentCount },
+        stats: {
+          total,
+          positive: posCount,
+          neutral: neutralCount,
+          negative: negCount,
+          avgScore,
+          urgentCount,
+        },
         distribution: sentimentCounts,
         recentAnalyses,
         trends,
@@ -416,15 +514,31 @@ export const intelligenceRouter = createTRPCRouter({
         },
         nextBestAction: {
           action: (aiInsight.nextBestAction?.toUpperCase().replace(/\s+/g, '_') || 'WAIT') as
-            'CALL' | 'EMAIL' | 'MEETING' | 'SEND_PROPOSAL' | 'OFFER_DISCOUNT' | 'SCHEDULE_DEMO' |
-            'SEND_CASE_STUDY' | 'ESCALATE' | 'UPSELL' | 'CROSS_SELL' | 'TRAINING' | 'WAIT',
+            | 'CALL'
+            | 'EMAIL'
+            | 'MEETING'
+            | 'SEND_PROPOSAL'
+            | 'OFFER_DISCOUNT'
+            | 'SCHEDULE_DEMO'
+            | 'SEND_CASE_STUDY'
+            | 'ESCALATE'
+            | 'UPSELL'
+            | 'CROSS_SELL'
+            | 'TRAINING'
+            | 'WAIT',
           title: aiInsight.nextBestAction || 'No action recommended',
           deadline: undefined,
           priority: 'MEDIUM' as const,
         },
         conversionProbability: aiInsight.conversionProbability,
         lifetimeValue: aiInsight.lifetimeValue ?? aiInsight.estimatedValue,
-        sentiment: aiInsight.sentiment as 'VERY_POSITIVE' | 'POSITIVE' | 'NEUTRAL' | 'NEGATIVE' | 'VERY_NEGATIVE' | undefined,
+        sentiment: aiInsight.sentiment as
+          | 'VERY_POSITIVE'
+          | 'POSITIVE'
+          | 'NEUTRAL'
+          | 'NEGATIVE'
+          | 'VERY_NEGATIVE'
+          | undefined,
         engagementScore: aiInsight.engagementScore,
         recommendations: (aiInsight.recommendations as string[]) ?? [],
         confidence: 0.85, // Default confidence
@@ -487,7 +601,8 @@ export const intelligenceRouter = createTRPCRouter({
 
       return {
         status: 'PENDING' as const,
-        message: 'Prediction job infrastructure not yet configured. Use synchronous prediction endpoints.',
+        message:
+          'Prediction job infrastructure not yet configured. Use synchronous prediction endpoints.',
         entityType,
         entityId,
         predictionType,
@@ -500,21 +615,26 @@ export const intelligenceRouter = createTRPCRouter({
    * Called by ai-worker after prediction completes
    */
   updateLeadInsights: tenantProcedure
-    .input(z.object({
-      leadId: z.string().uuid(),
-      churnRisk: churnRiskLevelSchema.optional(),
-      conversionProbability: z.number().min(0).max(100).optional(),
-      estimatedValue: z.number().optional(),
-      engagementScore: z.number().min(0).max(100).optional(),
-      sentiment: z.string().optional(),
-      sentimentTrend: z.string().optional(),
-      nextBestAction: z.string().optional(),
-      recommendations: z.array(z.string()).optional(),
-      confidence: z.number().min(0).max(1).optional(),
-    }))
+    .input(
+      z.object({
+        leadId: z.string().uuid(),
+        churnRisk: churnRiskLevelSchema.optional(),
+        conversionProbability: z.number().min(0).max(100).optional(),
+        estimatedValue: z.number().optional(),
+        engagementScore: z.number().min(0).max(100).optional(),
+        sentiment: z.string().optional(),
+        sentimentTrend: z.string().optional(),
+        nextBestAction: z.string().optional(),
+        recommendations: z.array(z.string()).optional(),
+        emotions: z.array(emotionEntrySchema).optional(),
+        keyPhrases: z.array(keyPhraseEntrySchema).optional(),
+        primaryEmotion: z.string().optional(),
+        confidence: z.number().min(0).max(1).optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
-      const { leadId, confidence, ...updateData } = input;
+      const { leadId, confidence, emotions, keyPhrases, primaryEmotion, ...updateData } = input;
 
       // Verify lead exists
       const lead = await typedCtx.prismaWithTenant.lead.findUnique({
@@ -530,15 +650,22 @@ export const intelligenceRouter = createTRPCRouter({
 
       // Check if human review is required based on confidence
       // Use CHURN_PREDICTION chain type for churn risk assessments
-      const needsReview = confidence !== undefined
-        ? requiresHumanReview(confidence, 'CHURN_PREDICTION')
-        : false;
+      const needsReview =
+        confidence !== undefined ? requiresHumanReview(confidence, 'CHURN_PREDICTION') : false;
 
       if (needsReview) {
         console.warn(
           `[intelligence.updateLeadInsights] Lead ${leadId} requires human review (confidence: ${confidence?.toFixed(2)}, threshold: ${SIGNIFICANCE_LEVELS.MEDIUM})`
         );
       }
+
+      // Build structured recommendations JSON (stores emotions + keyPhrases alongside text recs)
+      const recsJson = buildRecommendationsJson(
+        updateData.recommendations,
+        emotions,
+        keyPhrases,
+        primaryEmotion,
+      );
 
       // Upsert AI insight
       const aiInsight = await ctx.prisma.leadAIInsight.upsert({
@@ -553,10 +680,11 @@ export const intelligenceRouter = createTRPCRouter({
           sentiment: updateData.sentiment ?? null,
           sentimentTrend: updateData.sentimentTrend ?? null,
           nextBestAction: updateData.nextBestAction ?? null,
-          recommendations: updateData.recommendations ?? [],
+          recommendations: recsJson as any,
         },
         update: {
           ...updateData,
+          recommendations: recsJson as any,
           updatedAt: new Date(),
         },
       });
@@ -575,20 +703,25 @@ export const intelligenceRouter = createTRPCRouter({
    * Called by ai-worker after prediction completes
    */
   updateContactInsights: tenantProcedure
-    .input(z.object({
-      contactId: z.string().uuid(),
-      churnRisk: churnRiskLevelSchema.optional(),
-      conversionProbability: z.number().min(0).max(100).optional(),
-      lifetimeValue: z.number().optional(),
-      engagementScore: z.number().min(0).max(100).optional(),
-      sentiment: z.string().optional(),
-      sentimentTrend: z.string().optional(),
-      nextBestAction: z.string().optional(),
-      recommendations: z.array(z.string()).optional(),
-    }))
+    .input(
+      z.object({
+        contactId: z.string().uuid(),
+        churnRisk: churnRiskLevelSchema.optional(),
+        conversionProbability: z.number().min(0).max(100).optional(),
+        lifetimeValue: z.number().optional(),
+        engagementScore: z.number().min(0).max(100).optional(),
+        sentiment: z.string().optional(),
+        sentimentTrend: z.string().optional(),
+        nextBestAction: z.string().optional(),
+        recommendations: z.array(z.string()).optional(),
+        emotions: z.array(emotionEntrySchema).optional(),
+        keyPhrases: z.array(keyPhraseEntrySchema).optional(),
+        primaryEmotion: z.string().optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
-      const { contactId, ...updateData } = input;
+      const { contactId, emotions, keyPhrases, primaryEmotion, ...updateData } = input;
 
       // Verify contact exists
       const contact = await typedCtx.prismaWithTenant.contact.findUnique({
@@ -601,6 +734,14 @@ export const intelligenceRouter = createTRPCRouter({
           message: `Contact with ID ${contactId} not found`,
         });
       }
+
+      // Build structured recommendations JSON
+      const recsJson = buildRecommendationsJson(
+        updateData.recommendations,
+        emotions,
+        keyPhrases,
+        primaryEmotion,
+      );
 
       // Upsert AI insight
       const aiInsight = await ctx.prisma.contactAIInsight.upsert({
@@ -615,10 +756,11 @@ export const intelligenceRouter = createTRPCRouter({
           sentiment: updateData.sentiment ?? null,
           sentimentTrend: updateData.sentimentTrend ?? null,
           nextBestAction: updateData.nextBestAction ?? null,
-          recommendations: updateData.recommendations ?? [],
+          recommendations: recsJson as any,
         },
         update: {
           ...updateData,
+          recommendations: recsJson as any,
           updatedAt: new Date(),
         },
       });
@@ -633,12 +775,14 @@ export const intelligenceRouter = createTRPCRouter({
    * Stats, at-risk customer list, and trend chart all derive from the same rows.
    */
   getChurnDashboard: tenantProcedure
-    .input(z.object({
-      entityType: z.enum(['all', 'lead', 'contact']).default('all'),
-      dateRange: z.enum(['7d', '30d', '90d']).default('30d'),
-      page: z.number().min(1).default(1),
-      limit: z.number().min(1).max(100).default(20),
-    }))
+    .input(
+      z.object({
+        entityType: z.enum(['all', 'lead', 'contact']).default('all'),
+        dateRange: z.enum(['7d', '30d', '90d']).default('30d'),
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+      })
+    )
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const tenantId = typedCtx.tenant.tenantId;
@@ -649,7 +793,11 @@ export const intelligenceRouter = createTRPCRouter({
 
       // SLA hours per risk level
       const slaHoursMap: Record<string, number> = {
-        CRITICAL: 24, HIGH: 48, MEDIUM: 168, LOW: 336, MINIMAL: 720,
+        CRITICAL: 24,
+        HIGH: 48,
+        MEDIUM: 168,
+        LOW: 336,
+        MINIMAL: 720,
       };
 
       type InsightRow = {
@@ -670,11 +818,16 @@ export const intelligenceRouter = createTRPCRouter({
       if (input.entityType === 'all' || input.entityType === 'lead') {
         const leadInsights = await ctx.prisma.leadAIInsight.findMany({
           where: { tenantId, updatedAt: { gte: since } },
-          include: { lead: { select: { id: true, firstName: true, lastName: true, company: true } } },
+          include: {
+            lead: { select: { id: true, firstName: true, lastName: true, company: true } },
+          },
           orderBy: { updatedAt: 'desc' },
         });
         for (const li of leadInsights) {
-          const name = [li.lead.firstName, li.lead.lastName].filter(Boolean).join(' ') || li.lead.company || 'Unknown Lead';
+          const name =
+            [li.lead.firstName, li.lead.lastName].filter(Boolean).join(' ') ||
+            li.lead.company ||
+            'Unknown Lead';
           allInsights.push({
             id: li.id,
             entityType: 'lead',
@@ -693,11 +846,16 @@ export const intelligenceRouter = createTRPCRouter({
       if (input.entityType === 'all' || input.entityType === 'contact') {
         const contactInsights = await ctx.prisma.contactAIInsight.findMany({
           where: { tenantId, updatedAt: { gte: since } },
-          include: { contact: { select: { id: true, firstName: true, lastName: true, company: true } } },
+          include: {
+            contact: { select: { id: true, firstName: true, lastName: true, company: true } },
+          },
           orderBy: { updatedAt: 'desc' },
         });
         for (const ci of contactInsights) {
-          const name = [ci.contact.firstName, ci.contact.lastName].filter(Boolean).join(' ') || ci.contact.company || 'Unknown Contact';
+          const name =
+            [ci.contact.firstName, ci.contact.lastName].filter(Boolean).join(' ') ||
+            ci.contact.company ||
+            'Unknown Contact';
           allInsights.push({
             id: ci.id,
             entityType: 'contact',
@@ -714,7 +872,13 @@ export const intelligenceRouter = createTRPCRouter({
       }
 
       // Sort by risk (CRITICAL first), then updatedAt desc
-      const riskOrder: Record<string, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3, MINIMAL: 4 };
+      const riskOrder: Record<string, number> = {
+        CRITICAL: 0,
+        HIGH: 1,
+        MEDIUM: 2,
+        LOW: 3,
+        MINIMAL: 4,
+      };
       allInsights.sort((a, b) => {
         const riskDiff = (riskOrder[a.churnRisk] ?? 4) - (riskOrder[b.churnRisk] ?? 4);
         if (riskDiff !== 0) return riskDiff;
@@ -722,7 +886,13 @@ export const intelligenceRouter = createTRPCRouter({
       });
 
       // Stats
-      const distribution: Record<string, number> = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, MINIMAL: 0 };
+      const distribution: Record<string, number> = {
+        CRITICAL: 0,
+        HIGH: 0,
+        MEDIUM: 0,
+        LOW: 0,
+        MINIMAL: 0,
+      };
       let totalEngagement = 0;
 
       for (const row of allInsights) {
@@ -750,21 +920,47 @@ export const intelligenceRouter = createTRPCRouter({
           slaHours,
           slaDeadline: slaDeadline.toISOString(),
           nextBestAction: row.nextBestAction,
-          recommendations: Array.isArray(row.recommendations) ? row.recommendations as string[] : [],
+          recommendations: Array.isArray(row.recommendations)
+            ? (row.recommendations as string[])
+            : [],
           lastEngagementDays: row.lastEngagementDays,
           updatedAt: row.updatedAt.toISOString(),
         };
       });
 
       // Trends grouped by date
-      const trendMap = new Map<string, { critical: number; high: number; medium: number; low: number; minimal: number; totalEng: number; count: number }>();
+      const trendMap = new Map<
+        string,
+        {
+          critical: number;
+          high: number;
+          medium: number;
+          low: number;
+          minimal: number;
+          totalEng: number;
+          count: number;
+        }
+      >();
       for (const row of allInsights) {
         const dateKey = row.updatedAt.toISOString().split('T')[0];
         if (!trendMap.has(dateKey)) {
-          trendMap.set(dateKey, { critical: 0, high: 0, medium: 0, low: 0, minimal: 0, totalEng: 0, count: 0 });
+          trendMap.set(dateKey, {
+            critical: 0,
+            high: 0,
+            medium: 0,
+            low: 0,
+            minimal: 0,
+            totalEng: 0,
+            count: 0,
+          });
         }
         const bucket = trendMap.get(dateKey)!;
-        const key = row.churnRisk.toLowerCase() as 'critical' | 'high' | 'medium' | 'low' | 'minimal';
+        const key = row.churnRisk.toLowerCase() as
+          | 'critical'
+          | 'high'
+          | 'medium'
+          | 'low'
+          | 'minimal';
         if (key in bucket) (bucket as Record<string, number>)[key]++;
         bucket.totalEng += row.engagementScore;
         bucket.count++;
@@ -794,6 +990,408 @@ export const intelligenceRouter = createTRPCRouter({
         distribution,
         atRiskCustomers,
         trends,
+      };
+    }),
+
+  // ── Lead Scoring Dashboard (PG-148) ──────────────────────────────
+
+  getLeadScoringDashboard: tenantProcedure
+    .input(
+      z.object({
+        dateRange: z.enum(['7d', '30d', '90d']).default('30d'),
+        page: z.number().min(1).default(1),
+        limit: z.number().min(1).max(100).default(20),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const tenantId = typedCtx.tenant.tenantId;
+
+      const daysMap = { '7d': 7, '30d': 30, '90d': 90 };
+      const since = new Date();
+      since.setDate(since.getDate() - daysMap[input.dateRange]);
+
+      // Fetch all AI scores for the tenant within the date range
+      const allScores = await ctx.prisma.aIScore.findMany({
+        where: {
+          tenantId,
+          createdAt: { gte: since },
+        },
+        include: {
+          lead: {
+            select: { id: true, firstName: true, lastName: true, company: true },
+          },
+        },
+        orderBy: { score: 'desc' },
+      });
+
+      // Stats aggregation
+      let totalScore = 0;
+      let totalConfidence = 0;
+      let hot = 0;
+      let warm = 0;
+      let cold = 0;
+
+      for (const s of allScores) {
+        totalScore += s.score;
+        totalConfidence += s.confidence;
+        if (s.score >= 80) hot++;
+        else if (s.score >= 50) warm++;
+        else cold++;
+      }
+
+      const total = allScores.length;
+      const avgScore = total > 0 ? Math.round(totalScore / total) : 0;
+      const avgConfidence = total > 0 ? totalConfidence / total : 0;
+
+      // Paginated scored leads
+      const offset = (input.page - 1) * input.limit;
+      const paginatedScores = allScores.slice(offset, offset + input.limit);
+
+      const scoredLeads = paginatedScores.map((s) => {
+        const leadName =
+          [s.lead.firstName, s.lead.lastName].filter(Boolean).join(' ') || 'Unknown Lead';
+        const tier: 'hot' | 'warm' | 'cold' =
+          s.score >= 80 ? 'hot' : s.score >= 50 ? 'warm' : 'cold';
+
+        // Parse factors from Json field
+        let factors: Array<{ name: string; impact: number; reasoning: string }> = [];
+        if (Array.isArray(s.factors)) {
+          factors = (s.factors as Array<Record<string, unknown>>).map((f) => ({
+            name: String(f.name ?? ''),
+            impact: Number(f.impact ?? 0),
+            reasoning: String(f.reasoning ?? ''),
+          }));
+        }
+
+        return {
+          id: s.id,
+          leadId: s.leadId,
+          leadName,
+          company: s.lead.company,
+          score: s.score,
+          confidence: s.confidence,
+          factors,
+          modelVersion: s.modelVersion,
+          scoredAt: s.createdAt.toISOString(),
+          tier,
+          requiresReview: requiresHumanReview(s.confidence, 'LEAD_SCORING'),
+        };
+      });
+
+      // Trends grouped by date
+      const trendMap = new Map<
+        string,
+        { totalScore: number; hot: number; warm: number; cold: number; count: number }
+      >();
+
+      for (const s of allScores) {
+        const dateKey = s.createdAt.toISOString().split('T')[0];
+        if (!trendMap.has(dateKey)) {
+          trendMap.set(dateKey, { totalScore: 0, hot: 0, warm: 0, cold: 0, count: 0 });
+        }
+        const bucket = trendMap.get(dateKey)!;
+        bucket.totalScore += s.score;
+        bucket.count++;
+        if (s.score >= 80) bucket.hot++;
+        else if (s.score >= 50) bucket.warm++;
+        else bucket.cold++;
+      }
+
+      const trendEntries = Array.from(trendMap.entries()).sort(([a], [b]) => a.localeCompare(b));
+      const trends = trendEntries.map(([date, b]) => ({
+        date,
+        avgScore: b.count > 0 ? Math.round(b.totalScore / b.count) : 0,
+        hot: b.hot,
+        warm: b.warm,
+        cold: b.cold,
+        count: b.count,
+      }));
+
+      return {
+        stats: { total, hot, warm, cold, avgScore, avgConfidence },
+        distribution: { hot, warm, cold },
+        scoredLeads,
+        trends,
+      };
+    }),
+
+  // ── RAG Search (PG-144) ──────────────────────────────────
+
+  ragSearch: tenantProcedure
+    .input(
+      z.object({
+        query: z.string().min(1).max(1000),
+        sources: z
+          .array(
+            z.enum([
+              'leads',
+              'contacts',
+              'accounts',
+              'opportunities',
+              'documents',
+              'notes',
+              'conversations',
+              'messages',
+              'tickets',
+            ]),
+          )
+          .optional(),
+        searchType: z.enum(['fulltext', 'semantic', 'hybrid']).default('hybrid'),
+        minRelevance: z.number().min(0).max(1).default(0.3),
+        dateRange: z.enum(['24h', '7d', '30d', 'all']).default('7d'),
+        limit: z.number().min(1).max(50).default(20),
+        offset: z.number().min(0).default(0),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const startTime = performance.now();
+      const typedCtx = getTenantContext(ctx);
+      const tenantId = typedCtx.tenant.tenantId;
+
+      // Date range filter
+      let since: Date | undefined;
+      if (input.dateRange !== 'all') {
+        const daysMap: Record<string, number> = { '24h': 1, '7d': 7, '30d': 30 };
+        since = new Date();
+        since.setDate(since.getDate() - (daysMap[input.dateRange] ?? 7));
+      }
+
+      const searchTerm = input.query.trim();
+      const results: Array<{
+        id: string;
+        source: string;
+        title: string;
+        snippet: string;
+        relevanceScore: number;
+        metadata: Record<string, unknown>;
+        citation: string;
+        createdAt: string;
+        updatedAt: string;
+      }> = [];
+
+      // Determine which sources to search
+      const allSources = [
+        'leads',
+        'contacts',
+        'accounts',
+        'opportunities',
+        'documents',
+        'notes',
+        'conversations',
+        'messages',
+        'tickets',
+      ];
+      const searchSources = input.sources ?? allSources;
+
+      // Search each source with tenant isolation
+      const dateFilter = since ? { gte: since } : undefined;
+
+      try {
+        const searches = [];
+
+        if (searchSources.includes('leads')) {
+          searches.push(
+            ctx.prisma.lead
+              .findMany({
+                where: {
+                  tenantId,
+                  ...(dateFilter && { updatedAt: dateFilter }),
+                  OR: [
+                    { firstName: { contains: searchTerm, mode: 'insensitive' as const } },
+                    { lastName: { contains: searchTerm, mode: 'insensitive' as const } },
+                    { email: { contains: searchTerm, mode: 'insensitive' as const } },
+                    { company: { contains: searchTerm, mode: 'insensitive' as const } },
+                  ],
+                },
+                take: input.limit,
+                skip: input.offset,
+                orderBy: { updatedAt: 'desc' },
+              })
+              .then((rows) =>
+                rows.map((r) => ({
+                  id: r.id,
+                  source: 'leads' as const,
+                  title: `${r.firstName} ${r.lastName}${r.company ? ` - ${r.company}` : ''}`,
+                  snippet: `${r.email ?? ''}${r.company ? ` at ${r.company}` : ''}. Status: ${r.status}`,
+                  relevanceScore: 0.8,
+                  metadata: { status: r.status, company: r.company } as Record<string, unknown>,
+                  citation: 'Lead record',
+                  createdAt: r.createdAt.toISOString(),
+                  updatedAt: r.updatedAt.toISOString(),
+                })),
+              ),
+          );
+        }
+
+        if (searchSources.includes('contacts')) {
+          searches.push(
+            ctx.prisma.contact
+              .findMany({
+                where: {
+                  tenantId,
+                  ...(dateFilter && { updatedAt: dateFilter }),
+                  OR: [
+                    { firstName: { contains: searchTerm, mode: 'insensitive' as const } },
+                    { lastName: { contains: searchTerm, mode: 'insensitive' as const } },
+                    { email: { contains: searchTerm, mode: 'insensitive' as const } },
+                  ],
+                },
+                take: input.limit,
+                skip: input.offset,
+                orderBy: { updatedAt: 'desc' },
+              })
+              .then((rows) =>
+                rows.map((r) => ({
+                  id: r.id,
+                  source: 'contacts' as const,
+                  title: `${r.firstName} ${r.lastName}`,
+                  snippet: `${r.email ?? ''}. Status: ${r.status}`,
+                  relevanceScore: 0.75,
+                  metadata: { status: r.status } as Record<string, unknown>,
+                  citation: 'Contact record',
+                  createdAt: r.createdAt.toISOString(),
+                  updatedAt: r.updatedAt.toISOString(),
+                })),
+              ),
+          );
+        }
+
+        if (searchSources.includes('accounts')) {
+          searches.push(
+            ctx.prisma.account
+              .findMany({
+                where: {
+                  tenantId,
+                  ...(dateFilter && { updatedAt: dateFilter }),
+                  OR: [
+                    { name: { contains: searchTerm, mode: 'insensitive' as const } },
+                    { industry: { contains: searchTerm, mode: 'insensitive' as const } },
+                  ],
+                },
+                take: input.limit,
+                skip: input.offset,
+                orderBy: { updatedAt: 'desc' },
+              })
+              .then((rows) =>
+                rows.map((r) => ({
+                  id: r.id,
+                  source: 'accounts' as const,
+                  title: r.name,
+                  snippet: `Industry: ${r.industry ?? 'N/A'}`,
+                  relevanceScore: 0.7,
+                  metadata: { industry: r.industry } as Record<string, unknown>,
+                  citation: 'Account record',
+                  createdAt: r.createdAt.toISOString(),
+                  updatedAt: r.updatedAt.toISOString(),
+                })),
+              ),
+          );
+        }
+
+        if (searchSources.includes('opportunities')) {
+          searches.push(
+            ctx.prisma.opportunity
+              .findMany({
+                where: {
+                  tenantId,
+                  ...(dateFilter && { updatedAt: dateFilter }),
+                  OR: [
+                    { name: { contains: searchTerm, mode: 'insensitive' as const } },
+                    { description: { contains: searchTerm, mode: 'insensitive' as const } },
+                  ],
+                },
+                take: input.limit,
+                skip: input.offset,
+                orderBy: { updatedAt: 'desc' },
+              })
+              .then((rows) =>
+                rows.map((r) => ({
+                  id: r.id,
+                  source: 'opportunities' as const,
+                  title: r.name,
+                  snippet: r.description ?? `Stage: ${r.stage}`,
+                  relevanceScore: 0.7,
+                  metadata: { stage: r.stage, value: r.value } as Record<string, unknown>,
+                  citation: 'Opportunity pipeline',
+                  createdAt: r.createdAt.toISOString(),
+                  updatedAt: r.updatedAt.toISOString(),
+                })),
+              ),
+          );
+        }
+
+        if (searchSources.includes('tickets')) {
+          searches.push(
+            ctx.prisma.ticket
+              .findMany({
+                where: {
+                  tenantId,
+                  ...(dateFilter && { updatedAt: dateFilter }),
+                  OR: [
+                    { title: { contains: searchTerm, mode: 'insensitive' as const } },
+                    { description: { contains: searchTerm, mode: 'insensitive' as const } },
+                  ],
+                },
+                take: input.limit,
+                skip: input.offset,
+                orderBy: { updatedAt: 'desc' },
+              })
+              .then((rows) =>
+                rows.map((r) => ({
+                  id: r.id,
+                  source: 'tickets' as const,
+                  title: r.title,
+                  snippet: r.description ?? '',
+                  relevanceScore: 0.65,
+                  metadata: { status: r.status, priority: r.priority } as Record<string, unknown>,
+                  citation: 'Support ticket',
+                  createdAt: r.createdAt.toISOString(),
+                  updatedAt: r.updatedAt.toISOString(),
+                })),
+              ),
+          );
+        }
+
+        // Run all searches in parallel
+        const allResults = await Promise.all(searches);
+        for (const batch of allResults) {
+          results.push(...batch);
+        }
+      } catch (err) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Search failed',
+          cause: err,
+        });
+      }
+
+      // Apply min relevance filter
+      const filteredResults = results.filter((r) => r.relevanceScore >= input.minRelevance);
+
+      // Sort by relevance (descending)
+      filteredResults.sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+      // Build source counts
+      const sourceCounts: Record<string, number> = {};
+      for (const r of filteredResults) {
+        sourceCounts[r.source] = (sourceCounts[r.source] ?? 0) + 1;
+      }
+
+      // Calculate average relevance
+      const avgRelevance =
+        filteredResults.length > 0
+          ? filteredResults.reduce((sum, r) => sum + r.relevanceScore, 0) / filteredResults.length
+          : 0;
+
+      const executionTimeMs = Math.round(performance.now() - startTime);
+
+      return {
+        results: filteredResults.slice(0, input.limit),
+        totalResults: filteredResults.length,
+        avgRelevance: Math.round(avgRelevance * 100) / 100,
+        executionTimeMs,
+        sourceCounts,
       };
     }),
 });

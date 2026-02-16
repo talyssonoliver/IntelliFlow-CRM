@@ -92,7 +92,10 @@ function loadTasks(): Array<{
 
       const artifactsField = cols[colIndex['Artifacts To Track']]?.trim() || '';
       const artifacts = artifactsField
-        ? artifactsField.split(/[,;\n]/).map((a) => a.trim()).filter(Boolean)
+        ? artifactsField
+            .split(/[,;\n]/)
+            .map((a) => a.trim())
+            .filter(Boolean)
         : [];
 
       tasks.push({
@@ -173,9 +176,10 @@ export async function GET(request: NextRequest) {
     const registry = getFullRegistry(forceRefresh);
 
     // Start with all files or just artifacts
-    let filteredFiles = scope === 'artifacts'
-      ? registry.files.filter(f => f.directory === 'artifacts')
-      : registry.files;
+    let filteredFiles =
+      scope === 'artifacts'
+        ? registry.files.filter((f) => f.directory === 'artifacts')
+        : registry.files;
 
     // Apply filters
     if (directory) {

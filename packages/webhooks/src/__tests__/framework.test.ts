@@ -158,8 +158,14 @@ describe('WebhookFramework', () => {
     it('executes in order', async () => {
       fw.registerSource(makeSource({ name: 's' }));
       const order: number[] = [];
-      fw.use(async (_e, _c, next) => { order.push(1); await next(); order.push(3); });
-      fw.on('mw.evt', async () => { order.push(2); });
+      fw.use(async (_e, _c, next) => {
+        order.push(1);
+        await next();
+        order.push(3);
+      });
+      fw.on('mw.evt', async () => {
+        order.push(2);
+      });
       const body = JSON.stringify({ id: 'mw1', type: 'mw.evt' });
       const sig = signPayload(body, 'secret123');
       await fw.handle('s', body, { 'x-signature': sig });
@@ -196,7 +202,12 @@ describe('WebhookFramework', () => {
       const handler = fw.expressHandler();
       const body = JSON.stringify({ id: 'ex1', type: 'exp.evt' });
       const sig = signPayload(body, 'secret123');
-      const res = await handler({ params: { source: 's' }, body, headers: { 'x-signature': sig }, ip: '127.0.0.1' });
+      const res = await handler({
+        params: { source: 's' },
+        body,
+        headers: { 'x-signature': sig },
+        ip: '127.0.0.1',
+      });
       expect(res.status).toBe(200);
       expect((res.json as any).success).toBe(true);
     });
@@ -213,34 +224,51 @@ describe('signature verifiers', () => {
   });
   it('githubVerify valid', () => {
     const hash = createHmac('sha256', 'gs').update('body').digest('hex');
-    expect(githubVerify('body', 'sha256='+hash, 'gs')).toBe(true);
+    expect(githubVerify('body', 'sha256=' + hash, 'gs')).toBe(true);
   });
   it('githubVerify no prefix', () => {
     expect(githubVerify('body', 'nope', 'gs')).toBe(false);
   });
   it('stripeVerify valid', () => {
-    const ts = Math.floor(Date.now()/1000).toString();
-    const hash = createHmac('sha256', 'ss').update(ts+'.'+'body').digest('hex');
-    expect(stripeVerify('body', 't='+ts+',v1='+hash, 'ss')).toBe(true);
+    const ts = Math.floor(Date.now() / 1000).toString();
+    const hash = createHmac('sha256', 'ss')
+      .update(ts + '.' + 'body')
+      .digest('hex');
+    expect(stripeVerify('body', 't=' + ts + ',v1=' + hash, 'ss')).toBe(true);
   });
   it('stripeVerify expired', () => {
-    const ts = (Math.floor(Date.now()/1000)-400).toString();
-    const hash = createHmac('sha256', 'ss').update(ts+'.'+'body').digest('hex');
-    expect(stripeVerify('body', 't='+ts+',v1='+hash, 'ss')).toBe(false);
+    const ts = (Math.floor(Date.now() / 1000) - 400).toString();
+    const hash = createHmac('sha256', 'ss')
+      .update(ts + '.' + 'body')
+      .digest('hex');
+    expect(stripeVerify('body', 't=' + ts + ',v1=' + hash, 'ss')).toBe(false);
   });
 });
 
 describe('event transformers', () => {
   it('defaultEventTransformer', () => {
     const e = defaultEventTransformer({ id: 'e1', type: 't1', data: { x: 1 } });
-    expect(e.id).toBe('e1'); expect(e.type).toBe('t1');
+    expect(e.id).toBe('e1');
+    expect(e.type).toBe('t1');
   });
   it('stripeEventTransformer', () => {
-    const e = stripeEventTransformer({ id: 'si1', type: 'charge.succeeded', created: 1700000000, data: {}, livemode: false });
-    expect(e.source).toBe('stripe'); expect(e.id).toBe('si1');
+    const e = stripeEventTransformer({
+      id: 'si1',
+      type: 'charge.succeeded',
+      created: 1700000000,
+      data: {},
+      livemode: false,
+    });
+    expect(e.source).toBe('stripe');
+    expect(e.id).toBe('si1');
   });
   it('sendgridEventTransformer', () => {
-    const e = sendgridEventTransformer({ sg_message_id: 'sg1', event: 'delivered', timestamp: 1700000000 });
-    expect(e.source).toBe('sendgrid'); expect(e.type).toBe('email.delivered');
+    const e = sendgridEventTransformer({
+      sg_message_id: 'sg1',
+      event: 'delivered',
+      timestamp: 1700000000,
+    });
+    expect(e.source).toBe('sendgrid');
+    expect(e.type).toBe('email.delivered');
   });
 });

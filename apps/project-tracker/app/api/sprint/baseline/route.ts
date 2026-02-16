@@ -70,9 +70,20 @@ function saveFallback(sprintNumber: number, data: any): void {
 }
 
 // Load sprint baseline from CSV
-function loadSprintBaseline(sprintNumber: number): { tasks: BaselineTask[]; baseline: SprintBaseline } {
+function loadSprintBaseline(sprintNumber: number): {
+  tasks: BaselineTask[];
+  baseline: SprintBaseline;
+} {
   const projectRoot = getProjectRoot();
-  const csvPath = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+  const csvPath = join(
+    projectRoot,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    '_global',
+    'Sprint_plan.csv'
+  );
   const tasks: BaselineTask[] = [];
   const sections = new Set<string>();
   let internalDeps = 0;
@@ -89,8 +100,14 @@ function loadSprintBaseline(sprintNumber: number): { tasks: BaselineTask[]; base
         const sprintNum = targetSprint === 'Continuous' ? -1 : parseInt(String(targetSprint ?? ''));
 
         if (sprintNum === sprintNumber) {
-          const dependencies = (row['Dependencies'] || '').split(',').map((d: string) => d.trim()).filter(Boolean);
-          const prerequisites = (row['Pre-requisites'] || '').split(',').map((p: string) => p.trim()).filter(Boolean);
+          const dependencies = (row['Dependencies'] || '')
+            .split(',')
+            .map((d: string) => d.trim())
+            .filter(Boolean);
+          const prerequisites = (row['Pre-requisites'] || '')
+            .split(',')
+            .map((p: string) => p.trim())
+            .filter(Boolean);
 
           tasks.push({
             taskId: row['Task ID'] || '',
@@ -99,7 +116,11 @@ function loadSprintBaseline(sprintNumber: number): { tasks: BaselineTask[]; base
             dependencies,
             prerequisites,
             targetSprint: sprintNum,
-            estimatedEffort: String((row as Record<string, unknown>)['Effort'] ?? (row as Record<string, unknown>)['Story Points'] ?? ''),
+            estimatedEffort: String(
+              (row as Record<string, unknown>)['Effort'] ??
+                (row as Record<string, unknown>)['Story Points'] ??
+                ''
+            ),
             priority: String((row as Record<string, unknown>)['Priority'] ?? ''),
           });
 
@@ -148,7 +169,15 @@ function loadSprintBaseline(sprintNumber: number): { tasks: BaselineTask[]; base
 // Load sprint summary if available
 function loadSprintSummary(sprintNumber: number): any | null {
   const projectRoot = getProjectRoot();
-  const summaryPath = join(projectRoot, 'apps', 'project-tracker', 'docs', 'metrics', `sprint-${sprintNumber}`, '_summary.json');
+  const summaryPath = join(
+    projectRoot,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    `sprint-${sprintNumber}`,
+    '_summary.json'
+  );
 
   try {
     if (existsSync(summaryPath)) {
@@ -169,11 +198,14 @@ export async function GET(request: NextRequest) {
     const summary = loadSprintSummary(sprintNumber);
 
     // Calculate baseline metrics
-    const tasksBySection = tasks.reduce((acc, t) => {
-      if (!acc[t.section]) acc[t.section] = [];
-      acc[t.section].push(t.taskId);
-      return acc;
-    }, {} as Record<string, string[]>);
+    const tasksBySection = tasks.reduce(
+      (acc, t) => {
+        if (!acc[t.section]) acc[t.section] = [];
+        acc[t.section].push(t.taskId);
+        return acc;
+      },
+      {} as Record<string, string[]>
+    );
 
     // Dependency graph analysis
     const dependencyGraph: Record<string, string[]> = {};
@@ -182,9 +214,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Find tasks with no dependencies (can start immediately)
-    const readyToStart = tasks
-      .filter(t => t.dependencies.length === 0)
-      .map(t => t.taskId);
+    const readyToStart = tasks.filter((t) => t.dependencies.length === 0).map((t) => t.taskId);
 
     // Find tasks blocking others
     const blockingTasks: Record<string, number> = {};
@@ -210,24 +240,28 @@ export async function GET(request: NextRequest) {
       scheduling: {
         readyToStart,
         topBlockers,
-        parallelizationPotential: readyToStart.length > 3 ? 'High' : readyToStart.length > 1 ? 'Medium' : 'Low',
+        parallelizationPotential:
+          readyToStart.length > 3 ? 'High' : readyToStart.length > 1 ? 'Medium' : 'Low',
       },
-      existingSummary: summary ? {
-        totalTasks: summary.total_tasks,
-        completedTasks: summary.completed_tasks,
-        lastUpdated: summary.updated_at,
-      } : null,
+      existingSummary: summary
+        ? {
+            totalTasks: summary.total_tasks,
+            completedTasks: summary.completed_tasks,
+            lastUpdated: summary.updated_at,
+          }
+        : null,
       dependencyGraph,
-      tasks: tasks.map(t => ({
+      tasks: tasks.map((t) => ({
         taskId: t.taskId,
         description: t.description.substring(0, 80),
         section: t.section,
         dependencyCount: t.dependencies.length,
         prerequisiteCount: t.prerequisites.length,
       })),
-      recommendation: baseline.riskFactors.length > 0
-        ? `Address risks: ${baseline.riskFactors[0]}`
-        : 'Sprint baseline looks healthy',
+      recommendation:
+        baseline.riskFactors.length > 0
+          ? `Address risks: ${baseline.riskFactors[0]}`
+          : 'Sprint baseline looks healthy',
     };
 
     // If no fresh data available, try fallback

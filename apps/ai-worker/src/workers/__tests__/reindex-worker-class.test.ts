@@ -33,7 +33,12 @@ const mockQueueEventsClose = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('bullmq', () => {
   // Must use class syntax so `new Queue(...)` works
-  const MockWorker = vi.fn().mockImplementation(function (this: any, _name: string, _processor: unknown, _opts: unknown) {
+  const MockWorker = vi.fn().mockImplementation(function (
+    this: any,
+    _name: string,
+    _processor: unknown,
+    _opts: unknown
+  ) {
     this.on = mockWorkerOn;
     this.close = mockWorkerClose;
   });
@@ -157,9 +162,12 @@ describe('ReindexWorker class', () => {
       await worker.start();
 
       const { Queue, Worker, QueueEvents } = await import('bullmq');
-      expect(Queue).toHaveBeenCalledWith(REINDEX_QUEUE_NAME, expect.objectContaining({
-        connection: redisConnection,
-      }));
+      expect(Queue).toHaveBeenCalledWith(
+        REINDEX_QUEUE_NAME,
+        expect.objectContaining({
+          connection: redisConnection,
+        })
+      );
       expect(Worker).toHaveBeenCalledWith(
         REINDEX_QUEUE_NAME,
         expect.any(Function),
@@ -168,9 +176,12 @@ describe('ReindexWorker class', () => {
           concurrency: 1,
         })
       );
-      expect(QueueEvents).toHaveBeenCalledWith(REINDEX_QUEUE_NAME, expect.objectContaining({
-        connection: redisConnection,
-      }));
+      expect(QueueEvents).toHaveBeenCalledWith(
+        REINDEX_QUEUE_NAME,
+        expect.objectContaining({
+          connection: redisConnection,
+        })
+      );
     });
 
     it('should register event handlers on worker', async () => {
@@ -214,12 +225,16 @@ describe('ReindexWorker class', () => {
 
       const job = await worker.addJob(jobData);
 
-      expect(mockQueueAdd).toHaveBeenCalledWith('reindex', expect.objectContaining({
-        indexType: 'all',
-        batchSize: 10,
-      }), expect.objectContaining({
-        priority: 10,
-      }));
+      expect(mockQueueAdd).toHaveBeenCalledWith(
+        'reindex',
+        expect.objectContaining({
+          indexType: 'all',
+          batchSize: 10,
+        }),
+        expect.objectContaining({
+          priority: 10,
+        })
+      );
       expect(job.id).toBe('test-job-id');
     });
 
@@ -245,10 +260,14 @@ describe('ReindexWorker class', () => {
         { priority: 1, delay: 5000 }
       );
 
-      expect(mockQueueAdd).toHaveBeenCalledWith('reindex', expect.anything(), expect.objectContaining({
-        priority: 1,
-        delay: 5000,
-      }));
+      expect(mockQueueAdd).toHaveBeenCalledWith(
+        'reindex',
+        expect.anything(),
+        expect.objectContaining({
+          priority: 1,
+          delay: 5000,
+        })
+      );
     });
 
     it('should accept tenantId and documentIds', async () => {
@@ -266,11 +285,15 @@ describe('ReindexWorker class', () => {
 
       await worker.addJob(jobData);
 
-      expect(mockQueueAdd).toHaveBeenCalledWith('reindex', expect.objectContaining({
-        tenantId: '123e4567-e89b-12d3-a456-426614174000',
-        documentIds: ['123e4567-e89b-12d3-a456-426614174001'],
-        forceRegenerate: true,
-      }), expect.anything());
+      expect(mockQueueAdd).toHaveBeenCalledWith(
+        'reindex',
+        expect.objectContaining({
+          tenantId: '123e4567-e89b-12d3-a456-426614174000',
+          documentIds: ['123e4567-e89b-12d3-a456-426614174001'],
+          forceRegenerate: true,
+        }),
+        expect.anything()
+      );
     });
   });
 
@@ -402,9 +425,13 @@ describe('scheduleReindexJob', () => {
       forceRegenerate: false,
     });
 
-    expect(mockQueue.add).toHaveBeenCalledWith('reindex', expect.anything(), expect.objectContaining({
-      delay: undefined,
-    }));
+    expect(mockQueue.add).toHaveBeenCalledWith(
+      'reindex',
+      expect.anything(),
+      expect.objectContaining({
+        delay: undefined,
+      })
+    );
     expect(jobId).toBe('scheduled-1');
   });
 
@@ -419,9 +446,13 @@ describe('scheduleReindexJob', () => {
       { delay: 60000 }
     );
 
-    expect(mockQueue.add).toHaveBeenCalledWith('reindex', expect.anything(), expect.objectContaining({
-      delay: 60000,
-    }));
+    expect(mockQueue.add).toHaveBeenCalledWith(
+      'reindex',
+      expect.anything(),
+      expect.objectContaining({
+        delay: 60000,
+      })
+    );
   });
 
   it('should schedule a repeatable cron job', async () => {
@@ -435,9 +466,13 @@ describe('scheduleReindexJob', () => {
       { cron: '0 2 * * *' }
     );
 
-    expect(mockQueue.add).toHaveBeenCalledWith('scheduled-reindex', expect.anything(), expect.objectContaining({
-      repeat: { pattern: '0 2 * * *' },
-    }));
+    expect(mockQueue.add).toHaveBeenCalledWith(
+      'scheduled-reindex',
+      expect.anything(),
+      expect.objectContaining({
+        repeat: { pattern: '0 2 * * *' },
+      })
+    );
     expect(jobId).toBe('cron-1');
   });
 
@@ -447,7 +482,11 @@ describe('scheduleReindexJob', () => {
     } as any;
 
     await expect(
-      scheduleReindexJob(mockQueue, { indexType: 'bad' as any, batchSize: 10, forceRegenerate: false })
+      scheduleReindexJob(mockQueue, {
+        indexType: 'bad' as any,
+        batchSize: 10,
+        forceRegenerate: false,
+      })
     ).rejects.toThrow();
   });
 });

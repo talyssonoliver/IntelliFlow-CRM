@@ -240,9 +240,33 @@ function extractKeywords(task: Task): string[] {
 
   // Extract meaningful words (3+ chars, not common words)
   const commonWords = new Set([
-    'the', 'and', 'for', 'with', 'that', 'this', 'from', 'have', 'are', 'was',
-    'will', 'can', 'all', 'should', 'must', 'when', 'where', 'what', 'which',
-    'create', 'implement', 'add', 'update', 'ensure', 'make', 'use', 'set',
+    'the',
+    'and',
+    'for',
+    'with',
+    'that',
+    'this',
+    'from',
+    'have',
+    'are',
+    'was',
+    'will',
+    'can',
+    'all',
+    'should',
+    'must',
+    'when',
+    'where',
+    'what',
+    'which',
+    'create',
+    'implement',
+    'add',
+    'update',
+    'ensure',
+    'make',
+    'use',
+    'set',
   ]);
 
   const words = text
@@ -822,7 +846,10 @@ export async function hydrateContextCli(taskId: string): Promise<void> {
 }
 
 // Run CLI if executed directly
-if (process.argv[1]?.endsWith('context-hydration.ts') || process.argv[1]?.endsWith('context-hydration.js')) {
+if (
+  process.argv[1]?.endsWith('context-hydration.ts') ||
+  process.argv[1]?.endsWith('context-hydration.js')
+) {
   const taskId = process.argv[2];
   if (!taskId) {
     console.error('Usage: tsx context-hydration.ts <TASK_ID>');

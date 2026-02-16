@@ -50,12 +50,15 @@ export function GrowthTrendsWidget(_props: WidgetProps) {
           Growth Trends
         </h3>
         {yoyChange !== 0 && (
-          <span className={`text-xs font-medium flex items-center px-1.5 py-0.5 rounded ${
-            yoyChange >= 0
-              ? 'text-success bg-success-muted'
-              : 'text-destructive bg-destructive-muted'
-          }`}>
-            {yoyChange >= 0 ? '+' : ''}{yoyChange}% YoY
+          <span
+            className={`text-xs font-medium flex items-center px-1.5 py-0.5 rounded ${
+              yoyChange >= 0
+                ? 'text-success bg-success-muted'
+                : 'text-destructive bg-destructive-muted'
+            }`}
+          >
+            {yoyChange >= 0 ? '+' : ''}
+            {yoyChange}% YoY
           </span>
         )}
       </div>
@@ -64,9 +67,33 @@ export function GrowthTrendsWidget(_props: WidgetProps) {
       <div className="flex-1 flex items-end gap-1 min-h-[120px]">
         <svg className="w-full h-full" viewBox="0 0 300 100" preserveAspectRatio="none">
           {/* Grid lines */}
-          <line x1="0" y1="25" x2="300" y2="25" stroke="currentColor" className="text-border" strokeWidth="0.5" />
-          <line x1="0" y1="50" x2="300" y2="50" stroke="currentColor" className="text-border" strokeWidth="0.5" />
-          <line x1="0" y1="75" x2="300" y2="75" stroke="currentColor" className="text-border" strokeWidth="0.5" />
+          <line
+            x1="0"
+            y1="25"
+            x2="300"
+            y2="25"
+            stroke="currentColor"
+            className="text-border"
+            strokeWidth="0.5"
+          />
+          <line
+            x1="0"
+            y1="50"
+            x2="300"
+            y2="50"
+            stroke="currentColor"
+            className="text-border"
+            strokeWidth="0.5"
+          />
+          <line
+            x1="0"
+            y1="75"
+            x2="300"
+            y2="75"
+            stroke="currentColor"
+            className="text-border"
+            strokeWidth="0.5"
+          />
 
           {/* Area fill */}
           <path
@@ -97,9 +124,11 @@ export function GrowthTrendsWidget(_props: WidgetProps) {
 
       {/* X-axis labels */}
       <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-        {months.filter((_: string, i: number) => i % 3 === 0).map((month: string) => (
-          <span key={month}>{month}</span>
-        ))}
+        {months
+          .filter((_: string, i: number) => i % 3 === 0)
+          .map((month: string) => (
+            <span key={month}>{month}</span>
+          ))}
       </div>
     </div>
   );

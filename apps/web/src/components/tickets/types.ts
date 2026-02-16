@@ -53,7 +53,13 @@ export type BulkActionType = 'assign' | 'updateStatus' | 'resolve' | 'escalate' 
 
 export interface TicketActivity {
   id: string;
-  type: 'customer_message' | 'agent_reply' | 'internal_note' | 'system_event' | 'sla_breach' | 'priority_change';
+  type:
+    | 'customer_message'
+    | 'agent_reply'
+    | 'internal_note'
+    | 'system_event'
+    | 'sla_breach'
+    | 'priority_change';
   author: {
     name: string;
     role: 'customer' | 'agent' | 'system' | 'devops';

@@ -134,8 +134,14 @@ describe('AI Validators', () => {
   describe('recommendedActionSchema', () => {
     it('should accept all valid actions', () => {
       const actions = [
-        'SEND_EMAIL', 'PHONE_CALL', 'SCHEDULE_MEETING', 'SEND_PROPOSAL',
-        'WAIT', 'NURTURE_CAMPAIGN', 'CLOSE_AS_LOST', 'ESCALATE_TO_MANAGER',
+        'SEND_EMAIL',
+        'PHONE_CALL',
+        'SCHEDULE_MEETING',
+        'SEND_PROPOSAL',
+        'WAIT',
+        'NURTURE_CAMPAIGN',
+        'CLOSE_AS_LOST',
+        'ESCALATE_TO_MANAGER',
       ];
       actions.forEach((v) => {
         expect(recommendedActionSchema.safeParse(v).success).toBe(true);
@@ -187,8 +193,13 @@ describe('AI Validators', () => {
   describe('emailPurposeSchema', () => {
     it('should accept all valid purposes', () => {
       const purposes = [
-        'INTRODUCTION', 'FOLLOW_UP', 'MEETING_REQUEST', 'PROPOSAL',
-        'CHECK_IN', 'RE_ENGAGEMENT', 'THANK_YOU',
+        'INTRODUCTION',
+        'FOLLOW_UP',
+        'MEETING_REQUEST',
+        'PROPOSAL',
+        'CHECK_IN',
+        'RE_ENGAGEMENT',
+        'THANK_YOU',
       ];
       purposes.forEach((v) => {
         expect(emailPurposeSchema.safeParse(v).success).toBe(true);
@@ -236,9 +247,11 @@ describe('AI Validators', () => {
 
   describe('leadFollowupStatusSchema', () => {
     it('should accept all valid statuses', () => {
-      ['NEW', 'CONTACTED', 'QUALIFIED', 'PROPOSAL_SENT', 'NEGOTIATION', 'WON', 'LOST'].forEach((v) => {
-        expect(leadFollowupStatusSchema.safeParse(v).success).toBe(true);
-      });
+      ['NEW', 'CONTACTED', 'QUALIFIED', 'PROPOSAL_SENT', 'NEGOTIATION', 'WON', 'LOST'].forEach(
+        (v) => {
+          expect(leadFollowupStatusSchema.safeParse(v).success).toBe(true);
+        }
+      );
     });
 
     it('should reject invalid status', () => {
@@ -248,9 +261,11 @@ describe('AI Validators', () => {
 
   describe('interactionTypeSchema', () => {
     it('should accept all valid types', () => {
-      ['EMAIL_SENT', 'EMAIL_OPENED', 'EMAIL_CLICKED', 'CALL', 'MEETING', 'FORM_SUBMISSION'].forEach((v) => {
-        expect(interactionTypeSchema.safeParse(v).success).toBe(true);
-      });
+      ['EMAIL_SENT', 'EMAIL_OPENED', 'EMAIL_CLICKED', 'CALL', 'MEETING', 'FORM_SUBMISSION'].forEach(
+        (v) => {
+          expect(interactionTypeSchema.safeParse(v).success).toBe(true);
+        }
+      );
     });
 
     it('should reject invalid type', () => {
@@ -326,9 +341,7 @@ describe('AI Validators', () => {
     it('should reject recommendedAction with invalid priority', () => {
       const output = {
         ...validOutput,
-        recommendedActions: [
-          { action: 'Call', priority: 'URGENT', reasoning: 'reason' },
-        ],
+        recommendedActions: [{ action: 'Call', priority: 'URGENT', reasoning: 'reason' }],
       };
       const result = qualificationOutputSchema.safeParse(output);
       expect(result.success).toBe(false);
@@ -431,9 +444,7 @@ describe('AI Validators', () => {
         optimalTimeSlot: 'MORNING' as const,
         reasonForTiming: 'Historically higher response rates on Tuesday mornings.',
       },
-      nextSteps: [
-        { action: 'Call lead', deadline: '2026-02-10', owner: 'Sales Rep' },
-      ],
+      nextSteps: [{ action: 'Call lead', deadline: '2026-02-10', owner: 'Sales Rep' }],
       riskFactors: ['Competitor evaluation in progress'],
       opportunitySignals: ['Expanded team size recently'],
     };
@@ -792,7 +803,12 @@ describe('AI Validators', () => {
       riskLevel: 'HIGH' as const,
       confidence: 0.88,
       topRiskFactors: [
-        { factor: 'Login decline', value: 'down 60%', impact: 'HIGH' as const, reasoning: 'Significant drop' },
+        {
+          factor: 'Login decline',
+          value: 'down 60%',
+          impact: 'HIGH' as const,
+          reasoning: 'Significant drop',
+        },
       ],
       explanation: 'Account shows multiple churn risk indicators.',
       recommendations: ['Schedule retention call', 'Offer training session'],
@@ -974,9 +990,19 @@ describe('AI Validators', () => {
   describe('nbaActionTypeSchema', () => {
     it('should accept all valid action types', () => {
       const types = [
-        'CALL', 'EMAIL', 'SCHEDULE_MEETING', 'SEND_PROPOSAL', 'FOLLOW_UP',
-        'ESCALATE', 'NURTURE', 'CLOSE_DEAL', 'RE_ENGAGE', 'PROVIDE_DEMO',
-        'SEND_CONTENT', 'RESEARCH', 'WAIT',
+        'CALL',
+        'EMAIL',
+        'SCHEDULE_MEETING',
+        'SEND_PROPOSAL',
+        'FOLLOW_UP',
+        'ESCALATE',
+        'NURTURE',
+        'CLOSE_DEAL',
+        'RE_ENGAGE',
+        'PROVIDE_DEMO',
+        'SEND_CONTENT',
+        'RESEARCH',
+        'WAIT',
       ];
       types.forEach((v) => {
         expect(nbaActionTypeSchema.safeParse(v).success).toBe(true);

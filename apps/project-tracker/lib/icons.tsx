@@ -728,4 +728,3 @@ const ICON_NAME_MAPPING: Record<string, string> = {
   Subscript2: 'subscript',
   Superscript2: 'superscript',
 };
-

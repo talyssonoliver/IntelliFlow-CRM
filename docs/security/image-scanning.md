@@ -1,9 +1,8 @@
 # Container Image Scanning Policy
 
-**Status:** Implemented (Sprint 7)
-**Related Task:** IFC-134
-**Dependencies:** ENV-003-AI (Docker Setup), ENV-005-AI (CI/CD Pipeline)
-**Owner:** Security Engineer (STOA-Security)
+**Status:** Implemented (Sprint 7) **Related Task:** IFC-134 **Dependencies:**
+ENV-003-AI (Docker Setup), ENV-005-AI (CI/CD Pipeline) **Owner:** Security
+Engineer (STOA-Security)
 
 ## Overview
 
@@ -16,7 +15,8 @@ deployment to any environment.
 IntelliFlow CRM uses [Trivy](https://github.com/aquasecurity/trivy) by Aqua
 Security for container image scanning. Trivy is chosen for:
 
-- **Comprehensive scanning**: OS packages, language dependencies, misconfigurations
+- **Comprehensive scanning**: OS packages, language dependencies,
+  misconfigurations
 - **Speed**: Fast scanning with local vulnerability database
 - **CI/CD integration**: Native GitHub Actions support
 - **Industry adoption**: Widely used in production environments
@@ -35,12 +35,12 @@ Every container image build triggers an automatic vulnerability scan:
 
 ### 2. Severity Thresholds
 
-| Severity | Action | Blocking |
-|----------|--------|----------|
-| CRITICAL | Block build | Yes |
-| HIGH | Warn, log for review | No (configurable) |
-| MEDIUM | Log for awareness | No |
-| LOW | Log only | No |
+| Severity | Action               | Blocking          |
+| -------- | -------------------- | ----------------- |
+| CRITICAL | Block build          | Yes               |
+| HIGH     | Warn, log for review | No (configurable) |
+| MEDIUM   | Log for awareness    | No                |
+| LOW      | Log only             | No                |
 
 **Default Policy:** Fail on CRITICAL vulnerabilities (exit-code 1)
 
@@ -48,12 +48,12 @@ Every container image build triggers an automatic vulnerability scan:
 
 All images built by the CI/CD pipeline are scanned:
 
-| Image | Context | Scan Trigger |
-|-------|---------|--------------|
-| `intelliflow-api` | `apps/api/` | Push to main/develop |
-| `intelliflow-web` | `apps/web/` | Push to main/develop |
-| `intelliflow-ai-worker` | `apps/ai-worker/` | Push to main/develop |
-| Third-party base images | - | Weekly scheduled scan |
+| Image                   | Context           | Scan Trigger          |
+| ----------------------- | ----------------- | --------------------- |
+| `intelliflow-api`       | `apps/api/`       | Push to main/develop  |
+| `intelliflow-web`       | `apps/web/`       | Push to main/develop  |
+| `intelliflow-ai-worker` | `apps/ai-worker/` | Push to main/develop  |
+| Third-party base images | -                 | Weekly scheduled scan |
 
 ## Vulnerability Management
 
@@ -61,12 +61,12 @@ All images built by the CI/CD pipeline are scanned:
 
 Per the security baseline (`artifacts/misc/security-baseline.json`):
 
-| Severity | Remediation SLA | Escalation Path |
-|----------|-----------------|-----------------|
-| CRITICAL | 24 hours | Block deployment, page on-call |
-| HIGH | 7 days | Create ticket, notify team |
-| MEDIUM | 30 days | Add to backlog |
-| LOW | 90 days | Track in vulnerability report |
+| Severity | Remediation SLA | Escalation Path                |
+| -------- | --------------- | ------------------------------ |
+| CRITICAL | 24 hours        | Block deployment, page on-call |
+| HIGH     | 7 days          | Create ticket, notify team     |
+| MEDIUM   | 30 days         | Add to backlog                 |
+| LOW      | 90 days         | Track in vulnerability report  |
 
 ### Remediation Process
 
@@ -127,6 +127,7 @@ CVE-2024-YYYYY  # No patch available, tracking issue #123, Expiry: 2025-02-15
 ```
 
 **Exception Rules:**
+
 - All exceptions must have an expiry date (max 90 days for CRITICAL)
 - Exceptions are reviewed in weekly security standup
 - Expired exceptions are removed automatically by CI
@@ -168,30 +169,30 @@ jobs:
 
 ### Scan Reports
 
-| Report Type | Location | Retention |
-|-------------|----------|-----------|
-| SARIF | GitHub Security tab | 30 days |
-| JSON | Artifact: `trivy-results-*.json` | 90 days |
-| Table | GitHub Actions log | 30 days |
+| Report Type | Location                         | Retention |
+| ----------- | -------------------------------- | --------- |
+| SARIF       | GitHub Security tab              | 30 days   |
+| JSON        | Artifact: `trivy-results-*.json` | 90 days   |
+| Table       | GitHub Actions log               | 30 days   |
 
 ### Integration with Existing Workflows
 
-| Workflow | Integration Point |
-|----------|-------------------|
-| `ci.yml` | Build job outputs image for scanning |
-| `security-sbom.yml` | SBOM includes container components |
-| `cd.yml` | Scan gate before production deploy |
+| Workflow            | Integration Point                    |
+| ------------------- | ------------------------------------ |
+| `ci.yml`            | Build job outputs image for scanning |
+| `security-sbom.yml` | SBOM includes container components   |
+| `cd.yml`            | Scan gate before production deploy   |
 
 ## Metrics and KPIs
 
 ### Target Metrics (IFC-134)
 
-| KPI | Target | Measurement |
-|-----|--------|-------------|
-| Critical vulns in prod images | 0 | Trivy scan results |
-| Scan coverage for deployable images | 100% | CI/CD pipeline logs |
-| Mean time to remediate CRITICAL | <24 hours | Ticket tracking |
-| Mean time to remediate HIGH | <7 days | Ticket tracking |
+| KPI                                 | Target    | Measurement         |
+| ----------------------------------- | --------- | ------------------- |
+| Critical vulns in prod images       | 0         | Trivy scan results  |
+| Scan coverage for deployable images | 100%      | CI/CD pipeline logs |
+| Mean time to remediate CRITICAL     | <24 hours | Ticket tracking     |
+| Mean time to remediate HIGH         | <7 days   | Ticket tracking     |
 
 ### Reporting
 
@@ -242,12 +243,12 @@ fi
 
 This policy addresses the following compliance requirements:
 
-| Framework | Control | How Addressed |
-|-----------|---------|---------------|
-| OWASP A06 | Vulnerable Components | Automated CVE scanning |
-| OWASP A08 | Software Integrity | Image verification before deploy |
-| ISO 27001 | A.14.2.2 | System change control procedures |
-| SOC 2 | CC6.6 | Logical access security software |
+| Framework | Control               | How Addressed                    |
+| --------- | --------------------- | -------------------------------- |
+| OWASP A06 | Vulnerable Components | Automated CVE scanning           |
+| OWASP A08 | Software Integrity    | Image verification before deploy |
+| ISO 27001 | A.14.2.2              | System change control procedures |
+| SOC 2     | CC6.6                 | Logical access security software |
 
 ## References
 
@@ -260,9 +261,6 @@ This policy addresses the following compliance requirements:
 
 ---
 
-**Document Status:** Active
-**Created:** 2025-12-28
-**Last Review:** 2025-12-28
-**Next Review:** 2026-03-28 (Quarterly)
-**Owner:** Security Team
-**Approver:** STOA-Security
+**Document Status:** Active **Created:** 2025-12-28 **Last Review:** 2025-12-28
+**Next Review:** 2026-03-28 (Quarterly) **Owner:** Security Team **Approver:**
+STOA-Security

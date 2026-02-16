@@ -2,7 +2,12 @@
 
 import { useState } from 'react';
 import { Card } from '@intelliflow/ui';
-import { RiskHeatMap, ComplianceTimeline, ComplianceDetailPanel, ExportReportButton } from './components';
+import {
+  RiskHeatMap,
+  ComplianceTimeline,
+  ComplianceDetailPanel,
+  ExportReportButton,
+} from './components';
 
 interface ComplianceCardProps {
   title: string;
@@ -30,7 +35,8 @@ function ComplianceCard({
   const statusConfig = {
     compliant: {
       badge: 'Compliant',
-      badgeClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
+      badgeClass:
+        'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
       dotClass: 'bg-emerald-500 animate-pulse',
       iconBg: 'bg-emerald-50 dark:bg-emerald-900/20',
       iconColor: 'text-emerald-600 dark:text-emerald-400',
@@ -38,7 +44,8 @@ function ComplianceCard({
     },
     critical: {
       badge: 'Critical',
-      badgeClass: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
+      badgeClass:
+        'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800',
       dotClass: 'bg-red-500',
       iconBg: 'bg-red-50 dark:bg-red-900/20',
       iconColor: 'text-red-600 dark:text-red-400',
@@ -46,7 +53,8 @@ function ComplianceCard({
     },
     attention: {
       badge: 'Attention',
-      badgeClass: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800',
+      badgeClass:
+        'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800',
       dotClass: 'bg-amber-500',
       iconBg: 'bg-amber-50 dark:bg-amber-900/20',
       iconColor: 'text-amber-600 dark:text-amber-400',
@@ -57,18 +65,27 @@ function ComplianceCard({
   const config = statusConfig[status];
 
   return (
-    <Card className="p-6 h-full hover:shadow-md transition-shadow cursor-pointer" onClick={() => onSelect(standardId)}>
+    <Card
+      className="p-6 h-full hover:shadow-md transition-shadow cursor-pointer"
+      onClick={() => onSelect(standardId)}
+    >
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-lg ${config.iconBg} ${config.iconColor} flex items-center justify-center`}>
+          <div
+            className={`w-10 h-10 rounded-lg ${config.iconBg} ${config.iconColor} flex items-center justify-center`}
+          >
             <span className="material-symbols-outlined">{icon}</span>
           </div>
           <div>
             <h3 className="font-bold text-foreground text-lg">{title}</h3>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{subtitle}</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+              {subtitle}
+            </p>
           </div>
         </div>
-        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${config.badgeClass} border`}>
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${config.badgeClass} border`}
+        >
           <span className={`w-1.5 h-1.5 rounded-full ${config.dotClass}`} />
           {config.badge}
         </span>
@@ -76,18 +93,24 @@ function ComplianceCard({
 
       <div className="flex items-baseline gap-2 mb-2">
         <span className="text-4xl font-bold text-foreground">{score}%</span>
-        <span className={`text-sm font-medium flex items-center ${
-          trend > 0 ? 'text-emerald-600' : trend < 0 ? 'text-red-600' : 'text-muted-foreground'
-        }`}>
+        <span
+          className={`text-sm font-medium flex items-center ${
+            trend > 0 ? 'text-emerald-600' : trend < 0 ? 'text-red-600' : 'text-muted-foreground'
+          }`}
+        >
           <span className="material-symbols-outlined text-base">
             {trend > 0 ? 'trending_up' : trend < 0 ? 'trending_down' : 'remove'}
           </span>
-          {trend > 0 ? '+' : ''}{trend}%
+          {trend > 0 ? '+' : ''}
+          {trend}%
         </span>
       </div>
 
       <div className="w-full bg-muted rounded-full h-2.5 mb-6 overflow-hidden">
-        <div className={`${config.progressColor} h-2.5 rounded-full transition-all`} style={{ width: `${score}%` }} />
+        <div
+          className={`${config.progressColor} h-2.5 rounded-full transition-all`}
+          style={{ width: `${score}%` }}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4 text-sm border-t border-border pt-4">
@@ -115,7 +138,9 @@ function OverallScoreCard() {
           </div>
           <div>
             <h3 className="font-bold text-white text-lg">Overall Score</h3>
-            <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">Compliance Maturity</p>
+            <p className="text-xs text-slate-400 font-medium uppercase tracking-wider">
+              Compliance Maturity
+            </p>
           </div>
         </div>
 
@@ -151,7 +176,9 @@ function OverallScoreCard() {
           <div className="text-center border-r border-white/10">
             <p className="text-slate-400 mb-0.5 text-xs">Quarterly Trend</p>
             <p className="font-bold text-white flex items-center justify-center gap-1">
-              <span className="material-symbols-outlined text-emerald-400 text-base">arrow_upward</span>
+              <span className="material-symbols-outlined text-emerald-400 text-base">
+                arrow_upward
+              </span>
               Positive
             </p>
           </div>
@@ -205,7 +232,9 @@ export default function ComplianceDashboardPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">Compliance Dashboard</h1>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">
+              Compliance Dashboard
+            </h1>
             <p className="text-muted-foreground mt-1">
               Monitor adherence to international standards and internal policies.
             </p>
@@ -318,9 +347,7 @@ export default function ComplianceDashboardPage() {
               <div key={index} className="flex gap-4">
                 <div className="flex flex-col items-center">
                   <div className={`w-2 h-2 rounded-full ${activity.dotColor} my-1`} />
-                  {index < recentActivity.length - 1 && (
-                    <div className="w-px h-full bg-border" />
-                  )}
+                  {index < recentActivity.length - 1 && <div className="w-px h-full bg-border" />}
                 </div>
                 <div className="pb-2">
                   <p className="text-sm font-semibold text-foreground">{activity.action}</p>

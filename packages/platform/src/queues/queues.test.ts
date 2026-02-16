@@ -250,10 +250,10 @@ describe('Retry Strategy', () => {
     it('calculates exponential backoff correctly', () => {
       const config = { type: 'exponential' as const, delay: 1000 };
 
-      expect(calculateBackoffDelay(1, config)).toBe(1000);  // 1000 * 2^0
-      expect(calculateBackoffDelay(2, config)).toBe(2000);  // 1000 * 2^1
-      expect(calculateBackoffDelay(3, config)).toBe(4000);  // 1000 * 2^2
-      expect(calculateBackoffDelay(4, config)).toBe(8000);  // 1000 * 2^3
+      expect(calculateBackoffDelay(1, config)).toBe(1000); // 1000 * 2^0
+      expect(calculateBackoffDelay(2, config)).toBe(2000); // 1000 * 2^1
+      expect(calculateBackoffDelay(3, config)).toBe(4000); // 1000 * 2^2
+      expect(calculateBackoffDelay(4, config)).toBe(8000); // 1000 * 2^3
     });
 
     it('respects maximum delay cap', () => {
@@ -268,9 +268,7 @@ describe('Retry Strategy', () => {
       const config = { type: 'exponential' as const, delay: 1000, jitter: 0.1 };
 
       // Run multiple times to check jitter is applied
-      const results = Array.from({ length: 100 }, () =>
-        calculateBackoffDelay(2, config)
-      );
+      const results = Array.from({ length: 100 }, () => calculateBackoffDelay(2, config));
 
       // With 10% jitter on 2000ms, range should be ~1800-2200
       const min = Math.min(...results);
@@ -303,9 +301,13 @@ describe('Retry Strategy', () => {
     });
 
     it('categorizes server errors correctly', () => {
-      expect(categorizeError(new Error('500 Internal Server Error'))).toBe(ErrorCategory.SERVER_ERROR);
+      expect(categorizeError(new Error('500 Internal Server Error'))).toBe(
+        ErrorCategory.SERVER_ERROR
+      );
       expect(categorizeError(new Error('502 Bad Gateway'))).toBe(ErrorCategory.SERVER_ERROR);
-      expect(categorizeError(new Error('503 Service Unavailable'))).toBe(ErrorCategory.SERVER_ERROR);
+      expect(categorizeError(new Error('503 Service Unavailable'))).toBe(
+        ErrorCategory.SERVER_ERROR
+      );
     });
 
     it('categorizes unknown errors', () => {
@@ -595,7 +597,9 @@ describe('Bull Board Integration', () => {
       const desc = getBullBoardScreenshotDescription();
 
       expect(desc.description).toContain('Bull Board Dashboard');
-      expect(desc.components).toContain('Queue List Sidebar - Shows all registered queues (AI Scoring, Email Notifications, Webhook Delivery)');
+      expect(desc.components).toContain(
+        'Queue List Sidebar - Shows all registered queues (AI Scoring, Email Notifications, Webhook Delivery)'
+      );
       expect(desc.layout).toContain('intelliflow:ai-scoring');
     });
   });

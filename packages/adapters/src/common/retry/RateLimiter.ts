@@ -97,9 +97,7 @@ export class RateLimiter {
 export class TieredRateLimiter {
   private limiters: Map<string, RateLimiter> = new Map();
 
-  constructor(
-    private readonly tiers: Record<string, RateLimiterConfig>
-  ) {
+  constructor(private readonly tiers: Record<string, RateLimiterConfig>) {
     for (const [tier, config] of Object.entries(tiers)) {
       this.limiters.set(tier, new RateLimiter(config));
     }

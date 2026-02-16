@@ -6,7 +6,13 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
-import { router, publicProcedure, protectedProcedure, loggedProcedure, adminProcedure } from '../server';
+import {
+  router,
+  publicProcedure,
+  protectedProcedure,
+  loggedProcedure,
+  adminProcedure,
+} from '../server';
 import { z } from 'zod';
 
 describe('tRPC Server - server.ts', () => {

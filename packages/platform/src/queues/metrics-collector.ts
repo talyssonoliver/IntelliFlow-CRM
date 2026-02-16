@@ -246,7 +246,8 @@ export class JobMetricsCollector {
     if (message.includes('timeout')) return 'timeout';
     if (message.includes('connection')) return 'connection';
     if (message.includes('rate limit') || message.includes('429')) return 'rate_limit';
-    if (message.includes('auth') || message.includes('401') || message.includes('403')) return 'auth';
+    if (message.includes('auth') || message.includes('401') || message.includes('403'))
+      return 'auth';
     if (message.includes('not found') || message.includes('404')) return 'not_found';
     if (message.includes('500') || message.includes('server error')) return 'server_error';
     if (message.includes('stalled')) return 'stalled';
@@ -292,7 +293,9 @@ export class AggregateMetricsCollector {
   exportToJSON(): object {
     return {
       exportedAt: new Date().toISOString(),
-      queues: Object.fromEntries(Array.from(this.collectors.entries()).map(([name, collector]) => [name, collector.toJSON()])),
+      queues: Object.fromEntries(
+        Array.from(this.collectors.entries()).map(([name, collector]) => [name, collector.toJSON()])
+      ),
     };
   }
 

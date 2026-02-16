@@ -97,14 +97,10 @@ const columns: ColumnDef<DocumentRecord>[] = [
       return (
         <div className="flex items-center gap-3">
           <div className="p-2 rounded bg-slate-100 dark:bg-slate-700">
-            <span className="material-symbols-outlined text-[20px] text-primary">
-              description
-            </span>
+            <span className="material-symbols-outlined text-[20px] text-primary">description</span>
           </div>
           <div>
-            <p className="font-medium text-slate-900 dark:text-white">
-              {doc.metadata.title}
-            </p>
+            <p className="font-medium text-slate-900 dark:text-white">{doc.metadata.title}</p>
             {doc.metadata.description && (
               <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-1">
                 {doc.metadata.description}
@@ -148,9 +144,7 @@ const columns: ColumnDef<DocumentRecord>[] = [
         ? `${doc.version.major}.${doc.version.minor}.${doc.version.patch}`
         : '1.0.0';
       return (
-        <span className="font-mono text-sm text-slate-500 dark:text-slate-400">
-          v{version}
-        </span>
+        <span className="font-mono text-sm text-slate-500 dark:text-slate-400">v{version}</span>
       );
     },
   },
@@ -172,9 +166,7 @@ const columns: ColumnDef<DocumentRecord>[] = [
           {formatDate(row.original.createdAt)}
         </p>
         {row.original.createdBy && (
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            by {row.original.createdBy}
-          </p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">by {row.original.createdBy}</p>
         )}
       </div>
     ),
@@ -276,7 +268,8 @@ export default function DocumentsPage() {
       (doc) =>
         searchQuery === '' ||
         doc.metadata.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (doc.metadata.description && doc.metadata.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (doc.metadata.description &&
+          doc.metadata.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
         doc.metadata.documentType.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -291,9 +284,7 @@ export default function DocumentsPage() {
     }
 
     if (sortOrder === 'name') {
-      docs = [...docs].sort((a, b) =>
-        a.metadata.title.localeCompare(b.metadata.title)
-      );
+      docs = [...docs].sort((a, b) => a.metadata.title.localeCompare(b.metadata.title));
     } else if (sortOrder === 'oldest') {
       docs = [...docs].sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
@@ -356,19 +347,16 @@ export default function DocumentsPage() {
     [bulkDownloadMutation]
   );
 
-  const handleBulkShare = useCallback(
-    async (documents: DocumentRecord[]) => {
-      // For bulk share, we would need a dialog to select recipients
-      // For now, we'll show a placeholder message
-      toast({
-        title: 'Share Documents',
-        description: `Selected ${documents.length} document(s) for sharing. Open document details to manage access.`,
-      });
-      // In a full implementation, this would open a user selection dialog
-      // and call bulkShareMutation with the selected recipients
-    },
-    []
-  );
+  const handleBulkShare = useCallback(async (documents: DocumentRecord[]) => {
+    // For bulk share, we would need a dialog to select recipients
+    // For now, we'll show a placeholder message
+    toast({
+      title: 'Share Documents',
+      description: `Selected ${documents.length} document(s) for sharing. Open document details to manage access.`,
+    });
+    // In a full implementation, this would open a user selection dialog
+    // and call bulkShareMutation with the selected recipients
+  }, []);
 
   const handleBulkArchive = useCallback(async () => {
     const documents = selectedDocumentsRef.current;
@@ -486,10 +474,7 @@ export default function DocumentsPage() {
     <div className="flex flex-col gap-6">
       {/* Header */}
       <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/dashboard' },
-          { label: 'Documents' },
-        ]}
+        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Documents' }]}
         title="Document Library"
         description="Manage legal documents with versioning, e-signatures, and access control."
         actions={[
@@ -593,11 +578,27 @@ function DocumentStatusBadge({
 }) {
   const statusConfig = {
     DRAFT: { bg: 'bg-muted', text: 'text-muted-foreground', icon: 'edit_note' },
-    UNDER_REVIEW: { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-400', icon: 'rate_review' },
-    APPROVED: { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-400', icon: 'check_circle' },
+    UNDER_REVIEW: {
+      bg: 'bg-amber-100 dark:bg-amber-900/30',
+      text: 'text-amber-700 dark:text-amber-400',
+      icon: 'rate_review',
+    },
+    APPROVED: {
+      bg: 'bg-green-100 dark:bg-green-900/30',
+      text: 'text-green-700 dark:text-green-400',
+      icon: 'check_circle',
+    },
     SIGNED: { bg: 'bg-primary/10', text: 'text-primary', icon: 'verified' },
-    ARCHIVED: { bg: 'bg-gray-100 dark:bg-gray-900/30', text: 'text-gray-600 dark:text-gray-400', icon: 'archive' },
-    SUPERSEDED: { bg: 'bg-purple-100 dark:bg-purple-900/30', text: 'text-purple-700 dark:text-purple-400', icon: 'history' },
+    ARCHIVED: {
+      bg: 'bg-gray-100 dark:bg-gray-900/30',
+      text: 'text-gray-600 dark:text-gray-400',
+      icon: 'archive',
+    },
+    SUPERSEDED: {
+      bg: 'bg-purple-100 dark:bg-purple-900/30',
+      text: 'text-purple-700 dark:text-purple-400',
+      icon: 'history',
+    },
   };
 
   const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.DRAFT;

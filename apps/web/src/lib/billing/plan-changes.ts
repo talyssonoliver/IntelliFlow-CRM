@@ -7,13 +7,7 @@
  * @implements PG-030 (Subscriptions)
  */
 
-import {
-  type Plan,
-  PLANS,
-  getPlanById,
-  formatCurrency,
-  formatBillingDate,
-} from './stripe-portal';
+import { type Plan, PLANS, getPlanById, formatCurrency, formatBillingDate } from './stripe-portal';
 
 // ============================================
 // Types
@@ -91,14 +85,11 @@ export function getPlanChangeDirection(
 /**
  * Compare two plans and return detailed comparison
  */
-export function comparePlans(
-  fromPlanId: string | null,
-  toPlanId: string
-): PlanComparison | null {
+export function comparePlans(fromPlanId: string | null, toPlanId: string): PlanComparison | null {
   const toPlan = getPlanById(toPlanId);
   if (!toPlan) return null;
 
-  const fromPlan = fromPlanId ? getPlanById(fromPlanId) ?? null : null;
+  const fromPlan = fromPlanId ? (getPlanById(fromPlanId) ?? null) : null;
   const direction = getPlanChangeDirection(fromPlanId, toPlanId);
 
   // Calculate price difference
@@ -121,10 +112,7 @@ export function comparePlans(
 /**
  * Calculate feature changes between two plans
  */
-function calculateFeatureChanges(
-  fromPlan: Plan | null,
-  toPlan: Plan
-): FeatureChange[] {
+function calculateFeatureChanges(fromPlan: Plan | null, toPlan: Plan): FeatureChange[] {
   const changes: FeatureChange[] = [];
 
   // Build a map of fromPlan features
@@ -180,8 +168,7 @@ export function estimateProration(
   daysRemainingInPeriod: number,
   totalDaysInPeriod: number
 ): number {
-  const dailyDifference =
-    (toPlan.priceMonthly - fromPlan.priceMonthly) / totalDaysInPeriod;
+  const dailyDifference = (toPlan.priceMonthly - fromPlan.priceMonthly) / totalDaysInPeriod;
   return Math.round(dailyDifference * daysRemainingInPeriod);
 }
 
@@ -197,9 +184,7 @@ export function getDaysRemainingInPeriod(periodEnd: Date): number {
 /**
  * Format proration preview for display
  */
-export function formatProrationPreview(
-  preview: ProrationPreview
-): {
+export function formatProrationPreview(preview: ProrationPreview): {
   formattedAmountDue: string;
   formattedCredit: string;
   formattedNewAmount: string;
@@ -347,10 +332,7 @@ export function canChangeToPlan(
 /**
  * Get recommended plan based on current usage
  */
-export function getRecommendedPlan(
-  currentUsers: number,
-  currentContacts: number
-): Plan | null {
+export function getRecommendedPlan(currentUsers: number, currentContacts: number): Plan | null {
   for (const plan of PLANS) {
     const maxUsers = plan.maxUsers ?? Infinity;
 
@@ -358,14 +340,13 @@ export function getRecommendedPlan(
     if (currentUsers > maxUsers) continue;
 
     // Extract contact limit from features
-    const contactFeature = plan.features.find((f) =>
-      f.name.toLowerCase().includes('contact')
-    );
+    const contactFeature = plan.features.find((f) => f.name.toLowerCase().includes('contact'));
     if (contactFeature) {
       const limitStr = contactFeature.limit?.toString() ?? '0';
-      const limit = limitStr.toLowerCase() === 'unlimited'
-        ? Infinity
-        : parseInt(limitStr.replace(/,/g, ''), 10);
+      const limit =
+        limitStr.toLowerCase() === 'unlimited'
+          ? Infinity
+          : parseInt(limitStr.replace(/,/g, ''), 10);
 
       if (currentContacts > limit) continue;
     }
@@ -395,10 +376,7 @@ export interface CancellationInfo {
 /**
  * Get cancellation information
  */
-export function getCancellationInfo(
-  periodEnd: Date,
-  subscriptionStatus: string
-): CancellationInfo {
+export function getCancellationInfo(periodEnd: Date, subscriptionStatus: string): CancellationInfo {
   const daysRemaining = getDaysRemainingInPeriod(periodEnd);
   const canReactivate = subscriptionStatus !== 'canceled';
 
@@ -406,12 +384,13 @@ export function getCancellationInfo(
   const refundEligible = daysRemaining > 25;
 
   // Retention offer for professional plan users
-  const retentionOffer = daysRemaining > 14
-    ? {
-        discountPercent: 20,
-        description: 'Stay with us and get 20% off your next 3 months',
-      }
-    : undefined;
+  const retentionOffer =
+    daysRemaining > 14
+      ? {
+          discountPercent: 20,
+          description: 'Stay with us and get 20% off your next 3 months',
+        }
+      : undefined;
 
   return {
     effectiveDate: periodEnd,
@@ -425,10 +404,7 @@ export function getCancellationInfo(
 /**
  * Format cancellation date message
  */
-export function formatCancellationMessage(
-  periodEnd: Date,
-  atPeriodEnd: boolean
-): string {
+export function formatCancellationMessage(periodEnd: Date, atPeriodEnd: boolean): string {
   const formattedDate = formatBillingDate(periodEnd);
 
   if (atPeriodEnd) {

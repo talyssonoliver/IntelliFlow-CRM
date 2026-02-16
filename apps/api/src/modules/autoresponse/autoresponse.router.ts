@@ -62,7 +62,10 @@ async function publishEvents(draft: AutoResponseDraft): Promise<void> {
   if (events.length > 0) {
     // In production, this would publish to event bus
     // For now, just log and clear
-    console.log('[AutoResponse] Domain events:', events.map(e => e.constructor.name));
+    console.log(
+      '[AutoResponse] Domain events:',
+      events.map((e) => e.constructor.name)
+    );
   }
   draft.clearDomainEvents();
 }
@@ -73,11 +76,13 @@ export const autoResponseRouter = createTRPCRouter({
    * SECURITY: Uses tenantProcedure to enforce tenant isolation
    */
   create: tenantProcedure
-    .input(createAutoResponseDraftSchema.extend({
-      leadTenantId: idSchema,
-      leadStatus: z.string(),
-      modelVersion: z.string().default('openai:gpt-4:v1'),
-    }))
+    .input(
+      createAutoResponseDraftSchema.extend({
+        leadTenantId: idSchema,
+        leadStatus: z.string(),
+        modelVersion: z.string().default('openai:gpt-4:v1'),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const repository = await getRepository(ctx);
@@ -156,92 +161,88 @@ export const autoResponseRouter = createTRPCRouter({
    * Get a draft by ID
    * SECURITY: Uses tenantProcedure to enforce tenant isolation
    */
-  getById: tenantProcedure
-    .input(z.object({ draftId: idSchema }))
-    .query(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const repository = await getRepository(ctx);
+  getById: tenantProcedure.input(z.object({ draftId: idSchema })).query(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const repository = await getRepository(ctx);
 
-      const id = AutoResponseDraftId.fromString(input.draftId);
-      const draft = await repository.findById(id, typedCtx.tenant.tenantId);
+    const id = AutoResponseDraftId.fromString(input.draftId);
+    const draft = await repository.findById(id, typedCtx.tenant.tenantId);
 
-      if (!draft) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `Draft not found: ${input.draftId}`,
-        });
-      }
+    if (!draft) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Draft not found: ${input.draftId}`,
+      });
+    }
 
-      return {
-        id: draft.id.toString(),
-        leadId: draft.leadId,
-        subject: draft.content.subject,
-        body: draft.content.body,
-        status: draft.status,
-        aiConfidence: draft.aiConfidence,
-        modelVersion: draft.modelVersion,
-        triggerType: draft.triggerType,
-        recipientEmail: draft.recipientEmail,
-        createdAt: draft.createdAt,
-        expiresAt: draft.expiresAt,
-        updatedAt: draft.updatedAt,
-        statusHistory: draft.statusHistory.map(h => ({
-          status: h.status,
-          changedAt: h.changedAt,
-          changedBy: h.changedBy,
-          reason: h.reason,
-        })),
-        approvalDecision: draft.approvalDecision,
-        escalation: draft.escalation,
-        escalationCount: draft.escalationCount,
-        isExpired: draft.isExpired,
-        isPendingApproval: draft.isPendingApproval,
-        canBeSent: draft.canBeSent,
-      };
-    }),
+    return {
+      id: draft.id.toString(),
+      leadId: draft.leadId,
+      subject: draft.content.subject,
+      body: draft.content.body,
+      status: draft.status,
+      aiConfidence: draft.aiConfidence,
+      modelVersion: draft.modelVersion,
+      triggerType: draft.triggerType,
+      recipientEmail: draft.recipientEmail,
+      createdAt: draft.createdAt,
+      expiresAt: draft.expiresAt,
+      updatedAt: draft.updatedAt,
+      statusHistory: draft.statusHistory.map((h) => ({
+        status: h.status,
+        changedAt: h.changedAt,
+        changedBy: h.changedBy,
+        reason: h.reason,
+      })),
+      approvalDecision: draft.approvalDecision,
+      escalation: draft.escalation,
+      escalationCount: draft.escalationCount,
+      isExpired: draft.isExpired,
+      isPendingApproval: draft.isPendingApproval,
+      canBeSent: draft.canBeSent,
+    };
+  }),
 
   /**
    * List drafts with filtering
    * SECURITY: Uses tenantProcedure to enforce tenant isolation
    */
-  list: tenantProcedure
-    .input(autoResponseQuerySchema)
-    .query(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const repository = await getRepository(ctx);
+  list: tenantProcedure.input(autoResponseQuerySchema).query(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const repository = await getRepository(ctx);
 
-      const page = input.page ?? 1;
-      const limit = input.limit ?? 20;
-      const offset = (page - 1) * limit;
+    const page = input.page ?? 1;
+    const limit = input.limit ?? 20;
+    const offset = (page - 1) * limit;
 
-      const drafts = await repository.find({
-        tenantId: typedCtx.tenant.tenantId,
-        leadId: input.leadId,
-        status: input.status,
-        triggerType: input.triggerType?.[0],
-        expiredOnly: input.expired,
-        limit,
-        offset,
-      });
+    const drafts = await repository.find({
+      tenantId: typedCtx.tenant.tenantId,
+      leadId: input.leadId,
+      status: input.status,
+      triggerType: input.triggerType?.[0],
+      expiredOnly: input.expired,
+      limit,
+      offset,
+    });
 
-      return {
-        drafts: drafts.map(d => ({
-          id: d.id.toString(),
-          leadId: d.leadId,
-          subject: d.content.subject,
-          status: d.status,
-          aiConfidence: d.aiConfidence,
-          triggerType: d.triggerType,
-          recipientEmail: d.recipientEmail,
-          createdAt: d.createdAt,
-          expiresAt: d.expiresAt,
-        })),
-        total: drafts.length,
-        page,
-        limit,
-        hasMore: drafts.length === limit,
-      };
-    }),
+    return {
+      drafts: drafts.map((d) => ({
+        id: d.id.toString(),
+        leadId: d.leadId,
+        subject: d.content.subject,
+        status: d.status,
+        aiConfidence: d.aiConfidence,
+        triggerType: d.triggerType,
+        recipientEmail: d.recipientEmail,
+        createdAt: d.createdAt,
+        expiresAt: d.expiresAt,
+      })),
+      total: drafts.length,
+      page,
+      limit,
+      hasMore: drafts.length === limit,
+    };
+  }),
 
   /**
    * Submit a draft for human approval
@@ -290,9 +291,11 @@ export const autoResponseRouter = createTRPCRouter({
    * SECURITY: Uses tenantProcedure to enforce tenant isolation
    */
   approve: tenantProcedure
-    .input(approvalDecisionSchema.refine(d => d.decision === 'APPROVED', {
-      message: 'Use reject endpoint for rejection',
-    }))
+    .input(
+      approvalDecisionSchema.refine((d) => d.decision === 'APPROVED', {
+        message: 'Use reject endpoint for rejection',
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const repository = await getRepository(ctx);
@@ -307,11 +310,7 @@ export const autoResponseRouter = createTRPCRouter({
         });
       }
 
-      const approveResult = draft.approve(
-        input.decidedBy,
-        input.modifications,
-        input.reason
-      );
+      const approveResult = draft.approve(input.decidedBy, input.modifications, input.reason);
 
       if (approveResult.isFailure) {
         throw new TRPCError({
@@ -339,11 +338,13 @@ export const autoResponseRouter = createTRPCRouter({
    * SECURITY: Uses tenantProcedure to enforce tenant isolation
    */
   reject: tenantProcedure
-    .input(z.object({
-      draftId: idSchema,
-      decidedBy: idSchema,
-      reason: z.string().min(1, 'Rejection reason is required').max(500),
-    }))
+    .input(
+      z.object({
+        draftId: idSchema,
+        decidedBy: idSchema,
+        reason: z.string().min(1, 'Rejection reason is required').max(500),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const repository = await getRepository(ctx);
@@ -385,9 +386,11 @@ export const autoResponseRouter = createTRPCRouter({
    * SECURITY: Uses tenantProcedure to enforce tenant isolation
    */
   escalate: tenantProcedure
-    .input(escalationSchema.extend({
-      escalatedBy: idSchema,
-    }))
+    .input(
+      escalationSchema.extend({
+        escalatedBy: idSchema,
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const repository = await getRepository(ctx);
@@ -435,11 +438,13 @@ export const autoResponseRouter = createTRPCRouter({
    * SECURITY: Uses tenantProcedure to enforce tenant isolation
    */
   resolveEscalation: tenantProcedure
-    .input(z.object({
-      draftId: idSchema,
-      resolvedBy: idSchema,
-      feedback: z.string().max(500).optional(),
-    }))
+    .input(
+      z.object({
+        draftId: idSchema,
+        resolvedBy: idSchema,
+        feedback: z.string().max(500).optional(),
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const repository = await getRepository(ctx);
@@ -480,85 +485,81 @@ export const autoResponseRouter = createTRPCRouter({
    * Mark a draft as sent
    * SECURITY: Uses tenantProcedure to enforce tenant isolation
    */
-  markSent: tenantProcedure
-    .input(markSentSchema)
-    .mutation(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const repository = await getRepository(ctx);
+  markSent: tenantProcedure.input(markSentSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const repository = await getRepository(ctx);
 
-      const id = AutoResponseDraftId.fromString(input.draftId);
-      const draft = await repository.findById(id, typedCtx.tenant.tenantId);
+    const id = AutoResponseDraftId.fromString(input.draftId);
+    const draft = await repository.findById(id, typedCtx.tenant.tenantId);
 
-      if (!draft) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `Draft not found: ${input.draftId}`,
-        });
-      }
+    if (!draft) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Draft not found: ${input.draftId}`,
+      });
+    }
 
-      const sentResult = draft.markSent(input.notificationId);
-      if (sentResult.isFailure) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: sentResult.error.message,
-        });
-      }
+    const sentResult = draft.markSent(input.notificationId);
+    if (sentResult.isFailure) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: sentResult.error.message,
+      });
+    }
 
-      try {
-        await repository.save(draft);
-      } catch (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to save draft',
-        });
-      }
+    try {
+      await repository.save(draft);
+    } catch (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to save draft',
+      });
+    }
 
-      await publishEvents(draft);
+    await publishEvents(draft);
 
-      return { success: true, status: draft.status };
-    }),
+    return { success: true, status: draft.status };
+  }),
 
   /**
    * Mark a draft send as failed
    * SECURITY: Uses tenantProcedure to enforce tenant isolation
    */
-  markFailed: tenantProcedure
-    .input(markFailedSchema)
-    .mutation(async ({ ctx, input }) => {
-      const typedCtx = getTenantContext(ctx);
-      const repository = await getRepository(ctx);
+  markFailed: tenantProcedure.input(markFailedSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const repository = await getRepository(ctx);
 
-      const id = AutoResponseDraftId.fromString(input.draftId);
-      const draft = await repository.findById(id, typedCtx.tenant.tenantId);
+    const id = AutoResponseDraftId.fromString(input.draftId);
+    const draft = await repository.findById(id, typedCtx.tenant.tenantId);
 
-      if (!draft) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: `Draft not found: ${input.draftId}`,
-        });
-      }
+    if (!draft) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Draft not found: ${input.draftId}`,
+      });
+    }
 
-      const failResult = draft.markSendFailed(input.error);
-      if (failResult.isFailure) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: failResult.error.message,
-        });
-      }
+    const failResult = draft.markSendFailed(input.error);
+    if (failResult.isFailure) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: failResult.error.message,
+      });
+    }
 
-      try {
-        await repository.save(draft);
-      } catch (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to save draft',
-        });
-      }
+    try {
+      await repository.save(draft);
+    } catch (error) {
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to save draft',
+      });
+    }
 
-      await publishEvents(draft);
+    await publishEvents(draft);
 
-      return { success: true, status: draft.status };
-    }),
+    return { success: true, status: draft.status };
+  }),
 
   /**
    * Get pending drafts for an approver
@@ -576,7 +577,7 @@ export const autoResponseRouter = createTRPCRouter({
       );
 
       return {
-        drafts: drafts.map(d => ({
+        drafts: drafts.map((d) => ({
           id: d.id.toString(),
           leadId: d.leadId,
           subject: d.content.subject,

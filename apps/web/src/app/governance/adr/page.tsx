@@ -347,7 +347,9 @@ export default function ADRRegistryPage() {
                   : 'border-transparent text-muted-foreground hover:text-foreground'
               }`}
             >
-              <span className="material-symbols-outlined text-lg align-middle mr-1">account_tree</span>
+              <span className="material-symbols-outlined text-lg align-middle mr-1">
+                account_tree
+              </span>
               Graph
             </button>
           </div>
@@ -362,7 +364,9 @@ export default function ADRRegistryPage() {
             </Card>
             <Card className="p-4">
               <p className="text-sm text-muted-foreground">Accepted</p>
-              <p className="text-2xl font-bold text-emerald-500">{stats.byStatus['Accepted'] || 0}</p>
+              <p className="text-2xl font-bold text-emerald-500">
+                {stats.byStatus['Accepted'] || 0}
+              </p>
             </Card>
             <Card className="p-4">
               <p className="text-sm text-muted-foreground">Proposed</p>
@@ -679,8 +683,8 @@ export default function ADRRegistryPage() {
                           !v.validation.valid
                             ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
                             : v.validation.warnings.length > 0
-                            ? 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20'
-                            : 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20'
+                              ? 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20'
+                              : 'border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20'
                         }`}
                       >
                         <div className="flex items-center gap-2 mb-2">
@@ -689,15 +693,15 @@ export default function ADRRegistryPage() {
                               !v.validation.valid
                                 ? 'text-red-500'
                                 : v.validation.warnings.length > 0
-                                ? 'text-amber-500'
-                                : 'text-emerald-500'
+                                  ? 'text-amber-500'
+                                  : 'text-emerald-500'
                             }`}
                           >
                             {!v.validation.valid
                               ? 'error'
                               : v.validation.warnings.length > 0
-                              ? 'warning'
-                              : 'check_circle'}
+                                ? 'warning'
+                                : 'check_circle'}
                           </span>
                           <span className="font-medium text-foreground">
                             {v.id}: {v.title}

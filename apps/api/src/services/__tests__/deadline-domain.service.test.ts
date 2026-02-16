@@ -183,7 +183,7 @@ vi.mock('@intelliflow/domain', () => {
       // Add some sample UK bank holidays
       calendar.addHoliday(new Date('2024-12-25'), 'Christmas Day');
       calendar.addHoliday(new Date('2024-12-26'), 'Boxing Day');
-      calendar.addHoliday(new Date('2024-01-01'), 'New Year\'s Day');
+      calendar.addHoliday(new Date('2024-01-01'), "New Year's Day");
       return calendar;
     }
 
@@ -227,12 +227,14 @@ vi.mock('@intelliflow/domain', () => {
     };
     private holidayCalendar: MockHolidayCalendar;
 
-    constructor(config?: Partial<{
-      warningThresholdDays: number;
-      criticalThresholdDays: number;
-      defaultReminderIntervals: number[];
-      holidayCalendar: MockHolidayCalendar;
-    }>) {
+    constructor(
+      config?: Partial<{
+        warningThresholdDays: number;
+        criticalThresholdDays: number;
+        defaultReminderIntervals: number[];
+        holidayCalendar: MockHolidayCalendar;
+      }>
+    ) {
       this.config = {
         warningThresholdDays: config?.warningThresholdDays ?? 3,
         criticalThresholdDays: config?.criticalThresholdDays ?? 1,
@@ -246,10 +248,12 @@ vi.mock('@intelliflow/domain', () => {
       return { ...this.config };
     }
 
-    updateConfig(config: Partial<{
-      warningThresholdDays: number;
-      criticalThresholdDays: number;
-    }>) {
+    updateConfig(
+      config: Partial<{
+        warningThresholdDays: number;
+        criticalThresholdDays: number;
+      }>
+    ) {
       this.config = { ...this.config, ...config };
     }
 
@@ -415,11 +419,13 @@ vi.mock('@intelliflow/domain', () => {
   }
 
   // Factory function
-  const createDeadlineEngine = (config?: Partial<{
-    warningThresholdDays: number;
-    criticalThresholdDays: number;
-    defaultReminderIntervals: number[];
-  }>) => {
+  const createDeadlineEngine = (
+    config?: Partial<{
+      warningThresholdDays: number;
+      criticalThresholdDays: number;
+      defaultReminderIntervals: number[];
+    }>
+  ) => {
     return new MockDeadlineEngine(config);
   };
 
@@ -918,7 +924,12 @@ describe('DeadlineDomainService', () => {
         service.createDeadlineFromRule({
           caseId: 'case-3',
           triggerDate: new Date(),
-          rule: { name: 'High Priority', daysCount: 7, dayCountType: 'CALENDAR', trigger: 'CUSTOM' },
+          rule: {
+            name: 'High Priority',
+            daysCount: 7,
+            dayCountType: 'CALENDAR',
+            trigger: 'CUSTOM',
+          },
           priority: 'HIGH',
         })!,
       ];
@@ -1127,7 +1138,12 @@ describe('DeadlineDomainService', () => {
         service.createDeadlineFromRule({
           caseId: 'different-case',
           triggerDate: new Date(),
-          rule: { name: 'Different Case', daysCount: 10, dayCountType: 'CALENDAR', trigger: 'CUSTOM' },
+          rule: {
+            name: 'Different Case',
+            daysCount: 10,
+            dayCountType: 'CALENDAR',
+            trigger: 'CUSTOM',
+          },
         })!,
       ];
 

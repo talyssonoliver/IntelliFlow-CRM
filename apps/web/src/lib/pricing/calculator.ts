@@ -102,7 +102,11 @@ export function getStripePriceId(tier: string, billing: 'monthly' | 'annual'): s
 /**
  * Redirect to checkout (mock for MVP - redirects to sign-up)
  */
-export async function redirectToCheckout(tier: string, billing: 'monthly' | 'annual', userCount: number) {
+export async function redirectToCheckout(
+  tier: string,
+  billing: 'monthly' | 'annual',
+  userCount: number
+) {
   const params = new URLSearchParams({
     plan: tier,
     billing,

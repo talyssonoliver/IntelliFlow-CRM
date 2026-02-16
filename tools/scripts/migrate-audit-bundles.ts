@@ -10,12 +10,20 @@ import { join, dirname } from 'node:path';
 
 const REPO_ROOT = process.cwd();
 const OLD_DIR = join(REPO_ROOT, 'artifacts', 'reports', 'system-audit');
-const SPRINT_CSV = join(REPO_ROOT, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+const SPRINT_CSV = join(
+  REPO_ROOT,
+  'apps',
+  'project-tracker',
+  'docs',
+  'metrics',
+  '_global',
+  'Sprint_plan.csv'
+);
 
 async function getSprintForTask(taskId: string): Promise<number> {
   const content = await readFile(SPRINT_CSV, 'utf-8');
   const lines = content.split('\n');
-  
+
   for (const line of lines) {
     if (line.includes(taskId)) {
       // Find Target Sprint column (usually column index varies)
@@ -39,7 +47,7 @@ async function getSprintForTask(taskId: string): Promise<number> {
       }
     }
   }
-  
+
   // Default to sprint 0 if not found
   console.warn(`  Warning: Could not find sprint for ${taskId}, defaulting to 0`);
   return 0;
@@ -47,59 +55,64 @@ async function getSprintForTask(taskId: string): Promise<number> {
 
 async function migrate() {
   console.log('Migrating audit bundles to sprint-based paths...\n');
-  
+
   if (!existsSync(OLD_DIR)) {
     console.log('No old audit bundles to migrate.');
     return;
   }
 
   const entries = await readdir(OLD_DIR, { withFileTypes: true });
-  const runDirs = entries.filter(e => e.isDirectory()).map(e => e.name);
-  
+  const runDirs = entries.filter((e) => e.isDirectory()).map((e) => e.name);
+
   console.log(`Found ${runDirs.length} bundles to migrate.\n`);
-  
+
   for (const runId of runDirs) {
     const oldPath = join(OLD_DIR, runId);
     const summaryPath = join(oldPath, 'summary.json');
-    
+
     if (!existsSync(summaryPath)) {
       console.log(`Skipping ${runId} - no summary.json`);
       continue;
     }
-    
+
     try {
       const summary = JSON.parse(await readFile(summaryPath, 'utf-8'));
       const taskId = summary.taskId;
-      
+
       if (!taskId) {
         console.log(`Skipping ${runId} - no taskId in summary`);
         continue;
       }
-      
+
       const sprintNumber = await getSprintForTask(taskId);
       const newPath = join(
         REPO_ROOT,
-        '.specify', 'sprints', `sprint-${sprintNumber}`,
-        'execution', taskId, runId, 'matop'
+        '.specify',
+        'sprints',
+        `sprint-${sprintNumber}`,
+        'execution',
+        taskId,
+        runId,
+        'matop'
       );
-      
+
       console.log(`Migrating ${runId}:`);
       console.log(`  Task: ${taskId}, Sprint: ${sprintNumber}`);
       console.log(`  From: ${oldPath}`);
       console.log(`  To:   ${newPath}`);
-      
+
       // Create parent directory
       mkdirSync(dirname(newPath), { recursive: true });
-      
+
       // Move the directory
       await rename(oldPath, newPath);
-      
+
       console.log(`  ✓ Migrated successfully\n`);
     } catch (err) {
       console.error(`  ✗ Failed to migrate ${runId}:`, err);
     }
   }
-  
+
   // Check if old directory is now empty
   const remaining = await readdir(OLD_DIR);
   if (remaining.length === 0) {
@@ -109,7 +122,7 @@ async function migrate() {
   } else {
     console.log(`\nNote: ${remaining.length} items remain in old directory.`);
   }
-  
+
   console.log('\nMigration complete!');
 }
 

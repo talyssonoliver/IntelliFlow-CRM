@@ -21,25 +21,29 @@ describe('NextBestAction', () => {
     });
 
     it('should throw InvalidActionTypeError for unknown action type', () => {
-      expect(() => NextBestAction.create({
-        actionType: 'INVALID_ACTION',
-        priority: 'HIGH',
-        rationale: 'Test',
-        deadline: null,
-      })).toThrow(InvalidActionTypeError);
+      expect(() =>
+        NextBestAction.create({
+          actionType: 'INVALID_ACTION',
+          priority: 'HIGH',
+          rationale: 'Test',
+          deadline: null,
+        })
+      ).toThrow(InvalidActionTypeError);
     });
 
     it('should throw InvalidPriorityError for unknown priority', () => {
-      expect(() => NextBestAction.create({
-        actionType: 'CALL',
-        priority: 'INVALID_PRIORITY',
-        rationale: 'Test',
-        deadline: null,
-      })).toThrow(InvalidPriorityError);
+      expect(() =>
+        NextBestAction.create({
+          actionType: 'CALL',
+          priority: 'INVALID_PRIORITY',
+          rationale: 'Test',
+          deadline: null,
+        })
+      ).toThrow(InvalidPriorityError);
     });
 
     it('should accept all NBA_ACTION_TYPES', () => {
-      NBA_ACTION_TYPES.forEach(actionType => {
+      NBA_ACTION_TYPES.forEach((actionType) => {
         const nba = NextBestAction.create({
           actionType,
           priority: 'MEDIUM',
@@ -51,7 +55,7 @@ describe('NextBestAction', () => {
     });
 
     it('should accept all NBA_ACTION_PRIORITIES', () => {
-      NBA_ACTION_PRIORITIES.forEach(priority => {
+      NBA_ACTION_PRIORITIES.forEach((priority) => {
         const nba = NextBestAction.create({
           actionType: 'CALL',
           priority,

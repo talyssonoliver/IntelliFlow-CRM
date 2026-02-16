@@ -25,13 +25,7 @@ import { TicketId } from '../TicketId';
 describe('TicketCreatedEvent', () => {
   it('should create event with correct payload', () => {
     const ticketId = TicketId.generate();
-    const event = new TicketCreatedEvent(
-      ticketId,
-      'T-00001',
-      'Login issue',
-      'HIGH',
-      'tenant-123'
-    );
+    const event = new TicketCreatedEvent(ticketId, 'T-00001', 'Login issue', 'HIGH', 'tenant-123');
 
     expect(event.eventType).toBe('ticket.created');
     expect(event.ticketId).toBe(ticketId);
@@ -44,13 +38,7 @@ describe('TicketCreatedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const ticketId = TicketId.generate();
-    const event = new TicketCreatedEvent(
-      ticketId,
-      'T-00001',
-      'Login issue',
-      'HIGH',
-      'tenant-123'
-    );
+    const event = new TicketCreatedEvent(ticketId, 'T-00001', 'Login issue', 'HIGH', 'tenant-123');
     const payload = event.toPayload();
 
     expect(payload.ticketId).toBe(ticketId.value);
@@ -65,12 +53,7 @@ describe('TicketCreatedEvent', () => {
 describe('TicketStatusChangedEvent', () => {
   it('should create event with status change', () => {
     const ticketId = TicketId.generate();
-    const event = new TicketStatusChangedEvent(
-      ticketId,
-      'OPEN',
-      'IN_PROGRESS',
-      'user-123'
-    );
+    const event = new TicketStatusChangedEvent(ticketId, 'OPEN', 'IN_PROGRESS', 'user-123');
 
     expect(event.eventType).toBe('ticket.status_changed');
     expect(event.ticketId).toBe(ticketId);
@@ -82,12 +65,7 @@ describe('TicketStatusChangedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const ticketId = TicketId.generate();
-    const event = new TicketStatusChangedEvent(
-      ticketId,
-      'OPEN',
-      'IN_PROGRESS',
-      'user-123'
-    );
+    const event = new TicketStatusChangedEvent(ticketId, 'OPEN', 'IN_PROGRESS', 'user-123');
     const payload = event.toPayload();
 
     expect(payload.ticketId).toBe(ticketId.value);
@@ -100,12 +78,7 @@ describe('TicketStatusChangedEvent', () => {
 describe('TicketPriorityChangedEvent', () => {
   it('should create event with priority change', () => {
     const ticketId = TicketId.generate();
-    const event = new TicketPriorityChangedEvent(
-      ticketId,
-      'MEDIUM',
-      'CRITICAL',
-      'user-123'
-    );
+    const event = new TicketPriorityChangedEvent(ticketId, 'MEDIUM', 'CRITICAL', 'user-123');
 
     expect(event.eventType).toBe('ticket.priority_changed');
     expect(event.ticketId).toBe(ticketId);
@@ -117,12 +90,7 @@ describe('TicketPriorityChangedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const ticketId = TicketId.generate();
-    const event = new TicketPriorityChangedEvent(
-      ticketId,
-      'MEDIUM',
-      'CRITICAL',
-      'user-123'
-    );
+    const event = new TicketPriorityChangedEvent(ticketId, 'MEDIUM', 'CRITICAL', 'user-123');
     const payload = event.toPayload();
 
     expect(payload.ticketId).toBe(ticketId.value);
@@ -135,12 +103,7 @@ describe('TicketPriorityChangedEvent', () => {
 describe('TicketAssignedEvent', () => {
   it('should create event when ticket is assigned', () => {
     const ticketId = TicketId.generate();
-    const event = new TicketAssignedEvent(
-      ticketId,
-      null,
-      'agent-456',
-      'manager-789'
-    );
+    const event = new TicketAssignedEvent(ticketId, null, 'agent-456', 'manager-789');
 
     expect(event.eventType).toBe('ticket.assigned');
     expect(event.ticketId).toBe(ticketId);
@@ -152,12 +115,7 @@ describe('TicketAssignedEvent', () => {
 
   it('should create event when ticket is reassigned', () => {
     const ticketId = TicketId.generate();
-    const event = new TicketAssignedEvent(
-      ticketId,
-      'agent-123',
-      'agent-456',
-      'manager-789'
-    );
+    const event = new TicketAssignedEvent(ticketId, 'agent-123', 'agent-456', 'manager-789');
 
     expect(event.previousAssigneeId).toBe('agent-123');
     expect(event.newAssigneeId).toBe('agent-456');
@@ -165,12 +123,7 @@ describe('TicketAssignedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const ticketId = TicketId.generate();
-    const event = new TicketAssignedEvent(
-      ticketId,
-      'agent-123',
-      'agent-456',
-      'manager-789'
-    );
+    const event = new TicketAssignedEvent(ticketId, 'agent-123', 'agent-456', 'manager-789');
     const payload = event.toPayload();
 
     expect(payload.ticketId).toBe(ticketId.value);
@@ -183,11 +136,7 @@ describe('TicketAssignedEvent', () => {
 describe('TicketUnassignedEvent', () => {
   it('should create event when ticket is unassigned', () => {
     const ticketId = TicketId.generate();
-    const event = new TicketUnassignedEvent(
-      ticketId,
-      'agent-123',
-      'manager-456'
-    );
+    const event = new TicketUnassignedEvent(ticketId, 'agent-123', 'manager-456');
 
     expect(event.eventType).toBe('ticket.unassigned');
     expect(event.ticketId).toBe(ticketId);
@@ -198,11 +147,7 @@ describe('TicketUnassignedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const ticketId = TicketId.generate();
-    const event = new TicketUnassignedEvent(
-      ticketId,
-      'agent-123',
-      'manager-456'
-    );
+    const event = new TicketUnassignedEvent(ticketId, 'agent-123', 'manager-456');
     const payload = event.toPayload();
 
     expect(payload.ticketId).toBe(ticketId.value);
@@ -233,12 +178,7 @@ describe('TicketResolvedEvent', () => {
   it('should serialize to payload correctly', () => {
     const ticketId = TicketId.generate();
     const resolvedAt = new Date('2026-02-05T10:00:00.000Z');
-    const event = new TicketResolvedEvent(
-      ticketId,
-      'Fixed',
-      'agent-123',
-      resolvedAt
-    );
+    const event = new TicketResolvedEvent(ticketId, 'Fixed', 'agent-123', resolvedAt);
     const payload = event.toPayload();
 
     expect(payload.ticketId).toBe(ticketId.value);
@@ -291,11 +231,7 @@ describe('TicketReopenedEvent', () => {
 
   it('should serialize to payload correctly', () => {
     const ticketId = TicketId.generate();
-    const event = new TicketReopenedEvent(
-      ticketId,
-      'Still broken',
-      'agent-123'
-    );
+    const event = new TicketReopenedEvent(ticketId, 'Still broken', 'agent-123');
     const payload = event.toPayload();
 
     expect(payload.ticketId).toBe(ticketId.value);
@@ -309,12 +245,7 @@ describe('TicketResponseSlaBreachedEvent', () => {
     const ticketId = TicketId.generate();
     const dueAt = new Date('2026-02-05T08:00:00.000Z');
     const breachedAt = new Date('2026-02-05T09:00:00.000Z');
-    const event = new TicketResponseSlaBreachedEvent(
-      ticketId,
-      dueAt,
-      breachedAt,
-      'sla-policy-123'
-    );
+    const event = new TicketResponseSlaBreachedEvent(ticketId, dueAt, breachedAt, 'sla-policy-123');
 
     expect(event.eventType).toBe('ticket.response_sla_breached');
     expect(event.ticketId).toBe(ticketId);
@@ -328,12 +259,7 @@ describe('TicketResponseSlaBreachedEvent', () => {
     const ticketId = TicketId.generate();
     const dueAt = new Date('2026-02-05T08:00:00.000Z');
     const breachedAt = new Date('2026-02-05T09:00:00.000Z');
-    const event = new TicketResponseSlaBreachedEvent(
-      ticketId,
-      dueAt,
-      breachedAt,
-      'sla-policy-123'
-    );
+    const event = new TicketResponseSlaBreachedEvent(ticketId, dueAt, breachedAt, 'sla-policy-123');
     const payload = event.toPayload();
 
     expect(payload.ticketId).toBe(ticketId.value);
@@ -404,12 +330,7 @@ describe('TicketSlaPausedEvent', () => {
   it('should serialize to payload correctly', () => {
     const ticketId = TicketId.generate();
     const pausedAt = new Date('2026-02-05T14:00:00.000Z');
-    const event = new TicketSlaPausedEvent(
-      ticketId,
-      pausedAt,
-      'Waiting',
-      'agent-123'
-    );
+    const event = new TicketSlaPausedEvent(ticketId, pausedAt, 'Waiting', 'agent-123');
     const payload = event.toPayload();
 
     expect(payload.ticketId).toBe(ticketId.value);

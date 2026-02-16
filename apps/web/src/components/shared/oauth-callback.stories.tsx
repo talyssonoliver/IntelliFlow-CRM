@@ -168,30 +168,21 @@ const MockOAuthCallback = ({
 
         <div className="mt-6 flex items-center justify-center gap-4 text-xs text-slate-400">
           <div className="flex items-center gap-1">
-            <span
-              className="material-symbols-outlined text-sm text-[#7cc4ff]"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
               lock
             </span>
             Secure
           </div>
           <div className="w-1 h-1 rounded-full bg-slate-600" aria-hidden="true" />
           <div className="flex items-center gap-1">
-            <span
-              className="material-symbols-outlined text-sm text-[#7cc4ff]"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
               shield_check
             </span>
             Encrypted
           </div>
           <div className="w-1 h-1 rounded-full bg-slate-600" aria-hidden="true" />
           <div className="flex items-center gap-1">
-            <span
-              className="material-symbols-outlined text-sm text-[#7cc4ff]"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
               policy
             </span>
             Protected

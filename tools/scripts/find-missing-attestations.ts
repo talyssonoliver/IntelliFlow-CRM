@@ -14,8 +14,8 @@ const results: AttestationStatus[] = [];
 const missing: string[] = [];
 
 const dirs = readdirSync(attestationsDir, { withFileTypes: true })
-  .filter(d => d.isDirectory())
-  .map(d => d.name);
+  .filter((d) => d.isDirectory())
+  .map((d) => d.name);
 
 console.log(`Found ${dirs.length} attestation directories\n`);
 
@@ -33,7 +33,7 @@ for (const dir of dirs) {
 }
 
 console.log('=== MISSING attestation.json (but have context_ack.json) ===');
-missing.forEach(m => console.log(`  - ${m}`));
+missing.forEach((m) => console.log(`  - ${m}`));
 console.log(`\nTotal missing: ${missing.length}`);
 
 // Output as JSON for processing

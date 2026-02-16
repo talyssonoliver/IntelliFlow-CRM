@@ -173,7 +173,7 @@ export class AppointmentDomainService {
             monthOfYear: rec.monthOfYear,
             endDate: rec.endDate ? new Date(rec.endDate) : undefined,
             occurrenceCount: rec.occurrenceCount,
-            exceptionDates: rec.exceptionDates?.map(d => new Date(d)),
+            exceptionDates: rec.exceptionDates?.map((d) => new Date(d)),
           });
           if (recurrenceResult.isSuccess) {
             recurrence = recurrenceResult.value;
@@ -210,7 +210,10 @@ export class AppointmentDomainService {
           }
         }
       } catch (error) {
-        console.error(`[AppointmentDomainService] Failed to convert appointment ${dbApt.id}:`, error);
+        console.error(
+          `[AppointmentDomainService] Failed to convert appointment ${dbApt.id}:`,
+          error
+        );
       }
     }
 
@@ -228,7 +231,7 @@ export class AppointmentDomainService {
    */
   static checkConflicts(
     input: CheckConflictsInput,
-    existingAppointments: Appointment[],
+    existingAppointments: Appointment[]
   ): { hasConflicts: boolean; conflicts: ConflictInfo[] } {
     // Create TimeSlot
     const timeSlotResult = TimeSlot.create(input.startTime, input.endTime);
@@ -337,9 +340,7 @@ export class AppointmentDomainService {
    * Batch check conflicts for multiple appointments
    * Useful for validating recurrence patterns
    */
-  static batchCheckConflicts(
-    appointments: Appointment[]
-  ): Map<string, ConflictCheckResult> {
+  static batchCheckConflicts(appointments: Appointment[]): Map<string, ConflictCheckResult> {
     return ConflictDetector.batchCheckConflicts(appointments);
   }
 
@@ -377,10 +378,16 @@ export class AppointmentDomainService {
     }
 
     // Buffer validation
-    if (input.bufferMinutesBefore && (input.bufferMinutesBefore < 0 || input.bufferMinutesBefore > 240)) {
+    if (
+      input.bufferMinutesBefore &&
+      (input.bufferMinutesBefore < 0 || input.bufferMinutesBefore > 240)
+    ) {
       errors.push('Buffer before must be between 0 and 240 minutes');
     }
-    if (input.bufferMinutesAfter && (input.bufferMinutesAfter < 0 || input.bufferMinutesAfter > 240)) {
+    if (
+      input.bufferMinutesAfter &&
+      (input.bufferMinutesAfter < 0 || input.bufferMinutesAfter > 240)
+    ) {
       errors.push('Buffer after must be between 0 and 240 minutes');
     }
 

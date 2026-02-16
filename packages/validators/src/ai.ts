@@ -365,13 +365,15 @@ export const churnRiskOutputSchema = z.object({
   slaHours: z.number().positive(),
 
   // Metadata
-  metadata: z.object({
-    modelVersion: z.string(),
-    promptVersion: z.string().optional(),
-    latencyMs: z.number(),
-    tokenCount: z.number().optional(),
-    dataQuality: dataQualityLevelSchema,
-  }).optional(),
+  metadata: z
+    .object({
+      modelVersion: z.string(),
+      promptVersion: z.string().optional(),
+      latencyMs: z.number(),
+      tokenCount: z.number().optional(),
+      dataQuality: dataQualityLevelSchema,
+    })
+    .optional(),
 });
 export type ChurnRiskOutput = z.infer<typeof churnRiskOutputSchema>;
 
@@ -507,7 +509,9 @@ export const aiInsightsSummarySchema = z.object({
   // Additional insights
   conversionProbability: z.number().min(0).max(100).optional(),
   lifetimeValue: z.number().optional(),
-  sentiment: z.enum(['VERY_POSITIVE', 'POSITIVE', 'NEUTRAL', 'NEGATIVE', 'VERY_NEGATIVE']).optional(),
+  sentiment: z
+    .enum(['VERY_POSITIVE', 'POSITIVE', 'NEUTRAL', 'NEGATIVE', 'VERY_NEGATIVE'])
+    .optional(),
   engagementScore: z.number().min(0).max(100).optional(),
 
   // Recommendations list

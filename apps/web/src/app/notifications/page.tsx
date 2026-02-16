@@ -91,7 +91,10 @@ interface Notification {
 // =============================================================================
 
 function getTypeConfig(type: NotificationType) {
-  const configs: Record<string, { icon: string; bgColor: string; iconColor: string; ringColor: string; label: string }> = {
+  const configs: Record<
+    string,
+    { icon: string; bgColor: string; iconColor: string; ringColor: string; label: string }
+  > = {
     // Lead notifications
     lead_assigned: {
       icon: 'person_add',
@@ -351,7 +354,10 @@ function getTypeConfig(type: NotificationType) {
 }
 
 function getPriorityConfig(priority: NotificationPriority) {
-  const configs: Record<NotificationPriority, { borderColor: string; badgeBg: string; badgeText: string; badgeRing: string; label: string }> = {
+  const configs: Record<
+    NotificationPriority,
+    { borderColor: string; badgeBg: string; badgeText: string; badgeRing: string; label: string }
+  > = {
     high: {
       borderColor: 'bg-red-500',
       badgeBg: 'bg-red-50 dark:bg-red-900/30',
@@ -464,7 +470,9 @@ function NotificationItem({
           {notification.body}
         </p>
         <div className="flex items-center gap-2 mt-1">
-          <span className={`text-xs px-2 py-0.5 rounded-full ${typeConfig.bgColor} ${typeConfig.iconColor}`}>
+          <span
+            className={`text-xs px-2 py-0.5 rounded-full ${typeConfig.bgColor} ${typeConfig.iconColor}`}
+          >
             {typeConfig.label}
           </span>
           {actionLink && (
@@ -566,12 +574,7 @@ export default function NotificationsPage() {
   }, [typeFilter, priorityFilter, activeTab]);
 
   // Fetch notifications - only run when authenticated
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = trpc.notifications.list.useQuery(
+  const { data, isLoading, error, refetch } = trpc.notifications.list.useQuery(
     {
       limit,
       cursor,
@@ -581,7 +584,8 @@ export default function NotificationsPage() {
   );
 
   // Check for auth errors
-  const isAuthError = error?.data?.code === 'UNAUTHORIZED' ||
+  const isAuthError =
+    error?.data?.code === 'UNAUTHORIZED' ||
     error?.message?.toLowerCase().includes('authentication') ||
     error?.message?.toLowerCase().includes('unauthorized');
 
@@ -593,10 +597,9 @@ export default function NotificationsPage() {
   }, [error, isAuthError, isLoading, authLoading, router]);
 
   // Fetch unread count - only run when authenticated
-  const { data: unreadData } = trpc.notifications.getUnreadCount.useQuery(
-    undefined,
-    { enabled: isAuthenticated && !authLoading }
-  );
+  const { data: unreadData } = trpc.notifications.getUnreadCount.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+  });
 
   // Mutations
   const markAsReadMutation = trpc.notifications.markAsRead.useMutation({
@@ -642,8 +645,18 @@ export default function NotificationsPage() {
   const tabs = [
     { id: 'all' as const, label: 'All' },
     { id: 'unread' as const, label: 'Unread', count: totalUnread, dot: 'bg-primary' },
-    { id: 'urgent' as const, label: 'Urgent', count: unreadData?.byPriority?.urgent, dot: 'bg-red-500' },
-    { id: 'high' as const, label: 'High', count: unreadData?.byPriority?.high, dot: 'bg-orange-500' },
+    {
+      id: 'urgent' as const,
+      label: 'Urgent',
+      count: unreadData?.byPriority?.urgent,
+      dot: 'bg-red-500',
+    },
+    {
+      id: 'high' as const,
+      label: 'High',
+      count: unreadData?.byPriority?.high,
+      dot: 'bg-orange-500',
+    },
   ];
 
   // Type options for filter
@@ -671,10 +684,7 @@ export default function NotificationsPage() {
       <div className="mx-auto flex flex-col gap-6">
         {/* Page Header */}
         <PageHeader
-          breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' },
-            { label: 'Notifications' },
-          ]}
+          breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Notifications' }]}
           title="Notifications"
           description="Stay updated with your latest alerts and activities."
           actions={[
@@ -785,7 +795,9 @@ export default function NotificationsPage() {
         {/* Redirecting State for Auth Errors */}
         {error && isAuthError && (
           <div className="flex items-center justify-center gap-3 p-8">
-            <span className="material-symbols-outlined text-slate-400 animate-spin">progress_activity</span>
+            <span className="material-symbols-outlined text-slate-400 animate-spin">
+              progress_activity
+            </span>
             <p className="text-slate-600 dark:text-slate-400">Redirecting to login...</p>
           </div>
         )}
@@ -795,7 +807,9 @@ export default function NotificationsPage() {
           <div className="flex items-center gap-3 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
             <span className="material-symbols-outlined text-red-500">error</span>
             <div>
-              <p className="font-medium text-red-700 dark:text-red-400">Failed to load notifications</p>
+              <p className="font-medium text-red-700 dark:text-red-400">
+                Failed to load notifications
+              </p>
               <p className="text-sm text-red-600 dark:text-red-500">{error.message}</p>
             </div>
             <button
@@ -858,9 +872,7 @@ export default function NotificationsPage() {
                 {data.notifications.length}
               </span>{' '}
               of{' '}
-              <span className="font-semibold text-slate-700 dark:text-slate-200">
-                {data.total}
-              </span>{' '}
+              <span className="font-semibold text-slate-700 dark:text-slate-200">{data.total}</span>{' '}
               notifications
             </div>
             <div className="flex items-center gap-2">

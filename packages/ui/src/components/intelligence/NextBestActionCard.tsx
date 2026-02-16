@@ -52,8 +52,7 @@ export interface NextBestActionData {
 }
 
 export interface NextBestActionCardProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof nbaCardVariants> {
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof nbaCardVariants> {
   /** Next best action data */
   data: NextBestActionData;
   /** Card title */
@@ -98,15 +97,47 @@ function getActionConfig(actionType: NBAActionType) {
   const configs: Record<NBAActionType, { icon: string; label: string; color: string }> = {
     CALL: { icon: 'call', label: 'Make a Call', color: 'text-green-600 dark:text-green-400' },
     EMAIL: { icon: 'mail', label: 'Send Email', color: 'text-blue-600 dark:text-blue-400' },
-    MEETING: { icon: 'event', label: 'Schedule Meeting', color: 'text-purple-600 dark:text-purple-400' },
-    SEND_PROPOSAL: { icon: 'description', label: 'Send Proposal', color: 'text-indigo-600 dark:text-indigo-400' },
-    OFFER_DISCOUNT: { icon: 'sell', label: 'Offer Discount', color: 'text-orange-600 dark:text-orange-400' },
-    SCHEDULE_DEMO: { icon: 'play_circle', label: 'Schedule Demo', color: 'text-cyan-600 dark:text-cyan-400' },
-    SEND_CASE_STUDY: { icon: 'article', label: 'Send Case Study', color: 'text-teal-600 dark:text-teal-400' },
+    MEETING: {
+      icon: 'event',
+      label: 'Schedule Meeting',
+      color: 'text-purple-600 dark:text-purple-400',
+    },
+    SEND_PROPOSAL: {
+      icon: 'description',
+      label: 'Send Proposal',
+      color: 'text-indigo-600 dark:text-indigo-400',
+    },
+    OFFER_DISCOUNT: {
+      icon: 'sell',
+      label: 'Offer Discount',
+      color: 'text-orange-600 dark:text-orange-400',
+    },
+    SCHEDULE_DEMO: {
+      icon: 'play_circle',
+      label: 'Schedule Demo',
+      color: 'text-cyan-600 dark:text-cyan-400',
+    },
+    SEND_CASE_STUDY: {
+      icon: 'article',
+      label: 'Send Case Study',
+      color: 'text-teal-600 dark:text-teal-400',
+    },
     ESCALATE: { icon: 'priority_high', label: 'Escalate', color: 'text-red-600 dark:text-red-400' },
-    UPSELL: { icon: 'trending_up', label: 'Upsell Opportunity', color: 'text-emerald-600 dark:text-emerald-400' },
-    CROSS_SELL: { icon: 'swap_horiz', label: 'Cross-Sell', color: 'text-violet-600 dark:text-violet-400' },
-    TRAINING: { icon: 'school', label: 'Offer Training', color: 'text-amber-600 dark:text-amber-400' },
+    UPSELL: {
+      icon: 'trending_up',
+      label: 'Upsell Opportunity',
+      color: 'text-emerald-600 dark:text-emerald-400',
+    },
+    CROSS_SELL: {
+      icon: 'swap_horiz',
+      label: 'Cross-Sell',
+      color: 'text-violet-600 dark:text-violet-400',
+    },
+    TRAINING: {
+      icon: 'school',
+      label: 'Offer Training',
+      color: 'text-amber-600 dark:text-amber-400',
+    },
     WAIT: { icon: 'hourglass_empty', label: 'Wait', color: 'text-gray-600 dark:text-gray-400' },
   };
   return configs[actionType] || configs.WAIT;
@@ -223,7 +254,13 @@ function NextBestActionCard({
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
         <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
-        <div className={cn('px-2 py-0.5 rounded-full text-xs font-medium', priorityConfig.bgColor, priorityConfig.color)}>
+        <div
+          className={cn(
+            'px-2 py-0.5 rounded-full text-xs font-medium',
+            priorityConfig.bgColor,
+            priorityConfig.color
+          )}
+        >
           {priorityConfig.label}
         </div>
       </div>
@@ -231,7 +268,10 @@ function NextBestActionCard({
       {/* Action */}
       <div className="flex items-start gap-3 mt-3">
         <div className={cn('flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10')}>
-          <span className={cn('material-symbols-outlined text-xl', actionConfig.color)} aria-hidden="true">
+          <span
+            className={cn('material-symbols-outlined text-xl', actionConfig.color)}
+            aria-hidden="true"
+          >
             {actionConfig.icon}
           </span>
         </div>
@@ -243,10 +283,12 @@ function NextBestActionCard({
 
       {/* Deadline */}
       {deadlineInfo && (
-        <div className={cn(
-          'mt-3 flex items-center gap-2 text-sm',
-          deadlineInfo.isUrgent ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'
-        )}>
+        <div
+          className={cn(
+            'mt-3 flex items-center gap-2 text-sm',
+            deadlineInfo.isUrgent ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'
+          )}
+        >
           <span className="material-symbols-outlined text-sm">schedule</span>
           <span>{deadlineInfo.text}</span>
         </div>
@@ -263,24 +305,29 @@ function NextBestActionCard({
       )}
 
       {/* Confidence & Success Probability */}
-      {showConfidence && (data.confidence !== undefined || data.successProbability !== undefined) && (
-        <div className="mt-3 flex items-center gap-4 text-sm">
-          {data.confidence !== undefined && (
-            <div className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-sm text-muted-foreground">psychology</span>
-              <span className="text-muted-foreground">Confidence:</span>
-              <span className="font-medium">{Math.round(data.confidence * 100)}%</span>
-            </div>
-          )}
-          {data.successProbability !== undefined && (
-            <div className="flex items-center gap-1">
-              <span className="material-symbols-outlined text-sm text-muted-foreground">target</span>
-              <span className="text-muted-foreground">Success:</span>
-              <span className="font-medium">{Math.round(data.successProbability * 100)}%</span>
-            </div>
-          )}
-        </div>
-      )}
+      {showConfidence &&
+        (data.confidence !== undefined || data.successProbability !== undefined) && (
+          <div className="mt-3 flex items-center gap-4 text-sm">
+            {data.confidence !== undefined && (
+              <div className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm text-muted-foreground">
+                  psychology
+                </span>
+                <span className="text-muted-foreground">Confidence:</span>
+                <span className="font-medium">{Math.round(data.confidence * 100)}%</span>
+              </div>
+            )}
+            {data.successProbability !== undefined && (
+              <div className="flex items-center gap-1">
+                <span className="material-symbols-outlined text-sm text-muted-foreground">
+                  target
+                </span>
+                <span className="text-muted-foreground">Success:</span>
+                <span className="font-medium">{Math.round(data.successProbability * 100)}%</span>
+              </div>
+            )}
+          </div>
+        )}
 
       {/* Actions */}
       {(onActionTaken || onDismiss) && (
@@ -315,4 +362,10 @@ function NextBestActionCard({
 // Exports
 // ============================================
 
-export { NextBestActionCard, NextBestActionCardSkeleton, nbaCardVariants, getActionConfig, getPriorityConfig };
+export {
+  NextBestActionCard,
+  NextBestActionCardSkeleton,
+  nbaCardVariants,
+  getActionConfig,
+  getPriorityConfig,
+};

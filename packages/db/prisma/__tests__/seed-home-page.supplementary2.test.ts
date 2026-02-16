@@ -19,19 +19,15 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // ---------------------------------------------------------------------------
 // vi.hoisted mocks
 // ---------------------------------------------------------------------------
-const {
-  mockFindFirst,
-  mockUpsert,
-  mockCreate,
-  mockExecuteRaw,
-  mockDisconnect,
-} = vi.hoisted(() => ({
-  mockFindFirst: vi.fn(),
-  mockUpsert: vi.fn().mockResolvedValue({ id: 'upserted-id' }),
-  mockCreate: vi.fn().mockResolvedValue({ id: 'created-id', name: 'TestAccount' }),
-  mockExecuteRaw: vi.fn().mockResolvedValue(undefined),
-  mockDisconnect: vi.fn().mockResolvedValue(undefined),
-}));
+const { mockFindFirst, mockUpsert, mockCreate, mockExecuteRaw, mockDisconnect } = vi.hoisted(
+  () => ({
+    mockFindFirst: vi.fn(),
+    mockUpsert: vi.fn().mockResolvedValue({ id: 'upserted-id' }),
+    mockCreate: vi.fn().mockResolvedValue({ id: 'created-id', name: 'TestAccount' }),
+    mockExecuteRaw: vi.fn().mockResolvedValue(undefined),
+    mockDisconnect: vi.fn().mockResolvedValue(undefined),
+  })
+);
 
 vi.mock('@prisma/client', () => ({
   PrismaClient: vi.fn().mockImplementation(() => ({
@@ -82,11 +78,10 @@ describe('seed-home-page - supplementary2', () => {
 
       // Setup mock calls in order: tenant, user, account, lead (for audit), lead (after upserts)
       mockFindFirst
-        .mockResolvedValueOnce(tenant)    // tenant.findFirst
-        .mockResolvedValueOnce(user)      // user.findFirst
-        .mockResolvedValueOnce(account)   // account.findFirst
-        .mockResolvedValueOnce(lead)      // lead.findFirst (for audit)
-        ;
+        .mockResolvedValueOnce(tenant) // tenant.findFirst
+        .mockResolvedValueOnce(user) // user.findFirst
+        .mockResolvedValueOnce(account) // account.findFirst
+        .mockResolvedValueOnce(lead); // lead.findFirst (for audit)
 
       // Step 1: Find tenant
       const foundTenant = await mockFindFirst();
@@ -99,9 +94,24 @@ describe('seed-home-page - supplementary2', () => {
 
       // Step 3: Upsert 3 tasks
       const tasks = [
-        { id: 'home-task-1', title: 'Follow up with Acme Corp on proposal', priority: 'HIGH', status: 'IN_PROGRESS' },
-        { id: 'home-task-2', title: 'Prepare quarterly review presentation', priority: 'HIGH', status: 'PENDING' },
-        { id: 'home-task-3', title: 'Review contract with legal team', priority: 'HIGH', status: 'PENDING' },
+        {
+          id: 'home-task-1',
+          title: 'Follow up with Acme Corp on proposal',
+          priority: 'HIGH',
+          status: 'IN_PROGRESS',
+        },
+        {
+          id: 'home-task-2',
+          title: 'Prepare quarterly review presentation',
+          priority: 'HIGH',
+          status: 'PENDING',
+        },
+        {
+          id: 'home-task-3',
+          title: 'Review contract with legal team',
+          priority: 'HIGH',
+          status: 'PENDING',
+        },
       ];
       for (const task of tasks) {
         await mockUpsert({ where: { id: task.id }, update: task, create: task });
@@ -115,9 +125,24 @@ describe('seed-home-page - supplementary2', () => {
       // Step 5: Upsert 3 deals
       vi.clearAllMocks();
       const deals = [
-        { id: 'home-deal-1', name: 'CloudSync Enterprise License', value: 75000, stage: 'CLOSED_WON' },
-        { id: 'home-deal-2', name: 'DataFlow Analytics Subscription', value: 45000, stage: 'CLOSED_WON' },
-        { id: 'home-deal-3', name: 'SecureVault Implementation', value: 120000, stage: 'CLOSED_WON' },
+        {
+          id: 'home-deal-1',
+          name: 'CloudSync Enterprise License',
+          value: 75000,
+          stage: 'CLOSED_WON',
+        },
+        {
+          id: 'home-deal-2',
+          name: 'DataFlow Analytics Subscription',
+          value: 45000,
+          stage: 'CLOSED_WON',
+        },
+        {
+          id: 'home-deal-3',
+          name: 'SecureVault Implementation',
+          value: 120000,
+          stage: 'CLOSED_WON',
+        },
       ];
       for (const deal of deals) {
         await mockUpsert({ where: { id: deal.id }, update: deal, create: deal });
@@ -131,17 +156,37 @@ describe('seed-home-page - supplementary2', () => {
 
       // Step 7: Upsert 5 audit logs
       vi.clearAllMocks();
-      const auditEventTypes = ['DealClosed', 'TaskCompleted', 'LeadQualified', 'EmailSent', 'CallLogged'];
+      const auditEventTypes = [
+        'DealClosed',
+        'TaskCompleted',
+        'LeadQualified',
+        'EmailSent',
+        'CallLogged',
+      ];
       for (const eventType of auditEventTypes) {
-        await mockUpsert({ where: { id: `home-audit-${auditEventTypes.indexOf(eventType) + 1}` }, update: { eventType }, create: { eventType } });
+        await mockUpsert({
+          where: { id: `home-audit-${auditEventTypes.indexOf(eventType) + 1}` },
+          update: { eventType },
+          create: { eventType },
+        });
       }
       expect(mockUpsert).toHaveBeenCalledTimes(5);
 
       // Step 8: Upsert 2 appointments
       vi.clearAllMocks();
       const appointments = [
-        { id: 'home-appt-1', title: 'Product Demo - TechCorp', appointmentType: 'MEETING', status: 'CONFIRMED' },
-        { id: 'home-appt-2', title: 'Weekly Team Standup', appointmentType: 'MEETING', status: 'CONFIRMED' },
+        {
+          id: 'home-appt-1',
+          title: 'Product Demo - TechCorp',
+          appointmentType: 'MEETING',
+          status: 'CONFIRMED',
+        },
+        {
+          id: 'home-appt-2',
+          title: 'Weekly Team Standup',
+          appointmentType: 'MEETING',
+          status: 'CONFIRMED',
+        },
       ];
       for (const appt of appointments) {
         await mockUpsert({ where: { id: appt.id }, update: appt, create: appt });
@@ -217,7 +262,9 @@ describe('seed-home-page - supplementary2', () => {
     });
 
     it('should skip account creation when one already exists', async () => {
-      const accountLookup = vi.fn().mockResolvedValueOnce({ id: 'existing-account', name: 'Existing' });
+      const accountLookup = vi
+        .fn()
+        .mockResolvedValueOnce({ id: 'existing-account', name: 'Existing' });
       const account = await accountLookup();
       expect(account).not.toBeNull();
       expect(account.id).toBe('existing-account');
@@ -226,7 +273,8 @@ describe('seed-home-page - supplementary2', () => {
 
   describe('seedHomePageData - lead creation with 3 specific leads', () => {
     it('should create 3 leads with specific data when none exist', async () => {
-      const leadLookup = vi.fn()
+      const leadLookup = vi
+        .fn()
         .mockResolvedValueOnce(null) // no leads initially
         .mockResolvedValueOnce({ id: 'home-seed-lead-1' }); // after creation
 
@@ -350,7 +398,7 @@ describe('seed-home-page - supplementary2', () => {
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
       const appt1Start = new Date(today.getTime() + 10 * 60 * 60 * 1000); // 10 AM
-      const appt1End = new Date(today.getTime() + 11 * 60 * 60 * 1000);   // 11 AM
+      const appt1End = new Date(today.getTime() + 11 * 60 * 60 * 1000); // 11 AM
       const appt2Start = new Date(today.getTime() + 14 * 60 * 60 * 1000); // 2 PM
       const appt2End = new Date(today.getTime() + 14.5 * 60 * 60 * 1000); // 2:30 PM
 

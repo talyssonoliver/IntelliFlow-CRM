@@ -155,9 +155,10 @@ export function mapToAddress(data: Record<string, unknown>): PayPalAddress {
   };
 }
 
-function mapToShipping(
-  data: Record<string, unknown>
-): { name?: { fullName?: string }; address?: PayPalAddress } {
+function mapToShipping(data: Record<string, unknown>): {
+  name?: { fullName?: string };
+  address?: PayPalAddress;
+} {
   const name = data.name as Record<string, unknown> | undefined;
   const address = data.address as Record<string, unknown> | undefined;
 

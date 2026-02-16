@@ -150,7 +150,10 @@ async function seedSupabaseAuthUsers() {
 
       if (error) {
         // Check if it's a duplicate email error
-        if (error.message?.includes('already been registered') || error.message?.includes('duplicate')) {
+        if (
+          error.message?.includes('already been registered') ||
+          error.message?.includes('duplicate')
+        ) {
           console.log(`   ✓ Auth user already exists: ${user.email}`);
         } else {
           console.error(`   ✗ Failed to create auth user ${user.email}:`, error.message);
@@ -515,7 +518,16 @@ async function cleanDatabase() {
  * Based on apps/api/src/security/rbac.ts DEFAULT_PERMISSIONS
  */
 type PermissionAction = 'read' | 'write' | 'delete' | 'export' | 'manage' | 'admin';
-type ResourceType = 'lead' | 'contact' | 'account' | 'opportunity' | 'task' | 'user' | 'ai_score' | 'appointment' | 'system';
+type ResourceType =
+  | 'lead'
+  | 'contact'
+  | 'account'
+  | 'opportunity'
+  | 'task'
+  | 'user'
+  | 'ai_score'
+  | 'appointment'
+  | 'system';
 type RoleName = 'ADMIN' | 'MANAGER' | 'SALES_REP' | 'USER' | 'VIEWER';
 
 const RBAC_ROLE_LEVELS: Record<RoleName, number> = {
@@ -589,7 +601,12 @@ async function seedRBACPermissions() {
 
   // Collect all unique permissions from the matrix
   const permissionSet = new Set<string>();
-  const permissions: Array<{ name: string; resource: string; action: string; description: string }> = [];
+  const permissions: Array<{
+    name: string;
+    resource: string;
+    action: string;
+    description: string;
+  }> = [];
 
   for (const [resources] of Object.entries(RBAC_DEFAULT_PERMISSIONS)) {
     for (const [resource, actions] of Object.entries(resources)) {
@@ -750,7 +767,8 @@ async function seedUsers(tenantId: string) {
       email: 'sarah.johnson@intelliflow.dev',
       name: 'Sarah Johnson',
       role: UserRole.SALES_REP,
-      avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face',
+      avatarUrl:
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face',
       tenantId,
     },
     {
@@ -850,7 +868,8 @@ async function seedAccounts(tenantId: string) {
       employees: 500,
       revenue: 50000000,
       description: 'Leading enterprise software provider',
-      ownerId: SEED_IDS.users.sarahJohnson,tenantId,
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
     },
     {
       id: SEED_IDS.accounts.designCo,
@@ -860,7 +879,9 @@ async function seedAccounts(tenantId: string) {
       employees: 50,
       revenue: 5000000,
       description: 'Award-winning design agency',
-      ownerId: SEED_IDS.users.mikeDavis,     tenantId,   },
+      ownerId: SEED_IDS.users.mikeDavis,
+      tenantId,
+    },
     {
       id: SEED_IDS.accounts.smithConsulting,
       name: 'Smith Consulting',
@@ -869,7 +890,9 @@ async function seedAccounts(tenantId: string) {
       employees: 25,
       revenue: 2500000,
       description: 'Boutique consulting firm',
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,   },
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+    },
     {
       id: SEED_IDS.accounts.globalSoft,
       name: 'GlobalSoft',
@@ -878,7 +901,9 @@ async function seedAccounts(tenantId: string) {
       employees: 2000,
       revenue: 200000000,
       description: 'Global enterprise software solutions',
-      ownerId: SEED_IDS.users.jamesWilson,     tenantId,   },
+      ownerId: SEED_IDS.users.jamesWilson,
+      tenantId,
+    },
     {
       id: SEED_IDS.accounts.finTech,
       name: 'FinTech IO',
@@ -887,7 +912,9 @@ async function seedAccounts(tenantId: string) {
       employees: 150,
       revenue: 15000000,
       description: 'Modern financial technology solutions',
-      ownerId: SEED_IDS.users.mikeDavis,     tenantId,   },
+      ownerId: SEED_IDS.users.mikeDavis,
+      tenantId,
+    },
     // From Deals page
     {
       id: SEED_IDS.accounts.acmeCorp,
@@ -897,7 +924,9 @@ async function seedAccounts(tenantId: string) {
       employees: 1000,
       revenue: 100000000,
       description: 'Enterprise technology solutions',
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,   },
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+    },
     {
       id: SEED_IDS.accounts.techStart,
       name: 'TechStart Inc',
@@ -906,7 +935,9 @@ async function seedAccounts(tenantId: string) {
       employees: 30,
       revenue: 3000000,
       description: 'Fast-growing SaaS startup',
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,   },
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+    },
     {
       id: SEED_IDS.accounts.globalTech,
       name: 'GlobalTech Solutions',
@@ -915,7 +946,9 @@ async function seedAccounts(tenantId: string) {
       employees: 500,
       revenue: 75000000,
       description: 'Global IT services provider',
-      ownerId: SEED_IDS.users.mikeDavis,     tenantId,   },
+      ownerId: SEED_IDS.users.mikeDavis,
+      tenantId,
+    },
     {
       id: SEED_IDS.accounts.dataCorp,
       name: 'DataCorp Analytics',
@@ -924,7 +957,9 @@ async function seedAccounts(tenantId: string) {
       employees: 200,
       revenue: 25000000,
       description: 'Data analytics and BI solutions',
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,   },
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+    },
     {
       id: SEED_IDS.accounts.innovateCo,
       name: 'InnovateCo',
@@ -933,7 +968,9 @@ async function seedAccounts(tenantId: string) {
       employees: 75,
       revenue: 10000000,
       description: 'Innovation and transformation consulting',
-      ownerId: SEED_IDS.users.mikeDavis,     tenantId,   },
+      ownerId: SEED_IDS.users.mikeDavis,
+      tenantId,
+    },
     {
       id: SEED_IDS.accounts.megaCorp,
       name: 'MegaCorp Industries',
@@ -942,7 +979,9 @@ async function seedAccounts(tenantId: string) {
       employees: 5000,
       revenue: 500000000,
       description: 'Global manufacturing leader',
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,   },
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+    },
     {
       id: SEED_IDS.accounts.startupXYZ,
       name: 'StartupXYZ',
@@ -951,7 +990,9 @@ async function seedAccounts(tenantId: string) {
       employees: 15,
       revenue: 500000,
       description: 'Early-stage tech startup',
-      ownerId: SEED_IDS.users.mikeDavis,     tenantId,   },
+      ownerId: SEED_IDS.users.mikeDavis,
+      tenantId,
+    },
     {
       id: SEED_IDS.accounts.devTools,
       name: 'DevTools Inc',
@@ -960,7 +1001,9 @@ async function seedAccounts(tenantId: string) {
       employees: 45,
       revenue: 4000000,
       description: 'Developer productivity tools',
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,   },
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+    },
   ];
 
   for (const account of accounts) {
@@ -991,7 +1034,8 @@ async function seedLeads(tenantId: string) {
       source: LeadSource.WEBSITE,
       status: LeadStatus.QUALIFIED,
       score: 85,
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
     },
     {
       id: SEED_IDS.leads.davidChen,
@@ -1004,7 +1048,8 @@ async function seedLeads(tenantId: string) {
       source: LeadSource.REFERRAL,
       status: LeadStatus.NEW,
       score: 42,
-      ownerId: SEED_IDS.users.mikeDavis,     tenantId
+      ownerId: SEED_IDS.users.mikeDavis,
+      tenantId,
     },
     {
       id: SEED_IDS.leads.amandaSmith,
@@ -1017,7 +1062,8 @@ async function seedLeads(tenantId: string) {
       source: LeadSource.SOCIAL,
       status: LeadStatus.UNQUALIFIED,
       score: 15,
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
     },
     {
       id: SEED_IDS.leads.jamesWilson,
@@ -1031,7 +1077,8 @@ async function seedLeads(tenantId: string) {
       // Note: 'NEGOTIATING' in UI maps to LeadStatus - using CONTACTED as closest match
       status: LeadStatus.CONTACTED,
       score: 92,
-      ownerId: SEED_IDS.users.jamesWilson,     tenantId
+      ownerId: SEED_IDS.users.jamesWilson,
+      tenantId,
     },
     {
       id: SEED_IDS.leads.elenaRodriguez,
@@ -1044,7 +1091,8 @@ async function seedLeads(tenantId: string) {
       source: LeadSource.EMAIL,
       status: LeadStatus.CONTACTED,
       score: 55,
-      ownerId: SEED_IDS.users.mikeDavis,     tenantId
+      ownerId: SEED_IDS.users.mikeDavis,
+      tenantId,
     },
     {
       id: SEED_IDS.leads.marcusReed,
@@ -1061,11 +1109,133 @@ async function seedLeads(tenantId: string) {
       // Lead 360 fields
       location: 'Austin, TX',
       website: 'summitsys.com',
-      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&h=160&fit=crop&crop=face',
+      avatarUrl:
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&h=160&fit=crop&crop=face',
       lastContactedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
       estimatedValue: 85000,
       tags: ['Enterprise', 'Multi-warehouse', 'Q1 Budget'],
-      tenantId
+      tenantId,
+    },
+    // Queue leads for routing UI (PG-132) — status NEW, unassigned
+    {
+      id: SEED_IDS.leads.kevinTaylor,
+      email: 'kevin.taylor@cloudtech.io',
+      firstName: 'Kevin',
+      lastName: 'Taylor',
+      company: 'CloudTech Solutions',
+      title: 'VP Engineering',
+      phone: '+1 (555) 700-0001',
+      source: LeadSource.WEBSITE,
+      status: LeadStatus.NEW,
+      score: 82,
+      estimatedValue: 95000,
+      ownerId: SEED_IDS.users.admin,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leads.rachelGreen,
+      email: 'rachel@startupabc.com',
+      firstName: 'Rachel',
+      lastName: 'Green',
+      company: 'StartupABC',
+      title: 'Co-Founder',
+      phone: '+1 (555) 700-0002',
+      source: LeadSource.REFERRAL,
+      status: LeadStatus.NEW,
+      score: 75,
+      estimatedValue: 45000,
+      ownerId: SEED_IDS.users.admin,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leads.tomBrown,
+      email: 'tom.brown@dataflow.com',
+      firstName: 'Tom',
+      lastName: 'Brown',
+      company: 'DataFlow Inc',
+      title: 'CTO',
+      phone: '+1 (555) 700-0003',
+      source: LeadSource.EVENT,
+      status: LeadStatus.NEW,
+      score: 88,
+      estimatedValue: 120000,
+      ownerId: SEED_IDS.users.admin,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leads.lisaPark,
+      email: 'lisa.park@finserve.com',
+      firstName: 'Lisa',
+      lastName: 'Park',
+      company: 'FinServe Corp',
+      title: 'Director of IT',
+      phone: '+1 (555) 700-0004',
+      source: LeadSource.WEBSITE,
+      status: LeadStatus.NEW,
+      score: 68,
+      estimatedValue: 38000,
+      ownerId: SEED_IDS.users.admin,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leads.carlosRivera,
+      email: 'carlos@greenenergy.com',
+      firstName: 'Carlos',
+      lastName: 'Rivera',
+      company: 'GreenEnergy Ltd',
+      title: 'Operations Manager',
+      phone: '+1 (555) 700-0005',
+      source: LeadSource.REFERRAL,
+      status: LeadStatus.NEW,
+      score: 71,
+      estimatedValue: 62000,
+      ownerId: SEED_IDS.users.admin,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leads.ninaPatel,
+      email: 'nina.patel@medtech.io',
+      firstName: 'Nina',
+      lastName: 'Patel',
+      company: 'MedTech Solutions',
+      title: 'Head of Procurement',
+      phone: '+1 (555) 700-0006',
+      source: LeadSource.WEBSITE,
+      status: LeadStatus.NEW,
+      score: 85,
+      estimatedValue: 88000,
+      ownerId: SEED_IDS.users.admin,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leads.ryanMurphy,
+      email: 'ryan@logipro.com',
+      firstName: 'Ryan',
+      lastName: 'Murphy',
+      company: 'LogiPro Systems',
+      title: 'Logistics Director',
+      phone: '+1 (555) 700-0007',
+      source: LeadSource.SOCIAL,
+      status: LeadStatus.NEW,
+      score: 62,
+      estimatedValue: 41000,
+      ownerId: SEED_IDS.users.admin,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.leads.dianaHall,
+      email: 'diana@edulearn.io',
+      firstName: 'Diana',
+      lastName: 'Hall',
+      company: 'EduLearn Platform',
+      title: 'Product Manager',
+      phone: '+1 (555) 700-0008',
+      source: LeadSource.EMAIL,
+      status: LeadStatus.NEW,
+      score: 79,
+      estimatedValue: 55000,
+      ownerId: SEED_IDS.users.admin,
+      tenantId,
     },
   ];
 
@@ -1103,7 +1273,8 @@ async function seedLeadActivities(tenantId: string) {
       sentiment: Sentiment.POSITIVE,
       metadata: {
         source: 'Request a Demo',
-        message: 'We are looking to replace our current inventory system. Do you support multi-warehouse tracking?',
+        message:
+          'We are looking to replace our current inventory system. Do you support multi-warehouse tracking?',
       },
       leadId: SEED_IDS.leads.marcusReed,
       tenantId,
@@ -1133,7 +1304,8 @@ async function seedLeadActivities(tenantId: string) {
       sentiment: Sentiment.POSITIVE,
       metadata: {
         subject: 'Thanks for your interest in IntelliFlow',
-        preview: 'Hi Marcus, Thank you for reaching out! We received your demo request and will be in touch shortly...',
+        preview:
+          'Hi Marcus, Thank you for reaching out! We received your demo request and will be in touch shortly...',
         opened: true,
         clicked: true,
         openCount: 2,
@@ -1240,7 +1412,8 @@ async function seedLeadNotes(tenantId: string) {
   const notes = [
     {
       id: SEED_IDS.leadNotes.competitorNote,
-      content: 'Marcus mentioned they are evaluating 2 other competitors. Needs SOC2 compliance docs.',
+      content:
+        'Marcus mentioned they are evaluating 2 other competitors. Needs SOC2 compliance docs.',
       author: 'Alex Morgan',
       leadId: SEED_IDS.leads.marcusReed,
       tenantId,
@@ -1612,7 +1785,9 @@ async function seedContacts(tenantId: string) {
       title: 'CTO',
       phone: '+1 (555) 123-4567',
       department: 'Technology',
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,     accountId: SEED_IDS.accounts.techCorp
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+      accountId: SEED_IDS.accounts.techCorp,
     },
     {
       id: SEED_IDS.contacts.davidChen,
@@ -1622,7 +1797,9 @@ async function seedContacts(tenantId: string) {
       title: 'Manager',
       phone: '+1 (555) 987-6543',
       department: 'Creative',
-      ownerId: SEED_IDS.users.mikeDavis,     tenantId,     accountId: SEED_IDS.accounts.designCo
+      ownerId: SEED_IDS.users.mikeDavis,
+      tenantId,
+      accountId: SEED_IDS.accounts.designCo,
     },
     {
       id: SEED_IDS.contacts.amandaSmith,
@@ -1632,7 +1809,9 @@ async function seedContacts(tenantId: string) {
       title: 'Freelance Consultant',
       phone: '+1 (555) 321-7890',
       department: 'Consulting',
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,     accountId: SEED_IDS.accounts.smithConsulting
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+      accountId: SEED_IDS.accounts.smithConsulting,
     },
     {
       id: SEED_IDS.contacts.jamesWilson,
@@ -1642,7 +1821,9 @@ async function seedContacts(tenantId: string) {
       title: 'VP Sales',
       phone: '+1 (555) 456-7890',
       department: 'Sales',
-      ownerId: SEED_IDS.users.jamesWilson,     tenantId,     accountId: SEED_IDS.accounts.globalSoft
+      ownerId: SEED_IDS.users.jamesWilson,
+      tenantId,
+      accountId: SEED_IDS.accounts.globalSoft,
     },
     {
       id: SEED_IDS.contacts.elenaRodriguez,
@@ -1652,7 +1833,9 @@ async function seedContacts(tenantId: string) {
       title: 'Product Manager',
       phone: '+1 (555) 555-0199',
       department: 'Product',
-      ownerId: SEED_IDS.users.mikeDavis,     tenantId,     accountId: SEED_IDS.accounts.finTech
+      ownerId: SEED_IDS.users.mikeDavis,
+      tenantId,
+      accountId: SEED_IDS.accounts.finTech,
     },
     // From Deals page - contacts linked to deals
     {
@@ -1663,7 +1846,9 @@ async function seedContacts(tenantId: string) {
       title: 'Procurement Manager',
       phone: '+1 (555) 100-2001',
       department: 'Procurement',
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,     accountId: SEED_IDS.accounts.acmeCorp
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+      accountId: SEED_IDS.accounts.acmeCorp,
     },
     {
       id: SEED_IDS.contacts.emilyChen,
@@ -1673,7 +1858,9 @@ async function seedContacts(tenantId: string) {
       title: 'CEO',
       phone: '+1 (555) 100-2002',
       department: 'Executive',
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,     accountId: SEED_IDS.accounts.techStart
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+      accountId: SEED_IDS.accounts.techStart,
     },
     {
       id: SEED_IDS.contacts.michaelBrown,
@@ -1683,7 +1870,9 @@ async function seedContacts(tenantId: string) {
       title: 'IT Director',
       phone: '+1 (555) 100-2003',
       department: 'IT',
-      ownerId: SEED_IDS.users.mikeDavis,     tenantId,     accountId: SEED_IDS.accounts.globalTech
+      ownerId: SEED_IDS.users.mikeDavis,
+      tenantId,
+      accountId: SEED_IDS.accounts.globalTech,
     },
     {
       id: SEED_IDS.contacts.lisaWang,
@@ -1693,7 +1882,9 @@ async function seedContacts(tenantId: string) {
       title: 'CIO',
       phone: '+1 (555) 100-2004',
       department: 'IT',
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,     accountId: SEED_IDS.accounts.dataCorp
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+      accountId: SEED_IDS.accounts.dataCorp,
     },
     // From Deal detail page
     {
@@ -1704,7 +1895,9 @@ async function seedContacts(tenantId: string) {
       title: 'CTO',
       phone: '+1 (555) 100-2005',
       department: 'Technology',
-      ownerId: SEED_IDS.users.janeDoe,     tenantId,     accountId: SEED_IDS.accounts.acmeCorp
+      ownerId: SEED_IDS.users.janeDoe,
+      tenantId,
+      accountId: SEED_IDS.accounts.acmeCorp,
     },
   ];
 
@@ -1733,7 +1926,9 @@ async function seedOpportunities(tenantId: string) {
       probability: 20,
       expectedCloseDate: new Date('2025-02-15'),
       description: 'Enterprise license for Acme Corporation',
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,     accountId: SEED_IDS.accounts.acmeCorp,
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+      accountId: SEED_IDS.accounts.acmeCorp,
       contactId: SEED_IDS.contacts.johnSmith,
     },
     {
@@ -1744,7 +1939,9 @@ async function seedOpportunities(tenantId: string) {
       probability: 25,
       expectedCloseDate: new Date('2025-01-30'),
       description: 'Annual subscription for TechStart Inc',
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,     accountId: SEED_IDS.accounts.techStart,
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+      accountId: SEED_IDS.accounts.techStart,
       contactId: SEED_IDS.contacts.emilyChen,
     },
     {
@@ -1755,7 +1952,9 @@ async function seedOpportunities(tenantId: string) {
       probability: 40,
       expectedCloseDate: new Date('2025-03-01'),
       description: 'Custom integration project for GlobalTech Solutions',
-      ownerId: SEED_IDS.users.mikeDavis,     tenantId,     accountId: SEED_IDS.accounts.globalTech,
+      ownerId: SEED_IDS.users.mikeDavis,
+      tenantId,
+      accountId: SEED_IDS.accounts.globalTech,
       contactId: SEED_IDS.contacts.michaelBrown,
     },
     {
@@ -1766,7 +1965,9 @@ async function seedOpportunities(tenantId: string) {
       probability: 60,
       expectedCloseDate: new Date('2025-02-28'),
       description: 'Platform migration for DataCorp Analytics',
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,     accountId: SEED_IDS.accounts.dataCorp,
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+      accountId: SEED_IDS.accounts.dataCorp,
       contactId: SEED_IDS.contacts.lisaWang,
     },
     {
@@ -1777,7 +1978,9 @@ async function seedOpportunities(tenantId: string) {
       probability: 55,
       expectedCloseDate: new Date('2025-02-10'),
       description: 'Consulting engagement for InnovateCo',
-      ownerId: SEED_IDS.users.mikeDavis,     tenantId,     accountId: SEED_IDS.accounts.innovateCo,
+      ownerId: SEED_IDS.users.mikeDavis,
+      tenantId,
+      accountId: SEED_IDS.accounts.innovateCo,
       contactId: null,
     },
     {
@@ -1788,7 +1991,9 @@ async function seedOpportunities(tenantId: string) {
       probability: 75,
       expectedCloseDate: new Date('2025-01-31'),
       description: 'Full enterprise suite for MegaCorp Industries',
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,     accountId: SEED_IDS.accounts.megaCorp,
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+      accountId: SEED_IDS.accounts.megaCorp,
       contactId: null,
     },
     {
@@ -1800,7 +2005,9 @@ async function seedOpportunities(tenantId: string) {
       expectedCloseDate: new Date('2024-12-20'),
       description: 'Team license for StartupXYZ',
       closedAt: new Date('2024-12-20'),
-      ownerId: SEED_IDS.users.mikeDavis,     tenantId,     accountId: SEED_IDS.accounts.startupXYZ,
+      ownerId: SEED_IDS.users.mikeDavis,
+      tenantId,
+      accountId: SEED_IDS.accounts.startupXYZ,
       contactId: null,
     },
     {
@@ -1812,7 +2019,9 @@ async function seedOpportunities(tenantId: string) {
       expectedCloseDate: new Date('2024-12-15'),
       description: 'API access subscription for DevTools Inc',
       closedAt: new Date('2024-12-15'),
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,     accountId: SEED_IDS.accounts.devTools,
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+      accountId: SEED_IDS.accounts.devTools,
       contactId: null,
     },
     // From Deal detail page - Acme Corp Software License
@@ -2262,7 +2471,9 @@ async function seedTasks(tenantId: string) {
       dueDate: today,
       priority: TaskPriority.HIGH,
       status: TaskStatus.PENDING,
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,     contactId: SEED_IDS.contacts.sarahMiller,
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+      contactId: SEED_IDS.contacts.sarahMiller,
     },
     {
       id: SEED_IDS.tasks.followUpTechCorp,
@@ -2271,7 +2482,9 @@ async function seedTasks(tenantId: string) {
       dueDate: tomorrow,
       priority: TaskPriority.MEDIUM,
       status: TaskStatus.PENDING,
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,     opportunityId: SEED_IDS.opportunities.enterpriseLicenseAcme,
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+      opportunityId: SEED_IDS.opportunities.enterpriseLicenseAcme,
     },
     {
       id: SEED_IDS.tasks.prepareQ3Report,
@@ -2280,7 +2493,9 @@ async function seedTasks(tenantId: string) {
       dueDate: oct24,
       priority: TaskPriority.LOW,
       status: TaskStatus.PENDING,
-      ownerId: SEED_IDS.users.manager,     tenantId,   },
+      ownerId: SEED_IDS.users.manager,
+      tenantId,
+    },
     // From PendingTasksWidget
     {
       id: SEED_IDS.tasks.callAcmeCorp,
@@ -2289,7 +2504,9 @@ async function seedTasks(tenantId: string) {
       dueDate: today,
       priority: TaskPriority.HIGH,
       status: TaskStatus.IN_PROGRESS,
-      ownerId: SEED_IDS.users.janeDoe,     tenantId,     opportunityId: SEED_IDS.opportunities.acmeCorpSoftwareLicense,
+      ownerId: SEED_IDS.users.janeDoe,
+      tenantId,
+      opportunityId: SEED_IDS.opportunities.acmeCorpSoftwareLicense,
     },
     {
       id: SEED_IDS.tasks.reviewQ3Report,
@@ -2298,7 +2515,9 @@ async function seedTasks(tenantId: string) {
       dueDate: tomorrow,
       priority: TaskPriority.MEDIUM,
       status: TaskStatus.PENDING,
-      ownerId: SEED_IDS.users.manager,     tenantId,   },
+      ownerId: SEED_IDS.users.manager,
+      tenantId,
+    },
     // From Deal detail page - Next Steps
     {
       id: SEED_IDS.tasks.sendContract,
@@ -2307,7 +2526,9 @@ async function seedTasks(tenantId: string) {
       dueDate: tomorrow,
       priority: TaskPriority.URGENT,
       status: TaskStatus.PENDING,
-      ownerId: SEED_IDS.users.janeDoe,     tenantId,     opportunityId: SEED_IDS.opportunities.acmeCorpSoftwareLicense,
+      ownerId: SEED_IDS.users.janeDoe,
+      tenantId,
+      opportunityId: SEED_IDS.opportunities.acmeCorpSoftwareLicense,
     },
     {
       id: SEED_IDS.tasks.scheduleTechReview,
@@ -2316,7 +2537,9 @@ async function seedTasks(tenantId: string) {
       dueDate: jan20,
       priority: TaskPriority.MEDIUM,
       status: TaskStatus.PENDING,
-      ownerId: SEED_IDS.users.janeDoe,     tenantId,     opportunityId: SEED_IDS.opportunities.acmeCorpSoftwareLicense,
+      ownerId: SEED_IDS.users.janeDoe,
+      tenantId,
+      opportunityId: SEED_IDS.opportunities.acmeCorpSoftwareLicense,
     },
   ];
 
@@ -2652,7 +2875,8 @@ async function seedDealActivities(tenantId: string) {
       id: SEED_IDS.dealActivities.agentAdvance,
       type: ActivityType.AGENT_ACTION,
       title: 'AI: Advance deal to negotiation stage',
-      description: 'Pipeline Intelligence Agent detected positive signals from recent communication',
+      description:
+        'Pipeline Intelligence Agent detected positive signals from recent communication',
       timestamp: new Date(now.getTime() - 30 * 60 * 1000), // 11:30 AM today
       dateLabel: 'today',
       agentActionId: 'action-3',
@@ -2695,7 +2919,8 @@ async function seedDealActivities(tenantId: string) {
       id: SEED_IDS.dealActivities.callRobert,
       type: ActivityType.CALL,
       title: 'Call with Robert Fox',
-      description: 'Discussed timeline for implementation. They are keen to start by Nov 1st. Need to adjust contract start date.',
+      description:
+        'Discussed timeline for implementation. They are keen to start by Nov 1st. Need to adjust contract start date.',
       timestamp: new Date(yesterday.getTime() + 14 * 60 * 60 * 1000 + 15 * 60 * 1000), // 2:15 PM yesterday
       dateLabel: 'yesterday',
       opportunityId: SEED_IDS.opportunities.acmeCorpSoftwareLicense,
@@ -2739,12 +2964,14 @@ async function seedTicketActivities(tenantId: string) {
     {
       id: SEED_IDS.ticketActivities.customerMessage,
       type: TicketActivityType.CUSTOMER_MESSAGE,
-      content: "Hi Support,\n\nOur team in the West Region is reporting consistent 503 errors when trying to load the main dashboard. This started about 30 minutes ago. We've tried clearing cache and different browsers but the issue persists.\n\nPlease investigate ASAP as this is blocking our daily reporting.\n\nRegards,\nDavid",
+      content:
+        "Hi Support,\n\nOur team in the West Region is reporting consistent 503 errors when trying to load the main dashboard. This started about 30 minutes ago. We've tried clearing cache and different browsers but the issue persists.\n\nPlease investigate ASAP as this is blocking our daily reporting.\n\nRegards,\nDavid",
       timestamp: new Date(yesterday.getTime() + 16 * 60 * 60 * 1000 + 30 * 60 * 1000), // Yesterday 4:30 PM
       isInternal: false,
       authorName: 'David Kim',
       authorRole: 'Customer',
-      authorAvatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face',
+      authorAvatar:
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face',
       channel: TicketChannel.EMAIL,
       ticketId: SEED_IDS.tickets.systemOutage,
       tenantId,
@@ -2766,12 +2993,14 @@ async function seedTicketActivities(tenantId: string) {
     {
       id: SEED_IDS.ticketActivities.agentReply,
       type: TicketActivityType.AGENT_REPLY,
-      content: "Hello David,\n\nThanks for reaching out. I'm looking into this immediately. We are checking our load balancers for the West region.\n\nI've escalated this to our DevOps team.",
+      content:
+        "Hello David,\n\nThanks for reaching out. I'm looking into this immediately. We are checking our load balancers for the West region.\n\nI've escalated this to our DevOps team.",
       timestamp: new Date(yesterday.getTime() + 16 * 60 * 60 * 1000 + 45 * 60 * 1000), // Yesterday 4:45 PM
       isInternal: false,
       authorName: 'Sarah Jenkins',
       authorRole: 'Support Agent',
-      authorAvatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face',
+      authorAvatar:
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=face',
       channel: TicketChannel.PORTAL,
       ticketId: SEED_IDS.tickets.systemOutage,
       tenantId,
@@ -2793,7 +3022,8 @@ async function seedTicketActivities(tenantId: string) {
     {
       id: SEED_IDS.ticketActivities.internalNote,
       type: TicketActivityType.INTERNAL_NOTE,
-      content: 'We identified a degraded shard in the DB cluster. Replication lag is high. Creating a fix now.',
+      content:
+        'We identified a degraded shard in the DB cluster. Replication lag is high. Creating a fix now.',
       timestamp: new Date(now.getTime() - 3 * 60 * 60 * 1000), // Today 9:15 AM (3 hours ago)
       isInternal: true,
       authorName: 'Mike Ross (DevOps)',
@@ -2940,7 +3170,9 @@ async function seedAdditionalUsersAndAccounts(tenantId: string) {
     title: 'VP of Marketing',
     phone: '+1 (555) 012-3456',
     department: 'Marketing',
-    ownerId: SEED_IDS.users.alexMorgan,     tenantId,   accountId: SEED_IDS.additionalAccounts.techFlowInc,
+    ownerId: SEED_IDS.users.alexMorgan,
+    tenantId,
+    accountId: SEED_IDS.additionalAccounts.techFlowInc,
   };
 
   await prisma.contact.upsert({
@@ -2964,7 +3196,8 @@ async function seedAgentActions(tenantId: string) {
       actionType: 'lead_update',
       tenantId,
       description: 'Update lead score and status based on engagement analysis',
-      aiReasoning: 'Lead opened 5 emails (100% open rate), visited pricing page 3 times, and downloaded enterprise whitepaper. Company size (500+ employees) matches ideal customer profile.',
+      aiReasoning:
+        'Lead opened 5 emails (100% open rate), visited pricing page 3 times, and downloaded enterprise whitepaper. Company size (500+ employees) matches ideal customer profile.',
       confidenceScore: 85,
       status: AgentActionStatus.PENDING_APPROVAL,
       entityId: 'lead-123',
@@ -2980,7 +3213,8 @@ async function seedAgentActions(tenantId: string) {
         score: 72,
         status: 'Qualified',
         nextFollowUp: '2025-01-05',
-        notes: 'Initial inquiry via website form. AI Analysis: High engagement, enterprise company, decision-maker role.',
+        notes:
+          'Initial inquiry via website form. AI Analysis: High engagement, enterprise company, decision-maker role.',
       },
       agentId: 'scoring-agent-v1',
       agentName: 'Lead Scoring Agent',
@@ -2992,7 +3226,8 @@ async function seedAgentActions(tenantId: string) {
       actionType: 'email_draft',
       tenantId,
       description: 'Send personalized follow-up email based on demo engagement',
-      aiReasoning: 'Contact attended 45-minute demo, asked 8 questions about API integrations, and requested pricing information. Optimal follow-up timing is 5 days post-demo based on historical conversion data.',
+      aiReasoning:
+        'Contact attended 45-minute demo, asked 8 questions about API integrations, and requested pricing information. Optimal follow-up timing is 5 days post-demo based on historical conversion data.',
       confidenceScore: 78,
       status: AgentActionStatus.PENDING_APPROVAL,
       entityId: 'contact-456',
@@ -3020,7 +3255,8 @@ async function seedAgentActions(tenantId: string) {
       actionType: 'deal_stage_change',
       tenantId,
       description: 'Advance deal to negotiation stage with updated probability',
-      aiReasoning: "Prospect verbally agreed to terms in last meeting (sentiment analysis: positive). Legal team CC'd on latest email suggests contract review in progress. Similar deals at this stage have 75% close rate.",
+      aiReasoning:
+        "Prospect verbally agreed to terms in last meeting (sentiment analysis: positive). Legal team CC'd on latest email suggests contract review in progress. Similar deals at this stage have 75% close rate.",
       confidenceScore: 92,
       status: AgentActionStatus.PENDING_APPROVAL,
       entityId: 'deal-789',
@@ -3047,7 +3283,8 @@ async function seedAgentActions(tenantId: string) {
       actionType: 'task_create',
       tenantId,
       description: 'Create follow-up task for high-intent lead',
-      aiReasoning: 'Lead visited pricing page 5 times in last 24 hours and spent 12 minutes on comparison chart. Urgency signals suggest ready for sales conversation.',
+      aiReasoning:
+        'Lead visited pricing page 5 times in last 24 hours and spent 12 minutes on comparison chart. Urgency signals suggest ready for sales conversation.',
       confidenceScore: 68,
       status: AgentActionStatus.PENDING_APPROVAL,
       entityId: 'lead-124',
@@ -3100,7 +3337,8 @@ async function seedContactActivities(tenantId: string) {
       sentiment: Sentiment.POSITIVE,
       metadata: {
         subject: 'Proposal Follow-up - Q3 Software',
-        preview: 'Hi Sarah, Following up on our conversation about the Q3 software implementation...',
+        preview:
+          'Hi Sarah, Following up on our conversation about the Q3 software implementation...',
         openCount: 3,
       },
       contactId: SEED_IDS.additionalContacts.sarahJenkins,
@@ -3307,7 +3545,8 @@ async function seedContactNotes(tenantId: string) {
   const notes = [
     {
       id: SEED_IDS.contactNotes.securityFeatures,
-      content: 'Very interested in our enterprise security features. Needs SOC2 compliance documentation.',
+      content:
+        'Very interested in our enterprise security features. Needs SOC2 compliance documentation.',
       author: 'Alex Morgan',
       contactId: SEED_IDS.additionalContacts.sarahJenkins,
       createdAt: new Date('2024-12-15T16:30:00Z'),
@@ -3390,7 +3629,9 @@ async function seedCalendarEvents(tenantId: string) {
         'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face',
       ],
       contactId: SEED_IDS.additionalContacts.sarahJenkins,
-      ownerId: SEED_IDS.users.alexMorgan,     tenantId,   },
+      ownerId: SEED_IDS.users.alexMorgan,
+      tenantId,
+    },
     // From UpcomingEventsWidget
     {
       id: SEED_IDS.calendarEvents.productDemoTechCorp,
@@ -3401,7 +3642,9 @@ async function seedCalendarEvents(tenantId: string) {
       location: 'Conference Room A',
       eventType: CalendarEventType.MEETING,
       contactId: SEED_IDS.contacts.sarahMiller,
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,   },
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+    },
     {
       id: SEED_IDS.calendarEvents.followUpCallSarah,
       title: 'Follow-up Call - Sarah',
@@ -3410,14 +3653,18 @@ async function seedCalendarEvents(tenantId: string) {
       endTime: new Date(today.getTime() + 24 * 60 * 60 * 1000 + 11 * 60 * 60 * 1000),
       eventType: CalendarEventType.CALL,
       contactId: SEED_IDS.contacts.sarahMiller,
-      ownerId: SEED_IDS.users.alexMorgan,     tenantId,   },
+      ownerId: SEED_IDS.users.alexMorgan,
+      tenantId,
+    },
     {
       id: SEED_IDS.calendarEvents.proposalDeadline,
       title: 'Proposal Deadline',
       description: 'Deadline to submit TechCorp proposal',
       startTime: new Date('2024-10-28T17:00:00Z'),
       eventType: CalendarEventType.DEADLINE,
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,   },
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+    },
   ];
 
   for (const event of events) {
@@ -3600,8 +3847,34 @@ async function seedGrowthMetrics(tenantId: string) {
 
   // Data from apps/web/src/components/dashboard/widgets/GrowthTrendsWidget.tsx
   const dataPoints = [20, 35, 28, 45, 42, 55, 48, 62, 58, 72, 68, 85];
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const monthIds = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  const monthIds = [
+    'jan',
+    'feb',
+    'mar',
+    'apr',
+    'may',
+    'jun',
+    'jul',
+    'aug',
+    'sep',
+    'oct',
+    'nov',
+    'dec',
+  ];
 
   const metrics = months.map((month, index) => ({
     id: SEED_IDS.growthMetrics[monthIds[index] as keyof typeof SEED_IDS.growthMetrics],
@@ -3844,7 +4117,9 @@ async function seedDashboardTasks(tenantId: string) {
       dueDate: new Date(today.getTime() + 14 * 60 * 60 * 1000), // Today 2 PM
       priority: TaskPriority.HIGH,
       status: TaskStatus.PENDING,
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,   },
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+    },
     {
       id: SEED_IDS.dashboardTasks.reviewQ3,
       title: 'Review Q3 Report',
@@ -3852,7 +4127,9 @@ async function seedDashboardTasks(tenantId: string) {
       dueDate: new Date(today.getTime() + 24 * 60 * 60 * 1000 + 10 * 60 * 60 * 1000), // Tomorrow 10 AM
       priority: TaskPriority.MEDIUM,
       status: TaskStatus.PENDING,
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,   },
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+    },
     {
       id: SEED_IDS.dashboardTasks.emailFollowup,
       title: 'Email follow-up: Sarah',
@@ -3860,7 +4137,9 @@ async function seedDashboardTasks(tenantId: string) {
       dueDate: new Date(today.getTime() - 24 * 60 * 60 * 1000), // Yesterday (overdue)
       priority: TaskPriority.HIGH,
       status: TaskStatus.PENDING,
-      ownerId: SEED_IDS.users.alexMorgan,     tenantId,   },
+      ownerId: SEED_IDS.users.alexMorgan,
+      tenantId,
+    },
   ];
 
   for (const task of tasks) {
@@ -3887,7 +4166,9 @@ async function seedContactDeals(tenantId: string) {
       stage: OpportunityStage.NEGOTIATION,
       probability: 75,
       expectedCloseDate: new Date('2025-01-31'),
-      ownerId: SEED_IDS.users.alexMorgan,     tenantId,     contactId: SEED_IDS.additionalContacts.sarahJenkins,
+      ownerId: SEED_IDS.users.alexMorgan,
+      tenantId,
+      contactId: SEED_IDS.additionalContacts.sarahJenkins,
       accountId: SEED_IDS.additionalAccounts.techFlowInc,
     },
     {
@@ -3897,7 +4178,9 @@ async function seedContactDeals(tenantId: string) {
       stage: OpportunityStage.PROPOSAL,
       probability: 50,
       expectedCloseDate: new Date('2025-02-15'),
-      ownerId: SEED_IDS.users.alexMorgan,     tenantId,     contactId: SEED_IDS.additionalContacts.sarahJenkins,
+      ownerId: SEED_IDS.users.alexMorgan,
+      tenantId,
+      contactId: SEED_IDS.additionalContacts.sarahJenkins,
       accountId: SEED_IDS.additionalAccounts.techFlowInc,
     },
     {
@@ -3908,7 +4191,9 @@ async function seedContactDeals(tenantId: string) {
       probability: 100,
       expectedCloseDate: new Date('2024-12-01'),
       closedAt: new Date('2024-12-01'),
-      ownerId: SEED_IDS.users.alexMorgan,     tenantId,     contactId: SEED_IDS.additionalContacts.sarahJenkins,
+      ownerId: SEED_IDS.users.alexMorgan,
+      tenantId,
+      contactId: SEED_IDS.additionalContacts.sarahJenkins,
       accountId: SEED_IDS.additionalAccounts.techFlowInc,
     },
   ];
@@ -3936,7 +4221,9 @@ async function seedContactTasks(tenantId: string) {
       dueDate: new Date('2024-12-28'),
       priority: TaskPriority.HIGH,
       status: TaskStatus.PENDING,
-      ownerId: SEED_IDS.users.alexMorgan,     tenantId,     contactId: SEED_IDS.additionalContacts.sarahJenkins,
+      ownerId: SEED_IDS.users.alexMorgan,
+      tenantId,
+      contactId: SEED_IDS.additionalContacts.sarahJenkins,
     },
     {
       id: SEED_IDS.contactTasks.scheduleTechDemo,
@@ -3945,7 +4232,9 @@ async function seedContactTasks(tenantId: string) {
       dueDate: new Date('2024-12-30'),
       priority: TaskPriority.MEDIUM,
       status: TaskStatus.PENDING,
-      ownerId: SEED_IDS.users.alexMorgan,     tenantId,     contactId: SEED_IDS.additionalContacts.sarahJenkins,
+      ownerId: SEED_IDS.users.alexMorgan,
+      tenantId,
+      contactId: SEED_IDS.additionalContacts.sarahJenkins,
     },
     {
       id: SEED_IDS.contactTasks.sendProposal,
@@ -3954,7 +4243,9 @@ async function seedContactTasks(tenantId: string) {
       dueDate: new Date('2024-12-10'),
       priority: TaskPriority.LOW,
       status: TaskStatus.COMPLETED,
-      ownerId: SEED_IDS.users.alexMorgan,     tenantId,     contactId: SEED_IDS.additionalContacts.sarahJenkins,
+      ownerId: SEED_IDS.users.alexMorgan,
+      tenantId,
+      contactId: SEED_IDS.additionalContacts.sarahJenkins,
     },
   ];
 
@@ -4105,7 +4396,7 @@ async function seedEmailTemplates(tenantId: string) {
       id: SEED_IDS.emailTemplates.welcome,
       name: 'Welcome Email',
       subject: 'Welcome to IntelliFlow CRM!',
-      body: '<h1>Welcome!</h1><p>Thank you for joining IntelliFlow CRM. We\'re excited to help you streamline your sales process.</p>',
+      body: "<h1>Welcome!</h1><p>Thank you for joining IntelliFlow CRM. We're excited to help you streamline your sales process.</p>",
       category: 'onboarding',
       isActive: true,
       createdBy: SEED_IDS.users.admin,
@@ -4123,7 +4414,7 @@ async function seedEmailTemplates(tenantId: string) {
       id: SEED_IDS.emailTemplates.proposal,
       name: 'Proposal Template',
       subject: 'Your Custom Proposal from IntelliFlow',
-      body: '<h2>Proposal for {{company}}</h2><p>Based on our discussions, we\'ve prepared the following proposal...</p>',
+      body: "<h2>Proposal for {{company}}</h2><p>Based on our discussions, we've prepared the following proposal...</p>",
       category: 'sales',
       isActive: true,
       createdBy: SEED_IDS.users.sarahJohnson,
@@ -4265,7 +4556,8 @@ async function seedChatMessages(tenantId: string) {
       senderId: SEED_IDS.users.emilyDavis,
       senderName: 'Emily Davis',
       senderType: 'user',
-      content: 'Hello Sarah! I\'d be happy to help with pricing. Let me connect you with our sales team.',
+      content:
+        "Hello Sarah! I'd be happy to help with pricing. Let me connect you with our sales team.",
     },
     {
       id: SEED_IDS.chatMessages.msg3,
@@ -4302,8 +4594,10 @@ async function seedCallRecords(tenantId: string) {
       duration: 1800, // 30 minutes
       status: CallStatus.COMPLETED,
       recordingUrl: 'https://recordings.intelliflow.com/call_001.mp3',
-      transcription: 'Sarah: Hi, thanks for taking the time today...\nRep: Of course, let me walk you through our enterprise features...',
-      summary: 'Discovery call with Sarah Jenkins. Discussed enterprise features, pricing, and implementation timeline. Scheduled follow-up demo.',
+      transcription:
+        'Sarah: Hi, thanks for taking the time today...\nRep: Of course, let me walk you through our enterprise features...',
+      summary:
+        'Discovery call with Sarah Jenkins. Discussed enterprise features, pricing, and implementation timeline. Scheduled follow-up demo.',
       sentiment: 'positive',
       startedAt: new Date('2024-12-15T10:00:00'),
       endedAt: new Date('2024-12-15T10:30:00'),
@@ -4423,9 +4717,9 @@ async function seedCases() {
 
   // Users matching mockup assignees
   const sarahJenkins = SEED_IDS.users.sarahJenkins;
-  const mikeDavis = SEED_IDS.users.mikeDavis;   // Michael K. in mockup
-  const davidKim = SEED_IDS.users.davidKim;      // David C. in mockup
-  const emilyDavis = SEED_IDS.users.emilyDavis;  // Emily W. in mockup
+  const mikeDavis = SEED_IDS.users.mikeDavis; // Michael K. in mockup
+  const davidKim = SEED_IDS.users.davidKim; // David C. in mockup
+  const emilyDavis = SEED_IDS.users.emilyDavis; // Emily W. in mockup
   const admin = SEED_IDS.users.admin;
   const jamesWilson = SEED_IDS.users.jamesWilson;
   const alexMorgan = SEED_IDS.users.alexMorgan;
@@ -4445,7 +4739,8 @@ async function seedCases() {
     {
       id: SEED_IDS.cases.estatePlanningSmith,
       title: 'Estate Planning - Smith Family',
-      description: 'Comprehensive estate planning including wills, trusts, and power of attorney documents for the Smith family. Client requires tax-efficient wealth transfer strategy.',
+      description:
+        'Comprehensive estate planning including wills, trusts, and power of attorney documents for the Smith family. Client requires tax-efficient wealth transfer strategy.',
       status: 'IN_PROGRESS' as const,
       priority: 'MEDIUM' as const,
       deadline: new Date('2026-03-24'),
@@ -4465,10 +4760,11 @@ async function seedCases() {
     {
       id: SEED_IDS.cases.corporateMergerTechFlow,
       title: 'Corporate Merger - TechFlow Inc',
-      description: 'Legal due diligence and documentation for the merger of TechFlow Inc with DataStream Corp. Awaiting financial disclosure documents from counterparty.',
+      description:
+        'Legal due diligence and documentation for the merger of TechFlow Inc with DataStream Corp. Awaiting financial disclosure documents from counterparty.',
       status: 'OPEN' as const,
       priority: 'HIGH' as const,
-      deadline: new Date('2026-02-12'),  // Past deadline = overdue
+      deadline: new Date('2026-02-12'), // Past deadline = overdue
       clientId: techFlowInc,
       assignedTo: mikeDavis,
       resolution: null,
@@ -4485,7 +4781,8 @@ async function seedCases() {
     {
       id: SEED_IDS.cases.civilLitigationJohnson,
       title: 'Civil Litigation - Johnson v. City',
-      description: 'Civil lawsuit filed by Linda Johnson against City of Springfield regarding property zoning dispute. Initial review phase - gathering evidence and reviewing municipal records.',
+      description:
+        'Civil lawsuit filed by Linda Johnson against City of Springfield regarding property zoning dispute. Initial review phase - gathering evidence and reviewing municipal records.',
       status: 'OPEN' as const,
       priority: 'LOW' as const,
       deadline: new Date('2026-04-05'),
@@ -4505,13 +4802,15 @@ async function seedCases() {
     {
       id: SEED_IDS.cases.realEstateClosingPine,
       title: 'Real Estate Closing - 442 Pine St',
-      description: 'Residential real estate closing for property at 442 Pine Street. All documents signed, title transferred, and funds disbursed.',
+      description:
+        'Residential real estate closing for property at 442 Pine Street. All documents signed, title transferred, and funds disbursed.',
       status: 'CLOSED' as const,
       priority: 'MEDIUM' as const,
       deadline: new Date('2026-01-28'),
       clientId: techCorp,
       assignedTo: emilyDavis,
-      resolution: 'Successfully closed on January 28, 2026. Title transferred and funds disbursed to all parties.',
+      resolution:
+        'Successfully closed on January 28, 2026. Title transferred and funds disbursed to all parties.',
       parties: JSON.stringify([
         { name: 'Marcos Rodriguez', role: 'Buyer', email: 'marcos@techcorp.com' },
         { name: 'First National Bank', role: 'Lender' },
@@ -4525,7 +4824,8 @@ async function seedCases() {
     {
       id: SEED_IDS.cases.intellectualPropertyDispute,
       title: 'IP Dispute - Patent Infringement Claim',
-      description: 'Patent infringement claim regarding proprietary AI algorithm. Client alleges unauthorized use of patented technology in competitor product.',
+      description:
+        'Patent infringement claim regarding proprietary AI algorithm. Client alleges unauthorized use of patented technology in competitor product.',
       status: 'IN_PROGRESS' as const,
       priority: 'HIGH' as const,
       deadline: new Date('2026-03-15'),
@@ -4544,7 +4844,8 @@ async function seedCases() {
     {
       id: SEED_IDS.cases.contractReviewGlobal,
       title: 'Contract Review - Global SaaS Agreement',
-      description: 'Reviewing and negotiating enterprise SaaS agreement with multi-year terms. Focus on liability caps, data protection, and SLA commitments.',
+      description:
+        'Reviewing and negotiating enterprise SaaS agreement with multi-year terms. Focus on liability caps, data protection, and SLA commitments.',
       status: 'OPEN' as const,
       priority: 'MEDIUM' as const,
       deadline: new Date('2026-03-01'),
@@ -4560,7 +4861,8 @@ async function seedCases() {
     {
       id: SEED_IDS.cases.employmentDispute,
       title: 'Employment Dispute - Wrongful Termination',
-      description: 'Employment dispute regarding alleged wrongful termination. Employee claims termination violated company policy and employment contract.',
+      description:
+        'Employment dispute regarding alleged wrongful termination. Employee claims termination violated company policy and employment contract.',
       status: 'IN_PROGRESS' as const,
       priority: 'URGENT' as const,
       deadline: new Date('2026-02-20'),
@@ -4579,7 +4881,8 @@ async function seedCases() {
     {
       id: SEED_IDS.cases.regulatoryCompliance,
       title: 'Regulatory Compliance - GDPR Audit',
-      description: 'GDPR compliance audit and documentation review. Preparing data processing inventory and updating privacy policies.',
+      description:
+        'GDPR compliance audit and documentation review. Preparing data processing inventory and updating privacy policies.',
       status: 'OPEN' as const,
       priority: 'HIGH' as const,
       deadline: new Date('2026-04-01'),
@@ -4755,7 +5058,7 @@ async function seedCaseDocuments() {
   console.log('📑 Seeding case documents...');
 
   const userId = SEED_IDS.users.admin;
-  
+
   const caseDocuments = [
     {
       id: SEED_IDS.caseDocuments.employmentAgreement,
@@ -4767,7 +5070,8 @@ async function seedCaseDocuments() {
       is_latest_version: true,
       status: 'SIGNED',
       title: 'Employment Agreement - Sarah Chen',
-      description: 'Standard employment contract with non-compete clause for Senior Software Engineer position',
+      description:
+        'Standard employment contract with non-compete clause for Senior Software Engineer position',
       document_type: 'CONTRACT',
       classification: 'CONFIDENTIAL',
       tags: ['Employment', 'Legal', 'HR'],
@@ -4992,7 +5296,8 @@ async function seedFeedbackSurveys(tenantId: string) {
       contactName: 'Sarah Jenkins',
       contactEmail: 'sarah.jenkins@techflow.com',
       score: 9,
-      comment: 'Excellent service! The team was very responsive and the platform exceeded our expectations.',
+      comment:
+        'Excellent service! The team was very responsive and the platform exceeded our expectations.',
       sentiment: 'positive',
       status: FeedbackStatus.RESPONDED,
       sentAt: new Date('2024-12-01T10:00:00'),
@@ -5052,7 +5357,9 @@ async function seedDealRenewals(tenantId: string) {
       previousValue: 100000,
       changePercent: 25,
       notes: 'Client very satisfied. Likely to expand seats.',
-      ownerId: SEED_IDS.users.sarahJohnson,     tenantId,     ownerName: 'Sarah Johnson',
+      ownerId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+      ownerName: 'Sarah Johnson',
     },
     {
       id: SEED_IDS.dealRenewals.techCorpRenewal,
@@ -5064,7 +5371,9 @@ async function seedDealRenewals(tenantId: string) {
       previousValue: 45000,
       changePercent: 11.1,
       notes: 'Early renewal discussions started. Very engaged.',
-      ownerId: SEED_IDS.users.mikeDavis,     tenantId,     ownerName: 'Mike Davis',
+      ownerId: SEED_IDS.users.mikeDavis,
+      tenantId,
+      ownerName: 'Mike Davis',
     },
   ];
 
@@ -5167,6 +5476,7 @@ async function seedAgentSkills(tenantId: string) {
     },
     {
       id: SEED_IDS.agentSkills.sarahNegotiation,
+      tenantId,
       userId: SEED_IDS.users.sarahJohnson,
       userName: 'Sarah Johnson',
       skillName: 'Enterprise Negotiation',
@@ -5176,12 +5486,92 @@ async function seedAgentSkills(tenantId: string) {
     },
     {
       id: SEED_IDS.agentSkills.mikeSupport,
+      tenantId,
       userId: SEED_IDS.users.mikeDavis,
       userName: 'Mike Davis',
       skillName: 'Technical Support',
       proficiency: 88,
       certified: true,
       certifiedAt: new Date('2024-02-15'),
+    },
+    // Expanded skills for routing UI (PG-132)
+    {
+      id: SEED_IDS.agentSkills.emilyBilling,
+      tenantId,
+      userId: SEED_IDS.users.emilyDavis,
+      userName: 'Emily Davis',
+      skillName: 'Billing & Renewals',
+      proficiency: 88,
+      certified: true,
+      certifiedAt: new Date('2024-04-10'),
+    },
+    {
+      id: SEED_IDS.agentSkills.emilySMBSales,
+      tenantId,
+      userId: SEED_IDS.users.emilyDavis,
+      userName: 'Emily Davis',
+      skillName: 'SMB Sales',
+      proficiency: 82,
+      certified: true,
+      certifiedAt: new Date('2024-06-01'),
+    },
+    {
+      id: SEED_IDS.agentSkills.jamesAPI,
+      tenantId,
+      userId: SEED_IDS.users.jamesWilson,
+      userName: 'James Wilson',
+      skillName: 'API Integration',
+      proficiency: 90,
+      certified: true,
+      certifiedAt: new Date('2024-05-15'),
+    },
+    {
+      id: SEED_IDS.agentSkills.jamesDemos,
+      tenantId,
+      userId: SEED_IDS.users.jamesWilson,
+      userName: 'James Wilson',
+      skillName: 'Product Demos',
+      proficiency: 85,
+      certified: false,
+    },
+    {
+      id: SEED_IDS.agentSkills.alexSalesConsulting,
+      tenantId,
+      userId: SEED_IDS.users.alexMorgan,
+      userName: 'Alex Morgan',
+      skillName: 'Sales Consulting',
+      proficiency: 78,
+      certified: false,
+    },
+    {
+      id: SEED_IDS.agentSkills.davidEnterprise,
+      tenantId,
+      userId: SEED_IDS.users.davidKim,
+      userName: 'David Kim',
+      skillName: 'Enterprise Sales',
+      proficiency: 92,
+      certified: true,
+      certifiedAt: new Date('2024-02-20'),
+    },
+    {
+      id: SEED_IDS.agentSkills.janeCustomerSuccess,
+      tenantId,
+      userId: SEED_IDS.users.janeDoe,
+      userName: 'Jane Doe',
+      skillName: 'Customer Success',
+      proficiency: 87,
+      certified: true,
+      certifiedAt: new Date('2024-07-01'),
+    },
+    {
+      id: SEED_IDS.agentSkills.sarahJLeadQual,
+      tenantId,
+      userId: SEED_IDS.users.sarahJenkins,
+      userName: 'Sarah Jenkins',
+      skillName: 'Lead Qualification',
+      proficiency: 91,
+      certified: true,
+      certifiedAt: new Date('2024-03-15'),
     },
   ];
 
@@ -5196,12 +5586,13 @@ async function seedAgentSkills(tenantId: string) {
   console.log(`✅ Created ${skills.length} agent skills`);
 }
 
-async function seedAgentAvailability() {
+async function seedAgentAvailability(tenantId: string) {
   console.log('🟢 Seeding agent availability...');
 
   const availability = [
     {
       id: SEED_IDS.agentAvailability.sarahAvailable,
+      tenantId,
       userId: SEED_IDS.users.sarahJohnson,
       userName: 'Sarah Johnson',
       status: AgentStatus.ONLINE,
@@ -5211,6 +5602,7 @@ async function seedAgentAvailability() {
     },
     {
       id: SEED_IDS.agentAvailability.mikeAvailable,
+      tenantId,
       userId: SEED_IDS.users.mikeDavis,
       userName: 'Mike Davis',
       status: AgentStatus.BUSY,
@@ -5220,12 +5612,74 @@ async function seedAgentAvailability() {
     },
     {
       id: SEED_IDS.agentAvailability.emilyAvailable,
+      tenantId,
       userId: SEED_IDS.users.emilyDavis,
       userName: 'Emily Davis',
       status: AgentStatus.ONLINE,
       currentCapacity: 5,
       maxCapacity: 15,
       lastActiveAt: new Date('2024-12-20T08:00:00'),
+    },
+    // Expanded agents for routing UI (PG-132)
+    {
+      id: SEED_IDS.agentAvailability.jamesAvailable,
+      tenantId,
+      userId: SEED_IDS.users.jamesWilson,
+      userName: 'James Wilson',
+      status: AgentStatus.AWAY,
+      currentCapacity: 2,
+      maxCapacity: 8,
+      lastActiveAt: new Date('2024-12-20T07:00:00'),
+      shiftStart: new Date('2024-12-20T08:00:00'),
+      shiftEnd: new Date('2024-12-20T16:00:00'),
+    },
+    {
+      id: SEED_IDS.agentAvailability.alexAvailable,
+      tenantId,
+      userId: SEED_IDS.users.alexMorgan,
+      userName: 'Alex Morgan',
+      status: AgentStatus.ON_BREAK,
+      currentCapacity: 4,
+      maxCapacity: 10,
+      lastActiveAt: new Date('2024-12-20T09:30:00'),
+      shiftStart: new Date('2024-12-20T09:00:00'),
+      shiftEnd: new Date('2024-12-20T17:00:00'),
+    },
+    {
+      id: SEED_IDS.agentAvailability.davidAvailable,
+      tenantId,
+      userId: SEED_IDS.users.davidKim,
+      userName: 'David Kim',
+      status: AgentStatus.ONLINE,
+      currentCapacity: 1,
+      maxCapacity: 12,
+      lastActiveAt: new Date('2024-12-20T06:30:00'),
+      shiftStart: new Date('2024-12-20T07:00:00'),
+      shiftEnd: new Date('2024-12-20T15:00:00'),
+    },
+    {
+      id: SEED_IDS.agentAvailability.janeAvailable,
+      tenantId,
+      userId: SEED_IDS.users.janeDoe,
+      userName: 'Jane Doe',
+      status: AgentStatus.ONLINE,
+      currentCapacity: 6,
+      maxCapacity: 15,
+      lastActiveAt: new Date('2024-12-20T10:00:00'),
+      shiftStart: new Date('2024-12-20T10:00:00'),
+      shiftEnd: new Date('2024-12-20T18:00:00'),
+    },
+    {
+      id: SEED_IDS.agentAvailability.sarahJAvailable,
+      tenantId,
+      userId: SEED_IDS.users.sarahJenkins,
+      userName: 'Sarah Jenkins',
+      status: AgentStatus.BUSY,
+      currentCapacity: 7,
+      maxCapacity: 8,
+      lastActiveAt: new Date('2024-12-20T08:15:00'),
+      shiftStart: new Date('2024-12-20T08:00:00'),
+      shiftEnd: new Date('2024-12-20T16:00:00'),
     },
   ];
 
@@ -5240,18 +5694,17 @@ async function seedAgentAvailability() {
   console.log(`✅ Created ${availability.length} agent availability records`);
 }
 
-async function seedRoutingRules() {
+async function seedRoutingRules(tenantId: string) {
   console.log('🔀 Seeding routing rules...');
 
   const rules = [
     {
       id: SEED_IDS.routingRules.enterpriseDeals,
-      name: 'Enterprise Deal Routing',
-      description: 'Route enterprise deals ($100k+) to senior sales team',
-      priority: 1,
+      name: 'Enterprise Deals',
+      description: 'Route high-value enterprise leads ($100k+) to senior sales team',
+      priority: 0,
       conditions: {
-        deal_value: { operator: 'gte', value: 100000 },
-        account_type: 'enterprise',
+        estimatedValue: { operator: 'gte', value: 100000 },
       },
       actions: {
         assign_to_team: SEED_IDS.teams.sales,
@@ -5262,16 +5715,15 @@ async function seedRoutingRules() {
     },
     {
       id: SEED_IDS.routingRules.technicalSupport,
-      name: 'Technical Support Routing',
-      description: 'Route technical tickets to engineering team',
-      priority: 2,
+      name: 'Technical Support',
+      description: 'Route technical leads from website/API to Mike Davis',
+      priority: 1,
       conditions: {
-        ticket_category: 'technical',
-        priority: { operator: 'in', value: ['high', 'critical'] },
+        source: { operator: 'in', value: ['WEBSITE', 'API'] },
+        tags: { operator: 'contains', value: 'technical' },
       },
       actions: {
-        assign_to_team: SEED_IDS.teams.engineering,
-        escalate_after_hours: 4,
+        assign_to_user: SEED_IDS.users.mikeDavis,
       },
       isActive: true,
       createdBy: SEED_IDS.users.admin,
@@ -5279,31 +5731,289 @@ async function seedRoutingRules() {
     {
       id: SEED_IDS.routingRules.urgentEscalation,
       name: 'Urgent Escalation',
-      description: 'Escalate urgent issues to management',
-      priority: 0,
+      description: 'Escalate hot leads (score 90+) to Sarah Johnson with notifications',
+      priority: 2,
       conditions: {
-        priority: 'critical',
-        sla_status: 'breached',
+        score: { operator: 'gte', value: 90 },
       },
       actions: {
-        assign_to: SEED_IDS.users.manager,
-        notify: ['email', 'sms', 'slack'],
-        create_incident: true,
+        assign_to_user: SEED_IDS.users.sarahJohnson,
+        notify: ['slack', 'email'],
       },
       isActive: true,
+      createdBy: SEED_IDS.users.admin,
+    },
+    {
+      id: SEED_IDS.routingRules.highValueLeads,
+      name: 'High-Value Leads',
+      description: 'Route leads with score >= 70 and value >= $50k to sales team',
+      priority: 3,
+      conditions: {
+        score: { operator: 'gte', value: 70 },
+        estimatedValue: { operator: 'gte', value: 50000 },
+      },
+      actions: {
+        assign_to_team: SEED_IDS.teams.sales,
+      },
+      isActive: true,
+      createdBy: SEED_IDS.users.admin,
+    },
+    {
+      id: SEED_IDS.routingRules.technicalEvaluation,
+      name: 'Technical Evaluation',
+      description: 'Route website leads with technical tags to Mike Davis for evaluation',
+      priority: 4,
+      conditions: {
+        source: 'WEBSITE',
+        tags: { operator: 'contains', value: 'technical' },
+      },
+      actions: {
+        assign_to_user: SEED_IDS.users.mikeDavis,
+      },
+      isActive: true,
+      createdBy: SEED_IDS.users.admin,
+    },
+    {
+      id: SEED_IDS.routingRules.websiteInquiries,
+      name: 'Website Inquiries',
+      description: 'Route qualified website leads (score 40+) to sales team',
+      priority: 5,
+      conditions: {
+        source: 'WEBSITE',
+        score: { operator: 'gte', value: 40 },
+      },
+      actions: {
+        assign_to_team: SEED_IDS.teams.sales,
+      },
+      isActive: true,
+      createdBy: SEED_IDS.users.admin,
+    },
+    {
+      id: SEED_IDS.routingRules.referralLeads,
+      name: 'Referral Leads',
+      description: 'Route all referral leads to Emily Davis',
+      priority: 6,
+      conditions: {
+        source: 'REFERRAL',
+      },
+      actions: {
+        assign_to_user: SEED_IDS.users.emilyDavis,
+      },
+      isActive: true,
+      createdBy: SEED_IDS.users.admin,
+    },
+    {
+      id: SEED_IDS.routingRules.lowScoreNurture,
+      name: 'Low-Score Nurture',
+      description: 'Route low-score leads (< 30) to support team for nurturing',
+      priority: 7,
+      conditions: {
+        score: { operator: 'lt', value: 30 },
+      },
+      actions: {
+        assign_to_team: SEED_IDS.teams.support,
+      },
+      isActive: false,
       createdBy: SEED_IDS.users.admin,
     },
   ];
 
   for (const rule of rules) {
+    const data = { ...rule, tenantId };
     await prisma.routingRule.upsert({
       where: { id: rule.id },
-      update: rule,
-      create: rule,
+      update: data,
+      create: data,
     });
   }
 
   console.log(`✅ Created ${rules.length} routing rules`);
+}
+
+// Routing audit records for routing UI (PG-132)
+async function seedRoutingAudits(tenantId: string) {
+  console.log('📋 Seeding routing audits...');
+
+  const now = Date.now();
+  const HOUR = 60 * 60 * 1000;
+  const DAY = 24 * HOUR;
+
+  const audits = [
+    {
+      id: SEED_IDS.routingAudits.audit1,
+      ticketId: SEED_IDS.leads.kevinTaylor,
+      ruleId: SEED_IDS.routingRules.highValueLeads,
+      ruleName: 'High-Value Leads',
+      toUserId: SEED_IDS.users.sarahJohnson,
+      toUserName: 'Sarah Johnson',
+      reason: 'rule_match',
+      details: { score: 82, estimatedValue: 95000 },
+      createdAt: new Date(now - 2 * HOUR),
+    },
+    {
+      id: SEED_IDS.routingAudits.audit2,
+      ticketId: SEED_IDS.leads.tomBrown,
+      ruleId: SEED_IDS.routingRules.enterpriseDeals,
+      ruleName: 'Enterprise Deals',
+      toUserId: SEED_IDS.users.sarahJohnson,
+      toUserName: 'Sarah Johnson',
+      reason: 'rule_match',
+      details: { score: 88, estimatedValue: 120000 },
+      createdAt: new Date(now - 4 * HOUR),
+    },
+    {
+      id: SEED_IDS.routingAudits.audit3,
+      ticketId: SEED_IDS.leads.rachelGreen,
+      ruleId: SEED_IDS.routingRules.referralLeads,
+      ruleName: 'Referral Leads',
+      toUserId: SEED_IDS.users.emilyDavis,
+      toUserName: 'Emily Davis',
+      reason: 'rule_match',
+      details: { source: 'REFERRAL' },
+      createdAt: new Date(now - 6 * HOUR),
+    },
+    {
+      id: SEED_IDS.routingAudits.audit4,
+      ticketId: SEED_IDS.leads.ninaPatel,
+      ruleId: SEED_IDS.routingRules.websiteInquiries,
+      ruleName: 'Website Inquiries',
+      toUserId: SEED_IDS.users.mikeDavis,
+      toUserName: 'Mike Davis',
+      reason: 'rule_match',
+      details: { source: 'WEBSITE', score: 85 },
+      createdAt: new Date(now - 8 * HOUR),
+    },
+    {
+      id: SEED_IDS.routingAudits.audit5,
+      ticketId: SEED_IDS.leads.carlosRivera,
+      fromUserId: SEED_IDS.users.admin,
+      fromUserName: 'Admin User',
+      toUserId: SEED_IDS.users.emilyDavis,
+      toUserName: 'Emily Davis',
+      reason: 'manual',
+      details: { note: 'Referral from existing client' },
+      createdAt: new Date(now - 12 * HOUR),
+    },
+    {
+      id: SEED_IDS.routingAudits.audit6,
+      ticketId: SEED_IDS.leads.lisaPark,
+      toUserId: SEED_IDS.users.jamesWilson,
+      toUserName: 'James Wilson',
+      reason: 'skill_match',
+      details: { skill: 'API Integration', proficiency: 90 },
+      createdAt: new Date(now - 18 * HOUR),
+    },
+    {
+      id: SEED_IDS.routingAudits.audit7,
+      ticketId: SEED_IDS.leads.ryanMurphy,
+      ruleId: SEED_IDS.routingRules.websiteInquiries,
+      ruleName: 'Website Inquiries',
+      toUserId: SEED_IDS.users.davidKim,
+      toUserName: 'David Kim',
+      reason: 'load_balance',
+      details: { currentLoad: 1, maxCapacity: 12 },
+      createdAt: new Date(now - 1 * DAY),
+    },
+    {
+      id: SEED_IDS.routingAudits.audit8,
+      ticketId: SEED_IDS.leads.dianaHall,
+      ruleId: SEED_IDS.routingRules.highValueLeads,
+      ruleName: 'High-Value Leads',
+      toUserId: SEED_IDS.users.sarahJohnson,
+      toUserName: 'Sarah Johnson',
+      reason: 'rule_match',
+      details: { score: 79, estimatedValue: 55000 },
+      createdAt: new Date(now - 1.5 * DAY),
+    },
+    {
+      id: SEED_IDS.routingAudits.audit9,
+      ticketId: SEED_IDS.leads.sarahMiller,
+      fromUserId: SEED_IDS.users.sarahJohnson,
+      fromUserName: 'Sarah Johnson',
+      toUserId: SEED_IDS.users.mikeDavis,
+      toUserName: 'Mike Davis',
+      reason: 'manual',
+      details: { note: 'Reassigned for technical evaluation' },
+      createdAt: new Date(now - 2 * DAY),
+    },
+    {
+      id: SEED_IDS.routingAudits.audit10,
+      ticketId: SEED_IDS.leads.davidChen,
+      toUserId: SEED_IDS.users.emilyDavis,
+      toUserName: 'Emily Davis',
+      reason: 'skill_match',
+      details: { skill: 'SMB Sales', proficiency: 82 },
+      createdAt: new Date(now - 2 * DAY),
+    },
+    {
+      id: SEED_IDS.routingAudits.audit11,
+      ticketId: SEED_IDS.leads.jamesWilson,
+      ruleId: SEED_IDS.routingRules.urgentEscalation,
+      ruleName: 'Urgent Escalation',
+      fromUserId: SEED_IDS.users.mikeDavis,
+      fromUserName: 'Mike Davis',
+      toUserId: SEED_IDS.users.sarahJohnson,
+      toUserName: 'Sarah Johnson',
+      reason: 'escalation',
+      details: { score: 92, previousAgent: 'Mike Davis' },
+      createdAt: new Date(now - 2.5 * DAY),
+    },
+    {
+      id: SEED_IDS.routingAudits.audit12,
+      ticketId: SEED_IDS.leads.elenaRodriguez,
+      ruleId: SEED_IDS.routingRules.websiteInquiries,
+      ruleName: 'Website Inquiries',
+      toUserId: SEED_IDS.users.jamesWilson,
+      toUserName: 'James Wilson',
+      reason: 'rule_match',
+      details: { source: 'EMAIL', score: 55 },
+      createdAt: new Date(now - 3 * DAY),
+    },
+    {
+      id: SEED_IDS.routingAudits.audit13,
+      ticketId: SEED_IDS.leads.marcusReed,
+      fromUserId: SEED_IDS.users.alexMorgan,
+      fromUserName: 'Alex Morgan',
+      toUserId: SEED_IDS.users.davidKim,
+      toUserName: 'David Kim',
+      reason: 'manual',
+      details: { note: 'Alex on leave, reassigning' },
+      createdAt: new Date(now - 4 * DAY),
+    },
+    {
+      id: SEED_IDS.routingAudits.audit14,
+      ticketId: SEED_IDS.leads.kevinTaylor,
+      ruleId: SEED_IDS.routingRules.technicalSupport,
+      ruleName: 'Technical Support',
+      toUserId: SEED_IDS.users.mikeDavis,
+      toUserName: 'Mike Davis',
+      reason: 'rule_match',
+      details: { tags: ['technical'], source: 'WEBSITE' },
+      createdAt: new Date(now - 4.5 * DAY),
+    },
+    {
+      id: SEED_IDS.routingAudits.audit15,
+      ticketId: SEED_IDS.leads.tomBrown,
+      ruleId: SEED_IDS.routingRules.highValueLeads,
+      ruleName: 'High-Value Leads',
+      toUserId: SEED_IDS.users.sarahJohnson,
+      toUserName: 'Sarah Johnson',
+      reason: 'rule_match',
+      details: { score: 88, estimatedValue: 120000 },
+      createdAt: new Date(now - 5 * DAY),
+    },
+  ];
+
+  for (const audit of audits) {
+    const data = { ...audit, tenantId };
+    await prisma.routingAudit.upsert({
+      where: { id: audit.id },
+      update: data,
+      create: data,
+    });
+  }
+
+  console.log(`✅ Created ${audits.length} routing audit records`);
 }
 
 // FLOW-011, FLOW-013: Ticket Categories & SLA
@@ -5540,7 +6250,11 @@ async function seedWorkflowExecutions() {
       status: WorkflowStatus.RUNNING,
       currentStep: 2,
       stepResults: [
-        { step: 1, status: 'completed', result: { approved: true, approver: SEED_IDS.users.manager } },
+        {
+          step: 1,
+          status: 'completed',
+          result: { approved: true, approver: SEED_IDS.users.manager },
+        },
         { step: 2, status: 'pending', result: null },
       ],
       startedAt: new Date('2024-12-21T14:00:00'),
@@ -5791,12 +6505,17 @@ async function seedAIInsights(tenantId: string) {
       type: 'prediction',
       category: 'risk',
       title: 'Deal at Risk: Acme Corp Enterprise License',
-      description: 'Deal showing signs of stalling. No activity in 14 days. Risk factors include no recent activity, stakeholder change, and competitor mention.',
+      description:
+        'Deal showing signs of stalling. No activity in 14 days. Risk factors include no recent activity, stakeholder change, and competitor mention.',
       confidence: 85,
       priority: 'high',
       entityType: 'deal',
       entityId: SEED_IDS.opportunities.enterpriseLicenseAcme,
-      suggestedActions: ['Schedule executive review', 'Offer additional demo', 'Provide case studies'],
+      suggestedActions: [
+        'Schedule executive review',
+        'Offer additional demo',
+        'Provide case studies',
+      ],
       metadata: {
         deal_id: SEED_IDS.opportunities.enterpriseLicenseAcme,
         risk_factors: ['no_recent_activity', 'stakeholder_change', 'competitor_mention'],
@@ -5809,12 +6528,17 @@ async function seedAIInsights(tenantId: string) {
       type: 'prediction',
       category: 'risk',
       title: 'Churn Risk Alert: TechCorp',
-      description: 'Account health score declining. Product usage down 40% this month. Engagement signals show reduced logins, fewer support tickets, and missed training sessions.',
+      description:
+        'Account health score declining. Product usage down 40% this month. Engagement signals show reduced logins, fewer support tickets, and missed training sessions.',
       confidence: 78,
       priority: 'high',
       entityType: 'account',
       entityId: SEED_IDS.accounts.techCorp,
-      suggestedActions: ['Schedule check-in call', 'Offer additional training', 'Review account health'],
+      suggestedActions: [
+        'Schedule check-in call',
+        'Offer additional training',
+        'Review account health',
+      ],
       metadata: {
         account_id: SEED_IDS.accounts.techCorp,
         health_score: 65,
@@ -5829,12 +6553,17 @@ async function seedAIInsights(tenantId: string) {
       type: 'recommendation',
       category: 'sales',
       title: 'Upsell Opportunity: GlobalSoft',
-      description: 'Account approaching user limit (45/50 users). Usage growing 25% monthly. Good candidate for enterprise plan upgrade with potential value of $25,000.',
+      description:
+        'Account approaching user limit (45/50 users). Usage growing 25% monthly. Good candidate for enterprise plan upgrade with potential value of $25,000.',
       confidence: 82,
       priority: 'medium',
       entityType: 'account',
       entityId: SEED_IDS.accounts.globalSoft,
-      suggestedActions: ['Present enterprise plan', 'Schedule upgrade discussion', 'Prepare ROI analysis'],
+      suggestedActions: [
+        'Present enterprise plan',
+        'Schedule upgrade discussion',
+        'Prepare ROI analysis',
+      ],
       metadata: {
         account_id: SEED_IDS.accounts.globalSoft,
         current_users: 45,
@@ -6161,9 +6890,13 @@ async function getDefaultTenant() {
 
     // Update the tenant ID using raw SQL (Prisma doesn't support PK updates)
     // This will cascade to all related records via foreign key constraints
-    await prisma.$executeRawUnsafe(`
+    await prisma.$executeRawUnsafe(
+      `
       UPDATE tenants SET id = $1 WHERE id = $2
-    `, expectedId, existingBySlug.id);
+    `,
+      expectedId,
+      existingBySlug.id
+    );
 
     // Fetch the updated tenant
     tenant = await prisma.tenant.findUnique({
@@ -6432,7 +7165,7 @@ async function seedHomePageData(tenantId: string) {
       title: 'Product Demo - TechCorp',
       description: 'Show new analytics features and discuss enterprise licensing',
       startTime: new Date(today.getTime() + 10 * 60 * 60 * 1000), // 10 AM today
-      endTime: new Date(today.getTime() + 11 * 60 * 60 * 1000),   // 11 AM today
+      endTime: new Date(today.getTime() + 11 * 60 * 60 * 1000), // 11 AM today
       status: AppointmentStatus.CONFIRMED,
       appointmentType: AppointmentType.MEETING,
       location: 'Zoom - https://zoom.us/j/123456789',
@@ -6460,7 +7193,7 @@ async function seedHomePageData(tenantId: string) {
       id: SEED_IDS.appointments.q3ReviewMeeting,
       title: 'Q3 Pipeline Review',
       description: 'Quarterly review of sales pipeline, conversion rates, and revenue targets',
-      startTime: new Date(tomorrow.getTime() + 9 * 60 * 60 * 1000),  // 9 AM tomorrow
+      startTime: new Date(tomorrow.getTime() + 9 * 60 * 60 * 1000), // 9 AM tomorrow
       endTime: new Date(tomorrow.getTime() + 10.5 * 60 * 60 * 1000), // 10:30 AM tomorrow
       status: AppointmentStatus.CONFIRMED,
       appointmentType: AppointmentType.MEETING,
@@ -6491,11 +7224,12 @@ async function seedHomePageData(tenantId: string) {
       title: 'Client Consultation - GlobalSoft',
       description: 'Initial consultation on CRM integration and data migration requirements',
       startTime: new Date(nextWeek.getTime() + 11 * 60 * 60 * 1000), // 11 AM next week
-      endTime: new Date(nextWeek.getTime() + 12 * 60 * 60 * 1000),   // 12 PM
+      endTime: new Date(nextWeek.getTime() + 12 * 60 * 60 * 1000), // 12 PM
       status: AppointmentStatus.SCHEDULED,
       appointmentType: AppointmentType.CONSULTATION,
       location: 'Microsoft Teams',
-      notes: 'Assess current CRM setup, data volume, integration points. Bring migration checklist.',
+      notes:
+        'Assess current CRM setup, data volume, integration points. Bring migration checklist.',
       bufferMinutesBefore: 15,
       reminderMinutes: 60,
       organizerId: SEED_IDS.users.sarahJohnson,
@@ -6505,8 +7239,8 @@ async function seedHomePageData(tenantId: string) {
       id: SEED_IDS.appointments.courtHearing,
       title: 'Court Hearing - Johnson Civil Case',
       description: 'Preliminary hearing for Johnson v. Smith civil litigation case',
-      startTime: new Date(nextWeek2.getTime() + 9 * 60 * 60 * 1000),  // 9 AM
-      endTime: new Date(nextWeek2.getTime() + 12 * 60 * 60 * 1000),   // 12 PM
+      startTime: new Date(nextWeek2.getTime() + 9 * 60 * 60 * 1000), // 9 AM
+      endTime: new Date(nextWeek2.getTime() + 12 * 60 * 60 * 1000), // 12 PM
       status: AppointmentStatus.CONFIRMED,
       appointmentType: AppointmentType.HEARING,
       location: 'District Court, Room 304',
@@ -6522,7 +7256,7 @@ async function seedHomePageData(tenantId: string) {
       title: 'Deposition Prep - TechFlow Merger',
       description: 'Prepare witness for deposition in TechFlow corporate merger case',
       startTime: new Date(nextWeek3.getTime() + 14 * 60 * 60 * 1000), // 2 PM
-      endTime: new Date(nextWeek3.getTime() + 16 * 60 * 60 * 1000),   // 4 PM
+      endTime: new Date(nextWeek3.getTime() + 16 * 60 * 60 * 1000), // 4 PM
       status: AppointmentStatus.SCHEDULED,
       appointmentType: AppointmentType.DEPOSITION,
       location: 'Law Office - Suite 500',
@@ -6536,8 +7270,8 @@ async function seedHomePageData(tenantId: string) {
       id: SEED_IDS.appointments.weeklyStandup,
       title: 'Weekly Team Standup',
       description: 'Review pipeline progress, blockers, and weekly priorities',
-      startTime: new Date(tomorrow.getTime() + 14 * 60 * 60 * 1000),  // 2 PM tomorrow
-      endTime: new Date(tomorrow.getTime() + 14.5 * 60 * 60 * 1000),  // 2:30 PM
+      startTime: new Date(tomorrow.getTime() + 14 * 60 * 60 * 1000), // 2 PM tomorrow
+      endTime: new Date(tomorrow.getTime() + 14.5 * 60 * 60 * 1000), // 2:30 PM
       status: AppointmentStatus.CONFIRMED,
       appointmentType: AppointmentType.MEETING,
       location: 'Conference Room A',
@@ -6550,7 +7284,7 @@ async function seedHomePageData(tenantId: string) {
       title: 'Partner Integration Call - Zapier',
       description: 'Discuss webhook integration and API partnership opportunities',
       startTime: new Date(twoWeeksOut.getTime() + 15 * 60 * 60 * 1000), // 3 PM
-      endTime: new Date(twoWeeksOut.getTime() + 16 * 60 * 60 * 1000),   // 4 PM
+      endTime: new Date(twoWeeksOut.getTime() + 16 * 60 * 60 * 1000), // 4 PM
       status: AppointmentStatus.SCHEDULED,
       appointmentType: AppointmentType.CALL,
       location: 'Google Meet',
@@ -6564,7 +7298,7 @@ async function seedHomePageData(tenantId: string) {
       title: 'Q4 Strategy Planning Session',
       description: 'Executive strategy session for Q4 goals, budgets, and hiring plan',
       startTime: new Date(threeWeeksOut.getTime() + 10 * 60 * 60 * 1000), // 10 AM
-      endTime: new Date(threeWeeksOut.getTime() + 13 * 60 * 60 * 1000),   // 1 PM
+      endTime: new Date(threeWeeksOut.getTime() + 13 * 60 * 60 * 1000), // 1 PM
       status: AppointmentStatus.SCHEDULED,
       appointmentType: AppointmentType.MEETING,
       location: 'Executive Boardroom',
@@ -6589,28 +7323,98 @@ async function seedHomePageData(tenantId: string) {
   // 4b. Create appointment attendees
   const attendees = [
     // Product Demo - TechCorp: admin + Sarah + Mike
-    { id: SEED_IDS.appointmentAttendees.att1, appointmentId: SEED_IDS.appointments.productDemoTechCorp, userId: SEED_IDS.users.sarahJohnson, tenantId },
-    { id: SEED_IDS.appointmentAttendees.att2, appointmentId: SEED_IDS.appointments.productDemoTechCorp, userId: SEED_IDS.users.mikeDavis, tenantId },
+    {
+      id: SEED_IDS.appointmentAttendees.att1,
+      appointmentId: SEED_IDS.appointments.productDemoTechCorp,
+      userId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.appointmentAttendees.att2,
+      appointmentId: SEED_IDS.appointments.productDemoTechCorp,
+      userId: SEED_IDS.users.mikeDavis,
+      tenantId,
+    },
     // Follow-up Call - Sarah: admin only (organizer)
     // Q3 Pipeline Review: admin + Sarah + Emily + James
-    { id: SEED_IDS.appointmentAttendees.att3, appointmentId: SEED_IDS.appointments.q3ReviewMeeting, userId: SEED_IDS.users.sarahJohnson, tenantId },
-    { id: SEED_IDS.appointmentAttendees.att4, appointmentId: SEED_IDS.appointments.q3ReviewMeeting, userId: SEED_IDS.users.emilyDavis, tenantId },
-    { id: SEED_IDS.appointmentAttendees.att5, appointmentId: SEED_IDS.appointments.q3ReviewMeeting, userId: SEED_IDS.users.jamesWilson, tenantId },
-    { id: SEED_IDS.appointmentAttendees.att6, appointmentId: SEED_IDS.appointments.q3ReviewMeeting, userId: SEED_IDS.users.manager, tenantId },
+    {
+      id: SEED_IDS.appointmentAttendees.att3,
+      appointmentId: SEED_IDS.appointments.q3ReviewMeeting,
+      userId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.appointmentAttendees.att4,
+      appointmentId: SEED_IDS.appointments.q3ReviewMeeting,
+      userId: SEED_IDS.users.emilyDavis,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.appointmentAttendees.att5,
+      appointmentId: SEED_IDS.appointments.q3ReviewMeeting,
+      userId: SEED_IDS.users.jamesWilson,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.appointmentAttendees.att6,
+      appointmentId: SEED_IDS.appointments.q3ReviewMeeting,
+      userId: SEED_IDS.users.manager,
+      tenantId,
+    },
     // Client Consultation - GlobalSoft: Sarah + Alex
-    { id: SEED_IDS.appointmentAttendees.att7, appointmentId: SEED_IDS.appointments.clientConsultation, userId: SEED_IDS.users.alexMorgan, tenantId },
+    {
+      id: SEED_IDS.appointmentAttendees.att7,
+      appointmentId: SEED_IDS.appointments.clientConsultation,
+      userId: SEED_IDS.users.alexMorgan,
+      tenantId,
+    },
     // Court Hearing: James + Mike
-    { id: SEED_IDS.appointmentAttendees.att8, appointmentId: SEED_IDS.appointments.courtHearing, userId: SEED_IDS.users.mikeDavis, tenantId },
+    {
+      id: SEED_IDS.appointmentAttendees.att8,
+      appointmentId: SEED_IDS.appointments.courtHearing,
+      userId: SEED_IDS.users.mikeDavis,
+      tenantId,
+    },
     // Deposition Prep: Mike + James
-    { id: SEED_IDS.appointmentAttendees.att9, appointmentId: SEED_IDS.appointments.depositionPrep, userId: SEED_IDS.users.jamesWilson, tenantId },
+    {
+      id: SEED_IDS.appointmentAttendees.att9,
+      appointmentId: SEED_IDS.appointments.depositionPrep,
+      userId: SEED_IDS.users.jamesWilson,
+      tenantId,
+    },
     // Weekly Standup: everyone
-    { id: SEED_IDS.appointmentAttendees.att10, appointmentId: SEED_IDS.appointments.weeklyStandup, userId: SEED_IDS.users.sarahJohnson, tenantId },
-    { id: SEED_IDS.appointmentAttendees.att11, appointmentId: SEED_IDS.appointments.weeklyStandup, userId: SEED_IDS.users.mikeDavis, tenantId },
-    { id: SEED_IDS.appointmentAttendees.att12, appointmentId: SEED_IDS.appointments.weeklyStandup, userId: SEED_IDS.users.emilyDavis, tenantId },
+    {
+      id: SEED_IDS.appointmentAttendees.att10,
+      appointmentId: SEED_IDS.appointments.weeklyStandup,
+      userId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.appointmentAttendees.att11,
+      appointmentId: SEED_IDS.appointments.weeklyStandup,
+      userId: SEED_IDS.users.mikeDavis,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.appointmentAttendees.att12,
+      appointmentId: SEED_IDS.appointments.weeklyStandup,
+      userId: SEED_IDS.users.emilyDavis,
+      tenantId,
+    },
     // Partner Call: Alex + admin
-    { id: SEED_IDS.appointmentAttendees.att13, appointmentId: SEED_IDS.appointments.partnerCall, userId: user.id, tenantId },
+    {
+      id: SEED_IDS.appointmentAttendees.att13,
+      appointmentId: SEED_IDS.appointments.partnerCall,
+      userId: user.id,
+      tenantId,
+    },
     // Strategy Session: manager + Sarah + Mike + Emily + James + Alex
-    { id: SEED_IDS.appointmentAttendees.att14, appointmentId: SEED_IDS.appointments.strategySession, userId: SEED_IDS.users.sarahJohnson, tenantId },
+    {
+      id: SEED_IDS.appointmentAttendees.att14,
+      appointmentId: SEED_IDS.appointments.strategySession,
+      userId: SEED_IDS.users.sarahJohnson,
+      tenantId,
+    },
   ];
 
   for (const att of attendees) {
@@ -6624,8 +7428,18 @@ async function seedHomePageData(tenantId: string) {
 
   // 4c. Link appointments to cases
   const appointmentCases = [
-    { id: SEED_IDS.appointmentCases.hearingCase, appointmentId: SEED_IDS.appointments.courtHearing, caseId: SEED_IDS.cases.civilLitigationJohnson, tenantId },
-    { id: SEED_IDS.appointmentCases.depositionCase, appointmentId: SEED_IDS.appointments.depositionPrep, caseId: SEED_IDS.cases.corporateMergerTechFlow, tenantId },
+    {
+      id: SEED_IDS.appointmentCases.hearingCase,
+      appointmentId: SEED_IDS.appointments.courtHearing,
+      caseId: SEED_IDS.cases.civilLitigationJohnson,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.appointmentCases.depositionCase,
+      appointmentId: SEED_IDS.appointments.depositionPrep,
+      caseId: SEED_IDS.cases.corporateMergerTechFlow,
+      tenantId,
+    },
   ];
 
   for (const ac of appointmentCases) {
@@ -6740,80 +7554,131 @@ async function main() {
     console.log('\n📦 Seeding supplementary data (optional)...');
     try {
       await seedDealProducts(tenantId);
-    } catch (e) { console.warn('⚠️  seedDealProducts failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedDealProducts failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedDealFiles(tenantId);
-    } catch (e) { console.warn('⚠️  seedDealFiles failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedDealFiles failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedDealActivities(tenantId);
-    } catch (e) { console.warn('⚠️  seedDealActivities failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedDealActivities failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedTicketActivities(tenantId);
-    } catch (e) { console.warn('⚠️  seedTicketActivities failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedTicketActivities failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedTicketAttachments();
-    } catch (e) { console.warn('⚠️  seedTicketAttachments failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedTicketAttachments failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // Seed additional UI mockup data (Agent Actions, Contact Activities, Dashboard Activities)
     try {
       await seedAdditionalUsersAndAccounts(tenantId);
-    } catch (e) { console.warn('⚠️  seedAdditionalUsersAndAccounts failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn(
+        '⚠️  seedAdditionalUsersAndAccounts failed:',
+        (e as Error).message?.slice(0, 100)
+      );
+    }
     try {
       await seedAgentActions();
-    } catch (e) { console.warn('⚠️  seedAgentActions failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedAgentActions failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedContactActivities(tenantId);
-    } catch (e) { console.warn('⚠️  seedContactActivities failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedContactActivities failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedDashboardActivities();
-    } catch (e) { console.warn('⚠️  seedDashboardActivities failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedDashboardActivities failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // Seed comprehensive UI data (contacts 360, dashboard widgets, analytics)
     try {
       await seedContactNotes(tenantId);
-    } catch (e) { console.warn('⚠️  seedContactNotes failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedContactNotes failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedContactAIInsights(tenantId);
-    } catch (e) { console.warn('⚠️  seedContactAIInsights failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedContactAIInsights failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedCalendarEvents(tenantId);
-    } catch (e) { console.warn('⚠️  seedCalendarEvents failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedCalendarEvents failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedTeamMessages();
-    } catch (e) { console.warn('⚠️  seedTeamMessages failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedTeamMessages failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedPipelineSnapshots();
-    } catch (e) { console.warn('⚠️  seedPipelineSnapshots failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedPipelineSnapshots failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedTrafficSources();
-    } catch (e) { console.warn('⚠️  seedTrafficSources failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedTrafficSources failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedGrowthMetrics();
-    } catch (e) { console.warn('⚠️  seedGrowthMetrics failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedGrowthMetrics failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedDealsWonMetrics();
-    } catch (e) { console.warn('⚠️  seedDealsWonMetrics failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedDealsWonMetrics failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedTicketNextSteps();
-    } catch (e) { console.warn('⚠️  seedTicketNextSteps failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedTicketNextSteps failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedRelatedTickets();
-    } catch (e) { console.warn('⚠️  seedRelatedTickets failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedRelatedTickets failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedTicketAIInsights();
-    } catch (e) { console.warn('⚠️  seedTicketAIInsights failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedTicketAIInsights failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedSalesPerformance();
-    } catch (e) { console.warn('⚠️  seedSalesPerformance failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedSalesPerformance failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedDashboardTasks(tenantId);
-    } catch (e) { console.warn('⚠️  seedDashboardTasks failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedDashboardTasks failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedContactDeals(tenantId);
-    } catch (e) { console.warn('⚠️  seedContactDeals failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedContactDeals failed:', (e as Error).message?.slice(0, 100));
+    }
     try {
       await seedContactTasks(tenantId);
-    } catch (e) { console.warn('⚠️  seedContactTasks failed:', (e as Error).message?.slice(0, 100)); }
+    } catch (e) {
+      console.warn('⚠️  seedContactTasks failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // =========================================================================
     // NEW FLOW COVERAGE DATA (FLOW-001 to FLOW-038)
@@ -6821,77 +7686,222 @@ async function main() {
     console.log('\n🔄 Seeding flow coverage data (optional)...');
 
     // FLOW-002, FLOW-004: Teams & Workspaces
-    try { await seedWorkspaces(); } catch (e) { console.warn('⚠️  seedWorkspaces failed:', (e as Error).message?.slice(0, 100)); }
-    try { await seedTeams(); } catch (e) { console.warn('⚠️  seedTeams failed:', (e as Error).message?.slice(0, 100)); }
-    try { await seedTeamMembers(); } catch (e) { console.warn('⚠️  seedTeamMembers failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedWorkspaces();
+    } catch (e) {
+      console.warn('⚠️  seedWorkspaces failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedTeams();
+    } catch (e) {
+      console.warn('⚠️  seedTeams failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedTeamMembers();
+    } catch (e) {
+      console.warn('⚠️  seedTeamMembers failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // FLOW-016: Email Communication
-    try { await seedEmailTemplates(); } catch (e) { console.warn('⚠️  seedEmailTemplates failed:', (e as Error).message?.slice(0, 100)); }
-    try { await seedEmailRecords(); } catch (e) { console.warn('⚠️  seedEmailRecords failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedEmailTemplates();
+    } catch (e) {
+      console.warn('⚠️  seedEmailTemplates failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedEmailRecords();
+    } catch (e) {
+      console.warn('⚠️  seedEmailRecords failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // FLOW-017: Chat Integration
-    try { await seedChatConversations(); } catch (e) { console.warn('⚠️  seedChatConversations failed:', (e as Error).message?.slice(0, 100)); }
-    try { await seedChatMessages(); } catch (e) { console.warn('⚠️  seedChatMessages failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedChatConversations();
+    } catch (e) {
+      console.warn('⚠️  seedChatConversations failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedChatMessages();
+    } catch (e) {
+      console.warn('⚠️  seedChatMessages failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // FLOW-018: Call Recording
-    try { await seedCallRecords(); } catch (e) { console.warn('⚠️  seedCallRecords failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedCallRecords();
+    } catch (e) {
+      console.warn('⚠️  seedCallRecords failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // FLOW-021: Document Management
-    try { await seedDocuments(); } catch (e) { console.warn('⚠️  seedDocuments failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedDocuments();
+    } catch (e) {
+      console.warn('⚠️  seedDocuments failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // PG-138: Case Management
-    try { await seedCases(); } catch (e) { console.warn('⚠️  seedCases failed:', (e as Error).message?.slice(0, 100)); }
-    try { await seedCaseTasks(); } catch (e) { console.warn('⚠️  seedCaseTasks failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedCases();
+    } catch (e) {
+      console.warn('⚠️  seedCases failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedCaseTasks();
+    } catch (e) {
+      console.warn('⚠️  seedCaseTasks failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // IFC-152: Case Document Management
-    try { await seedCaseDocuments(); } catch (e) { console.warn('⚠️  seedCaseDocuments failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedCaseDocuments();
+    } catch (e) {
+      console.warn('⚠️  seedCaseDocuments failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // FLOW-015: Customer Feedback (NPS/CSAT)
-    try { await seedFeedbackSurveys(); } catch (e) { console.warn('⚠️  seedFeedbackSurveys failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedFeedbackSurveys();
+    } catch (e) {
+      console.warn('⚠️  seedFeedbackSurveys failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // FLOW-010: Deal Renewals & Account Health
-    try { await seedDealRenewals(tenantId); } catch (e) { console.warn('⚠️  seedDealRenewals failed:', (e as Error).message?.slice(0, 100)); }
-    try { await seedAccountHealthScores(); } catch (e) { console.warn('⚠️  seedAccountHealthScores failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedDealRenewals(tenantId);
+    } catch (e) {
+      console.warn('⚠️  seedDealRenewals failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedAccountHealthScores();
+    } catch (e) {
+      console.warn('⚠️  seedAccountHealthScores failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // FLOW-012: Agent Skills & Routing
-    try { await seedAgentSkills(); } catch (e) { console.warn('⚠️  seedAgentSkills failed:', (e as Error).message?.slice(0, 100)); }
-    try { await seedAgentAvailability(); } catch (e) { console.warn('⚠️  seedAgentAvailability failed:', (e as Error).message?.slice(0, 100)); }
-    try { await seedRoutingRules(); } catch (e) { console.warn('⚠️  seedRoutingRules failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedAgentSkills(tenantId);
+    } catch (e) {
+      console.warn('⚠️  seedAgentSkills failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedAgentAvailability(tenantId);
+    } catch (e) {
+      console.warn('⚠️  seedAgentAvailability failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedRoutingRules(tenantId);
+    } catch (e) {
+      console.warn('⚠️  seedRoutingRules failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedRoutingAudits(tenantId);
+    } catch (e) {
+      console.warn('⚠️  seedRoutingAudits failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // FLOW-011, FLOW-013: Ticket Categories & SLA
-    try { await seedTicketCategories(); } catch (e) { console.warn('⚠️  seedTicketCategories failed:', (e as Error).message?.slice(0, 100)); }
-    try { await seedSLABreaches(); } catch (e) { console.warn('⚠️  seedSLABreaches failed:', (e as Error).message?.slice(0, 100)); }
-    try { await seedEscalationHistory(); } catch (e) { console.warn('⚠️  seedEscalationHistory failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedTicketCategories();
+    } catch (e) {
+      console.warn('⚠️  seedTicketCategories failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedSLABreaches();
+    } catch (e) {
+      console.warn('⚠️  seedSLABreaches failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedEscalationHistory();
+    } catch (e) {
+      console.warn('⚠️  seedEscalationHistory failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // FLOW-025, FLOW-026: Workflow Engine
-    try { await seedWorkflowDefinitions(); } catch (e) { console.warn('⚠️  seedWorkflowDefinitions failed:', (e as Error).message?.slice(0, 100)); }
-    try { await seedWorkflowExecutions(); } catch (e) { console.warn('⚠️  seedWorkflowExecutions failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedWorkflowDefinitions();
+    } catch (e) {
+      console.warn('⚠️  seedWorkflowDefinitions failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedWorkflowExecutions();
+    } catch (e) {
+      console.warn('⚠️  seedWorkflowExecutions failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // FLOW-027: Business Rules
-    try { await seedBusinessRules(); } catch (e) { console.warn('⚠️  seedBusinessRules failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedBusinessRules();
+    } catch (e) {
+      console.warn('⚠️  seedBusinessRules failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // FLOW-022, FLOW-023: Dashboards & Reports
-    try { await seedDashboardConfigs(); } catch (e) { console.warn('⚠️  seedDashboardConfigs failed:', (e as Error).message?.slice(0, 100)); }
-    try { await seedKPIDefinitions(); } catch (e) { console.warn('⚠️  seedKPIDefinitions failed:', (e as Error).message?.slice(0, 100)); }
-    try { await seedReportDefinitions(); } catch (e) { console.warn('⚠️  seedReportDefinitions failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedDashboardConfigs();
+    } catch (e) {
+      console.warn('⚠️  seedDashboardConfigs failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedKPIDefinitions();
+    } catch (e) {
+      console.warn('⚠️  seedKPIDefinitions failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedReportDefinitions();
+    } catch (e) {
+      console.warn('⚠️  seedReportDefinitions failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // FLOW-024: AI Insights
-    try { await seedAIInsights(); } catch (e) { console.warn('⚠️  seedAIInsights failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedAIInsights();
+    } catch (e) {
+      console.warn('⚠️  seedAIInsights failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // FLOW-031, FLOW-032, FLOW-033: Monitoring & Observability
-    try { await seedHealthChecks(); } catch (e) { console.warn('⚠️  seedHealthChecks failed:', (e as Error).message?.slice(0, 100)); }
-    try { await seedAlertIncidents(); } catch (e) { console.warn('⚠️  seedAlertIncidents failed:', (e as Error).message?.slice(0, 100)); }
-    try { await seedPerformanceMetrics(); } catch (e) { console.warn('⚠️  seedPerformanceMetrics failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedHealthChecks();
+    } catch (e) {
+      console.warn('⚠️  seedHealthChecks failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedAlertIncidents();
+    } catch (e) {
+      console.warn('⚠️  seedAlertIncidents failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedPerformanceMetrics();
+    } catch (e) {
+      console.warn('⚠️  seedPerformanceMetrics failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // FLOW-034: Webhooks
-    try { await seedWebhookEndpoints(); } catch (e) { console.warn('⚠️  seedWebhookEndpoints failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedWebhookEndpoints();
+    } catch (e) {
+      console.warn('⚠️  seedWebhookEndpoints failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // FLOW-035, FLOW-036: API Management
-    try { await seedAPIKeys(); } catch (e) { console.warn('⚠️  seedAPIKeys failed:', (e as Error).message?.slice(0, 100)); }
-    try { await seedAPIVersions(); } catch (e) { console.warn('⚠️  seedAPIVersions failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedAPIKeys();
+    } catch (e) {
+      console.warn('⚠️  seedAPIKeys failed:', (e as Error).message?.slice(0, 100));
+    }
+    try {
+      await seedAPIVersions();
+    } catch (e) {
+      console.warn('⚠️  seedAPIVersions failed:', (e as Error).message?.slice(0, 100));
+    }
 
     // IFC-182: Home Page Data (uses relative dates for recent activity)
-    try { await seedHomePageData(tenantId); } catch (e) { console.warn('⚠️  seedHomePageData failed:', (e as Error).message?.slice(0, 100)); }
+    try {
+      await seedHomePageData(tenantId);
+    } catch (e) {
+      console.warn('⚠️  seedHomePageData failed:', (e as Error).message?.slice(0, 100));
+    }
 
     console.log('\n✨ Database seeding completed successfully!\n');
     console.log('📊 Summary (matching UI mockups + ALL 38 FLOWS):');
@@ -6946,14 +7956,14 @@ async function main() {
     console.log('  FLOW-034: 3 webhook endpoints');
     console.log('  FLOW-035/036: 3 API keys, 2 API versions');
     console.log('');
-    console.log('\n🎉 Ready for development! Data matches ALL 104 frontend mockup files + ALL 38 FLOWS!\n');
+    console.log(
+      '\n🎉 Ready for development! Data matches ALL 104 frontend mockup files + ALL 38 FLOWS!\n'
+    );
   } catch (error) {
     console.error('❌ Error seeding database:', error);
     throw error;
   }
 }
-
-
 
 (async () => {
   try {

@@ -3,8 +3,7 @@ import { ApiReferenceClient } from '@/components/shared/api-reference-client';
 
 export const metadata: Metadata = {
   title: 'API Reference | IntelliFlow CRM',
-  description:
-    'Interactive tRPC API documentation with 25 routers and 235+ typed procedures',
+  description: 'Interactive tRPC API documentation with 25 routers and 235+ typed procedures',
 };
 
 export default function ApiReferencePage() {

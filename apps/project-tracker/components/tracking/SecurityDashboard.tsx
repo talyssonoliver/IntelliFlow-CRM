@@ -82,10 +82,7 @@ export default function SecurityDashboard() {
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
         </div>
-        <button
-          onClick={fetchData}
-          className="mt-2 text-sm underline hover:no-underline"
-        >
+        <button onClick={fetchData} className="mt-2 text-sm underline hover:no-underline">
           Try again
         </button>
       </div>
@@ -101,15 +98,15 @@ export default function SecurityDashboard() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Icon name="shield" className={hasCritical ? 'text-red-500' : 'text-green-600'} size="xl" />
+          <Icon
+            name="shield"
+            className={hasCritical ? 'text-red-500' : 'text-green-600'}
+            size="xl"
+          />
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Security Dashboard</h3>
             {data?.lastScan && (
-              <StaleIndicator
-                lastUpdated={data.lastScan}
-                thresholdMinutes={10080}
-                showTime
-              />
+              <StaleIndicator lastUpdated={data.lastScan} thresholdMinutes={10080} showTime />
             )}
           </div>
         </div>
@@ -121,35 +118,49 @@ export default function SecurityDashboard() {
       </div>
 
       {/* Security Status Banner */}
-      <div className={`rounded-lg p-4 border ${
-        hasCritical
-          ? 'bg-red-50 border-red-200'
-          : hasVulnerabilities
-          ? 'bg-yellow-50 border-yellow-200'
-          : 'bg-green-50 border-green-200'
-      }`}>
+      <div
+        className={`rounded-lg p-4 border ${
+          hasCritical
+            ? 'bg-red-50 border-red-200'
+            : hasVulnerabilities
+              ? 'bg-yellow-50 border-yellow-200'
+              : 'bg-green-50 border-green-200'
+        }`}
+      >
         <div className="flex items-center gap-3">
           <Icon
             name={hasCritical ? 'gpp_maybe' : hasVulnerabilities ? 'shield' : 'verified_user'}
-            className={hasCritical ? 'text-red-500' : hasVulnerabilities ? 'text-yellow-600' : 'text-green-600'}
+            className={
+              hasCritical
+                ? 'text-red-500'
+                : hasVulnerabilities
+                  ? 'text-yellow-600'
+                  : 'text-green-600'
+            }
             size="2xl"
           />
           <div>
-            <div className={`text-lg font-semibold ${
-              hasCritical ? 'text-red-700' : hasVulnerabilities ? 'text-yellow-700' : 'text-green-700'
-            }`}>
+            <div
+              className={`text-lg font-semibold ${
+                hasCritical
+                  ? 'text-red-700'
+                  : hasVulnerabilities
+                    ? 'text-yellow-700'
+                    : 'text-green-700'
+              }`}
+            >
               {hasCritical
                 ? `${vulns.critical} Critical Vulnerabilities Found`
                 : hasVulnerabilities
-                ? `${vulns.total} Vulnerabilities Found`
-                : 'No Vulnerabilities Detected'}
+                  ? `${vulns.total} Vulnerabilities Found`
+                  : 'No Vulnerabilities Detected'}
             </div>
             <div className="text-sm text-gray-600">
               {hasCritical
                 ? 'Immediate action required - critical security issues detected'
                 : hasVulnerabilities
-                ? 'Review and address vulnerabilities as appropriate'
-                : 'Your dependencies are secure'}
+                  ? 'Review and address vulnerabilities as appropriate'
+                  : 'Your dependencies are secure'}
             </div>
           </div>
         </div>
@@ -181,12 +192,7 @@ export default function SecurityDashboard() {
           icon="info"
           variant={vulns.moderate > 0 ? 'info' : 'default'}
         />
-        <MetricCard
-          title="Low"
-          value={vulns.low}
-          icon="remove_circle"
-          variant="default"
-        />
+        <MetricCard title="Low" value={vulns.low} icon="remove_circle" variant="default" />
       </div>
 
       {/* Baseline Comparison */}
@@ -201,8 +207,11 @@ export default function SecurityDashboard() {
               <span className="text-gray-500">Critical:</span>
               <span className="font-mono text-gray-900">{data.baseline.critical}</span>
               {vulns.critical !== data.baseline.critical && (
-                <span className={`text-sm ${vulns.critical > data.baseline.critical ? 'text-red-600' : 'text-green-600'}`}>
-                  {vulns.critical > data.baseline.critical ? '+' : ''}{vulns.critical - data.baseline.critical}
+                <span
+                  className={`text-sm ${vulns.critical > data.baseline.critical ? 'text-red-600' : 'text-green-600'}`}
+                >
+                  {vulns.critical > data.baseline.critical ? '+' : ''}
+                  {vulns.critical - data.baseline.critical}
                 </span>
               )}
             </div>
@@ -210,8 +219,11 @@ export default function SecurityDashboard() {
               <span className="text-gray-500">High:</span>
               <span className="font-mono text-gray-900">{data.baseline.high}</span>
               {vulns.high !== data.baseline.high && (
-                <span className={`text-sm ${vulns.high > data.baseline.high ? 'text-red-600' : 'text-green-600'}`}>
-                  {vulns.high > data.baseline.high ? '+' : ''}{vulns.high - data.baseline.high}
+                <span
+                  className={`text-sm ${vulns.high > data.baseline.high ? 'text-red-600' : 'text-green-600'}`}
+                >
+                  {vulns.high > data.baseline.high ? '+' : ''}
+                  {vulns.high - data.baseline.high}
                 </span>
               )}
             </div>
@@ -229,9 +241,7 @@ export default function SecurityDashboard() {
           <div className="space-y-2">
             {data.scanHistory.slice(0, 5).map((scan, idx) => (
               <div key={idx} className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">
-                  {new Date(scan.date).toLocaleString()}
-                </span>
+                <span className="text-gray-500">{new Date(scan.date).toLocaleString()}</span>
                 <div className="flex items-center gap-4">
                   <span className={`${scan.critical > 0 ? 'text-red-600' : 'text-green-600'}`}>
                     {scan.critical} critical
@@ -251,11 +261,13 @@ export default function SecurityDashboard() {
           Compliance Status
         </h4>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className={`flex items-center gap-2 p-3 rounded-lg ${
-            data?.compliance.owasp_top10
-              ? 'bg-green-50 border border-green-200'
-              : 'bg-red-50 border border-red-200'
-          }`}>
+          <div
+            className={`flex items-center gap-2 p-3 rounded-lg ${
+              data?.compliance.owasp_top10
+                ? 'bg-green-50 border border-green-200'
+                : 'bg-red-50 border border-red-200'
+            }`}
+          >
             <Icon
               name={data?.compliance.owasp_top10 ? 'check_circle' : 'cancel'}
               className={data?.compliance.owasp_top10 ? 'text-green-600' : 'text-red-500'}
@@ -263,11 +275,13 @@ export default function SecurityDashboard() {
             />
             <span className="text-gray-900">OWASP Top 10</span>
           </div>
-          <div className={`flex items-center gap-2 p-3 rounded-lg ${
-            data?.compliance.dependency_check
-              ? 'bg-green-50 border border-green-200'
-              : 'bg-red-50 border border-red-200'
-          }`}>
+          <div
+            className={`flex items-center gap-2 p-3 rounded-lg ${
+              data?.compliance.dependency_check
+                ? 'bg-green-50 border border-green-200'
+                : 'bg-red-50 border border-red-200'
+            }`}
+          >
             <Icon
               name={data?.compliance.dependency_check ? 'check_circle' : 'cancel'}
               className={data?.compliance.dependency_check ? 'text-green-600' : 'text-red-500'}
@@ -275,11 +289,13 @@ export default function SecurityDashboard() {
             />
             <span className="text-gray-900">Dependency Check</span>
           </div>
-          <div className={`flex items-center gap-2 p-3 rounded-lg ${
-            data?.compliance.secret_scan
-              ? 'bg-green-50 border border-green-200'
-              : 'bg-red-50 border border-red-200'
-          }`}>
+          <div
+            className={`flex items-center gap-2 p-3 rounded-lg ${
+              data?.compliance.secret_scan
+                ? 'bg-green-50 border border-green-200'
+                : 'bg-red-50 border border-red-200'
+            }`}
+          >
             <Icon
               name={data?.compliance.secret_scan ? 'check_circle' : 'cancel'}
               className={data?.compliance.secret_scan ? 'text-green-600' : 'text-red-500'}

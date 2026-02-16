@@ -36,9 +36,7 @@ export class WorkflowStateMachine implements IWorkflowEngine {
   /**
    * Register a workflow definition
    */
-  registerWorkflow<T extends Record<string, unknown>>(
-    definition: WorkflowDefinition<T>
-  ): void {
+  registerWorkflow<T extends Record<string, unknown>>(definition: WorkflowDefinition<T>): void {
     if (this.definitions.has(definition.name)) {
       throw new Error(`Workflow ${definition.name} is already registered`);
     }
@@ -115,7 +113,8 @@ export class WorkflowStateMachine implements IWorkflowEngine {
       return {
         success: false,
         state,
-        error: 'Cannot transition: workflow is paused. Use processHumanDecision for human review nodes.',
+        error:
+          'Cannot transition: workflow is paused. Use processHumanDecision for human review nodes.',
         isComplete: false,
         awaitingHumanInput: true,
       };
@@ -168,11 +167,10 @@ export class WorkflowStateMachine implements IWorkflowEngine {
       }
 
       // Find next node
-      const nextNodeId = this.findNextNode(
-        definition,
-        state.currentNode,
-        { ...state, data: updatedData } as WorkflowState<Record<string, unknown>>
-      );
+      const nextNodeId = this.findNextNode(definition, state.currentNode, {
+        ...state,
+        data: updatedData,
+      } as WorkflowState<Record<string, unknown>>);
 
       if (!nextNodeId) {
         return {
@@ -259,9 +257,7 @@ export class WorkflowStateMachine implements IWorkflowEngine {
     if (currentNode?.type === 'decision' && currentNode.condition) {
       const nextNodeId = currentNode.condition(state);
       // Verify the edge exists
-      const edge = definition.edges.find(
-        (e) => e.from === currentNodeId && e.label === nextNodeId
-      );
+      const edge = definition.edges.find((e) => e.from === currentNodeId && e.label === nextNodeId);
       if (edge) {
         return edge.to;
       }

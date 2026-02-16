@@ -11,7 +11,7 @@ interface BlogPaginationProps {
 export function BlogPagination({
   currentPage,
   totalPages,
-  basePath = '/blog'
+  basePath = '/blog',
 }: BlogPaginationProps) {
   const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
@@ -19,10 +19,7 @@ export function BlogPagination({
   const canGoNext = currentPage < totalPages;
 
   return (
-    <nav
-      aria-label="Blog pagination"
-      className="flex items-center justify-center gap-2"
-    >
+    <nav aria-label="Blog pagination" className="flex items-center justify-center gap-2">
       {/* Previous Button */}
       {canGoPrev ? (
         <Link

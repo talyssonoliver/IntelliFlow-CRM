@@ -93,7 +93,8 @@ export interface OpportunitySearchResult {
  */
 export const searchLeadsTool: AgentToolDefinition<LeadSearchInput, LeadSearchResult[]> = {
   name: 'search_leads',
-  description: 'Search for leads in the CRM based on status, source, score, owner, or free text query',
+  description:
+    'Search for leads in the CRM based on status, source, score, owner, or free text query',
   actionType: 'SEARCH',
   entityTypes: ['LEAD'],
   requiresApproval: false,
@@ -292,9 +293,13 @@ export const searchContactsTool: AgentToolDefinition<ContactSearchInput, Contact
  * Searches for opportunities based on stage, value, account, close date, etc.
  * This is a read-only operation and does not require approval.
  */
-export const searchOpportunitiesTool: AgentToolDefinition<OpportunitySearchInput, OpportunitySearchResult[]> = {
+export const searchOpportunitiesTool: AgentToolDefinition<
+  OpportunitySearchInput,
+  OpportunitySearchResult[]
+> = {
   name: 'search_opportunities',
-  description: 'Search for opportunities/deals in the CRM based on stage, value, account, close date, or free text query',
+  description:
+    'Search for opportunities/deals in the CRM based on stage, value, account, close date, or free text query',
   actionType: 'SEARCH',
   entityTypes: ['OPPORTUNITY'],
   requiresApproval: false,
@@ -402,7 +407,8 @@ export const combinedSearchTool: AgentToolDefinition<
   }
 > = {
   name: 'search_crm',
-  description: 'Search across multiple CRM entities (leads, contacts, opportunities) with a single query',
+  description:
+    'Search across multiple CRM entities (leads, contacts, opportunities) with a single query',
   actionType: 'SEARCH',
   entityTypes: ['LEAD', 'CONTACT', 'OPPORTUNITY'],
   requiresApproval: false,
@@ -448,7 +454,10 @@ export const combinedSearchTool: AgentToolDefinition<
         }
       }
 
-      if (input.entityTypes.includes('OPPORTUNITY') && context.allowedEntityTypes.includes('OPPORTUNITY')) {
+      if (
+        input.entityTypes.includes('OPPORTUNITY') &&
+        context.allowedEntityTypes.includes('OPPORTUNITY')
+      ) {
         const oppResult = await searchOpportunitiesTool.execute(
           { query: input.query, limit: input.limit, offset: 0 },
           context

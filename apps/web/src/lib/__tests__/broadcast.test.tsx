@@ -159,7 +159,9 @@ describe('AuthBroadcast', () => {
       const broadcast = createAuthBroadcast();
 
       // Force an error by mocking postMessage to throw
-      const mockChannel = MockBroadcastChannel as unknown as { prototype: { postMessage: () => void } };
+      const mockChannel = MockBroadcastChannel as unknown as {
+        prototype: { postMessage: () => void };
+      };
       const originalPostMessage = mockChannel.prototype.postMessage;
       mockChannel.prototype.postMessage = () => {
         throw new Error('Broadcast failed');

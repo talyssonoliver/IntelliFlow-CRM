@@ -68,8 +68,18 @@ export const retrieveCaseContextInputSchema = z.object({
   includeDocuments: z.boolean().default(true).describe('Include case documents in retrieval'),
   includeTasks: z.boolean().default(true).describe('Include case tasks in retrieval'),
   includeNotes: z.boolean().default(true).describe('Include case notes/conversations in retrieval'),
-  maxResults: z.number().min(1).max(50).default(10).describe('Maximum number of sources to retrieve'),
-  minRelevanceScore: z.number().min(0).max(1).default(0.3).describe('Minimum relevance score threshold'),
+  maxResults: z
+    .number()
+    .min(1)
+    .max(50)
+    .default(10)
+    .describe('Maximum number of sources to retrieve'),
+  minRelevanceScore: z
+    .number()
+    .min(0)
+    .max(1)
+    .default(0.3)
+    .describe('Minimum relevance score threshold'),
 });
 
 export type RetrieveCaseContextInput = z.infer<typeof retrieveCaseContextInputSchema>;
@@ -80,15 +90,19 @@ export type RetrieveCaseContextInput = z.infer<typeof retrieveCaseContextInputSc
 export const retrieveCaseContextOutputSchema = z.object({
   success: z.boolean(),
   context: z.string().optional(),
-  citations: z.array(z.object({
-    id: z.string(),
-    sourceType: z.enum(['case', 'document', 'task', 'note', 'conversation']),
-    sourceId: z.string(),
-    title: z.string(),
-    retrievedAt: z.string(),
-    relevanceScore: z.number(),
-    snippet: z.string(),
-  })).optional(),
+  citations: z
+    .array(
+      z.object({
+        id: z.string(),
+        sourceType: z.enum(['case', 'document', 'task', 'note', 'conversation']),
+        sourceId: z.string(),
+        title: z.string(),
+        retrievedAt: z.string(),
+        relevanceScore: z.number(),
+        snippet: z.string(),
+      })
+    )
+    .optional(),
   totalSources: z.number().optional(),
   queryTimeMs: z.number().optional(),
   error: z.string().optional(),
@@ -201,7 +215,7 @@ export function wrapWithBoundaries(content: string, sourceId: string): string {
  * Check if content contains potential injection attempts
  */
 export function detectInjectionAttempt(content: string): boolean {
-  return INJECTION_PATTERNS.some(pattern => pattern.test(content));
+  return INJECTION_PATTERNS.some((pattern) => pattern.test(content));
 }
 
 // ============================================================================
@@ -232,7 +246,7 @@ async function withRetry<T>(
       // Exponential backoff
       if (attempt < maxRetries - 1) {
         const delay = baseDelayMs * Math.pow(2, attempt);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }
@@ -289,17 +303,14 @@ export async function verifyCaseAccess(
     const userRoles = await prisma.userRoleAssignment.findMany({
       where: {
         userId: userId,
-        OR: [
-          { expiresAt: null },
-          { expiresAt: { gt: new Date() } },
-        ],
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
       },
       include: {
         role: true,
       },
     });
 
-    const roleNames = userRoles.map(ur => ur.role.name);
+    const roleNames = userRoles.map((ur) => ur.role.name);
 
     if (roleNames.includes('ADMIN')) {
       return {
@@ -371,7 +382,9 @@ async function retrieveCaseDetails(
     `Priority: ${caseRecord.priority}`,
     caseRecord.description ? `Description: ${caseRecord.description}` : '',
     caseRecord.deadline ? `Deadline: ${caseRecord.deadline.toISOString()}` : '',
-  ].filter(Boolean).join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
 
   return {
     id: `case-${caseRecord.id}`,
@@ -434,16 +447,16 @@ async function retrieveCaseDocuments(
   });
 
   // Filter by ACL
-  const accessibleDocs = documents.filter(doc => {
+  const accessibleDocs = documents.filter((doc) => {
     const hasAccess = doc.acl.some(
-      acl =>
+      (acl) =>
         (acl.principal_type === 'USER' && acl.principal_id === userId) ||
         acl.principal_type === 'TENANT'
     );
     return hasAccess || doc.created_by === userId;
   });
 
-  return accessibleDocs.map(doc => ({
+  return accessibleDocs.map((doc) => ({
     id: `doc-${doc.id}`,
     sourceType: 'document' as const,
     sourceId: doc.id,
@@ -484,14 +497,16 @@ async function retrieveCaseTasks(
     orderBy: { updatedAt: 'desc' },
   });
 
-  return caseTasks.map(task => ({
+  return caseTasks.map((task) => ({
     id: `task-${task.id}`,
     sourceType: 'task' as const,
     sourceId: task.id,
     title: task.title,
     retrievedAt: new Date().toISOString(),
     relevanceScore: calculateRelevance(query, `${task.title} ${task.description || ''}`),
-    snippet: sanitizeContent(`${task.title}: ${task.description || 'No description'} [Status: ${task.status}]`),
+    snippet: sanitizeContent(
+      `${task.title}: ${task.description || 'No description'} [Status: ${task.status}]`
+    ),
     metadata: {
       status: task.status,
       dueDate: task.dueDate?.toISOString(),
@@ -526,7 +541,7 @@ async function retrieveCaseConversations(
     orderBy: { startedAt: 'desc' },
   });
 
-  return conversations.map(conv => ({
+  return conversations.map((conv) => ({
     id: `conv-${conv.id}`,
     sourceType: 'conversation' as const,
     sourceId: conv.id,
@@ -546,7 +561,10 @@ async function retrieveCaseConversations(
  * Calculate relevance score for a query against content
  */
 function calculateRelevance(query: string, content: string): number {
-  const queryTerms = query.toLowerCase().split(/\s+/).filter(t => t.length > 2);
+  const queryTerms = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((t) => t.length > 2);
   const contentLower = content.toLowerCase();
 
   let matchCount = 0;
@@ -575,8 +593,8 @@ export async function retrieveCaseContext(
   const startTime = Date.now();
 
   // Verify case access with retry for transient failures
-  const accessResult = await withRetry(
-    () => verifyCaseAccess(prisma, input.caseId, userId, tenantId)
+  const accessResult = await withRetry(() =>
+    verifyCaseAccess(prisma, input.caseId, userId, tenantId)
   );
   if (!accessResult.hasAccess) {
     throw new Error(`Access denied: ${accessResult.reason}`);
@@ -589,20 +607,13 @@ export async function retrieveCaseContext(
 
   // 1. Always retrieve case details
   retrievalPromises.push(
-    retrieveCaseDetails(prisma, input.caseId, tenantId).then(c => c ? [c] : [])
+    retrieveCaseDetails(prisma, input.caseId, tenantId).then((c) => (c ? [c] : []))
   );
 
   // 2. Retrieve documents if requested
   if (input.includeDocuments) {
     retrievalPromises.push(
-      retrieveCaseDocuments(
-        prisma,
-        input.caseId,
-        tenantId,
-        userId,
-        input.query,
-        input.maxResults
-      )
+      retrieveCaseDocuments(prisma, input.caseId, tenantId, userId, input.query, input.maxResults)
     );
   }
 
@@ -645,12 +656,12 @@ export async function retrieveCaseContext(
 
   // Filter by relevance score and sort
   const filteredCitations = citations
-    .filter(c => c.relevanceScore >= input.minRelevanceScore)
+    .filter((c) => c.relevanceScore >= input.minRelevanceScore)
     .sort((a, b) => b.relevanceScore - a.relevanceScore)
     .slice(0, input.maxResults);
 
   // Build combined content with boundary markers
-  const contentParts = filteredCitations.map(citation =>
+  const contentParts = filteredCitations.map((citation) =>
     wrapWithBoundaries(citation.snippet, citation.id)
   );
 
@@ -807,7 +818,7 @@ All retrievals are permission-checked and audit-logged.`,
         const output: RetrieveCaseContextOutput = {
           success: true,
           context: result.content,
-          citations: result.citations.map(c => ({
+          citations: result.citations.map((c) => ({
             id: c.id,
             sourceType: c.sourceType,
             sourceId: c.sourceId,

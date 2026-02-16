@@ -5,7 +5,11 @@
  */
 
 import { NextResponse } from 'next/server';
-import { getSessionStatus, getSessionOutput, getAllActiveSessions } from '../../../../lib/claude-session-spawner';
+import {
+  getSessionStatus,
+  getSessionOutput,
+  getAllActiveSessions,
+} from '../../../../lib/claude-session-spawner';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,10 +41,7 @@ export async function GET(request: Request) {
     // Get session status
     const status = await getSessionStatus(sessionId);
     if (!status) {
-      return NextResponse.json(
-        { error: `Session ${sessionId} not found` },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: `Session ${sessionId} not found` }, { status: 404 });
     }
 
     // Get session output

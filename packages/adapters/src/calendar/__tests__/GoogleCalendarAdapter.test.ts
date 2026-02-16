@@ -135,9 +135,7 @@ describe('GoogleCalendarAdapter', () => {
 
         expect(url).toContain('https://accounts.google.com/o/oauth2/v2/auth');
         expect(url).toContain(`client_id=${config.oauthConfig.clientId}`);
-        expect(url).toContain(
-          `redirect_uri=${encodeURIComponent(config.oauthConfig.redirectUri)}`
-        );
+        expect(url).toContain(`redirect_uri=${encodeURIComponent(config.oauthConfig.redirectUri)}`);
         expect(url).toContain(`state=${state}`);
         expect(url).toContain('response_type=code');
         expect(url).toContain('access_type=offline');
@@ -817,7 +815,11 @@ describe('GoogleCalendarAdapter', () => {
           status: 404,
         });
 
-        const result = await adapter.unregisterWebhook(mockTokens, 'unknown-channel', 'resource-xyz');
+        const result = await adapter.unregisterWebhook(
+          mockTokens,
+          'unknown-channel',
+          'resource-xyz'
+        );
 
         expect(result.isSuccess).toBe(true);
       });

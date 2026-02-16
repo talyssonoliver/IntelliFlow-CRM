@@ -111,9 +111,7 @@ describe('AuditLogger', () => {
         actorId: 'user-123',
       });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[AUDIT]')
-      );
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('[AUDIT]'));
     });
 
     it('should buffer entries when async mode is enabled', async () => {
@@ -251,9 +249,7 @@ describe('AuditLogger', () => {
         description: 'Failed login attempt',
       });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[SECURITY]')
-      );
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('[SECURITY]'));
     });
 
     it('should handle missing securityEvent model gracefully', async () => {
@@ -312,29 +308,47 @@ describe('AuditLogger', () => {
 
   describe('logBulkOperation', () => {
     it('should log bulk update operation', async () => {
-      await logger.logBulkOperation('BULK_UPDATE', 'lead', ['lead-1', 'lead-2', 'lead-3'], TEST_TENANT_ID, {
-        actorId: 'user-123',
-        successCount: 3,
-      });
+      await logger.logBulkOperation(
+        'BULK_UPDATE',
+        'lead',
+        ['lead-1', 'lead-2', 'lead-3'],
+        TEST_TENANT_ID,
+        {
+          actorId: 'user-123',
+          successCount: 3,
+        }
+      );
 
       expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
 
     it('should log bulk delete operation', async () => {
-      await logger.logBulkOperation('BULK_DELETE', 'contact', ['contact-1', 'contact-2'], TEST_TENANT_ID, {
-        actorId: 'user-123',
-        successCount: 2,
-      });
+      await logger.logBulkOperation(
+        'BULK_DELETE',
+        'contact',
+        ['contact-1', 'contact-2'],
+        TEST_TENANT_ID,
+        {
+          actorId: 'user-123',
+          successCount: 2,
+        }
+      );
 
       expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
 
     it('should log partial success when there are failures', async () => {
-      await logger.logBulkOperation('IMPORT', 'lead', ['lead-1', 'lead-2', 'lead-3', 'lead-4'], TEST_TENANT_ID, {
-        actorId: 'user-123',
-        successCount: 3,
-        failureCount: 1,
-      });
+      await logger.logBulkOperation(
+        'IMPORT',
+        'lead',
+        ['lead-1', 'lead-2', 'lead-3', 'lead-4'],
+        TEST_TENANT_ID,
+        {
+          actorId: 'user-123',
+          successCount: 3,
+          failureCount: 1,
+        }
+      );
 
       expect(mockPrisma.auditLogEntry.create).toHaveBeenCalled();
     });
@@ -545,9 +559,7 @@ describe('AuditLogger', () => {
         description: 'Critical event',
       });
 
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        expect.stringContaining('!!!')
-      );
+      expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('!!!'));
     });
   });
 
@@ -657,9 +669,7 @@ describe('getResourceAuditTrail', () => {
         findUnique: vi.fn().mockResolvedValue({ id: TEST_TENANT_ID }),
       },
       auditLogEntry: {
-        findMany: vi.fn().mockResolvedValue([
-          { id: 'entry-1', resourceId: 'lead-123' },
-        ]),
+        findMany: vi.fn().mockResolvedValue([{ id: 'entry-1', resourceId: 'lead-123' }]),
         count: vi.fn().mockResolvedValue(1),
       },
     } as unknown as PrismaClient;
@@ -771,9 +781,7 @@ describe('getPermissionAuditTrail', () => {
         findUnique: vi.fn().mockResolvedValue({ id: TEST_TENANT_ID }),
       },
       auditLogEntry: {
-        findMany: vi.fn().mockResolvedValue([
-          { id: 'entry-1', permissionGranted: false },
-        ]),
+        findMany: vi.fn().mockResolvedValue([{ id: 'entry-1', permissionGranted: false }]),
         count: vi.fn().mockResolvedValue(1),
       },
     } as unknown as PrismaClient;
@@ -966,9 +974,7 @@ describe('getSeverityEmoji - all levels', () => {
       description: 'Critical event',
     });
 
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('!!!')
-    );
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('!!!'));
   });
 
   it('should return !! for HIGH severity', async () => {
@@ -979,9 +985,7 @@ describe('getSeverityEmoji - all levels', () => {
       description: 'High event',
     });
 
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('!!')
-    );
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('!!'));
   });
 
   it('should return ! for MEDIUM severity', async () => {
@@ -992,9 +996,7 @@ describe('getSeverityEmoji - all levels', () => {
       description: 'Medium event',
     });
 
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('!')
-    );
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('!'));
   });
 
   it('should return - for LOW severity', async () => {
@@ -1005,9 +1007,7 @@ describe('getSeverityEmoji - all levels', () => {
       description: 'Low event',
     });
 
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('-')
-    );
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('-'));
   });
 
   it('should return * for INFO severity', async () => {
@@ -1018,9 +1018,7 @@ describe('getSeverityEmoji - all levels', () => {
       description: 'Info event',
     });
 
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringContaining('*')
-    );
+    expect(consoleLogSpy).toHaveBeenCalledWith(expect.stringContaining('*'));
   });
 });
 

@@ -136,16 +136,19 @@ function loadSchedule(schedulePath: string): RotationSchedule {
 function getSecretMetadata(secretName: string, policy: RotationPolicy): SecretMetadata {
   // In production, this would read from Vault or a secrets manager
   const lastRotated = new Date();
-  lastRotated.setDate(lastRotated.getDate() - Math.floor(Math.random() * policy.rotation_interval_days));
+  lastRotated.setDate(
+    lastRotated.getDate() - Math.floor(Math.random() * policy.rotation_interval_days)
+  );
 
   const nextRotation = new Date(lastRotated);
   nextRotation.setDate(nextRotation.getDate() + policy.rotation_interval_days);
 
   return {
     name: secretName,
-    type: Object.keys({} as Record<string, RotationPolicy>).find(
-      (key) => policy.secrets.includes(secretName)
-    ) || 'unknown',
+    type:
+      Object.keys({} as Record<string, RotationPolicy>).find((key) =>
+        policy.secrets.includes(secretName)
+      ) || 'unknown',
     last_rotated: lastRotated.toISOString(),
     next_rotation: nextRotation.toISOString(),
     version: Math.floor(Math.random() * 10) + 1,
@@ -173,7 +176,9 @@ async function checkRotation(args: Record<string, string | boolean>): Promise<vo
     for (const secretName of policy.secrets) {
       const metadata = getSecretMetadata(secretName, policy);
       const nextRotation = new Date(metadata.next_rotation);
-      const daysUntilRotation = Math.ceil((nextRotation.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      const daysUntilRotation = Math.ceil(
+        (nextRotation.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
       if (daysUntilRotation <= 0) {
         secretsDue.push(metadata);
@@ -222,9 +227,10 @@ async function rotateSecrets(args: Record<string, string | boolean>): Promise<vo
     timestamp: new Date().toISOString(),
   };
 
-  const policiesToProcess = secretType === 'all'
-    ? Object.entries(schedule.policies)
-    : Object.entries(schedule.policies).filter(([name]) => name === secretType);
+  const policiesToProcess =
+    secretType === 'all'
+      ? Object.entries(schedule.policies)
+      : Object.entries(schedule.policies).filter(([name]) => name === secretType);
 
   for (const [policyName, policy] of policiesToProcess) {
     console.log(`\nProcessing policy: ${policyName}`);
@@ -247,10 +253,7 @@ async function rotateSecrets(args: Record<string, string | boolean>): Promise<vo
           name: secretName,
           old_version: oldVersion,
           new_version: newVersion,
-          encrypted_value: crypto
-            .createHash('sha256')
-            .update(newValue)
-            .digest('hex'),
+          encrypted_value: crypto.createHash('sha256').update(newValue).digest('hex'),
         });
 
         console.log(`    Rotated: v${oldVersion} -> v${newVersion}`);
@@ -372,14 +375,7 @@ async function reEncrypt(args: Record<string, string | boolean>): Promise<void> 
   console.log(`\n=== Re-encryption with Key Version ${keyVersion} ===`);
 
   // Simulate re-encryption process
-  const tables = [
-    'leads',
-    'contacts',
-    'accounts',
-    'opportunities',
-    'tasks',
-    'audit_logs',
-  ];
+  const tables = ['leads', 'contacts', 'accounts', 'opportunities', 'tasks', 'audit_logs'];
 
   console.log('\nRe-encrypting sensitive fields in database tables...\n');
 

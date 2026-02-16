@@ -88,7 +88,10 @@ function computeInitials(name: string): string {
 /**
  * Simulates click-outside logic
  */
-function isClickOutside(menuRef: { contains: (target: unknown) => boolean }, target: unknown): boolean {
+function isClickOutside(
+  menuRef: { contains: (target: unknown) => boolean },
+  target: unknown
+): boolean {
   return !menuRef.contains(target);
 }
 

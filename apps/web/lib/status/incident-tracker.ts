@@ -7,11 +7,7 @@
  * @module status/incident-tracker
  */
 
-export type ServiceStatus =
-  | 'operational'
-  | 'degraded'
-  | 'partial_outage'
-  | 'major_outage';
+export type ServiceStatus = 'operational' | 'degraded' | 'partial_outage' | 'major_outage';
 
 export type IncidentSeverity = 'maintenance' | 'minor' | 'major' | 'critical';
 
@@ -251,9 +247,7 @@ export function getAllIncidents(): Incident[] {
  * Get active incidents (not resolved)
  */
 export function getActiveIncidents(): Incident[] {
-  return getAllIncidents().filter(
-    (i) => i.status !== 'resolved' && i.status !== 'completed'
-  );
+  return getAllIncidents().filter((i) => i.status !== 'resolved' && i.status !== 'completed');
 }
 
 /**
@@ -269,10 +263,7 @@ export function getRecentIncidents(days = 30): Incident[] {
 /**
  * Subscribe to status updates
  */
-export function subscribe(
-  email: string,
-  services?: string[]
-): StatusSubscriber {
+export function subscribe(email: string, services?: string[]): StatusSubscriber {
   const id = `sub-${Date.now()}`;
   const subscriber: StatusSubscriber = {
     id,
@@ -304,10 +295,7 @@ export function getSubscribersForService(serviceId: string): StatusSubscriber[] 
 /**
  * Calculate uptime percentage for a service over the last N days
  */
-export function calculateUptime(
-  _serviceId: string,
-  _days = 90
-): number {
+export function calculateUptime(_serviceId: string, _days = 90): number {
   // In production, this would query historical data
   // For now, return a simulated value
   return 99.9 + Math.random() * 0.09;

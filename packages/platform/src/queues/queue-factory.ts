@@ -8,7 +8,12 @@
 import { Queue, Worker, QueueEvents, Job, ConnectionOptions } from 'bullmq';
 import { getBullMQConnectionOptions } from './connection';
 import { QueueConfig, JobMetrics, JobEvent, QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } from './types';
-import { calculateBackoffDelay, createBackoffStrategy, globalRetryBudget, BACKOFF_PRESETS } from './retry-strategy';
+import {
+  calculateBackoffDelay,
+  createBackoffStrategy,
+  globalRetryBudget,
+  BACKOFF_PRESETS,
+} from './retry-strategy';
 import { JobMetricsCollector } from './metrics-collector';
 
 // ============================================================================
@@ -224,7 +229,9 @@ export async function enqueueAIScoring(
 ): Promise<Job> {
   // Check global retry budget before enqueuing
   if (!globalRetryBudget.canRetry(QUEUE_NAMES.AI_SCORING)) {
-    throw new Error('Retry budget exhausted for AI scoring queue — too many retries in the current window');
+    throw new Error(
+      'Retry budget exhausted for AI scoring queue — too many retries in the current window'
+    );
   }
 
   const queue = createAIScoringQueue();
@@ -299,15 +306,3 @@ export async function resumeQueue(queueName: string): Promise<void> {
 export async function shutdownAllQueues(): Promise<void> {
   await queueRegistry.shutdown();
 }
-
-
-
-
-
-
-
-
-
-
-
-

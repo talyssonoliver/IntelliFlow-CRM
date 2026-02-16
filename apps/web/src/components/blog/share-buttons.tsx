@@ -19,9 +19,7 @@ export function ShareButtons({ title, slug }: ShareButtonsProps) {
 
   return (
     <div className="mt-8 flex items-center gap-4">
-      <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-        Share:
-      </span>
+      <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Share:</span>
       <div className="flex gap-2">
         <a
           href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(title)}&url=${encodeURIComponent(postUrl)}`}

@@ -38,10 +38,7 @@ export interface NotificationPreferenceRepository {
   /**
    * Find users with specific channel enabled
    */
-  findUsersWithChannelEnabled(
-    tenantId: string,
-    channel: string
-  ): Promise<string[]>;
+  findUsersWithChannelEnabled(tenantId: string, channel: string): Promise<string[]>;
 
   /**
    * Bulk update preferences for multiple users

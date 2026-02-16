@@ -47,7 +47,7 @@ describe('Home Router', () => {
       // Mock parallel stats queries with progressive fallback periods
       prismaMock.task.count.mockResolvedValue(3); // high priority tasks and overdue
       prismaMock.lead.count
-        .mockResolvedValueOnce(5)  // new leads since yesterday
+        .mockResolvedValueOnce(5) // new leads since yesterday
         .mockResolvedValueOnce(10) // new leads this week
         .mockResolvedValueOnce(20) // new leads this month
         .mockResolvedValueOnce(50); // total leads
@@ -124,8 +124,8 @@ describe('Home Router', () => {
       prismaMock.user.findUnique.mockResolvedValue(mockUser as any);
       prismaMock.task.count.mockResolvedValue(0);
       prismaMock.lead.count
-        .mockResolvedValueOnce(0)  // no leads since yesterday
-        .mockResolvedValueOnce(7)  // 7 leads this week
+        .mockResolvedValueOnce(0) // no leads since yesterday
+        .mockResolvedValueOnce(7) // 7 leads this week
         .mockResolvedValueOnce(15) // 15 leads this month
         .mockResolvedValueOnce(50); // 50 total leads
       prismaMock.appointment.count.mockResolvedValue(0);
@@ -141,8 +141,8 @@ describe('Home Router', () => {
       prismaMock.user.findUnique.mockResolvedValue(mockUser as any);
       prismaMock.task.count.mockResolvedValue(0);
       prismaMock.lead.count
-        .mockResolvedValueOnce(0)  // no leads since yesterday
-        .mockResolvedValueOnce(0)  // no leads this week
+        .mockResolvedValueOnce(0) // no leads since yesterday
+        .mockResolvedValueOnce(0) // no leads this week
         .mockResolvedValueOnce(12) // 12 leads this month
         .mockResolvedValueOnce(50); // 50 total leads
       prismaMock.appointment.count.mockResolvedValue(0);
@@ -158,9 +158,9 @@ describe('Home Router', () => {
       prismaMock.user.findUnique.mockResolvedValue(mockUser as any);
       prismaMock.task.count.mockResolvedValue(0);
       prismaMock.lead.count
-        .mockResolvedValueOnce(0)  // no leads since yesterday
-        .mockResolvedValueOnce(0)  // no leads this week
-        .mockResolvedValueOnce(0)  // no leads this month
+        .mockResolvedValueOnce(0) // no leads since yesterday
+        .mockResolvedValueOnce(0) // no leads this week
+        .mockResolvedValueOnce(0) // no leads this month
         .mockResolvedValueOnce(25); // 25 total leads
       prismaMock.appointment.count.mockResolvedValue(0);
       prismaMock.opportunity.count.mockResolvedValue(0);
@@ -177,8 +177,8 @@ describe('Home Router', () => {
       prismaMock.lead.count.mockResolvedValue(0);
       prismaMock.appointment.count.mockResolvedValue(0);
       prismaMock.opportunity.count
-        .mockResolvedValueOnce(0)  // no deals this week
-        .mockResolvedValueOnce(0)  // no deals last week
+        .mockResolvedValueOnce(0) // no deals this week
+        .mockResolvedValueOnce(0) // no deals last week
         .mockResolvedValueOnce(10) // 10 deals this month
         .mockResolvedValueOnce(5); // 5 deals last month
 
@@ -328,344 +328,10 @@ describe('Home Router', () => {
   });
 
   // =============================================================================
-  // getActivityFeed
-  // =============================================================================
-  describe('getActivityFeed', () => {
-    it('should return activity feed from audit logs', async () => {
-      const mockAuditLog = {
-        id: 'audit-1',
-        eventType: 'LEAD_CREATED',
-        resourceType: 'Lead',
-        resourceId: TEST_UUIDS.lead1,
-        timestamp: new Date(),
-        actorType: 'USER',
-        user: {
-          id: TEST_UUIDS.user1,
-          name: 'John Doe',
-          avatarUrl: null,
-        },
-      };
-
-      prismaMock.auditLogEntry.findMany.mockResolvedValue([mockAuditLog] as any);
-
-      const result = await caller.getActivityFeed({ limit: 10 });
-
-      expect(result.items).toHaveLength(1);
-      expect(result.items[0].type).toBe('lead');
-      expect(result.items[0].title).toBe('LEAD_CREATED');
-      expect(result.items[0].actor?.name).toBe('John Doe');
-      expect(result.hasMore).toBe(false);
-    });
-
-    it('should identify different activity types from eventType', async () => {
-      const logs = [
-        { id: '1', eventType: 'EMAIL_SENT', resourceType: 'Email', resourceId: '1', timestamp: new Date(), actorType: 'USER', user: null },
-        { id: '2', eventType: 'CALL_LOGGED', resourceType: 'Call', resourceId: '2', timestamp: new Date(), actorType: 'USER', user: null },
-        { id: '3', eventType: 'TASK_COMPLETED', resourceType: 'Task', resourceId: '3', timestamp: new Date(), actorType: 'USER', user: null },
-        { id: '4', eventType: 'DEAL_CLOSED', resourceType: 'Deal', resourceId: '4', timestamp: new Date(), actorType: 'USER', user: null },
-        { id: '5', eventType: 'AI_SCORE_GENERATED', resourceType: 'Lead', resourceId: '5', timestamp: new Date(), actorType: 'AI_AGENT', user: null },
-      ];
-
-      prismaMock.auditLogEntry.findMany.mockResolvedValue(logs as any);
-
-      const result = await caller.getActivityFeed({ limit: 10 });
-
-      expect(result.items[0].type).toBe('email');
-      expect(result.items[1].type).toBe('call');
-      expect(result.items[2].type).toBe('task');
-      expect(result.items[3].type).toBe('deal');
-      expect(result.items[4].type).toBe('ai');
-    });
-
-    it('should support cursor-based pagination', async () => {
-      const logs = Array.from({ length: 6 }, (_, i) => ({
-        id: `audit-${i}`,
-        eventType: 'SYSTEM_EVENT',
-        resourceType: 'System',
-        resourceId: `${i}`,
-        timestamp: new Date(),
-        actorType: 'SYSTEM',
-        user: null,
-      }));
-
-      prismaMock.auditLogEntry.findMany.mockResolvedValue(logs as any);
-
-      const result = await caller.getActivityFeed({ limit: 5 });
-
-      expect(result.items).toHaveLength(5);
-      expect(result.hasMore).toBe(true);
-      expect(result.nextCursor).toBe('audit-4');
-    });
-
-    it('should filter by cursor when provided', async () => {
-      prismaMock.auditLogEntry.findMany.mockResolvedValue([]);
-
-      await caller.getActivityFeed({ limit: 5, cursor: 'previous-cursor' });
-
-      expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            id: { lt: 'previous-cursor' },
-          }),
-        })
-      );
-    });
-
-    it('should return relative time for timestamps', async () => {
-      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-
-      prismaMock.auditLogEntry.findMany.mockResolvedValue([
-        {
-          id: 'audit-1',
-          eventType: 'SYSTEM_EVENT',
-          resourceType: 'System',
-          resourceId: '1',
-          timestamp: fiveMinutesAgo,
-          actorType: 'SYSTEM',
-          user: null,
-        },
-      ] as any);
-
-      const result = await caller.getActivityFeed({ limit: 5 });
-
-      expect(result.items[0].relativeTime).toBe('5m ago');
-    });
-
-    it('should generate initials from user name', async () => {
-      prismaMock.auditLogEntry.findMany.mockResolvedValue([
-        {
-          id: 'audit-1',
-          eventType: 'SYSTEM_EVENT',
-          resourceType: 'System',
-          resourceId: '1',
-          timestamp: new Date(),
-          actorType: 'USER',
-          user: { id: '1', name: 'John Doe', avatarUrl: null },
-        },
-      ] as any);
-
-      const result = await caller.getActivityFeed({ limit: 5 });
-
-      expect(result.items[0].actor?.initials).toBe('JD');
-    });
-
-    // =========================================================================
-    // types filter tests (bug fix — Spec §5.1)
-    // =========================================================================
-    describe('types filter', () => {
-      it('should filter activity feed by single type', async () => {
-        const logs = [
-          { id: '1', eventType: 'LEAD_CREATED', resourceType: 'Lead', resourceId: '1', timestamp: new Date(), actorType: 'USER', user: null },
-          { id: '2', eventType: 'TASK_COMPLETED', resourceType: 'Task', resourceId: '2', timestamp: new Date(), actorType: 'USER', user: null },
-          { id: '3', eventType: 'EMAIL_SENT', resourceType: 'Email', resourceId: '3', timestamp: new Date(), actorType: 'USER', user: null },
-        ];
-
-        prismaMock.auditLogEntry.findMany.mockResolvedValue(logs as any);
-
-        await caller.getActivityFeed({ limit: 10, types: ['lead'] });
-
-        // Verify Prisma was called with types filter in where clause
-        expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
-          expect.objectContaining({
-            where: expect.objectContaining({
-              AND: expect.arrayContaining([
-                expect.objectContaining({
-                  OR: expect.arrayContaining([
-                    expect.objectContaining({
-                      eventType: { contains: 'lead', mode: 'insensitive' },
-                    }),
-                  ]),
-                }),
-              ]),
-            }),
-          })
-        );
-      });
-
-      it('should filter activity feed by multiple types', async () => {
-        prismaMock.auditLogEntry.findMany.mockResolvedValue([] as any);
-
-        await caller.getActivityFeed({ limit: 10, types: ['lead', 'task'] });
-
-        expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
-          expect.objectContaining({
-            where: expect.objectContaining({
-              AND: expect.arrayContaining([
-                expect.objectContaining({
-                  OR: expect.arrayContaining([
-                    { eventType: { contains: 'lead', mode: 'insensitive' } },
-                    { eventType: { contains: 'task', mode: 'insensitive' } },
-                  ]),
-                }),
-              ]),
-            }),
-          })
-        );
-      });
-
-      it('should include deal and opportunity patterns for deal type', async () => {
-        prismaMock.auditLogEntry.findMany.mockResolvedValue([] as any);
-
-        await caller.getActivityFeed({ limit: 10, types: ['deal'] });
-
-        expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
-          expect.objectContaining({
-            where: expect.objectContaining({
-              AND: expect.arrayContaining([
-                expect.objectContaining({
-                  OR: expect.arrayContaining([
-                    { eventType: { contains: 'deal', mode: 'insensitive' } },
-                    { eventType: { contains: 'opportunity', mode: 'insensitive' } },
-                  ]),
-                }),
-              ]),
-            }),
-          })
-        );
-      });
-
-      it('should include actorType filter for ai type', async () => {
-        prismaMock.auditLogEntry.findMany.mockResolvedValue([] as any);
-
-        await caller.getActivityFeed({ limit: 10, types: ['ai'] });
-
-        expect(prismaMock.auditLogEntry.findMany).toHaveBeenCalledWith(
-          expect.objectContaining({
-            where: expect.objectContaining({
-              AND: expect.arrayContaining([
-                expect.objectContaining({
-                  OR: expect.arrayContaining([
-                    { actorType: 'AI_AGENT' },
-                  ]),
-                }),
-              ]),
-            }),
-          })
-        );
-      });
-
-      it('should return all items when types is empty array', async () => {
-        prismaMock.auditLogEntry.findMany.mockResolvedValue([] as any);
-
-        await caller.getActivityFeed({ limit: 10, types: [] });
-
-        // With empty types array, no AND filter should be applied
-        const callArgs = prismaMock.auditLogEntry.findMany.mock.calls[0][0] as any;
-        expect(callArgs.where.AND).toBeUndefined();
-      });
-
-      it('should return all items when types is undefined', async () => {
-        prismaMock.auditLogEntry.findMany.mockResolvedValue([] as any);
-
-        await caller.getActivityFeed({ limit: 10 });
-
-        // Without types, no AND filter should be applied
-        const callArgs = prismaMock.auditLogEntry.findMany.mock.calls[0][0] as any;
-        expect(callArgs.where.AND).toBeUndefined();
-      });
-    });
-
-    it('should use actorEmail as fallback for actor name', async () => {
-      prismaMock.auditLogEntry.findMany.mockResolvedValue([
-        {
-          id: 'audit-email-fallback',
-          eventType: 'LEAD_CREATED',
-          resourceType: 'Lead',
-          resourceId: '1',
-          timestamp: new Date(),
-          actorType: 'USER',
-          actorId: 'user-123',
-          actorEmail: 'jane@example.com',
-          user: null, // no user relation loaded
-        },
-      ] as any);
-
-      const result = await caller.getActivityFeed({ limit: 5 });
-
-      expect(result.items[0].actor?.name).toBe('jane@example.com');
-      expect(result.items[0].actor?.initials).toBe('JA'); // from jane@example.com
-    });
-
-    it('should return null actionUrl when resourceId is null', async () => {
-      prismaMock.auditLogEntry.findMany.mockResolvedValue([
-        {
-          id: 'audit-no-resource',
-          eventType: 'SYSTEM_STARTUP',
-          resourceType: 'System',
-          resourceId: null,
-          timestamp: new Date(),
-          actorType: 'SYSTEM',
-          actorId: null,
-          user: null,
-        },
-      ] as any);
-
-      const result = await caller.getActivityFeed({ limit: 5 });
-
-      expect(result.items[0].actionUrl).toBeNull();
-    });
-
-    it('should detect mention type from eventType', async () => {
-      prismaMock.auditLogEntry.findMany.mockResolvedValue([
-        {
-          id: 'audit-mention',
-          eventType: 'USER_MENTIONED',
-          resourceType: 'Comment',
-          resourceId: '1',
-          timestamp: new Date(),
-          actorType: 'USER',
-          user: null,
-        },
-      ] as any);
-
-      const result = await caller.getActivityFeed({ limit: 5 });
-
-      expect(result.items[0].type).toBe('mention');
-    });
-
-    it('should detect ai type from actorType AI_AGENT even without ai in eventType', async () => {
-      prismaMock.auditLogEntry.findMany.mockResolvedValue([
-        {
-          id: 'audit-ai-agent',
-          eventType: 'SCORE_GENERATED',
-          resourceType: 'Lead',
-          resourceId: '1',
-          timestamp: new Date(),
-          actorType: 'AI_AGENT',
-          user: null,
-        },
-      ] as any);
-
-      const result = await caller.getActivityFeed({ limit: 5 });
-
-      expect(result.items[0].type).toBe('ai');
-    });
-
-    it('should handle audit log with null actorId and no user relation', async () => {
-      prismaMock.auditLogEntry.findMany.mockResolvedValue([
-        {
-          id: 'audit-null-actor',
-          eventType: 'SYSTEM_CLEANUP',
-          resourceType: 'System',
-          resourceId: '1',
-          timestamp: new Date(),
-          actorType: 'SYSTEM',
-          actorId: null,
-          actorEmail: null,
-          user: null,
-        },
-      ] as any);
-
-      const result = await caller.getActivityFeed({ limit: 5 });
-
-      expect(result.items).toHaveLength(1);
-      expect(result.items[0].actor).toBeNull();
-    });
-  });
-
-  // =============================================================================
   // getDailyGoal
   // =============================================================================
+  // NOTE: getActivityFeed tests removed — endpoint was moved to activityFeed.getUnifiedFeed (IFC-069)
+
   describe('getDailyGoal', () => {
     it('should calculate revenue goal progress', async () => {
       prismaMock.opportunity.aggregate.mockResolvedValue({
@@ -927,9 +593,7 @@ describe('Home Router', () => {
     it('should filter out items not in existing pins', async () => {
       prismaMock.user.findUnique.mockResolvedValue({
         preferences: {
-          pinnedItems: [
-            { entityType: 'lead', entityId: '1', title: 'Only Pin' },
-          ],
+          pinnedItems: [{ entityType: 'lead', entityId: '1', title: 'Only Pin' }],
         },
       } as any);
       prismaMock.user.update.mockResolvedValue({} as any);
@@ -1057,94 +721,15 @@ describe('Home Router', () => {
         const result = await caller.getWelcomeSummary();
 
         // Greeting should be one of the three options
-        expect(['Good morning', 'Good afternoon', 'Good evening']).toContain(
-          result.greeting
-        );
+        expect(['Good morning', 'Good afternoon', 'Good evening']).toContain(result.greeting);
       });
     });
 
-    describe('getRelativeTime', () => {
-      it('should format timestamps correctly', async () => {
-        const now = new Date();
-        const timestamps = [
-          { date: new Date(now.getTime() - 30 * 1000), expected: 'Just now' },
-          { date: new Date(now.getTime() - 5 * 60 * 1000), expected: '5m ago' },
-          { date: new Date(now.getTime() - 60 * 1000), expected: '1m ago' }, // boundary: exactly 60s
-          { date: new Date(now.getTime() - 2 * 60 * 60 * 1000), expected: '2h ago' },
-          { date: new Date(now.getTime() - 60 * 60 * 1000), expected: '1h ago' }, // boundary: exactly 60min
-          { date: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000), expected: '3d ago' },
-        ];
-
-        for (const { date, expected } of timestamps) {
-          prismaMock.auditLogEntry.findMany.mockResolvedValue([
-            {
-              id: 'test',
-              eventType: 'TEST',
-              resourceType: 'Test',
-              resourceId: '1',
-              timestamp: date,
-              actorType: 'SYSTEM',
-              user: null,
-            },
-          ] as any);
-
-          const result = await caller.getActivityFeed({ limit: 1 });
-          expect(result.items[0].relativeTime).toBe(expected);
-        }
-      });
-
-      it('should return locale date string after 7+ days', async () => {
-        const tenDaysAgo = new Date(Date.now() - 10 * 24 * 60 * 60 * 1000);
-
-        prismaMock.auditLogEntry.findMany.mockResolvedValue([
-          {
-            id: 'test-old',
-            eventType: 'TEST',
-            resourceType: 'Test',
-            resourceId: '1',
-            timestamp: tenDaysAgo,
-            actorType: 'SYSTEM',
-            user: null,
-          },
-        ] as any);
-
-        const result = await caller.getActivityFeed({ limit: 1 });
-
-        // Should be a locale date string, not relative time
-        expect(result.items[0].relativeTime).toBe(tenDaysAgo.toLocaleDateString());
-      });
-    });
-
-    describe('getInitials', () => {
-      it('should generate initials from various name formats', async () => {
-        const testCases = [
-          { name: 'John Doe', expected: 'JD' },
-          { name: 'Alice', expected: 'AL' },
-          { name: 'Bob Smith Jr', expected: 'BJ' },
-          { name: null, expected: '??' },
-          { name: '', expected: '??' },
-          { name: 'Mary-Jane Watson', expected: 'MW' },
-          { name: 'X', expected: 'X' },
-        ];
-
-        for (const { name, expected } of testCases) {
-          prismaMock.auditLogEntry.findMany.mockResolvedValue([
-            {
-              id: 'test',
-              eventType: 'TEST',
-              resourceType: 'Test',
-              resourceId: '1',
-              timestamp: new Date(),
-              actorType: 'USER',
-              user: { id: '1', name, avatarUrl: null },
-            },
-          ] as any);
-
-          const result = await caller.getActivityFeed({ limit: 1 });
-          expect(result.items[0].actor?.initials).toBe(expected);
-        }
-      });
-    });
+    // Note: getRelativeTime and getInitials helpers were removed from the home
+    // router when getActivityFeed moved to IFC-069's activity-feed router.
+    // The presentation logic now lives in the frontend component
+    // (apps/web/src/components/shared/activity-feed/ActivityFeedItem.tsx)
+    // and is tested there.
   });
 
   // =============================================================================
@@ -1157,16 +742,22 @@ describe('Home Router', () => {
       await expect(caller.getWelcomeSummary()).rejects.toThrow();
     });
 
-    it('should validate input schemas', async () => {
-      // Invalid limit
-      await expect(
-        caller.getActivityFeed({ limit: 100 }) // max is 50
-      ).rejects.toThrow();
+    it('should handle errors on AI insights endpoint', async () => {
+      prismaMock.lead.findMany.mockRejectedValue(new Error('Database connection failed'));
 
-      // Invalid cursor type
-      await expect(
-        caller.getActivityFeed({ limit: 5, cursor: 123 as any })
-      ).rejects.toThrow();
+      await expect(caller.getAIInsights()).rejects.toThrow();
+    });
+
+    it('should handle errors on daily goal endpoint', async () => {
+      prismaMock.task.count.mockRejectedValue(new Error('Database connection failed'));
+
+      await expect(caller.getDailyGoal()).rejects.toThrow();
+    });
+
+    it('should handle errors on pinned items endpoint', async () => {
+      prismaMock.user.findUnique.mockRejectedValue(new Error('Database connection failed'));
+
+      await expect(caller.getPinnedItems()).rejects.toThrow();
     });
   });
 });

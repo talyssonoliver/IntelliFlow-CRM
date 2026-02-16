@@ -38,7 +38,10 @@ const REPO_ROOT = join(dirname(scriptPath), '..', '..');
 const OLD_CONTEXT_DIR = join(REPO_ROOT, 'artifacts', 'context');
 const OLD_ATTESTATIONS_DIR = join(REPO_ROOT, 'artifacts', 'attestations');
 // Sprint plan for looking up task sprint numbers
-const SPRINT_PLAN_PATH = join(REPO_ROOT, 'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv');
+const SPRINT_PLAN_PATH = join(
+  REPO_ROOT,
+  'apps/project-tracker/docs/metrics/_global/Sprint_plan.csv'
+);
 const SCHEMA_VERSION = '1.0.0';
 
 /**
@@ -274,7 +277,9 @@ function migrateAttestations(): void {
         writeFileSync(newPath, JSON.stringify(newData, null, 2), 'utf-8');
       }
       const sprintNum = taskSprintMap?.get(taskId) ?? 0;
-      log(`  Migrated ${taskId}: context_ack.json → .specify/sprints/sprint-${sprintNum}/attestations/${taskId}/attestation.json`);
+      log(
+        `  Migrated ${taskId}: context_ack.json → .specify/sprints/sprint-${sprintNum}/attestations/${taskId}/attestation.json`
+      );
       migratedCount++;
     } catch (error) {
       log(`  Error migrating ${taskId}: ${error}`);
@@ -285,7 +290,9 @@ function migrateAttestations(): void {
 }
 
 function moveContextPacks(): void {
-  log('\nMoving context packs from artifacts/context/ to .specify/sprints/sprint-{N}/attestations/{taskId}/...');
+  log(
+    '\nMoving context packs from artifacts/context/ to .specify/sprints/sprint-{N}/attestations/{taskId}/...'
+  );
   let movedCount = 0;
   let skippedCount = 0;
 

@@ -122,7 +122,14 @@ describe('DSARWorkflow', () => {
     });
 
     it('should validate all request types', () => {
-      const types = ['access', 'erasure', 'rectification', 'portability', 'restriction', 'objection'];
+      const types = [
+        'access',
+        'erasure',
+        'rectification',
+        'portability',
+        'restriction',
+        'objection',
+      ];
       for (const type of types) {
         const result = dsarRequestSchema.safeParse({
           requestType: type,
@@ -364,9 +371,9 @@ describe('DSARWorkflow', () => {
     it('should throw when DSAR request not found', async () => {
       mockDb.data_subject_requests.findUnique.mockResolvedValue(null);
 
-      await expect(
-        workflow.verifyIdentity('non-existent', 'token')
-      ).rejects.toThrow('DSAR request not found');
+      await expect(workflow.verifyIdentity('non-existent', 'token')).rejects.toThrow(
+        'DSAR request not found'
+      );
     });
 
     it('should throw when request already processed', async () => {
@@ -375,9 +382,9 @@ describe('DSARWorkflow', () => {
         status: 'completed', // not pending
       });
 
-      await expect(
-        workflow.verifyIdentity('dsar-001', 'token')
-      ).rejects.toThrow('DSAR request already processed');
+      await expect(workflow.verifyIdentity('dsar-001', 'token')).rejects.toThrow(
+        'DSAR request already processed'
+      );
     });
 
     it('should return false for invalid token', async () => {
@@ -699,7 +706,14 @@ describe('DSARWorkflow', () => {
     });
 
     it('should route to correct handler for each request type', async () => {
-      const types = ['access', 'erasure', 'rectification', 'portability', 'restriction', 'objection'];
+      const types = [
+        'access',
+        'erasure',
+        'rectification',
+        'portability',
+        'restriction',
+        'objection',
+      ];
 
       for (const type of types) {
         vi.clearAllMocks();
@@ -899,9 +913,7 @@ describe('DSARWorkflow', () => {
 
     it('should throw when subject is under legal hold', async () => {
       setupErasureRequest();
-      mockDb.legal_holds.findMany.mockResolvedValue([
-        { case_reference: 'CASE-001' },
-      ]);
+      mockDb.legal_holds.findMany.mockResolvedValue([{ case_reference: 'CASE-001' }]);
 
       await expect(workflow.processDSAR('dsar-erase')).rejects.toThrow(
         'Cannot erase data: subject is under legal hold in CASE-001'
@@ -1173,9 +1185,7 @@ describe('DSARWorkflow', () => {
     it('should throw when request not found', async () => {
       mockDb.data_subject_requests.findUnique.mockResolvedValue(null);
 
-      await expect(workflow.getStatus('non-existent')).rejects.toThrow(
-        'DSAR request not found'
-      );
+      await expect(workflow.getStatus('non-existent')).rejects.toThrow('DSAR request not found');
     });
 
     it('should handle null notes', async () => {

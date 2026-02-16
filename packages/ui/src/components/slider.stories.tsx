@@ -61,9 +61,7 @@ export const Steps: Story = {
 };
 
 export const Disabled: Story = {
-  render: () => (
-    <Slider defaultValue={[50]} max={100} step={1} disabled className="w-[60%]" />
-  ),
+  render: () => <Slider defaultValue={[50]} max={100} step={1} disabled className="w-[60%]" />,
 };
 
 export const CustomRange: Story = {

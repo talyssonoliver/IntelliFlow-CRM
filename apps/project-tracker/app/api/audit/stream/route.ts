@@ -8,7 +8,12 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 export const runtime = 'nodejs';
 
-type AuditStreamCommand = 'run-audit' | 'status-snapshot' | 'sprint0-audit' | 'affected' | 'sprint-completion';
+type AuditStreamCommand =
+  | 'run-audit'
+  | 'status-snapshot'
+  | 'sprint0-audit'
+  | 'affected'
+  | 'sprint-completion';
 
 function isAuditStreamCommand(value: string | null): value is AuditStreamCommand {
   return (

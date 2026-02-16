@@ -41,11 +41,7 @@ export const createExperimentSchema = z.object({
     .min(1)
     .max(99)
     .default(EXPERIMENT_DEFAULTS.DEFAULT_TRAFFIC_PERCENT),
-  minSampleSize: z
-    .number()
-    .int()
-    .min(EXPERIMENT_DEFAULTS.MIN_SAMPLE_SIZE)
-    .default(100),
+  minSampleSize: z.number().int().min(EXPERIMENT_DEFAULTS.MIN_SAMPLE_SIZE).default(100),
   significanceLevel: z
     .number()
     .min(0.001)

@@ -144,7 +144,9 @@ function validateCoverage(tranche: 'T2' | 'T3'): ValidationResult {
         '│'
     );
   } else {
-    console.log(`│ Domain        │ ${thresholds.domain}%`.padEnd(21) + '│ -        │ No data               │');
+    console.log(
+      `│ Domain        │ ${thresholds.domain}%`.padEnd(21) + '│ -        │ No data               │'
+    );
   }
 
   let appStatus = 'N/A';
@@ -158,7 +160,8 @@ function validateCoverage(tranche: 'T2' | 'T3'): ValidationResult {
     );
   } else {
     console.log(
-      `│ Application   │ ${thresholds.application}%`.padEnd(21) + '│ -        │ No data               │'
+      `│ Application   │ ${thresholds.application}%`.padEnd(21) +
+        '│ -        │ No data               │'
     );
   }
 
@@ -176,7 +179,10 @@ function validateCoverage(tranche: 'T2' | 'T3'): ValidationResult {
   } else {
     console.log(`│  ✗ FAIL: ${tranche} coverage threshold not met                    │`);
     if (!overallMet) {
-      console.log(`│  Gap: Need +${(thresholds.overall - overall).toFixed(2)}% overall coverage`.padEnd(62) + '│');
+      console.log(
+        `│  Gap: Need +${(thresholds.overall - overall).toFixed(2)}% overall coverage`.padEnd(62) +
+          '│'
+      );
     }
   }
 
@@ -218,7 +224,10 @@ if (!existsSync(artifactsDir)) {
   mkdirSync(artifactsDir, { recursive: true });
 }
 
-writeFileSync(join(artifactsDir, `coverage-validation-${tranche}.json`), JSON.stringify(result, null, 2));
+writeFileSync(
+  join(artifactsDir, `coverage-validation-${tranche}.json`),
+  JSON.stringify(result, null, 2)
+);
 
 console.log('');
 console.log(`Result saved to: artifacts/gate-2/coverage-validation-${tranche}.json`);

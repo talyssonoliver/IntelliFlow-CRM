@@ -120,14 +120,34 @@ describe('LineItem', () => {
 
   describe('LineItem.equals', () => {
     it('should be equal with same props', () => {
-      const a = LineItem.create({ description: 'Item', quantity: 1, unitPriceCents: 100, type: 'ONE_TIME' });
-      const b = LineItem.create({ description: 'Item', quantity: 1, unitPriceCents: 100, type: 'ONE_TIME' });
+      const a = LineItem.create({
+        description: 'Item',
+        quantity: 1,
+        unitPriceCents: 100,
+        type: 'ONE_TIME',
+      });
+      const b = LineItem.create({
+        description: 'Item',
+        quantity: 1,
+        unitPriceCents: 100,
+        type: 'ONE_TIME',
+      });
       expect(a.value.equals(b.value)).toBe(true);
     });
 
     it('should not be equal with different props', () => {
-      const a = LineItem.create({ description: 'Item A', quantity: 1, unitPriceCents: 100, type: 'ONE_TIME' });
-      const b = LineItem.create({ description: 'Item B', quantity: 2, unitPriceCents: 200, type: 'USAGE' });
+      const a = LineItem.create({
+        description: 'Item A',
+        quantity: 1,
+        unitPriceCents: 100,
+        type: 'ONE_TIME',
+      });
+      const b = LineItem.create({
+        description: 'Item B',
+        quantity: 2,
+        unitPriceCents: 200,
+        type: 'USAGE',
+      });
       expect(a.value.equals(b.value)).toBe(false);
     });
   });

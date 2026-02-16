@@ -9,7 +9,8 @@ const docCategories: DocCategory[] = [
   {
     id: 'getting-started',
     title: 'Getting Started',
-    description: 'Quick start guides, installation instructions, and first steps with IntelliFlow CRM',
+    description:
+      'Quick start guides, installation instructions, and first steps with IntelliFlow CRM',
     href: 'https://intelliflow-crm.dev/docs/guides/getting-started',
     icon: 'rocket_launch',
     color: 'bg-blue-500',
@@ -28,7 +29,8 @@ const docCategories: DocCategory[] = [
   {
     id: 'architecture',
     title: 'Architecture',
-    description: 'Hexagonal architecture, DDD bounded contexts, and 25 Architecture Decision Records',
+    description:
+      'Hexagonal architecture, DDD bounded contexts, and 25 Architecture Decision Records',
     href: 'https://intelliflow-crm.dev/docs/architecture',
     icon: 'architecture',
     color: 'bg-indigo-500',
@@ -38,7 +40,8 @@ const docCategories: DocCategory[] = [
   {
     id: 'developer-guides',
     title: 'Developer Guides',
-    description: 'Step-by-step tutorials for building features, testing strategies, and best practices',
+    description:
+      'Step-by-step tutorials for building features, testing strategies, and best practices',
     href: 'https://intelliflow-crm.dev/docs/guides',
     icon: 'code',
     color: 'bg-emerald-500',
@@ -79,10 +82,7 @@ export default function DocsPage() {
         </div>
 
         <div className="mb-6">
-          <DocsSearch
-            categories={docCategories}
-            onFilter={setFilteredCategories}
-          />
+          <DocsSearch categories={docCategories} onFilter={setFilteredCategories} />
         </div>
 
         <DocsNavigation categories={filteredCategories} />

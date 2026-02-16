@@ -29,7 +29,7 @@ const FEED_CACHE_TTL_SECONDS = 30;
 export class ActivityFeedService {
   constructor(
     private readonly feedRepository: ActivityFeedRepositoryPort,
-    private readonly cache: CachePort,
+    private readonly cache: CachePort
   ) {}
 
   /**
@@ -46,14 +46,20 @@ export class ActivityFeedService {
       entityId?: string;
       after?: Date;
       before?: Date;
-    },
+    }
   ): Promise<ActivityFeedPage> {
     const cursor = cursorStr ? decodeCursor(cursorStr) : null;
 
     // Cache-aside: try cache first for first page with no filters
     const cacheKey = this.buildCacheKey(tenantId, cursor, filters);
-    const isFirstPageNoFilters = !cursor && !filters.types?.length && !filters.sources?.length
-      && !filters.entityType && !filters.entityId && !filters.after && !filters.before;
+    const isFirstPageNoFilters =
+      !cursor &&
+      !filters.types?.length &&
+      !filters.sources?.length &&
+      !filters.entityType &&
+      !filters.entityId &&
+      !filters.after &&
+      !filters.before;
 
     if (isFirstPageNoFilters) {
       const cached = await this.cache.get<ActivityFeedPage>(cacheKey);
@@ -65,7 +71,7 @@ export class ActivityFeedService {
       tenantId,
       limit + 1,
       cursor,
-      filters as ActivityFeedFilters,
+      filters as ActivityFeedFilters
     );
 
     // Deduplicate by id (items from different sources could overlap)
@@ -82,7 +88,10 @@ export class ActivityFeedService {
 
     const result: ActivityFeedPage = {
       items: pageItems,
-      nextCursor: hasMore && lastItem ? encodeCursor({ timestamp: lastItem.timestamp, id: lastItem.id }) : null,
+      nextCursor:
+        hasMore && lastItem
+          ? encodeCursor({ timestamp: lastItem.timestamp, id: lastItem.id })
+          : null,
       hasMore,
     };
 
@@ -103,7 +112,7 @@ export class ActivityFeedService {
     entityId: string,
     limit: number,
     cursorStr: string | null | undefined,
-    types?: ActivityFeedType[],
+    types?: ActivityFeedType[]
   ): Promise<ActivityFeedPage> {
     const cursor = cursorStr ? decodeCursor(cursorStr) : null;
 
@@ -112,13 +121,11 @@ export class ActivityFeedService {
       entityType,
       entityId,
       limit + 1,
-      cursor,
+      cursor
     );
 
     // Apply type filter if provided (entity feed may not filter at DB level)
-    const filtered = types?.length
-      ? items.filter((item) => types.includes(item.type))
-      : items;
+    const filtered = types?.length ? items.filter((item) => types.includes(item.type)) : items;
 
     const hasMore = filtered.length > limit;
     const pageItems = filtered.slice(0, limit);
@@ -126,7 +133,10 @@ export class ActivityFeedService {
 
     return {
       items: pageItems,
-      nextCursor: hasMore && lastItem ? encodeCursor({ timestamp: lastItem.timestamp, id: lastItem.id }) : null,
+      nextCursor:
+        hasMore && lastItem
+          ? encodeCursor({ timestamp: lastItem.timestamp, id: lastItem.id })
+          : null,
       hasMore,
     };
   }
@@ -134,7 +144,7 @@ export class ActivityFeedService {
   private buildCacheKey(
     tenantId: string,
     cursor: ActivityFeedCursor | null,
-    filters: ActivityFeedFilters,
+    filters: ActivityFeedFilters
   ): string {
     const parts = [`activity-feed:${tenantId}`];
     if (cursor) parts.push(`c:${cursor.id}`);

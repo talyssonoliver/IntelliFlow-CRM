@@ -48,10 +48,7 @@ export function getSessionFailureStatus(session: WorkflowSession): WorkflowStatu
 /**
  * Check if a task can proceed to a given session
  */
-export function canProceedToSession(
-  task: TaskRecord,
-  session: WorkflowSession
-): PrerequisiteCheck {
+export function canProceedToSession(task: TaskRecord, session: WorkflowSession): PrerequisiteCheck {
   const currentStatus = task.Status as WorkflowStatus;
   const artifacts = task['Artifacts To Track'] || '';
 
