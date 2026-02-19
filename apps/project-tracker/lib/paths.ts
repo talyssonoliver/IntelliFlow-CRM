@@ -163,21 +163,21 @@ export function getPhaseDir(sprint: number | string, phase: string): string {
 /**
  * Get phase summary file path
  */
-function getPhaseSummaryPath(sprint: number | string, phase: string): string {
+function _getPhaseSummaryPath(sprint: number | string, phase: string): string {
   return join(getPhaseDir(sprint, phase), '_phase-summary.json');
 }
 
 /**
  * Get task file path
  */
-function getTaskFilePath(sprint: number | string, phase: string, taskId: string): string {
+function _getTaskFilePath(sprint: number | string, phase: string, taskId: string): string {
   return join(getPhaseDir(sprint, phase), `${taskId}.json`);
 }
 
 /**
  * Get governance file paths
  */
-const GOVERNANCE_PATHS = {
+const _GOVERNANCE_PATHS = {
   get PLAN_OVERRIDES() {
     return join(PATHS.sprintTracking.global, 'plan-overrides.yaml');
   },

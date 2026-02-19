@@ -119,7 +119,6 @@ export async function GET() {
     const realSuccessRate = realBenchmarks.length > 0 ? 100 : null; // All real benchmarks passed
 
     // Extract k6 load test results if available
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const loadTestResults = (data as any).load_test_results as
       | {
           timestamp: string;

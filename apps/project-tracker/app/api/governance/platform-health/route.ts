@@ -189,7 +189,7 @@ function computeMaturity(
     }
   }
 
-  const currentLevel = currentIdx >= 0 ? levels[currentIdx] : levels[0];
+  const _currentLevel = currentIdx >= 0 ? levels[currentIdx] : levels[0];
   const nextLevelDef = currentIdx < levels.length - 1 ? levels[currentIdx + 1] : null;
 
   // Compute score (weighted across all levels)

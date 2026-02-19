@@ -373,7 +373,7 @@ function cleanupProcess(processKey: string): void {
 /**
  * Kill a running subprocess
  */
-function killSubprocess(runId: string, taskId: string): boolean {
+function _killSubprocess(runId: string, taskId: string): boolean {
   const processKey = `${runId}-${taskId}`;
   const active = activeProcesses.get(processKey);
 
@@ -396,7 +396,7 @@ function killSubprocess(runId: string, taskId: string): boolean {
 /**
  * Kill all active subprocesses for a run
  */
-function killAllSubprocesses(runId: string): number {
+function _killAllSubprocesses(runId: string): number {
   let killed = 0;
 
   for (const [_key, active] of activeProcesses.entries()) {
@@ -421,7 +421,7 @@ function killAllSubprocesses(runId: string): number {
 /**
  * Get list of active subprocesses
  */
-function getActiveSubprocesses(): { taskId: string; runId: string; duration: number }[] {
+function _getActiveSubprocesses(): { taskId: string; runId: string; duration: number }[] {
   const now = Date.now();
   return Array.from(activeProcesses.values()).map((active) => ({
     taskId: active.taskId,
@@ -433,7 +433,7 @@ function getActiveSubprocesses(): { taskId: string; runId: string; duration: num
 /**
  * Spawn multiple agents in parallel with concurrency limit
  */
-async function spawnParallelAgents(
+async function _spawnParallelAgents(
   tasks: Array<{
     taskId: string;
     executionMode: 'swarm' | 'matop' | 'manual';
@@ -481,7 +481,7 @@ async function spawnParallelAgents(
 /**
  * Check if scripts exist and are executable
  */
-async function validateScripts(): Promise<{
+async function _validateScripts(): Promise<{
   swarm: { exists: boolean; path: string };
   matop: { exists: boolean; path: string };
 }> {

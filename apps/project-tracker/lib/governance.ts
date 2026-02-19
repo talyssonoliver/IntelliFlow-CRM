@@ -306,7 +306,7 @@ export function loadPlanOverrides(): Record<string, TaskOverride> {
 /**
  * Load gate profile definitions from plan-overrides.yaml
  */
-function loadGateProfiles(): Record<
+function _loadGateProfiles(): Record<
   string,
   { command: string; description: string; required: boolean }
 > {
@@ -426,7 +426,7 @@ export function loadPhantomCompletionAudit(): PhantomCompletionAudit | null {
 /**
  * Load sprint summary from _summary.json
  */
-function loadSprintSummary(): SprintSummary | null {
+function _loadSprintSummary(): SprintSummary | null {
   try {
     if (!fs.existsSync(SPRINT_SUMMARY_PATH)) {
       console.warn('_summary.json not found at:', SPRINT_SUMMARY_PATH);
@@ -565,7 +565,7 @@ export function getTaskOverride(taskId: string): TaskOverride | null {
 /**
  * Enhance a task with governance data
  */
-function enhanceTaskWithGovernance(task: Task): TaskWithGovernance {
+function _enhanceTaskWithGovernance(task: Task): TaskWithGovernance {
   const override = getTaskOverride(task.id);
   const reviewQueue = loadReviewQueue();
 
@@ -600,7 +600,7 @@ function enhanceTaskWithGovernance(task: Task): TaskWithGovernance {
 /**
  * Get tasks grouped by tier
  */
-function getTasksByTier(): { A: string[]; B: string[]; C: string[] } {
+function _getTasksByTier(): { A: string[]; B: string[]; C: string[] } {
   const overrides = loadPlanOverrides();
   const result = { A: [] as string[], B: [] as string[], C: [] as string[] };
 

@@ -350,7 +350,7 @@ export async function getSessionOutput(
 /**
  * List all session files (for history)
  */
-async function listSessions(): Promise<string[]> {
+async function _listSessions(): Promise<string[]> {
   const statusDir = getStatusDir();
   if (!existsSync(statusDir)) {
     return [];

@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parse } from 'csv-parse/sync';
 import { access, readdir } from 'node:fs/promises';
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { normalizeStatus, STATUS_GROUPS } from '@/lib/csv-parser';
 import { PATHS, MONOREPO_ROOT } from '@/lib/paths';
 import { NO_CACHE_HEADERS } from '@/lib/api-types';
@@ -71,6 +71,8 @@ interface PlanGapDetail {
   total_files: number;
   verified_files: number;
   missing_files: string[];
+  checkbox_total: number;
+  checkbox_checked: number;
 }
 
 interface HashMismatchDetail {
@@ -79,6 +81,16 @@ interface HashMismatchDetail {
   mismatched_files: string[];
   total_files: number;
   matched_count: number;
+}
+
+interface CompletionIntegrityDetail {
+  task_id: string;
+  description: string;
+  issues: string[];
+  checkbox_pct: number | null;
+  has_attestation: boolean;
+  attestation_verdict: string | null;
+  validation_count: number;
 }
 
 interface ExecutiveMetrics {
@@ -102,6 +114,8 @@ interface ExecutiveMetrics {
   incomplete_plan_deliverables_details: PlanGapDetail[];
   context_hash_mismatches: number;
   context_hash_mismatches_details: HashMismatchDetail[];
+  completion_integrity_failures: number;
+  completion_integrity_details: CompletionIntegrityDetail[];
   generated_at: string;
 }
 
@@ -312,7 +326,7 @@ function checkContextExists(taskId: string, sprintNumber: number | null, allSpri
         const attestPath = join(dir, attestName);
         if (existsSync(attestPath)) {
           try {
-            const content = require('node:fs').readFileSync(attestPath, 'utf-8');
+            const content = readFileSync(attestPath, 'utf-8');
             const parsed = JSON.parse(content);
             if (parsed.context_acknowledgment) {
               hasAck = true;
@@ -336,8 +350,8 @@ function checkPlanDeliverables(
   taskId: string,
   sprintNumber: number | null,
   allSprintDirs: string[]
-): { planExists: boolean; planPath: string; total: number; verified: number; missingFiles: string[] } {
-  const result = { planExists: false, planPath: '', total: 0, verified: 0, missingFiles: [] as string[] };
+): { planExists: boolean; planPath: string; total: number; verified: number; missingFiles: string[]; checkboxTotal: number; checkboxChecked: number; checkboxPct: number | null } {
+  const result = { planExists: false, planPath: '', total: 0, verified: 0, missingFiles: [] as string[], checkboxTotal: 0, checkboxChecked: 0, checkboxPct: null as number | null };
 
   // Look for plan file in sprint-based planning dir and legacy locations
   const root = join(MONOREPO_ROOT, '.specify', 'sprints');
@@ -358,7 +372,7 @@ function checkPlanDeliverables(
   for (const candidate of candidates) {
     if (existsSync(candidate)) {
       try {
-        planContent = require('node:fs').readFileSync(candidate, 'utf-8');
+        planContent = readFileSync(candidate, 'utf-8');
         result.planPath = candidate.replace(MONOREPO_ROOT + '/', '').replace(MONOREPO_ROOT + '\\', '');
         result.planExists = true;
         break;
@@ -368,17 +382,35 @@ function checkPlanDeliverables(
 
   if (!planContent) return result;
 
+  // Count plan checkboxes (same regex as validation-summary API)
+  const checkboxRegex = /^(\s*)-\s*\[([ xX])\]\s*(.+)$/;
+  for (const line of planContent.split('\n')) {
+    const match = line.replace(/\r$/, '').match(checkboxRegex);
+    if (match) {
+      result.checkboxTotal++;
+      if (match[2].toLowerCase() === 'x') result.checkboxChecked++;
+    }
+  }
+  result.checkboxPct = result.checkboxTotal > 0
+    ? Math.round((result.checkboxChecked / result.checkboxTotal) * 1000) / 10
+    : null;
+
   // Extract files from "Files to Create:" and "Files to Modify:" sections
+  // Only take the FIRST backtick-wrapped string per list item (the file path).
+  // Subsequent backticks on the same line are descriptions/annotations (e.g., `contactId`).
   const fileRegex = /\*\*Files to (?:Create|Modify):\*\*\s*\n((?:\s*-\s*`[^`]+`.*\n?)*)/gi;
-  const pathRegex = /`([^`]+)`/g;
+  const linePathRegex = /^\s*-\s*`([^`]+)`/;
   const filePaths: string[] = [];
 
   let sectionMatch;
   while ((sectionMatch = fileRegex.exec(planContent)) !== null) {
     const section = sectionMatch[1];
-    let pathMatch;
-    while ((pathMatch = pathRegex.exec(section)) !== null) {
-      filePaths.push(pathMatch[1]);
+    const lines = section.split('\n');
+    for (const line of lines) {
+      const lineMatch = line.match(linePathRegex);
+      if (lineMatch) {
+        filePaths.push(lineMatch[1]);
+      }
     }
   }
 
@@ -387,11 +419,50 @@ function checkPlanDeliverables(
     if (existsSync(join(MONOREPO_ROOT, fp))) {
       result.verified++;
     } else {
-      result.missingFiles.push(fp);
+      // Check extension variants: .ts↔.tsx, .js↔.jsx (plans sometimes list wrong extension)
+      const extVariant = fp.endsWith('.ts') && !fp.endsWith('.tsx')
+        ? fp + 'x'
+        : fp.endsWith('.tsx')
+          ? fp.slice(0, -1)
+          : fp.endsWith('.js') && !fp.endsWith('.jsx')
+            ? fp + 'x'
+            : fp.endsWith('.jsx')
+              ? fp.slice(0, -1)
+              : null;
+      if (extVariant && existsSync(join(MONOREPO_ROOT, extVariant))) {
+        result.verified++;
+      } else {
+        result.missingFiles.push(fp);
+      }
     }
   }
 
   return result;
+}
+
+function checkAttestationIntegrity(
+  taskId: string,
+  sprintNumber: number | null,
+  allSprintDirs: string[]
+): { exists: boolean; verdict: string | null; validationCount: number } {
+  const dirs = getAttestationDirs(taskId, sprintNumber, allSprintDirs);
+  const attestNames = ['attestation.json', `${taskId}-attestation.json`];
+
+  for (const dir of dirs) {
+    for (const name of attestNames) {
+      const attestPath = join(dir, name);
+      if (existsSync(attestPath)) {
+        try {
+          const raw = JSON.parse(readFileSync(attestPath, 'utf-8'));
+          const validationCount = Array.isArray(raw.validation_results) ? raw.validation_results.length : 0;
+          const verdict = raw.verdict ?? raw.status ?? null;
+          return { exists: true, verdict, validationCount };
+        } catch { /* invalid JSON */ }
+      }
+    }
+  }
+
+  return { exists: false, verdict: null, validationCount: 0 };
 }
 
 function checkContextHashes(
@@ -415,7 +486,7 @@ function checkContextHashes(
         const manifestPath = join(dir, name);
         if (existsSync(manifestPath)) {
           try {
-            const raw = JSON.parse(require('node:fs').readFileSync(manifestPath, 'utf-8'));
+            const raw = JSON.parse(readFileSync(manifestPath, 'utf-8'));
             manifestFiles = (raw.files || []).map((f: { path: string; sha256?: string; hash?: string }) => ({
               path: f.path,
               sha256: f.sha256 || f.hash || '',
@@ -433,7 +504,7 @@ function checkContextHashes(
         const attestPath = join(dir, name);
         if (existsSync(attestPath)) {
           try {
-            const raw = JSON.parse(require('node:fs').readFileSync(attestPath, 'utf-8'));
+            const raw = JSON.parse(readFileSync(attestPath, 'utf-8'));
             if (raw.context_acknowledgment?.files_read) {
               ackFiles = raw.context_acknowledgment.files_read.map((f: { path: string; sha256?: string; hash?: string }) => ({
                 path: f.path,
@@ -451,7 +522,7 @@ function checkContextHashes(
           const ackPath = join(dir, name);
           if (existsSync(ackPath)) {
             try {
-              const raw = JSON.parse(require('node:fs').readFileSync(ackPath, 'utf-8'));
+              const raw = JSON.parse(readFileSync(ackPath, 'utf-8'));
               ackFiles = (raw.files_read || []).map((f: { path: string; sha256?: string; hash?: string }) => ({
                 path: f.path,
                 sha256: f.sha256 || f.hash || '',
@@ -714,16 +785,23 @@ export async function GET(request: Request) {
       }
 
       // b) Plan Deliverables Check — any completed task with a plan file
+      //    Flags both missing files AND unchecked steps
       const plan = checkPlanDeliverables(taskId, sprintNum, allSprintDirs);
-      if (plan.planExists && plan.total > 0 && plan.verified < plan.total) {
-        planGapDetails.push({
-          task_id: taskId,
-          description: desc,
-          plan_path: plan.planPath,
-          total_files: plan.total,
-          verified_files: plan.verified,
-          missing_files: plan.missingFiles.slice(0, 5),
-        });
+      if (plan.planExists) {
+        const hasMissingFiles = plan.total > 0 && plan.verified < plan.total;
+        const hasUncheckedSteps = plan.checkboxTotal > 0 && plan.checkboxChecked < plan.checkboxTotal;
+        if (hasMissingFiles || hasUncheckedSteps) {
+          planGapDetails.push({
+            task_id: taskId,
+            description: desc,
+            plan_path: plan.planPath,
+            total_files: plan.total,
+            verified_files: plan.verified,
+            missing_files: plan.missingFiles.slice(0, 5),
+            checkbox_total: plan.checkboxTotal,
+            checkbox_checked: plan.checkboxChecked,
+          });
+        }
       }
 
       // c) Context Hash Verification — only for tasks with EVIDENCE: artifacts
@@ -738,6 +816,68 @@ export async function GET(request: Request) {
             matched_count: hashes.matched,
           });
         }
+      }
+    }
+
+    // --- Completion Integrity Sweep ---
+    // Catch "Completed" tasks that are missing attestation, have low checkbox completion,
+    // or lack the required 4 validations (TypeScript, Tests, Lint, Build).
+    const integrityFailures: CompletionIntegrityDetail[] = [];
+
+    for (const task of tasks) {
+      const status = (task.Status || '').toLowerCase().trim();
+      if (status !== 'completed' && status !== 'done') continue;
+
+      const taskId = task['Task ID']?.trim();
+      if (!taskId) continue;
+
+      const sprintNum = taskSprintMap.get(taskId) ?? null;
+      const issues: string[] = [];
+
+      // Reuse the plan check we already computed above (avoids double-reading)
+      const planResult = checkPlanDeliverables(taskId, sprintNum, allSprintDirs);
+
+      // Check 1: Plan checkbox completion — completed tasks must have 100%
+      if (planResult.planExists && planResult.checkboxTotal > 0 && planResult.checkboxChecked < planResult.checkboxTotal) {
+        issues.push(
+          `Plan steps: ${planResult.checkboxChecked}/${planResult.checkboxTotal} checked (${planResult.checkboxPct}%) — must be 100% for completed tasks`
+        );
+      }
+
+      // Check 2: Plan deliverables — files listed in plan but missing on disk
+      if (planResult.planExists && planResult.total > 0 && planResult.verified < planResult.total) {
+        const missingCount = planResult.total - planResult.verified;
+        const sample = planResult.missingFiles.slice(0, 3).map(f => f.split('/').pop()).join(', ');
+        issues.push(
+          `Plan deliverables: ${planResult.verified}/${planResult.total} files exist on disk (missing: ${sample}${missingCount > 3 ? ` +${missingCount - 3} more` : ''})`
+        );
+      }
+
+      // Check 3: Attestation existence and completeness
+      const attestResult = checkAttestationIntegrity(taskId, sprintNum, allSprintDirs);
+      if (!attestResult.exists) {
+        issues.push('Missing attestation.json');
+      } else {
+        if (attestResult.verdict && attestResult.verdict !== 'COMPLETE' && attestResult.verdict !== 'PASS') {
+          issues.push(`Attestation verdict: ${attestResult.verdict} (expected COMPLETE)`);
+        }
+        if (attestResult.validationCount < 4) {
+          issues.push(
+            `Only ${attestResult.validationCount}/4 validations recorded (need TypeScript, Tests, Lint, Build)`
+          );
+        }
+      }
+
+      if (issues.length > 0) {
+        integrityFailures.push({
+          task_id: taskId,
+          description: (task.Description || '').substring(0, 80),
+          issues,
+          checkbox_pct: planResult.checkboxPct ?? null,
+          has_attestation: attestResult.exists,
+          attestation_verdict: attestResult.verdict,
+          validation_count: attestResult.validationCount,
+        });
       }
     }
 
@@ -808,6 +948,8 @@ export async function GET(request: Request) {
       incomplete_plan_deliverables_details: planGapDetails,
       context_hash_mismatches: hashMismatchDetails.length,
       context_hash_mismatches_details: hashMismatchDetails,
+      completion_integrity_failures: integrityFailures.length,
+      completion_integrity_details: integrityFailures,
       generated_at: new Date().toISOString(),
     };
 

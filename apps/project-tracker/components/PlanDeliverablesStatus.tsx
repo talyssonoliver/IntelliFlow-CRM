@@ -272,7 +272,7 @@ export default function PlanDeliverablesStatus({
 }
 
 // Compact inline indicator for task cards
-function PlanVerificationIndicator({
+function _PlanVerificationIndicator({
   overallStatus,
   completionPercentage,
 }: {

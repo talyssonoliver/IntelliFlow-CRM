@@ -628,8 +628,11 @@ async function parsePlanDeliverables(
   let inlineMatch;
   while ((inlineMatch = inlineFilePattern.exec(planContent)) !== null) {
     const filePath = inlineMatch[1];
-    // Skip paths that are clearly not project files (e.g., npm package names)
+    // Skip paths that are clearly not project files (e.g., npm package names, partial paths)
     if (filePath.startsWith('node_modules/') || filePath.startsWith('http')) continue;
+    // Skip partial paths that don't start with a known project directory
+    const knownPrefixes = ['apps/', 'packages/', 'infra/', 'docs/', 'tests/', 'scripts/', 'artifacts/', '.specify/', '.claude/', '.github/'];
+    if (!knownPrefixes.some((p) => filePath.startsWith(p))) continue;
     if (!deliverables.some((d) => d.path === filePath)) {
       const fullPath = join(repoRoot, filePath);
       const fileExists = existsSync(fullPath);

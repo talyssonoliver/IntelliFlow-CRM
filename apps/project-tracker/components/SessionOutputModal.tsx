@@ -63,7 +63,7 @@ export function SessionOutputModal({
   output,
   status,
   phase,
-  isSwarm = false,
+  isSwarm: _isSwarm = false,
   onKill,
 }: SessionOutputModalProps) {
   const outputRef = useRef<HTMLPreElement>(null);
@@ -230,14 +230,14 @@ interface UseSessionPollingResult {
 
 export function useSessionPolling({
   sessionId,
-  taskId,
-  sessionType,
+  taskId: _taskId,
+  sessionType: _sessionType,
   enabled,
   pollInterval = 3000,
 }: UseSessionPollingOptions): UseSessionPollingResult {
   const [output, setOutput] = useState('');
   const [status, setStatus] = useState<SessionStatus>('not_started');
-  const [phase, setPhase] = useState<string | undefined>();
+  const [phase, _setPhase] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

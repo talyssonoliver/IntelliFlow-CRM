@@ -14,30 +14,26 @@
     "clsx": "^2.1.1",
     "csv-parse": "^6.1.0",
     "js-yaml": "^4.1.0",
-    "next": "16.1.5",
+    "next": "16.1.6",
     "papaparse": "^5.4.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "tailwind-merge": "^2.3.0"
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3.3.3",
-    "@eslint/js": "^9.39.2",
-    "@next/eslint-plugin-next": "^16.1.5",
+    "@eslint/js": "^10.0.0",
+    "@next/eslint-plugin-next": "^16.1.6",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^20.12.7",
+    "@types/node": "^22.0.0",
     "@types/papaparse": "^5.3.14",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.49.0",
-    "@typescript-eslint/parser": "^8.49.0",
-    "autoprefixer": "^10.4.19",
-    "eslint": "^9.39.2",
-    "eslint-config-next": "16.1.5",
-    "postcss": "^8.4.38",
-    "tailwindcss": "^3.4.3",
-    "tailwindcss-animate": "^1.0.7",
+    "@typescript-eslint/eslint-plugin": "^8.56.0",
+    "@typescript-eslint/parser": "^8.56.0",
+    "@tailwindcss/postcss": "^4.2.0",
+    "eslint": "^10.0.0",
+    "tailwindcss": "^4.2.0",
     "typescript": "^5.4.5",
-    "typescript-eslint": "^8.49.0"
+    "typescript-eslint": "^8.56.0"
   }
 }

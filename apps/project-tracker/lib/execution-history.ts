@@ -362,7 +362,7 @@ export function formatDuration(ms: number): string {
 /**
  * Get execution runs for a date range
  */
-function getRunsByDateRange(projectRoot: string, startDate: Date, endDate: Date): ExecutionRun[] {
+function _getRunsByDateRange(projectRoot: string, startDate: Date, endDate: Date): ExecutionRun[] {
   const history = loadExecutionHistory(projectRoot, { includeDetails: false });
 
   return history.runs.filter((run) => {

@@ -22,7 +22,7 @@ export interface ApiResponse<T> {
 /**
  * Create a successful API response
  */
-function createSuccessResponse<T>(data: T, message?: string): ApiResponse<T> {
+function _createSuccessResponse<T>(data: T, message?: string): ApiResponse<T> {
   return {
     success: true,
     data,
@@ -34,7 +34,7 @@ function createSuccessResponse<T>(data: T, message?: string): ApiResponse<T> {
 /**
  * Create an error API response
  */
-function createErrorResponse<T>(error: string, data?: T): ApiResponse<T> {
+function _createErrorResponse<T>(error: string, data?: T): ApiResponse<T> {
   return {
     success: false,
     data: data as T,

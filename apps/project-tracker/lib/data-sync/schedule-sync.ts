@@ -163,7 +163,7 @@ function updateSprintSummaryWithSchedule(
 /**
  * Get schedule summary for API response
  */
-function getScheduleSummary(
+function _getScheduleSummary(
   tasks: TaskRecord[],
   sprintNum?: number
 ): {

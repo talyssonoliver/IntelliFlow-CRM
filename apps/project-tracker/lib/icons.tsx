@@ -53,7 +53,7 @@ export function Icon({ name, className, size = 'base' }: IconProps) {
 /**
  * Icon name mapping reference for common UI icons
  */
-const ICON_NAME_MAPPING: Record<string, string> = {
+const _ICON_NAME_MAPPING: Record<string, string> = {
   // Common UI icons
   Check: 'check',
   CheckCircle: 'check_circle',

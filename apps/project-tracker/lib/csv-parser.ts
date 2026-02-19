@@ -49,7 +49,7 @@ export async function parseCSV(file: File): Promise<ParsedCSVData> {
 /**
  * Parse CSV from text content
  */
-function parseCSVText(csvText: string): ParsedCSVData {
+function _parseCSVText(csvText: string): ParsedCSVData {
   const results = Papa.parse(csvText, {
     header: true,
     skipEmptyLines: true,
@@ -188,7 +188,7 @@ function parseBoolean(value: any): boolean {
 /**
  * Group tasks by sprint
  */
-function groupTasksBySprint(tasks: Task[]): Map<SprintNumber, Task[]> {
+function _groupTasksBySprint(tasks: Task[]): Map<SprintNumber, Task[]> {
   const grouped = new Map<SprintNumber, Task[]>();
 
   for (const task of tasks) {

@@ -119,7 +119,7 @@ export async function POST() {
     let packageCount = 0;
     const workspaceYaml = resolve(root, 'pnpm-workspace.yaml');
     if (existsSync(workspaceYaml)) {
-      const content = readFileSync(workspaceYaml, 'utf-8');
+      const _content = readFileSync(workspaceYaml, 'utf-8');
       // Count actual package.json files in workspace globs
       const appsDir = resolve(root, 'apps');
       const pkgsDir = resolve(root, 'packages');

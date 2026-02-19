@@ -43,6 +43,8 @@ interface PlanGapDetail {
   total_files: number;
   verified_files: number;
   missing_files: string[];
+  checkbox_total: number;
+  checkbox_checked: number;
 }
 
 interface HashMismatchDetail {
@@ -51,6 +53,16 @@ interface HashMismatchDetail {
   mismatched_files: string[];
   total_files: number;
   matched_count: number;
+}
+
+interface CompletionIntegrityDetail {
+  task_id: string;
+  description: string;
+  issues: string[];
+  checkbox_pct: number | null;
+  has_attestation: boolean;
+  attestation_verdict: string | null;
+  validation_count: number;
 }
 
 interface ExecutiveMetrics {
@@ -72,10 +84,12 @@ interface ExecutiveMetrics {
   incomplete_plan_deliverables_details: PlanGapDetail[];
   context_hash_mismatches: number;
   context_hash_mismatches_details: HashMismatchDetail[];
+  completion_integrity_failures: number;
+  completion_integrity_details: CompletionIntegrityDetail[];
   generated_at: string;
 }
 
-type ExpandableMetric = 'mismatches' | 'untracked' | 'forward' | 'bottleneck' | 'context' | 'plandeliverables' | 'hashmismatch';
+type ExpandableMetric = 'mismatches' | 'untracked' | 'forward' | 'bottleneck' | 'context' | 'plandeliverables' | 'hashmismatch' | 'integrity';
 
 interface ExecutiveSummaryProps {
   readonly sprint?: number | 'all' | 'Continuous';
@@ -473,9 +487,18 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                             <span className="font-mono text-orange-400">{detail.task_id}</span>
                             <span className="text-slate-500">-</span>
                             <span className="truncate">{detail.description}</span>
-                            <span className="text-slate-500 ml-auto">
-                              {detail.verified_files}/{detail.total_files} verified
-                            </span>
+                            <div className="flex gap-2 ml-auto shrink-0">
+                              {detail.total_files > 0 && (
+                                <span className={`${detail.verified_files < detail.total_files ? 'text-orange-400' : 'text-green-400'}`}>
+                                  Files {detail.verified_files}/{detail.total_files}
+                                </span>
+                              )}
+                              {detail.checkbox_total > 0 && (
+                                <span className={`${detail.checkbox_checked < detail.checkbox_total ? 'text-orange-400' : 'text-green-400'}`}>
+                                  Steps {detail.checkbox_checked}/{detail.checkbox_total}
+                                </span>
+                              )}
+                            </div>
                           </div>
                           {detail.missing_files.length > 0 && (
                             <div className="ml-4 mt-1 text-slate-500">
@@ -486,6 +509,89 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                           )}
                         </div>
                       ))}
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </React.Fragment>
+
+            {/* Completion Integrity - Expandable */}
+            <React.Fragment key="integrity-section">
+              <tr
+                className="hover:bg-slate-800/30 transition-colors cursor-pointer"
+                onClick={() => toggleExpanded('integrity')}
+              >
+                <td className="py-3 px-3">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-8 h-8 rounded-lg ${metrics.completion_integrity_failures > 0 ? 'bg-red-500/10' : 'bg-green-500/10'} flex items-center justify-center ${metrics.completion_integrity_failures > 0 ? 'text-red-400' : 'text-green-400'}`}
+                    >
+                      <Icon name="verified" size="sm" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-200">
+                      Completion Integrity Failures
+                    </span>
+                    {metrics.completion_integrity_details.length > 0 &&
+                      (expanded.has('integrity') ? (
+                        <Icon name="expand_more" size="sm" className="text-slate-400" />
+                      ) : (
+                        <Icon name="chevron_right" size="sm" className="text-slate-400" />
+                      ))}
+                  </div>
+                </td>
+                <td className="py-3 px-3 text-right">
+                  <span
+                    className={`text-sm font-semibold ${metrics.completion_integrity_failures > 0 ? 'text-red-400' : 'text-green-400'}`}
+                  >
+                    {metrics.completion_integrity_failures}
+                  </span>
+                </td>
+              </tr>
+              {expanded.has('integrity') && metrics.completion_integrity_details.length > 0 && (
+                <tr>
+                  <td colSpan={2} className="px-3 pb-3">
+                    <div className="ml-11 bg-slate-800/50 rounded-lg p-3 space-y-2">
+                      {metrics.completion_integrity_details.slice(0, 20).map((detail, idx) => (
+                        <div key={`integrity-${detail.task_id}-${idx}`} className="text-xs">
+                          <div className="flex items-center gap-2 text-slate-300">
+                            <span className="font-mono text-red-400">{detail.task_id}</span>
+                            <span className="text-slate-500">-</span>
+                            <span className="truncate">{detail.description}</span>
+                            <div className="flex gap-1 ml-auto shrink-0">
+                              {!detail.has_attestation && (
+                                <span className="px-1.5 py-0.5 bg-red-500/10 text-red-400 rounded text-[10px]">
+                                  no attestation
+                                </span>
+                              )}
+                              {detail.checkbox_pct !== null && detail.checkbox_pct < 100 && (
+                                <span className="px-1.5 py-0.5 bg-orange-500/10 text-orange-400 rounded text-[10px]">
+                                  {detail.checkbox_pct}% checked
+                                </span>
+                              )}
+                              {detail.has_attestation && detail.validation_count < 4 && (
+                                <span className="px-1.5 py-0.5 bg-orange-500/10 text-orange-400 rounded text-[10px]">
+                                  {detail.validation_count}/4 validations
+                                </span>
+                              )}
+                              {detail.issues.some(i => i.startsWith('Plan deliverables:')) && (
+                                <span className="px-1.5 py-0.5 bg-orange-500/10 text-orange-400 rounded text-[10px]">
+                                  missing files
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {detail.issues.length > 0 && (
+                            <div className="ml-4 mt-1 text-slate-500">
+                              {detail.issues.join(' · ')}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {metrics.completion_integrity_details.length > 20 && (
+                        <div className="text-xs text-slate-500 pt-1">
+                          +{metrics.completion_integrity_details.length - 20} more failures
+                        </div>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -766,6 +872,12 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
             <div className="flex items-center gap-1.5 text-orange-400">
               <Icon name="folder" size="xs" />
               <span>{metrics.missing_context_tasks_details.filter((d) => d.missing_ack).length} missing ack</span>
+            </div>
+          )}
+          {metrics.completion_integrity_failures > 0 && (
+            <div className="flex items-center gap-1.5 text-red-400">
+              <Icon name="verified" size="xs" />
+              <span>{metrics.completion_integrity_failures} integrity failures</span>
             </div>
           )}
           {metrics.context_hash_mismatches > 0 && (

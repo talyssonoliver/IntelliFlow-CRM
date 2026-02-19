@@ -375,7 +375,7 @@ export function validateFileContent(
 /**
  * Batch validate multiple files
  */
-function validateFilesContent(
+function _validateFilesContent(
   filesToValidate: Array<{ path: string; content: string; expectedExtension?: string }>
 ): ContentValidationResult[] {
   return filesToValidate.map(({ path, content, expectedExtension }) =>
@@ -386,7 +386,7 @@ function validateFilesContent(
 /**
  * Quick check if content appears to be fabricated (without full validation)
  */
-function isLikelyFabricated(content: string): boolean {
+function _isLikelyFabricated(content: string): boolean {
   // Check for common fabrication indicators
   const fabricationIndicators = [
     /mock:.*:v\d/i, // Mock version strings
@@ -583,7 +583,7 @@ export function scanAllFiles(): FileEntry[] {
 /**
  * Scan only artifacts directory (for backward compatibility)
  */
-function scanAllArtifacts(): FileEntry[] {
+function _scanAllArtifacts(): FileEntry[] {
   const allFiles = scanAllFiles();
   return allFiles.filter((f) => f.directory === 'artifacts');
 }
@@ -1054,7 +1054,7 @@ export function enrichWithGitHistory(files: FileEntry[], staleDays: number = 30)
  * Batch enrich files with git history (more efficient for large sets)
  * Only enriches first N files to avoid timeout
  */
-function enrichWithGitHistoryBatch(
+function _enrichWithGitHistoryBatch(
   files: FileEntry[],
   maxFiles: number = 100,
   staleDays: number = 30
@@ -1263,7 +1263,7 @@ export function scanArtifactRegistry(
   };
 }
 
-function getTaskArtifacts(
+function _getTaskArtifacts(
   taskId: string,
   registryResult: ArtifactRegistryResult | FullRegistryResult
 ): {
