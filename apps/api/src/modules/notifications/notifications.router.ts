@@ -11,12 +11,14 @@
  *
  * Task: IFC-183 - Notifications tRPC Router
  * KPIs: All endpoints <200ms; real-time latency <100ms; test coverage >=90%
+ *
+ * Uses Notification table (not DomainEvent) per IFC-157 migration.
+ * All endpoints use tenantProcedure for tenant isolation.
  */
 
-import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { observable } from '@trpc/server/observable';
-import { createTRPCRouter, protectedProcedure } from '../../trpc';
+import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { type Context } from '../../context';
 import {
   notificationListQuerySchema,
@@ -34,21 +36,19 @@ import {
   type Notification,
   type NotificationEvent,
   NOTIFICATION_TYPES,
-  NOTIFICATION_CHANNELS,
 } from '@intelliflow/validators';
-import { mapErrorToTRPCError } from '../../shared/error-mapper';
 
 // =============================================================================
 // Event Emitter for Real-time Updates
+// NOTE: In-process EventEmitter — single instance only.
+// TODO: Replace with Redis pub/sub for multi-instance deployment.
 // =============================================================================
 
 import { EventEmitter } from 'events';
 
-// Global event emitter for notification events
 const notificationEmitter = new EventEmitter();
 notificationEmitter.setMaxListeners(100);
 
-// Event types
 type NotificationEventType = 'new' | 'read' | 'deleted' | 'updated';
 
 interface NotificationEmitPayload {
@@ -62,9 +62,6 @@ interface NotificationEmitPayload {
 // Helper Functions
 // =============================================================================
 
-/**
- * Get user ID from context
- */
 function getUserId(ctx: Context): string {
   if (!ctx.user?.userId) {
     throw new TRPCError({
@@ -75,52 +72,73 @@ function getUserId(ctx: Context): string {
   return ctx.user.userId;
 }
 
-/**
- * Get tenant ID from context
- */
-function getTenantId(ctx: Context): string {
-  if (!ctx.user?.tenantId) {
-    throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'Tenant ID not found in user context',
-    });
-  }
-  return ctx.user.tenantId;
-}
-
-/**
- * Emit notification event for real-time updates
- */
 function emitNotificationEvent(payload: NotificationEmitPayload) {
   notificationEmitter.emit(`notification:${payload.userId}`, payload);
 }
 
 /**
- * Map domain event to notification
+ * Map Prisma Notification record to validator Notification type
  */
-function mapToNotification(event: any, userId: string): Notification {
-  const payload = event.payload as any;
-
+function mapDbToNotification(record: any): Notification {
   return {
-    id: event.id,
-    type: payload?.notificationType || 'system_alert',
-    title: payload?.title || event.eventType,
-    body: payload?.body || payload?.description || '',
-    priority: payload?.priority || 'normal',
-    status: event.status === 'PROCESSED' ? 'read' : 'pending',
-    isRead: event.status === 'PROCESSED',
-    readAt: event.status === 'PROCESSED' ? event.processedAt : null,
-    createdAt: event.occurredAt,
-    expiresAt: payload?.expiresAt ? new Date(payload.expiresAt) : null,
-    entityType: event.aggregateType,
-    entityId: event.aggregateId,
-    entityName: payload?.entityName || null,
-    actionUrl: payload?.actionUrl || null,
-    actionLabel: payload?.actionLabel || null,
-    actor: payload?.actor || null,
-    groupId: payload?.groupId || null,
-    groupCount: payload?.groupCount,
-    metadata: event.metadata,
+    id: record.id,
+    type: (record.metadata as any)?.notificationType || 'system_alert',
+    title: record.subject,
+    body: record.body,
+    priority: record.priority?.toLowerCase() || 'normal',
+    status: record.status === 'READ' ? 'read' : record.status?.toLowerCase() || 'pending',
+    isRead: record.status === 'READ',
+    readAt: record.readAt || null,
+    createdAt: record.createdAt,
+    expiresAt: null,
+    entityType: record.sourceType || null,
+    entityId: record.sourceId || null,
+    entityName: (record.metadata as any)?.entityName || null,
+    actionUrl: (record.metadata as any)?.actionUrl || null,
+    actionLabel: (record.metadata as any)?.actionLabel || null,
+    actor: (record.metadata as any)?.actor || null,
+    groupId: (record.metadata as any)?.groupId || null,
+    groupCount: (record.metadata as any)?.groupCount,
+    metadata: record.metadata,
+  };
+}
+
+/**
+ * Creates the event handler for the onNew subscription observable.
+ * Extracted for testability — V8 coverage requires exercising the handler directly.
+ */
+function createSubscriptionHandler(
+  userId: string,
+  types?: readonly string[],
+  priorities?: readonly string[],
+) {
+  return (emit: { next: (event: NotificationEvent) => void }) => {
+    const handler = (payload: NotificationEmitPayload) => {
+      if (types && types.length > 0 && payload.notification) {
+        if (!types.includes(payload.notification.type as any)) {
+          return;
+        }
+      }
+
+      if (priorities && priorities.length > 0 && payload.notification) {
+        if (!priorities.includes(payload.notification.priority as any)) {
+          return;
+        }
+      }
+
+      emit.next({
+        eventType: payload.eventType,
+        notification: payload.notification,
+        notificationId: payload.notificationId,
+        timestamp: new Date(),
+      });
+    };
+
+    notificationEmitter.on(`notification:${userId}`, handler);
+
+    return () => {
+      notificationEmitter.off(`notification:${userId}`, handler);
+    };
   };
 }
 
@@ -130,230 +148,56 @@ function mapToNotification(event: any, userId: string): Notification {
 
 export const notificationsRouter = createTRPCRouter({
   /**
-   * Send email notification immediately
-   * Handles NotificationDeliveryError from NotificationServicePort
-   */
-  sendEmail: protectedProcedure
-    .input(
-      z.object({
-        to: z.array(z.string().email()).min(1),
-        cc: z.array(z.string().email()).optional(),
-        bcc: z.array(z.string().email()).optional(),
-        subject: z.string().min(1).max(200),
-        htmlBody: z.string().optional(),
-        textBody: z.string().optional(),
-        replyTo: z.string().email().optional(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      try {
-        // Lazy load notification service
-        const adapters = await import('@intelliflow/adapters');
-        const NotificationService = (adapters as any).NotificationService;
-
-        if (!NotificationService) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Notification service not available',
-          });
-        }
-
-        const service = new NotificationService();
-        const result = await service.sendEmail(input);
-
-        if (result.isFailure) {
-          // Maps NotificationDeliveryError to INTERNAL_SERVER_ERROR
-          throw mapErrorToTRPCError(result.error);
-        }
-
-        return result.value;
-      } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-        throw mapErrorToTRPCError(error);
-      }
-    }),
-
-  /**
-   * Send SMS notification immediately
-   * Handles NotificationDeliveryError from NotificationServicePort
-   */
-  sendSms: protectedProcedure
-    .input(
-      z.object({
-        to: z.string().min(1),
-        message: z.string().min(1).max(1600),
-        from: z.string().optional(),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      try {
-        const adapters = await import('@intelliflow/adapters');
-        const NotificationService = (adapters as any).NotificationService;
-
-        if (!NotificationService) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Notification service not available',
-          });
-        }
-
-        const service = new NotificationService();
-        const result = await service.sendSms(input);
-
-        if (result.isFailure) {
-          // Maps NotificationDeliveryError to INTERNAL_SERVER_ERROR
-          throw mapErrorToTRPCError(result.error);
-        }
-
-        return result.value;
-      } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-        throw mapErrorToTRPCError(error);
-      }
-    }),
-
-  /**
-   * Schedule notification for future delivery
-   * Handles NotificationSchedulingError from NotificationServicePort
-   */
-  scheduleNotification: protectedProcedure
-    .input(
-      z.object({
-        channel: z.enum(['email', 'sms', 'push', 'webhook', 'in_app']),
-        scheduledAt: z.date(),
-        priority: z.enum(['high', 'normal', 'low']).optional(),
-        options: z.union([
-          z.object({
-            to: z.array(z.string().email()),
-            subject: z.string(),
-            htmlBody: z.string().optional(),
-            textBody: z.string().optional(),
-          }),
-          z.object({
-            to: z.string(),
-            message: z.string(),
-          }),
-          z.object({
-            userId: z.string(),
-            title: z.string(),
-            body: z.string(),
-          }),
-        ]),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      try {
-        const adapters = await import('@intelliflow/adapters');
-        const NotificationService = (adapters as any).NotificationService;
-
-        if (!NotificationService) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Notification service not available',
-          });
-        }
-
-        const service = new NotificationService();
-        const result = await service.schedule(
-          input.channel,
-          input.scheduledAt,
-          input.options,
-          input.priority
-        );
-
-        if (result.isFailure) {
-          // Maps NotificationSchedulingError to BAD_REQUEST
-          throw mapErrorToTRPCError(result.error);
-        }
-
-        return result.value;
-      } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-        throw mapErrorToTRPCError(error);
-      }
-    }),
-
-  /**
-   * Cancel scheduled notification
-   */
-  cancelScheduled: protectedProcedure
-    .input(
-      z.object({
-        notificationId: z.string().min(1),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      try {
-        const adapters = await import('@intelliflow/adapters');
-        const NotificationService = (adapters as any).NotificationService;
-
-        if (!NotificationService) {
-          throw new TRPCError({
-            code: 'INTERNAL_SERVER_ERROR',
-            message: 'Notification service not available',
-          });
-        }
-
-        const service = new NotificationService();
-        const result = await service.cancelScheduled(input.notificationId);
-
-        if (result.isFailure) {
-          throw mapErrorToTRPCError(result.error);
-        }
-
-        return { success: true, message: 'Notification cancelled successfully' };
-      } catch (error) {
-        if (error instanceof TRPCError) {
-          throw error;
-        }
-        throw mapErrorToTRPCError(error);
-      }
-    }),
-
-  /**
    * List notifications with pagination and filtering
+   * Queries Notification table with tenant isolation
    */
-  list: protectedProcedure
+  list: tenantProcedure
     .input(notificationListQuerySchema)
     .query(async ({ ctx, input }): Promise<NotificationListResponse> => {
       const startTime = performance.now();
       const userId = getUserId(ctx);
+      const tenantId = ctx.tenant.tenantId;
       const { limit, cursor, types, priorities, status, isRead, fromDate, toDate, search } = input;
 
-      // Build where clause for domain events (notification source)
+      // Build WHERE clause on Notification table
       const where: any = {
-        eventType: { startsWith: 'Notification' },
-        OR: [
-          { metadata: { path: ['targetUserId'], equals: userId } },
-          { metadata: { path: ['targetUserIds'], array_contains: [userId] } },
-        ],
+        tenantId,
+        recipientId: userId,
       };
 
-      // Filter by types
+      // Filter by types (stored in metadata.notificationType)
       if (types && types.length > 0) {
-        where.payload = {
-          path: ['notificationType'],
-          in: types,
-        };
+        where.metadata = { path: ['notificationType'], in: types };
+      }
+
+      // Filter by priorities
+      if (priorities && priorities.length > 0) {
+        where.priority = { in: priorities.map((p: string) => p.toUpperCase()) };
+      }
+
+      // Filter by status
+      if (status) {
+        where.status = status.toUpperCase();
       }
 
       // Filter by date range
-      if (fromDate) {
-        where.occurredAt = { ...where.occurredAt, gte: fromDate };
-      }
-      if (toDate) {
-        where.occurredAt = { ...where.occurredAt, lte: toDate };
+      if (fromDate || toDate) {
+        where.createdAt = {};
+        if (fromDate) where.createdAt.gte = fromDate;
+        if (toDate) where.createdAt.lte = toDate;
       }
 
       // Filter by read status
       if (isRead !== undefined) {
-        where.status = isRead ? 'PROCESSED' : 'PENDING';
+        where.status = isRead ? 'READ' : 'PENDING';
+      }
+
+      // Search filter
+      if (search) {
+        where.OR = [
+          { subject: { contains: search, mode: 'insensitive' } },
+          { body: { contains: search, mode: 'insensitive' } },
+        ];
       }
 
       // Cursor pagination
@@ -361,41 +205,24 @@ export const notificationsRouter = createTRPCRouter({
         where.id = { lt: cursor };
       }
 
-      // Fetch notifications from domain events
-      const events = await ctx.prisma.domainEvent.findMany({
+      const records = await ctx.prisma.notification.findMany({
         where,
-        orderBy: { occurredAt: 'desc' },
+        orderBy: { createdAt: 'desc' },
         take: limit + 1,
       });
 
-      const hasMore = events.length > limit;
-      const items = events.slice(0, limit);
+      const hasMore = records.length > limit;
+      const items = records.slice(0, limit);
+      const notifications = items.map(mapDbToNotification);
 
-      // Map to notification format
-      const notifications = items.map((event) => mapToNotification(event, userId));
-
-      // Get unread count
-      const unreadCount = await ctx.prisma.domainEvent.count({
-        where: {
-          eventType: { startsWith: 'Notification' },
-          status: 'PENDING',
-          OR: [
-            { metadata: { path: ['targetUserId'], equals: userId } },
-            { metadata: { path: ['targetUserIds'], array_contains: [userId] } },
-          ],
-        },
-      });
-
-      // Get total count
-      const total = await ctx.prisma.domainEvent.count({
-        where: {
-          eventType: { startsWith: 'Notification' },
-          OR: [
-            { metadata: { path: ['targetUserId'], equals: userId } },
-            { metadata: { path: ['targetUserIds'], array_contains: [userId] } },
-          ],
-        },
-      });
+      const [unreadCount, total] = await Promise.all([
+        ctx.prisma.notification.count({
+          where: { tenantId, recipientId: userId, status: 'PENDING' },
+        }),
+        ctx.prisma.notification.count({
+          where: { tenantId, recipientId: userId },
+        }),
+      ]);
 
       const duration = performance.now() - startTime;
       if (duration > 200) {
@@ -412,70 +239,21 @@ export const notificationsRouter = createTRPCRouter({
     }),
 
   /**
-   * Get unread notification count
+   * Get unread notification count by priority
+   * Uses Notification table with 3-bucket response (high/normal/low)
    */
-  getUnreadCount: protectedProcedure.query(async ({ ctx }): Promise<UnreadCountResponse> => {
+  getUnreadCount: tenantProcedure.query(async ({ ctx }): Promise<UnreadCountResponse> => {
     const startTime = performance.now();
     const userId = getUserId(ctx);
+    const tenantId = ctx.tenant.tenantId;
 
-    // Count unread notifications
-    const total = await ctx.prisma.domainEvent.count({
-      where: {
-        eventType: { startsWith: 'Notification' },
-        status: 'PENDING',
-        OR: [
-          { metadata: { path: ['targetUserId'], equals: userId } },
-          { metadata: { path: ['targetUserIds'], array_contains: [userId] } },
-        ],
-      },
-    });
+    const baseWhere = { tenantId, recipientId: userId, status: 'PENDING' as const };
 
-    // Count by priority
-    const [lowCount, mediumCount, highCount, urgentCount] = await Promise.all([
-      ctx.prisma.domainEvent.count({
-        where: {
-          eventType: { startsWith: 'Notification' },
-          status: 'PENDING',
-          payload: { path: ['priority'], equals: 'low' },
-          OR: [
-            { metadata: { path: ['targetUserId'], equals: userId } },
-            { metadata: { path: ['targetUserIds'], array_contains: [userId] } },
-          ],
-        },
-      }),
-      ctx.prisma.domainEvent.count({
-        where: {
-          eventType: { startsWith: 'Notification' },
-          status: 'PENDING',
-          payload: { path: ['priority'], equals: 'medium' },
-          OR: [
-            { metadata: { path: ['targetUserId'], equals: userId } },
-            { metadata: { path: ['targetUserIds'], array_contains: [userId] } },
-          ],
-        },
-      }),
-      ctx.prisma.domainEvent.count({
-        where: {
-          eventType: { startsWith: 'Notification' },
-          status: 'PENDING',
-          payload: { path: ['priority'], equals: 'high' },
-          OR: [
-            { metadata: { path: ['targetUserId'], equals: userId } },
-            { metadata: { path: ['targetUserIds'], array_contains: [userId] } },
-          ],
-        },
-      }),
-      ctx.prisma.domainEvent.count({
-        where: {
-          eventType: { startsWith: 'Notification' },
-          status: 'PENDING',
-          payload: { path: ['priority'], equals: 'urgent' },
-          OR: [
-            { metadata: { path: ['targetUserId'], equals: userId } },
-            { metadata: { path: ['targetUserIds'], array_contains: [userId] } },
-          ],
-        },
-      }),
+    const [total, highCount, normalCount, lowCount] = await Promise.all([
+      ctx.prisma.notification.count({ where: baseWhere }),
+      ctx.prisma.notification.count({ where: { ...baseWhere, priority: 'HIGH' } }),
+      ctx.prisma.notification.count({ where: { ...baseWhere, priority: 'NORMAL' } }),
+      ctx.prisma.notification.count({ where: { ...baseWhere, priority: 'LOW' } }),
     ]);
 
     const duration = performance.now() - startTime;
@@ -488,47 +266,40 @@ export const notificationsRouter = createTRPCRouter({
     return {
       total,
       byPriority: {
-        low: lowCount,
-        medium: mediumCount,
         high: highCount,
-        urgent: urgentCount,
+        normal: normalCount,
+        low: lowCount,
       },
     };
   }),
 
   /**
    * Mark notifications as read
+   * Sets readAt and status=READ on Notification table
    */
-  markAsRead: protectedProcedure
+  markAsRead: tenantProcedure
     .input(markAsReadInputSchema)
     .mutation(async ({ ctx, input }): Promise<MarkAsReadResponse> => {
       const startTime = performance.now();
       const userId = getUserId(ctx);
+      const tenantId = ctx.tenant.tenantId;
       const { notificationIds } = input;
 
-      // Update domain events to PROCESSED status
-      const result = await ctx.prisma.domainEvent.updateMany({
+      const result = await ctx.prisma.notification.updateMany({
         where: {
           id: { in: notificationIds },
-          eventType: { startsWith: 'Notification' },
-          OR: [
-            { metadata: { path: ['targetUserId'], equals: userId } },
-            { metadata: { path: ['targetUserIds'], array_contains: [userId] } },
-          ],
+          tenantId,
+          recipientId: userId,
+          status: { in: ['PENDING', 'SENT', 'DELIVERED'] },
         },
         data: {
-          status: 'PROCESSED',
-          processedAt: new Date(),
+          status: 'READ',
+          readAt: new Date(),
         },
       });
 
-      // Emit events for real-time updates
       notificationIds.forEach((id) => {
-        emitNotificationEvent({
-          userId,
-          eventType: 'read',
-          notificationId: id,
-        });
+        emitNotificationEvent({ userId, eventType: 'read', notificationId: id });
       });
 
       const duration = performance.now() - startTime;
@@ -544,202 +315,157 @@ export const notificationsRouter = createTRPCRouter({
     }),
 
   /**
-   * Mark all notifications as read
+   * Mark all notifications as read — atomic single updateMany (no TOCTOU race)
    */
-  markAllAsRead: protectedProcedure.mutation(async ({ ctx }): Promise<MarkAsReadResponse> => {
+  markAllAsRead: tenantProcedure.mutation(async ({ ctx }): Promise<MarkAsReadResponse> => {
     const startTime = performance.now();
     const userId = getUserId(ctx);
+    const tenantId = ctx.tenant.tenantId;
 
-    // Get IDs of unread notifications
-    const unreadEvents = await ctx.prisma.domainEvent.findMany({
+    const result = await ctx.prisma.notification.updateMany({
       where: {
-        eventType: { startsWith: 'Notification' },
-        status: 'PENDING',
-        OR: [
-          { metadata: { path: ['targetUserId'], equals: userId } },
-          { metadata: { path: ['targetUserIds'], array_contains: [userId] } },
-        ],
-      },
-      select: { id: true },
-    });
-
-    const ids = unreadEvents.map((e) => e.id);
-
-    // Update all to PROCESSED
-    const result = await ctx.prisma.domainEvent.updateMany({
-      where: {
-        id: { in: ids },
+        tenantId,
+        recipientId: userId,
+        status: { not: 'READ' },
       },
       data: {
-        status: 'PROCESSED',
-        processedAt: new Date(),
+        status: 'READ',
+        readAt: new Date(),
       },
-    });
-
-    // Emit events for real-time updates
-    ids.forEach((id) => {
-      emitNotificationEvent({
-        userId,
-        eventType: 'read',
-        notificationId: id,
-      });
     });
 
     const duration = performance.now() - startTime;
     if (duration > 200) {
-      console.warn(`[notifications.markAllAsRead] SLOW: ${duration.toFixed(2)}ms (target: <200ms)`);
+      console.warn(
+        `[notifications.markAllAsRead] SLOW: ${duration.toFixed(2)}ms (target: <200ms)`
+      );
     }
 
     return {
       success: true,
       updatedCount: result.count,
-      updatedIds: ids,
+      updatedIds: [],
     };
   }),
 
   /**
    * Delete notifications
+   * permanent=true: real deleteMany; permanent=false: set status=ARCHIVED
    */
-  delete: protectedProcedure
+  delete: tenantProcedure
     .input(deleteNotificationsInputSchema)
     .mutation(async ({ ctx, input }): Promise<DeleteNotificationsResponse> => {
       const startTime = performance.now();
       const userId = getUserId(ctx);
+      const tenantId = ctx.tenant.tenantId;
       const { notificationIds, permanent } = input;
 
+      const baseWhere = {
+        id: { in: notificationIds },
+        tenantId,
+        recipientId: userId,
+      };
+
+      let deletedCount: number;
+
       if (permanent) {
-        // Permanent delete (for domain events, we can't really delete, so mark as archived)
-        const result = await ctx.prisma.domainEvent.updateMany({
-          where: {
-            id: { in: notificationIds },
-            eventType: { startsWith: 'Notification' },
-            OR: [
-              { metadata: { path: ['targetUserId'], equals: userId } },
-              { metadata: { path: ['targetUserIds'], array_contains: [userId] } },
-            ],
-          },
-          data: {
-            status: 'ARCHIVED',
-          },
-        });
-
-        notificationIds.forEach((id) => {
-          emitNotificationEvent({
-            userId,
-            eventType: 'deleted',
-            notificationId: id,
-          });
-        });
-
-        return {
-          success: true,
-          deletedCount: result.count,
-          deletedIds: notificationIds,
-        };
+        const result = await ctx.prisma.notification.deleteMany({ where: baseWhere });
+        deletedCount = result.count;
       } else {
-        // Soft delete - mark as archived
-        const result = await ctx.prisma.domainEvent.updateMany({
-          where: {
-            id: { in: notificationIds },
-            eventType: { startsWith: 'Notification' },
-            OR: [
-              { metadata: { path: ['targetUserId'], equals: userId } },
-              { metadata: { path: ['targetUserIds'], array_contains: [userId] } },
-            ],
-          },
-          data: {
-            status: 'ARCHIVED',
-          },
+        const result = await ctx.prisma.notification.updateMany({
+          where: baseWhere,
+          data: { status: 'ARCHIVED' as any },
         });
-
-        const duration = performance.now() - startTime;
-        if (duration > 200) {
-          console.warn(`[notifications.delete] SLOW: ${duration.toFixed(2)}ms (target: <200ms)`);
-        }
-
-        return {
-          success: true,
-          deletedCount: result.count,
-          deletedIds: notificationIds,
-        };
+        deletedCount = result.count;
       }
+
+      notificationIds.forEach((id) => {
+        emitNotificationEvent({ userId, eventType: 'deleted', notificationId: id });
+      });
+
+      const duration = performance.now() - startTime;
+      if (duration > 200) {
+        console.warn(`[notifications.delete] SLOW: ${duration.toFixed(2)}ms (target: <200ms)`);
+      }
+
+      return {
+        success: true,
+        deletedCount,
+        deletedIds: notificationIds,
+      };
     }),
 
   /**
-   * Get notification preferences
+   * Get notification preferences from NotificationPreference table
    */
-  getPreferences: protectedProcedure.query(async ({ ctx }): Promise<NotificationPreferences> => {
+  getPreferences: tenantProcedure.query(async ({ ctx }): Promise<NotificationPreferences> => {
     const userId = getUserId(ctx);
+    const tenantId = ctx.tenant.tenantId;
 
-    // Get user preferences
-    const user = await ctx.prisma.user.findUnique({
-      where: { id: userId },
-      select: { preferences: true },
+    const record = await ctx.prisma.notificationPreference.findUnique({
+      where: { tenantId_userId: { tenantId, userId } },
     });
 
-    const prefs = (user?.preferences as any)?.notifications || {};
+    const channelPrefs = (record?.channelPreferences as any) || {};
+    const categoryPrefs = (record?.categoryPreferences as any) || {};
 
-    // Build default preferences for all notification types
     const defaultPreferences = NOTIFICATION_TYPES.map((type) => ({
       type,
-      enabled: prefs.typePreferences?.[type]?.enabled ?? true,
-      channels: prefs.typePreferences?.[type]?.channels || ['in_app'],
-      frequency: prefs.typePreferences?.[type]?.frequency || 'instant',
+      enabled: categoryPrefs[type]?.enabled ?? true,
+      channels: channelPrefs[type]?.channels || ['in_app'],
+      frequency: categoryPrefs[type]?.frequency || 'instant',
     }));
 
     return {
       userId,
-      globalEnabled: prefs.globalEnabled ?? true,
-      defaultChannels: prefs.defaultChannels || ['in_app', 'email'],
-      quietHours: prefs.quietHours || {
-        enabled: false,
-        start: '22:00',
-        end: '08:00',
-        timezone: 'UTC',
+      globalEnabled: record ? !record.doNotDisturb : true,
+      defaultChannels: channelPrefs.defaultChannels || ['in_app', 'email'],
+      quietHours: {
+        enabled: record?.quietHoursEnabled ?? false,
+        start: record?.quietHoursStart || '22:00',
+        end: record?.quietHoursEnd || '08:00',
+        timezone: record?.timezone || 'UTC',
         daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
       },
-      emailDigest: prefs.emailDigest || {
+      emailDigest: channelPrefs.emailDigest || {
         enabled: false,
         frequency: 'daily',
         time: '09:00',
       },
       preferences: defaultPreferences,
-      updatedAt: new Date(),
+      updatedAt: record?.updatedAt || new Date(),
     };
   }),
 
   /**
-   * Update notification preferences
+   * Update notification preferences via upsert to NotificationPreference table
    */
-  updatePreferences: protectedProcedure
+  updatePreferences: tenantProcedure
     .input(updatePreferencesInputSchema)
     .mutation(async ({ ctx, input }) => {
       const userId = getUserId(ctx);
+      const tenantId = ctx.tenant.tenantId;
 
-      // Get current preferences
-      const user = await ctx.prisma.user.findUnique({
-        where: { id: userId },
-        select: { preferences: true },
+      const existing = await ctx.prisma.notificationPreference.findUnique({
+        where: { tenantId_userId: { tenantId, userId } },
       });
 
-      const currentPrefs = (user?.preferences as any) || {};
-      const currentNotifPrefs = currentPrefs.notifications || {};
+      const currentChannelPrefs = (existing?.channelPreferences as any) || {};
+      const currentCategoryPrefs = (existing?.categoryPreferences as any) || {};
 
-      // Merge updates
-      const updatedNotifPrefs = {
-        ...currentNotifPrefs,
-        globalEnabled: input.globalEnabled ?? currentNotifPrefs.globalEnabled,
-        defaultChannels: input.defaultChannels ?? currentNotifPrefs.defaultChannels,
-        quietHours: input.quietHours ?? currentNotifPrefs.quietHours,
-        emailDigest: input.emailDigest ?? currentNotifPrefs.emailDigest,
+      // Build updated channel preferences
+      const updatedChannelPrefs = {
+        ...currentChannelPrefs,
+        ...(input.defaultChannels ? { defaultChannels: input.defaultChannels } : {}),
+        ...(input.emailDigest ? { emailDigest: input.emailDigest } : {}),
       };
 
-      // Update type-specific preferences
+      // Build updated category preferences
+      const updatedCategoryPrefs = { ...currentCategoryPrefs };
       if (input.preferences) {
-        updatedNotifPrefs.typePreferences = updatedNotifPrefs.typePreferences || {};
         input.preferences.forEach((pref) => {
-          updatedNotifPrefs.typePreferences[pref.type] = {
-            ...updatedNotifPrefs.typePreferences[pref.type],
+          updatedCategoryPrefs[pref.type] = {
+            ...updatedCategoryPrefs[pref.type],
             enabled: pref.enabled ?? true,
             channels: pref.channels,
             frequency: pref.frequency,
@@ -747,14 +473,31 @@ export const notificationsRouter = createTRPCRouter({
         });
       }
 
-      // Save to user preferences
-      await ctx.prisma.user.update({
-        where: { id: userId },
-        data: {
-          preferences: {
-            ...currentPrefs,
-            notifications: updatedNotifPrefs,
-          },
+      await ctx.prisma.notificationPreference.upsert({
+        where: { tenantId_userId: { tenantId, userId } },
+        create: {
+          tenantId,
+          userId,
+          doNotDisturb: input.globalEnabled === false,
+          quietHoursEnabled: input.quietHours?.enabled ?? false,
+          quietHoursStart: input.quietHours?.start || '22:00',
+          quietHoursEnd: input.quietHours?.end || '08:00',
+          timezone: input.quietHours?.timezone || 'UTC',
+          channelPreferences: updatedChannelPrefs,
+          categoryPreferences: updatedCategoryPrefs,
+        },
+        update: {
+          ...(input.globalEnabled !== undefined ? { doNotDisturb: !input.globalEnabled } : {}),
+          ...(input.quietHours
+            ? {
+                quietHoursEnabled: input.quietHours.enabled,
+                quietHoursStart: input.quietHours.start,
+                quietHoursEnd: input.quietHours.end,
+                timezone: input.quietHours.timezone,
+              }
+            : {}),
+          channelPreferences: updatedChannelPrefs,
+          categoryPreferences: updatedCategoryPrefs,
         },
       });
 
@@ -764,20 +507,17 @@ export const notificationsRouter = createTRPCRouter({
   /**
    * Batch notification actions
    */
-  batchAction: protectedProcedure
+  batchAction: tenantProcedure
     .input(batchNotificationActionSchema)
     .mutation(async ({ ctx, input }): Promise<BatchNotificationResponse> => {
       const startTime = performance.now();
       const userId = getUserId(ctx);
+      const tenantId = ctx.tenant.tenantId;
       const { action, notificationIds, filter } = input;
 
-      // Build where clause
       const where: any = {
-        eventType: { startsWith: 'Notification' },
-        OR: [
-          { metadata: { path: ['targetUserId'], equals: userId } },
-          { metadata: { path: ['targetUserIds'], array_contains: [userId] } },
-        ],
+        tenantId,
+        recipientId: userId,
       };
 
       if (notificationIds && notificationIds.length > 0) {
@@ -786,37 +526,40 @@ export const notificationsRouter = createTRPCRouter({
 
       if (filter) {
         if (filter.types && filter.types.length > 0) {
-          where.payload = { path: ['notificationType'], in: filter.types };
+          where.metadata = { path: ['notificationType'], in: filter.types };
         }
         if (filter.olderThan) {
-          where.occurredAt = { lt: filter.olderThan };
+          where.createdAt = { lt: filter.olderThan };
         }
         if (filter.isRead !== undefined) {
-          where.status = filter.isRead ? 'PROCESSED' : 'PENDING';
+          where.status = filter.isRead ? 'READ' : 'PENDING';
         }
       }
 
       let result;
       switch (action) {
         case 'mark_read':
-          result = await ctx.prisma.domainEvent.updateMany({
+          result = await ctx.prisma.notification.updateMany({
             where,
-            data: { status: 'PROCESSED', processedAt: new Date() },
+            data: { status: 'READ', readAt: new Date() },
           });
           break;
         case 'mark_unread':
-          result = await ctx.prisma.domainEvent.updateMany({
+          result = await ctx.prisma.notification.updateMany({
             where,
-            data: { status: 'PENDING', processedAt: null },
+            data: { status: 'PENDING', readAt: null },
           });
           break;
         case 'archive':
-        case 'delete':
-          result = await ctx.prisma.domainEvent.updateMany({
+          result = await ctx.prisma.notification.updateMany({
             where,
-            data: { status: 'ARCHIVED' },
+            data: { status: 'ARCHIVED' as any },
           });
           break;
+        case 'delete':
+          result = await ctx.prisma.notification.deleteMany({ where });
+          break;
+        /* v8 ignore next 4 -- Zod enum validation prevents reaching default */
         default:
           throw new TRPCError({
             code: 'BAD_REQUEST',
@@ -837,48 +580,15 @@ export const notificationsRouter = createTRPCRouter({
 
   /**
    * Real-time notification subscription
-   *
-   * Subscribes to new notifications via WebSocket
-   * KPI: Real-time latency <100ms
+   * KPI: Real-time latency <100ms (in-process EventEmitter)
    */
-  onNew: protectedProcedure
+  onNew: tenantProcedure
     .input(notificationSubscriptionInputSchema)
     .subscription(({ ctx, input }) => {
       const userId = getUserId(ctx);
-      const { types, priorities } = input;
-
-      return observable<NotificationEvent>((emit) => {
-        const handler = (payload: NotificationEmitPayload) => {
-          // Filter by types if specified
-          if (types && types.length > 0 && payload.notification) {
-            if (!types.includes(payload.notification.type as any)) {
-              return;
-            }
-          }
-
-          // Filter by priorities if specified
-          if (priorities && priorities.length > 0 && payload.notification) {
-            if (!priorities.includes(payload.notification.priority as any)) {
-              return;
-            }
-          }
-
-          emit.next({
-            eventType: payload.eventType,
-            notification: payload.notification,
-            notificationId: payload.notificationId,
-            timestamp: new Date(),
-          });
-        };
-
-        // Subscribe to user's notifications
-        notificationEmitter.on(`notification:${userId}`, handler);
-
-        // Cleanup on unsubscribe
-        return () => {
-          notificationEmitter.off(`notification:${userId}`, handler);
-        };
-      });
+      return observable<NotificationEvent>(
+        createSubscriptionHandler(userId, input.types, input.priorities)
+      );
     }),
 });
 
@@ -888,8 +598,7 @@ export const notificationsRouter = createTRPCRouter({
 
 /**
  * Create and emit a new notification
- *
- * Use this function from other parts of the application to create notifications
+ * Writes to Notification table (not DomainEvent). Uses Prisma @default(cuid()) for ID.
  */
 export async function createNotification(
   prisma: Context['prisma'],
@@ -909,8 +618,32 @@ export async function createNotification(
     metadata?: Record<string, any>;
   }
 ): Promise<Notification> {
+  const priorityEnum = (params.priority || 'normal').toUpperCase();
+
+  const record = await prisma.notification.create({
+    data: {
+      tenantId: params.tenantId,
+      recipientId: params.userId,
+      channel: 'IN_APP',
+      subject: params.title,
+      body: params.body,
+      priority: priorityEnum as any,
+      status: 'PENDING',
+      category: 'SYSTEM',
+      sourceType: params.entityType,
+      sourceId: params.entityId,
+      metadata: {
+        notificationType: params.type,
+        entityName: params.entityName,
+        actionUrl: params.actionUrl,
+        actionLabel: params.actionLabel,
+        ...params.metadata,
+      },
+    },
+  });
+
   const notification: Notification = {
-    id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: record.id,
     type: params.type,
     title: params.title,
     body: params.body,
@@ -918,7 +651,7 @@ export async function createNotification(
     status: 'pending',
     isRead: false,
     readAt: null,
-    createdAt: new Date(),
+    createdAt: record.createdAt,
     expiresAt: params.expiresAt || null,
     entityType: params.entityType || null,
     entityId: params.entityId || null,
@@ -927,45 +660,20 @@ export async function createNotification(
     actionLabel: params.actionLabel || null,
     actor: null,
     groupId: null,
-    metadata: params.metadata || null,
+    metadata: record.metadata as any,
   };
 
-  // Store as domain event
-  await prisma.domainEvent.create({
-    data: {
-      id: notification.id,
-      eventType: `Notification.${params.type}`,
-      aggregateType: params.entityType || 'User',
-      aggregateId: params.entityId || params.userId,
-      payload: {
-        notificationType: params.type,
-        title: params.title,
-        body: params.body,
-        priority: params.priority || 'medium',
-        entityName: params.entityName,
-        actionUrl: params.actionUrl,
-        actionLabel: params.actionLabel,
-        expiresAt: params.expiresAt?.toISOString(),
-      },
-      metadata: {
-        targetUserId: params.userId,
-        ...params.metadata,
-      },
-      occurredAt: new Date(),
-      status: 'PENDING',
-      tenantId: params.tenantId,
-    },
-  });
-
-  // Emit real-time event
   emitNotificationEvent({
     userId: params.userId,
     eventType: 'new',
     notification,
-    notificationId: notification.id,
+    notificationId: record.id,
   });
 
   return notification;
 }
+
+// Export for testing
+export { notificationEmitter, createSubscriptionHandler };
 
 export type NotificationsRouter = typeof notificationsRouter;
