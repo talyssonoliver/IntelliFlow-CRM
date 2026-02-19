@@ -189,4 +189,56 @@ describe('TicketForm', () => {
 
     expect((prioritySelect as HTMLSelectElement).value).toBe('HIGH');
   });
+
+  it('allows selecting category from dropdown', () => {
+    render(
+      <TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />
+    );
+
+    const categorySelect = screen.getByLabelText(/category/i);
+    fireEvent.change(categorySelect, { target: { value: 'TECHNICAL' } });
+
+    expect((categorySelect as HTMLSelectElement).value).toBe('TECHNICAL');
+  });
+
+  it('allows selecting channel from dropdown', () => {
+    render(
+      <TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />
+    );
+
+    const channelSelect = screen.getByLabelText(/channel/i);
+    fireEvent.change(channelSelect, { target: { value: 'EMAIL' } });
+
+    expect((channelSelect as HTMLSelectElement).value).toBe('EMAIL');
+  });
+
+  it('allows entering tags', () => {
+    render(
+      <TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />
+    );
+
+    const tagsInput = screen.getByLabelText(/tags/i);
+    fireEvent.change(tagsInput, { target: { value: 'urgent, bug' } });
+
+    expect((tagsInput as HTMLInputElement).value).toBe('urgent, bug');
+  });
+
+  it('shows Save Changes button in edit mode', () => {
+    render(
+      <TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="edit" />
+    );
+
+    expect(screen.getByRole('button', { name: /save changes/i })).toBeInTheDocument();
+  });
+
+  it('updates description field', () => {
+    render(
+      <TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="create" />
+    );
+
+    const descInput = screen.getByLabelText(/description/i);
+    fireEvent.change(descInput, { target: { value: 'Detailed description here' } });
+
+    expect((descInput as HTMLTextAreaElement).value).toBe('Detailed description here');
+  });
 });

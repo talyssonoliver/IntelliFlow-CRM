@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, Skeleton, ConfirmationDialog, toast } from '@intelliflow/ui';
+import { Card, Skeleton, ConfirmationDialog } from '@intelliflow/ui';
 import { useState } from 'react';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
 

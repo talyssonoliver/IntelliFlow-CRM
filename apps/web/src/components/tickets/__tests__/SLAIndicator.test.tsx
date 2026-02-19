@@ -110,4 +110,45 @@ describe('SLAIndicator', () => {
     const indicator = screen.getByLabelText(/SLA status: On Track/i);
     expect(indicator).toBeInTheDocument();
   });
+
+  it('transitions ON_TRACK to AT_RISK via timer countdown at 30 minutes', () => {
+    // Start at 31 minutes, advance by 1 tick (60s) to hit 30 min threshold
+    render(<SLAIndicator slaStatus="ON_TRACK" slaTimeRemaining={31} />);
+
+    expect(screen.getByLabelText(/SLA On Track/i)).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(60000); // 1 minute tick
+    });
+
+    // Should transition to AT_RISK at exactly 30 minutes
+    expect(screen.getByLabelText(/SLA At Risk/i)).toBeInTheDocument();
+  });
+
+  it('transitions AT_RISK to BREACHED via timer countdown at 0', () => {
+    // Start AT_RISK at 1 minute remaining
+    render(<SLAIndicator slaStatus="AT_RISK" slaTimeRemaining={1} />);
+
+    expect(screen.getByLabelText(/SLA At Risk/i)).toBeInTheDocument();
+
+    act(() => {
+      vi.advanceTimersByTime(60000); // 1 minute tick - remaining goes to 0
+    });
+
+    expect(screen.getByLabelText(/SLA Breached/i)).toBeInTheDocument();
+  });
+
+  it('handles visibility change to re-sync timer', () => {
+    render(<SLAIndicator slaStatus="ON_TRACK" slaTimeRemaining={120} />);
+
+    // Simulate tab becoming hidden then visible
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', writable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', writable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+
+    // Should re-sync from props (still 120 min)
+    expect(screen.getByText(/02h 00m/i)).toBeInTheDocument();
+  });
 });

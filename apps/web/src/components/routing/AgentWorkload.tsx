@@ -8,7 +8,7 @@
  * Displays agent cards with capacity gauges, skills, and availability status.
  */
 
-import { Card, CardContent, CardHeader, CardTitle, Progress, Skeleton } from '@intelliflow/ui';
+import { Card, CardContent, Progress, Skeleton } from '@intelliflow/ui';
 import { useRouting } from '@/app/settings/routing/hooks/useRouting';
 import type { AgentStatusType } from '@intelliflow/domain';
 

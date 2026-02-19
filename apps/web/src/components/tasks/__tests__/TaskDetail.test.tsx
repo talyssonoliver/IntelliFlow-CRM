@@ -11,11 +11,16 @@ import { TaskDetail, type TaskDetailData } from '../TaskDetail';
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className }: any) => <div className={className}>{children}</div>,
   Skeleton: ({ className }: any) => <div className={className} data-testid="skeleton" />,
-  ConfirmationDialog: ({ open, onConfirm, title }: any) =>
+  ConfirmationDialog: ({ open, onOpenChange, onConfirm, title, confirmLabel }: any) =>
     open ? (
-      <div data-testid="confirm-dialog">
+      <div data-testid={`confirm-dialog-${title?.toLowerCase().includes('archive') ? 'archive' : 'delete'}`}>
         <span>{title}</span>
-        <button onClick={onConfirm}>Confirm Delete</button>
+        <button onClick={onConfirm} data-testid={`confirm-btn-${title?.toLowerCase().includes('archive') ? 'archive' : 'delete'}`}>
+          {confirmLabel || 'Confirm'}
+        </button>
+        <button onClick={() => onOpenChange(false)} data-testid={`cancel-btn-${title?.toLowerCase().includes('archive') ? 'archive' : 'delete'}`}>
+          Dismiss
+        </button>
       </div>
     ) : null,
   toast: vi.fn(),
@@ -232,7 +237,7 @@ describe('TaskDetail', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete task' }));
-    expect(screen.getByTestId('confirm-dialog')).toBeInTheDocument();
+    expect(screen.getByTestId('confirm-dialog-delete')).toBeInTheDocument();
   });
 
   it('calls onDelete after confirmation', () => {
@@ -248,7 +253,7 @@ describe('TaskDetail', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete task' }));
-    fireEvent.click(screen.getByText('Confirm Delete'));
+    fireEvent.click(screen.getByTestId('confirm-btn-delete'));
     expect(onDelete).toHaveBeenCalledWith('task-1');
   });
 
@@ -282,5 +287,98 @@ describe('TaskDetail', () => {
     );
 
     expect(screen.queryByText('Bob Williams')).not.toBeInTheDocument();
+  });
+
+  it('shows archive confirmation dialog for completed tasks', () => {
+    const completedTask = { ...mockTask, status: 'COMPLETED' as const };
+    render(
+      <TaskDetail
+        task={completedTask}
+        isLoading={false}
+        onComplete={onComplete}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onArchive={onArchive}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Archive task' }));
+    expect(screen.getByTestId('confirm-dialog-archive')).toBeInTheDocument();
+    expect(screen.getByText('Archive Task')).toBeInTheDocument();
+  });
+
+  it('calls onArchive after archive confirmation', () => {
+    const completedTask = { ...mockTask, status: 'COMPLETED' as const };
+    render(
+      <TaskDetail
+        task={completedTask}
+        isLoading={false}
+        onComplete={onComplete}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onArchive={onArchive}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Archive task' }));
+    fireEvent.click(screen.getByTestId('confirm-btn-archive'));
+    expect(onArchive).toHaveBeenCalledWith('task-1');
+  });
+
+  it('closes delete dialog via onOpenChange', () => {
+    render(
+      <TaskDetail
+        task={mockTask}
+        isLoading={false}
+        onComplete={onComplete}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onArchive={onArchive}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete task' }));
+    expect(screen.getByTestId('confirm-dialog-delete')).toBeInTheDocument();
+
+    // Click cancel to close via onOpenChange(false)
+    fireEvent.click(screen.getByText('Dismiss'));
+    expect(screen.queryByTestId('confirm-dialog-delete')).not.toBeInTheDocument();
+  });
+
+  it('closes archive dialog via onOpenChange', () => {
+    const completedTask = { ...mockTask, status: 'COMPLETED' as const };
+    render(
+      <TaskDetail
+        task={completedTask}
+        isLoading={false}
+        onComplete={onComplete}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onArchive={onArchive}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Archive task' }));
+    expect(screen.getByTestId('confirm-dialog-archive')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Dismiss'));
+    expect(screen.queryByTestId('confirm-dialog-archive')).not.toBeInTheDocument();
+  });
+
+  it('shows archive button for CANCELLED tasks', () => {
+    const cancelledTask = { ...mockTask, status: 'CANCELLED' as const };
+    render(
+      <TaskDetail
+        task={cancelledTask}
+        isLoading={false}
+        onComplete={onComplete}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onArchive={onArchive}
+      />
+    );
+
+    expect(screen.getByRole('button', { name: 'Archive task' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete task' })).not.toBeInTheDocument();
   });
 });

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
 import { TASK_STATUSES, TASK_PRIORITIES } from '@intelliflow/domain';
-import { Sheet, SheetContent, SheetTitle, SheetDescription, toast } from '@intelliflow/ui';
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@intelliflow/ui';
 import { EntitySearchField } from './EntitySearchField';
 
 export interface TaskFormData {

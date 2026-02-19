@@ -131,4 +131,87 @@ describe('TaskCreateSheet', () => {
     const noneRadio = screen.getByDisplayValue('none');
     expect(noneRadio).toBeChecked();
   });
+
+  it('validates description max length', () => {
+    render(<TaskCreateSheet {...defaultProps} />);
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'Valid Title' } });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'a'.repeat(2001) } });
+    fireEvent.click(screen.getByText('Create Task'));
+    expect(screen.getByText('Description must be 2000 characters or less')).toBeInTheDocument();
+    expect(mockMutate).not.toHaveBeenCalled();
+  });
+
+  it('updates description field', () => {
+    render(<TaskCreateSheet {...defaultProps} />);
+    const desc = screen.getByLabelText(/description/i);
+    fireEvent.change(desc, { target: { value: 'My task description' } });
+    expect(desc).toHaveValue('My task description');
+  });
+
+  it('updates due date field', () => {
+    render(<TaskCreateSheet {...defaultProps} />);
+    const dueDate = screen.getByLabelText(/due date/i);
+    fireEvent.change(dueDate, { target: { value: '2026-04-01' } });
+    expect(dueDate).toHaveValue('2026-04-01');
+  });
+
+  it('updates priority field', () => {
+    render(<TaskCreateSheet {...defaultProps} />);
+    const priority = screen.getByLabelText(/priority/i);
+    fireEvent.change(priority, { target: { value: 'HIGH' } });
+    expect(priority).toHaveValue('HIGH');
+  });
+
+  it('switches entity type radio to lead and shows entity search', () => {
+    render(<TaskCreateSheet {...defaultProps} />);
+    // None is selected, no entity search visible
+    expect(screen.queryByTestId('entity-search-lead')).not.toBeInTheDocument();
+
+    // Click the lead radio
+    fireEvent.click(screen.getByDisplayValue('lead'));
+    expect(screen.getByTestId('entity-search-lead')).toBeInTheDocument();
+  });
+
+  it('switches entity type from lead back to none', () => {
+    render(<TaskCreateSheet {...defaultProps} defaultEntityType="lead" />);
+    expect(screen.getByTestId('entity-search-lead')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByDisplayValue('none'));
+    expect(screen.queryByTestId('entity-search-lead')).not.toBeInTheDocument();
+  });
+
+  it('submits with leadId when entity type is lead and has entity ID', () => {
+    render(
+      <TaskCreateSheet
+        {...defaultProps}
+        defaultEntityType="lead"
+        defaultEntityId="lead-abc"
+        defaultEntityName="John Lead"
+      />
+    );
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'Entity Task' } });
+    fireEvent.click(screen.getByText('Create Task'));
+    expect(mockMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Entity Task', leadId: 'lead-abc' })
+    );
+  });
+
+  it('submits with description, due date and priority values', () => {
+    render(<TaskCreateSheet {...defaultProps} />);
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'Full Task' } });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Details here' } });
+    fireEvent.change(screen.getByLabelText(/due date/i), { target: { value: '2026-05-01' } });
+    fireEvent.change(screen.getByLabelText(/priority/i), { target: { value: 'URGENT' } });
+    fireEvent.click(screen.getByText('Create Task'));
+    expect(mockMutate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Full Task',
+        description: 'Details here',
+        priority: 'URGENT',
+      })
+    );
+    // dueDate is converted to Date object by the form
+    const call = mockMutate.mock.calls[0][0];
+    expect(call.dueDate).toBeInstanceOf(Date);
+  });
 });

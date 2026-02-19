@@ -4,7 +4,6 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 
 const mockLeads = [
   {
@@ -61,7 +60,7 @@ vi.mock('@intelliflow/ui', () => ({
     />
   ),
   Input: (props: any) => <input {...props} />,
-  Select: ({ children, onValueChange }: any) => <div>{children}</div>,
+  Select: ({ children, onValueChange: _onValueChange }: any) => <div>{children}</div>,
   SelectContent: ({ children }: any) => <div>{children}</div>,
   SelectItem: ({ children, value }: any) => <option value={value}>{children}</option>,
   SelectTrigger: ({ children, ...props }: any) => <div {...props}>{children}</div>,

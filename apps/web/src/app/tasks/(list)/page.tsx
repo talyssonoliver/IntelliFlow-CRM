@@ -93,7 +93,7 @@ export default function TasksPage() {
   );
 
   // Reminder counts query
-  const { data: remindersData } = api.task.getReminders.useQuery(undefined, {
+  api.task.getReminders.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
   });
 

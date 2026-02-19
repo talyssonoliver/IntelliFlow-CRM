@@ -27,7 +27,7 @@ const SLA_POLICIES: SLAPolicy[] = [
   { priority: 'Low', responseTarget: '24 hours', followUpTarget: '72 hours' },
 ];
 
-function SLABadge({ status }: { status: SLAStatus }) {
+function _SLABadge({ status }: { status: SLAStatus }) {
   const styles: Record<SLAStatus, string> = {
     ON_TRACK: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
     AT_RISK: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',

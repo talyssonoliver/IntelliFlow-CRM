@@ -5,8 +5,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mock the api module
-const mockUseQuery = vi.fn();
-const mockUseMutation = vi.fn(() => ({
+const mockUseQuery = vi.fn((..._args: unknown[]) => ({}));
+const mockUseMutation = vi.fn((..._args: unknown[]) => ({
   mutate: vi.fn(),
   isPending: false,
 }));
@@ -16,37 +16,37 @@ vi.mock('@/lib/api', () => ({
   api: {
     routing: {
       list: {
-        useQuery: (...args: any[]) => mockUseQuery('list', ...args),
+        useQuery: (...args: unknown[]) => mockUseQuery('list', ...args),
       },
       get: {
-        useQuery: (...args: any[]) => mockUseQuery('get', ...args),
+        useQuery: (...args: unknown[]) => mockUseQuery('get', ...args),
       },
       create: {
-        useMutation: (...args: any[]) => mockUseMutation('create', ...args),
+        useMutation: (...args: unknown[]) => mockUseMutation('create', ...args),
       },
       update: {
-        useMutation: (...args: any[]) => mockUseMutation('update', ...args),
+        useMutation: (...args: unknown[]) => mockUseMutation('update', ...args),
       },
       delete: {
-        useMutation: (...args: any[]) => mockUseMutation('delete', ...args),
+        useMutation: (...args: unknown[]) => mockUseMutation('delete', ...args),
       },
       reorder: {
-        useMutation: (...args: any[]) => mockUseMutation('reorder', ...args),
+        useMutation: (...args: unknown[]) => mockUseMutation('reorder', ...args),
       },
       toggle: {
-        useMutation: (...args: any[]) => mockUseMutation('toggle', ...args),
+        useMutation: (...args: unknown[]) => mockUseMutation('toggle', ...args),
       },
       getAssignments: {
-        useQuery: (...args: any[]) => mockUseQuery('getAssignments', ...args),
+        useQuery: (...args: unknown[]) => mockUseQuery('getAssignments', ...args),
       },
       getAgentWorkload: {
-        useQuery: (...args: any[]) => mockUseQuery('getAgentWorkload', ...args),
+        useQuery: (...args: unknown[]) => mockUseQuery('getAgentWorkload', ...args),
       },
       getLeadQueue: {
-        useQuery: (...args: any[]) => mockUseQuery('getLeadQueue', ...args),
+        useQuery: (...args: unknown[]) => mockUseQuery('getLeadQueue', ...args),
       },
       assignLead: {
-        useMutation: (...args: any[]) => mockUseMutation('assignLead', ...args),
+        useMutation: (...args: unknown[]) => mockUseMutation('assignLead', ...args),
       },
     },
     useUtils: () => ({
@@ -75,7 +75,7 @@ describe('useRouting hook', () => {
   });
 
   it('calls list query with correct input', async () => {
-    const { useRouting } = await import('../useRouting');
+    const { useRouting: _useRouting } = await import('../useRouting');
 
     // renderHook equivalent - just call the hook in test context
     // Since we can't use renderHook without proper React test setup,
@@ -84,11 +84,11 @@ describe('useRouting hook', () => {
   });
 
   it('getAssignments uses refetchInterval of 30000ms', async () => {
-    const { useRouting } = await import('../useRouting');
+    const { useRouting: _useRouting } = await import('../useRouting');
 
     // The hook module was already loaded and called useQuery
     // Verify the getAssignments call includes refetchInterval
-    const assignmentsCalls = mockUseQuery.mock.calls.filter(
+    const _assignmentsCalls = mockUseQuery.mock.calls.filter(
       (call: any[]) => call[0] === 'getAssignments'
     );
 

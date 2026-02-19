@@ -4,8 +4,6 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-
 // Mock the 5 routing components
 vi.mock('@/components/routing/RoutingRulesEditor', () => ({
   RoutingRulesEditor: () => <div data-testid="routing-rules-editor">RoutingRulesEditor</div>,

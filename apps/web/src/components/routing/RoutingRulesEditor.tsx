@@ -88,8 +88,8 @@ function SortableRule({
     transition,
   };
 
-  const conditions = (rule.conditions as RoutingCondition[]) || [];
-  const actions = (rule.actions as RoutingAction[]) || [];
+  const conditions: RoutingCondition[] = Array.isArray(rule.conditions) ? rule.conditions : [];
+  const actions: RoutingAction[] = Array.isArray(rule.actions) ? rule.actions : [];
 
   const conditionsSummary = conditions
     .map((c) => `${c.field} ${c.operator} ${Array.isArray(c.value) ? c.value.join(', ') : c.value}`)
@@ -184,8 +184,8 @@ export function RoutingRulesEditor() {
     setFormData({
       name: rule.name,
       description: rule.description || '',
-      conditions: (rule.conditions as RoutingCondition[]) || [{ ...emptyCondition }],
-      actions: (rule.actions as RoutingAction[]) || [{ ...emptyAction }],
+      conditions: Array.isArray(rule.conditions) ? rule.conditions : [{ ...emptyCondition }],
+      actions: Array.isArray(rule.actions) ? rule.actions : [{ ...emptyAction }],
     });
     setIsSheetOpen(true);
   };
@@ -195,8 +195,8 @@ export function RoutingRulesEditor() {
     setFormData({
       name: `Copy of ${rule.name}`,
       description: rule.description || '',
-      conditions: (rule.conditions as RoutingCondition[]) || [{ ...emptyCondition }],
-      actions: (rule.actions as RoutingAction[]) || [{ ...emptyAction }],
+      conditions: Array.isArray(rule.conditions) ? rule.conditions : [{ ...emptyCondition }],
+      actions: Array.isArray(rule.actions) ? rule.actions : [{ ...emptyAction }],
     });
     setIsSheetOpen(true);
   };

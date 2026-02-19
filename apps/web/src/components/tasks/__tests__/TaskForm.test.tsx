@@ -34,7 +34,7 @@ vi.mock('@intelliflow/domain', () => ({
 
 // Mock EntitySearchField
 vi.mock('../EntitySearchField', () => ({
-  EntitySearchField: ({ entityType, value, valueName, onChange }: any) => (
+  EntitySearchField: ({ entityType, value, valueName }: any) => (
     <div data-testid={`entity-search-${entityType}`}>
       {value ? valueName : `Search ${entityType}`}
     </div>
@@ -188,5 +188,70 @@ describe('TaskForm', () => {
     // Select "Lead"
     fireEvent.click(screen.getByDisplayValue('lead'));
     expect(screen.getByTestId('entity-search-lead')).toBeInTheDocument();
+  });
+
+  it('updates description field via onChange', () => {
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />);
+    const desc = screen.getByLabelText(/description/i);
+    fireEvent.change(desc, { target: { value: 'Updated description' } });
+    expect(desc).toHaveValue('Updated description');
+  });
+
+  it('updates due date field via onChange', () => {
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />);
+    const dueDate = screen.getByLabelText(/due date/i);
+    fireEvent.change(dueDate, { target: { value: '2026-06-15' } });
+    expect(dueDate).toHaveValue('2026-06-15');
+  });
+
+  it('updates priority field via onChange', () => {
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />);
+    const priority = screen.getByLabelText(/priority/i);
+    fireEvent.change(priority, { target: { value: 'URGENT' } });
+    expect(priority).toHaveValue('URGENT');
+  });
+
+  it('updates status field in edit mode', () => {
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="edit" />);
+    const status = screen.getByLabelText(/status/i);
+    fireEvent.change(status, { target: { value: 'IN_PROGRESS' } });
+    expect(status).toHaveValue('IN_PROGRESS');
+  });
+
+  it('switches entity type from none to contact and back', () => {
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />);
+
+    // Select Contact
+    fireEvent.click(screen.getByDisplayValue('contact'));
+    expect(screen.getByTestId('entity-search-contact')).toBeInTheDocument();
+
+    // Switch back to None
+    fireEvent.click(screen.getByDisplayValue('none'));
+    expect(screen.queryByTestId('entity-search-contact')).not.toBeInTheDocument();
+  });
+
+  it('submits form with all fields filled', () => {
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />);
+
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'Complete Task' } });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Full desc' } });
+    fireEvent.change(screen.getByLabelText(/due date/i), { target: { value: '2026-07-01' } });
+    fireEvent.change(screen.getByLabelText(/priority/i), { target: { value: 'HIGH' } });
+
+    fireEvent.click(screen.getByText('Create Task'));
+    expect(onSubmit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Complete Task',
+        description: 'Full desc',
+        dueDate: '2026-07-01',
+        priority: 'HIGH',
+      })
+    );
+  });
+
+  it('shows EntitySearchField for opportunity', () => {
+    render(<TaskForm open={true} onClose={onClose} onSubmit={onSubmit} mode="create" />);
+    fireEvent.click(screen.getByDisplayValue('opportunity'));
+    expect(screen.getByTestId('entity-search-opportunity')).toBeInTheDocument();
   });
 });

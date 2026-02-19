@@ -553,6 +553,11 @@ export function TicketDetail({
                             </span>
                           </div>
                         ))}
+                        {ticket.activities.length === 0 && (
+                          <p className="text-sm text-muted-foreground text-center py-4">
+                            No recent activity yet
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1101,6 +1106,11 @@ export function TicketDetail({
                     </div>
                   </label>
                 ))}
+                {ticket.nextSteps.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No next steps defined
+                  </p>
+                )}
               </div>
             </Card>
 
@@ -1129,6 +1139,11 @@ export function TicketDetail({
                     </Link>
                   );
                 })}
+                {ticket.relatedTickets.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    No related tickets
+                  </p>
+                )}
               </div>
             </Card>
           </aside>

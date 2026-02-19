@@ -24,13 +24,17 @@ vi.mock('@/lib/api', () => ({
         useMutation: (opts: any) => ({
           mutate: (data: any) => {
             mockComplete(data);
-            opts?.onSuccess?.();
+            if (data?.taskId === 'fail-task') {
+              opts?.onError?.(new Error('Complete failed'));
+            } else {
+              opts?.onSuccess?.();
+            }
           },
           isPending: false,
         }),
       },
       create: {
-        useMutation: (opts: any) => ({
+        useMutation: (_opts: any) => ({
           mutate: vi.fn(),
           isPending: false,
         }),
@@ -176,5 +180,45 @@ describe('RelatedTasksCard', () => {
     // The card should have p-4 instead of p-5
     const card = container.firstChild;
     expect(card?.firstChild).toBeTruthy();
+  });
+
+  it('opens create sheet when add button is clicked', () => {
+    render(<RelatedTasksCard {...defaultProps} />);
+    fireEvent.click(screen.getByLabelText('Add task'));
+    // The Sheet mock renders when open=true
+    expect(screen.getByTestId('sheet')).toBeInTheDocument();
+    expect(screen.getByText('New Task')).toBeInTheDocument();
+  });
+
+  it('opens create sheet from empty state "Add a task" button', () => {
+    mockGetByEntity.mockReturnValue({ data: [], isLoading: false, error: null });
+    render(<RelatedTasksCard {...defaultProps} />);
+    expect(screen.getByText('No tasks yet')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('Add a task'));
+    expect(screen.getByTestId('sheet')).toBeInTheDocument();
+  });
+
+  it('handles complete mutation error', () => {
+    const tasksWithFailable = [
+      { id: 'fail-task', title: 'Will Fail', status: 'PENDING', priority: 'LOW', dueDate: null },
+    ];
+    mockGetByEntity.mockReturnValue({ data: tasksWithFailable, isLoading: false, error: null });
+    render(<RelatedTasksCard {...defaultProps} />);
+    const checkbox = screen.getByLabelText('Complete task: Will Fail');
+    fireEvent.click(checkbox);
+    expect(mockComplete).toHaveBeenCalledWith({ taskId: 'fail-task' });
+    // Error toast should have been called (via the mock's onError path)
+  });
+
+  it('renders View All link when viewAllHref is provided', () => {
+    render(<RelatedTasksCard {...defaultProps} maxItems={2} viewAllHref="/tasks?entity=lead-123" />);
+    const link = screen.getByText('View All');
+    expect(link.closest('a')).toHaveAttribute('href', '/tasks?entity=lead-123');
+  });
+
+  it('shows "+N more" when there are more tasks and no viewAll', () => {
+    render(<RelatedTasksCard {...defaultProps} maxItems={2} />);
+    // 4 open tasks, showing 2, so "+2 more"
+    expect(screen.getByText('+2 more')).toBeInTheDocument();
   });
 });

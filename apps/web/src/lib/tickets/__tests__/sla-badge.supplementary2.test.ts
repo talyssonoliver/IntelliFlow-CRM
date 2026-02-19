@@ -6,12 +6,10 @@
  *
  * Uses sla-service.ts directly (no rendering).
  */
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
   SLATrackingService,
   DEFAULT_SLA_POLICY,
-  type SLAPolicy,
-  type SLATimerResult,
 } from '../../../../lib/tickets/sla-service';
 
 const slaService = new SLATrackingService();

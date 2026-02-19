@@ -2,7 +2,7 @@
  * Tests for sla-badge.tsx (apps/web/lib/tickets/sla-badge.tsx)
  * Tests the component logic without @testing-library/react
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // Since sla-badge.tsx is a React component with JSX outside src/,
 // we test the logic patterns used in the component without importing it directly.
