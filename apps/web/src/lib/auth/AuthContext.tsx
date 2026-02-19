@@ -50,7 +50,7 @@ function decodeJwtPayload(token: string): { exp?: number; sub?: string } | null 
  * Check if token needs refresh (expires within threshold)
  * Default threshold: 5 minutes before expiry
  */
-function tokenNeedsRefresh(token: string, thresholdMs: number = 5 * 60 * 1000): boolean {
+function _tokenNeedsRefresh(token: string, thresholdMs: number = 5 * 60 * 1000): boolean {
   const payload = decodeJwtPayload(token);
   if (!payload?.exp) return true; // If we can't read expiry, assume needs refresh
 
@@ -174,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   // tRPC mutation for token refresh
-  const refreshTokenMutation = trpc.auth.refreshSession.useMutation();
+  const _refreshTokenMutation = trpc.auth.refreshSession.useMutation();
 
   // Track refresh timer
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -916,7 +916,7 @@ export function useRequireAuth(): AuthContextType {
  */
 export function useRedirectIfAuthenticated(redirectTo: string = '/dashboard'): AuthContextType {
   const auth = useAuth();
-  const router = useRouter();
+  const _router = useRouter();
   const searchParams = useSearchParams();
 
   // Check if user just logged out - don't redirect them back

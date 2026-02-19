@@ -340,7 +340,7 @@ describe('MfaChallenge', () => {
 
   describe('Resend Code', () => {
     it('shows resend button for SMS method', async () => {
-      const user = userEvent.setup();
+      const _user = userEvent.setup();
       const onResend = vi.fn().mockResolvedValue(true);
 
       render(

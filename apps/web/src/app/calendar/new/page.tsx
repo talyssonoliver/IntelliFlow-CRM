@@ -12,7 +12,7 @@ import { useCallback } from 'react';
 import { Skeleton } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { AppointmentForm } from '@/components/appointments';
-import type { AppointmentFormData } from '@/components/appointments/types';
+import type { AppointmentFormInput } from '@/components/appointments/types';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
 
@@ -31,7 +31,7 @@ export default function NewAppointmentPage() {
   }) ?? { mutateAsync: async () => {}, isPending: false };
 
   const handleSubmit = useCallback(
-    async (data: AppointmentFormData) => {
+    async (data: AppointmentFormInput) => {
       await createMutation.mutateAsync(data);
     },
     [createMutation]
@@ -65,7 +65,7 @@ export default function NewAppointmentPage() {
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isSubmitting={createMutation.isPending}
-        existingAppointments={[]}
+        onConflictCheck={() => {}}
       />
     </>
   );

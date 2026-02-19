@@ -431,7 +431,7 @@ export default function Contact360Page() {
   }, [apiContact?.opportunities]);
 
   // Transform tasks from API
-  const tasks = useMemo(() => {
+  const _tasks = useMemo(() => {
     if (!apiContact?.tasks) return [];
     return apiContact.tasks.map((task) => ({
       id: task.id,

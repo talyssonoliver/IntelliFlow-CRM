@@ -11,9 +11,9 @@
  * - Click interactions
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ContactCard, type ContactCardProps } from '../ContactCard';
+import { ContactCard } from '../ContactCard';
 import { createMockContact, createMockHandlers, resetAllMocks } from './contact-test-utils';
 
 describe('ContactCard', () => {

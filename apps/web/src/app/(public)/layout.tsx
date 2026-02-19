@@ -14,6 +14,7 @@ const AUTH_PAGES_NO_FOOTER = [
   '/reset-password',
   '/logout',
   '/verify-email',
+  '/mfa',
 ];
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {

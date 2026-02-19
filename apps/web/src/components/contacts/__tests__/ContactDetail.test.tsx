@@ -91,10 +91,10 @@ vi.mock('@intelliflow/ui', () => ({
       {children}
     </div>
   ),
-  ChurnRiskCard: ({ data, title }: { data: unknown; title: string }) => (
+  ChurnRiskCard: ({ _data, title }: { _data?: unknown; title: string }) => (
     <div data-testid="churn-risk-card">{title}</div>
   ),
-  NextBestActionCard: ({ data, title }: { data: unknown; title: string }) => (
+  NextBestActionCard: ({ _data, title }: { _data?: unknown; title: string }) => (
     <div data-testid="nba-card">{title}</div>
   ),
 }));

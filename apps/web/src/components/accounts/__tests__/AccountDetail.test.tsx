@@ -2,7 +2,7 @@
 /**
  * AccountDetail Tests (PG-134)
  */
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AccountDetail } from '../AccountDetail';

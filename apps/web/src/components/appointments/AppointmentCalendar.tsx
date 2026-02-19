@@ -117,7 +117,7 @@ export function AppointmentCalendar({
   );
 
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent, date: Date, dayIndex: number) => {
+    (e: React.KeyboardEvent, date: Date, _dayIndex: number) => {
       let newDate: Date | null = null;
       switch (e.key) {
         case 'ArrowLeft':

@@ -6,7 +6,7 @@
  * Tests pure functions and state machine logic extracted from the source.
  * Does NOT render React components or use @testing-library/react.
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 // ============================================================
 // Re-implement pure functions from AuthContext.tsx for testing

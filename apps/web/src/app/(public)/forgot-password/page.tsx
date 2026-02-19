@@ -15,7 +15,7 @@
  * - Link back to login
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { cn } from '@intelliflow/ui';
 import { useRedirectIfAuthenticated } from '@/lib/auth/AuthContext';
@@ -54,6 +54,21 @@ export default function ForgotPasswordPage() {
   const [isResending, setIsResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  // Countdown timer for resend cooldown
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
 
   // Handle password reset request
   const handleSubmit = useCallback(async (submittedEmail: string) => {

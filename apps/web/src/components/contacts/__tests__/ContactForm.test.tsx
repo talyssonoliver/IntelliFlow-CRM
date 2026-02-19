@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ContactForm } from '../ContactForm';
 import { createMockFormData, createMockHandlers, resetAllMocks } from './contact-test-utils';
@@ -289,7 +289,7 @@ describe('ContactForm', () => {
 
       // Error should clear when field is corrected
       await waitFor(() => {
-        const errorSummary = screen.queryByText(/Please fix the following errors/i);
+        const _errorSummary = screen.queryByText(/Please fix the following errors/i);
         // Error summary may still exist if other fields have errors, but firstName error should be gone
         const firstNameInput = screen.getByLabelText(/First Name/i);
         expect(firstNameInput).toHaveAttribute('aria-invalid', 'false');
