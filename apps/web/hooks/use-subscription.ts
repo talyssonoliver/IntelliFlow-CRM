@@ -227,7 +227,6 @@ export function useSubscription<T = unknown>(options: SubscriptionOptions<T>) {
     } as const;
 
     channel
-      // @ts-expect-error - Supabase types don't properly support filter parameter
       .on('postgres_changes', eventConfig, handlePayload)
       .on('system', { event: '*' }, (payload) => {
         log('System event:', payload);

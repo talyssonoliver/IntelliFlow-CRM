@@ -55,10 +55,12 @@ Adapters CAN depend on: packages/application (ports), external libraries
 | Condition                                                  | Verdict |
 | ---------------------------------------------------------- | ------- |
 | All domain tests pass, types valid, no boundary violations | PASS    |
-| Minor type warnings, tests pass                            | WARN    |
+| Type warnings exist (even minor)                           | FAIL    |
 | Domain tests fail                                          | FAIL    |
 | Architecture boundary violation                            | FAIL    |
 | Business rule violation detected                           | FAIL    |
+
+**CRITICAL**: There is NO WARN verdict. Type warnings must be fixed — they indicate type safety gaps that can cause runtime errors.
 
 ## Trigger Conditions
 
@@ -77,7 +79,7 @@ Write verdict JSON to:
 {
   "stoa": "Domain",
   "taskId": "<TASK_ID>",
-  "verdict": "PASS|WARN|FAIL|NEEDS_HUMAN",
+  "verdict": "PASS|FAIL|NEEDS_HUMAN",
   "rationale": "...",
   "toolIdsExecuted": [...],
   "domainMetrics": {

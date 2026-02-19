@@ -353,7 +353,7 @@ export const myRouter = createTRPCRouter({
 
 - Use shadcn/ui components from `packages/ui/`
 - Follow WCAG 2.1 AA accessibility standards
-- Target Lighthouse score >90
+- Target Lighthouse score >90 (run `pnpm run lighthouse` to verify)
 
 ### Page Structure
 

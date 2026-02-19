@@ -51,10 +51,11 @@ Execute these gates in order, logging output to
 | Condition                           | Verdict     |
 | ----------------------------------- | ----------- |
 | Coverage >= 90%, all tests pass     | PASS        |
-| Coverage between 85-90%             | WARN        |
+| Coverage below 90%                  | FAIL        |
 | Tests fail                          | FAIL        |
-| Coverage below 85%                  | FAIL        |
 | Coverage enforcement not configured | NEEDS_HUMAN |
+
+**CRITICAL**: There is NO WARN verdict. Coverage either meets the 90% threshold or fails. The 85-90% "WARN" range was removed because it silently accepted under-tested code.
 
 ## Output
 
@@ -65,7 +66,7 @@ Write verdict JSON to:
 {
   "stoa": "Quality",
   "taskId": "<TASK_ID>",
-  "verdict": "PASS|WARN|FAIL|NEEDS_HUMAN",
+  "verdict": "PASS|FAIL|NEEDS_HUMAN",
   "rationale": "...",
   "toolIdsExecuted": [...],
   "metrics": {

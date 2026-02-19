@@ -36,31 +36,31 @@ Execute these gates in order, logging output to
 | -------- | ------------------------------------ |
 | CRITICAL | Immediate FAIL, block merge          |
 | HIGH     | FAIL, requires fix before completion |
-| MEDIUM   | WARN, create review queue entry      |
-| LOW      | INFO, log and continue               |
+| MEDIUM   | FAIL, must be fixed — no silent pass |
+| LOW      | FAIL, must be fixed or formally accepted via ADR |
 
 ## Verdict Logic
 
 | Condition                                   | Verdict          |
 | ------------------------------------------- | ---------------- |
-| All gates exit 0, no HIGH/CRITICAL findings | PASS             |
-| Gates pass but MEDIUM findings exist        | WARN             |
+| All gates exit 0, no findings at any level  | PASS             |
 | Any gate exits non-zero                     | FAIL             |
-| HIGH/CRITICAL findings detected             | FAIL             |
+| Any finding at any severity                 | FAIL             |
 | Secret leak detected                        | FAIL (immediate) |
 
-## Waiver Handling
+**CRITICAL**: There is NO WARN verdict. Security findings at ANY severity must be resolved. MEDIUM findings that were previously WARN'd silently became accepted tech debt. Fix them or document the risk in an ADR.
 
-Tools requiring external setup (tokens, installations) get waivers when
-unavailable:
+## Unavailable Tools
 
-| Tool    | Waiver Reason                  |
-| ------- | ------------------------------ |
-| snyk    | `env_var_missing` (SNYK_TOKEN) |
-| semgrep | `infrastructure_not_ready`     |
-| trivy   | `infrastructure_not_ready`     |
+Tools requiring external setup (tokens, installations) that are unavailable:
 
-Waivers must have justification and expiry date (max 30 days).
+| Tool    | Reason                         | Action |
+| ------- | ------------------------------ | ------ |
+| snyk    | `env_var_missing` (SNYK_TOKEN) | Run available gates only. Document which tools were unavailable. |
+| semgrep | `infrastructure_not_ready`     | Same — no waiver, just document. |
+| trivy   | `infrastructure_not_ready`     | Same — no waiver, just document. |
+
+Unavailable tools do NOT produce a PASS — they produce no result. The verdict is based on gates that DID run. If zero security gates could run, verdict is NEEDS_HUMAN.
 
 ## Output
 
@@ -71,10 +71,10 @@ Write verdict JSON to:
 {
   "stoa": "Security",
   "taskId": "<TASK_ID>",
-  "verdict": "PASS|WARN|FAIL|NEEDS_HUMAN",
+  "verdict": "PASS|FAIL|NEEDS_HUMAN",
   "rationale": "...",
   "toolIdsExecuted": [...],
-  "waiversProposed": [...],
+  "unavailableTools": [...],
   "findings": [...],
   "timestamp": "<ISO8601>"
 }
@@ -82,7 +82,7 @@ Write verdict JSON to:
 
 ## Rules
 
-- Secret leaks are ALWAYS a FAIL — no waivers allowed
-- Run available gates even if some tools are missing (waiver the rest)
+- Secret leaks are ALWAYS a FAIL
+- Run available gates even if some tools are missing (document unavailable tools)
 - Log exact exit codes and durations for each gate
 - Include finding severity in all reported issues

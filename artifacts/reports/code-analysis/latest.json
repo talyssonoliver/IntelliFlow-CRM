@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-09T17:45:46.638Z",
+  "timestamp": "2026-02-18T00:42:41.090Z",
   "knip": {
     "success": true,
     "data": {
@@ -9,26 +9,27 @@
         "packages/db/prisma/apply-schema-v2.ts",
         "packages/db/prisma/apply-schema.ts",
         "packages/db/prisma/check-db.ts",
-        "packages/domain/src/ai/conversation-record.ts",
-        "packages/domain/src/platform/index.ts",
+        "packages/domain/src/ai/events/ChainVersionEvents.ts",
         "apps/web/lib/tickets/index.ts",
-        "apps/web/src/components/governance/governance-sidebar.tsx",
-        "apps/web/src/components/governance/index.ts",
-        "apps/web/src/components/pricing/pricing-calculator.tsx",
-        "apps/web/src/components/settings/index.ts",
-        "apps/web/src/components/settings/settings-sidebar.tsx",
+        "apps/web/lib/tickets/sla-badge.tsx",
+        "apps/web/src/components/ai-intelligence/churn-utils.ts",
+        "apps/web/src/components/ai-intelligence/CitationDisplay.tsx",
+        "apps/web/src/components/ai-intelligence/sentiment-utils.ts",
+        "apps/web/src/lib/tickets/index.ts",
+        "apps/web/src/lib/tickets/sla-service.ts",
+        "apps/web/src/test/fixtures/case-data.ts",
+        "apps/web/src/components/shared/activity-feed/index.ts",
+        "apps/api/src/scripts/backfill-ticket-relations.ts",
         "apps/api/src/shared/bias-detector.ts",
         "apps/api/src/shared/filter-options-builder.ts",
         "apps/api/src/shared/retry-policy.ts",
-        "apps/api/src/modules/autoresponse/index.ts",
-        "apps/api/src/modules/chain-version/index.ts",
-        "apps/api/src/modules/experiment/index.ts",
         "apps/api/src/modules/legal/types.ts",
+        "apps/ai-worker/src/metrics/index.ts",
         "apps/project-tracker/lib/prompt-generator/types.ts"
       ],
       "dependencies": [
         "@prisma/client",
-        "use-debounce",
+        "@scalar/nextjs-api-reference",
         "ioredis",
         "@opentelemetry/exporter-metrics-otlp-http",
         "@opentelemetry/exporter-trace-otlp-http",
@@ -44,6 +45,9 @@
         "@paralleldrive/cuid2"
       ],
       "devDependencies": [
+        "@anatine/zod-openapi",
+        "@apidevtools/swagger-parser",
+        "openapi3-ts",
         "@microsoft/api-extractor",
         "baseline-browser-mapping",
         "cspell",
@@ -95,6 +99,18 @@
           ]
         },
         {
+          "file": "apps/ai-worker/src/services/document-indexer.ts",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/workers/reindex-worker.ts",
+          "exports": [
+            "default"
+          ]
+        },
+        {
           "file": "apps/ai-worker/src/monitoring/chain-monitor.ts",
           "exports": [
             "sanitizeMetricLabel"
@@ -121,12 +137,7 @@
         {
           "file": "apps/ai-worker/src/services/embedding-purge.service.ts",
           "exports": [
-            "createEmbeddingPurgeService"
-          ]
-        },
-        {
-          "file": "apps/ai-worker/src/prompts/index.ts",
-          "exports": [
+            "createEmbeddingPurgeService",
             "default"
           ]
         },
@@ -134,6 +145,18 @@
           "file": "packages/platform/src/resilience/retry-policy.ts",
           "exports": [
             "Retry"
+          ]
+        },
+        {
+          "file": "apps/api/src/security/encryption.ts",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/api/src/security/key-rotation.ts",
+          "exports": [
+            "default"
           ]
         },
         {
@@ -182,17 +205,17 @@
           ]
         },
         {
+          "file": "packages/application/src/usecases/SyncModulesOnPlanChange.ts",
+          "exports": [
+            "SyncModulesOnPlanChange"
+          ]
+        },
+        {
           "file": "packages/search/src/index.ts",
           "exports": [
             "SEARCH_MODES",
             "SEARCH_SOURCES",
             "SEARCH_PERFORMANCE"
-          ]
-        },
-        {
-          "file": "packages/ai/tools/retrieve-case-context.ts",
-          "exports": [
-            "default"
           ]
         },
         {
@@ -234,9 +257,34 @@
           ]
         },
         {
+          "file": "packages/ui/src/components/experiment/ExperimentDashboard.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "packages/ui/src/components/cookie-consent/cookie-consent.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
           "file": "packages/ui/src/components/status-select-dialog.tsx",
           "exports": [
             "StatusSelectDialog"
+          ]
+        },
+        {
+          "file": "packages/ui/src/components/sheet.tsx",
+          "exports": [
+            "SheetClose"
+          ]
+        },
+        {
+          "file": "packages/ui/src/components/dropdown-menu.tsx",
+          "exports": [
+            "DropdownMenuGroup",
+            "DropdownMenuPortal"
           ]
         },
         {
@@ -252,13 +300,200 @@
           ]
         },
         {
-          "file": "apps/web/lib/tickets/sla-badge.tsx",
+          "file": "packages/domain/src/crm/task/TaskEvents.ts",
           "exports": [
-            "SLAQuickView"
+            "canTransitionTaskTo"
           ]
         },
         {
-          "file": "apps/web/lib/status/incident-tracker.ts",
+          "file": "packages/domain/src/crm/billing/billing-errors.ts",
+          "exports": [
+            "InvoiceAlreadyVoidedError"
+          ]
+        },
+        {
+          "file": "packages/domain/src/ai/ChainVersionEvents.ts",
+          "exports": [
+            "ChainVersionCreatedEvent",
+            "ChainVersionActivatedEvent",
+            "ChainVersionDeprecatedEvent",
+            "ChainVersionRolledBackEvent"
+          ]
+        },
+        {
+          "file": "packages/domain/src/platform/modules/ModuleRegistry.ts",
+          "exports": [
+            "isModuleInPlan"
+          ]
+        },
+        {
+          "file": "packages/domain/src/platform/modules/ModuleRoutes.ts",
+          "exports": [
+            "getModuleForRoute"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/page-header.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/reset-email.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/billing/invoice-list.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/billing/payment-methods.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/billing/receipt-list.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/billing/subscription-manager.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/shared/filter-utils.ts",
+          "exports": [
+            "taskStatusChips",
+            "taskPriorityChips"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/blog/comments-widget.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/job-detail-template.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/landing-builder.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/auth-background.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/auth-card.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/password-reset.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/onboarding-flow.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/email-verification.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/billing/invoice-detail.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/mfa-qr-generator.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/backup-codes-display.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/agent/rollback-service.ts",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/test/fixtures/appointment-data.ts",
+          "exports": [
+            "mockLinkedCase2",
+            "createMockAppointment",
+            "createMockConflict",
+            "createMockStats"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/auth/mfa-challenge.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/test/fixtures/billing-data.ts",
+          "exports": [
+            "createMockUsageMetrics"
+          ]
+        },
+        {
+          "file": "apps/web/src/test/fixtures/openapi-data.ts",
+          "exports": [
+            "mockInvalidSpec"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/apply-button.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/oauth-callback.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/password-input.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/trust-indicators.tsx",
           "exports": [
             "default"
           ]
@@ -279,6 +514,44 @@
           "file": "apps/web/src/lib/pricing/calculator.ts",
           "exports": [
             "redirectToCheckout"
+          ]
+        },
+        {
+          "file": "apps/web/src/hooks/useActivityFeed.ts",
+          "exports": [
+            "useEntityFeed"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/active-agents/agent-utils.ts",
+          "exports": [
+            "getStatusColor"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/churn-risk/churn-utils.ts",
+          "exports": [
+            "getRiskIcon"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/lead-scoring/lead-scoring-utils.ts",
+          "exports": [
+            "getScoreTierBadgeClass",
+            "getScoreTierIcon",
+            "getScoreTierLabel"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/entity-header.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/sidebar/configs/email.ts",
+          "exports": [
+            "emailSidebarConfig"
           ]
         },
         {
@@ -326,6 +599,18 @@
           ]
         },
         {
+          "file": "apps/api/src/modules/agent/conversation.router.ts",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/api/src/modules/misc/timeline.ts",
+          "exports": [
+            "default"
+          ]
+        },
+        {
           "file": "apps/api/src/shared/audit-encryption-module.ts",
           "exports": [
             "resetAuditEncryption"
@@ -339,6 +624,18 @@
             "callSendGrid",
             "callTwilio",
             "wrapExternalServiceCallWithRetry"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/services/retrieval-service.ts",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/workers/ocr-worker.ts",
+          "exports": [
+            "default"
           ]
         }
       ],
@@ -377,6 +674,12 @@
           ]
         },
         {
+          "file": "apps/ai-worker/src/services/document-indexer.ts",
+          "types": [
+            "NoteToIndex"
+          ]
+        },
+        {
           "file": "packages/platform/src/resilience/retry-policy.ts",
           "types": [
             "ResilientCallOptions"
@@ -393,6 +696,12 @@
           "types": [
             "MaterialSymbolName",
             "MaterialIconProps"
+          ]
+        },
+        {
+          "file": "apps/ai-worker/src/services/retrieval-service.ts",
+          "types": [
+            "ContactNoteRecord"
           ]
         },
         {
@@ -460,12 +769,6 @@
           ]
         },
         {
-          "file": "apps/ai-worker/src/services/document-indexer.ts",
-          "types": [
-            "NoteToIndex"
-          ]
-        },
-        {
           "file": "apps/ai-worker/src/config/relevance-config.ts",
           "types": [
             "SourceWeights"
@@ -518,6 +821,12 @@
           ]
         },
         {
+          "file": "packages/search/src/embedding-provider.ts",
+          "types": [
+            "IEmbeddingProvider"
+          ]
+        },
+        {
           "file": "packages/platform/src/feature-flags/schema.ts",
           "types": [
             "FeatureFlagsConfigInput"
@@ -558,12 +867,6 @@
           ]
         },
         {
-          "file": "packages/domain/src/support/TicketConstants.ts",
-          "types": [
-            "TicketCategory"
-          ]
-        },
-        {
           "file": "packages/domain/src/shared/QueryTypes.ts",
           "types": [
             "PaginationParams",
@@ -591,13 +894,6 @@
           ]
         },
         {
-          "file": "packages/domain/src/legal/cases/CaseRepository.ts",
-          "types": [
-            "CaseRepository",
-            "CaseQueryService"
-          ]
-        },
-        {
           "file": "packages/domain/src/ai/AIConstants.ts",
           "types": [
             "AIPriority",
@@ -620,7 +916,6 @@
         {
           "file": "packages/domain/src/auth/AuthConstants.ts",
           "types": [
-            "MfaMethod",
             "OAuthProvider"
           ]
         },
@@ -640,6 +935,24 @@
           ]
         },
         {
+          "file": "packages/domain/src/automation/RoutingConstants.ts",
+          "types": [
+            "RoutingReason",
+            "RoutingConditionOperator",
+            "RoutingConditionField",
+            "RoutingActionType"
+          ]
+        },
+        {
+          "file": "packages/domain/src/ai/review/ReviewStatus.ts",
+          "types": [
+            "ReviewStatusType",
+            "ReviewDecisionType",
+            "AuditEventTypeValue",
+            "AuditEventType"
+          ]
+        },
+        {
           "file": "packages/domain/src/platform/PlatformConstants.ts",
           "types": [
             "IdpStatus",
@@ -652,15 +965,6 @@
             "OnboardingStep",
             "SecretsTool",
             "KpiStatus"
-          ]
-        },
-        {
-          "file": "packages/domain/src/ai/review/ReviewStatus.ts",
-          "types": [
-            "ReviewStatusType",
-            "ReviewDecisionType",
-            "AuditEventTypeValue",
-            "AuditEventType"
           ]
         },
         {
@@ -709,9 +1013,40 @@
           ]
         },
         {
+          "file": "apps/web/src/lib/export/csv.ts",
+          "types": [
+            "PipelineStageExport"
+          ]
+        },
+        {
+          "file": "apps/web/lib/timeline/types.ts",
+          "types": [
+            "UpcomingDeadlinesResponse",
+            "PendingAgentActionsResponse"
+          ]
+        },
+        {
           "file": "apps/web/src/hooks/usePipelineConfig.ts",
           "types": [
             "UpdateAllInput"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/experiments/types.ts",
+          "types": [
+            "ExperimentResult",
+            "ExperimentStatusResponse",
+            "ExperimentFilters",
+            "ExperimentAction"
+          ]
+        },
+        {
+          "file": "apps/api/src/shared/scoring-output-schema.zod.ts",
+          "types": [
+            "ScoringResponse",
+            "BatchScoringRequest",
+            "BatchScoringResponse",
+            "ScoreOverride"
           ]
         },
         {
@@ -731,15 +1066,6 @@
           "types": [
             "PermissionId",
             "RequestContext"
-          ]
-        },
-        {
-          "file": "apps/api/src/shared/scoring-output-schema.zod.ts",
-          "types": [
-            "ScoringResponse",
-            "BatchScoringRequest",
-            "BatchScoringResponse",
-            "ScoreOverride"
           ]
         },
         {
@@ -767,9 +1093,9 @@
           ]
         },
         {
-          "file": "apps/api/src/modules/misc/timeline.router.ts",
+          "file": "apps/api/src/modules/legal/cases.router.ts",
           "types": [
-            "TimelineRouter"
+            "CasesRouter"
           ]
         },
         {
@@ -779,9 +1105,9 @@
           ]
         },
         {
-          "file": "apps/api/src/modules/legal/cases.router.ts",
+          "file": "apps/api/src/modules/misc/timeline.router.ts",
           "types": [
-            "CasesRouter"
+            "TimelineRouter"
           ]
         },
         {
@@ -794,12 +1120,6 @@
           "file": "apps/api/src/modules/webhooks/webhooks.router.ts",
           "types": [
             "WebhooksRouter"
-          ]
-        },
-        {
-          "file": "apps/ai-worker/src/services/retrieval-service.ts",
-          "types": [
-            "ContactNoteRecord"
           ]
         },
         {
@@ -844,10 +1164,10 @@
       "duplicates": []
     },
     "summary": {
-      "unusedFiles": 21,
-      "unusedDeps": 25,
-      "unusedExports": 64,
-      "unusedTypes": 162
+      "unusedFiles": 22,
+      "unusedDeps": 28,
+      "unusedExports": 122,
+      "unusedTypes": 170
     }
   },
   "depcheck": {

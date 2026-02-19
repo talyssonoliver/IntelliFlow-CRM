@@ -341,7 +341,7 @@ class EnvValidator {
         this.errors.push({
           variable: name,
           type: 'invalid_format',
-          message: `Invalid format for '${name}': ${result.error.errors[0]?.message}`,
+          message: `Invalid format for '${name}': ${result.error.issues[0]?.message}`,
           severity: 'high',
         });
         return false;

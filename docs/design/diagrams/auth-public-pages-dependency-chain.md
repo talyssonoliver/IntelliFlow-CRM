@@ -17,7 +17,7 @@ verification.
 | Sign Up            | IFC-006 | PG-016     | COMPLETE |
 | Logout             | IFC-006 | PG-017     | COMPLETE |
 | Password Reset     | IFC-006 | PG-018-021 | COMPLETE |
-| MFA/2FA            | IFC-098 | PG-022-023 | PARTIAL  |
+| MFA/2FA            | IFC-098 | PG-021-023 | PARTIAL  |
 | Email Verification | IFC-006 | PG-024     | COMPLETE |
 | Public Pages       | N/A     | PG-001-014 | COMPLETE |
 | Onboarding         | IFC-076 | PG-126     | BACKLOG  |
@@ -84,17 +84,17 @@ verification.
     ║  MFA/2FA FLOW                                                            ✅ COMPLETE     ║
     ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
 
-    ┌─────────────────────────────┐         ┌─────────────────────────────┐
-    │        IFC-098              │         │       PG-021                │
-    │   RBAC / MFA Backend        │         │   MFA Setup Page            │
-    │                             │         │                             │
-    │  - TOTP setup               │         │  - 5-step wizard            │
-    │  - Backup codes             │ ───────►│  - QR code, SMS, Email      │
-    │  - Recovery flow            │         │  - 41 page tests (96% cov)  │
-    │                             │         │                             │
-    │  Status: COMPLETED ✅       │         │  Status: COMPLETED ✅       │
-    │  Sprint: 5                  │         │  Sprint: 13                 │
-    └─────────────────────────────┘         └─────────────────────────────┘
+    ┌─────────────────────────────┐         ┌─────────────────────────────┐         ┌─────────────────────────────┐
+    │        IFC-098              │         │       PG-021                │         │       PG-022                │
+    │   RBAC / MFA Backend        │         │   MFA Setup Page            │         │   MFA Verify Page           │
+    │                             │         │                             │         │                             │
+    │  - TOTP setup               │         │  - 5-step wizard            │         │  - Standalone verify page   │
+    │  - Backup codes             │ ───────►│  - QR code, SMS, Email      │ ───────►│  - URL param validation     │
+    │  - Recovery flow            │         │  - 41 page tests (96% cov)  │         │  - Open redirect prevention │
+    │                             │         │                             │         │                             │
+    │  Status: COMPLETED ✅       │         │  Status: COMPLETED ✅       │         │  Status: COMPLETED ✅       │
+    │  Sprint: 5                  │         │  Sprint: 13                 │         │  Sprint: 13                 │
+    └─────────────────────────────┘         └─────────────────────────────┘         └─────────────────────────────┘
 ```
 
 ---
@@ -288,7 +288,7 @@ verification.
     ├────────────────────────┼─────────────┼─────────────┼─────────────────────────────────────┤
     │ Auth (Sign In/Out)     │ ✅ Complete │ ✅ Complete │ IFC-006, PG-015-017                 │
     │ Password Reset         │ ✅ Complete │ ✅ Complete │ IFC-006, PG-018-021                 │
-    │ MFA/2FA                │ ✅ Complete │ ⚠️ Backlog  │ IFC-098, PG-022-023                 │
+    │ MFA/2FA                │ ✅ Complete │ ⚠️ Partial  │ IFC-098, PG-021-022 ✅, PG-023 ⚠️   │
     │ Email Verification     │ ✅ Complete │ ✅ Complete │ IFC-006, PG-024                     │
     │ Marketing Pages        │ N/A         │ ✅ Complete │ PG-001-014 (static)                 │
     │ Billing                │ ⚠️ Partial  │ ⚠️ Backlog  │ Stripe integration partial          │
@@ -306,7 +306,7 @@ No new tasks required for Auth domain - all chains are tracked:
 
 | Feature    | Backend           | Frontend                        | Status  |
 | ---------- | ----------------- | ------------------------------- | ------- |
-| MFA        | IFC-098 ✅        | PG-022-023 (Backlog)            | Tracked |
+| MFA        | IFC-098 ✅        | PG-021-022 ✅, PG-023 (Backlog) | Tracked |
 | Onboarding | IFC-076 (Backlog) | PG-126 (Backlog)                | Tracked |
 | Billing    | Partial           | PG-025 ✅, PG-026-031 (Backlog) | Tracked |
 

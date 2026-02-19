@@ -14,7 +14,33 @@ This directory tracks Sprint 0 performance artifacts for **ENV-014-AI**.
 - `artifacts/logs/optimization-log.csv`: optimization decisions log.
 - `artifacts/misc/cache-config.yaml`: baseline caching configuration placeholder.
 
-## Suggested workflow (operator)
+## Lighthouse CI Workflow
+
+```bash
+# Start dev server first
+pnpm run dev:web
+
+# Quick single-page audit (dev mode — scores will be lower)
+npx lhci autorun --collect.url=http://localhost:3000/email --collect.numberOfRuns=1
+
+# Full audit across all 27 configured routes
+pnpm run lighthouse
+
+# CI mode — saves HTML/JSON reports to artifacts/lighthouse/
+pnpm run lighthouse:ci
+```
+
+**Configuration**: `lighthouserc.js` (project root) defines URLs, thresholds,
+Core Web Vitals budgets, and resource limits.
+
+**Reports**: `artifacts/lighthouse/manifest.json` contains results summary with
+links to full HTML/JSON reports.
+
+**Note**: Dev server gives lower performance scores (~60%) due to unminified JS,
+no gzip, and HMR overhead. Use production builds (`pnpm run build && pnpm start`)
+for accurate benchmarks.
+
+## Benchmark Workflow
 
 ```bash
 pnpm install

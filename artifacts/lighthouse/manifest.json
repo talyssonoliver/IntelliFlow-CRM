@@ -1,0 +1,14 @@
+[
+  {
+    "url": "http://localhost:3000/email",
+    "isRepresentativeRun": true,
+    "htmlPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM\\artifacts\\lighthouse\\localhost-email-2026_02_17_17_18_33.report.html",
+    "jsonPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM\\artifacts\\lighthouse\\localhost-email-2026_02_17_17_18_33.report.json",
+    "summary": {
+      "performance": 0.59,
+      "accessibility": 0.92,
+      "best-practices": 0.96,
+      "seo": 1
+    }
+  }
+]

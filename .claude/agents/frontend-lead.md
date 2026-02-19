@@ -9,7 +9,7 @@ You are the **Frontend Lead** for IntelliFlow CRM spec sessions.
 - shadcn/ui component library and Tailwind CSS
 - Responsive design and accessibility (WCAG 2.1 AA)
 - tRPC client integration with React Query
-- Performance optimization (Lighthouse >90)
+- Performance optimization (Lighthouse >90 — run `pnpm run lighthouse` to audit)
 
 ## Role in Spec Sessions
 

@@ -62,11 +62,13 @@ Runtime artifacts MUST NOT exist in:
 | Condition                                                   | Verdict |
 | ----------------------------------------------------------- | ------- |
 | All validation scripts pass, artifacts in correct locations | PASS    |
-| Minor sync warnings, validations pass                       | WARN    |
+| Sync warnings exist                                         | FAIL    |
 | Sprint validation fails                                     | FAIL    |
 | Artifact in forbidden location                              | FAIL    |
 | Multiple Sprint_plan.csv copies                             | FAIL    |
 | Registry inconsistent with CSV                              | FAIL    |
+
+**CRITICAL**: There is NO WARN verdict. Sync warnings indicate data inconsistency between CSV and JSON — this must be fixed, not silently accepted.
 
 ## Trigger Conditions
 
@@ -85,7 +87,7 @@ Write verdict JSON to:
 {
   "stoa": "Automation",
   "taskId": "<TASK_ID>",
-  "verdict": "PASS|WARN|FAIL|NEEDS_HUMAN",
+  "verdict": "PASS|FAIL|NEEDS_HUMAN",
   "rationale": "...",
   "toolIdsExecuted": [...],
   "automationMetrics": {

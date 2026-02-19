@@ -12,12 +12,42 @@
 module.exports = {
   ci: {
     collect: {
-      // URLs to test (adjust based on deployment environment)
+      // URLs to test — all major app routes (list pages, not dynamic [id] routes)
+      // Public pages
       url: [
-        'http://localhost:3000', // Home page
-        'http://localhost:3000/dashboard', // Dashboard
-        'http://localhost:3000/leads', // Leads page
-        'http://localhost:3000/contacts', // Contacts page
+        'http://localhost:3000',                          // Public landing
+        'http://localhost:3000/login',                    // Login page
+        'http://localhost:3000/signup',                   // Signup page
+        'http://localhost:3000/pricing',                  // Pricing page
+        // Core CRM
+        'http://localhost:3000/dashboard',                // Dashboard
+        'http://localhost:3000/leads',                    // Leads list
+        'http://localhost:3000/contacts',                 // Contacts list
+        'http://localhost:3000/accounts',                 // Accounts list
+        'http://localhost:3000/deals',                    // Deals/pipeline list
+        'http://localhost:3000/deals/forecast',           // Deals forecast
+        'http://localhost:3000/tasks',                    // Tasks list
+        'http://localhost:3000/tickets',                  // Tickets list
+        // Communications & scheduling
+        'http://localhost:3000/email',                    // Email client
+        'http://localhost:3000/calendar',                 // Calendar
+        'http://localhost:3000/appointments',             // Appointments list
+        // Legal & documents
+        'http://localhost:3000/cases',                    // Cases list
+        'http://localhost:3000/documents',                // Documents list
+        // AI & intelligence
+        'http://localhost:3000/agent-approvals',          // Agent approvals hub
+        'http://localhost:3000/agent-approvals/ai-review',// AI review queue
+        'http://localhost:3000/agent-approvals/experiments', // Experiments
+        // Analytics & governance
+        'http://localhost:3000/analytics',                // Analytics dashboard
+        'http://localhost:3000/governance',               // Governance
+        'http://localhost:3000/notifications',            // Notifications
+        // Settings
+        'http://localhost:3000/settings',                 // Settings hub
+        'http://localhost:3000/settings/ai',              // AI settings
+        'http://localhost:3000/settings/team',            // Team settings
+        'http://localhost:3000/billing',                  // Billing
       ],
 
       // Number of runs per URL (for statistical reliability)
@@ -94,9 +124,9 @@ module.exports = {
         'uses-rel-preconnect': 'warn',
         'font-display': 'warn',
 
-        // Security
-        'is-on-https': 'error',
-        'redirects-http': 'warn',
+        // Security (HTTPS checks disabled for localhost — enable in production config)
+        'is-on-https': 'off',
+        'redirects-http': 'off',
 
         // Accessibility
         'color-contrast': 'warn',

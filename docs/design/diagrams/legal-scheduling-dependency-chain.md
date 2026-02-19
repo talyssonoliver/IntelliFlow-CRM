@@ -268,7 +268,7 @@ _IFC-147 creates timeline UI but no formal PG-_ task exists
 | Documents       | YES               | NO              | Create PG-140    |
 | Timeline        | YES               | YES (IFC-147)\* | None             |
 | Calendar Sync   | YES               | N/A (settings)  | None             |
-| Email           | YES               | NO              | Create PG-141    |
+| Email           | YES               | YES ✅          | PG-141 COMPLETED |
 
 _IFC-147 creates timeline UI but should formalize as PG-_ for consistency
 

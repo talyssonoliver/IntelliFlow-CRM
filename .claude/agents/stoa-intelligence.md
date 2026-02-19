@@ -48,11 +48,13 @@ Execute these gates in order, logging output to
 | Condition                                        | Verdict          |
 | ------------------------------------------------ | ---------------- |
 | AI tests pass, prompts valid, models configured  | PASS             |
-| Minor prompt warnings, tests pass                | WARN             |
+| Prompt warnings exist                            | FAIL             |
 | AI tests fail                                    | FAIL             |
 | Chain produces invalid output format             | FAIL             |
 | Safety guardrail missing for high-risk operation | FAIL             |
-| Model not available (dev environment)            | WARN with waiver |
+| Model not available (dev environment)            | NEEDS_HUMAN      |
+
+**CRITICAL**: There is NO WARN verdict. Prompt warnings indicate quality issues that affect AI output reliability. "Model not available" is NEEDS_HUMAN (requires human decision), not an automatic pass.
 
 ## Trigger Conditions
 
@@ -70,7 +72,7 @@ Write verdict JSON to:
 {
   "stoa": "Intelligence",
   "taskId": "<TASK_ID>",
-  "verdict": "PASS|WARN|FAIL|NEEDS_HUMAN",
+  "verdict": "PASS|FAIL|NEEDS_HUMAN",
   "rationale": "...",
   "toolIdsExecuted": [...],
   "aiMetrics": {
