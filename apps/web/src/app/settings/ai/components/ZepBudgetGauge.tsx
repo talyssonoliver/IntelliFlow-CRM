@@ -12,7 +12,7 @@
  * - Red (95-100%): Critical
  */
 
-import { Card, Skeleton, Tooltip, TooltipContent, TooltipTrigger } from '@intelliflow/ui';
+import { Card, Skeleton, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@intelliflow/ui';
 import { useZepBudget } from '../hooks';
 
 interface ZepBudgetGaugeProps {
@@ -86,6 +86,7 @@ export function ZepBudgetGauge({ className }: ZepBudgetGaugeProps) {
       <div className="text-center">
         <h3 className="text-sm font-medium text-muted-foreground mb-4">Zep Memory Budget</h3>
 
+        <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <div
@@ -139,6 +140,7 @@ export function ZepBudgetGauge({ className }: ZepBudgetGaugeProps) {
             </div>
           </TooltipContent>
         </Tooltip>
+        </TooltipProvider>
 
         {/* Status text */}
         <div className="mt-4">

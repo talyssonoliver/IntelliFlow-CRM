@@ -176,14 +176,14 @@ describe('CaseList', () => {
   });
 
   it('renders closed case with reduced opacity', () => {
-    const closedCase = { ...mockCase, status: 'CLOSED' };
+    const closedCase = { ...mockCase, status: 'CLOSED' as const };
     render(<CaseList {...defaultProps} cases={[closedCase]} />);
     // "Closed" may appear in both the table badge and filter dropdown
     expect(screen.getAllByText('Closed').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders cancelled case status', () => {
-    const cancelledCase = { ...mockCase, status: 'CANCELLED' };
+    const cancelledCase = { ...mockCase, status: 'CANCELLED' as const };
     render(<CaseList {...defaultProps} cases={[cancelledCase]} />);
     // "Cancelled" may appear in both the table badge and filter dropdown
     expect(screen.getAllByText('Cancelled').length).toBeGreaterThanOrEqual(1);
@@ -228,7 +228,7 @@ describe('CaseList', () => {
   });
 
   it('renders deadline column showing "Completed" for closed cases', () => {
-    const closedCase = { ...mockCase, status: 'CLOSED' };
+    const closedCase = { ...mockCase, status: 'CLOSED' as const };
     render(<CaseList {...defaultProps} cases={[closedCase]} />);
     expect(screen.getByText('Completed')).toBeInTheDocument();
   });
@@ -257,14 +257,14 @@ describe('CaseList', () => {
   });
 
   it('renders MEDIUM priority with amber dot', () => {
-    const medCase = { ...mockCase, priority: 'MEDIUM' };
+    const medCase = { ...mockCase, priority: 'MEDIUM' as const };
     render(<CaseList {...defaultProps} cases={[medCase]} />);
     // "Medium" may appear in both the table cell and filter dropdown
     expect(screen.getAllByText('Medium').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders LOW priority with blue dot', () => {
-    const lowCase = { ...mockCase, priority: 'LOW' };
+    const lowCase = { ...mockCase, priority: 'LOW' as const };
     render(<CaseList {...defaultProps} cases={[lowCase]} />);
     // "Low" may appear in both the table cell and filter dropdown
     expect(screen.getAllByText('Low').length).toBeGreaterThanOrEqual(1);
@@ -325,19 +325,19 @@ describe('CaseList', () => {
   });
 
   it('renders URGENT priority', () => {
-    const urgentCase = { ...mockCase, priority: 'URGENT' };
+    const urgentCase = { ...mockCase, priority: 'URGENT' as const };
     render(<CaseList {...defaultProps} cases={[urgentCase]} />);
     expect(screen.getAllByText('Urgent').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders ON_HOLD status', () => {
-    const holdCase = { ...mockCase, status: 'ON_HOLD' };
+    const holdCase = { ...mockCase, status: 'ON_HOLD' as const };
     render(<CaseList {...defaultProps} cases={[holdCase]} />);
     expect(screen.getAllByText('On Hold').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders IN_PROGRESS status', () => {
-    const ipCase = { ...mockCase, status: 'IN_PROGRESS' };
+    const ipCase = { ...mockCase, status: 'IN_PROGRESS' as const };
     render(<CaseList {...defaultProps} cases={[ipCase]} />);
     expect(screen.getAllByText('In Progress').length).toBeGreaterThanOrEqual(1);
   });

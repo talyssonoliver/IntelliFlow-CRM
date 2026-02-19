@@ -28,7 +28,7 @@ const { mockSetState, mockUseSubscription } = vi.hoisted(() => ({
 vi.mock('react', () => ({
   useState: vi.fn((init: unknown) => [init, mockSetState]),
   useEffect: vi.fn((fn: () => void | (() => void)) => {
-    const cleanup = fn();
+    const _cleanup = fn();
     // no-op: cleanup stored but not tracked
   }),
   useCallback: vi.fn((fn: unknown) => fn),

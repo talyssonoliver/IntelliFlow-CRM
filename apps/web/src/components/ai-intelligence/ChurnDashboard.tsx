@@ -25,7 +25,7 @@ import type { AtRiskCustomer } from '@/lib/churn-risk/types';
 import { CHURN_RISK_LEVELS } from '@intelliflow/domain';
 import {
   getRiskBadgeClass,
-  getRiskColor,
+  getRiskColor as _getRiskColor,
   getEngagementColor,
   getEngagementBgClass,
   formatSlaCountdown,

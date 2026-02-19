@@ -157,5 +157,6 @@ export const PUBLIC_ROUTES = [
   '/verify-email',
   '/auth/verify-email',
   '/auth/mfa/verify',
+  '/mfa/verify',
   '/auth/callback', // OAuth callback page
 ];

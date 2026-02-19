@@ -103,11 +103,21 @@ describe('root proxy.ts', () => {
   });
 
   describe('protected routes', () => {
-    it('lets through when no auth (client handles)', async () => {
+    it('redirects to login when no auth', async () => {
       await proxy(mkReq('/dashboard'));
-      expect(mockNextFn).toHaveBeenCalled();
-      expect(mockRedirect).not.toHaveBeenCalled();
+      expect(mockRedirect).toHaveBeenCalled();
+      expect(mockNextFn).not.toHaveBeenCalled();
+      const redirectUrl = mockRedirect.mock.calls[0][0].toString();
+      expect(redirectUrl).toContain('/login');
+      expect(redirectUrl).toContain('redirect=%2Fdashboard');
     });
+
+    it('includes redirect param with original path', async () => {
+      await proxy(mkReq('/agent-approvals/ai-review'));
+      const redirectUrl = mockRedirect.mock.calls[0][0].toString();
+      expect(redirectUrl).toContain('redirect=%2Fagent-approvals%2Fai-review');
+    });
+
     it('redirects USER from /admin', async () => {
       mockDecrypt.mockResolvedValue({ userId: 'u1', email: 'a@b.com', role: 'USER' });
       await proxy(mkReq('/admin', { session: 'valid' }));
@@ -116,6 +126,55 @@ describe('root proxy.ts', () => {
     it('allows ADMIN to /admin', async () => {
       mockDecrypt.mockResolvedValue({ userId: 'u1', email: 'a@b.com', role: 'ADMIN' });
       await proxy(mkReq('/admin', { session: 'valid' }));
+      expect(mockRedirect).not.toHaveBeenCalled();
+    });
+    it('passes through with accessToken cookie', async () => {
+      await proxy(mkReq('/dashboard', { accessToken: 'tok123' }));
+      expect(mockNextFn).toHaveBeenCalled();
+      // Should not redirect since hasAnyAuthArtifact is true
+      // (role check may still redirect, but no login redirect)
+    });
+  });
+
+  describe('new protected patterns', () => {
+    const newPatterns = [
+      '/agent-approvals',
+      '/calendar',
+      '/billing',
+      '/governance',
+      '/notifications',
+      '/cases',
+      '/deals',
+      '/documents',
+      '/email',
+      '/appointments',
+      '/profile',
+      '/tickets',
+    ];
+
+    it.each(newPatterns)('redirects unauthenticated user from %s', async (route) => {
+      await proxy(mkReq(route));
+      expect(mockRedirect).toHaveBeenCalled();
+      const redirectUrl = mockRedirect.mock.calls[0][0].toString();
+      expect(redirectUrl).toContain('/login');
+    });
+
+    it('redirects for sub-paths of new patterns', async () => {
+      await proxy(mkReq('/tickets/123'));
+      expect(mockRedirect).toHaveBeenCalled();
+    });
+  });
+
+  describe('non-protected routes pass through', () => {
+    it('does not redirect /auth/callback', async () => {
+      await proxy(mkReq('/auth/callback'));
+      expect(mockNextFn).toHaveBeenCalled();
+      expect(mockRedirect).not.toHaveBeenCalled();
+    });
+
+    it('does not redirect /auth/mfa/verify', async () => {
+      await proxy(mkReq('/auth/mfa/verify'));
+      expect(mockNextFn).toHaveBeenCalled();
       expect(mockRedirect).not.toHaveBeenCalled();
     });
   });

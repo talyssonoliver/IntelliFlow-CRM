@@ -99,7 +99,7 @@ describe('session-cleanup (additional coverage)', () => {
       });
 
       // The function should catch the error
-      const result = clearLocalStorage(false);
+      const _result = clearLocalStorage(false);
       expect(consoleSpy).toHaveBeenCalled();
     });
 
@@ -108,7 +108,7 @@ describe('session-cleanup (additional coverage)', () => {
       localStorage.setItem('intelliflow_lang', 'en');
       localStorage.setItem('other_key', 'value');
 
-      const cleared = clearLocalStorage(false);
+      const _cleared = clearLocalStorage(false);
 
       expect(localStorage.getItem('intelliflow_theme')).toBeNull();
       expect(localStorage.getItem('intelliflow_lang')).toBeNull();
@@ -234,7 +234,7 @@ describe('session-cleanup (additional coverage)', () => {
     });
 
     it('handles deleteDatabase error', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const _consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       const mockDatabases = vi.fn().mockResolvedValue([{ name: 'auth_db', version: 1 }]);
 
@@ -552,18 +552,18 @@ describe('session-cleanup (additional coverage)', () => {
     });
 
     it('reports outer-level errors as failures', async () => {
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const _consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       // To trigger the outer catch, we need to throw from something
       // that bypasses inner try/catches. We can mock clearAuthCookies
       // to throw by making Object.keys throw via proxy
-      const originalGetItem = localStorage.getItem.bind(localStorage);
-      const originalSetItem = localStorage.setItem.bind(localStorage);
+      const _originalGetItem = localStorage.getItem.bind(localStorage);
+      const _originalSetItem = localStorage.setItem.bind(localStorage);
 
       // Override clearLocalStorage to throw at top level by making
       // the for...of loop throw
-      const originalForEach = Array.prototype.forEach;
-      let shouldThrow = false;
+      const _originalForEach = Array.prototype.forEach;
+      let _shouldThrow = false;
 
       // Instead, let's verify the function structure by checking successful path
       const result = await cleanupSession();

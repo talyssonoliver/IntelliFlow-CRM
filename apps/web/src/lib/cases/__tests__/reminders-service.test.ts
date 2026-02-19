@@ -32,7 +32,7 @@ vi.mock('../../../../lib/timeline/types', () => ({
 }));
 
 import { RemindersService, remindersService } from '../reminders-service';
-import type { Reminder, CreateReminderInput } from '../reminders-service';
+import type { CreateReminderInput } from '../reminders-service';
 
 describe('RemindersService', () => {
   let service: RemindersService;

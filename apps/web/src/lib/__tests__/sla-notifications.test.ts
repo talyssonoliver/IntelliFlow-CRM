@@ -14,8 +14,6 @@ import {
   SLANotificationManager,
   slaNotificationManager,
   useSLANotifications,
-  type NotificationConfig,
-  type SLANotification,
 } from '../../../lib/tickets/sla-notifications';
 
 import {
@@ -25,7 +23,7 @@ import {
   type Ticket,
 } from '../../../lib/tickets/sla-service';
 
-function createMockAlert(overrides: Partial<SLABreachAlert> = {}): SLABreachAlert {
+function _createMockAlert(overrides: Partial<SLABreachAlert> = {}): SLABreachAlert {
   return {
     ticketId: 'ticket-1',
     ticketNumber: 'T-10001',
@@ -101,7 +99,7 @@ describe('SLANotificationManager', () => {
 
     it('should request browser notification permission when browser channel enabled', () => {
       // Simulate browser environment
-      const originalWindow = globalThis.window;
+      const _originalWindow = globalThis.window;
       const originalNotification = (globalThis as any).Notification;
 
       // Mock Notification

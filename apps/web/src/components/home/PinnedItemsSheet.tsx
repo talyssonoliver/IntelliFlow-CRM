@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useCallback, useRef } from 'react';
-import Link from 'next/link';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@intelliflow/ui';
 
 // =============================================================================

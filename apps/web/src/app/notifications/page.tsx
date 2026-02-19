@@ -648,7 +648,7 @@ export default function NotificationsPage() {
     {
       id: 'urgent' as const,
       label: 'Urgent',
-      count: unreadData?.byPriority?.urgent,
+      count: (unreadData?.byPriority as Record<string, number> | undefined)?.urgent,
       dot: 'bg-red-500',
     },
     {

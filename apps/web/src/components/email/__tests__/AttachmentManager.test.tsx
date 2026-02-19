@@ -118,4 +118,39 @@ describe('AttachmentManager', () => {
     render(<AttachmentManager {...defaultProps} files={files} />);
     expect(screen.getByText('2')).toBeInTheDocument();
   });
+
+  it('removes drag highlight when dragLeave fires (handleDragLeave)', () => {
+    render(<AttachmentManager {...defaultProps} />);
+    const dropZone = screen.getByTestId('drop-zone');
+    fireEvent.dragOver(dropZone);
+    expect(dropZone.className).toMatch(/border-primary|ring|highlight/);
+    fireEvent.dragLeave(dropZone);
+    expect(dropZone.className).not.toMatch(/border-primary/);
+  });
+
+  it('calls click on hidden file input when browse button clicked', async () => {
+    const user = userEvent.setup();
+    render(<AttachmentManager {...defaultProps} />);
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const clickSpy = vi.spyOn(fileInput, 'click').mockImplementation(() => {});
+    await user.click(screen.getByRole('button', { name: /attach file/i }));
+    expect(clickSpy).toHaveBeenCalled();
+    clickSpy.mockRestore();
+  });
+
+  it('calls onFilesChange when files selected via hidden file input', () => {
+    render(<AttachmentManager {...defaultProps} />);
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const mockFile = createMockFile('selected.pdf', 1024);
+    fireEvent.change(fileInput, { target: { files: [mockFile] } });
+    expect(defaultProps.onFilesChange).toHaveBeenCalledWith([mockFile]);
+  });
+
+  it('uses generic File icon for unsupported file types (getFileIcon fallback)', () => {
+    const zipFile = createMockFile('archive.zip', 1024, 'application/zip');
+    render(<AttachmentManager {...defaultProps} files={[zipFile]} />);
+    expect(screen.getByText('archive.zip')).toBeInTheDocument();
+    // No image thumbnail — the generic File icon is used
+    expect(document.querySelector('img')).not.toBeInTheDocument();
+  });
 });

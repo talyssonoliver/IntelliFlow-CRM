@@ -18,8 +18,8 @@ import {
   parseLogoutReason,
   parseReturnUrl,
   getLogoutMessage,
-  isLogoutPage,
-  isLoginPage,
+  isLogoutPage as _isLogoutPage,
+  isLoginPage as _isLoginPage,
   isValidRedirectUrl,
   sanitizeReturnUrl,
 } from '../logout-redirect';

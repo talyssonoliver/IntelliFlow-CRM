@@ -13,9 +13,6 @@ import { useState, useCallback, Suspense, lazy } from 'react';
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-  Badge,
   Button,
   Skeleton,
   cn,
@@ -246,7 +243,7 @@ function LeadCard({ lead }: { lead: ScoredLead }) {
 
 function ScoreDistributionChart({
   distribution,
-  total,
+  total: _total,
 }: {
   distribution: { hot: number; warm: number; cold: number } | null;
   total: number;

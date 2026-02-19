@@ -7,7 +7,6 @@ import {
   exportToCSV,
   exportAnalyticsToCSV,
   exportPipelineToCSV,
-  type CSVExportOptions,
   type AnalyticsMetric,
   type PipelineStage,
 } from '../csv';

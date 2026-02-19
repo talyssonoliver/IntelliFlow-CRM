@@ -5,7 +5,7 @@ import SettingsPage from '../page';
 
 // Mock SearchInput from @intelliflow/ui
 vi.mock('@intelliflow/ui', () => ({
-  SearchInput: vi.fn(({ value, onChange, onClear, onKeyDown, placeholder, ...props }: any) => (
+  SearchInput: vi.fn(({ value, onChange, _onClear, onKeyDown, placeholder, ...props }: any) => (
     <input
       data-testid="search-input"
       value={value}

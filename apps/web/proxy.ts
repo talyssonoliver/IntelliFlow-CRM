@@ -30,6 +30,18 @@ const protectedPatterns = [
   '/analytics',
   '/settings',
   '/admin',
+  '/agent-approvals',
+  '/calendar',
+  '/billing',
+  '/governance',
+  '/notifications',
+  '/cases',
+  '/deals',
+  '/documents',
+  '/email',
+  '/appointments',
+  '/profile',
+  '/tickets',
 ];
 
 /**
@@ -86,13 +98,13 @@ export async function proxy(request: NextRequest) {
     `[Proxy] Path: ${path}, hasAccessToken: ${!!accessToken}, hasSession: ${!!session}, hasValidSession: ${hasValidSession}`
   );
 
-  // Protected route without auth -> let client-side handle redirect
-  // We don't redirect server-side anymore to avoid the loop
-  // The useRequireAuth hook will handle the redirect properly
+  // Protected route without auth -> redirect to login immediately
+  // This eliminates the 200-800ms content flash that occurred when deferring to client-side useRequireAuth
   if (isProtectedRoute && !hasAnyAuthArtifact) {
-    console.log(`[Proxy] Protected route without auth, letting client-side handle: ${path}`);
-    // Don't redirect - let the page load and useRequireAuth will handle it
-    return NextResponse.next();
+    console.log(`[Proxy] Protected route without auth, redirecting to login: ${path}`);
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', path);
+    return NextResponse.redirect(loginUrl);
   }
 
   // Check role-based access (only if we have a full session)

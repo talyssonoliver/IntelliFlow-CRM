@@ -390,7 +390,7 @@ describe('ChainVersionEditor', () => {
 
   describe('Form Validation', () => {
     it('validates temperature range', async () => {
-      const user = userEvent.setup();
+      const _user = userEvent.setup();
       render(<ChainVersionEditor {...defaultProps} />);
 
       const temperatureInput = screen.getByLabelText(/Temperature/i);
@@ -401,7 +401,7 @@ describe('ChainVersionEditor', () => {
     });
 
     it('validates max tokens range', async () => {
-      const user = userEvent.setup();
+      const _user = userEvent.setup();
       render(<ChainVersionEditor {...defaultProps} />);
 
       const maxTokensInput = screen.getByLabelText(/Max Tokens/i);

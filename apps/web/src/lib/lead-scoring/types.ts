@@ -40,7 +40,7 @@ export interface ScoreTrendPoint {
 
 export interface LeadScoringDashboardData {
   stats: LeadScoringStats;
-  distribution: Record<string, number>;
+  distribution: { hot: number; warm: number; cold: number };
   scoredLeads: ScoredLead[];
   trends: ScoreTrendPoint[];
 }

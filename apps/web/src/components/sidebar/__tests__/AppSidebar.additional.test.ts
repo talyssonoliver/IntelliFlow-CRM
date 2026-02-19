@@ -80,7 +80,7 @@ describe('AppSidebar - isItemActive logic', () => {
 describe('AppSidebar - SidebarInset margin logic', () => {
   it('pinned gives larger margin', () => {
     const isPinned = true;
-    const isExpanded = true;
+    const _isExpanded = true;
     const margin = isPinned ? 'lg:ml-60' : 'lg:ml-14';
     expect(margin).toBe('lg:ml-60');
   });

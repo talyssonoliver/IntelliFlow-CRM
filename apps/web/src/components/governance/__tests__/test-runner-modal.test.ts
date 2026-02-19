@@ -2,7 +2,7 @@
  * @vitest-environment happy-dom
  * test-runner-modal.tsx - Logic tests for test runner state machine
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 // Test scope configuration
 const scopeOptions = [

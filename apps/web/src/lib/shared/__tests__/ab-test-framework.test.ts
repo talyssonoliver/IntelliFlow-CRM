@@ -10,7 +10,7 @@ import {
   useExperiment,
   LANDING_PAGE_EXPERIMENTS,
 } from '../ab-test-framework';
-import type { Experiment, Variant } from '../ab-test-framework';
+import type { Experiment } from '../ab-test-framework';
 
 describe('ab-test-framework', () => {
   beforeEach(() => {
@@ -404,7 +404,7 @@ describe('ab-test-framework', () => {
     });
 
     it('all experiments have valid variant weights', () => {
-      for (const [key, exp] of Object.entries(LANDING_PAGE_EXPERIMENTS)) {
+      for (const [_key, exp] of Object.entries(LANDING_PAGE_EXPERIMENTS)) {
         const totalWeight = exp.variants.reduce((sum, v) => sum + v.weight, 0);
         expect(totalWeight).toBe(100);
       }

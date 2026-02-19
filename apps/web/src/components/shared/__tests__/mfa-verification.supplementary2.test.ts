@@ -6,7 +6,7 @@
  * Tests the logic paths of the MfaVerification component without rendering.
  * Does NOT use @testing-library/react.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // ============================================================
 // Import real code-validator utilities used by the component

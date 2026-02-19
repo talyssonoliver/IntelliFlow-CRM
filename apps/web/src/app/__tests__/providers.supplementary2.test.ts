@@ -6,7 +6,7 @@
  * Tests pure functions and configuration logic extracted from the source.
  * Does NOT render React components or use @testing-library/react.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 // ============================================================
 // Re-implement pure functions from providers.tsx for testing

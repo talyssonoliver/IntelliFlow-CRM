@@ -14,3 +14,4 @@ export { developerSidebarConfig } from './developer';
 export { tasksSidebarConfig } from './tasks';
 export { casesSidebarConfig } from './cases';
 export { appointmentsSidebarConfig } from './appointments';
+export { emailSidebarConfig } from './email';

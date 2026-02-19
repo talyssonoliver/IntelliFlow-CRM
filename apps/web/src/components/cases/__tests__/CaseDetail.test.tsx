@@ -265,19 +265,19 @@ describe('CaseDetail', () => {
   });
 
   it('hides "New Entry" button when case is closed', () => {
-    const closedCase = { ...mockCase, status: 'CLOSED' };
+    const closedCase = { ...mockCase, status: 'CLOSED' as const };
     render(<CaseDetail {...defaultProps} caseData={closedCase} />);
     expect(screen.queryByText('New Entry')).not.toBeInTheDocument();
   });
 
   it('hides "New Entry" button when case is cancelled', () => {
-    const cancelledCase = { ...mockCase, status: 'CANCELLED' };
+    const cancelledCase = { ...mockCase, status: 'CANCELLED' as const };
     render(<CaseDetail {...defaultProps} caseData={cancelledCase} />);
     expect(screen.queryByText('New Entry')).not.toBeInTheDocument();
   });
 
   it('renders closed case status with static badge (no pulse)', () => {
-    const closedCase = { ...mockCase, status: 'CLOSED' };
+    const closedCase = { ...mockCase, status: 'CLOSED' as const };
     render(<CaseDetail {...defaultProps} caseData={closedCase} />);
     expect(screen.getByText('Closed')).toBeInTheDocument();
   });
@@ -410,7 +410,7 @@ describe('CaseDetail', () => {
   it('renders no upcoming deadlines when all tasks completed', () => {
     const allDoneCase = {
       ...mockCase,
-      tasks: [{ ...mockCase.tasks[0], status: 'COMPLETED' }],
+      tasks: [{ ...mockCase.tasks[0], status: 'COMPLETED' as const }],
       appointments: [],
     };
     render(<CaseDetail {...defaultProps} caseData={allDoneCase} />);
@@ -421,7 +421,7 @@ describe('CaseDetail', () => {
     const caseWithApt = {
       ...mockCase,
       appointments: [
-        { id: 'apt-1', title: 'Court Hearing', startTime: '2026-03-10T09:00:00Z', location: 'Room 301' },
+        { id: 'apt-1', title: 'Court Hearing', startTime: '2026-03-10T09:00:00Z', endTime: '2026-03-10T10:00:00Z', status: 'SCHEDULED', location: 'Room 301' },
       ],
     };
     render(<CaseDetail {...defaultProps} caseData={caseWithApt} />);

@@ -16,7 +16,7 @@ const mockContextValue = vi.hoisted(() => ({
 }));
 
 vi.mock('react', () => {
-  const createRef = () => ({ current: null });
+  const _createRef = () => ({ current: null });
   return {
     createContext: vi.fn((defaultValue: any) => {
       return { Provider: vi.fn(), Consumer: vi.fn(), _defaultValue: defaultValue };

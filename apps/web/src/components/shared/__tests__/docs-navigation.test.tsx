@@ -131,7 +131,7 @@ describe('DocsNavigation', () => {
   it('renders color-coded icon badges', () => {
     const { container } = render(<DocsNavigation categories={mockDocsCategories} />);
     for (const cat of mockDocsCategories) {
-      const colorDiv = container.querySelector(`.${cat.color.replace('bg-', 'bg-')}`);
+      const _colorDiv = container.querySelector(`.${cat.color.replace('bg-', 'bg-')}`);
       // Check that colored icon container exists
       expect(container.innerHTML).toContain(cat.color);
     }

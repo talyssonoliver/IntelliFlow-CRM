@@ -21,7 +21,6 @@ import {
 } from '@intelliflow/ui';
 import { OPPORTUNITY_STAGES, type OpportunityStage } from '@intelliflow/domain';
 import { SearchFilterBar, type FilterOption } from '@/components/shared';
-import { toFilterOptions } from '@/lib/shared/filter-utils';
 import { trpc } from '@/lib/trpc';
 import { type Deal, PIPELINE_STAGE_CONFIG, formatCurrencyFull, transformDeals } from './types';
 

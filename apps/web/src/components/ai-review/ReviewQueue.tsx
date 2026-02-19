@@ -113,7 +113,7 @@ export function ReviewQueue() {
     stats,
     isLoading,
     isStatsLoading,
-    filters,
+    filters: _filters,
     setFilters,
     claim,
     approve,

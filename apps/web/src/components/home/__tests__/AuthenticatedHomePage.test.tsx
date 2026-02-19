@@ -69,7 +69,7 @@ vi.mock('@/hooks/useActivityFeed', () => ({
 
 // Mock ActivityFeed to bypass @tanstack/react-virtual (no layout in JSDOM)
 vi.mock('@/components/shared/activity-feed/ActivityFeed', () => ({
-  ActivityFeed: (props: any) => {
+  ActivityFeed: (_props: any) => {
     const feed = mockUseActivityFeed();
     if (feed.isLoading)
       return (

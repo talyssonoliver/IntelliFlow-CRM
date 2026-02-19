@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 // ============================================
@@ -36,8 +36,8 @@ vi.mock('next/link', () => ({
 
 import {
   mockSearchResponse,
-  mockEmptySearchResponse,
-  mockSingleResultResponse,
+  mockEmptySearchResponse as _mockEmptySearchResponse,
+  mockSingleResultResponse as _mockSingleResultResponse,
   mockSearchResults,
 } from '@/test/fixtures/rag-search-data';
 import { useAISearch } from '@/lib/ai-search/hooks';

@@ -27,7 +27,7 @@ vi.mock('@/lib/shared/ab-test-framework', () => ({
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className, ...props }: any) =>
     React.createElement('div', { className, 'data-testid': 'card', ...props }, children),
-  Button: ({ children, className, asChild, variant, ...props }: any) =>
+  Button: ({ children, className, asChild: _asChild, variant, ...props }: any) =>
     React.createElement('button', { className, 'data-variant': variant, ...props }, children),
   cn: (...args: any[]) => args.filter(Boolean).join(' '),
 }));

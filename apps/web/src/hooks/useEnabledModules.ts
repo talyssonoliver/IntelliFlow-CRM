@@ -13,7 +13,7 @@ import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import type { ModuleId } from '@intelliflow/domain';
 import {
-  CRM_MODULES,
+  CRM_MODULES as _CRM_MODULES,
   MODULE_PLAN_MAP,
   getRoutesForModules,
   type NavRouteConfig,

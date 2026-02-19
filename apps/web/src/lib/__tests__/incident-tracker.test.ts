@@ -23,8 +23,6 @@ import {
   calculateUptime,
   healthCheck,
   resetStore,
-  type ServiceHealth,
-  type ServiceStatus,
 } from '../../../lib/status/incident-tracker';
 
 describe('incident-tracker', () => {

@@ -50,7 +50,7 @@ vi.mock('recharts', () => ({
 import {
   mockDashboardData,
   mockEmptyDashboard,
-  mockSentimentStats,
+  mockSentimentStats as _mockSentimentStats,
   mockSentimentAnalyses,
 } from '@/test/fixtures/sentiment-data';
 import { useSentimentDashboard } from '@/lib/sentiment/hooks';

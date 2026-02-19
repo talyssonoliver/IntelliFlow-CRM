@@ -189,7 +189,7 @@ describe('VersionComparisonView', () => {
       const user = userEvent.setup();
       // Create a fresh mock (vi.clearAllMocks clears defaultProps.onCompare)
       const onCompare = vi.fn().mockResolvedValue(mockComparison);
-      const { rerender } = render(
+      const { rerender: _rerender } = render(
         <VersionComparisonView {...defaultProps} onCompare={onCompare} />
       );
 

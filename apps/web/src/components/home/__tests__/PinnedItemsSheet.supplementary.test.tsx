@@ -15,7 +15,7 @@ import React from 'react';
 // Hoisted mocks
 // ============================================================
 
-const mocks = vi.hoisted(() => ({
+const _mocks = vi.hoisted(() => ({
   mockLocalStorage: new Map<string, string>(),
 }));
 
@@ -29,7 +29,7 @@ vi.mock('@intelliflow/ui', () => ({
   SheetContent: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="sheet-content">{children}</div>
   ),
-  SheetTitle: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+  SheetTitle: ({ children, className: _className }: { children: React.ReactNode; className?: string }) => (
     <h2 data-testid="sheet-title">{children}</h2>
   ),
   SheetDescription: ({ children }: { children: React.ReactNode }) => (

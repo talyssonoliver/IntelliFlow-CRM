@@ -35,7 +35,7 @@ vi.mock('@/lib/api', () => ({
       get: {
         useQuery: vi.fn((input: any, opts: any) => ({
           data: input.reviewId ? { id: input.reviewId } : undefined,
-          enabled: opts?.enabled,
+          isEnabled: opts?.enabled ?? true,
         })),
       },
       claim: {
@@ -250,6 +250,6 @@ describe('useReviewDetail', () => {
 
   it('is disabled when reviewId is empty', () => {
     const result = useReviewDetail('');
-    expect(result.enabled).toBe(false);
+    expect(result.isEnabled).toBe(false);
   });
 });

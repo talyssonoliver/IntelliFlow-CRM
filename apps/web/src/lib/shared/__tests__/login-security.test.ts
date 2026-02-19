@@ -330,7 +330,7 @@ describe('login-security', () => {
       // Manually store invalid JSON
       // We need to figure out the storage key format (uses hashString)
       // The function uses a hash prefix, so store with any matching key
-      const key = Object.keys(localStorage).find((k) => k.startsWith('intelliflow_rate_limit_'));
+      const _key = Object.keys(localStorage).find((k) => k.startsWith('intelliflow_rate_limit_'));
       // Or just set any key and use the function
       localStorage.setItem('intelliflow_rate_limit_test', 'invalid json{{{');
 

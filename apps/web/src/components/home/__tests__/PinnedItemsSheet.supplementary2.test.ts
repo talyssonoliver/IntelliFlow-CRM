@@ -253,7 +253,7 @@ describe('PinnedItemsSheet utility functions (supplementary2)', () => {
     });
 
     it('each entry has icon, iconBg, iconColor', () => {
-      for (const [key, style] of Object.entries(PINNED_ICON_MAP)) {
+      for (const [_key, style] of Object.entries(PINNED_ICON_MAP)) {
         expect(typeof style.icon).toBe('string');
         expect(style.icon.length).toBeGreaterThan(0);
         expect(style.iconBg).toBeTruthy();

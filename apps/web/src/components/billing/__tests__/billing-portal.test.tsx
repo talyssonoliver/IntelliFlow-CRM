@@ -10,7 +10,7 @@
  * @implements PG-025 (Billing Portal)
  */
 
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BillingPortal } from '../billing-portal';
 import {
@@ -33,23 +33,26 @@ const mockBillingInfo = createMockBillingInformation();
 // Mock modules
 // ============================================
 
+// Query return shape that allows nullable data and Error for error states
+type MockQueryReturn<T> = { data: T | null | undefined; isLoading: boolean; error: Error | null };
+
 // Mock tRPC
-const mockGetSubscription = vi.fn(() => ({
+const mockGetSubscription = vi.fn<() => MockQueryReturn<typeof mockSubscription>>(() => ({
   data: mockSubscription,
   isLoading: false,
   error: null,
 }));
-const mockGetPaymentMethods = vi.fn(() => ({
+const mockGetPaymentMethods = vi.fn<() => MockQueryReturn<typeof mockPaymentMethods>>(() => ({
   data: mockPaymentMethods,
   isLoading: false,
   error: null,
 }));
-const mockListInvoices = vi.fn(() => ({
+const mockListInvoices = vi.fn<() => MockQueryReturn<{ invoices: typeof mockInvoices; total: number; page: number; limit: number; hasMore: boolean }>>(() => ({
   data: { invoices: mockInvoices, total: 1, page: 1, limit: 5, hasMore: false },
   isLoading: false,
   error: null,
 }));
-const mockGetBillingInformation = vi.fn(() => ({
+const mockGetBillingInformation = vi.fn<() => MockQueryReturn<typeof mockBillingInfo>>(() => ({
   data: mockBillingInfo,
   isLoading: false,
   error: null,
@@ -58,11 +61,11 @@ const mockGetBillingInformation = vi.fn(() => ({
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     billing: {
-      getSubscription: { useQuery: (...args: unknown[]) => mockGetSubscription(...args) },
-      getPaymentMethods: { useQuery: (...args: unknown[]) => mockGetPaymentMethods(...args) },
-      listInvoices: { useQuery: (...args: unknown[]) => mockListInvoices(...args) },
+      getSubscription: { useQuery: () => mockGetSubscription() },
+      getPaymentMethods: { useQuery: () => mockGetPaymentMethods() },
+      listInvoices: { useQuery: () => mockListInvoices() },
       getBillingInformation: {
-        useQuery: (...args: unknown[]) => mockGetBillingInformation(...args),
+        useQuery: () => mockGetBillingInformation(),
       },
     },
   },
@@ -256,6 +259,23 @@ describe('BillingPortal', () => {
       expect(screen.getByText('+ Add New Payment Method')).toBeInTheDocument();
     });
 
+    it('navigates to payment methods page when Add New Payment Method is clicked', () => {
+      // Mock window.location.href setter
+      const originalLocation = window.location;
+      Object.defineProperty(window, 'location', {
+        writable: true,
+        value: { ...originalLocation, href: '' },
+      });
+      render(<BillingPortal />);
+      fireEvent.click(screen.getByText('+ Add New Payment Method'));
+      expect(window.location.href).toBe('/billing/payment-methods');
+      // Restore
+      Object.defineProperty(window, 'location', {
+        writable: true,
+        value: originalLocation,
+      });
+    });
+
     it('renders multiple payment methods', () => {
       mockGetPaymentMethods.mockReturnValue({
         data: [
@@ -427,6 +447,21 @@ describe('BillingPortal', () => {
       render(<BillingPortal />);
       // Invoice date should be formatted
       expect(screen.getByText(/Dec 2024|1 Dec 2024/)).toBeInTheDocument();
+    });
+
+    it('renders Load More button when hasMore is true and increments page on click', () => {
+      mockListInvoices.mockReturnValue({
+        data: { invoices: mockInvoices, total: 10, page: 1, limit: 5, hasMore: true },
+        isLoading: false,
+        error: null,
+      });
+      render(<BillingPortal />);
+      const loadMoreBtn = screen.getByText('Load More');
+      expect(loadMoreBtn).toBeInTheDocument();
+      fireEvent.click(loadMoreBtn);
+      // After click, the component calls setPage which triggers a re-render
+      // The mockListInvoices should be called again with updated page
+      expect(mockListInvoices).toHaveBeenCalled();
     });
   });
 

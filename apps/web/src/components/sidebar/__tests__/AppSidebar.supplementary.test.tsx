@@ -12,7 +12,7 @@
  * - Module color lookup
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 // Mock all external dependencies
 vi.mock('react', async () => {
@@ -76,7 +76,7 @@ describe('AppSidebar - logic tests', () => {
   describe('isItemActive logic', () => {
     it('should return true for exact path match without params', () => {
       const pathname = '/dashboard';
-      const searchParams = { get: (k: string) => null, toString: () => '' };
+      const searchParams = { get: (_k: string) => null, toString: () => '' };
 
       const isItemActive = (item: { href: string }) => {
         const itemUrl = new URL(item.href, 'http://localhost');
@@ -104,7 +104,7 @@ describe('AppSidebar - logic tests', () => {
 
     it('should return true for child path match', () => {
       const pathname = '/dashboard/settings';
-      const searchParams = { get: (k: string) => null, toString: () => '' };
+      const searchParams = { get: (_k: string) => null, toString: () => '' };
 
       const isItemActive = (item: { href: string }) => {
         const itemUrl = new URL(item.href, 'http://localhost');
@@ -132,7 +132,7 @@ describe('AppSidebar - logic tests', () => {
 
     it('should return false for different path', () => {
       const pathname = '/contacts';
-      const searchParams = { get: () => null, toString: () => '' };
+      const _searchParams = { get: () => null, toString: () => '' };
 
       const isItemActive = (item: { href: string }) => {
         const itemUrl = new URL(item.href, 'http://localhost');
@@ -217,14 +217,14 @@ describe('AppSidebar - logic tests', () => {
   describe('SidebarInset margin logic', () => {
     it('should use lg:ml-60 when pinned', () => {
       const isPinned = true;
-      const isExpanded = true;
+      const _isExpanded = true;
       const margin = isPinned ? 'lg:ml-60' : 'lg:ml-14';
       expect(margin).toBe('lg:ml-60');
     });
 
     it('should use lg:ml-14 when not pinned', () => {
       const isPinned = false;
-      const isExpanded = false;
+      const _isExpanded = false;
       const margin = isPinned ? 'lg:ml-60' : 'lg:ml-14';
       expect(margin).toBe('lg:ml-14');
     });
@@ -248,7 +248,7 @@ describe('AppSidebar - logic tests', () => {
         actionHref: '/features',
       };
 
-      const preventDefault = vi.fn();
+      const _preventDefault = vi.fn();
       onDismiss(announcement.id);
 
       expect(onDismiss).toHaveBeenCalledWith('ann-1');

@@ -2,7 +2,7 @@
  * @vitest-environment happy-dom
  * providers.tsx - Logic tests for auth error detection and token validation
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 
 // Re-implement pure functions from providers.tsx
 function isAuthError(error: unknown): boolean {

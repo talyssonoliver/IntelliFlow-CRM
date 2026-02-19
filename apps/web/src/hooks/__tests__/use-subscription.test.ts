@@ -2,7 +2,7 @@
  * @vitest-environment happy-dom
  * use-subscription.ts - Logic tests for subscription configuration and types
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // Test the module-level constants and logic without invoking hooks
 describe('use-subscription - configuration', () => {

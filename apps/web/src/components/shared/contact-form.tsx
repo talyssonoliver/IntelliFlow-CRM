@@ -55,8 +55,8 @@ export function ContactForm() {
 
     if (!validation.success) {
       const errors: Partial<Record<keyof ContactFormInput, string>> = {};
-      validation.error.errors.forEach((err) => {
-        const field = err.path[0] as keyof ContactFormInput;
+      validation.error.issues.forEach((err) => {
+        const field = String(err.path[0]) as keyof ContactFormInput;
         errors[field] = err.message;
       });
       setFormErrors(errors);

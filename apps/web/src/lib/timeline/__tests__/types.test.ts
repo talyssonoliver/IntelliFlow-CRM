@@ -34,9 +34,7 @@ import {
   type TimelineEventsResponse,
   type TimelineStatsResponse,
   type DeadlineItem,
-  type UpcomingDeadlinesResponse,
   type PendingAgentAction,
-  type PendingAgentActionsResponse,
   type TimelineQueryParams,
 } from '../../../../lib/timeline/types';
 
