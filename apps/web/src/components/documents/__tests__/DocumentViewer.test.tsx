@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { DocumentViewer } from '../DocumentViewer';
 
 // =============================================================================
@@ -162,7 +162,8 @@ describe('DocumentViewer', () => {
       />
     );
     expect(screen.getByTestId('download-fallback')).toBeInTheDocument();
-    expect(screen.getByText('report.docx')).toBeInTheDocument();
+    // "report.docx" appears in toolbar and fallback
+    expect(screen.getAllByText('report.docx').length).toBeGreaterThanOrEqual(1);
   });
 
   it('renders download fallback for unknown MIME types', () => {
@@ -184,7 +185,8 @@ describe('DocumentViewer', () => {
         fileName="data.bin"
       />
     );
-    const link = screen.getByLabelText(/download data\.bin/i);
+    const fallback = screen.getByTestId('download-fallback');
+    const link = within(fallback).getByRole('link');
     expect(link).toHaveAttribute('href', defaultProps.storageUrl);
     expect(link).toHaveAttribute('download', 'data.bin');
   });

@@ -501,11 +501,11 @@ Dependency Chain:
                                  ┌──────────────────┐
                                  │    PG-140        │
                                  │  Document UI     │
-                                 │      ⬜ NEW      │
+                                 │      ✅ DONE     │
                                  └──────────────────┘
 
 Dependency Chain:
-  IFC-152 (Domain) ──┬──► IFC-153 (Ingestion) ──► IFC-154 (OCR) ──► IFC-155 (Index) ✅ ──► documents.router ✅ ──► PG-140 (UI) ⬜
+  IFC-152 (Domain) ──┬──► IFC-153 (Ingestion) ──► IFC-154 (OCR) ──► IFC-155 (Index) ✅ ──► documents.router ✅ ──► PG-140 (UI) ✅
                      │
                      └──► IFC-017 (Database) ───────────────────────────────────────────────────────────────────────┘
 ```
@@ -1758,7 +1758,7 @@ Opportunity:   IFC-104 ──► validators ──► IFC-108 ──► IFC-107 
 Task:          IFC-105 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-187 ✅ ──► PG-136 ✅
 Case:          IFC-136 ──► validators ──► IFC-139 ──► cases.router ✅ ──► PG-138 ✅
 Appointment:   IFC-137 ──► validators ──► IFC-138 ──► appointments.router ✅ ──► PG-139 ✅
-Document:      IFC-152 ──► IFC-153 ──► IFC-154 ──► documents.router ✅ ──► PG-140 ⬜
+Document:      IFC-152 ──► IFC-153 ──► IFC-154 ──► documents.router ✅ ──► PG-140 ✅
 Email:         IFC-144 ──► IFC-173 ──► inbound.router ✅ ──► PG-141 ✅
 Sentiment:     IFC-039 ──► timeline.router ✅ ──► PG-142 ✅
 Churn:         IFC-095 ──► intelligence.router ✅ ──► PG-143 ⬜

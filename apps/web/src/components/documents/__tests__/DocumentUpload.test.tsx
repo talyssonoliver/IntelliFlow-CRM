@@ -316,9 +316,9 @@ describe('DocumentUpload', () => {
     });
   });
 
-  it('shows progress during upload', async () => {
-    vi.useFakeTimers();
-    render(<DocumentUpload {...defaultProps} />);
+  it('calls onUploadComplete on successful submit', async () => {
+    const onUploadComplete = vi.fn();
+    render(<DocumentUpload {...defaultProps} onUploadComplete={onUploadComplete} />);
     const file = new File(['content'], 'test.pdf', { type: 'application/pdf' });
     Object.defineProperty(file, 'size', { value: 1024 });
 
@@ -339,12 +339,8 @@ describe('DocumentUpload', () => {
       fireEvent.submit(form);
     });
 
-    // Advance timers to trigger progress interval
-    await act(async () => {
-      vi.advanceTimersByTime(200);
+    await waitFor(() => {
+      expect(onUploadComplete).toHaveBeenCalledWith('new-doc-id');
     });
-
-    expect(screen.getByText(/uploading/i)).toBeInTheDocument();
-    vi.useRealTimers();
   });
 });

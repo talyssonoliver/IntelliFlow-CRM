@@ -3,8 +3,10 @@
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Card } from '@intelliflow/ui';
+import { Card, toast } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { formatFileSize as formatSize, sanitizeFileName } from '@/components/documents';
 
 // Document types from domain model (matching API schema)
 type DocumentType =
@@ -87,6 +89,7 @@ const availableTags = [
 
 export default function UploadDocumentPage() {
   const router = useRouter();
+  useRequireAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<DocumentFormData>(initialFormData);
   const [errors, setErrors] = useState<Partial<Record<keyof DocumentFormData, string>>>({});
@@ -263,29 +266,21 @@ export default function UploadDocumentPage() {
       setUploadProgress(30);
       const sha256Hash = await calculateFileHash(file);
 
-      // NOTE: In a production system, you would upload the file to Supabase Storage
-      // or another storage service and get the storageKey. For now, we'll simulate it.
-      // TODO: Integrate with Supabase Storage:
-      // const { data, error } = await supabase.storage
-      //   .from('documents')
-      //   .upload(`${Date.now()}-${file.name}`, file);
-      // const storageKey = data?.path || '';
-
-      const storageKey = `documents/${Date.now()}-${file.name}`;
-
+      // Server generates the storageKey — DO NOT generate on client (SR-02)
       setUploadProgress(50);
 
-      // Create document via tRPC mutation
+      // Create document via tRPC mutation — server generates storageKey (SR-02)
+      const sanitizedName = sanitizeFileName(file.name);
       await createDocument.mutateAsync({
         title: formData.title.trim(),
         description: formData.description.trim() || undefined,
         documentType: formData.documentType,
         classification: formData.classification,
         tags: formData.tags,
-        storageKey,
+        fileName: sanitizedName,
         sizeBytes: file.size,
         mimeType: file.type,
-        contentHash: sha256Hash, // API expects 'contentHash' not 'sha256Hash'
+        contentHash: sha256Hash,
         relatedCaseId: formData.relatedCaseId || undefined,
         relatedContactId: formData.relatedContactId || undefined,
       });
@@ -297,11 +292,13 @@ export default function UploadDocumentPage() {
       setTimeout(() => {
         router.push('/documents');
       }, 500);
-    } catch (error) {
-      console.error('Failed to upload document:', error);
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to upload document. Please try again.';
-      alert(errorMessage);
+    } catch (err) {
+      console.error('Failed to upload document:', err);
+      toast({
+        title: 'Upload Failed',
+        description: err instanceof Error ? err.message : 'Failed to upload document. Please try again.',
+        variant: 'destructive',
+      });
       setIsSubmitting(false);
       setUploadProgress(0);
     }

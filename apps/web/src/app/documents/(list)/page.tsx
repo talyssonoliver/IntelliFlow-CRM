@@ -11,35 +11,11 @@ import {
   toast,
 } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { PageHeader, SearchFilterBar } from '@/components/shared';
-
-// =============================================================================
-// Types
-// =============================================================================
-
-interface DocumentMetadata {
-  title: string;
-  description?: string;
-  documentType: string;
-}
-
-interface DocumentVersion {
-  major: number;
-  minor: number;
-  patch: number;
-}
-
-interface DocumentRecord {
-  id: string;
-  metadata: DocumentMetadata;
-  status: string;
-  version?: DocumentVersion;
-  sizeBytes?: string | number;
-  createdAt: string;
-  createdBy?: string;
-  retentionUntil?: string;
-  eSignature?: boolean;
-}
+import { DocumentStatusBadge } from '@/components/documents';
+import { formatFileSize, formatDate } from '@/components/documents';
+import type { DocumentRecord } from '@/components/documents';
 
 // =============================================================================
 // Filter Options
@@ -64,23 +40,6 @@ const SORT_OPTIONS = [
   { value: 'oldest', label: 'Oldest First' },
   { value: 'name', label: 'Name A-Z' },
 ];
-
-// =============================================================================
-// Helper Functions
-// =============================================================================
-
-function formatFileSize(bytes: number) {
-  const kb = bytes / 1024;
-  return kb > 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb.toFixed(0)} KB`;
-}
-
-function formatDate(dateString: string) {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
 
 // =============================================================================
 // Column Definitions
@@ -236,6 +195,7 @@ const columns: ColumnDef<DocumentRecord>[] = [
 
 export default function DocumentsPage() {
   const router = useRouter();
+  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -250,10 +210,10 @@ export default function DocumentsPage() {
   const selectedDocumentsRef = useRef<DocumentRecord[]>([]);
 
   // Fetch documents from API
-  const { data, isLoading, error, refetch } = trpc.documents.list.useQuery({
-    limit: 100,
-    offset: 0,
-  });
+  const { data, isLoading, error, refetch } = trpc.documents.list.useQuery(
+    { limit: 100, offset: 0 },
+    { enabled: isAuthenticated && !authLoading }
+  );
 
   // tRPC mutations
   const bulkDownloadMutation = trpc.documents.bulkDownload.useMutation();
@@ -519,7 +479,7 @@ export default function DocumentsPage() {
       />
 
       {/* Data Table */}
-      {isLoading ? (
+      {isLoading || authLoading ? (
         <div className="flex items-center justify-center py-8">
           <div className="text-muted-foreground">Loading documents...</div>
         </div>
@@ -569,49 +529,3 @@ export default function DocumentsPage() {
   );
 }
 
-function DocumentStatusBadge({
-  status,
-  signatureCount,
-}: {
-  status: string;
-  signatureCount: number;
-}) {
-  const statusConfig = {
-    DRAFT: { bg: 'bg-muted', text: 'text-muted-foreground', icon: 'edit_note' },
-    UNDER_REVIEW: {
-      bg: 'bg-amber-100 dark:bg-amber-900/30',
-      text: 'text-amber-700 dark:text-amber-400',
-      icon: 'rate_review',
-    },
-    APPROVED: {
-      bg: 'bg-green-100 dark:bg-green-900/30',
-      text: 'text-green-700 dark:text-green-400',
-      icon: 'check_circle',
-    },
-    SIGNED: { bg: 'bg-primary/10', text: 'text-primary', icon: 'verified' },
-    ARCHIVED: {
-      bg: 'bg-gray-100 dark:bg-gray-900/30',
-      text: 'text-gray-600 dark:text-gray-400',
-      icon: 'archive',
-    },
-    SUPERSEDED: {
-      bg: 'bg-purple-100 dark:bg-purple-900/30',
-      text: 'text-purple-700 dark:text-purple-400',
-      icon: 'history',
-    },
-  };
-
-  const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.DRAFT;
-
-  return (
-    <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}
-    >
-      <span className="material-symbols-outlined text-sm">{config.icon}</span>
-      {status.replace('_', ' ')}
-      {status === 'SIGNED' && signatureCount > 0 && (
-        <span className="ml-0.5">({signatureCount})</span>
-      )}
-    </span>
-  );
-}

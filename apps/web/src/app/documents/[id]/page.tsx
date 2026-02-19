@@ -7,6 +7,8 @@ import { Card } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { AppAvatar } from '@/components/shared/app-avatar';
+import { DocumentViewer, VersionHistory, ACLManager, formatFileSize, formatDate } from '@/components/documents';
+import type { DocumentVersion, AccessControlEntry, AccessLevel, DocumentStatus } from '@/components/documents';
 
 // Tab types
 type TabId = 'overview' | 'versions' | 'access-control' | 'signatures' | 'comments';
@@ -16,9 +18,6 @@ interface Tab {
   label: string;
   count?: number;
 }
-
-type DocumentStatus = 'DRAFT' | 'UNDER_REVIEW' | 'APPROVED' | 'SIGNED' | 'ARCHIVED' | 'SUPERSEDED';
-type AccessLevel = 'NONE' | 'VIEW' | 'COMMENT' | 'EDIT' | 'ADMIN';
 
 interface ACLEntry {
   id: string;
@@ -271,12 +270,7 @@ export default function DocumentDetailPage() {
     { id: 'comments', label: 'Comments', count: comments.length },
   ];
 
-  const formatFileSize = (bytes: number) => {
-    const kb = bytes / 1024;
-    return kb > 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${kb.toFixed(0)} KB`;
-  };
-
-  const formatDate = (dateString: string) => {
+  const formatDateTime = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -293,7 +287,7 @@ export default function DocumentDetailPage() {
     if (diffDays === 0) return 'Today';
     if (diffDays === 1) return 'Yesterday';
     if (diffDays < 7) return `${diffDays} days ago`;
-    return formatDate(dateString);
+    return formatDateTime(dateString);
   };
 
   const getStatusConfig = (status: DocumentStatus) => {
@@ -454,7 +448,7 @@ export default function DocumentDetailPage() {
                   <div className="flex flex-col">
                     <span className="text-xs text-slate-400 uppercase font-semibold">Created</span>
                     <span className="text-sm text-slate-700 dark:text-slate-300">
-                      {formatDate(document.createdAt)}
+                      {formatDateTime(document.createdAt)}
                     </span>
                     <span className="text-xs text-slate-500">by {document.createdBy}</span>
                   </div>
@@ -665,7 +659,7 @@ export default function DocumentDetailPage() {
                                   {event.action} - {event.changes || 'No change log'}
                                 </p>
                                 <div className="flex items-center gap-3 text-xs text-slate-500">
-                                  <span>{formatDate(event.timestamp)}</span>
+                                  <span>{formatDateTime(event.timestamp)}</span>
                                   <span>•</span>
                                   <span>by {event.performedBy}</span>
                                   {event.metadata?.sizeBytes && (
@@ -788,13 +782,13 @@ export default function DocumentDetailPage() {
                                 </td>
                                 <td className="px-4 py-3">
                                   <div className="text-xs text-slate-600 dark:text-slate-400">
-                                    <div>{formatDate(acl.grantedAt)}</div>
+                                    <div>{formatDateTime(acl.grantedAt)}</div>
                                     <div className="text-slate-500">by {acl.grantedBy}</div>
                                   </div>
                                 </td>
                                 <td className="px-4 py-3">
                                   <span className="text-xs text-slate-600 dark:text-slate-400">
-                                    {acl.expiresAt ? formatDate(acl.expiresAt) : 'Never'}
+                                    {acl.expiresAt ? formatDateTime(acl.expiresAt) : 'Never'}
                                   </span>
                                 </td>
                                 <td className="px-4 py-3">
@@ -877,7 +871,7 @@ export default function DocumentDetailPage() {
                               <div className="grid grid-cols-2 gap-2 text-xs text-slate-500">
                                 <div>
                                   <span className="font-semibold">Signed at:</span>{' '}
-                                  {formatDate(signature.signedAt)}
+                                  {formatDateTime(signature.signedAt)}
                                 </div>
                                 <div>
                                   <span className="font-semibold">IP Address:</span>{' '}
