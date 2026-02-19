@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-19T18:17:01.233Z",
+  "last_updated": "2026-02-19T19:19:10.827Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -1871,10 +1871,10 @@
     "PG-019": {
       "task_id": "PG-019",
       "sprint": 13,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
-        "IFC-006",
-        "PG-015"
+        "PG-015",
+        "IFC-006"
       ],
       "dependents": [
         "PG-020",
@@ -2923,7 +2923,7 @@
     "PG-104": {
       "task_id": "PG-104",
       "sprint": 13,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
         "IFC-076"
       ],
@@ -4567,7 +4567,7 @@
     "PG-140": {
       "task_id": "PG-140",
       "sprint": 13,
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "dependencies": [
         "IFC-152",
         "IFC-153"
@@ -4577,7 +4577,7 @@
     "PG-141": {
       "task_id": "PG-141",
       "sprint": 11,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
         "IFC-144"
       ],
@@ -4808,7 +4808,7 @@
     "IFC-200": {
       "task_id": "IFC-200",
       "sprint": 13,
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "dependencies": [
         "IFC-096",
         "IFC-106"
@@ -8803,12 +8803,9 @@
     "IFC-071",
     "PG-100",
     "PG-103",
-    "PG-105",
     "IFC-115",
     "IFC-049",
     "IFC-050",
-    "PG-106",
-    "PG-107",
     "PG-108",
     "PG-109",
     "PG-110",
@@ -8817,25 +8814,17 @@
     "IFC-052",
     "IFC-084",
     "PG-112",
-    "PG-113",
     "PG-114",
     "PG-115",
-    "PG-116",
-    "PG-117",
     "IFC-053",
     "IFC-060",
     "PG-120",
     "PG-121"
   ],
   "ready_to_start": [
-    "PG-141",
     "PG-017",
-    "PG-019",
     "PG-023",
     "PG-024",
-    "PG-104",
-    "PG-140",
-    "IFC-200",
     "IFC-062",
     "IFC-064",
     "IFC-065",
@@ -8921,8 +8910,14 @@
     "IFC-048",
     "PG-101",
     "PG-102",
+    "PG-105",
     "IFC-201",
+    "PG-106",
+    "PG-107",
     "PG-145",
+    "PG-113",
+    "PG-116",
+    "PG-117",
     "PG-118",
     "PG-119",
     "PG-122",
@@ -8937,12 +8932,6 @@
     }
   ],
   "parallel_execution_groups": {
-    "sprint-13": {
-      "group-1": [
-        "PG-019",
-        "PG-024"
-      ]
-    },
     "sprint-14": {
       "group-1": [
         "IFC-065",

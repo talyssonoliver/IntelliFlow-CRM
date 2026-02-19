@@ -11,7 +11,7 @@
     "required": [
       "IFC-079"
     ],
-    "verified_at": "2026-02-19T18:17:01.170Z",
+    "verified_at": "2026-02-19T19:19:10.730Z",
     "all_satisfied": true,
     "notes": "IFC-079 verified complete — attestation checked, all 4 artifacts exist (docusaurus.config.js, sidebars.js, search-index.json, package.json)"
   },

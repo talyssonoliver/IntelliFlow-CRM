@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-19T18:17:01.058Z",
+  "last_updated": "2026-02-19T19:19:10.576Z",
   "total_tasks": 305,
   "sprints": {
     "sprint-0": {
@@ -129,6 +129,7 @@
       "PG-015",
       "PG-016",
       "PG-018",
+      "PG-019",
       "PG-020",
       "PG-021",
       "PG-022",
@@ -146,6 +147,7 @@
       "ENG-OPS-001",
       "GOV-001",
       "ANALYTICS-001",
+      "PG-104",
       "IFC-101",
       "IFC-102",
       "IFC-103",
@@ -245,6 +247,7 @@
       "PG-137",
       "PG-138",
       "PG-139",
+      "PG-141",
       "PG-142",
       "PG-143",
       "PG-144",
@@ -261,7 +264,10 @@
       "IFC-206",
       "IFC-207"
     ],
-    "IN_PROGRESS": [],
+    "IN_PROGRESS": [
+      "PG-140",
+      "IFC-200"
+    ],
     "VALIDATING": [],
     "BLOCKED": [],
     "PLANNED": [],
@@ -300,7 +306,6 @@
       "IFC-084",
       "IFC-087",
       "PG-017",
-      "PG-019",
       "PG-023",
       "PG-024",
       "PG-026",
@@ -379,7 +384,6 @@
       "PG-101",
       "PG-102",
       "PG-103",
-      "PG-104",
       "PG-105",
       "PG-106",
       "PG-107",
@@ -420,8 +424,6 @@
       "PG-130",
       "PG-131",
       "IFC-190",
-      "PG-140",
-      "PG-141",
       "PG-145",
       "PG-147",
       "IFC-191",
@@ -431,7 +433,6 @@
       "IFC-195",
       "IFC-196",
       "IFC-199",
-      "IFC-200",
       "IFC-201",
       "IFC-202",
       "IFC-203",
@@ -3056,7 +3057,7 @@
       "section": "Auth Pages",
       "description": "Forgot Password",
       "owner": "Platform FE (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 13,
       "dependencies": [
         "PG-015",
@@ -4713,7 +4714,7 @@
       "section": "Settings",
       "description": "Settings Home",
       "owner": "Platform FE+BE (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 13,
       "dependencies": [
         "IFC-076"
@@ -7196,7 +7197,7 @@
       "section": "Legal",
       "description": "Document Manager Page - Upload viewer version history ACL management search",
       "owner": "Frontend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "sprint": 13,
       "dependencies": [
         "IFC-152",
@@ -7214,7 +7215,7 @@
       "section": "Communications",
       "description": "Email Compose & History Page - Thread view compose attachments templates",
       "owner": "Frontend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 11,
       "dependencies": [
         "IFC-144"
@@ -7608,7 +7609,7 @@
       "section": "Analytics",
       "description": "Analytics Adapter Layer - query builders and export pipeline for metrics router",
       "owner": "Data Eng + Backend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "IN_PROGRESS",
       "sprint": 13,
       "dependencies": [
         "IFC-096",
