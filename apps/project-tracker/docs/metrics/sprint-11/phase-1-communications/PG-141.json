@@ -1,0 +1,86 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "PG-141",
+  "section": "Communications",
+  "description": "Email Compose & History Page - Thread view compose attachments templates",
+  "owner": "Frontend Dev (STOA-Domain)",
+  "sprint": "sprint-11",
+  "phase": "phase-1-communications",
+  "dependencies": {
+    "required": [
+      "IFC-144"
+    ],
+    "verified_at": "2026-02-19T18:17:01.216Z",
+    "all_satisfied": true
+  },
+  "status": "BACKLOG",
+  "started_at": "2026-02-16T22:34:39Z",
+  "spec_completed_at": "2026-02-16T23:10:00Z",
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2025-12-29T00:00:00Z",
+      "note": "Initial status"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-16T22:34:39Z",
+      "note": "Spec session started via /full-pipeline PG-141"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-16T23:10:00Z",
+      "note": "Spec session completed — 4 agents (Frontend-Lead, Domain-Expert, Test-Engineer, A11y-Expert), 109 test cases planned"
+    }
+  ],
+  "execution": {
+    "executor": "Claude Code (Opus 4.6)",
+    "agents": [
+      "Frontend-Lead",
+      "Domain-Expert",
+      "Test-Engineer",
+      "A11y-Expert"
+    ]
+  },
+  "artifacts": {
+    "created": [
+      {
+        "path": ".specify/sprints/sprint-11/specifications/PG-141-spec.md",
+        "sha256": "41fcf694da4031859b44ad9e6e9adf70629aec911bf90f0bc17a212cee7a290c",
+        "created_at": "2026-02-16T23:10:00Z"
+      }
+    ]
+  },
+  "kpis": [
+    {
+      "target": "<500ms",
+      "actual": "pending",
+      "met": false,
+      "unit": "response_time"
+    },
+    {
+      "target": ">=90",
+      "actual": "pending",
+      "met": false,
+      "unit": "lighthouse_score"
+    }
+  ],
+  "blockers": [],
+  "dependencies_resolved": [
+    "IFC-144"
+  ],
+  "completed_at": "2026-02-16T23:58:37.542Z",
+  "actual_duration_minutes": 15,
+  "validations": [
+    {
+      "name": "Task completion verification",
+      "command": "echo \"Task PG-141 completed\"",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2026-02-16T23:58:37.542Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "Task marked as completed in Sprint_plan.csv"
+    }
+  ]
+}

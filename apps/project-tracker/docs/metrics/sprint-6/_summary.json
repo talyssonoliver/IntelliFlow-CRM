@@ -7,13 +7,13 @@
   "phases": [],
   "task_summary": {
     "total": 40,
-    "done": 39,
-    "in_progress": 1,
+    "done": 40,
+    "in_progress": 0,
     "blocked": 0,
     "not_started": 0,
     "failed": 0
   },
-  "notes": "39/40 tasks DONE (98%). Last synced: 2026-02-16T20:49:51.377Z",
+  "notes": "40/40 tasks DONE (100%). Last synced: 2026-02-19T18:17:01.145Z",
   "completed_tasks": [
     {
       "task_id": "IFC-181",
@@ -26,188 +26,193 @@
       "duration_minutes": 1462
     },
     {
+      "task_id": "PG-136",
+      "completed_at": "2026-02-10T23:35:00.000Z",
+      "duration_minutes": 95
+    },
+    {
       "task_id": "IFC-010",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-012",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-013",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-014",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-015",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-016",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-017",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-018",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-019",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-020",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-021",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-022",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-023",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-025",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-039",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-090",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-091",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-094",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-095",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-100",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-117",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-125",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-129",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-132",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-139",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-144",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-149",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-151",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-152",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-153",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-154",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-155",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-156",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-135",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-205",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-206",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-207",
-      "completed_at": "2026-02-16T20:49:51.377Z",
+      "completed_at": "2026-02-19T18:17:01.145Z",
       "duration_minutes": 15
     }
   ],
@@ -236,10 +241,10 @@
       "bottleneck_task_id": null
     },
     "schedule_variance": {
-      "sv_minutes": -195,
-      "spi": 0.98,
+      "sv_minutes": -97,
+      "spi": 0.99,
       "status": "on_track"
     },
-    "calculated_at": "2026-02-16T20:50:01.300Z"
+    "calculated_at": "2026-02-19T18:17:01.239Z"
   }
 }

@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-16T20:49:51.478Z",
+  "last_updated": "2026-02-19T18:17:01.233Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -1884,7 +1884,7 @@
     "PG-020": {
       "task_id": "PG-020",
       "sprint": 13,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
         "PG-019"
       ],
@@ -1909,10 +1909,10 @@
     "PG-022": {
       "task_id": "PG-022",
       "sprint": 13,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
-        "PG-015",
-        "PG-021"
+        "PG-021",
+        "PG-015"
       ],
       "dependents": [
         "PG-125"
@@ -1945,7 +1945,7 @@
     "PG-025": {
       "task_id": "PG-025",
       "sprint": 14,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
         "IFC-099",
         "IFC-198"
@@ -4343,7 +4343,7 @@
     "IFC-183": {
       "task_id": "IFC-183",
       "sprint": 13,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
         "IFC-003",
         "IFC-157"
@@ -4531,7 +4531,7 @@
     "PG-136": {
       "task_id": "PG-136",
       "sprint": 6,
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "dependencies": [
         "IFC-187"
       ],
@@ -4626,7 +4626,7 @@
     "PG-146": {
       "task_id": "PG-146",
       "sprint": 8,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
         "IFC-117",
         "IFC-197"
@@ -4729,7 +4729,7 @@
     "PG-149": {
       "task_id": "PG-149",
       "sprint": 7,
-      "status": "PLANNED",
+      "status": "DONE",
       "dependencies": [
         "IFC-025",
         "IFC-181"
@@ -4739,17 +4739,17 @@
     "PG-150": {
       "task_id": "PG-150",
       "sprint": 7,
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "dependencies": [
-        "IFC-180",
-        "IFC-181"
+        "IFC-181",
+        "IFC-180"
       ],
       "dependents": []
     },
     "PG-151": {
       "task_id": "PG-151",
       "sprint": 8,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
         "IFC-021",
         "IFC-139",
@@ -4760,7 +4760,7 @@
     "PG-152": {
       "task_id": "PG-152",
       "sprint": 8,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
         "IFC-148",
         "IFC-197"
@@ -4770,7 +4770,7 @@
     "PG-153": {
       "task_id": "PG-153",
       "sprint": 8,
-      "status": "BACKLOG",
+      "status": "DONE",
       "dependencies": [
         "IFC-117",
         "IFC-197"
@@ -8739,14 +8739,8 @@
     }
   ],
   "blocked_tasks": [
-    "PG-020",
-    "PG-026",
-    "PG-027",
     "PG-028",
-    "PG-029",
-    "PG-030",
     "IFC-120",
-    "PG-130",
     "IFC-190",
     "PG-040",
     "PG-041",
@@ -8758,8 +8752,6 @@
     "PG-045",
     "PG-047",
     "PG-048",
-    "PG-125",
-    "PG-161",
     "PG-051",
     "PG-052",
     "PG-053",
@@ -8836,19 +8828,12 @@
     "PG-121"
   ],
   "ready_to_start": [
-    "PG-149",
-    "PG-146",
-    "PG-151",
-    "PG-152",
-    "PG-153",
     "PG-141",
     "PG-017",
     "PG-019",
-    "PG-022",
     "PG-023",
     "PG-024",
     "PG-104",
-    "IFC-183",
     "PG-140",
     "IFC-200",
     "IFC-062",
@@ -8857,7 +8842,10 @@
     "IFC-066",
     "IFC-067",
     "IFC-068",
-    "PG-025",
+    "PG-026",
+    "PG-027",
+    "PG-029",
+    "PG-030",
     "TRACK-001",
     "TRACK-002",
     "TRACK-003",
@@ -8865,6 +8853,7 @@
     "TRACK-005",
     "TRACK-006",
     "IFC-174",
+    "PG-130",
     "PG-131",
     "PG-154",
     "PG-155",
@@ -8890,11 +8879,13 @@
     "PG-170",
     "PG-043",
     "PG-046",
+    "PG-125",
     "IFC-193",
     "IFC-194",
     "IFC-202",
     "IFC-203",
     "IFC-204",
+    "PG-161",
     "PG-162",
     "PG-167",
     "PG-168",
@@ -8946,12 +8937,6 @@
     }
   ],
   "parallel_execution_groups": {
-    "sprint-8": {
-      "group-1": [
-        "PG-146",
-        "PG-153"
-      ]
-    },
     "sprint-13": {
       "group-1": [
         "PG-019",

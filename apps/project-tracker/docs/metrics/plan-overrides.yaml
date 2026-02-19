@@ -25,7 +25,7 @@
 # =============================================================================
 
 schema_version: '2.0.0'
-last_updated: '2025-12-21'
+last_updated: '2026-02-17'
 maintainer: 'Tech Lead'
 
 # -----------------------------------------------------------------------------
@@ -1883,6 +1883,325 @@ IFC-160:
     - docs/architecture/repo-layout.md
   notes: 'Repository layout documentation and artifact path conventions.'
 
+# =============================================================================
+# TIER A TASKS - Missing Governance Fields
+# Added to resolve plan linter errors (2026-02-17)
+# =============================================================================
+
+# IFC-028: Workflow Engine with LangGraph (Sprint 16, Completed)
+# Section: Automation | Owner: Backend Dev + Architect
+# Validation: AUDIT:manual-review | Deps: IFC-027
+IFC-028:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+  acceptance_owner: 'Backend Dev'
+  debt_allowed: no
+  evidence_required:
+    - apps/api/src/workflow/__tests__/state-machine.test.ts
+    - .specify/sprints/sprint-16/execution/IFC-028/IFC-028-delivery.md
+    - .specify/sprints/sprint-16/attestations/IFC-028/context_ack.json
+  notes: 'Workflow Engine with LangGraph. Visual workflow with conditional logic and state persistence.'
+
+# IFC-030: Smart Lead Routing (Sprint 17, Backlog)
+# Section: Automation | Owner: Backend Dev + Sales Ops
+# Validation: AUDIT:manual-review;GATE:real-routing-data;VALIDATE:pnpm test:integration
+IFC-030:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - integration_test
+  acceptance_owner: 'Backend Dev'
+  debt_allowed: no
+  evidence_required:
+    - artifacts/misc/routing-rules-config.yaml
+    - artifacts/misc/routing-simulation-results.csv
+    - artifacts/reports/sla-compliance.pdf
+    - .specify/sprints/sprint-17/attestations/IFC-030/context_ack.json
+  notes: 'Smart Lead Routing. Score-based routing with load balancing and real routing data.'
+
+# IFC-069: Unified Activity Feed Service (Sprint 14, Completed)
+# Section: Core CRM | Owner: Backend Dev + Frontend Dev
+# Validation: VALIDATE:pnpm test | Deps: IFC-089, IFC-091, IFC-093, IFC-109
+IFC-069:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+  acceptance_owner: 'Backend Dev'
+  debt_allowed: no
+  evidence_required:
+    - apps/api/src/modules/misc/activity-feed.router.ts
+    - apps/web/src/components/shared/activity-feed/ActivityFeed.tsx
+    - packages/application/src/services/ActivityFeedService.ts
+    - .specify/sprints/sprint-14/attestations/IFC-069/attestation.json
+  notes: 'Unified Activity Feed. Timeline for leads, contacts, deals, tickets. <500ms load, real-time.'
+
+# IFC-103: Account Aggregate and Value Objects (Sprint 2, Completed)
+# Section: Validation | Owner: Backend Dev + Tech Lead
+# Validation: VALIDATE:pnpm test;AUDIT:design-review;AUDIT:code-review
+IFC-103:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - architecture_test
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - packages/adapters/src/repositories/PrismaAccountRepository.ts
+    - .specify/sprints/sprint-2/attestations/IFC-103/context_ack.json
+  notes: 'Account Aggregate. Phase-039 DDD implementation with value objects and repository.'
+
+# IFC-105: Task Aggregate and Value Objects (Sprint 3, Completed)
+# Section: Validation | Owner: Backend Dev + Tech Lead
+# Validation: VALIDATE:pnpm test;AUDIT:design-review;AUDIT:code-review
+IFC-105:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - architecture_test
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - packages/adapters/src/repositories/PrismaTaskRepository.ts
+    - .specify/sprints/sprint-3/attestations/IFC-105/context_ack.json
+  notes: 'Task Aggregate. Phase-039 DDD implementation with value objects and repository.'
+
+# IFC-107: Implement Repositories and Factories (Sprint 3, Completed)
+# Section: Infrastructure | Owner: Backend Dev
+# Validation: VALIDATE:pnpm test;VALIDATE:pnpm test:unit;GATE:coverage-gte-90
+IFC-107:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - coverage_check
+  acceptance_owner: 'Backend Dev'
+  debt_allowed: no
+  evidence_required:
+    - packages/adapters/src/repositories/PrismaLeadRepository.ts
+    - packages/adapters/src/repositories/PrismaContactRepository.ts
+    - packages/adapters/src/repositories/PrismaAccountRepository.ts
+    - packages/adapters/src/repositories/PrismaTaskRepository.ts
+    - .specify/sprints/sprint-3/attestations/IFC-107/context_ack.json
+  notes: 'Repository implementations for all aggregates with Prisma. Coverage >90%.'
+
+# IFC-117: Monitor AI models for drift, latency, hallucination, ROI (Sprint 6, Completed)
+# Section: AI Insights | Owner: AI Specialist + SRE
+# Validation: AUDIT:manual-review;GATE:integration-wired
+IFC-117:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - chain_test
+  acceptance_owner: 'AI Specialist'
+  debt_allowed: no
+  evidence_required:
+    - artifacts/metrics/ai-metrics.json
+    - artifacts/misc/drift-dashboard.md
+    - artifacts/misc/alerts-config.yaml
+    - infra/monitoring/ai-grafana-dashboard.json
+    - infra/monitoring/ai-prometheus-rules.yaml
+    - .specify/sprints/sprint-10/attestations/IFC-117/context_ack.json
+  notes: 'AI model monitoring. Drift detection, hallucination rate <5%, ROI tracking.'
+
+# IFC-125: Guardrails for prompt injection, data leakage, AI bias (Sprint 6, Completed)
+# Section: AI Foundation | Owner: AI Specialist + Security
+# Validation: VALIDATE:pnpm test;GATE:no-deferred-audit-logging
+IFC-125:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - security_scan
+  acceptance_owner: 'Security Engineer'
+  debt_allowed: no
+  evidence_required:
+    - apps/api/src/shared/prompt-sanitizer.ts
+    - artifacts/metrics/bias-metrics.csv
+    - docs/shared/ai-guardrails-report.md
+    - .specify/sprints/sprint-11/attestations/IFC-125/context_ack.json
+  notes: 'AI guardrails. Prompt sanitization, output redaction, bias detection. Zero injection incidents.'
+
+# IFC-128: AI output review and manual fallback processes (Sprint 3, Completed)
+# Section: AI Foundation | Owner: QA Lead + Tech Lead
+# Validation: AUDIT:code-review;VALIDATE:pnpm test;GATE:no-placeholder-code
+IFC-128:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+  acceptance_owner: 'QA Lead'
+  debt_allowed: no
+  evidence_required:
+    - docs/shared/ai-review-checklist.md
+    - docs/shared/fallback-procedure.md
+    - .specify/sprints/sprint-3/attestations/IFC-128/context_ack.json
+  notes: 'AI output review. Human review of AI-generated code/tests/docs. No placeholder code in BaseAgent.'
+
+# IFC-181: AI Output Review - Frontend UI (Sprint 6, Completed)
+# Section: AI Foundation | Owner: Frontend Dev
+# Validation: VALIDATE:pnpm test;GATE:lighthouse-gte-90;AUDIT:manual-review
+IFC-181:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - lighthouse
+  acceptance_owner: 'Frontend Dev'
+  debt_allowed: no
+  evidence_required:
+    - apps/web/src/app/agent-approvals/ai-review/page.tsx
+    - apps/web/src/components/ai-review/ReviewQueue.tsx
+    - apps/web/src/lib/ai-review/hooks.ts
+    - .specify/sprints/sprint-6/attestations/IFC-181/context_ack.json
+  notes: 'AI Review Queue UI. Filters, claim/approve/reject, confidence viz, SLA countdown. Lighthouse >=90.'
+
+# IFC-182: Home Page tRPC Router (Sprint 13, Completed)
+# Section: Infrastructure | Owner: Backend Dev
+# Validation: VALIDATE:pnpm test;GATE:coverage-gte-90
+IFC-182:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - coverage_check
+  acceptance_owner: 'Backend Dev'
+  debt_allowed: no
+  evidence_required:
+    - apps/api/src/modules/home/home.router.ts
+    - packages/validators/src/home.ts
+    - apps/api/src/modules/home/__tests__/home.router.test.ts
+    - .specify/sprints/sprint-13/attestations/IFC-182/attestation.json
+  notes: 'Home page tRPC router. Welcome summary, AI insights, activity feed, daily goals, pins.'
+
+# PG-129: Authenticated Home Page (Sprint 14, Completed)
+# Section: Core CRM | Owner: CRM FE+BE
+# Validation: VALIDATE:pnpm test;GATE:lighthouse-gte-90
+PG-129:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - lighthouse
+  acceptance_owner: 'Frontend Dev'
+  debt_allowed: no
+  evidence_required:
+    - apps/web/src/components/home/AuthenticatedHomePage.tsx
+    - apps/web/src/components/home/HomePageContent.tsx
+    - .specify/sprints/sprint-14/attestations/PG-129/context_ack.json
+  notes: 'Authenticated Home Page. <500ms load, Lighthouse >=90, real-time feed, AI insights, draggable pins.'
+
+# IFC-189: Ticket tRPC Router (Sprint 5, Completed)
+# Section: Core CRM | Owner: Backend Dev
+# Validation: VALIDATE:pnpm test;GATE:coverage-gte-90
+IFC-189:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - coverage_check
+  acceptance_owner: 'Backend Dev'
+  debt_allowed: no
+  evidence_required:
+    - apps/api/src/modules/ticket/ticket.router.ts
+    - apps/api/src/modules/ticket/__tests__/ticket.router.test.ts
+    - packages/adapters/src/repositories/PrismaTicketRepository.ts
+    - .specify/sprints/sprint-5/attestations/IFC-189/context_ack.json
+  notes: 'Ticket tRPC Router. CRUD, SLA tracking, escalation, assignment, customer portal.'
+
+# IFC-197: AI Monitoring tRPC Router (Sprint 7, Completed)
+# Section: AI Intelligence | Owner: Backend Dev
+# Validation: VALIDATE:pnpm test;GATE:coverage-gte-90
+IFC-197:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - coverage_check
+  acceptance_owner: 'Backend Dev'
+  debt_allowed: no
+  evidence_required:
+    - apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts
+    - apps/api/src/modules/ai-monitoring/__tests__/ai-monitoring.router.test.ts
+    - .specify/sprints/sprint-7/attestations/IFC-197/context_ack.json
+  notes: 'AI Monitoring tRPC Router. Drift, latency, hallucination, ROI, agent status endpoints.'
+
+# IFC-198: Billing Domain Core (Sprint 13, Completed)
+# Section: Billing | Owner: Backend Dev + FinOps
+# Validation: VALIDATE:pnpm test;AUDIT:design-review;GATE:billing-invariants-pass
+IFC-198:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+  acceptance_owner: 'Backend Dev'
+  debt_allowed: no
+  evidence_required:
+    - packages/domain/src/crm/billing/Invoice.ts
+    - packages/domain/src/crm/billing/Receipt.ts
+    - packages/application/src/services/BillingDomainService.ts
+    - packages/application/src/services/__tests__/BillingDomainService.test.ts
+    - .specify/sprints/sprint-29/attestations/IFC-198/context_ack.json
+  notes: 'Billing Domain Core. Invoice/Receipt aggregates, payment state machine, tax/refund rules.'
+
+# IFC-201: Settings Control Plane Foundations (Sprint 25, Backlog)
+# Section: Settings | Owner: Platform BE + Security Eng
+# Validation: VALIDATE:pnpm test;GATE:coverage-gte-90;AUDIT:security-review
+IFC-201:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - coverage_check
+    - security_scan
+  acceptance_owner: 'Security Engineer'
+  debt_allowed: no
+  evidence_required:
+    - packages/domain/src/settings/SettingsPolicy.ts
+    - packages/adapters/src/repositories/PrismaSettingsRepository.ts
+    - apps/api/src/modules/settings/settings.router.ts
+    - apps/api/src/modules/settings/__tests__/settings.router.test.ts
+    - .specify/sprints/sprint-29/attestations/IFC-201/context_ack.json
+  notes: 'Settings Control Plane. IAM, audit, integrations, security controls. Coverage >=90%.'
+
 # -----------------------------------------------------------------------------
 # GATE PROFILE DEFINITIONS
 # Mapping of gate_profile names to actual validation commands
@@ -2081,11 +2400,11 @@ gate_profiles:
 _meta:
   description: 'Plan overrides for Sprint plan validation and governance'
   created: '2025-12-17'
-  updated: '2025-12-21'
+  updated: '2026-02-17'
   author: 'Plan Linter System'
   version: '2.0.0'
   sprint_scope: 'all'
-  total_overrides: 75
+  total_overrides: 91
   cycles_fixed: 2
   cross_sprint_fixes: 25
-  tier_a_definitions: 49
+  tier_a_definitions: 65
