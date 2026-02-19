@@ -89,19 +89,19 @@ const RecordToolCallSchema = z.object({
   toolName: z.string(),
   toolType: ToolTypeSchema,
   toolVersion: z.string().optional(),
-  inputParameters: z.record(z.unknown()),
+  inputParameters: z.record(z.string(), z.unknown()),
   requiresApproval: z.boolean().optional().default(false),
   affectedEntityType: z.string().optional(),
   affectedEntityId: z.string().optional(),
   changeDescription: z.string().optional(),
   isReversible: z.boolean().optional().default(false),
-  rollbackData: z.record(z.unknown()).optional(),
+  rollbackData: z.record(z.string(), z.unknown()).optional(),
 });
 
 const UpdateToolCallSchema = z.object({
   id: z.string(),
   status: ToolCallStatusSchema.optional(),
-  outputResult: z.record(z.unknown()).optional(),
+  outputResult: z.record(z.string(), z.unknown()).optional(),
   errorMessage: z.string().optional(),
   errorCode: z.string().optional(),
   durationMs: z.number().optional(),

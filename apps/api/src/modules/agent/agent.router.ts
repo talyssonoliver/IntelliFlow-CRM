@@ -128,7 +128,7 @@ export const agentRouter = createTRPCRouter({
     .input(
       z.object({
         toolName: z.string(),
-        input: z.record(z.unknown()),
+        input: z.record(z.string(), z.unknown()),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -284,7 +284,7 @@ export const agentRouter = createTRPCRouter({
       z.object({
         actionId: z.string(),
         reason: z.string().optional(),
-        modifiedInput: z.record(z.unknown()).optional(),
+        modifiedInput: z.record(z.string(), z.unknown()).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
