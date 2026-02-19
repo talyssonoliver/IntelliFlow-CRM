@@ -509,7 +509,7 @@ describe('AI Monitoring Router (IFC-197)', () => {
         expect.objectContaining({
           where: expect.objectContaining({
             tenantId: 'test-tenant-id',
-            status: 'ACTIVE',
+            status: { in: ['ACTIVE', 'IDLE', 'ERROR'] },
           }),
         })
       );

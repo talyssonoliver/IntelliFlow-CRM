@@ -177,16 +177,20 @@ export const aiMonitoringRouter = createTRPCRouter({
 
       return {
         sampleCount: stats.sampleCount,
+        successRate: stats.successRate,
         percentiles: stats.percentiles,
         sloCompliance: stats.sloCompliance,
         byModel: stats.byModel,
         byOperation: stats.byOperation,
+        byPhase: stats.byPhase,
         alerts: alerts.map((a) => ({
           severity: a.severity,
           message: a.message,
           timestamp: a.timestamp.toISOString(),
           model: a.model,
           operationType: a.operationType,
+          currentP95: a.currentP95,
+          targetP95: a.targetP95,
         })),
       };
     } catch (error) {
@@ -197,6 +201,37 @@ export const aiMonitoringRouter = createTRPCRouter({
       });
     }
   }),
+
+  /**
+   * Latency trend over time: p50, p95, p99, count per bucket.
+   */
+  getLatencyTrend: tenantProcedure
+    .input(
+      timeRangeSchema.extend({
+        periodMinutes: z.number().int().min(5).max(1440).default(60),
+        bucketMinutes: z.number().int().min(1).max(60).default(5),
+      })
+    )
+    .query(async ({ input }) => {
+      try {
+        const { latencyMonitor } = await loadAIMonitoringModule();
+        const trend = latencyMonitor.getTrend(input.periodMinutes, input.bucketMinutes);
+
+        return trend.map((t) => ({
+          timestamp: t.timestamp.toISOString(),
+          p50: t.p50,
+          p95: t.p95,
+          p99: t.p99,
+          count: t.count,
+        }));
+      } catch (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to retrieve latency trend',
+          cause: error,
+        });
+      }
+    }),
 
   /**
    * Hallucination detection stats: rate, type breakdown, KPI compliance.
@@ -273,7 +308,7 @@ export const aiMonitoringRouter = createTRPCRouter({
       const conversations = await ctx.prismaWithTenant.conversationRecord.findMany({
         where: {
           tenantId,
-          status: 'ACTIVE',
+          status: { in: ['ACTIVE', 'IDLE', 'ERROR'] },
         },
         select: {
           id: true,
@@ -294,7 +329,7 @@ export const aiMonitoringRouter = createTRPCRouter({
           agentId: c.agentId,
           type: c.agentName ?? 'unknown',
           model: c.agentModel ?? 'unknown',
-          status: c.status as 'active' | 'idle' | 'error',
+          status: c.status.toLowerCase() as 'active' | 'idle' | 'error',
           currentTask: c.contextName ?? undefined,
           lastActive: (c.lastMessageAt ?? c.startedAt).toISOString(),
         })),
