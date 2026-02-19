@@ -248,8 +248,7 @@ export function DocumentSearch({
             <Badge
               key={`status-${status}`}
               variant="secondary"
-              className="flex items-center gap-1 cursor-pointer"
-              aria-label={`Remove ${opt?.label ?? status} filter`}
+              className="flex items-center gap-1"
             >
               {opt?.label ?? status}
               <button
@@ -269,8 +268,7 @@ export function DocumentSearch({
             <Badge
               key={`cls-${cls}`}
               variant="secondary"
-              className="flex items-center gap-1 cursor-pointer"
-              aria-label={`Remove ${opt?.label ?? cls} filter`}
+              className="flex items-center gap-1"
             >
               {opt?.label ?? cls}
               <button
@@ -290,8 +288,7 @@ export function DocumentSearch({
             <Badge
               key={`ft-${ft}`}
               variant="secondary"
-              className="flex items-center gap-1 cursor-pointer"
-              aria-label={`Remove ${opt?.label ?? ft} filter`}
+              className="flex items-center gap-1"
             >
               {opt?.label ?? ft}
               <button
