@@ -17,7 +17,7 @@ import { useSearchParams } from 'next/navigation';
 import { Card, Button } from '@intelliflow/ui';
 import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc';
-import { useAuth, useRequireAuth } from '@/lib/auth/AuthContext';
+import { useRequireAuth } from '@/lib/auth/AuthContext';
 import type { AgentAction, ActionStatus } from '@/lib/agent';
 
 // Material Symbols icon helper component

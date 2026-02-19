@@ -27,8 +27,7 @@ import { getTenantContext } from '../../security/tenant-context';
  * Helper to get experiment service with null check
  * Cast to any to work around application package build issues
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getExperimentService(ctx: Context): any {
+function getExperimentService(ctx: Context): any { // eslint-disable-line @typescript-eslint/no-explicit-any
   if (!ctx.services?.experiment) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',
@@ -61,7 +60,7 @@ export const experimentRouter = createTRPCRouter({
   update: tenantProcedure
     .input(
       z.object({
-        experimentId: z.string().cuid(),
+        experimentId: z.string().regex(/^c[a-z0-9]{8,}$/),
         data: updateExperimentSchema,
       })
     )
@@ -75,7 +74,7 @@ export const experimentRouter = createTRPCRouter({
    * SECURITY: Uses tenantProcedure
    */
   start: tenantProcedure
-    .input(z.object({ experimentId: z.string().cuid() }))
+    .input(z.object({ experimentId: z.string().regex(/^c[a-z0-9]{8,}$/) }))
     .mutation(async ({ ctx, input }) => {
       const experimentService = getExperimentService(ctx);
       return experimentService.startExperiment(input.experimentId);
@@ -86,7 +85,7 @@ export const experimentRouter = createTRPCRouter({
    * SECURITY: Uses tenantProcedure
    */
   pause: tenantProcedure
-    .input(z.object({ experimentId: z.string().cuid() }))
+    .input(z.object({ experimentId: z.string().regex(/^c[a-z0-9]{8,}$/) }))
     .mutation(async ({ ctx, input }) => {
       const experimentService = getExperimentService(ctx);
       return experimentService.pauseExperiment(input.experimentId);
@@ -97,7 +96,7 @@ export const experimentRouter = createTRPCRouter({
    * SECURITY: Uses tenantProcedure
    */
   complete: tenantProcedure
-    .input(z.object({ experimentId: z.string().cuid() }))
+    .input(z.object({ experimentId: z.string().regex(/^c[a-z0-9]{8,}$/) }))
     .mutation(async ({ ctx, input }) => {
       const experimentService = getExperimentService(ctx);
       return experimentService.completeExperiment(input.experimentId);
@@ -108,7 +107,7 @@ export const experimentRouter = createTRPCRouter({
    * SECURITY: Uses tenantProcedure
    */
   archive: tenantProcedure
-    .input(z.object({ experimentId: z.string().cuid() }))
+    .input(z.object({ experimentId: z.string().regex(/^c[a-z0-9]{8,}$/) }))
     .mutation(async ({ ctx, input }) => {
       const experimentService = getExperimentService(ctx);
       return experimentService.archiveExperiment(input.experimentId);
@@ -126,8 +125,8 @@ export const experimentRouter = createTRPCRouter({
   assignVariant: tenantProcedure
     .input(
       z.object({
-        experimentId: z.string().cuid(),
-        leadId: z.string().cuid(),
+        experimentId: z.string().regex(/^c[a-z0-9]{8,}$/),
+        leadId: z.string().regex(/^c[a-z0-9]{8,}$/),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -142,8 +141,8 @@ export const experimentRouter = createTRPCRouter({
   getVariant: tenantProcedure
     .input(
       z.object({
-        experimentId: z.string().cuid(),
-        leadId: z.string().cuid(),
+        experimentId: z.string().regex(/^c[a-z0-9]{8,}$/),
+        leadId: z.string().regex(/^c[a-z0-9]{8,}$/),
       })
     )
     .query(async ({ ctx, input }) => {
@@ -199,7 +198,7 @@ export const experimentRouter = createTRPCRouter({
    * SECURITY: Uses tenantProcedure
    */
   getById: tenantProcedure
-    .input(z.object({ experimentId: z.string().cuid() }))
+    .input(z.object({ experimentId: z.string().regex(/^c[a-z0-9]{8,}$/) }))
     .query(async ({ ctx, input }) => {
       const experimentService = getExperimentService(ctx);
       return experimentService.getExperiment(input.experimentId);
@@ -220,7 +219,7 @@ export const experimentRouter = createTRPCRouter({
    * SECURITY: Uses tenantProcedure
    */
   getStatus: tenantProcedure
-    .input(z.object({ experimentId: z.string().cuid() }))
+    .input(z.object({ experimentId: z.string().regex(/^c[a-z0-9]{8,}$/) }))
     .query(async ({ ctx, input }) => {
       const experimentService = getExperimentService(ctx);
       return experimentService.getStatus(input.experimentId);
@@ -231,7 +230,7 @@ export const experimentRouter = createTRPCRouter({
    * SECURITY: Uses tenantProcedure
    */
   getResults: tenantProcedure
-    .input(z.object({ experimentId: z.string().cuid() }))
+    .input(z.object({ experimentId: z.string().regex(/^c[a-z0-9]{8,}$/) }))
     .query(async ({ ctx, input }) => {
       const experimentService = getExperimentService(ctx);
       return experimentService.getResults(input.experimentId);

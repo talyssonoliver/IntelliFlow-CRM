@@ -71,16 +71,16 @@ export type UpdateExperimentInput = z.infer<typeof updateExperimentSchema>;
 // =============================================================================
 
 export const assignVariantInputSchema = z.object({
-  experimentId: z.string().cuid(),
-  leadId: z.string().cuid(),
+  experimentId: z.string().regex(/^c[a-z0-9]{8,}$/),
+  leadId: z.string().regex(/^c[a-z0-9]{8,}$/),
 });
 
 export type AssignVariantInput = z.infer<typeof assignVariantInputSchema>;
 
 export const experimentAssignmentSchema = z.object({
-  id: z.string().cuid(),
-  experimentId: z.string().cuid(),
-  leadId: z.string().cuid(),
+  id: z.string().regex(/^c[a-z0-9]{8,}$/),
+  experimentId: z.string().regex(/^c[a-z0-9]{8,}$/),
+  leadId: z.string().regex(/^c[a-z0-9]{8,}$/),
   variant: experimentVariantSchema,
   score: z.number().int().min(0).max(100).nullable(),
   confidence: z.number().min(0).max(1).nullable(),
@@ -96,8 +96,8 @@ export type ExperimentAssignment = z.infer<typeof experimentAssignmentSchema>;
 // =============================================================================
 
 export const recordScoreInputSchema = z.object({
-  experimentId: z.string().cuid(),
-  leadId: z.string().cuid(),
+  experimentId: z.string().regex(/^c[a-z0-9]{8,}$/),
+  leadId: z.string().regex(/^c[a-z0-9]{8,}$/),
   score: z.number().int().min(0).max(100),
   confidence: z.number().min(0).max(1).optional(),
 });
@@ -109,8 +109,8 @@ export type RecordScoreInput = z.infer<typeof recordScoreInputSchema>;
 // =============================================================================
 
 export const recordConversionInputSchema = z.object({
-  experimentId: z.string().cuid(),
-  leadId: z.string().cuid(),
+  experimentId: z.string().regex(/^c[a-z0-9]{8,}$/),
+  leadId: z.string().regex(/^c[a-z0-9]{8,}$/),
   conversionValue: z.number().min(0).optional(),
 });
 
@@ -155,8 +155,8 @@ export type EffectSizeInterpretation = z.infer<typeof effectSizeInterpretationSc
 // =============================================================================
 
 export const experimentResultSchema = z.object({
-  id: z.string().cuid(),
-  experimentId: z.string().cuid(),
+  id: z.string().regex(/^c[a-z0-9]{8,}$/),
+  experimentId: z.string().regex(/^c[a-z0-9]{8,}$/),
 
   // Sample sizes
   controlSampleSize: z.number().int().min(0),
@@ -195,7 +195,7 @@ export type ExperimentResult = z.infer<typeof experimentResultSchema>;
 // =============================================================================
 
 export const experimentSummarySchema = z.object({
-  id: z.string().cuid(),
+  id: z.string().regex(/^c[a-z0-9]{8,}$/),
   name: z.string(),
   description: z.string().nullable(),
   type: experimentTypeSchema,
@@ -234,7 +234,7 @@ export type ExperimentSummary = z.infer<typeof experimentSummarySchema>;
 // =============================================================================
 
 export const experimentStatusResponseSchema = z.object({
-  experimentId: z.string().cuid(),
+  experimentId: z.string().regex(/^c[a-z0-9]{8,}$/),
   status: experimentStatusSchema,
   controlSampleSize: z.number(),
   treatmentSampleSize: z.number(),
@@ -251,7 +251,7 @@ export type ExperimentStatusResponse = z.infer<typeof experimentStatusResponseSc
 // =============================================================================
 
 export const analyzeExperimentInputSchema = z.object({
-  experimentId: z.string().cuid(),
+  experimentId: z.string().regex(/^c[a-z0-9]{8,}$/),
   includeConversionAnalysis: z.boolean().default(true),
 });
 

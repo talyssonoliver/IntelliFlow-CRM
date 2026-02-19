@@ -23,6 +23,7 @@ vi.mock('../../../security/tenant-context', () => ({
 
 // Mock the validators - provide real schemas that the router expects
 vi.mock('@intelliflow/validators', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { z } = require('zod');
   return {
     createExperimentSchema: z.object({
@@ -43,18 +44,18 @@ vi.mock('@intelliflow/validators', () => {
       trafficPercent: z.number().int().min(1).max(99).optional(),
     }),
     recordScoreInputSchema: z.object({
-      experimentId: z.string().cuid(),
-      leadId: z.string().cuid(),
+      experimentId: z.string().regex(/^c[a-z0-9]{8,}$/),
+      leadId: z.string().regex(/^c[a-z0-9]{8,}$/),
       score: z.number().int().min(0).max(100),
       confidence: z.number().min(0).max(1).optional(),
     }),
     recordConversionInputSchema: z.object({
-      experimentId: z.string().cuid(),
-      leadId: z.string().cuid(),
+      experimentId: z.string().regex(/^c[a-z0-9]{8,}$/),
+      leadId: z.string().regex(/^c[a-z0-9]{8,}$/),
       conversionValue: z.number().min(0).optional(),
     }),
     analyzeExperimentInputSchema: z.object({
-      experimentId: z.string().cuid(),
+      experimentId: z.string().regex(/^c[a-z0-9]{8,}$/),
       includeConversionAnalysis: z.boolean().default(true),
     }),
   };
