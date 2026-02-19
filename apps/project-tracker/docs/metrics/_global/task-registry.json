@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-16T20:49:51.202Z",
+  "last_updated": "2026-02-19T17:41:55.378Z",
   "total_tasks": 305,
   "sprints": {
     "sprint-0": {
@@ -129,7 +129,10 @@
       "PG-015",
       "PG-016",
       "PG-018",
+      "PG-020",
       "PG-021",
+      "PG-022",
+      "PG-025",
       "PG-031",
       "PG-032",
       "DOC-001",
@@ -226,6 +229,7 @@
       "IFC-180",
       "IFC-181",
       "IFC-182",
+      "IFC-183",
       "PG-129",
       "PG-132",
       "IFC-184",
@@ -237,28 +241,30 @@
       "PG-133",
       "PG-134",
       "PG-135",
+      "PG-136",
       "PG-137",
       "PG-138",
       "PG-139",
       "PG-142",
       "PG-143",
       "PG-144",
+      "PG-146",
       "IFC-197",
       "PG-148",
+      "PG-149",
+      "PG-150",
+      "PG-151",
+      "PG-152",
+      "PG-153",
       "IFC-198",
       "IFC-205",
       "IFC-206",
       "IFC-207"
     ],
-    "IN_PROGRESS": [
-      "PG-136",
-      "PG-150"
-    ],
+    "IN_PROGRESS": [],
     "VALIDATING": [],
     "BLOCKED": [],
-    "PLANNED": [
-      "PG-149"
-    ],
+    "PLANNED": [],
     "BACKLOG": [
       "IFC-030",
       "IFC-031",
@@ -295,11 +301,8 @@
       "IFC-087",
       "PG-017",
       "PG-019",
-      "PG-020",
-      "PG-022",
       "PG-023",
       "PG-024",
-      "PG-025",
       "PG-026",
       "PG-027",
       "PG-028",
@@ -414,14 +417,12 @@
       "IFC-166",
       "IFC-175",
       "IFC-174",
-      "IFC-183",
       "PG-130",
       "PG-131",
       "IFC-190",
       "PG-140",
       "PG-141",
       "PG-145",
-      "PG-146",
       "PG-147",
       "IFC-191",
       "IFC-192",
@@ -429,9 +430,6 @@
       "IFC-194",
       "IFC-195",
       "IFC-196",
-      "PG-151",
-      "PG-152",
-      "PG-153",
       "IFC-199",
       "IFC-200",
       "IFC-201",
@@ -3076,15 +3074,15 @@
       "section": "Auth Pages",
       "description": "Reset Password",
       "owner": "Platform FE (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 13,
       "dependencies": [
         "PG-019"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/(public)/reset-password/[token]/page.tsx;ARTIFACT:apps/web/src/components/shared/password-reset.tsx;ARTIFACT:apps/web/src/lib/shared/password-validation.ts;EVIDENCE:.specify/sprints/sprint-13/attestations/PG-020/context_ack.json"
+        "ARTIFACT:apps/web/src/app/(public)/reset-password/[token]/page.tsx;ARTIFACT:apps/web/src/components/shared/password-reset.tsx;ARTIFACT:apps/web/src/lib/shared/password-validation.ts;EVIDENCE:.specify/sprints/sprint-13/attestations/PG-020/attestation.json"
       ],
-      "kpis": "Password reset working, requirements enforced",
+      "kpis": "Password reset working, requirements enforced, 18 page-level tests, 91 total tests",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, password updated; artifacts: page.tsx, password-reset.tsx, password-validation.ts",
       "validation": "AUDIT:manual-review;GATE:lighthouse-gte-90",
       "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;FILE:apps/web/src/app/(public)/forgot-password/page.tsx;FILE:apps/web/src/components/shared/auth-background.tsx;FILE:apps/web/src/components/shared/auth-card.tsx;FILE:apps/web/src/components/shared/password-input.tsx;FILE:apps/web/src/components/shared/trust-indicators.tsx;FILE:packages/validators/src/auth.ts;ENV:Reset form;POLICY:password requirements"
@@ -3112,7 +3110,7 @@
       "section": "Auth Pages",
       "description": "MFA Verify",
       "owner": "Platform FE (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 13,
       "dependencies": [
         "PG-021",
@@ -3166,14 +3164,14 @@
       "section": "Billing Pages",
       "description": "Billing Portal",
       "owner": "Platform BE (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [
         "IFC-099",
         "IFC-198"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/(billing)/billing/page.tsx;ARTIFACT:apps/web/src/components/billing/billing-portal.tsx;ARTIFACT:apps/web/src/lib/billing/stripe-portal.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/PG-025/context_ack.json"
+        "ARTIFACT:apps/web/src/app/billing/page.tsx;ARTIFACT:apps/web/src/components/billing/billing-portal.tsx;ARTIFACT:apps/web/src/lib/billing/stripe-portal.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/PG-025/context_ack.json"
       ],
       "kpis": "Portal working, subscriptions managed, invoices shown",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, billing functional; artifacts: page.tsx, billing-portal.tsx, stripe-portal.ts; Stripe integration must be wired to real API (test mode), not mock client",
@@ -6858,7 +6856,7 @@
       "section": "Infrastructure",
       "description": "Notifications tRPC Router - List mark read preferences real-time subscription",
       "owner": "Backend Dev (STOA-Domain)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 13,
       "dependencies": [
         "IFC-003",
@@ -7130,7 +7128,7 @@
       "section": "Core CRM",
       "description": "Task Management Page - List calendar view assignments reminders entity linking",
       "owner": "Frontend Dev (STOA-Domain)",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "sprint": 6,
       "dependencies": [
         "IFC-187"
@@ -7305,7 +7303,7 @@
       "section": "AI Intelligence",
       "description": "Drift Detection Dashboard at /agent-approvals/drift - Model performance drift alerts cost tracking error rates",
       "owner": "Frontend Dev (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 8,
       "dependencies": [
         "IFC-117",
@@ -7483,7 +7481,7 @@
       "section": "AI Intelligence",
       "description": "Experiments Dashboard at /agent-approvals/experiments - A/B test management experiment results statistical analysis variant comparison",
       "owner": "Frontend Dev (STOA-Intelligence)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 7,
       "dependencies": [
         "IFC-025",
@@ -7501,7 +7499,7 @@
       "section": "AI Intelligence",
       "description": "AI Review History at /agent-approvals/history - Filterable history of all AI output reviews with timeline and audit trail",
       "owner": "Frontend Dev (STOA-Intelligence)",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "sprint": 7,
       "dependencies": [
         "IFC-181",
@@ -7519,7 +7517,7 @@
       "section": "AI Intelligence",
       "description": "Active Agents Dashboard at /agent-approvals/agents - Agent status monitoring active sessions task assignments health indicators",
       "owner": "Frontend Dev (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 8,
       "dependencies": [
         "IFC-021",
@@ -7538,7 +7536,7 @@
       "section": "AI Intelligence",
       "description": "Agent Logs Viewer at /agent-approvals/logs - Conversation transcripts tool call records searchable log timeline",
       "owner": "Frontend Dev (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 8,
       "dependencies": [
         "IFC-148",
@@ -7556,7 +7554,7 @@
       "section": "AI Intelligence",
       "description": "Latency Monitor Dashboard at /agent-approvals/latency - SLO compliance latency percentiles chain performance phase-level monitoring",
       "owner": "Frontend Dev (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 8,
       "dependencies": [
         "IFC-117",

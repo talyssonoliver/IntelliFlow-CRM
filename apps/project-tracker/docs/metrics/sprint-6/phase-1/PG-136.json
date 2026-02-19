@@ -7,7 +7,7 @@
   "sprint": "sprint-6",
   "phase": "phase-1",
   "stream": null,
-  "status": "IN_PROGRESS",
+  "status": "DONE",
   "started_at": "2026-02-09T22:00:00.000Z",
   "completed_at": "2026-02-10T23:35:00.000Z",
   "actual_duration_minutes": 95,
@@ -16,7 +16,7 @@
       "IFC-187"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-02-16T20:49:51.374Z",
+    "verified_at": "2026-02-19T17:41:55.501Z",
     "notes": "IFC-187 (Task tRPC Router) marked Completed. All 10 endpoints available in router (create, getById, list, update, delete, complete, assign, reschedule, getReminders, getByEntity)."
   },
   "status_history": [
@@ -49,6 +49,11 @@
       "status": "Completed",
       "at": "2026-02-12T22:00:00.000Z",
       "note": "Re-validated — 13 artifacts (3 new: EntitySearchField, TaskCreateSheet, RelatedTasksCard), 104 tests across 9 test files, all 6 completion gates passed, build succeeds"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-02-16T23:05:00.000Z",
+      "note": "Final exec session — lint errors fixed (11 unused imports/variables), context_ack.json created, attestation refreshed with current hashes, all 7 gates PASS"
     }
   ],
   "execution": {
@@ -94,13 +99,13 @@
   "kpis": {
     "test_coverage": {
       "target": 90,
-      "actual": 100,
+      "actual": 95.08,
       "met": true,
       "unit": "percent"
     },
     "tests_passing": {
       "target": 50,
-      "actual": 104,
+      "actual": 148,
       "met": true,
       "unit": "count"
     },
@@ -132,10 +137,17 @@
       "exit_code": 0,
       "passed": true,
       "duration_ms": 8000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "duration_ms": 63124
     }
   ],
   "blockers": [],
-  "notes": "Task Management Page fully implemented. 13 artifacts created (9 components + 3 pages/layouts + 1 sidebar config), 9 test files with 104 tests, 3 existing files modified (sidebar barrel exports, filter-utils). Custom month-view calendar (no external library). All tRPC endpoints wired (create, getById, list, update, delete, complete, getByEntity). Views: list (DataTable) + calendar toggle. Features: search, status/priority filters, sort, overdue/due-today reminders, entity linking (EntitySearchField), CRUD forms, bulk actions, task creation sheet (TaskCreateSheet), related tasks card (RelatedTasksCard). Re-validated 2026-02-12: all 6 completion gates passed, build succeeds.",
+  "notes": "Task Management Page fully implemented. 13 artifacts created (9 components + 3 pages/layouts + 1 sidebar config), 9 test files with 148 tests. Scoped coverage: Stmts 91.21%, Branches 82.11%, Functions 90.14%, Lines 95.08%. All 4 validations passed (TypeScript, Tests, Lint, Build). Custom month-view calendar (no external library). All tRPC endpoints wired. Views: list (DataTable) + calendar toggle. Features: search, status/priority filters, sort, overdue/due-today reminders, entity linking, CRUD forms, bulk actions, task creation sheet, related tasks card.",
   "dependencies_resolved": [
     "IFC-187"
   ]
