@@ -162,7 +162,7 @@ _IFC-147 creates timeline UI but no formal PG-_ task exists
     │  - Party management     │  │  - Conflict display     │  │  - Version history      │
     │  - Deadline tracking    │  │  - Calendar integration │  │  - ACL management       │
     │                         │  │                         │  │                         │
-    │  DONE: PG-138 ✅        │  │  DONE: PG-139 ✅        │  │  CREATE: PG-140         │
+    │  DONE: PG-138 ✅        │  │  DONE: PG-139 ✅        │  │  DONE: PG-140 ✅        │
     └─────────────────────────┘  └─────────────────────────┘  └─────────────────────────┘
 
                               ┌─────────────────────────────┐
@@ -265,7 +265,7 @@ _IFC-147 creates timeline UI but no formal PG-_ task exists
 | --------------- | ----------------- | --------------- | ---------------- |
 | Case Management | YES               | YES ✅          | PG-138 COMPLETED |
 | Appointments    | YES               | YES ✅          | PG-139 COMPLETED |
-| Documents       | YES               | NO              | Create PG-140    |
+| Documents       | YES               | YES ✅          | PG-140 COMPLETED |
 | Timeline        | YES               | YES (IFC-147)\* | None             |
 | Calendar Sync   | YES               | N/A (settings)  | None             |
 | Email           | YES               | YES ✅          | PG-141 COMPLETED |
