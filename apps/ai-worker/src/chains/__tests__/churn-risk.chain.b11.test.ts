@@ -58,7 +58,7 @@ import {
 function createInput(overrides: Partial<ChurnRiskInput> = {}): ChurnRiskInput {
   return {
     entityType: 'lead',
-    entityId: '00000000-0000-0000-0000-000000000001',
+    entityId: '00000001-0000-4000-8000-000000000001',
     ...overrides,
   };
 }
@@ -256,7 +256,7 @@ describe('Churn Risk Chain - b11 coverage', () => {
     it('should validate minimal input', () => {
       const result = churnRiskInputSchema.parse({
         entityType: 'lead',
-        entityId: '00000000-0000-0000-0000-000000000001',
+        entityId: '00000001-0000-4000-8000-000000000001',
       });
       expect(result.entityType).toBe('lead');
     });
@@ -264,7 +264,7 @@ describe('Churn Risk Chain - b11 coverage', () => {
     it('should validate full input', () => {
       const result = churnRiskInputSchema.parse({
         entityType: 'account',
-        entityId: '00000000-0000-0000-0000-000000000001',
+        entityId: '00000001-0000-4000-8000-000000000001',
         daysSinceLastLogin: 5,
         loginFrequency30d: 20,
         sessionDurationAvg: 45,
@@ -294,7 +294,7 @@ describe('Churn Risk Chain - b11 coverage', () => {
       expect(() =>
         churnRiskInputSchema.parse({
           entityType: 'invalid',
-          entityId: '00000000-0000-0000-0000-000000000001',
+          entityId: '00000001-0000-4000-8000-000000000001',
         })
       ).toThrow();
     });

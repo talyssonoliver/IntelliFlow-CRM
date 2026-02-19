@@ -5,9 +5,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 let capturedProcessor: any = null;
-const capturedEventHandlers: Record<string, Function> = {};
+const capturedEventHandlers: Record<string, (...args: any[]) => any> = {};
 
-const mockWorkerOn = vi.fn().mockImplementation(function (event: string, handler: Function) {
+const mockWorkerOn = vi.fn().mockImplementation(function (event: string, handler: (...args: any[]) => any) {
   capturedEventHandlers[event] = handler;
 });
 const mockWorkerClose = vi.fn().mockResolvedValue(undefined);
@@ -98,7 +98,7 @@ describe('ReindexWorker - event handlers', () => {
   afterEach(async () => {
     try {
       await worker.stop();
-    } catch (_e) {}
+    } catch (_e) { /* cleanup may fail if worker never started */ }
   });
 
   it('should register completed, failed, and progress handlers', () => {
@@ -146,7 +146,7 @@ describe('ReindexWorker - processJob via captured processor', () => {
   afterEach(async () => {
     try {
       await worker.stop();
-    } catch (_e) {}
+    } catch (_e) { /* cleanup may fail if worker never started */ }
   });
 
   it('should capture the processor function', () => {
@@ -169,7 +169,7 @@ describe('ReindexWorker - processJob via captured processor', () => {
         indexType: 'documents',
         batchSize: 5,
         forceRegenerate: false,
-        documentIds: ['11111111-1111-1111-1111-111111111111'],
+        documentIds: ['11111111-1111-4111-8111-111111111111'],
       },
       updateProgress: vi.fn().mockResolvedValue(undefined),
     };
@@ -183,7 +183,7 @@ describe('ReindexWorker - processJob via captured processor', () => {
         indexType: 'notes',
         batchSize: 5,
         forceRegenerate: false,
-        noteIds: ['aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'],
+        noteIds: ['aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'],
       },
       updateProgress: vi.fn().mockResolvedValue(undefined),
     };
@@ -205,7 +205,7 @@ describe('ReindexWorker - audit log failure', () => {
   afterEach(async () => {
     try {
       await worker.stop();
-    } catch (_e) {}
+    } catch (_e) { /* cleanup may fail if worker never started */ }
   });
 
   it('should not fail when audit log write fails', async () => {

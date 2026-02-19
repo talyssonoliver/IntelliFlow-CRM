@@ -31,13 +31,13 @@ export function validateEntityId(id: string): boolean {
  */
 export const predictionInputSchema = z.object({
   entityType: z.enum(ENTITY_TYPES, {
-    errorMap: () => ({ message: 'Invalid entity type' }),
+    message: 'Invalid entity type',
   }),
   entityId: z.string().refine(validateEntityId, {
     message: 'Invalid entity ID - must be valid UUID',
   }),
   predictionType: z.enum(PREDICTION_TYPES, {
-    errorMap: () => ({ message: 'Invalid prediction type' }),
+    message: 'Invalid prediction type',
   }),
   context: z
     .object({
@@ -63,7 +63,7 @@ export function sanitizePredictionInput(input: unknown): SanitizedPredictionInpu
   const result = predictionInputSchema.safeParse(input);
 
   if (!result.success) {
-    const errors = result.error.errors.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ');
+    const errors = result.error.issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ');
     logger.warn({ errors, input }, 'Prediction input validation failed');
     throw new Error(`Invalid prediction input: ${errors}`);
   }

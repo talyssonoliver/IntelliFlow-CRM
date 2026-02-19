@@ -42,7 +42,7 @@ export const PredictionJobDataSchema = z.object({
   entityType: z.enum(['lead', 'contact', 'opportunity', 'account']),
   entityId: z.string().uuid(),
   predictionType: z.enum(PredictionTypes),
-  context: z.record(z.unknown()).optional(),
+  context: z.record(z.string(), z.unknown()).optional(),
   correlationId: z.string().optional(),
   priority: z.number().min(1).max(10).default(5),
 });

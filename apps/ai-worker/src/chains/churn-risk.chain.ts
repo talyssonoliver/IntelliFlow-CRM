@@ -120,7 +120,7 @@ export const churnRiskInputSchema = z.object({
   userCount: z.number().optional(),
 
   // Context
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type ChurnRiskInput = z.infer<typeof churnRiskInputSchema>;

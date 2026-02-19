@@ -60,7 +60,7 @@ export const sentimentInputSchema = z.object({
     .enum(['email', 'chat', 'note', 'ticket', 'call_transcript', 'other'])
     .optional()
     .default('other'),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type SentimentInput = z.infer<typeof sentimentInputSchema>;

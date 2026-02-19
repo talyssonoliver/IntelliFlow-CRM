@@ -70,7 +70,7 @@ export const contextItemSchema = z.object({
   content: z.string(),
   snippet: z.string().optional(),
   relevanceScore: z.number().min(0).max(1),
-  metadata: z.record(z.unknown()),
+  metadata: z.record(z.string(), z.unknown()),
   citation: z.string(),
   retrievedAt: z.string().datetime(),
 });

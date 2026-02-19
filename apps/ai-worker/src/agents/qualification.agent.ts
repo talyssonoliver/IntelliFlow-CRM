@@ -260,7 +260,6 @@ Your recommendations are data-driven, actionable, and focused on conversion opti
     // We validate it's reasonable based on data completeness
     const lead = task.input;
 
-    let dataCompleteness = 0;
     const fields = [
       lead.firstName,
       lead.lastName,
@@ -269,7 +268,7 @@ Your recommendations are data-driven, actionable, and focused on conversion opti
       lead.phone,
       lead.companyData,
     ];
-    dataCompleteness = fields.filter(Boolean).length / fields.length;
+    const dataCompleteness = fields.filter(Boolean).length / fields.length;
 
     // Adjust confidence based on data completeness
     // If we have less than 50% data, cap confidence at 0.7

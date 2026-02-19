@@ -26,7 +26,7 @@ export const leadInputSchema = z.object({
   title: z.string().optional(),
   phone: z.string().optional(),
   source: z.string(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type LeadInput = z.infer<typeof leadInputSchema>;

@@ -33,7 +33,7 @@ export const ScoringJobDataSchema = z.object({
     title: z.string().optional(),
     phone: z.string().optional(),
     source: z.string(),
-    metadata: z.record(z.unknown()).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
   }),
   correlationId: z.string().optional(),
   priority: z.number().min(1).max(10).default(5),

@@ -13,7 +13,7 @@ const logger = pino({
  */
 export const embeddingInputSchema = z.object({
   text: z.string().min(1).max(8000),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type EmbeddingInput = z.infer<typeof embeddingInputSchema>;
@@ -26,7 +26,7 @@ export const embeddingResultSchema = z.object({
   dimensions: z.number(),
   model: z.string(),
   text: z.string(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type EmbeddingResult = z.infer<typeof embeddingResultSchema>;
@@ -119,7 +119,8 @@ export class EmbeddingChain {
       );
 
       throw new Error(
-        `Failed to generate embedding: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to generate embedding: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
       );
     }
   }
@@ -178,7 +179,8 @@ export class EmbeddingChain {
       );
 
       throw new Error(
-        `Failed to generate batch embeddings: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Failed to generate batch embeddings: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
       );
     }
   }

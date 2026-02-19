@@ -84,7 +84,16 @@ export const RelevanceConfigSchema = z.object({
   /**
    * Source-specific weight multipliers
    */
-  sourceWeights: SourceWeightSchema.default({}),
+  sourceWeights: SourceWeightSchema.default({
+    leads: 1.0,
+    contacts: 1.0,
+    accounts: 1.0,
+    opportunities: 1.2,
+    documents: 1.5,
+    conversations: 0.8,
+    messages: 0.6,
+    tickets: 1.0,
+  }),
 
   /**
    * Enable/disable specific scoring features
@@ -97,7 +106,13 @@ export const RelevanceConfigSchema = z.object({
       enableSemanticSearch: z.boolean().default(true),
       enableFuzzyMatching: z.boolean().default(true),
     })
-    .default({}),
+    .default({
+      enableTimeDecay: true,
+      enableTitleBoost: true,
+      enableExactMatchBoost: true,
+      enableSemanticSearch: true,
+      enableFuzzyMatching: true,
+    }),
 
   /**
    * Semantic search configuration
@@ -124,7 +139,12 @@ export const RelevanceConfigSchema = z.object({
        */
       topK: z.number().min(1).max(100).default(50),
     })
-    .default({}),
+    .default({
+      minSimilarity: 0.7,
+      embeddingModel: 'text-embedding-3-small',
+      embeddingDimension: 1536,
+      topK: 50,
+    }),
 
   /**
    * Full-text search configuration
@@ -151,7 +171,12 @@ export const RelevanceConfigSchema = z.object({
        */
       fuzzyDistance: z.number().min(0).max(5).default(2),
     })
-    .default({}),
+    .default({
+      searchConfig: 'english',
+      enableStemming: true,
+      removeStopWords: true,
+      fuzzyDistance: 2,
+    }),
 
   /**
    * Caching configuration
@@ -173,7 +198,11 @@ export const RelevanceConfigSchema = z.object({
        */
       maxEntries: z.number().min(0).default(1000),
     })
-    .default({}),
+    .default({
+      enabled: true,
+      ttlSeconds: 300,
+      maxEntries: 1000,
+    }),
 });
 
 export type RelevanceConfig = z.infer<typeof RelevanceConfigSchema>;
