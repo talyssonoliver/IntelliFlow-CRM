@@ -136,7 +136,7 @@ export const notificationSchema = z.object({
   groupId: z.string().optional().nullable(),
   groupCount: z.number().optional(),
   // Metadata
-  metadata: z.record(z.any()).optional().nullable(),
+  metadata: z.record(z.string(), z.any()).optional().nullable(),
 });
 
 export type Notification = z.infer<typeof notificationSchema>;
@@ -155,7 +155,6 @@ export const notificationListQuerySchema = z.object({
   fromDate: z.coerce.date().optional(),
   toDate: z.coerce.date().optional(),
   search: z.string().optional(),
-  groupById: z.boolean().optional().default(false),
 });
 
 export type NotificationListQuery = z.infer<typeof notificationListQuerySchema>;
@@ -179,10 +178,9 @@ export const unreadCountResponseSchema = z.object({
   byType: z.record(notificationTypeSchema, z.number()).optional(),
   byPriority: z
     .object({
-      low: z.number(),
-      medium: z.number(),
       high: z.number(),
-      urgent: z.number(),
+      normal: z.number(),
+      low: z.number(),
     })
     .optional(),
 });

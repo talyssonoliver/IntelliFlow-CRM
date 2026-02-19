@@ -242,7 +242,8 @@ export class DkimSigner {
       });
     } catch (error) {
       throw new Error(
-        `Invalid DKIM private key: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `Invalid DKIM private key: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
       );
     }
   }

@@ -258,7 +258,6 @@ describe('Notifications Validators', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.limit).toBe(20);
-        expect(result.data.groupById).toBe(false);
       }
     });
 
@@ -273,7 +272,6 @@ describe('Notifications Validators', () => {
         fromDate: '2025-01-01T00:00:00.000Z',
         toDate: '2025-12-31T23:59:59.999Z',
         search: 'important',
-        groupById: true,
       });
       expect(result.success).toBe(true);
     });

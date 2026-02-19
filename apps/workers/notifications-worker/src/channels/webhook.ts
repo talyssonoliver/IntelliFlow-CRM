@@ -20,8 +20,8 @@ import { z } from 'zod';
 export const WebhookPayloadSchema = z.object({
   url: z.string().url(),
   method: z.enum(['POST', 'PUT', 'PATCH']).default('POST'),
-  body: z.union([z.string(), z.record(z.unknown())]),
-  headers: z.record(z.string()).optional(),
+  body: z.union([z.string(), z.record(z.string(), z.unknown())]),
+  headers: z.record(z.string(), z.string()).optional(),
   timeout: z.number().int().min(1000).max(60000).default(30000),
   retryOnStatus: z.array(z.number().int()).default([429, 500, 502, 503, 504]),
 });

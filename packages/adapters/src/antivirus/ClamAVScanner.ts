@@ -53,7 +53,7 @@ export class ClamAVScanner implements AVScannerPort {
         engine: `ClamAV ${result.version || 'unknown'}`,
       };
     } catch (error: any) {
-      throw new Error(`AV scan failed: ${error.message}`);
+      throw new Error(`AV scan failed: ${error.message}`, { cause: error });
     }
   }
 

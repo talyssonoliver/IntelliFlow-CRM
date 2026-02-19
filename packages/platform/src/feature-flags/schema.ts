@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const featureFlagRuleSchema = z.object({
-  when: z.record(z.union([z.string(), z.number(), z.boolean()])),
+  when: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])),
   then: z.object({
     enabled: z.boolean(),
     variant: z.string().optional(),

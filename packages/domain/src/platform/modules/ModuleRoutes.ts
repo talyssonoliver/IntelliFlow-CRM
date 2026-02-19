@@ -40,6 +40,7 @@ export const MODULE_NAV_ROUTES: Record<ModuleId, readonly NavRouteConfig[]> = {
     { label: 'Deals', href: '/deals', icon: 'handshake' },
     { label: 'Tasks', href: '/tasks', icon: 'task_alt' },
     { label: 'Calendar', href: '/calendar', icon: 'calendar_month' },
+    { label: 'Email', href: '/email', icon: 'mail' },
   ],
   LEGAL: [
     { label: 'Cases', href: '/cases', icon: 'gavel' },

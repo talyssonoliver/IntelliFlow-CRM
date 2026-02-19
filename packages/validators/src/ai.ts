@@ -406,7 +406,7 @@ export const churnRiskInputSchema = z.object({
   planTier: z.string().optional(),
 
   // Context
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 export type ChurnRiskInput = z.infer<typeof churnRiskInputSchema>;
 

@@ -152,7 +152,7 @@ export const contactTimelineEventSchema = z.object({
       name: z.string(),
     })
     .optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type ContactTimelineEvent = z.infer<typeof contactTimelineEventSchema>;

@@ -103,7 +103,7 @@ export const actionSchema = z.object({
     'log_event',
     'call_webhook',
   ]),
-  config: z.record(z.unknown()),
+  config: z.record(z.string(), z.unknown()),
 });
 
 export type Action = z.infer<typeof actionSchema>;
@@ -120,7 +120,7 @@ export const ruleDefinitionSchema = z.object({
   eventTypes: z.array(z.string()).min(1),
   conditions: z.unknown(), // ConditionGroup - complex type
   actions: z.array(actionSchema).min(1),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   createdAt: z.date().optional(),
   updatedAt: z.date().optional(),
 });

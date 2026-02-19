@@ -50,6 +50,7 @@ model Tenant {
   pipelineSnapshots    PipelineSnapshot[]
   trafficSources       TrafficSource[]
   growthMetrics        GrowthMetric[]
+  ticketNextSteps      TicketNextStep[]
   relatedTickets       RelatedTicket[]
   ticketAIInsights     TicketAIInsight[]
   salesPerformances    SalesPerformance[]
@@ -2079,8 +2080,12 @@ model TicketNextStep {
   completed Boolean  @default(false)
   createdAt DateTime @default(now())
 
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([ticketId])
   @@index([completed])
+  @@index([tenantId])
   @@map("ticket_next_steps")
 }
 

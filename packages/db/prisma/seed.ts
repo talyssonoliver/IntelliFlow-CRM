@@ -1771,6 +1771,174 @@ The IntelliFlow Team`,
   console.log(`✅ Created ${drafts.length} auto-response drafts`);
 }
 
+// =============================================================================
+// AI Conversation Records (PG-151: Active Agents Dashboard)
+// =============================================================================
+
+async function seedConversationRecords(tenantId: string) {
+  console.log('🤖 Seeding AI conversation records (Active Agents Dashboard)...');
+
+  const now = new Date();
+  const oneMinAgo = new Date(now.getTime() - 60 * 1000);
+  const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000);
+  const tenMinAgo = new Date(now.getTime() - 10 * 60 * 1000);
+  const fifteenMinAgo = new Date(now.getTime() - 15 * 60 * 1000);
+  const twentyMinAgo = new Date(now.getTime() - 20 * 60 * 1000);
+  const thirtyMinAgo = new Date(now.getTime() - 30 * 60 * 1000);
+  const fortyFiveMinAgo = new Date(now.getTime() - 45 * 60 * 1000);
+  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+  const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+  const threeHoursAgo = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+
+  // Helper to build conversation records concisely
+  function conv(
+    id: string, sessionSuffix: string, agentName: string, agentModel: string,
+    title: string, contextName: string, contextType: string,
+    status: string, startedAt: Date, lastMessageAt: Date,
+    msgCount: number, toolCount: number,
+    opts: Record<string, unknown> = {},
+  ) {
+    return {
+      id, sessionId: `session-${sessionSuffix}-${Date.now()}`,
+      title, contextName, contextType,
+      agentId: `crewai-${agentName}-v1`, agentName, agentModel,
+      userName: 'System', channel: 'automation',
+      messageCount: msgCount, toolCallCount: toolCount,
+      status, startedAt, lastMessageAt,
+      tenantId, userId: SEED_IDS.users.admin,
+      ...opts,
+    };
+  }
+
+  const IDS = SEED_IDS.conversationRecords;
+  const conversations = [
+    // ── ACTIVE agents (8) ──────────────────────────────────────────────
+    conv(IDS.qualificationAgent, 'qual-1', 'qualification', 'gpt-4o-mini',
+      'Lead Qualification: Marcus Reed', 'Qualifying lead Marcus Reed', 'lead_qualification',
+      'ACTIVE', tenMinAgo, fiveMinAgo, 8, 3,
+      { contextId: SEED_IDS.leads.marcusReed, tokenCountInput: 2450, tokenCountOutput: 890 }),
+
+    conv(IDS.emailAgent, 'email-2', 'email', 'gpt-4o',
+      'Email Draft: Follow-up with Sarah Miller', 'Drafting email for Sarah Miller', 'email_generation',
+      'ACTIVE', thirtyMinAgo, fiveMinAgo, 12, 5,
+      { contextId: SEED_IDS.leads.sarahMiller, userId: SEED_IDS.users.sarahJohnson, tokenCountInput: 4200, tokenCountOutput: 1650 }),
+
+    conv(IDS.followupAgent, 'followup-3', 'followup', 'gpt-4o-mini',
+      'Follow-up Check: 14 Overdue Tasks', 'Checking overdue follow-ups', 'followup_management',
+      'ACTIVE', fiveMinAgo, oneMinAgo, 6, 2,
+      { tokenCountInput: 1800, tokenCountOutput: 520 }),
+
+    conv(IDS.nbaAgent, 'nba-4', 'nba', 'gpt-4o',
+      'Next Best Action: Pipeline Analysis', 'Analyzing 23 deals for NBA', 'next_best_action',
+      'ACTIVE', oneHourAgo, tenMinAgo, 15, 7,
+      { tokenCountInput: 6100, tokenCountOutput: 2340 }),
+
+    conv(IDS.sentimentAgent, 'sentiment-7', 'sentiment', 'gpt-4o-mini',
+      'Sentiment Analysis: 12 New Tickets', 'Analyzing ticket sentiment batch', 'sentiment_analysis',
+      'ACTIVE', twentyMinAgo, fiveMinAgo, 14, 0,
+      { tokenCountInput: 3600, tokenCountOutput: 1100 }),
+
+    conv(IDS.autoresponseAgent, 'autoresponse-8', 'autoresponse', 'gpt-4o-mini',
+      'Auto-Response: 3 Pending Emails', 'Generating auto-responses', 'auto_response',
+      'ACTIVE', fifteenMinAgo, fiveMinAgo, 9, 2,
+      { tokenCountInput: 2800, tokenCountOutput: 960 }),
+
+    conv(IDS.ragAgent, 'rag-9', 'rag', 'text-embedding-3-small',
+      'RAG Context: Deal Research for TechCorp', 'Retrieving context for deal analysis', 'rag_context',
+      'ACTIVE', tenMinAgo, fiveMinAgo, 4, 3,
+      { tokenCountInput: 1200, tokenCountOutput: 450 }),
+
+    conv(IDS.crewAgent, 'crew-11', 'crew', 'gpt-4o',
+      'Crew: Full Lead Processing Pipeline', 'Orchestrating qualification → email → followup', 'crew_orchestration',
+      'ACTIVE', fortyFiveMinAgo, tenMinAgo, 32, 14,
+      { tokenCountInput: 12000, tokenCountOutput: 4800 }),
+
+    // ── IDLE agents (3) ────────────────────────────────────────────────
+    conv(IDS.scoringAgent, 'scoring-5', 'scoring', 'gpt-4o-mini',
+      'Lead Scoring: Awaiting Next Batch', 'Waiting for lead batch', 'lead_scoring',
+      'IDLE', twoHoursAgo, oneHourAgo, 24, 12,
+      { tokenCountInput: 8900, tokenCountOutput: 3200 }),
+
+    conv(IDS.embeddingAgent, 'embedding-10', 'embedding', 'text-embedding-3-small',
+      'Embedding: Batch Complete', 'Waiting for new documents', 'embedding_generation',
+      'IDLE', threeHoursAgo, twoHoursAgo, 48, 0,
+      { tokenCountInput: 15000, tokenCountOutput: 0 }),
+
+    conv(IDS.indexerAgent, 'indexer-13', 'indexer', 'text-embedding-3-small',
+      'Document Indexer: 156 Documents Indexed', 'Indexing complete — awaiting new uploads', 'document_indexing',
+      'IDLE', threeHoursAgo, oneHourAgo, 156, 156,
+      { tokenCountInput: 48000, tokenCountOutput: 0 }),
+
+    // ── ERROR agents (2) ───────────────────────────────────────────────
+    conv(IDS.churnAgent, 'churn-6', 'churn', 'gpt-4o',
+      'Churn Prediction: API Timeout', 'Churn analysis failed — model timeout', 'churn_prediction',
+      'ERROR', thirtyMinAgo, twentyMinAgo, 3, 1,
+      { wasEscalated: true, escalatedTo: SEED_IDS.users.manager, escalatedAt: twentyMinAgo,
+        tokenCountInput: 800, tokenCountOutput: 0 }),
+
+    conv(IDS.ocrAgent, 'ocr-14', 'ocr', 'tesseract-v5',
+      'OCR: Corrupted PDF Processing Error', 'Failed to process invoice-2026-Q1.pdf', 'ocr_processing',
+      'ERROR', fortyFiveMinAgo, fortyFiveMinAgo, 2, 1,
+      { wasEscalated: true, escalatedTo: SEED_IDS.users.manager, escalatedAt: fortyFiveMinAgo }),
+
+    // ── Additional: Hallucination checker (ACTIVE — always running) ───
+    conv(IDS.hallucinationAgent, 'hallucination-12', 'hallucination', 'gpt-4o-mini',
+      'Hallucination Check: Continuous Monitoring', 'Monitoring AI output quality', 'hallucination_detection',
+      'ACTIVE', threeHoursAgo, oneMinAgo, 89, 0,
+      { tokenCountInput: 22000, tokenCountOutput: 5600 }),
+  ];
+
+  for (const c of conversations) {
+    await prisma.conversationRecord.upsert({
+      where: { id: c.id },
+      update: c,
+      create: c,
+    });
+  }
+
+  // Sample messages for qualification + email agents
+  const messages = [
+    { id: SEED_IDS.conversationMessages.msg1, conversationId: IDS.qualificationAgent, role: 'system',
+      content: 'You are a lead qualification agent. Analyze the provided lead data and determine qualification score.', createdAt: tenMinAgo, tenantId },
+    { id: SEED_IDS.conversationMessages.msg2, conversationId: IDS.qualificationAgent, role: 'assistant',
+      content: 'Analyzing lead Marcus Reed from Summit Systems. Checking engagement history, company size, and intent signals.', createdAt: new Date(tenMinAgo.getTime() + 30_000), tenantId },
+    { id: SEED_IDS.conversationMessages.msg3, conversationId: IDS.qualificationAgent, role: 'assistant',
+      content: 'Lead scored at 87/100. High engagement (5 pricing page visits in 24h), mid-market company (250 employees), strong buying signals.', createdAt: fiveMinAgo, tenantId },
+    { id: SEED_IDS.conversationMessages.msg4, conversationId: IDS.emailAgent, role: 'system',
+      content: 'Draft a personalized follow-up email for the lead based on their recent interactions.', createdAt: thirtyMinAgo, tenantId },
+    { id: SEED_IDS.conversationMessages.msg5, conversationId: IDS.emailAgent, role: 'assistant',
+      content: 'Reviewing Sarah Miller interaction history: 3 calls, 2 demos, proposal viewed 4 times. Current stage: Negotiation.', createdAt: new Date(thirtyMinAgo.getTime() + 120_000), tenantId },
+    { id: SEED_IDS.conversationMessages.msg6, conversationId: IDS.emailAgent, role: 'assistant',
+      content: 'Email draft ready. Subject: "Next steps for your IntelliFlow implementation". Confidence: 0.92. Awaiting approval.', createdAt: fiveMinAgo, tenantId },
+  ];
+
+  for (const msg of messages) {
+    await prisma.messageRecord.upsert({ where: { id: msg.id }, update: msg, create: msg });
+  }
+
+  // Sample tool calls
+  const toolCalls = [
+    { id: SEED_IDS.conversationToolCalls.tc1, conversationId: IDS.qualificationAgent, messageId: SEED_IDS.conversationMessages.msg2,
+      toolName: 'search_lead_history', toolInput: { leadId: SEED_IDS.leads.marcusReed, days: 30 },
+      toolOutput: { visits: 12, downloads: 2, emailOpens: 8 }, status: 'SUCCESS',
+      startedAt: new Date(tenMinAgo.getTime() + 10_000), completedAt: new Date(tenMinAgo.getTime() + 12_000), durationMs: 2000, tenantId },
+    { id: SEED_IDS.conversationToolCalls.tc2, conversationId: IDS.qualificationAgent, messageId: SEED_IDS.conversationMessages.msg2,
+      toolName: 'get_company_info', toolInput: { company: 'Summit Systems' },
+      toolOutput: { employees: 250, industry: 'Technology', revenue: '$45M' }, status: 'SUCCESS',
+      startedAt: new Date(tenMinAgo.getTime() + 13_000), completedAt: new Date(tenMinAgo.getTime() + 14_000), durationMs: 1000, tenantId },
+    { id: SEED_IDS.conversationToolCalls.tc3, conversationId: IDS.emailAgent, messageId: SEED_IDS.conversationMessages.msg5,
+      toolName: 'get_interaction_history', toolInput: { leadId: SEED_IDS.leads.sarahMiller, limit: 10 },
+      toolOutput: { interactions: 8, lastContact: '2026-02-15', sentiment: 'positive' }, status: 'SUCCESS',
+      startedAt: new Date(thirtyMinAgo.getTime() + 60_000), completedAt: new Date(thirtyMinAgo.getTime() + 62_000), durationMs: 2000, tenantId },
+  ];
+
+  for (const tc of toolCalls) {
+    await prisma.toolCallRecord.upsert({ where: { id: tc.id }, update: tc, create: tc });
+  }
+
+  console.log(`✅ Created ${conversations.length} AI conversation records, ${messages.length} messages, ${toolCalls.length} tool calls`);
+}
+
 async function seedContacts(tenantId: string) {
   console.log('📇 Seeding contacts...');
 
@@ -2961,6 +3129,7 @@ async function seedTicketActivities(tenantId: string) {
 
   // Data from apps/web/src/app/tickets/[id]/page.tsx lines 134-180
   const activities = [
+    // ---- System Outage (CRITICAL) ----
     {
       id: SEED_IDS.ticketActivities.customerMessage,
       type: TicketActivityType.CUSTOMER_MESSAGE,
@@ -3043,6 +3212,186 @@ async function seedTicketActivities(tenantId: string) {
       channel: TicketChannel.SYSTEM,
       systemEventType: 'sla_breach',
       ticketId: SEED_IDS.tickets.systemOutage,
+      tenantId,
+    },
+
+    // ---- Login Failure (HIGH) ----
+    {
+      id: SEED_IDS.ticketActivities.loginCreated,
+      type: TicketActivityType.SYSTEM_EVENT,
+      content: 'Ticket created',
+      timestamp: new Date(yesterday.getTime() + 10 * 60 * 60 * 1000), // Yesterday 10:00 AM
+      isInternal: true,
+      authorName: 'System',
+      authorRole: 'System',
+      channel: TicketChannel.SYSTEM,
+      systemEventType: 'ticket_created',
+      ticketId: SEED_IDS.tickets.loginFailure,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketActivities.loginCustomerMsg,
+      type: TicketActivityType.CUSTOMER_MESSAGE,
+      content:
+        "Hi,\n\nOur SSO login has been failing for the past hour. Multiple users across the organization are unable to sign in. The error says 'Authentication provider unavailable'.\n\nThis is urgent — our entire sales team is locked out.\n\nThanks,\nEmily",
+      timestamp: new Date(yesterday.getTime() + 10 * 60 * 60 * 1000 + 5 * 60 * 1000), // Yesterday 10:05 AM
+      isInternal: false,
+      authorName: 'Emily Chen',
+      authorRole: 'Customer',
+      channel: TicketChannel.EMAIL,
+      ticketId: SEED_IDS.tickets.loginFailure,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketActivities.loginAgentReply,
+      type: TicketActivityType.AGENT_REPLY,
+      content:
+        "Hi Emily,\n\nI've escalated this to our identity team. We're seeing issues with the SSO provider and are working on restoring access. In the meantime, users can try the direct login at /auth/login.\n\nWe'll update you within 30 minutes.",
+      timestamp: new Date(yesterday.getTime() + 10 * 60 * 60 * 1000 + 20 * 60 * 1000), // Yesterday 10:20 AM
+      isInternal: false,
+      authorName: 'Mike Ross',
+      authorRole: 'Support Agent',
+      channel: TicketChannel.PORTAL,
+      ticketId: SEED_IDS.tickets.loginFailure,
+      tenantId,
+    },
+
+    // ---- Dark Mode Request (LOW) ----
+    {
+      id: SEED_IDS.ticketActivities.darkModeCreated,
+      type: TicketActivityType.SYSTEM_EVENT,
+      content: 'Ticket created',
+      timestamp: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+      isInternal: true,
+      authorName: 'System',
+      authorRole: 'System',
+      channel: TicketChannel.SYSTEM,
+      systemEventType: 'ticket_created',
+      ticketId: SEED_IDS.tickets.darkModeRequest,
+      tenantId,
+    },
+
+    // ---- Billing Inquiry (MEDIUM) ----
+    {
+      id: SEED_IDS.ticketActivities.billingCreated,
+      type: TicketActivityType.SYSTEM_EVENT,
+      content: 'Ticket created',
+      timestamp: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+      isInternal: true,
+      authorName: 'System',
+      authorRole: 'System',
+      channel: TicketChannel.SYSTEM,
+      systemEventType: 'ticket_created',
+      ticketId: SEED_IDS.tickets.billingInquiry,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketActivities.billingAgentReply,
+      type: TicketActivityType.AGENT_REPLY,
+      content:
+        "Hi,\n\nI've reviewed your account and can see the duplicate charge. I'm processing a refund for the extra charge now. You should see it reflected within 3-5 business days.\n\nPlease let me know if you have any other questions.",
+      timestamp: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000), // 2 days ago + 2h
+      isInternal: false,
+      authorName: 'David Kim',
+      authorRole: 'Support Agent',
+      channel: TicketChannel.PORTAL,
+      ticketId: SEED_IDS.tickets.billingInquiry,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketActivities.billingWaiting,
+      type: TicketActivityType.SYSTEM_EVENT,
+      content: 'Status changed to Waiting on Customer',
+      timestamp: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000 + 2 * 60 * 60 * 1000 + 5 * 60 * 1000),
+      isInternal: true,
+      authorName: 'System',
+      authorRole: 'System',
+      channel: TicketChannel.SYSTEM,
+      systemEventType: 'status_change',
+      systemEventData: { newStatus: 'WAITING_ON_CUSTOMER' },
+      ticketId: SEED_IDS.tickets.billingInquiry,
+      tenantId,
+    },
+
+    // ---- API 500 Error (CRITICAL) ----
+    {
+      id: SEED_IDS.ticketActivities.apiCreated,
+      type: TicketActivityType.SYSTEM_EVENT,
+      content: 'Ticket created',
+      timestamp: new Date(yesterday.getTime() + 14 * 60 * 60 * 1000), // Yesterday 2:00 PM
+      isInternal: true,
+      authorName: 'System',
+      authorRole: 'System',
+      channel: TicketChannel.SYSTEM,
+      systemEventType: 'ticket_created',
+      ticketId: SEED_IDS.tickets.api500Error,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketActivities.apiCustomerMsg,
+      type: TicketActivityType.CUSTOMER_MESSAGE,
+      content:
+        "We're getting 500 Internal Server Error on all API calls to /api/v2/contacts and /api/v2/deals. This started around 1:45 PM and is affecting our integration pipeline. Our automated workflows are failing as a result.\n\nEndpoint: POST /api/v2/contacts\nResponse: 500 Internal Server Error\nRequest ID: req_abc123",
+      timestamp: new Date(yesterday.getTime() + 14 * 60 * 60 * 1000 + 10 * 60 * 1000), // Yesterday 2:10 PM
+      isInternal: false,
+      authorName: 'James Wilson',
+      authorRole: 'Customer',
+      channel: TicketChannel.EMAIL,
+      ticketId: SEED_IDS.tickets.api500Error,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketActivities.apiAgentReply,
+      type: TicketActivityType.AGENT_REPLY,
+      content:
+        "Hi James,\n\nWe've identified the root cause — a database connection pool exhaustion issue. Our infrastructure team is scaling up the connection pool and deploying a fix now.\n\nETA for resolution: 30-45 minutes.",
+      timestamp: new Date(yesterday.getTime() + 14 * 60 * 60 * 1000 + 35 * 60 * 1000), // Yesterday 2:35 PM
+      isInternal: false,
+      authorName: 'Alex Morgan',
+      authorRole: 'Support Agent',
+      channel: TicketChannel.PORTAL,
+      ticketId: SEED_IDS.tickets.api500Error,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketActivities.apiSlaBreach,
+      type: TicketActivityType.SLA_ALERT,
+      content: 'Response time SLA at risk — approaching 1 hour limit',
+      timestamp: new Date(yesterday.getTime() + 15 * 60 * 60 * 1000), // Yesterday 3:00 PM
+      isInternal: true,
+      authorName: 'System',
+      authorRole: 'System',
+      channel: TicketChannel.SYSTEM,
+      systemEventType: 'sla_breach',
+      ticketId: SEED_IDS.tickets.api500Error,
+      tenantId,
+    },
+
+    // ---- Dashboard Performance (HIGH) ----
+    {
+      id: SEED_IDS.ticketActivities.dashCreated,
+      type: TicketActivityType.SYSTEM_EVENT,
+      content: 'Ticket created',
+      timestamp: new Date(now.getTime() - 8 * 60 * 60 * 1000), // 8 hours ago
+      isInternal: true,
+      authorName: 'System',
+      authorRole: 'System',
+      channel: TicketChannel.SYSTEM,
+      systemEventType: 'ticket_created',
+      ticketId: SEED_IDS.tickets.dashboardPerformance,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketActivities.dashCustomerMsg,
+      type: TicketActivityType.CUSTOMER_MESSAGE,
+      content:
+        "The analytics dashboard is taking 15-20 seconds to load. Charts are timing out and we see spinner indefinitely on the revenue breakdown widget. This has been getting progressively worse over the past week.\n\nBrowser: Chrome 120\nScreen: Analytics > Revenue Dashboard",
+      timestamp: new Date(now.getTime() - 7 * 60 * 60 * 1000 - 45 * 60 * 1000), // ~7h45m ago
+      isInternal: false,
+      authorName: 'Rachel Green',
+      authorRole: 'Customer',
+      channel: TicketChannel.PORTAL,
+      ticketId: SEED_IDS.tickets.dashboardPerformance,
       tenantId,
     },
   ];
@@ -3930,17 +4279,18 @@ async function seedDealsWonMetrics() {
   console.log(`✅ Created ${metrics.length} deals won metrics`);
 }
 
-async function seedTicketNextSteps() {
+async function seedTicketNextSteps(tenantId: string) {
   console.log('📋 Seeding ticket next steps...');
 
-  // Data from apps/web/src/app/tickets/[id]/page.tsx (SAMPLE_TICKET.nextSteps)
   const steps = [
+    // ---- System Outage (CRITICAL) — 3 custom steps ----
     {
       id: SEED_IDS.ticketNextSteps.verifyDbFix,
       ticketId: SEED_IDS.tickets.systemOutage,
       title: 'Verify DB cluster fix deployment',
       dueDate: 'Due in 1 hour',
       completed: false,
+      tenantId,
     },
     {
       id: SEED_IDS.ticketNextSteps.confirmResolution,
@@ -3948,6 +4298,7 @@ async function seedTicketNextSteps() {
       title: 'Confirm with customer resolution',
       dueDate: 'Due Today',
       completed: false,
+      tenantId,
     },
     {
       id: SEED_IDS.ticketNextSteps.documentRootCause,
@@ -3955,6 +4306,161 @@ async function seedTicketNextSteps() {
       title: 'Document root cause for knowledge base',
       dueDate: 'Tomorrow',
       completed: false,
+      tenantId,
+    },
+
+    // ---- Login Failure (HIGH) — 4 default steps ----
+    {
+      id: SEED_IDS.ticketNextSteps.loginReviewSso,
+      ticketId: SEED_IDS.tickets.loginFailure,
+      title: 'Review ticket details and confirm category',
+      dueDate: 'Due Today',
+      completed: true,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketNextSteps.loginAckCustomer,
+      ticketId: SEED_IDS.tickets.loginFailure,
+      title: 'Send initial acknowledgement to customer',
+      dueDate: 'Due Today',
+      completed: true,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketNextSteps.loginEscalate,
+      ticketId: SEED_IDS.tickets.loginFailure,
+      title: 'Escalate to senior support if unresolved',
+      dueDate: 'Due Today',
+      completed: false,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketNextSteps.loginUpdateCustomer,
+      ticketId: SEED_IDS.tickets.loginFailure,
+      title: 'Update customer with resolution progress',
+      dueDate: 'Tomorrow',
+      completed: false,
+      tenantId,
+    },
+
+    // ---- Dark Mode Request (LOW) — 3 default steps ----
+    {
+      id: SEED_IDS.ticketNextSteps.darkReviewDetails,
+      ticketId: SEED_IDS.tickets.darkModeRequest,
+      title: 'Review ticket details and confirm category',
+      dueDate: 'Due Today',
+      completed: false,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketNextSteps.darkAckCustomer,
+      ticketId: SEED_IDS.tickets.darkModeRequest,
+      title: 'Send initial acknowledgement to customer',
+      dueDate: 'Due Today',
+      completed: false,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketNextSteps.darkInvestigate,
+      ticketId: SEED_IDS.tickets.darkModeRequest,
+      title: 'Investigate root cause and document findings',
+      dueDate: 'Tomorrow',
+      completed: false,
+      tenantId,
+    },
+
+    // ---- Billing Inquiry (MEDIUM) — 3 default steps ----
+    {
+      id: SEED_IDS.ticketNextSteps.billingReview,
+      ticketId: SEED_IDS.tickets.billingInquiry,
+      title: 'Review ticket details and confirm category',
+      dueDate: 'Due Today',
+      completed: true,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketNextSteps.billingAck,
+      ticketId: SEED_IDS.tickets.billingInquiry,
+      title: 'Send initial acknowledgement to customer',
+      dueDate: 'Due Today',
+      completed: true,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketNextSteps.billingInvestigate,
+      ticketId: SEED_IDS.tickets.billingInquiry,
+      title: 'Investigate root cause and document findings',
+      dueDate: 'Tomorrow',
+      completed: false,
+      tenantId,
+    },
+
+    // ---- API 500 Error (CRITICAL) — 4 default steps ----
+    {
+      id: SEED_IDS.ticketNextSteps.apiReview,
+      ticketId: SEED_IDS.tickets.api500Error,
+      title: 'Review ticket details and confirm category',
+      dueDate: 'Due Today',
+      completed: true,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketNextSteps.apiAck,
+      ticketId: SEED_IDS.tickets.api500Error,
+      title: 'Send initial acknowledgement to customer',
+      dueDate: 'Due Today',
+      completed: true,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketNextSteps.apiEscalate,
+      ticketId: SEED_IDS.tickets.api500Error,
+      title: 'Escalate to senior support if unresolved',
+      dueDate: 'Due in 1 hour',
+      completed: false,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketNextSteps.apiUpdate,
+      ticketId: SEED_IDS.tickets.api500Error,
+      title: 'Update customer with resolution progress',
+      dueDate: 'Tomorrow',
+      completed: false,
+      tenantId,
+    },
+
+    // ---- Dashboard Performance (HIGH) — 4 default steps ----
+    {
+      id: SEED_IDS.ticketNextSteps.dashReview,
+      ticketId: SEED_IDS.tickets.dashboardPerformance,
+      title: 'Review ticket details and confirm category',
+      dueDate: 'Due Today',
+      completed: false,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketNextSteps.dashAck,
+      ticketId: SEED_IDS.tickets.dashboardPerformance,
+      title: 'Send initial acknowledgement to customer',
+      dueDate: 'Due Today',
+      completed: false,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketNextSteps.dashEscalate,
+      ticketId: SEED_IDS.tickets.dashboardPerformance,
+      title: 'Escalate to senior support if unresolved',
+      dueDate: 'Due Today',
+      completed: false,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketNextSteps.dashUpdate,
+      ticketId: SEED_IDS.tickets.dashboardPerformance,
+      title: 'Update customer with resolution progress',
+      dueDate: 'Tomorrow',
+      completed: false,
+      tenantId,
     },
   ];
 
@@ -3969,34 +4475,88 @@ async function seedTicketNextSteps() {
   console.log(`✅ Created ${steps.length} ticket next steps`);
 }
 
-async function seedRelatedTickets() {
+async function seedRelatedTickets(tenantId: string) {
   console.log('🔗 Seeding related tickets...');
 
-  // Data from apps/web/src/app/tickets/[id]/page.tsx (SAMPLE_TICKET.relatedTickets)
   const related = [
+    // ---- System Outage → related ----
     {
       id: SEED_IDS.relatedTickets.slowDashboard,
       ticketId: SEED_IDS.tickets.systemOutage,
-      relatedId: 'T-10890',
-      relatedSubject: 'Slow dashboard loading - East Region',
-      relatedStatus: TicketStatus.RESOLVED,
+      relatedId: SEED_IDS.tickets.dashboardPerformance,
+      relatedSubject: 'Dashboard performance degradation',
+      relatedStatus: TicketStatus.IN_PROGRESS,
       similarity: 85,
+      tenantId,
     },
     {
       id: SEED_IDS.relatedTickets.databaseTimeout,
       ticketId: SEED_IDS.tickets.systemOutage,
-      relatedId: 'T-10756',
-      relatedSubject: 'Database timeout errors',
-      relatedStatus: TicketStatus.RESOLVED,
+      relatedId: SEED_IDS.tickets.api500Error,
+      relatedSubject: 'API 500 Internal Server Error on /api/v2/contacts',
+      relatedStatus: TicketStatus.IN_PROGRESS,
       similarity: 72,
+      tenantId,
     },
     {
       id: SEED_IDS.relatedTickets.apiLatency,
       ticketId: SEED_IDS.tickets.systemOutage,
-      relatedId: 'T-10923',
-      relatedSubject: 'API latency issues',
+      relatedId: SEED_IDS.tickets.loginFailure,
+      relatedSubject: 'SSO login failures across organization',
       relatedStatus: TicketStatus.IN_PROGRESS,
-      similarity: 68,
+      similarity: 45,
+      tenantId,
+    },
+
+    // ---- Login Failure → related to system outage ----
+    {
+      id: SEED_IDS.relatedTickets.loginSsoOutage,
+      ticketId: SEED_IDS.tickets.loginFailure,
+      relatedId: SEED_IDS.tickets.systemOutage,
+      relatedSubject: 'System outage - 503 errors on dashboard',
+      relatedStatus: TicketStatus.IN_PROGRESS,
+      similarity: 45,
+      tenantId,
+    },
+
+    // ---- API 500 Error → related ----
+    {
+      id: SEED_IDS.relatedTickets.apiDbTimeout,
+      ticketId: SEED_IDS.tickets.api500Error,
+      relatedId: SEED_IDS.tickets.systemOutage,
+      relatedSubject: 'System outage - 503 errors on dashboard',
+      relatedStatus: TicketStatus.IN_PROGRESS,
+      similarity: 72,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.relatedTickets.apiSystemOutage,
+      ticketId: SEED_IDS.tickets.api500Error,
+      relatedId: SEED_IDS.tickets.dashboardPerformance,
+      relatedSubject: 'Dashboard performance degradation',
+      relatedStatus: TicketStatus.IN_PROGRESS,
+      similarity: 55,
+      tenantId,
+    },
+
+    // ---- Dashboard Performance → related ----
+    {
+      id: SEED_IDS.relatedTickets.dashSystemOutage,
+      ticketId: SEED_IDS.tickets.dashboardPerformance,
+      relatedId: SEED_IDS.tickets.systemOutage,
+      relatedSubject: 'System outage - 503 errors on dashboard',
+      relatedStatus: TicketStatus.IN_PROGRESS,
+      similarity: 85,
+      tenantId,
+    },
+    {
+      id: SEED_IDS.relatedTickets.dashApiLatency,
+      ticketId: SEED_IDS.tickets.dashboardPerformance,
+      relatedId: SEED_IDS.tickets.api500Error,
+      relatedSubject: 'API 500 Internal Server Error on /api/v2/contacts',
+      relatedStatus: TicketStatus.IN_PROGRESS,
+      similarity: 55,
+      tenantId,
     },
   ];
 
@@ -4014,28 +4574,74 @@ async function seedRelatedTickets() {
 async function seedTicketAIInsights(tenantId: string) {
   console.log('🤖 Seeding ticket AI insights...');
 
-  // Data from apps/web/src/app/tickets/[id]/page.tsx (SAMPLE_TICKET.aiInsights)
-  const insight = {
-    id: SEED_IDS.ticketAIInsights.systemOutage,
-    ticketId: SEED_IDS.tickets.systemOutage,
-    suggestedSolutions: [
-      'Check DB cluster replication status - similar to T-10756',
-      'Verify load balancer health checks for West region',
-      'Review recent deployment changes in the last 24 hours',
-    ],
-    sentiment: 'negative',
-    predictedResolutionTime: '2-4 hours',
-    similarResolvedTickets: 8,
-    escalationRisk: 'high',
-  };
+  const insights = [
+    {
+      id: SEED_IDS.ticketAIInsights.systemOutage,
+      ticketId: SEED_IDS.tickets.systemOutage,
+      suggestedSolutions: [
+        'Check DB cluster replication status - similar to T-10756',
+        'Verify load balancer health checks for West region',
+        'Review recent deployment changes in the last 24 hours',
+      ],
+      sentiment: 'negative',
+      predictedResolutionTime: '2-4 hours',
+      similarResolvedTickets: 8,
+      escalationRisk: 'high',
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketAIInsights.loginFailure,
+      ticketId: SEED_IDS.tickets.loginFailure,
+      suggestedSolutions: [
+        'Check SSO provider status page for ongoing incidents',
+        'Verify SAML certificate expiry dates',
+        'Provide direct login URL as temporary workaround',
+      ],
+      sentiment: 'negative',
+      predictedResolutionTime: '1-2 hours',
+      similarResolvedTickets: 5,
+      escalationRisk: 'high',
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketAIInsights.api500Error,
+      ticketId: SEED_IDS.tickets.api500Error,
+      suggestedSolutions: [
+        'Check database connection pool utilization metrics',
+        'Review API gateway rate limiting configuration',
+        'Verify recent schema migration compatibility',
+      ],
+      sentiment: 'negative',
+      predictedResolutionTime: '1-3 hours',
+      similarResolvedTickets: 12,
+      escalationRisk: 'critical',
+      tenantId,
+    },
+    {
+      id: SEED_IDS.ticketAIInsights.dashboardPerformance,
+      ticketId: SEED_IDS.tickets.dashboardPerformance,
+      suggestedSolutions: [
+        'Optimize revenue dashboard SQL queries with proper indexing',
+        'Add caching layer for chart data aggregation',
+        'Check if recent data volume increase is causing slow queries',
+      ],
+      sentiment: 'neutral',
+      predictedResolutionTime: '4-8 hours',
+      similarResolvedTickets: 3,
+      escalationRisk: 'medium',
+      tenantId,
+    },
+  ];
 
-  await prisma.ticketAIInsight.upsert({
-    where: { id: insight.id },
-    update: insight,
-    create: insight,
-  });
+  for (const insight of insights) {
+    await prisma.ticketAIInsight.upsert({
+      where: { id: insight.id },
+      update: insight,
+      create: insight,
+    });
+  }
 
-  console.log('✅ Created 1 ticket AI insight');
+  console.log(`✅ Created ${insights.length} ticket AI insights`);
 }
 
 async function seedSalesPerformance(tenantId: string) {
@@ -7540,6 +8146,8 @@ async function main() {
     await seedLeadAIInsights(tenantId);
     // Auto-Response Drafts for IFC-029 (Agent Approvals page)
     await seedAutoResponseDrafts(tenantId);
+    // AI Conversation Records for PG-151 (Active Agents Dashboard)
+    await seedConversationRecords(tenantId);
     await seedContacts(tenantId);
     await seedOpportunities(tenantId);
     await seedSLAPolicies(tenantId);
@@ -7645,17 +8253,17 @@ async function main() {
       console.warn('⚠️  seedDealsWonMetrics failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedTicketNextSteps();
+      await seedTicketNextSteps(tenantId);
     } catch (e) {
       console.warn('⚠️  seedTicketNextSteps failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedRelatedTickets();
+      await seedRelatedTickets(tenantId);
     } catch (e) {
       console.warn('⚠️  seedRelatedTickets failed:', (e as Error).message?.slice(0, 100));
     }
     try {
-      await seedTicketAIInsights();
+      await seedTicketAIInsights(tenantId);
     } catch (e) {
       console.warn('⚠️  seedTicketAIInsights failed:', (e as Error).message?.slice(0, 100));
     }
@@ -7954,6 +8562,7 @@ async function main() {
     console.log('  FLOW-024: 3 AI insights (deal risk, churn risk, upsell)');
     console.log('  FLOW-031/032/033: 3 health checks, 2 alert incidents, 3 performance metrics');
     console.log('  FLOW-034: 3 webhook endpoints');
+    console.log('  PG-151: 14 AI conversation records (9 active, 3 idle, 2 error), 6 messages, 3 tool calls');
     console.log('  FLOW-035/036: 3 API keys, 2 API versions');
     console.log('');
     console.log(

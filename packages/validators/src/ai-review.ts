@@ -197,7 +197,7 @@ export const auditLogEntrySchema = z.object({
   /** Type of actor */
   actorType: z.enum(['USER', 'SYSTEM']),
   /** Additional event metadata */
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   /** When the event occurred */
   timestamp: z.coerce.date(),
 });

@@ -86,7 +86,7 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
     // Use PrismaOutboxRepository when database mode is enabled and PrismaClient is provided
     if (this.workerConfig.useDatabase && this.workerConfig.prisma) {
       // Dynamic require to avoid build-time dependency on adapters package types
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const { PrismaOutboxRepository } = require('@intelliflow/adapters') as {
         PrismaOutboxRepository: new (prisma: PrismaClient) => OutboxRepository;
       };

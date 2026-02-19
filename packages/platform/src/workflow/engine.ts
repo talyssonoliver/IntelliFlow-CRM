@@ -61,12 +61,12 @@ export const workflowInstanceSchema = z.object({
   id: z.string().uuid(),
   definitionId: z.string(),
   status: z.enum(['pending', 'running', 'completed', 'failed', 'cancelled', 'waiting_for_input']),
-  input: z.record(z.unknown()).optional(),
-  output: z.record(z.unknown()).optional(),
+  input: z.record(z.string(), z.unknown()).optional(),
+  output: z.record(z.string(), z.unknown()).optional(),
   error: z.string().optional(),
   startedAt: z.date().optional(),
   completedAt: z.date().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type WorkflowInstance = z.infer<typeof workflowInstanceSchema>;

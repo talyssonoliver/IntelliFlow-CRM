@@ -175,6 +175,24 @@ export const SEED_IDS = {
     priorityChange: seedUUID('0c', 4),
     internalNote: seedUUID('0c', 5),
     slaBreach: seedUUID('0c', 6),
+    // Login Failure (ticket 2)
+    loginCreated: seedUUID('0c', 7),
+    loginCustomerMsg: seedUUID('0c', 8),
+    loginAgentReply: seedUUID('0c', 9),
+    // Dark Mode Request (ticket 3)
+    darkModeCreated: seedUUID('0c', 10),
+    // Billing Inquiry (ticket 4)
+    billingCreated: seedUUID('0c', 11),
+    billingAgentReply: seedUUID('0c', 12),
+    billingWaiting: seedUUID('0c', 13),
+    // API 500 Error (ticket 5)
+    apiCreated: seedUUID('0c', 14),
+    apiCustomerMsg: seedUUID('0c', 15),
+    apiAgentReply: seedUUID('0c', 16),
+    apiSlaBreach: seedUUID('0c', 17),
+    // Dashboard Performance (ticket 6)
+    dashCreated: seedUUID('0c', 18),
+    dashCustomerMsg: seedUUID('0c', 19),
   },
   ticketAttachments: {
     errorLogs: seedUUID('0d', 1), // 00000000-0000-4000-8000-000000000d01
@@ -272,14 +290,48 @@ export const SEED_IDS = {
     verifyDbFix: seedUUID('1c', 1), // 00000000-0000-4000-8000-000000001c01
     confirmResolution: seedUUID('1c', 2),
     documentRootCause: seedUUID('1c', 3),
+    // Login Failure
+    loginReviewSso: seedUUID('1c', 4),
+    loginAckCustomer: seedUUID('1c', 5),
+    loginEscalate: seedUUID('1c', 6),
+    loginUpdateCustomer: seedUUID('1c', 7),
+    // Dark Mode Request
+    darkReviewDetails: seedUUID('1c', 8),
+    darkAckCustomer: seedUUID('1c', 9),
+    darkInvestigate: seedUUID('1c', 10),
+    // Billing Inquiry
+    billingReview: seedUUID('1c', 11),
+    billingAck: seedUUID('1c', 12),
+    billingInvestigate: seedUUID('1c', 13),
+    // API 500 Error
+    apiReview: seedUUID('1c', 14),
+    apiAck: seedUUID('1c', 15),
+    apiEscalate: seedUUID('1c', 16),
+    apiUpdate: seedUUID('1c', 17),
+    // Dashboard Performance
+    dashReview: seedUUID('1c', 18),
+    dashAck: seedUUID('1c', 19),
+    dashEscalate: seedUUID('1c', 20),
+    dashUpdate: seedUUID('1c', 21),
   },
   relatedTickets: {
     slowDashboard: seedUUID('1d', 1), // 00000000-0000-4000-8000-000000001d01
     databaseTimeout: seedUUID('1d', 2),
     apiLatency: seedUUID('1d', 3),
+    // Login Failure → related
+    loginSsoOutage: seedUUID('1d', 4),
+    // API 500 → related
+    apiDbTimeout: seedUUID('1d', 5),
+    apiSystemOutage: seedUUID('1d', 6),
+    // Dashboard Performance → related
+    dashSystemOutage: seedUUID('1d', 7),
+    dashApiLatency: seedUUID('1d', 8),
   },
   ticketAIInsights: {
     systemOutage: seedUUID('1e', 1), // 00000000-0000-4000-8000-000000001e01
+    loginFailure: seedUUID('1e', 2),
+    api500Error: seedUUID('1e', 3),
+    dashboardPerformance: seedUUID('1e', 4),
   },
   salesPerformance: {
     sarahJohnson: seedUUID('1f', 1), // 00000000-0000-4000-8000-000000001f01
@@ -598,6 +650,36 @@ export const SEED_IDS = {
   appointmentCases: {
     hearingCase: seedUUID('5c', 1), // 00000000-0000-4000-8000-000000005c01
     depositionCase: seedUUID('5c', 2),
+  },
+  // AI Conversation Records for PG-151 (Active Agents Dashboard)
+  conversationRecords: {
+    qualificationAgent: seedUUID('5d', 1), // 00000000-0000-4000-8000-000000005d01
+    emailAgent: seedUUID('5d', 2),
+    followupAgent: seedUUID('5d', 3),
+    nbaAgent: seedUUID('5d', 4),
+    scoringAgent: seedUUID('5d', 5),
+    churnAgent: seedUUID('5d', 6),
+    sentimentAgent: seedUUID('5d', 7),
+    autoresponseAgent: seedUUID('5d', 8),
+    ragAgent: seedUUID('5d', 9),
+    embeddingAgent: seedUUID('5d', 10),
+    crewAgent: seedUUID('5d', 11),
+    hallucinationAgent: seedUUID('5d', 12),
+    indexerAgent: seedUUID('5d', 13),
+    ocrAgent: seedUUID('5d', 14),
+  },
+  conversationMessages: {
+    msg1: seedUUID('5e', 1), // 00000000-0000-4000-8000-000000005e01
+    msg2: seedUUID('5e', 2),
+    msg3: seedUUID('5e', 3),
+    msg4: seedUUID('5e', 4),
+    msg5: seedUUID('5e', 5),
+    msg6: seedUUID('5e', 6),
+  },
+  conversationToolCalls: {
+    tc1: seedUUID('5f', 1), // 00000000-0000-4000-8000-000000005f01
+    tc2: seedUUID('5f', 2),
+    tc3: seedUUID('5f', 3),
   },
   // Auto-Response Drafts for IFC-029 (Agent Approvals page)
   autoResponseDrafts: {

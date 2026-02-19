@@ -182,7 +182,7 @@ export const timelineEventSchema = z.object({
   actor: timelineActorSchema.nullable().optional(),
 
   /** Additional metadata */
-  metadata: z.record(z.unknown()).nullable().optional(),
+  metadata: z.record(z.string(), z.unknown()).nullable().optional(),
 
   /** Whether the event is overdue */
   isOverdue: z.boolean().optional(),

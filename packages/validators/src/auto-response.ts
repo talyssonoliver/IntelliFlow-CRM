@@ -52,7 +52,7 @@ export const autoResponseContextSchema = z.object({
   messageType: z.string().optional(),
   // For FORM_SUBMIT
   formName: z.string().optional(),
-  formFields: z.record(z.string()).optional(),
+  formFields: z.record(z.string(), z.string()).optional(),
   // For CHAT_MESSAGE
   chatHistory: z
     .array(

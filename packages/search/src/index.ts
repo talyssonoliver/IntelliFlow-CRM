@@ -32,6 +32,9 @@ export {
   type IRelevanceEvaluator,
 } from './retrieval';
 
+// Embedding Provider
+export { type EmbeddingResult, type IEmbeddingProvider } from './embedding-provider';
+
 // Document Indexer
 export {
   IndexerConfigSchema,

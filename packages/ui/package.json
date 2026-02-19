@@ -42,7 +42,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "react-hook-form": "^7.69.0",
-    "tailwind-merge": "^2.2.0"
+    "tailwind-merge": "^3.4.0"
   },
   "peerDependencies": {
     "react": "^19.2.3",
@@ -62,7 +62,7 @@
     "@testing-library/user-event": "^14.5.1",
     "@types/react": "^19.2.3",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^4.7.0",
+    "@vitejs/plugin-react": "^5.0.0",
     "@vitest/coverage-v8": "^4.0.16",
     "axe-core": "^4.8.4",
     "jsdom": "^23.0.1",

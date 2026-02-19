@@ -10,6 +10,11 @@
 
 import { z } from 'zod';
 
+/** Zod v4 replacement for z.SafeParseReturnType */
+type SafeParseResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: z.ZodError };
+
 // ============================================================================
 // Event Metadata Schema
 // ============================================================================
@@ -38,7 +43,7 @@ export type EventMetadataOutput = z.output<typeof eventMetadataSchema>;
  * Base domain event schema
  */
 export const baseDomainEventSchema = z.object({
-  id: z.string().cuid2().optional(),
+  id: z.string().regex(/^[a-z0-9]{8,}$/).optional(),
   eventType: z
     .string()
     .min(1)
@@ -47,7 +52,7 @@ export const baseDomainEventSchema = z.object({
     }),
   aggregateType: z.string().min(1),
   aggregateId: z.string().min(1),
-  payload: z.record(z.unknown()),
+  payload: z.record(z.string(), z.unknown()),
   metadata: eventMetadataSchema,
   occurredAt: z.coerce.date(),
   status: z
@@ -168,7 +173,7 @@ export type RegisteredEventType = keyof typeof eventPayloadSchemas;
  */
 export function validateEventMetadata(
   metadata: unknown
-): z.SafeParseReturnType<unknown, EventMetadataOutput> {
+): SafeParseResult<EventMetadataOutput> {
   return eventMetadataSchema.safeParse(metadata);
 }
 
@@ -182,12 +187,12 @@ export function validateEventMetadata(
 export function validateEventPayload(
   eventType: string,
   payload: unknown
-): z.SafeParseReturnType<unknown, unknown> {
+): SafeParseResult<unknown> {
   const schema = eventPayloadSchemas[eventType as RegisteredEventType];
 
   if (!schema) {
     // Unknown event type - validate as generic record
-    return z.record(z.unknown()).safeParse(payload);
+    return z.record(z.string(), z.unknown()).safeParse(payload);
   }
 
   return schema.safeParse(payload);
@@ -201,7 +206,7 @@ export function validateEventPayload(
  */
 export function validateOutboxEvent(
   event: unknown
-): z.SafeParseReturnType<unknown, OutboxEventOutput> {
+): SafeParseResult<OutboxEventOutput> {
   return outboxEventSchema.safeParse(event);
 }
 

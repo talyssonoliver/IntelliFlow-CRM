@@ -6,13 +6,13 @@ import { PhoneNumber, Money, WebsiteUrl, DateRange, Percentage } from '@intellif
 export const idSchema = z.string().uuid();
 
 // Keep cuid for legacy compatibility if needed
-export const cuidSchema = z.string().cuid();
+export const cuidSchema = z.string().regex(/^c[a-z0-9]{8,}$/, 'Invalid CUID');
 
 // Alias for clarity
 export const uuidSchema = idSchema;
 
 // Common string schemas
-export const emailSchema = z.string().email('Invalid email address').toLowerCase().trim();
+export const emailSchema = z.string().email('Invalid email address').transform(v => v.toLowerCase().trim());
 
 // Name validation with consistent rules (used across all entities)
 export const nameSchema = z
@@ -133,7 +133,7 @@ export type DateRangeInput = z.infer<typeof dateRangeSchema>;
 // Search/filter schema
 export const searchSchema = z.object({
   query: z.string().min(1).max(200).optional(),
-  filters: z.record(z.union([z.string(), z.number(), z.boolean(), z.array(z.string())])).optional(),
+  filters: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.array(z.string())])).optional(),
 });
 
 export type SearchInput = z.infer<typeof searchSchema>;
@@ -152,7 +152,7 @@ export const apiErrorSchema = z.object({
   error: z.object({
     code: z.string(),
     message: z.string(),
-    details: z.record(z.unknown()).optional(),
+    details: z.record(z.string(), z.unknown()).optional(),
   }),
   timestamp: z.string().datetime(),
 });

@@ -4,9 +4,9 @@ import { CaseDocumentRepository } from '@intelliflow/domain';
 import { EventBusPort } from '../../ports/external';
 import { createHash, randomUUID } from 'crypto';
 
-// Valid UUIDs for test data
-const TEST_TENANT_ID = '11111111-1111-1111-1111-111111111111';
-const TEST_USER_ID = '22222222-2222-2222-2222-222222222222';
+// Valid RFC 4122 UUIDs for test data
+const TEST_TENANT_ID = '11111111-1111-4111-8111-111111111111';
+const TEST_USER_ID = '22222222-2222-4222-8222-222222222222';
 
 describe('IngestionOrchestrator', () => {
   let orchestrator: IngestionOrchestrator;

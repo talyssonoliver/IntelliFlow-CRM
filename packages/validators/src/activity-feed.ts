@@ -77,7 +77,7 @@ export const unifiedActivityItemSchema = z.object({
   timestamp: z.date(),
   actor: activityActorSchema.nullable(),
   entity: activityEntitySchema.nullable(),
-  metadata: z.record(z.unknown()).nullable(),
+  metadata: z.record(z.string(), z.unknown()).nullable(),
 });
 
 export type UnifiedActivityItemOutput = z.infer<typeof unifiedActivityItemSchema>;

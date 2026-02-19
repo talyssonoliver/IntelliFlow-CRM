@@ -327,7 +327,7 @@ export class SMSChannel {
         'Twilio API error'
       );
 
-      throw new Error(twilioError.message || 'Twilio API error');
+      throw new Error(twilioError.message || 'Twilio API error', { cause: twilioError });
     }
   }
 
