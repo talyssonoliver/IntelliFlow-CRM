@@ -76,8 +76,8 @@ const taskListResponseSchema = z.object({
  */
 const taskStatsResponseSchema = z.object({
   total: z.number().int().min(0),
-  byStatus: z.record(z.number().int().min(0)),
-  byPriority: z.record(z.number().int().min(0)),
+  byStatus: z.record(z.string(), z.number().int().min(0)),
+  byPriority: z.record(z.string(), z.number().int().min(0)),
   overdue: z.number().int().min(0),
   dueToday: z.number().int().min(0),
 });

@@ -42,7 +42,7 @@ export const safePromptSchema = z.object({
       },
       { message: 'Prompt contains suspicious repetition' }
     ),
-  context: z.record(z.unknown()).optional(),
+  context: z.record(z.string(), z.unknown()).optional(),
   userId: z.string().uuid('Invalid user ID'),
   maxTokens: z.number().int().min(1).max(2000).default(500),
 });

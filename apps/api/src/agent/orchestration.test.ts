@@ -25,7 +25,7 @@ export const orchestrationRequestSchema = z.object({
     'followup_strategy',
     'full_pipeline',
   ]),
-  input: z.record(z.unknown()),
+  input: z.record(z.string(), z.unknown()),
   options: z
     .object({
       executionMode: z.enum(['sequential', 'parallel', 'hierarchical']).default('sequential'),
@@ -53,7 +53,7 @@ export const orchestrationResponseSchema = z.object({
   workflowId: z.string(),
   status: z.enum(['completed', 'pending_review', 'failed', 'timeout']),
   results: z.record(
-    z.object({
+    z.string(), z.object({
       agentName: z.string(),
       success: z.boolean(),
       output: z.unknown().optional(),
@@ -66,7 +66,7 @@ export const orchestrationResponseSchema = z.object({
   requiresHumanReview: z.boolean(),
   lowConfidenceAgents: z.array(z.string()).optional(),
   totalDuration: z.number(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type OrchestrationResponse = z.infer<typeof orchestrationResponseSchema>;

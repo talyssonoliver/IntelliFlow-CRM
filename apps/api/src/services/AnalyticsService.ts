@@ -1,4 +1,4 @@
-// eslint-disable-next-line no-restricted-imports -- Analytics service uses Prisma directly for read-only aggregations
+// eslint-disable-next-line no-restricted-imports -- Analytics service uses Prisma directly for read-only aggregations (suppressed at import level)
 import type { PrismaClient } from '@intelliflow/db';
 
 /**

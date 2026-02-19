@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const { mockOn, mockClose, mockBroadcast } = vi.hoisted(() => ({
   mockOn: vi.fn(),
-  mockClose: vi.fn((cb?: Function) => {
+  mockClose: vi.fn((cb?: () => void) => {
     if (cb) cb();
   }),
   mockBroadcast: vi.fn(),

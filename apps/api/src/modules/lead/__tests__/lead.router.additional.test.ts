@@ -95,7 +95,7 @@ describe('Lead Router - Additional Coverage', () => {
       ];
 
       // Mock transaction
-      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: Function) => {
+      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: (tx: unknown) => unknown) => {
         const tx = {
           lead: {
             findMany: vi.fn().mockResolvedValue(mockLeads),
@@ -125,7 +125,7 @@ describe('Lead Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = leadRouter.createCaller(ctx);
 
-      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: Function) => {
+      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: (tx: unknown) => unknown) => {
         const tx = {
           lead: {
             findMany: vi.fn().mockResolvedValue([]),
@@ -152,7 +152,7 @@ describe('Lead Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = leadRouter.createCaller(ctx);
 
-      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: Function) => {
+      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: (tx: unknown) => unknown) => {
         const tx = {
           lead: {
             findMany: vi
@@ -190,7 +190,7 @@ describe('Lead Router - Additional Coverage', () => {
 
       const mockAccountCreateMany = vi.fn().mockResolvedValue({ count: 1 });
 
-      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: Function) => {
+      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: (tx: unknown) => unknown) => {
         const tx = {
           lead: {
             findMany: vi
@@ -231,7 +231,7 @@ describe('Lead Router - Additional Coverage', () => {
 
       const mockAccountCreateMany = vi.fn().mockResolvedValue({ count: 0 });
 
-      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: Function) => {
+      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: (tx: unknown) => unknown) => {
         const tx = {
           lead: {
             findMany: vi
@@ -271,7 +271,7 @@ describe('Lead Router - Additional Coverage', () => {
       const ctx = createTestContext();
       const caller = leadRouter.createCaller(ctx);
 
-      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: Function) => {
+      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: (tx: unknown) => unknown) => {
         const tx = {
           lead: {
             findMany: vi

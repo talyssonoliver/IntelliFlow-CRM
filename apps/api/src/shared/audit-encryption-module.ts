@@ -187,7 +187,7 @@ export class AuditEncryption {
     try {
       return JSON.parse(plaintext);
     } catch (error) {
-      throw new Error(`Failed to parse decrypted audit log: ${(error as Error).message}`);
+      throw new Error(`Failed to parse decrypted audit log: ${(error as Error).message}`, { cause: error });
     }
   }
 

@@ -53,7 +53,7 @@ const opportunityListResponseSchema = z.object({
 const opportunityStatsResponseSchema = z.object({
   total: z.number().int().min(0),
   byStage: z.record(
-    z.object({
+    z.string(), z.object({
       count: z.number().int().min(0),
       totalValue: z.string(),
     })

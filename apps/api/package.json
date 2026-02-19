@@ -41,16 +41,15 @@
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.36.1",
     "ws": "^8.18.0",
-    "zod": "^3.22.0"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@anatine/zod-openapi": "^2.2.8",
     "@apidevtools/swagger-parser": "^12.1.0",
     "@intelliflow/typescript-config": "workspace:*",
-    "@types/node": "^20.11.0",
+    "@types/node": "^22.0.0",
     "@types/ws": "^8.5.10",
     "@vitest/ui": "^4.0.16",
-    "eslint": "^9.0.0",
+    "eslint": "^10.0.0",
     "openapi3-ts": "^4.5.0",
     "tsup": "^8.0.0",
     "tsx": "^4.7.0",

@@ -251,7 +251,7 @@ export const humanDecisionSchema = z.object({
   userId: z.string(),
   decision: z.enum(['approve', 'reject', 'modify']),
   comment: z.string().optional(),
-  modifications: z.record(z.unknown()).optional(),
+  modifications: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const workflowQuerySchema = z.object({

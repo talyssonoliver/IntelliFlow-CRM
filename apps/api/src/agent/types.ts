@@ -185,7 +185,7 @@ export interface AgentToolDefinition<TInput = unknown, TOutput = unknown> {
   entityTypes: EntityType[];
   requiresApproval: boolean;
   // Allow Zod schemas with defaults (input type may differ from output type)
-  inputSchema: z.ZodType<TInput, z.ZodTypeDef, unknown>;
+  inputSchema: z.ZodType<TInput>;
   execute: (input: TInput, context: AgentAuthContext) => Promise<AgentToolResult<TOutput>>;
   generatePreview: (input: TInput, context: AgentAuthContext) => Promise<ActionPreview>;
   rollback?: (

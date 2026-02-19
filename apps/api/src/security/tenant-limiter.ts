@@ -185,8 +185,8 @@ export async function checkResourceUsage(
   resourceType: ResourceType
 ): Promise<ResourceUsage> {
   const limits = await getTenantLimits(prisma, tenantId);
-  let current = 0;
-  let limit = 0;
+  let current: number;
+  let limit: number;
 
   switch (resourceType) {
     case 'leads':

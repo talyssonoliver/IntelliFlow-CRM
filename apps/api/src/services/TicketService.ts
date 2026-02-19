@@ -252,6 +252,10 @@ export class TicketService {
           where: { completed: false },
           orderBy: { createdAt: 'asc' },
         },
+        relatedTickets: {
+          orderBy: { similarity: 'desc' },
+        },
+        aiInsight: true,
       },
     });
 
@@ -366,6 +370,27 @@ export class TicketService {
         authorRole: 'System',
         channel: 'PORTAL',
       },
+    });
+
+    // Generate default next steps based on priority
+    const defaultNextSteps = this.getDefaultNextSteps(data.priority);
+    if (defaultNextSteps.length > 0) {
+      await this.prisma.ticketNextStep.createMany({
+        data: defaultNextSteps.map((step) => ({
+          ticketId: ticket.id,
+          title: step.title,
+          dueDate: step.dueDate,
+          completed: false,
+          tenantId: data.tenantId,
+        })),
+      });
+    }
+
+    // Find and link related tickets (non-blocking, best-effort)
+    void this.findAndLinkRelatedTickets({
+      id: ticket.id,
+      subject: data.subject,
+      tenantId: data.tenantId,
     });
 
     return {
@@ -608,6 +633,123 @@ export class TicketService {
 
     const avgMs = totalResponseTime / tickets.length;
     return Math.round(avgMs / (1000 * 60)); // Convert to minutes
+  }
+
+  /**
+   * Get default next steps based on ticket priority
+   */
+  private getDefaultNextSteps(
+    priority: TicketPriority
+  ): { title: string; dueDate: string }[] {
+    const base: { title: string; dueDate: string }[] = [
+      {
+        title: 'Review ticket details and confirm category',
+        dueDate: 'Due Today',
+      },
+      {
+        title: 'Send initial acknowledgement to customer',
+        dueDate: 'Due Today',
+      },
+    ];
+
+    if (priority === 'CRITICAL' || priority === 'HIGH') {
+      return [
+        ...base,
+        {
+          title: 'Escalate to senior support if unresolved',
+          dueDate: priority === 'CRITICAL' ? 'Due in 1 hour' : 'Due Today',
+        },
+        {
+          title: 'Update customer with resolution progress',
+          dueDate: 'Tomorrow',
+        },
+      ];
+    }
+
+    return [
+      ...base,
+      {
+        title: 'Investigate root cause and document findings',
+        dueDate: 'Tomorrow',
+      },
+    ];
+  }
+
+  /**
+   * Find and link related tickets by subject word overlap
+   */
+  private async findAndLinkRelatedTickets(ticket: {
+    id: string;
+    subject: string;
+    tenantId: string;
+  }) {
+    try {
+      const recentTickets = await this.prisma.ticket.findMany({
+        where: {
+          tenantId: ticket.tenantId,
+          id: { not: ticket.id },
+          status: { notIn: ['ARCHIVED'] },
+        },
+        select: { id: true, subject: true, status: true },
+        orderBy: { createdAt: 'desc' },
+        take: 50,
+      });
+
+      const subjectWords = new Set(
+        ticket.subject
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((w) => w.length > 3)
+      );
+      if (subjectWords.size === 0) return;
+
+      const matches: {
+        id: string;
+        subject: string;
+        status: string;
+        similarity: number;
+      }[] = [];
+
+      for (const other of recentTickets) {
+        const otherWords = other.subject
+          .toLowerCase()
+          .split(/\s+/)
+          .filter((w) => w.length > 3);
+        if (otherWords.length === 0) continue;
+        const overlap = otherWords.filter((w) => subjectWords.has(w)).length;
+        const similarity = Math.round(
+          (overlap / Math.max(subjectWords.size, otherWords.length)) * 100
+        );
+        if (similarity >= 30) {
+          matches.push({
+            id: other.id,
+            subject: other.subject,
+            status: other.status,
+            similarity,
+          });
+        }
+      }
+
+      if (matches.length === 0) return;
+
+      const topMatches = matches
+        .sort((a, b) => b.similarity - a.similarity)
+        .slice(0, 5);
+
+      await this.prisma.relatedTicket.createMany({
+        data: topMatches.map((m) => ({
+          ticketId: ticket.id,
+          relatedId: m.id,
+          relatedSubject: m.subject,
+          relatedStatus: m.status as TicketStatus,
+          similarity: m.similarity,
+          tenantId: ticket.tenantId,
+        })),
+        skipDuplicates: true,
+      });
+    } catch {
+      // Best-effort: don't fail ticket creation if relation linking fails
+    }
   }
 
   /**

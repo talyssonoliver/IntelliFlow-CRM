@@ -784,13 +784,13 @@ export const billingRouter = createTRPCRouter({
           object: z.object({
             id: z.string(),
             customer: z.string(),
-            metadata: z.record(z.string()).optional(),
+            metadata: z.record(z.string(), z.string()).optional(),
             items: z
               .object({
                 data: z.array(
                   z.object({
                     price: z.object({
-                      metadata: z.record(z.string()).optional(),
+                      metadata: z.record(z.string(), z.string()).optional(),
                     }),
                   })
                 ),

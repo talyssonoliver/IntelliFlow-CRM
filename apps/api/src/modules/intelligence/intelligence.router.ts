@@ -15,6 +15,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
+import { Prisma } from '@prisma/client';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   churnRiskLevelSchema,
@@ -148,6 +149,137 @@ const aiInsightsResponseSchema = z.object({
   createdAt: z.date(),
 });
 
+// ── Shared helpers (reduce cognitive complexity & duplication) ────────────────
+
+/** Superset row type used by both sentiment and churn dashboards */
+type BaseInsightRow = {
+  id: string;
+  entityType: 'lead' | 'contact';
+  entityId: string;
+  entityName: string;
+  sentiment: string;
+  churnRisk: string;
+  engagementScore: number;
+  sentimentTrend: string | null;
+  nextBestAction: string | null;
+  recommendations: unknown;
+  lastEngagementDays: number | null;
+  updatedAt: Date;
+};
+
+/** Build a display name from first/last/company, with a fallback */
+function buildEntityName(
+  firstName: string | null,
+  lastName: string | null,
+  company: string | null,
+  fallback: string,
+): string {
+  return [firstName, lastName].filter(Boolean).join(' ') || company || fallback;
+}
+
+/** Convert date range string to a Date threshold */
+function dateRangeSince(dateRange: '7d' | '30d' | '90d'): Date {
+  const daysMap = { '7d': 7, '30d': 30, '90d': 90 };
+  const since = new Date();
+  since.setDate(since.getDate() - daysMap[dateRange]);
+  return since;
+}
+
+/** Fetch insight rows from both LeadAIInsight and ContactAIInsight tables */
+async function fetchAllInsightRows(
+  prisma: { leadAIInsight: { findMany: (...args: any[]) => any }; contactAIInsight: { findMany: (...args: any[]) => any } }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  tenantId: string,
+  since: Date,
+  entityType: 'all' | 'lead' | 'contact',
+): Promise<BaseInsightRow[]> {
+  const rows: BaseInsightRow[] = [];
+
+  if (entityType === 'all' || entityType === 'lead') {
+    const leadInsights = await prisma.leadAIInsight.findMany({
+      where: { tenantId, updatedAt: { gte: since } },
+      include: {
+        lead: { select: { id: true, firstName: true, lastName: true, company: true } },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+    for (const li of leadInsights) {
+      rows.push({
+        id: li.id,
+        entityType: 'lead',
+        entityId: li.leadId,
+        entityName: buildEntityName(li.lead.firstName, li.lead.lastName, li.lead.company, 'Unknown Lead'),
+        sentiment: (li.sentiment ?? 'NEUTRAL').toUpperCase(),
+        churnRisk: li.churnRisk,
+        engagementScore: li.engagementScore,
+        sentimentTrend: li.sentimentTrend,
+        nextBestAction: li.nextBestAction,
+        recommendations: li.recommendations,
+        lastEngagementDays: li.lastEngagementDays,
+        updatedAt: li.updatedAt,
+      });
+    }
+  }
+
+  if (entityType === 'all' || entityType === 'contact') {
+    const contactInsights = await prisma.contactAIInsight.findMany({
+      where: { tenantId, updatedAt: { gte: since } },
+      include: {
+        contact: { select: { id: true, firstName: true, lastName: true, company: true } },
+      },
+      orderBy: { updatedAt: 'desc' },
+    });
+    for (const ci of contactInsights) {
+      rows.push({
+        id: ci.id,
+        entityType: 'contact',
+        entityId: ci.contactId,
+        entityName: buildEntityName(ci.contact.firstName, ci.contact.lastName, ci.contact.company, 'Unknown Contact'),
+        sentiment: (ci.sentiment ?? 'NEUTRAL').toUpperCase(),
+        churnRisk: ci.churnRisk,
+        engagementScore: ci.engagementScore,
+        sentimentTrend: ci.sentimentTrend,
+        nextBestAction: ci.nextBestAction,
+        recommendations: ci.recommendations,
+        lastEngagementDays: ci.lastEngagementDays,
+        updatedAt: ci.updatedAt,
+      });
+    }
+  }
+
+  return rows;
+}
+
+/** Map churn risk to urgency level */
+function churnToUrgency(cr: string): string {
+  if (cr === 'CRITICAL') return 'CRITICAL';
+  if (cr === 'HIGH') return 'HIGH';
+  if (cr === 'MEDIUM') return 'MEDIUM';
+  return 'NONE';
+}
+
+/** Paginate an array by page/limit */
+function paginateRows<T>(rows: T[], page: number, limit: number): T[] {
+  const offset = (page - 1) * limit;
+  return rows.slice(offset, offset + limit);
+}
+
+/** Group rows by date key for trend charts */
+function groupByDateKey<T extends { updatedAt: Date }, B extends Record<string, number>>(
+  rows: T[],
+  init: () => B,
+  accumulate: (bucket: B, row: T) => void,
+): Array<{ date: string; bucket: B }> {
+  const trendMap = new Map<string, B>();
+  for (const row of rows) {
+    const dateKey = row.updatedAt.toISOString().split('T')[0];
+    if (!trendMap.has(dateKey)) trendMap.set(dateKey, init());
+    accumulate(trendMap.get(dateKey)!, row);
+  }
+  return Array.from(trendMap.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, bucket]) => ({ date, bucket }));
+}
+
 export const intelligenceRouter = createTRPCRouter({
   /**
    * Get sentiment dashboard data (PG-142)
@@ -168,135 +300,30 @@ export const intelligenceRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const tenantId = typedCtx.tenant.tenantId;
+      const since = dateRangeSince(input.dateRange);
 
-      // Calculate date filter
-      const daysMap = { '7d': 7, '30d': 30, '90d': 90 };
-      const since = new Date();
-      since.setDate(since.getDate() - daysMap[input.dateRange]);
-
-      // ----- Unified data source: fetch full insight rows -----
-
-      type InsightRow = {
-        id: string;
-        entityType: 'lead' | 'contact';
-        entityId: string;
-        entityName: string;
-        sentiment: string;
-        churnRisk: string;
-        engagementScore: number;
-        sentimentTrend: string | null;
-        nextBestAction: string | null;
-        recommendations: unknown;
-        updatedAt: Date;
-      };
-
-      const churnToUrgency = (cr: string): string => {
-        if (cr === 'CRITICAL') return 'CRITICAL';
-        if (cr === 'HIGH') return 'HIGH';
-        if (cr === 'MEDIUM') return 'MEDIUM';
-        return 'NONE';
-      };
-
-      const allInsights: InsightRow[] = [];
-
-      if (input.entityType === 'all' || input.entityType === 'lead') {
-        const leadInsights = await ctx.prisma.leadAIInsight.findMany({
-          where: { tenantId, updatedAt: { gte: since } },
-          include: {
-            lead: { select: { id: true, firstName: true, lastName: true, company: true } },
-          },
-          orderBy: { updatedAt: 'desc' },
-        });
-        for (const li of leadInsights) {
-          const name =
-            [li.lead.firstName, li.lead.lastName].filter(Boolean).join(' ') ||
-            li.lead.company ||
-            'Unknown Lead';
-          allInsights.push({
-            id: li.id,
-            entityType: 'lead',
-            entityId: li.leadId,
-            entityName: name,
-            sentiment: (li.sentiment ?? 'NEUTRAL').toUpperCase(),
-            churnRisk: li.churnRisk,
-            engagementScore: li.engagementScore,
-            sentimentTrend: li.sentimentTrend,
-            nextBestAction: li.nextBestAction,
-            recommendations: li.recommendations,
-            updatedAt: li.updatedAt,
-          });
-        }
-      }
-
-      if (input.entityType === 'all' || input.entityType === 'contact') {
-        const contactInsights = await ctx.prisma.contactAIInsight.findMany({
-          where: { tenantId, updatedAt: { gte: since } },
-          include: {
-            contact: { select: { id: true, firstName: true, lastName: true, company: true } },
-          },
-          orderBy: { updatedAt: 'desc' },
-        });
-        for (const ci of contactInsights) {
-          const name =
-            [ci.contact.firstName, ci.contact.lastName].filter(Boolean).join(' ') ||
-            ci.contact.company ||
-            'Unknown Contact';
-          allInsights.push({
-            id: ci.id,
-            entityType: 'contact',
-            entityId: ci.contactId,
-            entityName: name,
-            sentiment: (ci.sentiment ?? 'NEUTRAL').toUpperCase(),
-            churnRisk: ci.churnRisk,
-            engagementScore: ci.engagementScore,
-            sentimentTrend: ci.sentimentTrend,
-            nextBestAction: ci.nextBestAction,
-            recommendations: ci.recommendations,
-            updatedAt: ci.updatedAt,
-          });
-        }
-      }
-
-      // Sort all insights by updatedAt desc (newest first)
+      const allInsights = await fetchAllInsightRows(ctx.prisma, tenantId, since, input.entityType);
       allInsights.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
 
-      // ----- Stats (derived from same rows) -----
-
-      const sentimentCounts = {
-        VERY_POSITIVE: 0,
-        POSITIVE: 0,
-        NEUTRAL: 0,
-        NEGATIVE: 0,
-        VERY_NEGATIVE: 0,
-      };
+      // Stats
+      const sentimentCounts = { VERY_POSITIVE: 0, POSITIVE: 0, NEUTRAL: 0, NEGATIVE: 0, VERY_NEGATIVE: 0 };
       let urgentCount = 0;
-
       for (const row of allInsights) {
         const s = row.sentiment as keyof typeof sentimentCounts;
         if (s in sentimentCounts) sentimentCounts[s]++;
         if (row.churnRisk === 'CRITICAL' || row.churnRisk === 'HIGH') urgentCount++;
       }
-
       const posCount = sentimentCounts.VERY_POSITIVE + sentimentCounts.POSITIVE;
       const neutralCount = sentimentCounts.NEUTRAL;
       const negCount = sentimentCounts.VERY_NEGATIVE + sentimentCounts.NEGATIVE;
       const total = posCount + neutralCount + negCount;
       const avgScore = total > 0 ? (posCount - negCount) / total : 0;
 
-      // ----- Recent analyses (paginated slice of same rows) -----
-
-      const offset = (input.page - 1) * input.limit;
-      const paginatedInsights = allInsights.slice(offset, offset + input.limit);
-
+      // Recent analyses (paginated)
       const sentimentScoreMap: Record<string, number> = {
-        VERY_POSITIVE: 0.9,
-        POSITIVE: 0.7,
-        NEUTRAL: 0.5,
-        NEGATIVE: 0.3,
-        VERY_NEGATIVE: 0.1,
+        VERY_POSITIVE: 0.9, POSITIVE: 0.7, NEUTRAL: 0.5, NEGATIVE: 0.3, VERY_NEGATIVE: 0.1,
       };
-
-      const recentAnalyses = paginatedInsights.map((row) => {
+      const recentAnalyses = paginateRows(allInsights, input.page, input.limit).map((row) => {
         const recs = parseRecommendations(row.recommendations);
         return {
           id: row.id,
@@ -314,28 +341,17 @@ export const intelligenceRouter = createTRPCRouter({
         };
       });
 
-      // ----- Trends (grouped by date from same rows) -----
-
-      const trendMap = new Map<
-        string,
-        { positive: number; neutral: number; negative: number; total: number }
-      >();
-      for (const row of allInsights) {
-        const dateKey = row.updatedAt.toISOString().split('T')[0];
-        if (!trendMap.has(dateKey)) {
-          trendMap.set(dateKey, { positive: 0, neutral: 0, negative: 0, total: 0 });
-        }
-        const bucket = trendMap.get(dateKey)!;
-        if (row.sentiment.includes('POSITIVE')) bucket.positive++;
-        else if (row.sentiment.includes('NEGATIVE')) bucket.negative++;
-        else bucket.neutral++;
-        bucket.total++;
-      }
-
-      // Sort trend entries chronologically
-      const trendEntries = Array.from(trendMap.entries()).sort(([a], [b]) => a.localeCompare(b));
-
-      const trends = trendEntries.map(([date, b]) => ({
+      // Trends
+      const trends = groupByDateKey(
+        allInsights,
+        () => ({ positive: 0, neutral: 0, negative: 0, total: 0 }),
+        (bucket, row) => {
+          if (row.sentiment.includes('POSITIVE')) bucket.positive++;
+          else if (row.sentiment.includes('NEGATIVE')) bucket.negative++;
+          else bucket.neutral++;
+          bucket.total++;
+        },
+      ).map(({ date, bucket: b }) => ({
         date,
         positive: b.positive,
         neutral: b.neutral,
@@ -344,14 +360,7 @@ export const intelligenceRouter = createTRPCRouter({
       }));
 
       return {
-        stats: {
-          total,
-          positive: posCount,
-          neutral: neutralCount,
-          negative: negCount,
-          avgScore,
-          urgentCount,
-        },
+        stats: { total, positive: posCount, neutral: neutralCount, negative: negCount, avgScore, urgentCount },
         distribution: sentimentCounts,
         recentAnalyses,
         trends,
@@ -364,6 +373,7 @@ export const intelligenceRouter = createTRPCRouter({
    */
   getLeadInsights: tenantProcedure
     .input(z.object({ leadId: z.string().uuid() }))
+    .output(aiInsightsResponseSchema.nullable())
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
 
@@ -412,6 +422,7 @@ export const intelligenceRouter = createTRPCRouter({
    */
   getContactInsights: tenantProcedure
     .input(z.object({ contactId: z.string().uuid() }))
+    .output(aiInsightsResponseSchema.nullable())
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
 
@@ -505,30 +516,29 @@ export const intelligenceRouter = createTRPCRouter({
         HIGH: 80,
       };
 
+      // Validate action type against the canonical schema, falling back to 'WAIT'
+      const rawAction = aiInsight.nextBestAction?.toUpperCase().replace(/\s+/g, '_') || 'WAIT';
+      const parsedAction = nbaActionTypeSchema.safeParse(rawAction);
+      const action = parsedAction.success ? parsedAction.data : 'WAIT';
+
+      // Validate priority against schema
+      const parsedPriority = nbaPrioritySchema.safeParse('MEDIUM');
+      const priority = parsedPriority.success ? parsedPriority.data : 'MEDIUM';
+
+      // Validate churn risk level against schema
+      const parsedChurnLevel = churnRiskLevelSchema.safeParse(aiInsight.churnRisk);
+      const churnLevel = parsedChurnLevel.success ? parsedChurnLevel.data : 'LOW';
+
       const summary = {
         churnRisk: {
           score: churnRiskScoreMap[aiInsight.churnRisk] ?? 0,
-          level: aiInsight.churnRisk as 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'MINIMAL',
-          trend: undefined,
+          level: churnLevel,
           lastAssessedAt: aiInsight.updatedAt.toISOString(),
         },
         nextBestAction: {
-          action: (aiInsight.nextBestAction?.toUpperCase().replace(/\s+/g, '_') || 'WAIT') as
-            | 'CALL'
-            | 'EMAIL'
-            | 'MEETING'
-            | 'SEND_PROPOSAL'
-            | 'OFFER_DISCOUNT'
-            | 'SCHEDULE_DEMO'
-            | 'SEND_CASE_STUDY'
-            | 'ESCALATE'
-            | 'UPSELL'
-            | 'CROSS_SELL'
-            | 'TRAINING'
-            | 'WAIT',
+          action,
           title: aiInsight.nextBestAction || 'No action recommended',
-          deadline: undefined,
-          priority: 'MEDIUM' as const,
+          priority,
         },
         conversionProbability: aiInsight.conversionProbability,
         lifetimeValue: aiInsight.lifetimeValue ?? aiInsight.estimatedValue,
@@ -540,10 +550,20 @@ export const intelligenceRouter = createTRPCRouter({
           | 'VERY_NEGATIVE'
           | undefined,
         engagementScore: aiInsight.engagementScore,
-        recommendations: (aiInsight.recommendations as string[]) ?? [],
-        confidence: 0.85, // Default confidence
+        recommendations: Array.isArray(aiInsight.recommendations)
+          ? (aiInsight.recommendations as string[])
+          : [],
+        confidence: 0.85,
         lastUpdatedAt: aiInsight.updatedAt.toISOString(),
       };
+
+      // Validate summary against the canonical aiInsightsSummarySchema
+      const validated = aiInsightsSummarySchema.safeParse(summary);
+      if (!validated.success) {
+        console.warn(
+          `[intelligence.getInsightsSummary] Schema validation warning for ${entityType}/${entityId}: ${validated.error.message}`
+        );
+      }
 
       return summary;
     }),
@@ -585,19 +605,9 @@ export const intelligenceRouter = createTRPCRouter({
         }
       }
 
-      // TODO: When BullMQ is configured, add job to prediction queue
-      // For now, return a pending status
-      //
-      // Example future implementation:
-      // const job = await predictionQueue.add('prediction', {
-      //   entityType,
-      //   entityId,
-      //   tenantId: typedCtx.tenant.tenantId,
-      //   predictionType,
-      // }, {
-      //   priority: priority === 'HIGH' ? 1 : priority === 'NORMAL' ? 5 : 10,
-      // });
-      // return { jobId: job.id, status: 'QUEUED' };
+      // BullMQ job queue integration is tracked under IFC-095 Phase 2.
+      // Once Redis + BullMQ are wired, this endpoint will enqueue a prediction
+      // job and return { jobId, status: 'QUEUED' } instead of PENDING.
 
       return {
         status: 'PENDING' as const,
@@ -680,11 +690,11 @@ export const intelligenceRouter = createTRPCRouter({
           sentiment: updateData.sentiment ?? null,
           sentimentTrend: updateData.sentimentTrend ?? null,
           nextBestAction: updateData.nextBestAction ?? null,
-          recommendations: recsJson as any,
+          recommendations: recsJson as Prisma.InputJsonValue,
         },
         update: {
           ...updateData,
-          recommendations: recsJson as any,
+          recommendations: recsJson as Prisma.InputJsonValue,
           updatedAt: new Date(),
         },
       });
@@ -756,11 +766,11 @@ export const intelligenceRouter = createTRPCRouter({
           sentiment: updateData.sentiment ?? null,
           sentimentTrend: updateData.sentimentTrend ?? null,
           nextBestAction: updateData.nextBestAction ?? null,
-          recommendations: recsJson as any,
+          recommendations: recsJson as Prisma.InputJsonValue,
         },
         update: {
           ...updateData,
-          recommendations: recsJson as any,
+          recommendations: recsJson as Prisma.InputJsonValue,
           updatedAt: new Date(),
         },
       });
@@ -786,188 +796,63 @@ export const intelligenceRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const tenantId = typedCtx.tenant.tenantId;
+      const since = dateRangeSince(input.dateRange);
 
-      const daysMap = { '7d': 7, '30d': 30, '90d': 90 };
-      const since = new Date();
-      since.setDate(since.getDate() - daysMap[input.dateRange]);
-
-      // SLA hours per risk level
       const slaHoursMap: Record<string, number> = {
-        CRITICAL: 24,
-        HIGH: 48,
-        MEDIUM: 168,
-        LOW: 336,
-        MINIMAL: 720,
+        CRITICAL: 24, HIGH: 48, MEDIUM: 168, LOW: 336, MINIMAL: 720,
       };
-
-      type InsightRow = {
-        id: string;
-        entityType: 'lead' | 'contact';
-        entityId: string;
-        entityName: string;
-        churnRisk: string;
-        engagementScore: number;
-        nextBestAction: string | null;
-        recommendations: unknown;
-        lastEngagementDays: number | null;
-        updatedAt: Date;
-      };
-
-      const allInsights: InsightRow[] = [];
-
-      if (input.entityType === 'all' || input.entityType === 'lead') {
-        const leadInsights = await ctx.prisma.leadAIInsight.findMany({
-          where: { tenantId, updatedAt: { gte: since } },
-          include: {
-            lead: { select: { id: true, firstName: true, lastName: true, company: true } },
-          },
-          orderBy: { updatedAt: 'desc' },
-        });
-        for (const li of leadInsights) {
-          const name =
-            [li.lead.firstName, li.lead.lastName].filter(Boolean).join(' ') ||
-            li.lead.company ||
-            'Unknown Lead';
-          allInsights.push({
-            id: li.id,
-            entityType: 'lead',
-            entityId: li.leadId,
-            entityName: name,
-            churnRisk: li.churnRisk,
-            engagementScore: li.engagementScore,
-            nextBestAction: li.nextBestAction,
-            recommendations: li.recommendations,
-            lastEngagementDays: li.lastEngagementDays,
-            updatedAt: li.updatedAt,
-          });
-        }
-      }
-
-      if (input.entityType === 'all' || input.entityType === 'contact') {
-        const contactInsights = await ctx.prisma.contactAIInsight.findMany({
-          where: { tenantId, updatedAt: { gte: since } },
-          include: {
-            contact: { select: { id: true, firstName: true, lastName: true, company: true } },
-          },
-          orderBy: { updatedAt: 'desc' },
-        });
-        for (const ci of contactInsights) {
-          const name =
-            [ci.contact.firstName, ci.contact.lastName].filter(Boolean).join(' ') ||
-            ci.contact.company ||
-            'Unknown Contact';
-          allInsights.push({
-            id: ci.id,
-            entityType: 'contact',
-            entityId: ci.contactId,
-            entityName: name,
-            churnRisk: ci.churnRisk,
-            engagementScore: ci.engagementScore,
-            nextBestAction: ci.nextBestAction,
-            recommendations: ci.recommendations,
-            lastEngagementDays: ci.lastEngagementDays,
-            updatedAt: ci.updatedAt,
-          });
-        }
-      }
-
-      // Sort by risk (CRITICAL first), then updatedAt desc
       const riskOrder: Record<string, number> = {
-        CRITICAL: 0,
-        HIGH: 1,
-        MEDIUM: 2,
-        LOW: 3,
-        MINIMAL: 4,
+        CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3, MINIMAL: 4,
       };
+
+      const allInsights = await fetchAllInsightRows(ctx.prisma, tenantId, since, input.entityType);
       allInsights.sort((a, b) => {
         const riskDiff = (riskOrder[a.churnRisk] ?? 4) - (riskOrder[b.churnRisk] ?? 4);
-        if (riskDiff !== 0) return riskDiff;
-        return b.updatedAt.getTime() - a.updatedAt.getTime();
+        return riskDiff !== 0 ? riskDiff : b.updatedAt.getTime() - a.updatedAt.getTime();
       });
 
       // Stats
-      const distribution: Record<string, number> = {
-        CRITICAL: 0,
-        HIGH: 0,
-        MEDIUM: 0,
-        LOW: 0,
-        MINIMAL: 0,
-      };
+      const distribution: Record<string, number> = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, MINIMAL: 0 };
       let totalEngagement = 0;
-
       for (const row of allInsights) {
         if (row.churnRisk in distribution) distribution[row.churnRisk]++;
         totalEngagement += row.engagementScore;
       }
-
       const total = allInsights.length;
       const avgEngagement = total > 0 ? Math.round(totalEngagement / total) : 0;
 
       // Paginated at-risk customers
-      const offset = (input.page - 1) * input.limit;
-      const paginatedInsights = allInsights.slice(offset, offset + input.limit);
-
-      const atRiskCustomers = paginatedInsights.map((row) => {
+      const atRiskCustomers = paginateRows(allInsights, input.page, input.limit).map((row) => {
         const slaHours = slaHoursMap[row.churnRisk] ?? 720;
         const slaDeadline = new Date(row.updatedAt.getTime() + slaHours * 3600000);
+        const parsedRisk = churnRiskLevelSchema.safeParse(row.churnRisk);
         return {
           id: row.id,
           entityType: row.entityType,
           entityId: row.entityId,
           entityName: row.entityName,
-          riskLevel: row.churnRisk as 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'MINIMAL',
+          riskLevel: parsedRisk.success ? parsedRisk.data : 'LOW',
           engagementScore: row.engagementScore,
           slaHours,
           slaDeadline: slaDeadline.toISOString(),
           nextBestAction: row.nextBestAction,
-          recommendations: Array.isArray(row.recommendations)
-            ? (row.recommendations as string[])
-            : [],
+          recommendations: Array.isArray(row.recommendations) ? (row.recommendations as string[]) : [],
           lastEngagementDays: row.lastEngagementDays,
           updatedAt: row.updatedAt.toISOString(),
         };
       });
 
-      // Trends grouped by date
-      const trendMap = new Map<
-        string,
-        {
-          critical: number;
-          high: number;
-          medium: number;
-          low: number;
-          minimal: number;
-          totalEng: number;
-          count: number;
-        }
-      >();
-      for (const row of allInsights) {
-        const dateKey = row.updatedAt.toISOString().split('T')[0];
-        if (!trendMap.has(dateKey)) {
-          trendMap.set(dateKey, {
-            critical: 0,
-            high: 0,
-            medium: 0,
-            low: 0,
-            minimal: 0,
-            totalEng: 0,
-            count: 0,
-          });
-        }
-        const bucket = trendMap.get(dateKey)!;
-        const key = row.churnRisk.toLowerCase() as
-          | 'critical'
-          | 'high'
-          | 'medium'
-          | 'low'
-          | 'minimal';
-        if (key in bucket) (bucket as Record<string, number>)[key]++;
-        bucket.totalEng += row.engagementScore;
-        bucket.count++;
-      }
-
-      const trendEntries = Array.from(trendMap.entries()).sort(([a], [b]) => a.localeCompare(b));
-      const trends = trendEntries.map(([date, b]) => ({
+      // Trends
+      const trends = groupByDateKey(
+        allInsights,
+        () => ({ critical: 0, high: 0, medium: 0, low: 0, minimal: 0, totalEng: 0, count: 0 }),
+        (bucket, row) => {
+          const key = row.churnRisk.toLowerCase() as keyof typeof bucket;
+          if (key in bucket) (bucket[key] as number)++;
+          bucket.totalEng += row.engagementScore;
+          bucket.count++;
+        },
+      ).map(({ date, bucket: b }) => ({
         date,
         critical: b.critical,
         high: b.high,
@@ -1329,7 +1214,7 @@ export const intelligenceRouter = createTRPCRouter({
                   tenantId,
                   ...(dateFilter && { updatedAt: dateFilter }),
                   OR: [
-                    { title: { contains: searchTerm, mode: 'insensitive' as const } },
+                    { subject: { contains: searchTerm, mode: 'insensitive' as const } },
                     { description: { contains: searchTerm, mode: 'insensitive' as const } },
                   ],
                 },
@@ -1341,7 +1226,7 @@ export const intelligenceRouter = createTRPCRouter({
                 rows.map((r) => ({
                   id: r.id,
                   source: 'tickets' as const,
-                  title: r.title,
+                  title: r.subject,
                   snippet: r.description ?? '',
                   relevanceScore: 0.65,
                   metadata: { status: r.status, priority: r.priority } as Record<string, unknown>,

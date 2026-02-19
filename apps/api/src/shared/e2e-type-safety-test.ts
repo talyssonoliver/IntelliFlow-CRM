@@ -97,6 +97,7 @@ function demonstrateZodValidation() {
 
   const typedInput: CreateLeadInput = {
     email: 'jane@example.com',
+    phone: undefined,
     firstName: 'Jane',
     lastName: 'Smith',
     company: 'Example Inc',

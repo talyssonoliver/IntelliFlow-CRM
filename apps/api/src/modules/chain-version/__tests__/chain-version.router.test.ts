@@ -36,16 +36,17 @@ vi.mock('../../../security/tenant-context', async (importOriginal) => {
 
 // Mock validator schemas
 vi.mock('@intelliflow/validators', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { z } = require('zod');
   return {
     createChainVersionSchema: z.object({
       chainType: z.string(),
       name: z.string(),
-      config: z.record(z.unknown()).optional(),
+      config: z.record(z.string(), z.unknown()).optional(),
     }),
     updateChainVersionSchema: z.object({
       name: z.string().optional(),
-      config: z.record(z.unknown()).optional(),
+      config: z.record(z.string(), z.unknown()).optional(),
     }),
     activateVersionSchema: z.object({
       versionId: z.string().uuid(),

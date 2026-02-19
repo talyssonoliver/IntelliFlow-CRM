@@ -34,7 +34,7 @@ export const RetryEntrySchema = z.object({
   nextAttemptAt: z.date(),
   createdAt: z.date(),
   error: z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   status: z.enum(['pending', 'processing', 'completed', 'failed', 'dead_letter']),
 });
 

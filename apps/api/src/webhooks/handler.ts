@@ -20,8 +20,8 @@ export const WebhookEventSchema = z.object({
   timestamp: z.string().datetime(),
   version: z.string().default('1.0'),
   source: z.string(),
-  payload: z.record(z.unknown()),
-  metadata: z.record(z.unknown()).optional(),
+  payload: z.record(z.string(), z.unknown()),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 export type WebhookEvent = z.infer<typeof WebhookEventSchema>;

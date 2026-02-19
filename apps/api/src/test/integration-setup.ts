@@ -34,14 +34,11 @@ export let infrastructureUnavailableReason = '';
  * Real Prisma client for integration tests (may be null if unavailable)
  * Connected to test database
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export let testPrisma: any = null;
+export let testPrisma: any = null; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 // Lazy-loaded services and adapters
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _testServices: any = null;
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _testAdapters: any = null;
+let _testServices: any = null; // eslint-disable-line @typescript-eslint/no-explicit-any
+let _testAdapters: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 /**
  * Alert banner for skipped infrastructure tests

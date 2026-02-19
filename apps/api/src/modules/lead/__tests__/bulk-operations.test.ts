@@ -26,7 +26,7 @@ describe('Bulk Lead Operations', () => {
   let testUserId: string;
   let testLeadIds: string[];
   // Accumulate ALL lead IDs across tests so afterAll can clean them all up
-  let allCreatedLeadIds: string[] = [];
+  const allCreatedLeadIds: string[] = [];
   let isDbAvailable = false;
 
   beforeAll(async () => {

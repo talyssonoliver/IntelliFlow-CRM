@@ -26,8 +26,8 @@ import type { Context } from '../../context';
 const webhookPayloadSchema = z.object({
   sourceName: z.string().min(1).max(100),
   rawBody: z.string(),
-  headers: z.record(z.string()),
-  ip: z.string().ip().optional(),
+  headers: z.record(z.string(), z.string()),
+  ip: z.string().regex(/^(\d{1,3}\.){3}\d{1,3}$|^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/).optional(),
 });
 
 const registerSourceSchema = z.object({
@@ -37,7 +37,7 @@ const registerSourceSchema = z.object({
   signatureVerifier: z.enum(['hmac-sha256', 'stripe', 'github', 'custom']).default('hmac-sha256'),
   enabled: z.boolean().default(true),
   allowedEvents: z.array(z.string()).optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 const reprocessDeadLetterSchema = z.object({

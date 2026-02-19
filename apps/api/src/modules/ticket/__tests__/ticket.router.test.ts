@@ -11,11 +11,12 @@ import { ticketRouter } from '../ticket.router';
 import type { UserSession } from '../../../context';
 import type { TenantContext } from '../../../security/tenant-context';
 
-// Valid UUIDs for testing
-const TICKET_UUID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
-const TENANT_UUID = 'b2c3d4e5-f6a7-8901-bcde-f12345678901';
-const USER_UUID = 'c3d4e5f6-a7b8-9012-cdef-123456789012';
-const SLA_UUID = 'd4e5f6a7-b8c9-0123-def0-234567890123';
+// Valid RFC 4122 v4 UUIDs for testing
+// Format: xxxxxxxx-xxxx-4xxx-[89ab]xxx-xxxxxxxxxxxx
+const TICKET_UUID = 'a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d';
+const TENANT_UUID = 'b2c3d4e5-f6a7-4b8c-9d0e-1f2a3b4c5d6e';
+const USER_UUID = 'c3d4e5f6-a7b8-4c9d-ae1f-2a3b4c5d6e7f';
+const SLA_UUID = 'd4e5f6a7-b8c9-4d0e-bf12-3a4b5c6d7e8f';
 
 // Mock ticket data
 const mockTicket = {
@@ -249,7 +250,7 @@ describe('ticketRouter', () => {
         mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
       );
 
-      const nonExistentUuid = 'e5f6a7b8-c9d0-1234-ef01-345678901234';
+      const nonExistentUuid = 'e5f6a7b8-c9d0-4e1f-9a01-345678901234';
       await expect(caller.getById({ id: nonExistentUuid })).rejects.toThrow(/Ticket not found/);
     });
   });
@@ -317,7 +318,7 @@ describe('ticketRouter', () => {
         mockContext as unknown as Parameters<typeof ticketRouter.createCaller>[0]
       );
 
-      const assigneeUuid = 'f6a7b8c9-d0e1-2345-f012-456789012345';
+      const assigneeUuid = 'f6a7b8c9-d0e1-4f23-a456-789012345678';
       await caller.list({
         assignedToId: assigneeUuid,
       });

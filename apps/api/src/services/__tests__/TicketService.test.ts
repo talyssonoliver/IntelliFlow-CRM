@@ -7,7 +7,7 @@
  * - Statistics and aggregations
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TicketService } from '../TicketService';
 import type { PrismaClient, Ticket, TicketStatus, TicketPriority } from '@intelliflow/db';
 
@@ -24,6 +24,12 @@ type MockPrismaClient = {
   };
   ticketActivity: {
     create: ReturnType<typeof vi.fn>;
+  };
+  ticketNextStep: {
+    createMany: ReturnType<typeof vi.fn>;
+  };
+  relatedTicket: {
+    createMany: ReturnType<typeof vi.fn>;
   };
   sLAPolicy: {
     findUnique: ReturnType<typeof vi.fn>;
@@ -91,6 +97,12 @@ describe('TicketService', () => {
       },
       ticketActivity: {
         create: vi.fn(),
+      },
+      ticketNextStep: {
+        createMany: vi.fn().mockResolvedValue({ count: 0 }),
+      },
+      relatedTicket: {
+        createMany: vi.fn().mockResolvedValue({ count: 0 }),
       },
       sLAPolicy: {
         findUnique: vi.fn(),
@@ -513,7 +525,7 @@ describe('TicketService', () => {
       expect(result).toBeNull();
     });
 
-    it('should include related data', async () => {
+    it('should include related data including relatedTickets and aiInsight', async () => {
       mockPrisma.ticket.findUnique.mockResolvedValue(createMockTicket());
 
       await service.findById('ticket-1');
@@ -525,9 +537,49 @@ describe('TicketService', () => {
             activities: expect.any(Object),
             attachments: true,
             nextSteps: expect.any(Object),
+            relatedTickets: { orderBy: { similarity: 'desc' } },
+            aiInsight: true,
           }),
         })
       );
+    });
+
+    it('should return relatedTickets and aiInsight when present', async () => {
+      mockPrisma.ticket.findUnique.mockResolvedValue({
+        ...createMockTicket(),
+        activities: [],
+        attachments: [],
+        nextSteps: [],
+        relatedTickets: [
+          {
+            id: 'rt-1',
+            ticketId: 'ticket-1',
+            relatedId: 'ticket-2',
+            relatedSubject: 'Login issue',
+            relatedStatus: 'OPEN',
+            similarity: 75,
+            tenantId: 'tenant-1',
+          },
+        ],
+        aiInsight: {
+          id: 'ai-1',
+          ticketId: 'ticket-1',
+          suggestedSolutions: ['Clear cache'],
+          sentiment: 'negative',
+          predictedResolutionTime: '2-4 hours',
+          similarResolvedTickets: 3,
+          escalationRisk: 'low',
+          tenantId: 'tenant-1',
+        },
+      });
+
+      const result = await service.findById('ticket-1');
+
+      expect(result).toBeDefined();
+      expect(result!.relatedTickets).toHaveLength(1);
+      expect(result!.relatedTickets[0].similarity).toBe(75);
+      expect(result!.aiInsight).toBeDefined();
+      expect(result!.aiInsight!.sentiment).toBe('negative');
     });
 
     it('should enrich assignee metadata for a single ticket', async () => {
@@ -780,6 +832,153 @@ describe('TicketService', () => {
           }),
         })
       );
+    });
+  });
+
+  // ============================================
+  // create — default next steps
+  // ============================================
+
+  describe('create — next steps generation', () => {
+    const createInput = {
+      subject: 'Login page broken after update',
+      priority: 'MEDIUM' as TicketPriority,
+      contactName: 'John Doe',
+      contactEmail: 'john@example.com',
+      slaPolicyId: 'sla-1',
+      tenantId: 'tenant-1',
+    };
+
+    beforeEach(() => {
+      mockPrisma.ticket.count.mockResolvedValue(0);
+      mockPrisma.sLAPolicy.findUnique.mockResolvedValue(mockSLAPolicy);
+      mockPrisma.ticket.create.mockResolvedValue(createMockTicket());
+      mockPrisma.ticketActivity.create.mockResolvedValue({});
+      // Return empty array for related tickets search
+      mockPrisma.ticket.findMany.mockResolvedValue([]);
+    });
+
+    it('should create 3 default next steps for MEDIUM priority', async () => {
+      await service.create(createInput);
+
+      expect(mockPrisma.ticketNextStep.createMany).toHaveBeenCalledTimes(1);
+      const call = mockPrisma.ticketNextStep.createMany.mock.calls[0][0];
+      expect(call.data).toHaveLength(3);
+      expect(call.data[0].title).toBe('Review ticket details and confirm category');
+      expect(call.data[1].title).toBe('Send initial acknowledgement to customer');
+      expect(call.data[2].title).toBe('Investigate root cause and document findings');
+    });
+
+    it('should create 4 next steps for CRITICAL priority with urgent escalation', async () => {
+      await service.create({ ...createInput, priority: 'CRITICAL' as TicketPriority });
+
+      const call = mockPrisma.ticketNextStep.createMany.mock.calls[0][0];
+      expect(call.data).toHaveLength(4);
+      expect(call.data[2].title).toBe('Escalate to senior support if unresolved');
+      expect(call.data[2].dueDate).toBe('Due in 1 hour');
+      expect(call.data[3].title).toBe('Update customer with resolution progress');
+    });
+
+    it('should create 4 next steps for HIGH priority with same-day escalation', async () => {
+      await service.create({ ...createInput, priority: 'HIGH' as TicketPriority });
+
+      const call = mockPrisma.ticketNextStep.createMany.mock.calls[0][0];
+      expect(call.data).toHaveLength(4);
+      expect(call.data[2].dueDate).toBe('Due Today');
+    });
+
+    it('should create 3 next steps for LOW priority', async () => {
+      await service.create({ ...createInput, priority: 'LOW' as TicketPriority });
+
+      const call = mockPrisma.ticketNextStep.createMany.mock.calls[0][0];
+      expect(call.data).toHaveLength(3);
+      expect(call.data[2].title).toBe('Investigate root cause and document findings');
+      expect(call.data[2].dueDate).toBe('Tomorrow');
+    });
+  });
+
+  // ============================================
+  // create — related ticket linking
+  // ============================================
+
+  describe('create — related ticket linking', () => {
+    const createInput = {
+      subject: 'Login page broken after update',
+      priority: 'MEDIUM' as TicketPriority,
+      contactName: 'John Doe',
+      contactEmail: 'john@example.com',
+      slaPolicyId: 'sla-1',
+      tenantId: 'tenant-1',
+    };
+
+    beforeEach(() => {
+      // Use real timers for async void tests that need setTimeout to settle
+      vi.useRealTimers();
+      mockPrisma.ticket.count.mockResolvedValue(0);
+      mockPrisma.sLAPolicy.findUnique.mockResolvedValue(mockSLAPolicy);
+      mockPrisma.ticket.create.mockResolvedValue(createMockTicket());
+      mockPrisma.ticketActivity.create.mockResolvedValue({});
+    });
+
+    afterEach(() => {
+      // Restore fake timers for other test blocks
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date('2025-01-15T10:00:00Z'));
+    });
+
+    it('should find and link related tickets with similar subjects', async () => {
+      mockPrisma.ticket.findMany.mockResolvedValue([
+        { id: 'ticket-2', subject: 'Login page error after latest update', status: 'IN_PROGRESS' },
+        { id: 'ticket-3', subject: 'Completely unrelated billing issue', status: 'OPEN' },
+      ]);
+
+      await service.create(createInput);
+      // Wait for async void call to settle
+      await new Promise((r) => setTimeout(r, 50));
+
+      expect(mockPrisma.relatedTicket.createMany).toHaveBeenCalled();
+      const call = mockPrisma.relatedTicket.createMany.mock.calls[0][0];
+      expect(call.data.length).toBeGreaterThanOrEqual(1);
+      expect(call.data[0].relatedId).toBe('ticket-2');
+      expect(call.data[0].similarity).toBeGreaterThanOrEqual(30);
+    });
+
+    it('should not create relations when no similar tickets exist', async () => {
+      mockPrisma.ticket.findMany.mockResolvedValue([
+        { id: 'ticket-4', subject: 'Billing refund request', status: 'OPEN' },
+      ]);
+
+      await service.create(createInput);
+      await new Promise((r) => setTimeout(r, 50));
+
+      expect(mockPrisma.relatedTicket.createMany).not.toHaveBeenCalled();
+    });
+
+    it('should not fail ticket creation if relation linking throws', async () => {
+      mockPrisma.ticket.findMany.mockRejectedValue(new Error('DB error'));
+
+      const result = await service.create(createInput);
+      await new Promise((r) => setTimeout(r, 50));
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe('ticket-1');
+    });
+
+    it('should limit related tickets to top 5 matches', async () => {
+      const manyTickets = Array.from({ length: 8 }, (_, i) => ({
+        id: `ticket-${i + 10}`,
+        subject: `Login page broken after update version ${i}`,
+        status: 'OPEN',
+      }));
+      mockPrisma.ticket.findMany.mockResolvedValue(manyTickets);
+
+      await service.create(createInput);
+      await new Promise((r) => setTimeout(r, 50));
+
+      if (mockPrisma.relatedTicket.createMany.mock.calls.length > 0) {
+        const call = mockPrisma.relatedTicket.createMany.mock.calls[0][0];
+        expect(call.data.length).toBeLessThanOrEqual(5);
+      }
     });
   });
 

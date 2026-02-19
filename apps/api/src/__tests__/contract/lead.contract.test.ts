@@ -60,7 +60,7 @@ const leadListResponseSchema = z.object({
  */
 const leadStatsResponseSchema = z.object({
   total: z.number().int().min(0),
-  byStatus: z.record(z.number().int().min(0)),
+  byStatus: z.record(z.string(), z.number().int().min(0)),
   averageScore: z.number().min(0).max(100),
 });
 

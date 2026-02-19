@@ -238,7 +238,7 @@ const timelineEventSchema = z.object({
     .nullable(),
 
   // Metadata
-  metadata: z.record(z.any()).optional().nullable(),
+  metadata: z.record(z.string(), z.any()).optional().nullable(),
   isOverdue: z.boolean().optional(),
 });
 
