@@ -24,7 +24,7 @@ const inboundEmailSchema = z.object({
   text: z.string().optional(),
   html: z.string().optional(),
   attachments: z.array(emailAttachmentSchema).default([]),
-  headers: z.record(z.string()).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
   // Webhook signature for verification (SendGrid)
   signature: z.string().optional(),
 });

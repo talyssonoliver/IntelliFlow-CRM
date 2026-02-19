@@ -40,7 +40,7 @@ export const EmailPayloadSchema = z.object({
       })
     )
     .optional(),
-  headers: z.record(z.string()).optional(),
+  headers: z.record(z.string(), z.string()).optional(),
 });
 
 export type EmailPayload = z.infer<typeof EmailPayloadSchema>;

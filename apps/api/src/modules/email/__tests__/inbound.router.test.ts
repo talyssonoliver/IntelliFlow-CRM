@@ -165,8 +165,11 @@ Hello World`;
 
   describe('listEmails', () => {
     it('should return empty list when no emails exist', async () => {
+      (prismaMock.emailRecord.findMany as any).mockResolvedValue([]);
+      (prismaMock.emailRecord.count as any).mockResolvedValue(0);
+
       const result = await protectedCaller.listEmails({
-        tenantId: 'test-tenant',
+
         limit: 20,
         offset: 0,
       });
@@ -177,8 +180,11 @@ Hello World`;
     });
 
     it('should support pagination parameters', async () => {
+      (prismaMock.emailRecord.findMany as any).mockResolvedValue([]);
+      (prismaMock.emailRecord.count as any).mockResolvedValue(0);
+
       const result = await protectedCaller.listEmails({
-        tenantId: 'test-tenant',
+
         limit: 10,
         offset: 5,
       });
@@ -188,7 +194,25 @@ Hello World`;
   });
 
   describe('processEmail', () => {
+    const mockExistingEmail = {
+      id: 'test-email-123',
+      tenantId: 'test-tenant-id',
+      messageId: '<msg-123@example.com>',
+      fromEmail: 'sender@example.com',
+      toEmail: 'inbox@intelliflow.com',
+      subject: 'Test',
+      textBody: 'test',
+      htmlBody: null,
+      status: 'received',
+      metadata: {},
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
     it('should handle archive action', async () => {
+      (prismaMock.emailRecord.findFirst as any).mockResolvedValue(mockExistingEmail);
+      (prismaMock.emailRecord.update as any).mockResolvedValue({ ...mockExistingEmail, metadata: { archived: true } });
+
       const result = await protectedCaller.processEmail({
         emailId: 'test-email-123',
         action: 'archive',
@@ -198,6 +222,9 @@ Hello World`;
     });
 
     it('should handle spam action', async () => {
+      (prismaMock.emailRecord.findFirst as any).mockResolvedValue(mockExistingEmail);
+      (prismaMock.emailRecord.update as any).mockResolvedValue({ ...mockExistingEmail, metadata: { spam: true } });
+
       const result = await protectedCaller.processEmail({
         emailId: 'test-email-123',
         action: 'spam',
@@ -207,6 +234,9 @@ Hello World`;
     });
 
     it('should handle delete action', async () => {
+      (prismaMock.emailRecord.findFirst as any).mockResolvedValue(mockExistingEmail);
+      (prismaMock.emailRecord.delete as any).mockResolvedValue(mockExistingEmail);
+
       const result = await protectedCaller.processEmail({
         emailId: 'test-email-123',
         action: 'delete',
@@ -216,6 +246,8 @@ Hello World`;
     });
 
     it('should require forwardTo for forward action', async () => {
+      (prismaMock.emailRecord.findFirst as any).mockResolvedValue(mockExistingEmail);
+
       await expect(
         protectedCaller.processEmail({
           emailId: 'test-email-123',
@@ -226,6 +258,9 @@ Hello World`;
     });
 
     it('should accept forward action with valid email', async () => {
+      (prismaMock.emailRecord.findFirst as any).mockResolvedValue(mockExistingEmail);
+      (prismaMock.emailRecord.update as any).mockResolvedValue({ ...mockExistingEmail, metadata: { forwarded: true } });
+
       const result = await protectedCaller.processEmail({
         emailId: 'test-email-123',
         action: 'forward',
@@ -238,6 +273,8 @@ Hello World`;
 
   describe('getThread', () => {
     it('should return thread with empty emails for new thread', async () => {
+      (prismaMock.emailRecord.findMany as any).mockResolvedValue([]);
+
       const result = await protectedCaller.getThread({
         threadId: 'test-thread-123',
         limit: 20,

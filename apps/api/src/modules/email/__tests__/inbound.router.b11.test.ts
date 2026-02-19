@@ -14,7 +14,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createPublicContext, createTestContext } from '../../../test/setup';
+import { createPublicContext, createTestContext, prismaMock } from '../../../test/setup';
 
 // Track parse calls for controlling behavior
 const mockParseFn = vi.hoisted(() => vi.fn());
@@ -138,7 +138,9 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
 
   describe('webhook - attachments processing', () => {
     it('should process attachments when present', async () => {
-      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      (prismaMock.emailRecord.create as any).mockResolvedValue({ id: 'stored-email-id' });
+      (prismaMock.emailAttachment.createMany as any).mockResolvedValue({ count: 2 });
+
       mockParseFn.mockReturnValue(
         defaultParsedEmail({
           attachments: [
@@ -164,16 +166,21 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
       });
 
       expect(result.success).toBe(true);
-      // processAttachments should log each attachment
-      expect(logSpy).toHaveBeenCalledWith(
-        'Processing attachment',
-        expect.objectContaining({ filename: 'doc.pdf' })
+      // processAttachments should store attachments via createMany
+      expect(prismaMock.emailAttachment.createMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.arrayContaining([
+            expect.objectContaining({ fileName: 'doc.pdf' }),
+          ]),
+        })
       );
-      expect(logSpy).toHaveBeenCalledWith(
-        'Processing attachment',
-        expect.objectContaining({ filename: 'image.png' })
+      expect(prismaMock.emailAttachment.createMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.arrayContaining([
+            expect.objectContaining({ fileName: 'image.png' }),
+          ]),
+        })
       );
-      logSpy.mockRestore();
     });
   });
 
@@ -209,8 +216,11 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
 
   describe('listEmails - with caseId filter', () => {
     it('should accept caseId parameter', async () => {
+      (prismaMock.emailRecord.findMany as any).mockResolvedValue([]);
+      (prismaMock.emailRecord.count as any).mockResolvedValue(0);
+
       const result = await protectedCaller.listEmails({
-        tenantId: 'test-tenant',
+
         caseId: 'case-123',
         limit: 20,
         offset: 0,
@@ -222,8 +232,11 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
 
   describe('listEmails - with threadId filter', () => {
     it('should accept threadId parameter', async () => {
+      (prismaMock.emailRecord.findMany as any).mockResolvedValue([]);
+      (prismaMock.emailRecord.count as any).mockResolvedValue(0);
+
       const result = await protectedCaller.listEmails({
-        tenantId: 'test-tenant',
+
         threadId: 'thread-123',
         limit: 10,
         offset: 0,

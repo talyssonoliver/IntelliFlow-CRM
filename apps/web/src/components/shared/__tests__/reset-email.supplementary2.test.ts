@@ -6,7 +6,7 @@
  * Tests exported pure functions directly without rendering components.
  * Does NOT use @testing-library/react.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // ============================================================
 // Re-implement / import-equivalent pure functions from reset-email.tsx
@@ -571,7 +571,7 @@ describe('reset-email - ForgotPasswordForm logic', () => {
     });
 
     it('handles submit error from onSubmit callback', async () => {
-      const onSubmit = async (email: string) => {
+      const onSubmit = async (_email: string) => {
         throw new Error('Rate limited');
       };
 
