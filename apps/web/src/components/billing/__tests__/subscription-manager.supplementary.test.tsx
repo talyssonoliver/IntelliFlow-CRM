@@ -18,9 +18,22 @@
  * - Plan change confirmation flow
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+
+// Polyfill pointer capture methods for Radix UI Select in jsdom
+beforeAll(() => {
+  if (!Element.prototype.hasPointerCapture) {
+    Element.prototype.hasPointerCapture = () => false;
+  }
+  if (!Element.prototype.setPointerCapture) {
+    Element.prototype.setPointerCapture = () => {};
+  }
+  if (!Element.prototype.releasePointerCapture) {
+    Element.prototype.releasePointerCapture = () => {};
+  }
+});
 
 // ============================================
 // Hoisted mocks
@@ -141,18 +154,41 @@ vi.mock('@/lib/billing/stripe-portal', () => ({
         features: [],
         popular: false,
       };
+    if (priceId.includes('ent'))
+      return {
+        id: 'enterprise',
+        name: 'Enterprise',
+        description: 'Full plan',
+        priceId,
+        currency: 'gbp',
+        features: [
+          { name: 'AI Scoring', included: true },
+          { name: 'Custom Reports', included: true },
+        ],
+        popular: false,
+      };
     return null;
   },
   getAnnualSavingsPercent: () => 20,
 }));
 
+// Control mock behavior for canChangeToPlan
+const mockCanChangeAllowed = vi.hoisted(() => ({ value: true }));
+
 vi.mock('@/lib/billing/plan-changes', () => ({
   comparePlans: (currentId: string | null, targetId: string) => {
     if (!currentId || currentId === targetId) return null;
+    // Downgrade when going from higher to lower tier
+    const tierOrder = ['starter', 'professional', 'enterprise'];
+    const currentTier = tierOrder.indexOf(currentId);
+    const targetTier = tierOrder.indexOf(targetId);
+    const isDowngrade = targetTier < currentTier;
     return {
-      direction: 'upgrade' as const,
-      priceDifference: 2000,
-      featureChanges: [{ name: 'AI Scoring', change: 'gained' }],
+      direction: isDowngrade ? ('downgrade' as const) : ('upgrade' as const),
+      priceDifference: isDowngrade ? -2000 : 2000,
+      featureChanges: isDowngrade
+        ? [{ name: 'AI Scoring', change: 'lost' }]
+        : [{ name: 'AI Scoring', change: 'gained' }],
     };
   },
   getPlanChangeDirectionDisplay: (direction: string) => ({
@@ -161,13 +197,13 @@ vi.mock('@/lib/billing/plan-changes', () => ({
     description: direction === 'upgrade' ? 'Upgrade your plan' : 'Downgrade your plan',
   }),
   formatPriceDifference: (diff: number, _currency: string) => ({
-    formatted: `+£${(diff / 100).toFixed(0)}/mo`,
+    formatted: diff > 0 ? `+£${(diff / 100).toFixed(0)}/mo` : `-£${(Math.abs(diff) / 100).toFixed(0)}/mo`,
     isIncrease: diff > 0,
     isDecrease: diff < 0,
   }),
   canChangeToPlan: (_currentId: string | null, _targetId: string, _quantity: number) => ({
-    allowed: true,
-    reason: null,
+    allowed: mockCanChangeAllowed.value,
+    reason: mockCanChangeAllowed.value ? null : 'User limit exceeded',
   }),
   getCancellationInfo: (periodEnd: Date, _status: string) => ({
     effectiveDate: periodEnd.toISOString(),
@@ -181,6 +217,7 @@ vi.mock('@/lib/billing/plan-changes', () => ({
       name: 'Starter',
       description: 'Basic',
       priceId: 'price_starter_monthly',
+      priceMonthly: 2900,
       currency: 'gbp',
       features: [{ name: 'Basic CRM', included: true }],
       popular: false,
@@ -192,6 +229,7 @@ vi.mock('@/lib/billing/plan-changes', () => ({
       name: 'Professional',
       description: 'Advanced',
       priceId: 'price_pro_monthly',
+      priceMonthly: 7900,
       currency: 'gbp',
       features: [{ name: 'AI Scoring', included: true }],
       popular: true,
@@ -203,6 +241,7 @@ vi.mock('@/lib/billing/plan-changes', () => ({
       name: 'Enterprise',
       description: 'Full',
       priceId: 'price_ent_monthly',
+      priceMonthly: 19900,
       currency: 'gbp',
       features: [{ name: 'Custom Reports', included: true }],
       popular: false,
@@ -219,6 +258,25 @@ vi.mock('@/lib/billing/plan-changes', () => ({
     formattedPerMonth: '£79/mo',
     savings: interval === 'annual' ? 'Save 20%' : undefined,
   }),
+  estimateProration: (_fromPlan: any, _toPlan: any, daysRemaining: number, _totalDays: number) =>
+    Math.round(daysRemaining * 50),
+  getDaysRemainingInPeriod: (_periodEnd: Date) => 15,
+  CANCELLATION_REASONS: [
+    'too_expensive',
+    'missing_features',
+    'switching_competitor',
+    'no_longer_needed',
+    'technical_issues',
+    'other',
+  ] as const,
+  CANCELLATION_REASON_LABELS: {
+    too_expensive: 'Too expensive',
+    missing_features: 'Missing features I need',
+    switching_competitor: 'Switching to a competitor',
+    no_longer_needed: 'No longer need a CRM',
+    technical_issues: 'Technical issues',
+    other: 'Other',
+  },
 }));
 
 import { SubscriptionManager } from '../subscription-manager';
@@ -453,6 +511,296 @@ describe('SubscriptionManager', () => {
 
       // Cancel dialog should not render
       expect(screen.queryByText(/are you sure you want to cancel/i)).not.toBeInTheDocument();
+    });
+  });
+
+  // ============================================
+  // T1-T10: Coverage expansion tests
+  // ============================================
+
+  describe('ChangePlanDialog interaction', () => {
+    it('T1: opens ChangePlanDialog when clicking a non-current plan card', async () => {
+      const user = userEvent.setup();
+      render(<SubscriptionManager subscription={mockActiveSubscription} />);
+
+      // Click on Enterprise plan (non-current)
+      const enterpriseBtn = screen.getByRole('button', { name: /upgrade to enterprise/i });
+      await user.click(enterpriseBtn);
+
+      // Dialog should show price change info
+      expect(screen.getByText('Price Change')).toBeInTheDocument();
+    });
+
+    it('T2: confirm plan change calls updateSubscription.mutate with priceId', async () => {
+      const user = userEvent.setup();
+      render(
+        <SubscriptionManager
+          subscription={mockActiveSubscription}
+          onPlanChange={mockOnPlanChange}
+        />
+      );
+
+      // Click Enterprise plan
+      const enterpriseBtn = screen.getByRole('button', { name: /upgrade to enterprise/i });
+      await user.click(enterpriseBtn);
+
+      // Confirm the change
+      const confirmBtn = screen.getByRole('button', { name: /confirm upgrade/i });
+      await user.click(confirmBtn);
+
+      expect(mockMutateUpdate).toHaveBeenCalledWith({ priceId: 'price_ent_monthly' });
+    });
+
+    it('T3: toggle to annual then confirm sends _annual priceId', async () => {
+      const user = userEvent.setup();
+      render(
+        <SubscriptionManager
+          subscription={mockActiveSubscription}
+          onPlanChange={mockOnPlanChange}
+        />
+      );
+
+      // Toggle to annual
+      await user.click(screen.getByText('Annual'));
+
+      // Click Enterprise plan
+      const enterpriseBtn = screen.getByRole('button', { name: /upgrade to enterprise/i });
+      await user.click(enterpriseBtn);
+
+      // Confirm the change
+      const confirmBtn = screen.getByRole('button', { name: /confirm upgrade/i });
+      await user.click(confirmBtn);
+
+      expect(mockMutateUpdate).toHaveBeenCalledWith({ priceId: 'price_ent_annual' });
+    });
+
+    it('T9: downgrade plan shows "Features You\'ll Lose" and period-end text', async () => {
+      const user = userEvent.setup();
+      // Use enterprise subscription so Starter is a downgrade
+      const enterpriseSub = {
+        ...mockActiveSubscription,
+        priceId: 'price_ent_monthly',
+      };
+      render(<SubscriptionManager subscription={enterpriseSub} />);
+
+      // Click Starter plan (downgrade from Enterprise)
+      const starterBtn = screen.getByRole('button', { name: /downgrade to starter/i });
+      await user.click(starterBtn);
+
+      expect(screen.getByText(/features you.ll lose/i)).toBeInTheDocument();
+      expect(screen.getByText(/end of your current billing period/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('Mutation callbacks', () => {
+    it('T4: updateSubscription.onSuccess closes dialog and calls onPlanChange', async () => {
+      const user = userEvent.setup();
+      render(
+        <SubscriptionManager
+          subscription={mockActiveSubscription}
+          onPlanChange={mockOnPlanChange}
+        />
+      );
+
+      // Click Enterprise plan to open dialog
+      const enterpriseBtn = screen.getByRole('button', { name: /upgrade to enterprise/i });
+      await user.click(enterpriseBtn);
+
+      // Dialog should be open
+      expect(screen.getByText('Price Change')).toBeInTheDocument();
+
+      // Simulate onSuccess callback
+      const opts = (mockUpdateSubscription as any)._opts;
+      opts?.onSuccess?.();
+
+      expect(mockOnPlanChange).toHaveBeenCalled();
+    });
+
+    it('T5: cancelSubscription.onSuccess closes dialog and calls onPlanChange', async () => {
+      const user = userEvent.setup();
+      render(
+        <SubscriptionManager
+          subscription={mockActiveSubscription}
+          onPlanChange={mockOnPlanChange}
+        />
+      );
+
+      // Open cancel dialog
+      await user.click(screen.getByRole('button', { name: /cancel subscription/i }));
+
+      // Simulate onSuccess callback
+      const opts = (mockCancelSubscription as any)._opts;
+      opts?.onSuccess?.();
+
+      expect(mockOnPlanChange).toHaveBeenCalled();
+    });
+  });
+
+  describe('Loading states', () => {
+    it('T6: shows "Processing..." spinner in ChangePlanDialog when isPending', async () => {
+      const user = userEvent.setup();
+      mockUpdateSubscription.isPending = true;
+
+      render(<SubscriptionManager subscription={mockActiveSubscription} />);
+
+      const enterpriseBtn = screen.getByRole('button', { name: /upgrade to enterprise/i });
+      await user.click(enterpriseBtn);
+
+      expect(screen.getByText('Processing...')).toBeInTheDocument();
+
+      mockUpdateSubscription.isPending = false;
+    });
+
+    it('T7: shows "Cancelling..." spinner in CancelDialog when isPending', async () => {
+      const user = userEvent.setup();
+      mockCancelSubscription.isPending = true;
+
+      render(<SubscriptionManager subscription={mockActiveSubscription} />);
+
+      await user.click(screen.getByRole('button', { name: /cancel subscription/i }));
+
+      expect(screen.getByText('Cancelling...')).toBeInTheDocument();
+
+      mockCancelSubscription.isPending = false;
+    });
+  });
+
+  describe('Disabled plan cards', () => {
+    it('T8: plan card shows disabled styling when canChangeToPlan returns false', () => {
+      mockCanChangeAllowed.value = false;
+
+      render(<SubscriptionManager subscription={mockActiveSubscription} />);
+
+      // Look for opacity-50 in plan cards (disabled styling)
+      const starterCard = screen.getByText('Starter').closest('[class*="Card"]')?.parentElement;
+      expect(starterCard?.innerHTML).toContain('opacity-50');
+
+      mockCanChangeAllowed.value = true;
+    });
+  });
+
+  describe('Fallback text', () => {
+    it('T10: shows "Current Plan" fallback when getPlanByPriceId returns null', () => {
+      const unknownSub = {
+        ...mockActiveSubscription,
+        priceId: 'price_unknown_plan',
+      };
+
+      render(<SubscriptionManager subscription={unknownSub} />);
+
+      expect(screen.getByText('Current Plan')).toBeInTheDocument();
+    });
+  });
+
+  describe('Status badge variants', () => {
+    it('T14a: trialing status renders "Trial" badge', () => {
+      const trialSub = {
+        ...mockActiveSubscription,
+        status: 'trialing' as const,
+      };
+
+      render(<SubscriptionManager subscription={trialSub} />);
+
+      expect(screen.getByText('Trial')).toBeInTheDocument();
+    });
+
+    it('T14b: past_due status renders "Past Due" badge', () => {
+      const pastDueSub = {
+        ...mockActiveSubscription,
+        status: 'past_due' as const,
+      };
+
+      render(<SubscriptionManager subscription={pastDueSub} />);
+
+      expect(screen.getByText('Past Due')).toBeInTheDocument();
+    });
+  });
+
+  // ============================================
+  // T11-T13: New feature tests (C1, C2, C3)
+  // ============================================
+
+  describe('Reactivation (C2)', () => {
+    it('T11: shows reactivation button when cancelAtPeriodEnd is true', () => {
+      const cancelledSub = {
+        ...mockActiveSubscription,
+        cancelAtPeriodEnd: true,
+      };
+
+      render(<SubscriptionManager subscription={cancelledSub} />);
+
+      expect(screen.getByRole('button', { name: /reactivate subscription/i })).toBeInTheDocument();
+    });
+
+    it('T11b: clicking reactivation calls updateSubscription.mutate with cancelAtPeriodEnd: false', async () => {
+      const user = userEvent.setup();
+      const cancelledSub = {
+        ...mockActiveSubscription,
+        cancelAtPeriodEnd: true,
+      };
+
+      render(
+        <SubscriptionManager
+          subscription={cancelledSub}
+          onPlanChange={mockOnPlanChange}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /reactivate subscription/i }));
+
+      expect(mockMutateUpdate).toHaveBeenCalledWith({ cancelAtPeriodEnd: false });
+    });
+  });
+
+  describe('Cancellation reason (C1)', () => {
+    it('T12: cancel dialog shows reason selector', async () => {
+      const user = userEvent.setup();
+      render(<SubscriptionManager subscription={mockActiveSubscription} />);
+
+      await user.click(screen.getByRole('button', { name: /cancel subscription/i }));
+
+      // Look for the cancellation reason selector
+      expect(screen.getByLabelText(/cancellation reason/i)).toBeInTheDocument();
+    });
+
+    it('T12b: selected reason is forwarded in cancel mutation', async () => {
+      const user = userEvent.setup();
+      render(
+        <SubscriptionManager
+          subscription={mockActiveSubscription}
+          onPlanChange={mockOnPlanChange}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /cancel subscription/i }));
+
+      // Select a reason using native select
+      const selectEl = screen.getByLabelText(/cancellation reason/i);
+      await user.selectOptions(selectEl, 'too_expensive');
+
+      // Confirm cancellation
+      const confirmBtn = screen.getByRole('button', { name: /cancel at period end/i });
+      await user.click(confirmBtn);
+
+      expect(mockMutateCancel).toHaveBeenCalledWith({
+        atPeriodEnd: true,
+        reason: 'too_expensive',
+      });
+    });
+  });
+
+  describe('Proration estimate (C3)', () => {
+    it('T13: upgrade dialog shows estimated proration amount', async () => {
+      const user = userEvent.setup();
+      render(<SubscriptionManager subscription={mockActiveSubscription} />);
+
+      // Click Enterprise plan (upgrade)
+      const enterpriseBtn = screen.getByRole('button', { name: /upgrade to enterprise/i });
+      await user.click(enterpriseBtn);
+
+      // Should show estimated proration text
+      expect(screen.getByText(/estimated charge today/i)).toBeInTheDocument();
+      expect(screen.getByText(/prorated for.*remaining days/i)).toBeInTheDocument();
     });
   });
 });

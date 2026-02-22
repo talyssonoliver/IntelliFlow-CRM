@@ -8,6 +8,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import type { CasePriority } from '@intelliflow/domain';
 import { CASE_PRIORITIES } from '@intelliflow/domain';
 import { api } from '@/lib/api';
@@ -109,12 +110,11 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
   }, [clientDropdownOpen]);
 
   // ── Team assignees query ─────────────────────────────────────────────────
-  const assigneesQuery = (api as Record<string, any>).cases?.assignees?.useQuery?.(undefined, {
+  const assigneesQuery = api.cases.assignees.useQuery(undefined, {
     staleTime: 5 * 60 * 1000,
-  }) ?? { data: [], isLoading: false };
+  });
 
-  const teamMembers: Array<{ id: string; name: string; title: string; avatar: string | null }> =
-    (assigneesQuery.data as any[]) ?? [];
+  const teamMembers = assigneesQuery.data ?? [];
 
   const contactQuery = api.contact.list.useQuery(
     { search: debouncedClientSearch, limit: 5, page: 1 },
@@ -122,11 +122,11 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
   );
 
   const clientResults: Array<{ id: string; name: string; email?: string; company?: string }> =
-    ((contactQuery.data as any)?.contacts ?? []).map((c: any) => ({
+    (contactQuery.data?.contacts ?? []).map((c) => ({
       id: c.id,
       name: [c.firstName, c.lastName].filter(Boolean).join(' '),
-      email: c.email,
-      company: c.account?.name ?? c.company,
+      email: c.email ?? undefined,
+      company: (c as { account?: { name?: string } }).account?.name ?? undefined,
     }));
 
   function handleClientSelect(id: string, name: string) {
@@ -406,9 +406,9 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
             ) : (
               <p id="client-help" className="text-xs text-muted-foreground mt-1.5 italic">
                 Type to search existing clients or{' '}
-                <a href="/contacts/new" className="text-primary hover:underline">
+                <Link href="/contacts/new" className="text-primary hover:underline">
                   create a new one
-                </a>
+                </Link>
                 .
               </p>
             )}

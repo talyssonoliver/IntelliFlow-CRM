@@ -13,6 +13,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Skeleton, cn } from '@intelliflow/ui';
 import {
   getStatusConfig,
@@ -83,7 +84,7 @@ function Avatar({ name, url, size = 'sm' }: { name: string; url?: string; size?:
   const sizeClass = size === 'md' ? 'size-8' : 'size-5';
   const textSize = size === 'md' ? 'text-[10px]' : 'text-[8px]';
   if (url) {
-    return <img src={url} alt={name} className={cn(sizeClass, 'rounded-full object-cover')} />;
+    return <Image src={url} alt={name} width={size === 'md' ? 32 : 20} height={size === 'md' ? 32 : 20} className={cn(sizeClass, 'rounded-full object-cover')} unoptimized />;
   }
   return (
     <div

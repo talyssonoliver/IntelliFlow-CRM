@@ -47,6 +47,10 @@ import {
   getPlansWithSelectionState,
   getBillingIntervals,
   getPlanPriceForInterval,
+  estimateProration,
+  getDaysRemainingInPeriod,
+  CANCELLATION_REASONS,
+  CANCELLATION_REASON_LABELS,
 } from '@/lib/billing/plan-changes';
 
 // ============================================
@@ -94,9 +98,11 @@ type BillingInterval = 'monthly' | 'annual';
 function CurrentPlanCard({
   subscription,
   onCancelClick,
+  onReactivate,
 }: {
   subscription: Subscription;
   onCancelClick: () => void;
+  onReactivate: () => void;
 }) {
   const statusDisplay = getSubscriptionStatusDisplay(subscription.status);
   const currentPlan = getPlanByPriceId(subscription.priceId);
@@ -160,6 +166,15 @@ function CurrentPlanCard({
                 </p>
               </div>
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onReactivate}
+              className="mt-3 border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
+            >
+              <span className="material-symbols-outlined mr-2 text-lg">refresh</span>
+              Reactivate Subscription
+            </Button>
           </div>
         )}
 
@@ -342,6 +357,7 @@ function ChangePlanDialog({
   targetPlan,
   isLoading,
   onConfirm,
+  subscription,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -349,6 +365,7 @@ function ChangePlanDialog({
   targetPlan: Plan | null;
   isLoading: boolean;
   onConfirm: () => void;
+  subscription?: Subscription | null;
 }) {
   if (!targetPlan) return null;
 
@@ -357,6 +374,23 @@ function ChangePlanDialog({
 
   const directionDisplay = getPlanChangeDirectionDisplay(comparison.direction);
   const priceDiff = formatPriceDifference(comparison.priceDifference, targetPlan.currency);
+
+  // Proration estimate for upgrades
+  // Note: client-side estimate using monthly price; actual charge computed by Stripe at mutation time
+  let prorationText: string | null = null;
+  if (comparison.direction === 'upgrade' && subscription && currentPlanId) {
+    const currentPlan = getPlanById(currentPlanId);
+    if (currentPlan) {
+      const periodEnd = new Date(subscription.currentPeriodEnd);
+      const periodStart = new Date(subscription.currentPeriodStart);
+      const daysRemaining = getDaysRemainingInPeriod(periodEnd);
+      const totalDays = Math.ceil(
+        (periodEnd.getTime() - periodStart.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      const prorationAmount = estimateProration(currentPlan, targetPlan, daysRemaining, totalDays);
+      prorationText = `Estimated charge today: £${(prorationAmount / 100).toFixed(2)} (prorated for ${daysRemaining} remaining days)`;
+    }
+  }
 
   const gainedFeatures = comparison.featureChanges.filter((f) => f.change === 'gained');
   const lostFeatures = comparison.featureChanges.filter((f) => f.change === 'lost');
@@ -395,6 +429,14 @@ function ChangePlanDialog({
               </span>
             </div>
           </div>
+
+          {prorationText && (
+            <div className="rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                {prorationText}
+              </p>
+            </div>
+          )}
 
           {gainedFeatures.length > 0 && (
             <div>
@@ -479,8 +521,10 @@ function CancelDialog({
   onOpenChange: (open: boolean) => void;
   subscription: Subscription | null;
   isLoading: boolean;
-  onConfirm: (atPeriodEnd: boolean) => void;
+  onConfirm: (atPeriodEnd: boolean, reason?: string) => void;
 }) {
+  const [reason, setReason] = useState<string>('');
+
   if (!subscription) return null;
 
   const cancellationInfo = getCancellationInfo(
@@ -531,6 +575,29 @@ function CancelDialog({
               <li>Workflow automation</li>
             </ul>
           </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="cancellation-reason"
+              className="text-sm font-medium text-slate-700 dark:text-slate-300"
+            >
+              Cancellation reason
+            </label>
+            <select
+              id="cancellation-reason"
+              aria-label="Cancellation reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <option value="">Select a reason (optional)</option>
+              {CANCELLATION_REASONS.map((r) => (
+                <option key={r} value={r}>
+                  {CANCELLATION_REASON_LABELS[r]}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <DialogFooter className="flex-col gap-2 sm:flex-row">
@@ -543,7 +610,7 @@ function CancelDialog({
           </Button>
           <Button
             variant="destructive"
-            onClick={() => onConfirm(true)}
+            onClick={() => onConfirm(true, reason || undefined)}
             disabled={isLoading}
             className="w-full sm:w-auto"
           >
@@ -686,8 +753,8 @@ export function SubscriptionManager({
   }, [selectedPlan, interval, updateSubscription]);
 
   const handleCancelSubscription = useCallback(
-    (atPeriodEnd: boolean) => {
-      cancelSubscription.mutate({ atPeriodEnd });
+    (atPeriodEnd: boolean, reason?: string) => {
+      cancelSubscription.mutate({ atPeriodEnd, reason });
     },
     [cancelSubscription]
   );
@@ -704,6 +771,7 @@ export function SubscriptionManager({
         <CurrentPlanCard
           subscription={subscription}
           onCancelClick={() => setShowCancelDialog(true)}
+          onReactivate={() => updateSubscription.mutate({ cancelAtPeriodEnd: false })}
         />
       ) : (
         <NoSubscriptionState onSelectPlan={() => setShowPlanSelector(true)} />
@@ -759,6 +827,7 @@ export function SubscriptionManager({
         targetPlan={selectedPlan ?? null}
         isLoading={updateSubscription.isPending}
         onConfirm={handleConfirmChange}
+        subscription={subscription}
       />
 
       {/* Cancel Dialog */}

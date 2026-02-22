@@ -2,10 +2,9 @@
 
 import {
   SidebarProvider,
-  AppSidebar,
   SidebarInset,
   SidebarTrigger,
-  MobileSidebar,
+  SidebarWithSuspense,
   ticketsSidebarConfig,
   SidebarPortalProvider,
   SidebarPortalTarget,
@@ -18,14 +17,10 @@ export default function TicketsListLayout({ children }: { children: React.ReactN
     <SidebarPortalProvider>
       <SidebarProvider>
         <div className="flex min-h-[calc(100vh-4rem)]">
-          {/* Left Sidebar - Ticket Management & Configuration (Desktop) */}
-          <AppSidebar config={ticketsSidebarConfig} />
+          <SidebarWithSuspense config={ticketsSidebarConfig} />
 
           {/* Portal target for page-injected sidebar content */}
           <SidebarPortalTarget />
-
-          {/* Mobile Sidebar Drawer */}
-          <MobileSidebar config={ticketsSidebarConfig} />
 
           {/* Main Content */}
           <SidebarInset>

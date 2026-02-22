@@ -2,10 +2,9 @@
 
 import {
   SidebarProvider,
-  AppSidebar,
   SidebarInset,
   SidebarTrigger,
-  MobileSidebar,
+  SidebarWithSuspense,
   tasksSidebarConfig,
 } from '@/components/sidebar';
 
@@ -13,11 +12,7 @@ export default function TasksListLayout({ children }: { readonly children: React
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">
-        {/* Desktop Sidebar */}
-        <AppSidebar config={tasksSidebarConfig} />
-
-        {/* Mobile Sidebar Drawer */}
-        <MobileSidebar config={tasksSidebarConfig} />
+        <SidebarWithSuspense config={tasksSidebarConfig} />
 
         <SidebarInset>
           <main

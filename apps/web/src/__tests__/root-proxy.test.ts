@@ -1,6 +1,6 @@
 /**
  * Tests for apps/web/proxy.ts (root proxy)
- * Covers: proxy function, matchesPattern, config, role-based access
+ * Covers: proxy function, matchesPattern, proxyConfig, role-based access
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -41,7 +41,7 @@ vi.mock('next/server', () => ({
   },
 }));
 
-import { proxy, config } from '../../proxy';
+import { proxy, proxyConfig } from '../../proxy';
 
 function mkReq(
   path: string,
@@ -213,10 +213,10 @@ describe('root proxy.ts', () => {
     });
   });
 
-  describe('config', () => {
+  describe('proxyConfig', () => {
     it('has matcher', () => {
-      expect(config.matcher).toBeDefined();
-      expect(config.matcher[0]).toContain('api');
+      expect(proxyConfig.matcher).toBeDefined();
+      expect(proxyConfig.matcher[0]).toContain('api');
     });
   });
 });

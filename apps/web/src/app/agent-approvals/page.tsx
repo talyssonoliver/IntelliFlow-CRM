@@ -1075,7 +1075,7 @@ function AgentApprovalsContent() {
               </p>
             </div>
           </div>
-          <div className="text-xs text-slate-500 dark:text-slate-400">
+          <div className="text-xs text-slate-500 dark:text-slate-400" suppressHydrationWarning>
             Last refresh: {new Date().toLocaleTimeString()}
           </div>
         </div>

@@ -2,10 +2,9 @@
 
 import {
   SidebarProvider,
-  AppSidebar,
   SidebarInset,
   SidebarTrigger,
-  MobileSidebar,
+  SidebarWithSuspense,
   agentApprovalsSidebarConfig,
 } from '@/components/sidebar';
 import { ModuleGate } from '@/components/ModuleGate';
@@ -15,11 +14,7 @@ export default function AgentApprovalsLayout({ children }: { readonly children: 
     <ModuleGate moduleId="AI_INTELLIGENCE">
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">
-        {/* Desktop Sidebar */}
-        <AppSidebar config={agentApprovalsSidebarConfig} />
-
-        {/* Mobile Sidebar Drawer */}
-        <MobileSidebar config={agentApprovalsSidebarConfig} />
+        <SidebarWithSuspense config={agentApprovalsSidebarConfig} />
 
         <SidebarInset>
           <main

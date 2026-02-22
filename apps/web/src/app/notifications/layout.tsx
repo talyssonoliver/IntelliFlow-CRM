@@ -2,10 +2,9 @@
 
 import {
   SidebarProvider,
-  AppSidebar,
   SidebarInset,
   SidebarTrigger,
-  MobileSidebar,
+  SidebarWithSuspense,
   notificationsSidebarConfig,
 } from '@/components/sidebar';
 
@@ -13,11 +12,7 @@ export default function NotificationsLayout({ children }: { readonly children: R
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">
-        {/* Desktop Sidebar */}
-        <AppSidebar config={notificationsSidebarConfig} />
-
-        {/* Mobile Sidebar Drawer */}
-        <MobileSidebar config={notificationsSidebarConfig} />
+        <SidebarWithSuspense config={notificationsSidebarConfig} />
 
         <SidebarInset>
           <main

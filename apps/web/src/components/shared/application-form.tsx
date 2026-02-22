@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 
 interface Position {
@@ -223,9 +224,9 @@ export function ApplicationForm({ positions }: ApplicationFormProps) {
           />
           <label htmlFor="privacy" className="text-sm text-slate-600 dark:text-slate-300">
             I agree to the{' '}
-            <a href="/privacy" className="text-[#137fec] hover:underline">
+            <Link href="/privacy" className="text-[#137fec] hover:underline">
               Privacy Policy
-            </a>{' '}
+            </Link>{' '}
             and consent to IntelliFlow processing my data for recruitment purposes.
           </label>
         </div>

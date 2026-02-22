@@ -89,12 +89,22 @@ export interface InvoiceDetailData {
     postalCode?: string;
     country?: string;
   };
+  // PG-028 additions
+  invoiceNumber?: string;
+  totalAmount?: number;
+  taxBreakdown?: {
+    amount: number;
+    rate: number;
+    type: 'VAT' | 'SALES_TAX' | 'GST' | 'NONE';
+    jurisdiction?: string;
+  };
 }
 
 export interface InvoiceDetailProps {
   invoice: InvoiceDetailData | null;
   isLoading: boolean;
   error?: string | null;
+  onPayNow?: (invoiceId: string) => Promise<void>;
 }
 
 // ============================================
@@ -111,11 +121,22 @@ function StatusBadge({ status }: { status: string }) {
     default: 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300',
   };
 
+  const variantIcons: Record<StatusVariant, string> = {
+    success: 'check_circle',
+    warning: 'schedule',
+    error: 'cancel',
+    default: 'edit_note',
+  };
+
   return (
     <Badge
-      className={`${variantClasses[variant]} border-0 font-medium text-sm px-3 py-1`}
+      className={`${variantClasses[variant]} border-0 font-medium text-sm px-3 py-1 gap-1`}
       variant="outline"
+      data-testid="status-badge"
     >
+      <span className="material-symbols-outlined text-sm" aria-hidden="true">
+        {variantIcons[variant]}
+      </span>
       {label}
     </Badge>
   );
@@ -149,8 +170,9 @@ function ActionButton({
       onClick={onClick}
       disabled={disabled || loading}
       className="gap-2"
+      aria-label={label}
     >
-      <span className={`material-symbols-outlined text-lg ${loading ? 'animate-spin' : ''}`}>
+      <span className={`material-symbols-outlined text-lg ${loading ? 'animate-spin' : ''}`} aria-hidden="true">
         {loading ? 'progress_activity' : icon}
       </span>
       {label}
@@ -309,11 +331,54 @@ function LineItemsTable({ items, currency }: { items: InvoiceLineItem[]; currenc
 }
 
 // ============================================
+// Tax Breakdown Section
+// ============================================
+
+function TaxBreakdownSection({
+  taxBreakdown,
+  currency,
+}: {
+  taxBreakdown: NonNullable<InvoiceDetailData['taxBreakdown']>;
+  currency: string;
+}) {
+  if (taxBreakdown.type === 'NONE' || taxBreakdown.rate === 0) {
+    return null;
+  }
+
+  const typeLabels: Record<string, string> = {
+    VAT: 'VAT',
+    SALES_TAX: 'Sales Tax',
+    GST: 'GST',
+  };
+
+  const label = typeLabels[taxBreakdown.type] ?? taxBreakdown.type;
+
+  return (
+    <div className="flex justify-between text-sm py-2" data-testid="tax-breakdown">
+      <span className="text-slate-500 dark:text-slate-400">
+        {label} ({taxBreakdown.rate}%)
+        {taxBreakdown.jurisdiction && (
+          <span className="text-slate-400 dark:text-slate-500"> — {taxBreakdown.jurisdiction}</span>
+        )}
+      </span>
+      <span className="text-slate-900 dark:text-white">
+        {formatCurrency(taxBreakdown.amount, currency)}
+      </span>
+    </div>
+  );
+}
+
+// ============================================
 // Totals Section
 // ============================================
 
 function TotalsSection({ invoice }: { invoice: InvoiceDetailData }) {
-  const { currency, subtotal, tax, discount, amountDue, amountPaid } = invoice;
+  const { currency, subtotal, tax, discount, amountDue, amountPaid, totalAmount } = invoice;
+
+  // Total = totalAmount if provided, else compute from subtotal + tax - discount, else amountDue
+  const computedTotal =
+    totalAmount ??
+    (subtotal != null ? subtotal + (tax ?? 0) - (discount ?? 0) : amountDue);
 
   return (
     <div className="space-y-2 border-t border-slate-200 dark:border-slate-800 pt-4">
@@ -342,14 +407,14 @@ function TotalsSection({ invoice }: { invoice: InvoiceDetailData }) {
         </div>
       )}
 
-      <div className="flex justify-between text-base font-semibold pt-2 border-t border-slate-200 dark:border-slate-700">
+      <div className="flex justify-between text-base font-semibold pt-2 border-t border-slate-200 dark:border-slate-700" data-testid="totals-total">
         <span className="text-slate-900 dark:text-white">Total</span>
         <span className="text-slate-900 dark:text-white">
-          {formatCurrency(amountDue, currency)}
+          {formatCurrency(computedTotal, currency)}
         </span>
       </div>
 
-      {amountPaid > 0 && amountPaid !== amountDue && (
+      {amountPaid > 0 && amountPaid !== computedTotal && (
         <>
           <div className="flex justify-between text-sm">
             <span className="text-slate-500 dark:text-slate-400">Amount Paid</span>
@@ -360,7 +425,7 @@ function TotalsSection({ invoice }: { invoice: InvoiceDetailData }) {
           <div className="flex justify-between text-base font-semibold">
             <span className="text-slate-900 dark:text-white">Balance Due</span>
             <span className="text-slate-900 dark:text-white">
-              {formatCurrency(amountDue - amountPaid, currency)}
+              {formatCurrency(amountDue, currency)}
             </span>
           </div>
         </>
@@ -373,7 +438,7 @@ function TotalsSection({ invoice }: { invoice: InvoiceDetailData }) {
 // Main Component
 // ============================================
 
-export function InvoiceDetail({ invoice, isLoading, error }: InvoiceDetailProps) {
+export function InvoiceDetail({ invoice, isLoading, error, onPayNow }: InvoiceDetailProps) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<{
     type: 'success' | 'error';
@@ -423,6 +488,24 @@ export function InvoiceDetail({ invoice, isLoading, error }: InvoiceDetailProps)
     }
   }, [invoice, showMessage]);
 
+  const handlePayNow = useCallback(async () => {
+    if (!invoice || !onPayNow) return;
+    // Prefer hosted payment page (minimizes PCI scope)
+    if (invoice.hostedInvoiceUrl) {
+      window.open(invoice.hostedInvoiceUrl, '_blank', 'noopener,noreferrer');
+      return;
+    }
+    setActionLoading('pay');
+    try {
+      await onPayNow(invoice.id);
+      showMessage('success', 'Payment initiated successfully');
+    } catch (err) {
+      showMessage('error', err instanceof Error ? err.message : 'Payment failed');
+    } finally {
+      setActionLoading(null);
+    }
+  }, [invoice, onPayNow, showMessage]);
+
   if (isLoading) {
     return <InvoiceDetailSkeleton />;
   }
@@ -435,10 +518,9 @@ export function InvoiceDetail({ invoice, isLoading, error }: InvoiceDetailProps)
     return <NotFoundState />;
   }
 
-  // Format invoice ID for display
-  const displayId = invoice.id.includes('_')
-    ? invoice.id.split('_').pop()
-    : invoice.id.slice(0, 12);
+  // Format invoice ID for display — prefer invoiceNumber from Stripe
+  const displayId = invoice.invoiceNumber
+    ?? (invoice.id.includes('_') ? invoice.id.split('_').pop() : invoice.id.slice(0, 12));
 
   const canView = hasViewableUrl(invoice as InvoiceData);
 
@@ -526,6 +608,15 @@ export function InvoiceDetail({ invoice, isLoading, error }: InvoiceDetailProps)
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-200 dark:border-slate-800">
+            {invoice.status === 'open' && invoice.amountRemaining > 0 && onPayNow && (
+              <ActionButton
+                icon="payment"
+                label="Pay Now"
+                onClick={handlePayNow}
+                loading={actionLoading === 'pay'}
+                variant="default"
+              />
+            )}
             {canView && (
               <>
                 <ActionButton
@@ -620,6 +711,11 @@ export function InvoiceDetail({ invoice, isLoading, error }: InvoiceDetailProps)
         </CardHeader>
         <CardContent>
           <LineItemsTable items={invoice.lineItems || []} currency={invoice.currency} />
+          {invoice.taxBreakdown && (
+            <div className="mt-4 max-w-sm ml-auto">
+              <TaxBreakdownSection taxBreakdown={invoice.taxBreakdown} currency={invoice.currency} />
+            </div>
+          )}
           <div className="mt-6 max-w-sm ml-auto">
             <TotalsSection invoice={invoice} />
           </div>

@@ -150,7 +150,7 @@ export async function proxy(request: NextRequest) {
  * Proxy configuration
  * Matcher excludes static files, images, and API routes
  */
-export const config = {
+export const proxyConfig = {
   matcher: [
     /*
      * Match all request paths except:

@@ -6,79 +6,39 @@
  * Displays detailed view of a single invoice with:
  * - Invoice summary and status
  * - Line items breakdown
- * - Action buttons (download, print, email)
+ * - Action buttons (download, print, email, pay)
  *
  * @implements PG-028 (Invoice Detail)
  */
 
 import { useParams } from 'next/navigation';
-import { useEffect, useState, useCallback, useRef } from 'react';
-import { InvoiceDetail, type InvoiceDetailData } from '@/components/billing/invoice-detail';
+import { useCallback } from 'react';
+import { InvoiceDetail } from '@/components/billing/invoice-detail';
 import { trpc } from '@/lib/trpc';
-
-const INVOICES_PER_PAGE = 100; // Fetch more to find the invoice
 
 export default function InvoiceDetailPage() {
   const params = useParams();
   const invoiceId = params?.id as string;
 
-  const [invoice, setInvoice] = useState<InvoiceDetailData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const fetchedRef = useRef(false);
-
-  // Fetch invoices list and find the specific invoice
+  // Single getInvoice call — replaces listInvoices + client-side filter (AC-001)
   const {
-    data,
-    isLoading: queryLoading,
-    error: queryError,
-  } = trpc.billing.listInvoices.useQuery(
-    { page: 1, limit: INVOICES_PER_PAGE },
+    data: invoice,
+    isLoading,
+    error,
+  } = trpc.billing.getInvoice.useQuery(
+    { invoiceId },
     { enabled: !!invoiceId }
   );
 
-  // Find the invoice from the list
-  const findInvoice = useCallback(() => {
-    if (!data?.invoices || !invoiceId) return;
+  // Pay invoice mutation
+  const payInvoiceMutation = trpc.billing.payInvoice.useMutation();
 
-    const found = data.invoices.find((inv) => inv.id === invoiceId);
-
-    if (found) {
-      // Transform to InvoiceDetailData format
-      const detailData: InvoiceDetailData = {
-        ...found,
-        // Mock line items for display (in production, these would come from API)
-        lineItems: generateMockLineItems(found),
-        subtotal: found.amountDue,
-        tax: 0,
-        discount: 0,
-      };
-      setInvoice(detailData);
-      setError(null);
-    } else {
-      setInvoice(null);
-      setError('Invoice not found');
-    }
-    setIsLoading(false);
-  }, [data?.invoices, invoiceId]);
-
-  useEffect(() => {
-    if (queryLoading) {
-      setIsLoading(true);
-      return;
-    }
-
-    if (queryError) {
-      setError(queryError.message);
-      setIsLoading(false);
-      return;
-    }
-
-    if (!fetchedRef.current && data) {
-      fetchedRef.current = true;
-      findInvoice();
-    }
-  }, [data, queryLoading, queryError, findInvoice]);
+  const handlePayNow = useCallback(
+    async (id: string) => {
+      await payInvoiceMutation.mutateAsync({ invoiceId: id });
+    },
+    [payInvoiceMutation]
+  );
 
   return (
     <div className="space-y-6">
@@ -91,50 +51,12 @@ export default function InvoiceDetailPage() {
       </div>
 
       {/* Invoice Detail Component */}
-      <InvoiceDetail invoice={invoice} isLoading={isLoading} error={error} />
+      <InvoiceDetail
+        invoice={invoice ?? null}
+        isLoading={isLoading}
+        error={error?.message ?? null}
+        onPayNow={handlePayNow}
+      />
     </div>
   );
-}
-
-// ============================================
-// Helper Functions
-// ============================================
-
-/**
- * Generate mock line items based on invoice amount
- * In production, line items would come from Stripe API
- */
-function generateMockLineItems(invoice: {
-  id: string;
-  amountDue: number;
-  amountPaid: number;
-  currency: string;
-  subscriptionId?: string;
-}): InvoiceDetailData['lineItems'] {
-  // Generate representative line items based on the invoice
-  const items: InvoiceDetailData['lineItems'] = [];
-
-  if (invoice.subscriptionId) {
-    // Subscription invoice - show plan line item
-    items.push({
-      id: `li_${invoice.id}_1`,
-      description: 'IntelliFlow CRM - Monthly Subscription',
-      quantity: 1,
-      unitAmount: invoice.amountDue,
-      amount: invoice.amountDue,
-      currency: invoice.currency,
-    });
-  } else {
-    // One-time invoice
-    items.push({
-      id: `li_${invoice.id}_1`,
-      description: 'IntelliFlow CRM Service',
-      quantity: 1,
-      unitAmount: invoice.amountDue,
-      amount: invoice.amountDue,
-      currency: invoice.currency,
-    });
-  }
-
-  return items;
 }

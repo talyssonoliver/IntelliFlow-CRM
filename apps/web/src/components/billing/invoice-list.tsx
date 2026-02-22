@@ -9,6 +9,7 @@
  * @implements PG-027 (Invoices)
  */
 
+import Link from 'next/link';
 import {
   Badge,
   Button,
@@ -198,7 +199,9 @@ function InvoiceRow({ invoice }: { invoice: SerializedInvoice }) {
         {formatBillingDate(invoice.created)}
       </TableCell>
       <TableCell className="text-slate-600 dark:text-slate-400">
-        <span className="font-mono text-xs">{displayId}</span>
+        <Link href={`/billing/invoices/${invoice.id}`} className="font-mono text-xs text-primary hover:underline">
+          {displayId}
+        </Link>
       </TableCell>
       <TableCell className="text-right font-medium text-slate-900 dark:text-white">
         {formatCurrency(invoice.amountDue, invoice.currency)}

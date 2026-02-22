@@ -359,7 +359,7 @@ describe('InvoiceDetail', () => {
 
       expect(screen.getByRole('button', { name: /download pdf/i })).toBeInTheDocument();
       // The View button has accessible name including icon text "open_in_new View"
-      expect(screen.getByRole('button', { name: /open_in_new.*view/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /^view$/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /print/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /copy link/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /email/i })).toBeInTheDocument();
@@ -389,7 +389,7 @@ describe('InvoiceDetail', () => {
       const user = userEvent.setup();
       render(<InvoiceDetail invoice={baseInvoice} isLoading={false} />);
 
-      await user.click(screen.getByRole('button', { name: /open_in_new.*view/i }));
+      await user.click(screen.getByRole('button', { name: /^view$/i }));
 
       expect(mockViewInvoice).toHaveBeenCalled();
     });
@@ -443,11 +443,331 @@ describe('InvoiceDetail', () => {
 
       render(<InvoiceDetail invoice={baseInvoice} isLoading={false} />);
 
-      await user.click(screen.getByRole('button', { name: /open_in_new.*view/i }));
+      await user.click(screen.getByRole('button', { name: /^view$/i }));
 
       await waitFor(() => {
         expect(screen.getByText('No URL available')).toBeInTheDocument();
       });
+    });
+  });
+
+  // ============================================
+  // PG-028: Pay Now Button (AC-005)
+  // ============================================
+
+  describe('Pay Now Button', () => {
+    const openInvoice: InvoiceDetailData = {
+      ...baseInvoice,
+      status: 'open',
+      amountDue: 7900,
+      amountPaid: 0,
+      amountRemaining: 7900,
+    };
+
+    // T-008
+    it('visible for OPEN invoices with amountRemaining > 0', () => {
+      const onPayNow = vi.fn();
+      render(<InvoiceDetail invoice={openInvoice} isLoading={false} onPayNow={onPayNow} />);
+
+      expect(screen.getByRole('button', { name: /pay now/i })).toBeInTheDocument();
+    });
+
+    // T-009
+    it('hidden for PAID invoices', () => {
+      const onPayNow = vi.fn();
+      render(<InvoiceDetail invoice={baseInvoice} isLoading={false} onPayNow={onPayNow} />);
+
+      expect(screen.queryByRole('button', { name: /pay now/i })).not.toBeInTheDocument();
+    });
+
+    // T-010
+    it('hidden for VOID invoices', () => {
+      const voidInvoice = { ...openInvoice, status: 'void', amountRemaining: 7900 };
+      const onPayNow = vi.fn();
+      render(<InvoiceDetail invoice={voidInvoice} isLoading={false} onPayNow={onPayNow} />);
+
+      expect(screen.queryByRole('button', { name: /pay now/i })).not.toBeInTheDocument();
+    });
+
+    // T-011
+    it('hidden for DRAFT invoices', () => {
+      const draftInvoice = { ...openInvoice, status: 'draft', amountRemaining: 7900 };
+      const onPayNow = vi.fn();
+      render(<InvoiceDetail invoice={draftInvoice} isLoading={false} onPayNow={onPayNow} />);
+
+      expect(screen.queryByRole('button', { name: /pay now/i })).not.toBeInTheDocument();
+    });
+
+    it('hidden when onPayNow is not provided', () => {
+      render(<InvoiceDetail invoice={openInvoice} isLoading={false} />);
+
+      expect(screen.queryByRole('button', { name: /pay now/i })).not.toBeInTheDocument();
+    });
+
+    it('opens hosted URL when hostedInvoiceUrl available', async () => {
+      const windowOpen = vi.spyOn(window, 'open').mockImplementation(() => null);
+      const onPayNow = vi.fn();
+      const user = userEvent.setup();
+
+      render(
+        <InvoiceDetail
+          invoice={{ ...openInvoice, hostedInvoiceUrl: 'https://invoice.stripe.com/i/test' }}
+          isLoading={false}
+          onPayNow={onPayNow}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /pay now/i }));
+
+      expect(windowOpen).toHaveBeenCalledWith(
+        'https://invoice.stripe.com/i/test',
+        '_blank',
+        'noopener,noreferrer'
+      );
+      expect(onPayNow).not.toHaveBeenCalled();
+      windowOpen.mockRestore();
+    });
+
+    it('calls onPayNow when no hosted URL', async () => {
+      const onPayNow = vi.fn().mockResolvedValue(undefined);
+      const user = userEvent.setup();
+
+      render(
+        <InvoiceDetail
+          invoice={{ ...openInvoice, hostedInvoiceUrl: null }}
+          isLoading={false}
+          onPayNow={onPayNow}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /pay now/i }));
+
+      await waitFor(() => {
+        expect(onPayNow).toHaveBeenCalledWith(openInvoice.id);
+      });
+    });
+
+    it('shows error message when onPayNow rejects', async () => {
+      const onPayNow = vi.fn().mockRejectedValue(new Error('Payment failed'));
+      const user = userEvent.setup();
+
+      render(
+        <InvoiceDetail
+          invoice={{ ...openInvoice, hostedInvoiceUrl: null }}
+          isLoading={false}
+          onPayNow={onPayNow}
+        />
+      );
+
+      await user.click(screen.getByRole('button', { name: /pay now/i }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('alert')).toHaveTextContent('Payment failed');
+      });
+    });
+  });
+
+  // ============================================
+  // PG-028: Tax Breakdown (AC-003)
+  // ============================================
+
+  describe('Tax Breakdown', () => {
+    // T-012
+    it('shows VAT label with rate percentage', () => {
+      const invoice: InvoiceDetailData = {
+        ...baseInvoice,
+        taxBreakdown: { amount: 1580, rate: 20, type: 'VAT' },
+      };
+
+      render(<InvoiceDetail invoice={invoice} isLoading={false} />);
+
+      expect(screen.getByTestId('tax-breakdown')).toHaveTextContent('VAT (20%)');
+    });
+
+    // T-013
+    it('shows Sales Tax label', () => {
+      const invoice: InvoiceDetailData = {
+        ...baseInvoice,
+        taxBreakdown: { amount: 790, rate: 10, type: 'SALES_TAX' },
+      };
+
+      render(<InvoiceDetail invoice={invoice} isLoading={false} />);
+
+      expect(screen.getByTestId('tax-breakdown')).toHaveTextContent('Sales Tax (10%)');
+    });
+
+    // T-014
+    it('shows jurisdiction when present', () => {
+      const invoice: InvoiceDetailData = {
+        ...baseInvoice,
+        taxBreakdown: { amount: 1580, rate: 20, type: 'VAT', jurisdiction: 'GB' },
+      };
+
+      render(<InvoiceDetail invoice={invoice} isLoading={false} />);
+
+      expect(screen.getByTestId('tax-breakdown')).toHaveTextContent('GB');
+    });
+
+    // T-015
+    it('hidden when type is NONE', () => {
+      const invoice: InvoiceDetailData = {
+        ...baseInvoice,
+        taxBreakdown: { amount: 0, rate: 0, type: 'NONE' },
+      };
+
+      render(<InvoiceDetail invoice={invoice} isLoading={false} />);
+
+      expect(screen.queryByTestId('tax-breakdown')).not.toBeInTheDocument();
+    });
+
+    it('hidden when rate is 0', () => {
+      const invoice: InvoiceDetailData = {
+        ...baseInvoice,
+        taxBreakdown: { amount: 0, rate: 0, type: 'VAT' },
+      };
+
+      render(<InvoiceDetail invoice={invoice} isLoading={false} />);
+
+      expect(screen.queryByTestId('tax-breakdown')).not.toBeInTheDocument();
+    });
+  });
+
+  // ============================================
+  // PG-028: Invoice Number (AC-002)
+  // ============================================
+
+  describe('Invoice Number Display', () => {
+    // T-016
+    it('displays invoiceNumber when available', () => {
+      const invoice: InvoiceDetailData = {
+        ...baseInvoice,
+        invoiceNumber: 'INV-2025-001',
+      };
+
+      render(<InvoiceDetail invoice={invoice} isLoading={false} />);
+
+      expect(screen.getByText(/Invoice #INV-2025-001/)).toBeInTheDocument();
+    });
+
+    // T-017
+    it('falls back to truncated ID when invoiceNumber absent', () => {
+      render(<InvoiceDetail invoice={baseInvoice} isLoading={false} />);
+
+      // id is 'in_abc123_xyz456', displayId = 'xyz456' (last segment)
+      expect(screen.getByText(/Invoice #xyz456/)).toBeInTheDocument();
+    });
+  });
+
+  // ============================================
+  // PG-028: Multiple Line Items (AC-001)
+  // ============================================
+
+  describe('Multiple Line Items', () => {
+    // T-018
+    it('renders multiple line items correctly', () => {
+      const invoice: InvoiceDetailData = {
+        ...baseInvoice,
+        lineItems: [
+          { id: 'li_1', description: 'Professional Plan', quantity: 1, unitAmount: 5000, amount: 5000, currency: 'gbp' },
+          { id: 'li_2', description: 'API Add-on', quantity: 2, unitAmount: 1000, amount: 2000, currency: 'gbp' },
+          { id: 'li_3', description: 'Support Upgrade', quantity: 1, unitAmount: 900, amount: 900, currency: 'gbp' },
+        ],
+      };
+
+      render(<InvoiceDetail invoice={invoice} isLoading={false} />);
+
+      expect(screen.getByText('Professional Plan')).toBeInTheDocument();
+      expect(screen.getByText('API Add-on')).toBeInTheDocument();
+      expect(screen.getByText('Support Upgrade')).toBeInTheDocument();
+    });
+  });
+
+  // ============================================
+  // PG-028: Totals (AC-004)
+  // ============================================
+
+  describe('Totals with totalAmount', () => {
+    // T-019
+    it('shows totalAmount as Total (not amountDue)', () => {
+      const invoice: InvoiceDetailData = {
+        ...baseInvoice,
+        totalAmount: 9480, // subtotal + tax
+        subtotal: 7900,
+        tax: 1580,
+      };
+
+      render(<InvoiceDetail invoice={invoice} isLoading={false} />);
+
+      const totalsEl = screen.getByTestId('totals-total');
+      // Should display totalAmount (9480 / 100 = £94.80)
+      expect(totalsEl).toHaveTextContent('£94.80');
+    });
+  });
+
+  // ============================================
+  // PG-028: Accessibility (AC-008)
+  // ============================================
+
+  describe('Accessibility', () => {
+    // T-020
+    it('action buttons have aria-label attributes', () => {
+      mockHasViewableUrl.mockReturnValue(true);
+      render(<InvoiceDetail invoice={baseInvoice} isLoading={false} />);
+
+      const buttons = screen.getAllByRole('button');
+      buttons.forEach((button) => {
+        expect(button).toHaveAttribute('aria-label');
+      });
+    });
+
+    // T-029
+    it('toast container has role="alert"', async () => {
+      mockDownloadInvoice.mockResolvedValue({ success: true, message: 'Downloaded' });
+      const user = userEvent.setup();
+
+      render(<InvoiceDetail invoice={baseInvoice} isLoading={false} />);
+
+      await user.click(screen.getByRole('button', { name: /download pdf/i }));
+
+      await waitFor(() => {
+        expect(screen.getByRole('alert')).toBeInTheDocument();
+      });
+    });
+
+    // T-030
+    it('status badge renders icon element alongside text', () => {
+      render(<InvoiceDetail invoice={baseInvoice} isLoading={false} />);
+
+      const badge = screen.getByTestId('status-badge');
+      // Should contain a material icon span
+      const icon = badge.querySelector('.material-symbols-outlined');
+      expect(icon).toBeTruthy();
+      expect(badge).toHaveTextContent('Paid');
+    });
+
+    // T-031
+    it('Pay Now button is reachable via Tab key', async () => {
+      const onPayNow = vi.fn();
+      const openInvoice: InvoiceDetailData = {
+        ...baseInvoice,
+        status: 'open',
+        amountPaid: 0,
+        amountRemaining: 7900,
+      };
+      const user = userEvent.setup();
+
+      render(<InvoiceDetail invoice={openInvoice} isLoading={false} onPayNow={onPayNow} />);
+
+      const payButton = screen.getByRole('button', { name: /pay now/i });
+      // Tab through elements until Pay Now is focused
+      await user.tab();
+      // Keep tabbing until we reach the Pay Now button or exceed reasonable tries
+      let tries = 0;
+      while (document.activeElement !== payButton && tries < 20) {
+        await user.tab();
+        tries++;
+      }
+      expect(document.activeElement).toBe(payButton);
     });
   });
 });

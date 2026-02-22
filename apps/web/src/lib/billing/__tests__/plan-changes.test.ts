@@ -635,3 +635,22 @@ describe('getPlanPriceForInterval', () => {
     expect(result.savings).toBeUndefined();
   });
 });
+
+describe('CANCELLATION_REASONS', () => {
+  it('exports a const array with 6 items', async () => {
+    const { CANCELLATION_REASONS } = await import('../plan-changes');
+    expect(CANCELLATION_REASONS).toHaveLength(6);
+  });
+
+  it('contains the exact predefined reason keys', async () => {
+    const { CANCELLATION_REASONS } = await import('../plan-changes');
+    expect([...CANCELLATION_REASONS]).toEqual([
+      'too_expensive',
+      'missing_features',
+      'switching_competitor',
+      'no_longer_needed',
+      'technical_issues',
+      'other',
+    ]);
+  });
+});
