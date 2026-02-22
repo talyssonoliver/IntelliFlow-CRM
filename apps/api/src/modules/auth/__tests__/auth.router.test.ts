@@ -99,6 +99,13 @@ vi.mock('../../../services/session.service', () => ({
   getSessionService: () => mockSessionService,
 }));
 
+// IFC-120: Mock supabaseAdmin for new auth flows
+const mockVerifyOtp = vi.fn().mockResolvedValue({ data: { user: { email: 'test@example.com' } }, error: null });
+const mockSupabaseSignUp = vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
+const mockSupabaseResend = vi.fn().mockResolvedValue({ data: {}, error: null });
+const mockResetPasswordForEmail = vi.fn().mockResolvedValue({ data: {}, error: null });
+const mockUpdateUserPassword = vi.fn().mockResolvedValue({ data: {}, error: null });
+
 // Mock Supabase
 vi.mock('../../../lib/supabase', () => ({
   signIn: (...args: unknown[]) => mockSignIn(...args),
@@ -108,6 +115,16 @@ vi.mock('../../../lib/supabase', () => ({
   verifyToken: (...args: unknown[]) => mockVerifyToken(...args),
   signInWithOAuth: (...args: unknown[]) => mockSignInWithOAuth(...args),
   exchangeCodeForSession: (...args: unknown[]) => mockExchangeCodeForSession(...args),
+  // IFC-120: Supabase admin client for auth flows
+  supabaseAdmin: {
+    auth: {
+      signUp: (...args: unknown[]) => mockSupabaseSignUp(...args),
+      verifyOtp: (...args: unknown[]) => mockVerifyOtp(...args),
+      resend: (...args: unknown[]) => mockSupabaseResend(...args),
+    },
+  },
+  resetPasswordForEmail: (...args: unknown[]) => mockResetPasswordForEmail(...args),
+  updateUserPassword: (...args: unknown[]) => mockUpdateUserPassword(...args),
 }));
 
 // Import mocked supabase after mocking
@@ -822,27 +839,27 @@ describe('authRouter', () => {
   // ============================================
 
   describe('verifyEmail', () => {
-    it('should process email verification', async () => {
+    it('should process email verification via Supabase (IFC-120)', async () => {
+      // Re-set after vi.clearAllMocks() wipes declaration-time mockResolvedValue
+      mockVerifyOtp.mockResolvedValue({ data: { user: { email: 'test@example.com' } }, error: null });
       const mockContext = createMockContext();
       const caller = authRouter.createCaller(
         mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
       );
 
       const result = await caller.verifyEmail({
-        token: 'a'.repeat(64), // 64 hex chars
+        token_hash: 'a'.repeat(64), // Supabase token hash
+        type: 'email',
       });
 
       expect(result.success).toBe(true);
-      expect(mockAuditLogger.log).toHaveBeenCalledWith(
-        expect.objectContaining({
-          eventType: 'EmailVerificationAttempt',
-        })
-      );
+      expect(result.email).toBeDefined();
     });
   });
 
   describe('resendVerification', () => {
-    it('should resend verification email', async () => {
+    it('should resend verification email and always return success (AC-007)', async () => {
+      mockSupabaseResend.mockResolvedValue({ data: {}, error: null });
       const mockContext = createMockContext();
       const caller = authRouter.createCaller(
         mockContext as unknown as Parameters<typeof authRouter.createCaller>[0]
@@ -852,12 +869,8 @@ describe('authRouter', () => {
         email: 'test@example.com',
       });
 
+      // IFC-120: Always returns success to prevent email enumeration
       expect(result.success).toBe(true);
-      expect(mockAuditLogger.log).toHaveBeenCalledWith(
-        expect.objectContaining({
-          eventType: 'VerificationEmailResent',
-        })
-      );
     });
   });
 });

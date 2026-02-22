@@ -41,6 +41,9 @@ export type Services = {
   ticket: Container['ticketService'];
   analytics: Container['analyticsService'];
   chainVersion: Container['chainVersionService'];
+  convertLeadToDeal: Container['convertLeadToDealUseCase'];
+  closeDealWon: Container['closeDealWonUseCase'];
+  feedbackSurvey: Container['feedbackSurveyService'];
   // Optional future services - not yet implemented in container
   experiment?: unknown;
   feedback?: unknown;
@@ -213,6 +216,9 @@ export const createWSContext = async (authHeader?: string): Promise<BaseContext>
       ticket: container.ticketService,
       analytics: container.analyticsService,
       chainVersion: container.chainVersionService,
+      convertLeadToDeal: container.convertLeadToDealUseCase,
+      closeDealWon: container.closeDealWonUseCase,
+      feedbackSurvey: container.feedbackSurveyService,
     },
     security: container.security,
     adapters: container.adapters,
@@ -247,6 +253,7 @@ export const createContext = async (opts?: {
             name: true,
             role: true,
             tenantId: true,
+            stripeCustomerId: true,
           },
         });
 
@@ -257,6 +264,7 @@ export const createContext = async (opts?: {
             name: dbUser.name ?? undefined,
             role: dbUser.role,
             tenantId: dbUser.tenantId,
+            stripeCustomerId: dbUser.stripeCustomerId ?? undefined,
           };
         } else {
           // User exists in Supabase Auth but not in database
@@ -355,6 +363,9 @@ export const createContext = async (opts?: {
       ticket: container.ticketService,
       analytics: container.analyticsService,
       chainVersion: container.chainVersionService,
+      convertLeadToDeal: container.convertLeadToDealUseCase,
+      closeDealWon: container.closeDealWonUseCase,
+      feedbackSurvey: container.feedbackSurveyService,
     },
     // Security services (IFC-098, IFC-113, IFC-127)
     security: container.security,

@@ -17,16 +17,22 @@ import {
   PrismaChainVersionAuditRepository,
   PrismaActivityFeedRepository,
   PrismaTenantModuleRepository,
+  PrismaAnalyticsRepository,
+  PrismaFeedbackSurveyRepository,
+  PrismaCaseDocumentRepository,
   InMemoryEventBus,
   MockAIService,
   InMemoryCache,
   GuardrailsAIService,
   DurableAuditLogAdapter,
   FeatureFlagAdapter,
+  SupabaseStorageAdapter,
+  NoOpAVScanner,
+  MockNotificationServiceAdapter,
+  IcsGenerationService,
 } from '@intelliflow/adapters';
 import { InMemoryFeatureFlagProvider } from '@intelliflow/platform';
 import { TicketService } from './services/TicketService';
-import { AnalyticsService } from './services/AnalyticsService';
 import {
   LeadService,
   ContactService,
@@ -35,6 +41,14 @@ import {
   TaskService,
   ChainVersionService,
   ActivityFeedService,
+  AnalyticsAggregationService,
+  FeedbackSurveyAnalyticsService,
+  InternalSignatureProvider,
+  IngestionOrchestrator,
+  AppointmentIcsEventHandler,
+  ReminderSchedulerService,
+  ConvertLeadToDealUseCase,
+  CloseDealWonUseCase,
 } from '@intelliflow/application';
 import {
   getAuditLogger,
@@ -73,6 +87,16 @@ const createAdapters = (prismaClient: PrismaClient) => {
   const chainVersionRepository = new PrismaChainVersionRepository(prismaClient);
   const chainVersionAuditRepository = new PrismaChainVersionAuditRepository(prismaClient);
   const activityFeedRepository = new PrismaActivityFeedRepository(prismaClient);
+  const analyticsRepository = new PrismaAnalyticsRepository(prismaClient);
+  const feedbackSurveyRepository = new PrismaFeedbackSurveyRepository(prismaClient);
+  const caseDocumentRepository = new PrismaCaseDocumentRepository(prismaClient);
+
+  // Storage & AV (IFC-094)
+  const storageService = new SupabaseStorageAdapter(
+    process.env.SUPABASE_URL || 'http://localhost:54321',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || 'dev-service-key'
+  );
+  const avScanner = new NoOpAVScanner();
 
   // Feature flags
   const featureFlagsConfig = loadFeatureFlagsConfig();
@@ -83,6 +107,10 @@ const createAdapters = (prismaClient: PrismaClient) => {
   const eventBus = new InMemoryEventBus();
   const baseAIService = new MockAIService();
   const cache = new InMemoryCache();
+
+  // IFC-158: Notification service + ICS generation
+  const notificationService = new MockNotificationServiceAdapter();
+  const icsGenerationService = new IcsGenerationService();
 
   // IFC-125: Wrap AI service with guardrails + audit logging
   const auditSigningKey = Buffer.from(
@@ -108,11 +136,18 @@ const createAdapters = (prismaClient: PrismaClient) => {
     chainVersionRepository,
     chainVersionAuditRepository,
     activityFeedRepository,
+    analyticsRepository,
+    feedbackSurveyRepository,
+    caseDocumentRepository,
     eventBus,
     aiService,
     cache,
     featureFlagProvider,
     featureFlagAdapter,
+    storageService,
+    avScanner,
+    notificationService,
+    icsGenerationService,
   };
 };
 
@@ -191,7 +226,10 @@ const createServices = (prismaClient: PrismaClient) => {
 
   const ticketService = new TicketService(prismaClient);
 
-  const analyticsService = new AnalyticsService(prismaClient);
+  const analyticsService = new AnalyticsAggregationService(adapters.analyticsRepository);
+
+  // IFC-068: Feedback Survey Analytics
+  const feedbackSurveyService = new FeedbackSurveyAnalyticsService(adapters.feedbackSurveyRepository);
 
   const chainVersionService = new ChainVersionService(
     adapters.chainVersionRepository,
@@ -206,6 +244,38 @@ const createServices = (prismaClient: PrismaClient) => {
     adapters.cache
   );
 
+  // IFC-158: Appointment ICS + Reminder services
+  const appointmentIcsHandler = new AppointmentIcsEventHandler(
+    adapters.icsGenerationService,
+    adapters.notificationService
+  );
+  const reminderScheduler = new ReminderSchedulerService(adapters.notificationService);
+
+  // IFC-062: Lead to Deal Conversion
+  const convertLeadToDealUseCase = new ConvertLeadToDealUseCase(
+    adapters.leadRepository,
+    adapters.contactRepository,
+    adapters.accountRepository,
+    adapters.opportunityRepository,
+    adapters.eventBus
+  );
+
+  // IFC-065: Deal Won Closure Workflow
+  const closeDealWonUseCase = new CloseDealWonUseCase(
+    opportunityService,
+    adapters.eventBus,
+    adapters.notificationService
+  );
+
+  // IFC-094: Signature Provider + Ingestion Orchestrator
+  const signatureProvider = new InternalSignatureProvider();
+  const ingestionOrchestrator = new IngestionOrchestrator(
+    adapters.caseDocumentRepository,
+    adapters.eventBus,
+    adapters.storageService,
+    adapters.avScanner
+  );
+
   return {
     leadService,
     contactService,
@@ -214,8 +284,19 @@ const createServices = (prismaClient: PrismaClient) => {
     taskService,
     ticketService,
     analyticsService,
+    feedbackSurveyService,
     chainVersionService,
     activityFeedService,
+    // IFC-158: Appointment scheduling services
+    appointmentIcsHandler,
+    reminderScheduler,
+    // IFC-062: Lead to Deal conversion
+    convertLeadToDealUseCase,
+    // IFC-065: Deal Won Closure
+    closeDealWonUseCase,
+    // IFC-094: Document services
+    signatureProvider,
+    ingestionOrchestrator,
     // Security services (IFC-098, IFC-113, IFC-127)
     security,
     // Also expose adapters for direct access when needed

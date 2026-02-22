@@ -132,6 +132,9 @@ export const mockServices = {
   ticket: mockDeep<any>(),
   analytics: mockDeep<any>(),
   chainVersion: mockDeep<any>(),
+  convertLeadToDeal: mockDeep<any>(),
+  closeDealWon: mockDeep<any>(),
+  feedbackSurvey: mockDeep<any>(),
 };
 
 /**
@@ -158,11 +161,18 @@ export const mockAdapters = {
   chainVersionRepository: mockDeep<any>(),
   chainVersionAuditRepository: mockDeep<any>(),
   activityFeedRepository: mockDeep<any>(),
+  analyticsRepository: mockDeep<any>(),
   eventBus: mockDeep<any>(),
   aiService: mockDeep<any>(),
   cache: mockDeep<any>(),
   featureFlagProvider: mockDeep<any>(),
   featureFlagAdapter: mockDeep<any>(),
+  caseDocumentRepository: mockDeep<any>(),
+  storageService: mockDeep<any>(),
+  avScanner: mockDeep<any>(),
+  notificationService: mockDeep<any>(),
+  icsGenerationService: mockDeep<any>(),
+  feedbackSurveyRepository: mockDeep<any>(),
 };
 
 /**
@@ -371,6 +381,7 @@ export const mockOpportunity = {
   accountId: TEST_UUIDS.account1,
   contactId: TEST_UUIDS.contact1,
   ownerId: TEST_UUIDS.user1,
+  sourceLeadId: null,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 };

@@ -30,11 +30,13 @@ import {
   oauthCallbackSchema,
   revokeSessionSchema,
   refreshTokenSchema,
-  verifyEmailSchema,
+  verifyEmailCallbackSchema,
   resendVerificationSchema,
   resendMfaCodeSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
+  signupSchema,
   type LoginResponse,
-  type VerifyEmailResponse,
 } from '@intelliflow/validators';
 import {
   signIn,
@@ -44,6 +46,9 @@ import {
   signInWithOAuth,
   exchangeCodeForSession,
   verifyToken,
+  supabaseAdmin,
+  resetPasswordForEmail,
+  updateUserPassword,
   type OAuthProvider,
 } from '../../lib/supabase';
 import { getLoginLimiter } from '../../security/login-limiter';
@@ -69,6 +74,59 @@ function getHeaderFromContext(
   }
   const value = (headers as Record<string, string | string[] | undefined>)[name];
   return Array.isArray(value) ? value[0] : value;
+}
+
+// ============================================
+// Per-Email Rate Limiter (IFC-120)
+// ============================================
+
+interface EmailRateLimitState {
+  count: number;
+  windowStart: number;
+}
+
+function createEmailRateLimiter(limit: number, windowMs: number) {
+  const store = new Map<string, EmailRateLimitState>();
+
+  return {
+    check(email: string): { allowed: boolean; retryAfterSeconds: number } {
+      const now = Date.now();
+      const key = email.toLowerCase();
+      let state = store.get(key);
+
+      if (state && now - state.windowStart >= windowMs) {
+        store.delete(key);
+        state = undefined;
+      }
+
+      if (!state) {
+        state = { count: 0, windowStart: now };
+        store.set(key, state);
+      }
+
+      if (state.count >= limit) {
+        const retryAfterSeconds = Math.max(
+          1,
+          Math.ceil((windowMs - (now - state.windowStart)) / 1000)
+        );
+        return { allowed: false, retryAfterSeconds };
+      }
+
+      state.count++;
+      return { allowed: true, retryAfterSeconds: 0 };
+    },
+  };
+}
+
+// 3 requests per email per 15 minutes (AC-008)
+const passwordResetLimiter = createEmailRateLimiter(3, 900000);
+const verificationResendLimiter = createEmailRateLimiter(3, 900000);
+
+/**
+ * Mask email for logging: user@example.com → us***@example.com (NF-003)
+ */
+function maskEmail(email: string): string {
+  return email.replace(/(.{2}).*@/, '$1***@');
 }
 
 // ============================================
@@ -790,96 +848,163 @@ export const authRouter = createTRPCRouter({
   }),
 
   /**
-   * Verify email address
+   * Request password reset email
    *
-   * IMPLEMENTS: PG-023 (Email Verification page)
+   * IMPLEMENTS: IFC-120 (AC-001, AC-007, AC-008)
    *
-   * Validates the email verification token and marks email as verified.
-   * Note: Token store is currently in-memory per-process. Production would use Redis/DB.
+   * Sends a password reset email via Supabase. Always returns success
+   * to prevent email enumeration (AC-007). Rate limited per email (AC-008).
    */
-  verifyEmail: publicProcedure.input(verifyEmailSchema).mutation(async ({ ctx, input }) => {
-    const auditLogger = getAuditLogger(ctx.prisma);
+  requestPasswordReset: publicProcedure
+    .input(forgotPasswordSchema)
+    .mutation(async ({ input }) => {
+      // Check per-email rate limit (AC-008)
+      const rateCheck = passwordResetLimiter.check(input.email);
+      if (!rateCheck.allowed) {
+        throw new TRPCError({
+          code: 'TOO_MANY_REQUESTS',
+          message: `Too many requests. Please try again in ${Math.ceil(rateCheck.retryAfterSeconds / 60)} minutes.`,
+        });
+      }
 
-    try {
-      // Token format is already validated by Zod schema (64 hex chars)
-      // In production, this would validate against a shared token store (Redis/DB)
+      const redirectTo = `${process.env.APP_URL || 'http://localhost:3000'}/reset-password/callback`;
 
-      // For MVP: Token validation happens client-side in account-activation.ts
-      // This endpoint logs the verification attempt and returns success
-      // The client maintains the in-memory token store
+      try {
+        await resetPasswordForEmail(input.email, redirectTo);
+      } catch {
+        // Silently swallow errors to prevent email enumeration (AC-007)
+      }
 
-      // Log verification attempt
-      await auditLogger.log({
-        tenantId: 'system',
-        eventType: 'EmailVerificationAttempt',
-        action: 'UPDATE',
-        actionResult: 'SUCCESS',
-        resourceType: 'user',
-        resourceId: input.token.substring(0, 8) + '...',
-        actorId: 'system',
-        actorEmail: 'system',
-        metadata: { verifiedAt: new Date().toISOString() },
+      // Always return success (AC-007)
+      return { success: true };
+    }),
+
+  /**
+   * Reset password with Supabase access token
+   *
+   * IMPLEMENTS: IFC-120 (AC-002)
+   *
+   * Uses the access token from the Supabase callback URL to update the password.
+   */
+  resetPassword: publicProcedure
+    .input(resetPasswordSchema)
+    .mutation(async ({ input }) => {
+      const { error } = await updateUserPassword(input.token, input.password);
+
+      if (error) {
+        const isExpired = error.message?.includes('expired') || error.message?.includes('invalid');
+        throw new TRPCError({
+          code: isExpired ? 'UNAUTHORIZED' : 'INTERNAL_SERVER_ERROR',
+          message: isExpired
+            ? 'Reset link has expired. Please request a new one.'
+            : 'Failed to reset password. Please try again.',
+        });
+      }
+
+      return { success: true };
+    }),
+
+  /**
+   * Sign up a new user
+   *
+   * IMPLEMENTS: IFC-120 (AC-003)
+   *
+   * Creates a user via Supabase Auth. Supabase auto-sends confirmation email.
+   */
+  signup: publicProcedure
+    .input(signupSchema)
+    .mutation(async ({ input }) => {
+      const { data, error } = await supabaseAdmin.auth.signUp({
+        email: input.email,
+        password: input.password,
+        options: {
+          data: { name: input.name },
+        },
       });
 
-      // MVP response - actual validation done client-side
-      const response: VerifyEmailResponse = {
+      if (error) {
+        // Supabase returns specific errors for duplicate email
+        if (error.message?.includes('already registered') || error.message?.includes('already been registered')) {
+          throw new TRPCError({
+            code: 'CONFLICT',
+            message: 'An account with this email already exists.',
+          });
+        }
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create account. Please try again.',
+        });
+      }
+
+      // If Supabase returns a user with identities=[] it means user already exists
+      if (data.user && data.user.identities && data.user.identities.length === 0) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: 'An account with this email already exists.',
+        });
+      }
+
+      return { success: true, needsEmailVerification: true };
+    }),
+
+  /**
+   * Verify email address via Supabase OTP
+   *
+   * IMPLEMENTS: IFC-120 (AC-004)
+   *
+   * Validates the email verification token_hash from Supabase callback URL.
+   */
+  verifyEmail: publicProcedure
+    .input(verifyEmailCallbackSchema)
+    .mutation(async ({ input }) => {
+      const { data, error } = await supabaseAdmin.auth.verifyOtp({
+        token_hash: input.token_hash,
+        type: input.type,
+      });
+
+      if (error) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Verification link is invalid or has expired.',
+        });
+      }
+
+      return {
         success: true,
-        message: 'Email verification processed. Please check the verification status.',
+        email: data.user?.email || '',
       };
-
-      return response;
-    } catch (error) {
-      console.error('[Auth] Email verification error:', error);
-
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'Email verification failed. Please try again.',
-        cause: error,
-      });
-    }
-  }),
+    }),
 
   /**
    * Resend verification email
    *
-   * IMPLEMENTS: PG-023 (Email Verification page)
+   * IMPLEMENTS: IFC-120 (AC-005, AC-007, AC-008)
    *
-   * Rate-limited endpoint to resend verification emails.
-   * Note: Token generation happens client-side for MVP.
+   * Rate-limited endpoint to resend verification emails via Supabase.
+   * Always returns success to prevent email enumeration (AC-007).
    */
   resendVerification: publicProcedure
     .input(resendVerificationSchema)
-    .mutation(async ({ ctx, input }) => {
-      const auditLogger = getAuditLogger(ctx.prisma);
-
-      try {
-        // Log resend attempt
-        await auditLogger.log({
-          tenantId: 'system',
-          eventType: 'VerificationEmailResent',
-          action: 'CREATE',
-          actionResult: 'SUCCESS',
-          resourceType: 'user',
-          resourceId: input.email,
-          actorId: 'system',
-          actorEmail: input.email,
-        });
-
-        // In production, send email via email service (Resend, SendGrid, etc.)
-        console.log('[Auth] Verification email requested for:', input.email);
-
-        return {
-          success: true,
-          message: 'If this email is registered, you will receive a verification link shortly.',
-        };
-      } catch (error) {
-        console.error('[Auth] Resend verification error:', error);
-
+    .mutation(async ({ input }) => {
+      // Check per-email rate limit (AC-008)
+      const rateCheck = verificationResendLimiter.check(input.email);
+      if (!rateCheck.allowed) {
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to resend verification email. Please try again.',
-          cause: error,
+          code: 'TOO_MANY_REQUESTS',
+          message: `Too many requests. Please try again in ${Math.ceil(rateCheck.retryAfterSeconds / 60)} minutes.`,
         });
       }
+
+      try {
+        await supabaseAdmin.auth.resend({
+          type: 'signup',
+          email: input.email,
+        });
+      } catch {
+        // Silently swallow errors to prevent email enumeration (AC-007)
+      }
+
+      // Always return success (AC-007)
+      return { success: true };
     }),
 });

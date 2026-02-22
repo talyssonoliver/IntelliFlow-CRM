@@ -21,6 +21,7 @@ import subscriptionRouter from './shared/subscription-demo';
 import { appointmentsRouter } from './modules/legal/appointments.router';
 import { casesRouter } from './modules/legal/cases.router';
 import { documentsRouter } from './modules/legal/documents.router';
+import { uploadRouter } from './modules/documents/upload.router';
 import { agentRouter } from './modules/agent/agent.router';
 import { auditRouter } from './modules/security/audit.router';
 import { authRouter } from './modules/auth/auth.router';
@@ -42,6 +43,7 @@ import { activityFeedRouter } from './modules/misc/activity-feed.router';
 import { moduleAccessRouter } from './modules/subscription/subscription.router';
 import { experimentRouter } from './modules/experiment';
 import { routingRouter } from './modules/routing';
+import { feedbackSurveyRouter } from './modules/feedback/feedbackSurvey.router';
 
 /**
  * Main application router
@@ -111,6 +113,7 @@ export const appRouter = createTRPCRouter({
   cases: casesRouter,
   appointments: appointmentsRouter,
   documents: documentsRouter,
+  upload: uploadRouter, // IFC-094: File upload endpoint (AC-005)
 
   // AI & Automation
   agent: agentRouter,
@@ -162,6 +165,9 @@ export const appRouter = createTRPCRouter({
 
   // Lead Routing (PG-132)
   routing: routingRouter,
+
+  // Feedback Survey Analytics (IFC-068)
+  feedbackSurvey: feedbackSurveyRouter,
 });
 
 /**

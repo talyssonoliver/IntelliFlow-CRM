@@ -79,6 +79,11 @@ vi.mock('@intelliflow/adapters', () => ({
       return { name: 'activityFeedRepo' };
     }
   },
+  PrismaAnalyticsRepository: class {
+    constructor() {
+      return { name: 'analyticsRepo' };
+    }
+  },
   InMemoryEventBus: class {
     constructor() {
       return { name: 'eventBus' };
@@ -107,6 +112,36 @@ vi.mock('@intelliflow/adapters', () => ({
   FeatureFlagAdapter: class {
     constructor() {
       return { name: 'featureFlagAdapter', isEnabled: vi.fn(), getVariant: vi.fn(), getRolloutPercent: vi.fn() };
+    }
+  },
+  PrismaCaseDocumentRepository: class {
+    constructor() {
+      return { name: 'caseDocumentRepo' };
+    }
+  },
+  SupabaseStorageAdapter: class {
+    constructor() {
+      return { name: 'storageService' };
+    }
+  },
+  NoOpAVScanner: class {
+    constructor() {
+      return { name: 'avScanner' };
+    }
+  },
+  MockNotificationServiceAdapter: class {
+    constructor() {
+      return { name: 'notificationService', sendEmail: vi.fn(), schedule: vi.fn(), cancelScheduled: vi.fn() };
+    }
+  },
+  IcsGenerationService: class {
+    constructor() {
+      return { name: 'icsGenerationService', generateInvitation: vi.fn(), generateUpdate: vi.fn(), generateCancellation: vi.fn() };
+    }
+  },
+  PrismaFeedbackSurveyRepository: class {
+    constructor() {
+      return { name: 'feedbackSurveyRepo' };
     }
   },
 }));
@@ -156,6 +191,46 @@ vi.mock('@intelliflow/application', () => ({
       return { name: 'activityFeedService' };
     }
   },
+  AnalyticsAggregationService: class {
+    constructor() {
+      return { name: 'analyticsService' };
+    }
+  },
+  InternalSignatureProvider: class {
+    constructor() {
+      return { name: 'signatureProvider', computeSignatureHash: vi.fn() };
+    }
+  },
+  IngestionOrchestrator: class {
+    constructor() {
+      return { name: 'ingestionOrchestrator', ingestFile: vi.fn() };
+    }
+  },
+  AppointmentIcsEventHandler: class {
+    constructor() {
+      return { name: 'appointmentIcsHandler', handleAppointmentCreated: vi.fn(), handleAppointmentRescheduled: vi.fn(), handleAppointmentCancelled: vi.fn() };
+    }
+  },
+  ReminderSchedulerService: class {
+    constructor() {
+      return { name: 'reminderScheduler', handleAppointmentCreated: vi.fn(), handleAppointmentRescheduled: vi.fn(), handleAppointmentCancelled: vi.fn() };
+    }
+  },
+  FeedbackSurveyAnalyticsService: class {
+    constructor() {
+      return { name: 'feedbackSurveyService' };
+    }
+  },
+  ConvertLeadToDealUseCase: class {
+    constructor() {
+      return { name: 'convertLeadToDealUseCase' };
+    }
+  },
+  CloseDealWonUseCase: class {
+    constructor() {
+      return { name: 'closeDealWonUseCase' };
+    }
+  },
 }));
 
 vi.mock('../services/TicketService', () => ({
@@ -166,13 +241,7 @@ vi.mock('../services/TicketService', () => ({
   },
 }));
 
-vi.mock('../services/AnalyticsService', () => ({
-  AnalyticsService: class {
-    constructor() {
-      return { name: 'analyticsService' };
-    }
-  },
-}));
+// AnalyticsService removed — now uses AnalyticsAggregationService from @intelliflow/application (IFC-200)
 
 vi.mock('../config/feature-flags.config', () => ({
   loadFeatureFlagsConfig: vi.fn().mockReturnValue({
@@ -232,6 +301,30 @@ describe('Container', () => {
     expect(container.adapters.cache).toBeDefined();
     expect(container.adapters.featureFlagProvider).toBeDefined();
     expect(container.adapters.featureFlagAdapter).toBeDefined();
+  });
+
+  it('should export container with IFC-094 document services', async () => {
+    const { container } = await import('../container.js');
+
+    expect(container.signatureProvider).toBeDefined();
+    expect(container.ingestionOrchestrator).toBeDefined();
+  });
+
+  it('should export container with IFC-158 appointment scheduling services', async () => {
+    const { container } = await import('../container.js');
+
+    expect(container.appointmentIcsHandler).toBeDefined();
+    expect(container.reminderScheduler).toBeDefined();
+    expect(container.adapters.notificationService).toBeDefined();
+    expect(container.adapters.icsGenerationService).toBeDefined();
+  });
+
+  it('should expose caseDocumentRepository via adapters', async () => {
+    const { container } = await import('../container.js');
+
+    expect(container.adapters.caseDocumentRepository).toBeDefined();
+    expect(container.adapters.storageService).toBeDefined();
+    expect(container.adapters.avScanner).toBeDefined();
   });
 
   describe('container.get()', () => {

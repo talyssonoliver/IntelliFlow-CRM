@@ -429,6 +429,34 @@ export async function verifyToken(
   }
 }
 
+/**
+ * Send a password reset email via Supabase
+ * IFC-120: Supabase native password reset flow
+ */
+export async function resetPasswordForEmail(
+  email: string,
+  redirectTo: string
+): Promise<{ error: Error | null }> {
+  const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+    redirectTo,
+  });
+  return { error };
+}
+
+/**
+ * Update a user's password using their access token
+ * Creates a scoped Supabase client with the user's token
+ * IFC-120: Supabase native password reset flow
+ */
+export async function updateUserPassword(
+  accessToken: string,
+  password: string
+): Promise<{ error: Error | null }> {
+  const scopedClient = createAuthenticatedClient(accessToken);
+  const { error } = await scopedClient.auth.updateUser({ password });
+  return { error };
+}
+
 // ============================================
 // REALTIME HELPERS
 // ============================================

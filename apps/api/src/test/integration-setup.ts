@@ -17,7 +17,8 @@ import { beforeAll, afterAll } from 'vitest';
 import type { BaseContext } from '../context';
 import type { TenantContext } from '../security/tenant-context';
 import { TicketService } from '../services/TicketService';
-import { AnalyticsService } from '../services/AnalyticsService';
+import { AnalyticsAggregationService } from '@intelliflow/application';
+import { PrismaAnalyticsRepository } from '@intelliflow/adapters';
 
 /**
  * Infrastructure availability flag
@@ -34,11 +35,11 @@ export let infrastructureUnavailableReason = '';
  * Real Prisma client for integration tests (may be null if unavailable)
  * Connected to test database
  */
-export let testPrisma: any = null; // eslint-disable-line @typescript-eslint/no-explicit-any
+export let testPrisma: any = null;
 
 // Lazy-loaded services and adapters
-let _testServices: any = null; // eslint-disable-line @typescript-eslint/no-explicit-any
-let _testAdapters: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+let _testServices: any = null;
+let _testAdapters: any;
 
 /**
  * Alert banner for skipped infrastructure tests
@@ -135,7 +136,7 @@ try {
         _testAdapters.eventBus
       ),
       ticket: new TicketService(testPrisma),
-      analytics: new AnalyticsService(testPrisma),
+      analytics: new AnalyticsAggregationService(new PrismaAnalyticsRepository(testPrisma)),
     };
 
     isInfrastructureAvailable = true;

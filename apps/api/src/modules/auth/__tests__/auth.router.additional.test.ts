@@ -13,6 +13,13 @@ const mockSignInWithOAuth = vi.fn();
 const mockExchangeCodeForSession = vi.fn();
 const mockVerifyToken = vi.fn();
 
+// IFC-120: Module-scope mocks for supabaseAdmin (closure pattern required for vi.mock)
+const mockVerifyOtp = vi.fn().mockResolvedValue({ data: {}, error: { message: 'Token expired' } });
+const mockSupabaseSignUp = vi.fn().mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
+const mockSupabaseResend = vi.fn().mockResolvedValue({ data: {}, error: null });
+const mockResetPasswordForEmail = vi.fn().mockResolvedValue({ data: {}, error: null });
+const mockUpdateUserPassword = vi.fn().mockResolvedValue({ data: {}, error: null });
+
 const mockLoginLimiter = {
   checkAllowed: vi.fn(),
   recordFailed: vi.fn().mockReturnValue({ isLocked: false }),
@@ -54,6 +61,16 @@ vi.mock('../../../lib/supabase', () => ({
   signInWithOAuth: (...args: any[]) => mockSignInWithOAuth(...args),
   exchangeCodeForSession: (...args: any[]) => mockExchangeCodeForSession(...args),
   verifyToken: (...args: any[]) => mockVerifyToken(...args),
+  // IFC-120: Supabase admin client for auth flows (closure pattern)
+  supabaseAdmin: {
+    auth: {
+      signUp: (...args: any[]) => mockSupabaseSignUp(...args),
+      verifyOtp: (...args: any[]) => mockVerifyOtp(...args),
+      resend: (...args: any[]) => mockSupabaseResend(...args),
+    },
+  },
+  resetPasswordForEmail: (...args: any[]) => mockResetPasswordForEmail(...args),
+  updateUserPassword: (...args: any[]) => mockUpdateUserPassword(...args),
 }));
 
 vi.mock('../../../security/login-limiter', () => ({
@@ -79,6 +96,22 @@ describe('authRouter additional coverage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockLoginLimiter.recordFailed.mockReturnValue({ isLocked: false });
+  });
+
+  describe('oauthCallback - exchange failure', () => {
+    it('should throw UNAUTHORIZED when code exchange fails', async () => {
+      mockExchangeCodeForSession.mockResolvedValue({
+        session: null,
+        user: null,
+        error: { message: 'Invalid code' },
+      });
+      const ctx = createPublicContext();
+      const caller = authRouter.createCaller(ctx);
+
+      await expect(
+        caller.oauthCallback({ code: 'invalid-code' })
+      ).rejects.toThrow('Invalid code');
+    });
   });
 
   describe('login - generic error catch', () => {
@@ -237,6 +270,21 @@ describe('authRouter additional coverage', () => {
     });
   });
 
+  describe('setupMfa - SMS send failure', () => {
+    it('should throw INTERNAL_SERVER_ERROR when SMS send fails', async () => {
+      mockMfaService.sendSmsOtp.mockResolvedValue({ success: false, error: 'Provider unavailable' });
+      const ctx = createTestContext();
+      const caller = authRouter.createCaller(ctx);
+
+      await expect(
+        caller.setupMfa({
+          method: 'sms',
+          phone: '+1234567890',
+        })
+      ).rejects.toThrow('Provider unavailable');
+    });
+  });
+
   describe('setupMfa - email method', () => {
     it('should send email OTP for email method', async () => {
       mockMfaService.sendEmailOtp.mockResolvedValue({ success: true });
@@ -326,34 +374,36 @@ describe('authRouter additional coverage', () => {
   });
 
   describe('verifyEmail - error handling', () => {
-    it('should throw INTERNAL_SERVER_ERROR on audit failure', async () => {
-      mockAuditLogger.log.mockRejectedValue(new Error('Audit DB down'));
+    it('should throw BAD_REQUEST on Supabase OTP verification failure (IFC-120)', async () => {
+      // IFC-120: verifyEmail now uses Supabase verifyOtp, throws BAD_REQUEST on failure
+      // Re-set after vi.clearAllMocks() wipes declaration-time mockResolvedValue
+      mockVerifyOtp.mockResolvedValue({ data: {}, error: { message: 'Token expired' } });
       const ctx = createPublicContext();
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const caller = authRouter.createCaller(ctx);
 
+      // verifyOtp mock returns error → BAD_REQUEST
       await expect(
         caller.verifyEmail({
-          token: 'a'.repeat(64),
+          token_hash: 'invalid-hash',
+          type: 'email',
         })
-      ).rejects.toThrow('Email verification failed');
-      consoleSpy.mockRestore();
+      ).rejects.toThrow('Verification link is invalid or has expired');
     });
   });
 
   describe('resendVerification - error handling', () => {
-    it('should throw INTERNAL_SERVER_ERROR on failure', async () => {
-      mockAuditLogger.log.mockRejectedValue(new Error('Audit DB down'));
+    it('should always return success even on Supabase failure (IFC-120 AC-007)', async () => {
+      // IFC-120: resendVerification silently swallows errors to prevent email enumeration
+      mockSupabaseResend.mockResolvedValue({ data: {}, error: { message: 'Rate limited' } });
       const ctx = createPublicContext();
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       const caller = authRouter.createCaller(ctx);
 
-      await expect(
-        caller.resendVerification({
-          email: 'test@example.com',
-        })
-      ).rejects.toThrow('Failed to resend verification');
-      consoleSpy.mockRestore();
+      const result = await caller.resendVerification({
+        email: 'test@example.com',
+      });
+
+      // Always returns success regardless of internal errors (AC-007)
+      expect(result.success).toBe(true);
     });
   });
 });
