@@ -7,3 +7,4 @@ export * from './InMemoryEventBus';
 export * from './InMemoryCache';
 export * from './MockAIService';
 export * from './GuardrailsAIService';
+export * from './MockNotificationServiceAdapter';

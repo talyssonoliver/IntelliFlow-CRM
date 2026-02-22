@@ -14,6 +14,7 @@ export * from './storage/SupabaseStorageAdapter';
 
 // Antivirus Adapters
 export * from './antivirus/ClamAVScanner';
+export * from './antivirus/NoOpAVScanner';
 
 // ICS Generation Service (IFC-158)
 export * from './ics/IcsGenerationService';

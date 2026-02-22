@@ -224,7 +224,7 @@ describe('PrismaCaseDocumentRepository', () => {
       // Submit for review, approve, then sign
       doc.submitForReview(USER_ID);
       doc.approve(USER_ID);
-      doc.sign(USER_ID, '192.168.1.1', 'Mozilla/5.0');
+      doc.sign(USER_ID, '192.168.1.1', 'Mozilla/5.0', HASH);
 
       await repo.save(doc);
 

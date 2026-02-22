@@ -68,6 +68,7 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
       createdAt: opportunity.createdAt,
       updatedAt: opportunity.updatedAt,
       closedAt: opportunity.closedAt ?? null,
+      sourceLeadId: opportunity.sourceLeadId ?? null,
     };
 
     await this.prisma.opportunity.upsert({
@@ -98,6 +99,7 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
       closedAt: record.closedAt ?? undefined,
+      sourceLeadId: record.sourceLeadId ?? undefined,
     });
   }
 

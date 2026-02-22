@@ -33,6 +33,12 @@ export * from './PrismaTenantModuleRepository';
 // Outbox pattern (domain events)
 export * from './PrismaOutboxRepository';
 
+// Analytics Repository (IFC-200)
+export * from './PrismaAnalyticsRepository';
+
+// Feedback Survey Repository (IFC-068)
+export * from './PrismaFeedbackSurveyRepository';
+
 // In-memory implementations (testing)
 export * from './InMemoryLeadRepository';
 export * from './InMemoryContactRepository';
@@ -43,3 +49,4 @@ export * from './InMemoryAppointmentRepository';
 export * from './InMemoryCaseDocumentRepository';
 export * from './InMemoryNotificationRepository';
 export * from './InMemoryNotificationPreferenceRepository';
+export * from './InMemoryAnalyticsRepository';
