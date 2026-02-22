@@ -6,12 +6,13 @@ import { api } from '@/lib/api';
 import { Skeleton } from '@intelliflow/ui';
 import { TaskCreateSheet } from '@/components/tasks/TaskCreateSheet';
 import type { WidgetProps } from './index';
+import type { TaskStatus } from '@intelliflow/domain';
 
 export function PendingTasksWidget(_props: WidgetProps) {
   const [createOpen, setCreateOpen] = useState(false);
 
   const { data, isLoading } = api.task.list.useQuery({
-    status: ['PENDING'] as any,
+    status: ['PENDING'] as TaskStatus[],
     limit: 3,
     page: 1,
   });
@@ -24,7 +25,7 @@ export function PendingTasksWidget(_props: WidgetProps) {
     },
   });
 
-  const tasks = (data as any)?.tasks ?? [];
+  const tasks = data?.tasks ?? [];
 
   return (
     <div className="p-5 flex flex-col h-full">
@@ -59,7 +60,7 @@ export function PendingTasksWidget(_props: WidgetProps) {
           </div>
         )}
         {!isLoading &&
-          tasks.map((task: any) => (
+          tasks.map((task) => (
             <Link
               key={task.id}
               href={`/tasks/${task.id}`}

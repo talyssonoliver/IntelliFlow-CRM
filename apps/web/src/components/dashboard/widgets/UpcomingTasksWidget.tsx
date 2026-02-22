@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { Skeleton } from '@intelliflow/ui';
 import { TaskCreateSheet } from '@/components/tasks/TaskCreateSheet';
 import type { WidgetProps } from './index';
+import type { TaskStatus } from '@intelliflow/domain';
 
 const priorityColors: Record<string, string> = {
   URGENT: 'text-red-600 dark:text-red-400',
@@ -47,7 +48,7 @@ export function UpcomingTasksWidget(_props: WidgetProps) {
     sortOrder: 'asc',
     limit: 3,
     page: 1,
-    status: ['PENDING', 'IN_PROGRESS'] as any,
+    status: ['PENDING', 'IN_PROGRESS'] as TaskStatus[],
   });
 
   const utils = api.useUtils();
@@ -58,7 +59,7 @@ export function UpcomingTasksWidget(_props: WidgetProps) {
     },
   });
 
-  const tasks = (data as any)?.tasks ?? [];
+  const tasks = data?.tasks ?? [];
 
   return (
     <div className="p-6 h-full flex flex-col">
@@ -83,7 +84,7 @@ export function UpcomingTasksWidget(_props: WidgetProps) {
           </div>
         )}
         {!isLoading &&
-          tasks.map((task: any) => (
+          tasks.map((task) => (
             <Link
               key={task.id}
               href={`/tasks/${task.id}`}

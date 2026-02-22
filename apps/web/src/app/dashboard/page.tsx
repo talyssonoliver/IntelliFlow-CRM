@@ -1,168 +1,30 @@
-'use client';
-
 /**
- * Dashboard Page
+ * Dashboard Page — Server Component Shell
  *
- * Analytics dashboard with configurable widget grid displaying:
- * - Lead and revenue statistics
- * - Pipeline summary and active deals
- * - Task management and recent activity
+ * Reads the auth token server-side (outside cache boundary),
+ * prefetches lead stats via cached query, then renders the
+ * full interactive dashboard as a client island.
  *
  * Task: PG-129 - Dashboard Page
  */
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { Card } from '@intelliflow/ui';
-import type { Widget } from '@intelliflow/ui';
-import { widgetRegistry } from '@/components/dashboard/widgets';
-import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { getAccessToken } from '@/lib/trpc-server';
+import { fetchLeadStats } from '@/lib/cached-queries/lead-queries';
+import DashboardClient from './DashboardClient';
 
-// Default widgets matching the original dashboard layout
-const defaultWidgets: Widget[] = [
-  // Row 1: 4 stat cards (1+1+1+1 = 4)
-  { id: 'w1', type: 'total-leads', title: 'Total Leads', colSpan: 1, rowSpan: 1 },
-  { id: 'w2', type: 'sales-revenue', title: 'Sales Revenue', colSpan: 1, rowSpan: 1 },
-  { id: 'w3', type: 'active-deals', title: 'Active Deals', colSpan: 1, rowSpan: 1 },
-  { id: 'w4', type: 'open-tickets', title: 'Open Tickets', colSpan: 1, rowSpan: 1 },
-  // Row 2: Pipeline Summary (3/4) + Upcoming Tasks (1/4)
-  { id: 'w5', type: 'pipeline-summary', title: 'Pipeline Summary', colSpan: 3, rowSpan: 1 },
-  { id: 'w6', type: 'upcoming-tasks', title: 'Upcoming Tasks', colSpan: 1, rowSpan: 1 },
-  // Row 3: Deals Won (3/4) + Recent Activity (1/4)
-  { id: 'w7', type: 'deals-won', title: 'Deals Won (Last 6 Months)', colSpan: 3, rowSpan: 1 },
-  { id: 'w8', type: 'recent-activity', title: 'Recent Activity', colSpan: 1, rowSpan: 1 },
-];
+export default async function DashboardPage() {
+  const token = await getAccessToken();
 
-export default function DashboardPage() {
-  const { isLoading: authLoading } = useRequireAuth();
-  const [widgets, setWidgets] = useState<Widget[]>(defaultWidgets);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  // Load saved layout from localStorage on mount
-  useEffect(() => {
-    const saved = localStorage.getItem('dashboard-layout');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setWidgets(parsed);
-        }
-      } catch (e) {
-        console.error('Failed to parse saved dashboard layout:', e);
-      }
-    }
-    setIsLoaded(true);
-  }, []);
-
-  // Grid column span classes
-  const colSpanClasses: Record<number, string> = {
-    1: 'col-span-1',
-    2: 'col-span-1 md:col-span-2',
-    3: 'col-span-1 md:col-span-2 lg:col-span-3',
-    4: 'col-span-1 md:col-span-2 lg:col-span-4',
-  };
-
-  const rowSpanClasses: Record<number, string> = {
-    1: '',
-    2: 'row-span-2',
-  };
-
-  // Show loading skeleton while auth is being verified
-  if (authLoading) {
-    return (
-      <div className="p-6 lg:p-8 bg-background-light dark:bg-background-dark min-h-[calc(100vh-4rem)]">
-        <div className="animate-pulse space-y-6">
-          <div className="h-4 w-48 bg-slate-200 dark:bg-slate-700 rounded" />
-          <div className="space-y-2">
-            <div className="h-8 w-64 bg-slate-200 dark:bg-slate-700 rounded" />
-            <div className="h-4 w-80 bg-slate-200 dark:bg-slate-700 rounded" />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            {[1, 2, 3, 4].map((i) => (
-              <Card
-                key={i}
-                className="h-32 bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark animate-pulse"
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+  // Prefetch lead stats — cached for 60s via 'use cache' in fetchLeadStats.
+  // Errors are non-fatal: the client island will fetch on its own.
+  // JSON roundtrip converts Date→string to match client-side tRPC wire format.
+  let initialLeadStats: unknown = null;
+  try {
+    const raw = await fetchLeadStats(token);
+    initialLeadStats = JSON.parse(JSON.stringify(raw));
+  } catch {
+    // Silently fall through — client-side React Query will fetch
   }
 
-  return (
-    <div className="p-6 lg:p-8 bg-background-light dark:bg-background-dark min-h-[calc(100vh-4rem)]">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-4">
-        <Link href="/" className="hover:text-ds-primary">
-          Home
-        </Link>
-        <span>&gt;</span>
-        <span className="text-slate-900 dark:text-white font-medium">Dashboard</span>
-      </nav>
-
-      {/* Header with Actions */}
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/dashboard/customize"
-            className="group inline-flex items-center gap-2 px-4 py-2.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm rounded-lg hover:bg-slate-50 hover:border-slate-400 dark:hover:bg-slate-700 dark:hover:border-slate-500 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-ds-primary focus:ring-offset-2"
-          >
-            <span className="material-symbols-outlined text-base transition-transform group-hover:rotate-90">
-              tune
-            </span>
-            Customize
-          </Link>
-          <Link
-            href="/dashboard/new"
-            className="group flex items-center justify-center gap-2 bg-ds-primary hover:bg-ds-primary-hover text-white font-bold py-2.5 px-5 rounded-lg shadow-sm shadow-ds-primary/30 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-ds-primary focus:ring-offset-2"
-          >
-            <span
-              className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform"
-              aria-hidden="true"
-            >
-              add
-            </span>
-            <span>Add New</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* Dashboard Widgets Grid */}
-      {isLoaded ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 auto-rows-min">
-          {widgets.map((widget) => {
-            const WidgetComponent = widgetRegistry[widget.type];
-            return (
-              <Card
-                key={widget.id}
-                className={`
-                  bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
-                  ${colSpanClasses[widget.colSpan] || 'col-span-1'}
-                  ${rowSpanClasses[widget.rowSpan] || ''}
-                `}
-              >
-                {WidgetComponent ? (
-                  <WidgetComponent config={widget.config} />
-                ) : (
-                  <div className="p-6 text-slate-400">Unknown widget: {widget.type}</div>
-                )}
-              </Card>
-            );
-          })}
-        </div>
-      ) : (
-        /* Loading skeleton */
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <Card
-              key={i}
-              className="h-32 bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark animate-pulse"
-            />
-          ))}
-        </div>
-      )}
-    </div>
-  );
+  return <DashboardClient initialLeadStats={initialLeadStats} />;
 }

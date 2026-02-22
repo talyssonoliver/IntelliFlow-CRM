@@ -619,35 +619,29 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const totalReports = reports.length;
-
-    for (let i = 0; i < reports.length; i++) {
-      const report = reports[i];
-      const progressPercent = Math.round((i / totalReports) * 100);
-
-      // Update progress before starting each report
-      if (updateProgress) {
-        updateProgress({ currentReport: report, progress: progressPercent });
-      }
-
+    const reportPromises = reports.map((report: string) => {
       switch (report) {
         case 'coverage':
-          results.push(await generateCoverageReport(projectRoot, scope));
-          break;
+          return generateCoverageReport(projectRoot, scope);
         case 'lighthouse':
-          results.push(await generateLighthouseReport(projectRoot, lighthouseUrl, scope));
-          break;
+          return generateLighthouseReport(projectRoot, lighthouseUrl, scope);
         case 'performance':
-          results.push(await generatePerformanceReport(projectRoot, scope));
-          break;
+          return generatePerformanceReport(projectRoot, scope);
         default:
-          results.push({
+          return Promise.resolve({
             report,
             success: false,
             message: `Unknown report type: ${report}`,
             duration: 0,
           });
       }
+    });
+
+    const settled = await Promise.all(reportPromises);
+    results.push(...settled);
+
+    if (updateProgress) {
+      updateProgress({ currentReport: reports[reports.length - 1], progress: 100 });
     }
 
     const allSuccess = results.every((r) => r.success);

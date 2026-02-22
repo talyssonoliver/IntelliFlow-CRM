@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { startTestRun, getActiveRuns } from '@/lib/test-runner';
 import type { TestRunConfig, TestScope } from '@/lib/test-runner';
 
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
-
 /**
  * POST /api/quality-reports/test-run
  * Start a new test run
@@ -28,7 +25,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate unique run ID
-    const runId = `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const runId = `test-${crypto.randomUUID()}`;
 
     const config: TestRunConfig = {
       runId,

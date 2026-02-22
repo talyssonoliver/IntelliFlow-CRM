@@ -27,6 +27,7 @@ import { GrowthTrendsWidget } from './GrowthTrendsWidget';
 
 export interface WidgetProps {
   config?: Record<string, unknown>;
+  initialData?: unknown;
 }
 
 // Widget registry mapping type strings to React components

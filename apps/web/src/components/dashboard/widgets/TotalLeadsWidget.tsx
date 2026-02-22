@@ -4,13 +4,17 @@ import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
 import type { WidgetProps } from './index';
 
-export function TotalLeadsWidget(_props: WidgetProps) {
+export function TotalLeadsWidget({ initialData }: WidgetProps) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const {
     data: stats,
     isLoading,
     error,
-  } = trpc.lead.stats.useQuery(undefined, { enabled: isAuthenticated && !authLoading });
+  } = trpc.lead.stats.useQuery(undefined, {
+    enabled: isAuthenticated && !authLoading,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...(initialData != null ? { initialData: initialData as any } : {}),
+  });
 
   if (isLoading || authLoading) {
     return (

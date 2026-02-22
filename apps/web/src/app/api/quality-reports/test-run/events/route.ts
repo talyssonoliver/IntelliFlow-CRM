@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { testRunnerEvents, type TestRunProgress } from '@/lib/test-runner';
 
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
-
 // Store for active connections
 const connections = new Map<
   string,

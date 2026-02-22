@@ -2,10 +2,9 @@
 
 import {
   SidebarProvider,
-  AppSidebar,
   SidebarInset,
   SidebarTrigger,
-  MobileSidebar,
+  SidebarWithSuspense,
   governanceSidebarConfig,
 } from '@/components/sidebar';
 
@@ -13,8 +12,7 @@ export default function GovernanceLayout({ children }: { children: React.ReactNo
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">
-        <AppSidebar config={governanceSidebarConfig} />
-        <MobileSidebar config={governanceSidebarConfig} />
+        <SidebarWithSuspense config={governanceSidebarConfig} />
         <SidebarInset>
           <main
             className="flex flex-1 flex-col h-full min-w-0 overflow-hidden bg-background relative"

@@ -2,10 +2,9 @@
 
 import {
   SidebarProvider,
-  AppSidebar,
   SidebarInset,
   SidebarTrigger,
-  MobileSidebar,
+  SidebarWithSuspense,
   analyticsSidebarConfig,
 } from '@/components/sidebar';
 import { ModuleGate } from '@/components/ModuleGate';
@@ -15,11 +14,7 @@ export default function AnalyticsListLayout({ children }: { children: React.Reac
     <ModuleGate moduleId="ANALYTICS">
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">
-        {/* Left Sidebar - Report Views & Saved Reports (Desktop) */}
-        <AppSidebar config={analyticsSidebarConfig} />
-
-        {/* Mobile Sidebar Drawer */}
-        <MobileSidebar config={analyticsSidebarConfig} />
+        <SidebarWithSuspense config={analyticsSidebarConfig} />
 
         {/* Main Content */}
         <SidebarInset>

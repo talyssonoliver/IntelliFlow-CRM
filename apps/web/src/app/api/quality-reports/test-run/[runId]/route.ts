@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRunState, cancelTestRun } from '@/lib/test-runner';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * GET /api/quality-reports/test-run/[runId]
  * Get the status of a specific test run

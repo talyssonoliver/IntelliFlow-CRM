@@ -238,9 +238,9 @@ describe('/api/quality-reports/test-run/[runId]', () => {
   });
 
   describe('dynamic export', () => {
-    it('exports dynamic as force-dynamic', async () => {
-      const mod = await import('../route.js');
-      expect(mod.dynamic).toBe('force-dynamic');
+    it('does not export dynamic segment config (removed for useCache compatibility)', async () => {
+      const mod = await import('../route.js') as any;
+      expect(mod.dynamic).toBeUndefined();
     });
   });
 });
