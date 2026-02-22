@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Skeleton, Badge, Card } from '@intelliflow/ui';
 import { api } from '@/lib/api';
+import type { OpportunityStage } from '@intelliflow/domain';
 import { formatCurrency } from '@/lib/pricing/calculator';
 
 interface AccountOpportunity {
@@ -21,13 +22,13 @@ interface AccountOpportunitiesListProps {
 export function AccountOpportunitiesList({ accountId }: AccountOpportunitiesListProps) {
   const router = useRouter();
   const [cursor, setCursor] = useState<string | undefined>();
-  const [stageFilter, setStageFilter] = useState<string | undefined>();
+  const [stageFilter, setStageFilter] = useState<OpportunityStage | undefined>();
 
   const { data, isLoading, error } = api.account.getOpportunities.useQuery({
     accountId,
     limit: 20,
     cursor,
-    stage: stageFilter ? [stageFilter as any] : undefined,
+    stage: stageFilter ? [stageFilter] : undefined,
   });
 
   if (isLoading) {
@@ -100,7 +101,7 @@ export function AccountOpportunitiesList({ accountId }: AccountOpportunitiesList
           className="text-sm border rounded-md px-2 py-1 bg-background text-foreground"
           value={stageFilter ?? ''}
           onChange={(e) => {
-            setStageFilter(e.target.value || undefined);
+            setStageFilter((e.target.value || undefined) as OpportunityStage | undefined);
             setCursor(undefined);
           }}
         >

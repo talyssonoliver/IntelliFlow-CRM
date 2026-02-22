@@ -410,8 +410,8 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
           {pickerQuery.data?.accounts && (
             <div className="max-h-48 overflow-y-auto divide-y">
               {pickerQuery.data.accounts
-                .filter((a: any) => a.id !== accountId)
-                .map((account: any) => (
+                .filter((a) => a.id !== accountId)
+                .map((account) => (
                   <button
                     key={account.id}
                     className="flex items-center gap-2 px-2 py-2 w-full text-left hover:bg-muted/50 rounded text-sm"

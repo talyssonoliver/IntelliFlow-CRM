@@ -501,7 +501,7 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
               )}
               {activityQuery.data?.activities && activityQuery.data.activities.length > 0 && (
                 <div className="space-y-4">
-                  {activityQuery.data.activities.map((activity: any) => (
+                  {activityQuery.data.activities.map((activity) => (
                     <div key={activity.id} className="flex gap-3 items-start">
                       <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 shrink-0 mt-0.5">
                         <span className="material-symbols-outlined !text-[18px]">
@@ -514,7 +514,6 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
                         </p>
                         <p className="text-xs text-slate-500 mt-0.5">
                           {new Date(activity.createdAt).toLocaleString()}
-                          {activity.performedBy && ` by ${activity.performedBy.name}`}
                         </p>
                       </div>
                     </div>
@@ -529,11 +528,11 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
             <RevenueChart
               accountId={accountId}
               stageBreakdown={oppsQuery.data?.summary?.stageBreakdown}
-              opportunities={oppsQuery.data?.opportunities?.map((o: any) => ({
-                value: o.value,
-                expectedCloseDate: o.expectedCloseDate,
-                stage: o.stage,
-              }))}
+              opportunities={oppsQuery.data?.opportunities?.flatMap((o) =>
+                o.expectedCloseDate
+                  ? [{ value: o.value, expectedCloseDate: o.expectedCloseDate, stage: o.stage }]
+                  : []
+              )}
             />
           )}
 

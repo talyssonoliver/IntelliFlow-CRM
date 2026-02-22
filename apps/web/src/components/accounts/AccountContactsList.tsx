@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Skeleton, Badge } from '@intelliflow/ui';
 import { api } from '@/lib/api';
+import type { ContactStatus } from '@intelliflow/domain';
 
 interface AccountContact {
   id: string;
@@ -20,13 +21,13 @@ interface AccountContactsListProps {
 export function AccountContactsList({ accountId }: AccountContactsListProps) {
   const router = useRouter();
   const [cursor, setCursor] = useState<string | undefined>();
-  const [statusFilter, setStatusFilter] = useState<string | undefined>();
+  const [statusFilter, setStatusFilter] = useState<ContactStatus | undefined>();
 
   const { data, isLoading, error } = api.account.getContacts.useQuery({
     accountId,
     limit: 20,
     cursor,
-    status: statusFilter ? [statusFilter as any] : undefined,
+    status: statusFilter ? [statusFilter] : undefined,
   });
 
   if (isLoading) {
@@ -72,7 +73,7 @@ export function AccountContactsList({ accountId }: AccountContactsListProps) {
           className="text-sm border rounded-md px-2 py-1 bg-background text-foreground"
           value={statusFilter ?? ''}
           onChange={(e) => {
-            setStatusFilter(e.target.value || undefined);
+            setStatusFilter((e.target.value || undefined) as ContactStatus | undefined);
             setCursor(undefined);
           }}
         >

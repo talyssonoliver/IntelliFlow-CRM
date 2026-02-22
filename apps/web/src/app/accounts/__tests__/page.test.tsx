@@ -96,14 +96,14 @@ vi.mock('@intelliflow/ui', () => ({
 
 describe('AccountsPage', () => {
   it('should export a default page component', async () => {
-    const mod = await import('../(list)/page');
+    const mod = await import('../(list)/AccountsPageClient');
     expect(mod.default).toBeDefined();
     expect(typeof mod.default).toBe('function');
   });
 
   it('should render the page header with correct title', async () => {
     const { render, screen } = await import('@testing-library/react');
-    const mod = await import('../(list)/page');
+    const mod = await import('../(list)/AccountsPageClient');
     const AccountsPage = mod.default;
 
     render(<AccountsPage />);
@@ -114,7 +114,7 @@ describe('AccountsPage', () => {
 
   it('should render the data table when data is loaded', async () => {
     const { render, screen } = await import('@testing-library/react');
-    const mod = await import('../(list)/page');
+    const mod = await import('../(list)/AccountsPageClient');
 
     render(<mod.default />);
 
@@ -124,7 +124,7 @@ describe('AccountsPage', () => {
 
   it('should render stat cards', async () => {
     const { render, screen } = await import('@testing-library/react');
-    const mod = await import('../(list)/page');
+    const mod = await import('../(list)/AccountsPageClient');
 
     render(<mod.default />);
 

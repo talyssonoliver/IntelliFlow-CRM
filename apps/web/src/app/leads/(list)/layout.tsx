@@ -2,10 +2,9 @@
 
 import {
   SidebarProvider,
-  AppSidebar,
   SidebarInset,
   SidebarTrigger,
-  MobileSidebar,
+  SidebarWithSuspense,
   leadsSidebarConfig,
 } from '@/components/sidebar';
 import { UnsavedChangesProvider } from '@/hooks/useUnsavedChanges';
@@ -14,11 +13,7 @@ export default function LeadsListLayout({ children }: { readonly children: React
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">
-        {/* Desktop Sidebar */}
-        <AppSidebar config={leadsSidebarConfig} />
-
-        {/* Mobile Sidebar Drawer */}
-        <MobileSidebar config={leadsSidebarConfig} />
+        <SidebarWithSuspense config={leadsSidebarConfig} />
 
         <SidebarInset>
           <main

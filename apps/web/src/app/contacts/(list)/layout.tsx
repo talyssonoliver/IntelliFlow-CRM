@@ -2,10 +2,9 @@
 
 import {
   SidebarProvider,
-  AppSidebar,
   SidebarInset,
   SidebarTrigger,
-  MobileSidebar,
+  SidebarWithSuspense,
   contactsSidebarConfig,
 } from '@/components/sidebar';
 
@@ -13,11 +12,7 @@ export default function ContactsListLayout({ children }: { readonly children: Re
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">
-        {/* Desktop Sidebar */}
-        <AppSidebar config={contactsSidebarConfig} />
-
-        {/* Mobile Sidebar Drawer */}
-        <MobileSidebar config={contactsSidebarConfig} />
+        <SidebarWithSuspense config={contactsSidebarConfig} />
 
         <SidebarInset>
           <main
