@@ -5,18 +5,20 @@ import { Icon } from '@/lib/icons';
 import {
   StatusTracker,
   FeatureMatrixPanel,
+  SpecTrackerPanel,
   QualityDashboard,
   RiskRegister,
   AIMetrics,
   SecurityDashboard,
   BuildHealth,
+  StatusHistory,
 } from './tracking';
-import StatusHistory from './tracking/StatusHistory';
 import CollapsibleSection from './CollapsibleSection';
 
 type TrackingTab =
   | 'status'
   | 'featureMatrix'
+  | 'specTracker'
   | 'quality'
   | 'risks'
   | 'ai'
@@ -43,6 +45,12 @@ const TABS: TabConfig[] = [
     label: 'Feature Matrix',
     icon: 'table_chart',
     description: 'Source-of-truth feature inventory with task and coverage traceability',
+  },
+  {
+    id: 'specTracker',
+    label: 'Spec Tracker',
+    icon: 'fact_check',
+    description: 'Cross-references specs, attestations, plans, and CSV status to verify real completion',
   },
   {
     id: 'quality',
@@ -91,6 +99,8 @@ export default function TrackingView() {
         return <StatusTracker />;
       case 'featureMatrix':
         return <FeatureMatrixPanel />;
+      case 'specTracker':
+        return <SpecTrackerPanel />;
       case 'quality':
         return <QualityDashboard />;
       case 'risks':
@@ -120,12 +130,20 @@ export default function TrackingView() {
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="bg-gray-100 rounded-lg p-1 inline-flex gap-1">
+      {/* Tab Navigation (G13 fix: ARIA tablist/tab roles) */}
+      <div
+        className="bg-gray-100 rounded-lg p-1 inline-flex gap-1"
+        role="tablist"
+        aria-label="Tracking dashboard sections"
+      >
         {TABS.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            aria-controls={`tabpanel-${tab.id}`}
+            id={`tab-${tab.id}`}
             className={`
               flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all
               ${
@@ -136,21 +154,27 @@ export default function TrackingView() {
             `}
             title={tab.description}
           >
-            <Icon name={tab.icon} size="base" />
+            <Icon name={tab.icon} size="base" aria-hidden="true" />
             {tab.label}
           </button>
         ))}
       </div>
 
-      {/* Tab Content */}
-      <CollapsibleSection
-        storageKey={`tracking-${activeTab}`}
-        title={TABS.find((t) => t.id === activeTab)?.label ?? 'Tracking'}
-        icon="monitoring"
-        defaultExpanded
+      {/* Tab Content (wrapped in tabpanel div since CollapsibleSection doesn't forward ARIA props) */}
+      <div
+        role="tabpanel"
+        aria-labelledby={`tab-${activeTab}`}
+        id={`tabpanel-${activeTab}`}
       >
-        {renderTabContent()}
-      </CollapsibleSection>
+        <CollapsibleSection
+          storageKey={`tracking-${activeTab}`}
+          title={TABS.find((t) => t.id === activeTab)?.label ?? 'Tracking'}
+          icon="monitoring"
+          defaultExpanded
+        >
+          {renderTabContent()}
+        </CollapsibleSection>
+      </div>
     </div>
   );
 }

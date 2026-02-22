@@ -12,7 +12,6 @@ import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 interface HealthCheck {
   name: string;

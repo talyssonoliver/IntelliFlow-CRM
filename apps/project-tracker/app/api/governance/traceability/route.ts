@@ -17,7 +17,6 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
 import { join } from 'path';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 interface TraceLink {
   type: 'artifact' | 'attestation' | 'test' | 'documentation';

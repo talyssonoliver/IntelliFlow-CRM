@@ -12,7 +12,6 @@ import { join } from 'path';
 import { execSync } from 'child_process';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 interface WebVitalsMetrics {
   performance: number;

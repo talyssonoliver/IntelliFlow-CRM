@@ -5,7 +5,6 @@ import path from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 export const runtime = 'nodejs';
 
 type AuditStreamCommand =

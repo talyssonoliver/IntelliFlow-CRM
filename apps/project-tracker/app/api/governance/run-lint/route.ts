@@ -12,7 +12,6 @@ import { loadLintReport, loadReviewQueue, loadPhantomCompletionAudit } from '@/l
 const execAsync = promisify(exec);
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 // Detect Python command (python or python3)
 async function getPythonCommand(rootDir: string): Promise<string> {

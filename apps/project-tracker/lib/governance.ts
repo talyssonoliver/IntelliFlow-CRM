@@ -95,7 +95,7 @@ export function loadCSVTasks(): CSVTask[] {
     const tasks: CSVTask[] = (results.data as any[])
       .map((row) => {
         const sprintValue = row['Target Sprint'] || '0';
-        let sprint: number | 'Continuous' = 0;
+        let sprint: number | 'Continuous';
         if (sprintValue.toLowerCase() === 'continuous') {
           sprint = 'Continuous';
         } else {

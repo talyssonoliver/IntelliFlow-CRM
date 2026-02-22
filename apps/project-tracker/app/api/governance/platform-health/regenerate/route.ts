@@ -20,7 +20,6 @@ import { resolve, join } from 'node:path';
 import { execSync } from 'node:child_process';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 function getRoot(): string {
   let root = process.cwd();

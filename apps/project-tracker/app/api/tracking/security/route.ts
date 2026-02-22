@@ -12,7 +12,6 @@ const BASELINE_PATH = path.join(ARTIFACTS_DIR, 'misc', 'vulnerability-baseline.j
 const SCAN_STATE_PATH = path.join(SECURITY_DIR, 'scan-state.json');
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 // Interfaces
 interface VulnerabilityCounts {

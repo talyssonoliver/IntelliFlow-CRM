@@ -13,7 +13,6 @@ import { existsSync, readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 interface SprintVelocity {
   sprint: number;

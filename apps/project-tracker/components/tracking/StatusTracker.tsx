@@ -191,6 +191,34 @@ export default function StatusTracker() {
         </div>
       )}
 
+      {/* Section Breakdown (G9 fix) */}
+      {data?.by_section && Object.keys(data.by_section).length > 0 && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h4 className="text-sm font-medium text-gray-700 mb-3">By Section</h4>
+          <div className="space-y-2">
+            {Object.entries(data.by_section)
+              .sort(([a], [b]) => a.localeCompare(b, 'en'))
+              .slice(0, 8)
+              .map(([section, stats]) => {
+                const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+                return (
+                  <div key={section} className="flex items-center gap-3">
+                    <span className="text-xs text-gray-500 w-24 truncate" title={section}>
+                      {section}
+                    </span>
+                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-purple-500" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="text-xs text-gray-500 w-12 text-right">
+                      {stats.completed}/{stats.total}
+                    </span>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
+
       {/* Recent Completions */}
       {data?.recent_completions && data.recent_completions.length > 0 && (
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">

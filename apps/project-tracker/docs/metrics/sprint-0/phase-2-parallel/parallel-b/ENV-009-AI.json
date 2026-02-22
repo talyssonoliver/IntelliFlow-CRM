@@ -9,7 +9,7 @@
   "stream": "parallel-b",
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-02-19T19:19:10.596Z",
+    "verified_at": "2026-02-22T15:11:45.857Z",
     "required": [
       "ENV-001-AI"
     ]
@@ -69,10 +69,11 @@
       "apps/web/src/app/layout.tsx",
       "apps/web/src/app/dashboard/page.tsx",
       "packages/ui/package.json",
-      "apps/web/package.json",
-      "apps/web/tailwind.config.ts"
+      "apps/web/package.json"
     ],
-    "missing": []
+    "missing": [
+      "apps/web/tailwind.config.ts"
+    ]
   },
   "validations": [
     {

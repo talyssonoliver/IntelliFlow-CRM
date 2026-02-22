@@ -3,7 +3,6 @@ import fs from 'fs';
 import path from 'path';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 // Types for k6 raw data
 interface K6Check {

@@ -6,7 +6,6 @@ const ARTIFACTS_DIR = path.join(process.cwd(), '..', '..', 'artifacts');
 const RISK_REGISTER_PATH = path.join(ARTIFACTS_DIR, 'reports', 'risk-register.csv');
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 interface Risk {
   id: string;

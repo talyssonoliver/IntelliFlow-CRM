@@ -57,6 +57,8 @@ export default function RefreshButton({
         ${variantClasses[variant]}
         disabled:cursor-not-allowed
       `}
+      aria-busy={isRefreshing}
+      {...(!showLabel ? { 'aria-label': isRefreshing ? `${label}: refreshing` : label } : {})}
     >
       <Icon
         name="refresh"

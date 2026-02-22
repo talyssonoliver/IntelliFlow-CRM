@@ -4,7 +4,6 @@ import { join } from 'node:path';
 import { PATHS } from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 /**
  * POST /api/sync-metrics

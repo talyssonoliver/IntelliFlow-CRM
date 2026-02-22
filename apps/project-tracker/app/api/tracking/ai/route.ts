@@ -7,7 +7,6 @@ const AI_METRICS_PATH = path.join(ARTIFACTS_DIR, 'metrics', 'ai-metrics.json');
 const COST_BUDGET_PATH = path.join(ARTIFACTS_DIR, 'reports', 'cost-budget.csv');
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 interface AIMetrics {
   models: Array<{

@@ -5,7 +5,6 @@ import { normalizeStatus, TASK_STATUSES, STATUS_GROUPS } from '@/lib/csv-parser'
 import { PATHS, getSprintSummaryPath } from '@/lib/paths';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 interface CsvTask {
   'Task ID': string;

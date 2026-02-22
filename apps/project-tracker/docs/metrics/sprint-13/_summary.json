@@ -7,10 +7,10 @@
   "phases": [],
   "task_summary": {
     "total": 20,
-    "done": 15,
-    "in_progress": 2,
+    "done": 20,
+    "in_progress": 0,
     "blocked": 0,
-    "not_started": 3,
+    "not_started": 0,
     "failed": 0
   },
   "completed_tasks": [
@@ -25,72 +25,97 @@
       "duration_minutes": 8
     },
     {
+      "task_id": "PG-023",
+      "completed_at": "2026-02-19T23:15:00.000Z",
+      "duration_minutes": 15
+    },
+    {
       "task_id": "PG-016",
-      "completed_at": "2026-02-19T19:19:10.821Z",
+      "completed_at": "2026-02-22T15:11:46.113Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "PG-017",
+      "completed_at": "2026-02-22T15:11:46.113Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-018",
-      "completed_at": "2026-02-19T19:19:10.821Z",
+      "completed_at": "2026-02-22T15:11:46.113Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-019",
-      "completed_at": "2026-02-19T19:19:10.821Z",
+      "completed_at": "2026-02-22T15:11:46.113Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-020",
-      "completed_at": "2026-02-19T19:19:10.821Z",
+      "completed_at": "2026-02-22T15:11:46.113Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-021",
-      "completed_at": "2026-02-19T19:19:10.821Z",
+      "completed_at": "2026-02-22T15:11:46.113Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-022",
-      "completed_at": "2026-02-19T19:19:10.821Z",
+      "completed_at": "2026-02-22T15:11:46.113Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "PG-024",
+      "completed_at": "2026-02-22T15:11:46.113Z",
       "duration_minutes": 15
     },
     {
       "task_id": "PG-104",
-      "completed_at": "2026-02-19T19:19:10.821Z",
+      "completed_at": "2026-02-22T15:11:46.113Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-159",
-      "completed_at": "2026-02-19T19:19:10.821Z",
+      "completed_at": "2026-02-22T15:11:46.113Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-163",
-      "completed_at": "2026-02-19T19:19:10.821Z",
+      "completed_at": "2026-02-22T15:11:46.113Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-172",
-      "completed_at": "2026-02-19T19:19:10.821Z",
+      "completed_at": "2026-02-22T15:11:46.113Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-173",
-      "completed_at": "2026-02-19T19:19:10.822Z",
+      "completed_at": "2026-02-22T15:11:46.113Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-183",
-      "completed_at": "2026-02-19T19:19:10.822Z",
+      "completed_at": "2026-02-22T15:11:46.113Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "PG-140",
+      "completed_at": "2026-02-22T15:11:46.113Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-198",
-      "completed_at": "2026-02-19T19:19:10.822Z",
+      "completed_at": "2026-02-22T15:11:46.113Z",
+      "duration_minutes": 15
+    },
+    {
+      "task_id": "IFC-200",
+      "completed_at": "2026-02-22T15:11:46.113Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "15/20 tasks DONE (75%). Last synced: 2026-02-19T19:19:10.822Z",
+  "notes": "20/20 tasks DONE (100%). Last synced: 2026-02-22T15:11:46.113Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
@@ -101,17 +126,18 @@
         "PG-015",
         "PG-016",
         "PG-017",
-        "PG-024"
+        "PG-020",
+        "PG-104"
       ],
-      "total_duration_minutes": 650,
-      "completion_percentage": 60,
-      "bottleneck_task_id": "PG-017"
+      "total_duration_minutes": 780,
+      "completion_percentage": 100,
+      "bottleneck_task_id": null
     },
     "schedule_variance": {
-      "sv_minutes": -873,
-      "spi": 0.81,
-      "status": "behind"
+      "sv_minutes": 0,
+      "spi": 1,
+      "status": "on_track"
     },
-    "calculated_at": "2026-02-19T19:19:10.873Z"
+    "calculated_at": "2026-02-22T15:11:46.150Z"
   }
 }

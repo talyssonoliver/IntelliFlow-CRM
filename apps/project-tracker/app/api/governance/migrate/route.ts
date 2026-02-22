@@ -11,7 +11,6 @@ import path from 'path';
 const execAsync = promisify(exec);
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 // Detect Python command
 async function getPythonCommand(rootDir: string): Promise<string> {

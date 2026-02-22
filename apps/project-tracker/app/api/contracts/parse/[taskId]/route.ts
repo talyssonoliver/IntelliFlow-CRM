@@ -4,7 +4,6 @@ import { join } from 'node:path';
 import Papa from 'papaparse';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 interface Params {
   params: Promise<{

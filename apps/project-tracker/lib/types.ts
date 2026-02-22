@@ -692,10 +692,10 @@ export interface DocumentPreview {
 export interface PlanDeliverable {
   path: string;
   type: 'file' | 'directory';
-  status: 'exists' | 'missing' | 'unknown';
+  status: 'exists' | 'missing' | 'deleted' | 'unknown';
   size?: number;
   lastModified?: string;
-  fromSection: 'Files to Create/Modify' | 'Artifacts' | 'Implementation Steps';
+  fromSection: 'Files to Create/Modify' | 'Files to Delete' | 'Artifacts' | 'Implementation Steps';
 }
 
 /**

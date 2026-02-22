@@ -9,7 +9,6 @@ import { PATHS, MONOREPO_ROOT } from '@/lib/paths';
 import { NO_CACHE_HEADERS } from '@/lib/api-types';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 interface CsvTask {
   'Task ID': string;

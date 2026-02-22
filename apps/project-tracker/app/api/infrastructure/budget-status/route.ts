@@ -12,7 +12,6 @@ import Papa from 'papaparse';
 import type { RawCSVRow } from '../../../../lib/types';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 interface BudgetLine {
   category: string;

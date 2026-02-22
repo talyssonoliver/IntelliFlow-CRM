@@ -11,7 +11,6 @@ const REPORTS_DIR = path.join(ARTIFACTS_DIR, 'reports');
 const CODE_ANALYSIS_DIR = path.join(REPORTS_DIR, 'code-analysis');
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 interface QualityMetrics {
   debt: {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Icon } from '@/lib/icons';
+import { RefreshButton } from './shared';
 
 interface HistorySummary {
   total: number;
@@ -151,13 +152,7 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
             </p>
           </div>
         </div>
-        <button
-          onClick={fetchHistory}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm transition-colors"
-        >
-          <Icon name="refresh" size="sm" />
-          Refresh
-        </button>
+        <RefreshButton onRefresh={fetchHistory} label="Refresh History" variant="outline" size="sm" />
       </div>
 
       {/* Trend Summary */}

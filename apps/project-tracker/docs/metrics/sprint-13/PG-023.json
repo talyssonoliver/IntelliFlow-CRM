@@ -1,0 +1,122 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "PG-023",
+  "section": "Auth Pages",
+  "description": "Email Verification",
+  "owner": "Platform FE (STOA-Foundation)",
+  "status": "DONE",
+  "sprint": "sprint-13",
+  "phase": null,
+  "stream": null,
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": "2026-02-22T15:11:46.110Z",
+    "required": [
+      "PG-016",
+      "IFC-006"
+    ]
+  },
+  "started_at": "2026-02-19T22:00:00.000Z",
+  "completed_at": "2026-02-19T23:15:00.000Z",
+  "execution": {
+    "retry_count": 0,
+    "last_error": null,
+    "executor": "Claude Code exec session",
+    "log_path": ".specify/sprints/sprint-13/execution/PG-023/20260219-exec-session/PG-023-delivery.md"
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/(public)/verify-email/[token]/page.tsx",
+      "apps/web/src/components/shared/email-verification.tsx",
+      "apps/web/src/lib/shared/account-activation.ts"
+    ],
+    "created": [
+      "apps/web/src/app/(public)/verify-email/[token]/page.tsx",
+      "apps/web/src/components/shared/email-verification.tsx",
+      "apps/web/src/lib/shared/account-activation.ts"
+    ],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-02-19T23:05:00.000Z",
+      "duration_ms": 18000,
+      "stdout_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run src/app/(public)/verify-email src/lib/shared/__tests__/account-activation.test.ts src/components/shared/__tests__/email-verification.test.tsx",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-02-19T23:06:00.000Z",
+      "duration_ms": 4500,
+      "stdout_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint src/app/(public)/verify-email src/lib/shared/account-activation.ts src/components/shared/email-verification.tsx --max-warnings=0",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-02-19T23:07:00.000Z",
+      "duration_ms": 8000,
+      "stdout_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "executed_at": "2026-02-19T23:10:00.000Z",
+      "duration_ms": 117000,
+      "stdout_hash": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "kpis": {
+    "test_count": {
+      "target": "15",
+      "actual": "82",
+      "met": true
+    },
+    "coverage_statements": {
+      "target": ">=90%",
+      "actual": "93.63%",
+      "met": true
+    },
+    "coverage_branches": {
+      "target": ">=80%",
+      "actual": "90.56%",
+      "met": true
+    },
+    "coverage_functions": {
+      "target": ">=90%",
+      "actual": "95.65%",
+      "met": true
+    },
+    "coverage_lines": {
+      "target": ">=90%",
+      "actual": "94.23%",
+      "met": true
+    }
+  },
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "In Progress",
+      "at": "2026-02-19T22:00:00.000Z",
+      "note": "Exec session started. Files from prior session verified on disk."
+    },
+    {
+      "status": "Completed",
+      "at": "2026-02-19T23:15:00.000Z",
+      "note": "All 4 gates passed. TypeScript clean, 82 tests pass, lint 0 errors, build exit 0, coverage >=90% all metrics."
+    }
+  ],
+  "dependencies_resolved": [
+    "PG-016",
+    "IFC-006"
+  ]
+}

@@ -10,7 +10,6 @@ import { existsSync, readFileSync, statSync } from 'fs';
 import { join } from 'path';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 type VulnerabilitySeverity = 'critical' | 'high' | 'medium' | 'low';
 

@@ -11,6 +11,7 @@ interface PlanDeliverablesStatusProps {
 
 const STATUS_CONFIG = {
   exists: { icon: 'check_circle', color: 'text-green-600', bg: 'bg-green-50', label: 'Exists' },
+  deleted: { icon: 'check_circle', color: 'text-green-600', bg: 'bg-green-50', label: 'Deleted' },
   missing: { icon: 'cancel', color: 'text-red-600', bg: 'bg-red-50', label: 'Missing' },
   unknown: { icon: 'help', color: 'text-gray-400', bg: 'bg-gray-50', label: 'Unknown' },
   complete: { icon: 'check_circle', color: 'text-green-600', bg: 'bg-green-50', label: 'Complete' },
@@ -155,7 +156,7 @@ export default function PlanDeliverablesStatus({
             onClick={() => setExpandedFiles(!expandedFiles)}
           >
             <h4 className="text-sm font-medium text-gray-700">
-              Files to Create/Modify ({data.deliverables.total})
+              Plan Deliverables ({data.deliverables.total})
             </h4>
             {expandedFiles ? (
               <Icon name="expand_less" size="sm" className="text-gray-400" />
@@ -171,16 +172,16 @@ export default function PlanDeliverablesStatus({
                   <div
                     key={idx}
                     className={`flex items-center justify-between py-1 px-2 rounded ${
-                      file.status === 'exists' ? 'bg-green-50' : 'bg-red-50'
+                      file.status === 'exists' || file.status === 'deleted' ? 'bg-green-50' : 'bg-red-50'
                     }`}
                   >
                     <span
                       className={`truncate flex-1 ${
-                        file.status === 'exists' ? 'text-gray-700' : 'text-red-700'
+                        file.status === 'exists' || file.status === 'deleted' ? 'text-gray-700' : 'text-red-700'
                       }`}
                       title={file.path}
                     >
-                      {file.path}
+                      {file.path}{file.status === 'deleted' ? ' (deleted)' : ''}
                     </span>
                     <div className="flex items-center gap-2 ml-2">
                       {file.size && (
@@ -188,10 +189,10 @@ export default function PlanDeliverablesStatus({
                       )}
                       <span
                         className={`w-4 h-4 flex items-center justify-center ${
-                          file.status === 'exists' ? 'text-green-600' : 'text-red-600'
+                          file.status === 'exists' || file.status === 'deleted' ? 'text-green-600' : 'text-red-600'
                         }`}
                       >
-                        {file.status === 'exists' ? '✓' : '✗'}
+                        {file.status === 'exists' || file.status === 'deleted' ? '✓' : '✗'}
                       </span>
                     </div>
                   </div>

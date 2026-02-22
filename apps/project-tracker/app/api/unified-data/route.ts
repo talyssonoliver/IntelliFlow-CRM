@@ -20,7 +20,6 @@ import { NO_CACHE_HEADERS, TaskSummary, createEmptyTaskSummary } from '@/lib/api
 import type { TaskStatus } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 interface CsvRow {
   'Task ID': string;

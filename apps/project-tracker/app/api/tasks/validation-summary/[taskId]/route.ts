@@ -19,7 +19,6 @@ import type {
 } from '../../../../../lib/types';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 // Get repo root (apps/project-tracker -> repo root)
 function getRepoRoot(): string {
@@ -580,6 +579,29 @@ async function parsePlanDeliverables(
     }
   }
 
+  // Extract files from "Files to Delete:" sections (inverted check: missing on disk = correctly deleted)
+  const deletePattern = /\*\*Files to Delete[^:]*:\*\*\s*\n((?:- `[^`]+`\n?)+)/g;
+  let deleteMatch;
+  while ((deleteMatch = deletePattern.exec(planContent)) !== null) {
+    const fileListBlock = deleteMatch[1];
+    const fileMatches = fileListBlock.match(/- `([^`]+)`/g);
+    if (fileMatches) {
+      for (const fileMatch of fileMatches) {
+        const filePath = fileMatch.match(/- `([^`]+)`/)?.[1];
+        if (filePath && !deliverables.some((d) => d.path === filePath)) {
+          const fullPath = join(repoRoot, filePath);
+          const fileExists = existsSync(fullPath);
+          deliverables.push({
+            path: filePath,
+            type: 'file',
+            status: fileExists ? 'missing' : 'deleted',
+            fromSection: 'Files to Delete',
+          });
+        }
+      }
+    }
+  }
+
   // Also extract artifact paths mentioned in the plan
   const artifactPattern = /`(artifacts\/[^`]+)`/g;
   let artifactMatch;
@@ -675,7 +697,7 @@ async function parsePlanDeliverables(
   }
 
   // Calculate verification summary
-  const verifiedCount = deliverables.filter((d) => d.status === 'exists').length;
+  const verifiedCount = deliverables.filter((d) => d.status === 'exists' || d.status === 'deleted').length;
   const missingCount = deliverables.filter((d) => d.status === 'missing').length;
   const checkedCount = checkboxItems.filter((c) => c.checked).length;
 
@@ -919,7 +941,7 @@ function buildCompletionGates(
   const checkboxChecked = planDeliverables?.checkboxes?.checked ?? 0;
   const checkboxPct = checkboxTotal > 0 ? Math.round((checkboxChecked / checkboxTotal) * 100) : 100;
 
-  let checkboxStatus: 'pass' | 'warn' | 'blocked' | 'pending' = 'pending';
+  let checkboxStatus: 'pass' | 'warn' | 'blocked' | 'pending';
   if (!planDeliverables?.planExists) {
     checkboxStatus = 'pending';
   } else if (checkboxPct === 100) {
@@ -945,7 +967,7 @@ function buildCompletionGates(
   const artifactVerified = planDeliverables?.deliverables?.verified ?? 0;
   const artifactMissing = planDeliverables?.deliverables?.missing ?? 0;
 
-  let artifactStatus: 'pass' | 'warn' | 'blocked' | 'pending' = 'pending';
+  let artifactStatus: 'pass' | 'warn' | 'blocked' | 'pending';
   if (artifactTotal === 0) {
     artifactStatus = 'pending';
   } else if (artifactMissing === 0) {
@@ -978,7 +1000,7 @@ function buildCompletionGates(
     (i) => i?.status === 'pending'
   );
 
-  let buildStatus: 'pass' | 'warn' | 'blocked' | 'pending' = 'pending';
+  let buildStatus: 'pass' | 'warn' | 'blocked' | 'pending';
   if (allBuildPending) {
     buildStatus = 'blocked';
     blockingReasons.push('Build validation not executed');

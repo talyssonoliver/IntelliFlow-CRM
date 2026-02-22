@@ -6,8 +6,9 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import Papa from 'papaparse';
 import { splitSprintPlan } from '../../../../tools/scripts/split-sprint-plan';
+import { generateSpecTracker } from '../../../../tools/scripts/generate-spec-tracker';
 import type { SyncResult, SafeUpdateResult, TaskRecord } from './types';
-import { tryFormatMetricsJson } from './file-io';
+import { tryFormatMetricsJson, findRepoRoot } from './file-io';
 import { updateSprintPlanJson, updateTaskRegistry } from './json-generators';
 import { updateIndividualTaskFile } from './task-json-updater';
 import { updatePhaseSummaries, updateSprintSummaryGeneric } from './summary-generators';
@@ -62,6 +63,19 @@ export function syncMetricsFromCSV(csvPath: string, metricsDir: string): SyncRes
       }
     } else if (splitResult.error) {
       errors.push(`CSV split: ${splitResult.error}`);
+    }
+
+    // Auto-regenerate spec-tracker.json
+    const repoRoot = findRepoRoot(metricsDir);
+    if (repoRoot) {
+      const specTrackerResult = safeUpdate(() => {
+        generateSpecTracker({ repoRoot, writeOutput: true });
+      }, 'spec-tracker.json');
+      if (specTrackerResult.success) {
+        filesUpdated.push(specTrackerResult.file);
+      } else {
+        errors.push(`${specTrackerResult.file}: ${specTrackerResult.error}`);
+      }
     }
 
     const timeElapsed = Date.now() - startTime;

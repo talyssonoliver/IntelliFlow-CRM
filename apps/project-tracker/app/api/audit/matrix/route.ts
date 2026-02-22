@@ -5,7 +5,6 @@ import crypto from 'node:crypto';
 import yaml from 'js-yaml';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 export const runtime = 'nodejs';
 
 function getRepoRootDir(): string {
