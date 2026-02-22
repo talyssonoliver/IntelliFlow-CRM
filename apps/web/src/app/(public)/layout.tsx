@@ -15,6 +15,7 @@ const AUTH_PAGES_NO_FOOTER = [
   '/logout',
   '/verify-email',
   '/mfa',
+  '/auth/callback',
 ];
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {

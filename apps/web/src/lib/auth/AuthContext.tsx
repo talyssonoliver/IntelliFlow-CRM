@@ -523,6 +523,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data?.url) {
+        // Store session nonce for callback verification
+        sessionStorage.setItem('intelliflow_oauth_nonce', crypto.randomUUID());
+
         // Redirect to OAuth provider
         console.log('[OAuth] Redirecting to:', data.url);
         window.location.href = data.url;

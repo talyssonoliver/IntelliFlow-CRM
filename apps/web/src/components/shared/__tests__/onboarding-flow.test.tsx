@@ -89,7 +89,7 @@ describe('OnboardingFlow', () => {
 
     expect(screen.getByRole('button', { name: /resend email/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /complete profile/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /import contacts/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /import contacts/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /start tour/i })).toBeInTheDocument();
   });
 
@@ -143,7 +143,7 @@ describe('OnboardingFlow', () => {
 
     // Check that the grid layout is applied
     const stepsContainer = screen
-      .getByRole('navigation', { name: /onboarding steps/i })
+      .getByRole('region', { name: /onboarding steps/i })
       .querySelector('.grid');
     expect(stepsContainer).toBeInTheDocument();
   });
@@ -153,7 +153,7 @@ describe('OnboardingFlow', () => {
 
     // Vertical variant should not have grid class
     const stepsContainer = screen
-      .getByRole('navigation', { name: /onboarding steps/i })
+      .getByRole('region', { name: /onboarding steps/i })
       .querySelector('.space-y-0');
     expect(stepsContainer).toBeInTheDocument();
   });
@@ -177,7 +177,7 @@ describe('OnboardingFlow', () => {
   it('has accessible navigation landmark', () => {
     render(<OnboardingFlow />);
 
-    expect(screen.getByRole('navigation', { name: /onboarding steps/i })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: /onboarding steps/i })).toBeInTheDocument();
   });
 
   it('uses aria-hidden for decorative icons', () => {

@@ -1,9 +1,12 @@
 /**
  * Reset Token Service
  *
- * Utilities for generating, validating, and managing password reset tokens.
+ * @deprecated IFC-120: All functions in this file are deprecated.
+ * Use tRPC `auth.requestPasswordReset` and `auth.resetPassword` instead.
+ * Supabase handles token generation, validation, and email delivery natively.
+ * This file is kept for backward compatibility with existing tests only.
  *
- * IMPLEMENTS: PG-019 (Forgot Password page)
+ * IMPLEMENTS: PG-019 (Forgot Password page) — superseded by IFC-120
  *
  * Features:
  * - Secure token generation

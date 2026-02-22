@@ -79,7 +79,6 @@ export const DEFAULT_ONBOARDING_STEPS: OnboardingStep[] = [
     icon: 'upload',
     action: {
       label: 'Import contacts',
-      href: '/contacts/import',
     },
     optional: true,
   },
@@ -90,7 +89,7 @@ export const DEFAULT_ONBOARDING_STEPS: OnboardingStep[] = [
     icon: 'explore',
     action: {
       label: 'Start tour',
-      href: '/dashboard?tour=true',
+      href: '/dashboard',
     },
     optional: true,
   },
@@ -132,6 +131,7 @@ function StepItem({
         'relative flex gap-4',
         variant === 'horizontal' ? 'flex-col items-center text-center' : 'items-start'
       )}
+      aria-current={isActive ? 'step' : undefined}
     >
       {/* Connector Line */}
       {!isLast && variant === 'vertical' && (
@@ -178,7 +178,7 @@ function StepItem({
             {step.title}
           </h3>
           {step.optional && (
-            <span className="text-xs text-slate-500 bg-slate-800 px-2 py-0.5 rounded">
+            <span className="text-xs text-slate-400 bg-slate-800 px-2 py-0.5 rounded">
               Optional
             </span>
           )}
@@ -191,7 +191,7 @@ function StepItem({
             </span>
           )}
         </div>
-        <p className="text-sm text-slate-400 mb-3">{step.description}</p>
+        <p className="text-sm text-slate-300 mb-3">{step.description}</p>
 
         {/* Action Button */}
         {step.action && !isCompleted && (
@@ -202,6 +202,7 @@ function StepItem({
                 onClick={handleActionClick}
                 className={cn(
                   'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                  'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900',
                   isActive
                     ? 'bg-[#137fec] text-white hover:bg-[#137fec]/90'
                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
@@ -218,6 +219,7 @@ function StepItem({
                 onClick={handleActionClick}
                 className={cn(
                   'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all',
+                  'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900',
                   isActive
                     ? 'bg-[#137fec] text-white hover:bg-[#137fec]/90'
                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
@@ -249,7 +251,7 @@ function ProgressBar({ current, total, className }: ProgressBarProps) {
   return (
     <div className={cn('space-y-2', className)}>
       <div className="flex items-center justify-between text-sm">
-        <span className="text-slate-400">
+        <span className="text-slate-300">
           {current} of {total} steps completed
         </span>
         <span className="text-[#137fec] font-medium">{percentage}%</span>
@@ -328,7 +330,7 @@ export function OnboardingFlow({
   const completedCount = completedSteps.size;
 
   return (
-    <div className={cn('space-y-6', className)} role="navigation" aria-label="Onboarding steps">
+    <div className={cn('space-y-6', className)} role="region" aria-label="Onboarding steps">
       {/* Progress Bar */}
       {showProgress && <ProgressBar current={completedCount} total={steps.length} />}
 
@@ -357,7 +359,7 @@ export function OnboardingFlow({
         <div className="pt-4 border-t border-slate-700">
           <Link
             href="/dashboard"
-            className="text-sm text-slate-400 hover:text-white transition-colors flex items-center gap-2"
+            className="text-sm text-slate-300 hover:text-white transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900 rounded"
           >
             Skip for now and go to dashboard
             <span className="material-symbols-outlined text-lg" aria-hidden="true">

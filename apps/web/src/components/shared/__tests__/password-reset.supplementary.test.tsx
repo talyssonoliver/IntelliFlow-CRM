@@ -84,12 +84,24 @@ vi.mock('@/lib/shared/password-validation', () => ({
   },
 }));
 
-vi.mock('@/lib/shared/reset-token', () => ({
-  markTokenUsed: vi.fn(),
-}));
-
 vi.mock('@/lib/shared/login-security', () => ({
   sanitizePassword: (p: string) => p.trim(),
+}));
+
+const mockResetMutateAsync = vi.fn().mockResolvedValue({ success: true });
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    auth: {
+      resetPassword: {
+        useMutation: () => ({
+          mutateAsync: (...args: any[]) => mockResetMutateAsync(...args),
+          isPending: false,
+          isSuccess: false,
+          error: null,
+        }),
+      },
+    },
+  },
 }));
 
 import {
@@ -353,5 +365,76 @@ describe('PasswordResetForm', () => {
     render(<PasswordResetForm {...formProps} />);
 
     expect(screen.getByRole('form', { name: /password reset form/i })).toBeInTheDocument();
+  });
+
+  it('calls tRPC resetPassword on valid submit and triggers onSuccess', async () => {
+    const onSuccess = vi.fn();
+    mockResetMutateAsync.mockResolvedValue({ success: true });
+    const user = userEvent.setup();
+
+    render(<PasswordResetForm {...formProps} onSuccess={onSuccess} />);
+
+    const passwordInput = screen.getByLabelText('New password');
+    const confirmInput = screen.getByLabelText('Confirm new password');
+
+    await user.type(passwordInput, 'StrongP@ss1!');
+    await user.type(confirmInput, 'StrongP@ss1!');
+    await user.click(screen.getByRole('button', { name: /reset password/i }));
+
+    await waitFor(() => {
+      expect(mockResetMutateAsync).toHaveBeenCalledWith(
+        expect.objectContaining({
+          token: 'test-token-123',
+          password: 'StrongP@ss1!',
+          confirmPassword: 'StrongP@ss1!',
+        })
+      );
+    });
+
+    await waitFor(() => {
+      expect(onSuccess).toHaveBeenCalled();
+    });
+  });
+
+  it('shows UNAUTHORIZED error message on expired token submit', async () => {
+    mockResetMutateAsync.mockRejectedValue({
+      data: { code: 'UNAUTHORIZED' },
+      message: 'Token expired',
+    });
+    const user = userEvent.setup();
+
+    render(<PasswordResetForm {...formProps} />);
+
+    const passwordInput = screen.getByLabelText('New password');
+    const confirmInput = screen.getByLabelText('Confirm new password');
+
+    await user.type(passwordInput, 'StrongP@ss1!');
+    await user.type(confirmInput, 'StrongP@ss1!');
+    await user.click(screen.getByRole('button', { name: /reset password/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/expired or is invalid/i)).toBeInTheDocument();
+    });
+  });
+
+  it('shows generic error message on non-UNAUTHORIZED failure', async () => {
+    mockResetMutateAsync.mockRejectedValue({
+      data: { code: 'INTERNAL_SERVER_ERROR' },
+      message: 'Server error',
+    });
+    const user = userEvent.setup();
+
+    render(<PasswordResetForm {...formProps} />);
+
+    const passwordInput = screen.getByLabelText('New password');
+    const confirmInput = screen.getByLabelText('Confirm new password');
+
+    await user.type(passwordInput, 'StrongP@ss1!');
+    await user.type(confirmInput, 'StrongP@ss1!');
+    await user.click(screen.getByRole('button', { name: /reset password/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/failed to reset password/i)).toBeInTheDocument();
+    });
   });
 });

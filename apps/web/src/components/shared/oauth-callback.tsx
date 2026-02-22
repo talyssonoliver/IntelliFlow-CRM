@@ -23,7 +23,7 @@
  * 6. On error: displays error with retry option
  */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card } from '@intelliflow/ui';
 import { cn } from '@intelliflow/ui';
@@ -75,6 +75,8 @@ export function OAuthCallback({
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<OAuthCallbackStatus>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const hasCalledRef = useRef(false);
+  const backToLoginRef = useRef<HTMLButtonElement>(null);
 
   // tRPC mutation for OAuth callback
   const oauthCallback = trpc.auth.oauthCallback.useMutation();
@@ -82,6 +84,24 @@ export function OAuthCallback({
   // Handle the OAuth callback flow
   const handleCallback = useCallback(async () => {
     try {
+      // Bookmarked URL detection: no params at all → redirect to login
+      const hasCode = searchParams.get('code');
+      const hasError = searchParams.get('error');
+      if (!hasCode && !hasError) {
+        setStatus('error');
+        const errorMsg = 'No authentication data found. Please start the sign-in process from the login page.';
+        setErrorMessage(errorMsg);
+        onError?.(errorMsg);
+        return;
+      }
+
+      // Verify session nonce (soft check — mobile app switches may lose sessionStorage)
+      const nonce = sessionStorage.getItem('intelliflow_oauth_nonce');
+      if (!nonce) {
+        console.warn('[OAuth] Session nonce missing — possible cross-tab or mobile redirect');
+      }
+      sessionStorage.removeItem('intelliflow_oauth_nonce');
+
       // Extract OAuth parameters from URL
       const params = extractOAuthParams(searchParams);
 
@@ -115,8 +135,15 @@ export function OAuthCallback({
         mutationInput.provider = validation.value.provider;
       }
 
-      // Exchange code for session
-      const result = await oauthCallback.mutateAsync(mutationInput);
+      // Exchange code for session with 4-second timeout (NF-005)
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('TIMEOUT')), 4000);
+      });
+
+      const result = await Promise.race([
+        oauthCallback.mutateAsync(mutationInput),
+        timeoutPromise,
+      ]);
 
       if (result.success && result.session) {
         setStatus('success');
@@ -129,15 +156,19 @@ export function OAuthCallback({
         // Store device fingerprint for session verification
         storeSessionFingerprint();
 
-        // Call success callback
+        // Set OAuth login success flag for AuthContext grace window
+        sessionStorage.setItem('oauth_login_success', 'true');
+
+        // Call success callback or redirect
         if (onSuccess && result.user) {
           onSuccess(result.user, result.session);
+          return;
         }
 
-        // Redirect to dashboard after brief success state
+        // Redirect to dashboard after brief success state (300ms per NF-004)
         setTimeout(() => {
           router.push(redirectUrl);
-        }, 1500);
+        }, 300);
       } else {
         setStatus('error');
         const errorMsg = 'Authentication failed. Please try again.';
@@ -146,16 +177,30 @@ export function OAuthCallback({
       }
     } catch (err) {
       setStatus('error');
-      const errorMsg = err instanceof Error ? err.message : 'An unexpected error occurred';
+      const errorMsg = err instanceof Error
+        ? (err.message === 'TIMEOUT'
+          ? 'Authentication is taking too long. Please try again.'
+          : err.message)
+        : 'An unexpected error occurred';
       setErrorMessage(errorMsg);
       onError?.(errorMsg);
     }
   }, [searchParams, oauthCallback, router, redirectUrl, onSuccess, onError]);
 
-  // Run callback on mount
+  // Run callback on mount — hasCalledRef prevents double-execution in StrictMode
+  // (PKCE authorization codes are single-use)
   useEffect(() => {
+    if (hasCalledRef.current) return;
+    hasCalledRef.current = true;
     handleCallback();
   }, [handleCallback]);
+
+  // Focus management: move focus to primary action on error state (NF-007)
+  useEffect(() => {
+    if (status === 'error' && backToLoginRef.current) {
+      backToLoginRef.current.focus();
+    }
+  }, [status]);
 
   // ==========================================
   // Status Configurations
@@ -205,7 +250,7 @@ export function OAuthCallback({
   };
 
   const handleRetry = () => {
-    window.location.reload();
+    router.push('/login');
   };
 
   // ==========================================
@@ -224,7 +269,7 @@ export function OAuthCallback({
           {/* Card gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-[#137fec]/[0.03]" />
 
-          <div className="relative p-8 text-center space-y-6" role="status" aria-live="polite">
+          <div className="relative p-8 text-center space-y-6" role="status" aria-live="assertive">
             {/* Status icon */}
             <div
               className={cn(
@@ -254,6 +299,7 @@ export function OAuthCallback({
             {status === 'error' && (
               <div className="pt-4 space-y-3">
                 <button
+                  ref={backToLoginRef}
                   onClick={handleBackToLogin}
                   className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7] transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a] shadow-lg shadow-[#137fec]/20"
                 >

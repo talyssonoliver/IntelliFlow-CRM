@@ -23,9 +23,8 @@ import { AuthBackground, AuthCard } from '@/components/shared';
 import {
   ForgotPasswordForm,
   ResetEmailSent,
-  buildResetEmailPayload,
 } from '@/components/shared/reset-email';
-import { createResetToken, buildResetUrl, checkRateLimit } from '@/lib/shared/reset-token';
+import { trpc } from '@/lib/trpc';
 
 // ============================================
 // Types
@@ -70,60 +69,33 @@ export default function ForgotPasswordPage() {
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
+  // tRPC mutation for requesting password reset
+  const requestResetMutation = trpc.auth.requestPasswordReset.useMutation();
+
   // Handle password reset request
   const handleSubmit = useCallback(async (submittedEmail: string) => {
     setIsLoading(true);
     setError(null);
 
     try {
-      // Check rate limit first
-      const rateLimit = checkRateLimit(submittedEmail);
-      if (rateLimit.isLimited) {
-        throw new Error(
-          `Too many requests. Please try again in ${Math.ceil(
-            (rateLimit.resetAt.getTime() - Date.now()) / 60000
-          )} minutes.`
-        );
-      }
+      await requestResetMutation.mutateAsync({ email: submittedEmail });
 
-      // Create reset token
-      const result = createResetToken(submittedEmail);
-
-      if (!result.ok) {
-        throw new Error(result.error.message);
-      }
-
-      // Build reset URL and email payload
-      const resetUrl = buildResetUrl(result.value.token);
-      const emailPayload = buildResetEmailPayload({
-        email: submittedEmail,
-        resetUrl,
-        expiresAt: result.value.expiresAt,
-      });
-
-      // TODO: Send email via API
-      // In production, this would call an API endpoint to send the email
-      console.log('[ForgotPassword] Reset email payload:', {
-        to: emailPayload.to,
-        subject: emailPayload.subject,
-        resetUrl,
-        expiresAt: result.value.expiresAt,
-      });
-
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Update state
+      // Update state — server always returns success to prevent email enumeration
       setEmail(submittedEmail);
       setState('sent');
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
-    } catch (err) {
-      console.error('[ForgotPassword] Error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred. Please try again.');
+    } catch (err: unknown) {
+      // Handle rate limiting
+      const trpcError = err as { data?: { code?: string }; message?: string };
+      if (trpcError.data?.code === 'TOO_MANY_REQUESTS') {
+        setError('Too many requests. Please try again in a few minutes.');
+      } else {
+        setError('An error occurred. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [requestResetMutation]);
 
   // Handle resend request
   const handleResend = useCallback(async () => {
@@ -133,41 +105,21 @@ export default function ForgotPasswordPage() {
     setError(null);
 
     try {
-      // Create new reset token
-      const result = createResetToken(email);
-
-      if (!result.ok) {
-        throw new Error(result.error.message);
-      }
-
-      // Build reset URL and email payload
-      const resetUrl = buildResetUrl(result.value.token);
-      const emailPayload = buildResetEmailPayload({
-        email,
-        resetUrl,
-        expiresAt: result.value.expiresAt,
-      });
-
-      // TODO: Send email via API
-      console.log('[ForgotPassword] Resend email payload:', {
-        to: emailPayload.to,
-        subject: emailPayload.subject,
-        resetUrl,
-        expiresAt: result.value.expiresAt,
-      });
-
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await requestResetMutation.mutateAsync({ email });
 
       // Reset cooldown
       setResendCooldown(RESEND_COOLDOWN_SECONDS);
-    } catch (err) {
-      console.error('[ForgotPassword] Resend error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to resend. Please try again.');
+    } catch (err: unknown) {
+      const trpcError = err as { data?: { code?: string }; message?: string };
+      if (trpcError.data?.code === 'TOO_MANY_REQUESTS') {
+        setError('Too many requests. Please try again in a few minutes.');
+      } else {
+        setError('Failed to resend. Please try again.');
+      }
     } finally {
       setIsResending(false);
     }
-  }, [email, resendCooldown]);
+  }, [email, resendCooldown, requestResetMutation]);
 
   // Handle change email (go back to form)
   const handleChangeEmail = useCallback(() => {

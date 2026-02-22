@@ -13,16 +13,37 @@
  * - Onboarding flow with next steps
  * - Conversion tracking (GTM, Facebook Pixel, LinkedIn)
  * - Email verification reminder
- * - Accessibility support
+ * - Accessibility support (WCAG 2.1 AA)
  */
 
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 import { cn } from '@intelliflow/ui';
 import { AuthBackground } from '@/components/shared';
 import { OnboardingFlow, DEFAULT_ONBOARDING_STEPS } from '@/components/shared/onboarding-flow';
 import { trackSignupComplete, trackPageView } from '@/lib/shared/tracking-pixel';
+import { trpc } from '@/lib/trpc';
+
+// ============================================
+// Reduced Motion Hook
+// ============================================
+
+function useReducedMotion(): boolean {
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mql.matches);
+
+    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
+
+  return prefersReducedMotion;
+}
 
 // ============================================
 // Confetti Animation Component
@@ -96,6 +117,42 @@ function ConfettiAnimation() {
 }
 
 // ============================================
+// Error Fallback Component
+// ============================================
+
+function SuccessErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
+  const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
+
+  return (
+    <AuthBackground>
+      <div className="relative z-10 w-full max-w-md mx-auto">
+        <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-slate-700/50 shadow-2xl p-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/20 border-2 border-red-500 mb-4">
+            <span className="material-symbols-outlined text-3xl text-red-400" aria-hidden="true">
+              error
+            </span>
+          </div>
+          <h1 className="text-xl font-bold text-white mb-2">Something went wrong</h1>
+          <p className="text-slate-300 text-sm mb-4">
+            An unexpected error occurred while loading your success page.
+          </p>
+          <p className="text-red-400 text-sm mb-4">{errorMessage}</p>
+          <button
+            onClick={resetErrorBoundary}
+            className={cn(
+              'px-4 py-2 bg-[#137fec] hover:bg-[#137fec]/90 text-white rounded-lg font-medium transition-colors',
+              'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900'
+            )}
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    </AuthBackground>
+  );
+}
+
+// ============================================
 // Success Content Component
 // ============================================
 
@@ -103,6 +160,8 @@ function SuccessContent() {
   const searchParams = useSearchParams();
   const email = searchParams.get('email') || '';
   const [showConfetti, setShowConfetti] = useState(true);
+  const prefersReducedMotion = useReducedMotion();
+  const resendMutation = trpc.auth.resendVerification.useMutation();
 
   // Track page view and signup completion on mount
   useEffect(() => {
@@ -134,17 +193,28 @@ function SuccessContent() {
   // Mask email for display
   const maskedEmail = email ? email.replace(/(.{2})(.*)(@.*)/, '$1***$3') : 'your email';
 
+  // Resend button text based on mutation state
+  const resendButtonText = resendMutation.isPending
+    ? 'Sending...'
+    : resendMutation.isSuccess
+      ? 'Email sent!'
+      : 'Resend verification';
+
   return (
     <>
-      {/* Confetti Animation */}
-      {showConfetti && <ConfettiAnimation />}
+      {/* Confetti Animation — respects prefers-reduced-motion */}
+      {showConfetti && !prefersReducedMotion && <ConfettiAnimation />}
 
       <AuthBackground>
         <div className="relative z-10 w-full max-w-lg mx-auto px-4">
           {/* Success Card */}
           <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-slate-700/50 shadow-2xl overflow-hidden">
-            {/* Success Header */}
-            <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-b border-green-500/20 p-8 text-center">
+            {/* Success Header — live region for screen readers */}
+            <div
+              className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-b border-green-500/20 p-8 text-center"
+              role="status"
+              aria-live="polite"
+            >
               {/* Success Icon */}
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-500/20 border-2 border-green-500 mb-4">
                 <span
@@ -170,7 +240,7 @@ function SuccessContent() {
                 </span>
                 <div>
                   <p className="text-sm text-slate-200 font-medium">Verification email sent</p>
-                  <p className="text-sm text-slate-400 mt-0.5">
+                  <p className="text-sm text-slate-300 mt-0.5">
                     We sent a verification link to <span className="text-white">{maskedEmail}</span>
                     . Please check your inbox.
                   </p>
@@ -194,24 +264,33 @@ function SuccessContent() {
 
           {/* Help Section */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-300">
               Didn&apos;t receive the email?{' '}
               <button
                 type="button"
                 onClick={() => {
-                  // TODO: Implement resend email
-                  console.log('[SignUpSuccess] Resend email clicked');
+                  resendMutation.mutate({ email });
                 }}
-                className="text-[#137fec] hover:text-[#137fec]/80 font-medium transition-colors"
+                disabled={resendMutation.isPending}
+                className={cn(
+                  'text-[#137fec] hover:text-[#137fec]/80 font-medium transition-colors',
+                  'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900 rounded',
+                  resendMutation.isPending && 'opacity-50 cursor-not-allowed'
+                )}
               >
-                Resend verification
+                {resendButtonText}
               </button>
             </p>
-            <p className="text-sm text-slate-500 mt-2">
+            {resendMutation.error && (
+              <p className="text-sm text-red-400 mt-1">
+                Failed to resend email. Please try again.
+              </p>
+            )}
+            <p className="text-sm text-slate-400 mt-2">
               Need help?{' '}
               <Link
                 href="/support"
-                className="text-slate-400 hover:text-white underline transition-colors"
+                className="text-slate-300 hover:text-white underline transition-colors"
               >
                 Contact support
               </Link>
@@ -261,16 +340,22 @@ function SuccessContent() {
 
 export default function SignUpSuccessPage() {
   return (
-    <Suspense
-      fallback={
-        <AuthBackground>
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#137fec]" />
-          </div>
-        </AuthBackground>
-      }
-    >
-      <SuccessContent />
-    </Suspense>
+    <ErrorBoundary FallbackComponent={SuccessErrorFallback}>
+      <Suspense
+        fallback={
+          <AuthBackground>
+            <div className="flex items-center justify-center min-h-screen">
+              <div
+                className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#137fec]"
+                role="status"
+                aria-label="Loading"
+              />
+            </div>
+          </AuthBackground>
+        }
+      >
+        <SuccessContent />
+      </Suspense>
+    </ErrorBoundary>
   );
 }

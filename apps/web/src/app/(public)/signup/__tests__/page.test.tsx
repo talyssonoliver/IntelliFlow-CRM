@@ -39,11 +39,22 @@ vi.mock('@/lib/auth/AuthContext', () => ({
   useRedirectIfAuthenticated: vi.fn(),
 }));
 
-// Mock welcome-email
-const mockSendWelcomeEmail = vi.fn().mockResolvedValue({ ok: true });
-vi.mock('@/lib/shared/welcome-email', () => ({
-  sendWelcomeEmail: (...args: unknown[]) => mockSendWelcomeEmail(...args),
-  generateVerificationToken: vi.fn().mockReturnValue('test-verification-token'),
+// Mock tRPC — signup mutation
+const mockSignupMutateAsync = vi.fn().mockResolvedValue({ success: true, needsEmailVerification: true });
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    auth: {
+      signup: {
+        useMutation: () => ({
+          mutateAsync: (...args: any[]) => mockSignupMutateAsync(...args),
+          mutate: (...args: any[]) => mockSignupMutateAsync(...args),
+          isPending: false,
+          isSuccess: false,
+          error: null,
+        }),
+      },
+    },
+  },
 }));
 
 // Import after mocks
@@ -52,7 +63,7 @@ import SignUpPage from '../page';
 describe('SignUpPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSendWelcomeEmail.mockResolvedValue({ ok: true });
+    mockSignupMutateAsync.mockResolvedValue({ success: true, needsEmailVerification: true });
     // Reset localStorage
     localStorage.clear();
   });

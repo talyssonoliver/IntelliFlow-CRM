@@ -1,5 +1,7 @@
 /**
  * @vitest-environment happy-dom
+ *
+ * Forgot Password Page Tests — IFC-120 wired to tRPC
  */
 import { render, screen, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -24,15 +26,23 @@ vi.mock('@/lib/auth/AuthContext', () => ({
   useRedirectIfAuthenticated: vi.fn(),
 }));
 
-const mockCreateResetToken = vi.fn();
-const mockCheckRateLimit = vi.fn();
-const mockBuildResetUrl = vi.fn();
-const mockBuildResetEmailPayload = vi.fn();
+// tRPC mock — requestPasswordReset mutation
+const mockMutateAsync = vi.fn();
 
-vi.mock('@/lib/shared/reset-token', () => ({
-  createResetToken: (...args: any[]) => mockCreateResetToken(...args),
-  checkRateLimit: (...args: any[]) => mockCheckRateLimit(...args),
-  buildResetUrl: (...args: any[]) => mockBuildResetUrl(...args),
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    auth: {
+      requestPasswordReset: {
+        useMutation: () => ({
+          mutateAsync: (...args: any[]) => mockMutateAsync(...args),
+          mutate: (...args: any[]) => mockMutateAsync(...args),
+          isPending: false,
+          isSuccess: false,
+          error: null,
+        }),
+      },
+    },
+  },
 }));
 
 vi.mock('@/components/shared', () => ({
@@ -91,67 +101,21 @@ vi.mock('@/components/shared/reset-email', () => ({
       </div>
     );
   },
-  buildResetEmailPayload: (...args: any[]) => mockBuildResetEmailPayload(...args),
 }));
 
 import ForgotPasswordPage from '../page';
 import { useRedirectIfAuthenticated } from '@/lib/auth/AuthContext';
 
 // ============================================
-// Helpers
-// ============================================
-
-function setupSuccessfulMocks() {
-  mockCheckRateLimit.mockReturnValue({
-    remaining: 2,
-    resetAt: new Date(Date.now() + 3600000),
-    isLimited: false,
-  });
-  mockCreateResetToken.mockReturnValue({
-    ok: true,
-    value: {
-      token: 'abc123token',
-      hashedToken: 'hashed123',
-      email: 'test@example.com',
-      expiresAt: new Date(Date.now() + 3600000),
-      createdAt: new Date(),
-    },
-  });
-  mockBuildResetUrl.mockReturnValue('http://localhost:3000/reset-password/abc123token');
-  mockBuildResetEmailPayload.mockReturnValue({
-    to: 'test@example.com',
-    from: 'noreply@intelliflow.com',
-    subject: 'Reset your IntelliFlow password',
-    htmlBody: '<html>...</html>',
-    textBody: 'Reset...',
-    replyTo: 'support@intelliflow.com',
-    metadata: { source: 'password_reset', email: 'test@example.com', expiresAt: '2026-01-01T00:00:00.000Z' },
-  });
-}
-
-/** Submit the form and await handleSubmit to transition to "sent" state */
-async function submitAndWaitForSent() {
-  render(<ForgotPasswordPage />);
-
-  // Directly await the async handleSubmit (includes 1s simulated delay)
-  await act(async () => {
-    await capturedFormProps.onSubmit('test@example.com');
-  });
-
-  // Verify transition
-  expect(screen.getByTestId('reset-email-sent')).toBeTruthy();
-}
-
-// ============================================
 // Tests
 // ============================================
 
-describe('ForgotPasswordPage', () => {
+describe('ForgotPasswordPage (IFC-120)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     capturedFormProps = null;
     capturedSentProps = null;
-    setupSuccessfulMocks();
+    mockMutateAsync.mockResolvedValue({ success: true });
   });
 
   // --- Rendering ---
@@ -215,7 +179,7 @@ describe('ForgotPasswordPage', () => {
     });
   });
 
-  // --- Form Submission ---
+  // --- Form Submission via tRPC ---
 
   describe('Form Submission', () => {
     it('passes isLoading prop to ForgotPasswordForm', () => {
@@ -223,45 +187,54 @@ describe('ForgotPasswordPage', () => {
       expect(capturedFormProps.isLoading).toBe(false);
     });
 
-    it('transitions to "sent" state after successful submit', async () => {
-      await submitAndWaitForSent();
-      expect(screen.getByTestId('reset-email-sent')).toBeTruthy();
-    });
-
-    it('shows "Check your email" title in sent state', async () => {
-      await submitAndWaitForSent();
-      expect(screen.getByTestId('auth-card-title').textContent).toBe('Check your email');
-    });
-
-    it('passes email to ResetEmailSent in sent state', async () => {
-      await submitAndWaitForSent();
-      expect(capturedSentProps).toBeTruthy();
-      expect(capturedSentProps.email).toBe('test@example.com');
-    });
-
-    it('shows generic error for non-Error throw', async () => {
-      mockCheckRateLimit.mockImplementation(() => {
-        throw 'unexpected string error';
-      });
-
+    it('calls tRPC requestPasswordReset.mutateAsync on submit', async () => {
       render(<ForgotPasswordPage />);
 
       await act(async () => {
         await capturedFormProps.onSubmit('test@example.com');
       });
 
-      expect(screen.getByText('An error occurred. Please try again.')).toBeTruthy();
+      expect(mockMutateAsync).toHaveBeenCalledWith({ email: 'test@example.com' });
+    });
+
+    it('transitions to "sent" state after successful submit', async () => {
+      render(<ForgotPasswordPage />);
+
+      await act(async () => {
+        await capturedFormProps.onSubmit('test@example.com');
+      });
+
+      expect(screen.getByTestId('reset-email-sent')).toBeTruthy();
+    });
+
+    it('shows "Check your email" title in sent state', async () => {
+      render(<ForgotPasswordPage />);
+
+      await act(async () => {
+        await capturedFormProps.onSubmit('test@example.com');
+      });
+
+      expect(screen.getByTestId('auth-card-title').textContent).toBe('Check your email');
+    });
+
+    it('passes email to ResetEmailSent in sent state', async () => {
+      render(<ForgotPasswordPage />);
+
+      await act(async () => {
+        await capturedFormProps.onSubmit('test@example.com');
+      });
+
+      expect(capturedSentProps.email).toBe('test@example.com');
     });
   });
 
-  // --- Rate Limiting ---
+  // --- Rate Limiting (server-side via tRPC) ---
 
   describe('Rate Limiting', () => {
-    it('shows rate limit error when checkRateLimit returns isLimited', async () => {
-      mockCheckRateLimit.mockReturnValue({
-        remaining: 0,
-        resetAt: new Date(Date.now() + 1800000),
-        isLimited: true,
+    it('shows rate limit error for TOO_MANY_REQUESTS (AC-008)', async () => {
+      mockMutateAsync.mockRejectedValue({
+        data: { code: 'TOO_MANY_REQUESTS' },
+        message: 'Too many requests',
       });
 
       render(<ForgotPasswordPage />);
@@ -277,11 +250,8 @@ describe('ForgotPasswordPage', () => {
   // --- Error Handling ---
 
   describe('Error Handling', () => {
-    it('shows error message for failed token creation', async () => {
-      mockCreateResetToken.mockReturnValue({
-        ok: false,
-        error: { code: 'GENERATION_FAILED', message: 'Token generation failed' },
-      });
+    it('shows generic error for network failure (NF-002)', async () => {
+      mockMutateAsync.mockRejectedValue(new Error('Network error'));
 
       render(<ForgotPasswordPage />);
 
@@ -289,13 +259,21 @@ describe('ForgotPasswordPage', () => {
         await capturedFormProps.onSubmit('test@example.com');
       });
 
-      expect(screen.getByText('Token generation failed')).toBeTruthy();
+      expect(screen.getByText('An error occurred. Please try again.')).toBeTruthy();
     });
   });
 
   // --- Sent State Actions ---
 
   describe('Sent State Actions', () => {
+    async function submitAndWaitForSent() {
+      render(<ForgotPasswordPage />);
+      await act(async () => {
+        await capturedFormProps.onSubmit('test@example.com');
+      });
+      expect(screen.getByTestId('reset-email-sent')).toBeTruthy();
+    }
+
     it('"Use a different email" returns to form state', async () => {
       await submitAndWaitForSent();
 
@@ -308,7 +286,6 @@ describe('ForgotPasswordPage', () => {
 
     it('passes resendCooldown=60 to ResetEmailSent', async () => {
       await submitAndWaitForSent();
-      expect(capturedSentProps).toBeTruthy();
       expect(capturedSentProps.resendCooldown).toBe(60);
     });
   });
@@ -324,30 +301,20 @@ describe('ForgotPasswordPage', () => {
       vi.useRealTimers();
     });
 
-    /** Submit with fake timers: advance past the 1s simulated API delay */
-    async function submitWithFakeTimers() {
+    it('decrements cooldown every second after submit', async () => {
       render(<ForgotPasswordPage />);
 
       await act(async () => {
-        const promise = capturedFormProps.onSubmit('test@example.com');
-        vi.advanceTimersByTime(1100); // resolve the 1s setTimeout
-        await promise;
+        await capturedFormProps.onSubmit('test@example.com');
       });
 
-      expect(screen.getByTestId('reset-email-sent')).toBeTruthy();
-    }
-
-    it('decrements cooldown every second after submit', async () => {
-      await submitWithFakeTimers();
       expect(capturedSentProps.resendCooldown).toBe(60);
 
-      // Advance 1 second
       await act(async () => {
         vi.advanceTimersByTime(1000);
       });
       expect(capturedSentProps.resendCooldown).toBe(59);
 
-      // Advance 5 more seconds
       await act(async () => {
         vi.advanceTimersByTime(5000);
       });
@@ -355,9 +322,12 @@ describe('ForgotPasswordPage', () => {
     });
 
     it('stops decrementing at zero', async () => {
-      await submitWithFakeTimers();
+      render(<ForgotPasswordPage />);
 
-      // Advance past all 60 seconds
+      await act(async () => {
+        await capturedFormProps.onSubmit('test@example.com');
+      });
+
       await act(async () => {
         vi.advanceTimersByTime(61000);
       });
@@ -365,7 +335,7 @@ describe('ForgotPasswordPage', () => {
     });
   });
 
-  // --- Resend Flow ---
+  // --- Resend Flow (via tRPC) ---
 
   describe('Resend Flow', () => {
     beforeEach(() => {
@@ -376,40 +346,31 @@ describe('ForgotPasswordPage', () => {
       vi.useRealTimers();
     });
 
-    /** Submit with fake timers: advance past the 1s simulated API delay */
-    async function submitWithFakeTimers() {
+    it('early returns when cooldown is active', async () => {
       render(<ForgotPasswordPage />);
 
       await act(async () => {
-        const promise = capturedFormProps.onSubmit('test@example.com');
-        vi.advanceTimersByTime(1100);
-        await promise;
+        await capturedFormProps.onSubmit('test@example.com');
       });
 
-      expect(screen.getByTestId('reset-email-sent')).toBeTruthy();
-    }
+      mockMutateAsync.mockClear();
 
-    it('early returns when cooldown is active', async () => {
-      await submitWithFakeTimers();
-      mockCreateResetToken.mockClear();
-
-      // Try resend while cooldown active
+      // Resend while cooldown active
       await act(async () => {
         await capturedSentProps.onResend();
       });
 
-      // createResetToken should NOT be called
-      expect(mockCreateResetToken).not.toHaveBeenCalled();
+      expect(mockMutateAsync).not.toHaveBeenCalled();
     });
 
-    it('resends successfully after cooldown expires', async () => {
-      await submitWithFakeTimers();
-      mockCreateResetToken.mockClear();
-      mockBuildResetUrl.mockClear();
-      mockBuildResetEmailPayload.mockClear();
+    it('resends successfully via tRPC after cooldown expires', async () => {
+      render(<ForgotPasswordPage />);
 
-      // Re-setup mocks for the resend call
-      setupSuccessfulMocks();
+      await act(async () => {
+        await capturedFormProps.onSubmit('test@example.com');
+      });
+
+      mockMutateAsync.mockClear();
 
       // Wait for cooldown to expire
       await act(async () => {
@@ -417,53 +378,50 @@ describe('ForgotPasswordPage', () => {
       });
       expect(capturedSentProps.resendCooldown).toBe(0);
 
-      // Now resend (includes 1s simulated delay)
+      // Resend
       await act(async () => {
-        const promise = capturedSentProps.onResend();
-        vi.advanceTimersByTime(1100);
-        await promise;
+        await capturedSentProps.onResend();
       });
 
-      expect(mockCreateResetToken).toHaveBeenCalledWith('test@example.com');
-      expect(mockBuildResetUrl).toHaveBeenCalled();
-      expect(mockBuildResetEmailPayload).toHaveBeenCalled();
-      // Cooldown resets to 60
+      expect(mockMutateAsync).toHaveBeenCalledWith({ email: 'test@example.com' });
       expect(capturedSentProps.resendCooldown).toBe(60);
     });
 
-    it('shows error when resend token creation fails', async () => {
-      await submitWithFakeTimers();
+    it('shows rate limit error on resend', async () => {
+      render(<ForgotPasswordPage />);
 
-      // Wait for cooldown to expire
+      await act(async () => {
+        await capturedFormProps.onSubmit('test@example.com');
+      });
+
       await act(async () => {
         vi.advanceTimersByTime(61000);
       });
 
-      // Mock token failure for resend
-      mockCreateResetToken.mockReturnValue({
-        ok: false,
-        error: { code: 'RATE_LIMITED', message: 'Rate limit exceeded' },
+      mockMutateAsync.mockRejectedValueOnce({
+        data: { code: 'TOO_MANY_REQUESTS' },
+        message: 'Too many requests',
       });
 
       await act(async () => {
         await capturedSentProps.onResend();
       });
 
-      expect(screen.getByText('Rate limit exceeded')).toBeTruthy();
+      expect(screen.getByText(/Too many requests/i)).toBeTruthy();
     });
 
-    it('shows generic error for non-Error thrown during resend', async () => {
-      await submitWithFakeTimers();
+    it('shows generic error on resend failure', async () => {
+      render(<ForgotPasswordPage />);
 
-      // Wait for cooldown to expire
+      await act(async () => {
+        await capturedFormProps.onSubmit('test@example.com');
+      });
+
       await act(async () => {
         vi.advanceTimersByTime(61000);
       });
 
-      // Mock throwing a non-Error value
-      mockCreateResetToken.mockImplementation(() => {
-        throw 42;
-      });
+      mockMutateAsync.mockRejectedValueOnce(new Error('Network error'));
 
       await act(async () => {
         await capturedSentProps.onResend();

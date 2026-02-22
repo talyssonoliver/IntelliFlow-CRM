@@ -1,9 +1,12 @@
 /**
  * Account Activation Service
  *
- * Utilities for generating, validating, and managing email verification tokens.
+ * @deprecated IFC-120: All functions in this file are deprecated.
+ * Use tRPC `auth.verifyEmail` and `auth.resendVerification` instead.
+ * Supabase handles token generation, validation, and email delivery natively.
+ * This file is kept for backward compatibility with existing tests only.
  *
- * IMPLEMENTS: PG-023 (Email Verification page)
+ * IMPLEMENTS: PG-023 (Email Verification page) — superseded by IFC-120
  *
  * Features:
  * - Secure token generation
@@ -290,8 +293,8 @@ export function buildVerificationUrl(token: string, baseUrl?: string): string {
   const base =
     baseUrl ||
     process.env.NEXT_PUBLIC_APP_URL ||
-    (typeof window !== 'undefined' ? window.location.origin : 'https://intelliflow-crm.com');
-  return `${base}/auth/verify-email/${token}`;
+    'https://intelliflow-crm.com';
+  return `${base}/verify-email/${token}`;
 }
 
 // ============================================

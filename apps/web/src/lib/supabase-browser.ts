@@ -30,6 +30,7 @@ if (typeof window !== 'undefined') {
 export function createBrowserClient() {
   return createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     auth: {
+      flowType: 'pkce', // PG-024: Use PKCE authorization code exchange (not implicit grant)
       autoRefreshToken: true,
       persistSession: false, // We manage session via localStorage
       detectSessionInUrl: false, // We handle this manually in /auth/callback

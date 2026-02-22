@@ -18,14 +18,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { cn } from '@intelliflow/ui';
-import {
-  validateVerificationToken,
-  markEmailVerified,
-  checkResendRateLimit,
-  createVerificationToken,
-  buildVerificationUrl,
-  isTokenExpiringSoon,
-} from '@/lib/shared/account-activation';
+import { trpc } from '@/lib/trpc';
 
 // ============================================
 // Types
@@ -40,7 +33,12 @@ export type VerificationStatus =
   | 'error';
 
 export interface EmailVerificationProps {
-  token: string;
+  /** Legacy prop — ignored when tokenHash is provided */
+  token?: string;
+  /** Supabase token_hash from callback URL */
+  tokenHash?: string;
+  /** Supabase type from callback URL */
+  type?: 'email' | 'signup';
   email?: string;
   onVerified?: () => void;
   onError?: (error: string) => void;
@@ -98,6 +96,8 @@ function StatusIcon({ status }: StatusIconProps) {
 
 export function EmailVerification({
   token,
+  tokenHash,
+  type = 'email',
   email,
   onVerified,
   onError,
@@ -109,60 +109,54 @@ export function EmailVerification({
   const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
-  const [showExpiryWarning, setShowExpiryWarning] = useState(false);
+  const [showExpiryWarning] = useState(false);
 
-  // Verify token on mount
+  // tRPC mutations
+  const verifyEmailMutation = trpc.auth.verifyEmail.useMutation();
+  const resendMutation = trpc.auth.resendVerification.useMutation();
+
+  // Verify token on mount via tRPC
   useEffect(() => {
     const verifyToken = async () => {
-      // Validate token format
-      if (!token || token.length !== 64) {
+      // Resolve the actual token hash — prefer tokenHash prop, fallback to legacy token
+      const hash = tokenHash || token;
+
+      if (!hash || hash.length < 6) {
         setStatus('invalid');
         setMessage('This verification link is invalid.');
         onError?.('Invalid verification link');
         return;
       }
 
-      // Validate token
-      const result = validateVerificationToken(token);
+      try {
+        const result = await verifyEmailMutation.mutateAsync({
+          token_hash: hash,
+          type,
+        });
 
-      if (!result.ok) {
-        const statusMap: Record<string, VerificationStatus> = {
-          EXPIRED: 'expired',
-          INVALID: 'invalid',
-          ALREADY_USED: 'already_verified',
-        };
-        setStatus(statusMap[result.error.code] || 'error');
-        setMessage(result.error.message);
-        onError?.(result.error.message);
-        return;
+        // Success!
+        setStatus('success');
+        setMessage('Your email has been verified successfully!');
+        setVerifiedEmail(result.email || null);
+        onVerified?.();
+      } catch (err: unknown) {
+        const trpcError = err as { data?: { code?: string }; message?: string };
+        if (trpcError.data?.code === 'BAD_REQUEST') {
+          setStatus('expired');
+          setMessage('This verification link has expired or is invalid.');
+        } else {
+          setStatus('error');
+          setMessage('Failed to verify email. Please try again.');
+        }
+        onError?.(trpcError.message || 'Verification failed');
       }
-
-      // Check if token is expiring soon (within 1 hour)
-      if (isTokenExpiringSoon(result.value)) {
-        setShowExpiryWarning(true);
-      }
-
-      // Mark as verified
-      const marked = markEmailVerified(token);
-
-      if (!marked) {
-        setStatus('error');
-        setMessage('Failed to verify email. Please try again.');
-        onError?.('Verification failed');
-        return;
-      }
-
-      // Success!
-      setStatus('success');
-      setMessage('Your email has been verified successfully!');
-      setVerifiedEmail(result.value.email);
-      onVerified?.();
     };
 
     verifyToken();
-  }, [token, onVerified, onError]);
+    // Run only once on mount — deps intentionally empty
+  }, []);
 
-  // Handle resend
+  // Handle resend via tRPC
   const handleResend = useCallback(async () => {
     if (!email || isResending) return;
 
@@ -170,34 +164,19 @@ export function EmailVerification({
     setResendMessage(null);
 
     try {
-      // Check rate limit
-      const rateLimit = checkResendRateLimit(email);
-      if (rateLimit.isLimited) {
-        const minutesLeft = Math.ceil((rateLimit.resetAt.getTime() - Date.now()) / 60000);
-        setResendMessage(`Too many requests. Please try again in ${minutesLeft} minutes.`);
-        return;
-      }
-
-      // Create new token
-      const tokenResult = createVerificationToken(email);
-
-      if (!tokenResult.ok) {
-        setResendMessage(tokenResult.error.message);
-        return;
-      }
-
-      // Build URL (in production, this would be sent via email)
-      const url = buildVerificationUrl(tokenResult.value.token);
-      console.log('[EmailVerification] New verification URL:', url);
-
+      await resendMutation.mutateAsync({ email });
       setResendMessage('A new verification link has been sent to your email.');
-    } catch (error) {
-      console.error('[EmailVerification] Resend error:', error);
-      setResendMessage('Failed to send verification email. Please try again.');
+    } catch (err: unknown) {
+      const trpcError = err as { data?: { code?: string }; message?: string };
+      if (trpcError.data?.code === 'TOO_MANY_REQUESTS') {
+        setResendMessage('Too many requests. Please try again in a few minutes.');
+      } else {
+        setResendMessage('Failed to send verification email. Please try again.');
+      }
     } finally {
       setIsResending(false);
     }
-  }, [email, isResending]);
+  }, [email, isResending, resendMutation]);
 
   // Get action content based on status
   const getActionContent = () => {

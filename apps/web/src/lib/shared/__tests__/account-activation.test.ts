@@ -342,7 +342,7 @@ describe('Account Activation Service', () => {
       const token = 'abc123def456';
       const url = buildVerificationUrl(token);
 
-      expect(url).toContain('/auth/verify-email/abc123def456');
+      expect(url).toContain('/verify-email/abc123def456');
     });
 
     it('uses base URL from environment', () => {
@@ -351,7 +351,7 @@ describe('Account Activation Service', () => {
 
       const url = buildVerificationUrl('token123');
 
-      expect(url).toBe('https://myapp.com/auth/verify-email/token123');
+      expect(url).toBe('https://myapp.com/verify-email/token123');
 
       process.env.NEXT_PUBLIC_APP_URL = originalUrl;
     });
@@ -362,7 +362,7 @@ describe('Account Activation Service', () => {
 
       const url = buildVerificationUrl('token123');
 
-      expect(url).toContain('/auth/verify-email/token123');
+      expect(url).toContain('/verify-email/token123');
 
       process.env.NEXT_PUBLIC_APP_URL = originalUrl;
     });

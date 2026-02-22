@@ -16,7 +16,7 @@
  * - Rate limiting protection
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { Suspense, useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
@@ -31,7 +31,7 @@ import {
 import { useAuth, useRedirectIfAuthenticated } from '@/lib/auth/AuthContext';
 import { SocialLoginGrid, OAuthDivider, AuthBackground, AuthCard } from '@/components/shared';
 import { RegistrationForm, type RegistrationFormData } from '@/components/shared/registration-form';
-import { sendWelcomeEmail, generateVerificationToken } from '@/lib/shared/welcome-email';
+import { trpc } from '@/lib/trpc';
 
 // ============================================
 // Types
@@ -157,44 +157,29 @@ function SignUpPageContent() {
     []
   );
 
+  // tRPC signup mutation
+  const signupMutation = trpc.auth.signup.useMutation();
+
   // Handle registration form submission
-  // Note: In production, this would call an API endpoint to create the user
-  // For now, we simulate the signup flow and send a welcome email
   const handleSubmit = useCallback(
     async (data: RegistrationFormData) => {
       setIsSubmitting(true);
 
       try {
-        // Simulate API call delay
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        // TODO: Replace with actual signup API call when backend is ready
-        // const response = await fetch('/api/auth/signup', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ email: data.email, password: data.password, fullName: data.fullName }),
-        // });
-
         // Get UTM data for marketing attribution
         const utmData = getUTMData();
-
-        // Generate verification token and send welcome email
-        const verificationToken = generateVerificationToken();
-        const emailResult = await sendWelcomeEmail({
-          fullName: data.fullName,
-          email: data.email,
-          verificationToken,
-        });
-
-        // Log UTM data for attribution (in production, send to analytics)
         if (utmData) {
           console.info('[SignUp] Registration with UTM:', utmData);
         }
 
-        if (!emailResult.ok) {
-          console.warn('[SignUp] Failed to send welcome email:', emailResult.error);
-          // Don't block registration if email fails
-        }
+        // Call tRPC signup — Supabase handles email verification
+        await signupMutation.mutateAsync({
+          email: data.email,
+          password: data.password,
+          confirmPassword: data.password,
+          name: data.fullName,
+          acceptTerms: true as const,
+        });
 
         // Show success and redirect
         showToast('success', 'Account created!', 'Please check your email to verify your account.');
@@ -203,17 +188,25 @@ function SignUpPageContent() {
         setTimeout(() => {
           router.push('/signup/success?email=' + encodeURIComponent(data.email));
         }, 1500);
-      } catch (error) {
-        console.error('[SignUp] Unexpected error:', error);
-        showToast(
-          'destructive',
-          'Registration failed',
-          'An unexpected error occurred. Please try again.'
-        );
+      } catch (error: unknown) {
+        const trpcError = error as { data?: { code?: string }; message?: string };
+        if (trpcError.data?.code === 'CONFLICT') {
+          showToast(
+            'destructive',
+            'Email already registered',
+            'An account with this email already exists. Please sign in instead.'
+          );
+        } else {
+          showToast(
+            'destructive',
+            'Registration failed',
+            'An unexpected error occurred. Please try again.'
+          );
+        }
         setIsSubmitting(false);
       }
     },
-    [router, showToast, getUTMData]
+    [router, showToast, getUTMData, signupMutation]
   );
 
   // Handle OAuth registration
@@ -319,7 +312,9 @@ function SignUpPageContent() {
 export default function SignUpPage() {
   return (
     <ErrorBoundary FallbackComponent={SignUpErrorFallback}>
-      <SignUpPageContent />
+      <Suspense fallback={<div className="min-h-screen" />}>
+        <SignUpPageContent />
+      </Suspense>
     </ErrorBoundary>
   );
 }

@@ -65,7 +65,7 @@ export const mockDocsCategories: DocCategory[] = [
     href: '/docs/integrations',
     icon: 'integration_instructions',
     color: 'bg-amber-500',
-    comingSoon: true,
+    docCount: 16,
   },
   {
     id: 'changelog',

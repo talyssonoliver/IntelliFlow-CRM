@@ -25,8 +25,8 @@ import {
   validatePasswordMatch,
   STRENGTH_CONFIG,
 } from '@/lib/shared/password-validation';
-import { markTokenUsed } from '@/lib/shared/reset-token';
 import { sanitizePassword } from '@/lib/shared/login-security';
+import { trpc } from '@/lib/trpc';
 
 // ============================================
 // Types
@@ -34,8 +34,8 @@ import { sanitizePassword } from '@/lib/shared/login-security';
 
 export interface PasswordResetFormProps {
   token: string;
-  email: string;
-  expiresAt: Date;
+  email?: string;
+  expiresAt?: Date;
   onSuccess?: () => void;
   className?: string;
 }
@@ -301,6 +301,7 @@ export function PasswordResetForm({
   className,
 }: PasswordResetFormProps) {
   const formId = useId();
+  const resetPasswordMutation = trpc.auth.resetPassword.useMutation();
 
   // Form state
   const [password, setPassword] = useState('');
@@ -375,34 +376,28 @@ export function PasswordResetForm({
         // Sanitize password for API call
         const sanitizedPassword = sanitizePassword(password);
 
-        // TODO: Call API to update password
-        // await trpc.auth.resetPassword.mutate({
-        //   token,
-        //   newPassword: sanitizedPassword,
-        // });
-
-        // Simulate API call for now (using sanitizedPassword in simulation)
-        await new Promise((resolve) => {
-          // In production, sanitizedPassword is sent to the API
-          // For now, validate it's not empty to ensure sanitization worked
-          if (sanitizedPassword.length > 0) {
-            setTimeout(resolve, 1500);
-          }
+        // Call tRPC to reset password via Supabase
+        await resetPasswordMutation.mutateAsync({
+          token,
+          password: sanitizedPassword,
+          confirmPassword,
         });
-
-        // Mark token as used
-        markTokenUsed(token);
 
         // Call success callback
         if (onSuccess) {
           onSuccess();
         }
-      } catch (err) {
-        console.error('[PasswordReset] Error:', err);
-        setErrors({
-          general:
-            err instanceof Error ? err.message : 'Failed to reset password. Please try again.',
-        });
+      } catch (err: unknown) {
+        const trpcError = err as { data?: { code?: string }; message?: string };
+        if (trpcError.data?.code === 'UNAUTHORIZED') {
+          setErrors({
+            general: 'This reset link has expired or is invalid. Please request a new one.',
+          });
+        } else {
+          setErrors({
+            general: 'Failed to reset password. Please try again.',
+          });
+        }
         setIsSubmitting(false);
       }
     },
@@ -410,7 +405,7 @@ export function PasswordResetForm({
   );
 
   // Masked email display
-  const maskedEmail = email.replace(/(.{2})(.*)(@.*)/, '$1***$3');
+  const maskedEmail = email ? email.replace(/(.{2})(.*)(@.*)/, '$1***$3') : null;
 
   return (
     <form
@@ -420,13 +415,15 @@ export function PasswordResetForm({
       aria-label="Password reset form"
     >
       {/* Email display */}
-      <div className="text-center pb-2">
-        <p className="text-sm text-slate-400">Resetting password for</p>
-        <p className="text-white font-medium">{maskedEmail}</p>
-      </div>
+      {maskedEmail && (
+        <div className="text-center pb-2">
+          <p className="text-sm text-slate-400">Resetting password for</p>
+          <p className="text-white font-medium">{maskedEmail}</p>
+        </div>
+      )}
 
       {/* Token expiry warning */}
-      <TokenExpiryWarning expiresAt={expiresAt} />
+      {expiresAt && <TokenExpiryWarning expiresAt={expiresAt} />}
 
       {/* General error */}
       {errors.general && (
