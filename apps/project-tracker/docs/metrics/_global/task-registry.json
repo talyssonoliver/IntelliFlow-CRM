@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-22T15:11:45.837Z",
+  "last_updated": "2026-02-22T15:43:25.647Z",
   "total_tasks": 305,
   "sprints": {
     "sprint-0": {
@@ -285,11 +285,12 @@
       "PG-155",
       "PG-171"
     ],
-    "IN_PROGRESS": [],
+    "IN_PROGRESS": [
+      "PG-029"
+    ],
     "VALIDATING": [],
     "BLOCKED": [],
     "PLANNED": [
-      "PG-029",
       "TRACK-002"
     ],
     "BACKLOG": [
@@ -3237,7 +3238,7 @@
       "section": "Billing Pages",
       "description": "Payment Methods",
       "owner": "Platform BE (STOA-Foundation)",
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "sprint": 14,
       "dependencies": [
         "PG-025",

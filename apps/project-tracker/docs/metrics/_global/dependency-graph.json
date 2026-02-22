@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-22T15:11:46.121Z",
+  "last_updated": "2026-02-22T15:43:25.850Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -1992,7 +1992,7 @@
     "PG-029": {
       "task_id": "PG-029",
       "sprint": 14,
-      "status": "PLANNED",
+      "status": "IN_PROGRESS",
       "dependencies": [
         "IFC-198",
         "PG-025"
@@ -8824,7 +8824,6 @@
     "PG-120"
   ],
   "ready_to_start": [
-    "PG-029",
     "TRACK-002",
     "TRACK-003",
     "TRACK-004",

@@ -13,7 +13,7 @@
     "not_started": 0,
     "failed": 0
   },
-  "notes": "10/10 tasks DONE (100%). Last synced: 2026-02-22T15:11:45.964Z",
+  "notes": "10/10 tasks DONE (100%). Last synced: 2026-02-22T15:43:25.747Z",
   "completed_tasks": [
     {
       "task_id": "IFC-009",
@@ -47,22 +47,22 @@
     },
     {
       "task_id": "IFC-108",
-      "completed_at": "2026-02-22T15:11:45.964Z",
+      "completed_at": "2026-02-22T15:43:25.747Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-110",
-      "completed_at": "2026-02-22T15:11:45.964Z",
+      "completed_at": "2026-02-22T15:43:25.747Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-131",
-      "completed_at": "2026-02-22T15:11:45.964Z",
+      "completed_at": "2026-02-22T15:43:25.747Z",
       "duration_minutes": 15
     },
     {
       "task_id": "IFC-137",
-      "completed_at": "2026-02-22T15:11:45.964Z",
+      "completed_at": "2026-02-22T15:43:25.747Z",
       "duration_minutes": 15
     }
   ],
@@ -85,6 +85,6 @@
       "spi": 0.9,
       "status": "behind"
     },
-    "calculated_at": "2026-02-22T15:11:46.131Z"
+    "calculated_at": "2026-02-22T15:43:25.853Z"
   }
 }

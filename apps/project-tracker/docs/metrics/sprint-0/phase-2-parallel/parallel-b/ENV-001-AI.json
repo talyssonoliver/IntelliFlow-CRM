@@ -9,7 +9,7 @@
   "stream": "parallel-b",
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-02-22T15:11:45.845Z",
+    "verified_at": "2026-02-22T15:43:25.656Z",
     "required": [
       "AI-SETUP-001"
     ]

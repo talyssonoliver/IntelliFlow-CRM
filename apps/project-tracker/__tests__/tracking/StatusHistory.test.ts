@@ -82,12 +82,12 @@ function getDeltaColorClass(value: number, label: string): string {
   const isPositive = value > 0;
 
   if (label === 'completed') {
-    return isPositive ? 'text-green-400' : 'text-red-400';
+    return isPositive ? 'text-green-600' : 'text-red-600';
   }
   if (label === 'blocked') {
-    return isPositive ? 'text-red-400' : 'text-green-400';
+    return isPositive ? 'text-red-600' : 'text-green-600';
   }
-  return 'text-gray-400';
+  return 'text-gray-500';
 }
 
 describe('StatusHistory Component Logic', () => {
@@ -229,24 +229,24 @@ describe('StatusHistory Component Logic', () => {
     });
 
     it('returns green for positive completed delta', () => {
-      expect(getDeltaColorClass(3, 'completed')).toBe('text-green-400');
+      expect(getDeltaColorClass(3, 'completed')).toBe('text-green-600');
     });
 
     it('returns red for negative completed delta', () => {
-      expect(getDeltaColorClass(-2, 'completed')).toBe('text-red-400');
+      expect(getDeltaColorClass(-2, 'completed')).toBe('text-red-600');
     });
 
     it('returns red for positive blocked delta (more blocked is bad)', () => {
-      expect(getDeltaColorClass(2, 'blocked')).toBe('text-red-400');
+      expect(getDeltaColorClass(2, 'blocked')).toBe('text-red-600');
     });
 
     it('returns green for negative blocked delta (less blocked is good)', () => {
-      expect(getDeltaColorClass(-1, 'blocked')).toBe('text-green-400');
+      expect(getDeltaColorClass(-1, 'blocked')).toBe('text-green-600');
     });
 
     it('returns gray for other labels', () => {
-      expect(getDeltaColorClass(1, 'in_progress')).toBe('text-gray-400');
-      expect(getDeltaColorClass(-1, 'backlog')).toBe('text-gray-400');
+      expect(getDeltaColorClass(1, 'in_progress')).toBe('text-gray-500');
+      expect(getDeltaColorClass(-1, 'backlog')).toBe('text-gray-500');
     });
   });
 
