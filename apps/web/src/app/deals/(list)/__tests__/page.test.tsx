@@ -51,6 +51,8 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 // Mock trpc with configurable state
 const mockRefetch = vi.fn();
 const mockMutate = vi.fn();
+const mockMoveStage = vi.fn();
+let capturedMoveStageConfig: Record<string, (...args: unknown[]) => unknown> = {};
 const mockOpportunityData = {
   opportunities: [
     {
@@ -123,14 +125,21 @@ vi.mock('@/lib/trpc', () => ({
       update: {
         useMutation: () => ({
           mutate: mockMutate,
-          isLoading: false,
+          isPending: false,
         }),
+      },
+      moveStage: {
+        useMutation: (config?: Record<string, (...args: unknown[]) => unknown>) => {
+          if (config) capturedMoveStageConfig = config;
+          return { mutate: mockMoveStage, isPending: false };
+        },
       },
     },
   },
 }));
 
 // Mock @intelliflow/ui
+const mockToast = vi.fn();
 vi.mock('@intelliflow/ui', () => ({
   Card: ({
     children,
@@ -149,6 +158,14 @@ vi.mock('@intelliflow/ui', () => ({
   Skeleton: ({ className }: { className?: string }) => (
     <div data-testid="skeleton" className={className} />
   ),
+  toast: (...args: unknown[]) => mockToast(...args),
+  Dialog: ({ children, open }: { children: React.ReactNode; open: boolean }) =>
+    open ? <div data-testid="loss-reason-dialog">{children}</div> : null,
+  DialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
+  DialogDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
+  DialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 // Mock @/components/shared
@@ -164,18 +181,41 @@ vi.mock('@/components/shared', () => ({
 // Mock extracted deal components — render minimal stubs that prove props flow through
 vi.mock('@/components/deals', () => ({
   DealListView: () => <div data-testid="deal-list-view">Deal List View</div>,
+  LossReasonModal: ({
+    open,
+    onConfirm,
+    onCancel,
+    dealName,
+  }: {
+    open: boolean;
+    onConfirm: (reason: string) => void;
+    onCancel: () => void;
+    dealName: string;
+  }) =>
+    open ? (
+      <div data-testid="loss-reason-modal" data-deal-name={dealName}>
+        <button data-testid="confirm-loss" onClick={() => onConfirm('Budget constraints prevented the deal')}>
+          Confirm
+        </button>
+        <button data-testid="cancel-loss" onClick={() => onCancel()}>
+          Cancel
+        </button>
+      </div>
+    ) : null,
   PipelineBoard: ({
     deals,
     onStageChange,
     onDealNavigate,
+    pendingDealId,
   }: {
     deals: Array<{ id: string; name: string; stage: string }>;
     onStageChange: (id: string, stage: string) => void;
     onDealNavigate: (id: string) => void;
+    pendingDealId?: string | null;
   }) => (
-    <div data-testid="pipeline-board" data-deal-count={deals.length}>
+    <div data-testid="pipeline-board" data-deal-count={deals.length} data-pending-deal={pendingDealId ?? ''}>
       {deals.map((d) => (
-        <button key={d.id} data-testid={`deal-${d.id}`} onClick={() => onDealNavigate(d.id)}>
+        <button key={d.id} data-testid={`deal-${d.id}`} data-stage={d.stage} onClick={() => onDealNavigate(d.id)}>
           {d.name}
         </button>
       ))}
@@ -189,6 +229,16 @@ vi.mock('@/components/deals', () => ({
         }}
       >
         Trigger Stage Change
+      </button>
+      <button
+        data-testid="trigger-closed-lost"
+        onClick={() => {
+          if (deals.length > 0) {
+            onStageChange(deals[0].id, 'CLOSED_LOST');
+          }
+        }}
+      >
+        Trigger Closed Lost
       </button>
     </div>
   ),
@@ -254,6 +304,7 @@ describe('DealsPage', { timeout: 10000 }, () => {
     mockQueryState.error = null;
     mockAuthState.isLoading = false;
     mockAuthState.isAuthenticated = true;
+    capturedMoveStageConfig = {};
   });
 
   afterEach(() => {
@@ -356,7 +407,7 @@ describe('DealsPage', { timeout: 10000 }, () => {
       expect(mockPush).toHaveBeenCalledWith('/deals/1');
     });
 
-    it('stage change triggers optimistic update + mutation', async () => {
+    it('stage change calls moveStage.mutate (IFC-064 AC-001)', async () => {
       const user = userEvent.setup();
 
       await act(async () => {
@@ -366,7 +417,135 @@ describe('DealsPage', { timeout: 10000 }, () => {
       const triggerBtn = screen.getByTestId('trigger-stage-change');
       await user.click(triggerBtn);
 
-      expect(mockMutate).toHaveBeenCalledWith({ id: '1', stage: 'PROPOSAL' });
+      expect(mockMoveStage).toHaveBeenCalledWith(
+        { id: '1', targetStage: 'PROPOSAL' },
+        expect.objectContaining({ onSettled: expect.any(Function) })
+      );
+    });
+  });
+
+  describe('IFC-064: Drag-Drop Persistence', () => {
+    it('optimistic update moves deal to new stage before mutation resolves (AC-002)', async () => {
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      // Trigger optimistic update via onMutate callback
+      expect(capturedMoveStageConfig.onMutate).toBeDefined();
+      await act(async () => {
+        await capturedMoveStageConfig.onMutate({ id: '1', targetStage: 'PROPOSAL' });
+      });
+
+      // Deal should now show PROPOSAL stage in the board
+      const deal1 = screen.getByTestId('deal-1');
+      expect(deal1.getAttribute('data-stage')).toBe('PROPOSAL');
+    });
+
+    it('error rollback reverts deal to original stage (AC-004)', async () => {
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      // Trigger optimistic update
+      let rollbackContext: unknown;
+      await act(async () => {
+        rollbackContext = await capturedMoveStageConfig.onMutate({ id: '1', targetStage: 'PROPOSAL' });
+      });
+
+      // Verify optimistic update applied
+      expect(screen.getByTestId('deal-1').getAttribute('data-stage')).toBe('PROPOSAL');
+
+      // Simulate error — onError should rollback
+      await act(async () => {
+        capturedMoveStageConfig.onError(
+          { message: 'Server error' },
+          { id: '1', targetStage: 'PROPOSAL' },
+          rollbackContext
+        );
+      });
+
+      // Deal should revert to original stage
+      const deal1 = screen.getByTestId('deal-1');
+      expect(deal1.getAttribute('data-stage')).toBe('QUALIFICATION');
+    });
+
+    it('CLOSED_LOST drag opens LossReasonModal (AC-005)', async () => {
+      const user = userEvent.setup();
+
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      // Modal should not be visible initially
+      expect(screen.queryByTestId('loss-reason-modal')).not.toBeInTheDocument();
+
+      // Trigger CLOSED_LOST stage change
+      const closedLostBtn = screen.getByTestId('trigger-closed-lost');
+      await user.click(closedLostBtn);
+
+      // Modal should now be visible
+      expect(screen.getByTestId('loss-reason-modal')).toBeInTheDocument();
+      expect(screen.getByTestId('loss-reason-modal').getAttribute('data-deal-name')).toBe(
+        'Enterprise License - Acme Corp'
+      );
+    });
+
+    it('successful stage change shows success toast (AC-008)', async () => {
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      // Trigger onSuccess callback
+      await act(async () => {
+        capturedMoveStageConfig.onSuccess();
+      });
+
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'Deal stage updated successfully' })
+      );
+    });
+
+    it('failed stage change shows error toast (AC-009)', async () => {
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      // Trigger onError callback with generic error
+      await act(async () => {
+        capturedMoveStageConfig.onError(
+          { message: 'Network error' },
+          { id: '1', targetStage: 'PROPOSAL' },
+          { previousDeals: [] }
+        );
+      });
+
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Failed to update deal stage. Please try again.',
+          variant: 'destructive',
+        })
+      );
+    });
+
+    it('OpportunityAlreadyClosedError shows distinct error message (AC-009)', async () => {
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      await act(async () => {
+        capturedMoveStageConfig.onError(
+          { message: 'OpportunityAlreadyClosedError' },
+          { id: '1', targetStage: 'CLOSED_LOST' },
+          { previousDeals: [] }
+        );
+      });
+
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'This deal has already been closed by another user',
+          variant: 'destructive',
+        })
+      );
     });
   });
 

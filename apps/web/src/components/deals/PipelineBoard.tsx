@@ -37,6 +37,7 @@ interface PipelineBoardProps {
   readonly deals: Deal[];
   readonly onStageChange: (dealId: string, newStage: OpportunityStage) => void;
   readonly onDealNavigate: (dealId: string) => void;
+  readonly pendingDealId?: string | null;
 }
 
 // Mirrors OpportunityService.STAGE_TRANSITION_RULES (packages/application)
@@ -58,6 +59,7 @@ export const PipelineBoard = React.memo(function PipelineBoard({
   deals,
   onStageChange,
   onDealNavigate,
+  pendingDealId,
 }: PipelineBoardProps) {
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
 
@@ -181,6 +183,7 @@ export const PipelineBoard = React.memo(function PipelineBoard({
               stage={stage}
               deals={dealsByStage[stage]}
               onDealNavigate={onDealNavigate}
+              pendingDealId={pendingDealId}
             />
           ))}
         </div>

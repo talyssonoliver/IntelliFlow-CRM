@@ -74,6 +74,20 @@ export const PIPELINE_STAGE_CONFIG: Record<OpportunityStage, { label: string; co
   CLOSED_LOST: { label: 'Closed Lost', color: 'hsl(var(--stage-lost))' },
 };
 
+/**
+ * Default probability for each stage — matches domain Opportunity.getDefaultProbabilityForStage()
+ * Used for optimistic updates during drag-drop stage changes (IFC-064 AC-010).
+ */
+export const STAGE_PROBABILITIES: Record<OpportunityStage, number> = {
+  PROSPECTING: 10,
+  QUALIFICATION: 20,
+  NEEDS_ANALYSIS: 40,
+  PROPOSAL: 60,
+  NEGOTIATION: 80,
+  CLOSED_WON: 100,
+  CLOSED_LOST: 0,
+};
+
 /** All opportunity stages re-exported for convenience */
 export { OPPORTUNITY_STAGES };
 export type { OpportunityStage };

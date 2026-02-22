@@ -11,35 +11,33 @@
  */
 
 import * as React from 'react';
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { Suspense, useState, useMemo, useCallback, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Card, Skeleton } from '@intelliflow/ui';
+import dynamic from 'next/dynamic';
+import { Card, Skeleton, toast } from '@intelliflow/ui';
 import { OPPORTUNITY_STAGES, type OpportunityStage } from '@intelliflow/domain';
 import { PageHeader } from '@/components/shared';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
 
-import { PipelineBoard, ValueSummary, DealFilters, DealListView } from '@/components/deals';
+import { PipelineBoard, ValueSummary, DealFilters, DealListView, LossReasonModal } from '@/components/deals';
+
+const DealsCharts = dynamic(() => import('@/components/deals/DealsCharts'), {
+  ssr: false,
+  loading: () => (
+    <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 mt-4">
+      <Card className="p-4 sm:p-6 bg-card border-border"><Skeleton className="h-[250px] w-full" /></Card>
+      <Card className="p-4 sm:p-6 bg-card border-border"><Skeleton className="h-[250px] w-full" /></Card>
+    </div>
+  ),
+});
 import {
   type Deal,
   type DealFiltersValue,
   PIPELINE_STAGE_CONFIG,
+  STAGE_PROBABILITIES,
   transformDeals,
   calculateStats,
-  formatCurrencyCompact,
 } from '@/components/deals/types';
 
 // =============================================================================
@@ -201,6 +199,14 @@ function ErrorDisplay({ message, onRetry }: Readonly<ErrorDisplayProps>) {
 // =============================================================================
 
 export default function DealsPage() {
+  return (
+    <Suspense fallback={<PipelineSkeleton />}>
+      <DealsPageContent />
+    </Suspense>
+  );
+}
+
+function DealsPageContent() {
   const router = useRouter();
   const [viewMode, setViewMode] = useViewMode();
   const [deals, setDeals] = useState<Deal[]>([]);
@@ -245,21 +251,100 @@ export default function DealsPage() {
     }
   }, [opportunitiesData]);
 
-  // Mutation for stage change
-  const updateOpportunity = trpc.opportunity.update.useMutation({
+  // State for pending deal and loss reason modal (IFC-064)
+  const [pendingDealId, setPendingDealId] = useState<string | null>(null);
+  const [lossReasonState, setLossReasonState] = useState<{
+    dealId: string;
+    dealName: string;
+  } | null>(null);
+
+  // Mutation for stage change (IFC-064: uses moveStage endpoint)
+  const moveStage = trpc.opportunity.moveStage.useMutation({
     onSuccess: () => {
+      setPendingDealId(null);
       refetch();
+      toast({ title: 'Deal stage updated successfully' });
+    },
+    onError: (err, _variables, context) => {
+      // Rollback to previous state (AC-004)
+      const previousDeals = (context as { previousDeals?: Deal[] })?.previousDeals;
+      if (previousDeals) {
+        setDeals(previousDeals);
+      }
+      setPendingDealId(null);
+
+      const message =
+        err.message === 'OpportunityAlreadyClosedError'
+          ? 'This deal has already been closed by another user'
+          : 'Failed to update deal stage. Please try again.';
+      toast({ title: message, variant: 'destructive' });
+    },
+    onMutate: async ({ id, targetStage }: { id: string; targetStage: string; reason?: string }) => {
+      const previousDeals = [...deals];
+      // Optimistic update (AC-002)
+      setPendingDealId(id);
+      setDeals((prev) =>
+        prev.map((d) =>
+          d.id === id
+            ? {
+                ...d,
+                stage: targetStage as OpportunityStage,
+                probability: STAGE_PROBABILITIES[targetStage as OpportunityStage] ?? d.probability,
+              }
+            : d
+        )
+      );
+      return { previousDeals };
     },
   });
 
-  // Handler: stage change from PipelineBoard (optimistic update + persist)
+  // Handler: stage change from PipelineBoard (IFC-064)
   const handleStageChange = useCallback(
     (dealId: string, newStage: OpportunityStage) => {
-      setDeals((prev) => prev.map((d) => (d.id === dealId ? { ...d, stage: newStage } : d)));
-      updateOpportunity.mutate({ id: dealId, stage: newStage });
+      if (newStage === 'CLOSED_LOST') {
+        // Open loss reason modal (AC-005)
+        const deal = deals.find((d) => d.id === dealId);
+        setLossReasonState({
+          dealId,
+          dealName: deal?.name ?? 'Unknown Deal',
+        });
+        return;
+      }
+
+      const startTime = performance.now();
+      moveStage.mutate(
+        { id: dealId, targetStage: newStage },
+        {
+          onSettled: () => {
+            const elapsed = performance.now() - startTime;
+            if (elapsed > 300) {
+              console.warn(`[IFC-064] Stage change took ${elapsed.toFixed(0)}ms (target: <300ms)`);
+            }
+          },
+        }
+      );
     },
-    [updateOpportunity]
+    [deals, moveStage]
   );
+
+  // Handler: loss reason confirmed (IFC-064 AC-005)
+  const handleLossReasonConfirm = useCallback(
+    (reason: string) => {
+      if (!lossReasonState) return;
+      moveStage.mutate({
+        id: lossReasonState.dealId,
+        targetStage: 'CLOSED_LOST',
+        reason,
+      });
+      setLossReasonState(null);
+    },
+    [lossReasonState, moveStage]
+  );
+
+  // Handler: loss reason cancelled
+  const handleLossReasonCancel = useCallback(() => {
+    setLossReasonState(null);
+  }, []);
 
   const handleDealNavigate = useCallback(
     (dealId: string) => {
@@ -419,98 +504,8 @@ export default function DealsPage() {
       {/* Stats Cards (AC-7, AC-24) */}
       <ValueSummary stats={pipelineStats} />
 
-      {/* Charts Section */}
-      <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 mt-4">
-        <Card className="p-4 sm:p-6 bg-card border-border">
-          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-4">
-            Deals by Stage
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie
-                data={pieChartData}
-                cx="50%"
-                cy="50%"
-                innerRadius={50}
-                outerRadius={80}
-                paddingAngle={2}
-                dataKey="value"
-                label={({ name, value }) => `${name}: ${value}`}
-                labelLine={false}
-              >
-                {pieChartData.map((entry) => (
-                  <Cell key={`pie-${entry.name}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-          {/* SR-only data table for chart accessibility (AC-23) */}
-          <table className="sr-only" aria-label="Deals by Stage data">
-            <thead>
-              <tr>
-                <th>Stage</th>
-                <th>Count</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pieChartData.map((entry) => (
-                <tr key={`pie-sr-${entry.name}`}>
-                  <td>{entry.name}</td>
-                  <td>{entry.value}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
-
-        <Card className="p-4 sm:p-6 bg-card border-border">
-          <h3 className="text-base sm:text-lg font-semibold text-foreground mb-4">
-            Revenue by Stage
-          </h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={barChartData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-              <XAxis dataKey="name" tick={{ fontSize: 10 }} className="fill-muted-foreground" />
-              <YAxis
-                tickFormatter={(value) => `$${(value / 1000).toFixed(0)}K`}
-                tick={{ fontSize: 10 }}
-                className="fill-muted-foreground"
-                width={50}
-              />
-              <Tooltip
-                formatter={(value) => {
-                  const numValue = typeof value === 'number' ? value : 0;
-                  return [`$${numValue.toLocaleString()}`, 'Revenue'];
-                }}
-              />
-              <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
-                {barChartData.map((entry) => (
-                  <Cell key={`bar-${entry.name}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-          {/* SR-only data table for chart accessibility (AC-23) */}
-          <table className="sr-only" aria-label="Revenue by Stage data">
-            <thead>
-              <tr>
-                <th>Stage</th>
-                <th>Revenue</th>
-              </tr>
-            </thead>
-            <tbody>
-              {barChartData.map((entry) => (
-                <tr key={`bar-sr-${entry.name}`}>
-                  <td>{entry.name}</td>
-                  <td>{formatCurrencyCompact(entry.revenue)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </Card>
-      </div>
+      {/* Charts Section (lazy-loaded) */}
+      <DealsCharts pieChartData={pieChartData} barChartData={barChartData} />
 
       {/* Kanban Board (AC-1, AC-3, AC-4, AC-6, AC-19, AC-21) */}
       <Card className="p-3 sm:p-4 overflow-x-auto bg-card border-border -mx-4 sm:mx-0 rounded-none sm:rounded-lg mt-4">
@@ -518,8 +513,17 @@ export default function DealsPage() {
           deals={deals}
           onStageChange={handleStageChange}
           onDealNavigate={handleDealNavigate}
+          pendingDealId={pendingDealId}
         />
       </Card>
+
+      {/* Loss Reason Modal (IFC-064 AC-005) */}
+      <LossReasonModal
+        open={lossReasonState !== null}
+        onConfirm={handleLossReasonConfirm}
+        onCancel={handleLossReasonCancel}
+        dealName={lossReasonState?.dealName ?? ''}
+      />
     </>
   );
 }

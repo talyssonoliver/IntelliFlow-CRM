@@ -9,7 +9,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
 import { PipelineBoard } from '../PipelineBoard';
 import { createMockDeal } from './deal-test-utils';
 import type { OpportunityStage } from '../types';
@@ -284,5 +284,163 @@ describe('PipelineBoard', () => {
     });
 
     expect(mockOnStageChange).toHaveBeenCalledWith('deal-1', 'CLOSED_WON');
+  });
+
+  // ─── IFC-064: DnD lifecycle + pendingDealId tests ──────────────────────────
+
+  it('handleDragStart sets activeDeal — DragOverlay renders deal name (IFC-064 AC-003)', async () => {
+    const deals = [createMockDeal({ id: 'deal-1', name: 'Big Deal', stage: 'PROSPECTING' as OpportunityStage, value: 50000 })];
+    render(
+      <PipelineBoard
+        deals={deals}
+        onStageChange={mockOnStageChange}
+        onDealNavigate={mockOnDealNavigate}
+      />
+    );
+
+    const onDragStart = capturedDndProps.onDragStart as (event: Record<string, unknown>) => void;
+    await act(async () => {
+      onDragStart({ active: { id: 'deal-1' } });
+    });
+
+    // DragOverlay should now show the active deal's name
+    const overlay = screen.getByTestId('drag-overlay');
+    expect(overlay.textContent).toContain('Big Deal');
+  });
+
+  it('handleDragCancel clears activeDeal — DragOverlay empty (IFC-064 AC-003)', async () => {
+    const deals = [createMockDeal({ id: 'deal-1', name: 'Big Deal', stage: 'PROSPECTING' as OpportunityStage })];
+    render(
+      <PipelineBoard
+        deals={deals}
+        onStageChange={mockOnStageChange}
+        onDealNavigate={mockOnDealNavigate}
+      />
+    );
+
+    const onDragStart = capturedDndProps.onDragStart as (event: Record<string, unknown>) => void;
+    await act(async () => {
+      onDragStart({ active: { id: 'deal-1' } });
+    });
+
+    const onDragCancel = capturedDndProps.onDragCancel as () => void;
+    await act(async () => {
+      onDragCancel();
+    });
+
+    // DragOverlay should be empty
+    const overlay = screen.getByTestId('drag-overlay');
+    expect(overlay.textContent).toBe('');
+  });
+
+  it('passes pendingDealId through to StageColumn children (IFC-064 AC-007)', () => {
+    const deals = [createMockDeal({ id: 'deal-1', name: 'Pending Deal', stage: 'QUALIFICATION' as OpportunityStage })];
+    const { container } = render(
+      <PipelineBoard
+        deals={deals}
+        onStageChange={mockOnStageChange}
+        onDealNavigate={mockOnDealNavigate}
+        pendingDealId="deal-1"
+      />
+    );
+
+    // When pendingDealId matches, DealCard should get isPending=true
+    // cn() mock concatenates — check for animate-pulse class on the deal card
+    const dealCard = container.querySelector('[aria-label="View deal: Pending Deal"]');
+    expect(dealCard?.className).toContain('animate-pulse');
+  });
+
+  it('accessibility announcements: onDragOver returns stage description (IFC-064)', () => {
+    const deals = [createMockDeal({ id: 'deal-1', name: 'Big Deal', stage: 'PROSPECTING' as OpportunityStage })];
+    render(
+      <PipelineBoard
+        deals={deals}
+        onStageChange={mockOnStageChange}
+        onDealNavigate={mockOnDealNavigate}
+      />
+    );
+
+    const accessibility = capturedDndProps.accessibility as {
+      announcements: {
+        onDragStart: (ev: { active: { id: string } }) => string;
+        onDragOver: (ev: { active: { id: string }; over: { id: string } | null }) => string;
+        onDragEnd: (ev: { active: { id: string }; over: { id: string } | null }) => string;
+        onDragCancel: () => string;
+      };
+    };
+
+    // Test all announcement callbacks
+    const startMsg = accessibility.announcements.onDragStart({ active: { id: 'deal-1' } });
+    expect(startMsg).toContain('Big Deal');
+
+    const overMsg = accessibility.announcements.onDragOver({
+      active: { id: 'deal-1' },
+      over: { id: 'QUALIFICATION' },
+    });
+    expect(overMsg).toContain('Qualification');
+
+    const overNullMsg = accessibility.announcements.onDragOver({
+      active: { id: 'deal-1' },
+      over: null,
+    });
+    expect(overNullMsg).toContain('not over a stage');
+
+    const endMsg = accessibility.announcements.onDragEnd({
+      active: { id: 'deal-1' },
+      over: { id: 'QUALIFICATION' },
+    });
+    expect(endMsg).toContain('Qualification');
+
+    const endNullMsg = accessibility.announcements.onDragEnd({
+      active: { id: 'deal-1' },
+      over: null,
+    });
+    expect(endNullMsg).toContain('was dropped');
+
+    const cancelMsg = accessibility.announcements.onDragCancel();
+    expect(cancelMsg).toBe('Drag cancelled');
+  });
+
+  it('handleDragEnd — dropping on another deal in a different stage calls onStageChange', () => {
+    const deals = [
+      createMockDeal({ id: 'deal-1', stage: 'PROSPECTING' as OpportunityStage }),
+      createMockDeal({ id: 'deal-2', stage: 'QUALIFICATION' as OpportunityStage }),
+    ];
+    render(
+      <PipelineBoard
+        deals={deals}
+        onStageChange={mockOnStageChange}
+        onDealNavigate={mockOnDealNavigate}
+      />
+    );
+
+    const onDragEnd = capturedDndProps.onDragEnd as (event: Record<string, unknown>) => void;
+    onDragEnd({
+      active: { id: 'deal-1', data: { current: {} } },
+      over: { id: 'deal-2' }, // Dropping on another deal, not a stage
+    });
+
+    // Should detect target stage from the deal being dropped on
+    expect(mockOnStageChange).toHaveBeenCalledWith('deal-1', 'QUALIFICATION');
+  });
+
+  it('CLOSED_LOST drag delegates to parent via onStageChange (IFC-064 AC-005)', () => {
+    const deals = [createMockDeal({ id: 'deal-1', stage: 'PROSPECTING' as OpportunityStage })];
+    render(
+      <PipelineBoard
+        deals={deals}
+        onStageChange={mockOnStageChange}
+        onDealNavigate={mockOnDealNavigate}
+      />
+    );
+
+    const onDragEnd = capturedDndProps.onDragEnd as (event: Record<string, unknown>) => void;
+    onDragEnd({
+      active: { id: 'deal-1', data: { current: {} } },
+      over: { id: 'CLOSED_LOST' },
+    });
+
+    // PROSPECTING → CLOSED_LOST is valid, should delegate to parent
+    expect(mockOnStageChange).toHaveBeenCalledWith('deal-1', 'CLOSED_LOST');
   });
 });

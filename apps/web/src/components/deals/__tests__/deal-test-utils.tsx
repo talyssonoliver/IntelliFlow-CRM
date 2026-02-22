@@ -119,7 +119,7 @@ export function mockOpportunityRouter() {
         moveStage: {
           useMutation: vi.fn(() => ({
             mutate: mockMoveStage,
-            isLoading: false,
+            isPending: false,
           })),
         },
       },

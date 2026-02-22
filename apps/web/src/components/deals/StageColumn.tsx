@@ -21,12 +21,14 @@ interface StageColumnProps {
   readonly stage: OpportunityStage;
   readonly deals: Deal[];
   readonly onDealNavigate: (dealId: string) => void;
+  readonly pendingDealId?: string | null;
 }
 
 export const StageColumn = React.memo(function StageColumn({
   stage,
   deals,
   onDealNavigate,
+  pendingDealId,
 }: StageColumnProps) {
   const config = PIPELINE_STAGE_CONFIG[stage];
   const totalValue = deals.reduce((sum, deal) => sum + deal.value, 0);
@@ -67,7 +69,7 @@ export const StageColumn = React.memo(function StageColumn({
           <div className="space-y-1.5" role="list" aria-label={`Deals in ${config.label}`}>
             {deals.map((deal) => (
               <div key={deal.id} role="listitem">
-                <DealCard deal={deal} onNavigate={() => onDealNavigate(deal.id)} />
+                <DealCard deal={deal} onNavigate={() => onDealNavigate(deal.id)} isPending={deal.id === pendingDealId} />
               </div>
             ))}
             {deals.length === 0 && (

@@ -158,4 +158,29 @@ describe('DealCard', () => {
     const card = container.querySelector('[role="button"]');
     expect(card).not.toHaveClass('opacity-50');
   });
+
+  // ─── IFC-064: isPending prop tests (AC-007) ─────────────────────────────────
+
+  it('renders with pending visual state when isPending=true', () => {
+    const deal = createMockDeal();
+    const { container } = render(
+      <DealCard deal={deal} onNavigate={mockOnNavigate} isPending={true} />
+    );
+
+    const card = container.querySelector('[role="button"]');
+    // cn() mock concatenates classes — isPending adds animate-pulse
+    expect(card?.className).toContain('animate-pulse');
+    expect(card?.className).toContain('ring-primary/50');
+    expect(card?.className).toContain('opacity-75');
+  });
+
+  it('renders normal state when isPending is false', () => {
+    const deal = createMockDeal();
+    const { container } = render(
+      <DealCard deal={deal} onNavigate={mockOnNavigate} isPending={false} />
+    );
+
+    const card = container.querySelector('[role="button"]');
+    expect(card?.className).not.toContain('animate-pulse');
+  });
 });

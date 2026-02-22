@@ -2,10 +2,9 @@
 
 import {
   SidebarProvider,
-  AppSidebar,
   SidebarInset,
   SidebarTrigger,
-  MobileSidebar,
+  SidebarWithSuspense,
   dealsSidebarConfig,
 } from '@/components/sidebar';
 
@@ -13,11 +12,7 @@ export default function DealsForecastLayout({ children }: { readonly children: R
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)] w-full overflow-hidden">
-        {/* Left Sidebar - Deal Views & Segments (Desktop) */}
-        <AppSidebar config={dealsSidebarConfig} />
-
-        {/* Mobile Sidebar Drawer */}
-        <MobileSidebar config={dealsSidebarConfig} />
+        <SidebarWithSuspense config={dealsSidebarConfig} />
 
         {/* Main Content */}
         <SidebarInset>

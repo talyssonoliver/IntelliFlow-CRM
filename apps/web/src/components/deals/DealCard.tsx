@@ -21,6 +21,7 @@ import { formatCurrencyFull } from './types';
 interface DealCardProps {
   readonly deal: Deal;
   readonly onNavigate: () => void;
+  readonly isPending?: boolean;
 }
 
 function formatDate(dateStr: string | null): string {
@@ -31,7 +32,7 @@ function formatDate(dateStr: string | null): string {
   });
 }
 
-export const DealCard = React.memo(function DealCard({ deal, onNavigate }: DealCardProps) {
+export const DealCard = React.memo(function DealCard({ deal, onNavigate, isPending }: DealCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: deal.id,
     data: { type: 'deal', deal },
@@ -59,6 +60,7 @@ export const DealCard = React.memo(function DealCard({ deal, onNavigate }: DealC
         'bg-card rounded-lg border border-border text-left w-full',
         'p-3 sm:p-4 cursor-pointer touch-pan-y',
         'hover:border-primary hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary',
+        isPending && 'animate-pulse ring-2 ring-primary/50 opacity-75',
         isDragging
           ? 'opacity-50 shadow-lg ring-2 ring-primary'
           : 'transition-[border-color,box-shadow] duration-200'
