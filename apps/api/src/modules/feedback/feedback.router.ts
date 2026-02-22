@@ -27,7 +27,7 @@ import { getTenantContext } from '../../security/tenant-context';
  * Helper to get feedback service with null check
  * Cast to any to work around application package build issues
  */
-function getFeedbackService(ctx: Context): any { // eslint-disable-line @typescript-eslint/no-explicit-any
+function getFeedbackService(ctx: Context): any {
   if (!ctx.services?.feedback) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',

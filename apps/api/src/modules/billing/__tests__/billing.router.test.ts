@@ -78,6 +78,9 @@ const mockStripeAdapterMethods = {
   updateSubscription: vi.fn(),
   cancelSubscription: vi.fn(),
   createCustomer: vi.fn(),
+  createSubscription: vi.fn(),
+  getInvoice: vi.fn(),
+  payInvoice: vi.fn(),
 };
 
 // Create a proper class mock for StripeAdapter
@@ -91,6 +94,9 @@ class MockStripeAdapter {
   updateSubscription = mockStripeAdapterMethods.updateSubscription;
   cancelSubscription = mockStripeAdapterMethods.cancelSubscription;
   createCustomer = mockStripeAdapterMethods.createCustomer;
+  createSubscription = mockStripeAdapterMethods.createSubscription;
+  getInvoice = mockStripeAdapterMethods.getInvoice;
+  payInvoice = mockStripeAdapterMethods.payInvoice;
 }
 
 // Mock the StripeAdapter module with a proper class
@@ -1044,6 +1050,15 @@ describe('billingRouter', () => {
         value: mockPaymentMethod,
       });
 
+      mockStripeAdapterMethods.createSubscription.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          ...mockSubscription,
+          latestInvoicePaymentIntentClientSecret: null,
+        },
+      });
+
       const mockContext = {
         user: {
           userId: 'user_123',
@@ -1070,10 +1085,10 @@ describe('billingRouter', () => {
         paymentMethodId: 'pm_123',
       });
 
-      expect(result.customerId).toBe('cus_123');
-      expect(result.planId).toBe('plan_pro');
-      expect(result.billingCycle).toBe('monthly');
-      expect(result.subscriptionId).toContain('sub_');
+      expect(result.subscriptionId).toBe('sub_123');
+      expect(result.status).toBe('active');
+      expect(result.clientSecret).toBeNull();
+      expect(result.currentPeriodEnd).toBe(new Date('2025-02-01').toISOString());
       expect(mockStripeAdapterMethods.createCustomer).not.toHaveBeenCalled();
       expect(mockStripeAdapterMethods.attachPaymentMethod).toHaveBeenCalledWith(
         'pm_123',
@@ -1097,6 +1112,17 @@ describe('billingRouter', () => {
         isSuccess: true,
         isFailure: false,
         value: mockPaymentMethod,
+      });
+
+      mockStripeAdapterMethods.createSubscription.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          ...mockSubscription,
+          id: 'sub_new_789',
+          customerId: 'cus_new_456',
+          latestInvoicePaymentIntentClientSecret: 'pi_secret_abc',
+        },
       });
 
       const mockPrismaUpdate = vi.fn();
@@ -1126,9 +1152,9 @@ describe('billingRouter', () => {
         paymentMethodId: 'pm_456',
       });
 
-      expect(result.customerId).toBe('cus_new_456');
-      expect(result.planId).toBe('plan_enterprise');
-      expect(result.billingCycle).toBe('annual');
+      expect(result.subscriptionId).toBe('sub_new_789');
+      expect(result.status).toBe('active');
+      expect(result.clientSecret).toBe('pi_secret_abc');
       expect(mockStripeAdapterMethods.createCustomer).toHaveBeenCalledWith({
         email: 'test@example.com',
         name: 'Test User',
@@ -1685,6 +1711,242 @@ describe('billingRouter', () => {
       const result = await caller.updateSubscription({ priceId: 'price_enterprise_monthly' });
       expect(result.status).toBe('trialing');
       expect(result.priceId).toBe('price_enterprise_monthly');
+    });
+  });
+
+  // ============================================
+  // getInvoice Tests (PG-028)
+  // ============================================
+
+  describe('getInvoice', () => {
+    const detailedInvoice = {
+      ...mockInvoice,
+      number: 'INV-2025-001',
+      subtotal: 7900,
+      tax: 1580,
+      discount: 0,
+      customerEmail: 'test@example.com',
+      customerName: 'Test User',
+      lineItems: [
+        { id: 'li_1', description: 'Professional Plan', quantity: 1, unitAmount: 7900, amount: 7900, currency: 'gbp' },
+      ],
+    };
+
+    // T-021
+    it('returns invoice for valid ID', async () => {
+      mockStripeAdapterMethods.getInvoice.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: detailedInvoice,
+      });
+
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+
+      const result = await caller.getInvoice({ invoiceId: 'in_123' });
+      expect(result.id).toBe('in_123');
+      expect(result.number).toBe('INV-2025-001');
+      expect(result.lineItems).toHaveLength(1);
+    });
+
+    // T-022
+    it('throws NOT_FOUND when user has no stripeCustomerId', async () => {
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: undefined,
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+
+      await expect(caller.getInvoice({ invoiceId: 'in_123' })).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+
+    // T-023
+    it('throws NOT_FOUND when adapter returns null', async () => {
+      mockStripeAdapterMethods.getInvoice.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: null,
+      });
+
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+
+      await expect(caller.getInvoice({ invoiceId: 'in_notexist' })).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+    });
+
+    // T-024
+    it('throws FORBIDDEN when invoice belongs to different customer', async () => {
+      mockStripeAdapterMethods.getInvoice.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: { ...detailedInvoice, customerId: 'cus_other' },
+      });
+
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+
+      await expect(caller.getInvoice({ invoiceId: 'in_123' })).rejects.toThrow(
+        expect.objectContaining({ code: 'FORBIDDEN' })
+      );
+    });
+  });
+
+  // ============================================
+  // payInvoice Tests (PG-028)
+  // ============================================
+
+  describe('payInvoice', () => {
+    const openInvoice = {
+      ...mockInvoice,
+      status: 'open' as const,
+      amountDue: 7900,
+      amountPaid: 0,
+      amountRemaining: 7900,
+    };
+
+    const paidInvoice = {
+      ...openInvoice,
+      status: 'paid' as const,
+      amountPaid: 7900,
+      amountRemaining: 0,
+    };
+
+    // T-025
+    it('succeeds for open invoice', async () => {
+      mockStripeAdapterMethods.getInvoice.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: openInvoice,
+      });
+      mockStripeAdapterMethods.payInvoice.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: paidInvoice,
+      });
+
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+
+      const result = await caller.payInvoice({ invoiceId: 'in_123' });
+      expect(result.status).toBe('paid');
+      expect(result.amountPaid).toBe(7900);
+    });
+
+    // T-026
+    it('rejects non-open invoice with BAD_REQUEST', async () => {
+      mockStripeAdapterMethods.getInvoice.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: { ...openInvoice, status: 'paid' },
+      });
+
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+
+      await expect(caller.payInvoice({ invoiceId: 'in_123' })).rejects.toThrow(
+        expect.objectContaining({ code: 'BAD_REQUEST' })
+      );
+    });
+
+    // T-027
+    it('rejects wrong customer with FORBIDDEN', async () => {
+      mockStripeAdapterMethods.getInvoice.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: { ...openInvoice, customerId: 'cus_other' },
+      });
+
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+
+      await expect(caller.payInvoice({ invoiceId: 'in_123' })).rejects.toThrow(
+        expect.objectContaining({ code: 'FORBIDDEN' })
+      );
     });
   });
 });

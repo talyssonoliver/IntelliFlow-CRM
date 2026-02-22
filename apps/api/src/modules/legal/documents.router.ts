@@ -15,6 +15,7 @@ import { PrismaCaseDocumentRepository } from '@intelliflow/adapters';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure } from '../../trpc';
+import { container } from '../../container';
 
 // ============================================================================
 // Input Schemas
@@ -37,7 +38,6 @@ const createDocumentInputSchema = z.object({
   tags: z.array(z.string().max(50)).max(20).default([]),
   relatedCaseId: z.string().uuid().optional(),
   relatedContactId: z.string().uuid().optional(),
-  storageKey: z.string().min(1),
   contentHash: z.string().regex(/^[a-f0-9]{64}$/),
   mimeType: z.string().min(1),
   sizeBytes: z.number().int().positive(),
@@ -60,8 +60,6 @@ const createVersionInputSchema = z.object({
 
 const signDocumentInputSchema = z.object({
   documentId: z.string().uuid(),
-  ipAddress: z.string().min(1),
-  userAgent: z.string().min(1),
 });
 
 const placeLegalHoldInputSchema = z.object({
@@ -79,15 +77,20 @@ export const documentsRouter = createTRPCRouter({
    */
   create: protectedProcedure.input(createDocumentInputSchema).mutation(async ({ ctx, input }) => {
     const userId = ctx.user?.userId;
-    if (!userId) {
+    const tenantId = ctx.user?.tenantId;
+    if (!userId || !tenantId) {
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
     }
 
     const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
 
+    // Generate storageKey server-side (AC-011)
+    const extension = input.mimeType.split('/').pop() || 'bin';
+    const storageKey = `${tenantId}/${crypto.randomUUID()}.${extension}`;
+
     // Create document using domain model
     const document = CaseDocument.create({
-      tenantId: userId, // Using userId as tenantId for now
+      tenantId,
       metadata: {
         title: input.title,
         description: input.description,
@@ -97,7 +100,7 @@ export const documentsRouter = createTRPCRouter({
         relatedCaseId: input.relatedCaseId,
         relatedContactId: input.relatedContactId,
       },
-      storageKey: input.storageKey,
+      storageKey,
       contentHash: input.contentHash,
       mimeType: input.mimeType,
       sizeBytes: input.sizeBytes,
@@ -221,7 +224,7 @@ export const documentsRouter = createTRPCRouter({
       if (input?.caseId) {
         documents = await documentRepo.findByCaseId(input.caseId);
       } else {
-        documents = await documentRepo.findAccessibleByUser(userId, userId); // Using userId as tenantId
+        documents = await documentRepo.findAccessibleByUser(userId, ctx.user?.tenantId ?? userId);
       }
 
       // Apply filters
@@ -408,9 +411,24 @@ export const documentsRouter = createTRPCRouter({
       throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
     }
 
+    // Extract IP and User-Agent from request headers server-side (AC-003)
+    const req = ctx.req as any;
+    const ipAddress =
+      req?.headers?.['x-forwarded-for']?.toString().split(',')[0]?.trim() ??
+      req?.socket?.remoteAddress ??
+      'unknown';
+    const userAgent = req?.headers?.['user-agent'] ?? 'unknown';
+
+    // Compute signature hash via SignatureProvider (AC-002)
+    const signatureHash = await container.signatureProvider.computeSignatureHash(
+      document.contentHash,
+      userId,
+      new Date()
+    );
+
     // Sign using domain method
     try {
-      document.sign(userId, input.ipAddress, input.userAgent);
+      document.sign(userId, ipAddress, userAgent, signatureHash);
       await documentRepo.save(document);
 
       const data = document.toJSON();
@@ -440,6 +458,11 @@ export const documentsRouter = createTRPCRouter({
       const document = await documentRepo.findById(input.documentId);
       if (!document) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+      }
+
+      // Check EDIT access (AC-008)
+      if (!document.hasAccess(userId, AccessLevel.EDIT) && document.toJSON().createdBy !== userId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions to archive' });
       }
 
       // Archive using domain method
@@ -541,6 +564,39 @@ export const documentsRouter = createTRPCRouter({
     }),
 
   /**
+   * Get a signed URL for document preview/download (AC-004)
+   */
+  getSignedUrl: protectedProcedure
+    .input(z.object({ documentId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.user?.userId;
+      if (!userId) {
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+      }
+
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const document = await documentRepo.findById(input.documentId);
+      if (!document) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+      }
+
+      // Check VIEW access
+      if (!document.hasAccess(userId, AccessLevel.VIEW) && document.toJSON().createdBy !== userId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
+      }
+
+      // Generate signed URL with 1-hour expiry (NF-004)
+      const expiresInSeconds = 3600;
+      const url = await container.adapters.storageService.getSignedUrl(
+        document.storageKey,
+        expiresInSeconds
+      );
+      const expiresAt = new Date(Date.now() + expiresInSeconds * 1000).toISOString();
+
+      return { url, expiresAt };
+    }),
+
+  /**
    * Get audit trail for document
    */
   getAuditTrail: protectedProcedure
@@ -549,6 +605,16 @@ export const documentsRouter = createTRPCRouter({
       const userId = ctx.user?.userId;
       if (!userId) {
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+      }
+
+      // Check VIEW access (AC-008)
+      const documentRepo = new PrismaCaseDocumentRepository(ctx.prisma);
+      const document = await documentRepo.findById(input.documentId);
+      if (!document) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+      }
+      if (!document.hasAccess(userId, AccessLevel.VIEW) && document.toJSON().createdBy !== userId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied to audit trail' });
       }
 
       const auditLogs = await ctx.prisma.caseDocumentAudit.findMany({
@@ -630,6 +696,12 @@ export const documentsRouter = createTRPCRouter({
           const document = await documentRepo.findById(docId);
           if (!document) {
             failed.push({ id: docId, error: 'Document not found' });
+            continue;
+          }
+
+          // ACL check per document (AC-008, NF-002)
+          if (!document.hasAccess(userId, AccessLevel.EDIT) && document.toJSON().createdBy !== userId) {
+            failed.push({ id: docId, error: 'Insufficient permissions to archive' });
             continue;
           }
 

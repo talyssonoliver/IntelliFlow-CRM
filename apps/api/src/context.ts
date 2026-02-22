@@ -39,10 +39,12 @@ export type Services = {
   opportunity: Container['opportunityService'];
   task: Container['taskService'];
   ticket: Container['ticketService'];
+  ticketRouting: Container['ticketRoutingService'];
   analytics: Container['analyticsService'];
   chainVersion: Container['chainVersionService'];
   convertLeadToDeal: Container['convertLeadToDealUseCase'];
   closeDealWon: Container['closeDealWonUseCase'];
+  closeDealLost: Container['closeDealLostUseCase'];
   feedbackSurvey: Container['feedbackSurveyService'];
   // Optional future services - not yet implemented in container
   experiment?: unknown;
@@ -214,10 +216,12 @@ export const createWSContext = async (authHeader?: string): Promise<BaseContext>
       opportunity: container.opportunityService,
       task: container.taskService,
       ticket: container.ticketService,
+      ticketRouting: container.ticketRoutingService,
       analytics: container.analyticsService,
       chainVersion: container.chainVersionService,
       convertLeadToDeal: container.convertLeadToDealUseCase,
       closeDealWon: container.closeDealWonUseCase,
+      closeDealLost: container.closeDealLostUseCase,
       feedbackSurvey: container.feedbackSurveyService,
     },
     security: container.security,
@@ -361,10 +365,12 @@ export const createContext = async (opts?: {
       opportunity: container.opportunityService,
       task: container.taskService,
       ticket: container.ticketService,
+      ticketRouting: container.ticketRoutingService,
       analytics: container.analyticsService,
       chainVersion: container.chainVersionService,
       convertLeadToDeal: container.convertLeadToDealUseCase,
       closeDealWon: container.closeDealWonUseCase,
+      closeDealLost: container.closeDealLostUseCase,
       feedbackSurvey: container.feedbackSurveyService,
     },
     // Security services (IFC-098, IFC-113, IFC-127)

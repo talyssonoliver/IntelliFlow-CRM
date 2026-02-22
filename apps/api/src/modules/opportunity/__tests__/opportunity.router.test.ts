@@ -527,7 +527,8 @@ describe('Opportunity Router', () => {
         isWon: true,
       });
 
-      ctx.services!.opportunity!.markAsWon = vi.fn().mockResolvedValue({
+      // IFC-065: moveStage CLOSED_WON now routes through closeDealWon use case
+      ctx.services!.closeDealWon!.execute = vi.fn().mockResolvedValue({
         isSuccess: true,
         isFailure: false,
         value: mockDomainOpp,
@@ -539,10 +540,11 @@ describe('Opportunity Router', () => {
       });
 
       expect(result.isWon).toBe(true);
-      expect(ctx.services!.opportunity!.markAsWon).toHaveBeenCalledWith(
-        TEST_UUIDS.opportunity1,
-        expect.any(String)
-      );
+      expect(ctx.services!.closeDealWon!.execute).toHaveBeenCalledWith({
+        opportunityId: TEST_UUIDS.opportunity1,
+        closedBy: expect.any(String),
+        tenantId: expect.any(String),
+      });
     });
 
     it('should mark as lost when targetStage is CLOSED_LOST with reason', async () => {
@@ -553,7 +555,8 @@ describe('Opportunity Router', () => {
         isLost: true,
       });
 
-      ctx.services!.opportunity!.markAsLost = vi.fn().mockResolvedValue({
+      // IFC-066: CLOSED_LOST now routes through CloseDealLostUseCase
+      ctx.services!.closeDealLost!.execute = vi.fn().mockResolvedValue({
         isSuccess: true,
         isFailure: false,
         value: mockDomainOpp,
@@ -566,11 +569,12 @@ describe('Opportunity Router', () => {
       });
 
       expect(result.isLost).toBe(true);
-      expect(ctx.services!.opportunity!.markAsLost).toHaveBeenCalledWith(
-        TEST_UUIDS.opportunity1,
-        'Lost to competitor pricing',
-        expect.any(String)
-      );
+      expect(ctx.services!.closeDealLost!.execute).toHaveBeenCalledWith({
+        opportunityId: TEST_UUIDS.opportunity1,
+        reason: 'Lost to competitor pricing',
+        closedBy: expect.any(String),
+        tenantId: expect.any(String),
+      });
     });
 
     it('should reject invalid stage transition with BAD_REQUEST', async () => {

@@ -97,6 +97,19 @@ vi.mock('@intelliflow/adapters', () => ({
   },
 }));
 
+vi.mock('../../../container', () => ({
+  container: {
+    signatureProvider: {
+      computeSignatureHash: vi.fn().mockResolvedValue('a'.repeat(64)),
+    },
+    adapters: {
+      storageService: {
+        getSignedUrl: vi.fn().mockResolvedValue('https://example.com/signed-url'),
+      },
+    },
+  },
+}));
+
 describe('Documents Router - Caller Tests', () => {
   const now = new Date();
   const futureDate = new Date(now.getTime() + 86400000 * 365);
@@ -123,7 +136,6 @@ describe('Documents Router - Caller Tests', () => {
         title: 'Test Document',
         documentType: 'CONTRACT',
         classification: 'INTERNAL',
-        storageKey: 'docs/test.pdf',
         contentHash: 'a'.repeat(64),
         mimeType: 'application/pdf',
         sizeBytes: 1024,
@@ -145,7 +157,6 @@ describe('Documents Router - Caller Tests', () => {
         classification: 'CONFIDENTIAL',
         tags: ['tag1', 'tag2'],
         relatedCaseId: TEST_UUIDS.account1,
-        storageKey: 'docs/evidence.pdf',
         contentHash: 'b'.repeat(64),
         mimeType: 'application/pdf',
         sizeBytes: 2048,
@@ -518,8 +529,6 @@ describe('Documents Router - Caller Tests', () => {
 
       const result = await caller.sign({
         documentId: TEST_UUIDS.task1,
-        ipAddress: '192.168.1.1',
-        userAgent: 'Mozilla/5.0',
       });
 
       expect(result.success).toBe(true);
@@ -536,8 +545,6 @@ describe('Documents Router - Caller Tests', () => {
       await expect(
         caller.sign({
           documentId: TEST_UUIDS.task1,
-          ipAddress: '192.168.1.1',
-          userAgent: 'Mozilla/5.0',
         })
       ).rejects.toThrow(TRPCError);
     });
@@ -553,8 +560,6 @@ describe('Documents Router - Caller Tests', () => {
       await expect(
         caller.sign({
           documentId: TEST_UUIDS.task1,
-          ipAddress: '192.168.1.1',
-          userAgent: 'Mozilla/5.0',
         })
       ).rejects.toThrow(TRPCError);
     });

@@ -13,30 +13,34 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createPublicContext, createTestContext, prismaMock } from '../../../test/setup';
 
-// Mock the InboundEmailParser from adapters - class must be inline
-vi.mock('@intelliflow/adapters', () => ({
-  InboundEmailParser: class MockInboundEmailParser {
-    parse(rawEmail: string) {
-      return {
-        id: 'parsed-email-123',
-        headers: {
-          messageId: '<msg-123@example.com>',
-          from: { address: 'sender@example.com', name: 'Sender Name' },
-          to: [{ address: 'inbox@intelliflow.com', name: '' }],
-          subject: 'Test Email Subject',
-          date: new Date().toISOString(),
-        },
-        textBody: 'Test email body text',
-        htmlBody: '<p>Test email body</p>',
-        attachments: [],
-        threadId: null,
-        isReply: false,
-        isForward: false,
-        spamScore: 10, // Low spam score
-      };
-    }
-  },
-}));
+// Mock the InboundEmailParser from adapters - preserve other exports via importOriginal
+vi.mock('@intelliflow/adapters', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...(actual as object),
+    InboundEmailParser: class MockInboundEmailParser {
+      parse(_rawEmail: string) {
+        return {
+          id: 'parsed-email-123',
+          headers: {
+            messageId: '<msg-123@example.com>',
+            from: { address: 'sender@example.com', name: 'Sender Name' },
+            to: [{ address: 'inbox@intelliflow.com', name: '' }],
+            subject: 'Test Email Subject',
+            date: new Date().toISOString(),
+          },
+          textBody: 'Test email body text',
+          htmlBody: '<p>Test email body</p>',
+          attachments: [],
+          threadId: null,
+          isReply: false,
+          isForward: false,
+          spamScore: 10, // Low spam score
+        };
+      }
+    },
+  };
+});
 
 // Import after mock is set up
 import { inboundEmailRouter } from '../inbound.router';
@@ -295,6 +299,100 @@ Hello World`;
 
       expect(result).toBeNull();
     });
+  });
+});
+
+describe('markAsRead', () => {
+  const caller = inboundEmailRouter.createCaller(createTestContext());
+
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it('marks a single email as read by emailId', async () => {
+    (prismaMock.emailRecord.updateMany as any).mockResolvedValue({ count: 1 });
+
+    const result = await caller.markAsRead({
+      emailId: 'test-email-123',
+    });
+
+    expect(result.success).toBe(true);
+    expect(prismaMock.emailRecord.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: 'test-email-123', isRead: false }),
+        data: expect.objectContaining({ isRead: true }),
+      })
+    );
+  });
+
+  it('marks all emails in thread as read when threadId provided', async () => {
+    (prismaMock.emailRecord.updateMany as any).mockResolvedValue({ count: 3 });
+
+    const result = await caller.markAsRead({
+      emailId: 'test-email-123',
+      threadId: 'thread-abc',
+    });
+
+    expect(result.success).toBe(true);
+    expect(prismaMock.emailRecord.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ isRead: false }),
+        data: expect.objectContaining({ isRead: true }),
+      })
+    );
+  });
+
+  it('returns { success: true } on success', async () => {
+    (prismaMock.emailRecord.updateMany as any).mockResolvedValue({ count: 0 });
+
+    const result = await caller.markAsRead({ emailId: 'any-id' });
+    expect(result).toEqual({ success: true });
+  });
+});
+
+describe('getUnreadCounts', () => {
+  const caller = inboundEmailRouter.createCaller(createTestContext());
+
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it('returns zero counts for all folders when no unread emails', async () => {
+    (prismaMock.emailRecord.count as any).mockResolvedValue(0);
+
+    const result = await caller.getUnreadCounts({});
+
+    expect(result).toMatchObject({
+      inbox: 0,
+      sent: 0,
+      drafts: 0,
+      trash: 0,
+      spam: 0,
+    });
+  });
+
+  it('returns actual counts for each folder', async () => {
+    (prismaMock.emailRecord.count as any)
+      .mockResolvedValueOnce(5)  // inbox
+      .mockResolvedValueOnce(2)  // sent
+      .mockResolvedValueOnce(1)  // drafts
+      .mockResolvedValueOnce(0)  // trash
+      .mockResolvedValueOnce(0); // spam
+
+    const result = await caller.getUnreadCounts({
+      folders: ['inbox', 'sent', 'drafts', 'trash', 'spam'],
+    });
+
+    expect(result.inbox).toBe(5);
+    expect(result.sent).toBe(2);
+    expect(result.drafts).toBe(1);
+    expect(result.trash).toBe(0);
+    expect(result.spam).toBe(0);
+  });
+
+  it('uses custom folder list when provided', async () => {
+    (prismaMock.emailRecord.count as any).mockResolvedValue(3);
+
+    const result = await caller.getUnreadCounts({ folders: ['inbox'] });
+
+    expect(result).toHaveProperty('inbox');
+    expect(result.inbox).toBe(3);
   });
 });
 

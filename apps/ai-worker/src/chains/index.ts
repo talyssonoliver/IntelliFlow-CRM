@@ -99,6 +99,20 @@ export {
 } from './rag-context.chain';
 
 // =============================================================================
+// Ticket Routing Chain (IFC-067)
+// =============================================================================
+export {
+  TicketRoutingChain,
+  ticketRoutingChain,
+  getTicketRoutingChain,
+  ticketRoutingInputSchema as chainTicketRoutingInputSchema,
+  ticketRoutingResultSchema as chainTicketRoutingResultSchema,
+  type TicketRoutingInput,
+  type TicketRoutingResult,
+  type AgentCandidate,
+} from './ticket-routing.chain';
+
+// =============================================================================
 // Chain Utilities
 // =============================================================================
 export {

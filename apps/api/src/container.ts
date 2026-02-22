@@ -33,6 +33,7 @@ import {
 } from '@intelliflow/adapters';
 import { InMemoryFeatureFlagProvider } from '@intelliflow/platform';
 import { TicketService } from './services/TicketService';
+import { TicketRoutingService } from './services/TicketRoutingService';
 import {
   LeadService,
   ContactService,
@@ -49,6 +50,7 @@ import {
   ReminderSchedulerService,
   ConvertLeadToDealUseCase,
   CloseDealWonUseCase,
+  CloseDealLostUseCase,
 } from '@intelliflow/application';
 import {
   getAuditLogger,
@@ -226,6 +228,9 @@ const createServices = (prismaClient: PrismaClient) => {
 
   const ticketService = new TicketService(prismaClient);
 
+  // IFC-067: Ticket Routing Service
+  const ticketRoutingService = new TicketRoutingService(prismaClient);
+
   const analyticsService = new AnalyticsAggregationService(adapters.analyticsRepository);
 
   // IFC-068: Feedback Survey Analytics
@@ -267,6 +272,13 @@ const createServices = (prismaClient: PrismaClient) => {
     adapters.notificationService
   );
 
+  // IFC-066: Deal Lost Closure Workflow
+  const closeDealLostUseCase = new CloseDealLostUseCase(
+    opportunityService,
+    adapters.eventBus,
+    adapters.notificationService
+  );
+
   // IFC-094: Signature Provider + Ingestion Orchestrator
   const signatureProvider = new InternalSignatureProvider();
   const ingestionOrchestrator = new IngestionOrchestrator(
@@ -283,6 +295,7 @@ const createServices = (prismaClient: PrismaClient) => {
     opportunityService,
     taskService,
     ticketService,
+    ticketRoutingService,
     analyticsService,
     feedbackSurveyService,
     chainVersionService,
@@ -294,6 +307,8 @@ const createServices = (prismaClient: PrismaClient) => {
     convertLeadToDealUseCase,
     // IFC-065: Deal Won Closure
     closeDealWonUseCase,
+    // IFC-066: Deal Lost Closure
+    closeDealLostUseCase,
     // IFC-094: Document services
     signatureProvider,
     ingestionOrchestrator,

@@ -187,7 +187,7 @@ function dateRangeSince(dateRange: '7d' | '30d' | '90d'): Date {
 
 /** Fetch insight rows from both LeadAIInsight and ContactAIInsight tables */
 async function fetchAllInsightRows(
-  prisma: { leadAIInsight: { findMany: (...args: any[]) => any }; contactAIInsight: { findMany: (...args: any[]) => any } }, // eslint-disable-line @typescript-eslint/no-explicit-any
+  prisma: { leadAIInsight: { findMany: (...args: any[]) => any }; contactAIInsight: { findMany: (...args: any[]) => any } },
   tenantId: string,
   since: Date,
   entityType: 'all' | 'lead' | 'contact',

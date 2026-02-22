@@ -17,6 +17,8 @@ import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure, publicProcedure } from '../../trpc';
 import {
   listInvoicesInputSchema,
+  getInvoiceInputSchema,
+  payInvoiceInputSchema,
   updatePaymentMethodInputSchema,
   updateSubscriptionInputSchema,
   cancelSubscriptionInputSchema,
@@ -58,6 +60,16 @@ export interface StripeSubscription {
   canceledAt?: Date;
   trialStart?: Date;
   trialEnd?: Date;
+  latestInvoicePaymentIntentClientSecret?: string;
+}
+
+export interface StripeInvoiceLineItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitAmount: number;
+  amount: number;
+  currency: string;
 }
 
 export interface StripeInvoice {
@@ -74,6 +86,21 @@ export interface StripeInvoice {
   hostedInvoiceUrl?: string;
   invoicePdf?: string;
   created: Date;
+  number?: string;
+  subtotal?: number;
+  tax?: number;
+  discount?: number;
+  customerEmail?: string;
+  customerName?: string;
+  billingAddress?: {
+    line1?: string;
+    line2?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    country?: string;
+  };
+  lineItems?: StripeInvoiceLineItem[];
 }
 
 export interface StripePaymentMethod {
@@ -129,6 +156,8 @@ interface IStripeAdapter {
     metadata?: Record<string, string>;
   }): Promise<StripeResult<StripeCustomer>>;
   getCustomer(customerId: string): Promise<StripeResult<StripeCustomer | null>>;
+  getInvoice(invoiceId: string): Promise<StripeResult<StripeInvoice | null>>;
+  payInvoice(invoiceId: string): Promise<StripeResult<StripeInvoice>>;
   listSubscriptions(customerId: string): Promise<StripeResult<StripeSubscription[]>>;
   listInvoices(customerId: string): Promise<StripeResult<StripeInvoice[]>>;
   listPaymentMethods(customerId: string): Promise<StripeResult<StripePaymentMethod[]>>;
@@ -145,6 +174,12 @@ interface IStripeAdapter {
     subscriptionId: string,
     atPeriodEnd?: boolean
   ): Promise<StripeResult<StripeSubscription>>;
+  createSubscription(params: {
+    customerId: string;
+    priceId: string;
+    paymentMethodId: string;
+    metadata?: Record<string, string>;
+  }): Promise<StripeResult<StripeSubscription>>;
 }
 
 // ============================================
@@ -231,6 +266,10 @@ export const billingRouter = createTRPCRouter({
 
   /**
    * List invoices with pagination
+   *
+   * NOTE (R-003): Currently fetches all invoices from Stripe then slices in memory.
+   * Acceptable for MVP (Stripe limits ~100 invoices by default). Optimize with Stripe
+   * cursor-based pagination (starting_after param) when customers exceed this threshold.
    */
   listInvoices: protectedProcedure.input(listInvoicesInputSchema).query(async ({ ctx, input }) => {
     const stripe = await getStripeAdapter();
@@ -268,6 +307,110 @@ export const billingRouter = createTRPCRouter({
       hasMore: start + paginatedInvoices.length < allInvoices.length,
     };
   }),
+
+  /**
+   * Get a single invoice by ID
+   *
+   * Fetches invoice details with line items, tax, and customer info.
+   * Includes ownership verification to prevent cross-tenant access.
+   *
+   * @implements PG-028 (Invoice Detail)
+   */
+  getInvoice: protectedProcedure
+    .input(getInvoiceInputSchema)
+    .query(async ({ ctx, input }) => {
+      const stripe = await getStripeAdapter();
+      const user = ctx.user;
+
+      if (!user?.stripeCustomerId) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'No billing account found.',
+        });
+      }
+
+      const result = await stripe.getInvoice(input.invoiceId);
+
+      if (result.isFailure || !result.value) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Invoice not found.',
+        });
+      }
+
+      const invoice = result.value;
+
+      // Ownership check — prevent cross-tenant access
+      if (invoice.customerId !== user.stripeCustomerId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to view this invoice.',
+        });
+      }
+
+      return invoice;
+    }),
+
+  /**
+   * Pay an open invoice
+   *
+   * Verifies ownership and status before initiating payment.
+   * Only open invoices with outstanding balance can be paid.
+   *
+   * @implements PG-028 (Invoice Detail)
+   */
+  payInvoice: protectedProcedure
+    .input(payInvoiceInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const stripe = await getStripeAdapter();
+      const user = ctx.user;
+
+      if (!user?.stripeCustomerId) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'No billing account found.',
+        });
+      }
+
+      // Fetch invoice first for ownership + status verification
+      const getResult = await stripe.getInvoice(input.invoiceId);
+
+      if (getResult.isFailure || !getResult.value) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Invoice not found.',
+        });
+      }
+
+      const invoice = getResult.value;
+
+      // Ownership check
+      if (invoice.customerId !== user.stripeCustomerId) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to pay this invoice.',
+        });
+      }
+
+      // Only open invoices can be paid
+      if (invoice.status !== 'open') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Invoice cannot be paid. Current status: ${invoice.status}`,
+        });
+      }
+
+      const payResult = await stripe.payInvoice(input.invoiceId);
+
+      if (payResult.isFailure) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: payResult.error.message,
+        });
+      }
+
+      return payResult.value;
+    }),
 
   /**
    * Get payment methods for the user
@@ -399,10 +542,15 @@ export const billingRouter = createTRPCRouter({
         });
       }
 
-      const result = await stripe.updateSubscription(activeSubscription.id, {
+      const updateParams: { priceId?: string; quantity?: number; cancel_at_period_end?: boolean } = {
         priceId: input.priceId,
         quantity: input.quantity,
-      });
+      };
+      if (input.cancelAtPeriodEnd !== undefined) {
+        updateParams.cancel_at_period_end = input.cancelAtPeriodEnd;
+      }
+
+      const result = await stripe.updateSubscription(activeSubscription.id, updateParams);
 
       if (result.isFailure) {
         throw new TRPCError({
@@ -705,7 +853,7 @@ export const billingRouter = createTRPCRouter({
       z.object({
         planId: z.string(),
         billingCycle: z.enum(['monthly', 'annual']),
-        paymentMethodId: z.string(),
+        paymentMethodId: z.string().regex(/^pm_[a-zA-Z0-9]+$/, 'Invalid payment method ID format'),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -757,15 +905,35 @@ export const billingRouter = createTRPCRouter({
         });
       }
 
-      // In production, create subscription via Stripe
-      // For now, return a mock subscription ID
-      const subscriptionId = `sub_${Date.now()}_${input.planId}`;
+      // Map planId + billingCycle to Stripe price ID
+      const priceId = `price_${input.planId}_${input.billingCycle}`;
+
+      // Create real Stripe subscription
+      const subscriptionResult = await stripe.createSubscription({
+        customerId,
+        priceId,
+        paymentMethodId: input.paymentMethodId,
+        metadata: {
+          userId: user.userId,
+          tenantId: user.tenantId,
+          planTier: input.planId.toUpperCase(),
+        },
+      });
+
+      if (subscriptionResult.isFailure) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: subscriptionResult.error.message,
+        });
+      }
+
+      const subscription = subscriptionResult.value;
 
       return {
-        subscriptionId,
-        customerId,
-        planId: input.planId,
-        billingCycle: input.billingCycle,
+        subscriptionId: subscription.id,
+        status: subscription.status as 'active' | 'incomplete' | 'past_due' | 'canceled' | 'trialing' | 'unpaid',
+        clientSecret: subscription.latestInvoicePaymentIntentClientSecret ?? null,
+        currentPeriodEnd: new Date(subscription.currentPeriodEnd).toISOString(),
       };
     }),
 

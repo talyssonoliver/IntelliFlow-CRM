@@ -119,4 +119,49 @@ export const analyticsRouter = createTRPCRouter({
 
     return stats;
   }),
+
+  /**
+   * Export aggregated metrics for selected metric types in a date range
+   */
+  exportMetrics: protectedProcedure
+    .input(
+      z.object({
+        startDate: z.string().datetime(),
+        endDate: z.string().datetime(),
+        metrics: z.array(z.enum(['revenue', 'leads', 'deals', 'contacts'])),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const analyticsService = getAnalyticsService(ctx);
+      const tenantId = getTenantId(ctx);
+
+      return analyticsService.exportMetrics(
+        tenantId,
+        {
+          startDate: new Date(input.startDate),
+          endDate: new Date(input.endDate),
+        },
+        input.metrics
+      );
+    }),
+
+  /**
+   * Export conversion funnel data for a date range
+   */
+  exportConversionFunnel: protectedProcedure
+    .input(
+      z.object({
+        startDate: z.string().datetime(),
+        endDate: z.string().datetime(),
+      })
+    )
+    .query(async ({ ctx, input }) => {
+      const analyticsService = getAnalyticsService(ctx);
+      const tenantId = getTenantId(ctx);
+
+      return analyticsService.exportConversionFunnel(tenantId, {
+        startDate: new Date(input.startDate),
+        endDate: new Date(input.endDate),
+      });
+    }),
 });

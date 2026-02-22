@@ -294,13 +294,28 @@ export const opportunityRouter = createTRPCRouter({
 
     let result;
     if (input.targetStage === 'CLOSED_WON') {
-      result = await opportunityService.markAsWon(input.id, typedCtx.tenant.userId);
+      // IFC-065: Route through CloseDealWonUseCase for enriched event + notification
+      const closeDealWonService = ctx.services?.closeDealWon;
+      if (!closeDealWonService) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'CloseDealWon service not available' });
+      }
+      result = await closeDealWonService.execute({
+        opportunityId: input.id,
+        closedBy: typedCtx.tenant.userId,
+        tenantId: typedCtx.tenant.tenantId,
+      });
     } else if (input.targetStage === 'CLOSED_LOST') {
-      result = await opportunityService.markAsLost(
-        input.id,
-        input.reason || '',
-        typedCtx.tenant.userId
-      );
+      // IFC-066: Route through CloseDealLostUseCase for enriched event + notification
+      const closeDealLostService = ctx.services?.closeDealLost;
+      if (!closeDealLostService) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'CloseDealLost service not available' });
+      }
+      result = await closeDealLostService.execute({
+        opportunityId: input.id,
+        reason: input.reason || '',
+        closedBy: typedCtx.tenant.userId,
+        tenantId: typedCtx.tenant.tenantId,
+      });
     } else {
       result = await opportunityService.changeStage(
         input.id,

@@ -27,7 +27,7 @@ import { getTenantContext } from '../../security/tenant-context';
  * Helper to get experiment service with null check
  * Cast to any to work around application package build issues
  */
-function getExperimentService(ctx: Context): any { // eslint-disable-line @typescript-eslint/no-explicit-any
+function getExperimentService(ctx: Context): any {
   if (!ctx.services?.experiment) {
     throw new TRPCError({
       code: 'INTERNAL_SERVER_ERROR',

@@ -17,13 +17,15 @@ import type { UserSession, Context } from '../../../context';
 // Mock prisma client
 const mockPrisma = {} as Context['prisma'];
 
-// Mock analytics service methods
+// Mock analytics service methods (matches AnalyticsAggregationService interface)
 const mockAnalyticsService = {
   getDealsWonTrend: vi.fn(),
   getGrowthTrend: vi.fn(),
   getTrafficSources: vi.fn(),
   getRecentActivity: vi.fn(),
   getLeadStats: vi.fn(),
+  exportMetrics: vi.fn(),
+  exportConversionFunnel: vi.fn(),
 };
 
 describe('analyticsRouter', () => {
@@ -615,6 +617,220 @@ describe('analyticsRouter', () => {
 
       expect(result.total).toBe(0);
       expect(result.newThisMonth).toBe(0);
+    });
+  });
+
+  // ============================================
+  // exportMetrics Tests (IFC-200)
+  // ============================================
+
+  describe('exportMetrics', () => {
+    it('should return metrics data for valid date range and metric types', async () => {
+      const mockData = [
+        { month: 'Jan 2026', metric: 'leads', value: 42 },
+        { month: 'Feb 2026', metric: 'leads', value: 55 },
+      ];
+      mockAnalyticsService.exportMetrics.mockResolvedValue(mockData);
+
+      const mockContext = {
+        prisma: mockPrisma,
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+        } as UserSession,
+        services: {
+          analytics: mockAnalyticsService,
+        },
+      };
+
+      const caller = analyticsRouter.createCaller(
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+      );
+
+      const result = await caller.exportMetrics({
+        startDate: '2026-01-01T00:00:00Z',
+        endDate: '2026-02-28T23:59:59Z',
+        metrics: ['leads'],
+      });
+
+      expect(result).toEqual(mockData);
+      expect(mockAnalyticsService.exportMetrics).toHaveBeenCalledWith(
+        'tenant_123',
+        expect.objectContaining({
+          startDate: expect.any(Date),
+          endDate: expect.any(Date),
+        }),
+        ['leads']
+      );
+    });
+
+    it('should throw INTERNAL_SERVER_ERROR when analytics service unavailable', async () => {
+      const mockContext = {
+        prisma: mockPrisma,
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+        } as UserSession,
+        services: {
+          analytics: undefined,
+        },
+      };
+
+      const caller = analyticsRouter.createCaller(
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+      );
+
+      await expect(
+        caller.exportMetrics({
+          startDate: '2026-01-01T00:00:00Z',
+          endDate: '2026-02-28T23:59:59Z',
+          metrics: ['leads'],
+        })
+      ).rejects.toMatchObject({
+        code: 'INTERNAL_SERVER_ERROR',
+      });
+    });
+
+    it('should throw UNAUTHORIZED when no tenantId', async () => {
+      const mockContext = {
+        prisma: mockPrisma,
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: undefined,
+        } as unknown as UserSession,
+        services: {
+          analytics: mockAnalyticsService,
+        },
+      };
+
+      const caller = analyticsRouter.createCaller(
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+      );
+
+      await expect(
+        caller.exportMetrics({
+          startDate: '2026-01-01T00:00:00Z',
+          endDate: '2026-02-28T23:59:59Z',
+          metrics: ['revenue'],
+        })
+      ).rejects.toMatchObject({
+        code: 'UNAUTHORIZED',
+      });
+    });
+  });
+
+  // ============================================
+  // exportConversionFunnel Tests (IFC-200)
+  // ============================================
+
+  describe('exportConversionFunnel', () => {
+    it('should return conversion funnel data for valid date range', async () => {
+      const mockData = {
+        leads: 100,
+        opportunities: 30,
+        closedWon: 10,
+        conversionRate: 10,
+      };
+      mockAnalyticsService.exportConversionFunnel.mockResolvedValue(mockData);
+
+      const mockContext = {
+        prisma: mockPrisma,
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+        } as UserSession,
+        services: {
+          analytics: mockAnalyticsService,
+        },
+      };
+
+      const caller = analyticsRouter.createCaller(
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+      );
+
+      const result = await caller.exportConversionFunnel({
+        startDate: '2026-01-01T00:00:00Z',
+        endDate: '2026-02-28T23:59:59Z',
+      });
+
+      expect(result).toEqual(mockData);
+      expect(mockAnalyticsService.exportConversionFunnel).toHaveBeenCalledWith(
+        'tenant_123',
+        expect.objectContaining({
+          startDate: expect.any(Date),
+          endDate: expect.any(Date),
+        })
+      );
+    });
+
+    it('should return zeros when no data exists', async () => {
+      mockAnalyticsService.exportConversionFunnel.mockResolvedValue({
+        leads: 0,
+        opportunities: 0,
+        closedWon: 0,
+        conversionRate: 0,
+      });
+
+      const mockContext = {
+        prisma: mockPrisma,
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+        } as UserSession,
+        services: {
+          analytics: mockAnalyticsService,
+        },
+      };
+
+      const caller = analyticsRouter.createCaller(
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+      );
+
+      const result = await caller.exportConversionFunnel({
+        startDate: '2026-01-01T00:00:00Z',
+        endDate: '2026-02-28T23:59:59Z',
+      });
+
+      expect(result.leads).toBe(0);
+      expect(result.conversionRate).toBe(0);
+    });
+
+    it('should throw INTERNAL_SERVER_ERROR when analytics service unavailable', async () => {
+      const mockContext = {
+        prisma: mockPrisma,
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+        } as UserSession,
+        services: {
+          analytics: undefined,
+        },
+      };
+
+      const caller = analyticsRouter.createCaller(
+        mockContext as unknown as Parameters<typeof analyticsRouter.createCaller>[0]
+      );
+
+      await expect(
+        caller.exportConversionFunnel({
+          startDate: '2026-01-01T00:00:00Z',
+          endDate: '2026-02-28T23:59:59Z',
+        })
+      ).rejects.toMatchObject({
+        code: 'INTERNAL_SERVER_ERROR',
+      });
     });
   });
 

@@ -24,8 +24,14 @@ import { AppointmentDomainService } from '../../services';
 import {
   ConflictDetectionError,
   AppointmentConflictDetectedEvent,
+  AppointmentCreatedEvent,
+  AppointmentRescheduledEvent,
+  AppointmentCancelledEvent,
   AppointmentId,
+  Appointment,
+  TimeSlot,
 } from '@intelliflow/domain';
+import { container } from '../../container';
 
 // Zod schemas for appointment operations
 const appointmentTypeSchema = z.enum([
@@ -148,6 +154,119 @@ function userScopeFilter(user: { userId: string; role: string }) {
   return {
     OR: [{ organizerId: user.userId }, { attendees: { some: { userId: user.userId } } }],
   };
+}
+
+/**
+ * Convert a Prisma appointment record to a domain Appointment for ICS/reminder handlers.
+ * Uses AppointmentDomainService.toDomainAppointments (handles TimeSlot, Buffer, etc.)
+ * and returns the first result, or null if conversion fails.
+ */
+function toDomainAppointment(dbRecord: any): Appointment | null {
+  const results = AppointmentDomainService.toDomainAppointments([
+    {
+      ...dbRecord,
+      bufferMinutesBefore: dbRecord.bufferMinutesBefore ?? 0,
+      bufferMinutesAfter: dbRecord.bufferMinutesAfter ?? 0,
+      attendees: dbRecord.attendees?.map((a: any) => ({ userId: a.userId ?? a })) ?? [],
+    },
+  ]);
+  return results.length > 0 ? results[0] : null;
+}
+
+/**
+ * Fire-and-forget: dispatch ICS invitation, schedule reminder, and emit audit event
+ * after an appointment is created. Errors are logged but do not block the response.
+ */
+async function onAppointmentCreated(dbRecord: any, userId: string): Promise<void> {
+  try {
+    const appointment = toDomainAppointment(dbRecord);
+    if (!appointment) return;
+
+    const idResult = AppointmentId.create(dbRecord.id);
+    if (idResult.isFailure) return;
+
+    const timeSlotResult = TimeSlot.create(dbRecord.startTime, dbRecord.endTime);
+    if (timeSlotResult.isFailure) return;
+
+    const event = new AppointmentCreatedEvent(
+      idResult.value,
+      dbRecord.title,
+      timeSlotResult.value,
+      dbRecord.appointmentType,
+      userId
+    );
+
+    // ICS invitation
+    await container.appointmentIcsHandler.handleAppointmentCreated(event, appointment);
+    // Schedule reminder
+    await container.reminderScheduler.handleAppointmentCreated(event, appointment);
+    // Audit trail via event bus
+    await container.adapters.eventBus.publish(event);
+  } catch (error) {
+    console.error('[appointments] onAppointmentCreated side-effect error:', error);
+  }
+}
+
+/**
+ * Fire-and-forget: regenerate ICS, reschedule reminders, emit audit event
+ */
+async function onAppointmentRescheduled(
+  dbRecord: any,
+  previousStartTime: Date,
+  previousEndTime: Date,
+  userId: string,
+  reason?: string
+): Promise<void> {
+  try {
+    const appointment = toDomainAppointment(dbRecord);
+    if (!appointment) return;
+
+    const idResult = AppointmentId.create(dbRecord.id);
+    if (idResult.isFailure) return;
+
+    const prevSlotResult = TimeSlot.create(previousStartTime, previousEndTime);
+    const newSlotResult = TimeSlot.create(dbRecord.startTime, dbRecord.endTime);
+    if (prevSlotResult.isFailure || newSlotResult.isFailure) return;
+
+    const event = new AppointmentRescheduledEvent(
+      idResult.value,
+      prevSlotResult.value,
+      newSlotResult.value,
+      userId,
+      reason
+    );
+
+    await container.appointmentIcsHandler.handleAppointmentRescheduled(event, appointment);
+    await container.reminderScheduler.handleAppointmentRescheduled(event, appointment);
+    await container.adapters.eventBus.publish(event);
+  } catch (error) {
+    console.error('[appointments] onAppointmentRescheduled side-effect error:', error);
+  }
+}
+
+/**
+ * Fire-and-forget: cancel ICS, cancel reminders, emit audit event
+ */
+async function onAppointmentCancelled(
+  dbRecord: any,
+  userId: string,
+  reason?: string
+): Promise<void> {
+  try {
+    const appointment = toDomainAppointment(dbRecord);
+    if (!appointment) return;
+
+    const idResult = AppointmentId.create(dbRecord.id);
+    if (idResult.isFailure) return;
+
+    const event = new AppointmentCancelledEvent(idResult.value, userId, reason);
+
+    await container.appointmentIcsHandler.handleAppointmentCancelled(event, appointment);
+    await container.reminderScheduler.handleAppointmentCancelled(event, appointment);
+    await container.adapters.eventBus.publish(event);
+  } catch (error) {
+    console.error('[appointments] onAppointmentCancelled side-effect error:', error);
+  }
 }
 
 export const appointmentsRouter = createTRPCRouter({
@@ -315,6 +434,9 @@ export const appointmentsRouter = createTRPCRouter({
 
     const duration = performance.now() - startTime;
     console.log(`[appointments.create] Domain-validated and scheduled in ${duration.toFixed(2)}ms`);
+
+    // IFC-158: Fire-and-forget ICS, reminders, audit trail
+    onAppointmentCreated(appointment, ctx.user.userId).catch(() => {});
 
     return appointment;
   }),
@@ -586,6 +708,15 @@ export const appointmentsRouter = createTRPCRouter({
       `[appointments.reschedule] Domain-validated reschedule in ${duration.toFixed(2)}ms`
     );
 
+    // IFC-158: Fire-and-forget ICS regeneration, reminder rescheduling, audit trail
+    onAppointmentRescheduled(
+      appointment,
+      existing.startTime,
+      existing.endTime,
+      ctx.user.userId,
+      input.reason
+    ).catch(() => {});
+
     return {
       appointment,
       previousTime: {
@@ -721,6 +852,9 @@ export const appointmentsRouter = createTRPCRouter({
           linkedCases: true,
         },
       });
+
+      // IFC-158: Fire-and-forget ICS cancellation, cancel reminders, audit trail
+      onAppointmentCancelled(appointment, ctx.user.userId, input.reason).catch(() => {});
 
       return appointment;
     }),

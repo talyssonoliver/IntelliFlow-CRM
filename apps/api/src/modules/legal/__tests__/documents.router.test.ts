@@ -88,6 +88,19 @@ vi.mock('@intelliflow/adapters', () => {
   };
 });
 
+vi.mock('../../../container', () => ({
+  container: {
+    signatureProvider: {
+      computeSignatureHash: vi.fn().mockResolvedValue('a'.repeat(64)),
+    },
+    adapters: {
+      storageService: {
+        getSignedUrl: vi.fn().mockResolvedValue('https://example.com/signed-url'),
+      },
+    },
+  },
+}));
+
 // Test data
 const validDocumentInput = {
   title: 'Test Contract',

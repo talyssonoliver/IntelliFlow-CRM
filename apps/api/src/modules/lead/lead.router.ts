@@ -21,6 +21,7 @@ import {
   leadQuerySchema,
   qualifyLeadSchema,
   convertLeadSchema,
+  convertLeadToDealSchema,
   idSchema,
 } from '@intelliflow/validators/lead';
 import {
@@ -451,6 +452,44 @@ export const leadRouter = createTRPCRouter({
 
     return result.value;
   }),
+
+  /**
+   * Convert a lead to a deal/opportunity (IFC-062)
+   * Creates Opportunity at PROSPECTING/10%, links Account, optionally creates Contact
+   */
+  convertToDeal: tenantProcedure
+    .input(convertLeadToDealSchema)
+    .mutation(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+      const useCase = ctx.services?.convertLeadToDeal;
+      if (!useCase) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'ConvertLeadToDeal service not available',
+        });
+      }
+
+      const result = await useCase.execute({
+        ...input,
+        convertedBy: typedCtx.tenant.userId,
+      });
+
+      if (result.isFailure) {
+        const msg = result.error.message;
+        if (msg.includes('not found')) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: msg });
+        }
+        if (msg.includes('already converted') || msg.includes('Only qualified')) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
+        }
+        if (msg.includes('required') || msg.includes('must be') || msg.includes('greater than')) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
+        }
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: msg });
+      }
+
+      return result.value;
+    }),
 
   /**
    * AI Score endpoint using LeadService

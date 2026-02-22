@@ -130,10 +130,12 @@ export const mockServices = {
   opportunity: mockDeep<any>(),
   task: mockDeep<any>(),
   ticket: mockDeep<any>(),
+  ticketRouting: mockDeep<any>(),
   analytics: mockDeep<any>(),
   chainVersion: mockDeep<any>(),
   convertLeadToDeal: mockDeep<any>(),
   closeDealWon: mockDeep<any>(),
+  closeDealLost: mockDeep<any>(),
   feedbackSurvey: mockDeep<any>(),
 };
 

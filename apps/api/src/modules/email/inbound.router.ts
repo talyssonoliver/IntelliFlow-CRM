@@ -15,6 +15,7 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { router, publicProcedure, tenantProcedure } from '../../trpc';
+import { MarkAsReadInputSchema, GetUnreadCountsInputSchema } from '@intelliflow/validators';
 // Import from adapters - using any cast for module resolution compatibility
 import * as adapters from '@intelliflow/adapters';
 const InboundEmailParser = (adapters as any).InboundEmailParser;
@@ -100,6 +101,8 @@ export interface ParsedEmailResponse {
   spamScore?: number;
   receivedAt: string;
   status: string;
+  isRead: boolean;
+  readAt: string | null;
 }
 
 // ============================================================================
@@ -129,6 +132,8 @@ function mapEmailRecord(record: any): ParsedEmailResponse {
     spamScore: metadata.spamScore,
     receivedAt: (record.sentAt ?? record.createdAt).toISOString(),
     status: record.status,
+    isRead: record.isRead ?? false,
+    readAt: record.readAt ? record.readAt.toISOString() : null,
   };
 }
 
@@ -613,6 +618,74 @@ export const inboundEmailRouter = router({
         category: t.category,
         variables: Array.isArray(t.variables) ? t.variables : [],
       }));
+    }),
+
+  /**
+   * Mark email(s) as read
+   * Marks a single email or all emails in a thread as read
+   */
+  markAsRead: tenantProcedure
+    .input(MarkAsReadInputSchema)
+    .mutation(async ({ input, ctx }): Promise<{ success: boolean }> => {
+      const tenantId = (ctx as any).tenant.tenantId;
+      const prisma = (ctx as any).prisma;
+      const now = new Date();
+
+      if (input.threadId) {
+        // Mark all emails in thread as read via metadata threadId
+        await prisma.emailRecord.updateMany({
+          where: {
+            tenantId,
+            metadata: { path: ['threadId'], equals: input.threadId },
+            isRead: false,
+          },
+          data: { isRead: true, readAt: now },
+        });
+      } else {
+        await prisma.emailRecord.updateMany({
+          where: { tenantId, id: input.emailId, isRead: false },
+          data: { isRead: true, readAt: now },
+        });
+      }
+      return { success: true };
+    }),
+
+  /**
+   * Get unread counts per folder
+   * Returns a map of folder name → unread count
+   */
+  getUnreadCounts: tenantProcedure
+    .input(GetUnreadCountsInputSchema)
+    .query(async ({ input, ctx }): Promise<Record<string, number>> => {
+      const tenantId = (ctx as any).tenant.tenantId;
+      const prisma = (ctx as any).prisma;
+      const folders = input?.folders ?? ['inbox', 'sent', 'drafts', 'trash', 'spam'];
+
+      const result: Record<string, number> = {};
+      for (const folder of folders) result[folder] = 0;
+
+      const countQueries = folders.map(async (folder) => {
+        const where: any = { tenantId, isRead: false };
+        const folderLower = folder.toLowerCase();
+        if (folderLower === 'sent') {
+          where.userId = (ctx as any).user?.userId;
+          where.status = { in: ['SENT', 'DELIVERED', 'OPENED', 'CLICKED'] };
+        } else if (folderLower === 'drafts') {
+          where.metadata = { path: ['isDraft'], equals: true };
+        } else if (folderLower === 'spam') {
+          where.metadata = { path: ['isSpam'], equals: true };
+        } else if (folderLower === 'trash') {
+          where.metadata = { path: ['isTrashed'], equals: true };
+        }
+        // inbox: no extra filter — all non-categorized unread emails
+        return { folder, count: await prisma.emailRecord.count({ where }) };
+      });
+
+      const counts = await Promise.all(countQueries);
+      for (const { folder, count } of counts) {
+        result[folder] = count;
+      }
+      return result;
     }),
 
   /**
