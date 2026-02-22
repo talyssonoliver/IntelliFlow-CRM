@@ -115,7 +115,7 @@ export class LeadConvertedEvent extends DomainEvent {
 
   constructor(
     public readonly leadId: LeadId,
-    public readonly contactId: string,
+    public readonly contactId: string | null,
     public readonly accountId: string | null,
     public readonly convertedBy: string
   ) {

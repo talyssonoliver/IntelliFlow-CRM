@@ -37,6 +37,7 @@ const VALID_UUID_2 = '00000000-0000-4000-8000-000000000002';
 const VALID_UUID_3 = '00000000-0000-4000-8000-000000000003';
 const VALID_CONTENT_HASH = 'a'.repeat(64);
 const VALID_CONTENT_HASH_2 = 'b'.repeat(64);
+const VALID_SIGNATURE_HASH = 'cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce';
 
 function makeMetadata(overrides?: Partial<CaseDocumentMetadata>): CaseDocumentMetadata {
   return {
@@ -638,11 +639,11 @@ describe('CaseDocument', () => {
   });
 
   describe('sign', () => {
-    it('should transition from APPROVED to SIGNED with e-signature', () => {
+    it('should accept signatureHash as 4th parameter and store it as-is', () => {
       const doc = createDoc();
       doc.submitForReview(VALID_UUID_2);
       doc.approve(VALID_UUID_3);
-      doc.sign(VALID_UUID_3, '192.168.1.1', 'Mozilla/5.0');
+      doc.sign(VALID_UUID_3, '192.168.1.1', 'Mozilla/5.0', VALID_SIGNATURE_HASH);
 
       expect(doc.status).toBe(DocumentStatus.SIGNED);
       const json = doc.toJSON();
@@ -650,14 +651,56 @@ describe('CaseDocument', () => {
       expect(json.eSignature!.signedBy).toBe(VALID_UUID_3);
       expect(json.eSignature!.ipAddress).toBe('192.168.1.1');
       expect(json.eSignature!.userAgent).toBe('Mozilla/5.0');
-      expect(json.eSignature!.signatureHash).toHaveLength(64);
+      expect(json.eSignature!.signatureHash).toBe(VALID_SIGNATURE_HASH);
+    });
+
+    it('should transition status from APPROVED to SIGNED', () => {
+      const doc = createDoc();
+      doc.submitForReview(VALID_UUID_2);
+      doc.approve(VALID_UUID_3);
+      expect(doc.status).toBe(DocumentStatus.APPROVED);
+
+      doc.sign(VALID_UUID_3, '10.0.0.1', 'Chrome/120', VALID_SIGNATURE_HASH);
+      expect(doc.status).toBe(DocumentStatus.SIGNED);
     });
 
     it('should throw if not APPROVED', () => {
       const doc = createDoc();
-      expect(() => doc.sign(VALID_UUID_2, '127.0.0.1', 'Test')).toThrow(
+      expect(() => doc.sign(VALID_UUID_2, '127.0.0.1', 'Test', VALID_SIGNATURE_HASH)).toThrow(
         'Only approved documents can be signed'
       );
+    });
+
+    it('should reject signatureHash that does not match ^[a-f0-9]{64}$ format', () => {
+      const doc = createDoc();
+      doc.submitForReview(VALID_UUID_2);
+      doc.approve(VALID_UUID_3);
+
+      // Too short
+      expect(() => doc.sign(VALID_UUID_3, '127.0.0.1', 'UA', 'abc123')).toThrow(
+        'signatureHash must be a valid 64-character lowercase hex string'
+      );
+
+      // Uppercase hex
+      expect(() =>
+        doc.sign(VALID_UUID_3, '127.0.0.1', 'UA', 'CF83E1357EEFB8BDF1542850D66D8007D620E4050B5715DC83F4A921D36CE9CE')
+      ).toThrow('signatureHash must be a valid 64-character lowercase hex string');
+
+      // Non-hex chars
+      expect(() =>
+        doc.sign(VALID_UUID_3, '127.0.0.1', 'UA', 'zz83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce')
+      ).toThrow('signatureHash must be a valid 64-character lowercase hex string');
+    });
+
+    it('should store the provided hash in eSignature.signatureHash as-is', () => {
+      const doc = createDoc();
+      doc.submitForReview(VALID_UUID_2);
+      doc.approve(VALID_UUID_3);
+      const specificHash = 'ab'.repeat(32);
+      doc.sign(VALID_UUID_3, '10.0.0.1', 'Firefox/120', specificHash);
+
+      const json = doc.toJSON();
+      expect(json.eSignature!.signatureHash).toBe(specificHash);
     });
   });
 
@@ -684,7 +727,7 @@ describe('CaseDocument', () => {
       const doc2 = createDoc();
       doc2.submitForReview(VALID_UUID_2);
       doc2.approve(VALID_UUID_3);
-      doc2.sign(VALID_UUID_3, '127.0.0.1', 'UA');
+      doc2.sign(VALID_UUID_3, '127.0.0.1', 'UA', VALID_SIGNATURE_HASH);
       doc2.archive(VALID_UUID_2);
       expect(doc2.status).toBe(DocumentStatus.ARCHIVED);
     });
@@ -757,7 +800,7 @@ describe('CaseDocument', () => {
       doc.approve(VALID_UUID_3);
       expect(doc.status).toBe(DocumentStatus.APPROVED);
 
-      doc.sign(VALID_UUID_3, '10.0.0.1', 'Chrome/120');
+      doc.sign(VALID_UUID_3, '10.0.0.1', 'Chrome/120', VALID_SIGNATURE_HASH);
       expect(doc.status).toBe(DocumentStatus.SIGNED);
 
       doc.archive(VALID_UUID_2);

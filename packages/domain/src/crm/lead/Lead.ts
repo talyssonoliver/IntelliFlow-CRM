@@ -310,7 +310,7 @@ export class Lead extends AggregateRoot<LeadId> {
   }
 
   convert(
-    contactId: string,
+    contactId: string | null,
     accountId: string | null,
     convertedBy: string
   ): Result<void, LeadAlreadyConvertedError> {

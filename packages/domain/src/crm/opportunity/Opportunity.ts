@@ -52,6 +52,7 @@ interface OpportunityProps {
   description?: string;
   accountId: string;
   contactId?: string;
+  sourceLeadId?: string;
   ownerId: string;
   tenantId: string;
   createdAt: Date;
@@ -64,6 +65,7 @@ export interface CreateOpportunityProps {
   value: number | Money;
   accountId: string;
   contactId?: string;
+  sourceLeadId?: string;
   expectedCloseDate?: Date;
   description?: string;
   ownerId: string;
@@ -114,6 +116,10 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
 
   get contactId(): string | undefined {
     return this.props.contactId;
+  }
+
+  get sourceLeadId(): string | undefined {
+    return this.props.sourceLeadId;
   }
 
   get ownerId(): string {
@@ -199,6 +205,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
       description: props.description,
       accountId: props.accountId,
       contactId: props.contactId,
+      sourceLeadId: props.sourceLeadId,
       ownerId: props.ownerId,
       tenantId: props.tenantId,
       createdAt: now,
@@ -211,7 +218,8 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
         props.name,
         moneyValue.amount,
         props.accountId,
-        props.ownerId
+        props.ownerId,
+        props.sourceLeadId
       )
     );
 

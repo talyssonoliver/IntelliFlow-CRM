@@ -26,7 +26,8 @@ export class OpportunityCreatedEvent extends DomainEvent {
     public readonly name: string,
     public readonly value: number,
     public readonly accountId: string,
-    public readonly ownerId: string
+    public readonly ownerId: string,
+    public readonly sourceLeadId?: string
   ) {
     super();
   }
@@ -38,6 +39,7 @@ export class OpportunityCreatedEvent extends DomainEvent {
       value: this.value,
       accountId: this.accountId,
       ownerId: this.ownerId,
+      sourceLeadId: this.sourceLeadId ?? null,
     };
   }
 }
@@ -205,6 +207,94 @@ export class OpportunityReopenedEvent extends DomainEvent {
     return {
       opportunityId: this.opportunityId.value,
       reopenedBy: this.reopenedBy,
+    };
+  }
+}
+
+/**
+ * Event: Deal won with enriched context for downstream consumers
+ * Published by CloseDealWonUseCase after the domain's OpportunityWonEvent.
+ * Carries full context so consumers don't need additional DB lookups.
+ * IFC-065: FLOW-009 Deal Won Closure Workflow
+ */
+export class DealWonEnrichedEvent extends DomainEvent {
+  readonly eventType = 'opportunity.deal_won_enriched';
+
+  constructor(
+    public readonly opportunityId: OpportunityId,
+    public readonly value: number,
+    public readonly currency: string,
+    public readonly accountId: string,
+    public readonly contactId: string | undefined,
+    public readonly ownerId: string,
+    public readonly tenantId: string,
+    public readonly closedBy: string,
+    public readonly closedAt: Date,
+    public readonly salesCycleDays: number,
+    public readonly opportunityName: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      opportunityId: this.opportunityId.value,
+      value: this.value,
+      currency: this.currency,
+      accountId: this.accountId,
+      contactId: this.contactId ?? null,
+      ownerId: this.ownerId,
+      tenantId: this.tenantId,
+      closedBy: this.closedBy,
+      closedAt: this.closedAt.toISOString(),
+      salesCycleDays: this.salesCycleDays,
+      opportunityName: this.opportunityName,
+    };
+  }
+}
+
+/**
+ * Event: Deal lost with enriched context for downstream consumers
+ * Published by CloseDealLostUseCase after the domain's OpportunityLostEvent.
+ * Carries full context so consumers don't need additional DB lookups.
+ * IFC-066: FLOW-009 Deal Lost Closure Workflow
+ */
+export class DealLostEnrichedEvent extends DomainEvent {
+  readonly eventType = 'opportunity.deal_lost_enriched';
+
+  constructor(
+    public readonly opportunityId: OpportunityId,
+    public readonly value: number,
+    public readonly currency: string,
+    public readonly accountId: string,
+    public readonly contactId: string | undefined,
+    public readonly ownerId: string,
+    public readonly tenantId: string,
+    public readonly closedBy: string,
+    public readonly closedAt: Date,
+    public readonly salesCycleDays: number,
+    public readonly opportunityName: string,
+    public readonly lossReason: string,
+    public readonly stageAtLoss: OpportunityStage
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      opportunityId: this.opportunityId.value,
+      value: this.value,
+      currency: this.currency,
+      accountId: this.accountId,
+      contactId: this.contactId ?? null,
+      ownerId: this.ownerId,
+      tenantId: this.tenantId,
+      closedBy: this.closedBy,
+      closedAt: this.closedAt.toISOString(),
+      salesCycleDays: this.salesCycleDays,
+      opportunityName: this.opportunityName,
+      lossReason: this.lossReason,
+      stageAtLoss: this.stageAtLoss,
     };
   }
 }

@@ -7,6 +7,8 @@ import {
   OpportunityLostEvent,
   OpportunityProbabilityUpdatedEvent,
   OpportunityCloseDateChangedEvent,
+  DealWonEnrichedEvent,
+  DealLostEnrichedEvent,
 } from '../OpportunityEvents';
 import { OpportunityId } from '../OpportunityId';
 
@@ -243,5 +245,165 @@ describe('OpportunityCloseDateChangedEvent', () => {
 
     expect(payload.previousDate).toBe(previousDate.toISOString());
     expect(payload.newDate).toBe(newDate.toISOString());
+  });
+});
+
+describe('DealWonEnrichedEvent', () => {
+  it('should have eventType opportunity.deal_won_enriched', () => {
+    const opportunityId = OpportunityId.generate();
+    const closedAt = new Date('2026-02-21T15:00:00Z');
+    const event = new DealWonEnrichedEvent(
+      opportunityId,
+      50000,
+      'USD',
+      'account-123',
+      'contact-456',
+      'owner-789',
+      'tenant-001',
+      'closer-111',
+      closedAt,
+      45,
+      'Enterprise Deal'
+    );
+
+    expect(event.eventType).toBe('opportunity.deal_won_enriched');
+  });
+
+  it('should include all enriched fields in toPayload()', () => {
+    const opportunityId = OpportunityId.generate();
+    const closedAt = new Date('2026-02-21T15:00:00Z');
+    const event = new DealWonEnrichedEvent(
+      opportunityId,
+      50000,
+      'USD',
+      'account-123',
+      'contact-456',
+      'owner-789',
+      'tenant-001',
+      'closer-111',
+      closedAt,
+      45,
+      'Enterprise Deal'
+    );
+    const payload = event.toPayload();
+
+    expect(payload.opportunityId).toBe(opportunityId.value);
+    expect(payload.value).toBe(50000);
+    expect(payload.currency).toBe('USD');
+    expect(payload.accountId).toBe('account-123');
+    expect(payload.contactId).toBe('contact-456');
+    expect(payload.ownerId).toBe('owner-789');
+    expect(payload.tenantId).toBe('tenant-001');
+    expect(payload.closedBy).toBe('closer-111');
+    expect(payload.closedAt).toBe(closedAt.toISOString());
+    expect(payload.salesCycleDays).toBe(45);
+    expect(payload.opportunityName).toBe('Enterprise Deal');
+  });
+
+  it('should extend DomainEvent with eventId and occurredAt', () => {
+    const opportunityId = OpportunityId.generate();
+    const event = new DealWonEnrichedEvent(
+      opportunityId,
+      50000,
+      'USD',
+      'account-123',
+      undefined,
+      'owner-789',
+      'tenant-001',
+      'closer-111',
+      new Date(),
+      0,
+      'Quick Deal'
+    );
+
+    expect(event.eventId).toBeDefined();
+    expect(typeof event.eventId).toBe('string');
+    expect(event.occurredAt).toBeInstanceOf(Date);
+    // contactId undefined should serialize to null
+    expect(event.toPayload().contactId).toBeNull();
+  });
+});
+
+describe('DealLostEnrichedEvent', () => {
+  it('should have eventType opportunity.deal_lost_enriched', () => {
+    const opportunityId = OpportunityId.generate();
+    const closedAt = new Date('2026-02-22T15:00:00Z');
+    const event = new DealLostEnrichedEvent(
+      opportunityId,
+      50000,
+      'USD',
+      'account-123',
+      'contact-456',
+      'owner-789',
+      'tenant-001',
+      'closer-111',
+      closedAt,
+      45,
+      'Enterprise Deal',
+      'Lost to competitor pricing',
+      'NEGOTIATION'
+    );
+
+    expect(event.eventType).toBe('opportunity.deal_lost_enriched');
+  });
+
+  it('should include all enriched fields in toPayload() including lossReason and stageAtLoss', () => {
+    const opportunityId = OpportunityId.generate();
+    const closedAt = new Date('2026-02-22T15:00:00Z');
+    const event = new DealLostEnrichedEvent(
+      opportunityId,
+      50000,
+      'USD',
+      'account-123',
+      'contact-456',
+      'owner-789',
+      'tenant-001',
+      'closer-111',
+      closedAt,
+      45,
+      'Enterprise Deal',
+      'Lost to competitor pricing',
+      'NEGOTIATION'
+    );
+    const payload = event.toPayload();
+
+    expect(payload.opportunityId).toBe(opportunityId.value);
+    expect(payload.value).toBe(50000);
+    expect(payload.currency).toBe('USD');
+    expect(payload.accountId).toBe('account-123');
+    expect(payload.contactId).toBe('contact-456');
+    expect(payload.ownerId).toBe('owner-789');
+    expect(payload.tenantId).toBe('tenant-001');
+    expect(payload.closedBy).toBe('closer-111');
+    expect(payload.closedAt).toBe(closedAt.toISOString());
+    expect(payload.salesCycleDays).toBe(45);
+    expect(payload.opportunityName).toBe('Enterprise Deal');
+    expect(payload.lossReason).toBe('Lost to competitor pricing');
+    expect(payload.stageAtLoss).toBe('NEGOTIATION');
+  });
+
+  it('should extend DomainEvent with eventId and occurredAt', () => {
+    const opportunityId = OpportunityId.generate();
+    const event = new DealLostEnrichedEvent(
+      opportunityId,
+      50000,
+      'USD',
+      'account-123',
+      undefined,
+      'owner-789',
+      'tenant-001',
+      'closer-111',
+      new Date(),
+      0,
+      'Quick Deal',
+      'Budget constraints forced cancellation',
+      'PROSPECTING'
+    );
+
+    expect(event.eventId).toBeDefined();
+    expect(typeof event.eventId).toBe('string');
+    expect(event.occurredAt).toBeInstanceOf(Date);
+    // contactId undefined should serialize to null
+    expect(event.toPayload().contactId).toBeNull();
   });
 });

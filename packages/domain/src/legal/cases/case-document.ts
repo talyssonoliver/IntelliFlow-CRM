@@ -474,15 +474,20 @@ export class CaseDocument {
 
   /**
    * Sign document with e-signature
+   * @param signedBy - UUID of the signer
+   * @param ipAddress - IP address extracted server-side from request headers
+   * @param userAgent - User-Agent extracted server-side from request headers
+   * @param signatureHash - Pre-computed SHA-256 hash from SignatureProviderPort
    */
-  sign(signedBy: string, ipAddress: string, userAgent: string): void {
+  sign(signedBy: string, ipAddress: string, userAgent: string, signatureHash: string): void {
     if (this.data.status !== DocumentStatus.APPROVED) {
       throw new Error('Only approved documents can be signed');
     }
 
-    // Generate signature hash (document hash + timestamp + signer)
-    const signatureData = `${this.data.contentHash}:${new Date().toISOString()}:${signedBy}`;
-    const signatureHash = this.hashString(signatureData);
+    // Validate signatureHash is a valid SHA-256 hex string
+    if (!/^[a-f0-9]{64}$/.test(signatureHash)) {
+      throw new Error('signatureHash must be a valid 64-character lowercase hex string (SHA-256)');
+    }
 
     this.data.eSignature = {
       signedBy,
@@ -546,18 +551,6 @@ export class CaseDocument {
     this.data.updatedAt = new Date();
   }
 
-  // ========== Helper Methods ==========
-
-  private hashString(input: string): string {
-    // Simple hash for demo (in production, use crypto.subtle.digest)
-    let hash = 0;
-    for (let i = 0; i < input.length; i++) {
-      const char = input.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash).toString(16).padStart(64, '0').slice(0, 64);
-  }
 }
 
 // ============================================================================

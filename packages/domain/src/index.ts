@@ -125,6 +125,10 @@ export * from './security/AISecurityEventTypes';
 // Activity Feed Domain (IFC-069)
 export * from './activity-feed';
 
+// CRM Domain - Feedback Surveys (IFC-068)
+// Not to be confused with AI FeedbackType in ai/AIConstants.ts
+export * from './crm/feedback';
+
 // CRM Domain - Billing (IFC-198)
 export * from './crm/billing';
 
