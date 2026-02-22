@@ -75,3 +75,37 @@ export function isTerminalStatus(status: TicketStatus): boolean {
 export function isWaitingStatus(status: TicketStatus): boolean {
   return status === 'WAITING_ON_CUSTOMER' || status === 'WAITING_ON_THIRD_PARTY';
 }
+
+// =============================================================================
+// IFC-067: Ticket Routing Constants
+// =============================================================================
+
+/**
+ * Maps ticket categories to required agent skill names.
+ * Used by TicketRoutingService to find agents with matching skills.
+ */
+export const TICKET_CATEGORY_SKILL_MAP: Record<TicketCategory, string> = {
+  BILLING: 'billing',
+  TECHNICAL: 'technical',
+  SALES: 'sales',
+  GENERAL: 'technical',
+  FEATURE_REQUEST: 'product',
+  BUG_REPORT: 'technical',
+} as const;
+
+/**
+ * Priority weights for routing order.
+ * Higher weight = higher routing priority.
+ */
+export const TICKET_PRIORITY_ROUTING_WEIGHT: Record<TicketPriority, number> = {
+  CRITICAL: 1000,
+  HIGH: 100,
+  MEDIUM: 10,
+  LOW: 1,
+} as const;
+
+/**
+ * SLA statuses that trigger escalation routing.
+ */
+export const SLA_ESCALATION_TRIGGER_STATUSES = ['BREACHED'] as const;
+export type SlaEscalationTriggerStatus = (typeof SLA_ESCALATION_TRIGGER_STATUSES)[number];

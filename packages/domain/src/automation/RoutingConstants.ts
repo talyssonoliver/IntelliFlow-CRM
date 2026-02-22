@@ -55,3 +55,40 @@ export const AGENT_STATUSES = [
   'ON_BREAK',
 ] as const;
 export type AgentStatusType = (typeof AGENT_STATUSES)[number];
+
+// =============================================================================
+// IFC-067: Ticket Routing Constants
+// =============================================================================
+
+/**
+ * Condition fields for ticket routing rules.
+ */
+export const TICKET_ROUTING_CONDITION_FIELDS = [
+  'ticketPriority',
+  'ticketCategory',
+  'ticketStatus',
+  'isSlaBreached',
+  'slaStatus',
+] as const;
+export type TicketRoutingConditionField = (typeof TICKET_ROUTING_CONDITION_FIELDS)[number];
+
+/**
+ * Ticket routing strategy types.
+ */
+export const TICKET_ROUTING_STRATEGIES = [
+  'rule_match',
+  'skill_match',
+  'load_balance',
+  'escalation',
+] as const;
+export type TicketRoutingStrategy = (typeof TICKET_ROUTING_STRATEGIES)[number];
+
+/**
+ * Ticket routing failure reason codes.
+ */
+export const TICKET_ROUTING_FAILURE_REASONS = [
+  'no_eligible_agents',
+  'no_skill_match',
+  'engine_error',
+] as const;
+export type TicketRoutingFailureReason = (typeof TICKET_ROUTING_FAILURE_REASONS)[number];

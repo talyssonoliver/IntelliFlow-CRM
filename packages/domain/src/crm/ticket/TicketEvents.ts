@@ -298,3 +298,63 @@ export class TicketSlaResumedEvent extends DomainEvent {
     };
   }
 }
+
+// =============================================================================
+// IFC-067: Ticket Routing Events
+// =============================================================================
+
+/**
+ * Event: Ticket was routed to an agent via AI routing engine
+ */
+export class TicketRoutedEvent extends DomainEvent {
+  readonly eventType = 'ticket.routed';
+
+  constructor(
+    public readonly ticketId: TicketId,
+    public readonly assigneeId: string,
+    public readonly routingStrategy: string,
+    public readonly ruleId: string | null,
+    public readonly matchedSkill: string | null,
+    public readonly tenantId: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      ticketId: this.ticketId.value,
+      assigneeId: this.assigneeId,
+      routingStrategy: this.routingStrategy,
+      ruleId: this.ruleId,
+      matchedSkill: this.matchedSkill,
+      tenantId: this.tenantId,
+      occurredAt: this.occurredAt.toISOString(),
+    };
+  }
+}
+
+/**
+ * Event: Ticket routing failed
+ */
+export class TicketRoutingFailedEvent extends DomainEvent {
+  readonly eventType = 'ticket.routing_failed';
+
+  constructor(
+    public readonly ticketId: TicketId,
+    public readonly failureReason: string,
+    public readonly attemptedStrategies: string[],
+    public readonly fallbackQueueId: string | null
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      ticketId: this.ticketId.value,
+      failureReason: this.failureReason,
+      attemptedStrategies: this.attemptedStrategies,
+      fallbackQueueId: this.fallbackQueueId,
+      occurredAt: this.occurredAt.toISOString(),
+    };
+  }
+}

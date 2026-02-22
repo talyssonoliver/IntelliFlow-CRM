@@ -96,6 +96,18 @@ export const convertLeadSchema = z.object({
 
 export type ConvertLeadInput = z.infer<typeof convertLeadSchema>;
 
+// Convert Lead to Deal Schema (IFC-062: Lead to Deal conversion)
+export const convertLeadToDealSchema = z.object({
+  leadId: idSchema,
+  dealValue: z.number().int().positive(),
+  dealName: z.string().min(1).max(200).trim().optional(),
+  accountName: z.string().min(1).max(200).trim().optional(),
+  createContact: z.boolean().default(true),
+  expectedCloseDate: z.coerce.date().optional(),
+});
+
+export type ConvertLeadToDealInput = z.infer<typeof convertLeadToDealSchema>;
+
 // Lead Query Schema
 export const leadQuerySchema = paginationSchema.extend({
   status: z.array(leadStatusSchema).optional(),

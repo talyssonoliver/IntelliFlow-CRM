@@ -111,6 +111,15 @@ export interface StripeSubscription {
   metadata?: Record<string, string>;
 }
 
+export interface StripeInvoiceLineItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unitAmount: number;
+  amount: number;
+  currency: string;
+}
+
 export interface StripeInvoice {
   id: string;
   customerId: string;
@@ -125,6 +134,22 @@ export interface StripeInvoice {
   hostedInvoiceUrl?: string;
   invoicePdf?: string;
   created: Date;
+  number?: string;
+  description?: string;
+  subtotal?: number;
+  tax?: number;
+  discount?: number;
+  customerEmail?: string;
+  customerName?: string;
+  billingAddress?: {
+    line1?: string;
+    line2?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    country?: string;
+  };
+  lineItems?: StripeInvoiceLineItem[];
 }
 
 export interface StripeWebhookEvent {
@@ -169,4 +194,5 @@ export interface UpdateCustomerParams {
   email?: string;
   name?: string;
   metadata?: Record<string, string>;
+  defaultPaymentMethodId?: string;
 }

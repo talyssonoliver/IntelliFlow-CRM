@@ -94,6 +94,21 @@ export const subscriptionSchema = z.object({
 export type Subscription = z.infer<typeof subscriptionSchema>;
 
 // ============================================
+// Invoice Line Item Schema
+// ============================================
+
+export const invoiceLineItemSchema = z.object({
+  id: z.string(),
+  description: z.string(),
+  quantity: z.number(),
+  unitAmount: z.number(),
+  amount: z.number(),
+  currency: z.string(),
+});
+
+export type InvoiceLineItem = z.infer<typeof invoiceLineItemSchema>;
+
+// ============================================
 // Invoice Schema
 // ============================================
 
@@ -111,6 +126,21 @@ export const invoiceSchema = z.object({
   hostedInvoiceUrl: z.string().url().nullable().optional(),
   invoicePdf: z.string().url().nullable().optional(),
   created: z.coerce.date(),
+  number: z.string().optional(),
+  subtotal: z.number().optional(),
+  tax: z.number().optional(),
+  discount: z.number().optional(),
+  customerEmail: z.string().optional(),
+  customerName: z.string().optional(),
+  billingAddress: z.object({
+    line1: z.string().optional(),
+    line2: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    postalCode: z.string().optional(),
+    country: z.string().optional(),
+  }).optional(),
+  lineItems: z.array(invoiceLineItemSchema).optional(),
 });
 
 export type Invoice = z.infer<typeof invoiceSchema>;
@@ -118,6 +148,24 @@ export type Invoice = z.infer<typeof invoiceSchema>;
 // ============================================
 // Input Schemas
 // ============================================
+
+/**
+ * Get single invoice by ID
+ */
+export const getInvoiceInputSchema = z.object({
+  invoiceId: z.string().min(1, 'Invoice ID is required'),
+});
+
+export type GetInvoiceInput = z.infer<typeof getInvoiceInputSchema>;
+
+/**
+ * Pay an invoice
+ */
+export const payInvoiceInputSchema = z.object({
+  invoiceId: z.string().min(1, 'Invoice ID is required'),
+});
+
+export type PayInvoiceInput = z.infer<typeof payInvoiceInputSchema>;
 
 /**
  * List invoices with pagination
@@ -146,9 +194,10 @@ export const updateSubscriptionInputSchema = z
   .object({
     priceId: z.string().optional(),
     quantity: z.number().int().min(1).optional(),
+    cancelAtPeriodEnd: z.boolean().optional(),
   })
-  .refine((data) => data.priceId || data.quantity, {
-    message: 'Either priceId or quantity must be provided',
+  .refine((data) => data.priceId || data.quantity || data.cancelAtPeriodEnd !== undefined, {
+    message: 'Either priceId, quantity, or cancelAtPeriodEnd must be provided',
   });
 
 export type UpdateSubscriptionInput = z.infer<typeof updateSubscriptionInputSchema>;
@@ -336,6 +385,8 @@ export const PAYMENT_ERROR_CODES = [
   'INVALID_EXPIRY',
   'INVALID_NUMBER',
   'RATE_LIMIT',
+  'AUTHENTICATION_REQUIRED',
+  'THREE_D_SECURE_FAILED',
 ] as const;
 
 export const paymentErrorCodeSchema = z.enum(PAYMENT_ERROR_CODES);

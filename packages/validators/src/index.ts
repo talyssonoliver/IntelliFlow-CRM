@@ -73,3 +73,12 @@ export * from './module';
 
 // Routing Schemas (PG-132)
 export * from './routing';
+
+// Email Schemas (read state, unread counts)
+export * from './email';
+
+// Feedback Survey Schemas (IFC-068: Feedback Analytics Dashboard)
+export * from './feedback-survey';
+
+// Ticket Routing Schemas (IFC-067: Automatic Ticket Routing Engine)
+export * from './ticket-routing';

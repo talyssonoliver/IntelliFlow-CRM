@@ -22,6 +22,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   signupSchema,
+  verifyEmailCallbackSchema,
 } from '../auth';
 import { emailSchema } from '../common';
 
@@ -455,9 +456,27 @@ describe('Auth Validators', () => {
   // Reset Password Schema
   // ============================================
   describe('resetPasswordSchema', () => {
-    it('validates complete reset request', () => {
+    it('validates complete reset request with JWT-length token', () => {
       const result = resetPasswordSchema.safeParse({
-        token: 'reset-token-from-email',
+        token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-payload',
+        password: 'NewSecureP@ss1',
+        confirmPassword: 'NewSecureP@ss1',
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects token shorter than 20 chars', () => {
+      const result = resetPasswordSchema.safeParse({
+        token: 'short-19-char-token',
+        password: 'NewSecureP@ss1',
+        confirmPassword: 'NewSecureP@ss1',
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('accepts token with exactly 20 chars', () => {
+      const result = resetPasswordSchema.safeParse({
+        token: '12345678901234567890',
         password: 'NewSecureP@ss1',
         confirmPassword: 'NewSecureP@ss1',
       });
@@ -475,7 +494,7 @@ describe('Auth Validators', () => {
 
     it('rejects mismatched passwords', () => {
       const result = resetPasswordSchema.safeParse({
-        token: 'valid-token',
+        token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test-payload',
         password: 'NewSecureP@ss1',
         confirmPassword: 'DifferentP@ss1',
       });
@@ -516,6 +535,65 @@ describe('Auth Validators', () => {
         confirmPassword: 'DifferentP@ss1',
         name: 'John Doe',
         acceptTerms: true,
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+
+  // ============================================
+  // Verify Email Callback Schema (IFC-120)
+  // ============================================
+  describe('verifyEmailCallbackSchema', () => {
+    it('validates valid callback params with email type', () => {
+      const result = verifyEmailCallbackSchema.safeParse({
+        token_hash: 'abc123def456',
+        type: 'email',
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('validates valid callback params with signup type', () => {
+      const result = verifyEmailCallbackSchema.safeParse({
+        token_hash: 'abc123def456',
+        type: 'signup',
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects invalid type', () => {
+      const result = verifyEmailCallbackSchema.safeParse({
+        token_hash: 'abc123def456',
+        type: 'recovery',
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects token_hash shorter than 6 chars', () => {
+      const result = verifyEmailCallbackSchema.safeParse({
+        token_hash: 'abc12',
+        type: 'email',
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('accepts token_hash with exactly 6 chars', () => {
+      const result = verifyEmailCallbackSchema.safeParse({
+        token_hash: 'abc123',
+        type: 'email',
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('rejects missing token_hash', () => {
+      const result = verifyEmailCallbackSchema.safeParse({
+        type: 'email',
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects missing type', () => {
+      const result = verifyEmailCallbackSchema.safeParse({
+        token_hash: 'abc123def456',
       });
       expect(result.success).toBe(false);
     });

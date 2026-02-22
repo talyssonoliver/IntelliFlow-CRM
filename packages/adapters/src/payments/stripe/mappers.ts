@@ -9,6 +9,7 @@ import type {
   StripeRefund,
   StripeSubscription,
   StripeInvoice,
+  StripeInvoiceLineItem,
 } from './types';
 
 export function mapToCustomer(data: Record<string, unknown>): StripeCustomer {
@@ -130,6 +131,31 @@ export function mapToSubscription(data: Record<string, unknown>): StripeSubscrip
 }
 
 export function mapToInvoice(data: Record<string, unknown>): StripeInvoice {
+  // Map line items from Stripe lines.data array
+  const linesObj = data.lines as Record<string, unknown> | undefined;
+  const linesData = (linesObj?.data as Array<Record<string, unknown>>) ?? [];
+  const lineItems: StripeInvoiceLineItem[] = linesData.map((item) => ({
+    id: String(item.id ?? ''),
+    description: String(item.description ?? ''),
+    quantity: Number(item.quantity ?? 1),
+    unitAmount: Number(item.unit_amount ?? 0),
+    amount: Number(item.amount ?? 0),
+    currency: String(item.currency ?? data.currency ?? 'usd'),
+  }));
+
+  // Map billing address from customer_address
+  const customerAddress = data.customer_address as Record<string, unknown> | undefined;
+  const billingAddress = customerAddress
+    ? {
+        line1: customerAddress.line1 ? String(customerAddress.line1) : undefined,
+        line2: customerAddress.line2 ? String(customerAddress.line2) : undefined,
+        city: customerAddress.city ? String(customerAddress.city) : undefined,
+        state: customerAddress.state ? String(customerAddress.state) : undefined,
+        postalCode: customerAddress.postal_code ? String(customerAddress.postal_code) : undefined,
+        country: customerAddress.country ? String(customerAddress.country) : undefined,
+      }
+    : undefined;
+
   return {
     id: String(data.id ?? ''),
     customerId: String(data.customer ?? ''),
@@ -146,5 +172,14 @@ export function mapToInvoice(data: Record<string, unknown>): StripeInvoice {
     hostedInvoiceUrl: data.hosted_invoice_url ? String(data.hosted_invoice_url) : undefined,
     invoicePdf: data.invoice_pdf ? String(data.invoice_pdf) : undefined,
     created: new Date(Number(data.created ?? 0) * 1000),
+    number: data.number ? String(data.number) : undefined,
+    description: data.description ? String(data.description) : undefined,
+    subtotal: data.subtotal != null ? Number(data.subtotal) : undefined,
+    tax: data.tax != null ? Number(data.tax) : undefined,
+    discount: data.discount != null ? Number(data.discount) : undefined,
+    customerEmail: data.customer_email ? String(data.customer_email) : undefined,
+    customerName: data.customer_name ? String(data.customer_name) : undefined,
+    billingAddress,
+    lineItems: lineItems.length > 0 ? lineItems : undefined,
   };
 }

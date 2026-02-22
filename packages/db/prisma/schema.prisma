@@ -418,6 +418,7 @@ model Opportunity {
   account       Account             @relation(fields: [accountId], references: [id])
   contactId     String?
   contact       Contact?            @relation(fields: [contactId], references: [id])
+  sourceLeadId  String?
   tasks         Task[]
   products      DealProduct[]
   files         DealFile[]
@@ -428,6 +429,7 @@ model Opportunity {
   @@index([accountId])
   @@index([tenantId])
   @@index([expectedCloseDate])
+  @@index([sourceLeadId])
   // IFC-185: Composite indexes for Account router performance
   @@index([accountId, tenantId])
   @@index([accountId, stage])
@@ -2282,6 +2284,8 @@ model EmailRecord {
   bouncedAt    DateTime?
   openCount    Int      @default(0)
   clickCount   Int      @default(0)
+  isRead       Boolean  @default(false)
+  readAt       DateTime?
   contactId    String?
   dealId       String?
   userId       String?  // Sender
@@ -2299,6 +2303,7 @@ model EmailRecord {
   @@index([sentAt])
   // IFC-069: Composite index for unified activity feed
   @@index([tenantId, createdAt(sort: Desc)])
+  @@index([tenantId, isRead])
   @@map("email_records")
 }
 
@@ -2559,11 +2564,11 @@ model FeedbackSurvey {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  @@index([type])
+  @@index([tenantId, createdAt])
+  @@index([tenantId, type])
+  @@index([tenantId, type, createdAt])
+  @@index([tenantId, status])
   @@index([contactId])
-  @@index([status])
-  @@index([score])
-  @@index([tenantId])
   @@map("feedback_surveys")
 }
 

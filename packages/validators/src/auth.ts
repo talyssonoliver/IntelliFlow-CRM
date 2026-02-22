@@ -288,7 +288,7 @@ export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
  */
 export const resetPasswordSchema = z
   .object({
-    token: z.string().min(1),
+    token: z.string().min(20, 'Invalid reset token'),
     password: strongPasswordSchema,
     confirmPassword: z.string(),
   })
@@ -358,6 +358,19 @@ export const verifyEmailSchema = z.object({
 });
 
 export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
+
+/**
+ * Email verification callback schema (Supabase redirect flow)
+ *
+ * Used when verifying email from Supabase callback URL with token_hash and type params.
+ * IMPLEMENTS: IFC-120 (Email verification via Supabase native flow)
+ */
+export const verifyEmailCallbackSchema = z.object({
+  token_hash: z.string().min(6, 'Invalid verification token'),
+  type: z.enum(['email', 'signup']),
+});
+
+export type VerifyEmailCallbackInput = z.infer<typeof verifyEmailCallbackSchema>;
 
 /**
  * Email verification response schema

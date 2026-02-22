@@ -513,9 +513,14 @@ export class Ticket extends AggregateRoot<TicketId> {
   // ==================== Assignment Methods ====================
 
   /**
-   * Assigns the ticket to an agent
+   * Assigns the ticket to an agent.
+   * Rejects assignment to ARCHIVED tickets (IFC-067).
    */
   assign(assigneeId: string, assignedBy: string): void {
+    if (this.props.status === 'ARCHIVED') {
+      throw new Error('Cannot assign an archived ticket');
+    }
+
     const previousAssigneeId = this.props.assigneeId ?? null;
     this.props.assigneeId = assigneeId;
     this.props.updatedAt = new Date();
