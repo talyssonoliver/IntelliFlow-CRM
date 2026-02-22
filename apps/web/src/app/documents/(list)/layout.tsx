@@ -2,10 +2,9 @@
 
 import {
   SidebarProvider,
-  AppSidebar,
   SidebarInset,
   SidebarTrigger,
-  MobileSidebar,
+  SidebarWithSuspense,
   documentsSidebarConfig,
 } from '@/components/sidebar';
 
@@ -13,11 +12,7 @@ export default function DocumentsListLayout({ children }: { readonly children: R
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">
-        {/* Desktop Sidebar */}
-        <AppSidebar config={documentsSidebarConfig} />
-
-        {/* Mobile Sidebar Drawer */}
-        <MobileSidebar config={documentsSidebarConfig} />
+        <SidebarWithSuspense config={documentsSidebarConfig} />
 
         <SidebarInset>
           <main

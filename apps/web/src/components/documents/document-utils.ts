@@ -73,7 +73,7 @@ export function getClassificationBadge(classification: DocumentClassification): 
     PUBLIC: { label: 'Public', variant: 'outline' },
     INTERNAL: { label: 'Internal', variant: 'secondary' },
     CONFIDENTIAL: { label: 'Confidential', variant: 'default' },
-    RESTRICTED: { label: 'Restricted', variant: 'destructive' },
+    PRIVILEGED: { label: 'Privileged', variant: 'destructive' },
   };
   return configs[classification] ?? { label: classification, variant: 'outline' };
 }

@@ -15,7 +15,7 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { PageHeader, SearchFilterBar } from '@/components/shared';
 import { DocumentStatusBadge } from '@/components/documents';
 import { formatFileSize, formatDate } from '@/components/documents';
-import type { DocumentRecord } from '@/components/documents';
+import type { DocumentRecord, DocumentStatus } from '@/components/documents';
 
 // =============================================================================
 // Filter Options
@@ -90,8 +90,7 @@ const columns: ColumnDef<DocumentRecord>[] = [
     header: 'Status',
     cell: ({ row }) => {
       const doc = row.original;
-      const signatureCount = doc.eSignature ? 1 : 0;
-      return <DocumentStatusBadge status={doc.status} signatureCount={signatureCount} />;
+      return <DocumentStatusBadge status={doc.status as DocumentStatus} />;
     },
   },
   {

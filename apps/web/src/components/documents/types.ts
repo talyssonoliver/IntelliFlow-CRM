@@ -16,7 +16,7 @@ export type DocumentClassification =
   | 'PUBLIC'
   | 'INTERNAL'
   | 'CONFIDENTIAL'
-  | 'RESTRICTED';
+  | 'PRIVILEGED';
 
 export type AccessLevel = 'NONE' | 'VIEW' | 'COMMENT' | 'EDIT' | 'ADMIN';
 
@@ -41,12 +41,19 @@ export interface DocumentRecord {
   createdAt: string;
   createdBy?: string;
   retentionUntil?: string;
-  eSignature?: boolean;
+  eSignature?: {
+    signedBy: string;
+    signedAt: string;
+    signatureHash: string;
+    ipAddress: string;
+    userAgent: string;
+  } | null;
   tags?: string[];
 }
 
 export interface AccessControlEntry {
-  userId: string;
+  principalId: string;
+  principalType: 'USER' | 'ROLE' | 'TENANT';
   userName: string;
   email: string;
   accessLevel: AccessLevel;
@@ -81,6 +88,7 @@ export interface DocumentListProps {
   tenantId: string;
   userId: string;
   initialFilters?: DocumentFilters;
+  initialDocuments?: DocumentRecord[];
   onDocumentSelect?: (documentId: string) => void;
   onBulkAction?: (action: BulkAction, documentIds: string[]) => void;
 }

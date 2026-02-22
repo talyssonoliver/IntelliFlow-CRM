@@ -6,8 +6,6 @@ import { useRouter } from 'next/navigation';
 import { Card, toast } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
-import { formatFileSize as formatSize, sanitizeFileName } from '@/components/documents';
-
 // Document types from domain model (matching API schema)
 type DocumentType =
   | 'CONTRACT'
@@ -269,15 +267,13 @@ export default function UploadDocumentPage() {
       // Server generates the storageKey — DO NOT generate on client (SR-02)
       setUploadProgress(50);
 
-      // Create document via tRPC mutation — server generates storageKey (SR-02)
-      const sanitizedName = sanitizeFileName(file.name);
+      // Create document via tRPC mutation — server generates storageKey (AC-011)
       await createDocument.mutateAsync({
         title: formData.title.trim(),
         description: formData.description.trim() || undefined,
         documentType: formData.documentType,
         classification: formData.classification,
         tags: formData.tags,
-        fileName: sanitizedName,
         sizeBytes: file.size,
         mimeType: file.type,
         contentHash: sha256Hash,

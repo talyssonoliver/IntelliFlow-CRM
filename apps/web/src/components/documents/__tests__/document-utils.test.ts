@@ -141,9 +141,9 @@ describe('getClassificationBadge', () => {
     expect(config.variant).toBe('default');
   });
 
-  it('returns correct config for RESTRICTED', () => {
-    const config = getClassificationBadge('RESTRICTED');
-    expect(config.label).toBe('Restricted');
+  it('returns correct config for PRIVILEGED', () => {
+    const config = getClassificationBadge('PRIVILEGED');
+    expect(config.label).toBe('Privileged');
     expect(config.variant).toBe('destructive');
   });
 });

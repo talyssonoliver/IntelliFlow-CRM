@@ -28,7 +28,7 @@ function computeSizeDelta(current: DocumentVersion, previous: DocumentVersion | 
 }
 
 export function VersionHistory({
-  documentId,
+  documentId: _documentId,
   versions,
   currentVersionId,
   onVersionSelect,

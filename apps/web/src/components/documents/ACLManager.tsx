@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { Button } from '@intelliflow/ui';
 import { canUserModifyACL, formatDate } from './document-utils';
-import type { ACLManagerProps, AccessLevel, AccessControlEntry } from './types';
+import type { ACLManagerProps, AccessLevel } from './types';
 
 // =============================================================================
 // ACLManager Component
@@ -25,7 +25,7 @@ const ACCESS_LEVEL_COLORS: Record<AccessLevel, string> = {
 };
 
 export function ACLManager({
-  documentId,
+  documentId: _documentId,
   currentACL,
   currentUserAccessLevel,
   onGrantAccess,
@@ -38,7 +38,6 @@ export function ACLManager({
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
 
   const isAdmin = canUserModifyACL(currentUserAccessLevel);
-  const isModificationDisabled = !isAdmin || isLegalHold;
 
   // ─── Grant Access ─────────────────────────────────────────────────────────
 
@@ -181,7 +180,7 @@ export function ACLManager({
           <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
             {currentACL.map((entry) => (
               <tr
-                key={entry.userId}
+                key={entry.principalId}
                 className="bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800/50"
               >
                 <td className="px-4 py-3">
@@ -205,10 +204,10 @@ export function ACLManager({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setRevokeTarget(entry.userId)}
+                      onClick={() => setRevokeTarget(entry.principalId)}
                       disabled={isLegalHold}
                       aria-label={`Revoke access for ${entry.userName}`}
-                      data-testid={`revoke-${entry.userId}`}
+                      data-testid={`revoke-${entry.principalId}`}
                     >
                       <span className="material-symbols-outlined text-[18px] text-red-500">person_remove</span>
                     </Button>
@@ -239,7 +238,7 @@ export function ACLManager({
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Revoke access?</h3>
             <p className="mt-2 text-sm text-slate-500">
               Are you sure you want to revoke access for{' '}
-              {currentACL.find((e) => e.userId === revokeTarget)?.userName ?? revokeTarget}?
+              {currentACL.find((e) => e.principalId === revokeTarget)?.userName ?? revokeTarget}?
               They will no longer be able to access this document.
             </p>
             <div className="flex justify-end gap-3 mt-6">

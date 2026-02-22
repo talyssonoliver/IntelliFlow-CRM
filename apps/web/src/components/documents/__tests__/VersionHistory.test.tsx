@@ -9,7 +9,7 @@ import type { DocumentVersion } from '../types';
 // =============================================================================
 
 vi.mock('@intelliflow/ui', () => ({
-  Button: ({ children, onClick, disabled, variant, size, ...props }: any) => (
+  Button: ({ children, onClick, disabled, variant, _size, ...props }: any) => (
     <button onClick={onClick} disabled={disabled} data-variant={variant} {...props}>
       {children}
     </button>

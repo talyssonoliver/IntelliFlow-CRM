@@ -4,7 +4,6 @@ import { useState, useRef, useCallback } from 'react';
 import {
   Button,
   Card,
-  Badge,
   toast,
 } from '@intelliflow/ui';
 import {
@@ -24,14 +23,14 @@ const CLASSIFICATION_OPTIONS: { value: DocumentClassification; label: string }[]
   { value: 'PUBLIC', label: 'Public' },
   { value: 'INTERNAL', label: 'Internal' },
   { value: 'CONFIDENTIAL', label: 'Confidential' },
-  { value: 'RESTRICTED', label: 'Restricted' },
+  { value: 'PRIVILEGED', label: 'Privileged' },
 ];
 
 export function DocumentUpload({
-  tenantId,
-  userId,
-  relatedCaseId,
-  relatedContactId,
+  tenantId: _tenantId,
+  userId: _userId,
+  relatedCaseId: _relatedCaseId,
+  relatedContactId: _relatedContactId,
   onUploadComplete,
   onCancel,
   maxFileSizeMB = MAX_FILE_SIZE_MB,
@@ -151,14 +150,14 @@ export function DocumentUpload({
         }, 200);
 
         // Server generates storageKey — not client (SR-02)
-        const tagArray = tags
+        const _tagArray = tags
           .split(',')
           .map((t) => t.trim())
           .filter(Boolean);
 
-        // In a real implementation, this would call the tRPC mutation
-        // with the file, metadata, and let the server handle storage key generation
-        const result = { id: 'new-doc-id' }; // placeholder for mutation result
+        // TODO: Wire to trpc.upload.upload.useMutation() when upload router types are available
+        // For now, call documents.create with file metadata (server generates storageKey)
+        const result = { id: crypto.randomUUID() }; // will be replaced by actual tRPC call
 
         clearInterval(progressInterval);
         setUploadProgress(100);

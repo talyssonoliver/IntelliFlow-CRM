@@ -9,7 +9,7 @@ import type { AccessControlEntry, AccessLevel } from '../types';
 // =============================================================================
 
 vi.mock('@intelliflow/ui', () => ({
-  Button: ({ children, onClick, disabled, variant, size, ...props }: any) => (
+  Button: ({ children, onClick, disabled, variant, ...props }: any) => (
     <button onClick={onClick} disabled={disabled} data-variant={variant} {...props}>
       {children}
     </button>
@@ -23,7 +23,7 @@ vi.mock('@intelliflow/ui', () => ({
 describe('ACLManager', () => {
   const createACL = (): AccessControlEntry[] => [
     createACLEntryFactory({
-      userId: 'user-1',
+      principalId: 'user-1',
       userName: 'Alice Smith',
       email: 'alice@example.com',
       accessLevel: 'ADMIN',
@@ -31,7 +31,7 @@ describe('ACLManager', () => {
       grantedBy: 'system',
     }),
     createACLEntryFactory({
-      userId: 'user-2',
+      principalId: 'user-2',
       userName: 'Bob Jones',
       email: 'bob@example.com',
       accessLevel: 'EDIT',
@@ -39,7 +39,7 @@ describe('ACLManager', () => {
       grantedBy: 'alice@example.com',
     }),
     createACLEntryFactory({
-      userId: 'user-3',
+      principalId: 'user-3',
       userName: 'Carol Davis',
       email: 'carol@example.com',
       accessLevel: 'VIEW',

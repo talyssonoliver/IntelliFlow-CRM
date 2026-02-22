@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@intelliflow/ui';
-import { isPreviewableType, getMimeTypeIcon } from './document-utils';
+import { getMimeTypeIcon } from './document-utils';
 import type { DocumentViewerProps } from './types';
 
 // =============================================================================
@@ -10,7 +10,7 @@ import type { DocumentViewerProps } from './types';
 // =============================================================================
 
 export function DocumentViewer({
-  documentId,
+  documentId: _documentId,
   storageUrl,
   mimeType,
   fileName,

@@ -7,8 +7,8 @@ import { Card } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { AppAvatar } from '@/components/shared/app-avatar';
-import { DocumentViewer, VersionHistory, ACLManager, formatFileSize, formatDate } from '@/components/documents';
-import type { DocumentVersion, AccessControlEntry, AccessLevel, DocumentStatus } from '@/components/documents';
+import { formatFileSize } from '@/components/documents';
+import type { AccessLevel, DocumentStatus } from '@/components/documents';
 
 // Tab types
 type TabId = 'overview' | 'versions' | 'access-control' | 'signatures' | 'comments';
@@ -55,6 +55,28 @@ export default function DocumentDetailPage() {
     { documentId },
     { enabled: isAuthenticated && !authLoading && !!documentId }
   );
+
+  // Fetch signed URL for document preview/download (AC-004)
+  const { data: signedUrlData } = trpc.documents.getSignedUrl.useQuery(
+    { documentId },
+    { enabled: isAuthenticated && !authLoading && !!documentId }
+  );
+
+  const utils = trpc.useUtils();
+
+  // Sign mutation (AC-003) — server extracts IP/UA from headers
+  const signMutation = trpc.documents.sign.useMutation({
+    onSuccess: () => {
+      void utils.documents.getById.invalidate({ id: documentId });
+    },
+  });
+
+  // Approve mutation
+  const approveMutation = trpc.documents.approve.useMutation({
+    onSuccess: () => {
+      void utils.documents.getById.invalidate({ id: documentId });
+    },
+  });
 
   // Map audit trail to UI-friendly format
   // Prisma CaseDocumentAudit has: id, document_id, tenant_id, event_type, user_id, ip_address, user_agent, changes, metadata, created_at
@@ -563,9 +585,20 @@ export default function DocumentDetailPage() {
                         <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
                           PDF Preview
                         </p>
-                        <button className="mt-4 px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors">
-                          Open Full View
-                        </button>
+                        {signedUrlData?.url ? (
+                          <a
+                            href={signedUrlData.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-4 inline-block px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors"
+                          >
+                            Open Full View
+                          </a>
+                        ) : (
+                          <button className="mt-4 px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors opacity-50 cursor-not-allowed" disabled>
+                            Open Full View
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -576,20 +609,28 @@ export default function DocumentDetailPage() {
                       Quick Actions
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      <button className="flex flex-col items-center gap-2 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                      <button
+                        className="flex flex-col items-center gap-2 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={document.status !== 'APPROVED' || signMutation.isPending}
+                        onClick={() => signMutation.mutate({ documentId })}
+                      >
                         <span className="material-symbols-outlined text-[32px] text-[#137fec]">
                           draw
                         </span>
                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                          Sign
+                          {signMutation.isPending ? 'Signing...' : 'Sign'}
                         </span>
                       </button>
-                      <button className="flex flex-col items-center gap-2 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                      <button
+                        className="flex flex-col items-center gap-2 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={document.status !== 'UNDER_REVIEW' || approveMutation.isPending}
+                        onClick={() => approveMutation.mutate({ documentId })}
+                      >
                         <span className="material-symbols-outlined text-[32px] text-[#137fec]">
                           check_circle
                         </span>
                         <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                          Approve
+                          {approveMutation.isPending ? 'Approving...' : 'Approve'}
                         </span>
                       </button>
                       <button className="flex flex-col items-center gap-2 p-4 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">

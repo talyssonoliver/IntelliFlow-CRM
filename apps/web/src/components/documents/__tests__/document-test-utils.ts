@@ -54,7 +54,8 @@ export function createVersionFactory(overrides: Partial<DocumentVersion> = {}): 
 export function createACLEntryFactory(overrides: Partial<AccessControlEntry> = {}): AccessControlEntry {
   aclCounter++;
   return {
-    userId: `user-${aclCounter}`,
+    principalId: `user-${aclCounter}`,
+    principalType: 'USER',
     userName: `User ${aclCounter}`,
     email: `user${aclCounter}@example.com`,
     accessLevel: 'VIEW' as AccessLevel,

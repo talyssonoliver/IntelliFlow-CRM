@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Button, Badge } from '@intelliflow/ui';
-import type { DocumentSearchProps, DocumentFilters, DocumentStatus, DocumentClassification } from './types';
+import type { DocumentSearchProps, DocumentStatus, DocumentClassification } from './types';
 
 // =============================================================================
 // DocumentSearch Component
@@ -21,7 +21,7 @@ const CLASSIFICATION_OPTIONS: { value: DocumentClassification; label: string }[]
   { value: 'PUBLIC', label: 'Public' },
   { value: 'INTERNAL', label: 'Internal' },
   { value: 'CONFIDENTIAL', label: 'Confidential' },
-  { value: 'RESTRICTED', label: 'Restricted' },
+  { value: 'PRIVILEGED', label: 'Privileged' },
 ];
 
 const FILE_TYPE_OPTIONS = [
@@ -235,8 +235,8 @@ export function DocumentSearch({
           )}
         </div>
 
-        {renderDropdown('status', 'Status', STATUS_OPTIONS, activeFilters.status, toggleStatusFilter)}
-        {renderDropdown('classification', 'Classification', CLASSIFICATION_OPTIONS, activeFilters.classification, toggleClassificationFilter)}
+        {renderDropdown('status', 'Status', STATUS_OPTIONS, activeFilters.status, (v) => toggleStatusFilter(v as DocumentStatus))}
+        {renderDropdown('classification', 'Classification', CLASSIFICATION_OPTIONS, activeFilters.classification, (v) => toggleClassificationFilter(v as DocumentClassification))}
         {renderDropdown('fileType', 'File Type', FILE_TYPE_OPTIONS, activeFilters.fileType, toggleFileTypeFilter)}
       </div>
 

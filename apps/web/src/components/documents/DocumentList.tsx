@@ -5,7 +5,6 @@ import { ColumnDef } from '@tanstack/react-table';
 import {
   DataTable,
   ConfirmationDialog,
-  Badge,
   Button,
   toast,
 } from '@intelliflow/ui';
@@ -42,20 +41,21 @@ export function DocumentStatusBadge({ status }: { status: DocumentStatus }) {
 const PAGE_SIZE = 20;
 
 export function DocumentList({
-  tenantId,
-  userId,
+  tenantId: _tenantId,
+  userId: _userId,
   initialFilters,
+  initialDocuments,
   onDocumentSelect,
   onBulkAction,
 }: DocumentListProps) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [filters, setFilters] = useState<DocumentFilters>(initialFilters ?? {});
+  const [filters, _setFilters] = useState<DocumentFilters>(initialFilters ?? {});
   const [sortField, setSortField] = useState<string>('createdAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(0);
   const [confirmAction, setConfirmAction] = useState<{ action: BulkAction; ids: string[] } | null>(null);
-  const [documents, setDocuments] = useState<DocumentRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [documents] = useState<DocumentRecord[]>(initialDocuments ?? []);
+  const [isLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // ─── Client-Side Filtering ────────────────────────────────────────────────
@@ -345,7 +345,7 @@ export function DocumentList({
         <DataTable
           columns={columns}
           data={paginatedDocuments}
-          onRowClick={(row) => onDocumentSelect?.(row.original.id)}
+          onRowClick={(row) => onDocumentSelect?.(row.id)}
         />
       </div>
 
@@ -386,7 +386,6 @@ export function DocumentList({
           title={`${confirmAction.action.charAt(0).toUpperCase() + confirmAction.action.slice(1)} ${confirmAction.ids.length} document(s)?`}
           description={`This action will ${confirmAction.action} the selected documents.`}
           onConfirm={executeBulkAction}
-          onCancel={() => setConfirmAction(null)}
           variant={confirmAction.action === 'delete' ? 'destructive' : 'default'}
         />
       )}
