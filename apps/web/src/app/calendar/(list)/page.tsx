@@ -28,6 +28,26 @@ import { useAppointmentFilters } from '@/hooks/useAppointmentFilters';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
 
+/** Typed escape-hatch for the appointments tRPC namespace (not yet in AppRouter). */
+interface AppointmentsListApiEscape {
+  appointments?: {
+    list?: {
+      useQuery?: (
+        params: Record<string, unknown>,
+        opts?: { staleTime?: number }
+      ) => { data: unknown; isLoading: boolean };
+    };
+    stats?: {
+      useQuery?: (
+        params: undefined,
+        opts?: { staleTime?: number; refetchOnMount?: boolean; refetchOnWindowFocus?: boolean }
+      ) => { data: unknown };
+    };
+  };
+}
+
+const appointmentsApi = api as unknown as AppointmentsListApiEscape;
+
 const defaultStats: AppointmentStats = {
   total: 0,
   byStatus: {},
@@ -52,14 +72,14 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(() => new Date());
 
   // tRPC queries
-  const { data, isLoading } = (api as Record<string, any>).appointments?.list?.useQuery?.(
-    queryParams,
+  const { data, isLoading } = appointmentsApi.appointments?.list?.useQuery?.(
+    queryParams as Record<string, unknown>,
     {
       staleTime: 30_000,
     }
   ) ?? { data: undefined, isLoading: false };
 
-  const { data: rawStats } = (api as Record<string, any>).appointments?.stats?.useQuery?.(
+  const { data: rawStats } = appointmentsApi.appointments?.stats?.useQuery?.(
     undefined,
     {
       staleTime: 5 * 60_000,

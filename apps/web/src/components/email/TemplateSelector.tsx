@@ -27,7 +27,7 @@ export function TemplateSelector({ onSelect, currentBody = '', className }: Temp
   const [highlightIndex, setHighlightIndex] = useState(-1);
 
   const { data: templates = [] } = trpc.email.listTemplates.useQuery(
-    { search: searchQuery } as any,
+    { search: searchQuery },
     { enabled: true }
   );
 

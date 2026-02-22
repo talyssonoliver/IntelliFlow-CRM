@@ -23,6 +23,12 @@ export const developerSidebarConfig: SidebarConfig = {
           icon: 'api',
           href: '/docs/api',
         },
+        {
+          id: 'integrations',
+          label: 'Integrations',
+          icon: 'integration_instructions',
+          href: '/docs/integrations',
+        },
       ],
     },
     // Developer Tools section — items will be added by PG-033 (playground) and PG-035 (changelog)

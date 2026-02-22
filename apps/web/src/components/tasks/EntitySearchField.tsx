@@ -69,7 +69,7 @@ export function EntitySearchField({
   const getResults = useCallback((): Array<{ id: string; name: string }> => {
     if (entityType === 'lead' && leadQuery.data) {
       return (
-        (leadQuery.data as any).leads?.map((l: any) => ({
+        leadQuery.data.leads?.map((l) => ({
           id: l.id,
           name: `${l.firstName} ${l.lastName}`,
         })) ?? []
@@ -77,7 +77,7 @@ export function EntitySearchField({
     }
     if (entityType === 'contact' && contactQuery.data) {
       return (
-        (contactQuery.data as any).contacts?.map((c: any) => ({
+        contactQuery.data.contacts?.map((c) => ({
           id: c.id,
           name: `${c.firstName} ${c.lastName}`,
         })) ?? []
@@ -85,7 +85,7 @@ export function EntitySearchField({
     }
     if (entityType === 'opportunity' && opportunityQuery.data) {
       return (
-        (opportunityQuery.data as any).opportunities?.map((o: any) => ({
+        opportunityQuery.data.opportunities?.map((o) => ({
           id: o.id,
           name: o.name,
         })) ?? []

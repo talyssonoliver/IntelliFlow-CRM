@@ -43,7 +43,7 @@ interface AppointmentEvent {
   appointmentType: string;
   status: string;
   location?: string | null;
-  attendees?: Array<{ user?: { name?: string; avatarUrl?: string | null } | null }>;
+  attendees?: Array<{ user?: { name?: string | null; avatarUrl?: string | null } | null }>;
 }
 
 // =============================================================================
@@ -97,8 +97,7 @@ export function UpcomingEventsCard({
   const [now] = useState(() => new Date());
 
   // Query upcoming appointments via tRPC
-  const appointmentsApi = (api as Record<string, any>).appointments;
-  const { data, isLoading, error } = appointmentsApi?.list?.useQuery?.(
+  const { data, isLoading, error } = api.appointments.list.useQuery(
     {
       status: ['SCHEDULED', 'CONFIRMED'],
       sortBy: 'startTime',
@@ -108,17 +107,17 @@ export function UpcomingEventsCard({
       ...(entityType === 'case' && entityId ? { caseId: entityId } : {}),
     },
     { enabled: true }
-  ) ?? { data: undefined, isLoading: false, error: null };
+  );
 
   const events: AppointmentEvent[] = useMemo(() => {
     if (!data) return [];
-    const items = (data as any)?.appointments ?? [];
+    const items = data.appointments ?? [];
     return items.slice(0, maxItems);
   }, [data, maxItems]);
 
   const hasMore = useMemo(() => {
     if (!data) return false;
-    const items = (data as any)?.appointments ?? [];
+    const items = data.appointments ?? [];
     return items.length > maxItems;
   }, [data, maxItems]);
 
@@ -126,8 +125,9 @@ export function UpcomingEventsCard({
     entityType && entityId ? `/calendar?entity=${entityType}&entityId=${entityId}` : '/calendar';
 
   // Wrapper: Card for standalone usage, plain div for dashboard widget context
+  type WrapperProps = { className: string; 'data-testid': string };
   const Wrapper = standalone ? Card : 'div';
-  const wrapperProps = standalone
+  const wrapperProps: WrapperProps = standalone
     ? { className: compact ? 'p-4' : 'p-6', 'data-testid': 'upcoming-events-card' }
     : {
         className: `${compact ? 'p-4' : 'p-6'} h-full flex flex-col`,
@@ -137,7 +137,7 @@ export function UpcomingEventsCard({
   // ─── Loading ──────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <Wrapper {...(wrapperProps as any)}>
+      <Wrapper {...wrapperProps}>
         <div className="flex items-center justify-between mb-4">
           <Skeleton className="h-5 w-24" />
         </div>
@@ -153,7 +153,7 @@ export function UpcomingEventsCard({
   // ─── Error ────────────────────────────────────────────────────────────
   if (error) {
     return (
-      <Wrapper {...(wrapperProps as any)}>
+      <Wrapper {...wrapperProps}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-foreground">{title}</h3>
         </div>
@@ -164,7 +164,7 @@ export function UpcomingEventsCard({
 
   // ─── Render ───────────────────────────────────────────────────────────
   return (
-    <Wrapper {...(wrapperProps as any)}>
+    <Wrapper {...wrapperProps}>
       {/* Header — matches UpcomingTasksWidget pattern */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-foreground flex items-center gap-2">

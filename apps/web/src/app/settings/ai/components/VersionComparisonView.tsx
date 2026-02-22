@@ -163,21 +163,21 @@ export function VersionComparisonView({
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Temperature:</span>
                   <span className="font-medium">
-                    {(comparison.versionA as any).temperature ?? 'N/A'}
+                    {comparison.versionA.temperature ?? 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Max Tokens:</span>
                   <span className="font-medium">
-                    {(comparison.versionA as any).maxTokens ?? 'N/A'}
+                    {comparison.versionA.maxTokens ?? 'N/A'}
                   </span>
                 </div>
               </div>
-              {(comparison.versionA as any).prompt && (
+              {comparison.versionA.prompt && (
                 <div className="mt-3 pt-3 border-t">
                   <p className="text-xs text-muted-foreground mb-1">Prompt:</p>
                   <pre className="text-xs bg-muted p-2 rounded whitespace-pre-wrap break-words max-h-40 overflow-y-auto">
-                    {(comparison.versionA as any).prompt}
+                    {comparison.versionA.prompt}
                   </pre>
                 </div>
               )}
@@ -203,21 +203,21 @@ export function VersionComparisonView({
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Temperature:</span>
                   <span className="font-medium">
-                    {(comparison.versionB as any).temperature ?? 'N/A'}
+                    {comparison.versionB.temperature ?? 'N/A'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Max Tokens:</span>
                   <span className="font-medium">
-                    {(comparison.versionB as any).maxTokens ?? 'N/A'}
+                    {comparison.versionB.maxTokens ?? 'N/A'}
                   </span>
                 </div>
               </div>
-              {(comparison.versionB as any).prompt && (
+              {comparison.versionB.prompt && (
                 <div className="mt-3 pt-3 border-t">
                   <p className="text-xs text-muted-foreground mb-1">Prompt:</p>
                   <pre className="text-xs bg-muted p-2 rounded whitespace-pre-wrap break-words max-h-40 overflow-y-auto">
-                    {(comparison.versionB as any).prompt}
+                    {comparison.versionB.prompt}
                   </pre>
                 </div>
               )}

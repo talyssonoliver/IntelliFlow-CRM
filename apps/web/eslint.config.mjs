@@ -26,6 +26,13 @@ export default [
       '@typescript-eslint/explicit-module-boundary-types': 'off',
     },
   },
+  // Test files — allow `any` for mock flexibility (consistent with root config)
+  {
+    files: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/**/*.spec.ts', 'src/**/*.spec.tsx'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
   {
     ignores: [
       'node_modules/**',

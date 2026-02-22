@@ -123,9 +123,28 @@ export function createListTemplatesQuery() {
 
 export function createContactListQuery() {
   return vi.fn().mockReturnValue({
-    data: { items: [], total: 0 },
+    data: { contacts: [], total: 0, page: 1, limit: 5, hasMore: false },
     isLoading: false,
     isError: false,
+  });
+}
+
+export function createGetUnreadCountsQuery() {
+  return vi.fn().mockReturnValue({
+    data: { inbox: 0, sent: 0, drafts: 0, trash: 0, spam: 0 },
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
+  });
+}
+
+export function createMarkAsReadMutation() {
+  return vi.fn().mockReturnValue({
+    mutate: vi.fn(),
+    mutateAsync: vi.fn().mockResolvedValue({ success: true }),
+    isPending: false,
+    isError: false,
+    error: null,
   });
 }
 
@@ -144,6 +163,8 @@ export function createMockEmailTrpc() {
   const saveDraft = createSaveDraftMutation();
   const listTemplates = createListTemplatesQuery();
   const contactList = createContactListQuery();
+  const getUnreadCounts = createGetUnreadCountsQuery();
+  const markAsRead = createMarkAsReadMutation();
 
   const trpc = {
     email: {
@@ -154,6 +175,8 @@ export function createMockEmailTrpc() {
       sendEmail: { useMutation: sendEmail },
       saveDraft: { useMutation: saveDraft },
       listTemplates: { useQuery: listTemplates },
+      getUnreadCounts: { useQuery: getUnreadCounts },
+      markAsRead: { useMutation: markAsRead },
     },
     contact: {
       list: { useQuery: contactList },
@@ -171,6 +194,8 @@ export function createMockEmailTrpc() {
       saveDraft,
       listTemplates,
       contactList,
+      getUnreadCounts,
+      markAsRead,
     },
   };
 }

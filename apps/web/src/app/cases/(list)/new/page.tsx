@@ -14,11 +14,28 @@ import { PageHeader } from '@/components/shared';
 import { CaseForm } from '@/components/cases';
 import { api } from '@/lib/api';
 
+/** Typed escape-hatch for the cases tRPC namespace (TS2589 deep type instantiation workaround). */
+interface CasesApiEscape {
+  cases?: {
+    create?: {
+      useMutation?: (opts: {
+        onSuccess: (data: { id: string }) => void;
+        onError: (error: { message: string }) => void;
+      }) => {
+        mutateAsync: (data: Record<string, unknown>) => Promise<Record<string, unknown>>;
+        isPending: boolean;
+      };
+    };
+  };
+}
+
+const casesApi = api as unknown as CasesApiEscape;
+
 export default function NewCasePage() {
   const router = useRouter();
 
   // Cast to avoid TS2589 deep type instantiation with tRPC inference
-  const createMutation = (api as Record<string, any>).cases?.create?.useMutation?.({
+  const createMutation = casesApi.cases?.create?.useMutation?.({
     onSuccess: (data: { id: string }) => {
       toast({ title: 'Case Created', description: 'Your case has been created successfully.' });
       router.push(`/cases/${data.id}`);

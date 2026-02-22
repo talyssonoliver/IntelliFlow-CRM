@@ -392,5 +392,34 @@ describe('PinnedItemsSheet (supplementary)', () => {
       fireEvent.click(screen.getByText('Cancel'));
       expect(onOpenChange).toHaveBeenCalledWith(false);
     });
+
+    it('renders pinned items and exercises unpin callback (PG-155 coverage)', () => {
+      const onUnpin = vi.fn();
+      const pinnedItems = [
+        {
+          id: 'pin-1',
+          entityType: 'lead',
+          entityId: 'lead-1',
+          title: 'Test Lead',
+          subtitle: null,
+          url: '/leads/lead-1',
+        },
+      ];
+
+      render(
+        <EditPinnedNavigationSheet
+          open={true}
+          onOpenChange={vi.fn()}
+          onSave={vi.fn()}
+          pinnedItems={pinnedItems}
+          onUnpin={onUnpin}
+        />
+      );
+
+      expect(screen.getByText('Test Lead')).toBeInTheDocument();
+      const unpinBtn = screen.getByTitle('Unpin');
+      fireEvent.click(unpinBtn);
+      expect(onUnpin).toHaveBeenCalledWith('lead', 'lead-1');
+    });
   });
 });

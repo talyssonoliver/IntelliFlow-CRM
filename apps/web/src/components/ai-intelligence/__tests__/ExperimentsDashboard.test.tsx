@@ -58,7 +58,6 @@ vi.mock('../ExperimentResultsPanel', () => ({
   ),
 }));
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const { useExperimentsDashboard } = vi.mocked(await import('@/lib/experiments/hooks') as any);
 
 // ============================================

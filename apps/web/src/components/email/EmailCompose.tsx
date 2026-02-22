@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   Send,
   Save,
@@ -8,6 +8,7 @@ import {
   Paperclip,
 } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
+import { useDebounce } from '@/hooks/useDebounce';
 import { cn } from '@/lib/utils';
 import { RecipientPicker, type Recipient } from './RecipientPicker';
 import { FormatToolbar } from './FormatToolbar';
@@ -74,6 +75,16 @@ export function EmailCompose({
   onSent,
   className,
 }: EmailComposeProps) {
+  // Forward mode: set initial body with quoted content
+  // Must be computed before useState so it can be used as the initial value
+  const initialBody =
+    mode === 'forward' && originalEmail?.htmlBody
+      ? `<br><br><div style="border-left:2px solid #ccc;padding-left:8px;color:#666">
+          <p><strong>Forwarded message:</strong></p>
+          ${originalEmail.htmlBody}
+        </div>`
+      : '';
+
   const defaults = getDefaultRecipients(mode, originalEmail);
 
   const [toRecipients, setToRecipients] = useState<Recipient[]>(defaults.to);
@@ -86,6 +97,8 @@ export function EmailCompose({
   const [activeFormats] = useState<string[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [statusMessage, setStatusMessage] = useState('');
+  const [bodyHtml, setBodyHtml] = useState(initialBody);
+  const [draftId, setDraftId] = useState<string | undefined>(undefined);
 
   const bodyRef = useRef<HTMLDivElement>(null);
 
@@ -120,7 +133,7 @@ export function EmailCompose({
         subject,
         htmlBody: getBodyHtml(),
         threadId: originalEmail?.id,
-      } as any);
+      });
       setStatusMessage('Email sent successfully');
       onSent?.();
     } catch {
@@ -133,16 +146,18 @@ export function EmailCompose({
 
   const handleSaveDraft = useCallback(async () => {
     try {
-      await draftMutation.mutateAsync({
+      const result = await draftMutation.mutateAsync({
+        id: draftId,
         to: toRecipients.map((r) => r.email),
         subject,
         htmlBody: getBodyHtml(),
-      } as any);
+      });
+      if (result?.id) setDraftId(result.id);
       setStatusMessage('Draft saved');
     } catch {
       setStatusMessage('Failed to save draft');
     }
-  }, [draftMutation, toRecipients, subject, getBodyHtml]);
+  }, [draftMutation, draftId, toRecipients, subject, getBodyHtml]);
 
   const handleFormat = useCallback((command: string) => {
     document.execCommand(command, false);
@@ -172,20 +187,62 @@ export function EmailCompose({
     [handleFormat]
   );
 
-  // Forward mode: set initial body with quoted content
-  const initialBody =
-    mode === 'forward' && originalEmail?.htmlBody
-      ? `<br><br><div style="border-left:2px solid #ccc;padding-left:8px;color:#666">
-          <p><strong>Forwarded message:</strong></p>
-          ${originalEmail.htmlBody}
-        </div>`
-      : '';
+  const handleBodyInput = useCallback(() => {
+    setBodyHtml(bodyRef.current?.innerHTML ?? '');
+  }, []);
+
+  // Auto-save draft after 2s debounce when body changes
+  const debouncedBody = useDebounce(bodyHtml, 2000);
+
+  useEffect(() => {
+    if (!debouncedBody || debouncedBody === initialBody) return;
+    const hasContent =
+      toRecipients.length > 0 ||
+      subject.trim().length > 0 ||
+      debouncedBody.replace(/<[^>]*>/g, '').trim().length > 0;
+    if (!hasContent) return;
+
+    draftMutation.mutateAsync({
+      id: draftId,
+      to: toRecipients.map((r) => r.email),
+      subject,
+      htmlBody: debouncedBody,
+    }).then((result) => {
+      if (result?.id) setDraftId(result.id);
+      setStatusMessage('Draft saved automatically');
+    }).catch(() => {
+      // Silent fail — auto-save should not interrupt the user
+    });
+  }, [debouncedBody]);
+
+  // Discard: save draft if content present, then call onDiscard
+  const handleDiscard = useCallback(async () => {
+    const body = getBodyHtml();
+    const hasContent =
+      toRecipients.length > 0 ||
+      subject.trim().length > 0 ||
+      body.replace(/<[^>]*>/g, '').trim().length > 0;
+
+    if (hasContent) {
+      try {
+        await draftMutation.mutateAsync({
+          id: draftId,
+          to: toRecipients.map((r) => r.email),
+          subject,
+          htmlBody: body,
+        });
+      } catch {
+        // proceed regardless
+      }
+    }
+    onDiscard();
+  }, [toRecipients, subject, draftId, draftMutation, getBodyHtml, onDiscard]);
 
   return (
     <form
       role="form"
       aria-label="Compose email"
-      className={cn('flex flex-col border-t border-border bg-card', className)}
+      className={cn('flex flex-col bg-card', className)}
       onSubmit={(e) => { e.preventDefault(); handleSend(); }}
     >
       {/* Recipients */}
@@ -276,6 +333,7 @@ export function EmailCompose({
           suppressContentEditableWarning
           className="min-h-[120px] text-sm focus:outline-none"
           onKeyDown={handleBodyKeyDown}
+          onInput={handleBodyInput}
           dangerouslySetInnerHTML={initialBody ? { __html: initialBody } : undefined}
         />
       </div>
@@ -353,7 +411,7 @@ export function EmailCompose({
             type="button"
             aria-label="Discard"
             className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-sm text-destructive hover:bg-destructive/10 focus:outline-none focus:ring-2 focus:ring-ring"
-            onClick={onDiscard}
+            onClick={handleDiscard}
           >
             <X className="h-4 w-4" />
             Discard

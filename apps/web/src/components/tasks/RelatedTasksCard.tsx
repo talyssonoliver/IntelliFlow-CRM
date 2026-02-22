@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Card, Skeleton, toast } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import { TaskCreateSheet } from './TaskCreateSheet';
@@ -63,7 +64,7 @@ export function RelatedTasksCard({
   const utils = api.useUtils();
   const completeMutation = api.task.complete.useMutation({
     onSuccess: () => {
-      utils.task.getByEntity.invalidate({ entityType: queryEntityType as any, entityId });
+      utils.task.getByEntity.invalidate({ entityType: queryEntityType as 'lead' | 'contact' | 'opportunity', entityId });
       utils.task.list.invalidate();
       toast({ title: 'Task completed' });
     },
@@ -73,7 +74,7 @@ export function RelatedTasksCard({
   });
 
   const tasks = data ?? [];
-  const openTasks = tasks.filter((t: any) => t.status !== 'COMPLETED' && t.status !== 'CANCELLED');
+  const openTasks = tasks.filter((t) => t.status !== 'COMPLETED' && t.status !== 'CANCELLED');
   const displayTasks = openTasks.slice(0, maxItems);
   const hasMore = openTasks.length > maxItems;
 
@@ -112,9 +113,9 @@ export function RelatedTasksCard({
             {(onViewAll || viewAllHref) &&
               hasMore &&
               (viewAllHref ? (
-                <a href={viewAllHref} className="text-xs text-primary hover:underline">
+                <Link href={viewAllHref} className="text-xs text-primary hover:underline">
                   View All
-                </a>
+                </Link>
               ) : (
                 <button onClick={onViewAll} className="text-xs text-primary hover:underline">
                   View All
@@ -158,7 +159,7 @@ export function RelatedTasksCard({
 
         {!isLoading && !error && displayTasks.length > 0 && (
           <div className={compact ? 'space-y-2' : 'space-y-3'}>
-            {displayTasks.map((task: any) => (
+            {displayTasks.map((task) => (
               <label
                 key={task.id}
                 className={`flex items-start gap-3 group cursor-pointer ${compact ? '' : 'p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
@@ -206,7 +207,7 @@ export function RelatedTasksCard({
         defaultEntityType={entityType}
         defaultEntityId={entityId}
         onSuccess={() => {
-          utils.task.getByEntity.invalidate({ entityType: queryEntityType as any, entityId });
+          utils.task.getByEntity.invalidate({ entityType: queryEntityType as 'lead' | 'contact' | 'opportunity', entityId });
         }}
       />
     </>

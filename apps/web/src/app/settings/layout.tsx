@@ -9,10 +9,9 @@
 
 import {
   SidebarProvider,
-  AppSidebar,
   SidebarInset,
   SidebarTrigger,
-  MobileSidebar,
+  SidebarWithSuspense,
   settingsSidebarConfig,
 } from '@/components/sidebar';
 
@@ -20,11 +19,7 @@ export default function SettingsLayout({ children }: { readonly children: React.
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">
-        {/* Desktop Sidebar */}
-        <AppSidebar config={settingsSidebarConfig} />
-
-        {/* Mobile Sidebar Drawer */}
-        <MobileSidebar config={settingsSidebarConfig} />
+        <SidebarWithSuspense config={settingsSidebarConfig} />
 
         <SidebarInset>
           <main

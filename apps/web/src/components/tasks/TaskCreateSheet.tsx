@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetTitle, SheetDescription, toast } from '@intelliflow/ui';
 import type { TaskPriority } from '@intelliflow/domain';
+import type { CreateTaskInput } from '@intelliflow/validators/task';
 import { TASK_PRIORITIES } from '@intelliflow/domain';
 import { api } from '@/lib/api';
 import { EntitySearchField } from './EntitySearchField';
@@ -95,9 +96,10 @@ export function TaskCreateSheet({
     e.preventDefault();
     if (!validate()) return;
 
-    const payload: Record<string, unknown> = {
+    const payload: CreateTaskInput = {
       title: form.title.trim(),
       priority: form.priority,
+      status: 'PENDING',
     };
     if (form.description.trim()) payload.description = form.description.trim();
     if (form.dueDate) payload.dueDate = new Date(form.dueDate);
@@ -107,7 +109,7 @@ export function TaskCreateSheet({
       else if (form.entityType === 'opportunity') payload.opportunityId = form.entityId;
     }
 
-    createMutation.mutate(payload as any);
+    createMutation.mutate(payload);
   }
 
   return (

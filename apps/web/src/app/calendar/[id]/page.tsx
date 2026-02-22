@@ -20,21 +20,49 @@ import {
   formatDuration,
 } from '@/lib/appointments/appointment-utils';
 
+/** Typed escape-hatch for the appointments tRPC namespace (not yet in AppRouter). */
+interface AppointmentsApiEscape {
+  useUtils(): {
+    appointments?: {
+      getById?: { invalidate?: (args: { id: string }) => void };
+      list?: { invalidate?: () => void };
+      stats?: { invalidate?: () => void };
+    };
+  };
+  appointments?: {
+    getById?: {
+      useQuery?: (
+        args: { id: string }
+      ) => { data: unknown; isLoading: boolean };
+    };
+    confirm?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
+    complete?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
+    cancel?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
+    markNoShow?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
+    reschedule?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
+    addAttendee?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
+    removeAttendee?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
+    linkCase?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
+    unlinkCase?: { useMutation?: (opts: { onSuccess: () => void }) => { mutateAsync: (args: Record<string, unknown>) => Promise<void> } };
+  };
+}
+
+const appointmentsApi = api as unknown as AppointmentsApiEscape;
+
 export default function AppointmentDetailPage() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
   const params = useParams();
   const router = useRouter();
   const appointmentId = params.id as string;
 
-  const utils = (api as Record<string, any>).useUtils?.() ?? {};
+  const utils = appointmentsApi.useUtils?.() ?? {};
 
   // tRPC queries
-  const { data: appointmentData, isLoading } = (
-    api as Record<string, any>
-  ).appointments?.getById?.useQuery?.({ id: appointmentId }) ?? {
-    data: undefined,
-    isLoading: false,
-  };
+  const { data: appointmentData, isLoading } =
+    appointmentsApi.appointments?.getById?.useQuery?.({ id: appointmentId }) ?? {
+      data: undefined,
+      isLoading: false,
+    };
 
   // Mutations
   const invalidateAll = useCallback(() => {
@@ -43,33 +71,32 @@ export default function AppointmentDetailPage() {
     utils.appointments?.stats?.invalidate?.();
   }, [utils, appointmentId]);
 
-  const confirmMutation = (api as Record<string, any>).appointments?.confirm?.useMutation?.({
+  const confirmMutation = appointmentsApi.appointments?.confirm?.useMutation?.({
     onSuccess: invalidateAll,
   }) ?? { mutateAsync: async () => {} };
-  const completeMutation = (api as Record<string, any>).appointments?.complete?.useMutation?.({
+  const completeMutation = appointmentsApi.appointments?.complete?.useMutation?.({
     onSuccess: invalidateAll,
   }) ?? { mutateAsync: async () => {} };
-  const cancelMutation = (api as Record<string, any>).appointments?.cancel?.useMutation?.({
+  const cancelMutation = appointmentsApi.appointments?.cancel?.useMutation?.({
     onSuccess: invalidateAll,
   }) ?? { mutateAsync: async () => {} };
-  const noShowMutation = (api as Record<string, any>).appointments?.markNoShow?.useMutation?.({
+  const noShowMutation = appointmentsApi.appointments?.markNoShow?.useMutation?.({
     onSuccess: invalidateAll,
   }) ?? { mutateAsync: async () => {} };
-  const rescheduleMutation = (api as Record<string, any>).appointments?.reschedule?.useMutation?.({
+  const rescheduleMutation = appointmentsApi.appointments?.reschedule?.useMutation?.({
     onSuccess: invalidateAll,
   }) ?? { mutateAsync: async () => {} };
-  const addAttendeeMutation = (api as Record<string, any>).appointments?.addAttendee?.useMutation?.(
+  const addAttendeeMutation = appointmentsApi.appointments?.addAttendee?.useMutation?.(
     { onSuccess: invalidateAll }
   ) ?? { mutateAsync: async () => {} };
-  const removeAttendeeMutation = (
-    api as Record<string, any>
-  ).appointments?.removeAttendee?.useMutation?.({ onSuccess: invalidateAll }) ?? {
-    mutateAsync: async () => {},
-  };
-  const linkCaseMutation = (api as Record<string, any>).appointments?.linkCase?.useMutation?.({
+  const removeAttendeeMutation =
+    appointmentsApi.appointments?.removeAttendee?.useMutation?.({ onSuccess: invalidateAll }) ?? {
+      mutateAsync: async () => {},
+    };
+  const linkCaseMutation = appointmentsApi.appointments?.linkCase?.useMutation?.({
     onSuccess: invalidateAll,
   }) ?? { mutateAsync: async () => {} };
-  const unlinkCaseMutation = (api as Record<string, any>).appointments?.unlinkCase?.useMutation?.({
+  const unlinkCaseMutation = appointmentsApi.appointments?.unlinkCase?.useMutation?.({
     onSuccess: invalidateAll,
   }) ?? { mutateAsync: async () => {} };
 

@@ -29,6 +29,7 @@ import {
   cn,
 } from '@intelliflow/ui';
 import { TICKET_STATUSES } from '@intelliflow/domain';
+import type { TicketPriority } from '@intelliflow/domain';
 import { SearchFilterBar } from '@/components/shared';
 import { AppAvatar } from '@/components/shared/app-avatar';
 import { SLAIndicator } from './SLAIndicator';
@@ -164,7 +165,7 @@ const ASSIGNEE_OPTIONS: StatusOption[] = [
 // =============================================================================
 
 function PriorityBadge({ priority }: { priority: string }) {
-  const config = getPriorityConfig(priority as any);
+  const config = getPriorityConfig(priority as TicketPriority);
 
   return (
     <div className={`flex items-center gap-1.5 font-semibold text-xs uppercase ${config.text}`}>

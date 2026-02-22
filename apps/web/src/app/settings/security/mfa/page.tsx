@@ -325,7 +325,6 @@ export default function MfaSetupPage() {
   }, [router]);
 
   // Check if any mutation is loading (for future UI enhancements)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const _isLoading =
     setupMfaMutation.isPending || confirmMfaMutation.isPending || getBackupCodesMutation.isPending;
 

@@ -11,6 +11,13 @@ export interface Recipient {
   email: string;
 }
 
+interface ContactSuggestion {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
 interface RecipientPickerProps {
   label: string;
   value: Recipient[];
@@ -32,14 +39,14 @@ export function RecipientPicker({ label, value, onChange, className }: Recipient
   const debouncedQuery = useDebounce(inputValue, 300);
 
   const { data: contactsData } = trpc.contact.list.useQuery(
-    { search: debouncedQuery, limit: 5 } as any,
+    { search: debouncedQuery, limit: 5 },
     { enabled: debouncedQuery.length >= 1 }
   );
 
-  const contacts = (contactsData as any)?.items ?? [];
+  const contacts: ContactSuggestion[] = (contactsData?.contacts ?? []) as ContactSuggestion[];
 
   const suggestions = contacts.filter(
-    (c: any) => !value.some((r) => r.email === c.email)
+    (c) => !value.some((r) => r.email === c.email)
   );
 
   const addRecipient = useCallback(
@@ -169,7 +176,7 @@ export function RecipientPicker({ label, value, onChange, className }: Recipient
           aria-label={`${label} suggestions`}
           className="absolute z-50 mt-1 max-h-48 w-full overflow-auto rounded-md border border-border bg-popover p-1 shadow-md"
         >
-          {suggestions.map((contact: any, i: number) => (
+          {suggestions.map((contact: ContactSuggestion, i: number) => (
             <li
               key={contact.id}
               id={`${listboxId}-option-${i}`}

@@ -6,6 +6,8 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
 import { ActivityFeed } from '@/components/shared/activity-feed/ActivityFeed';
 import type { ActivityFeedType } from '@intelliflow/domain';
+import type { PinnableEntityType } from '@intelliflow/validators';
+import { toast } from '@intelliflow/ui';
 import {
   EditQuickActionsSheet,
   ALL_QUICK_ACTIONS,
@@ -468,7 +470,7 @@ export function AuthenticatedHomePage() {
 
   const handleUnpin = useCallback(
     (entityType: string, entityId: string) => {
-      unpinMutation.mutate({ entityType: entityType as any, entityId });
+      unpinMutation.mutate({ entityType: entityType as PinnableEntityType, entityId });
     },
     [unpinMutation]
   );
@@ -579,22 +581,44 @@ export function AuthenticatedHomePage() {
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                {visibleQuickActions.map((action) => (
-                  <Link
-                    key={action.id}
-                    href={action.href}
-                    className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors gap-2 group"
-                  >
-                    <div
-                      className={`p-2 ${action.iconBg} ${action.iconColor} rounded-full group-hover:scale-110 transition-transform`}
+                {visibleQuickActions.map((action) => {
+                  const cardClassName = "flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors gap-2 group";
+                  const inner = (
+                    <>
+                      <div
+                        className={`p-2 ${action.iconBg} ${action.iconColor} rounded-full group-hover:scale-110 transition-transform`}
+                      >
+                        <span className="material-symbols-outlined">{action.icon}</span>
+                      </div>
+                      <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                        {action.label}
+                      </span>
+                    </>
+                  );
+
+                  if (action.comingSoon) {
+                    return (
+                      <button
+                        key={action.id}
+                        type="button"
+                        className={cardClassName}
+                        onClick={() => toast({ description: `${action.label} is coming soon! This feature is under development.` })}
+                      >
+                        {inner}
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <Link
+                      key={action.id}
+                      href={action.href}
+                      className={cardClassName}
                     >
-                      <span className="material-symbols-outlined">{action.icon}</span>
-                    </div>
-                    <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
-                      {action.label}
-                    </span>
-                  </Link>
-                ))}
+                      {inner}
+                    </Link>
+                  );
+                })}
                 {visibleQuickActions.length === 0 && (
                   <p className="col-span-2 text-sm text-slate-500 dark:text-slate-400 text-center py-4">
                     No actions selected. Click settings to add some.

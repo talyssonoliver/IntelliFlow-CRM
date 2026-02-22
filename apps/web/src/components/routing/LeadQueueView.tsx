@@ -25,6 +25,11 @@ import {
 } from '@intelliflow/ui';
 import { useLeadQueue, useRouting } from '@/app/settings/routing/hooks/useRouting';
 
+interface AgentWorkloadEntry {
+  userId: string;
+  user?: { name?: string | null } | null;
+}
+
 export function LeadQueueView() {
   const [scoreMin, setScoreMin] = useState<number | undefined>();
   const [source, setSource] = useState<string | undefined>();
@@ -113,7 +118,7 @@ export function LeadQueueView() {
                 <SelectValue placeholder="Assign to..." />
               </SelectTrigger>
               <SelectContent>
-                {(agentWorkload ?? []).map((agent: any) => (
+                {((agentWorkload ?? []) as AgentWorkloadEntry[]).map((agent) => (
                   <SelectItem key={agent.userId} value={agent.userId}>
                     {agent.user?.name ?? agent.userId}
                   </SelectItem>

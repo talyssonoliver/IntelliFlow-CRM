@@ -2,10 +2,9 @@
 
 import {
   SidebarProvider,
-  AppSidebar,
   SidebarInset,
   SidebarTrigger,
-  MobileSidebar,
+  SidebarWithSuspense,
   developerSidebarConfig,
 } from '@/components/sidebar';
 
@@ -13,8 +12,7 @@ export default function DeveloperLayout({ children }: { children: React.ReactNod
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">
-        <AppSidebar config={developerSidebarConfig} />
-        <MobileSidebar config={developerSidebarConfig} />
+        <SidebarWithSuspense config={developerSidebarConfig} />
         <SidebarInset>
           <main
             className="flex flex-1 flex-col h-full min-w-0 overflow-hidden bg-background relative"

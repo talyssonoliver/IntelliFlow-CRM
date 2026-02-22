@@ -2,10 +2,9 @@
 
 import {
   SidebarProvider,
-  AppSidebar,
   SidebarInset,
   SidebarTrigger,
-  MobileSidebar,
+  SidebarWithSuspense,
   casesSidebarConfig,
   SidebarPortalProvider,
   SidebarPortalTarget,
@@ -18,14 +17,10 @@ export default function CasesListLayout({ children }: { children: React.ReactNod
       <SidebarPortalProvider>
         <SidebarProvider>
           <div className="flex min-h-[calc(100vh-4rem)]">
-            {/* Left Sidebar - Case Management (Desktop) */}
-            <AppSidebar config={casesSidebarConfig} />
+            <SidebarWithSuspense config={casesSidebarConfig} />
 
             {/* Portal target for page-injected sidebar content */}
             <SidebarPortalTarget />
-
-            {/* Mobile Sidebar Drawer */}
-            <MobileSidebar config={casesSidebarConfig} />
 
             {/* Main Content */}
             <SidebarInset>

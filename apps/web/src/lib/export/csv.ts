@@ -168,3 +168,34 @@ export function exportPipelineToCSV(stages: PipelineStage[], filename = 'pipelin
 
   exportToCSV(data, { filename, headers });
 }
+
+/**
+ * Export feedback survey data to CSV (IFC-068)
+ */
+export interface FeedbackSurveyExport {
+  surveyType: string;
+  score: number | string;
+  sentimentLabel: string;
+  respondedAt: string;
+  status: string;
+  contactName: string;
+  contactEmail: string;
+}
+
+export function exportFeedbackSurveysToCSV(
+  surveys: FeedbackSurveyExport[],
+  filename = 'feedback-surveys'
+): void {
+  const headers = ['Survey Type', 'Score', 'Sentiment', 'Responded At', 'Status', 'Contact Name', 'Contact Email'];
+  const data = surveys.map((s) => ({
+    'Survey Type': s.surveyType,
+    Score: s.score,
+    Sentiment: s.sentimentLabel,
+    'Responded At': s.respondedAt,
+    Status: s.status,
+    'Contact Name': s.contactName,
+    'Contact Email': s.contactEmail,
+  }));
+
+  exportToCSV(data, { filename, headers });
+}

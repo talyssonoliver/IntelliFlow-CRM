@@ -11,6 +11,20 @@
 
 import { Card, CardContent, CardHeader, CardTitle, Skeleton } from '@intelliflow/ui';
 import { useRouting } from '@/app/settings/routing/hooks/useRouting';
+
+interface AssignmentItem {
+  id: string;
+  createdAt: Date | string;
+  reason: string;
+  details?: Record<string, unknown> | null;
+  rule?: { name: string } | null;
+  assignedTo?: { id: string; name: string | null; email: string } | null;
+}
+
+interface RoutingRuleItem {
+  id: string;
+  isActive: boolean;
+}
 /** Format a date as relative time (e.g., "5 minutes ago") */
 function formatTimeAgo(date: Date): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -60,11 +74,11 @@ export function AssignmentDashboard() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const todayAssignments = assignments?.filter(
-    (a: any) => new Date(a.createdAt) >= today
+  const todayAssignments = (assignments as AssignmentItem[] | undefined)?.filter(
+    (a) => new Date(a.createdAt) >= today
   ) ?? [];
 
-  const activeRules = rules?.filter((r: any) => r.isActive)?.length ?? 0;
+  const activeRules = (rules as RoutingRuleItem[] | undefined)?.filter((r) => r.isActive)?.length ?? 0;
   const loading = assignmentsLoading || rulesLoading;
 
   return (
@@ -129,10 +143,10 @@ export function AssignmentDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {assignments.map((assignment: any) => (
+                  {(assignments as AssignmentItem[]).map((assignment) => (
                     <tr key={assignment.id} className="border-b last:border-0">
                       <td className="py-2">
-                        {(assignment.details as any)?.leadId?.slice(0, 8) ?? '—'}
+                        {(assignment.details?.leadId as string | undefined)?.slice(0, 8) ?? '—'}
                       </td>
                       <td className="py-2">{assignment.assignedTo?.name ?? '—'}</td>
                       <td className="py-2">{assignment.rule?.name ?? '—'}</td>

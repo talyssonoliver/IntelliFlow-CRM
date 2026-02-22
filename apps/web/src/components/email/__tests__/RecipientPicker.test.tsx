@@ -24,11 +24,14 @@ describe('RecipientPicker', () => {
     vi.clearAllMocks();
     mocks.contactList.mockReturnValue({
       data: {
-        items: [
+        contacts: [
           createMockContact({ id: 'c1', firstName: 'Alice', lastName: 'Johnson', email: 'alice@test.com' }),
           createMockContact({ id: 'c2', firstName: 'Bob', lastName: 'Smith', email: 'bob@test.com' }),
         ],
         total: 2,
+        page: 1,
+        limit: 5,
+        hasMore: false,
       },
       isLoading: false,
       isError: false,

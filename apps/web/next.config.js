@@ -21,12 +21,14 @@ const nextConfig = {
 
   // Experimental features
   experimental: {
-    // Enable server actions
+    // Server actions configuration
     serverActions: {
       bodySizeLimit: '2mb',
     },
     // Optimize package imports
     optimizePackageImports: ['@intelliflow/ui', 'recharts'],
+    // Enable 'use cache' directive, cacheLife(), cacheTag() without PPR
+    useCache: true,
   },
 
   // Turbopack configuration (Next.js 16+ default bundler)
@@ -88,6 +90,10 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
+          {
+            key: 'Content-Security-Policy',
+            value: "frame-src 'self' https://js.stripe.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com;",
+          },
         ],
       },
     ];
@@ -109,63 +115,10 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
   },
 
-  // Webpack configuration
-  webpack: (config, { isServer, dev }) => {
-    // Optimize bundle size
-    if (!dev && !isServer) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            default: false,
-            vendors: false,
-            // Vendor chunk for react/next
-            framework: {
-              name: 'framework',
-              chunks: 'all',
-              test: /(?<!node_modules.*)[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
-              priority: 40,
-              enforce: true,
-            },
-            // UI library chunk
-            ui: {
-              name: 'ui',
-              chunks: 'all',
-              test: /[\\/]node_modules[\\/](@intelliflow\/ui)[\\/]/,
-              priority: 30,
-            },
-            // Charts library chunk
-            charts: {
-              name: 'charts',
-              chunks: 'all',
-              test: /[\\/]node_modules[\\/](recharts)[\\/]/,
-              priority: 25,
-            },
-            // Common shared chunks
-            commons: {
-              name: 'commons',
-              minChunks: 2,
-              priority: 20,
-            },
-          },
-        },
-      };
-    }
-
-    // Add support for SVG imports
-    config.module.rules.push({
-      test: /\.svg$/,
-      use: ['@svgr/webpack'],
-    });
-
-    return config;
-  },
-
   // TypeScript configuration
   typescript: {
     // Only run type checking in CI
-    ignoreBuildErrors: process.env.CI !== 'true',
+    ignoreBuildErrors: false,
   },
 
   // Power features

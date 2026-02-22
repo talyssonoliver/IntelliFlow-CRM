@@ -12,6 +12,24 @@ import { Card, CardContent, Progress, Skeleton } from '@intelliflow/ui';
 import { useRouting } from '@/app/settings/routing/hooks/useRouting';
 import type { AgentStatusType } from '@intelliflow/domain';
 
+interface AgentSkill {
+  id: string;
+  skillName: string;
+  proficiency: number;
+}
+
+interface AgentWorkloadItem {
+  id: string;
+  userId: string;
+  status: string;
+  currentCapacity: number;
+  maxCapacity: number;
+  shiftStart?: Date | string | null | undefined;
+  shiftEnd?: Date | string | null | undefined;
+  user?: { id: string; name: string | null; email: string } | null;
+  skills?: AgentSkill[];
+}
+
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
   ONLINE: {
     bg: 'bg-emerald-100 dark:bg-emerald-900/30',
@@ -77,7 +95,7 @@ export function AgentWorkload() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {agentWorkload.map((agent: any) => {
+      {(agentWorkload as AgentWorkloadItem[]).map((agent) => {
         const status = (agent.status as AgentStatusType) || 'OFFLINE';
         const style = STATUS_STYLES[status] || STATUS_STYLES.OFFLINE;
         const capacity = agent.maxCapacity > 0
@@ -122,7 +140,7 @@ export function AgentWorkload() {
               {/* Skills */}
               {agent.skills && agent.skills.length > 0 && (
                 <div className="flex flex-wrap gap-1">
-                  {agent.skills.map((skill: any) => (
+                  {agent.skills.map((skill: AgentSkill) => (
                     <span
                       key={skill.id}
                       className="inline-flex items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs"
@@ -137,7 +155,7 @@ export function AgentWorkload() {
               {/* Shift */}
               <div className="text-xs text-muted-foreground flex items-center gap-1">
                 <span className="material-symbols-outlined text-[14px]">schedule</span>
-                {formatTime(agent.shiftStart)} – {formatTime(agent.shiftEnd)}
+                {formatTime(agent.shiftStart ?? null)} – {formatTime(agent.shiftEnd ?? null)}
               </div>
             </CardContent>
           </Card>

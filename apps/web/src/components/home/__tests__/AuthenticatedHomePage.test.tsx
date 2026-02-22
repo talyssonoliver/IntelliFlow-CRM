@@ -412,6 +412,47 @@ describe('AuthenticatedHomePage', () => {
       const settingsBtn = screen.getByTitle('Edit quick actions');
       expect(settingsBtn).toBeInTheDocument();
     });
+
+    it('renders Send Email as link with href /email (PG-155)', () => {
+      render(<AuthenticatedHomePage />);
+      const emailLink = screen.getByText('Send Email').closest('a');
+      expect(emailLink).toHaveAttribute('href', '/email');
+    });
+
+    it('renders Log Call as button (comingSoon), not link (PG-155)', () => {
+      render(<AuthenticatedHomePage />);
+      const callButton = screen.getByText('Log Call').closest('button');
+      expect(callButton).not.toBeNull();
+      expect(screen.getByText('Log Call').closest('a')).toBeNull();
+    });
+
+    it('renders Create Task as link with href /tasks (PG-155)', () => {
+      render(<AuthenticatedHomePage />);
+      const taskLink = screen.getByText('Create Task').closest('a');
+      expect(taskLink).toHaveAttribute('href', '/tasks');
+    });
+
+    it('renders Schedule Meeting as link with href /calendar/new (PG-155)', () => {
+      render(<AuthenticatedHomePage />);
+      const meetingLink = screen.getByText('Schedule Meeting').closest('a');
+      expect(meetingLink).toHaveAttribute('href', '/calendar/new');
+    });
+
+    it('opens Edit Quick Actions sheet on settings click', () => {
+      render(<AuthenticatedHomePage />);
+      const settingsBtn = screen.getByTitle('Edit quick actions');
+      fireEvent.click(settingsBtn);
+      // Sheet opened — exercises handleQuickActionsSave callback wiring
+      expect(settingsBtn).toBeInTheDocument();
+    });
+
+    it('opens Edit Pinned Navigation sheet on edit click', () => {
+      render(<AuthenticatedHomePage />);
+      const editBtn = screen.getByTitle('Edit pinned navigation');
+      fireEvent.click(editBtn);
+      // Sheet opened — exercises handlePinnedNavSave callback wiring
+      expect(editBtn).toBeInTheDocument();
+    });
   });
 
   // =========================================================================

@@ -2,10 +2,9 @@
 
 import {
   SidebarProvider,
-  AppSidebar,
   SidebarInset,
   SidebarTrigger,
-  MobileSidebar,
+  SidebarWithSuspense,
   appointmentsSidebarConfig,
   SidebarPortalProvider,
   SidebarPortalTarget,
@@ -16,14 +15,10 @@ export default function CalendarListLayout({ children }: { children: React.React
     <SidebarPortalProvider>
       <SidebarProvider>
         <div className="flex min-h-[calc(100vh-4rem)]">
-          {/* Left Sidebar - Calendar & Appointments (Desktop) */}
-          <AppSidebar config={appointmentsSidebarConfig} />
+          <SidebarWithSuspense config={appointmentsSidebarConfig} />
 
           {/* Portal target for page-injected sidebar content */}
           <SidebarPortalTarget />
-
-          {/* Mobile Sidebar Drawer */}
-          <MobileSidebar config={appointmentsSidebarConfig} />
 
           {/* Main Content */}
           <SidebarInset>

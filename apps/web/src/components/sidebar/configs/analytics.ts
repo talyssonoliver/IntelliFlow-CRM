@@ -31,6 +31,12 @@ export const analyticsSidebarConfig: SidebarConfig = {
           icon: FEATURE_ICONS.forecast,
           href: '/analytics?view=forecasts',
         },
+        {
+          id: 'feedback',
+          label: 'Feedback Analytics',
+          icon: FEATURE_ICONS.chart,
+          href: '/analytics/feedback',
+        },
       ],
     },
     {

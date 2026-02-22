@@ -15,6 +15,7 @@ interface QuickActionDef {
   label: string;
   description: string;
   href: string;
+  comingSoon?: boolean;
 }
 
 const ALL_QUICK_ACTIONS: QuickActionDef[] = [
@@ -26,6 +27,7 @@ const ALL_QUICK_ACTIONS: QuickActionDef[] = [
     label: 'Log Call',
     description: 'Record a new interaction',
     href: '/calls/new',
+    comingSoon: true,
   },
   {
     id: 'action-email',
@@ -34,7 +36,7 @@ const ALL_QUICK_ACTIONS: QuickActionDef[] = [
     iconColor: 'text-emerald-600',
     label: 'Send Email',
     description: 'Compose message to contact',
-    href: '/emails/compose',
+    href: '/email',
   },
   {
     id: 'action-meeting',
@@ -52,7 +54,7 @@ const ALL_QUICK_ACTIONS: QuickActionDef[] = [
     iconColor: 'text-purple-600',
     label: 'Create Task',
     description: 'Set reminder for yourself',
-    href: '/tasks/new',
+    href: '/tasks',
   },
   {
     id: 'action-lead',
@@ -70,7 +72,7 @@ const ALL_QUICK_ACTIONS: QuickActionDef[] = [
     iconColor: 'text-pink-600',
     label: 'New Deal',
     description: 'Open a potential opportunity',
-    href: '/deals/new',
+    href: '/deals',
   },
   {
     id: 'action-document',
@@ -79,7 +81,7 @@ const ALL_QUICK_ACTIONS: QuickActionDef[] = [
     iconColor: 'text-cyan-600',
     label: 'Upload Document',
     description: 'Add files to repository',
-    href: '/documents/upload',
+    href: '/documents/new',
   },
   {
     id: 'action-report',
@@ -89,6 +91,7 @@ const ALL_QUICK_ACTIONS: QuickActionDef[] = [
     label: 'Generate Report',
     description: 'Run quick analytics export',
     href: '/reports/new',
+    comingSoon: true,
   },
 ];
 

@@ -624,6 +624,19 @@ describe('EmailPage callback handlers', () => {
     });
     mocks.contactList.mockReturnValue({ data: { items: [], total: 0 }, isLoading: false });
     mocks.listTemplates.mockReturnValue({ data: [], isLoading: false, isError: false });
+    mocks.getUnreadCounts.mockReturnValue({
+      data: { inbox: 0, sent: 0, drafts: 0, trash: 0, spam: 0 },
+      isLoading: false,
+      isError: false,
+      refetch: vi.fn(),
+    });
+    mocks.markAsRead.mockReturnValue({
+      mutate: vi.fn(),
+      mutateAsync: vi.fn().mockResolvedValue({ success: true }),
+      isPending: false,
+      isError: false,
+      error: null,
+    });
   });
 
   it('closes compose mode when Discard clicked (handleDiscardCompose)', async () => {

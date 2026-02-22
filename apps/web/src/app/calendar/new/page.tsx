@@ -16,13 +16,33 @@ import type { AppointmentFormInput } from '@/components/appointments/types';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
 
+/** Typed escape-hatch for the appointments tRPC namespace (not yet in AppRouter). */
+interface AppointmentsNewApiEscape {
+  useUtils(): {
+    appointments?: {
+      list?: { invalidate?: () => void };
+      stats?: { invalidate?: () => void };
+    };
+  };
+  appointments?: {
+    create?: {
+      useMutation?: (opts: { onSuccess: () => void }) => {
+        mutateAsync: (data: AppointmentFormInput) => Promise<void>;
+        isPending: boolean;
+      };
+    };
+  };
+}
+
+const appointmentsApi = api as unknown as AppointmentsNewApiEscape;
+
 export default function NewAppointmentPage() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
   const router = useRouter();
 
-  const utils = (api as Record<string, any>).useUtils?.() ?? {};
+  const utils = appointmentsApi.useUtils?.() ?? {};
 
-  const createMutation = (api as Record<string, any>).appointments?.create?.useMutation?.({
+  const createMutation = appointmentsApi.appointments?.create?.useMutation?.({
     onSuccess: () => {
       utils.appointments?.list?.invalidate?.();
       utils.appointments?.stats?.invalidate?.();

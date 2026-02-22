@@ -105,6 +105,33 @@ describe('PinnedItemsSheet utility functions (supplementary2)', () => {
       expect(ids).toContain('action-document');
       expect(ids).toContain('action-report');
     });
+
+    it('action-call and action-report have comingSoon: true (PG-155)', () => {
+      const call = ALL_QUICK_ACTIONS.find((a) => a.id === 'action-call');
+      const report = ALL_QUICK_ACTIONS.find((a) => a.id === 'action-report');
+      expect(call?.comingSoon).toBe(true);
+      expect(report?.comingSoon).toBe(true);
+    });
+
+    it('action-email href is /email (PG-155)', () => {
+      const email = ALL_QUICK_ACTIONS.find((a) => a.id === 'action-email');
+      expect(email?.href).toBe('/email');
+    });
+
+    it('action-task href is /tasks (PG-155)', () => {
+      const task = ALL_QUICK_ACTIONS.find((a) => a.id === 'action-task');
+      expect(task?.href).toBe('/tasks');
+    });
+
+    it('action-deal href is /deals (PG-155)', () => {
+      const deal = ALL_QUICK_ACTIONS.find((a) => a.id === 'action-deal');
+      expect(deal?.href).toBe('/deals');
+    });
+
+    it('action-document href is /documents/new (PG-155)', () => {
+      const doc = ALL_QUICK_ACTIONS.find((a) => a.id === 'action-document');
+      expect(doc?.href).toBe('/documents/new');
+    });
   });
 
   // -------------------------------------------------------

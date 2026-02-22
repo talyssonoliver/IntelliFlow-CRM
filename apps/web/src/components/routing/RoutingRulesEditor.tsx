@@ -56,6 +56,16 @@ import {
 import { useRouting } from '@/app/settings/routing/hooks/useRouting';
 import type { RoutingCondition, RoutingAction } from '@intelliflow/validators';
 
+interface RoutingRule {
+  id: string;
+  name: string;
+  description?: string | null;
+  priority: number;
+  isActive: boolean;
+  conditions: RoutingCondition[];
+  actions: RoutingAction[];
+}
+
 interface RuleFormData {
   name: string;
   description: string;
@@ -73,10 +83,10 @@ function SortableRule({
   onDuplicate,
   onToggle,
 }: {
-  rule: any;
-  onEdit: (rule: any) => void;
+  rule: RoutingRule;
+  onEdit: (rule: RoutingRule) => void;
   onDelete: (id: string) => void;
-  onDuplicate: (rule: any) => void;
+  onDuplicate: (rule: RoutingRule) => void;
   onToggle: (id: string, isActive: boolean) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
@@ -145,7 +155,7 @@ function SortableRule({
 
 export function RoutingRulesEditor() {
   const { rules, rulesLoading, createRule, updateRule, deleteRule, reorderRules, toggleRule } = useRouting();
-  const [editingRule, setEditingRule] = useState<any>(null);
+  const [editingRule, setEditingRule] = useState<RoutingRule | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [formData, setFormData] = useState<RuleFormData>({
     name: '',
@@ -161,13 +171,13 @@ export function RoutingRulesEditor() {
       const { active, over } = event;
       if (!over || active.id === over.id || !rules) return;
 
-      const oldIndex = rules.findIndex((r: any) => r.id === active.id);
-      const newIndex = rules.findIndex((r: any) => r.id === over.id);
+      const oldIndex = rules.findIndex((r) => r.id === active.id);
+      const newIndex = rules.findIndex((r) => r.id === over.id);
       if (oldIndex === -1 || newIndex === -1) return;
 
       const reordered = arrayMove(rules, oldIndex, newIndex);
       reorderRules.mutate({
-        rules: reordered.map((r: any, i: number) => ({ id: r.id, priority: i })),
+        rules: reordered.map((r, i) => ({ id: r.id, priority: i })),
       });
     },
     [rules, reorderRules]
@@ -179,7 +189,7 @@ export function RoutingRulesEditor() {
     setIsSheetOpen(true);
   };
 
-  const openEdit = (rule: any) => {
+  const openEdit = (rule: RoutingRule) => {
     setEditingRule(rule);
     setFormData({
       name: rule.name,
@@ -190,7 +200,7 @@ export function RoutingRulesEditor() {
     setIsSheetOpen(true);
   };
 
-  const openDuplicate = (rule: any) => {
+  const openDuplicate = (rule: RoutingRule) => {
     setEditingRule(null);
     setFormData({
       name: `Copy of ${rule.name}`,
@@ -232,7 +242,7 @@ export function RoutingRulesEditor() {
     }));
   };
 
-  const updateCondition = (index: number, field: keyof RoutingCondition, value: any) => {
+  const updateCondition = (index: number, field: keyof RoutingCondition, value: string | number | string[]) => {
     setFormData((prev) => ({
       ...prev,
       conditions: prev.conditions.map((c, i) => (i === index ? { ...c, [field]: value } : c)),
@@ -250,7 +260,7 @@ export function RoutingRulesEditor() {
     }));
   };
 
-  const updateAction = (index: number, field: keyof RoutingAction, value: any) => {
+  const updateAction = (index: number, field: keyof RoutingAction, value: string | string[]) => {
     setFormData((prev) => ({
       ...prev,
       actions: prev.actions.map((a, i) => (i === index ? { ...a, [field]: value } : a)),
@@ -429,9 +439,9 @@ export function RoutingRulesEditor() {
           </div>
         ) : (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-            <SortableContext items={rules.map((r: any) => r.id)} strategy={verticalListSortingStrategy}>
+            <SortableContext items={rules.map((r) => r.id)} strategy={verticalListSortingStrategy}>
               <div className="space-y-2" role="listbox" aria-label="Routing rules list">
-                {rules.map((rule: any) => (
+                {(rules as unknown as RoutingRule[]).map((rule) => (
                   <SortableRule
                     key={rule.id}
                     rule={rule}
