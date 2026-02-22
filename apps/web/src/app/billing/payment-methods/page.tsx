@@ -9,19 +9,15 @@
  */
 
 import { PaymentMethods } from '@/components/billing/payment-methods';
+import { PageHeader } from '@/components/shared/page-header';
 
 export default function PaymentMethodsPage() {
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Payment Methods</h1>
-        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Manage your saved payment methods and set your default card
-        </p>
-      </div>
-
-      {/* Main Component */}
+      <PageHeader
+        title="Payment Methods"
+        description="Manage your saved payment methods and set your default card"
+      />
       <PaymentMethods />
     </div>
   );

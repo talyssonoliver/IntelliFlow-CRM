@@ -166,6 +166,10 @@ interface IStripeAdapter {
     customerId: string
   ): Promise<StripeResult<StripePaymentMethod>>;
   detachPaymentMethod(paymentMethodId: string): Promise<StripeResult<StripePaymentMethod>>;
+  updateCustomer(
+    customerId: string,
+    params: { defaultPaymentMethodId?: string; email?: string; name?: string }
+  ): Promise<StripeResult<StripeCustomer>>;
   updateSubscription(
     subscriptionId: string,
     params: { priceId?: string; quantity?: number }
@@ -471,6 +475,20 @@ export const billingRouter = createTRPCRouter({
         });
       }
 
+      // Set as default payment method if requested
+      if (input.setAsDefault) {
+        const updateResult = await stripe.updateCustomer(user.stripeCustomerId, {
+          defaultPaymentMethodId: input.paymentMethodId,
+        });
+
+        if (updateResult.isFailure) {
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: updateResult.error.message,
+          });
+        }
+      }
+
       return {
         success: true,
         paymentMethod: result.value,
@@ -491,6 +509,42 @@ export const billingRouter = createTRPCRouter({
           code: 'BAD_REQUEST',
           message: 'No billing account found.',
         });
+      }
+
+      // Check subscription guard before removing
+      const subsResult = await stripe.listSubscriptions(user.stripeCustomerId);
+      const hasActiveSub = subsResult.isSuccess
+        ? subsResult.value.some((sub) => sub.status === 'active' || sub.status === 'trialing')
+        : false;
+
+      if (hasActiveSub) {
+        const customerResult = await stripe.getCustomer(user.stripeCustomerId);
+        const defaultPaymentMethodId = customerResult.isSuccess
+          ? customerResult.value?.defaultPaymentMethodId
+          : null;
+        const isDefault = input.paymentMethodId === defaultPaymentMethodId;
+
+        // Check if there are other payment methods
+        const pmResult = await stripe.listPaymentMethods(user.stripeCustomerId);
+        const otherMethods = pmResult.isSuccess
+          ? pmResult.value.filter((pm) => pm.id !== input.paymentMethodId)
+          : [];
+
+        if (otherMethods.length === 0) {
+          throw new TRPCError({
+            code: 'PRECONDITION_FAILED',
+            message:
+              'Cannot remove your only payment method while you have an active subscription. Please add another payment method first.',
+          });
+        }
+
+        if (isDefault) {
+          throw new TRPCError({
+            code: 'PRECONDITION_FAILED',
+            message:
+              'Cannot remove default payment method while you have an active subscription. Please set another card as default first.',
+          });
+        }
       }
 
       const result = await stripe.detachPaymentMethod(input.paymentMethodId);

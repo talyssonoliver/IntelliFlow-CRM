@@ -17,6 +17,7 @@
  * - Toast notifications
  */
 
+import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -155,6 +156,33 @@ vi.mock('@/lib/billing/payment-processor', () => ({
   },
 }));
 
+vi.mock('@/lib/auth/AuthContext', () => ({
+  useAuth: () => ({
+    isAuthenticated: true,
+    isLoading: false,
+  }),
+}));
+
+// Mock Stripe Elements for AddCardDialog
+vi.mock('@stripe/react-stripe-js', () => ({
+  Elements: ({ children }: { children: React.ReactNode }) => <div data-testid="stripe-elements">{children}</div>,
+  CardNumberElement: () => <div data-testid="card-number-element" />,
+  CardExpiryElement: () => <div data-testid="card-expiry-element" />,
+  CardCvcElement: () => <div data-testid="card-cvc-element" />,
+  useStripe: () => ({
+    createPaymentMethod: vi.fn().mockResolvedValue({
+      paymentMethod: { id: 'pm_new_123' },
+    }),
+  }),
+  useElements: () => ({
+    getElement: () => ({}),
+  }),
+}));
+
+vi.mock('@/lib/billing/stripe-client', () => ({
+  stripePromise: Promise.resolve(null),
+}));
+
 import { PaymentMethods } from '../payment-methods';
 
 // ============================================
@@ -279,10 +307,12 @@ describe('PaymentMethods', () => {
       await user.click(screen.getByRole('button', { name: /add card/i }));
 
       expect(screen.getByText('Add Payment Method')).toBeInTheDocument();
-      expect(screen.getByLabelText(/card number/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/expiry/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/cvc/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/cardholder name/i)).toBeInTheDocument();
+      // Stripe Elements are rendered as mocked divs with data-testid
+      expect(screen.getByTestId('card-number-element')).toBeInTheDocument();
+      expect(screen.getByTestId('card-expiry-element')).toBeInTheDocument();
+      expect(screen.getByTestId('card-cvc-element')).toBeInTheDocument();
+      // Cardholder name is a regular text label
+      expect(screen.getByText('Cardholder Name')).toBeInTheDocument();
     });
 
     it('closes add card dialog when Cancel is clicked', async () => {
@@ -302,7 +332,7 @@ describe('PaymentMethods', () => {
       expect(screen.queryByLabelText(/card number/i)).not.toBeInTheDocument();
     });
 
-    it('shows validation errors when submitting empty form', async () => {
+    it('renders Stripe Elements inside add card dialog form', async () => {
       mockQueryResult.data = mockPaymentMethods;
       const user = userEvent.setup();
 
@@ -310,15 +340,11 @@ describe('PaymentMethods', () => {
 
       await user.click(screen.getByRole('button', { name: /add card/i }));
 
-      // Click the Add Card submit button (the one inside the dialog footer)
-      const addButtons = screen.getAllByRole('button', { name: /add card/i });
-      // The last one is in the dialog footer
-      await user.click(addButtons[addButtons.length - 1]);
-
-      // Should show validation errors
-      await waitFor(() => {
-        expect(screen.getByText(/invalid card number/i)).toBeInTheDocument();
-      });
+      // Verify Stripe Elements are rendered inside the dialog
+      expect(screen.getByTestId('stripe-elements')).toBeInTheDocument();
+      expect(screen.getByTestId('card-number-element')).toBeInTheDocument();
+      expect(screen.getByTestId('card-expiry-element')).toBeInTheDocument();
+      expect(screen.getByTestId('card-cvc-element')).toBeInTheDocument();
     });
   });
 

@@ -5,3 +5,4 @@
  */
 
 export { BillingPortal } from './billing-portal';
+export { PaymentMethods } from './payment-methods';

@@ -14,7 +14,7 @@
  */
 
 import * as React from 'react';
-import { useState, useCallback, useId } from 'react';
+import { useState, useCallback } from 'react';
 import {
   Card,
   CardHeader,
@@ -24,10 +24,34 @@ import {
   Button,
   Badge,
   Skeleton,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+  Input,
   cn,
 } from '@intelliflow/ui';
+import {
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
+  Elements,
+  useStripe,
+  useElements,
+} from '@stripe/react-stripe-js';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
+import { stripePromise } from '@/lib/billing/stripe-client';
 import {
   getCardDisplayInfo,
   sortPaymentMethods,
@@ -35,13 +59,6 @@ import {
   formatCardDisplayString,
   formatMaskedCardNumber,
 } from '@/lib/billing/card-manager';
-import {
-  formatCardNumber,
-  formatExpiry,
-  detectCardBrand,
-  validateCardDetails,
-  type CardDetails,
-} from '@/lib/billing/payment-processor';
 import type { BillingPaymentMethod } from '@/lib/billing/stripe-portal';
 
 // ============================================
@@ -52,12 +69,17 @@ interface PaymentMethodsProps {
   className?: string;
 }
 
-interface CardFormState {
-  cardNumber: string;
-  expiry: string;
-  cvc: string;
-  name: string;
-}
+/** Stripe Elements styling to match shadcn input look */
+const stripeElementStyle = {
+  style: {
+    base: {
+      fontSize: '14px',
+      color: 'hsl(var(--foreground))',
+      '::placeholder': { color: 'hsl(var(--muted-foreground))' },
+    },
+    invalid: { color: 'hsl(var(--destructive))' },
+  },
+};
 
 // ============================================
 // Sub-Components
@@ -242,278 +264,190 @@ function LoadingSkeleton() {
 }
 
 /**
+ * Add Card Dialog — Inner form (must be inside <Elements>)
+ */
+interface AddCardFormProps {
+  onSuccess: (paymentMethodId: string) => void;
+  onClose: () => void;
+  isAdding: boolean;
+  setIsAdding: (v: boolean) => void;
+}
+
+function AddCardForm({ onSuccess, onClose, isAdding, setIsAdding }: AddCardFormProps) {
+  const stripe = useStripe();
+  const elements = useElements();
+  const [cardholderName, setCardholderName] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stripe || !elements) return;
+
+    setFormError(null);
+    setIsAdding(true);
+
+    try {
+      const cardElement = elements.getElement(CardNumberElement);
+      if (!cardElement) {
+        setFormError('Card element not ready');
+        setIsAdding(false);
+        return;
+      }
+
+      const { error, paymentMethod } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: cardElement,
+        billing_details: { name: cardholderName || undefined },
+      });
+
+      if (error) {
+        setFormError(error.message ?? 'Failed to create payment method');
+        setIsAdding(false);
+        return;
+      }
+
+      if (paymentMethod) {
+        onSuccess(paymentMethod.id);
+        setCardholderName('');
+      }
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Failed to add card');
+      setIsAdding(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="space-y-4 py-4">
+        {formError && (
+          <div
+            role="alert"
+            className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive"
+          >
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-base" aria-hidden="true">
+                error
+              </span>
+              {formError}
+            </div>
+          </div>
+        )}
+
+        {/* Card Number — Stripe Element */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Card Number</label>
+          <div className="h-10 rounded-md border border-input bg-background px-3 py-2.5">
+            <CardNumberElement options={stripeElementStyle} />
+          </div>
+        </div>
+
+        {/* Expiry and CVC — Stripe Elements */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">Expiry Date</label>
+            <div className="h-10 rounded-md border border-input bg-background px-3 py-2.5">
+              <CardExpiryElement options={stripeElementStyle} />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">CVC</label>
+            <div className="h-10 rounded-md border border-input bg-background px-3 py-2.5">
+              <CardCvcElement options={stripeElementStyle} />
+            </div>
+          </div>
+        </div>
+
+        {/* Cardholder Name — regular Input (not PCI scope) */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium">Cardholder Name</label>
+          <Input
+            type="text"
+            autoComplete="cc-name"
+            placeholder="John Doe"
+            value={cardholderName}
+            onChange={(e) => setCardholderName(e.target.value)}
+            disabled={isAdding}
+          />
+        </div>
+      </div>
+
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onClose} disabled={isAdding}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isAdding || !stripe}>
+          {isAdding ? (
+            <>
+              <span
+                className="material-symbols-outlined animate-spin text-lg mr-2"
+                aria-hidden="true"
+              >
+                progress_activity
+              </span>
+              Adding...
+            </>
+          ) : (
+            <>
+              <span className="material-symbols-outlined text-lg mr-2" aria-hidden="true">
+                add
+              </span>
+              Add Card
+            </>
+          )}
+        </Button>
+      </DialogFooter>
+    </form>
+  );
+}
+
+/**
  * Add Card Dialog
  */
 interface AddCardDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (cardDetails: CardDetails) => Promise<void>;
+  onAddSuccess: (paymentMethodId: string) => void;
   isAdding: boolean;
+  setIsAdding: (v: boolean) => void;
 }
 
-function AddCardDialog({ isOpen, onClose, onAdd, isAdding }: AddCardDialogProps) {
-  const formId = useId();
-  const [formState, setFormState] = useState<CardFormState>({
-    cardNumber: '',
-    expiry: '',
-    cvc: '',
-    name: '',
-  });
-  const [errors, setErrors] = useState<Partial<Record<keyof CardFormState, string>>>({});
-  const [formError, setFormError] = useState<string | null>(null);
-
-  const cardBrand = detectCardBrand(formState.cardNumber);
-
-  const handleInputChange = useCallback(
-    (field: keyof CardFormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      let value = e.target.value;
-
-      if (field === 'cardNumber') {
-        value = formatCardNumber(value);
-      } else if (field === 'expiry') {
-        value = formatExpiry(value);
-      } else if (field === 'cvc') {
-        value = value.replace(/\D/g, '').slice(0, cardBrand === 'amex' ? 4 : 3);
-      }
-
-      setFormState((prev) => ({ ...prev, [field]: value }));
-      if (errors[field]) {
-        setErrors((prev) => ({ ...prev, [field]: undefined }));
-      }
-    },
-    [cardBrand, errors]
-  );
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-
-    const cardDetails: CardDetails = {
-      number: formState.cardNumber,
-      expiry: formState.expiry,
-      cvc: formState.cvc,
-      name: formState.name,
-    };
-
-    const validation = validateCardDetails(cardDetails);
-    if (!validation.valid) {
-      setErrors({
-        cardNumber: validation.errors.number,
-        expiry: validation.errors.expiry,
-        cvc: validation.errors.cvc,
-        name: validation.errors.name,
-      });
-      return;
-    }
-
-    try {
-      await onAdd(cardDetails);
-      // Reset form on success
-      setFormState({ cardNumber: '', expiry: '', cvc: '', name: '' });
-      setErrors({});
-    } catch (error) {
-      setFormError(error instanceof Error ? error.message : 'Failed to add card');
-    }
-  };
-
+function AddCardDialog({ isOpen, onClose, onAddSuccess, isAdding, setIsAdding }: AddCardDialogProps) {
   const handleClose = () => {
     if (!isAdding) {
-      setFormState({ cardNumber: '', expiry: '', cvc: '', name: '' });
-      setErrors({});
-      setFormError(null);
       onClose();
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={handleClose} aria-hidden="true" />
-
-      {/* Dialog */}
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="add-card-title"
-        className="relative bg-background rounded-xl shadow-xl w-full max-w-md overflow-hidden"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 id="add-card-title" className="text-lg font-semibold">
-            Add Payment Method
-          </h2>
-          <button
-            onClick={handleClose}
-            disabled={isAdding}
-            className="p-1 text-muted-foreground hover:text-foreground rounded transition-colors"
-          >
-            <span className="material-symbols-outlined" aria-hidden="true">
-              close
-            </span>
-            <span className="sr-only">Close</span>
-          </button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
-          {/* Form Error */}
-          {formError && (
-            <div
-              role="alert"
-              className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-sm text-destructive"
-            >
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-base" aria-hidden="true">
-                  error
-                </span>
-                {formError}
-              </div>
-            </div>
-          )}
-
-          {/* Card Number */}
-          <div className="space-y-1.5">
-            <label htmlFor={`${formId}-number`} className="text-sm font-medium">
-              Card Number
-            </label>
-            <div className="relative">
-              <input
-                id={`${formId}-number`}
-                type="text"
-                inputMode="numeric"
-                autoComplete="cc-number"
-                placeholder="4242 4242 4242 4242"
-                value={formState.cardNumber}
-                onChange={handleInputChange('cardNumber')}
-                disabled={isAdding}
-                className={cn(
-                  'flex h-10 w-full rounded-md border bg-background px-3 py-2 pr-12 text-sm',
-                  'placeholder:text-muted-foreground',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  'disabled:cursor-not-allowed disabled:opacity-50',
-                  errors.cardNumber ? 'border-destructive' : 'border-input'
-                )}
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                <span className="material-symbols-outlined text-xl" aria-hidden="true">
-                  credit_card
-                </span>
-              </div>
-            </div>
-            {errors.cardNumber && <p className="text-sm text-destructive">{errors.cardNumber}</p>}
-          </div>
-
-          {/* Expiry and CVC */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label htmlFor={`${formId}-expiry`} className="text-sm font-medium">
-                Expiry Date
-              </label>
-              <input
-                id={`${formId}-expiry`}
-                type="text"
-                inputMode="numeric"
-                autoComplete="cc-exp"
-                placeholder="MM/YY"
-                value={formState.expiry}
-                onChange={handleInputChange('expiry')}
-                disabled={isAdding}
-                className={cn(
-                  'flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm',
-                  'placeholder:text-muted-foreground',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  'disabled:cursor-not-allowed disabled:opacity-50',
-                  errors.expiry ? 'border-destructive' : 'border-input'
-                )}
-              />
-              {errors.expiry && <p className="text-sm text-destructive">{errors.expiry}</p>}
-            </div>
-
-            <div className="space-y-1.5">
-              <label htmlFor={`${formId}-cvc`} className="text-sm font-medium">
-                CVC
-              </label>
-              <input
-                id={`${formId}-cvc`}
-                type="password"
-                inputMode="numeric"
-                autoComplete="cc-csc"
-                placeholder={cardBrand === 'amex' ? '1234' : '123'}
-                value={formState.cvc}
-                onChange={handleInputChange('cvc')}
-                disabled={isAdding}
-                className={cn(
-                  'flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm',
-                  'placeholder:text-muted-foreground',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  'disabled:cursor-not-allowed disabled:opacity-50',
-                  errors.cvc ? 'border-destructive' : 'border-input'
-                )}
-              />
-              {errors.cvc && <p className="text-sm text-destructive">{errors.cvc}</p>}
-            </div>
-          </div>
-
-          {/* Cardholder Name */}
-          <div className="space-y-1.5">
-            <label htmlFor={`${formId}-name`} className="text-sm font-medium">
-              Cardholder Name
-            </label>
-            <input
-              id={`${formId}-name`}
-              type="text"
-              autoComplete="cc-name"
-              placeholder="John Doe"
-              value={formState.name}
-              onChange={handleInputChange('name')}
-              disabled={isAdding}
-              className={cn(
-                'flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm',
-                'placeholder:text-muted-foreground',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                'disabled:cursor-not-allowed disabled:opacity-50',
-                errors.name ? 'border-destructive' : 'border-input'
-              )}
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add Payment Method</DialogTitle>
+          <DialogDescription>
+            Enter your card details below. Your information is encrypted and secure.
+          </DialogDescription>
+        </DialogHeader>
+        {stripePromise ? (
+          <Elements stripe={stripePromise}>
+            <AddCardForm
+              onSuccess={onAddSuccess}
+              onClose={handleClose}
+              isAdding={isAdding}
+              setIsAdding={setIsAdding}
             />
-            {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+          </Elements>
+        ) : (
+          <div className="py-4 text-center text-muted-foreground text-sm">
+            <p>Payment processing is not configured. Please contact support.</p>
           </div>
-        </form>
-
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t bg-muted/50">
-          <Button variant="outline" onClick={handleClose} disabled={isAdding}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={isAdding}>
-            {isAdding ? (
-              <>
-                <span
-                  className="material-symbols-outlined animate-spin text-lg mr-2"
-                  aria-hidden="true"
-                >
-                  progress_activity
-                </span>
-                Adding...
-              </>
-            ) : (
-              <>
-                <span className="material-symbols-outlined text-lg mr-2" aria-hidden="true">
-                  add
-                </span>
-                Add Card
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-    </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
 
 /**
- * Remove Card Confirmation Dialog
+ * Remove Card Confirmation Dialog (shadcn AlertDialog)
  */
 interface RemoveCardDialogProps {
   isOpen: boolean;
@@ -522,6 +456,7 @@ interface RemoveCardDialogProps {
   onConfirm: () => void;
   isRemoving: boolean;
   warningMessage?: string;
+  canRemove?: boolean;
 }
 
 function RemoveCardDialog({
@@ -531,31 +466,18 @@ function RemoveCardDialog({
   onConfirm,
   isRemoving,
   warningMessage,
+  canRemove = true,
 }: RemoveCardDialogProps) {
-  if (!isOpen || !card?.card) return null;
+  if (!card?.card) return null;
 
   const displayString = formatCardDisplayString(card.card.brand, card.card.last4);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={() => !isRemoving && onClose()}
-        aria-hidden="true"
-      />
-
-      {/* Dialog */}
-      <div
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby="remove-card-title"
-        aria-describedby="remove-card-description"
-        className="relative bg-background rounded-xl shadow-xl w-full max-w-sm overflow-hidden"
-      >
-        <div className="px-6 py-6 text-center">
+    <AlertDialog open={isOpen} onOpenChange={(open) => !open && !isRemoving && onClose()}>
+      <AlertDialogContent className="sm:max-w-sm">
+        <AlertDialogHeader className="text-center">
           {/* Icon */}
-          <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-destructive/10 flex items-center justify-center">
+          <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-destructive/10 flex items-center justify-center">
             <span
               className="material-symbols-outlined text-2xl text-destructive"
               aria-hidden="true"
@@ -563,61 +485,51 @@ function RemoveCardDialog({
               delete
             </span>
           </div>
-
-          {/* Title */}
-          <h2 id="remove-card-title" className="text-lg font-semibold mb-2">
-            Remove Payment Method?
-          </h2>
-
-          {/* Description */}
-          <p id="remove-card-description" className="text-muted-foreground text-sm mb-4">
+          <AlertDialogTitle>Remove Payment Method?</AlertDialogTitle>
+          <AlertDialogDescription>
             Are you sure you want to remove <strong>{displayString}</strong>?
-          </p>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
 
-          {/* Warning */}
-          {warningMessage && (
-            <div className="p-3 mb-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-left">
-              <div className="flex items-start gap-2">
+        {/* Warning */}
+        {warningMessage && (
+          <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-left">
+            <div className="flex items-start gap-2">
+              <span
+                className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-lg flex-shrink-0"
+                aria-hidden="true"
+              >
+                warning
+              </span>
+              <p className="text-sm text-amber-700 dark:text-amber-300">{warningMessage}</p>
+            </div>
+          </div>
+        )}
+
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isRemoving}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            disabled={isRemoving || !canRemove}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {isRemoving ? (
+              <>
                 <span
-                  className="material-symbols-outlined text-amber-600 dark:text-amber-400 text-lg flex-shrink-0"
+                  className="material-symbols-outlined animate-spin text-lg mr-2"
                   aria-hidden="true"
                 >
-                  warning
+                  progress_activity
                 </span>
-                <p className="text-sm text-amber-700 dark:text-amber-300">{warningMessage}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={onClose} disabled={isRemoving}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              className="flex-1"
-              onClick={onConfirm}
-              disabled={isRemoving}
-            >
-              {isRemoving ? (
-                <>
-                  <span
-                    className="material-symbols-outlined animate-spin text-lg mr-2"
-                    aria-hidden="true"
-                  >
-                    progress_activity
-                  </span>
-                  Removing...
-                </>
-              ) : (
-                'Remove'
-              )}
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+                Removing...
+              </>
+            ) : (
+              'Remove'
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
 
@@ -676,7 +588,7 @@ export function PaymentMethods({ className }: PaymentMethodsProps) {
     async (paymentMethodId: string) => {
       setSettingDefaultId(paymentMethodId);
       try {
-        await updatePaymentMethodMutation.mutateAsync({ paymentMethodId });
+        await updatePaymentMethodMutation.mutateAsync({ paymentMethodId, setAsDefault: true });
       } finally {
         setSettingDefaultId(null);
       }
@@ -706,26 +618,31 @@ export function PaymentMethods({ className }: PaymentMethodsProps) {
     }
   }, [removeCard, removePaymentMethodMutation]);
 
-  const handleAddCard = useCallback(
-    async (_cardDetails: CardDetails) => {
-      // In real implementation, this would:
-      // 1. Create payment method via Stripe.js
-      // 2. Call tRPC endpoint with payment method ID
-      // For now, simulate with mock payment method ID
-      const mockPaymentMethodId = `pm_${Date.now()}`;
+  const [isAddingCard, setIsAddingCard] = useState(false);
 
-      await updatePaymentMethodMutation.mutateAsync({ paymentMethodId: mockPaymentMethodId });
-      setIsAddDialogOpen(false);
+  const handleAddCardSuccess = useCallback(
+    async (paymentMethodId: string) => {
+      try {
+        await updatePaymentMethodMutation.mutateAsync({
+          paymentMethodId,
+          setAsDefault: !paymentMethods || paymentMethods.length === 0,
+        });
+        setIsAddDialogOpen(false);
+      } catch {
+        // Error handled by mutation onError callback
+      } finally {
+        setIsAddingCard(false);
+      }
     },
-    [updatePaymentMethodMutation]
+    [updatePaymentMethodMutation, paymentMethods]
   );
 
   // Get sorted payment methods
   const sortedPaymentMethods = paymentMethods ? sortPaymentMethods(paymentMethods) : [];
 
-  // Get remove warning message
-  const removeWarning =
-    removeCard && paymentMethods ? canRemoveCard(removeCard.id, paymentMethods).reason : undefined;
+  // Get remove check result (subscription-aware)
+  const removeCheck =
+    removeCard && paymentMethods ? canRemoveCard(removeCard.id, paymentMethods) : { canRemove: true };
 
   return (
     <div className={cn('space-y-6', className)}>
@@ -824,8 +741,9 @@ export function PaymentMethods({ className }: PaymentMethodsProps) {
       <AddCardDialog
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
-        onAdd={handleAddCard}
-        isAdding={updatePaymentMethodMutation.isPending}
+        onAddSuccess={handleAddCardSuccess}
+        isAdding={isAddingCard}
+        setIsAdding={setIsAddingCard}
       />
 
       {/* Remove Card Dialog */}
@@ -835,7 +753,8 @@ export function PaymentMethods({ className }: PaymentMethodsProps) {
         onClose={() => setRemoveCard(null)}
         onConfirm={handleRemoveConfirm}
         isRemoving={!!removingId}
-        warningMessage={removeWarning}
+        warningMessage={removeCheck.reason}
+        canRemove={removeCheck.canRemove}
       />
     </div>
   );

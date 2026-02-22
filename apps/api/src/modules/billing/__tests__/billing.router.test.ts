@@ -68,7 +68,7 @@ const mockCustomer = {
 };
 
 // Mock StripeAdapter methods for spy access
-const mockStripeAdapterMethods = {
+const mockStripeAdapterMethods: Record<string, any> = {
   listSubscriptions: vi.fn(),
   listInvoices: vi.fn(),
   listPaymentMethods: vi.fn(),
@@ -78,6 +78,7 @@ const mockStripeAdapterMethods = {
   updateSubscription: vi.fn(),
   cancelSubscription: vi.fn(),
   createCustomer: vi.fn(),
+  updateCustomer: vi.fn(),
   createSubscription: vi.fn(),
   getInvoice: vi.fn(),
   payInvoice: vi.fn(),
@@ -94,6 +95,7 @@ class MockStripeAdapter {
   updateSubscription = mockStripeAdapterMethods.updateSubscription;
   cancelSubscription = mockStripeAdapterMethods.cancelSubscription;
   createCustomer = mockStripeAdapterMethods.createCustomer;
+  updateCustomer = mockStripeAdapterMethods.updateCustomer;
   createSubscription = mockStripeAdapterMethods.createSubscription;
   getInvoice = mockStripeAdapterMethods.getInvoice;
   payInvoice = mockStripeAdapterMethods.payInvoice;
@@ -1947,6 +1949,261 @@ describe('billingRouter', () => {
       await expect(caller.payInvoice({ invoiceId: 'in_123' })).rejects.toThrow(
         expect.objectContaining({ code: 'FORBIDDEN' })
       );
+    });
+  });
+
+  // ============================================
+  // updatePaymentMethod — setDefault Tests (PG-029)
+  // ============================================
+
+  describe('updatePaymentMethod - setDefault', () => {
+    it('calls updateCustomer with defaultPaymentMethodId when setAsDefault is true', async () => {
+      const newPaymentMethod = { ...mockPaymentMethod, id: 'pm_new_456' };
+
+      mockStripeAdapterMethods.attachPaymentMethod.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: newPaymentMethod,
+      });
+
+      // Mock updateCustomer for setDefault
+      mockStripeAdapterMethods.updateCustomer = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: { ...mockCustomer, defaultPaymentMethodId: 'pm_new_456' },
+      });
+
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+
+      await caller.updatePaymentMethod({ paymentMethodId: 'pm_new_456', setAsDefault: true });
+
+      expect(mockStripeAdapterMethods.attachPaymentMethod).toHaveBeenCalledWith(
+        'pm_new_456',
+        'cus_123'
+      );
+      expect(mockStripeAdapterMethods.updateCustomer).toHaveBeenCalledWith(
+        'cus_123',
+        expect.objectContaining({ defaultPaymentMethodId: 'pm_new_456' })
+      );
+    });
+
+    it('does NOT call updateCustomer when setAsDefault is false', async () => {
+      const newPaymentMethod = { ...mockPaymentMethod, id: 'pm_new_789' };
+
+      mockStripeAdapterMethods.attachPaymentMethod.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: newPaymentMethod,
+      });
+
+      mockStripeAdapterMethods.updateCustomer = vi.fn();
+
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+
+      await caller.updatePaymentMethod({ paymentMethodId: 'pm_new_789', setAsDefault: false });
+
+      expect(mockStripeAdapterMethods.attachPaymentMethod).toHaveBeenCalled();
+      expect(mockStripeAdapterMethods.updateCustomer).not.toHaveBeenCalled();
+    });
+  });
+
+  // ============================================
+  // removePaymentMethod — subscription guard Tests (PG-029)
+  // ============================================
+
+  describe('removePaymentMethod - subscription guard', () => {
+    it('succeeds when no active subscription exists', async () => {
+      mockStripeAdapterMethods.listSubscriptions.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: [],
+      });
+
+      mockStripeAdapterMethods.getCustomer.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: { ...mockCustomer, defaultPaymentMethodId: 'pm_123' },
+      });
+
+      mockStripeAdapterMethods.listPaymentMethods.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: [mockPaymentMethod],
+      });
+
+      mockStripeAdapterMethods.detachPaymentMethod.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockPaymentMethod,
+      });
+
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+
+      const result = await caller.removePaymentMethod({ paymentMethodId: 'pm_123' });
+      expect(result.success).toBe(true);
+    });
+
+    it('throws PRECONDITION_FAILED when removing default card with active subscription', async () => {
+      mockStripeAdapterMethods.listSubscriptions.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: [mockSubscription],
+      });
+
+      mockStripeAdapterMethods.getCustomer.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: { ...mockCustomer, defaultPaymentMethodId: 'pm_123' },
+      });
+
+      mockStripeAdapterMethods.listPaymentMethods.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: [mockPaymentMethod],
+      });
+
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+
+      await expect(
+        caller.removePaymentMethod({ paymentMethodId: 'pm_123' })
+      ).rejects.toThrow('Cannot remove default payment method while you have an active subscription');
+    });
+
+    it('throws error when removing last card with active subscription', async () => {
+      mockStripeAdapterMethods.listSubscriptions.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: [mockSubscription],
+      });
+
+      mockStripeAdapterMethods.getCustomer.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: { ...mockCustomer, defaultPaymentMethodId: 'pm_other' },
+      });
+
+      mockStripeAdapterMethods.listPaymentMethods.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: [mockPaymentMethod], // Only one card
+      });
+
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+
+      await expect(
+        caller.removePaymentMethod({ paymentMethodId: 'pm_123' })
+      ).rejects.toThrow(/cannot remove/i);
+    });
+
+    it('succeeds when removing non-default card even with active subscription', async () => {
+      const nonDefaultPm = { ...mockPaymentMethod, id: 'pm_456' };
+
+      mockStripeAdapterMethods.listSubscriptions.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: [mockSubscription],
+      });
+
+      mockStripeAdapterMethods.getCustomer.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: { ...mockCustomer, defaultPaymentMethodId: 'pm_123' },
+      });
+
+      mockStripeAdapterMethods.listPaymentMethods.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: [mockPaymentMethod, nonDefaultPm],
+      });
+
+      mockStripeAdapterMethods.detachPaymentMethod.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: nonDefaultPm,
+      });
+
+      const mockContext = {
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'USER',
+          tenantId: 'tenant_123',
+          stripeCustomerId: 'cus_123',
+        } as UserSession,
+        prisma: {} as unknown,
+      };
+
+      const caller = billingRouter.createCaller(
+        mockContext as Parameters<typeof billingRouter.createCaller>[0]
+      );
+
+      const result = await caller.removePaymentMethod({ paymentMethodId: 'pm_456' });
+      expect(result.success).toBe(true);
     });
   });
 });

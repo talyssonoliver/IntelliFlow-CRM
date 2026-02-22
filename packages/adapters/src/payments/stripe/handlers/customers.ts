@@ -69,6 +69,9 @@ export async function updateCustomer(
     const body = new URLSearchParams();
     if (params.email) body.append('email', params.email);
     if (params.name) body.append('name', params.name);
+    if (params.defaultPaymentMethodId) {
+      body.append('invoice_settings[default_payment_method]', params.defaultPaymentMethodId);
+    }
     if (params.metadata) {
       Object.entries(params.metadata).forEach(([key, value]) => {
         body.append(`metadata[${key}]`, value);

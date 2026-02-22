@@ -199,7 +199,8 @@ export function formatMaskedCardNumber(last4: string): string {
  */
 export function canRemoveCard(
   paymentMethodId: string,
-  allPaymentMethods: BillingPaymentMethod[]
+  allPaymentMethods: BillingPaymentMethod[],
+  hasActiveSubscription?: boolean
 ): { canRemove: boolean; reason?: string } {
   const card = allPaymentMethods.find((pm) => pm.id === paymentMethodId);
 
@@ -207,7 +208,24 @@ export function canRemoveCard(
     return { canRemove: false, reason: 'Card not found' };
   }
 
-  // If this is the default and it's the only card, warn user
+  // Subscription-aware guard: block removal of only/default card when subscription active
+  if (hasActiveSubscription && card.isDefault && allPaymentMethods.length === 1) {
+    return {
+      canRemove: false,
+      reason:
+        'Cannot remove your only payment method while you have an active subscription. Please add another payment method first.',
+    };
+  }
+
+  if (hasActiveSubscription && card.isDefault && allPaymentMethods.length > 1) {
+    return {
+      canRemove: true,
+      reason:
+        'This is your default payment method. Removing it will set another card as default.',
+    };
+  }
+
+  // Non-subscription scenarios: warn but allow
   if (card.isDefault && allPaymentMethods.length === 1) {
     return {
       canRemove: true,
@@ -215,7 +233,6 @@ export function canRemoveCard(
     };
   }
 
-  // If this is the default, user should set another default first
   if (card.isDefault && allPaymentMethods.length > 1) {
     return {
       canRemove: true,
