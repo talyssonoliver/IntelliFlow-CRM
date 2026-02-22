@@ -16,3 +16,6 @@ export * from './AIOutputReviewRepositoryPort';
 export * from './ActivityFeedRepositoryPort';
 export * from './BillingRepositoryPort';
 export * from './ModuleAccessPort';
+
+// Feedback Survey Repository Port (IFC-068)
+export * from './FeedbackSurveyRepositoryPort';

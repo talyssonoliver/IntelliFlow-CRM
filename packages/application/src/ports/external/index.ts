@@ -14,3 +14,4 @@ export * from './EmailServicePort';
 export * from './WebhookServicePort';
 export * from './StorageServicePort';
 export * from './AVScannerPort';
+export * from './SignatureProviderPort';

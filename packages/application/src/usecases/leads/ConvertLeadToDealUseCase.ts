@@ -21,6 +21,7 @@ import {
   Account,
   Opportunity,
 } from '@intelliflow/domain';
+import { ConversionSnapshot } from './ConversionSnapshot';
 import {
   LeadRepository,
   ContactRepository,
@@ -74,6 +75,8 @@ export interface ConvertLeadToDealOutput {
   convertedBy: string;
   /** Timestamp of conversion */
   convertedAt: Date;
+  /** Snapshot of lead data at conversion time for audit */
+  conversionSnapshot: Record<string, unknown>;
 }
 
 // =============================================================================
@@ -126,8 +129,18 @@ export class ConvertLeadToDealUseCase {
 
     // 4. Check if lead is already converted
     if (lead.isConverted) {
-      return Result.fail(lead.convert('', null, '').error); // Get domain error
+      return Result.fail(lead.convert(null, null, '').error); // Get domain error
     }
+
+    // 4.5. QUALIFIED gate — only qualified leads can be converted to deals (AC-008)
+    if (lead.status !== 'QUALIFIED') {
+      return Result.fail(
+        new ValidationError('Only qualified leads can be converted to deals')
+      );
+    }
+
+    // 4.6. Capture ConversionSnapshot for audit trail (AC-012)
+    const conversionSnapshot = ConversionSnapshot.fromLead(lead);
 
     // 5. Handle account (REQUIRED for Opportunity)
     const accountResult = await this.handleAccount(input, lead);
@@ -155,7 +168,7 @@ export class ConvertLeadToDealUseCase {
     const opportunity = opportunityResult.value;
 
     // 8. Convert lead (updates status and creates event)
-    const convertResult = lead.convert(contactId ?? '', accountId, input.convertedBy);
+    const convertResult = lead.convert(contactId, accountId, input.convertedBy);
     if (convertResult.isFailure) {
       return Result.fail(convertResult.error);
     }
@@ -183,6 +196,7 @@ export class ConvertLeadToDealUseCase {
       probability: opportunity.probability.value,
       convertedBy: input.convertedBy,
       convertedAt: new Date(),
+      conversionSnapshot: conversionSnapshot.toValue(),
     });
   }
 
@@ -322,6 +336,7 @@ export class ConvertLeadToDealUseCase {
       value: input.dealValue,
       accountId,
       contactId: contactId ?? undefined,
+      sourceLeadId: lead.id.value,
       expectedCloseDate: input.expectedCloseDate,
       ownerId: lead.ownerId,
       tenantId: lead.tenantId,

@@ -33,3 +33,12 @@ export * from './ActivityFeedService';
 
 // Billing Domain Service (IFC-198)
 export * from './BillingDomainService';
+
+// Analytics Aggregation Service (IFC-200)
+export * from './AnalyticsAggregationService';
+
+// Internal Signature Provider (IFC-094)
+export * from './InternalSignatureProvider';
+
+// Feedback Survey Analytics Service (IFC-068)
+export * from './FeedbackSurveyAnalyticsService';
