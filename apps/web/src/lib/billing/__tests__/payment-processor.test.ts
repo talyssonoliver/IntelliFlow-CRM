@@ -325,6 +325,22 @@ describe('detectCardBrand', () => {
     it('should detect Mastercard starting with 2221-2720', () => {
       expect(detectCardBrand('2223000048400011')).toBe('mastercard');
     });
+
+    it('should detect Mastercard at lower boundary 2221', () => {
+      expect(detectCardBrand('2221000000000000')).toBe('mastercard');
+    });
+
+    it('should detect Mastercard at upper boundary 2720', () => {
+      expect(detectCardBrand('2720000000000000')).toBe('mastercard');
+    });
+
+    it('should NOT detect Mastercard below range 2220', () => {
+      expect(detectCardBrand('2220000000000000')).not.toBe('mastercard');
+    });
+
+    it('should NOT detect Mastercard above range 2721', () => {
+      expect(detectCardBrand('2721000000000000')).not.toBe('mastercard');
+    });
   });
 
   describe('American Express', () => {
@@ -432,6 +448,16 @@ describe('getPaymentErrorMessage', () => {
   it('should return message for VALIDATION_ERROR', () => {
     const message = getPaymentErrorMessage('VALIDATION_ERROR');
     expect(message).toBe('Please check your card details and try again.');
+  });
+
+  it('should return message for AUTHENTICATION_REQUIRED', () => {
+    const message = getPaymentErrorMessage('AUTHENTICATION_REQUIRED');
+    expect(message).toBe('Additional authentication is required. Please complete verification.');
+  });
+
+  it('should return message for THREE_D_SECURE_FAILED', () => {
+    const message = getPaymentErrorMessage('THREE_D_SECURE_FAILED');
+    expect(message).toBe('3D Secure verification failed. Please try again or use a different card.');
   });
 
   it('should return generic message for unknown error', () => {

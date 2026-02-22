@@ -5,28 +5,27 @@
  *
  * IMPLEMENTS: PG-026 (Checkout)
  *
- * A payment form for subscription checkout with:
- * - Card number input with formatting and brand detection
- * - Expiry date and CVC inputs
- * - Cardholder name input
- * - Order summary
- * - Real-time validation
- * - Accessible error handling
+ * PCI-compliant payment form using Stripe Elements iFrames:
+ * - CardNumberElement, CardExpiryElement, CardCvcElement (split Elements)
+ * - Cardholder name as standard React input (not PCI scope)
+ * - 3D Secure / SCA support via confirmCardPayment
+ * - Stripe error code propagation with user-friendly messages
+ * - Accessible: aria-invalid, aria-describedby, role="alert"
  */
 
-import { useState, useCallback, useId } from 'react';
+import { useState, useCallback, useId, useRef } from 'react';
+import {
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
+  useStripe,
+  useElements,
+} from '@stripe/react-stripe-js';
+import type { StripeCardNumberElement, StripeCardNumberElementChangeEvent } from '@stripe/stripe-js';
 import { cn } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
-import {
-  formatCardNumber,
-  formatExpiry,
-  detectCardBrand,
-  validateCardDetails,
-  getPaymentErrorMessage,
-  type CardDetails,
-  type CardValidationResult,
-} from '@/lib/billing/payment-processor';
-import type { BillingCycle, CardBrand } from '@intelliflow/validators';
+import { getPaymentErrorMessage } from '@/lib/billing/payment-processor';
+import type { BillingCycle } from '@intelliflow/validators';
 
 // ============================================
 // Types
@@ -43,39 +42,17 @@ export interface CheckoutFormProps {
   className?: string;
 }
 
-interface FormState {
-  cardNumber: string;
-  expiry: string;
-  cvc: string;
-  name: string;
-}
-
-interface FormErrors {
+interface ElementErrors {
   cardNumber?: string;
-  expiry?: string;
-  cvc?: string;
-  name?: string;
-  form?: string;
+  cardExpiry?: string;
+  cardCvc?: string;
 }
 
-type FormField = keyof Omit<FormState, 'form'>;
-
 // ============================================
-// Card Brand Icons
+// Card Brand Labels
 // ============================================
 
-const CARD_BRAND_ICONS: Record<CardBrand, string> = {
-  visa: 'credit_card',
-  mastercard: 'credit_card',
-  amex: 'credit_card',
-  discover: 'credit_card',
-  diners: 'credit_card',
-  jcb: 'credit_card',
-  unionpay: 'credit_card',
-  unknown: 'credit_card',
-};
-
-const CARD_BRAND_LABELS: Record<CardBrand, string> = {
+const CARD_BRAND_LABELS: Record<string, string> = {
   visa: 'Visa',
   mastercard: 'Mastercard',
   amex: 'Amex',
@@ -84,6 +61,23 @@ const CARD_BRAND_LABELS: Record<CardBrand, string> = {
   jcb: 'JCB',
   unionpay: 'UnionPay',
   unknown: 'Card',
+};
+
+// ============================================
+// Stripe Element Styling
+// ============================================
+
+const ELEMENT_STYLE = {
+  base: {
+    fontSize: '14px',
+    color: 'hsl(var(--foreground))',
+    '::placeholder': {
+      color: 'hsl(var(--muted-foreground))',
+    },
+  },
+  invalid: {
+    color: 'hsl(var(--destructive))',
+  },
 };
 
 // ============================================
@@ -101,25 +95,20 @@ export function CheckoutForm({
   className,
 }: CheckoutFormProps) {
   const formId = useId();
+  const stripe = useStripe();
+  const elements = useElements();
+  const cardNumberRef = useRef<StripeCardNumberElement | null>(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [name, setName] = useState('');
+  const [nameError, setNameError] = useState<string | undefined>();
+  const [nameTouched, setNameTouched] = useState(false);
+  const [formError, setFormError] = useState<string | undefined>();
+  const [elementErrors, setElementErrors] = useState<ElementErrors>({});
+  const [cardBrand, setCardBrand] = useState<string>('unknown');
 
-  // tRPC mutation for creating checkout subscription
   const createCheckoutMutation = trpc.billing.createCheckoutSubscription.useMutation();
-  const [formState, setFormState] = useState<FormState>({
-    cardNumber: '',
-    expiry: '',
-    cvc: '',
-    name: '',
-  });
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [touched, setTouched] = useState<Record<FormField, boolean>>({
-    cardNumber: false,
-    expiry: false,
-    cvc: false,
-    name: false,
-  });
 
-  const cardBrand = detectCardBrand(formState.cardNumber);
   const displayPrice = billingCycle === 'monthly' ? priceMonthly : priceAnnual;
   const priceFormatted = `£${(displayPrice / 100).toFixed(0)}`;
   const periodLabel = billingCycle === 'monthly' ? '/month' : '/year';
@@ -128,117 +117,116 @@ export function CheckoutForm({
   // Handlers
   // ============================================
 
-  const handleInputChange = useCallback(
-    (field: FormField) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      let value = e.target.value;
+  const handleCardNumberChange = useCallback((event: StripeCardNumberElementChangeEvent) => {
+    if (event.brand) {
+      setCardBrand(event.brand);
+    }
+    setElementErrors((prev) => ({
+      ...prev,
+      cardNumber: event.error?.message,
+    }));
+  }, []);
 
-      // Apply formatting
-      if (field === 'cardNumber') {
-        value = formatCardNumber(value);
-      } else if (field === 'expiry') {
-        value = formatExpiry(value);
-      } else if (field === 'cvc') {
-        // Only allow digits, max 4 for Amex
-        value = value.replace(/\D/g, '').slice(0, cardBrand === 'amex' ? 4 : 3);
-      }
-
-      setFormState((prev) => ({ ...prev, [field]: value }));
-
-      // Clear error when user starts typing
-      if (errors[field]) {
-        setErrors((prev) => ({ ...prev, [field]: undefined }));
-      }
+  const handleCardExpiryChange = useCallback(
+    (event: { error?: { message: string } }) => {
+      setElementErrors((prev) => ({
+        ...prev,
+        cardExpiry: event.error?.message,
+      }));
     },
-    [cardBrand, errors]
+    []
   );
 
-  const handleBlur = useCallback(
-    (field: FormField) => () => {
-      setTouched((prev) => ({ ...prev, [field]: true }));
-
-      // Validate single field
-      const cardDetails: CardDetails = {
-        number: formState.cardNumber,
-        expiry: formState.expiry,
-        cvc: formState.cvc,
-        name: formState.name,
-      };
-
-      const result = validateCardDetails(cardDetails);
-      // Map CardValidationResult field names to FormErrors field names
-      const fieldMap: Record<FormField, keyof typeof result.errors> = {
-        cardNumber: 'number',
-        expiry: 'expiry',
-        cvc: 'cvc',
-        name: 'name',
-      };
-      const errorKey = fieldMap[field];
-      if (result.errors[errorKey]) {
-        setErrors((prev) => ({ ...prev, [field]: result.errors[errorKey] }));
-      }
+  const handleCardCvcChange = useCallback(
+    (event: { error?: { message: string } }) => {
+      setElementErrors((prev) => ({
+        ...prev,
+        cardCvc: event.error?.message,
+      }));
     },
-    [formState]
+    []
   );
 
-  const validateForm = useCallback((): CardValidationResult => {
-    const cardDetails: CardDetails = {
-      number: formState.cardNumber,
-      expiry: formState.expiry,
-      cvc: formState.cvc,
-      name: formState.name,
-    };
-
-    const result = validateCardDetails(cardDetails);
-    // Map error keys from CardValidationResult to FormErrors
-    const mappedErrors: FormErrors = {
-      cardNumber: result.errors.number,
-      expiry: result.errors.expiry,
-      cvc: result.errors.cvc,
-      name: result.errors.name,
-    };
-    setErrors(mappedErrors);
-    setTouched({
-      cardNumber: true,
-      expiry: true,
-      cvc: true,
-      name: true,
-    });
-
-    return result;
-  }, [formState]);
+  const handleNameBlur = useCallback(() => {
+    setNameTouched(true);
+    if (!name.trim()) {
+      setNameError('Cardholder name is required');
+    } else {
+      setNameError(undefined);
+    }
+  }, [name]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate form
-    const validation = validateForm();
-    if (!validation.valid) {
+    if (!stripe || !elements) {
+      return;
+    }
+
+    // Validate cardholder name
+    if (!name.trim()) {
+      setNameTouched(true);
+      setNameError('Cardholder name is required');
       return;
     }
 
     setIsSubmitting(true);
-    setErrors((prev) => ({ ...prev, form: undefined }));
+    setFormError(undefined);
 
     try {
-      // In real implementation, we would:
-      // 1. Create payment method via Stripe.js
-      // 2. Call tRPC endpoint with payment method ID
-      // For now, simulate with mock payment method ID
-      const mockPaymentMethodId = `pm_${Date.now()}`;
+      // Step 1: Create payment method via Stripe.js
+      const cardElement = elements.getElement(CardNumberElement);
+      if (!cardElement) {
+        throw new Error('Card element not found');
+      }
 
+      const { error: pmError, paymentMethod } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: cardElement,
+        billing_details: { name: name.trim() },
+      });
+
+      if (pmError) {
+        const errorMessage = getPaymentErrorMessage(
+          pmError.code || 'PROCESSING_ERROR',
+          pmError.decline_code ?? undefined
+        );
+        setFormError(errorMessage);
+        onError?.(errorMessage);
+        return;
+      }
+
+      // Step 2: Create subscription via backend
       const result = await createCheckoutMutation.mutateAsync({
         planId,
         billingCycle,
-        paymentMethodId: mockPaymentMethodId,
+        paymentMethodId: paymentMethod.id,
       });
 
+      // Step 3: Handle 3D Secure if needed (Stripe returns 'incomplete' status when SCA is required)
+      if (result.status === 'incomplete' && result.clientSecret) {
+        const { error: confirmError } = await stripe.confirmCardPayment(result.clientSecret);
+        if (confirmError) {
+          const errorMessage = getPaymentErrorMessage(
+            'THREE_D_SECURE_FAILED',
+            confirmError.decline_code ?? undefined
+          );
+          setFormError(errorMessage);
+          onError?.(errorMessage);
+          return;
+        }
+      }
+
+      // Step 4: Success
       onSuccess?.(result.subscriptionId);
     } catch (error) {
       const errorMessage =
         error instanceof Error
-          ? getPaymentErrorMessage('PROCESSING_ERROR')
+          ? getPaymentErrorMessage(
+              (error as { code?: string }).code || 'PROCESSING_ERROR'
+            )
           : 'An unexpected error occurred';
-      setErrors((prev) => ({ ...prev, form: errorMessage }));
+      setFormError(errorMessage);
       onError?.(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -248,6 +236,12 @@ export function CheckoutForm({
   // ============================================
   // Render
   // ============================================
+
+  const elementClasses = cn(
+    'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background',
+    'focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2',
+    isSubmitting && 'cursor-not-allowed opacity-50'
+  );
 
   return (
     <form onSubmit={handleSubmit} className={cn('space-y-6', className)} aria-label="Checkout form">
@@ -261,10 +255,14 @@ export function CheckoutForm({
             <span className="text-sm font-normal text-muted-foreground">{periodLabel}</span>
           </span>
         </div>
+        <div className="mt-2 flex items-baseline justify-between border-t border-border pt-2">
+          <span className="text-sm text-muted-foreground">Tax</span>
+          <span className="text-sm text-muted-foreground">Calculated at payment</span>
+        </div>
       </div>
 
       {/* Form Error */}
-      {errors.form && (
+      {formError && (
         <div
           role="alert"
           className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive"
@@ -273,90 +271,79 @@ export function CheckoutForm({
             <span className="material-symbols-outlined text-base" aria-hidden="true">
               error
             </span>
-            {errors.form}
+            {formError}
           </div>
         </div>
       )}
 
-      {/* Card Number */}
+      {/* Card Number — Stripe Element */}
       <div className="space-y-2">
         <label
           htmlFor={`${formId}-card-number`}
-          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          className="text-sm font-medium leading-none"
         >
           Card Number
         </label>
         <div className="relative">
-          <input
+          <div
             id={`${formId}-card-number`}
-            type="text"
-            inputMode="numeric"
-            autoComplete="cc-number"
-            placeholder="4242 4242 4242 4242"
-            value={formState.cardNumber}
-            onChange={handleInputChange('cardNumber')}
-            onBlur={handleBlur('cardNumber')}
-            disabled={isSubmitting}
-            aria-invalid={touched.cardNumber && !!errors.cardNumber}
-            aria-describedby={errors.cardNumber ? `${formId}-card-number-error` : undefined}
             className={cn(
-              'flex h-10 w-full rounded-md border bg-background px-3 py-2 pr-12 text-sm ring-offset-background',
-              'placeholder:text-muted-foreground',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-              'disabled:cursor-not-allowed disabled:opacity-50',
-              touched.cardNumber && errors.cardNumber ? 'border-destructive' : 'border-input'
+              elementClasses,
+              elementErrors.cardNumber && 'border-destructive'
             )}
-          />
+            aria-invalid={!!elementErrors.cardNumber}
+            aria-describedby={elementErrors.cardNumber ? `${formId}-card-number-error` : undefined}
+          >
+            <CardNumberElement
+              options={{ style: ELEMENT_STYLE, disabled: isSubmitting }}
+              onChange={handleCardNumberChange}
+              onReady={(el) => { cardNumberRef.current = el; }}
+            />
+          </div>
           <div
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             data-testid="card-brand-icon"
-            title={CARD_BRAND_LABELS[cardBrand]}
+            title={CARD_BRAND_LABELS[cardBrand] || 'Card'}
           >
             <span className="material-symbols-outlined text-xl" aria-hidden="true">
-              {CARD_BRAND_ICONS[cardBrand]}
+              credit_card
             </span>
           </div>
         </div>
-        {touched.cardNumber && errors.cardNumber && (
+        {elementErrors.cardNumber && (
           <p id={`${formId}-card-number-error`} className="text-sm text-destructive" role="alert">
-            {errors.cardNumber}
+            {elementErrors.cardNumber}
           </p>
         )}
       </div>
 
-      {/* Expiry and CVC */}
+      {/* Expiry and CVC — Stripe Elements */}
       <div className="grid grid-cols-2 gap-4">
         {/* Expiry */}
         <div className="space-y-2">
           <label
             htmlFor={`${formId}-expiry`}
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className="text-sm font-medium leading-none"
           >
             Expiry Date
           </label>
-          <input
+          <div
             id={`${formId}-expiry`}
-            type="text"
-            inputMode="numeric"
-            autoComplete="cc-exp"
-            placeholder="MM/YY"
-            value={formState.expiry}
-            onChange={handleInputChange('expiry')}
-            onBlur={handleBlur('expiry')}
-            disabled={isSubmitting}
-            aria-invalid={touched.expiry && !!errors.expiry}
-            aria-describedby={errors.expiry ? `${formId}-expiry-error` : undefined}
             className={cn(
-              'flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background',
-              'placeholder:text-muted-foreground',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-              'disabled:cursor-not-allowed disabled:opacity-50',
-              touched.expiry && errors.expiry ? 'border-destructive' : 'border-input'
+              elementClasses,
+              elementErrors.cardExpiry && 'border-destructive'
             )}
-          />
-          {touched.expiry && errors.expiry && (
+            aria-invalid={!!elementErrors.cardExpiry}
+            aria-describedby={elementErrors.cardExpiry ? `${formId}-expiry-error` : undefined}
+          >
+            <CardExpiryElement
+              options={{ style: ELEMENT_STYLE, disabled: isSubmitting }}
+              onChange={handleCardExpiryChange}
+            />
+          </div>
+          {elementErrors.cardExpiry && (
             <p id={`${formId}-expiry-error`} className="text-sm text-destructive" role="alert">
-              {errors.expiry}
+              {elementErrors.cardExpiry}
             </p>
           )}
         </div>
@@ -365,43 +352,37 @@ export function CheckoutForm({
         <div className="space-y-2">
           <label
             htmlFor={`${formId}-cvc`}
-            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            className="text-sm font-medium leading-none"
           >
             CVC
           </label>
-          <input
+          <div
             id={`${formId}-cvc`}
-            type="password"
-            inputMode="numeric"
-            autoComplete="cc-csc"
-            placeholder={cardBrand === 'amex' ? '1234' : '123'}
-            value={formState.cvc}
-            onChange={handleInputChange('cvc')}
-            onBlur={handleBlur('cvc')}
-            disabled={isSubmitting}
-            aria-invalid={touched.cvc && !!errors.cvc}
-            aria-describedby={errors.cvc ? `${formId}-cvc-error` : undefined}
             className={cn(
-              'flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background',
-              'placeholder:text-muted-foreground',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-              'disabled:cursor-not-allowed disabled:opacity-50',
-              touched.cvc && errors.cvc ? 'border-destructive' : 'border-input'
+              elementClasses,
+              elementErrors.cardCvc && 'border-destructive'
             )}
-          />
-          {touched.cvc && errors.cvc && (
+            aria-invalid={!!elementErrors.cardCvc}
+            aria-describedby={elementErrors.cardCvc ? `${formId}-cvc-error` : undefined}
+          >
+            <CardCvcElement
+              options={{ style: ELEMENT_STYLE, disabled: isSubmitting }}
+              onChange={handleCardCvcChange}
+            />
+          </div>
+          {elementErrors.cardCvc && (
             <p id={`${formId}-cvc-error`} className="text-sm text-destructive" role="alert">
-              {errors.cvc}
+              {elementErrors.cardCvc}
             </p>
           )}
         </div>
       </div>
 
-      {/* Cardholder Name */}
+      {/* Cardholder Name — Standard React input (not PCI scope) */}
       <div className="space-y-2">
         <label
           htmlFor={`${formId}-name`}
-          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          className="text-sm font-medium leading-none"
         >
           Cardholder Name
         </label>
@@ -409,24 +390,28 @@ export function CheckoutForm({
           id={`${formId}-name`}
           type="text"
           autoComplete="cc-name"
+          inputMode="text"
           placeholder="John Doe"
-          value={formState.name}
-          onChange={handleInputChange('name')}
-          onBlur={handleBlur('name')}
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            if (nameError) setNameError(undefined);
+          }}
+          onBlur={handleNameBlur}
           disabled={isSubmitting}
-          aria-invalid={touched.name && !!errors.name}
-          aria-describedby={errors.name ? `${formId}-name-error` : undefined}
+          aria-invalid={nameTouched && !!nameError}
+          aria-describedby={nameError ? `${formId}-name-error` : undefined}
           className={cn(
             'flex h-10 w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background',
             'placeholder:text-muted-foreground',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
             'disabled:cursor-not-allowed disabled:opacity-50',
-            touched.name && errors.name ? 'border-destructive' : 'border-input'
+            nameTouched && nameError ? 'border-destructive' : 'border-input'
           )}
         />
-        {touched.name && errors.name && (
+        {nameTouched && nameError && (
           <p id={`${formId}-name-error`} className="text-sm text-destructive" role="alert">
-            {errors.name}
+            {nameError}
           </p>
         )}
       </div>
@@ -434,7 +419,7 @@ export function CheckoutForm({
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={isSubmitting}
+        disabled={isSubmitting || !stripe}
         className={cn(
           'flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground',
           'transition-colors hover:bg-primary/90',

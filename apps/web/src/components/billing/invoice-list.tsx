@@ -64,6 +64,8 @@ export interface InvoiceListProps {
 // Status Badge Component
 // ============================================
 
+// NOTE (R-002): Status values use Stripe's lowercase convention (draft, open, paid, void, uncollectible)
+// rather than the domain's UPPERCASE constants. This is intentional — the UI operates on Stripe's surface.
 function StatusBadge({ status }: { status: string }) {
   const { label, variant } = getInvoiceStatusDisplay(status);
 
@@ -87,17 +89,17 @@ function StatusBadge({ status }: { status: string }) {
 
 function InvoiceListSkeleton() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" role="status" aria-busy="true" aria-live="polite">
       {Array.from({ length: 5 }).map((_, i) => (
         <div key={i} className="flex items-center justify-between py-3">
           <div className="flex items-center gap-4">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-4 w-24" aria-hidden="true" />
+            <Skeleton className="h-4 w-32" aria-hidden="true" />
           </div>
           <div className="flex items-center gap-4">
-            <Skeleton className="h-6 w-16 rounded-full" />
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-8 w-8 rounded" />
+            <Skeleton className="h-6 w-16 rounded-full" aria-hidden="true" />
+            <Skeleton className="h-4 w-20" aria-hidden="true" />
+            <Skeleton className="h-8 w-8 rounded" aria-hidden="true" />
           </div>
         </div>
       ))}
@@ -113,7 +115,7 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-        <span className="material-symbols-outlined text-3xl text-slate-400">receipt_long</span>
+        <span className="material-symbols-outlined text-3xl text-slate-400" aria-hidden="true">receipt_long</span>
       </div>
       <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-white">No invoices yet</h3>
       <p className="max-w-sm text-sm text-slate-500 dark:text-slate-400">
@@ -149,7 +151,7 @@ function InvoiceActions({ invoice }: { invoice: SerializedInvoice }) {
   };
 
   if (!pdfInfo.canView) {
-    return <span className="text-xs text-slate-400 dark:text-slate-500">Not available</span>;
+    return <span className="text-xs text-slate-400 dark:text-slate-500" aria-label="PDF not available">Not available</span>;
   }
 
   return (
@@ -163,7 +165,7 @@ function InvoiceActions({ invoice }: { invoice: SerializedInvoice }) {
           title="Download PDF"
           aria-label={`Download invoice ${invoice.id}`}
         >
-          <span className="material-symbols-outlined text-lg">download</span>
+          <span className="material-symbols-outlined text-lg" aria-hidden="true">download</span>
         </Button>
       )}
       <Button
@@ -174,7 +176,7 @@ function InvoiceActions({ invoice }: { invoice: SerializedInvoice }) {
         title="View invoice"
         aria-label={`View invoice ${invoice.id}`}
       >
-        <span className="material-symbols-outlined text-lg">open_in_new</span>
+        <span className="material-symbols-outlined text-lg" aria-hidden="true">open_in_new</span>
       </Button>
     </div>
   );
@@ -199,7 +201,7 @@ function InvoiceRow({ invoice }: { invoice: SerializedInvoice }) {
         <span className="font-mono text-xs">{displayId}</span>
       </TableCell>
       <TableCell className="text-right font-medium text-slate-900 dark:text-white">
-        {formatCurrency(invoice.amountPaid || invoice.amountDue, invoice.currency)}
+        {formatCurrency(invoice.amountDue, invoice.currency)}
       </TableCell>
       <TableCell>
         <StatusBadge status={invoice.status} />
@@ -237,7 +239,7 @@ export function InvoiceList({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-xl text-primary">receipt_long</span>
+            <span className="material-symbols-outlined text-xl text-primary" aria-hidden="true">receipt_long</span>
             Invoices
           </CardTitle>
           <CardDescription>Loading your invoice history...</CardDescription>
@@ -254,7 +256,7 @@ export function InvoiceList({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-xl text-primary">receipt_long</span>
+            <span className="material-symbols-outlined text-xl text-primary" aria-hidden="true">receipt_long</span>
             Invoices
           </CardTitle>
         </CardHeader>
@@ -271,7 +273,7 @@ export function InvoiceList({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-xl text-primary">receipt_long</span>
+              <span className="material-symbols-outlined text-xl text-primary" aria-hidden="true">receipt_long</span>
               Invoices
             </CardTitle>
             <CardDescription>
@@ -282,7 +284,7 @@ export function InvoiceList({
       </CardHeader>
       <CardContent>
         <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden">
-          <Table>
+          <Table aria-label="Invoice history">
             <TableHeader>
               <TableRow className="bg-slate-50 dark:bg-slate-800/50">
                 <TableHead className="font-medium">Date</TableHead>
@@ -311,14 +313,14 @@ export function InvoiceList({
             >
               {isLoadingMore ? (
                 <>
-                  <span className="material-symbols-outlined animate-spin mr-2 text-lg">
+                  <span className="material-symbols-outlined animate-spin mr-2 text-lg" aria-hidden="true">
                     progress_activity
                   </span>
                   Loading...
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined mr-2 text-lg">expand_more</span>
+                  <span className="material-symbols-outlined mr-2 text-lg" aria-hidden="true">expand_more</span>
                   Load More
                 </>
               )}
@@ -329,5 +331,3 @@ export function InvoiceList({
     </Card>
   );
 }
-
-export default InvoiceList;

@@ -12,8 +12,10 @@
 
 import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { Elements } from '@stripe/react-stripe-js';
 import { PageHeader } from '@/components/shared/page-header';
 import { CheckoutForm } from '@/components/billing/checkout-form';
+import { stripePromise } from '@/lib/billing/stripe-client';
 import { getPlanById, getAnnualSavingsPercent } from '@/lib/billing/stripe-portal';
 import type { BillingCycle } from '@intelliflow/validators';
 
@@ -88,7 +90,7 @@ function CheckoutContent() {
             </div>
             <div className="border-t border-border pt-4">
               <div className="flex items-baseline justify-between">
-                <span className="text-sm text-muted-foreground">Total</span>
+                <span className="text-sm text-muted-foreground">Subtotal</span>
                 <div className="text-right">
                   <span className="text-2xl font-bold">
                     £
@@ -100,6 +102,10 @@ function CheckoutContent() {
                     /{cycle === 'monthly' ? 'month' : 'year'}
                   </span>
                 </div>
+              </div>
+              <div className="mt-2 flex items-baseline justify-between">
+                <span className="text-sm text-muted-foreground">Tax</span>
+                <span className="text-sm text-muted-foreground">Calculated at payment</span>
               </div>
             </div>
             <div className="border-t border-border pt-4">
@@ -137,14 +143,22 @@ function CheckoutContent() {
       <div className="order-2 lg:order-1">
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <h2 className="mb-6 text-lg font-semibold">Payment Details</h2>
-          <CheckoutForm
-            planId={plan.id}
-            planName={plan.name}
-            priceMonthly={plan.priceMonthly}
-            priceAnnual={plan.priceAnnual}
-            billingCycle={cycle}
-            onSuccess={handleSuccess}
-          />
+          {stripePromise ? (
+            <Elements stripe={stripePromise}>
+              <CheckoutForm
+                planId={plan.id}
+                planName={plan.name}
+                priceMonthly={plan.priceMonthly}
+                priceAnnual={plan.priceAnnual}
+                billingCycle={cycle}
+                onSuccess={handleSuccess}
+              />
+            </Elements>
+          ) : (
+            <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-sm text-destructive" role="alert">
+              Payment processing is temporarily unavailable. Please try again later.
+            </div>
+          )}
         </div>
         <div className="mt-4 flex items-start gap-3 rounded-lg border border-border bg-muted/30 p-4">
           <span className="material-symbols-outlined text-muted-foreground" aria-hidden="true">

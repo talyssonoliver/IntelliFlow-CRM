@@ -10,10 +10,9 @@
 
 import {
   SidebarProvider,
-  AppSidebar,
   SidebarInset,
   SidebarTrigger,
-  MobileSidebar,
+  SidebarWithSuspense,
   billingSidebarConfig,
 } from '@/components/sidebar';
 
@@ -21,11 +20,7 @@ export default function BillingLayout({ children }: { children: React.ReactNode 
   return (
     <SidebarProvider>
       <div className="flex min-h-[calc(100vh-4rem)]">
-        {/* Desktop Sidebar */}
-        <AppSidebar config={billingSidebarConfig} />
-
-        {/* Mobile Sidebar Drawer */}
-        <MobileSidebar config={billingSidebarConfig} />
+        <SidebarWithSuspense config={billingSidebarConfig} />
 
         <SidebarInset>
           <main

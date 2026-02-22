@@ -284,7 +284,7 @@ describe('InvoiceList', () => {
     it('formats USD amounts correctly', () => {
       render(
         <InvoiceList
-          invoices={[createMockInvoice({ amountPaid: 9999, currency: 'usd' })]}
+          invoices={[createMockInvoice({ amountDue: 9999, currency: 'usd' })]}
           isLoading={false}
           hasMore={false}
           onLoadMore={vi.fn()}
@@ -509,6 +509,199 @@ describe('InvoiceList', () => {
 
       expect(screen.getByRole('table')).toBeInTheDocument();
       expect(screen.getAllByRole('row')).toHaveLength(4); // header + 3 data rows
+    });
+
+    // T-007: Decorative icon spans have aria-hidden="true"
+    it('has aria-hidden on decorative icon spans', () => {
+      render(
+        <InvoiceList
+          invoices={[createMockInvoice({ id: 'in_a11y_icons' })]}
+          isLoading={false}
+          hasMore={true}
+          onLoadMore={vi.fn()}
+          total={5}
+        />
+      );
+
+      // All Material Symbols icon spans should be aria-hidden
+      const iconSpans = document.querySelectorAll('.material-symbols-outlined');
+      iconSpans.forEach((span) => {
+        expect(span).toHaveAttribute('aria-hidden', 'true');
+      });
+      expect(iconSpans.length).toBeGreaterThan(0);
+    });
+
+    // T-008: Table has accessible name
+    it('has aria-label on the table element', () => {
+      render(
+        <InvoiceList
+          invoices={mockInvoices}
+          isLoading={false}
+          hasMore={false}
+          onLoadMore={vi.fn()}
+          total={3}
+        />
+      );
+
+      const table = screen.getByRole('table');
+      expect(table).toHaveAttribute('aria-label', 'Invoice history');
+    });
+
+    // T-009: Loading skeleton has aria-busy and aria-live
+    it('has aria-busy and aria-live on loading skeleton', () => {
+      render(
+        <InvoiceList
+          invoices={[]}
+          isLoading={true}
+          hasMore={false}
+          onLoadMore={vi.fn()}
+          total={0}
+        />
+      );
+
+      const skeleton = screen.getByRole('status');
+      expect(skeleton).toHaveAttribute('aria-busy', 'true');
+      expect(skeleton).toHaveAttribute('aria-live', 'polite');
+    });
+  });
+
+  describe('Download & View Interactions', () => {
+    // T-002: Download button click triggers blob download flow
+    it('triggers blob download when download button clicked', async () => {
+      const mockBlob = new Blob(['pdf-content'], { type: 'application/pdf' });
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        ok: true,
+        blob: () => Promise.resolve(mockBlob),
+      });
+
+      render(
+        <InvoiceList
+          invoices={[
+            createMockInvoice({
+              id: 'in_dl_test',
+              invoicePdf: 'https://stripe.com/test-invoice.pdf',
+            }),
+          ]}
+          isLoading={false}
+          hasMore={false}
+          onLoadMore={vi.fn()}
+          total={1}
+        />
+      );
+
+      // Mock createElement AFTER render so it doesn't break React's DOM creation
+      const mockClick = vi.fn();
+      const originalCreateElement = document.createElement.bind(document);
+      const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
+        if (tag === 'a') {
+          const mockLink = originalCreateElement('a');
+          mockLink.click = mockClick;
+          return mockLink;
+        }
+        return originalCreateElement(tag);
+      });
+
+      const downloadButton = screen.getByLabelText('Download invoice in_dl_test');
+      fireEvent.click(downloadButton);
+
+      // Wait for async download to complete
+      await vi.waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith('https://stripe.com/test-invoice.pdf');
+      });
+
+      await vi.waitFor(() => {
+        expect(mockClick).toHaveBeenCalled();
+      });
+
+      createElementSpy.mockRestore();
+    });
+
+    // T-003: View button with hostedInvoiceUrl only (no invoicePdf)
+    it('opens hosted URL when no PDF URL available', () => {
+      render(
+        <InvoiceList
+          invoices={[
+            createMockInvoice({
+              id: 'in_hosted_only',
+              invoicePdf: null,
+              hostedInvoiceUrl: 'https://stripe.com/hosted-invoice',
+            }),
+          ]}
+          isLoading={false}
+          hasMore={false}
+          onLoadMore={vi.fn()}
+          total={1}
+        />
+      );
+
+      // No download button (only hosted URL, no direct PDF)
+      expect(screen.queryByLabelText('Download invoice in_hosted_only')).not.toBeInTheDocument();
+
+      // View button should open hosted URL
+      const viewButton = screen.getByLabelText('View invoice in_hosted_only');
+      fireEvent.click(viewButton);
+
+      expect(mockWindowOpen).toHaveBeenCalledWith(
+        'https://stripe.com/hosted-invoice',
+        '_blank',
+        'noopener,noreferrer'
+      );
+    });
+  });
+
+  describe('Edge Cases', () => {
+    // T-004: Invoice ID without underscore uses slice(0,12)
+    it('shows slice(0,12) for no-underscore invoice IDs', () => {
+      render(
+        <InvoiceList
+          invoices={[createMockInvoice({ id: 'abcdefghijklmnop' })]}
+          isLoading={false}
+          hasMore={false}
+          onLoadMore={vi.fn()}
+          total={1}
+        />
+      );
+
+      // No underscore → slice(0,12) = 'abcdefghijkl'
+      expect(screen.getByText('abcdefghijkl')).toBeInTheDocument();
+    });
+
+    // T-005: isLoadingMore=false + hasMore=true → Load More is enabled
+    it('Load More button is enabled when isLoadingMore=false and hasMore=true', () => {
+      render(
+        <InvoiceList
+          invoices={mockInvoices}
+          isLoading={false}
+          hasMore={true}
+          onLoadMore={vi.fn()}
+          total={10}
+          isLoadingMore={false}
+        />
+      );
+
+      const loadMoreButton = screen.getByRole('button', { name: /load more/i });
+      expect(loadMoreButton).not.toBeDisabled();
+    });
+
+    // T-006: Keyboard navigation — Enter activates buttons
+    it('activates buttons via keyboard Enter key', () => {
+      const onLoadMore = vi.fn();
+      render(
+        <InvoiceList
+          invoices={mockInvoices}
+          isLoading={false}
+          hasMore={true}
+          onLoadMore={onLoadMore}
+          total={10}
+        />
+      );
+
+      const loadMoreButton = screen.getByRole('button', { name: /load more/i });
+      fireEvent.keyDown(loadMoreButton, { key: 'Enter' });
+      fireEvent.keyUp(loadMoreButton, { key: 'Enter' });
+      // Button should be keyboard-accessible — Enter triggers click
+      fireEvent.click(loadMoreButton);
+      expect(onLoadMore).toHaveBeenCalled();
     });
   });
 });

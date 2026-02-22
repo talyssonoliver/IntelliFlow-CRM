@@ -50,6 +50,8 @@ const ERROR_MESSAGES: Record<PaymentErrorCode | string, string> = {
   INVALID_EXPIRY: 'Invalid expiry date. Please check and try again.',
   INVALID_NUMBER: 'Invalid card number. Please check and try again.',
   RATE_LIMIT: 'Too many attempts. Please wait a moment and try again.',
+  AUTHENTICATION_REQUIRED: 'Additional authentication is required. Please complete verification.',
+  THREE_D_SECURE_FAILED: '3D Secure verification failed. Please try again or use a different card.',
 };
 
 const DECLINE_CODE_MESSAGES: Record<string, string> = {
@@ -285,8 +287,14 @@ export function detectCardBrand(cardNumber: string): CardBrand {
   }
 
   // Mastercard: starts with 51-55 or 2221-2720
-  if (/^5[1-5]/.test(digits) || /^2[2-7]/.test(digits)) {
+  if (/^5[1-5]/.test(digits)) {
     return 'mastercard';
+  }
+  if (digits.length >= 4) {
+    const prefix4 = parseInt(digits.slice(0, 4), 10);
+    if (prefix4 >= 2221 && prefix4 <= 2720) {
+      return 'mastercard';
+    }
   }
 
   // Amex: starts with 34 or 37
