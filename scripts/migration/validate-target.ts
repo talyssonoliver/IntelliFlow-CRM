@@ -11,7 +11,7 @@
  *     --output artifacts/misc/migration-log.txt
  */
 
-import { PrismaClient } from '@intelliflow/db';
+import type { PrismaClient } from '@intelliflow/db';
 import { createHash } from 'crypto';
 import { writeFileSync, mkdirSync } from 'fs';
 import { dirname } from 'path';
@@ -21,12 +21,12 @@ import { parseArgs } from 'util';
 // Types
 // ============================================
 
-interface ValidationOptions {
+export interface ValidationOptions {
   database: string;
   output: string;
 }
 
-interface ValidationResult {
+export interface ValidationResult {
   category: string;
   check: string;
   entity?: string;
@@ -35,7 +35,7 @@ interface ValidationResult {
   duration: number;
 }
 
-interface ValidationSummary {
+export interface ValidationSummary {
   startTime: string;
   endTime: string;
   totalDuration: number;
@@ -50,7 +50,8 @@ interface ValidationSummary {
 // Validation Checks
 // ============================================
 
-async function validatePrimaryKeys(prisma: PrismaClient): Promise<ValidationResult[]> {
+/* v8 ignore start -- requires live database connection */
+export async function validatePrimaryKeys(prisma: PrismaClient): Promise<ValidationResult[]> {
   const results: ValidationResult[] = [];
   const tables = ['users', 'leads', 'contacts', 'accounts', 'opportunities', 'tasks'];
 
@@ -90,7 +91,7 @@ async function validatePrimaryKeys(prisma: PrismaClient): Promise<ValidationResu
   return results;
 }
 
-async function validateForeignKeys(prisma: PrismaClient): Promise<ValidationResult[]> {
+export async function validateForeignKeys(prisma: PrismaClient): Promise<ValidationResult[]> {
   const results: ValidationResult[] = [];
 
   const fkChecks = [
@@ -139,7 +140,7 @@ async function validateForeignKeys(prisma: PrismaClient): Promise<ValidationResu
   return results;
 }
 
-async function validateNotNullConstraints(prisma: PrismaClient): Promise<ValidationResult[]> {
+export async function validateNotNullConstraints(prisma: PrismaClient): Promise<ValidationResult[]> {
   const results: ValidationResult[] = [];
 
   const notNullChecks = [
@@ -186,7 +187,7 @@ async function validateNotNullConstraints(prisma: PrismaClient): Promise<Validat
   return results;
 }
 
-async function validateDataFormats(prisma: PrismaClient): Promise<ValidationResult[]> {
+export async function validateDataFormats(prisma: PrismaClient): Promise<ValidationResult[]> {
   const results: ValidationResult[] = [];
 
   // Email format validation
@@ -347,7 +348,7 @@ async function validateDataFormats(prisma: PrismaClient): Promise<ValidationResu
   return results;
 }
 
-async function validateIndexes(prisma: PrismaClient): Promise<ValidationResult[]> {
+export async function validateIndexes(prisma: PrismaClient): Promise<ValidationResult[]> {
   const results: ValidationResult[] = [];
 
   const start = Date.now();
@@ -394,7 +395,7 @@ async function validateIndexes(prisma: PrismaClient): Promise<ValidationResult[]
   return results;
 }
 
-async function validatePerformance(prisma: PrismaClient): Promise<ValidationResult[]> {
+export async function validatePerformance(prisma: PrismaClient): Promise<ValidationResult[]> {
   const results: ValidationResult[] = [];
 
   // Simple query performance test (<20ms for indexed query)
@@ -427,12 +428,13 @@ async function validatePerformance(prisma: PrismaClient): Promise<ValidationResu
 
   return results;
 }
+/* v8 ignore stop */
 
 // ============================================
 // Log Generation
 // ============================================
 
-function generateLog(summary: ValidationSummary): string {
+export function generateLog(summary: ValidationSummary): string {
   const lines: string[] = [];
 
   lines.push('='.repeat(60));
@@ -504,6 +506,7 @@ function generateLog(summary: ValidationSummary): string {
 // Main Execution
 // ============================================
 
+/* v8 ignore start -- CLI entry point, requires database connection */
 async function main(): Promise<void> {
   const { values } = parseArgs({
     options: {
@@ -558,7 +561,8 @@ Options:
 
   try {
     if (options.database) {
-      prisma = new PrismaClient({
+      const { PrismaClient: PC } = await import('@intelliflow/db');
+      prisma = new PC({
         datasources: { db: { url: options.database } },
       });
       await prisma.$connect();
@@ -822,8 +826,14 @@ Options:
   // Exit with appropriate code
   process.exit(summary.overallStatus === 'FAIL' ? 1 : 0);
 }
+/* v8 ignore stop */
 
-main().catch((error) => {
-  console.error('Fatal error:', error);
-  process.exit(1);
-});
+// Guard: only run main() when executed directly as a script
+/* v8 ignore start -- CLI bootstrap */
+if (process.argv[1]?.includes('validate-target')) {
+  main().catch((error) => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  });
+}
+/* v8 ignore stop */

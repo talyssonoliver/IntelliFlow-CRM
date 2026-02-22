@@ -323,9 +323,9 @@ components)
 
 ### ENV-002-AI (Completed):
 
-- [x] Tailwind config exists at `apps/web/tailwind.config.ts`
+- [x] Tailwind config exists at `apps/web/src/app/globals.css` (v4 CSS-first via `@theme inline` block)
 - [x] CSS variables exist at `apps/web/src/app/globals.css`
-- [x] Dark mode configured (`darkMode: 'class'`)
+- [x] Dark mode configured (`@custom-variant dark (&:where(.dark, .dark *));` in CSS)
 
 ## Validation Commands
 
@@ -345,7 +345,6 @@ cat docs/company/brand/typography.tokens.json
 cat docs/company/brand/spacing.tokens.json
 
 # Verify implementation files exist
-cat apps/web/tailwind.config.ts
 cat apps/web/src/app/globals.css
 ```
 

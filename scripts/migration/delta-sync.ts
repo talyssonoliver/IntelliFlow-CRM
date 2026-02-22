@@ -15,13 +15,14 @@
 
 import type { PrismaClient } from '@intelliflow/db';
 import { createHash } from 'crypto';
+import { readFileSync, writeFileSync } from 'fs';
 import { parseArgs } from 'util';
 
 // ============================================
 // Types
 // ============================================
 
-interface DeltaSyncOptions {
+export interface DeltaSyncOptions {
   source: string;
   target: string;
   since: string;
@@ -29,7 +30,7 @@ interface DeltaSyncOptions {
   validate: boolean;
 }
 
-interface TransformationRule {
+export interface TransformationRule {
   sourceTable: string;
   targetTable: string;
   sourceField: string;
@@ -38,7 +39,7 @@ interface TransformationRule {
   defaultValue?: string;
 }
 
-interface SyncResult {
+export interface SyncResult {
   table: string;
   recordsFound: number;
   recordsSynced: number;
@@ -47,7 +48,7 @@ interface SyncResult {
   duration: number;
 }
 
-interface SyncSummary {
+export interface SyncSummary {
   startTime: string;
   endTime: string;
   totalDuration: number;
@@ -62,7 +63,7 @@ interface SyncSummary {
 // Transformation Rules (from mapping.csv)
 // ============================================
 
-const TRANSFORMATION_RULES: TransformationRule[] = [
+export const TRANSFORMATION_RULES: TransformationRule[] = [
   // User transformations
   {
     sourceTable: 'users',
@@ -229,7 +230,7 @@ const TRANSFORMATION_RULES: TransformationRule[] = [
 ];
 
 // Enum mappings from legacy INT values to new string enums
-const ENUM_MAPPINGS: Record<string, Record<string, Record<number | string, string>>> = {
+export const ENUM_MAPPINGS: Record<string, Record<string, Record<number | string, string>>> = {
   users: {
     role: { 0: 'USER', 1: 'ADMIN', 2: 'MANAGER', 3: 'SALES_REP' },
   },
@@ -272,13 +273,13 @@ const ENUM_MAPPINGS: Record<string, Record<string, Record<number | string, strin
 // Transformation Functions
 // ============================================
 
-function generateCuid(): string {
+export function generateCuid(): string {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 9);
   return `c${timestamp}${random}`;
 }
 
-function transformValue(
+export function transformValue(
   value: unknown,
   rule: TransformationRule,
   idMap: Map<string, string>
@@ -342,7 +343,8 @@ function transformValue(
 // Sync Logic
 // ============================================
 
-async function syncTable(
+/* v8 ignore start -- requires live database connection */
+export async function syncTable(
   sourceClient: PrismaClient,
   targetClient: PrismaClient,
   tableName: string,
@@ -393,11 +395,145 @@ async function syncTable(
     return result;
   }
 }
+/* v8 ignore stop */
+
+// ============================================
+// Checkpoint / Resume (Step 7)
+// ============================================
+
+export interface CheckpointState {
+  tableName: string;
+  lastProcessedId: string;
+  idMap: Record<string, string>;
+  timestamp: string;
+}
+
+export async function saveCheckpoint(state: unknown, path: string): Promise<void> {
+  writeFileSync(path, JSON.stringify(state, null, 2), 'utf-8');
+}
+
+export async function loadCheckpoint(path: string): Promise<CheckpointState | null> {
+  try {
+    const content = readFileSync(path, 'utf-8');
+    return JSON.parse(content) as CheckpointState;
+  } catch {
+    return null;
+  }
+}
+
+// ============================================
+// Circuit Breaker (Step 8)
+// ============================================
+
+type CircuitState = 'CLOSED' | 'OPEN' | 'HALF_OPEN';
+
+export class CircuitBreaker {
+  private state: CircuitState = 'CLOSED';
+  private failureCount = 0;
+  private readonly threshold: number;
+  private readonly cooldown: number;
+  private lastFailureTime = 0;
+
+  constructor(opts: { threshold: number; cooldown: number }) {
+    this.threshold = opts.threshold;
+    this.cooldown = opts.cooldown;
+  }
+
+  getState(): string {
+    return this.state;
+  }
+
+  async execute<T>(fn: () => Promise<T>): Promise<T> {
+    if (this.state === 'OPEN') {
+      if (Date.now() - this.lastFailureTime >= this.cooldown) {
+        this.state = 'HALF_OPEN';
+      } else {
+        throw new Error('Circuit breaker is OPEN');
+      }
+    }
+
+    try {
+      const result = await fn();
+      // Success — reset
+      this.failureCount = 0;
+      this.state = 'CLOSED';
+      return result;
+    } catch (error) {
+      this.failureCount++;
+      this.lastFailureTime = Date.now();
+      if (this.failureCount >= this.threshold) {
+        this.state = 'OPEN';
+      }
+      throw error;
+    }
+  }
+}
+
+// ============================================
+// Governance Columns (Step 9)
+// ============================================
+
+const GOVERNANCE_CONFIG: Record<string, { classification: string; retentionYears: number }> = {
+  User: { classification: 'CONFIDENTIAL', retentionYears: 7 },
+  Lead: { classification: 'INTERNAL', retentionYears: 3 },
+  Contact: { classification: 'CONFIDENTIAL', retentionYears: 7 },
+  Account: { classification: 'INTERNAL', retentionYears: 7 },
+  Opportunity: { classification: 'INTERNAL', retentionYears: 5 },
+};
+
+export function addGovernanceColumns(
+  record: Record<string, unknown>,
+  entityType: string
+): Record<string, unknown> {
+  const config = GOVERNANCE_CONFIG[entityType] ?? { classification: 'INTERNAL', retentionYears: 3 };
+  return {
+    ...record,
+    dataClassification: config.classification,
+    retentionYears: config.retentionYears,
+    legalHold: false,
+    dataResidency: 'US',
+  };
+}
+
+// ============================================
+// PII Redaction (Step 9)
+// ============================================
+
+const PII_FIELDS = new Set(['email', 'phone', 'firstName', 'lastName']);
+
+export function sanitizeForLog(record: Record<string, unknown>): Record<string, unknown> {
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(record)) {
+    if (!PII_FIELDS.has(key)) {
+      sanitized[key] = value;
+    }
+  }
+  return sanitized;
+}
+
+// ============================================
+// Schema Drift Detection (Step 9)
+// ============================================
+
+export const EXPECTED_SCHEMA_VERSION = '1.0.0';
+
+export function validateSchemaVersion(
+  sourceSchema: { version: string }
+): { valid: boolean; message: string } {
+  if (sourceSchema.version !== EXPECTED_SCHEMA_VERSION) {
+    return {
+      valid: false,
+      message: `Schema version mismatch: expected ${EXPECTED_SCHEMA_VERSION}, got ${sourceSchema.version}`,
+    };
+  }
+  return { valid: true, message: 'Schema version matches' };
+}
 
 // ============================================
 // Main Execution
 // ============================================
 
+/* v8 ignore start -- CLI entry point, requires database connection */
 async function main(): Promise<void> {
   const { values } = parseArgs({
     options: {
@@ -548,8 +684,14 @@ Options:
 
   process.exit(summary.status === 'FAILED' ? 1 : 0);
 }
+/* v8 ignore stop */
 
-main().catch((error) => {
-  console.error('Fatal error:', error);
-  process.exit(1);
-});
+// Guard: only run main() when executed directly as a script
+/* v8 ignore start -- CLI bootstrap */
+if (process.argv[1]?.includes('delta-sync')) {
+  main().catch((error) => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  });
+}
+/* v8 ignore stop */

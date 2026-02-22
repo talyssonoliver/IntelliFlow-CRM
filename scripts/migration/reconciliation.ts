@@ -11,7 +11,7 @@
  *     --output artifacts/reports/data-validation-report.csv
  */
 
-import { PrismaClient } from '@intelliflow/db';
+import type { PrismaClient } from '@intelliflow/db';
 import { createHash } from 'crypto';
 import { writeFileSync, mkdirSync } from 'fs';
 import { dirname } from 'path';
@@ -21,13 +21,13 @@ import { parseArgs } from 'util';
 // Types
 // ============================================
 
-interface ReconciliationOptions {
+export interface ReconciliationOptions {
   target: string;
   output: string;
   expected?: string;
 }
 
-interface EntityCount {
+export interface EntityCount {
   entity: string;
   expected: number;
   actual: number;
@@ -36,7 +36,7 @@ interface EntityCount {
   status: 'PASS' | 'WARN' | 'FAIL';
 }
 
-interface ValidationCheck {
+export interface ValidationCheck {
   check: string;
   entity: string;
   description: string;
@@ -44,14 +44,14 @@ interface ValidationCheck {
   details: string;
 }
 
-interface DataQualityMetric {
+export interface DataQualityMetric {
   metric: string;
   value: number;
   threshold: number;
   status: 'PASS' | 'WARN' | 'FAIL';
 }
 
-interface ReconciliationResult {
+export interface ReconciliationResult {
   timestamp: string;
   entityCounts: EntityCount[];
   validationChecks: ValidationCheck[];
@@ -64,20 +64,20 @@ interface ReconciliationResult {
 // Expected Counts (from cutover-plan.md)
 // ============================================
 
-const EXPECTED_COUNTS: Record<string, number> = {
+export const EXPECTED_COUNTS: Record<string, number> = {
   User: 156,
   Lead: 8234,
   Contact: 5421,
   Account: 1847,
   Opportunity: 12563,
   Task: 19771,
-  AuditLog: 45234,
+  AuditLogEntry: 45234,
   AIScore: 8234,
   SecurityEvent: 1847,
 };
 
 // Acceptable variance thresholds
-const VARIANCE_THRESHOLDS = {
+export const VARIANCE_THRESHOLDS = {
   PASS: 0.5, // <0.5% variance = PASS
   WARN: 2.0, // <2% variance = WARN
   // >2% = FAIL
@@ -87,7 +87,8 @@ const VARIANCE_THRESHOLDS = {
 // Database Queries
 // ============================================
 
-async function getEntityCounts(prisma: PrismaClient): Promise<Record<string, number>> {
+/* v8 ignore start -- requires live database connection */
+export async function getEntityCounts(prisma: PrismaClient): Promise<Record<string, number>> {
   const counts: Record<string, number> = {};
 
   // Count each entity type
@@ -148,7 +149,7 @@ async function getEntityCounts(prisma: PrismaClient): Promise<Record<string, num
   return counts;
 }
 
-async function runValidationChecks(prisma: PrismaClient): Promise<ValidationCheck[]> {
+export async function runValidationChecks(prisma: PrismaClient): Promise<ValidationCheck[]> {
   const checks: ValidationCheck[] = [];
 
   // Check 1: Email uniqueness in Users
@@ -286,8 +287,9 @@ async function runValidationChecks(prisma: PrismaClient): Promise<ValidationChec
 
   return checks;
 }
+/* v8 ignore stop */
 
-function calculateQualityMetrics(
+export function calculateQualityMetrics(
   entityCounts: EntityCount[],
   validationChecks: ValidationCheck[]
 ): DataQualityMetric[] {
@@ -333,7 +335,7 @@ function calculateQualityMetrics(
 // CSV Generation
 // ============================================
 
-function generateCSV(result: ReconciliationResult): string {
+export function generateCSV(result: ReconciliationResult): string {
   const lines: string[] = [];
 
   // Header
@@ -415,6 +417,7 @@ function generateCSV(result: ReconciliationResult): string {
 // Main Execution
 // ============================================
 
+/* v8 ignore start -- CLI entry point, requires database connection */
 async function main(): Promise<void> {
   const { values } = parseArgs({
     options: {
@@ -460,7 +463,8 @@ Options:
 
   try {
     if (options.target) {
-      prisma = new PrismaClient({
+      const { PrismaClient: PC } = await import('@intelliflow/db');
+      prisma = new PC({
         datasources: { db: { url: options.target } },
       });
       await prisma.$connect();
@@ -500,7 +504,7 @@ Options:
   });
 
   // Run validation checks
-  let validationChecks: ValidationCheck[] = [];
+  let validationChecks: ValidationCheck[];
   if (prisma) {
     validationChecks = await runValidationChecks(prisma);
     console.log(`Ran ${validationChecks.length} validation checks`);
@@ -611,8 +615,14 @@ Options:
   // Exit with appropriate code
   process.exit(overallStatus === 'FAIL' ? 1 : 0);
 }
+/* v8 ignore stop */
 
-main().catch((error) => {
-  console.error('Fatal error:', error);
-  process.exit(1);
-});
+// Guard: only run main() when executed directly as a script
+/* v8 ignore start -- CLI bootstrap */
+if (process.argv[1]?.includes('reconciliation')) {
+  main().catch((error) => {
+    console.error('Fatal error:', error);
+    process.exit(1);
+  });
+}
+/* v8 ignore stop */

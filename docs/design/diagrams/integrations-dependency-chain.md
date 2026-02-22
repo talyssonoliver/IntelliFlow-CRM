@@ -38,6 +38,7 @@ Hexagonal Layers:
 | Adapters    | -               | ⬜     | Webhook adapters                    |
 | API         | webhooks.router | ⬜     | Webhook router                      |
 | UI          | PG-114, PG-115  | ⬜     | Integration Catalog, Webhook Config |
+| UI          | PG-171          | ✅     | Integration Resources Page          |
 
 ### Dependency Diagram
 
@@ -99,7 +100,7 @@ IFC-099 (Webhooks) ⬜ ──┬──► IFC-114 (Rate Limit) ⬜ ──► web
 | Application | IFC-116              | ⬜     | Metrics Collection        |
 | Adapters    | IFC-142              | ⬜     | Alerting & SLOs           |
 | API         | -                    | ⬜     | Metrics router            |
-| UI          | TRACK-001, TRACK-006 | ⬜     | Status & Build Dashboards |
+| UI          | TRACK-001, TRACK-006 | 🔶     | Status ✅ & Build ⬜ Dashboards |
 
 ### Dependency Diagram
 
@@ -137,14 +138,14 @@ IFC-099 (Webhooks) ⬜ ──┬──► IFC-114 (Rate Limit) ⬜ ──► web
               │    TRACK-001     │              │    TRACK-006     │
               │  Status          │              │  Build Health    │
               │  Dashboard       │              │  Dashboard       │
-              │      ⬜          │              │      ⬜          │
+              │      ✅          │              │      ⬜          │
               └──────────────────┘              └──────────────────┘
 ```
 
 ### Dependency Chain
 
 ```
-ENV-008-AI (OTel) ✅ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana Dashboards ⬜ ──┬──► TRACK-001 (Status) ⬜
+ENV-008-AI (OTel) ✅ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana Dashboards ⬜ ──┬──► TRACK-001 (Status) ✅
                        ├──► IFC-142 (Alerting) ⬜ ────────────────────────────┴──► TRACK-006 (Build) ⬜
                        └──► traces.ts (Val) ⬜ ───────────────────────────────────────────────────────┘
 ```

@@ -232,7 +232,6 @@ export default [
   {
     files: [
       '**/next.config.js',
-      '**/tailwind.config.js',
       '**/*.config.js',
       '**/*.config.mjs',
       '**/*.config.cjs',

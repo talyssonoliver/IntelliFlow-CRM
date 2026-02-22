@@ -1,4 +1,4 @@
-name: Migration ETL Validation
+name: Migration ETL Pipeline
 
 on:
   push:
@@ -12,10 +12,18 @@ on:
       - 'packages/db/prisma/schema.prisma'
   workflow_dispatch:
     inputs:
-      run_full_validation:
-        description: 'Run full validation suite'
+      source_url:
+        description: 'Legacy database connection URL'
         required: false
-        default: 'false'
+        type: string
+      target_url:
+        description: 'Target database connection URL'
+        required: false
+        type: string
+      dry_run:
+        description: 'Run in dry-run mode (no data changes)'
+        required: false
+        default: true
         type: boolean
 
 env:
@@ -23,9 +31,80 @@ env:
   PNPM_VERSION: '8.15.0'
 
 jobs:
-  migration-validation:
-    name: Validate Migration Scripts
+  # Job 1: Validate transformation rules and schema
+  validate:
+    name: Validate Transformation Rules
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @intelliflow/db prisma generate
+
+      - name: Validate transformation rules
+        run: |
+          echo "Validating delta-sync.ts transformation rules..."
+          pnpm exec tsx scripts/migration/delta-sync.ts --validate
+
+      - name: Run migration unit tests
+        run: |
+          pnpm exec vitest run scripts/migration/__tests__/delta-sync.test.ts
+          pnpm exec vitest run scripts/migration/__tests__/reconciliation.test.ts
+          pnpm exec vitest run scripts/migration/__tests__/validate-target.test.ts
+
+      - name: Validate Prisma schema
+        run: |
+          cd packages/db
+          npx prisma format
+          echo "Schema validation passed"
+
+      - name: Check governance columns (ADR-007)
+        run: |
+          echo "Checking for governance columns in schema..."
+          SCHEMA="packages/db/prisma/schema.prisma"
+
+          for model in Lead Contact Account Opportunity; do
+            if grep -A 50 "model ${model} {" "$SCHEMA" | grep -q "dataClassification"; then
+              echo "✓ ${model} has dataClassification"
+            else
+              echo "✗ ${model} missing dataClassification"
+              exit 1
+            fi
+          done
+
+          for table in DataGovernancePolicy LegalHold DSARRequest; do
+            if grep -q "model ${table} {" "$SCHEMA"; then
+              echo "✓ ${table} table exists"
+            else
+              echo "✗ ${table} table missing"
+              exit 1
+            fi
+          done
+
+          echo "All governance requirements met (ADR-007)"
+
+  # Job 2: Execute dry-run migration
+  dry-run:
+    name: Dry-Run Migration
+    runs-on: ubuntu-latest
+    needs: validate
     timeout-minutes: 30
 
     services:
@@ -71,76 +150,43 @@ jobs:
           pnpm --filter @intelliflow/db prisma migrate deploy
           pnpm --filter @intelliflow/db prisma db seed || echo "Seeding skipped or failed"
 
-      - name: Validate delta-sync script
-        run: |
-          echo "Validating delta-sync.ts transformation rules..."
-          pnpm exec tsx scripts/migration/delta-sync.ts --validate
-
-      - name: Run delta-sync dry run
+      - name: Run delta-sync dry-run
         env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test
+          DATABASE_URL: ${{ inputs.target_url || 'postgresql://test:test@localhost:5432/intelliflow_test' }}
+          LEGACY_DB_URL: ${{ inputs.source_url || '' }}
         run: |
           echo "Running delta-sync in dry-run mode..."
           pnpm exec tsx scripts/migration/delta-sync.ts \
-            --target $DATABASE_URL \
+            --target "$DATABASE_URL" \
             --since "2020-01-01T00:00:00Z" \
             --dry-run
 
-      - name: Run reconciliation
-        env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test
+      - name: Run integration tests
         run: |
-          echo "Running reconciliation to generate data-validation-report.csv..."
-          mkdir -p artifacts/reports
-          pnpm exec tsx scripts/migration/reconciliation.ts \
-            --target $DATABASE_URL \
-            --output artifacts/reports/data-validation-report.csv
+          pnpm exec vitest run scripts/migration/__tests__/migration.integration.test.ts
+          pnpm exec vitest run scripts/migration/__tests__/checkpoint.integration.test.ts
 
-      - name: Run target validation
-        env:
-          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test
-        run: |
-          echo "Running target validation to generate migration-log.txt..."
-          mkdir -p artifacts/misc
-          pnpm exec tsx scripts/migration/validate-target.ts \
-            --database $DATABASE_URL \
-            --output artifacts/misc/migration-log.txt
-
-      - name: Verify artifacts generated
-        run: |
-          echo "Checking generated artifacts..."
-          ls -la artifacts/reports/ || true
-          ls -la artifacts/misc/ || true
-
-          if [ -f artifacts/reports/data-validation-report.csv ]; then
-            echo "✓ data-validation-report.csv generated"
-            head -20 artifacts/reports/data-validation-report.csv
-          else
-            echo "✗ data-validation-report.csv not found"
-            exit 1
-          fi
-
-          if [ -f artifacts/misc/migration-log.txt ]; then
-            echo "✓ migration-log.txt generated"
-            head -50 artifacts/misc/migration-log.txt
-          else
-            echo "✗ migration-log.txt not found"
-            exit 1
-          fi
-
-      - name: Upload migration artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: migration-validation-${{ github.sha }}
-          path: |
-            artifacts/reports/data-validation-report.csv
-            artifacts/misc/migration-log.txt
-          retention-days: 30
-
-  schema-validation:
-    name: Validate Prisma Schema
+  # Job 3: Generate reconciliation report
+  reconciliation:
+    name: Reconciliation Report
     runs-on: ubuntu-latest
+    needs: dry-run
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: intelliflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout repository
@@ -160,118 +206,149 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Format and validate schema
+      - name: Generate Prisma client
+        run: pnpm --filter @intelliflow/db prisma generate
+
+      - name: Setup test database
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test
         run: |
-          cd packages/db
-          npx prisma format
-          echo "Schema validation passed"
+          pnpm --filter @intelliflow/db prisma migrate deploy
 
-      - name: Check for governance columns (ADR-007)
+      - name: Generate reconciliation report
+        env:
+          DATABASE_URL: ${{ inputs.target_url || 'postgresql://test:test@localhost:5432/intelliflow_test' }}
         run: |
-          echo "Checking for governance columns in schema..."
-          SCHEMA="packages/db/prisma/schema.prisma"
+          echo "Running reconciliation..."
+          mkdir -p artifacts/reports
+          pnpm exec tsx scripts/migration/reconciliation.ts \
+            --target "$DATABASE_URL" \
+            --output artifacts/reports/data-validation-report.csv
 
-          # Check Lead model
-          if grep -A 50 "model Lead {" "$SCHEMA" | grep -q "dataClassification"; then
-            echo "✓ Lead has dataClassification"
+      - name: Verify reconciliation report
+        run: |
+          if [ -f artifacts/reports/data-validation-report.csv ]; then
+            echo "✓ data-validation-report.csv generated"
+            head -20 artifacts/reports/data-validation-report.csv
           else
-            echo "✗ Lead missing dataClassification"
+            echo "✗ data-validation-report.csv not found"
             exit 1
           fi
 
-          # Check Contact model
-          if grep -A 50 "model Contact {" "$SCHEMA" | grep -q "dataClassification"; then
-            echo "✓ Contact has dataClassification"
-          else
-            echo "✗ Contact missing dataClassification"
-            exit 1
-          fi
+      - name: Upload reconciliation report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: reconciliation-report-${{ github.sha }}
+          path: artifacts/reports/data-validation-report.csv
+          retention-days: 30
 
-          # Check Account model
-          if grep -A 50 "model Account {" "$SCHEMA" | grep -q "dataClassification"; then
-            echo "✓ Account has dataClassification"
-          else
-            echo "✗ Account missing dataClassification"
-            exit 1
-          fi
-
-          # Check Opportunity model
-          if grep -A 50 "model Opportunity {" "$SCHEMA" | grep -q "dataClassification"; then
-            echo "✓ Opportunity has dataClassification"
-          else
-            echo "✗ Opportunity missing dataClassification"
-            exit 1
-          fi
-
-          # Check for governance tables
-          if grep -q "model DataGovernancePolicy {" "$SCHEMA"; then
-            echo "✓ DataGovernancePolicy table exists"
-          else
-            echo "✗ DataGovernancePolicy table missing"
-            exit 1
-          fi
-
-          if grep -q "model LegalHold {" "$SCHEMA"; then
-            echo "✓ LegalHold table exists"
-          else
-            echo "✗ LegalHold table missing"
-            exit 1
-          fi
-
-          if grep -q "model DSARRequest {" "$SCHEMA"; then
-            echo "✓ DSARRequest table exists"
-          else
-            echo "✗ DSARRequest table missing"
-            exit 1
-          fi
-
-          echo ""
-          echo "All governance requirements met (ADR-007)"
-
-  etl-scripts-check:
-    name: Check ETL Scripts Exist
+  # Job 4: Target database validation
+  target-validation:
+    name: Target Validation
     runs-on: ubuntu-latest
+    needs: reconciliation
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: intelliflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Verify ETL scripts exist
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @intelliflow/db prisma generate
+
+      - name: Setup test database
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/intelliflow_test
         run: |
-          echo "Checking for required ETL scripts..."
+          pnpm --filter @intelliflow/db prisma migrate deploy
 
-          if [ -f scripts/migration/delta-sync.ts ]; then
-            echo "✓ delta-sync.ts exists"
-          else
-            echo "✗ delta-sync.ts not found"
-            exit 1
-          fi
-
-          if [ -f scripts/migration/reconciliation.ts ]; then
-            echo "✓ reconciliation.ts exists"
-          else
-            echo "✗ reconciliation.ts not found"
-            exit 1
-          fi
-
-          if [ -f scripts/migration/validate-target.ts ]; then
-            echo "✓ validate-target.ts exists"
-          else
-            echo "✗ validate-target.ts not found"
-            exit 1
-          fi
-
-          echo ""
-          echo "All ETL scripts present"
-
-      - name: Check scripts are executable TypeScript
+      - name: Run target validation
+        env:
+          DATABASE_URL: ${{ inputs.target_url || 'postgresql://test:test@localhost:5432/intelliflow_test' }}
         run: |
-          echo "Verifying scripts have correct shebang..."
+          echo "Running target validation..."
+          mkdir -p artifacts/misc
+          pnpm exec tsx scripts/migration/validate-target.ts \
+            --database "$DATABASE_URL" \
+            --output artifacts/misc/migration-log.txt
 
-          for script in scripts/migration/*.ts; do
-            if head -1 "$script" | grep -q "#!/usr/bin/env tsx"; then
-              echo "✓ $script has correct shebang"
-            else
-              echo "⚠ $script missing tsx shebang (may still work)"
-            fi
-          done
+      - name: Verify migration log
+        run: |
+          if [ -f artifacts/misc/migration-log.txt ]; then
+            echo "✓ migration-log.txt generated"
+            head -50 artifacts/misc/migration-log.txt
+          else
+            echo "✗ migration-log.txt not found"
+            exit 1
+          fi
+
+      - name: Run rollback procedure tests
+        run: pnpm exec vitest run scripts/migration/__tests__/rollback.integration.test.ts
+
+      - name: Upload validation artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: migration-validation-${{ github.sha }}
+          path: |
+            artifacts/reports/data-validation-report.csv
+            artifacts/misc/migration-log.txt
+          retention-days: 30
+
+  # Notification on failure
+  notify-failure:
+    name: Notify on Failure
+    runs-on: ubuntu-latest
+    needs: [validate, dry-run, reconciliation, target-validation]
+    if: failure()
+
+    steps:
+      - name: Send Slack notification
+        if: env.SLACK_WEBHOOK_URL != ''
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -X POST "$SLACK_WEBHOOK_URL" \
+            -H 'Content-type: application/json' \
+            -d "{
+              \"text\": \"🚨 Migration pipeline failed on ${GITHUB_REF_NAME}\",
+              \"blocks\": [
+                {
+                  \"type\": \"section\",
+                  \"text\": {
+                    \"type\": \"mrkdwn\",
+                    \"text\": \"*Migration Pipeline Failed*\nBranch: \`${GITHUB_REF_NAME}\`\nCommit: \`${GITHUB_SHA:0:8}\`\nRun: <${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}|View Details>\"
+                  }
+                }
+              ]
+            }"

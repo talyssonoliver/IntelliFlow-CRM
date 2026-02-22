@@ -94,7 +94,6 @@
     "clsx",
     "tailwind-merge",
     "@radix-ui/*",
-    "autoprefixer",
     "postcss",
     "depcheck",
     "dependency-cruiser",

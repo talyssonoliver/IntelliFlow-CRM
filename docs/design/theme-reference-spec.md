@@ -43,8 +43,7 @@ intelliFlow-CRM/
 │   └── spacing.tokens.json      # Spacing scale
 │
 ├── apps/web/
-│   ├── tailwind.config.ts       # Tailwind configuration
-│   └── src/app/globals.css      # CSS variables (HSL)
+│   └── src/app/globals.css      # Tailwind v4 config + CSS variables (HSL)
 │
 └── packages/ui/src/components/  # Themed components
 ```
@@ -68,7 +67,7 @@ intelliFlow-CRM/
 **Tier 3: Tailwind Utilities (Usage)**
 
 - Format: Semantic class names
-- Location: `apps/web/tailwind.config.ts` + components
+- Location: `apps/web/src/app/globals.css` (`@theme inline { ... }`) + components
 - Purpose: Developer-friendly classes for components
 - Example: `className="bg-primary text-primary-foreground"`
 
@@ -702,7 +701,7 @@ export function StatusBadge({
 **Solution:**
 
 1. Ensure `.dark` class is on `<html>` or `<body>` element
-2. Check Tailwind config has `darkMode: 'class'`
+2. Check `globals.css` has `@custom-variant dark (&:where(.dark, .dark *));`
 3. Verify CSS variables exist in both `:root` and `.dark` selectors
 
 ### Issue: Colors look wrong in dark mode

@@ -102,7 +102,8 @@ function loadYAML(filepath) {
 
 function parseDependencies(depString) {
   if (!depString || depString.trim() === '') return [];
-  return depString.split(',').map(d => d.trim()).filter(d => d);
+  // Split on comma or semicolon (defensive: CSV standard is comma, but handle semicolons too)
+  return depString.split(/[,;]/).map(d => d.trim()).filter(d => d);
 }
 
 function applyDependencyOverrides(taskId, deps, overrides) {

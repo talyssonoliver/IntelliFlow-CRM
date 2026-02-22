@@ -231,6 +231,7 @@ and frontend layers.
 | PG-133      | Contact | Contact List & Detail Pages    | IFC-184      | 5      |
 | PG-134      | Account | Account List & Detail Pages    | IFC-185      | 5      |
 | PG-135      | Deal    | Deal List Page (pipeline view) | IFC-186      | 6      |
+| IFC-064     | Deal    | Kanban Drag-Drop Persistence — moveStage mutation, optimistic updates with rollback, CLOSED_LOST reason modal, success/error toasts | IFC-091, IFC-063 | 14 |
 | PG-136      | Task    | Task Management UI             | IFC-187      | 6      |
 | PG-137      | Ticket  | Ticket Management UI           | IFC-189      | 6      |
 
@@ -243,7 +244,7 @@ and frontend layers.
 | Lead        | No                  | No               | None - Complete                                      |
 | Contact     | No (domain exists)  | YES              | Create IFC-184, PG-133                               |
 | Account     | No (router done ✅) | No (PG-134 ✅)   | Complete                                             |
-| Opportunity | No (router done ✅) | No (PG-135 ✅)   | Complete — 6 components, 72 tests, DnD pipeline      |
+| Opportunity | No (router done ✅) | No (PG-135 ✅)   | Complete — 6 components, 72 tests, DnD pipeline + IFC-064 ✅ drag-drop persistence |
 | Task        | No (router done ✅) | No (PG-136 ✅)   | Complete — 9 components, 104 tests, tRPC integration |
 | Ticket      | No (router done ✅) | No (PG-137 ✅)   | Complete — 7 components, 79 tests, tRPC integration  |
 

@@ -259,35 +259,29 @@ Respect user preferences for reduced motion:
 
 ## Tailwind CSS Configuration
 
-Use this Tailwind configuration to match our design system:
+Use this CSS-first configuration in `globals.css` to match our design system:
 
-```javascript
-// tailwind.config.js
-module.exports = {
-  darkMode: 'class',
-  theme: {
-    extend: {
-      colors: {
-        primary: '#137fec',
-        'primary-hover': '#0e6ac7',
-        'background-light': '#f6f7f8',
-        'background-dark': '#101922',
-        'surface-light': '#ffffff',
-        'surface-dark': '#1e2936',
-        'border-light': '#e2e8f0',
-        'border-dark': '#334155',
-      },
-      fontFamily: {
-        display: ['Inter', 'system-ui', 'sans-serif'],
-      },
-      borderRadius: {
-        DEFAULT: '0.25rem',
-        lg: '0.5rem',
-        xl: '0.75rem',
-      },
-    },
-  },
-};
+```css
+/* apps/web/src/app/globals.css */
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-primary: #137fec;
+  --color-primary-hover: #0e6ac7;
+  --color-background-light: #f6f7f8;
+  --color-background-dark: #101922;
+  --color-surface-light: #ffffff;
+  --color-surface-dark: #1e2936;
+  --color-border-light: #e2e8f0;
+  --color-border-dark: #334155;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Inter', system-ui, sans-serif;
+  --radius-DEFAULT: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+}
 ```
 
 ## File References

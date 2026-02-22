@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-02-18T19:30:39.457Z",
+    "generated_at": "2026-02-20T23:56:26.379Z",
     "schema_version": "1.0.0",
     "sprint_scope": 0
   },
@@ -11,7 +11,7 @@
       "B": 8,
       "C": 7
     },
-    "error_count": 1,
+    "error_count": 0,
     "warning_count": 36,
     "review_queue_size": 29,
     "validation_coverage": {
@@ -20,17 +20,7 @@
       "coverage_percentage": 100
     }
   },
-  "errors": [
-    {
-      "rule": "DEPS_RESOLVE",
-      "severity": "error",
-      "message": "Task PG-171 has unresolved dependency: PG-032;PG-034",
-      "tasks": [
-        "PG-171"
-      ],
-      "fix": "Fix typo in dependency or add missing task to Sprint_plan.csv"
-    }
-  ],
+  "errors": [],
   "warnings": [
     {
       "rule": "AI_TASKS_MVP",
@@ -208,7 +198,7 @@
         "AI-SETUP-003"
       ],
       "priority": "critical",
-      "days_until_expiry": -19
+      "days_until_expiry": -21
     },
     {
       "rule": "WAIVER_USED",
@@ -223,12 +213,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-008-AI waiver expires in 9 days (2026-02-28)",
+      "message": "Task ENV-008-AI waiver expires in 7 days (2026-02-28)",
       "tasks": [
         "ENV-008-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 9
+      "days_until_expiry": 7
     },
     {
       "rule": "WAIVER_USED",
@@ -248,7 +238,7 @@
         "ENV-010-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -19
+      "days_until_expiry": -21
     },
     {
       "rule": "WAIVER_USED",
@@ -268,7 +258,7 @@
         "ENV-011-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -19
+      "days_until_expiry": -21
     },
     {
       "rule": "WAIVER_USED",
@@ -283,12 +273,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-012-AI waiver expires in 9 days (2026-02-28)",
+      "message": "Task ENV-012-AI waiver expires in 7 days (2026-02-28)",
       "tasks": [
         "ENV-012-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 9
+      "days_until_expiry": 7
     },
     {
       "rule": "WAIVER_USED",
@@ -303,12 +293,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-014-AI waiver expires in 9 days (2026-02-28)",
+      "message": "Task ENV-014-AI waiver expires in 7 days (2026-02-28)",
       "tasks": [
         "ENV-014-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 9
+      "days_until_expiry": 7
     },
     {
       "rule": "WAIVER_USED",
@@ -323,12 +313,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-015-AI waiver expires in 9 days (2026-02-28)",
+      "message": "Task ENV-015-AI waiver expires in 7 days (2026-02-28)",
       "tasks": [
         "ENV-015-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 9
+      "days_until_expiry": 7
     },
     {
       "rule": "WAIVER_USED",
@@ -343,12 +333,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task ENV-016-AI waiver expires in 9 days (2026-02-28)",
+      "message": "Task ENV-016-AI waiver expires in 7 days (2026-02-28)",
       "tasks": [
         "ENV-016-AI"
       ],
       "priority": "high",
-      "days_until_expiry": 9
+      "days_until_expiry": 7
     },
     {
       "rule": "WAIVER_USED",
@@ -363,12 +353,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task AUTOMATION-001 waiver expires in 9 days (2026-02-28)",
+      "message": "Task AUTOMATION-001 waiver expires in 7 days (2026-02-28)",
       "tasks": [
         "AUTOMATION-001"
       ],
       "priority": "high",
-      "days_until_expiry": 9
+      "days_until_expiry": 7
     },
     {
       "rule": "WAIVER_USED",
@@ -383,12 +373,12 @@
     {
       "rule": "WAIVER_EXPIRING",
       "severity": "warning",
-      "message": "Task AUTOMATION-002 waiver expires in 9 days (2026-02-28)",
+      "message": "Task AUTOMATION-002 waiver expires in 7 days (2026-02-28)",
       "tasks": [
         "AUTOMATION-002"
       ],
       "priority": "high",
-      "days_until_expiry": 9
+      "days_until_expiry": 7
     }
   ],
   "review_queue": [

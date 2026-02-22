@@ -1,13 +1,12 @@
 {
-  "generated_at": "2026-02-19T00:00:00Z",
+  "generated_at": "2026-02-22T15:43:26.533Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 115,
-    "completed": 106,
-    "partially_done": 5,
+    "total_specs_analyzed": 270,
+    "completed": 261,
+    "partially_done": 3,
     "spec_only": 2,
-    "uncertain": 1,
-    "note": "PG-018 has two spec versions (sprint-12 = SPEC_ONLY, sprint-13 = COMPLETED). PG-031 has cross-sprint spec (sprint-0 spec, sprint-14 execution). Both counted once in totals using their canonical completed version."
+    "uncertain": 4
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -17,58 +16,772 @@
   },
   "issues": [
     {
-      "task_id": "IFC-094",
+      "task_id": "IFC-025",
       "severity": "HIGH",
-      "issue": "CSV says Completed at 100% but NO attestation file exists. Plan has 0/25 checkboxes checked. Documents Management eSign may not be truly implemented.",
-      "recommendation": "Verify actual codebase for eSign implementation. Run /exec or /matop-execute to generate proper attestation."
+      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
+      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
     },
     {
-      "task_id": "IFC-117",
+      "task_id": "IFC-086",
       "severity": "MEDIUM",
-      "issue": "Initial monitoring modules (DriftDetector, HallucinationChecker, LatencyMonitor, ROITracker) built per 2025-12-29 attestation, but 2026-01-31 spec session found ChainMonitor integration into scoring.chain.ts was never executed. All 5 P0 ACs remain unchecked.",
-      "recommendation": "Wire ChainMonitor into scoring.chain.ts and re-run attestation."
+      "issue": "Attestation confirms completion but CSV shows only 50% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
-      "task_id": "IFC-144",
+      "task_id": "IFC-184",
       "severity": "MEDIUM",
-      "issue": "95% implemented with COMPLETE attestation for hexagonal restructuring, but spec updated 2026-02-01 documents 2 critical gaps: inboundEmailRouter not wired to appRouter, E2E inbound email webhook test missing.",
-      "recommendation": "Wire inboundEmailRouter and add E2E test."
+      "issue": "Attestation confirms completion but CSV shows only 20% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
-      "task_id": "IFC-158",
+      "task_id": "IFC-188",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 75% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "PG-026",
       "severity": "HIGH",
-      "issue": "Sprint-11 summary marks DONE and CSV=Completed, but attestation verdict is INCOMPLETE with pnpm test:e2e exit code 1. All 9 DoD criteria listed as unverified.",
-      "recommendation": "Fix failing E2E tests, re-run attestation to get COMPLETE verdict."
+      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
+      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
     },
     {
-      "task_id": "PG-018",
+      "task_id": "PG-031-discussion",
       "severity": "LOW",
-      "issue": "Sprint-12 spec has no plan, attestation, or metric JSON (SPEC_ONLY). Sprint-13 spec has COMPLETE attestation. CSV shows Completed in sprint 13. The sprint-12 version is an orphaned early draft.",
-      "recommendation": "No action needed — sprint-13 version is the canonical completed implementation."
-    },
-    {
-      "task_id": "PG-033",
-      "severity": "MEDIUM",
-      "issue": "CSV shows Backlog at 0%, metric JSON shows BACKLOG. Attestation directory has context_ack.json with COMPLETE verdict, but this appears to be from spec session only — not exec completion.",
-      "recommendation": "Run /exec PG-033 to implement the Scalar API docs page."
-    },
-    {
-      "task_id": "IFC-070",
-      "severity": "LOW",
-      "issue": "CSV shows Backlog at 0%. context_ack.json notes 'Re-run to verify PASS consensus'. No plan file found. Attestation is from planning phase only.",
-      "recommendation": "Run /exec IFC-070 when ready for data migration implementation."
+      "issue": "Spec exists in .specify/ but task ID not found in Sprint_plan.csv.",
+      "recommendation": "Verify if task was renamed, merged, or removed from the CSV."
     },
     {
       "task_id": "PG-137",
-      "severity": "LOW",
-      "issue": "Attestation COMPLETE and metric JSON DONE, but CSV shows only 75% complete. Likely a CSV update lag.",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 75% complete. Likely a CSV update lag.",
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "PG-152",
+      "severity": "HIGH",
+      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
+      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
+    },
+    {
+      "task_id": "PG-153",
+      "severity": "HIGH",
+      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
+      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
+    },
+    {
+      "task_id": "TRACK-003",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec TRACK-003 when ready for implementation."
     }
   ],
   "tasks": [
     {
+      "task_id": "AI-SETUP-001",
+      "title": "Configure Claude Code with Custom Commands and Hooks",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "EXC-INIT-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "AI-SETUP-002",
+      "title": "GitHub Copilot Enterprise Automation Setup",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "AI-SETUP-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "AI-SETUP-003",
+      "title": "External AI Tools Integration (Codex, Jules)",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "AI-SETUP-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ANALYTICS-001",
+      "title": "Customer Segmentation Spec (RFM + ABC) + Event Taxonomy",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "DOC-001",
+        "GTM-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "AUTOMATION-001",
+      "title": "Continuous AI Agent Coordination System",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "AI-SETUP-001",
+        "AI-SETUP-002",
+        "ENV-005-AI",
+        "ENV-008-AI",
+        "ENV-010-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "AUTOMATION-002",
+      "title": "AI Performance Dashboard and Optimization Loop",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "AUTOMATION-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "BRAND-001",
+      "title": "Visual Identity System (palette, typography, spacing, logo usage)",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "DOC-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "BRAND-002",
+      "title": "Design Tokens Integration Plan (Tailwind/shadcn theme mapping)",
+      "sprint": 1,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "BRAND-001",
+        "ENV-002-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "DOC-001",
+      "title": "Company & Product Master Brief (single source of truth)",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENG-OPS-001",
+      "title": "Engineering Playbook (SDLC, PR rules, quality gates, release/rollback)",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-002-AI",
+        "ENV-005-AI",
+        "ENV-010-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-001-AI",
+      "title": "Automated Monorepo Creation",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "AI-SETUP-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-002-AI",
+      "title": "Automated Development Tools Configuration",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-003-AI",
+      "title": "Docker Environment with Optimized Configuration",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-004-AI",
+      "title": "Supabase Integration with Automated Schema Design",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-003-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-005-AI",
+      "title": "CI/CD Pipeline with Predictive Optimization",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-002-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-006-AI",
+      "title": "Prisma Schema with Generated Optimizations",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-004-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-007-AI",
+      "title": "tRPC Setup with Automated Type Generation",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-006-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-008-AI",
+      "title": "Automated Observability with Predictive Monitoring",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-005-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-009-AI",
+      "title": "Frontend with Generated Components and Optimization",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-010-AI",
+      "title": "Automated Test Generation and Automation",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-007-AI",
+        "ENV-009-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-011-AI",
+      "title": "LangChain Integration with Optimized Chains",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-007-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-012-AI",
+      "title": "Documentation with Auto-Generation",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-013-AI",
+      "title": "Automated Security Implementation",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-005-AI",
+        "ENV-007-AI",
+        "ENV-009-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-014-AI",
+      "title": "Performance Optimization with AI Profiling",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-009-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-015-AI",
+      "title": "AI-Managed Feature Flags with Predictive Rollout",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-007-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-016-AI",
+      "title": "Privacy-First Analytics with AI Insights",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-009-AI",
+        "ANALYTICS-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-017-AI",
+      "title": "Automated Integration Testing",
+      "sprint": 1,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-001-AI",
+        "ENV-003-AI",
+        "ENV-005-AI",
+        "ENV-010-AI",
+        "IFC-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "ENV-018-AI",
+      "title": "Sprint Planning and Velocity Prediction",
+      "sprint": 1,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-017-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "EP-001-AI",
+      "title": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-003-AI",
+        "ENV-008-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "EXC-INIT-001",
+      "title": "Sprint 0 - Environment Setup with Agent Ecosystem",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "EXC-SEC-001",
+      "title": "Implement Secrets Management (e.g., HashiCorp Vault) for API Keys (OpenAI, etc.).",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-013-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "EXP-ARTIFACTS-002",
+      "title": "Cookie Consent Component Implementation (GDPR)",
+      "sprint": 14,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "EXP-ARTIFACTS-003",
+      "title": "Vulnerability Baseline Documentation",
+      "sprint": 14,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "EXP-PLATFORM-001",
+      "title": "Platform utilities package - feature flags, resilience patterns, job queues, workflow orchestration",
+      "sprint": 12,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-001-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "EXP-REPORTS-001",
+      "title": "Project Status & Tracking Reports (Continuous)",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "EXP-REPORTS-002",
+      "title": "Technical Debt & Quality Tracking (Continuous)",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "EXP-REPORTS-003",
+      "title": "Risk Management & Compliance Tracking",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "EXP-REPORTS-004",
+      "title": "Sprint Audit System (Continuous)",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "EXP-REPORTS-005",
+      "title": "Build & Validation Reports (Continuous)",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "EXP-SCRIPTS-001",
+      "title": "Utility scripts - task data cleanup, schema fixes, dev monitoring",
+      "sprint": 12,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "EXC-INIT-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "GOV-001",
+      "title": "Architecture Governance Pack (ADR + ARP templates, decision workflow, flowcharts)",
+      "sprint": 1,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENG-OPS-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "GTM-001",
+      "title": "ICP & Personas Pack (target customers, job stories, objections)",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "DOC-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "GTM-002",
+      "title": "Messaging Framework (positioning, value props, copy blocks)",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "GTM-001",
+        "BRAND-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-000",
+      "title": "IntelliFlow CRM Feasibility Assessment",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "IFC-001",
-      "title": "Technical Architecture Spike — Modern Stack Feasibility",
+      "title": "Technical Architecture Spike - Modern Stack",
       "sprint": 1,
       "spec_path": ".specify/sprints/sprint-1/specifications/IFC-001-spec.md",
       "has_spec": true,
@@ -76,8 +789,74 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 5,
-      "dependencies": ["IFC-000"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-000"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-002",
+      "title": "Domain Model Design (DDD)",
+      "sprint": 1,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-000"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-003",
+      "title": "tRPC API Foundation",
+      "sprint": 1,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-002"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-004",
+      "title": "Next.js 16.0.10 Lead Capture UI",
+      "sprint": 2,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-003"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-005",
+      "title": "FLOW-002, FLOW-011: LangChain AI Scoring Prototype",
+      "sprint": 2,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-004"
+      ],
       "real_status": "COMPLETED"
     },
     {
@@ -90,13 +869,15 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 3,
-      "dependencies": ["IFC-003"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-003"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-007",
-      "title": "Performance Benchmarks (k6 Load Testing)",
+      "title": "Performance Benchmarks - Modern Stack",
       "sprint": 3,
       "spec_path": ".specify/sprints/sprint-3/specifications/IFC-007-spec.md",
       "has_spec": true,
@@ -104,13 +885,32 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 6,
-      "dependencies": ["IFC-004", "IFC-005"],
+      "acceptance_criteria_count": 9,
+      "dependencies": [
+        "IFC-004",
+        "IFC-005"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-008",
+      "title": "Security Assessment - OWASP + ISO 42001 Prep",
+      "sprint": 2,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-001"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-009",
-      "title": "Team Capability Assessment",
+      "title": "Team Capability Assessment - Modern Stack (Next.js 16.0.10 App Router, Turbopack FS caching, Cache Components, proxy replacing middleware)",
       "sprint": 4,
       "spec_path": ".specify/sprints/sprint-4/specifications/IFC-009-spec.md",
       "has_spec": true,
@@ -119,12 +919,15 @@
       "csv_status": "Completed",
       "metric_status": "DONE",
       "acceptance_criteria_count": 10,
-      "dependencies": ["IFC-001", "IFC-005"],
+      "dependencies": [
+        "IFC-001",
+        "IFC-005"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-010",
-      "title": "Decision Gate — MVP Go/No-Go Review",
+      "title": "Phase 1 Go/No-Go Decision",
       "sprint": 6,
       "spec_path": ".specify/sprints/sprint-6/specifications/IFC-010-spec.md",
       "has_spec": true,
@@ -133,7 +936,20 @@
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 10,
-      "dependencies": ["EXC-INIT-001", "AI-SETUP-001", "IFC-001", "IFC-002", "IFC-003", "IFC-004", "IFC-005", "IFC-006", "IFC-007", "IFC-008", "IFC-009", "IFC-112"],
+      "dependencies": [
+        "IFC-001",
+        "IFC-002",
+        "IFC-003",
+        "IFC-004",
+        "IFC-005",
+        "IFC-006",
+        "IFC-007",
+        "IFC-008",
+        "IFC-009",
+        "IFC-089",
+        "IFC-098",
+        "IFC-112"
+      ],
       "real_status": "COMPLETED"
     },
     {
@@ -142,12 +958,14 @@
       "sprint": 3,
       "spec_path": ".specify/sprints/sprint-3/specifications/IFC-011-spec.md",
       "has_spec": true,
-      "has_plan": true,
+      "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 5,
-      "dependencies": ["IFC-000"],
+      "acceptance_criteria_count": 2,
+      "dependencies": [
+        "IFC-000"
+      ],
       "real_status": "COMPLETED"
     },
     {
@@ -161,13 +979,31 @@
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 10,
-      "dependencies": ["IFC-010"],
+      "dependencies": [
+        "IFC-010"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-013",
+      "title": "tRPC Router Implementation",
+      "sprint": 6,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-012"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-014",
-      "title": "Next.js App Router UI for Leads",
-      "sprint": 7,
+      "title": "Next.js 16.0.10 App Router UI",
+      "sprint": 6,
       "spec_path": ".specify/sprints/sprint-7/specifications/IFC-014-spec.md",
       "has_spec": true,
       "has_plan": false,
@@ -175,21 +1011,41 @@
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 16,
-      "dependencies": ["IFC-013"],
+      "dependencies": [
+        "IFC-013"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-015",
+      "title": "BullMQ Job Queue Setup",
+      "sprint": 6,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-013"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-016",
-      "title": "Real-time Subscriptions (Supabase Realtime)",
-      "sprint": 7,
+      "title": "Real-time Subscriptions",
+      "sprint": 6,
       "spec_path": ".specify/sprints/sprint-7/specifications/IFC-016-spec.md",
       "has_spec": true,
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 7,
-      "dependencies": ["IFC-014"],
+      "acceptance_criteria_count": 2,
+      "dependencies": [
+        "IFC-014"
+      ],
       "real_status": "COMPLETED"
     },
     {
@@ -203,110 +1059,162 @@
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 11,
-      "dependencies": ["IFC-012", "IFC-013"],
+      "dependencies": [
+        "IFC-012",
+        "IFC-013"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-018",
-      "title": "Vitest Testing Suite Setup",
-      "sprint": 7,
+      "title": "Vitest Testing Suite",
+      "sprint": 6,
       "spec_path": ".specify/sprints/sprint-7/specifications/IFC-018-spec.md",
       "has_spec": true,
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 12,
-      "dependencies": ["IFC-014", "IFC-015", "IFC-016"],
+      "acceptance_criteria_count": 16,
+      "dependencies": [
+        "IFC-014",
+        "IFC-015",
+        "IFC-016"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-019",
-      "title": "Gate 1 Review — £500 Investment Decision",
-      "sprint": 8,
+      "title": "Gate 1 Review - £500 Investment",
+      "sprint": 6,
       "spec_path": ".specify/sprints/sprint-8/specifications/IFC-019-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 2,
-      "dependencies": ["IFC-018"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-018"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-020",
       "title": "LangChain Pipeline Design",
-      "sprint": 12,
+      "sprint": 6,
       "spec_path": ".specify/sprints/sprint-12/specifications/IFC-020-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 14,
-      "dependencies": ["IFC-019"],
+      "acceptance_criteria_count": 2,
+      "dependencies": [
+        "IFC-019"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-021",
       "title": "CrewAI Agent Framework",
-      "sprint": 13,
+      "sprint": 6,
       "spec_path": ".specify/sprints/sprint-13/specifications/IFC-021-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 1,
-      "dependencies": ["IFC-020"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-020"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-022",
       "title": "Structured AI Output Implementation",
-      "sprint": 13,
+      "sprint": 6,
       "spec_path": ".specify/sprints/sprint-13/specifications/IFC-022-spec.md",
       "has_spec": true,
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 9,
-      "dependencies": ["IFC-021"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 1,
+      "dependencies": [
+        "IFC-021"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-023",
+      "title": "AI Explainability UI",
+      "sprint": 6,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-022"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-024",
+      "title": "Human-in-the-Loop Feedback",
+      "sprint": 14,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-023"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-025",
       "title": "A/B Testing Framework",
-      "sprint": 14,
+      "sprint": 6,
       "spec_path": ".specify/sprints/sprint-14/specifications/IFC-025-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 1,
-      "dependencies": ["IFC-022"],
-      "real_status": "COMPLETED"
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-022"
+      ],
+      "real_status": "UNCERTAIN"
     },
     {
       "task_id": "IFC-026",
-      "title": "Playwright E2E Testing for AI Features",
+      "title": "Playwright E2E Testing",
       "sprint": 15,
       "spec_path": ".specify/sprints/sprint-15/specifications/IFC-026-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 8,
-      "dependencies": ["IFC-022", "IFC-024"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 1,
+      "dependencies": [
+        "IFC-022",
+        "IFC-024"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-027",
-      "title": "Gate 2 Investment Review (£2000)",
+      "title": "Gate 2 Review - £2000 Investment",
       "sprint": 15,
       "spec_path": ".specify/sprints/sprint-15/specifications/IFC-027-spec.md",
       "has_spec": true,
@@ -314,8 +1222,10 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 5,
-      "dependencies": ["IFC-026"],
+      "acceptance_criteria_count": 1,
+      "dependencies": [
+        "IFC-026"
+      ],
       "real_status": "COMPLETED"
     },
     {
@@ -327,9 +1237,11 @@
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 6,
-      "dependencies": ["IFC-027"],
+      "dependencies": [
+        "IFC-027"
+      ],
       "real_status": "COMPLETED"
     },
     {
@@ -342,22 +1254,88 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 10,
-      "dependencies": ["IFC-028"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-028"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-039",
       "title": "Advanced AI Features (RAG)",
-      "sprint": 23,
+      "sprint": 6,
       "spec_path": ".specify/sprints/sprint-23/specifications/IFC-039-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 1,
-      "dependencies": ["IFC-025"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 2,
+      "dependencies": [
+        "IFC-025"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-042",
+      "title": "tRPC API Client SDK Docs",
+      "sprint": 12,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-013"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-044",
+      "title": "Unit Tests (Vitest + TDD)",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-010-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-045",
+      "title": "Integration Tests (Vitest + MSW)",
+      "sprint": 14,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-044"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-054",
+      "title": "Technical Complexity Monitoring",
+      "sprint": 7,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
       "real_status": "COMPLETED"
     },
     {
@@ -370,55 +1348,200 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 3,
+      "acceptance_criteria_count": 0,
       "dependencies": [],
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-056",
+      "title": "Team Upskilling Program",
+      "sprint": 9,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-009"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-057",
+      "title": "Vendor Lock-in Mitigation",
+      "sprint": 9,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-011"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "IFC-058",
-      "title": "GDPR Baseline Controls",
+      "title": "GDPR baseline controls: Supabase RLS policies, data minimisation, retention hooks",
       "sprint": 11,
       "spec_path": ".specify/sprints/sprint-11/specifications/IFC-058-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
-      "acceptance_criteria_count": 1,
-      "dependencies": ["IFC-017", "IFC-127", "IFC-008"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-017",
+        "IFC-127",
+        "IFC-008"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-061",
-      "title": "Lead to Contact Conversion Logic (FLOW-006)",
+      "title": "FLOW-006: Lead to Contact Conversion Logic",
       "sprint": 14,
       "spec_path": ".specify/sprints/sprint-14/specifications/IFC-061-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 7,
-      "dependencies": ["IFC-089", "IFC-101", "IFC-102"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-089",
+        "IFC-101",
+        "IFC-102"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-062",
+      "title": "FLOW-006: Lead to Deal Conversion Logic",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/IFC-062-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "In Progress",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-061",
+        "IFC-104"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-063",
-      "title": "Pipeline Stage Customization (FLOW-007)",
+      "title": "FLOW-007: Pipeline Stage Customization",
       "sprint": 14,
       "spec_path": ".specify/sprints/sprint-14/specifications/IFC-063-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 5,
-      "dependencies": ["IFC-091", "IFC-104"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-091",
+        "IFC-104"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-064",
+      "title": "FLOW-007: Kanban Drag-Drop Persistence",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/IFC-064-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "In Progress",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-091",
+        "IFC-063"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-065",
+      "title": "FLOW-009: Deal Won Closure Workflow",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/IFC-065-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "In Progress",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-091",
+        "IFC-092"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-066",
+      "title": "FLOW-009: Deal Lost Closure Workflow",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/IFC-066-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "In Progress",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-091",
+        "IFC-092"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-067",
+      "title": "FLOW-012: Automatic Ticket Routing Engine",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/IFC-067-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "In Progress",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-093",
+        "IFC-095"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-068",
+      "title": "FLOW-015: Feedback Analytics Dashboard",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/IFC-068-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "In Progress",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-090",
+        "IFC-096"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-069",
-      "title": "Unified Activity Feed Service (FLOW-020)",
+      "title": "FLOW-020: Unified Activity Feed Service",
       "sprint": 14,
       "spec_path": ".specify/sprints/sprint-14/specifications/IFC-069-spec.md",
       "has_spec": true,
@@ -426,8 +1549,13 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 9,
-      "dependencies": ["IFC-089", "IFC-091", "IFC-093", "IFC-109"],
+      "acceptance_criteria_count": 12,
+      "dependencies": [
+        "IFC-089",
+        "IFC-091",
+        "IFC-093",
+        "IFC-109"
+      ],
       "real_status": "COMPLETED"
     },
     {
@@ -436,14 +1564,80 @@
       "sprint": 18,
       "spec_path": ".specify/sprints/sprint-18/specifications/IFC-070-spec.md",
       "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "In Progress",
+      "acceptance_criteria_count": 9,
+      "dependencies": [
+        "IFC-017"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-072",
+      "title": "Zero Trust Security Model",
+      "sprint": 2,
+      "spec_path": null,
+      "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": null,
-      "acceptance_criteria_count": 7,
-      "dependencies": ["IFC-017"],
-      "real_status": "SPEC_ONLY",
-      "notes": "context_ack.json exists but is from planning phase only. CSV=Backlog at 0%. No plan file. Notes say 'Re-run to verify PASS consensus'."
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-001",
+        "IFC-008"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-073",
+      "title": "Privacy Impact Assessment",
+      "sprint": 2,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-072"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-074",
+      "title": "Full Stack Observability",
+      "sprint": 1,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-003"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-075",
+      "title": "IaC with Terraform",
+      "sprint": 1,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-001"
+      ],
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-076",
@@ -454,9 +1648,28 @@
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-014",
+        "BRAND-002"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-077",
+      "title": "API Rate Limiting (tRPC + Upstash)",
+      "sprint": 8,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 2,
-      "dependencies": ["IFC-014", "BRAND-002"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-013"
+      ],
       "real_status": "COMPLETED"
     },
     {
@@ -468,14 +1681,80 @@
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 3,
-      "dependencies": ["IFC-012"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 2,
+      "dependencies": [
+        "IFC-012"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-079",
+      "title": "Docusaurus Setup",
+      "sprint": 7,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-012"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-080",
+      "title": "LLM-Friendly Documentation Templates",
+      "sprint": 7,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-079"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-081",
+      "title": "API Documentation (tRPC + OpenAPI)",
+      "sprint": 12,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-013"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-082",
+      "title": "Domain Knowledge Base",
+      "sprint": 7,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-080"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-085",
-      "title": "Ollama Local Development Integration",
+      "title": "Ollama Local Development",
       "sprint": 2,
       "spec_path": ".specify/sprints/sprint-2/specifications/IFC-085-spec.md",
       "has_spec": true,
@@ -483,8 +1762,10 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 8,
-      "dependencies": ["IFC-005"],
+      "acceptance_criteria_count": 11,
+      "dependencies": [
+        "IFC-005"
+      ],
       "real_status": "COMPLETED"
     },
     {
@@ -496,38 +1777,198 @@
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 6,
-      "dependencies": ["IFC-020"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-020"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-088",
+      "title": "Continuous Quality Metrics",
+      "sprint": 14,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-044"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-089",
+      "title": "FLOW-005-A, FLOW-006, FLOW-014, FLOW-010-A: Contacts Module - Create/Edit/Search",
+      "sprint": 5,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-002",
+        "IFC-004",
+        "IFC-102"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-090",
+      "title": "Contact 360 Page - Full Detail View",
+      "sprint": 6,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-089"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-091",
+      "title": "Deals Pipeline - Kanban Board",
+      "sprint": 6,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-002",
+        "IFC-004",
+        "IFC-104"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-092",
+      "title": "Deal Forecasting & Reporting",
+      "sprint": 7,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-091"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-093",
+      "title": "Tickets Module - SLA Tracking",
+      "sprint": 7,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-002",
+        "IFC-004",
+        "IFC-188"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-094",
-      "title": "Documents Management — Upload and eSign",
+      "title": "Documents Management - Upload & Sign",
       "sprint": 8,
       "spec_path": ".specify/sprints/sprint-8/specifications/IFC-094-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 4,
-      "dependencies": ["IFC-090", "IFC-106"],
-      "real_status": "PARTIALLY_DONE",
-      "notes": "CSV=Completed at 100% but no attestation file. Plan has 0/25 checkboxes checked. Completion unsubstantiated."
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-090",
+        "IFC-106"
+      ],
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-095",
-      "title": "Churn Risk and Next Best Action AI Chains",
-      "sprint": 8,
+      "title": "Churn Risk & Next Best Action",
+      "sprint": 6,
       "spec_path": ".specify/sprints/sprint-8/specifications/IFC-095-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 15,
-      "dependencies": ["IFC-005", "IFC-090"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-005",
+        "IFC-090",
+        "IFC-108"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-096",
+      "title": "Custom Reports & Dashboards",
+      "sprint": 9,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-091",
+        "IFC-092",
+        "IFC-108"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-097",
+      "title": "Distributed Tracing & Logging",
+      "sprint": 9,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-007"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-098",
+      "title": "RBAC/ABAC & Audit Trail",
+      "sprint": 5,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-008"
+      ],
       "real_status": "COMPLETED"
     },
     {
@@ -539,99 +1980,451 @@
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
-      "acceptance_criteria_count": 3,
-      "dependencies": ["IFC-006", "IFC-106"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-006",
+        "IFC-106"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-100",
       "title": "ADR Registry & Compliance Reporting",
-      "sprint": 10,
+      "sprint": 6,
       "spec_path": ".specify/sprints/sprint-10/specifications/IFC-100-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 2,
-      "dependencies": ["IFC-008", "GOV-001"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-008",
+        "GOV-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-101",
+      "title": "Lead Aggregate and Value Objects",
+      "sprint": 2,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-002"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-102",
+      "title": "Contact Aggregate and Value Objects",
+      "sprint": 2,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-002"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-103",
+      "title": "Account Aggregate and Value Objects",
+      "sprint": 2,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-002"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-104",
+      "title": "Opportunity Aggregate and Value Objects",
+      "sprint": 3,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-002"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-105",
+      "title": "Task Aggregate and Value Objects",
+      "sprint": 3,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-002"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-106",
+      "title": "Define Hexagonal module boundaries + create canonical packages/application + packages/adapters skeleton",
+      "sprint": 1,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-002"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-107",
-      "title": "Repository Implementations & Factories (Prisma Adapters)",
+      "title": "Implement Repositories and Factories",
       "sprint": 3,
       "spec_path": ".specify/sprints/sprint-3/specifications/IFC-107-spec.md",
       "has_spec": true,
-      "has_plan": true,
+      "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 5,
-      "dependencies": ["IFC-101", "IFC-102", "IFC-103", "IFC-104", "IFC-105"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-101",
+        "IFC-102",
+        "IFC-103",
+        "IFC-104",
+        "IFC-105"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-108",
+      "title": "Implement Domain Services & Business Logic",
+      "sprint": 4,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-107"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-109",
+      "title": "Define TDD Process, Coverage & Review Checklist",
+      "sprint": 2,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-002"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-110",
+      "title": "Write Unit & Integration Tests for Domain Entities",
+      "sprint": 4,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-101",
+        "IFC-102",
+        "IFC-103",
+        "IFC-104",
+        "IFC-105"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-111",
+      "title": "Set up SonarQube and integrate static analysis into CI/CD",
+      "sprint": 5,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-005-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-112",
+      "title": "Implement blue/green deployment and rollback strategy",
+      "sprint": 5,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-005-AI"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-113",
-      "title": "Secrets Management & Encryption",
+      "title": "Implement secrets management and encryption at rest and in transit",
       "sprint": 10,
       "spec_path": ".specify/sprints/sprint-10/specifications/IFC-113-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
-      "acceptance_criteria_count": 3,
-      "dependencies": ["IFC-072", "IFC-098"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-072",
+        "IFC-098"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-114",
+      "title": "Implement API rate limiting and DDoS protection",
+      "sprint": 7,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-003",
+        "IFC-072"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-116",
+      "title": "Instrument application with OpenTelemetry, unify logs, metrics and traces",
+      "sprint": 9,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-074"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-117",
-      "title": "AI Model Monitoring (drift, latency, hallucination, ROI)",
-      "sprint": 10,
+      "title": "Monitor AI models for drift, latency, hallucination and ROI",
+      "sprint": 6,
       "spec_path": ".specify/sprints/sprint-10/specifications/IFC-117-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 5,
-      "dependencies": ["IFC-005", "AUTOMATION-002"],
-      "real_status": "PARTIALLY_DONE",
-      "notes": "Initial modules built per 2025-12-29 attestation. 2026-01-31 spec session found ChainMonitor integration into scoring.chain.ts was never executed."
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 7,
+      "dependencies": [
+        "IFC-005",
+        "AUTOMATION-002"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-118",
+      "title": "Establish and maintain a risk register with mitigation actions",
+      "sprint": 8,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-010",
+        "IFC-054"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-119",
+      "title": "Define recurring backlog refinement, sprint planning, review and retrospective ceremonies",
+      "sprint": 1,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-120",
+      "title": "Implement password reset and email verification flows",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/IFC-120-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-019",
+        "PG-020",
+        "PG-023",
+        "IFC-006"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-121",
+      "title": "Schedule periodic secret rotation and dependency vulnerability updates",
+      "sprint": 10,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-113"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-122",
+      "title": "Implement circuit breaker and retry policies for external service calls",
+      "sprint": 7,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-106",
+        "IFC-107"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-124",
+      "title": "Encrypt and aggregate audit logs; automate compliance reporting",
+      "sprint": 9,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-098"
+      ],
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-125",
-      "title": "AI Guardrails Audit Logger Integration",
-      "sprint": 11,
+      "title": "Implement guardrails for prompt injection, data leakage, and monitor AI bias",
+      "sprint": 6,
       "spec_path": ".specify/sprints/sprint-11/specifications/IFC-125-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 13,
-      "dependencies": ["IFC-005", "IFC-008"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-005",
+        "IFC-008"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-126",
+      "title": "Continuously maintain ADR registry and developer guide updates",
+      "sprint": 7,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-100",
+        "GOV-001"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-127",
-      "title": "Tenant Isolation at Database and Application Layers",
-      "sprint": 10,
+      "title": "Implement tenant isolation at database and application layers",
+      "sprint": 5,
       "spec_path": ".specify/sprints/sprint-10/specifications/IFC-127-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 3,
-      "dependencies": ["IFC-098", "IFC-072"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-098",
+        "IFC-072"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-128",
-      "title": "AI Output Review System — Core Feature",
+      "title": "Establish AI output review and manual fallback processes",
       "sprint": 3,
       "spec_path": ".specify/sprints/sprint-3/specifications/IFC-128-spec.md",
       "has_spec": true,
@@ -639,113 +2432,464 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 7,
-      "dependencies": ["ENV-017-AI"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-017-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-129",
+      "title": "Write UI and contract tests for core pages and tRPC endpoints",
+      "sprint": 6,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-110"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-130",
+      "title": "Release governance: staging auto-deploy, promotion policy, quality/security gates, rollback criteria",
+      "sprint": 5,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-005-AI",
+        "IFC-111"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-131",
+      "title": "Architecture boundary enforcement: domain/infrastructure dependency rules + architecture tests in CI",
+      "sprint": 4,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-106"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-132",
+      "title": "Supply chain security: dependency pinning + SBOM generation in CI (npm/pnpm + container)",
+      "sprint": 6,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-005-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-133",
+      "title": "Supply chain security: artifact signing + provenance for build outputs (images + releases)",
+      "sprint": 7,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-132"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-134",
+      "title": "Container/image scanning in CI and registry with fail-on-critical policy",
+      "sprint": 7,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-003-AI",
+        "ENV-005-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-135",
+      "title": "Create ADR pack for multi-tenancy; workflow engine choice; agent tool-calling; data classification & retention; audit logging",
+      "sprint": 1,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-002",
+        "GOV-001"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-136",
-      "title": "Case/Matter Aggregate Root (Domain Entity)",
+      "title": "Implement Case/Matter aggregate root with tasks; deadlines; parties; lawyer assignments",
       "sprint": 3,
       "spec_path": ".specify/sprints/sprint-3/specifications/IFC-136-spec.md",
       "has_spec": true,
-      "has_plan": true,
+      "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 7,
-      "dependencies": ["IFC-002", "IFC-003"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-002",
+        "IFC-003"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-137",
+      "title": "Develop Appointment aggregate with conflict detection; buffers; recurrence; linkage to cases and calendars",
+      "sprint": 4,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-136",
+        "IFC-003"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-138",
+      "title": "Integrate external calendar providers (Google/Microsoft) with bidirectional sync; webhook handling; idempotency; reconciliation",
+      "sprint": 5,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-137",
+        "IFC-106"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-139",
+      "title": "Expose application services as agent tools and implement human approval flows with preview and rollback for high-risk actions",
+      "sprint": 6,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-136",
+        "IFC-137",
+        "IFC-003",
+        "IFC-128"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-140",
-      "title": "Data Governance Workflows (DSAR, Retention, Legal Hold, KMS)",
+      "title": "Implement data governance workflows: DSAR requests; retention & legal hold policies; tenant-specific encryption key management; data residency compliance",
       "sprint": 11,
       "spec_path": ".specify/sprints/sprint-11/specifications/IFC-140-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
-      "acceptance_criteria_count": 3,
-      "dependencies": ["IFC-098", "IFC-127"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-098",
+        "IFC-127"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-141",
-      "title": "Workflow Engine Evaluation & Implementation",
+      "title": "Evaluate n8n; custom engine; and Temporal; document decision via ADR; build event-driven minimal rules engine and integrate selected workflow engine",
       "sprint": 10,
       "spec_path": ".specify/sprints/sprint-10/specifications/IFC-141-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
-      "acceptance_criteria_count": 6,
-      "dependencies": ["IFC-136", "IFC-137", "IFC-135", "IFC-150", "IFC-151"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-136",
+        "IFC-137",
+        "IFC-135",
+        "IFC-150",
+        "IFC-151"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-142",
+      "title": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
+      "sprint": 8,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-008-AI"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-143",
-      "title": "Threat Modeling, Pen Test, Cookie Consent",
+      "title": "Perform threat modeling and abuse-case analysis for multi-tenancy and agent tool-calling; design mitigations; schedule penetration test; implement cookie consent mechanism",
       "sprint": 11,
       "spec_path": ".specify/sprints/sprint-11/specifications/IFC-143-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
-      "acceptance_criteria_count": 3,
-      "dependencies": ["IFC-125", "IFC-136", "IFC-139"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-125",
+        "IFC-136",
+        "IFC-139"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-144",
-      "title": "Inbound/Outbound Email, DKIM, Webhook Framework, OpenAPI Spec",
-      "sprint": 10,
+      "title": "Design and implement inbound/outbound email flows: SPF/DKIM/DMARC; inbound parsing; attachments; implement general webhook handling with idempotency and retries; publish public API specification (OpenAPI) with versioning; baseline inbound email feature delivered",
+      "sprint": 6,
       "spec_path": ".specify/sprints/sprint-10/specifications/IFC-144-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 9,
-      "dependencies": ["IFC-137", "IFC-003", "IFC-150", "IFC-151", "IFC-106"],
-      "real_status": "PARTIALLY_DONE",
-      "notes": "95% implemented. 2 critical gaps: inboundEmailRouter not wired to appRouter, E2E inbound email webhook test missing."
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 15,
+      "dependencies": [
+        "IFC-137",
+        "IFC-003",
+        "IFC-150",
+        "IFC-151",
+        "IFC-106"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-145",
+      "title": "Plan and execute legacy system migration: discover and map data; assess data quality; design migration scripts; run rehearsals and reconciliation reporting; finalize cutover with rollback plan",
+      "sprint": 9,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-002",
+        "IFC-136"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-146",
+      "title": "Define PRD and user journey templates; create Definition of Ready criteria; develop traceability matrix linking capabilities to domain services; APIs; UIs; and tests",
+      "sprint": 2,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-000",
+        "ENV-018-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-147",
+      "title": "Develop Case timeline UI with deadline engine: display tasks; deadlines; events; implement deadline engine to compute legal deadlines and reminders; integrate with scheduling",
+      "sprint": 5,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-136",
+        "IFC-137"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-148",
+      "title": "Implement conversation record entity: store chat transcripts; tool calls; actions per case; enable search and retrieval; integrate audit logging and data retention policies",
+      "sprint": 7,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-139",
+        "IFC-126"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-149",
+      "title": "Implement action preview and rollback UI for agent-initiated changes; integrated with approval flows",
+      "sprint": 6,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-139",
+        "IFC-147"
+      ],
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-150",
-      "title": "Domain Events Infrastructure",
-      "sprint": 8,
+      "title": "Domain events infrastructure: event contracts + versioning + outbox pattern + idempotent publishing",
+      "sprint": 5,
       "spec_path": ".specify/sprints/sprint-8/specifications/IFC-150-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 12,
-      "dependencies": ["IFC-002", "IFC-106", "IFC-098"],
+      "acceptance_criteria_count": 11,
+      "dependencies": [
+        "IFC-002",
+        "IFC-106",
+        "IFC-098"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-151",
+      "title": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
+      "sprint": 6,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-150",
+        "ENV-008-AI"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-152",
-      "title": "Case Document Model (Storage, Versioning, ACL, Audit Hooks)",
-      "sprint": 11,
+      "title": "Case document model: storage metadata, versioning, ACL mapping (tenant + case + role), and audit hooks",
+      "sprint": 6,
       "spec_path": ".specify/sprints/sprint-11/specifications/IFC-152-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-136",
+        "IFC-127"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-153",
+      "title": "Ingestion pipeline for case files: upload/email attachment intake, antivirus scan, metadata extraction, storage, and indexing triggers",
+      "sprint": 6,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 3,
-      "dependencies": ["IFC-136", "IFC-127", "IFC-094"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-152",
+        "IFC-144",
+        "IFC-151",
+        "IFC-106"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-154",
+      "title": "OCR + text extraction worker for scanned PDFs/images; normalized text artifacts stored for search and RAG",
+      "sprint": 6,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-153"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-155",
-      "title": "Permissioned Indexing for Case Documents (FTS + Embeddings + ACL)",
-      "sprint": 12,
+      "title": "Permissioned indexing for case documents and notes: full-text + embeddings with tenant/case ACL filters",
+      "sprint": 6,
       "spec_path": ".specify/sprints/sprint-12/specifications/IFC-155-spec.md",
       "has_spec": true,
       "has_plan": true,
@@ -753,69 +2897,161 @@
       "csv_status": "Completed",
       "metric_status": "DONE",
       "acceptance_criteria_count": 9,
-      "dependencies": ["IFC-154", "IFC-127", "ENV-004-AI"],
+      "dependencies": [
+        "IFC-154",
+        "IFC-127",
+        "ENV-004-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-156",
+      "title": "Case RAG tool: agent retrieval tool constrained by tenant/case permissions; citations + source trace; prompt-injection hardening for retrieved content",
+      "sprint": 6,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-155",
+        "IFC-139",
+        "IFC-125"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-157",
-      "title": "Notification Service MVP (In-App + Email, Templates, Audit)",
+      "title": "Notification service MVP: unified delivery (in-app + email) with preference model (backend), templates, and audit logging",
       "sprint": 11,
       "spec_path": ".specify/sprints/sprint-11/specifications/IFC-157-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
-      "acceptance_criteria_count": 3,
-      "dependencies": ["IFC-144", "IFC-098", "IFC-151"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-144",
+        "IFC-098",
+        "IFC-151"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-158",
-      "title": "Scheduling Communications (ICS Invites, Reschedule/Cancel, Reminders)",
+      "title": "Scheduling communications: ICS invites, reschedule/cancel flows, reminders; integrated with notification service and calendar sync",
       "sprint": 11,
       "spec_path": ".specify/sprints/sprint-11/specifications/IFC-158-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
-      "acceptance_criteria_count": 3,
-      "dependencies": ["IFC-138", "IFC-157", "IFC-137"],
-      "real_status": "PARTIALLY_DONE",
-      "notes": "Attestation verdict INCOMPLETE — pnpm test:e2e exit code 1. All 9 DoD criteria unverified despite CSV=Completed."
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-138",
+        "IFC-157",
+        "IFC-137"
+      ],
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-159",
-      "title": "Case Timeline Enrichment",
+      "title": "Case timeline enrichment: include documents/versions, communications (email/WhatsApp), and agent actions/approvals as timeline events",
       "sprint": 13,
       "spec_path": ".specify/sprints/sprint-13/specifications/IFC-159-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 5,
-      "dependencies": ["IFC-147", "IFC-153", "IFC-144", "IFC-149", "IFC-148"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-147",
+        "IFC-153",
+        "IFC-144",
+        "IFC-149",
+        "IFC-148"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-160",
+      "title": "Artifact path conventions + CI lint to prevent repo drift",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-001-AI",
+        "ENV-002-AI"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-163",
-      "title": "Worker Runtime Standardization",
+      "title": "Standardize worker runtime under apps/workers (events, ingestion, notifications) with shared job framework, metrics, and deployment packaging",
       "sprint": 13,
       "spec_path": ".specify/sprints/sprint-13/specifications/IFC-163-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 4,
-      "dependencies": ["IFC-150", "IFC-151", "IFC-153", "IFC-157", "IFC-106"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-150",
+        "IFC-151",
+        "IFC-153",
+        "IFC-157",
+        "IFC-106"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-167",
+      "title": "Wire workers to pnpm dev startup - Follow-up to IFC-163",
+      "sprint": 14,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-163"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-168",
+      "title": "Convert AI worker to BullMQ queue consumer - Follow-up to IFC-005/IFC-085",
+      "sprint": 14,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-005",
+        "IFC-085",
+        "IFC-163"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-169",
-      "title": "Require Supabase Environment Variables (Fail-Fast Security Fix)",
+      "title": "Require Supabase env vars - Follow-up to IFC-006",
       "sprint": 12,
       "spec_path": ".specify/sprints/sprint-12/specifications/IFC-169-spec.md",
       "has_spec": true,
@@ -824,12 +3060,78 @@
       "csv_status": "Completed",
       "metric_status": "DONE",
       "acceptance_criteria_count": 8,
-      "dependencies": ["IFC-006"],
+      "dependencies": [
+        "IFC-006"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-170",
+      "title": "Implement Twilio SMS channel - Follow-up to IFC-157",
+      "sprint": 12,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-157"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-171",
+      "title": "Implement webhook notification channel - Follow-up to IFC-157",
+      "sprint": 12,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-157"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-172",
+      "title": "Complete Microsoft Calendar integration - Follow-up to IFC-138",
+      "sprint": 13,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-138"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-173",
+      "title": "Complete inbound email parsing endpoint - Follow-up to IFC-144",
+      "sprint": 13,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-144"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-176",
-      "title": "AI Output Review — Zod Validator Schemas",
+      "title": "AI Output Review - Validators Layer (Zod schemas for review inputs/outputs)",
       "sprint": 3,
       "spec_path": ".specify/sprints/sprint-3/specifications/IFC-176-spec.md",
       "has_spec": true,
@@ -837,13 +3139,15 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 6,
-      "dependencies": ["IFC-128"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-128"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-177",
-      "title": "AI Output Review — Application Layer (Use Cases)",
+      "title": "AI Output Review - Application Layer (use cases and ports)",
       "sprint": 4,
       "spec_path": ".specify/sprints/sprint-4/specifications/IFC-177-spec.md",
       "has_spec": true,
@@ -851,13 +3155,16 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 10,
-      "dependencies": ["IFC-176", "IFC-128"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-176",
+        "IFC-128"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-178",
-      "title": "AI Output Review — Database Schema (Prisma Models)",
+      "title": "AI Output Review - Database Schema (Prisma models)",
       "sprint": 4,
       "spec_path": ".specify/sprints/sprint-4/specifications/IFC-178-spec.md",
       "has_spec": true,
@@ -866,12 +3173,14 @@
       "csv_status": "Completed",
       "metric_status": "DONE",
       "acceptance_criteria_count": 9,
-      "dependencies": ["IFC-176", "IFC-177"],
+      "dependencies": [
+        "IFC-128"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-179",
-      "title": "AI Output Review — Adapters Layer (PrismaAIOutputReviewRepository)",
+      "title": "AI Output Review - Adapters Layer (repository implementation)",
       "sprint": 5,
       "spec_path": ".specify/sprints/sprint-5/specifications/IFC-179-spec.md",
       "has_spec": true,
@@ -879,13 +3188,16 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 11,
-      "dependencies": ["IFC-177", "IFC-178"],
+      "acceptance_criteria_count": 12,
+      "dependencies": [
+        "IFC-177",
+        "IFC-178"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-180",
-      "title": "AI Output Review — tRPC Router (7 Endpoints)",
+      "title": "AI Output Review - tRPC Router (API endpoints)",
       "sprint": 5,
       "spec_path": ".specify/sprints/sprint-5/specifications/IFC-180-spec.md",
       "has_spec": true,
@@ -893,13 +3205,15 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 14,
-      "dependencies": ["IFC-179"],
+      "acceptance_criteria_count": 3,
+      "dependencies": [
+        "IFC-179"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-181",
-      "title": "AI Output Review Frontend UI",
+      "title": "AI Output Review - Frontend UI (review queue page)",
       "sprint": 6,
       "spec_path": ".specify/sprints/sprint-6/specifications/IFC-181-spec.md",
       "has_spec": true,
@@ -907,13 +3221,16 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 17,
-      "dependencies": ["IFC-180", "IFC-149"],
+      "acceptance_criteria_count": 22,
+      "dependencies": [
+        "IFC-180",
+        "IFC-149"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-182",
-      "title": "Home Page tRPC Router",
+      "title": "Home Page tRPC Router - Welcome summary activity feed AI insights pinned items daily goals",
       "sprint": 13,
       "spec_path": ".specify/sprints/sprint-13/specifications/IFC-182-spec.md",
       "has_spec": true,
@@ -921,41 +3238,51 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 13,
-      "dependencies": ["IFC-003", "IFC-089"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-003",
+        "IFC-089"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-183",
-      "title": "Notifications tRPC Router",
+      "title": "Notifications tRPC Router - List mark read preferences real-time subscription",
       "sprint": 13,
       "spec_path": ".specify/sprints/sprint-13/specifications/IFC-183-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 10,
-      "dependencies": ["IFC-003", "IFC-157"],
+      "metric_status": "In Progress",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-003",
+        "IFC-157"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-184",
-      "title": "Contact tRPC Router — linkToLead, unlinkFromLead, getTimeline",
+      "title": "Contact tRPC Router - CRUD search relationship linking timeline integration",
       "sprint": 4,
       "spec_path": ".specify/sprints/sprint-4/specifications/IFC-184-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Completed",
+      "csv_status": "Done",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 15,
-      "dependencies": ["IFC-003"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-102",
+        "IFC-107",
+        "IFC-003"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-185",
-      "title": "Account tRPC Router — getContacts, getOpportunities, getActivity",
+      "title": "Account tRPC Router - CRUD hierarchy contacts opportunities activity feed",
       "sprint": 4,
       "spec_path": ".specify/sprints/sprint-4/specifications/IFC-185-spec.md",
       "has_spec": true,
@@ -963,13 +3290,17 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 8,
-      "dependencies": ["IFC-003", "IFC-103", "IFC-107"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-103",
+        "IFC-107",
+        "IFC-003"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-186",
-      "title": "Deal/Opportunity tRPC Router — moveStage, getHistory, getProducts, getPipeline",
+      "title": "Deal/Opportunity tRPC Router - CRUD pipeline stages probability history products",
       "sprint": 5,
       "spec_path": ".specify/sprints/sprint-5/specifications/IFC-186-spec.md",
       "has_spec": true,
@@ -978,12 +3309,16 @@
       "csv_status": "Completed",
       "metric_status": "DONE",
       "acceptance_criteria_count": 16,
-      "dependencies": ["IFC-104", "IFC-107", "IFC-003"],
+      "dependencies": [
+        "IFC-104",
+        "IFC-107",
+        "IFC-003"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-187",
-      "title": "Task tRPC Router — assign, reschedule, getReminders, getByEntity",
+      "title": "Task tRPC Router - CRUD assignment scheduling reminders timeline integration",
       "sprint": 5,
       "spec_path": ".specify/sprints/sprint-5/specifications/IFC-187-spec.md",
       "has_spec": true,
@@ -991,13 +3326,17 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 6,
-      "dependencies": ["IFC-105", "IFC-107", "IFC-003"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-105",
+        "IFC-107",
+        "IFC-003"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-188",
-      "title": "Ticket Domain Entity (Aggregate Root)",
+      "title": "Ticket Domain Entity - Aggregate with SLA priority escalation categories customer linking",
       "sprint": 4,
       "spec_path": ".specify/sprints/sprint-4/specifications/IFC-188-spec.md",
       "has_spec": true,
@@ -1006,12 +3345,15 @@
       "csv_status": "Completed",
       "metric_status": "DONE",
       "acceptance_criteria_count": 13,
-      "dependencies": ["IFC-002", "IFC-003"],
+      "dependencies": [
+        "IFC-002",
+        "IFC-003"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-189",
-      "title": "Ticket tRPC Router — close, escalate, assign, getSLAStatus, getByCustomer",
+      "title": "Ticket tRPC Router - CRUD SLA tracking escalation assignment customer portal",
       "sprint": 5,
       "spec_path": ".specify/sprints/sprint-5/specifications/IFC-189-spec.md",
       "has_spec": true,
@@ -1019,13 +3361,17 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 10,
-      "dependencies": ["IFC-188", "IFC-107", "IFC-003"],
+      "acceptance_criteria_count": 14,
+      "dependencies": [
+        "IFC-188",
+        "IFC-107",
+        "IFC-003"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-197",
-      "title": "AI Monitoring tRPC Router",
+      "title": "AI Monitoring tRPC Router - Expose drift detection latency metrics hallucination checks ROI tracking and agent status via tRPC endpoints",
       "sprint": 7,
       "spec_path": ".specify/sprints/sprint-7/specifications/IFC-197-spec.md",
       "has_spec": true,
@@ -1033,27 +3379,50 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 10,
-      "dependencies": ["IFC-117", "IFC-125"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-117",
+        "IFC-125"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-198",
-      "title": "Billing Domain Core",
-      "sprint": 29,
+      "title": "Billing Domain Core - Invoice/Receipt aggregates, payment state machine, tax/refund rules",
+      "sprint": 13,
       "spec_path": ".specify/sprints/sprint-29/specifications/IFC-198-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 16,
-      "dependencies": ["IFC-099", "IFC-107"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-099",
+        "IFC-107"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-200",
+      "title": "Analytics Adapter Layer - query builders and export pipeline for metrics router",
+      "sprint": 13,
+      "spec_path": ".specify/sprints/sprint-29/specifications/IFC-200-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "In Progress",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-096",
+        "IFC-106"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-205",
-      "title": "Ticket Full-Text Search",
+      "title": "Ticket Full-Text Search - add search parameter to ticketQuerySchema and TicketService for subject ticketNumber contactName searching",
       "sprint": 6,
       "spec_path": ".specify/sprints/sprint-6/specifications/IFC-205-spec.md",
       "has_spec": true,
@@ -1061,13 +3430,15 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 6,
-      "dependencies": ["IFC-189"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-189"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-206",
-      "title": "Ticket Stats Enhancement",
+      "title": "Ticket Stats Enhancement - add SLA status breakdown time window filtering and sortBy sortOrder to ticket query schema",
       "sprint": 6,
       "spec_path": ".specify/sprints/sprint-6/specifications/IFC-206-spec.md",
       "has_spec": true,
@@ -1075,134 +3446,278 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 5,
-      "dependencies": ["IFC-189", "IFC-205"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-189"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-207",
-      "title": "Ticket Query Performance Tracking",
+      "title": "Ticket Query Performance Tracking - add queryDurationMs to ticket list and stats endpoints using performance.now pattern from timeline router",
       "sprint": 6,
       "spec_path": ".specify/sprints/sprint-6/specifications/IFC-207-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
-      "acceptance_criteria_count": 7,
-      "dependencies": ["IFC-189"],
+      "metric_status": "Completed",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-189"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-001",
-      "title": "Home Page (Public Marketing)",
+      "title": "Home Page (Public)",
       "sprint": 11,
       "spec_path": ".specify/sprints/sprint-11/specifications/PG-001-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
-      "acceptance_criteria_count": 1,
-      "dependencies": ["IFC-076", "GTM-002", "BRAND-001"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-076",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-002",
-      "title": "Features Page (Public Marketing)",
+      "title": "Features Page",
       "sprint": 11,
       "spec_path": ".specify/sprints/sprint-11/specifications/PG-002-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
-      "acceptance_criteria_count": 1,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-003",
-      "title": "Pricing Page (Public Marketing)",
+      "title": "Pricing Page",
       "sprint": 11,
       "spec_path": ".specify/sprints/sprint-11/specifications/PG-003-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
-      "acceptance_criteria_count": 1,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-004",
-      "title": "About Page (Public Marketing)",
+      "title": "About Page",
       "sprint": 11,
       "spec_path": ".specify/sprints/sprint-11/specifications/PG-004-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
-      "acceptance_criteria_count": 1,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-005",
-      "title": "Contact Page (Public Marketing)",
+      "title": "Contact Page",
       "sprint": 11,
       "spec_path": ".specify/sprints/sprint-11/specifications/PG-005-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
-      "acceptance_criteria_count": 1,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-006",
-      "title": "Partners Page (Public Marketing)",
+      "title": "Partners Page",
       "sprint": 11,
       "spec_path": ".specify/sprints/sprint-11/specifications/PG-006-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
-      "acceptance_criteria_count": 1,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-007",
-      "title": "Press Page (Public Marketing)",
+      "title": "Press Page",
       "sprint": 11,
       "spec_path": ".specify/sprints/sprint-11/specifications/PG-007-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "DONE",
-      "acceptance_criteria_count": 1,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-008",
-      "title": "Security Page (Public Marketing)",
+      "title": "Security Page",
       "sprint": 11,
       "spec_path": ".specify/sprints/sprint-11/specifications/PG-008-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-009",
+      "title": "Blog Index",
+      "sprint": 12,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 1,
-      "dependencies": ["PG-001", "GTM-002", "BRAND-001"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-010",
+      "title": "Blog Post",
+      "sprint": 12,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-009",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-011",
+      "title": "Careers Page",
+      "sprint": 12,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-012",
+      "title": "Career Detail",
+      "sprint": 12,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-011",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-013",
+      "title": "Landing Page Template",
+      "sprint": 12,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-014",
+      "title": "Status Page",
+      "sprint": 12,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
       "real_status": "COMPLETED"
     },
     {
@@ -1215,8 +3730,12 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 3,
-      "dependencies": ["IFC-006", "IFC-076", "IFC-098"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-006",
+        "IFC-076",
+        "IFC-098"
+      ],
       "real_status": "COMPLETED"
     },
     {
@@ -1228,25 +3747,46 @@
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 8,
-      "dependencies": ["PG-015", "IFC-006"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 26,
+      "dependencies": [
+        "PG-015",
+        "IFC-006"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-017",
+      "title": "Sign Up Success",
+      "sprint": 13,
+      "spec_path": ".specify/sprints/sprint-13/specifications/PG-017-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "In Progress",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-016"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-018",
       "title": "Logout",
       "sprint": 13,
-      "spec_path": ".specify/sprints/sprint-13/specifications/PG-018-spec.md",
+      "spec_path": ".specify/sprints/sprint-12/specifications/PG-018-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 10,
-      "dependencies": ["PG-015", "IFC-006"],
-      "real_status": "COMPLETED",
-      "notes": "Sprint-12 also has a PG-018 spec (orphaned early draft with no plan/attestation). Sprint-13 is the canonical completed version."
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-015",
+        "IFC-006"
+      ],
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-019",
@@ -1257,9 +3797,12 @@
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 14,
-      "dependencies": ["PG-015", "IFC-006"],
+      "dependencies": [
+        "PG-015",
+        "IFC-006"
+      ],
       "real_status": "COMPLETED"
     },
     {
@@ -1271,9 +3814,11 @@
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 8,
-      "dependencies": ["PG-019"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-019"
+      ],
       "real_status": "COMPLETED"
     },
     {
@@ -1285,9 +3830,13 @@
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 14,
-      "dependencies": ["PG-015", "IFC-006", "IFC-098"],
+      "dependencies": [
+        "PG-015",
+        "IFC-006",
+        "IFC-098"
+      ],
       "real_status": "COMPLETED"
     },
     {
@@ -1299,9 +3848,46 @@
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 14,
-      "dependencies": ["PG-021", "PG-015"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-021",
+        "PG-015"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-023",
+      "title": "Email Verification",
+      "sprint": 13,
+      "spec_path": ".specify/sprints/sprint-13/specifications/PG-023-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-016",
+        "IFC-006"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-024",
+      "title": "SSO Callback",
+      "sprint": 13,
+      "spec_path": ".specify/sprints/sprint-13/specifications/PG-024-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-015",
+        "IFC-006"
+      ],
       "real_status": "COMPLETED"
     },
     {
@@ -1314,24 +3900,128 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 10,
-      "dependencies": ["IFC-099", "IFC-198"],
+      "acceptance_criteria_count": 14,
+      "dependencies": [
+        "IFC-099",
+        "IFC-198"
+      ],
       "real_status": "COMPLETED"
     },
     {
-      "task_id": "PG-031",
-      "title": "Receipts Billing Page",
+      "task_id": "PG-026",
+      "title": "Checkout",
       "sprint": 14,
-      "spec_path": ".specify/sprints/sprint-0/specifications/PG-031-spec.md",
+      "spec_path": ".specify/sprints/sprint-14/specifications/PG-026-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 7,
-      "dependencies": ["PG-025", "IFC-198"],
-      "real_status": "COMPLETED",
-      "notes": "Cross-sprint spec: spec written in sprint-0 but executed in sprint-14."
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-025",
+        "IFC-198"
+      ],
+      "real_status": "UNCERTAIN"
+    },
+    {
+      "task_id": "PG-027",
+      "title": "Invoices",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/PG-027-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-025",
+        "IFC-198"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-028",
+      "title": "Invoice Detail",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/PG-028-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-027",
+        "IFC-198"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-029",
+      "title": "Payment Methods",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/PG-029-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "In Progress",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-025",
+        "IFC-198"
+      ],
+      "real_status": "PARTIALLY_DONE"
+    },
+    {
+      "task_id": "PG-030",
+      "title": "Subscriptions",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/PG-030-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-025",
+        "IFC-198"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-031",
+      "title": "Receipts",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/PG-031-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-025",
+        "IFC-198"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-031-discussion",
+      "title": "PG-031-discussion",
+      "sprint": 0,
+      "spec_path": ".specify/sprints/sprint-0/specifications/PG-031-discussion-spec.md",
+      "has_spec": true,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "NOT_IN_CSV",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "PG-032",
@@ -1344,23 +4034,26 @@
       "csv_status": "Completed",
       "metric_status": "DONE",
       "acceptance_criteria_count": 7,
-      "dependencies": ["IFC-079"],
+      "dependencies": [
+        "IFC-079"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-033",
-      "title": "API Docs (Scalar)",
+      "title": "API Docs",
       "sprint": 15,
       "spec_path": ".specify/sprints/sprint-15/specifications/PG-033-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
-      "acceptance_criteria_count": 14,
-      "dependencies": ["PG-032"],
-      "real_status": "PARTIALLY_DONE",
-      "notes": "CSV=Backlog at 0%. context_ack.json in attestation dir appears from spec session only, not exec."
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-032"
+      ],
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-104",
@@ -1371,14 +4064,16 @@
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
-      "acceptance_criteria_count": 8,
-      "dependencies": ["IFC-076"],
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 2,
+      "dependencies": [
+        "IFC-076"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-128",
-      "title": "AI Chain Versioning Admin UI (FLOW-045)",
+      "title": "FLOW-045: AI Chain Versioning Admin UI - Wire IFC-086 Backend",
       "sprint": 14,
       "spec_path": ".specify/sprints/sprint-14/specifications/PG-128-spec.md",
       "has_spec": true,
@@ -1386,27 +4081,49 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 20,
-      "dependencies": ["IFC-086"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-086"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-129",
+      "title": "Authenticated Home Page - Welcome summary activity feed AI insights pinned items goals",
+      "sprint": 14,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-182",
+        "IFC-069",
+        "IFC-095"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-132",
-      "title": "Smart Lead Routing UI",
+      "title": "Smart Lead Routing UI - Rules configuration assignment dashboard SLA monitoring",
       "sprint": 18,
       "spec_path": ".specify/sprints/sprint-18/specifications/PG-132-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": null,
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 20,
-      "dependencies": ["IFC-030"],
+      "dependencies": [
+        "IFC-030"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-133",
-      "title": "Contact List & Detail Pages",
+      "title": "Contact List & Detail Pages - Search filters relationship view activity timeline",
       "sprint": 5,
       "spec_path": ".specify/sprints/sprint-5/specifications/PG-133-spec.md",
       "has_spec": true,
@@ -1414,13 +4131,15 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 15,
-      "dependencies": ["IFC-184"],
+      "acceptance_criteria_count": 3,
+      "dependencies": [
+        "IFC-184"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-134",
-      "title": "Account List & Detail Pages",
+      "title": "Account List & Detail Pages - Hierarchy view contacts opportunities revenue charts",
       "sprint": 5,
       "spec_path": ".specify/sprints/sprint-5/specifications/PG-134-spec.md",
       "has_spec": true,
@@ -1428,13 +4147,15 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 20,
-      "dependencies": ["IFC-185", "IFC-103", "IFC-107", "IFC-017"],
+      "acceptance_criteria_count": 32,
+      "dependencies": [
+        "IFC-185"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-135",
-      "title": "Deal Pipeline Page",
+      "title": "Deal Pipeline Page - Kanban board drag-drop stages value totals filtering",
       "sprint": 6,
       "spec_path": ".specify/sprints/sprint-6/specifications/PG-135-spec.md",
       "has_spec": true,
@@ -1442,13 +4163,15 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 32,
-      "dependencies": ["IFC-186"],
+      "acceptance_criteria_count": 31,
+      "dependencies": [
+        "IFC-186"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-136",
-      "title": "Task Management Page",
+      "title": "Task Management Page - List calendar view assignments reminders entity linking",
       "sprint": 6,
       "spec_path": ".specify/sprints/sprint-6/specifications/PG-136-spec.md",
       "has_spec": true,
@@ -1456,29 +4179,31 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 18,
-      "dependencies": ["IFC-187"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-187"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-137",
-      "title": "Ticket Management Page",
+      "title": "Ticket Management Page - List detail SLA indicators escalation customer portal view",
       "sprint": 6,
       "spec_path": ".specify/sprints/sprint-6/specifications/PG-137-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "csv_percent_complete": 75,
       "metric_status": "DONE",
       "acceptance_criteria_count": 21,
-      "dependencies": ["IFC-189"],
-      "real_status": "UNCERTAIN",
-      "notes": "Attestation COMPLETE and metric JSON DONE, but CSV shows only 75%. Likely CSV update lag."
+      "dependencies": [
+        "IFC-189"
+      ],
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-138",
-      "title": "Case List and Detail Pages",
+      "title": "Case List & Detail Pages - Party management deadline tracking document links timeline",
       "sprint": 7,
       "spec_path": ".specify/sprints/sprint-7/specifications/PG-138-spec.md",
       "has_spec": true,
@@ -1487,12 +4212,14 @@
       "csv_status": "Completed",
       "metric_status": "DONE",
       "acceptance_criteria_count": 15,
-      "dependencies": ["IFC-136"],
+      "dependencies": [
+        "IFC-136"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-139",
-      "title": "Appointment Scheduling Page",
+      "title": "Appointment Scheduling Page - Calendar view conflict detection case linking reminders",
       "sprint": 7,
       "spec_path": ".specify/sprints/sprint-7/specifications/PG-139-spec.md",
       "has_spec": true,
@@ -1500,13 +4227,32 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 32,
-      "dependencies": ["IFC-137"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-137"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-140",
+      "title": "Document Manager Page - Upload viewer version history ACL management search",
+      "sprint": 13,
+      "spec_path": ".specify/sprints/sprint-13/specifications/PG-140-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-152",
+        "IFC-153"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-141",
-      "title": "Email Compose & History Page",
+      "title": "Email Compose & History Page - Thread view compose attachments templates",
       "sprint": 11,
       "spec_path": ".specify/sprints/sprint-11/specifications/PG-141-spec.md",
       "has_spec": true,
@@ -1514,13 +4260,15 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 19,
-      "dependencies": ["IFC-144"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-144"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-142",
-      "title": "Sentiment Analysis Dashboard",
+      "title": "Sentiment Analysis Dashboard at /agent-approvals/sentiment - Timeline badges trend visualization email sentiment preview",
       "sprint": 7,
       "spec_path": ".specify/sprints/sprint-7/specifications/PG-142-spec.md",
       "has_spec": true,
@@ -1529,12 +4277,15 @@
       "csv_status": "Completed",
       "metric_status": "DONE",
       "acceptance_criteria_count": 22,
-      "dependencies": ["IFC-039", "IFC-181"],
+      "dependencies": [
+        "IFC-039",
+        "IFC-181"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-143",
-      "title": "Churn Risk Dashboard",
+      "title": "Churn Risk Dashboard at /agent-approvals/churn-risk - Health scores risk indicators intervention triggers trend charts",
       "sprint": 7,
       "spec_path": ".specify/sprints/sprint-7/specifications/PG-143-spec.md",
       "has_spec": true,
@@ -1542,13 +4293,16 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 16,
-      "dependencies": ["IFC-095", "IFC-181"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-095",
+        "IFC-181"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-144",
-      "title": "AI Search (RAG) Page",
+      "title": "AI Search (RAG) Page at /agent-approvals/ai-search - Universal search bar AI-powered results citations source highlighting",
       "sprint": 7,
       "spec_path": ".specify/sprints/sprint-7/specifications/PG-144-spec.md",
       "has_spec": true,
@@ -1557,12 +4311,16 @@
       "csv_status": "Completed",
       "metric_status": "DONE",
       "acceptance_criteria_count": 23,
-      "dependencies": ["IFC-156", "IFC-155", "IFC-181"],
+      "dependencies": [
+        "IFC-156",
+        "IFC-155",
+        "IFC-181"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-146",
-      "title": "Drift Detection Dashboard",
+      "title": "Drift Detection Dashboard at /agent-approvals/drift - Model performance drift alerts cost tracking error rates",
       "sprint": 8,
       "spec_path": ".specify/sprints/sprint-8/specifications/PG-146-spec.md",
       "has_spec": true,
@@ -1570,13 +4328,16 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 15,
-      "dependencies": ["IFC-117", "IFC-197"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-117",
+        "IFC-197"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-148",
-      "title": "Lead Scoring Dashboard",
+      "title": "Lead Scoring Dashboard at /agent-approvals/lead-scoring - Score distributions model accuracy top leads factor breakdown",
       "sprint": 7,
       "spec_path": ".specify/sprints/sprint-7/specifications/PG-148-spec.md",
       "has_spec": true,
@@ -1584,13 +4345,17 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 15,
-      "dependencies": ["IFC-005", "IFC-023", "IFC-181"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-005",
+        "IFC-023",
+        "IFC-181"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-149",
-      "title": "Experiments Dashboard",
+      "title": "Experiments Dashboard at /agent-approvals/experiments - A/B test management experiment results statistical analysis variant comparison",
       "sprint": 7,
       "spec_path": ".specify/sprints/sprint-7/specifications/PG-149-spec.md",
       "has_spec": true,
@@ -1598,13 +4363,16 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 30,
-      "dependencies": ["IFC-025", "IFC-181"],
+      "acceptance_criteria_count": 11,
+      "dependencies": [
+        "IFC-025",
+        "IFC-181"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-150",
-      "title": "AI Review History Page",
+      "title": "AI Review History at /agent-approvals/history - Filterable history of all AI output reviews with timeline and audit trail",
       "sprint": 7,
       "spec_path": ".specify/sprints/sprint-7/specifications/PG-150-spec.md",
       "has_spec": true,
@@ -1612,13 +4380,16 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 11,
-      "dependencies": ["IFC-180", "IFC-181"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-181",
+        "IFC-180"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-151",
-      "title": "Active Agents Dashboard",
+      "title": "Active Agents Dashboard at /agent-approvals/agents - Agent status monitoring active sessions task assignments health indicators",
       "sprint": 8,
       "spec_path": ".specify/sprints/sprint-8/specifications/PG-151-spec.md",
       "has_spec": true,
@@ -1626,13 +4397,17 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
-      "acceptance_criteria_count": 10,
-      "dependencies": ["IFC-021", "IFC-139", "IFC-197"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-021",
+        "IFC-139",
+        "IFC-197"
+      ],
       "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-152",
-      "title": "Agent Logs Viewer",
+      "title": "Agent Logs Viewer at /agent-approvals/logs - Conversation transcripts tool call records searchable log timeline",
       "sprint": 8,
       "spec_path": ".specify/sprints/sprint-8/specifications/PG-152-spec.md",
       "has_spec": true,
@@ -1640,13 +4415,16 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 12,
-      "dependencies": ["IFC-148", "IFC-197"],
-      "real_status": "COMPLETED"
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-148",
+        "IFC-197"
+      ],
+      "real_status": "UNCERTAIN"
     },
     {
       "task_id": "PG-153",
-      "title": "Latency Monitor Dashboard",
+      "title": "Latency Monitor Dashboard at /agent-approvals/latency - SLO compliance latency percentiles chain performance phase-level monitoring",
       "sprint": 8,
       "spec_path": ".specify/sprints/sprint-8/specifications/PG-153-spec.md",
       "has_spec": true,
@@ -1654,9 +4432,160 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 10,
-      "dependencies": ["IFC-117", "IFC-197"],
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-117",
+        "IFC-197"
+      ],
+      "real_status": "UNCERTAIN"
+    },
+    {
+      "task_id": "PG-155",
+      "title": "Fix 6 broken Quick Action hrefs - /calls/new /emails/compose /calendar/new /tasks/new /deals/new /documents/upload all return 404",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/PG-155-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-129"
+      ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-171",
+      "title": "Integration Resources Page",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/PG-171-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-032",
+        "PG-034"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PM-OPS-001",
+      "title": "Project Operating Model & Delivery Playbook (cadence, WIP, ticket sizing, ABC)",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "AUTOMATION-001",
+        "ENV-005-AI"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "SALES-001",
+      "title": "Commercial Narrative + Pitch Deck Outline + One-Pager",
+      "sprint": 1,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "SALES-002",
+      "title": "Sales Motion Playbook (outreach sequences, discovery + demo scripts)",
+      "sprint": 2,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "SALES-001",
+        "GTM-002"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "swarm",
+      "title": "swarm",
+      "sprint": 0,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "NOT_IN_CSV",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "TRACK-001",
+      "title": "Status Snapshot UI - Real-time task status tracking with manual refresh button",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/TRACK-001-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "EXP-REPORTS-001"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "TRACK-002",
+      "title": "Quality Metrics UI - Debt ledger coverage SonarQube with refresh buttons",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/TRACK-002-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Plan Complete",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "EXP-REPORTS-002",
+        "IFC-088"
+      ],
+      "real_status": "PARTIALLY_DONE"
+    },
+    {
+      "task_id": "TRACK-003",
+      "title": "Risk Register UI - View and update risks with mitigation tracking",
+      "sprint": 14,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "Backlog",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "EXP-REPORTS-003",
+        "IFC-118"
+      ],
+      "real_status": "PARTIALLY_DONE"
     }
   ]
 }

@@ -65,7 +65,7 @@ const KEYWORD_TO_FILES: Record<string, string[]> = {
   chart: ['apps/web/src/components/charts/*'],
   widget: ['apps/web/src/components/widgets/*'],
   storybook: ['apps/web/.storybook/*'],
-  tailwind: ['tailwind.config.ts'],
+  tailwind: ['apps/web/src/app/globals.css', 'apps/project-tracker/app/globals.css'],
   shadcn: ['packages/ui/src/components/*'],
   'next.js': ['apps/web/next.config.js'],
   turbopack: ['apps/web/next.config.js'],

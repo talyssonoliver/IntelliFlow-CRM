@@ -26,7 +26,7 @@ Before reviewing, you MUST read:
 3. The **Sprint_plan.csv** row for the task (Artifacts To Track, KPIs,
    Definition of Done)
 
-## Review Checklist (24 Categories)
+## Review Checklist (25 Categories)
 
 ### A. Files Summary Accuracy (CRITICAL — caught in PG-032)
 
@@ -236,6 +236,45 @@ Before reviewing, you MUST read:
 79. If shared: plan preflight MUST include it and the component must exist
     at the shared path
 80. Ambiguous shared/internal status → **WARN** — plan must be explicit
+
+### Y. UI Reachability (UI tasks only — caught in PG-030)
+
+81. For every page/route being created or modified, verify the plan includes a
+    step to ensure the page is discoverable from the app shell
+82. Check the spec's "Navigation & Reachability" section — if it specifies a
+    sidebar entry, the plan MUST have a step to add/update
+    `apps/web/src/components/sidebar/configs/<section>.ts`
+83. If the page is new and no navigation step exists in the plan → **ERROR**
+84. If the page is an enhancement to an existing reachable page → check the
+    existing sidebar/nav entry is correct (no action needed if already wired)
+85. A page reachable only by direct URL with no sidebar/breadcrumb/parent-link
+    → **ERROR** — plan must include a navigation wiring step
+
+### Z. Internal Contradiction Detection (caught in TRACK-001)
+
+86. For each implementation step, compare the "what to do" instruction against any
+    `**Note:**` blocks, caveats, or "intentional asymmetry" remarks within the SAME step
+87. If a step says "add fields X, Y, Z" but a note says "Y and Z are intentionally
+    omitted" → **ERROR** — remove the contradictory instruction or remove the note
+88. The implementer should never have to guess which instruction to follow
+89. Common anti-pattern: "Add these 3 fields" + "These 2 are reserved for future" =
+    implementer skips them but checks the box anyway
+90. Rule: If something is deferred to future, it MUST NOT appear in the current step's
+    implementation instructions — move it to a "Future Work" section instead
+
+### AA. Type Contract Consistency Across Boundaries (caught in TRACK-001)
+
+91. When a plan step modifies a **backend** interface (API response shape, HistoryEntry,
+    StatusSnapshot, etc.), scan ALL plan steps for **frontend** files that consume that
+    interface
+92. If a new field is added to a backend response, the frontend type that parses it MUST
+    also be updated — either in the same step or a later step with explicit cross-reference
+93. Check both directions: backend → frontend AND shared types → consumers
+94. Common anti-pattern: Route adds `planned` to JSON response, but component's
+    TypeScript interface omits it — backend sends data that frontend silently drops
+95. If a backend interface change has no corresponding frontend type update → **ERROR**
+96. If the field is intentionally not displayed in the UI, the frontend type SHOULD still
+    include it (with a `// not displayed` comment) to maintain type contract parity
 
 ## Output Format
 

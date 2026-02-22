@@ -270,6 +270,41 @@ IFC-136 (Case) ✅ ──┬──► IFC-147 (Deadlines) ✅ ──► Case Sta
 
 ---
 
+## 5. Deal Won Closure Workflow (FLOW-009)
+
+### Overview
+
+| Layer       | Task ID | Status | Description                      |
+| ----------- | ------- | ------ | -------------------------------- |
+| Domain      | IFC-104 | ✅     | Opportunity entity + events      |
+| Application | IFC-065 | ✅     | CloseDealWonUseCase              |
+| API         | IFC-186 | ✅     | opportunity.router moveStage     |
+| UI          | PG-135  | ✅     | Pipeline Kanban (DnD)            |
+
+### Dependency Chain
+
+```
+IFC-091 (Deals Pipeline Kanban) ✅ ──┐
+                                     ├──► IFC-065 (CloseDealWonUseCase) ✅
+IFC-092 (Deal Forecasting) ✅ ───────┘
+
+Orchestration Flow:
+  opportunity.router.moveStage(CLOSED_WON)
+    → CloseDealWonUseCase.execute()
+      → OpportunityService.markAsWon() [domain transition + persistence + base events]
+      → DealWonEnrichedEvent [fire-and-forget, carries full context for analytics]
+      → NotificationService.sendEmail() [fire-and-forget, deal-won notification]
+```
+
+### Key Design Decisions
+
+- **Use Case Delegation**: CloseDealWonUseCase delegates domain transition to OpportunityService.markAsWon() (DRY)
+- **Event-Driven Metrics**: No direct AnalyticsAggregationService call; DealWonEnrichedEvent carries all data for downstream consumers
+- **Fire-and-Forget**: Both enriched event publishing and notification dispatch are non-blocking
+- **3 Constructor Dependencies**: OpportunityService, EventBusPort, NotificationServicePort
+
+---
+
 ## Summary
 
 | Chain                | Status        | Blocking Issues                      |
@@ -278,6 +313,7 @@ IFC-136 (Case) ✅ ──┬──► IFC-147 (Deadlines) ✅ ──► Case Sta
 | Smart Lead Routing   | ⬜ All New    | IFC-030 core routing not started     |
 | DSAR Workflow        | ⬜ Mostly New | IFC-058, dsar.router needed          |
 | Legal Case Workflows | ⬜ Partial    | IFC-141, PG-138 needed               |
+| Deal Won Closure     | ✅ Complete   | IFC-065 fully implemented            |
 
 ### Prerequisites for Implementation
 

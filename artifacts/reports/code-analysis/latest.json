@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-18T00:42:41.090Z",
+  "timestamp": "2026-02-20T22:59:09.773Z",
   "knip": {
     "success": true,
     "data": {
@@ -18,6 +18,7 @@
         "apps/web/src/lib/tickets/index.ts",
         "apps/web/src/lib/tickets/sla-service.ts",
         "apps/web/src/test/fixtures/case-data.ts",
+        "apps/web/src/app/accounts/(list)/actions.ts",
         "apps/web/src/components/shared/activity-feed/index.ts",
         "apps/api/src/scripts/backfill-ticket-relations.ts",
         "apps/api/src/shared/bias-detector.ts",
@@ -45,7 +46,6 @@
         "@paralleldrive/cuid2"
       ],
       "devDependencies": [
-        "@anatine/zod-openapi",
         "@apidevtools/swagger-parser",
         "openapi3-ts",
         "@microsoft/api-extractor",
@@ -345,6 +345,12 @@
           ]
         },
         {
+          "file": "apps/web/src/lib/cached-queries/account-queries.ts",
+          "exports": [
+            "fetchAccountsFirstPage"
+          ]
+        },
+        {
           "file": "apps/web/src/components/billing/invoice-list.tsx",
           "exports": [
             "default"
@@ -369,6 +375,12 @@
           ]
         },
         {
+          "file": "apps/web/src/lib/cached-queries/contact-queries.ts",
+          "exports": [
+            "fetchContactStats"
+          ]
+        },
+        {
           "file": "apps/web/src/lib/shared/filter-utils.ts",
           "exports": [
             "taskStatusChips",
@@ -376,7 +388,13 @@
           ]
         },
         {
-          "file": "apps/web/src/components/blog/comments-widget.tsx",
+          "file": "apps/web/src/components/shared/auth-background.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/shared/oauth-callback.tsx",
           "exports": [
             "default"
           ]
@@ -388,13 +406,13 @@
           ]
         },
         {
-          "file": "apps/web/src/components/shared/landing-builder.tsx",
+          "file": "apps/web/src/components/blog/comments-widget.tsx",
           "exports": [
             "default"
           ]
         },
         {
-          "file": "apps/web/src/components/shared/auth-background.tsx",
+          "file": "apps/web/src/components/shared/landing-builder.tsx",
           "exports": [
             "default"
           ]
@@ -406,19 +424,7 @@
           ]
         },
         {
-          "file": "apps/web/src/components/shared/password-reset.tsx",
-          "exports": [
-            "default"
-          ]
-        },
-        {
           "file": "apps/web/src/components/shared/onboarding-flow.tsx",
-          "exports": [
-            "default"
-          ]
-        },
-        {
-          "file": "apps/web/src/components/shared/email-verification.tsx",
           "exports": [
             "default"
           ]
@@ -442,7 +448,19 @@
           ]
         },
         {
+          "file": "apps/web/src/components/shared/email-verification.tsx",
+          "exports": [
+            "default"
+          ]
+        },
+        {
           "file": "apps/web/src/lib/agent/rollback-service.ts",
+          "exports": [
+            "default"
+          ]
+        },
+        {
+          "file": "apps/web/src/components/auth/mfa-challenge.tsx",
           "exports": [
             "default"
           ]
@@ -454,12 +472,6 @@
             "createMockAppointment",
             "createMockConflict",
             "createMockStats"
-          ]
-        },
-        {
-          "file": "apps/web/src/components/auth/mfa-challenge.tsx",
-          "exports": [
-            "default"
           ]
         },
         {
@@ -481,13 +493,13 @@
           ]
         },
         {
-          "file": "apps/web/src/components/shared/oauth-callback.tsx",
+          "file": "apps/web/src/components/shared/password-input.tsx",
           "exports": [
             "default"
           ]
         },
         {
-          "file": "apps/web/src/components/shared/password-input.tsx",
+          "file": "apps/web/src/components/shared/password-reset.tsx",
           "exports": [
             "default"
           ]
@@ -523,9 +535,16 @@
           ]
         },
         {
-          "file": "apps/web/src/lib/active-agents/agent-utils.ts",
+          "file": "apps/web/src/lib/cache-profiles.ts",
           "exports": [
-            "getStatusColor"
+            "RECORD_DETAIL",
+            "REFERENCE"
+          ]
+        },
+        {
+          "file": "apps/web/src/lib/cache-tags.ts",
+          "exports": [
+            "entityTag"
           ]
         },
         {
@@ -561,12 +580,6 @@
           ]
         },
         {
-          "file": "apps/api/src/shared/prompt-sanitizer.ts",
-          "exports": [
-            "logSecurityEvent"
-          ]
-        },
-        {
           "file": "apps/api/src/tracing/middleware.ts",
           "exports": [
             "tracedPublicProcedure",
@@ -583,6 +596,12 @@
           "file": "apps/api/src/tracing/correlation.ts",
           "exports": [
             "getUserId"
+          ]
+        },
+        {
+          "file": "apps/api/src/shared/prompt-sanitizer.ts",
+          "exports": [
+            "logSecurityEvent"
           ]
         },
         {
@@ -1164,9 +1183,9 @@
       "duplicates": []
     },
     "summary": {
-      "unusedFiles": 22,
-      "unusedDeps": 28,
-      "unusedExports": 122,
+      "unusedFiles": 23,
+      "unusedDeps": 27,
+      "unusedExports": 126,
       "unusedTypes": 170
     }
   },
@@ -1175,7 +1194,6 @@
     "data": {
       "dependencies": [],
       "devDependencies": [
-        "@eslint/eslintrc",
         "@microsoft/api-extractor",
         "@typescript-eslint/eslint-plugin",
         "@typescript-eslint/parser",
@@ -1195,7 +1213,7 @@
     },
     "summary": {
       "unusedDeps": 0,
-      "unusedDevDeps": 15,
+      "unusedDevDeps": 14,
       "missingDeps": 0
     }
   }

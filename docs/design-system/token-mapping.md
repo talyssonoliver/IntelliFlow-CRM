@@ -255,12 +255,12 @@ contrast.
 | `typography.fontFamily.sans` | `Inter, system-ui, ...` | `font-sans`    | Body text, UI |
 | `typography.fontFamily.mono` | `ui-monospace, ...`     | `font-mono`    | Code blocks   |
 
-**Tailwind Config:**
+**Tailwind Config (v4 CSS-first in `globals.css`):**
 
-```typescript
-fontFamily: {
-  sans: ['Inter', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
-  mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
+```css
+@theme inline {
+  --font-sans: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
 }
 ```
 
@@ -309,13 +309,13 @@ with Tailwind's 4px base unit.
 | -            | `calc(var(--radius) - 2px)` | `rounded-md`   | Medium border radius  |
 | -            | `calc(var(--radius) - 4px)` | `rounded-sm`   | Small border radius   |
 
-**Tailwind Config:**
+**Tailwind Config (v4 CSS-first in `globals.css`):**
 
-```typescript
-borderRadius: {
-  lg: 'var(--radius)',
-  md: 'calc(var(--radius) - 2px)',
-  sm: 'calc(var(--radius) - 4px)',
+```css
+@theme inline {
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
 }
 ```
 
@@ -448,7 +448,7 @@ When adding a new color from brand tokens:
 1. Add brand token to `docs/company/brand/palette.tokens.json`
 2. Convert HEX to HSL
 3. Add CSS variable to `apps/web/src/app/globals.css` (both `:root` and `.dark`)
-4. Add Tailwind utility to `apps/web/tailwind.config.ts`
+4. Add token to `@theme inline { }` block in `apps/web/src/app/globals.css`
 5. Document mapping in this file
 6. Update component if needed
 
@@ -486,7 +486,7 @@ When adding a new color from brand tokens:
 
 - [Brand Tokens](../../company/brand/palette.tokens.json)
 - [CSS Variables](../../apps/web/src/app/globals.css)
-- [Tailwind Config](../../apps/web/tailwind.config.ts)
+- [Tailwind Config (globals.css)](../../apps/web/src/app/globals.css)
 - [Token Naming](./token-naming.md)
 - [Theme Reference](./theme-reference-spec.md)
 

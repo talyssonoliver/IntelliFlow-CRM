@@ -15,10 +15,10 @@ verification.
 | ------------------ | ------- | ---------- | -------- |
 | Sign In            | IFC-006 | PG-015     | COMPLETE |
 | Sign Up            | IFC-006 | PG-016     | COMPLETE |
-| Logout             | IFC-006 | PG-017     | COMPLETE |
+| Sign Up Success    | IFC-006 | PG-017     | COMPLETE |
 | Password Reset     | IFC-006 | PG-018-021 | COMPLETE |
-| MFA/2FA            | IFC-098 | PG-021-023 | PARTIAL  |
-| Email Verification | IFC-006 | PG-024     | COMPLETE |
+| MFA/2FA            | IFC-098 | PG-021-022 | COMPLETE |
+| Email Verification | IFC-006 | PG-023     | COMPLETE |
 | Public Pages       | N/A     | PG-001-014 | COMPLETE |
 | Onboarding         | IFC-076 | PG-126     | BACKLOG  |
 
@@ -57,10 +57,12 @@ verification.
                               │                                         │
                               │  auth.router.ts:                        │
                               │  - auth.signIn                          │
-                              │  - auth.signUp                          │
+                              │  - auth.signUp (IFC-120: Supabase)      │
                               │  - auth.signOut                         │
-                              │  - auth.resetPassword                   │
-                              │  - auth.verifyEmail                     │
+                              │  - auth.requestPasswordReset (IFC-120)  │
+                              │  - auth.resetPassword (IFC-120)         │
+                              │  - auth.verifyEmail (IFC-120: replaced) │
+                              │  - auth.resendVerification (IFC-120)    │
                               │  - auth.refreshToken                    │
                               │  - auth.getSession                      │
                               │                                         │
@@ -72,13 +74,24 @@ verification.
     ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
 
     ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-    │   PG-015    │  │   PG-016    │  │   PG-017    │  │  PG-018-021 │  │   PG-024    │
+    │   PG-015    │  │   PG-016    │  │   PG-017    │  │  PG-018-021 │  │   PG-023    │
     │  Sign In    │  │  Sign Up    │  │   Logout    │  │  Password   │  │   Email     │
-    │             │  │             │  │             │  │   Reset     │  │   Verify    │
-    │ /login      │  │ /signup     │  │ (redirect)  │  │ /forgot     │  │ /verify     │
-    │             │  │             │  │             │  │ /reset      │  │             │
+    │             │  │  (IFC-120)  │  │             │  │   Reset     │  │   Verify    │
+    │ /login      │  │ /signup     │  │ (redirect)  │  │ /forgot     │  │ /verify-    │
+    │             │  │             │  │             │  │ /reset/cb   │  │ email/cb    │
     │ COMPLETED ✅│  │ COMPLETED ✅│  │ COMPLETED ✅│  │ COMPLETED ✅│  │ COMPLETED ✅│
-    └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘
+    └──────┬──────┘  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘
+           │
+           │ PG-015 ──► PG-024
+           ▼
+    ┌─────────────┐
+    │   PG-024    │
+    │ SSO Callback│
+    │             │
+    │ /auth/      │
+    │  callback   │
+    │ COMPLETED ✅│
+    └─────────────┘
 
     ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
     ║  MFA/2FA FLOW                                                            ✅ COMPLETE     ║
@@ -286,10 +299,11 @@ verification.
     ┌────────────────────────┬─────────────┬─────────────┬─────────────────────────────────────┐
     │ Category               │ Backend     │ Frontend    │ Notes                               │
     ├────────────────────────┼─────────────┼─────────────┼─────────────────────────────────────┤
-    │ Auth (Sign In/Out)     │ ✅ Complete │ ✅ Complete │ IFC-006, PG-015-017                 │
+    │ Auth (Sign In/Up/Succ) │ ✅ Complete │ ✅ Complete │ IFC-006, PG-015-017                 │
     │ Password Reset         │ ✅ Complete │ ✅ Complete │ IFC-006, PG-018-021                 │
-    │ MFA/2FA                │ ✅ Complete │ ⚠️ Partial  │ IFC-098, PG-021-022 ✅, PG-023 ⚠️   │
-    │ Email Verification     │ ✅ Complete │ ✅ Complete │ IFC-006, PG-024                     │
+    │ MFA/2FA                │ ✅ Complete │ ✅ Complete │ IFC-098, PG-021-022 ✅               │
+    │ SSO Callback           │ ✅ Complete │ ✅ Complete │ PG-024 (PKCE via OAuthCallback)     │
+    │ Email Verification     │ ✅ Complete │ ✅ Complete │ IFC-006, PG-023 ✅                   │
     │ Marketing Pages        │ N/A         │ ✅ Complete │ PG-001-014 (static)                 │
     │ Billing                │ ⚠️ Partial  │ ⚠️ Backlog  │ Stripe integration partial          │
     │ Onboarding             │ ⚠️ Backlog  │ ⚠️ Backlog  │ IFC-076, PG-126                     │
@@ -306,7 +320,7 @@ No new tasks required for Auth domain - all chains are tracked:
 
 | Feature    | Backend           | Frontend                        | Status  |
 | ---------- | ----------------- | ------------------------------- | ------- |
-| MFA        | IFC-098 ✅        | PG-021-022 ✅, PG-023 (Backlog) | Tracked |
+| MFA        | IFC-098 ✅        | PG-021-022 ✅                   | Tracked |
 | Onboarding | IFC-076 (Backlog) | PG-126 (Backlog)                | Tracked |
 | Billing    | Partial           | PG-025 ✅, PG-026-031 (Backlog) | Tracked |
 

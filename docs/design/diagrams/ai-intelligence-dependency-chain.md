@@ -21,6 +21,7 @@ All chains now have UI tasks assigned via the unified **AI & Agents** sidebar at
 | Auto-Response      | IFC-029  | IFC-029    | IFC-149 ✅                     | `/agent-approvals`                           | ✅ COMPLETE                         |
 | AI Output Review   | IFC-128  | IFC-180 ✅ | IFC-181 ✅ + PG-150 ✅         | `/agent-approvals/ai-review`                 | ✅ COMPLETE                         |
 | AI Monitoring      | IFC-117  | IFC-197 ✅ | PG-146 ✅/152 ✅/153 ✅        | `/agent-approvals/drift,agents,logs,latency` | 3/4 UI COMPLETE (PG-151 backlog)    |
+| Ticket Routing     | IFC-067  | IFC-067    | (admin dashboard TBD)          | N/A (backend API only)                       | ✅ COMPLETE                         |
 | Experiments        | IFC-025  | IFC-025    | PG-149 (Plan Complete 50%)     | `/agent-approvals/experiments`               | PLAN COMPLETE (50%)                 |
 
 ---

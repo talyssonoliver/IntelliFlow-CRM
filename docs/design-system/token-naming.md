@@ -195,7 +195,7 @@ Design tokens follow a **three-tier naming system**:
 
 ### Location
 
-- `apps/web/tailwind.config.ts`
+- `apps/web/src/app/globals.css` (`@theme inline` block)
 
 ### Structure
 
@@ -320,14 +320,12 @@ colors: {
 }
 ```
 
-**3. Tailwind Config**
+**3. Tailwind Config (v4 CSS-first in `globals.css`)**
 
-```typescript
-colors: {
-  warning: {
-    DEFAULT: 'hsl(var(--warning))',
-    foreground: 'hsl(var(--warning-foreground))',
-  },
+```css
+@theme inline {
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
 }
 ```
 
@@ -380,6 +378,6 @@ All token names must pass these checks:
 
 - [Brand Tokens](../../company/brand/palette.tokens.json)
 - [CSS Variables](../../apps/web/src/app/globals.css)
-- [Tailwind Config](../../apps/web/tailwind.config.ts)
+- [Tailwind Config (globals.css)](../../apps/web/src/app/globals.css)
 - [Token Mapping](./token-mapping.md)
 - [Theme Reference](./theme-reference-spec.md)

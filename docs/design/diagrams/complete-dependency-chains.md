@@ -26,7 +26,7 @@ Layers:
 | :--- | :--- | :--: |
 | **Core CRM Entities** | Lead, Contact, Account, Opportunity/Deal, Task, Ticket | 6 |
 | **Legal Domain** | Case/Matter, Appointment, Document, Email | 4 |
-| **AI/Intelligence** | Lead Scoring, AI Agents, AI Output Review, RAG, Next Best Action,<br>AI Monitoring, Sentiment, Churn, Auto-Response, AI Chain Versioning | 10 |
+| **AI/Intelligence** | Lead Scoring, AI Agents, AI Output Review, RAG, Next Best Action,<br>AI Monitoring, Sentiment, Churn, Auto-Response, AI Chain Versioning, Ticket Routing | 11 |
 | **Platform Infrastructure** | Domain Events, Workflow Engine, Notifications, Home Page, RBAC/Audit,<br>Multi-Tenancy, Security/Secrets, Analytics, Release Governance, Caching | 10 |
 | **Integrations** | External APIs/Webhooks, Observability Stack | 2 |
 | **Business Workflows** | Lead Qualification, Smart Lead Routing, DSAR, Legal Case Workflows | 4 |
@@ -48,7 +48,7 @@ detailed reference:
 | [`ai-intelligence-dependency-chain.md`](./ai-intelligence-dependency-chain.md)                 | AI/Intelligence         | Lead Scoring, AI Agents, RAG, NBA, Monitoring, Sentiment, Churn, Auto-Response, Versioning   |
 | [`ai-output-review-dependency-chain.md`](./ai-output-review-dependency-chain.md)               | AI Output Review        | Review Queue, Review API, Feedback Loop                                                      |
 | [`security-platform-dependency-chain.md`](./security-platform-dependency-chain.md)             | Security/Platform       | RBAC/Audit, Analytics                                                                        |
-| [`auth-public-pages-dependency-chain.md`](./auth-public-pages-dependency-chain.md)             | Auth/Public             | Home Page, Notifications                                                                     |
+| [`auth-public-pages-dependency-chain.md`](./auth-public-pages-dependency-chain.md)             | Auth/Public             | Home Page, Notifications, SSO Callback (PG-024 ✅), Auth Flows (IFC-120 ✅)                  |
 | [`platform-infrastructure-dependency-chain.md`](./platform-infrastructure-dependency-chain.md) | Platform Infrastructure | Workflow Engine, Multi-Tenancy, Security/Secrets, Release Governance, Caching, Domain Events |
 | [`integrations-dependency-chain.md`](./integrations-dependency-chain.md)                       | Integrations            | External APIs/Webhooks, Observability Stack                                                  |
 | [`business-workflows-dependency-chain.md`](./business-workflows-dependency-chain.md)           | Business Workflows      | Lead Qualification, Smart Routing, DSAR, Legal Case Workflows                                |
@@ -262,12 +262,31 @@ Dependency Chain:
               │    PG-135        │              │    PG-131        │
               │  Pipeline Page   │              │  Forecast Page   │
               │      ✅ DONE     │              │      ⬜          │
-              └──────────────────┘              └──────────────────┘
+              └────────┬─────────┘              └──────────────────┘
+                       │
+                       ▼
+              ┌──────────────────┐
+              │    IFC-064       │
+              │  Kanban Drag-Drop│
+              │  Persistence     │
+              │      ✅ DONE     │
+              └──────────────────┘
 
 Dependency Chain:
-  IFC-104 (Domain) ──┬──► opportunity.ts (Val) ──► IFC-108 (Services) ──► IFC-107 (Adapters) ──► IFC-186 (API) ✅ ──┬──► PG-135 (Pipeline) ✅
+  IFC-104 (Domain) ──┬──► opportunity.ts (Val) ──► IFC-108 (Services) ──► IFC-107 (Adapters) ──► IFC-186 (API) ✅ ──┬──► PG-135 (Pipeline) ✅ ──► IFC-064 (DnD Persist) ✅
                      │                                                                                              │
                      └──► IFC-017 (Database) ───────────────────────────────────────────────────────────────────────┴──► PG-131 (Forecast) ⬜
+
+Cross-Domain: Lead → Deal Conversion (IFC-062 ✅):
+  IFC-061 (Lead Convert Use Case) ✅ ──► IFC-062 (Lead to Deal) ✅ ──► lead.convertToDeal endpoint
+  IFC-104 (Opportunity Domain) ✅ ────────────┘                        (sourceLeadId traceability)
+
+Deal Won Closure Workflow (IFC-065 ✅):
+  IFC-091 (Deals Pipeline Kanban) ✅ ──┐
+                                       ├──► IFC-065 (Deal Won Closure) ✅
+  IFC-092 (Deal Forecasting) ✅ ───────┘
+  CloseDealWonUseCase → OpportunityService.markAsWon() → DealWonEnrichedEvent
+  Fire-and-forget: enriched event + notification dispatch
 ```
 
 ---
@@ -1492,11 +1511,11 @@ Dependency Chain:
               │    TRACK-001     │              │    TRACK-006     │
               │  Status          │              │  Build Health    │
               │  Dashboard       │              │  Dashboard       │
-              │      ⬜          │              │      ⬜          │
+              │      ✅          │              │      ⬜          │
               └──────────────────┘              └──────────────────┘
 
 Dependency Chain:
-  ENV-008-AI (OTel) ✅ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana Dashboards ⬜ ──┬──► TRACK-001 (Status) ⬜
+  ENV-008-AI (OTel) ✅ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana Dashboards ⬜ ──┬──► TRACK-001 (Status) ✅
                          ├──► IFC-142 (Alerting) ⬜ ────────────────────────────┴──► TRACK-006 (Build) ⬜
                          └──► traces.ts (Val) ⬜ ───────────────────────────────────────────────────────┘
 ```
@@ -1637,6 +1656,31 @@ Dependency Chain:
 
 ---
 
+## Data Migration from Legacy (PLATFORM INFRASTRUCTURE)
+
+```
+    ┌──────────────────┐         ┌──────────────────┐
+    │    IFC-017       │         │    IFC-070        │
+    │ Prisma + Supabase│────────>│ Data Migration    │
+    │   Data Layer     │         │  from Legacy      │
+    │  (Sprint 6) DONE │         │  (Sprint 18)      │
+    └──────────────────┘         └────────┬─────────┘
+                                          │
+                                          v
+                                 ┌──────────────────┐
+                                 │    PG-121         │
+                                 │ Settings >        │
+                                 │  Import/Export    │
+                                 │  (Sprint 28)      │
+                                 └──────────────────┘
+```
+
+**Dependency Chain:** IFC-017 (Prisma+Supabase, DONE) → **IFC-070** (Delta Sync ETL, Reconciliation, Target Validation) → PG-121 (Import/Export UI)
+
+**Key Artifacts:** `delta-sync.ts`, `reconciliation.ts`, `validate-target.ts`, `data-validation-report.csv`, `migration-log.txt`, `rollback-procedure.md`, `gdpr-migration-attestation.md`
+
+---
+
 ## Legal Case Workflows (BUSINESS PROCESS)
 
 ```
@@ -1754,7 +1798,7 @@ Home Page:     IFC-182 ✅ ──► PG-129 ⏳60%
 ```
 Contact:       IFC-102 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-184 ⬜ ──► PG-133 ⬜
 Account:       IFC-103 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-185 ✅ ──► PG-134 ✅
-Opportunity:   IFC-104 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-186 ✅ ──► PG-135 ✅
+Opportunity:   IFC-104 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-186 ✅ ──► PG-135 ✅ ──► IFC-064 ✅
 Task:          IFC-105 ──► validators ──► IFC-108 ──► IFC-107 ──► IFC-187 ✅ ──► PG-136 ✅
 Case:          IFC-136 ──► validators ──► IFC-139 ──► cases.router ✅ ──► PG-138 ✅
 Appointment:   IFC-137 ──► validators ──► IFC-138 ──► appointments.router ✅ ──► PG-139 ✅
@@ -1787,8 +1831,8 @@ Workflow Engine:  IFC-028 ✅ ──► IFC-141 ⬜ ──► workflow.router �
 Security/Secrets: EXC-SEC-001 ✅ ──► IFC-113 ⬜ ──► IFC-121 ⬜ ──► IFC-143 ⬜ ──► PG-120 ⬜
 Release Gov:      IFC-130 ⬜ ──► IFC-132 ⬜ ──► IFC-133 ⬜ ──► IFC-134 ⬜ ──► IFC-112 ⬜
 Caching/Perf:     IFC-007 ⬜ ──► IFC-123 ⬜ ──► IFC-033 ✅ ──► Performance Dashboard ⬜
-External APIs:    IFC-099 ⬜ ──► IFC-114 ⬜ ──► IFC-036 ⬜ ──► webhooks.router ⬜ ──► PG-114/115 ⬜
-Observability:    ENV-008-AI ✅ ──► IFC-116 ⬜ ──► IFC-142 ⬜ ──► Grafana ⬜ ──► TRACK-001/006 ⬜
+External APIs:    IFC-099 ⬜ ──► IFC-114 ⬜ ──► IFC-036 ⬜ ──► webhooks.router ⬜ ──► PG-114/115 ⬜ | PG-171 ✅
+Observability:    ENV-008-AI ✅ ──► IFC-116 ⬜ ──► IFC-142 ⬜ ──► Grafana ⬜ ──► TRACK-001 ✅ / TRACK-006 ⬜
 ```
 
 ## Business Workflow Chains - 4 Total
@@ -1813,6 +1857,47 @@ Legal Case Workflows: IFC-136 ✅ ──► IFC-147 ✅ ──► IFC-141 ⬜ �
 | ⬜ Mostly/All New     | 10     | 27.8%      |
 | ⬜ Business Workflows | 3      | 8.3%       |
 | **Total**             | **36** | **100%**   |
+
+## Billing Portal Chain (Sprint 14)
+
+```
+IFC-198 (Billing Domain Core) ──┐
+                                ├──→ PG-025 (Billing Portal) ──→ PG-027 (Invoices) ──→ PG-028 (Invoice Detail)
+                                │                            └──→ PG-030 (Subscriptions) ✅
+                                │
+                                └──→ PG-026 (Checkout) ✅
+```
+
+- **PG-030**: Subscription management page with plan comparison, cancel/reactivation, proration estimates, reason selector
+- Dependencies: PG-025 (tRPC billing router), IFC-198 (Billing domain aggregate)
+- **PG-027**: Invoice list page with paginated table, PDF download/view, status badges, accessibility fixes
+- Dependencies: PG-025 (tRPC billing router), IFC-198 (Invoice domain aggregate)
+- **PG-028**: Invoice detail page — single-invoice fetch via `billing.getInvoice`, pay via `billing.payInvoice`, tax breakdown, invoice number, totals fix, link from invoice list
+- Dependencies: PG-027 (Invoice list navigation), IFC-198 (StripeInvoice type + StripeInvoiceLineItem)
+- Procedures: `billing.getInvoice` (query), `billing.payInvoice` (mutation)
+- Adapter path: StripeInvoice → StripeInvoiceLineItem → mapToInvoice() → billing.router → invoice-detail.tsx
+
+## Feedback Analytics Chain (Sprint 14)
+
+```
+IFC-090 (FeedbackSurvey Schema) ──┐
+                                   ├──→ IFC-068 (Feedback Analytics Dashboard)
+IFC-096 (Analytics Foundation)  ──┘
+
+IFC-068 Layer Stack:
+  Domain: SurveyConstants.ts (NPS/CSAT/CES calc, transitions, events)
+  → Validators: feedback-survey.ts (Zod schemas)
+  → Application: FeedbackSurveyRepositoryPort + FeedbackSurveyAnalyticsService
+  → Adapters: PrismaFeedbackSurveyRepository ($queryRaw, date_trunc, tenant isolation)
+  → API: feedbackSurvey.router.ts (getDashboardStats, getNPSTrend, getSentimentBreakdown, exportData)
+  → Container: container.ts + context.ts (feedbackSurvey service wiring)
+  → Web: hooks.ts + feedback/page.tsx + NpsGauge + NpsTrendChart + SentimentDistributionChart + NpsBreakdownBar
+  → Sidebar: analytics.ts (Feedback Analytics item at /analytics/feedback)
+  → Export: csv.ts (exportFeedbackSurveysToCSV) + pdf.ts (exportFeedbackReportToPDF)
+```
+
+- **IFC-068**: Full-stack feedback analytics dashboard with NPS gauge, trend charts, sentiment distribution, period/type filters, CSV/PDF export
+- Dependencies: IFC-090 (FeedbackSurvey Prisma model), IFC-096 (Analytics sidebar + export infrastructure)
 
 ## Critical Blockers
 

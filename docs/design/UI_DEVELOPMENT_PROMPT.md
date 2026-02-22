@@ -34,8 +34,7 @@ intelliFlow-CRM/
 │   │   ├── src/app/                   # Pages (route groups, layouts)
 │   │   ├── src/components/            # App-specific components
 │   │   ├── src/lib/                   # Utilities, tRPC client
-│   │   ├── tailwind.config.ts         # Tailwind + design tokens
-│   │   └── src/app/globals.css        # CSS variables (theme)
+│   │   └── src/app/globals.css        # Tailwind v4 config + CSS variables (theme)
 │   ├── api/                           # tRPC API server
 │   └── project-tracker/               # Sprint tracking dashboard
 │       └── docs/metrics/_global/
@@ -77,7 +76,7 @@ intelliFlow-CRM/
 - **Frontend**: Next.js 16.0.10 (App Router), React 19, TypeScript (strict mode)
 - **UI Library**: Radix UI primitives + shadcn/ui patterns (encapsulated in
   `@intelliflow/ui`)
-- **Styling**: Tailwind CSS 3.4.17 + CSS variables for theming
+- **Styling**: Tailwind CSS ^4.2.0 (CSS-first) + CSS variables for theming
 - **Forms**: React Hook Form + Zod validation
 - **Icons**: Material Symbols Outlined (414 occurrences)
 - **Testing**: Vitest + @testing-library/react + vitest-axe
@@ -1155,7 +1154,7 @@ state | | `loading` | `boolean?` | Loading state |
   "next": "16.0.10",
   "react": "19.0.0",
   "typescript": "5.7.2",
-  "tailwindcss": "3.4.17",
+  "tailwindcss": "^4.2.0",
   "@radix-ui/*": "latest",
   "vitest": "2.1.8",
   "@storybook/*": "8.4.7"

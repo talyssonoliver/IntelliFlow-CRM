@@ -164,6 +164,8 @@ export default defineConfig({
             'packages/**/*.{test,spec}.tsx',
             'tools/**/*.{test,spec}.ts',
             'tools/**/*.{test,spec}.tsx',
+            'scripts/**/*.{test,spec}.ts',
+            'scripts/**/*.{test,spec}.tsx',
             'tests/**/*.{test,spec}.ts',
             'tests/**/*.{test,spec}.tsx',
           ],
