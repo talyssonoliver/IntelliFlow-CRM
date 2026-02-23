@@ -21,3 +21,6 @@ export {
   transformDeals,
   calculateStats,
 } from './types';
+
+// Forecast components (PG-131)
+export * from './forecast';

@@ -127,6 +127,93 @@ export function mockOpportunityRouter() {
   };
 }
 
+// ─── Forecast Factories (PG-131) ────────────────────────────────────────────
+
+import type {
+  RiskFactor,
+  Recommendation,
+  HistoryPoint,
+  DealForecastResponse,
+} from '../forecast/types';
+
+export function createMockRiskFactor(overrides?: Partial<RiskFactor>): RiskFactor {
+  return {
+    id: 'risk-001',
+    factor: 'Probability below stage default',
+    severity: 'high',
+    description: 'Current 40% vs 60% PROPOSAL default',
+    impact: '20 points below expected',
+    ...overrides,
+  };
+}
+
+export function createMockRecommendation(overrides?: Partial<Recommendation>): Recommendation {
+  return {
+    id: 'rec-001',
+    action: 'SCHEDULE_CALL',
+    title: 'Schedule follow-up call',
+    description: 'Schedule follow-up call to qualify deal status',
+    priority: 'high',
+    ...overrides,
+  };
+}
+
+export function createMockHistoryPoint(overrides?: Partial<HistoryPoint>): HistoryPoint {
+  return {
+    date: '2026-02-15',
+    probability: 60,
+    event: 'Stage → Proposal',
+    ...overrides,
+  };
+}
+
+export function createMockDealForecastResponse(
+  overrides?: Partial<DealForecastResponse>
+): DealForecastResponse {
+  return {
+    deal: {
+      id: 'deal-001',
+      name: 'Acme Corp Enterprise',
+      stage: 'PROPOSAL' as OpportunityStage,
+      probability: 55,
+      value: 120000,
+      expectedCloseDate: '2026-03-15',
+      owner: { name: 'Jane Smith', avatar: 'JS' },
+      account: { name: 'Acme Corporation' },
+      contact: { name: 'John Doe', title: 'CTO' },
+    },
+    riskFactors: [
+      createMockRiskFactor(),
+      createMockRiskFactor({
+        id: 'risk-002',
+        factor: 'Activity gap',
+        severity: 'medium',
+        description: 'Last activity was 18 days ago',
+        impact: 'No recent engagement',
+      }),
+    ],
+    recommendations: [
+      createMockRecommendation(),
+      createMockRecommendation({
+        id: 'rec-002',
+        action: 'SEND_EMAIL',
+        title: 'Send follow-up email',
+        description: 'Send follow-up email or schedule call with contact',
+        priority: 'medium',
+      }),
+    ],
+    history: [
+      createMockHistoryPoint({ date: '2026-02-01', probability: 20, event: 'Stage → Qualification' }),
+      createMockHistoryPoint({ date: '2026-02-10', probability: 40, event: 'Stage → Needs Analysis' }),
+      createMockHistoryPoint({ date: '2026-02-15', probability: 60, event: 'Stage → Proposal' }),
+    ],
+    confidence: 0.75,
+    lastActivityAt: '2026-02-04T14:30:00Z',
+    stageDefault: 60,
+    ...overrides,
+  };
+}
+
 // ─── Mock Handlers ───────────────────────────────────────────────────────────
 
 export function createMockHandlers() {

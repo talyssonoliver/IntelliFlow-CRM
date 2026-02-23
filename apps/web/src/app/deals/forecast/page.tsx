@@ -71,79 +71,7 @@ const STAGE_LABELS: Record<StageId, string> = {
   NEGOTIATION: 'Negotiation',
 };
 
-// Sample forecast deals data
-const FORECAST_DEALS: ForecastDeal[] = [
-  {
-    id: '1',
-    name: 'Acme Corp Enterprise License',
-    stage: 'NEGOTIATION',
-    value: 120000,
-    probability: 60,
-    expectedCloseDate: '2025-01-25',
-    owner: { name: 'Sarah J.', avatar: 'SJ' },
-    riskLevel: 'medium',
-  },
-  {
-    id: '2',
-    name: 'Global Tech Expansion',
-    stage: 'PROPOSAL',
-    value: 85000,
-    probability: 45,
-    expectedCloseDate: '2025-02-12',
-    owner: { name: 'Mike R.', avatar: 'MR' },
-    riskLevel: 'low',
-  },
-  {
-    id: '3',
-    name: 'DataCorp Platform Migration',
-    stage: 'NEEDS_ANALYSIS',
-    value: 250000,
-    probability: 35,
-    expectedCloseDate: '2025-03-01',
-    owner: { name: 'Sarah J.', avatar: 'SJ' },
-    riskLevel: 'high',
-  },
-  {
-    id: '4',
-    name: 'StartupXYZ Team License',
-    stage: 'QUALIFICATION',
-    value: 45000,
-    probability: 25,
-    expectedCloseDate: '2025-02-28',
-    owner: { name: 'Alex T.', avatar: 'AT' },
-    riskLevel: 'low',
-  },
-  {
-    id: '5',
-    name: 'MegaCorp Enterprise Suite',
-    stage: 'NEGOTIATION',
-    value: 350000,
-    probability: 75,
-    expectedCloseDate: '2025-01-31',
-    owner: { name: 'Sarah J.', avatar: 'SJ' },
-    riskLevel: 'low',
-  },
-];
-
-// Revenue projection data (actual + projected)
-const MONTHLY_PROJECTIONS: MonthlyProjection[] = [
-  { month: 'Jul', actual: 280000, projected: null },
-  { month: 'Aug', actual: 420000, projected: null },
-  { month: 'Sep', actual: 380000, projected: null },
-  { month: 'Oct', actual: null, projected: 520000 },
-  { month: 'Nov', actual: null, projected: 680000 },
-  { month: 'Dec', actual: null, projected: 750000 },
-];
-
-// Win rate trend data
-const WIN_RATE_DATA: WinRateData[] = [
-  { month: 'May', rate: 18, isProjected: false },
-  { month: 'Jun', rate: 22, isProjected: false },
-  { month: 'Jul', rate: 20, isProjected: false },
-  { month: 'Aug', rate: 25, isProjected: false },
-  { month: 'Sep', rate: 28, isProjected: false },
-  { month: 'Oct', rate: 30, isProjected: true },
-];
+// NF-006: No hardcoded sample data arrays — all data from trpc.opportunity.forecast
 
 // =============================================================================
 // Utility Functions
@@ -603,24 +531,23 @@ export default function DealForecastPage() {
 
   const monthlyProjections = useMemo(() => {
     if (!forecastData?.monthlyRevenue || forecastData.monthlyRevenue.length === 0) {
-      // Fallback to default projections if no historical data
-      return MONTHLY_PROJECTIONS;
+      return [];
     }
-    // Add projected months
+    // Add projected months based on average revenue
     const projections: MonthlyProjection[] = [...forecastData.monthlyRevenue];
     const projectedMonths = ['Oct', 'Nov', 'Dec'];
     const avgRevenue =
       forecastData.monthlyRevenue.length > 0
         ? forecastData.monthlyRevenue.reduce((sum, m) => sum + (m.actual || 0), 0) /
           forecastData.monthlyRevenue.length
-        : 500000;
+        : 0;
 
     projectedMonths.forEach((month, i) => {
       if (!projections.find((p) => p.month === month)) {
         projections.push({
           month,
           actual: null,
-          projected: Math.round(avgRevenue * (1 + (i + 1) * 0.1)), // 10% growth projection
+          projected: avgRevenue > 0 ? Math.round(avgRevenue * (1 + (i + 1) * 0.1)) : null,
         });
       }
     });
@@ -629,7 +556,7 @@ export default function DealForecastPage() {
 
   const winRateData = useMemo(() => {
     if (!forecastData?.winRateTrend || forecastData.winRateTrend.length === 0) {
-      return WIN_RATE_DATA;
+      return [];
     }
     return forecastData.winRateTrend;
   }, [forecastData]);
@@ -735,7 +662,7 @@ export default function DealForecastPage() {
         </div>
 
         {/* Opportunities at Risk Table */}
-        <OpportunitiesAtRiskTable deals={deals.length > 0 ? deals : FORECAST_DEALS} />
+        {deals.length > 0 && <OpportunitiesAtRiskTable deals={deals} />}
       </div>
     </div>
   );
