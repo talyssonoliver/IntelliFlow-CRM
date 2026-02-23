@@ -296,3 +296,12 @@ apps/project-tracker/docs/metrics/schemas/logs/
 
 # Windows null device file
 nul
+
+# Scratch / temp files generated during development sessions
+tmp-*.txt
+tmp-*.json
+tmp-*.ps1
+tmp-*.mjs
+tmp_*.json
+packages/tmp-*.txt
+build-output.txt
