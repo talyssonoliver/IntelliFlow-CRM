@@ -24,6 +24,7 @@ import {
   idSchema,
 } from '@intelliflow/validators/case';
 import { assertTenantContext } from '../../security/tenant-context';
+import { createNotification } from '../notifications/notifications.router';
 
 function getAssigneeTitle(role?: string | null): string {
   switch (role) {
@@ -359,6 +360,22 @@ export const casesRouter = createTRPCRouter({
       },
     });
 
+    // Notify assignee
+    if (assignedTo) {
+      createNotification(ctx.prisma, {
+        userId: assignedTo,
+        tenantId,
+        type: 'case_assigned',
+        title: 'Case assigned to you',
+        body: `Case "${input.title}" has been assigned to you`,
+        priority: 'normal',
+        entityType: 'case',
+        entityId: caseData.id,
+        entityName: input.title,
+        actionUrl: `/cases/${caseData.id}`,
+      }).catch(() => {});
+    }
+
     return caseData;
   }),
 
@@ -432,6 +449,20 @@ export const casesRouter = createTRPCRouter({
       data,
     });
 
+    // Notify on status change
+    createNotification(ctx.prisma, {
+      userId: existing.assignedTo || ctx.user!.id as string,
+      tenantId,
+      type: 'case_status_changed',
+      title: 'Case status changed',
+      body: `Case "${existing.title}" status changed to ${input.status}`,
+      priority: 'normal',
+      entityType: 'case',
+      entityId: caseData.id,
+      entityName: existing.title,
+      actionUrl: `/cases/${caseData.id}`,
+    }).catch(() => {});
+
     return caseData;
   }),
 
@@ -462,6 +493,20 @@ export const casesRouter = createTRPCRouter({
         closedAt: new Date(),
       },
     });
+
+    // Notify on case closure
+    createNotification(ctx.prisma, {
+      userId: existing.assignedTo || ctx.user!.id as string,
+      tenantId,
+      type: 'case_closed',
+      title: 'Case closed',
+      body: `Case "${existing.title}" has been closed`,
+      priority: 'normal',
+      entityType: 'case',
+      entityId: caseData.id,
+      entityName: existing.title,
+      actionUrl: `/cases/${caseData.id}`,
+    }).catch(() => {});
 
     return caseData;
   }),

@@ -32,6 +32,7 @@ import {
   TimeSlot,
 } from '@intelliflow/domain';
 import { container } from '../../container';
+import { createNotification } from '../notifications/notifications.router';
 
 // Zod schemas for appointment operations
 const appointmentTypeSchema = z.enum([
@@ -438,6 +439,20 @@ export const appointmentsRouter = createTRPCRouter({
     // IFC-158: Fire-and-forget ICS, reminders, audit trail
     onAppointmentCreated(appointment, ctx.user.userId).catch(() => {});
 
+    // Notify organizer of scheduled appointment
+    createNotification(ctx.prisma, {
+      userId: ctx.user.userId,
+      tenantId,
+      type: 'appointment_scheduled',
+      title: 'Appointment scheduled',
+      body: `Appointment "${input.title}" scheduled for ${input.startTime.toLocaleDateString()}`,
+      priority: 'normal',
+      entityType: 'appointment',
+      entityId: appointment.id,
+      entityName: input.title,
+      actionUrl: `/calendar/${appointment.id}`,
+    }).catch(() => {});
+
     return appointment;
   }),
 
@@ -716,6 +731,20 @@ export const appointmentsRouter = createTRPCRouter({
       ctx.user.userId,
       input.reason
     ).catch(() => {});
+
+    // Notify organizer of rescheduled appointment
+    createNotification(ctx.prisma, {
+      userId: existing.organizerId,
+      tenantId: ctx.user.tenantId,
+      type: 'appointment_rescheduled',
+      title: 'Appointment rescheduled',
+      body: `Appointment "${existing.title}" has been rescheduled`,
+      priority: 'normal',
+      entityType: 'appointment',
+      entityId: appointment.id,
+      entityName: existing.title,
+      actionUrl: `/calendar/${appointment.id}`,
+    }).catch(() => {});
 
     return {
       appointment,

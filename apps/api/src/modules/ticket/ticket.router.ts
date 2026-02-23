@@ -27,6 +27,7 @@ import {
   createTenantWhereClause,
   type TenantAwareContext,
 } from '../../security/tenant-context';
+import { createNotification } from '../notifications/notifications.router';
 
 /**
  * Helper to get ticket service from context
@@ -88,6 +89,22 @@ export const ticketRouter = createTRPCRouter({
         ...input,
         tenantId,
       });
+
+      // Notify assignee if present
+      if (input.assigneeId) {
+        createNotification(ctx.prisma, {
+          userId: input.assigneeId,
+          tenantId,
+          type: 'ticket_assigned',
+          title: 'Ticket assigned to you',
+          body: `Ticket "${input.subject}" has been assigned to you`,
+          priority: 'normal',
+          entityType: 'ticket',
+          entityId: ticket.id,
+          entityName: input.subject,
+          actionUrl: `/tickets/${ticket.id}`,
+        }).catch(() => {});
+      }
 
       return ticket;
     } catch (error) {
@@ -183,6 +200,24 @@ export const ticketRouter = createTRPCRouter({
         priority: updateData.priority,
         assigneeId: updateData.assigneeId ?? undefined,
       });
+
+      // Notify on escalation (priority changed to URGENT or CRITICAL)
+      if (updateData.priority && ['URGENT', 'CRITICAL'].includes(updateData.priority)) {
+        const tenantId = await getTenantId(ctx);
+        createNotification(ctx.prisma, {
+          userId: ticket.assigneeId || 'system',
+          tenantId,
+          type: 'ticket_escalated',
+          title: 'Ticket escalated',
+          body: `Ticket "${ticket.subject}" escalated to ${updateData.priority}`,
+          priority: 'high',
+          entityType: 'ticket',
+          entityId: ticket.id,
+          entityName: ticket.subject,
+          actionUrl: `/tickets/${ticket.id}`,
+        }).catch(() => {});
+      }
+
       return ticket;
     } catch (error) {
       throw new TRPCError({

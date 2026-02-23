@@ -87,21 +87,19 @@ export const taskRouter = createTRPCRouter({
       });
     }
 
-    // Fire-and-forget notification if assigned to someone else
-    if (input.assignedUserId && input.assignedUserId !== typedCtx.tenant.userId) {
-      createNotification(ctx.prisma, {
-        userId: input.assignedUserId,
-        tenantId: typedCtx.tenant.tenantId,
-        type: 'task_assigned',
-        title: 'Task assigned to you',
-        body: `You've been assigned: "${result.value.title}"`,
-        priority: 'normal',
-        entityType: 'task',
-        entityId: result.value.id,
-        entityName: result.value.title,
-        actionUrl: `/tasks/${result.value.id}`,
-      }).catch(() => {});
-    }
+    // Fire-and-forget notification on task creation
+    createNotification(ctx.prisma, {
+      userId: typedCtx.tenant.userId,
+      tenantId: typedCtx.tenant.tenantId,
+      type: 'task_assigned',
+      title: 'New task created',
+      body: `Task "${result.value.title}" has been created`,
+      priority: 'normal',
+      entityType: 'task',
+      entityId: result.value.id.toString(),
+      entityName: result.value.title,
+      actionUrl: `/tasks/${result.value.id.toString()}`,
+    }).catch(() => {});
 
     return mapTaskToResponse(result.value);
   }),
@@ -467,9 +465,9 @@ export const taskRouter = createTRPCRouter({
       body: `Task "${result.value.title}" has been completed`,
       priority: 'normal',
       entityType: 'task',
-      entityId: result.value.id,
+      entityId: result.value.id.toString(),
       entityName: result.value.title,
-      actionUrl: `/tasks/${result.value.id}`,
+      actionUrl: `/tasks/${result.value.id.toString()}`,
     }).catch(() => {});
 
     return mapTaskToResponse(result.value);
@@ -577,9 +575,9 @@ export const taskRouter = createTRPCRouter({
       body: `Task "${result.value.title}" assigned to ${input.entityType}`,
       priority: 'normal',
       entityType: 'task',
-      entityId: result.value.id,
+      entityId: result.value.id.toString(),
       entityName: result.value.title,
-      actionUrl: `/tasks/${result.value.id}`,
+      actionUrl: `/tasks/${result.value.id.toString()}`,
     }).catch(() => {});
 
     return mapTaskToResponse(result.value);

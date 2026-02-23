@@ -274,7 +274,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
         tenantId,
         recipientId,
         channel: 'IN_APP',
-        status: { in: ['SENT', 'DELIVERED'] },
+        status: 'PENDING',
         readAt: null,
       },
     });
@@ -305,7 +305,7 @@ export class PrismaNotificationRepository implements NotificationRepository {
         tenantId,
         recipientId,
         channel: 'IN_APP',
-        status: { in: ['SENT', 'DELIVERED'] },
+        status: 'PENDING',
         readAt: null,
       },
       data: {

@@ -8112,6 +8112,155 @@ async function seedHomePageData(tenantId: string) {
 }
 
 // =============================================================================
+// Notifications Seed Data
+// =============================================================================
+
+async function seedNotifications(tenantId: string) {
+  console.log('📬 Seeding notifications...');
+
+  const now = new Date();
+  const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+  const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  const twoDaysAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+
+  const notifications = [
+    {
+      recipientId: SEED_IDS.users.admin,
+      channel: 'IN_APP' as const,
+      status: 'PENDING' as const,
+      priority: 'HIGH' as const,
+      title: 'Deal won: Enterprise License',
+      body: 'Acme Corp Enterprise License deal worth $125,000 has been closed-won',
+      metadata: { notificationType: 'deal_won', entityType: 'opportunity', entityId: SEED_IDS.opportunities.enterpriseLicenseAcme, actionUrl: `/deals/${SEED_IDS.opportunities.enterpriseLicenseAcme}` },
+      createdAt: oneHourAgo,
+    },
+    {
+      recipientId: SEED_IDS.users.manager,
+      channel: 'IN_APP' as const,
+      status: 'PENDING' as const,
+      priority: 'NORMAL' as const,
+      title: 'Deal stage changed',
+      body: 'Enterprise License (Acme Corp) moved to Negotiation stage',
+      metadata: { notificationType: 'deal_stage_changed', entityType: 'opportunity', entityId: SEED_IDS.opportunities.enterpriseLicenseAcme, actionUrl: `/deals/${SEED_IDS.opportunities.enterpriseLicenseAcme}` },
+      createdAt: twoHoursAgo,
+    },
+    {
+      recipientId: SEED_IDS.users.admin,
+      channel: 'IN_APP' as const,
+      status: 'PENDING' as const,
+      priority: 'NORMAL' as const,
+      title: 'Lead scored by AI',
+      body: 'Sarah Miller scored 85/100 (Hot tier) by AI scoring engine',
+      metadata: { notificationType: 'lead_scored', entityType: 'lead', entityId: SEED_IDS.leads.sarahMiller, actionUrl: `/leads/${SEED_IDS.leads.sarahMiller}` },
+      createdAt: twoHoursAgo,
+    },
+    {
+      recipientId: SEED_IDS.users.manager,
+      channel: 'IN_APP' as const,
+      status: 'PENDING' as const,
+      priority: 'NORMAL' as const,
+      title: 'Lead converted to deal',
+      body: 'David Chen has been converted to a deal',
+      metadata: { notificationType: 'lead_converted', entityType: 'lead', entityId: SEED_IDS.leads.davidChen, actionUrl: `/leads/${SEED_IDS.leads.davidChen}` },
+      createdAt: oneDayAgo,
+    },
+    {
+      recipientId: SEED_IDS.users.admin,
+      channel: 'IN_APP' as const,
+      status: 'PENDING' as const,
+      priority: 'NORMAL' as const,
+      title: 'Task assigned to you',
+      body: 'You have been assigned "Follow up with Sarah Miller"',
+      metadata: { notificationType: 'task_assigned', entityType: 'task', actionUrl: '/tasks' },
+      createdAt: oneDayAgo,
+    },
+    {
+      recipientId: SEED_IDS.users.manager,
+      channel: 'IN_APP' as const,
+      status: 'PENDING' as const,
+      priority: 'LOW' as const,
+      title: 'Task completed',
+      body: 'Task "Call Sarah Miller" has been completed',
+      metadata: { notificationType: 'task_completed', entityType: 'task', actionUrl: '/tasks' },
+      createdAt: twoDaysAgo,
+    },
+    {
+      recipientId: SEED_IDS.users.admin,
+      channel: 'IN_APP' as const,
+      status: 'PENDING' as const,
+      priority: 'NORMAL' as const,
+      title: 'AI insight available',
+      body: 'New AI recommendation: Consider bundling products for Acme Corp deal',
+      metadata: { notificationType: 'ai_insight', actionUrl: '/ai/insights' },
+      createdAt: oneHourAgo,
+    },
+    {
+      recipientId: SEED_IDS.users.admin,
+      channel: 'IN_APP' as const,
+      status: 'PENDING' as const,
+      priority: 'NORMAL' as const,
+      title: 'AI recommendation',
+      body: 'AI suggests scheduling a follow-up meeting with TechCorp within 48 hours',
+      metadata: { notificationType: 'ai_recommendation', actionUrl: '/ai/recommendations' },
+      createdAt: twoHoursAgo,
+    },
+    {
+      recipientId: SEED_IDS.users.admin,
+      channel: 'IN_APP' as const,
+      status: 'PENDING' as const,
+      priority: 'LOW' as const,
+      title: 'System update',
+      body: 'IntelliFlow CRM has been updated to version 2.1.0',
+      metadata: { notificationType: 'system_update' },
+      createdAt: twoDaysAgo,
+    },
+    {
+      recipientId: SEED_IDS.users.admin,
+      channel: 'IN_APP' as const,
+      status: 'PENDING' as const,
+      priority: 'HIGH' as const,
+      title: 'Ticket assigned to you',
+      body: 'Ticket "System Outage Report" has been assigned to you',
+      metadata: { notificationType: 'ticket_assigned', entityType: 'ticket', actionUrl: '/tickets' },
+      createdAt: oneHourAgo,
+    },
+    {
+      recipientId: SEED_IDS.users.manager,
+      channel: 'IN_APP' as const,
+      status: 'PENDING' as const,
+      priority: 'NORMAL' as const,
+      title: 'Case assigned to you',
+      body: 'Case "Contract Review - GlobalTech" has been assigned to you',
+      metadata: { notificationType: 'case_assigned', entityType: 'case', actionUrl: '/cases' },
+      createdAt: oneDayAgo,
+    },
+    {
+      recipientId: SEED_IDS.users.admin,
+      channel: 'IN_APP' as const,
+      status: 'PENDING' as const,
+      priority: 'NORMAL' as const,
+      title: 'New email received',
+      body: 'You have a new email from sarah.miller@techcorp.com',
+      metadata: { notificationType: 'email_received', actionUrl: '/email' },
+      createdAt: oneHourAgo,
+    },
+  ];
+
+  for (const notif of notifications) {
+    await prisma.notification.create({
+      data: {
+        ...notif,
+        tenantId,
+        metadata: notif.metadata as any,
+      },
+    });
+  }
+
+  console.log(`  ✅ Created ${notifications.length} notifications`);
+}
+
+// =============================================================================
 // Main Function
 // =============================================================================
 
@@ -8502,6 +8651,13 @@ async function main() {
       await seedAPIVersions();
     } catch (e) {
       console.warn('⚠️  seedAPIVersions failed:', (e as Error).message?.slice(0, 100));
+    }
+
+    // Notifications seed data (for notification inbox)
+    try {
+      await seedNotifications(tenantId);
+    } catch (e) {
+      console.warn('⚠️  seedNotifications failed:', (e as Error).message?.slice(0, 100));
     }
 
     // IFC-182: Home Page Data (uses relative dates for recent activity)
