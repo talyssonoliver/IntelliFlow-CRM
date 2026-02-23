@@ -175,6 +175,9 @@ export const mockAdapters = {
   notificationService: mockDeep<any>(),
   icsGenerationService: mockDeep<any>(),
   feedbackSurveyRepository: mockDeep<any>(),
+  tenantModuleRepository: mockDeep<any>(),
+  notificationRepository: mockDeep<any>(),
+  notificationPreferenceRepository: mockDeep<any>(),
 };
 
 /**
