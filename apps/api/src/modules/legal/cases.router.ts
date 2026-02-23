@@ -450,8 +450,9 @@ export const casesRouter = createTRPCRouter({
     });
 
     // Notify on status change
+    const statusChangeUserId = existing.assignedTo || (ctx.user as { id?: string })?.id || 'system';
     createNotification(ctx.prisma, {
-      userId: existing.assignedTo || ctx.user!.id as string,
+      userId: statusChangeUserId,
       tenantId,
       type: 'case_status_changed',
       title: 'Case status changed',
@@ -495,8 +496,9 @@ export const casesRouter = createTRPCRouter({
     });
 
     // Notify on case closure
+    const closeUserId = existing.assignedTo || (ctx.user as { id?: string })?.id || 'system';
     createNotification(ctx.prisma, {
-      userId: existing.assignedTo || ctx.user!.id as string,
+      userId: closeUserId,
       tenantId,
       type: 'case_closed',
       title: 'Case closed',
