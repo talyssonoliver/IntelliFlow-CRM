@@ -130,7 +130,7 @@
     }
   ],
   "blockers": [],
-  "notes": "13/13 tasks DONE (100%). Last synced: 2026-02-23T20:24:02.731Z",
+  "notes": "13/13 tasks DONE (100%). Last synced: 2026-02-23T22:15:24.902Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": "2025-12-21",
@@ -151,6 +151,6 @@
       "spi": 1,
       "status": "on_track"
     },
-    "calculated_at": "2026-02-23T20:24:02.865Z"
+    "calculated_at": "2026-02-23T22:15:25.125Z"
   }
 }

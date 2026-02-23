@@ -1,0 +1,47 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-195",
+  "section": "Core CRM",
+  "description": "Customizable Daily Goals - Multi-type goal support (revenue calls meetings tasks custom) with user preferences",
+  "owner": "Backend Dev (STOA-Domain)",
+  "status": "BACKLOG",
+  "sprint": "sprint-0",
+  "phase": "phase-0-initialisation",
+  "stream": null,
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": "2026-02-23T22:15:24.981Z",
+    "required": [
+      "IFC-182"
+    ]
+  },
+  "started_at": "2026-02-13T23:41:32+00:00",
+  "completed_at": null,
+  "execution": {
+    "retry_count": 0,
+    "last_error": null,
+    "executor": "orchestrator",
+    "log_path": "/c/Users/talys/projects/intelliFlow-CRM/artifacts/logs/execution-20260213-234130.log"
+  },
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  },
+  "validations": [],
+  "kpis": {},
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:41:32+00:00",
+      "note": "Task execution started"
+    }
+  ],
+  "current_phase": "ARCHITECT_SPEC",
+  "updated_at": "2026-02-13T23:41:34+00:00",
+  "attempt": 0,
+  "dependencies_resolved": [
+    "IFC-182"
+  ]
+}

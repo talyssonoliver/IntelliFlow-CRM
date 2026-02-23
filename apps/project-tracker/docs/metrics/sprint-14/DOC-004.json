@@ -12,10 +12,12 @@
     "required": [
       "DOC-002"
     ],
-    "all_satisfied": false,
-    "verified_at": "2026-02-23T20:24:02.774Z"
+    "all_satisfied": true,
+    "verified_at": "2026-02-23T22:15:24.961Z"
   },
-  "dependencies_resolved": [],
+  "dependencies_resolved": [
+    "DOC-002"
+  ],
   "started_at": null,
   "completed_at": null,
   "target_duration_minutes": null,

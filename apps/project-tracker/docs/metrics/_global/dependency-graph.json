@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-23T20:24:02.863Z",
+  "last_updated": "2026-02-23T22:15:25.122Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -2061,7 +2061,7 @@
     "PG-034": {
       "task_id": "PG-034",
       "sprint": 15,
-      "status": "PLANNED",
+      "status": "DONE",
       "dependencies": [
         "PG-032"
       ],
@@ -2108,7 +2108,7 @@
     "PG-039": {
       "task_id": "PG-039",
       "sprint": 15,
-      "status": "PLANNED",
+      "status": "DONE",
       "dependencies": [
         "PG-032"
       ],
@@ -5153,7 +5153,7 @@
     "DOC-002": {
       "task_id": "DOC-002",
       "sprint": 14,
-      "status": "PLANNED",
+      "status": "DONE",
       "dependencies": [],
       "dependents": [
         "DOC-003",
@@ -5212,7 +5212,7 @@
     "DOC-007": {
       "task_id": "DOC-007",
       "sprint": 14,
-      "status": "PLANNED",
+      "status": "DONE",
       "dependencies": [],
       "dependents": [
         "DOC-008"
@@ -9013,14 +9013,8 @@
     }
   ],
   "blocked_tasks": [
-    "DOC-003",
-    "DOC-004",
-    "DOC-005",
     "DOC-006",
-    "DOC-008",
     "DOC-009",
-    "PG-040",
-    "PG-041",
     "PG-042",
     "PG-044",
     "PG-045",
@@ -9095,14 +9089,16 @@
     "PG-120"
   ],
   "ready_to_start": [
-    "DOC-002",
-    "DOC-007",
-    "PG-034",
+    "DOC-003",
+    "DOC-004",
+    "DOC-005",
+    "DOC-008",
     "PG-035",
     "PG-036",
     "PG-037",
     "PG-038",
-    "PG-039",
+    "PG-040",
+    "PG-041",
     "PG-124",
     "IFC-191",
     "IFC-192",
@@ -9187,10 +9183,6 @@
   "parallel_execution_groups": {
     "sprint-14": {
       "group-1": [
-        "DOC-002",
-        "DOC-007"
-      ],
-      "group-2": [
         "DOC-003",
         "DOC-004",
         "DOC-005"
@@ -9198,12 +9190,10 @@
     },
     "sprint-15": {
       "group-1": [
-        "PG-034",
         "PG-035",
         "PG-036",
         "PG-037",
         "PG-038",
-        "PG-039",
         "PG-169",
         "PG-170"
       ],

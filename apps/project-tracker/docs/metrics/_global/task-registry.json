@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-23T20:24:02.657Z",
+  "last_updated": "2026-02-23T22:15:24.814Z",
   "total_tasks": 305,
   "sprints": {
     "sprint-0": {
@@ -152,6 +152,8 @@
       "PG-031",
       "PG-032",
       "PG-033",
+      "PG-034",
+      "PG-039",
       "DOC-001",
       "BRAND-001",
       "BRAND-002",
@@ -295,17 +297,14 @@
       "PG-154",
       "PG-155",
       "PG-165",
-      "PG-171"
+      "PG-171",
+      "DOC-002",
+      "DOC-007"
     ],
     "IN_PROGRESS": [],
     "VALIDATING": [],
     "BLOCKED": [],
-    "PLANNED": [
-      "PG-034",
-      "PG-039",
-      "DOC-002",
-      "DOC-007"
-    ],
+    "PLANNED": [],
     "BACKLOG": [
       "IFC-030",
       "IFC-031",
@@ -3342,7 +3341,7 @@
       "section": "Developer Pages",
       "description": "Webhooks Docs",
       "owner": "DevRel (STOA-Foundation)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 15,
       "dependencies": [
         "PG-032"
@@ -3427,7 +3426,7 @@
       "section": "Developer Pages",
       "description": "Dev Apps",
       "owner": "DevRel (STOA-Foundation)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 15,
       "dependencies": [
         "PG-032"
@@ -8200,7 +8199,7 @@
       "section": "Documentation",
       "description": "Update sitemap.md to reflect actual 101 page.tsx files, add app/sitemap.ts XML generator, app/robots.ts, reconcile against navigation-reachability-audit.md",
       "owner": "DevRel (STOA-Foundation)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [],
       "artifacts": [
@@ -8286,13 +8285,13 @@
       "section": "Documentation",
       "description": "Conduct full accessibility compliance gap assessment: Lighthouse a11y audit on all 27 URLs, document WCAG 2.1 AA conformance level per route, identify all Level A and AA failures, produce gap report with remediation priorities",
       "owner": "QA (STOA-Quality)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [],
       "artifacts": [
         "ARTIFACT:docs/compliance/accessibility-gap-assessment.md;ARTIFACT:artifacts/reports/accessibility-audit-results.json"
       ],
-      "kpis": "All 27 URLs audited; all WCAG 2.1 AA failures documented; remediation plan with priorities",
+      "kpis": "All 26 URLs audited; all WCAG 2.1 AA failures documented; remediation plan with priorities",
       "definition_of_done": "Accessibility gap report produced; Lighthouse audit run on all 27 URLs; WCAG failures categorized by level (A/AA) and severity; remediation priority list created; verified by: pnpm run lighthouse",
       "validation": "VALIDATE:pnpm run lighthouse;AUDIT:manual-review",
       "prerequisites": "FILE:docs/company/brand/accessibility-patterns.md;FILE:lighthouserc.js;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml"

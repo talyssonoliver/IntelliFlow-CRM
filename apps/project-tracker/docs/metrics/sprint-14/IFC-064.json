@@ -1,0 +1,61 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-064",
+  "section": "Core CRM",
+  "description": "FLOW-007: Kanban Drag-Drop Persistence",
+  "owner": "Frontend Dev + Backend Dev (STOA-Domain)",
+  "status": "DONE",
+  "sprint": "sprint-0",
+  "phase": "phase-0-initialisation",
+  "stream": null,
+  "dependencies": {
+    "all_satisfied": true,
+    "verified_at": "2026-02-23T22:15:24.946Z",
+    "required": [
+      "IFC-091",
+      "IFC-063"
+    ]
+  },
+  "started_at": "2026-02-13T23:21:32+00:00",
+  "completed_at": "2026-02-23T22:15:19.555Z",
+  "execution": {
+    "retry_count": 0,
+    "last_error": null,
+    "executor": "orchestrator",
+    "log_path": "/c/Users/talys/projects/intelliFlow-CRM/artifacts/logs/execution-20260213-232127.log"
+  },
+  "artifacts": {
+    "expected": [],
+    "created": [],
+    "missing": []
+  },
+  "validations": [
+    {
+      "name": "Task completion verification",
+      "command": "echo \"Task IFC-064 completed\"",
+      "type": "auto",
+      "required": true,
+      "executed_at": "2026-02-23T22:15:19.555Z",
+      "exit_code": 0,
+      "passed": true,
+      "notes": "Task marked as completed in Sprint_plan.csv"
+    }
+  ],
+  "kpis": {},
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "In Progress",
+      "at": "2026-02-13T23:21:32+00:00",
+      "note": "Task execution started"
+    }
+  ],
+  "current_phase": "ARCHITECT_SPEC",
+  "updated_at": "2026-02-13T23:21:33+00:00",
+  "attempt": 0,
+  "actual_duration_minutes": 15,
+  "dependencies_resolved": [
+    "IFC-091",
+    "IFC-063"
+  ]
+}
