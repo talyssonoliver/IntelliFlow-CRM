@@ -33,6 +33,7 @@ import {
   createTenantWhereClause,
   type TenantAwareContext,
 } from '../../security/tenant-context';
+import { createNotification } from '../notifications/notifications.router';
 
 /**
  * Helper to get opportunity service from context
@@ -74,6 +75,20 @@ export const opportunityRouter = createTRPCRouter({
         message: result.error.message,
       });
     }
+
+    // Fire-and-forget notification
+    createNotification(ctx.prisma, {
+      userId: typedCtx.tenant.userId,
+      tenantId: typedCtx.tenant.tenantId,
+      type: 'deal_assigned',
+      title: 'New deal created',
+      body: `Deal "${result.value.name}" has been created`,
+      priority: 'normal',
+      entityType: 'opportunity',
+      entityId: result.value.id,
+      entityName: result.value.name,
+      actionUrl: `/deals/${result.value.id}`,
+    }).catch(() => {});
 
     return mapOpportunityToResponse(result.value);
   }),
@@ -331,6 +346,30 @@ export const opportunityRouter = createTRPCRouter({
       }
       throw new TRPCError({ code: 'BAD_REQUEST', message: result.error.message });
     }
+
+    // Fire-and-forget stage change notification
+    const notifType = input.targetStage === 'CLOSED_WON'
+      ? 'deal_won' as const
+      : input.targetStage === 'CLOSED_LOST'
+        ? 'deal_lost' as const
+        : 'deal_stage_changed' as const;
+    const notifPriority = input.targetStage === 'CLOSED_WON' ? 'high' as const : 'normal' as const;
+    createNotification(ctx.prisma, {
+      userId: typedCtx.tenant.userId,
+      tenantId: typedCtx.tenant.tenantId,
+      type: notifType,
+      title: notifType === 'deal_won'
+        ? 'Deal won!'
+        : notifType === 'deal_lost'
+          ? 'Deal lost'
+          : `Deal moved to ${input.targetStage}`,
+      body: `"${result.value.name}" moved to ${input.targetStage}`,
+      priority: notifPriority,
+      entityType: 'opportunity',
+      entityId: result.value.id,
+      entityName: result.value.name,
+      actionUrl: `/deals/${result.value.id}`,
+    }).catch(() => {});
 
     return mapOpportunityToResponse(result.value);
   }),
@@ -682,4 +721,233 @@ export const opportunityRouter = createTRPCRouter({
       winRateTrend,
     };
   }),
+
+  /**
+   * Get deal-specific forecast with risk factors, recommendations, history
+   * PG-131: Deterministic risk scoring — no AI chain dependency
+   */
+  dealForecast: tenantProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const typedCtx = getTenantContext(ctx);
+
+      // Fetch opportunity with relations
+      const opportunity = await typedCtx.prismaWithTenant.opportunity.findUnique({
+        where: { id: input.id },
+        include: {
+          owner: { select: { id: true, name: true, email: true } },
+          account: { select: { id: true, name: true } },
+          contact: { select: { id: true, name: true, title: true } },
+        },
+      });
+
+      if (!opportunity) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Opportunity not found' });
+      }
+
+      // Fetch activity events for last 30 days
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const activities = await typedCtx.prismaWithTenant.activityEvent.findMany({
+        where: {
+          opportunityId: input.id,
+          timestamp: { gte: thirtyDaysAgo },
+        },
+        orderBy: { timestamp: 'asc' },
+      });
+
+      // Stage probability defaults (mirrors frontend STAGE_PROBABILITIES)
+      const STAGE_DEFAULTS: Record<string, number> = {
+        PROSPECTING: 10,
+        QUALIFICATION: 20,
+        NEEDS_ANALYSIS: 40,
+        PROPOSAL: 60,
+        NEGOTIATION: 80,
+        CLOSED_WON: 100,
+        CLOSED_LOST: 0,
+      };
+
+      const stageDefault = STAGE_DEFAULTS[opportunity.stage] ?? 50;
+
+      // ─── Derive Risk Factors (deterministic from domain signals) ───
+      const riskFactors: {
+        id: string;
+        factor: string;
+        severity: 'high' | 'medium' | 'low';
+        description: string;
+        impact: string;
+      }[] = [];
+
+      // RF-1: Probability below stage default
+      if (opportunity.probability < stageDefault) {
+        const gap = stageDefault - opportunity.probability;
+        riskFactors.push({
+          id: 'rf-prob-below-default',
+          factor: 'Probability below stage default',
+          severity: gap >= 20 ? 'high' : 'medium',
+          description: `Current ${opportunity.probability}% vs ${stageDefault}% ${opportunity.stage} default`,
+          impact: `${gap} points below expected`,
+        });
+      }
+
+      // RF-2: No close date set
+      if (!opportunity.expectedCloseDate) {
+        riskFactors.push({
+          id: 'rf-no-close-date',
+          factor: 'No expected close date',
+          severity: 'high',
+          description: 'Expected close date has not been set',
+          impact: 'Cannot forecast timeline or measure slippage',
+        });
+      }
+
+      // RF-3: Activity gap (last activity > 14 days ago)
+      const lastActivity = activities.length > 0 ? activities[activities.length - 1] : null;
+      const daysSinceActivity = lastActivity
+        ? Math.floor((Date.now() - new Date(lastActivity.timestamp).getTime()) / (1000 * 60 * 60 * 24))
+        : 999;
+
+      if (daysSinceActivity > 14) {
+        riskFactors.push({
+          id: 'rf-activity-gap',
+          factor: 'Activity gap',
+          severity: daysSinceActivity > 30 ? 'high' : 'medium',
+          description: lastActivity
+            ? `Last activity was ${daysSinceActivity} days ago`
+            : 'No activity recorded',
+          impact: 'No recent engagement',
+        });
+      }
+
+      // RF-4: No contact associated
+      if (!opportunity.contact) {
+        riskFactors.push({
+          id: 'rf-no-contact',
+          factor: 'No contact associated',
+          severity: 'medium',
+          description: 'No primary contact linked to this opportunity',
+          impact: 'Missing decision-maker relationship',
+        });
+      }
+
+      // RF-5: Close date slippage (past due)
+      if (opportunity.expectedCloseDate && new Date(opportunity.expectedCloseDate) < new Date()) {
+        const daysOverdue = Math.floor(
+          (Date.now() - new Date(opportunity.expectedCloseDate).getTime()) / (1000 * 60 * 60 * 24)
+        );
+        riskFactors.push({
+          id: 'rf-close-date-slippage',
+          factor: 'Close date has passed',
+          severity: daysOverdue > 30 ? 'high' : 'medium',
+          description: `Expected close was ${daysOverdue} days ago`,
+          impact: 'Deal may be stalled or lost',
+        });
+      }
+
+      // ─── Derive Recommendations (business rules) ───
+      const recommendations: {
+        id: string;
+        action: string;
+        title: string;
+        description: string;
+        priority: 'high' | 'medium' | 'low';
+      }[] = [];
+
+      if (daysSinceActivity > 7) {
+        recommendations.push({
+          id: 'rec-followup',
+          action: 'SCHEDULE_CALL',
+          title: 'Schedule follow-up call',
+          description: 'Schedule follow-up call to qualify deal status',
+          priority: daysSinceActivity > 14 ? 'high' : 'medium',
+        });
+      }
+
+      if (!opportunity.contact) {
+        recommendations.push({
+          id: 'rec-add-contact',
+          action: 'ADD_CONTACT',
+          title: 'Add primary contact',
+          description: 'Link a decision-maker contact to improve deal tracking',
+          priority: 'high',
+        });
+      }
+
+      if (opportunity.probability < stageDefault && opportunity.probability > 0) {
+        recommendations.push({
+          id: 'rec-update-prob',
+          action: 'UPDATE_PROBABILITY',
+          title: 'Review deal probability',
+          description: `Current ${opportunity.probability}% is below ${opportunity.stage} default of ${stageDefault}%`,
+          priority: 'medium',
+        });
+      }
+
+      if (!opportunity.expectedCloseDate) {
+        recommendations.push({
+          id: 'rec-set-close-date',
+          action: 'SET_CLOSE_DATE',
+          title: 'Set expected close date',
+          description: 'Add a close date to enable timeline tracking and forecasting',
+          priority: 'high',
+        });
+      }
+
+      // ─── Derive Probability History from STAGE_CHANGE events ───
+      const history: { date: string; probability: number; event?: string; isProjected?: boolean }[] = [];
+
+      for (const activity of activities) {
+        if (activity.type === 'STAGE_CHANGE' && activity.stageTo) {
+          const toStage = activity.stageTo;
+          const prob = STAGE_DEFAULTS[toStage] ?? 50;
+          history.push({
+            date: new Date(activity.timestamp).toISOString().split('T')[0],
+            probability: prob,
+            event: `Stage → ${toStage.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}`,
+          });
+        }
+      }
+
+      // ─── Composite Confidence Score (4 data quality signals) ───
+      let confidenceScore = 0;
+      // Signal 1: Activity frequency (0-0.25)
+      const activityCount = activities.length;
+      confidenceScore += activityCount >= 5 ? 0.25 : activityCount >= 2 ? 0.15 : activityCount >= 1 ? 0.1 : 0;
+      // Signal 2: Manual probability update (0-0.25)
+      confidenceScore += opportunity.probability !== stageDefault ? 0.25 : 0.1;
+      // Signal 3: Contact engagement (0-0.25)
+      confidenceScore += opportunity.contact ? 0.25 : 0;
+      // Signal 4: Close date presence (0-0.25)
+      confidenceScore += opportunity.expectedCloseDate ? 0.25 : 0;
+
+      const ownerName = opportunity.owner?.name || 'Unassigned';
+      const ownerAvatar = ownerName
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase();
+
+      return {
+        deal: {
+          id: opportunity.id,
+          name: opportunity.name,
+          stage: opportunity.stage,
+          probability: opportunity.probability,
+          value: Number(opportunity.value),
+          expectedCloseDate: opportunity.expectedCloseDate?.toISOString().split('T')[0] ?? null,
+          owner: { name: ownerName, avatar: ownerAvatar },
+          account: opportunity.account ? { name: opportunity.account.name } : null,
+          contact: opportunity.contact
+            ? { name: opportunity.contact.name, title: opportunity.contact.title ?? '' }
+            : null,
+        },
+        riskFactors,
+        recommendations,
+        history,
+        confidence: Math.min(1, confidenceScore),
+        lastActivityAt: lastActivity ? lastActivity.timestamp.toISOString() : null,
+        stageDefault,
+      };
+    }),
 });

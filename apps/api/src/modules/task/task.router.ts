@@ -31,6 +31,7 @@ import {
   type TenantAwareContext,
 } from '../../security/tenant-context';
 import { TaskNotInProgressError } from '@intelliflow/domain';
+import { createNotification } from '../notifications/notifications.router';
 
 /**
  * Helper to get task service from context
@@ -84,6 +85,22 @@ export const taskRouter = createTRPCRouter({
         code: 'BAD_REQUEST',
         message,
       });
+    }
+
+    // Fire-and-forget notification if assigned to someone else
+    if (input.assignedUserId && input.assignedUserId !== typedCtx.tenant.userId) {
+      createNotification(ctx.prisma, {
+        userId: input.assignedUserId,
+        tenantId: typedCtx.tenant.tenantId,
+        type: 'task_assigned',
+        title: 'Task assigned to you',
+        body: `You've been assigned: "${result.value.title}"`,
+        priority: 'normal',
+        entityType: 'task',
+        entityId: result.value.id,
+        entityName: result.value.title,
+        actionUrl: `/tasks/${result.value.id}`,
+      }).catch(() => {});
     }
 
     return mapTaskToResponse(result.value);
@@ -441,6 +458,20 @@ export const taskRouter = createTRPCRouter({
       });
     }
 
+    // Notify on task completion
+    createNotification(ctx.prisma, {
+      userId: typedCtx.tenant.userId,
+      tenantId: typedCtx.tenant.tenantId,
+      type: 'task_completed',
+      title: 'Task completed',
+      body: `Task "${result.value.title}" has been completed`,
+      priority: 'normal',
+      entityType: 'task',
+      entityId: result.value.id,
+      entityName: result.value.title,
+      actionUrl: `/tasks/${result.value.id}`,
+    }).catch(() => {});
+
     return mapTaskToResponse(result.value);
   }),
 
@@ -536,6 +567,20 @@ export const taskRouter = createTRPCRouter({
       }
       throw new TRPCError({ code: 'BAD_REQUEST', message });
     }
+
+    // Notify on entity assignment
+    createNotification(ctx.prisma, {
+      userId: typedCtx.tenant.userId,
+      tenantId: typedCtx.tenant.tenantId,
+      type: 'task_assigned',
+      title: 'Task assigned to entity',
+      body: `Task "${result.value.title}" assigned to ${input.entityType}`,
+      priority: 'normal',
+      entityType: 'task',
+      entityId: result.value.id,
+      entityName: result.value.title,
+      actionUrl: `/tasks/${result.value.id}`,
+    }).catch(() => {});
 
     return mapTaskToResponse(result.value);
   }),

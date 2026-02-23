@@ -20,6 +20,8 @@ import {
   PrismaAnalyticsRepository,
   PrismaFeedbackSurveyRepository,
   PrismaCaseDocumentRepository,
+  PrismaNotificationRepository,
+  PrismaNotificationPreferenceRepository,
   InMemoryEventBus,
   MockAIService,
   InMemoryCache,
@@ -92,6 +94,9 @@ const createAdapters = (prismaClient: PrismaClient) => {
   const analyticsRepository = new PrismaAnalyticsRepository(prismaClient);
   const feedbackSurveyRepository = new PrismaFeedbackSurveyRepository(prismaClient);
   const caseDocumentRepository = new PrismaCaseDocumentRepository(prismaClient);
+  const tenantModuleRepository = new PrismaTenantModuleRepository(prismaClient);
+  const notificationRepository = new PrismaNotificationRepository(prismaClient);
+  const notificationPreferenceRepository = new PrismaNotificationPreferenceRepository(prismaClient);
 
   // Storage & AV (IFC-094)
   const storageService = new SupabaseStorageAdapter(
@@ -141,6 +146,9 @@ const createAdapters = (prismaClient: PrismaClient) => {
     analyticsRepository,
     feedbackSurveyRepository,
     caseDocumentRepository,
+    tenantModuleRepository,
+    notificationRepository,
+    notificationPreferenceRepository,
     eventBus,
     aiService,
     cache,
@@ -312,6 +320,8 @@ const createServices = (prismaClient: PrismaClient) => {
     // IFC-094: Document services
     signatureProvider,
     ingestionOrchestrator,
+    // IFC-209: Module Access Service
+    moduleAccess: adapters.tenantModuleRepository,
     // Security services (IFC-098, IFC-113, IFC-127)
     security,
     // Also expose adapters for direct access when needed

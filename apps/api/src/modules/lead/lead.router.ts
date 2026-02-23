@@ -38,6 +38,7 @@ import {
   type TenantAwareContext,
 } from '../../security/tenant-context';
 import { detectScoreBias, type LeadScoringBiasCheck } from '@intelliflow/adapters';
+import { createNotification } from '../notifications/notifications.router';
 
 /**
  * Helper to get lead service with null check
@@ -411,6 +412,19 @@ export const leadRouter = createTRPCRouter({
       });
     }
 
+    // Fire-and-forget notification
+    createNotification(ctx.prisma, {
+      userId: typedCtx.tenant.userId,
+      tenantId: typedCtx.tenant.tenantId,
+      type: 'lead_converted',
+      title: 'Lead qualified',
+      body: `Lead has been qualified`,
+      priority: 'normal',
+      entityType: 'lead',
+      entityId: input.leadId,
+      actionUrl: `/leads/${input.leadId}`,
+    }).catch(() => {});
+
     return mapLeadToResponse(result.value);
   }),
 
@@ -488,6 +502,19 @@ export const leadRouter = createTRPCRouter({
         throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: msg });
       }
 
+      // Fire-and-forget notification
+      createNotification(ctx.prisma, {
+        userId: typedCtx.tenant.userId,
+        tenantId: typedCtx.tenant.tenantId,
+        type: 'lead_converted',
+        title: 'Lead converted to deal',
+        body: `Lead converted to deal "${input.dealName}"`,
+        priority: 'high',
+        entityType: 'lead',
+        entityId: input.leadId,
+        actionUrl: `/leads/${input.leadId}`,
+      }).catch(() => {});
+
       return result.value;
     }),
 
@@ -514,6 +541,19 @@ export const leadRouter = createTRPCRouter({
           message: result.error.message,
         });
       }
+
+      // Fire-and-forget notification
+      createNotification(ctx.prisma, {
+        userId: ctx.user?.userId || 'system',
+        tenantId: ctx.user?.tenantId || 'default',
+        type: 'lead_scored',
+        title: 'Lead scored by AI',
+        body: `Lead scored ${result.value.newScore} (${result.value.tier})`,
+        priority: 'normal',
+        entityType: 'lead',
+        entityId: result.value.leadId,
+        actionUrl: `/leads/${result.value.leadId}`,
+      }).catch(() => {});
 
       return {
         leadId: result.value.leadId,

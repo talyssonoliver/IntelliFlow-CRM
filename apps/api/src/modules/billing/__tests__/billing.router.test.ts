@@ -471,6 +471,13 @@ describe('billingRouter', () => {
         value: newPaymentMethod,
       });
 
+      // setAsDefault defaults to true, so updateCustomer is called
+      mockStripeAdapterMethods.updateCustomer.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: mockCustomer,
+      });
+
       const mockContext = {
         user: {
           userId: 'user_123',
@@ -550,6 +557,11 @@ describe('billingRouter', () => {
     });
 
     it('detaches payment method successfully', async () => {
+      mockStripeAdapterMethods.listSubscriptions.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: [], // No active subscriptions — guard passes
+      });
       mockStripeAdapterMethods.detachPaymentMethod.mockResolvedValue({
         isSuccess: true,
         isFailure: false,
@@ -577,6 +589,11 @@ describe('billingRouter', () => {
     });
 
     it('throws error when Stripe fails to detach payment method', async () => {
+      mockStripeAdapterMethods.listSubscriptions.mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: [], // No active subscriptions — guard passes
+      });
       mockStripeAdapterMethods.detachPaymentMethod.mockResolvedValue({
         isSuccess: false,
         isFailure: true,
@@ -2095,10 +2112,12 @@ describe('billingRouter', () => {
         value: { ...mockCustomer, defaultPaymentMethodId: 'pm_123' },
       });
 
+      // Include a second card so it's NOT the "last card" — tests the default-card guard specifically
+      const secondPm = { ...mockPaymentMethod, id: 'pm_other_card' };
       mockStripeAdapterMethods.listPaymentMethods.mockResolvedValue({
         isSuccess: true,
         isFailure: false,
-        value: [mockPaymentMethod],
+        value: [mockPaymentMethod, secondPm],
       });
 
       const mockContext = {
