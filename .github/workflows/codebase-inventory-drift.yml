@@ -41,7 +41,7 @@ on:
 
 env:
   NODE_VERSION: '20'
-  PNPM_VERSION: '8.15.0'
+  PNPM_VERSION: '10.29.3'
 
 jobs:
   detect-drift:

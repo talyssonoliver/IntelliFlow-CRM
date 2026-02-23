@@ -39,7 +39,7 @@ permissions:
 
 env:
   NODE_VERSION: '20'
-  PNPM_VERSION: '9'
+  PNPM_VERSION: '10.29.3'
   SBOM_FORMAT: 'cyclonedx-json' # CycloneDX 1.5 format
 
 jobs:

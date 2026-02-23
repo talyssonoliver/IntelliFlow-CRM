@@ -50,7 +50,7 @@ permissions:
 
 env:
   NODE_VERSION: '20'
-  PNPM_VERSION: '9'
+  PNPM_VERSION: '10.29.3'
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   COSIGN_VERSION: 'v2.2.2'
