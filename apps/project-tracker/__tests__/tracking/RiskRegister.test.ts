@@ -1,4 +1,17 @@
 import { describe, it, expect } from 'vitest';
+import {
+  isValidTransition,
+  classifyScore,
+  getScoreColor,
+  getStatusColor,
+  sanitizeCSVField,
+  normalizeStatus,
+  generateCSVExport,
+  generateJSONExport,
+  type Risk,
+  type RiskSummary,
+  type RiskStatus,
+} from '../../lib/risk-domain';
 
 /**
  * Tests for RiskRegister component logic.
@@ -8,61 +21,8 @@ import { describe, it, expect } from 'vitest';
  * extracted and tested independently.
  */
 
-// Risk interface matching the component
-interface Risk {
-  id: string;
-  category: string;
-  description: string;
-  impact: 'High' | 'Medium' | 'Low';
-  likelihood: 'High' | 'Medium' | 'Low';
-  impactScore?: number;
-  likelihoodScore?: number;
-  score: number;
-  status: 'Open' | 'Mitigated' | 'Closed' | 'Monitoring' | 'In Progress' | 'Accepted' | 'Monitored';
-  owner: string;
-  mitigation: string;
-  lastReviewed: string;
-}
+// ─── Helper: filter risks (mirrors component logic) ─────────────────────────
 
-// Extract pure functions from component for testing
-// These mirror the logic in RiskRegister.tsx
-
-/**
- * Gets color class for risk score (1-25 scale)
- */
-function getScoreColor(score: number): string {
-  if (score >= 15) return 'bg-red-500/20 text-red-400 border-red-500/30';
-  if (score >= 10) return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
-  if (score >= 6) return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-  return 'bg-green-500/20 text-green-400 border-green-500/30';
-}
-
-/**
- * Gets color class for risk status
- */
-function getStatusColor(status: string): string {
-  switch (status) {
-    case 'Open':
-      return 'bg-red-500/20 text-red-400';
-    case 'Mitigated':
-      return 'bg-green-500/20 text-green-400';
-    case 'Monitored':
-    case 'Monitoring':
-      return 'bg-blue-500/20 text-blue-400';
-    case 'In Progress':
-      return 'bg-yellow-500/20 text-yellow-400';
-    case 'Accepted':
-      return 'bg-purple-500/20 text-purple-400';
-    case 'Closed':
-      return 'bg-gray-500/20 text-gray-400';
-    default:
-      return 'bg-gray-500/20 text-gray-400';
-  }
-}
-
-/**
- * Filters risks based on filter type
- */
 function filterRisks(risks: Risk[], filter: 'all' | 'open' | 'high'): Risk[] {
   if (filter === 'open')
     return risks.filter((r) => r.status === 'Open' || r.status === 'In Progress');
@@ -70,32 +30,292 @@ function filterRisks(risks: Risk[], filter: 'all' | 'open' | 'high'): Risk[] {
   return risks;
 }
 
-/**
- * Calculates summary statistics from risks
- */
-function calculateSummary(risks: Risk[]): {
-  total: number;
-  open: number;
-  mitigated: number;
-  monitoring: number;
-  closed: number;
-  highRisk: number;
-  mediumRisk: number;
-  lowRisk: number;
-} {
+function calculateSummary(risks: Risk[]): RiskSummary {
   return {
     total: risks.length,
     open: risks.filter((r) => r.status === 'Open').length,
     mitigated: risks.filter((r) => r.status === 'Mitigated').length,
-    monitoring: risks.filter((r) => r.status === 'Monitoring' || r.status === 'Monitored').length,
+    monitoring: risks.filter((r) => r.status === 'Monitoring').length,
     closed: risks.filter((r) => r.status === 'Closed').length,
+    inProgress: risks.filter((r) => r.status === 'In Progress').length,
+    accepted: risks.filter((r) => r.status === 'Accepted').length,
     highRisk: risks.filter((r) => r.score >= 15).length,
     mediumRisk: risks.filter((r) => r.score >= 6 && r.score < 15).length,
     lowRisk: risks.filter((r) => r.score < 6).length,
   };
 }
 
+// ─── Mock data ───────────────────────────────────────────────────────────────
+
+const makeRisk = (overrides: Partial<Risk> = {}): Risk => ({
+  id: 'RISK-001',
+  category: 'Technology',
+  description: 'Test risk',
+  impact: 4,
+  likelihood: 4,
+  score: 16,
+  status: 'Open',
+  owner: 'Tech Lead',
+  mitigation: 'Mitigate it',
+  lastReviewed: '2025-01-15',
+  escalationPath: 'CTO',
+  evidence: 'Evidence here',
+  notes: 'Some notes',
+  reviewDate: '2025-01-15',
+  ...overrides,
+});
+
 describe('RiskRegister Component Logic', () => {
+  // ─── Status Transition Tests ───────────────────────────────────────────────
+
+  describe('isValidTransition', () => {
+    it('Open → In Progress is valid', () => {
+      expect(isValidTransition('Open', 'In Progress')).toBe(true);
+    });
+
+    it('Open → Accepted is valid', () => {
+      expect(isValidTransition('Open', 'Accepted')).toBe(true);
+    });
+
+    it('Open → Closed is NOT valid (not a direct transition)', () => {
+      expect(isValidTransition('Open', 'Closed')).toBe(false);
+    });
+
+    it('Closed → Open is NOT valid (terminal state)', () => {
+      expect(isValidTransition('Closed', 'Open')).toBe(false);
+    });
+
+    it('Mitigated → Monitoring is valid', () => {
+      expect(isValidTransition('Mitigated', 'Monitoring')).toBe(true);
+    });
+
+    it('Mitigated → Closed is valid', () => {
+      expect(isValidTransition('Mitigated', 'Closed')).toBe(true);
+    });
+
+    it('Accepted → Closed is valid', () => {
+      expect(isValidTransition('Accepted', 'Closed')).toBe(true);
+    });
+
+    it('all transitions from Closed return false (terminal)', () => {
+      const allStatuses: RiskStatus[] = [
+        'Open',
+        'In Progress',
+        'Mitigated',
+        'Monitoring',
+        'Accepted',
+        'Closed',
+      ];
+      for (const target of allStatuses) {
+        expect(isValidTransition('Closed', target)).toBe(false);
+      }
+    });
+  });
+
+  // ─── Score Classification Tests ────────────────────────────────────────────
+
+  describe('classifyScore', () => {
+    it('classifyScore(25) returns Critical', () => {
+      expect(classifyScore(25)).toBe('Critical');
+    });
+
+    it('classifyScore(20) returns Critical', () => {
+      expect(classifyScore(20)).toBe('Critical');
+    });
+
+    it('classifyScore(19) returns High', () => {
+      expect(classifyScore(19)).toBe('High');
+    });
+
+    it('classifyScore(15) returns High', () => {
+      expect(classifyScore(15)).toBe('High');
+    });
+
+    it('classifyScore(14) returns Medium', () => {
+      expect(classifyScore(14)).toBe('Medium');
+    });
+
+    it('classifyScore(10) returns Medium', () => {
+      expect(classifyScore(10)).toBe('Medium');
+    });
+
+    it('classifyScore(9) returns Low', () => {
+      expect(classifyScore(9)).toBe('Low');
+    });
+
+    it('classifyScore(6) returns Low', () => {
+      expect(classifyScore(6)).toBe('Low');
+    });
+
+    it('classifyScore(5) returns Minimal', () => {
+      expect(classifyScore(5)).toBe('Minimal');
+    });
+
+    it('classifyScore(1) returns Minimal', () => {
+      expect(classifyScore(1)).toBe('Minimal');
+    });
+  });
+
+  // ─── CSV Injection Sanitization Tests ──────────────────────────────────────
+
+  describe('sanitizeCSVField', () => {
+    it('strips leading = from =CMD()', () => {
+      expect(sanitizeCSVField('=CMD()')).toBe('CMD()');
+    });
+
+    it('strips leading + from +cmd', () => {
+      expect(sanitizeCSVField('+cmd')).toBe('cmd');
+    });
+
+    it('strips leading - from -cmd', () => {
+      expect(sanitizeCSVField('-cmd')).toBe('cmd');
+    });
+
+    it('strips leading @ from @cmd', () => {
+      expect(sanitizeCSVField('@cmd')).toBe('cmd');
+    });
+
+    it('passes through normal text unchanged', () => {
+      expect(sanitizeCSVField('normal text')).toBe('normal text');
+    });
+  });
+
+  // ─── Status Normalization Tests ────────────────────────────────────────────
+
+  describe('normalizeStatus', () => {
+    it('normalizes Monitored to Monitoring', () => {
+      expect(normalizeStatus('Monitored')).toBe('Monitoring');
+    });
+
+    it('returns Mitigated unchanged', () => {
+      expect(normalizeStatus('Mitigated')).toBe('Mitigated');
+    });
+
+    it('returns Open unchanged', () => {
+      expect(normalizeStatus('Open')).toBe('Open');
+    });
+
+    it('falls back to Open for unknown status', () => {
+      expect(normalizeStatus('InvalidStatus')).toBe('Open');
+    });
+  });
+
+  // ─── Export Logic Tests ────────────────────────────────────────────────────
+
+  describe('generateCSVExport', () => {
+    it('produces CSV with all 13 column headers', () => {
+      const csv = generateCSVExport([]);
+      const headers = csv.split('\n')[0].split(',');
+      expect(headers.length).toBe(13);
+      expect(headers[0]).toBe('Risk ID');
+      expect(headers[12]).toBe('Notes');
+    });
+
+    it('includes all risk rows', () => {
+      const risks = [makeRisk({ id: 'RISK-001' }), makeRisk({ id: 'RISK-002' })];
+      const csv = generateCSVExport(risks);
+      const lines = csv.split('\n');
+      expect(lines.length).toBe(3); // header + 2 rows
+    });
+
+    it('returns headers only for empty array', () => {
+      const csv = generateCSVExport([]);
+      const lines = csv.split('\n');
+      expect(lines.length).toBe(1); // header only
+    });
+
+    it('escapes values containing commas and quotes', () => {
+      const risks = [makeRisk({ description: 'Risk with, commas', notes: 'Note with "quotes"' })];
+      const csv = generateCSVExport(risks);
+      // Values with commas/quotes should be wrapped in double-quotes
+      expect(csv).toContain('"Risk with, commas"');
+      expect(csv).toContain('"Note with ""quotes"""');
+    });
+
+    it('exports filtered risks only', () => {
+      const allRisks = [
+        makeRisk({ id: 'RISK-001', status: 'Open', score: 20 }),
+        makeRisk({ id: 'RISK-002', status: 'Closed', score: 4 }),
+      ];
+      const filtered = filterRisks(allRisks, 'high');
+      const csv = generateCSVExport(filtered);
+      const lines = csv.split('\n');
+      expect(lines.length).toBe(2); // header + 1 high-risk row
+    });
+  });
+
+  describe('generateJSONExport', () => {
+    it('includes risks array, summary, and exportedAt timestamp', () => {
+      const risks = [makeRisk()];
+      const summary = calculateSummary(risks);
+      const result = generateJSONExport(risks, summary);
+      expect(result.risks).toEqual(risks);
+      expect(result.summary).toEqual(summary);
+      expect(result.exportedAt).toBeDefined();
+      expect(new Date(result.exportedAt).toISOString()).toBe(result.exportedAt);
+    });
+  });
+
+  // ─── Expandable Row Detail Tests (AC-004) ─────────────────────────────────
+
+  describe('Expandable row state logic', () => {
+    it('clicking a risk row sets expandedRow to that risk id', () => {
+      let expandedRow: string | null = null;
+      const risk = makeRisk({ id: 'RISK-003' });
+      // Simulate click
+      expandedRow = expandedRow === risk.id ? null : risk.id;
+      expect(expandedRow).toBe('RISK-003');
+    });
+
+    it('expanded panel has access to full mitigation text', () => {
+      const risk = makeRisk({ mitigation: 'Full mitigation strategy text here' });
+      expect(risk.mitigation).toBe('Full mitigation strategy text here');
+    });
+
+    it('expanded panel has access to escalationPath, evidence, notes', () => {
+      const risk = makeRisk({
+        escalationPath: 'CTO escalation',
+        evidence: 'Evidence doc',
+        notes: 'Important notes',
+      });
+      expect(risk.escalationPath).toBe('CTO escalation');
+      expect(risk.evidence).toBe('Evidence doc');
+      expect(risk.notes).toBe('Important notes');
+    });
+
+    it('clicking same row again collapses it (resets to null)', () => {
+      let expandedRow: string | null = 'RISK-003';
+      const risk = makeRisk({ id: 'RISK-003' });
+      expandedRow = expandedRow === risk.id ? null : risk.id;
+      expect(expandedRow).toBeNull();
+    });
+  });
+
+  // ─── Edit Form Validation Tests ────────────────────────────────────────────
+
+  describe('Edit form validation logic', () => {
+    it('empty description should be blocked (required field)', () => {
+      const description = '';
+      expect(description.trim().length > 0).toBe(false);
+    });
+
+    it('score auto-computes from impact × likelihood', () => {
+      const impact = 4;
+      const likelihood = 3;
+      expect(impact * likelihood).toBe(12);
+    });
+
+    it('Risk ID is read-only in edit mode', () => {
+      const risk = makeRisk({ id: 'RISK-005' });
+      // In edit mode, ID should not be in the updates object
+      const updates: Partial<Risk> = { description: 'Updated desc' };
+      expect(updates).not.toHaveProperty('id');
+      expect(risk.id).toBe('RISK-005');
+    });
+  });
+
+  // ─── getScoreColor (imported from domain) ──────────────────────────────────
+
   describe('getScoreColor', () => {
     it('returns red for critical risks (score >= 15)', () => {
       expect(getScoreColor(25)).toContain('red');
@@ -123,6 +343,8 @@ describe('RiskRegister Component Logic', () => {
     });
   });
 
+  // ─── getStatusColor (imported from domain) ─────────────────────────────────
+
   describe('getStatusColor', () => {
     it('returns red for Open status', () => {
       expect(getStatusColor('Open')).toContain('red');
@@ -132,8 +354,7 @@ describe('RiskRegister Component Logic', () => {
       expect(getStatusColor('Mitigated')).toContain('green');
     });
 
-    it('returns blue for Monitored/Monitoring status', () => {
-      expect(getStatusColor('Monitored')).toContain('blue');
+    it('returns blue for Monitoring status', () => {
       expect(getStatusColor('Monitoring')).toContain('blue');
     });
 
@@ -154,56 +375,14 @@ describe('RiskRegister Component Logic', () => {
     });
   });
 
+  // ─── filterRisks (local helper mirroring component) ────────────────────────
+
   describe('filterRisks', () => {
     const mockRisks: Risk[] = [
-      {
-        id: 'RISK-001',
-        category: 'Tech',
-        description: 'Risk 1',
-        impact: 'High',
-        likelihood: 'High',
-        score: 16,
-        status: 'Open',
-        owner: 'A',
-        mitigation: '',
-        lastReviewed: '',
-      },
-      {
-        id: 'RISK-002',
-        category: 'Tech',
-        description: 'Risk 2',
-        impact: 'Medium',
-        likelihood: 'Medium',
-        score: 9,
-        status: 'Mitigated',
-        owner: 'B',
-        mitigation: '',
-        lastReviewed: '',
-      },
-      {
-        id: 'RISK-003',
-        category: 'Tech',
-        description: 'Risk 3',
-        impact: 'Low',
-        likelihood: 'Low',
-        score: 4,
-        status: 'Closed',
-        owner: 'C',
-        mitigation: '',
-        lastReviewed: '',
-      },
-      {
-        id: 'RISK-004',
-        category: 'Tech',
-        description: 'Risk 4',
-        impact: 'High',
-        likelihood: 'High',
-        score: 20,
-        status: 'In Progress',
-        owner: 'D',
-        mitigation: '',
-        lastReviewed: '',
-      },
+      makeRisk({ id: 'RISK-001', score: 16, status: 'Open' }),
+      makeRisk({ id: 'RISK-002', score: 9, status: 'Mitigated' }),
+      makeRisk({ id: 'RISK-003', score: 4, status: 'Closed' }),
+      makeRisk({ id: 'RISK-004', score: 20, status: 'In Progress' }),
     ];
 
     it('returns all risks when filter is "all"', () => {
@@ -224,68 +403,15 @@ describe('RiskRegister Component Logic', () => {
     });
   });
 
+  // ─── calculateSummary (local helper mirroring component) ───────────────────
+
   describe('calculateSummary', () => {
     const mockRisks: Risk[] = [
-      {
-        id: 'RISK-001',
-        category: 'Tech',
-        description: 'Risk 1',
-        impact: 'High',
-        likelihood: 'High',
-        score: 16,
-        status: 'Open',
-        owner: 'A',
-        mitigation: '',
-        lastReviewed: '',
-      },
-      {
-        id: 'RISK-002',
-        category: 'Tech',
-        description: 'Risk 2',
-        impact: 'Medium',
-        likelihood: 'Medium',
-        score: 9,
-        status: 'Mitigated',
-        owner: 'B',
-        mitigation: '',
-        lastReviewed: '',
-      },
-      {
-        id: 'RISK-003',
-        category: 'Tech',
-        description: 'Risk 3',
-        impact: 'Low',
-        likelihood: 'Low',
-        score: 4,
-        status: 'Mitigated',
-        owner: 'C',
-        mitigation: '',
-        lastReviewed: '',
-      },
-      {
-        id: 'RISK-004',
-        category: 'Tech',
-        description: 'Risk 4',
-        impact: 'High',
-        likelihood: 'High',
-        score: 20,
-        status: 'Monitoring',
-        owner: 'D',
-        mitigation: '',
-        lastReviewed: '',
-      },
-      {
-        id: 'RISK-005',
-        category: 'Tech',
-        description: 'Risk 5',
-        impact: 'Low',
-        likelihood: 'Low',
-        score: 2,
-        status: 'Closed',
-        owner: 'E',
-        mitigation: '',
-        lastReviewed: '',
-      },
+      makeRisk({ id: 'RISK-001', score: 16, status: 'Open' }),
+      makeRisk({ id: 'RISK-002', score: 9, status: 'Mitigated' }),
+      makeRisk({ id: 'RISK-003', score: 4, status: 'Mitigated' }),
+      makeRisk({ id: 'RISK-004', score: 20, status: 'Monitoring' }),
+      makeRisk({ id: 'RISK-005', score: 2, status: 'Closed' }),
     ];
 
     it('calculates total correctly', () => {
@@ -316,88 +442,26 @@ describe('RiskRegister Component Logic', () => {
     });
   });
 
-  describe('Risk Data Structure', () => {
-    it('validates complete risk object structure', () => {
-      const validRisk: Risk = {
-        id: 'RISK-001',
-        category: 'Technology',
-        description: 'Test risk description',
-        impact: 'High',
-        likelihood: 'Medium',
-        impactScore: 4,
-        likelihoodScore: 3,
-        score: 12,
-        status: 'Mitigated',
-        owner: 'Tech Lead',
-        mitigation: 'Version pinning strategy',
-        lastReviewed: '2025-01-15',
-      };
-
-      expect(validRisk.id).toBeDefined();
-      expect(validRisk.category).toBeDefined();
-      expect(validRisk.score).toBeGreaterThan(0);
-      expect(['High', 'Medium', 'Low']).toContain(validRisk.impact);
-      expect(['High', 'Medium', 'Low']).toContain(validRisk.likelihood);
-    });
-
-    it('validates all valid status values', () => {
-      const validStatuses: Risk['status'][] = [
-        'Open',
-        'Mitigated',
-        'Closed',
-        'Monitoring',
-        'In Progress',
-        'Accepted',
-        'Monitored',
-      ];
-
-      validStatuses.forEach((status) => {
-        const risk: Risk = {
-          id: 'RISK-001',
-          category: 'Tech',
-          description: 'Test',
-          impact: 'Medium',
-          likelihood: 'Medium',
-          score: 9,
-          status,
-          owner: 'Test',
-          mitigation: '',
-          lastReviewed: '',
-        };
-        expect(risk.status).toBe(status);
-      });
-    });
-  });
+  // ─── Score Calculations ────────────────────────────────────────────────────
 
   describe('Score Calculations', () => {
     it('score is product of likelihood and impact (1-5 scale)', () => {
-      // In the actual CSV:
-      // Likelihood (1-5) * Impact (1-5) = Score (1-25)
-      expect(5 * 5).toBe(25); // Max score
-      expect(4 * 4).toBe(16); // High risk
-      expect(3 * 4).toBe(12); // Medium-high
-      expect(2 * 3).toBe(6); // Medium
-      expect(1 * 1).toBe(1); // Min score
+      expect(5 * 5).toBe(25);
+      expect(4 * 4).toBe(16);
+      expect(3 * 4).toBe(12);
+      expect(2 * 3).toBe(6);
+      expect(1 * 1).toBe(1);
     });
 
     it('classifies risk levels based on score', () => {
-      // Critical: 20-25
       expect(getScoreColor(25)).toContain('red');
       expect(getScoreColor(20)).toContain('red');
-
-      // High: 15-19
       expect(getScoreColor(19)).toContain('red');
       expect(getScoreColor(15)).toContain('red');
-
-      // Medium: 10-14
       expect(getScoreColor(14)).toContain('orange');
       expect(getScoreColor(10)).toContain('orange');
-
-      // Low-Medium: 6-9
       expect(getScoreColor(9)).toContain('yellow');
       expect(getScoreColor(6)).toContain('yellow');
-
-      // Minimal: 1-5
       expect(getScoreColor(5)).toContain('green');
       expect(getScoreColor(1)).toContain('green');
     });

@@ -880,4 +880,78 @@ describe('Security API Route', () => {
       expect(data2.status).toBe('busy');
     });
   });
+
+  describe('Gap-fill: Error paths and fallbacks', () => {
+    it('GET returns 500 when Promise.all throws', async () => {
+      // All 6 readFile calls reject — but readJsonFile catches individually,
+      // so force an unexpected error by making stat throw after reads succeed
+      mockFs.readFile.mockRejectedValue(new Error('ENOENT'));
+      mockFs.stat.mockRejectedValue(new Error('ENOENT'));
+
+      // To trigger the outer catch, we need the internal logic to throw.
+      // The most reliable way: mock readFile to return invalid JSON so parsing fails
+      // Actually readJsonFile catches all errors. Force an actual throw:
+      // Override Promise.all behavior by having stat throw a non-Error
+      const origPromiseAll = Promise.all.bind(Promise);
+      vi.spyOn(Promise, 'all').mockRejectedValueOnce(new Error('Unexpected disk failure'));
+
+      const request = new NextRequest('http://localhost:3002/api/tracking/security');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(data.status).toBe('error');
+      // Verify error message is sanitized (NF-003)
+      expect(data.message).toBe('Internal server error');
+
+      // Restore
+      vi.spyOn(Promise, 'all').mockImplementation(origPromiseAll);
+    });
+
+    it('POST returns 500 when fs.mkdir throws', async () => {
+      mockFs.readFile.mockResolvedValueOnce(JSON.stringify(SAMPLE_SCAN_STATE_IDLE));
+      mockFs.mkdir.mockRejectedValueOnce(new Error('EPERM: permission denied'));
+
+      const request = new NextRequest('http://localhost:3002/api/tracking/security', {
+        method: 'POST',
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(data.status).toBe('error');
+      // Verify error message is sanitized (NF-003)
+      expect(data.message).toBe('Internal server error');
+    });
+
+    it('parseBaseline falls back to lastUpdated when date is missing', async () => {
+      const baselineWithLastUpdated = {
+        critical: 1,
+        high: 2,
+        lastUpdated: '2026-01-01T00:00:00Z',
+        // No 'date' field
+        history: [],
+      };
+
+      mockFs.readFile
+        .mockResolvedValueOnce(JSON.stringify(SAMPLE_AUDIT_DATA))
+        .mockResolvedValueOnce(JSON.stringify(SAMPLE_OUTDATED_DATA))
+        .mockResolvedValueOnce(JSON.stringify(SAMPLE_GITLEAKS_DATA))
+        .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONAR_DATA))
+        .mockResolvedValueOnce(JSON.stringify(baselineWithLastUpdated))
+        .mockResolvedValueOnce(JSON.stringify(SAMPLE_SCAN_STATE_IDLE));
+
+      mockFs.stat.mockResolvedValue({ mtime: new Date() });
+
+      const request = new NextRequest('http://localhost:3002/api/tracking/security');
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(data.metrics.baseline).toBeDefined();
+      expect(data.metrics.baseline.date).toBe('2026-01-01T00:00:00Z');
+      expect(data.metrics.baseline.critical).toBe(1);
+      expect(data.metrics.baseline.high).toBe(2);
+    });
+  });
 });

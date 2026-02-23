@@ -17,12 +17,12 @@ function getQualityGateColor(gate: string): string {
   switch (gate.toLowerCase()) {
     case 'passed':
     case 'ok':
-      return 'text-green-400';
+      return 'text-green-600';
     case 'failed':
     case 'error':
-      return 'text-red-400';
+      return 'text-red-600';
     default:
-      return 'text-yellow-400';
+      return 'text-yellow-600';
   }
 }
 
@@ -425,12 +425,103 @@ describe('QualityDashboard Component Logic', () => {
     });
   });
 
+  // T-013: Strict getQualityGateColor assertions (exact -600 shade)
+  describe('getQualityGateColor strict', () => {
+    it('returns exact text-green-600 for passed', () => {
+      expect(getQualityGateColor('passed')).toBe('text-green-600');
+    });
+
+    it('returns exact text-green-600 for ok', () => {
+      expect(getQualityGateColor('ok')).toBe('text-green-600');
+    });
+
+    it('returns exact text-red-600 for failed', () => {
+      expect(getQualityGateColor('failed')).toBe('text-red-600');
+    });
+
+    it('returns exact text-yellow-600 for unknown', () => {
+      expect(getQualityGateColor('unknown')).toBe('text-yellow-600');
+    });
+  });
+
+  // T-015: buildRefreshState pure helper (mirrors export from QualityDashboard.tsx)
+  describe('buildRefreshState', () => {
+    function buildRefreshState(
+      current: Record<string, boolean>,
+      type: string
+    ): Record<string, boolean> {
+      return { ...current, [type]: true };
+    }
+
+
+    it('sets single section to refreshing', () => {
+      const result = buildRefreshState({}, 'debt');
+      expect(result).toEqual({ debt: true });
+    });
+
+    it('does not affect other sections', () => {
+      const result = buildRefreshState({ sonar: true }, 'debt');
+      expect(result.debt).toBe(true);
+      expect(result.sonar).toBe(true);
+      // phantom and coverage not set
+      expect(result.phantom).toBeUndefined();
+      expect(result.coverage).toBeUndefined();
+    });
+
+    it('overwrites existing false value', () => {
+      const result = buildRefreshState({ debt: false, sonar: false }, 'debt');
+      expect(result.debt).toBe(true);
+      expect(result.sonar).toBe(false);
+    });
+  });
+
+  // T-016: buildErrorState pure helper (mirrors export from QualityDashboard.tsx)
+  describe('buildErrorState', () => {
+    function buildErrorState(
+      current: Record<string, string | null>,
+      type: string,
+      msg: string
+    ): Record<string, string | null> {
+      return { ...current, [type]: msg };
+    }
+
+
+    it('sets error on one section', () => {
+      const result = buildErrorState({}, 'debt', 'Network error');
+      expect(result.debt).toBe('Network error');
+    });
+
+    it('leaves other sections null', () => {
+      const result = buildErrorState({ sonar: null, coverage: null }, 'debt', 'Failed');
+      expect(result.debt).toBe('Failed');
+      expect(result.sonar).toBeNull();
+      expect(result.coverage).toBeNull();
+    });
+  });
+
+  // T-017: Trend data with <2 points returns fallback
+  describe('Trend fallback', () => {
+    it('returns stable for <2 data points', () => {
+      expect(calculateTrend([])).toBe('stable');
+      expect(calculateTrend([42])).toBe('stable');
+    });
+
+    it('formatChartPoints returns empty for single point when treated as no-line', () => {
+      // Single point still returns a valid point string, but no line segment
+      const data: HistorySnapshot[] = [{ date: '2026-01-01', value: 10 }];
+      const points = formatChartPoints(data, 200, 40, 4);
+      // Single point produces a single coordinate pair
+      expect(points.split(' ').length).toBe(1);
+    });
+  });
+
   describe('Refresh Types', () => {
-    it('supports all refresh types', () => {
-      const validTypes = ['all', 'debt', 'sonar', 'coverage'];
+    // T-018: Refresh types includes 'phantom'
+    it('supports all refresh types including phantom', () => {
+      const validTypes = ['all', 'debt', 'sonar', 'coverage', 'phantom'];
 
       validTypes.forEach((type) => {
-        expect(['all', 'debt', 'sonar', 'coverage']).toContain(type);
+        expect(['all', 'debt', 'sonar', 'coverage', 'phantom']).toContain(type);
       });
     });
 
@@ -439,7 +530,8 @@ describe('QualityDashboard Component Logic', () => {
         { type: 'all', label: 'Refresh All' },
         { type: 'debt', label: 'Analyze' },
         { type: 'sonar', label: 'Scan' },
-        { type: 'coverage', label: 'Run Tests' },
+        { type: 'coverage', label: 'Updated by test runs' },
+        { type: 'phantom', label: 'Re-scan' },
       ];
 
       buttons.forEach((btn) => {

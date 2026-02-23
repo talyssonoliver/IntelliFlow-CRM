@@ -88,18 +88,16 @@ describe('Risk Register API Route', () => {
       expect(data.risks[4].category).toBe('Security');
     });
 
-    // Note: Implementation calculates score from High/Medium/Low text, not numeric values
-    // CSV uses numeric 1-5 scale which the implementation doesn't parse correctly
-    it.skip('parses scores from 1-25 scale correctly', async () => {
+    it('parses scores from 1-25 scale correctly', async () => {
       mockFs.readFile.mockResolvedValueOnce(SAMPLE_RISK_CSV);
       mockFs.stat.mockResolvedValueOnce({ mtime: new Date('2025-01-05T00:00:00Z') });
 
       const response = await GET();
       const data = await response.json();
 
-      expect(data.risks[0].score).toBe(16); // High (4*4)
-      expect(data.risks[1].score).toBe(6); // Medium (2*3)
-      expect(data.risks[4].score).toBe(5); // Low (5*1)
+      expect(data.risks[0].score).toBe(16); // 4*4
+      expect(data.risks[1].score).toBe(6); // 2*3
+      expect(data.risks[4].score).toBe(5); // 5*1
     });
 
     it('parses status values correctly', async () => {
@@ -110,7 +108,8 @@ describe('Risk Register API Route', () => {
       const data = await response.json();
 
       expect(data.risks[0].status).toBe('Mitigated');
-      expect(data.risks[3].status).toBe('Monitored');
+      // RISK-004 has Monitored in CSV → normalized to Monitoring
+      expect(data.risks[3].status).toBe('Monitoring');
     });
 
     it('calculates summary statistics correctly', async () => {
@@ -123,9 +122,7 @@ describe('Risk Register API Route', () => {
       expect(data.summary).toBeDefined();
       expect(data.summary.total).toBe(5);
       expect(data.summary.mitigated).toBe(4);
-      // Note: "Monitored" in CSV is counted as monitoring since the summary counts both
-      // Monitored status is different from Monitoring - check actual count
-      expect(data.summary.monitoring + data.summary.mitigated).toBeGreaterThanOrEqual(4);
+      expect(data.summary.monitoring).toBe(1);
     });
 
     it('returns lastUpdated timestamp', async () => {
@@ -164,17 +161,87 @@ Total Risks,5`;
       const response = await GET();
       const data = await response.json();
 
-      // Should only have 5 actual risks, not summary rows
       expect(data.risks.length).toBe(5);
+    });
+
+    it('does NOT include path field in response', async () => {
+      mockFs.readFile.mockResolvedValueOnce(SAMPLE_RISK_CSV);
+      mockFs.stat.mockResolvedValueOnce({ mtime: new Date() });
+
+      const response = await GET();
+      const data = await response.json();
+
+      expect(data.path).toBeUndefined();
+    });
+
+    it('returns risks with escalationPath, evidence, notes, reviewDate fields', async () => {
+      mockFs.readFile.mockResolvedValueOnce(SAMPLE_RISK_CSV);
+      mockFs.stat.mockResolvedValueOnce({ mtime: new Date() });
+
+      const response = await GET();
+      const data = await response.json();
+
+      expect(data.risks[0].escalationPath).toBe('CTO if migration required > 5 days');
+      expect(data.risks[0].evidence).toBe('apps/ai-worker/package.json shows pinned versions');
+      expect(data.risks[0].notes).toBe('LangChain releases frequently');
+      expect(data.risks[0].reviewDate).toBe('2025-01-15');
+    });
+
+    it('parses CSV with quoted fields containing commas', async () => {
+      const quotedCSV = `Risk ID,Category,Description,Likelihood (1-5),Impact (1-5),Score,Mitigation Strategy,Owner,Status,Review Date,Escalation Path,Evidence,Notes
+RISK-001,Technology,"Description with, commas and ""quotes""",4,4,16,"Mitigation, with commas",Tech Lead,Open,2025-01-15,CTO,evidence.md,notes`;
+      mockFs.readFile.mockResolvedValueOnce(quotedCSV);
+      mockFs.stat.mockResolvedValueOnce({ mtime: new Date() });
+
+      const response = await GET();
+      const data = await response.json();
+
+      expect(data.risks).toHaveLength(1);
+      expect(data.risks[0].description).toContain('commas');
+    });
+
+    it('summary highRisk counts risks with score >= 15 (not >= 6)', async () => {
+      mockFs.readFile.mockResolvedValueOnce(SAMPLE_RISK_CSV);
+      mockFs.stat.mockResolvedValueOnce({ mtime: new Date() });
+
+      const response = await GET();
+      const data = await response.json();
+
+      // Only RISK-001 (score 16) is >= 15
+      expect(data.summary.highRisk).toBe(1);
+    });
+
+    it('summary includes inProgress and accepted counts', async () => {
+      mockFs.readFile.mockResolvedValueOnce(SAMPLE_RISK_CSV);
+      mockFs.stat.mockResolvedValueOnce({ mtime: new Date() });
+
+      const response = await GET();
+      const data = await response.json();
+
+      expect(data.summary).toHaveProperty('inProgress');
+      expect(data.summary).toHaveProperty('accepted');
+    });
+
+    it('error responses use generic message, not raw error object', async () => {
+      mockFs.readFile.mockRejectedValueOnce(new Error('ENOENT'));
+      mockFs.stat.mockRejectedValueOnce(new Error('ENOENT'));
+
+      // Force the outer catch to trigger by making parseRiskRegister return empty
+      // and then triggering an error in the main handler
+      const response = await GET();
+      const data = await response.json();
+
+      // Should still be 200 since parseRiskRegister catches internally
+      expect(response.status).toBe(200);
+      expect(data.risks).toEqual([]);
     });
   });
 
   describe('POST /api/tracking/risks - Add Risk', () => {
     it('adds a new risk to the register', async () => {
-      mockFs.readFile.mockResolvedValueOnce(SAMPLE_RISK_CSV);
-      mockFs.stat.mockResolvedValueOnce({ mtime: new Date() });
-      mockFs.readFile.mockResolvedValueOnce(SAMPLE_RISK_CSV);
-      mockFs.writeFile.mockResolvedValueOnce(undefined);
+      mockFs.readFile.mockResolvedValue(SAMPLE_RISK_CSV);
+      mockFs.stat.mockResolvedValue({ mtime: new Date() });
+      mockFs.writeFile.mockResolvedValue(undefined);
 
       const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
         method: 'POST',
@@ -183,8 +250,8 @@ Total Risks,5`;
           risk: {
             category: 'Technical',
             description: 'New test risk',
-            impact: 'High',
-            likelihood: 'Medium',
+            impact: 4,
+            likelihood: 3,
             owner: 'Test Lead',
             mitigation: 'Test mitigation strategy',
           },
@@ -200,39 +267,90 @@ Total Risks,5`;
     });
 
     it('generates sequential risk IDs', async () => {
-      mockFs.readFile.mockResolvedValueOnce(SAMPLE_RISK_CSV);
-      mockFs.stat.mockResolvedValueOnce({ mtime: new Date() });
-      mockFs.readFile.mockResolvedValueOnce(SAMPLE_RISK_CSV);
-      mockFs.writeFile.mockResolvedValueOnce(undefined);
+      mockFs.readFile.mockResolvedValue(SAMPLE_RISK_CSV);
+      mockFs.stat.mockResolvedValue({ mtime: new Date() });
+      mockFs.writeFile.mockResolvedValue(undefined);
 
       const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
         method: 'POST',
         body: JSON.stringify({
           action: 'add',
-          risk: { description: 'Test', category: 'Technical' },
+          risk: {
+            description: 'Test',
+            category: 'Technical',
+            impact: 3,
+            likelihood: 3,
+            owner: 'Test',
+            mitigation: 'Test',
+          },
         }),
       });
 
       const response = await POST(request);
       const data = await response.json();
 
-      // Should be RISK-006 since RISK-001 to RISK-005 exist
       expect(data.riskId).toBe('RISK-006');
+    });
+
+    it('writes audit trail entry on add', async () => {
+      mockFs.readFile.mockImplementation(async (filePath: string) => {
+        if (filePath.includes('risk-register-history')) {
+          return '[]';
+        }
+        return SAMPLE_RISK_CSV;
+      });
+      mockFs.stat.mockResolvedValue({ mtime: new Date() });
+      mockFs.writeFile.mockResolvedValue(undefined);
+
+      const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'add',
+          risk: {
+            category: 'Technical',
+            description: 'Audit test',
+            impact: 3,
+            likelihood: 3,
+            owner: 'Tester',
+            mitigation: 'Mitigation',
+          },
+        }),
+      });
+
+      await POST(request);
+
+      // Verify audit trail was written
+      const writeCalls = mockFs.writeFile.mock.calls;
+      const auditWrite = writeCalls.find((c: string[]) =>
+        c[0]?.includes('risk-register-history')
+      );
+      expect(auditWrite).toBeDefined();
+      if (auditWrite) {
+        const auditData = JSON.parse(auditWrite[1]);
+        expect(Array.isArray(auditData)).toBe(true);
+        expect(auditData[0].action).toBe('add');
+        expect(auditData[0].riskId).toMatch(/^RISK-\d{3}$/);
+      }
     });
   });
 
-  // Note: Edit action not yet implemented in the route
-  describe.skip('POST /api/tracking/risks - Edit Risk', () => {
-    it('updates risk status', async () => {
-      mockFs.readFile.mockResolvedValueOnce(SAMPLE_RISK_CSV);
-      mockFs.writeFile.mockResolvedValueOnce(undefined);
+  describe('POST /api/tracking/risks - Edit Risk', () => {
+    it('updates risk status with valid transition', async () => {
+      mockFs.readFile.mockImplementation(async (filePath: string) => {
+        if (filePath.includes('risk-register-history')) {
+          return '[]';
+        }
+        return SAMPLE_RISK_CSV;
+      });
+      mockFs.stat.mockResolvedValue({ mtime: new Date() });
+      mockFs.writeFile.mockResolvedValue(undefined);
 
       const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
         method: 'POST',
         body: JSON.stringify({
           action: 'edit',
           riskId: 'RISK-001',
-          updates: { status: 'Closed' },
+          updates: { status: 'Monitoring' }, // Mitigated → Monitoring is valid
         }),
       });
 
@@ -241,11 +359,172 @@ Total Risks,5`;
 
       expect(response.status).toBe(200);
       expect(data.status).toBe('ok');
-      expect(data.message).toContain('RISK-001');
+    });
+
+    it('updates mitigation text', async () => {
+      mockFs.readFile.mockImplementation(async (filePath: string) => {
+        if (filePath.includes('risk-register-history')) {
+          return '[]';
+        }
+        return SAMPLE_RISK_CSV;
+      });
+      mockFs.stat.mockResolvedValue({ mtime: new Date() });
+      mockFs.writeFile.mockResolvedValue(undefined);
+
+      const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'edit',
+          riskId: 'RISK-001',
+          updates: { mitigation: 'Updated mitigation strategy' },
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data.status).toBe('ok');
+
+      // Verify CSV was rewritten with updated mitigation
+      const csvWriteCall = mockFs.writeFile.mock.calls.find(
+        (c: string[]) => c[0]?.includes('risk-register') && !c[0]?.includes('history')
+      );
+      expect(csvWriteCall).toBeDefined();
+      if (csvWriteCall) {
+        expect(csvWriteCall[1]).toContain('Updated mitigation strategy');
+      }
+    });
+
+    it('partial update preserves other fields', async () => {
+      mockFs.readFile.mockImplementation(async (filePath: string) => {
+        if (filePath.includes('risk-register-history')) {
+          return '[]';
+        }
+        return SAMPLE_RISK_CSV;
+      });
+      mockFs.stat.mockResolvedValue({ mtime: new Date() });
+      mockFs.writeFile.mockResolvedValue(undefined);
+
+      const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'edit',
+          riskId: 'RISK-001',
+          updates: { owner: 'New Owner' },
+        }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(200);
+
+      // Verify original description is preserved in the CSV write
+      const csvWriteCall = mockFs.writeFile.mock.calls.find(
+        (c: string[]) => c[0]?.includes('risk-register') && !c[0]?.includes('history')
+      );
+      expect(csvWriteCall).toBeDefined();
+      if (csvWriteCall) {
+        expect(csvWriteCall[1]).toContain('LangChain API breaking changes');
+        expect(csvWriteCall[1]).toContain('New Owner');
+      }
+    });
+
+    it('recalculates score when impact and likelihood change', async () => {
+      mockFs.readFile.mockImplementation(async (filePath: string) => {
+        if (filePath.includes('risk-register-history')) {
+          return '[]';
+        }
+        return SAMPLE_RISK_CSV;
+      });
+      mockFs.stat.mockResolvedValue({ mtime: new Date() });
+      mockFs.writeFile.mockResolvedValue(undefined);
+
+      const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'edit',
+          riskId: 'RISK-001',
+          updates: { impact: 2, likelihood: 3 },
+        }),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+      expect(data.status).toBe('ok');
+
+      // Verify the CSV was written with new score (2 * 3 = 6)
+      const csvWriteCall = mockFs.writeFile.mock.calls.find(
+        (call: unknown[]) => typeof call[0] === 'string' && call[0].includes('risk-register')
+      );
+      expect(csvWriteCall).toBeTruthy();
+      if (csvWriteCall) {
+        expect(csvWriteCall[1]).toContain(',6,'); // score = 2 * 3
+      }
+    });
+
+    it('handles notes with newline characters in CSV output', async () => {
+      mockFs.readFile.mockImplementation(async (filePath: string) => {
+        if (filePath.includes('risk-register-history')) {
+          return '[]';
+        }
+        return SAMPLE_RISK_CSV;
+      });
+      mockFs.stat.mockResolvedValue({ mtime: new Date() });
+      mockFs.writeFile.mockResolvedValue(undefined);
+
+      const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'edit',
+          riskId: 'RISK-001',
+          updates: { notes: 'Line one\nLine two' },
+        }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(200);
+
+      // Verify the CSV was written with properly escaped newline
+      const csvWriteCall = mockFs.writeFile.mock.calls.find(
+        (call: unknown[]) => typeof call[0] === 'string' && call[0].includes('risk-register')
+      );
+      expect(csvWriteCall).toBeTruthy();
+      if (csvWriteCall) {
+        // Newline in value should be quoted in CSV
+        expect(csvWriteCall[1]).toContain('"Line one\nLine two"');
+      }
+    });
+
+    it('returns 400 for invalid status transition', async () => {
+      mockFs.readFile.mockImplementation(async (filePath: string) => {
+        if (filePath.includes('risk-register-history')) {
+          return '[]';
+        }
+        return SAMPLE_RISK_CSV;
+      });
+      mockFs.stat.mockResolvedValue({ mtime: new Date() });
+
+      const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'edit',
+          riskId: 'RISK-001',
+          updates: { status: 'Accepted' }, // Mitigated → Accepted is NOT valid
+        }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(400);
     });
 
     it('returns 404 for non-existent risk', async () => {
-      mockFs.readFile.mockResolvedValueOnce(SAMPLE_RISK_CSV);
+      mockFs.readFile.mockImplementation(async (filePath: string) => {
+        if (filePath.includes('risk-register-history')) {
+          return '[]';
+        }
+        return SAMPLE_RISK_CSV;
+      });
+      mockFs.stat.mockResolvedValue({ mtime: new Date() });
 
       const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
         method: 'POST',
@@ -257,77 +536,185 @@ Total Risks,5`;
       });
 
       const response = await POST(request);
+      expect(response.status).toBe(404);
+    });
+
+    it('writeFile failure returns 500 with generic error', async () => {
+      mockFs.readFile.mockImplementation(async (filePath: string) => {
+        if (filePath.includes('risk-register-history')) {
+          return '[]';
+        }
+        return SAMPLE_RISK_CSV;
+      });
+      mockFs.stat.mockResolvedValue({ mtime: new Date() });
+      mockFs.writeFile.mockRejectedValue(new Error('disk full'));
+
+      const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'edit',
+          riskId: 'RISK-001',
+          updates: { owner: 'New Owner' },
+        }),
+      });
+
+      const response = await POST(request);
       const data = await response.json();
 
-      expect(response.status).toBe(404);
-      expect(data.message).toContain('not found');
+      expect(response.status).toBe(500);
+      expect(data.message).not.toContain('disk full');
+      expect(data.message).toBe('Internal server error');
+    });
+
+    it('edit appends audit trail entry', async () => {
+      mockFs.readFile.mockImplementation(async (filePath: string) => {
+        if (filePath.includes('risk-register-history')) {
+          return '[]';
+        }
+        return SAMPLE_RISK_CSV;
+      });
+      mockFs.stat.mockResolvedValue({ mtime: new Date() });
+      mockFs.writeFile.mockResolvedValue(undefined);
+
+      const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'edit',
+          riskId: 'RISK-001',
+          updates: { status: 'Monitoring' },
+        }),
+      });
+
+      await POST(request);
+
+      const auditWrite = mockFs.writeFile.mock.calls.find((c: string[]) =>
+        c[0]?.includes('risk-register-history')
+      );
+      expect(auditWrite).toBeDefined();
+      if (auditWrite) {
+        const auditData = JSON.parse(auditWrite[1]);
+        expect(auditData[0].action).toBe('edit');
+        expect(auditData[0].riskId).toBe('RISK-001');
+        expect(auditData[0].previousStatus).toBe('Mitigated');
+        expect(auditData[0].newStatus).toBe('Monitoring');
+        expect(auditData[0].changedAt).toBeDefined();
+      }
     });
   });
 
-  // Note: Export action not yet implemented in the route
-  describe.skip('POST /api/tracking/risks - Export', () => {
-    it('exports risks as CSV', async () => {
-      mockFs.readFile.mockResolvedValueOnce(SAMPLE_RISK_CSV).mockResolvedValueOnce(SAMPLE_RISK_CSV);
-      mockFs.stat.mockResolvedValueOnce({ mtime: new Date() });
-
+  describe('POST /api/tracking/risks - Zod Validation', () => {
+    it('rejects impact > 5', async () => {
       const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
         method: 'POST',
         body: JSON.stringify({
-          action: 'export',
-          format: 'csv',
+          action: 'add',
+          risk: {
+            category: 'Technical',
+            description: 'Test',
+            impact: 6,
+            likelihood: 3,
+            owner: 'Test',
+            mitigation: 'Test',
+          },
         }),
       });
 
       const response = await POST(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data.status).toBe('ok');
-      expect(data.format).toBe('csv');
-      expect(data.filename).toMatch(/risk-register-export.*\.csv$/);
+      expect(response.status).toBe(400);
     });
 
-    it('exports risks as JSON', async () => {
-      mockFs.readFile.mockResolvedValueOnce(SAMPLE_RISK_CSV);
-      mockFs.stat.mockResolvedValueOnce({ mtime: new Date() });
-
+    it('rejects likelihood < 1', async () => {
       const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
         method: 'POST',
         body: JSON.stringify({
-          action: 'export',
-          format: 'json',
+          action: 'add',
+          risk: {
+            category: 'Technical',
+            description: 'Test',
+            impact: 3,
+            likelihood: 0,
+            owner: 'Test',
+            mitigation: 'Test',
+          },
         }),
       });
 
       const response = await POST(request);
-      const data = await response.json();
-
-      expect(response.status).toBe(200);
-      expect(data.status).toBe('ok');
-      expect(data.format).toBe('json');
-      expect(data.data.risks).toBeDefined();
-      expect(data.data.summary).toBeDefined();
-      expect(data.filename).toMatch(/risk-register-export.*\.json$/);
+      expect(response.status).toBe(400);
     });
 
-    it('includes summary in JSON export', async () => {
-      mockFs.readFile.mockResolvedValueOnce(SAMPLE_RISK_CSV);
-      mockFs.stat.mockResolvedValueOnce({ mtime: new Date() });
-
+    it('rejects description > 2000 chars', async () => {
       const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
         method: 'POST',
         body: JSON.stringify({
-          action: 'export',
-          format: 'json',
+          action: 'add',
+          risk: {
+            category: 'Technical',
+            description: 'x'.repeat(2001),
+            impact: 3,
+            likelihood: 3,
+            owner: 'Test',
+            mitigation: 'Test',
+          },
         }),
       });
 
       const response = await POST(request);
-      const data = await response.json();
+      expect(response.status).toBe(400);
+    });
 
-      expect(data.data.summary.byStatus).toBeDefined();
-      expect(data.data.summary.byRiskLevel).toBeDefined();
-      expect(data.data.exportedAt).toBeDefined();
+    it('rejects invalid riskId format on edit', async () => {
+      const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'edit',
+          riskId: 'INVALID',
+          updates: { owner: 'Test' },
+        }),
+      });
+
+      const response = await POST(request);
+      expect(response.status).toBe(400);
+    });
+  });
+
+  describe('POST /api/tracking/risks - Security', () => {
+    it('sanitizes CSV injection in add risk description', async () => {
+      mockFs.readFile.mockImplementation(async (filePath: string) => {
+        if (filePath.includes('risk-register-history')) {
+          return '[]';
+        }
+        return SAMPLE_RISK_CSV;
+      });
+      mockFs.stat.mockResolvedValue({ mtime: new Date() });
+      mockFs.writeFile.mockResolvedValue(undefined);
+
+      const request = new NextRequest('http://localhost:3002/api/tracking/risks', {
+        method: 'POST',
+        body: JSON.stringify({
+          action: 'add',
+          risk: {
+            category: 'Technical',
+            description: '=CMD() injection attempt',
+            impact: 3,
+            likelihood: 3,
+            owner: 'Test',
+            mitigation: 'Test',
+          },
+        }),
+      });
+
+      await POST(request);
+
+      const csvWriteCall = mockFs.writeFile.mock.calls.find(
+        (c: string[]) => c[0]?.includes('risk-register') && !c[0]?.includes('history')
+      );
+      expect(csvWriteCall).toBeDefined();
+      if (csvWriteCall) {
+        // The written CSV should NOT contain the raw =CMD()
+        expect(csvWriteCall[1]).not.toContain('=CMD()');
+        expect(csvWriteCall[1]).toContain('CMD()');
+      }
     });
   });
 

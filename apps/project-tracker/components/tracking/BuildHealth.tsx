@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Icon } from '@/lib/icons';
 import { RefreshButton, MetricCard, StaleIndicator } from './shared';
 
-interface BuildMetrics {
+export interface BuildMetrics {
   turbo: {
     success: boolean;
     tasks_run: number;
@@ -33,6 +33,23 @@ interface BuildMetrics {
     warnings: number;
     lastRun: string | null;
   };
+}
+
+export function computeAllPassing(data: BuildMetrics | null): boolean {
+  return (
+    (data?.turbo.success ?? true) &&
+    (data?.typecheck.success ?? true) &&
+    (data?.lint.success ?? true) &&
+    (data?.tests.failed ?? 0) === 0
+  );
+}
+
+export function computeCacheHitRate(tasksRun: number, tasksCached: number): number {
+  return tasksRun ? Math.round((tasksCached / tasksRun) * 100) : 0;
+}
+
+export function computeTestPassRate(passed: number, total: number): number {
+  return total ? Math.round((passed / total) * 100) : 100;
 }
 
 export default function BuildHealth() {
@@ -96,19 +113,17 @@ export default function BuildHealth() {
     );
   }
 
-  const allPassing =
-    (data?.turbo.success ?? true) &&
-    (data?.typecheck.success ?? true) &&
-    (data?.lint.success ?? true) &&
-    (data?.tests.failed ?? 0) === 0;
+  const allPassing = computeAllPassing(data);
 
-  const cacheHitRate = data?.turbo.tasks_run
-    ? Math.round((data.turbo.tasks_cached / data.turbo.tasks_run) * 100)
-    : 0;
+  const cacheHitRate = computeCacheHitRate(
+    data?.turbo.tasks_run ?? 0,
+    data?.turbo.tasks_cached ?? 0
+  );
 
-  const testPassRate = data?.tests.total
-    ? Math.round((data.tests.passed / data.tests.total) * 100)
-    : 100;
+  const testPassRate = computeTestPassRate(
+    data?.tests.passed ?? 0,
+    data?.tests.total ?? 0
+  );
 
   return (
     <div className="space-y-6">
@@ -224,13 +239,13 @@ export default function BuildHealth() {
             {data?.typecheck.lastRun && (
               <StaleIndicator lastUpdated={data.typecheck.lastRun} thresholdMinutes={60} />
             )}
-            <button
-              onClick={() => handleValidation('typecheck')}
+            <RefreshButton
+              onRefresh={() => handleValidation('typecheck')}
+              label={validating === 'typecheck' ? 'Running...' : 'Run'}
+              size="sm"
+              variant="ghost"
               disabled={validating !== null}
-              className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-gray-700 disabled:opacity-50"
-            >
-              {validating === 'typecheck' ? 'Running...' : 'Run'}
-            </button>
+            />
           </div>
         </div>
         <div className="flex items-center gap-6">
@@ -266,13 +281,13 @@ export default function BuildHealth() {
             {data?.lint.lastRun && (
               <StaleIndicator lastUpdated={data.lint.lastRun} thresholdMinutes={60} />
             )}
-            <button
-              onClick={() => handleValidation('lint')}
+            <RefreshButton
+              onRefresh={() => handleValidation('lint')}
+              label={validating === 'lint' ? 'Running...' : 'Run'}
+              size="sm"
+              variant="ghost"
               disabled={validating !== null}
-              className="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-gray-700 disabled:opacity-50"
-            >
-              {validating === 'lint' ? 'Running...' : 'Run'}
-            </button>
+            />
           </div>
         </div>
         <div className="flex items-center gap-6">
@@ -331,9 +346,9 @@ export default function BuildHealth() {
             value={`${data?.tests.coverage.toFixed(1) ?? 0}%`}
             icon="pie_chart"
             variant={
-              (data?.tests.coverage ?? 0) >= 80
+              (data?.tests.coverage ?? 0) >= 90
                 ? 'success'
-                : (data?.tests.coverage ?? 0) >= 60
+                : (data?.tests.coverage ?? 0) >= 70
                   ? 'warning'
                   : 'error'
             }

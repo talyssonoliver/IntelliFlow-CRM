@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Icon } from '@/lib/icons';
-import { RefreshButton, MetricCard, StaleIndicator } from './shared';
+import { RefreshButton, MetricCard, StaleIndicator, TrendSparkline } from './shared';
 
 interface QualityMetrics {
   debt: {
@@ -12,7 +12,9 @@ interface QualityMetrics {
     medium: number;
     low: number;
     trend: 'up' | 'down' | 'stable';
+    healthScore: number;
     lastUpdated: string | null;
+    history: Array<{ date: string; total: number; critical: number }>;
   };
   coverage: {
     lines: number;
@@ -28,6 +30,7 @@ interface QualityMetrics {
     codeSmells: number;
     duplications: number;
     lastUpdated: string | null;
+    history: Array<{ date: string; bugs: number; vulnerabilities: number; codeSmells: number }>;
   };
   phantomAudit: {
     phantomCount: number;
@@ -36,11 +39,26 @@ interface QualityMetrics {
   };
 }
 
+export function buildRefreshState(
+  current: Record<string, boolean>,
+  type: string
+): Record<string, boolean> {
+  return { ...current, [type]: true };
+}
+
+export function buildErrorState(
+  current: Record<string, string | null>,
+  type: string,
+  msg: string
+): Record<string, string | null> {
+  return { ...current, [type]: msg };
+}
+
 export default function QualityDashboard() {
   const [data, setData] = useState<QualityMetrics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState<Record<string, boolean>>({});
+  const [errors, setErrors] = useState<Record<string, string | null>>({});
 
   const fetchData = useCallback(async () => {
     try {
@@ -48,26 +66,27 @@ export default function QualityDashboard() {
       if (!response.ok) throw new Error('Failed to fetch quality metrics');
       const result = await response.json();
       setData(result.metrics);
-      setError(null);
+      setErrors({});
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setErrors((prev) => buildErrorState(prev, 'global', err instanceof Error ? err.message : 'Unknown error'));
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const handleRefresh = async (type: 'all' | 'debt' | 'sonar') => {
-    setRefreshing(type);
+  const handleRefresh = async (type: 'all' | 'debt' | 'sonar' | 'phantom') => {
+    setRefreshing((prev) => buildRefreshState(prev, type));
     try {
       const response = await fetch(`/api/tracking/quality?type=${type}`, {
         method: 'POST',
       });
       if (!response.ok) throw new Error('Failed to refresh');
       await fetchData();
+      setErrors((prev) => ({ ...prev, [type]: null }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Refresh failed');
+      setErrors((prev) => buildErrorState(prev, type, err instanceof Error ? err.message : 'Refresh failed'));
     } finally {
-      setRefreshing(null);
+      setRefreshing((prev) => ({ ...prev, [type]: false }));
     }
   };
 
@@ -83,12 +102,12 @@ export default function QualityDashboard() {
     );
   }
 
-  if (error) {
+  if (errors.global && !data) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
         <div className="flex items-center gap-2">
           <Icon name="error" size="lg" />
-          <span>Error: {error}</span>
+          <span>Error: {errors.global}</span>
         </div>
         <button onClick={fetchData} className="mt-2 text-sm underline hover:no-underline">
           Try again
@@ -96,6 +115,8 @@ export default function QualityDashboard() {
       </div>
     );
   }
+
+  const isAnyRefreshing = Object.values(refreshing).some(Boolean);
 
   const getQualityGateColor = (gate: string) => {
     switch (gate.toLowerCase()) {
@@ -130,7 +151,7 @@ export default function QualityDashboard() {
         <RefreshButton
           onRefresh={() => handleRefresh('all')}
           label="Refresh All"
-          disabled={refreshing !== null}
+          disabled={isAnyRefreshing}
         />
       </div>
 
@@ -141,9 +162,14 @@ export default function QualityDashboard() {
             <Icon name="pie_chart" size="base" />
             Test Coverage
           </h4>
-          {data?.coverage.lastUpdated && (
-            <StaleIndicator lastUpdated={data.coverage.lastUpdated} thresholdMinutes={1440} />
-          )}
+          <div className="flex items-center gap-2">
+            {data?.coverage.lastUpdated && (
+              <StaleIndicator lastUpdated={data.coverage.lastUpdated} thresholdMinutes={1440} />
+            )}
+            <span className="text-xs text-gray-400" title="Coverage is updated by running tests">
+              Updated by test runs
+            </span>
+          </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <MetricCard
@@ -195,7 +221,7 @@ export default function QualityDashboard() {
               label="Analyze"
               size="sm"
               variant="ghost"
-              disabled={refreshing !== null}
+              disabled={refreshing['debt'] ?? false}
             />
           </div>
         </div>
@@ -227,6 +253,17 @@ export default function QualityDashboard() {
             variant="default"
           />
         </div>
+        {data?.debt.history && data.debt.history.length >= 2 && (
+          <div className="mt-4">
+            <TrendSparkline
+              data={data.debt.history.map((h) => ({ date: h.date, value: h.total }))}
+              label="Debt trend"
+            />
+          </div>
+        )}
+        {errors['debt'] && (
+          <div className="mt-2 text-xs text-red-500">{errors['debt']}</div>
+        )}
       </div>
 
       {/* SonarQube Section */}
@@ -245,7 +282,7 @@ export default function QualityDashboard() {
               label="Scan"
               size="sm"
               variant="ghost"
-              disabled={refreshing !== null}
+              disabled={refreshing['sonar'] ?? false}
             />
           </div>
         </div>
@@ -285,6 +322,18 @@ export default function QualityDashboard() {
             variant={(data?.sonarqube.duplications ?? 0) > 5 ? 'warning' : 'default'}
           />
         </div>
+        {data?.sonarqube.history && data.sonarqube.history.length >= 2 && (
+          <div className="mt-4">
+            <TrendSparkline
+              data={data.sonarqube.history.map((h) => ({ date: h.date, value: h.bugs }))}
+              color="#ef4444"
+              label="Bugs trend"
+            />
+          </div>
+        )}
+        {errors['sonar'] && (
+          <div className="mt-2 text-xs text-red-500">{errors['sonar']}</div>
+        )}
       </div>
 
       {/* Phantom Audit Section */}
@@ -294,10 +343,22 @@ export default function QualityDashboard() {
             <Icon name="visibility_off" size="base" />
             Phantom Completion Audit
           </h4>
-          {data?.phantomAudit.lastUpdated && (
-            <StaleIndicator lastUpdated={data.phantomAudit.lastUpdated} thresholdMinutes={10080} />
-          )}
+          <div className="flex items-center gap-2">
+            {data?.phantomAudit.lastUpdated && (
+              <StaleIndicator lastUpdated={data.phantomAudit.lastUpdated} thresholdMinutes={10080} />
+            )}
+            <RefreshButton
+              onRefresh={() => handleRefresh('phantom')}
+              label="Re-scan"
+              size="sm"
+              variant="ghost"
+              disabled={refreshing['phantom'] ?? false}
+            />
+          </div>
         </div>
+        {errors['phantom'] && (
+          <div className="mb-2 text-xs text-red-500">{errors['phantom']}</div>
+        )}
         <div className="grid grid-cols-2 gap-4">
           <MetricCard
             title="Phantom Tasks"

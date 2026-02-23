@@ -89,6 +89,22 @@ interface ScanState {
   scanId: string | null;
 }
 
+interface RemediationItem {
+  id: string;
+  module: string;
+  severity: string;
+  status: 'open' | 'fixed' | 'waived';
+  fixApplied?: string;
+}
+
+interface RemediationSummary {
+  fixedCount: number;
+  openCount: number;
+  waiverCount: number;
+  mttrHours: number | null;
+  items: RemediationItem[];
+}
+
 interface SecurityMetrics {
   vulnerabilities: VulnerabilityCounts;
   outdatedDeps: OutdatedDeps;
@@ -98,6 +114,7 @@ interface SecurityMetrics {
   scanHistory: ScanHistory[];
   compliance: Compliance;
   lastScan: string | null;
+  remediation: RemediationSummary;
 }
 
 // Default scan state
@@ -226,10 +243,64 @@ function parseSastScan(sonarData: any): SastScan {
 function parseBaseline(baselineData: any): Baseline | null {
   if (!baselineData) return null;
 
+  const vulns = baselineData.summary?.vulnerabilities;
   return {
-    critical: baselineData.critical || 0,
-    high: baselineData.high || 0,
-    date: baselineData.date || baselineData.lastUpdated || 'Unknown',
+    critical: vulns?.critical ?? baselineData.critical ?? 0,
+    high: vulns?.high ?? baselineData.high ?? 0,
+    date:
+      baselineData.generated_at ||
+      baselineData.date ||
+      baselineData.lastUpdated ||
+      'Unknown',
+  };
+}
+
+// Parse remediation data from vulnerability baseline
+function parseRemediation(baselineData: any): RemediationSummary {
+  const defaultRemediation: RemediationSummary = {
+    fixedCount: 0,
+    openCount: 0,
+    waiverCount: 0,
+    mttrHours: null,
+    items: [],
+  };
+
+  if (!baselineData) return defaultRemediation;
+
+  const items: RemediationItem[] = [];
+
+  // Extract fixed items from remediation_applied.vulnerabilities_fixed[]
+  const fixedVulns = baselineData.remediation_applied?.vulnerabilities_fixed || [];
+  for (const v of fixedVulns) {
+    items.push({
+      id: v.id || v.cve || 'unknown',
+      module: v.module || 'unknown',
+      severity: v.severity || 'unknown',
+      status: 'fixed',
+      fixApplied: v.fix_applied,
+    });
+  }
+
+  // Extract open items from vulnerabilities[]
+  const openVulns = baselineData.vulnerabilities || [];
+  for (const v of openVulns) {
+    items.push({
+      id: v.id || v.cve || 'unknown',
+      module: v.module || 'unknown',
+      severity: v.severity || 'unknown',
+      status: 'open',
+    });
+  }
+
+  const waiverCount = (baselineData.waivers || []).length;
+  const mttrHours = baselineData.metrics?.mean_time_to_remediate_hours ?? null;
+
+  return {
+    fixedCount: fixedVulns.length,
+    openCount: openVulns.length,
+    waiverCount,
+    mttrHours,
+    items,
   };
 }
 
@@ -298,7 +369,12 @@ export async function GET(request: NextRequest) {
     const secretScan = parseSecretScan(gitleaksData, lastScan);
     const sastScan = parseSastScan(sonarData);
     const baseline = parseBaseline(baselineData);
-    const scanHistory: ScanHistory[] = baselineData?.history || [];
+    const scanHistory: ScanHistory[] = (baselineData?.history || []).map((h: any) => ({
+      date: h.date,
+      total: h.vulnerabilities ?? h.total ?? 0,
+      critical: h.critical ?? 0,
+    }));
+    const remediation = parseRemediation(baselineData);
     const scanState = scanStateData || { ...DEFAULT_SCAN_STATE };
 
     // Calculate compliance (outdatedData !== null tells us if file was available)
@@ -318,6 +394,7 @@ export async function GET(request: NextRequest) {
       scanHistory,
       compliance,
       lastScan,
+      remediation,
     };
 
     return NextResponse.json({
@@ -327,7 +404,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error reading security metrics:', error);
-    return NextResponse.json({ status: 'error', message: String(error) }, { status: 500 });
+    return NextResponse.json({ status: 'error', message: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -381,6 +458,6 @@ export async function POST(_request: NextRequest) {
     });
   } catch (error) {
     console.error('Error starting security scan:', error);
-    return NextResponse.json({ status: 'error', message: String(error) }, { status: 500 });
+    return NextResponse.json({ status: 'error', message: 'Internal server error' }, { status: 500 });
   }
 }

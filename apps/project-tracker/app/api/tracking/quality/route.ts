@@ -20,7 +20,9 @@ interface QualityMetrics {
     medium: number;
     low: number;
     trend: 'up' | 'down' | 'stable';
+    healthScore: number;
     lastUpdated: string | null;
+    history: Array<{ date: string; total: number; critical: number }>;
   };
   coverage: {
     lines: number;
@@ -36,6 +38,7 @@ interface QualityMetrics {
     codeSmells: number;
     duplications: number;
     lastUpdated: string | null;
+    history: Array<{ date: string; bugs: number; vulnerabilities: number; codeSmells: number }>;
   };
   phantomAudit: {
     phantomCount: number;
@@ -61,8 +64,8 @@ async function readJsonFile<T>(
 
 export async function GET() {
   try {
-    // Read debt ledger
-    const debtPath = path.join(REPORTS_DIR, 'debt-ledger.json');
+    // BUG-1 FIX: Read debt-analysis.json (not debt-ledger.json)
+    const debtPath = path.join(CODE_ANALYSIS_DIR, 'debt-analysis.json');
     const { data: debtData, lastUpdated: debtUpdated } = await readJsonFile<any>(debtPath);
 
     // Read coverage
@@ -70,24 +73,34 @@ export async function GET() {
     const { data: coverageData, lastUpdated: coverageUpdated } =
       await readJsonFile<any>(coveragePath);
 
-    // Read SonarQube metrics
-    const sonarPath = path.join(CODE_ANALYSIS_DIR, 'latest.json');
+    // BUG-2 FIX: Read sonarqube-metrics.json (not latest.json)
+    const sonarPath = path.join(CODE_ANALYSIS_DIR, 'sonarqube-metrics.json');
     const { data: sonarData, lastUpdated: sonarUpdated } = await readJsonFile<any>(sonarPath);
 
     // Read phantom audit
     const phantomPath = path.join(REPORTS_DIR, 'phantom-completion-audit.json');
     const { data: phantomData, lastUpdated: phantomUpdated } = await readJsonFile<any>(phantomPath);
 
+    // FEAT-2: Read history files
+    const debtHistoryPath = path.join(CODE_ANALYSIS_DIR, 'debt-history.json');
+    const { data: debtHistoryData } = await readJsonFile<any>(debtHistoryPath);
+
+    const sonarHistoryPath = path.join(CODE_ANALYSIS_DIR, 'sonarqube-history.json');
+    const { data: sonarHistoryData } = await readJsonFile<any>(sonarHistoryPath);
+
     // Build metrics object
     const metrics: QualityMetrics = {
       debt: {
-        total_items: debtData?.items?.length ?? debtData?.total ?? 0,
-        critical: debtData?.by_severity?.critical ?? 0,
-        high: debtData?.by_severity?.high ?? 0,
-        medium: debtData?.by_severity?.medium ?? 0,
-        low: debtData?.by_severity?.low ?? 0,
-        trend: debtData?.trend ?? 'stable',
+        // BUG-1 FIX: Use bySeverity (not by_severity), summary.total, trending.trend
+        total_items: debtData?.summary?.total ?? debtData?.items?.length ?? 0,
+        critical: debtData?.bySeverity?.critical ?? 0,
+        high: debtData?.bySeverity?.high ?? 0,
+        medium: debtData?.bySeverity?.medium ?? 0,
+        low: debtData?.bySeverity?.low ?? 0,
+        trend: debtData?.trending?.trend ?? 'stable',
+        healthScore: debtData?.healthScore ?? 0,
         lastUpdated: debtUpdated,
+        history: Array.isArray(debtHistoryData) ? debtHistoryData : [],
       },
       coverage: {
         lines: coverageData?.total?.lines?.pct ?? 0,
@@ -103,10 +116,12 @@ export async function GET() {
         codeSmells: sonarData?.codeSmells ?? sonarData?.measures?.code_smells ?? 0,
         duplications: sonarData?.duplications ?? sonarData?.measures?.duplicated_lines_density ?? 0,
         lastUpdated: sonarUpdated,
+        history: Array.isArray(sonarHistoryData) ? sonarHistoryData : [],
       },
       phantomAudit: {
-        phantomCount: phantomData?.phantom_count ?? phantomData?.phantoms?.length ?? 0,
-        validCount: phantomData?.valid_count ?? 0,
+        // BUG-4 FIX: Use summary.phantom_completions / summary.verified_completions
+        phantomCount: phantomData?.summary?.phantom_completions ?? 0,
+        validCount: phantomData?.summary?.verified_completions ?? 0,
         lastUpdated: phantomUpdated,
       },
     };
@@ -144,10 +159,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (type === 'all' || type === 'sonar') {
-      // Run SonarQube metrics
+      // BUG-3 FIX: Add --save flag to sonarqube-metrics exec
       try {
         const sonarScript = path.join(scriptsDir, 'sonarqube-metrics.js');
-        await execAsync(`node "${sonarScript}"`, {
+        await execAsync(`node "${sonarScript}" --save`, {
           cwd: path.join(process.cwd(), '..', '..'),
           timeout: 60000,
         });
@@ -155,6 +170,11 @@ export async function POST(request: NextRequest) {
       } catch (e) {
         results.sonar = `failed: ${e}`;
       }
+    }
+
+    // FEAT-5: Phantom refresh re-reads phantom audit file (no script to run)
+    if (type === 'phantom') {
+      results.phantom = 're-read';
     }
 
     // Re-read metrics after update

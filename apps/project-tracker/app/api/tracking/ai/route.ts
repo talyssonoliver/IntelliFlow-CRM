@@ -11,39 +11,96 @@ export const dynamic = 'force-dynamic';
 interface AIMetrics {
   models: Array<{
     name: string;
-    latency_p50: number;
-    latency_p95: number;
-    accuracy: number;
+    latency_p50: number | null;
+    latency_p95: number | null;
+    accuracy: number | null;
     cost_per_1k: number;
     requests_24h: number;
+    cost_total: number;
   }>;
   drift: {
     detected: boolean;
-    score: number;
-    lastCheck: string;
+    score: number | null;
+    lastCheck: string | null;
     threshold: number;
+    history: Array<{ date: string; score: number; detected: boolean }>;
+    alerts: Array<{ timestamp: string; severity: string; message: string }>;
   };
   costs: {
     current_month: number;
     budget: number;
     forecast: number;
     trend: 'up' | 'down' | 'stable';
+    history: Array<{ date: string; amount: number }>;
+    by_model: Record<string, number>;
   };
   hallucination: {
-    rate: number;
+    rate: number | null;
     threshold: number;
     samples_checked: number;
+    history: Array<{ date: string; rate: number }>;
+  };
+  slo: {
+    p95_target_ms: number;
+    p99_target_ms: number;
+    p95_actual_ms: number | null;
+    p99_actual_ms: number | null;
+    p95_compliant: boolean | null;
+    p99_compliant: boolean | null;
+    success_rate: number | null;
+  };
+  roi: {
+    current_percentage: number | null;
+    target_percentage: number;
+    total_cost: number;
+    total_value: number;
+    trend: 'improving' | 'stable' | 'declining' | null;
   };
 }
 
-async function readJsonFile<T>(
+interface RawAiMetrics {
+  kpis?: {
+    drift_detection?: {
+      configuration?: {
+        window_size_hours?: number;
+        p_value_threshold?: number;
+      };
+    };
+    hallucination_rate?: {
+      target_percentage?: number;
+      current_percentage?: number;
+    };
+    latency_slo?: {
+      target_p95_ms?: number;
+      target_p99_ms?: number;
+      current_p95_ms?: number | null;
+      current_p99_ms?: number | null;
+    };
+    roi_tracking?: {
+      target_percentage?: number;
+      current_percentage?: number | null;
+    };
+  };
+  monitoring_components?: Record<string, { class?: string; file?: string }>;
+  drift?: {
+    lastCheck?: string;
+  };
+  lastRefresh?: string;
+  history?: {
+    drift?: Array<{ date: string; score: number; detected: boolean }>;
+    hallucination?: Array<{ date: string; rate: number }>;
+    costs?: Array<{ date: string; amount: number }>;
+  };
+}
+
+async function readJsonFile(
   filePath: string
-): Promise<{ data: T | null; lastUpdated: string | null }> {
+): Promise<{ data: RawAiMetrics | null; lastUpdated: string | null }> {
   try {
     const content = await fs.readFile(filePath, 'utf-8');
     const stats = await fs.stat(filePath);
     return {
-      data: JSON.parse(content),
+      data: JSON.parse(content) as RawAiMetrics,
       lastUpdated: stats.mtime.toISOString(),
     };
   } catch {
@@ -54,16 +111,14 @@ async function readJsonFile<T>(
 async function parseCostBudget(): Promise<{ current: number; budget: number } | null> {
   try {
     const content = await fs.readFile(COST_BUDGET_PATH, 'utf-8');
-    const lines = content.split('\n').filter((l) => l.trim());
+    const lines = content.split('\n').filter((l: string) => l.trim());
 
     if (lines.length < 2) return null;
 
-    // Look for AI-related costs
     for (const line of lines.slice(1)) {
       const lower = line.toLowerCase();
       if (lower.includes('ai') || lower.includes('inference') || lower.includes('openai')) {
         const values = line.split(',');
-        // Assuming format: Category,Budget,Actual,Forecast,...
         return {
           budget: parseFloat(values[1]) || 0,
           current: parseFloat(values[2]) || 0,
@@ -79,53 +134,61 @@ async function parseCostBudget(): Promise<{ current: number; budget: number } | 
 
 export async function GET() {
   try {
-    const { data: aiData, lastUpdated } = await readJsonFile<any>(AI_METRICS_PATH);
+    const { data: aiData, lastUpdated } = await readJsonFile(AI_METRICS_PATH);
     const costData = await parseCostBudget();
 
-    // Build metrics with defaults
+    const kpis = aiData?.kpis;
+    const driftConfig = kpis?.drift_detection?.configuration;
+    const hallucinationKpi = kpis?.hallucination_rate;
+    const latencySlo = kpis?.latency_slo;
+    const roiKpi = kpis?.roi_tracking;
+
+    const p95Actual = latencySlo?.current_p95_ms ?? null;
+    const p99Actual = latencySlo?.current_p99_ms ?? null;
+    const p95Target = latencySlo?.target_p95_ms ?? 2000;
+    const p99Target = latencySlo?.target_p99_ms ?? 5000;
+
     const metrics: AIMetrics = {
-      models: aiData?.models || [
-        {
-          name: 'GPT-4',
-          latency_p50: aiData?.latency?.p50 || 850,
-          latency_p95: aiData?.latency?.p95 || 1500,
-          accuracy: aiData?.accuracy || 0.87,
-          cost_per_1k: 0.03,
-          requests_24h: aiData?.requests_24h || 0,
-        },
-        {
-          name: 'GPT-3.5-Turbo',
-          latency_p50: 320,
-          latency_p95: 650,
-          accuracy: 0.82,
-          cost_per_1k: 0.002,
-          requests_24h: 0,
-        },
-        {
-          name: 'Ollama (Local)',
-          latency_p50: 180,
-          latency_p95: 400,
-          accuracy: 0.79,
-          cost_per_1k: 0,
-          requests_24h: 0,
-        },
-      ],
+      models: [],
       drift: {
-        detected: aiData?.drift?.detected || false,
-        score: aiData?.drift?.score || 0.02,
-        lastCheck: aiData?.drift?.lastCheck || new Date().toISOString(),
-        threshold: 0.05,
+        detected: false,
+        score: null,
+        lastCheck: aiData?.drift?.lastCheck ?? null,
+        threshold: driftConfig?.p_value_threshold ?? 0.05,
+        history: aiData?.history?.drift ?? [],
+        alerts: [],
       },
       costs: {
-        current_month: costData?.current || aiData?.costs?.current || 0,
-        budget: costData?.budget || aiData?.costs?.budget || 500,
-        forecast: aiData?.costs?.forecast || 0,
-        trend: aiData?.costs?.trend || 'stable',
+        current_month: costData?.current ?? 0,
+        budget: costData?.budget ?? 0,
+        forecast: 0,
+        trend: 'stable',
+        history: aiData?.history?.costs ?? [],
+        by_model: {},
       },
       hallucination: {
-        rate: aiData?.hallucination?.rate || 0.03,
-        threshold: 0.05,
-        samples_checked: aiData?.hallucination?.samples || 100,
+        rate: hallucinationKpi?.current_percentage != null
+          ? hallucinationKpi.current_percentage / 100
+          : null,
+        threshold: (hallucinationKpi?.target_percentage ?? 5) / 100,
+        samples_checked: 0,
+        history: aiData?.history?.hallucination ?? [],
+      },
+      slo: {
+        p95_target_ms: p95Target,
+        p99_target_ms: p99Target,
+        p95_actual_ms: p95Actual,
+        p99_actual_ms: p99Actual,
+        p95_compliant: p95Actual != null ? p95Actual <= p95Target : null,
+        p99_compliant: p99Actual != null ? p99Actual <= p99Target : null,
+        success_rate: null,
+      },
+      roi: {
+        current_percentage: roiKpi?.current_percentage ?? null,
+        target_percentage: roiKpi?.target_percentage ?? 200,
+        total_cost: 0,
+        total_value: 0,
+        trend: null,
       },
     };
 
@@ -133,7 +196,6 @@ export async function GET() {
       status: 'ok',
       metrics,
       lastUpdated,
-      path: AI_METRICS_PATH,
     });
   } catch (error) {
     console.error('Error reading AI metrics:', error);
@@ -143,24 +205,51 @@ export async function GET() {
 
 export async function POST(_request: NextRequest) {
   try {
-    // Simulate metrics refresh by updating the file timestamp
-    // In production, this would trigger actual model evaluation jobs
-
     const currentTime = new Date().toISOString();
+    const currentDate = currentTime.slice(0, 10);
 
-    // Read existing or create new metrics
-    let metrics: any = {};
+    let metrics: Record<string, unknown> = {};
     try {
       const content = await fs.readFile(AI_METRICS_PATH, 'utf-8');
-      metrics = JSON.parse(content);
+      metrics = JSON.parse(content) as Record<string, unknown>;
     } catch {
-      // File doesn't exist
+      // File doesn't exist — start from empty
     }
 
     // Update timestamps
     metrics.lastRefresh = currentTime;
-    metrics.drift = metrics.drift || {};
-    metrics.drift.lastCheck = currentTime;
+    const drift = (metrics.drift as Record<string, unknown>) ?? {};
+    drift.lastCheck = currentTime;
+    metrics.drift = drift;
+
+    // Append history entries
+    const history = (metrics.history as Record<string, unknown[]>) ?? {};
+
+    const driftHistory = Array.isArray(history.drift) ? [...history.drift] : [];
+    driftHistory.push({ date: currentDate, score: 0, detected: false });
+    if (driftHistory.length > 30) {
+      history.drift = driftHistory.slice(-30);
+    } else {
+      history.drift = driftHistory;
+    }
+
+    const hallucinationHistory = Array.isArray(history.hallucination) ? [...history.hallucination] : [];
+    hallucinationHistory.push({ date: currentDate, rate: 0 });
+    if (hallucinationHistory.length > 30) {
+      history.hallucination = hallucinationHistory.slice(-30);
+    } else {
+      history.hallucination = hallucinationHistory;
+    }
+
+    const costsHistory = Array.isArray(history.costs) ? [...history.costs] : [];
+    costsHistory.push({ date: currentDate, amount: 0 });
+    if (costsHistory.length > 30) {
+      history.costs = costsHistory.slice(-30);
+    } else {
+      history.costs = costsHistory;
+    }
+
+    metrics.history = history;
 
     // Save updated metrics
     await fs.mkdir(path.dirname(AI_METRICS_PATH), { recursive: true });
