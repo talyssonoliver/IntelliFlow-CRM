@@ -99,6 +99,70 @@ export interface DateRangeQuery {
 }
 
 // ============================================
+// IFC-190: COMPOSITE ANALYTICS TYPES
+// ============================================
+
+export type TimeSeriesGranularity = 'day' | 'week' | 'month';
+
+export type ExtendedMetricType = GrowthMetricType | 'pipeline_value' | 'win_rate';
+
+export type ReportType = 'sales' | 'leads' | 'funnel' | 'timeseries' | 'overview';
+
+export interface SalesMetricsResult {
+  pipelineValue: number;
+  winRate: number;
+  avgDealSize: number;
+  avgSalesCycleDays: number | null;
+  totalRevenue: number;
+  closedWonCount: number;
+  closedLostCount: number;
+}
+
+export interface LeadMetricsResult {
+  total: number;
+  bySource: Array<{ source: string; name: string; count: number; percentage: number }>;
+  byStatus: Array<{ status: string; count: number; percentage: number }>;
+  conversionRate: number;
+}
+
+export interface FunnelStage {
+  stage: string;
+  label: string;
+  count: number;
+  value: number;
+  conversionFromPrevious: number | null;
+}
+
+export interface ConversionFunnelResult {
+  stages: FunnelStage[];
+  totalLeads: number;
+  overallConversionRate: number;
+}
+
+export interface TimeSeriesPoint {
+  period: string;
+  periodLabel: string;
+  value: number;
+}
+
+export interface OverviewResult {
+  totalLeads: number;
+  leadDelta: number;
+  totalRevenue: number;
+  revenueDelta: number;
+  openOpportunities: number;
+  newContacts: number;
+  winRate: number;
+  recentActivity: ActivityItem[];
+}
+
+export interface ExportResult {
+  format: 'csv' | 'json';
+  data: unknown;
+  filename: string;
+}
+
+// ============================================
 // REPOSITORY INTERFACE
 // ============================================
 
@@ -163,4 +227,19 @@ export interface AnalyticsRepository {
    * @param tenantId - Tenant to filter by
    */
   countLeadsThisMonth(tenantId: string): Promise<number>;
+
+  // IFC-190: Sales metrics
+  countClosedWonInRange(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number>;
+  countClosedLostInRange(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number>;
+  getPipelineValue(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number>;
+  getAvgSalesCycleLength(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number | null>;
+  getRevenueInRange(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number>;
+
+  // IFC-190: Lead metrics
+  getLeadsBySourceInRange(tenantId: string, dateRange: DateRangeQuery): Promise<LeadGroupByResult[]>;
+  getLeadsByStatus(tenantId: string, dateRange: DateRangeQuery): Promise<Array<{ status: string; _count: number }>>;
+  countConvertedLeadsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number>;
+
+  // IFC-190: Conversion funnel
+  getOpportunitiesByStageInRange(tenantId: string, dateRange: DateRangeQuery): Promise<Array<{ stage: string; _count: number; _sum: { value: number | null } }>>;
 }

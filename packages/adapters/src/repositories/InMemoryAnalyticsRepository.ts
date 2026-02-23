@@ -178,6 +178,122 @@ export class InMemoryAnalyticsRepository implements AnalyticsRepository {
   }
 
   // ============================================
+  // IFC-190: Sales Metrics
+  // ============================================
+
+  async countClosedWonInRange(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number> {
+    return this.opportunities.filter(
+      (opp) =>
+        opp.tenantId === tenantId &&
+        opp.stage === 'CLOSED_WON' &&
+        opp.closedAt && opp.closedAt >= dateRange.startDate && opp.closedAt <= dateRange.endDate &&
+        (!ownerId || opp.ownerId === ownerId)
+    ).length;
+  }
+
+  async countClosedLostInRange(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number> {
+    return this.opportunities.filter(
+      (opp) =>
+        opp.tenantId === tenantId &&
+        opp.stage === 'CLOSED_LOST' &&
+        opp.closedAt && opp.closedAt >= dateRange.startDate && opp.closedAt <= dateRange.endDate &&
+        (!ownerId || opp.ownerId === ownerId)
+    ).length;
+  }
+
+  async getPipelineValue(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number> {
+    return this.opportunities
+      .filter(
+        (opp) =>
+          opp.tenantId === tenantId &&
+          opp.stage !== 'CLOSED_WON' && opp.stage !== 'CLOSED_LOST' &&
+          opp.createdAt >= dateRange.startDate && opp.createdAt <= dateRange.endDate &&
+          (!ownerId || opp.ownerId === ownerId)
+      )
+      .reduce((sum, opp) => sum + (opp.value ?? 0), 0);
+  }
+
+  async getAvgSalesCycleLength(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number | null> {
+    const closedWon = this.opportunities.filter(
+      (opp) =>
+        opp.tenantId === tenantId &&
+        opp.stage === 'CLOSED_WON' &&
+        opp.closedAt && opp.closedAt >= dateRange.startDate && opp.closedAt <= dateRange.endDate &&
+        (!ownerId || opp.ownerId === ownerId)
+    );
+    if (closedWon.length === 0) return null;
+    const totalDays = closedWon.reduce((sum, opp) => {
+      const diffMs = opp.closedAt!.getTime() - opp.createdAt.getTime();
+      return sum + diffMs / (1000 * 60 * 60 * 24);
+    }, 0);
+    return Math.round((totalDays / closedWon.length) * 10) / 10;
+  }
+
+  async getRevenueInRange(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number> {
+    return this.opportunities
+      .filter(
+        (opp) =>
+          opp.tenantId === tenantId &&
+          opp.stage === 'CLOSED_WON' &&
+          opp.closedAt && opp.closedAt >= dateRange.startDate && opp.closedAt <= dateRange.endDate &&
+          (!ownerId || opp.ownerId === ownerId)
+      )
+      .reduce((sum, opp) => sum + (opp.value ?? 0), 0);
+  }
+
+  // IFC-190: Lead Metrics
+
+  async getLeadsBySourceInRange(tenantId: string, dateRange: DateRangeQuery): Promise<LeadGroupByResult[]> {
+    const counts = new Map<string, number>();
+    for (const lead of this.leads) {
+      if (lead.tenantId !== tenantId) continue;
+      if (lead.createdAt < dateRange.startDate || lead.createdAt > dateRange.endDate) continue;
+      counts.set(lead.source, (counts.get(lead.source) ?? 0) + 1);
+    }
+    return Array.from(counts.entries()).map(([source, count]) => ({ source, _count: count }));
+  }
+
+  async getLeadsByStatus(tenantId: string, dateRange: DateRangeQuery): Promise<Array<{ status: string; _count: number }>> {
+    const counts = new Map<string, number>();
+    for (const lead of this.leads) {
+      if (lead.tenantId !== tenantId) continue;
+      if (lead.createdAt < dateRange.startDate || lead.createdAt > dateRange.endDate) continue;
+      const status = (lead as LeadData & { status?: string }).status ?? 'NEW';
+      counts.set(status, (counts.get(status) ?? 0) + 1);
+    }
+    return Array.from(counts.entries()).map(([status, count]) => ({ status, _count: count }));
+  }
+
+  async countConvertedLeadsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
+    return this.leads.filter(
+      (lead) =>
+        lead.tenantId === tenantId &&
+        (lead as LeadData & { status?: string }).status === 'CONVERTED' &&
+        lead.createdAt >= dateRange.startDate && lead.createdAt <= dateRange.endDate
+    ).length;
+  }
+
+  // IFC-190: Conversion Funnel
+
+  async getOpportunitiesByStageInRange(
+    tenantId: string,
+    dateRange: DateRangeQuery
+  ): Promise<Array<{ stage: string; _count: number; _sum: { value: number | null } }>> {
+    const groups = new Map<string, { count: number; value: number }>();
+    for (const opp of this.opportunities) {
+      if (opp.tenantId !== tenantId) continue;
+      if (opp.createdAt < dateRange.startDate || opp.createdAt > dateRange.endDate) continue;
+      const existing = groups.get(opp.stage) ?? { count: 0, value: 0 };
+      groups.set(opp.stage, { count: existing.count + 1, value: existing.value + (opp.value ?? 0) });
+    }
+    return Array.from(groups.entries()).map(([stage, data]) => ({
+      stage,
+      _count: data.count,
+      _sum: { value: data.value || null },
+    }));
+  }
+
+  // ============================================
   // TEST HELPER METHODS
   // ============================================
 
@@ -326,6 +442,7 @@ export interface OpportunityData {
   value: number | null;
   createdAt: Date;
   closedAt: Date | null;
+  ownerId?: string;
 }
 
 export interface LeadData {

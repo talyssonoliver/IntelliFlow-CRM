@@ -340,6 +340,24 @@ describe('Experiment Validators', () => {
       expect(n).toBeGreaterThan(20);
       expect(n).toBeLessThan(50);
     });
+
+    it('should use fallback z-scores for non-standard alpha', () => {
+      // alpha=0.1 hits the else branch (zAlpha=1.645)
+      const n = calculateRequiredSampleSize(0.5, 0.8, 0.1);
+      expect(n).toBeGreaterThan(0);
+      // Should be smaller than alpha=0.05 since less stringent
+      const n05 = calculateRequiredSampleSize(0.5, 0.8, 0.05);
+      expect(n).toBeLessThan(n05);
+    });
+
+    it('should use fallback z-scores for non-standard power', () => {
+      // power=0.7 hits the else branch (zBeta=0.52)
+      const n = calculateRequiredSampleSize(0.5, 0.7, 0.05);
+      expect(n).toBeGreaterThan(0);
+      // Should be smaller than power=0.8 since less demanding
+      const n08 = calculateRequiredSampleSize(0.5, 0.8, 0.05);
+      expect(n).toBeLessThan(n08);
+    });
   });
 
   describe('hasSufficientSamples', () => {

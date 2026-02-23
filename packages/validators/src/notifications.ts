@@ -66,6 +66,13 @@ export const NOTIFICATION_TYPES = [
   'document_shared',
   'document_comment',
   'document_approval_needed',
+  // Ticket notifications
+  'ticket_assigned',
+  'ticket_escalated',
+  // Case notifications
+  'case_assigned',
+  'case_status_changed',
+  'case_closed',
   // Email notifications
   'email_received',
   'email_opened',

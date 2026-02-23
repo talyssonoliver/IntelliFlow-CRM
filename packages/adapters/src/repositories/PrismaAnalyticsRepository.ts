@@ -1,4 +1,4 @@
-import { PrismaClient, AuditAction } from '@intelliflow/db';
+import { PrismaClient, Prisma, AuditAction } from '@intelliflow/db';
 import type {
   AnalyticsRepository,
   OpportunityGroupByResult,
@@ -168,6 +168,139 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
         },
       },
     });
+  }
+
+  // ============================================
+  // IFC-190: Sales Metrics
+  // ============================================
+
+  async countClosedWonInRange(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number> {
+    return this.prisma.opportunity.count({
+      where: {
+        tenantId,
+        stage: 'CLOSED_WON',
+        closedAt: { gte: dateRange.startDate, lte: dateRange.endDate },
+        ...(ownerId ? { ownerId } : {}),
+      },
+    });
+  }
+
+  async countClosedLostInRange(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number> {
+    return this.prisma.opportunity.count({
+      where: {
+        tenantId,
+        stage: 'CLOSED_LOST',
+        closedAt: { gte: dateRange.startDate, lte: dateRange.endDate },
+        ...(ownerId ? { ownerId } : {}),
+      },
+    });
+  }
+
+  async getPipelineValue(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number> {
+    const result = await this.prisma.opportunity.aggregate({
+      where: {
+        tenantId,
+        stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] },
+        createdAt: { gte: dateRange.startDate, lte: dateRange.endDate },
+        ...(ownerId ? { ownerId } : {}),
+      },
+      _sum: { value: true },
+    });
+    return result._sum.value ? Number(result._sum.value) : 0;
+  }
+
+  async getAvgSalesCycleLength(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number | null> {
+    const ownerFilter = ownerId
+      ? Prisma.sql` AND "ownerId" = ${ownerId}`
+      : Prisma.empty;
+
+    const result = await this.prisma.$queryRaw<Array<{ avg_days: number | null }>>(
+      Prisma.sql`SELECT AVG(EXTRACT(EPOCH FROM ("closedAt" - "createdAt")) / 86400) as avg_days
+        FROM "Opportunity"
+        WHERE "tenantId" = ${tenantId}
+          AND stage = 'CLOSED_WON'
+          AND "closedAt" IS NOT NULL
+          AND "closedAt" >= ${dateRange.startDate}
+          AND "closedAt" <= ${dateRange.endDate}${ownerFilter}`
+    );
+
+    const avgDays = result[0]?.avg_days;
+    return avgDays != null ? Math.round(avgDays * 10) / 10 : null;
+  }
+
+  async getRevenueInRange(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number> {
+    const result = await this.prisma.opportunity.aggregate({
+      where: {
+        tenantId,
+        stage: 'CLOSED_WON',
+        closedAt: { gte: dateRange.startDate, lte: dateRange.endDate },
+        ...(ownerId ? { ownerId } : {}),
+      },
+      _sum: { value: true },
+    });
+    return result._sum.value ? Number(result._sum.value) : 0;
+  }
+
+  // ============================================
+  // IFC-190: Lead Metrics
+  // ============================================
+
+  async getLeadsBySourceInRange(tenantId: string, dateRange: DateRangeQuery): Promise<LeadGroupByResult[]> {
+    const result = await this.prisma.lead.groupBy({
+      by: ['source'],
+      where: {
+        tenantId,
+        createdAt: { gte: dateRange.startDate, lte: dateRange.endDate },
+      },
+      _count: true,
+    });
+    return result.map((r) => ({ source: r.source, _count: r._count }));
+  }
+
+  async getLeadsByStatus(tenantId: string, dateRange: DateRangeQuery): Promise<Array<{ status: string; _count: number }>> {
+    const result = await this.prisma.lead.groupBy({
+      by: ['status'],
+      where: {
+        tenantId,
+        createdAt: { gte: dateRange.startDate, lte: dateRange.endDate },
+      },
+      _count: true,
+    });
+    return result.map((r) => ({ status: r.status, _count: r._count }));
+  }
+
+  async countConvertedLeadsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
+    return this.prisma.lead.count({
+      where: {
+        tenantId,
+        status: 'CONVERTED',
+        createdAt: { gte: dateRange.startDate, lte: dateRange.endDate },
+      },
+    });
+  }
+
+  // ============================================
+  // IFC-190: Conversion Funnel
+  // ============================================
+
+  async getOpportunitiesByStageInRange(
+    tenantId: string,
+    dateRange: DateRangeQuery
+  ): Promise<Array<{ stage: string; _count: number; _sum: { value: number | null } }>> {
+    const result = await this.prisma.opportunity.groupBy({
+      by: ['stage'],
+      where: {
+        tenantId,
+        createdAt: { gte: dateRange.startDate, lte: dateRange.endDate },
+      },
+      _count: true,
+      _sum: { value: true },
+    });
+    return result.map((r) => ({
+      stage: r.stage,
+      _count: r._count,
+      _sum: { value: r._sum.value ? Number(r._sum.value) : null },
+    }));
   }
 
   // ============================================
