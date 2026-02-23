@@ -1,0 +1,42 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "DOC-005",
+  "section": "Documentation",
+  "description": "Complete overhaul of page-registry.md from 8 routes to all 101 routes with task ID, KPI targets, code file path, component breakdown, API router, E2E test path, RACI assignments",
+  "owner": "DevRel (STOA-Foundation)",
+  "sprint": "sprint-14",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [
+      "DOC-002"
+    ],
+    "all_satisfied": false,
+    "verified_at": "2026-02-23T20:24:02.774Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": null,
+  "actual_duration_minutes": null,
+  "kpis": {},
+  "artifacts": {
+    "expected": [
+      "docs/design/page-registry.md"
+    ],
+    "created": [
+      "docs/design/page-registry.md"
+    ],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-02-23T00:00:00Z"
+    }
+  ],
+  "notes": ""
+}

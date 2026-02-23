@@ -1,0 +1,48 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "DOC-008",
+  "section": "Documentation",
+  "description": "Create VPAT 2.5 document, WCAG 2.1 AA conformance statement, axe-core/pa11y test suite, enforce accessibility in CI (error not warn), accessibility ADR, screen reader testing plan",
+  "owner": "QA (STOA-Security)",
+  "sprint": "sprint-14",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [
+      "DOC-007"
+    ],
+    "all_satisfied": false,
+    "verified_at": "2026-02-23T20:24:02.777Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": null,
+  "actual_duration_minutes": null,
+  "kpis": {},
+  "artifacts": {
+    "expected": [
+      "docs/compliance/vpat-2.5.md",
+      "docs/compliance/wcag-conformance-statement.md",
+      "tests/a11y/axe-core.spec.ts",
+      "docs/planning/adr/ADR-031-accessibility-architecture.md"
+    ],
+    "created": [],
+    "missing": [
+      "docs/compliance/vpat-2.5.md",
+      "docs/compliance/wcag-conformance-statement.md",
+      "tests/a11y/axe-core.spec.ts",
+      "docs/planning/adr/ADR-031-accessibility-architecture.md"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-02-23T00:00:00Z"
+    }
+  ],
+  "notes": ""
+}

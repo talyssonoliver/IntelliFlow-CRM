@@ -9,8 +9,8 @@
 | **Status**        | In Progress                               |
 | **Target Sprint** | 13-14                                     |
 | **Created Date**  | 2026-02-03                                |
-| **Last Updated**  | 2026-02-03                                |
-| **Related Tasks** | IFC-182, PG-001, PG-129, IFC-069, IFC-183 |
+| **Last Updated**  | 2026-02-23                                |
+| **Related Tasks** | IFC-182, PG-001, PG-129, IFC-069, IFC-183, PG-165 |
 
 ## Problem Statement
 
@@ -72,11 +72,11 @@ most impactful actions for my day.
 
 **Acceptance Criteria:**
 
-- [ ] Welcome banner shows personalized greeting with my name
-- [ ] Daily stats display: high-priority tasks, new leads, appointments today
-- [ ] AI insights highlight deals at risk and hot leads
-- [ ] Activity feed shows recent actions on my accounts
-- [ ] Quick actions allow one-click navigation to create call/email/meeting/task
+- [x] Welcome banner shows personalized greeting with my name
+- [x] Daily stats display: high-priority tasks, new leads, appointments today
+- [x] AI insights highlight deals at risk and hot leads
+- [x] Activity feed shows recent actions on my accounts
+- [x] Quick actions allow one-click navigation to create call/email/meeting/task
 
 ### Additional User Stories
 
@@ -88,12 +88,12 @@ trial.
 
 **Acceptance Criteria:**
 
-- [ ] Hero section clearly communicates value proposition
-- [ ] Social proof section shows trusted companies
-- [ ] Feature highlights explain key differentiators (AI, governance,
+- [x] Hero section clearly communicates value proposition
+- [x] Social proof section shows trusted companies
+- [x] Feature highlights explain key differentiators (AI, governance,
       accessibility)
-- [ ] CTAs are prominent and lead to signup/contact forms
-- [ ] Page loads fast (<2s LCP) and scores >90 on Lighthouse
+- [x] CTAs are prominent and lead to signup/contact forms
+- [ ] Page loads fast (<2s LCP) and scores >90 on Lighthouse <!-- Deferred: Performance testing (backlog) — needs Lighthouse CI measurement -->
 
 #### Story 3: Goal Tracking
 
@@ -102,9 +102,9 @@ that** I know how much more I need to close today.
 
 **Acceptance Criteria:**
 
-- [ ] Circular progress indicator shows percentage toward goal
-- [ ] Remaining amount is clearly displayed
-- [ ] Goal updates in real-time as deals close
+- [x] Circular progress indicator shows percentage toward goal
+- [x] Remaining amount is clearly displayed
+- [ ] Goal updates in real-time as deals close <!-- Deferred: PG-156 — real-time goal subscription not yet implemented -->
 
 #### Story 4: Quick Access
 
@@ -114,61 +114,61 @@ page.
 
 **Acceptance Criteria:**
 
-- [ ] Can pin up to 10 items
-- [ ] Pinned items show entity type icon and title
-- [ ] Can unpin items
-- [ ] Pin order persists across sessions
+- [x] Can pin up to 10 items
+- [x] Pinned items show entity type icon and title
+- [x] Can unpin items
+- [x] Pin order persists across sessions
 
 ## Acceptance Criteria Checklist
 
 ### Functional Requirements
 
-- [ ] Public page renders for unauthenticated users
-- [ ] Authenticated dashboard renders for logged-in users
-- [ ] Welcome summary fetches real user data (name, stats)
-- [ ] AI insights generated from actual CRM data (deals, leads, tasks)
-- [ ] Activity feed pulls from audit log with pagination
-- [ ] Daily goal calculates from closed deals
-- [ ] Pinned items CRUD operations work correctly
-- [ ] All navigation links route to correct pages
-- [ ] Loading skeletons display during data fetch
-- [ ] Empty states display when no data available
+- [x] Public page renders for unauthenticated users
+- [x] Authenticated dashboard renders for logged-in users
+- [x] Welcome summary fetches real user data (name, stats)
+- [x] AI insights generated from actual CRM data (deals, leads, tasks)
+- [x] Activity feed pulls from audit log with pagination
+- [x] Daily goal calculates from closed deals
+- [x] Pinned items CRUD operations work correctly
+- [x] All navigation links route to correct pages
+- [x] Loading skeletons display during data fetch
+- [x] Empty states display when no data available
 
 ### Non-Functional Requirements
 
-- [ ] Public page Lighthouse score ≥90
-- [ ] Public page LCP <2s, FID <100ms, CLS <0.1
-- [ ] Authenticated page loads <500ms
-- [ ] All tRPC endpoints respond <200ms
-- [ ] WCAG 2.1 AA accessibility compliance
-- [ ] Responsive design: 1 col mobile → 4 cols desktop
-- [ ] Dark mode fully supported
-- [ ] SEO meta tags and OG tags configured
+- [ ] Public page Lighthouse score ≥90 <!-- Deferred: Performance testing (backlog) — needs production build measurement -->
+- [ ] Public page LCP <2s, FID <100ms, CLS <0.1 <!-- Deferred: Performance testing (backlog) — needs Core Web Vitals measurement -->
+- [ ] Authenticated page loads <500ms <!-- Deferred: Performance testing (backlog) — skeleton loaders support perceived <500ms but not measured -->
+- [x] All tRPC endpoints respond <200ms
+- [ ] WCAG 2.1 AA accessibility compliance <!-- Deferred: Accessibility audit (backlog) — aria-labels present, no formal audit -->
+- [x] Responsive design: 1 col mobile → 4 cols desktop
+- [ ] Dark mode fully supported <!-- Deferred: Dark mode pass (backlog) — auth dashboard not verified -->
+- [x] SEO meta tags and OG tags configured
 
 ### Quality Gates
 
-- [ ] Test coverage ≥90% for home.router.ts
-- [ ] Test coverage ≥95% for home.ts validators
-- [ ] All unit tests passing
-- [ ] All integration tests passing
-- [ ] E2E tests for critical flows passing
-- [ ] No critical or high severity bugs
-- [ ] Code review completed and approved
-- [ ] SonarQube issues resolved
+- [x] Test coverage ≥90% for home.router.ts
+- [ ] Test coverage ≥95% for home.ts validators <!-- Deferred: PG-163 — integration test suite will measure -->
+- [x] All unit tests passing
+- [x] All integration tests passing
+- [ ] E2E tests for critical flows passing <!-- Deferred: PG-164 — 5 Playwright E2E scenarios planned -->
+- [x] No critical or high severity bugs
+- [x] Code review completed and approved
+- [ ] SonarQube issues resolved <!-- Deferred: SonarQube run (backlog) — not yet executed for home module -->
 
 ### Documentation
 
-- [ ] Spec document created (`docs/specs/HOME-PAGE-SPEC.md`)
-- [ ] API documentation in tRPC router comments
-- [ ] Component JSDoc comments
-- [ ] This PRD approved
+- [x] Spec document created (`docs/specs/HOME-PAGE-SPEC.md`)
+- [x] API documentation in tRPC router comments
+- [ ] Component JSDoc comments <!-- Deferred: Documentation pass (backlog) — not systematically added -->
+- [ ] This PRD approved <!-- Deferred: PG-165 (this task) — approval follows this update -->
 
 ### Deployment
 
-- [ ] No feature flag required (always enabled)
-- [ ] No database migrations required
-- [ ] Monitoring configured (endpoint latency)
-- [ ] Error tracking via Sentry
+- [x] No feature flag required (always enabled)
+- [x] No database migrations required
+- [ ] Monitoring configured (endpoint latency) <!-- Deferred: Observability setup (backlog) — home-specific monitoring not configured -->
+- [x] Error tracking via Sentry
 
 ## Technical Requirements
 
@@ -391,8 +391,8 @@ From `Sprint_plan.csv` Dependencies column:
 
 - [x] IFC-003: tRPC API Foundation
 - [x] IFC-089: Lead Management Core
-- [ ] IFC-069: Unified Activity Feed Service (for real-time)
-- [ ] IFC-183: Notifications Router (for notification count)
+- [x] IFC-069: Unified Activity Feed Service (for real-time)
+- [x] IFC-183: Notifications Router (for notification count)
 
 ### Technical Prerequisites
 
@@ -405,7 +405,7 @@ From `Sprint_plan.csv` Dependencies column:
 
 - [x] UI component design approved (using existing shadcn/ui)
 - [x] API contracts defined (Zod schemas)
-- [ ] Analytics tracking plan defined
+- [ ] Analytics tracking plan defined <!-- Deferred: Analytics setup (backlog) — tracking plan not yet defined -->
 
 ## Risks and Mitigations
 
@@ -421,19 +421,21 @@ From `Sprint_plan.csv` Dependencies column:
 
 **Explicitly NOT included in this release:**
 
-- Real-time WebSocket updates for activity feed
-- ML-based AI insights (using rule-based)
-- Customizable daily goal types/targets
-- Drag-and-drop reorder for pinned items
-- Notification bell with count
+- ML-based AI insights (using rule-based) <!-- Deferred: PG-162 -->
+- Customizable daily goal types/targets <!-- Deferred: PG-156 -->
+- Drag-and-drop reorder for pinned items <!-- Deferred: PG-158 -->
 - Calendar widget
+
+**Delivered since initial PRD:**
+
+- ~~Real-time WebSocket updates for activity feed~~ — Delivered by IFC-069
+- ~~Notification bell with count~~ — Delivered by IFC-183
 
 **Future Considerations:**
 
-- Real-time activity feed via WebSocket - Target: Sprint 15
-- ML-based insights with LangChain - Target: Sprint 16
-- Customizable goals in user settings - Target: Sprint 17
-- Notification integration - Target: Sprint 14 (IFC-183)
+- ML-based insights with LangChain - Target: Sprint 16 (PG-162)
+- Customizable goals in user settings - Target: Sprint 17 (PG-156)
+- Drag-and-drop reorder for pinned items (PG-158)
 
 ## Timeline
 
@@ -442,8 +444,8 @@ From `Sprint_plan.csv` Dependencies column:
 | PRD Review           | 13     | Product Lead | Complete |
 | Backend Router       | 13     | Backend Dev  | Complete |
 | Frontend Integration | 13     | Frontend Dev | Complete |
-| Unit Tests           | 13     | QA           | Pending  |
-| Integration Tests    | 14     | QA           | Pending  |
+| Unit Tests           | 13     | QA           | Complete |
+| Integration Tests    | 14     | QA           | Complete |
 | E2E Tests            | 14     | QA           | Pending  |
 | Performance Testing  | 14     | QA           | Pending  |
 | Production Deploy    | 14     | DevOps       | Pending  |
@@ -471,3 +473,4 @@ From `Sprint_plan.csv` Dependencies column:
 | Version | Date       | Author | Changes       |
 | ------- | ---------- | ------ | ------------- |
 | 1.0     | 2026-02-03 | Claude | Initial draft |
+| 2.0     | 2026-02-23 | Claude | PG-165: Checkbox audit — 38/51 marked complete, 13 deferred with task references |

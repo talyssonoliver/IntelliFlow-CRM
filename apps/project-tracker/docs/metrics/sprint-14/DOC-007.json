@@ -1,0 +1,42 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "DOC-007",
+  "section": "Documentation",
+  "description": "Conduct full accessibility compliance gap assessment: Lighthouse a11y audit on all 27 URLs, document WCAG 2.1 AA conformance level per route, identify all Level A and AA failures, produce gap report with remediation priorities",
+  "owner": "QA (STOA-Quality)",
+  "sprint": "sprint-14",
+  "phase": null,
+  "stream": null,
+  "status": "PLANNED",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-02-23T20:24:02.776Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": null,
+  "actual_duration_minutes": null,
+  "kpis": {},
+  "artifacts": {
+    "expected": [
+      "docs/compliance/accessibility-gap-assessment.md",
+      "artifacts/reports/accessibility-audit-results.json"
+    ],
+    "created": [],
+    "missing": [
+      "docs/compliance/accessibility-gap-assessment.md",
+      "artifacts/reports/accessibility-audit-results.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-02-23T00:00:00Z"
+    }
+  ],
+  "notes": ""
+}

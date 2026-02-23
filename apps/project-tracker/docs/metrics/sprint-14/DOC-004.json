@@ -1,0 +1,42 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "DOC-004",
+  "section": "Documentation",
+  "description": "Update ui-flow-mapping.md cross-reference matrix to 101 routes, verify API router procedure counts, update implementation and backend integration status",
+  "owner": "DevRel (STOA-Foundation)",
+  "sprint": "sprint-14",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [
+      "DOC-002"
+    ],
+    "all_satisfied": false,
+    "verified_at": "2026-02-23T20:24:02.774Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": null,
+  "actual_duration_minutes": null,
+  "kpis": {},
+  "artifacts": {
+    "expected": [
+      "docs/design/ui-flow-mapping.md"
+    ],
+    "created": [
+      "docs/design/ui-flow-mapping.md"
+    ],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-02-23T00:00:00Z"
+    }
+  ],
+  "notes": ""
+}

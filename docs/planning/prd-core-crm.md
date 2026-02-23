@@ -3,8 +3,7 @@
 **Version:** 1.0  
 **Date:** 2026-02-02  
 **Owners:** Product Lead, Domain Lead  
-**Related Tasks:** IFC-061, IFC-063, IFC-089, IFC-090, IFC-091, IFC-092,
-IFC-093, IFC-094, IFC-101–IFC-110  
+**Related Tasks:** IFC-014, IFC-016, IFC-061, IFC-062, IFC-063, IFC-064, IFC-065, IFC-066, IFC-089, IFC-090, IFC-091, IFC-092, IFC-093, IFC-094, IFC-101–IFC-110, PG-131
 **Decision Records:** ADR-019-core-crm-foundation.md
 
 ## Summary

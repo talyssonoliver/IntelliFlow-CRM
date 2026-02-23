@@ -3,7 +3,7 @@
 **Version:** 1.0  
 **Date:** 2026-02-02  
 **Owners:** Growth Lead, Frontend Lead  
-**Related Tasks:** PG-001–PG-018  
+**Related Tasks:** PG-001–PG-018, PG-019, PG-020, PG-021, PG-022, PG-023, PG-024  
 **Decision Records:** ADR-020-public-site-auth.md
 
 ## Summary

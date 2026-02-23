@@ -3,7 +3,7 @@
 **Version:** 1.0  
 **Date:** 2026-02-02  
 **Owners:** Product Lead, Data Lead  
-**Related Tasks:** IFC-037, IFC-038, IFC-096  
+**Related Tasks:** IFC-037, IFC-038, IFC-096, IFC-190  
 **Decision Records:** ADR-016-analytics-integrity.md
 
 ## Summary

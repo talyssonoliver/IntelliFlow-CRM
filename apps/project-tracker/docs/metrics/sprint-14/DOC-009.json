@@ -1,0 +1,45 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "DOC-009",
+  "section": "Documentation",
+  "description": "Create content audit framework and perform initial audit: quantitative URL inventory (101 routes with HTTP status, response time, title, meta), qualitative content review, SEO audit for public pages, stale content detection",
+  "owner": "DevRel (STOA-Foundation)",
+  "sprint": "sprint-14",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [
+      "DOC-002",
+      "DOC-005"
+    ],
+    "all_satisfied": false,
+    "verified_at": "2026-02-23T20:24:02.777Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": null,
+  "actual_duration_minutes": null,
+  "kpis": {},
+  "artifacts": {
+    "expected": [
+      "docs/design/content-audit.md",
+      "artifacts/reports/content-audit-results.json"
+    ],
+    "created": [],
+    "missing": [
+      "docs/design/content-audit.md",
+      "artifacts/reports/content-audit-results.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-02-23T00:00:00Z"
+    }
+  ],
+  "notes": ""
+}
