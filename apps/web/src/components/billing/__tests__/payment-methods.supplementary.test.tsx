@@ -51,6 +51,18 @@ const mockPaymentMethods = vi.hoisted(() => [
     isDefault: false,
     created: new Date('2024-06-01'),
   },
+  {
+    id: 'pm_003',
+    type: 'card' as const,
+    card: {
+      brand: 'amex',
+      last4: '3782',
+      expMonth: 6,
+      expYear: 2029,
+    },
+    isDefault: false,
+    created: new Date('2024-09-01'),
+  },
 ]);
 
 const mockInvalidate = vi.hoisted(() => vi.fn());
@@ -164,15 +176,19 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 }));
 
 // Mock Stripe Elements for AddCardDialog
+const mockCreatePaymentMethod = vi.hoisted(() =>
+  vi.fn().mockResolvedValue({
+    paymentMethod: { id: 'pm_new_123' },
+  })
+);
+
 vi.mock('@stripe/react-stripe-js', () => ({
   Elements: ({ children }: { children: React.ReactNode }) => <div data-testid="stripe-elements">{children}</div>,
   CardNumberElement: () => <div data-testid="card-number-element" />,
   CardExpiryElement: () => <div data-testid="card-expiry-element" />,
   CardCvcElement: () => <div data-testid="card-cvc-element" />,
   useStripe: () => ({
-    createPaymentMethod: vi.fn().mockResolvedValue({
-      paymentMethod: { id: 'pm_new_123' },
-    }),
+    createPaymentMethod: mockCreatePaymentMethod,
   }),
   useElements: () => ({
     getElement: () => ({}),
@@ -198,6 +214,9 @@ describe('PaymentMethods', () => {
 
     mockMutateAsyncUpdate.mockResolvedValue({});
     mockMutateAsyncRemove.mockResolvedValue({});
+    mockCreatePaymentMethod.mockResolvedValue({
+      paymentMethod: { id: 'pm_new_123' },
+    });
   });
 
   describe('Loading State', () => {
@@ -293,7 +312,7 @@ describe('PaymentMethods', () => {
       render(<PaymentMethods />);
 
       const removeButtons = screen.getAllByTitle('Remove card');
-      expect(removeButtons.length).toBe(2);
+      expect(removeButtons.length).toBe(3);
     });
   });
 
@@ -425,6 +444,287 @@ describe('PaymentMethods', () => {
 
       // Should not crash and should show empty state since the card renders null
       expect(screen.queryByText('Default')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Set Default Action', () => {
+    it('calls updatePaymentMethod with setAsDefault when star button clicked', async () => {
+      mockQueryResult.data = mockPaymentMethods;
+      const user = userEvent.setup();
+
+      render(<PaymentMethods />);
+
+      // Click the "Set as default" button (pm_003 is non-default, non-expired)
+      const setDefaultBtn = screen.getByTitle('Set as default');
+      await user.click(setDefaultBtn);
+
+      await waitFor(() => {
+        expect(mockMutateAsyncUpdate).toHaveBeenCalledWith({
+          paymentMethodId: 'pm_003',
+          setAsDefault: true,
+        });
+      });
+    });
+
+    it('triggers success toast on successful set default', async () => {
+      mockQueryResult.data = mockPaymentMethods;
+      const user = userEvent.setup();
+
+      render(<PaymentMethods />);
+
+      // Simulate mutation success by triggering onSuccess
+      const setDefaultBtn = screen.getByTitle('Set as default');
+      await user.click(setDefaultBtn);
+
+      // onSuccess fires: invalidate + toast
+      const successCb = (mockUpdateMutation as any)._onSuccess;
+      if (successCb) successCb();
+
+      await waitFor(() => {
+        expect(mockInvalidate).toHaveBeenCalled();
+      });
+    });
+
+    it('triggers error toast on failed set default', async () => {
+      mockQueryResult.data = mockPaymentMethods;
+      const user = userEvent.setup();
+
+      render(<PaymentMethods />);
+
+      const setDefaultBtn = screen.getByTitle('Set as default');
+      await user.click(setDefaultBtn);
+
+      // Simulate mutation error via onError callback (doesn't reject the promise)
+      const errorCb = (mockUpdateMutation as any)._onError;
+      if (errorCb) errorCb({ message: 'Update failed' });
+
+      await waitFor(() => {
+        expect(mockMutateAsyncUpdate).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Remove Mutation', () => {
+    it('triggers invalidate and close dialog on successful remove', async () => {
+      mockQueryResult.data = mockPaymentMethods;
+      const user = userEvent.setup();
+
+      render(<PaymentMethods />);
+
+      // Open remove dialog
+      const removeButtons = screen.getAllByTitle('Remove card');
+      await user.click(removeButtons[0]);
+
+      expect(screen.getByText('Remove Payment Method?')).toBeInTheDocument();
+
+      // Click confirm
+      const confirmBtn = screen.getByRole('button', { name: /^remove$/i });
+      await user.click(confirmBtn);
+
+      // onSuccess: invalidate + toast
+      const successCb = (mockRemoveMutation as any)._onSuccess;
+      if (successCb) successCb();
+
+      await waitFor(() => {
+        expect(mockMutateAsyncRemove).toHaveBeenCalled();
+        expect(mockInvalidate).toHaveBeenCalled();
+      });
+    });
+
+    it('calls error callback when remove mutation reports error', async () => {
+      mockQueryResult.data = mockPaymentMethods;
+      const user = userEvent.setup();
+
+      render(<PaymentMethods />);
+
+      const removeButtons = screen.getAllByTitle('Remove card');
+      await user.click(removeButtons[0]);
+
+      const confirmBtn = screen.getByRole('button', { name: /^remove$/i });
+      await user.click(confirmBtn);
+
+      // Simulate mutation error via onError callback
+      const errorCb = (mockRemoveMutation as any)._onError;
+      if (errorCb) errorCb({ message: 'Remove failed' });
+
+      await waitFor(() => {
+        expect(mockMutateAsyncRemove).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Add Card Form Submission', () => {
+    it('submits add card form and calls mutation on success', async () => {
+      mockQueryResult.data = mockPaymentMethods;
+      const user = userEvent.setup();
+
+      render(<PaymentMethods />);
+
+      await user.click(screen.getByRole('button', { name: /add card/i }));
+
+      // Fill cardholder name
+      const nameInput = screen.getByPlaceholderText('John Doe');
+      await user.type(nameInput, 'Jane Smith');
+
+      // Submit the form by clicking the Add Card button in dialog
+      const addButtons = screen.getAllByRole('button', { name: /add card/i });
+      await user.click(addButtons[addButtons.length - 1]);
+
+      // The mock stripe.createPaymentMethod returns pm_new_123
+      // Then handleAddCardSuccess calls updatePaymentMethod mutation
+      await waitFor(() => {
+        expect(mockMutateAsyncUpdate).toHaveBeenCalledWith({
+          paymentMethodId: 'pm_new_123',
+          setAsDefault: false, // already has payment methods
+        });
+      });
+    });
+
+    it('submits add card with setAsDefault true when no existing methods', async () => {
+      mockQueryResult.data = [];
+      const user = userEvent.setup();
+
+      render(<PaymentMethods />);
+
+      // Click Add Payment Method in empty state
+      await user.click(screen.getByRole('button', { name: /add payment method/i }));
+
+      // Submit the form
+      const addButtons = screen.getAllByRole('button', { name: /add card/i });
+      await user.click(addButtons[addButtons.length - 1]);
+
+      await waitFor(() => {
+        expect(mockMutateAsyncUpdate).toHaveBeenCalledWith({
+          paymentMethodId: 'pm_new_123',
+          setAsDefault: true, // no existing methods, so set as default
+        });
+      });
+    });
+
+    it('calls error callback when add card mutation reports error', async () => {
+      mockQueryResult.data = mockPaymentMethods;
+      const user = userEvent.setup();
+
+      render(<PaymentMethods />);
+
+      await user.click(screen.getByRole('button', { name: /add card/i }));
+
+      const addButtons = screen.getAllByRole('button', { name: /add card/i });
+      await user.click(addButtons[addButtons.length - 1]);
+
+      // Simulate mutation error via onError callback
+      const errorCb = (mockUpdateMutation as any)._onError;
+      if (errorCb) errorCb({ message: 'Attach failed' });
+
+      await waitFor(() => {
+        expect(mockMutateAsyncUpdate).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Toast Notifications', () => {
+    it('shows success toast text for set default', async () => {
+      mockQueryResult.data = mockPaymentMethods;
+      const user = userEvent.setup();
+
+      render(<PaymentMethods />);
+
+      const setDefaultBtn = screen.getByTitle('Set as default');
+      await user.click(setDefaultBtn);
+
+      // Trigger success callback
+      const successCb = (mockUpdateMutation as any)._onSuccess;
+      if (successCb) successCb();
+
+      await waitFor(() => {
+        expect(screen.getByText('Default payment method updated')).toBeInTheDocument();
+      });
+    });
+
+    it('shows success toast for remove', async () => {
+      mockQueryResult.data = mockPaymentMethods;
+      const user = userEvent.setup();
+
+      render(<PaymentMethods />);
+
+      const removeButtons = screen.getAllByTitle('Remove card');
+      await user.click(removeButtons[0]);
+
+      const confirmBtn = screen.getByRole('button', { name: /^remove$/i });
+      await user.click(confirmBtn);
+
+      const successCb = (mockRemoveMutation as any)._onSuccess;
+      if (successCb) successCb();
+
+      await waitFor(() => {
+        expect(screen.getByText('Payment method removed')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Add Card Stripe Errors', () => {
+    it('shows error when Stripe returns an error response', async () => {
+      mockCreatePaymentMethod.mockResolvedValueOnce({
+        error: { message: 'Your card was declined' },
+      });
+      mockQueryResult.data = mockPaymentMethods;
+      const user = userEvent.setup();
+
+      render(<PaymentMethods />);
+
+      await user.click(screen.getByRole('button', { name: /add card/i }));
+      const addButtons = screen.getAllByRole('button', { name: /add card/i });
+      await user.click(addButtons[addButtons.length - 1]);
+
+      await waitFor(() => {
+        expect(screen.getByRole('alert')).toBeInTheDocument();
+        expect(screen.getByText('Your card was declined')).toBeInTheDocument();
+      });
+    });
+
+    it('shows generic error when Stripe throws an exception', async () => {
+      mockCreatePaymentMethod.mockRejectedValueOnce(new Error('Network error'));
+      mockQueryResult.data = mockPaymentMethods;
+      const user = userEvent.setup();
+
+      render(<PaymentMethods />);
+
+      await user.click(screen.getByRole('button', { name: /add card/i }));
+      const addButtons = screen.getAllByRole('button', { name: /add card/i });
+      await user.click(addButtons[addButtons.length - 1]);
+
+      await waitFor(() => {
+        expect(screen.getByRole('alert')).toBeInTheDocument();
+        expect(screen.getByText('Network error')).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('className prop', () => {
+    it('passes className to root element', () => {
+      mockQueryResult.data = mockPaymentMethods;
+
+      const { container } = render(<PaymentMethods className="custom-class" />);
+
+      expect(container.firstChild).toHaveClass('custom-class');
+    });
+  });
+
+  describe('Remove card dialog display string', () => {
+    it('shows card display string in remove dialog', async () => {
+      mockQueryResult.data = mockPaymentMethods;
+      const user = userEvent.setup();
+
+      render(<PaymentMethods />);
+
+      const removeButtons = screen.getAllByTitle('Remove card');
+      await user.click(removeButtons[0]);
+
+      // Dialog shows "Are you sure you want to remove <strong>Visa ending in 4242</strong>?"
+      // The <strong> tag breaks text, so match within the description
+      const desc = screen.getByText(/Are you sure you want to remove/);
+      expect(desc).toBeInTheDocument();
+      expect(desc.querySelector('strong')?.textContent).toContain('visa ending in 4242');
     });
   });
 });

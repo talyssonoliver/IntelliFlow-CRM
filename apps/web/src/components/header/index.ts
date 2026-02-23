@@ -1,5 +1,4 @@
 // Main header components
-export { AppHeader } from './AppHeader';
 export { PublicHeader } from './PublicHeader';
 
 // Sub-components

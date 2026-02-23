@@ -42,6 +42,18 @@ export const billingSidebarConfig: SidebarConfig = {
           icon: 'insights',
           href: '/billing/usage',
         },
+        {
+          id: 'subscriptions',
+          label: 'Subscriptions',
+          icon: 'autorenew',
+          href: '/billing/subscriptions',
+        },
+        {
+          id: 'receipts',
+          label: 'Receipts',
+          icon: 'receipt',
+          href: '/billing/receipts',
+        },
       ],
     },
     {

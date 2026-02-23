@@ -11,6 +11,8 @@ import { cn } from '@intelliflow/ui';
 export interface FilterOption {
   value: string;
   label: string;
+  /** Optional group name — options with the same group render inside an <optgroup> */
+  group?: string;
 }
 
 export interface FilterDropdownConfig {
@@ -235,11 +237,7 @@ function FilterDropdown({
           )}
         >
           <option value="">{label}</option>
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
+          <FilterOptions options={options} />
         </select>
         <span
           className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-lg pointer-events-none transition-colors group-hover:text-slate-600 dark:group-hover:text-slate-300"
@@ -249,6 +247,56 @@ function FilterDropdown({
         </span>
       </div>
     </div>
+  );
+}
+
+// =============================================================================
+// Filter Options (flat or grouped via <optgroup>)
+// =============================================================================
+
+function FilterOptions({ options }: Readonly<{ options: FilterOption[] }>) {
+  const hasGroups = options.some((o) => o.group);
+  if (!hasGroups) {
+    return options.map((option) => (
+      <option key={option.value} value={option.value}>
+        {option.label}
+      </option>
+    ));
+  }
+
+  // Group options by their group field, preserving order
+  const groups: { name: string; items: FilterOption[] }[] = [];
+  const ungrouped: FilterOption[] = [];
+  for (const option of options) {
+    if (!option.group) {
+      ungrouped.push(option);
+      continue;
+    }
+    const existing = groups.find((g) => g.name === option.group);
+    if (existing) {
+      existing.items.push(option);
+    } else {
+      groups.push({ name: option.group, items: [option] });
+    }
+  }
+
+  return (
+    <>
+      {ungrouped.map((option) => (
+        <option key={option.value} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+      {groups.map((group) => (
+        <optgroup key={group.name} label={group.name}>
+          {group.items.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </optgroup>
+      ))}
+    </>
   );
 }
 

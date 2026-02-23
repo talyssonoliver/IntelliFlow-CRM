@@ -66,10 +66,23 @@ export const settingsSidebarConfig: SidebarConfig = {
       title: 'More',
       items: [
         {
+          id: 'billing',
+          label: 'Billing',
+          icon: 'credit_card',
+          href: '/billing',
+        },
+        {
           id: 'governance',
           label: 'Governance',
           icon: MODULE_ICONS.governance,
           href: '/governance',
+        },
+        {
+          id: 'developer-docs',
+          label: 'Developer Docs',
+          icon: 'code',
+          href: '/docs',
+          roles: ['SUPER_ADMIN'],
         },
       ],
     },

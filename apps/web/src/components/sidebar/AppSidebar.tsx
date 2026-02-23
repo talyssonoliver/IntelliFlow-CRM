@@ -13,6 +13,7 @@ import type {
   SidebarAnnouncement,
 } from './sidebar-types';
 import { MODULE_COLORS } from './icon-reference';
+import { useAuth } from '@/lib/auth';
 
 type ModuleId = keyof typeof MODULE_COLORS;
 
@@ -45,6 +46,19 @@ export function AppSidebar({
   const { isExpanded, isPinned, togglePinned, setHovered } = useSidebar();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
+
+  // Filter out items that require specific roles the current user doesn't have
+  const filteredSections = React.useMemo(() => {
+    return config.sections
+      .map((section) => ({
+        ...section,
+        items: section.items.filter(
+          (item) => !item.roles || item.roles.length === 0 || (user?.role && item.roles.includes(user.role))
+        ),
+      }))
+      .filter((section) => section.items.length > 0);
+  }, [config.sections, user?.role]);
 
   // Get module-specific color theme (only for icon colors)
   const moduleColor = React.useMemo(() => {
@@ -140,7 +154,7 @@ export function AppSidebar({
       {/* Navigation Sections */}
       <div className="flex-1 overflow-y-auto py-4 px-2">
         <div className="flex flex-col gap-1">
-          {config.sections.map((section, index) => (
+          {filteredSections.map((section, index) => (
             <React.Fragment key={section.id}>
               {/* Section separator (except for first section) */}
               {index > 0 && (
@@ -443,6 +457,7 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
   const { isMobileOpen, closeMobile } = useSidebar();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
   const [mounted, setMounted] = React.useState(false);
 
   // Track pathname to close sidebar on navigation
@@ -458,6 +473,18 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Filter items by role for mobile sidebar
+  const filteredSections = React.useMemo(() => {
+    return config.sections
+      .map((section) => ({
+        ...section,
+        items: section.items.filter(
+          (item) => !item.roles || item.roles.length === 0 || (user?.role && item.roles.includes(user.role))
+        ),
+      }))
+      .filter((section) => section.items.length > 0);
+  }, [config.sections, user?.role]);
 
   // Get module-specific color theme
   const moduleColor = React.useMemo(() => {
@@ -560,7 +587,7 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto py-4 px-3">
           <div className="flex flex-col gap-1">
-            {config.sections.map((section, index) => (
+            {filteredSections.map((section, index) => (
               <React.Fragment key={section.id}>
                 {index > 0 && <div className="my-3 mx-3 border-t border-border" />}
                 <div>

@@ -21,6 +21,7 @@ export const casesSidebarConfig: SidebarConfig = {
           href: '/cases?view=overdue',
         },
         { id: 'open', label: 'Open Cases', icon: 'folder_open', href: '/cases?status=OPEN' },
+        { id: 'timeline', label: 'Timeline', icon: 'timeline', href: '/cases/timeline' },
       ],
     },
     {

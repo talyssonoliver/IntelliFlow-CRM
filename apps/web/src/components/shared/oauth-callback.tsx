@@ -27,13 +27,9 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card } from '@intelliflow/ui';
 import { cn } from '@intelliflow/ui';
-import { trpc } from '@/lib/trpc';
+import { getSupabaseBrowserClient, clearSupabaseLocalStorage } from '@/lib/supabase-browser';
 import { storeSessionFingerprint } from '@/lib/shared/login-security';
-import {
-  extractOAuthParams,
-  validateOAuthParams,
-  storeSessionTokens,
-} from '@/lib/shared/token-exchange';
+import { storeSessionTokens } from '@/lib/shared/token-exchange';
 
 // ============================================
 // Types
@@ -78,10 +74,13 @@ export function OAuthCallback({
   const hasCalledRef = useRef(false);
   const backToLoginRef = useRef<HTMLButtonElement>(null);
 
-  // tRPC mutation for OAuth callback
-  const oauthCallback = trpc.auth.oauthCallback.useMutation();
-
-  // Handle the OAuth callback flow
+  // Handle the OAuth callback flow.
+  //
+  // With detectSessionInUrl: true, the Supabase SDK's _initialize() method
+  // detects the ?code= parameter, reads the PKCE code_verifier from
+  // PkceAwareStorage (localStorage), and exchanges the code for a session
+  // automatically. We just need to wait for initialization to finish, then
+  // read the session via getSession().
   const handleCallback = useCallback(async () => {
     try {
       // Bookmarked URL detection: no params at all → redirect to login
@@ -95,6 +94,15 @@ export function OAuthCallback({
         return;
       }
 
+      // Provider-side error (e.g. user denied consent)
+      if (hasError) {
+        const desc = searchParams.get('error_description') || hasError;
+        setStatus('error');
+        setErrorMessage(desc);
+        onError?.(desc);
+        return;
+      }
+
       // Verify session nonce (soft check — mobile app switches may lose sessionStorage)
       const nonce = sessionStorage.getItem('intelliflow_oauth_nonce');
       if (!nonce) {
@@ -102,79 +110,68 @@ export function OAuthCallback({
       }
       sessionStorage.removeItem('intelliflow_oauth_nonce');
 
-      // Extract OAuth parameters from URL
-      const params = extractOAuthParams(searchParams);
-
-      // Validate parameters
-      const validation = validateOAuthParams(params);
-
-      if (!validation.ok) {
-        setStatus('error');
-        setErrorMessage(validation.error.message);
-        onError?.(validation.error.message);
-        return;
-      }
-
       // Update status to exchanging
       setStatus('exchanging');
 
-      // Build mutation input
-      const mutationInput: {
-        code: string;
-        state?: string;
-        provider?: 'google' | 'azure';
-      } = {
-        code: validation.value.code,
-      };
-
-      if (validation.value.state) {
-        mutationInput.state = validation.value.state;
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) {
+        throw new Error('Failed to initialize authentication client');
       }
 
-      if (validation.value.provider) {
-        mutationInput.provider = validation.value.provider;
-      }
-
-      // Exchange code for session with 4-second timeout (NF-005)
+      // getSession() awaits initializePromise internally, so by the time it
+      // returns the SDK has already performed the PKCE code exchange (if the
+      // code_verifier was found in PkceAwareStorage / localStorage).
+      // 10-second timeout to handle network issues.
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('TIMEOUT')), 4000);
+        setTimeout(() => reject(new Error('TIMEOUT')), 10_000);
       });
 
-      const result = await Promise.race([
-        oauthCallback.mutateAsync(mutationInput),
-        timeoutPromise,
-      ]);
+      const sessionPromise = supabase.auth.getSession();
+      const { data, error: sessionError } = await Promise.race([sessionPromise, timeoutPromise]);
 
-      if (result.success && result.session) {
-        setStatus('success');
-
-        // Store access token
-        if (result.session.accessToken) {
-          storeSessionTokens(result.session.accessToken, result.session.refreshToken);
-        }
-
-        // Store device fingerprint for session verification
-        storeSessionFingerprint();
-
-        // Set OAuth login success flag for AuthContext grace window
-        sessionStorage.setItem('oauth_login_success', 'true');
-
-        // Call success callback or redirect
-        if (onSuccess && result.user) {
-          onSuccess(result.user, result.session);
-          return;
-        }
-
-        // Redirect to dashboard after brief success state (300ms per NF-004)
-        setTimeout(() => {
-          router.push(redirectUrl);
-        }, 300);
-      } else {
-        setStatus('error');
-        const errorMsg = 'Authentication failed. Please try again.';
-        setErrorMessage(errorMsg);
-        onError?.(errorMsg);
+      if (sessionError) {
+        throw new Error(sessionError.message);
       }
+
+      if (!data.session) {
+        throw new Error(
+          'Authentication session could not be established. ' +
+          'Please try signing in again from the login page.'
+        );
+      }
+
+      const { session } = data;
+      const { data: userData } = await supabase.auth.getUser(session.access_token);
+      const user = userData?.user;
+
+      setStatus('success');
+
+      // Store tokens for API calls (our custom token management)
+      storeSessionTokens(session.access_token, session.refresh_token);
+
+      // Store device fingerprint for session verification
+      storeSessionFingerprint();
+
+      // Set OAuth login success flag for AuthContext grace window
+      sessionStorage.setItem('oauth_login_success', 'true');
+
+      // Clean up Supabase localStorage keys so the SDK doesn't auto-recover
+      // a stale session on subsequent page loads (we manage tokens ourselves).
+      clearSupabaseLocalStorage();
+
+      // Call success callback or redirect
+      if (onSuccess) {
+        onSuccess(
+          { id: user?.id ?? '', email: user?.email },
+          { accessToken: session.access_token }
+        );
+        return;
+      }
+
+      // Redirect to dashboard after brief success state (300ms per NF-004)
+      setTimeout(() => {
+        router.push(redirectUrl);
+      }, 300);
     } catch (err) {
       setStatus('error');
       const errorMsg = err instanceof Error
@@ -185,7 +182,7 @@ export function OAuthCallback({
       setErrorMessage(errorMsg);
       onError?.(errorMsg);
     }
-  }, [searchParams, oauthCallback, router, redirectUrl, onSuccess, onError]);
+  }, [searchParams, router, redirectUrl, onSuccess, onError]);
 
   // Run callback on mount — hasCalledRef prevents double-execution in StrictMode
   // (PKCE authorization codes are single-use)

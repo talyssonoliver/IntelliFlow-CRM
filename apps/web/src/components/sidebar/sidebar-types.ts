@@ -13,6 +13,8 @@ export interface SidebarItem {
   color?: string;
   /** Badge count to display */
   badge?: number;
+  /** Required roles to see this item (empty = visible to all) */
+  roles?: string[];
 }
 
 export interface SidebarSection {

@@ -40,6 +40,7 @@ export {
   tasksSidebarConfig,
   casesSidebarConfig,
   appointmentsSidebarConfig,
+  emailSidebarConfig,
 } from './configs';
 
 // Icon reference and module colors

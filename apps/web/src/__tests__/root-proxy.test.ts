@@ -147,7 +147,6 @@ describe('root proxy.ts', () => {
       '/deals',
       '/documents',
       '/email',
-      '/appointments',
       '/profile',
       '/tickets',
     ];
@@ -217,6 +216,32 @@ describe('root proxy.ts', () => {
     it('has matcher', () => {
       expect(proxyConfig.matcher).toBeDefined();
       expect(proxyConfig.matcher[0]).toContain('api');
+    });
+  });
+
+  describe('appointments to calendar redirects', () => {
+    // TC-11: /appointments redirects to /calendar (permanent)
+    it('redirects /appointments to /calendar with permanent flag', async () => {
+      const nextConfig = require('../../next.config.js');
+      const redirects = await nextConfig.redirects();
+      const rule = redirects.find(
+        (r: { source: string }) => r.source === '/appointments'
+      );
+      expect(rule).toBeDefined();
+      expect(rule.destination).toBe('/calendar');
+      expect(rule.permanent).toBe(true);
+    });
+
+    // TC-12: /appointments/:path* redirects to /calendar/:path* (permanent)
+    it('redirects /appointments/:path* to /calendar/:path* with permanent flag', async () => {
+      const nextConfig = require('../../next.config.js');
+      const redirects = await nextConfig.redirects();
+      const rule = redirects.find(
+        (r: { source: string }) => r.source === '/appointments/:path*'
+      );
+      expect(rule).toBeDefined();
+      expect(rule.destination).toBe('/calendar/:path*');
+      expect(rule.permanent).toBe(true);
     });
   });
 });

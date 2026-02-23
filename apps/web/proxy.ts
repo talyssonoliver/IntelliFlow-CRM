@@ -39,7 +39,6 @@ const protectedPatterns = [
   '/deals',
   '/documents',
   '/email',
-  '/appointments',
   '/profile',
   '/tickets',
 ];

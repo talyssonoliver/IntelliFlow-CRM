@@ -107,6 +107,16 @@ const nextConfig = {
         destination: '/',
         permanent: true,
       },
+      {
+        source: '/appointments',
+        destination: '/calendar',
+        permanent: true,
+      },
+      {
+        source: '/appointments/:path*',
+        destination: '/calendar/:path*',
+        permanent: true,
+      },
     ];
   },
 
