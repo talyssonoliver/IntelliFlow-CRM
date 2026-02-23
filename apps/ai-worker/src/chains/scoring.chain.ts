@@ -82,11 +82,21 @@ export class LeadScoringChain {
       // Ollama local development support (IFC-085)
       // Uses @langchain/ollama for local LLM inference
       // Benefits: 90% cost reduction, no rate limits, offline dev, data privacy
+      // IFC-174: Forward timeout via custom fetch with AbortSignal
+      // ChatOllama doesn't accept a timeout param directly — use fetch wrapper
+      const ollamaTimeout = aiConfig.ollama.timeout;
       this.model = new ChatOllama({
         baseUrl: aiConfig.ollama.baseUrl,
         model: aiConfig.ollama.model,
         temperature: aiConfig.ollama.temperature,
-        // Note: Ollama is free, so no cost tracking needed
+        numCtx: 4096,
+        format: 'json',
+        fetch: (url: string | URL | Request, init?: RequestInit) => {
+          return globalThis.fetch(url, {
+            ...init,
+            signal: init?.signal ?? AbortSignal.timeout(ollamaTimeout),
+          });
+        },
       });
 
       logger.info(

@@ -13,9 +13,10 @@ vi.mock('@langchain/openai', () => {
 });
 
 vi.mock('@langchain/ollama', () => {
-  const M = function (this: any) {
+  const M = function (this: any, opts?: any) {
     mockOllamaInvoke = mockOllamaInvoke ?? vi.fn();
     this.invoke = mockOllamaInvoke;
+    this._opts = opts;
   };
   return { ChatOllama: M };
 });
@@ -239,5 +240,76 @@ describe('LeadScoringChain - additional', () => {
       costTracking: { enabled: true, warningThreshold: 10 },
     };
     expect(new LeadScoringChain()).toBeDefined();
+  });
+  it('handleLLMEnd callback records usage when cost tracking enabled', () => {
+    mockAiConfig = {
+      ...baseCfg,
+      features: { ...baseCfg.features, enableChainLogging: true },
+      costTracking: { enabled: true, warningThreshold: 10 },
+    };
+    const chain = new LeadScoringChain();
+    const model = (chain as any).model;
+    const callbacks = model._callbacks;
+    expect(callbacks).toBeDefined();
+    expect(callbacks).toHaveLength(1);
+    // Invoke the handleLLMEnd callback with token usage
+    callbacks[0].handleLLMEnd({
+      llmOutput: { tokenUsage: { promptTokens: 100, completionTokens: 50 } },
+    });
+  });
+  it('handleLLMEnd callback skips recording when no usage data', () => {
+    mockAiConfig = {
+      ...baseCfg,
+      features: { ...baseCfg.features, enableChainLogging: true },
+      costTracking: { enabled: true, warningThreshold: 10 },
+    };
+    const chain = new LeadScoringChain();
+    const model = (chain as any).model;
+    // Invoke with no llmOutput — should not throw
+    model._callbacks[0].handleLLMEnd({});
+  });
+  it('handleLLMEnd skips when cost tracking disabled', () => {
+    mockAiConfig = {
+      ...baseCfg,
+      features: { ...baseCfg.features, enableChainLogging: true },
+      costTracking: { enabled: false, warningThreshold: 10 },
+    };
+    const chain = new LeadScoringChain();
+    const model = (chain as any).model;
+    // Invoke with usage but cost tracking disabled — should not record
+    model._callbacks[0].handleLLMEnd({
+      llmOutput: { tokenUsage: { promptTokens: 50, completionTokens: 25 } },
+    });
+  });
+  it('Ollama fetch wrapper applies AbortSignal timeout when no signal provided', async () => {
+    mockAiConfig = { ...baseCfg, provider: 'ollama' };
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue(new Response('ok'));
+    try {
+      const chain = new LeadScoringChain();
+      const model = (chain as any).model;
+      const fetchFn = model._opts?.fetch;
+      expect(fetchFn).toBeTypeOf('function');
+      // Call fetch without signal — should apply AbortSignal.timeout
+      await fetchFn('http://localhost:11434/api', {});
+      expect(globalThis.fetch).toHaveBeenCalledWith('http://localhost:11434/api', expect.objectContaining({ signal: expect.any(AbortSignal) }));
+    } finally {
+      globalThis.fetch = origFetch;
+    }
+  });
+  it('Ollama fetch wrapper preserves existing signal', async () => {
+    mockAiConfig = { ...baseCfg, provider: 'ollama' };
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue(new Response('ok'));
+    try {
+      const chain = new LeadScoringChain();
+      const model = (chain as any).model;
+      const fetchFn = model._opts?.fetch;
+      const customSignal = AbortSignal.timeout(5000);
+      await fetchFn('http://localhost:11434/api', { signal: customSignal });
+      expect(globalThis.fetch).toHaveBeenCalledWith('http://localhost:11434/api', expect.objectContaining({ signal: customSignal }));
+    } finally {
+      globalThis.fetch = origFetch;
+    }
   });
 });

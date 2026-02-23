@@ -111,6 +111,32 @@ describe('Statistical Analysis Utilities', () => {
       expect(result.pValue).toBe(1);
       expect(result.isSignificant).toBe(false);
     });
+
+    it('should handle nearly identical groups with small t-value', () => {
+      // Small t-value relative to df exercises the incompleteBeta else branch
+      const control = [50, 51, 49, 50, 51, 49, 50, 51];
+      const treatment = [50.5, 51.5, 49.5, 50.5, 51.5, 49.5, 50.5, 51.5];
+
+      const result = welchTTest(control, treatment, 0.05);
+
+      expect(result.pValue).toBeGreaterThan(0.05);
+      expect(result.isSignificant).toBe(false);
+    });
+  });
+
+  describe('welchTTest with large df (>100)', () => {
+    it('should use normal approximation for large degrees of freedom', () => {
+      // Generate two large groups to push df > 100, exercising the df > 100 branch
+      // Use small mean difference so p-value is not essentially zero
+      const control = Array.from({ length: 60 }, (_, i) => 50 + (i % 10));
+      const treatment = Array.from({ length: 60 }, (_, i) => 51 + (i % 10));
+
+      const result = welchTTest(control, treatment, 0.05);
+
+      expect(result.pValue).toBeGreaterThanOrEqual(0);
+      expect(result.pValue).toBeLessThan(1);
+      expect(result.tStatistic).toBeDefined();
+    });
   });
 
   describe('welchTTestFromStats', () => {
@@ -303,6 +329,12 @@ describe('Statistical Analysis Utilities', () => {
       const n = requiredSampleSize(0.5, 0.8, 0.05);
       expect(n).toBeGreaterThan(50);
       expect(n).toBeLessThan(100);
+    });
+
+    it('should handle very low power (hits low-tail quantile branch)', () => {
+      // power=0.01 triggers normalDistributionQuantile(0.01) which is < pLow=0.02425
+      const n = requiredSampleSize(0.5, 0.01, 0.05);
+      expect(n).toBeGreaterThan(0);
     });
   });
 

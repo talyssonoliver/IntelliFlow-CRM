@@ -6,9 +6,10 @@
   "created_at": "2025-12-22T20:45:00Z",
   "task_reference": "IFC-085",
   "summary": {
-    "total_savings_percentage": 90,
+    "total_savings_percentage": 100,
     "annual_savings_estimate_usd": 270,
-    "accuracy_trade_off": "15-17% lower than GPT-4, acceptable for dev/test"
+    "accuracy_trade_off": "Measured avg score 62.87/100, differentiation 51.8pts (high=86.9, low=35.1). Acceptable for dev/test.",
+    "benchmark_source": "IFC-174 real benchmark, 2026-02-22T22:52:49.557Z, 30 operations, 0 errors"
   },
   "monthly_usage_assumptions": {
     "development_tokens_input": 400000,

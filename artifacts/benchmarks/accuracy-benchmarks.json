@@ -1,78 +1,66 @@
 {
   "$schema": "../schemas/benchmark.schema.json",
-  "benchmark_id": "IFC-085-accuracy-benchmark",
+  "benchmark_id": "IFC-174-ollama-benchmark",
   "title": "AI Model Accuracy Benchmarks for Lead Scoring",
-  "description": "Ollama provider integration completed. Unit tests passing with mocked responses.",
-  "timestamp": "2026-01-26T23:16:00.000Z",
-  "status": "COMPLETED",
-  "reason": "Ollama provider implemented in scoring.chain.ts with @langchain/ollama package. Full integration verified through unit tests.",
-  "task_context": {
-    "original_task": "IFC-085",
-    "original_task_status": "COMPLETED - Ollama provider implemented and tested",
-    "implementation_summary": {
-      "files_modified": [
-        "apps/ai-worker/src/chains/scoring.chain.ts",
-        "apps/ai-worker/package.json"
-      ],
-      "files_created": [
-        "apps/ai-worker/src/chains/ollama-scoring.chain.test.ts"
-      ],
-      "dependencies_added": [
-        "@langchain/ollama@^1.2.1"
-      ]
-    }
-  },
+  "description": "Real benchmark results from actual Ollama inference operations (IFC-174)",
+  "timestamp": "2026-02-22T22:52:49.557Z",
   "environment": {
     "node": "v25.2.1",
     "platform": "win32",
-    "openai_configured": false,
-    "ollama_provider": "IMPLEMENTED",
-    "ollama_test_status": "PASSING",
-    "test_count": 8
+    "ollama_version": "0.16.0",
+    "model": "mistral"
   },
-  "implementation_details": {
-    "provider_selection": {
-      "method": "aiConfig.provider environment variable",
-      "openai_branch": "Uses @langchain/openai ChatOpenAI",
-      "ollama_branch": "Uses @langchain/ollama ChatOllama",
-      "configuration": {
-        "baseUrl": "aiConfig.ollama.baseUrl (default: http://localhost:11434)",
-        "model": "aiConfig.ollama.model (default: mistral)",
-        "temperature": "aiConfig.ollama.temperature (default: 0.7)"
-      }
-    },
-    "cost_savings": {
-      "ollama_cost_per_1k_tokens": 0,
-      "openai_gpt4_cost_per_1k_tokens": 0.03,
-      "estimated_savings_percentage": 90
+  "test_configuration": {
+    "test_leads_count": 6,
+    "iterations_per_lead": 5,
+    "total_operations": 30,
+    "warmup_runs": 1,
+    "lead_categories": {
+      "high": 2,
+      "medium": 2,
+      "low": 2
     }
   },
-  "instructions": [
-    "Ollama provider is now fully integrated in scoring.chain.ts",
-    "To use Ollama for local development:",
-    "1. Start Ollama: docker-compose -f infra/docker/docker-compose.ollama.yml up -d",
-    "2. Pull a model: docker exec intelliflow-ollama ollama pull mistral",
-    "3. Set environment: AI_PROVIDER=ollama in .env.local",
-    "4. Run AI worker: pnpm --filter @intelliflow/ai-worker dev",
-    "",
-    "To run live benchmarks (requires running Ollama or OpenAI API key):",
-    "npx tsx artifacts/benchmarks/run-accuracy-benchmark.ts"
-  ],
   "results": {
     "models": [
       {
-        "model": "ollama:mistral",
-        "status": "INTEGRATION_TESTED",
-        "test_suite": "ollama-scoring.chain.test.ts",
-        "tests_passing": 8,
-        "tests_failing": 0
+        "model_id": "mistral",
+        "provider": "ollama",
+        "accuracy_metrics": {
+          "avg_score": 62.87,
+          "score_std_dev": 22.54,
+          "avg_confidence": 0.829,
+          "high_quality_avg": 86.9,
+          "medium_quality_avg": 66.6,
+          "low_quality_avg": 35.1,
+          "score_differentiation": 51.8,
+          "factor_completeness_pct": 100
+        },
+        "latency_ms": {
+          "avg": 148572.45,
+          "p50": 142808.31,
+          "p95": 219338.91,
+          "p99": 234094.68
+        },
+        "cost_per_1k_leads_usd": 0,
+        "error_rate": 0,
+        "runs": 30
       }
     ]
   },
   "kpi_validation": {
-    "ollama_integration_complete": true,
-    "unit_tests_passing": true,
-    "cost_savings_target_met": true,
-    "accuracy_benchmark_pending": "Requires running Ollama instance for live benchmark"
-  }
+    "latency_p95_under_2s": false,
+    "score_differentiation_adequate": true,
+    "error_rate_under_5pct": true,
+    "factor_completeness_above_80pct": true,
+    "all_targets_met": false
+  },
+  "conclusions": [
+    "Tested ollama/mistral with 30 real scoring operations",
+    "Average latency: 148572ms (p95: 219339ms)",
+    "Score differentiation: 51.8 points between high and low quality leads",
+    "Factor completeness: 100.0%",
+    "Cost per 1K leads: $0.00 (Ollama is free)",
+    "No errors during benchmark"
+  ]
 }
