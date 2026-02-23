@@ -1,6 +1,6 @@
 {
   "status": "running",
-  "startedAt": "2026-02-08T18:21:41.018Z",
+  "startedAt": "2026-02-22T20:23:44.965Z",
   "completedAt": null,
   "currentStep": "Initializing security scan...",
   "progress": {
@@ -10,5 +10,5 @@
     "sast_scan": "pending"
   },
   "errors": [],
-  "scanId": "scan-1770574901018"
+  "scanId": "scan-1771791824965"
 }

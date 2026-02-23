@@ -30,8 +30,7 @@ module.exports = {
         'http://localhost:3000/tickets',                  // Tickets list
         // Communications & scheduling
         'http://localhost:3000/email',                    // Email client
-        'http://localhost:3000/calendar',                 // Calendar
-        'http://localhost:3000/appointments',             // Appointments list
+        'http://localhost:3000/calendar',                 // Calendar / Appointments
         // Legal & documents
         'http://localhost:3000/cases',                    // Cases list
         'http://localhost:3000/documents',                // Documents list

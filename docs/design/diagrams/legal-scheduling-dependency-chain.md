@@ -156,14 +156,15 @@ _IFC-147 creates timeline UI but no formal PG-_ task exists
     │  Case List/Detail       │  │  Appointment UI         │  │  Document Manager       │
     │                         │  │                         │  │                         │
     │  Need:                  │  │  Need:                  │  │  Need:                  │
-    │  - /cases               │  │  - /appointments        │  │  - /documents           │
-    │  - /cases/[id]          │  │  - /calendar            │  │  - /documents/[id]      │
+    │  - /cases               │  │  - /calendar            │  │  - /documents           │
+    │  - /cases/[id]          │  │  - /calendar/[id]       │  │  - /documents/[id]      │
     │  - Case detail view     │  │  - Scheduling UI        │  │  - Document viewer      │
     │  - Party management     │  │  - Conflict display     │  │  - Version history      │
     │  - Deadline tracking    │  │  - Calendar integration │  │  - ACL management       │
     │                         │  │                         │  │                         │
     │  DONE: PG-138 ✅        │  │  DONE: PG-139 ✅        │  │  DONE: PG-140 ✅        │
-    └─────────────────────────┘  └─────────────────────────┘  └─────────────────────────┘
+    └─────────────────────────┘  │  DONE: PG-154 ✅ (cov)  │  └─────────────────────────┘
+                                 └─────────────────────────┘
 
                               ┌─────────────────────────────┐
                               │        IFC-147 ✅           │
@@ -264,7 +265,7 @@ _IFC-147 creates timeline UI but no formal PG-_ task exists
 | Feature         | Backend Complete? | Frontend Task?  | Action Required  |
 | --------------- | ----------------- | --------------- | ---------------- |
 | Case Management | YES               | YES ✅          | PG-138 COMPLETED |
-| Appointments    | YES               | YES ✅          | PG-139 COMPLETED |
+| Appointments    | YES               | YES ✅          | PG-139 COMPLETED, PG-154 COMPLETED |
 | Documents       | YES               | YES ✅          | PG-140 COMPLETED |
 | Timeline        | YES               | YES (IFC-147)\* | None             |
 | Calendar Sync   | YES               | N/A (settings)  | None             |

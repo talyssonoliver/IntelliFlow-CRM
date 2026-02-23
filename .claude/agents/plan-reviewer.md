@@ -26,7 +26,7 @@ Before reviewing, you MUST read:
 3. The **Sprint_plan.csv** row for the task (Artifacts To Track, KPIs,
    Definition of Done)
 
-## Review Checklist (25 Categories)
+## Review Checklist (29 Categories)
 
 ### A. Files Summary Accuracy (CRITICAL — caught in PG-032)
 
@@ -275,6 +275,26 @@ Before reviewing, you MUST read:
 95. If a backend interface change has no corresponding frontend type update → **ERROR**
 96. If the field is intentionally not displayed in the UI, the frontend type SHOULD still
     include it (with a `// not displayed` comment) to maintain type contract parity
+
+### BB. PRD/ADR Existence & Referencing (CRITICAL — systemic gap found in workflow audit)
+
+97. Read the spec's `## Related Documents` section — extract PRD and ADR paths
+98. For EACH PRD path listed (not `N/A`):
+    - Verify the file EXISTS on disk at the declared path
+    - If PRD does not exist → **ERROR** — spec-session should have created it
+    - Verify the plan includes the PRD path in "Files to Modify" (to update its status)
+99. For EACH ADR path listed (not `N/A`):
+    - Verify the file EXISTS on disk at the declared path
+    - If ADR does not exist → **ERROR** — spec-session should have created it
+    - If ADR status is "Proposed", verify plan includes a step to update it to "Accepted"
+100. If the spec has NO `## Related Documents` section at all → **ERROR** — spec is
+     missing mandatory section (spec-session Phase 0.97)
+101. If task is user-facing (PG-* or IFC-* with UI) and PRD is listed as `N/A` without
+     justification → **WARN** — user-facing tasks should have a PRD
+102. If task introduces new technology/pattern and ADR is listed as `N/A` → **WARN** —
+     architectural decisions should be documented
+103. Plan's "Files to Create" or "Files to Modify" must include any PRD/ADR paths that
+     were created or updated during spec-session. Missing from plan file lists → **WARN**
 
 ## Output Format
 

@@ -191,32 +191,59 @@
         {
           "name": "intelliflow.ai.drift",
           "rules": 3,
-          "alerts": ["AIModelDriftDetected", "AIModelDriftHighSeverity", "AIModelDriftScoreCritical"]
+          "alerts": [
+            "AIModelDriftDetected",
+            "AIModelDriftHighSeverity",
+            "AIModelDriftScoreCritical"
+          ]
         },
         {
           "name": "intelliflow.ai.hallucination",
           "rules": 4,
-          "alerts": ["AIHallucinationRateHigh", "AIHallucinationKPIViolation", "AIHallucinationRateCritical", "AIHallucinationByTypeSpike"]
+          "alerts": [
+            "AIHallucinationRateHigh",
+            "AIHallucinationKPIViolation",
+            "AIHallucinationRateCritical",
+            "AIHallucinationByTypeSpike"
+          ]
         },
         {
           "name": "intelliflow.ai.latency",
           "rules": 6,
-          "alerts": ["AILatencyP95Exceeded", "AILatencyP99Exceeded", "AISLOViolation", "AILatencyByModelHigh", "AISuccessRateLow", "AISuccessRateCritical"]
+          "alerts": [
+            "AILatencyP95Exceeded",
+            "AILatencyP99Exceeded",
+            "AISLOViolation",
+            "AILatencyByModelHigh",
+            "AISuccessRateLow",
+            "AISuccessRateCritical"
+          ]
         },
         {
           "name": "intelliflow.ai.roi",
           "rules": 4,
-          "alerts": ["AIROINegative", "AIROIBelowTarget", "AICostSpike", "AICostBudgetWarning"]
+          "alerts": [
+            "AIROINegative",
+            "AIROIBelowTarget",
+            "AICostSpike",
+            "AICostBudgetWarning"
+          ]
         },
         {
           "name": "intelliflow.ai.operations",
           "rules": 2,
-          "alerts": ["AIOperationsLow", "AIValueNotRecorded"]
+          "alerts": [
+            "AIOperationsLow",
+            "AIValueNotRecorded"
+          ]
         },
         {
           "name": "intelliflow.ai.model-health",
           "rules": 2,
-          "alerts": ["AIModelHealthDegraded", "AIModelHealthCritical"]
+          "alerts": [
+            "AIModelHealthDegraded",
+            "AIModelHealthCritical"
+          ]
         }
       ],
       "total_alerts": 21
@@ -231,7 +258,10 @@
     {
       "name": "intelliflow_ai_drift_score",
       "type": "gauge",
-      "labels": ["metric", "severity"],
+      "labels": [
+        "metric",
+        "severity"
+      ],
       "description": "Drift score by model and metric"
     },
     {
@@ -247,7 +277,9 @@
     {
       "name": "intelliflow_ai_hallucination_by_type",
       "type": "counter",
-      "labels": ["type"],
+      "labels": [
+        "type"
+      ],
       "description": "Hallucinations by type"
     },
     {
@@ -268,7 +300,9 @@
     {
       "name": "intelliflow_ai_cost_by_model",
       "type": "gauge",
-      "labels": ["model"],
+      "labels": [
+        "model"
+      ],
       "description": "AI cost by model in USD"
     },
     {
@@ -289,7 +323,9 @@
     {
       "name": "intelliflow_ai_slo_compliant",
       "type": "gauge",
-      "labels": ["slo"],
+      "labels": [
+        "slo"
+      ],
       "description": "SLO compliance status (1=compliant, 0=not)"
     },
     {
@@ -320,5 +356,9 @@
       "latencyMonitor.completeOperation('op-1', { model: 'gpt-4', operationType: 'scoring', success: true });",
       "const result = await withLatencyTracking('op-1', 'gpt-4', 'scoring', async () => await aiCall());"
     ]
+  },
+  "lastRefresh": "2026-02-22T20:23:36.866Z",
+  "drift": {
+    "lastCheck": "2026-02-22T20:23:36.866Z"
   }
 }

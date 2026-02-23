@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-02-22T15:43:26.533Z",
+  "generated_at": "2026-02-23T20:24:03.942Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 270,
-    "completed": 261,
-    "partially_done": 3,
+    "total_specs_analyzed": 279,
+    "completed": 277,
+    "partially_done": 0,
     "spec_only": 2,
-    "uncertain": 4
+    "uncertain": 0
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -14,68 +14,7 @@
     "SPEC_ONLY": "Spec exists but no execution evidence (no attestation, no plan completion, CSV=Backlog)",
     "UNCERTAIN": "Conflicting signals between evidence sources"
   },
-  "issues": [
-    {
-      "task_id": "IFC-025",
-      "severity": "HIGH",
-      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
-      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
-    },
-    {
-      "task_id": "IFC-086",
-      "severity": "MEDIUM",
-      "issue": "Attestation confirms completion but CSV shows only 50% complete. Likely a CSV update lag.",
-      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
-    },
-    {
-      "task_id": "IFC-184",
-      "severity": "MEDIUM",
-      "issue": "Attestation confirms completion but CSV shows only 20% complete. Likely a CSV update lag.",
-      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
-    },
-    {
-      "task_id": "IFC-188",
-      "severity": "MEDIUM",
-      "issue": "Attestation confirms completion but CSV shows only 75% complete. Likely a CSV update lag.",
-      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
-    },
-    {
-      "task_id": "PG-026",
-      "severity": "HIGH",
-      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
-      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
-    },
-    {
-      "task_id": "PG-031-discussion",
-      "severity": "LOW",
-      "issue": "Spec exists in .specify/ but task ID not found in Sprint_plan.csv.",
-      "recommendation": "Verify if task was renamed, merged, or removed from the CSV."
-    },
-    {
-      "task_id": "PG-137",
-      "severity": "MEDIUM",
-      "issue": "Attestation confirms completion but CSV shows only 75% complete. Likely a CSV update lag.",
-      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
-    },
-    {
-      "task_id": "PG-152",
-      "severity": "HIGH",
-      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
-      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
-    },
-    {
-      "task_id": "PG-153",
-      "severity": "HIGH",
-      "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
-      "recommendation": "Investigate attestation evidence. Re-run validation if needed."
-    },
-    {
-      "task_id": "TRACK-003",
-      "severity": "MEDIUM",
-      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
-      "recommendation": "Run /exec TRACK-003 when ready for implementation."
-    }
-  ],
+  "issues": [],
   "tasks": [
     {
       "task_id": "AI-SETUP-001",
@@ -224,6 +163,20 @@
       "acceptance_criteria_count": 0,
       "dependencies": [],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "DOC-002",
+      "title": "Update sitemap.md to reflect actual 101 page.tsx files, add app/sitemap.ts XML generator, app/robots.ts, reconcile against navigation-reachability-audit.md",
+      "sprint": 14,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Specifying",
+      "metric_status": "PLANNED",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "ENG-OPS-001",
@@ -1188,12 +1141,12 @@
       "has_plan": true,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "NOT_FOUND",
+      "metric_status": "Completed",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-022"
       ],
-      "real_status": "UNCERTAIN"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-026",
@@ -3130,6 +3083,23 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-174",
+      "title": "Run REAL Ollama benchmarks - Follow-up to IFC-085",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/IFC-174-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "In Progress",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-085",
+        "IFC-168"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "IFC-176",
       "title": "AI Output Review - Validators Layer (Zod schemas for review inputs/outputs)",
       "sprint": 3,
@@ -3270,7 +3240,7 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Done",
+      "csv_status": "Completed",
       "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
@@ -3366,6 +3336,24 @@
         "IFC-188",
         "IFC-107",
         "IFC-003"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-190",
+      "title": "Analytics tRPC Router - Sales metrics conversion funnels time series exports",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/IFC-190-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ANALYTICS-001",
+        "IFC-003",
+        "IFC-200"
       ],
       "real_status": "COMPLETED"
     },
@@ -3922,7 +3910,7 @@
         "PG-025",
         "IFC-198"
       ],
-      "real_status": "UNCERTAIN"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-027",
@@ -3966,14 +3954,14 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "In Progress",
+      "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-025",
         "IFC-198"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-030",
@@ -4008,20 +3996,6 @@
         "IFC-198"
       ],
       "real_status": "COMPLETED"
-    },
-    {
-      "task_id": "PG-031-discussion",
-      "title": "PG-031-discussion",
-      "sprint": 0,
-      "spec_path": ".specify/sprints/sprint-0/specifications/PG-031-discussion-spec.md",
-      "has_spec": true,
-      "has_plan": false,
-      "has_attestation": false,
-      "csv_status": "NOT_IN_CSV",
-      "metric_status": "NOT_FOUND",
-      "acceptance_criteria_count": 0,
-      "dependencies": [],
-      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "PG-032",
@@ -4101,6 +4075,39 @@
       "dependencies": [
         "IFC-182",
         "IFC-069",
+        "IFC-095"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-130",
+      "title": "Notifications Inbox Page - List mark read real-time updates filters",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/PG-130-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-183"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-131",
+      "title": "Deal Forecast UI Pages - Probability gauge risk factors recommendations history",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/PG-131-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-092",
         "IFC-095"
       ],
       "real_status": "COMPLETED"
@@ -4420,7 +4427,7 @@
         "IFC-148",
         "IFC-197"
       ],
-      "real_status": "UNCERTAIN"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-153",
@@ -4437,7 +4444,23 @@
         "IFC-117",
         "IFC-197"
       ],
-      "real_status": "UNCERTAIN"
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-154",
+      "title": "Fix View Schedule 404 - Welcome Banner links to /calendar which does not exist",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/PG-154-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-129"
+      ],
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-155",
@@ -4449,6 +4472,22 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-129"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-165",
+      "title": "Update PRD checkboxes for home page - mark completed acceptance criteria and annotate deferred items with task references",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/PG-165-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-129"
@@ -4561,31 +4600,82 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Plan Complete",
+      "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "EXP-REPORTS-002",
         "IFC-088"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "TRACK-003",
       "title": "Risk Register UI - View and update risks with mitigation tracking",
       "sprint": 14,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
+      "spec_path": ".specify/sprints/sprint-14/specifications/TRACK-003-spec.md",
+      "has_spec": true,
+      "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Backlog",
+      "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "EXP-REPORTS-003",
         "IFC-118"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "TRACK-004",
+      "title": "AI Metrics UI - Model performance drift detection cost tracking",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/TRACK-004-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-117",
+        "AUTOMATION-002"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "TRACK-005",
+      "title": "Security Dashboard UI - Vulnerability tracking scan results security posture",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/TRACK-005-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "EXC-SEC-001",
+        "IFC-121"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "TRACK-006",
+      "title": "Build Health UI - Validation results build status test results",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/TRACK-006-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "EXP-REPORTS-005",
+        "ENV-005-AI"
+      ],
+      "real_status": "COMPLETED"
     }
   ]
 }

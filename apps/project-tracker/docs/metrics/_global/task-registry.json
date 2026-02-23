@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-22T15:43:25.647Z",
+  "last_updated": "2026-02-23T20:24:02.657Z",
   "total_tasks": 305,
   "sprints": {
     "sprint-0": {
@@ -147,6 +147,7 @@
       "PG-026",
       "PG-027",
       "PG-028",
+      "PG-029",
       "PG-030",
       "PG-031",
       "PG-032",
@@ -233,6 +234,11 @@
       "EXP-REPORTS-004",
       "EXP-REPORTS-005",
       "TRACK-001",
+      "TRACK-002",
+      "TRACK-003",
+      "TRACK-004",
+      "TRACK-005",
+      "TRACK-006",
       "IFC-167",
       "IFC-168",
       "IFC-169",
@@ -240,6 +246,7 @@
       "IFC-171",
       "IFC-172",
       "IFC-173",
+      "IFC-174",
       "PG-128",
       "IFC-176",
       "IFC-177",
@@ -250,6 +257,8 @@
       "IFC-182",
       "IFC-183",
       "PG-129",
+      "PG-130",
+      "PG-131",
       "PG-132",
       "IFC-184",
       "IFC-185",
@@ -257,6 +266,7 @@
       "IFC-187",
       "IFC-188",
       "IFC-189",
+      "IFC-190",
       "PG-133",
       "PG-134",
       "PG-135",
@@ -282,16 +292,19 @@
       "IFC-205",
       "IFC-206",
       "IFC-207",
+      "PG-154",
       "PG-155",
+      "PG-165",
       "PG-171"
     ],
-    "IN_PROGRESS": [
-      "PG-029"
-    ],
+    "IN_PROGRESS": [],
     "VALIDATING": [],
     "BLOCKED": [],
     "PLANNED": [
-      "TRACK-002"
+      "PG-034",
+      "PG-039",
+      "DOC-002",
+      "DOC-007"
     ],
     "BACKLOG": [
       "IFC-030",
@@ -320,12 +333,10 @@
       "IFC-083",
       "IFC-084",
       "IFC-087",
-      "PG-034",
       "PG-035",
       "PG-036",
       "PG-037",
       "PG-038",
-      "PG-039",
       "PG-040",
       "PG-041",
       "PG-042",
@@ -415,18 +426,10 @@
       "IFC-123",
       "PG-126",
       "PG-127",
-      "TRACK-003",
-      "TRACK-004",
-      "TRACK-005",
-      "TRACK-006",
       "IFC-164",
       "IFC-165",
       "IFC-166",
       "IFC-175",
-      "IFC-174",
-      "PG-130",
-      "PG-131",
-      "IFC-190",
       "PG-145",
       "PG-147",
       "IFC-191",
@@ -440,7 +443,6 @@
       "IFC-202",
       "IFC-203",
       "IFC-204",
-      "PG-154",
       "PG-156",
       "PG-157",
       "PG-158",
@@ -450,12 +452,24 @@
       "PG-162",
       "PG-163",
       "PG-164",
-      "PG-165",
       "PG-166",
       "PG-167",
       "PG-168",
       "PG-169",
-      "PG-170"
+      "PG-170",
+      "PG-172",
+      "PG-173",
+      "PG-174",
+      "PG-175",
+      "PG-176",
+      "PG-177",
+      "PG-178",
+      "DOC-003",
+      "DOC-004",
+      "DOC-005",
+      "DOC-006",
+      "DOC-008",
+      "DOC-009"
     ],
     "FAILED": [],
     "NEEDS_HUMAN": [],
@@ -1588,7 +1602,8 @@
       "sprint": 21,
       "dependencies": [
         "IFC-032",
-        "ANALYTICS-001"
+        "ANALYTICS-001",
+        "IFC-190"
       ],
       "artifacts": [
         "ARTIFACT:artifacts/misc/figma-dashboard-designs.url;ARTIFACT:artifacts/misc/kpi-definitions.yaml;ARTIFACT:docs/dashboard/user-feedback-notes.md;ARTIFACT:artifacts/misc/design-tokens.json;EVIDENCE:.specify/sprints/sprint-21/attestations/IFC-037/context_ack.json;ARTIFACT:docs/planning/adr/ADR-016-analytics-integrity.md;ARTIFACT:docs/planning/prd-analytics-reporting.md"
@@ -1596,7 +1611,7 @@
       "kpis": "All stakeholders approve mockups",
       "definition_of_done": "Real-time analytics with shadcn/ui charts; artifacts: figma-dashboard-designs.url, kpi-definitions.yaml, user-feedback-notes.md",
       "validation": "AUDIT:manual-review",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:KPIs defined;POLICY:Tremor UI evaluated;FILE:docs/design/token-mapping.md;FILE:docs/company/brand/visual-identity.md;FILE:artifacts/misc/otel-collector-config.yaml;FILE:docs/analytics/rfm-abc-spec.md"
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;POLICY:KPIs defined;POLICY:Tremor UI evaluated;FILE:docs/design/token-mapping.md;FILE:docs/company/brand/visual-identity.md;FILE:artifacts/misc/otel-collector-config.yaml;FILE:docs/analytics/rfm-abc-spec.md;FILE:apps/api/src/modules/analytics/analytics.router.ts"
     },
     "IFC-038": {
       "section": "Enhancement",
@@ -1606,7 +1621,8 @@
       "sprint": 22,
       "dependencies": [
         "IFC-037",
-        "ANALYTICS-001"
+        "ANALYTICS-001",
+        "IFC-190"
       ],
       "artifacts": [
         "ARTIFACT:artifacts/misc/real-time-test-video.mp4;EVIDENCE:.specify/sprints/sprint-22/attestations/IFC-038/context_ack.json;ARTIFACT:docs/planning/adr/ADR-016-analytics-integrity.md;ARTIFACT:docs/planning/prd-analytics-reporting.md"
@@ -1614,7 +1630,7 @@
       "kpis": "Real-time updates <1s, insights actionable",
       "definition_of_done": "Interactive dashboard with Supabase real-time; artifacts: real-time-test-video.mp4, context_ack.json; targets: <1s; Dashboard must display real database data, not hardcoded chart values",
       "validation": "AUDIT:manual-review;GATE:real-data-check;VALIDATE:pnpm test",
-      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Chart components ready;ENV:data pipeline designed;FILE:docs/operations/engineering-playbook.md;FILE:artifacts/misc/figma-dashboard-designs.url;FILE:docs/analytics/rfm-abc-spec.md"
+      "prerequisites": "FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;ENV:Chart components ready;ENV:data pipeline designed;FILE:docs/operations/engineering-playbook.md;FILE:artifacts/misc/figma-dashboard-designs.url;FILE:docs/analytics/rfm-abc-spec.md;FILE:apps/api/src/modules/analytics/analytics.router.ts"
     },
     "IFC-039": {
       "section": "Enhancement",
@@ -3238,14 +3254,14 @@
       "section": "Billing Pages",
       "description": "Payment Methods",
       "owner": "Platform BE (STOA-Foundation)",
-      "status": "IN_PROGRESS",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [
         "PG-025",
         "IFC-198"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/app/billing/payment-methods/page.tsx;ARTIFACT:apps/web/src/components/billing/payment-methods.tsx;ARTIFACT:apps/web/src/lib/billing/card-manager.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/PG-029/context_ack.json"
+        "ARTIFACT:apps/web/src/app/billing/payment-methods/page.tsx;ARTIFACT:apps/web/src/components/billing/payment-methods.tsx;ARTIFACT:apps/web/src/lib/billing/card-manager.ts;ARTIFACT:apps/web/src/components/billing/__tests__/payment-methods.test.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/payment-methods.supplementary.test.tsx;ARTIFACT:apps/web/src/app/billing/payment-methods/__tests__/page.test.tsx;ARTIFACT:apps/web/src/components/billing/index.ts;ARTIFACT:packages/adapters/src/payments/stripe/types.ts;ARTIFACT:packages/adapters/src/payments/stripe/handlers/customers.ts;ARTIFACT:apps/api/src/modules/billing/billing.router.ts;ARTIFACT:apps/api/src/modules/billing/__tests__/billing.router.test.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/PG-029/context_ack.json"
       ],
       "kpis": "Cards managed, defaults set, updates working",
       "definition_of_done": "Response <200ms, Lighthouse ≥90, cards managed; artifacts: page.tsx, payment-methods.tsx, card-manager.ts",
@@ -3326,7 +3342,7 @@
       "section": "Developer Pages",
       "description": "Webhooks Docs",
       "owner": "DevRel (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 15,
       "dependencies": [
         "PG-032"
@@ -3411,7 +3427,7 @@
       "section": "Developer Pages",
       "description": "Dev Apps",
       "owner": "DevRel (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 15,
       "dependencies": [
         "PG-032"
@@ -6416,7 +6432,7 @@
       "section": "Tracking",
       "description": "Quality Metrics UI - Debt ledger coverage SonarQube with refresh buttons",
       "owner": "QA Lead + Frontend Dev (STOA-Quality)",
-      "status": "PLANNED",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [
         "EXP-REPORTS-002",
@@ -6434,7 +6450,7 @@
       "section": "Tracking",
       "description": "Risk Register UI - View and update risks with mitigation tracking",
       "owner": "PM + Security (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [
         "EXP-REPORTS-003",
@@ -6452,7 +6468,7 @@
       "section": "Tracking",
       "description": "AI Metrics UI - Model performance drift detection cost tracking",
       "owner": "AI Specialist + SRE (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [
         "IFC-117",
@@ -6470,7 +6486,7 @@
       "section": "Tracking",
       "description": "Security Dashboard UI - Vulnerability tracking scan results security posture",
       "owner": "Security Eng (STOA-Security)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [
         "EXC-SEC-001",
@@ -6488,14 +6504,14 @@
       "section": "Tracking",
       "description": "Build Health UI - Validation results build status test results",
       "owner": "DevOps (STOA-Automation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [
         "EXP-REPORTS-005",
         "ENV-005-AI"
       ],
       "artifacts": [
-        "ARTIFACT:apps/project-tracker/components/tracking/BuildHealth.tsx;ARTIFACT:apps/project-tracker/app/api/tracking/build/route.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/TRACK-006/context_ack.json"
+        "ARTIFACT:apps/project-tracker/components/tracking/BuildHealth.tsx;ARTIFACT:apps/project-tracker/app/api/tracking/build/route.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/TRACK-006/attestation.json"
       ],
       "kpis": "100% builds tracked, <30s validation",
       "definition_of_done": "Dashboard shows build success rate, test results, validation status; run-validation button",
@@ -6699,7 +6715,7 @@
       "section": "AI/ML",
       "description": "Run REAL Ollama benchmarks - Follow-up to IFC-085",
       "owner": "AI Specialist (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [
         "IFC-085",
@@ -6894,7 +6910,7 @@
       "section": "Core CRM",
       "description": "Notifications Inbox Page - List mark read real-time updates filters",
       "owner": "Platform FE+BE (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [
         "IFC-183"
@@ -6911,7 +6927,7 @@
       "section": "Core CRM",
       "description": "Deal Forecast UI Pages - Probability gauge risk factors recommendations history",
       "owner": "CRM FE+BE (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [
         "IFC-092",
@@ -7059,7 +7075,7 @@
       "section": "Analytics",
       "description": "Analytics tRPC Router - Sales metrics conversion funnels time series exports",
       "owner": "Backend Dev (STOA-Intelligence)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [
         "ANALYTICS-001",
@@ -7069,7 +7085,7 @@
       "artifacts": [
         "ARTIFACT:apps/api/src/modules/analytics/analytics.router.ts;ARTIFACT:apps/api/src/modules/analytics/__tests__/analytics.router.test.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/IFC-190/context_ack.json"
       ],
-      "kpis": "All endpoints <500ms; data from real queries; test coverage >=90%",
+      "kpis": "All endpoints <500ms; data from real queries; test coverage >=90%; Stmts 100% Branch 100% Funcs 100% Lines 100%",
       "definition_of_done": "analytics.getOverview, analytics.getSalesMetrics, analytics.getLeadMetrics, analytics.getConversionFunnel, analytics.getTimeSeriesData, analytics.exportReport endpoints; verified by: pnpm test; must query real database not mock data",
       "validation": "VALIDATE:pnpm test;GATE:coverage-gte-90;GATE:real-data-check",
       "prerequisites": "FILE:artifacts/misc/analytics/event-schema.json;FILE:apps/api/src/router.ts;FILE:docs/planning/prd-analytics-reporting.md;FILE:docs/planning/adr/ADR-016-analytics-integrity.md"
@@ -7751,13 +7767,13 @@
       "section": "Core CRM",
       "description": "Fix View Schedule 404 - Welcome Banner links to /calendar which does not exist",
       "owner": "CRM FE (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [
         "PG-129"
       ],
       "artifacts": [
-        "ARTIFACT:apps/web/src/components/home/AuthenticatedHomePage.tsx"
+        "ARTIFACT:apps/web/src/app/calendar/(list)/__tests__/page.test.tsx;ARTIFACT:apps/web/src/__tests__/root-proxy.test.ts;EVIDENCE:.specify/sprints/sprint-14/attestations/PG-154/attestation.json"
       ],
       "kpis": "Zero 404 errors from home page links",
       "definition_of_done": "View Schedule button navigates to a valid route; no 404; verified by: navigation test",
@@ -7941,7 +7957,7 @@
       "section": "Core CRM",
       "description": "Update PRD checkboxes for home page - mark completed acceptance criteria and annotate deferred items with task references",
       "owner": "Tech Lead (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "DONE",
       "sprint": 14,
       "dependencies": [
         "PG-129"
@@ -7950,7 +7966,7 @@
         "ARTIFACT:docs/planning/prd-home-page.md"
       ],
       "kpis": "All checkboxes accurately reflect implementation state",
-      "definition_of_done": "All 31 PRD checkboxes reviewed; completed items marked [x]; deferred items annotated with task references (PG-156 to PG-164); PRD reflects implementation state",
+      "definition_of_done": "All 51 PRD checkboxes reviewed; 38 completed items marked [x]; 13 deferred items annotated with task references (PG-156 to PG-164); PRD reflects implementation state",
       "validation": "AUDIT:manual-review",
       "prerequisites": "FILE:docs/planning/prd-home-page.md"
     },
@@ -8056,6 +8072,265 @@
       "definition_of_done": "Response <200ms, Lighthouse >=90, integrations documented; artifacts: page.tsx, integration-list.tsx",
       "validation": "AUDIT:manual-review;GATE:lighthouse-gte-90",
       "prerequisites": "FILE:apps/web/src/app/(developer)/docs/page.tsx;ENV:webhook docs ready"
+    },
+    "PG-172": {
+      "section": "Billing Pages",
+      "description": "Billing Ghost Pages - Usage Plans Upgrade Cancel and Settings",
+      "owner": "Platform BE (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 16,
+      "dependencies": [
+        "PG-025",
+        "PG-030"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/billing/usage/page.tsx;ARTIFACT:apps/web/src/app/billing/plans/page.tsx;ARTIFACT:apps/web/src/app/billing/upgrade/page.tsx;ARTIFACT:apps/web/src/app/billing/cancel/page.tsx;ARTIFACT:apps/web/src/app/billing/settings/page.tsx;ARTIFACT:apps/web/src/components/billing/usage-dashboard.tsx;ARTIFACT:apps/web/src/components/billing/plan-comparison.tsx;ARTIFACT:apps/web/src/components/billing/upgrade-flow.tsx;ARTIFACT:apps/web/src/components/billing/cancel-flow.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/usage-dashboard.test.tsx;ARTIFACT:apps/web/src/components/billing/__tests__/plan-comparison.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-172/context_ack.json"
+      ],
+      "kpis": "All 5 billing ghost routes resolve; usage bars accurate; upgrade shows proration; cancel period-end confirmed; Lighthouse >=90",
+      "definition_of_done": "Pages at /billing/usage (usage metrics vs plan limits with progress bars) /billing/plans (3-tier comparison grid Starter/Professional/Enterprise) /billing/upgrade (proration preview and confirmation) /billing/cancel (retention offer reason selection period-end behaviour) /billing/settings (billing address contact tax fields); all sidebar and billing-portal.tsx in-page links resolve; Lighthouse >=90; tests passing; verified by: pnpm test",
+      "validation": "AUDIT:manual-review;GATE:lighthouse-gte-90;VALIDATE:pnpm test",
+      "prerequisites": "IMPLEMENTS:FLOW-048;FILE:docs/planning/prd-billing-portal.md;FILE:docs/planning/adr/ADR-029-billing-architecture.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;FILE:apps/web/src/components/sidebar/configs/billing.ts;FILE:apps/web/src/components/billing/billing-portal.tsx;FILE:docs/design/navigation-reachability-audit.md;DESIGN:docs/design/mockups/billing-portal.png"
+    },
+    "PG-173": {
+      "section": "Support",
+      "description": "Ticket Configuration Pages - SLA Policies Types and Automations",
+      "owner": "Frontend Dev (STOA-Domain)",
+      "status": "BACKLOG",
+      "sprint": 16,
+      "dependencies": [
+        "PG-137",
+        "IFC-189",
+        "IFC-093"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/tickets/sla-policies/page.tsx;ARTIFACT:apps/web/src/app/tickets/types/page.tsx;ARTIFACT:apps/web/src/app/tickets/automations/page.tsx;ARTIFACT:apps/web/src/components/tickets/SLAPolicyManager.tsx;ARTIFACT:apps/web/src/components/tickets/TicketTypeManager.tsx;ARTIFACT:apps/web/src/components/tickets/AutomationRuleBuilder.tsx;ARTIFACT:apps/web/src/components/tickets/__tests__/SLAPolicyManager.test.tsx;ARTIFACT:apps/web/src/components/tickets/__tests__/TicketTypeManager.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-173/context_ack.json"
+      ],
+      "kpis": "All 3 ticket config routes resolve; SLA rules CRUD working; types editable; automations rule engine renders; Lighthouse >=90",
+      "definition_of_done": "Pages at /tickets/sla-policies (SLA rule list with priority and time targets CRUD) /tickets/types (ticket category list with custom field definitions) /tickets/automations (trigger-condition-action rule builder for auto-assignment and status transitions); sidebar Configuration section links resolve; Lighthouse >=90; verified by: pnpm test",
+      "validation": "AUDIT:manual-review;GATE:lighthouse-gte-90;VALIDATE:pnpm test",
+      "prerequisites": "FILE:apps/web/src/components/sidebar/configs/tickets.ts;FILE:apps/api/src/modules/ticket/ticket.router.ts;FILE:packages/domain/src/crm/ticket/Ticket.ts;FILE:packages/domain/src/support/TicketConstants.ts;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;FILE:docs/design/navigation-reachability-audit.md;DESIGN:docs/design/mockups/tickets-config.png"
+    },
+    "PG-174": {
+      "section": "Notifications",
+      "description": "Notification Configuration Pages - Channels and Quiet Hours",
+      "owner": "Frontend Dev (STOA-Domain)",
+      "status": "BACKLOG",
+      "sprint": 16,
+      "dependencies": [
+        "IFC-157"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/notifications/channels/page.tsx;ARTIFACT:apps/web/src/app/notifications/quiet-hours/page.tsx;ARTIFACT:apps/web/src/components/notifications/ChannelManager.tsx;ARTIFACT:apps/web/src/components/notifications/QuietHoursScheduler.tsx;ARTIFACT:apps/web/src/components/notifications/__tests__/ChannelManager.test.tsx;ARTIFACT:apps/web/src/components/notifications/__tests__/QuietHoursScheduler.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-174/context_ack.json"
+      ],
+      "kpis": "Both notification config routes resolve; channels enable/disable toggles; quiet-hours schedule saves; Lighthouse >=90",
+      "definition_of_done": "Pages at /notifications/channels (delivery channel list with enable/disable toggles and per-channel config for email SMS push webhook) and /notifications/quiet-hours (weekly schedule grid with time-range pickers and day selectors for suppression windows); sidebar Configuration links resolve; Lighthouse >=90; verified by: pnpm test",
+      "validation": "AUDIT:manual-review;GATE:lighthouse-gte-90;VALIDATE:pnpm test",
+      "prerequisites": "FILE:apps/web/src/components/sidebar/configs/notifications.ts;FILE:apps/web/src/app/notifications/settings/page.tsx;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;FILE:docs/design/navigation-reachability-audit.md;DESIGN:docs/design/mockups/notifications-config.png"
+    },
+    "PG-175": {
+      "section": "Core CRM",
+      "description": "Deals Trash Page - Soft-deleted deals list with restore and permanent delete",
+      "owner": "Frontend Dev (STOA-Domain)",
+      "status": "BACKLOG",
+      "sprint": 16,
+      "dependencies": [
+        "PG-135"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/deals/trash/page.tsx;ARTIFACT:apps/web/src/components/deals/TrashList.tsx;ARTIFACT:apps/web/src/components/deals/__tests__/TrashList.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-175/context_ack.json"
+      ],
+      "kpis": "Deals trash page resolves; restore working; permanent delete with confirm dialog; data-table pattern; Lighthouse >=90",
+      "definition_of_done": "Page at /deals/trash showing soft-deleted deals list with deal name value stage-at-deletion date; restore action (reverts deletedAt) and permanent delete with confirmation dialog; follows /deals data-table pattern; sidebar trash link resolves; Lighthouse >=90; verified by: pnpm test",
+      "validation": "AUDIT:manual-review;GATE:lighthouse-gte-90;VALIDATE:pnpm test",
+      "prerequisites": "FILE:apps/web/src/components/sidebar/configs/deals.ts;FILE:apps/api/src/modules/opportunity/opportunity.router.ts;FILE:packages/adapters/src/repositories/PrismaOpportunityRepository.ts;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;FILE:docs/design/navigation-reachability-audit.md;DESIGN:docs/design/mockups/deals-trash.png"
+    },
+    "PG-176": {
+      "section": "Governance",
+      "description": "Governance Quality Report Sub-Pages - Lighthouse Coverage and Performance views",
+      "owner": "Frontend Dev (STOA-Quality)",
+      "status": "BACKLOG",
+      "sprint": 16,
+      "dependencies": [
+        "PG-015"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/governance/quality-reports/lighthouse/page.tsx;ARTIFACT:apps/web/src/app/governance/quality-reports/coverage/page.tsx;ARTIFACT:apps/web/src/app/governance/quality-reports/performance/page.tsx;ARTIFACT:apps/web/src/components/governance/LighthouseReportView.tsx;ARTIFACT:apps/web/src/components/governance/CoverageReportView.tsx;ARTIFACT:apps/web/src/components/governance/PerformanceReportView.tsx;ARTIFACT:apps/web/src/components/governance/__tests__/LighthouseReportView.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-176/context_ack.json"
+      ],
+      "kpis": "All 3 quality report sub-routes resolve; each shows focused report data; back-navigation works; Lighthouse >=90",
+      "definition_of_done": "Pages at /governance/quality-reports/lighthouse (Lighthouse scores by URL with category breakdown and historical trend) /governance/quality-reports/coverage (test coverage by package with statements branches functions lines) /governance/quality-reports/performance (API response time and load test results); each renders focused report type with back-link to quality-reports list; sidebar Quality links resolve; Lighthouse >=90; verified by: pnpm test",
+      "validation": "AUDIT:manual-review;GATE:lighthouse-gte-90;VALIDATE:pnpm test",
+      "prerequisites": "FILE:apps/web/src/components/sidebar/configs/governance.ts;FILE:apps/web/src/app/governance/quality-reports/page.tsx;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;FILE:docs/design/navigation-reachability-audit.md;DESIGN:docs/design/mockups/quality-reports-detail.png"
+    },
+    "PG-177": {
+      "section": "Analytics",
+      "description": "Analytics Saved Report Pages - Weekly Monthly and Quarterly views",
+      "owner": "Frontend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 16,
+      "dependencies": [
+        "IFC-068"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/analytics/saved/weekly/page.tsx;ARTIFACT:apps/web/src/app/analytics/saved/monthly/page.tsx;ARTIFACT:apps/web/src/app/analytics/saved/quarterly/page.tsx;ARTIFACT:apps/web/src/components/analytics/SavedReportView.tsx;ARTIFACT:apps/web/src/components/analytics/__tests__/SavedReportView.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-177/context_ack.json"
+      ],
+      "kpis": "All 3 saved report routes resolve; weekly/monthly/quarterly data renders; period selector works; Lighthouse >=90",
+      "definition_of_done": "Pages at /analytics/saved/weekly (last 7 days metrics: revenue leads tickets closed with trend indicators) /analytics/saved/monthly (last 30 days revenue breakdown by product and region) /analytics/saved/quarterly (Q4 performance summary with YoY comparison); sidebar Saved Reports links resolve; Lighthouse >=90; verified by: pnpm test",
+      "validation": "AUDIT:manual-review;GATE:lighthouse-gte-90;VALIDATE:pnpm test",
+      "prerequisites": "FILE:apps/web/src/components/sidebar/configs/analytics.ts;FILE:apps/web/src/app/analytics/(list)/page.tsx;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;FILE:docs/design/navigation-reachability-audit.md;DESIGN:docs/design/mockups/analytics-saved-reports.png"
+    },
+    "PG-178": {
+      "section": "Settings",
+      "description": "Module Settings Pages - 11 per-module configuration pages at /settings/[module]",
+      "owner": "Frontend Dev (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 16,
+      "dependencies": [
+        "PG-104",
+        "IFC-076"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/web/src/app/settings/leads/page.tsx;ARTIFACT:apps/web/src/app/settings/contacts/page.tsx;ARTIFACT:apps/web/src/app/settings/accounts/page.tsx;ARTIFACT:apps/web/src/app/settings/deals/page.tsx;ARTIFACT:apps/web/src/app/settings/tickets/page.tsx;ARTIFACT:apps/web/src/app/settings/documents/page.tsx;ARTIFACT:apps/web/src/app/settings/reports/page.tsx;ARTIFACT:apps/web/src/app/settings/billing/page.tsx;ARTIFACT:apps/web/src/app/settings/appointments/page.tsx;ARTIFACT:apps/web/src/app/settings/cases/page.tsx;ARTIFACT:apps/web/src/app/settings/tasks/page.tsx;ARTIFACT:apps/web/src/components/settings/ModuleSettingsLayout.tsx;ARTIFACT:apps/web/src/components/settings/__tests__/ModuleSettingsLayout.test.tsx;EVIDENCE:.specify/sprints/sprint-16/attestations/PG-178/context_ack.json"
+      ],
+      "kpis": "All 11 module settings routes resolve; form fields render and save; breadcrumb navigation works; Lighthouse >=90",
+      "definition_of_done": "Pages at /settings/leads (scoring thresholds assignment auto-qual) /settings/contacts (duplicate detection required fields tags) /settings/accounts (hierarchy industry custom fields) /settings/deals (pipeline stages win-loss reasons scoring) /settings/tickets (default SLA auto-close notification triggers) /settings/documents (file types size limits antivirus retention) /settings/reports (default range currency scheduled delivery) /settings/billing (billing address tax ID invoice contact) /settings/appointments (duration buffer calendar integration) /settings/cases (case prefix default priority auto-assign) /settings/tasks (due-date offset reminder templates); all settingsHref and ModulePaywall links resolve; follows settings/account pattern; Lighthouse >=90; verified by: pnpm test",
+      "validation": "AUDIT:manual-review;GATE:lighthouse-gte-90;VALIDATE:pnpm test",
+      "prerequisites": "FILE:apps/web/src/components/sidebar/configs/leads.ts;FILE:apps/web/src/components/sidebar/configs/contacts.ts;FILE:apps/web/src/components/sidebar/configs/accounts.ts;FILE:apps/web/src/components/sidebar/configs/deals.ts;FILE:apps/web/src/components/sidebar/configs/tickets.ts;FILE:apps/web/src/components/sidebar/configs/documents.ts;FILE:apps/web/src/components/sidebar/configs/analytics.ts;FILE:apps/web/src/components/sidebar/configs/appointments.ts;FILE:apps/web/src/components/sidebar/configs/cases.ts;FILE:apps/web/src/components/sidebar/configs/tasks.ts;FILE:apps/web/src/components/ModulePaywall.tsx;FILE:apps/web/src/app/settings/account/page.tsx;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml;FILE:docs/design/navigation-reachability-audit.md;DESIGN:docs/design/mockups/module-settings.png"
+    },
+    "DOC-002": {
+      "section": "Documentation",
+      "description": "Update sitemap.md to reflect actual 101 page.tsx files, add app/sitemap.ts XML generator, app/robots.ts, reconcile against navigation-reachability-audit.md",
+      "owner": "DevRel (STOA-Foundation)",
+      "status": "PLANNED",
+      "sprint": 14,
+      "dependencies": [],
+      "artifacts": [
+        "ARTIFACT:docs/design/sitemap.md;ARTIFACT:apps/web/src/app/sitemap.ts;ARTIFACT:apps/web/src/app/robots.ts"
+      ],
+      "kpis": "Sitemap reflects 101+ actual routes; XML sitemap accessible at /sitemap.xml; robots.txt accessible at /robots.txt",
+      "definition_of_done": "sitemap.md updated to 101+ pages; app/sitemap.ts generates XML sitemap; app/robots.ts exists; route count matches navigation-reachability-audit.md; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test;AUDIT:manual-review",
+      "prerequisites": "FILE:docs/design/sitemap.md;FILE:docs/design/navigation-reachability-audit.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml"
+    },
+    "DOC-003": {
+      "section": "Documentation",
+      "description": "Update PAGE_MAP_AND_FLOWS.md to reflect 101 pages and current flows, verify auth diagrams, update API integration checklist, reconcile with audit",
+      "owner": "DevRel (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 14,
+      "dependencies": [
+        "DOC-002"
+      ],
+      "artifacts": [
+        "ARTIFACT:docs/design/PAGE_MAP_AND_FLOWS.md"
+      ],
+      "kpis": "Page count matches actual routes; all flows documented; integration status accurate",
+      "definition_of_done": "PAGE_MAP_AND_FLOWS.md updated to 101+ pages; flow table current; auth diagrams verified; integration checklist reflects actual state; verified by: manual review",
+      "validation": "AUDIT:manual-review",
+      "prerequisites": "FILE:docs/design/PAGE_MAP_AND_FLOWS.md;FILE:docs/design/navigation-reachability-audit.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml"
+    },
+    "DOC-004": {
+      "section": "Documentation",
+      "description": "Update ui-flow-mapping.md cross-reference matrix to 101 routes, verify API router procedure counts, update implementation and backend integration status",
+      "owner": "DevRel (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 14,
+      "dependencies": [
+        "DOC-002"
+      ],
+      "artifacts": [
+        "ARTIFACT:docs/design/ui-flow-mapping.md"
+      ],
+      "kpis": "Route count matches actual; procedure counts verified; no stale status entries",
+      "definition_of_done": "ui-flow-mapping.md reflects 101+ routes; API router counts verified; implementation status accurate; backend integration status current; verified by: manual review",
+      "validation": "AUDIT:manual-review",
+      "prerequisites": "FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/navigation-reachability-audit.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml"
+    },
+    "DOC-005": {
+      "section": "Documentation",
+      "description": "Complete overhaul of page-registry.md from 8 routes to all 101 routes with task ID, KPI targets, code file path, component breakdown, API router, E2E test path, RACI assignments",
+      "owner": "DevRel (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 14,
+      "dependencies": [
+        "DOC-002"
+      ],
+      "artifacts": [
+        "ARTIFACT:docs/design/page-registry.md"
+      ],
+      "kpis": "All 101 routes registered; 0 stale status entries; KPI targets defined for all pages",
+      "definition_of_done": "page-registry.md covers all 101 routes; status reflects verified state; KPI targets for each page; RACI assignments updated; component breakdowns current; verified by: manual review",
+      "validation": "AUDIT:manual-review",
+      "prerequisites": "FILE:docs/design/page-registry.md;FILE:docs/design/navigation-reachability-audit.md;FILE:docs/design/ui-flow-mapping.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml"
+    },
+    "DOC-006": {
+      "section": "Documentation",
+      "description": "Create unified IA reference combining reachability audit route inventory with flow mapping user journey context, linking routes to flows to components to APIs to nav layers",
+      "owner": "DevRel (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 14,
+      "dependencies": [
+        "DOC-002",
+        "DOC-003",
+        "DOC-004",
+        "DOC-005"
+      ],
+      "artifacts": [
+        "ARTIFACT:docs/design/information-architecture.md"
+      ],
+      "kpis": "Single reference covering 101 routes with journey context; no conflicting data across source docs",
+      "definition_of_done": "Unified IA reference doc created combining route inventory with user journey context; links routes to flows to components to APIs to nav layers; cross-references all 4 source documents; verified by: manual review",
+      "validation": "AUDIT:manual-review",
+      "prerequisites": "FILE:docs/design/navigation-reachability-audit.md;FILE:docs/design/ui-flow-mapping.md;FILE:docs/design/PAGE_MAP_AND_FLOWS.md;FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml"
+    },
+    "DOC-007": {
+      "section": "Documentation",
+      "description": "Conduct full accessibility compliance gap assessment: Lighthouse a11y audit on all 27 URLs, document WCAG 2.1 AA conformance level per route, identify all Level A and AA failures, produce gap report with remediation priorities",
+      "owner": "QA (STOA-Quality)",
+      "status": "PLANNED",
+      "sprint": 14,
+      "dependencies": [],
+      "artifacts": [
+        "ARTIFACT:docs/compliance/accessibility-gap-assessment.md;ARTIFACT:artifacts/reports/accessibility-audit-results.json"
+      ],
+      "kpis": "All 27 URLs audited; all WCAG 2.1 AA failures documented; remediation plan with priorities",
+      "definition_of_done": "Accessibility gap report produced; Lighthouse audit run on all 27 URLs; WCAG failures categorized by level (A/AA) and severity; remediation priority list created; verified by: pnpm run lighthouse",
+      "validation": "VALIDATE:pnpm run lighthouse;AUDIT:manual-review",
+      "prerequisites": "FILE:docs/company/brand/accessibility-patterns.md;FILE:lighthouserc.js;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml"
+    },
+    "DOC-008": {
+      "section": "Documentation",
+      "description": "Create VPAT 2.5 document, WCAG 2.1 AA conformance statement, axe-core/pa11y test suite, enforce accessibility in CI (error not warn), accessibility ADR, screen reader testing plan",
+      "owner": "QA (STOA-Security)",
+      "status": "BACKLOG",
+      "sprint": 14,
+      "dependencies": [
+        "DOC-007"
+      ],
+      "artifacts": [
+        "ARTIFACT:docs/compliance/vpat-2.5.md;ARTIFACT:docs/compliance/wcag-conformance-statement.md;ARTIFACT:tests/a11y/axe-core.spec.ts;ARTIFACT:docs/planning/adr/ADR-031-accessibility-architecture.md"
+      ],
+      "kpis": "VPAT covers all 101 routes; conformance statement at /accessibility; axe-core tests in CI; accessibility blocks deployment on failure",
+      "definition_of_done": "VPAT document created following ITI VPAT 2.5 template; WCAG conformance statement published; axe-core test suite added; lighthouserc.js accessibility as error; ADR for accessibility architecture created; screen reader testing plan documented; verified by: pnpm test",
+      "validation": "VALIDATE:pnpm test;GATE:lighthouse-accessibility-gte-90;AUDIT:manual-review",
+      "prerequisites": "FILE:docs/compliance/accessibility-gap-assessment.md;FILE:docs/company/brand/accessibility-patterns.md;FILE:lighthouserc.js;FILE:docs/planning/adr/template.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml"
+    },
+    "DOC-009": {
+      "section": "Documentation",
+      "description": "Create content audit framework and perform initial audit: quantitative URL inventory (101 routes with HTTP status, response time, title, meta), qualitative content review, SEO audit for public pages, stale content detection",
+      "owner": "DevRel (STOA-Foundation)",
+      "status": "BACKLOG",
+      "sprint": 14,
+      "dependencies": [
+        "DOC-002",
+        "DOC-005"
+      ],
+      "artifacts": [
+        "ARTIFACT:docs/design/content-audit.md;ARTIFACT:artifacts/reports/content-audit-results.json"
+      ],
+      "kpis": "All 101 routes audited; public pages have meta tags and OG tags; stale content identified; placeholder pages flagged",
+      "definition_of_done": "Content audit framework created; initial audit covering all 101 routes; quantitative metrics captured; qualitative review for each page; SEO audit for public pages; stale content identified; verified by: manual review",
+      "validation": "AUDIT:manual-review",
+      "prerequisites": "FILE:docs/design/navigation-reachability-audit.md;FILE:docs/design/page-registry.md;FILE:.specify/memory/Framework.md;FILE:audit-matrix.yml"
     }
   }
 }

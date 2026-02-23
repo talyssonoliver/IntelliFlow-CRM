@@ -134,12 +134,26 @@ All chains now have UI tasks assigned via the unified **AI & Agents** sidebar at
     │  Sprint: 14             │         │  Sprint: 14                 │
     └─────────────────────────┘         └─────────────────────────────┘
 
+    ┌─────────────────────────┐
+    │        IFC-174          │
+    │   Real Ollama Benchmark │
+    │                         │
+    │  - Real measured data   │
+    │  - Replaces simulated   │
+    │  - KPI validation       │
+    │  Deps: IFC-085, IFC-168 │
+    │                         │
+    │  Status: COMPLETED ✅    │
+    │  Sprint: 14             │
+    └─────────────────────────┘
+
     Chain Status: ✅ COMPLETE
     - AI Chain: IFC-005 ✅
     - Router: IFC-013 (lead.router) ✅
     - Frontend: IFC-023 (ScoreCard) ✅
     - Feedback: IFC-024 ✅
     - A/B Testing: IFC-025 ✅
+    - Real Benchmark: IFC-174 (validates IFC-085 accuracy claims) ✅
 ```
 
 ---
