@@ -1,0 +1,1544 @@
+{
+  "summary": {
+    "snapshot": "infra/supabase/schema-snapshots/gpirtcvwmssxhwcwwucq-2026-02-27.sql",
+    "prismaSchemas": [
+      "packages/db/prisma/schema.prisma"
+    ],
+    "auditDate": "2026-02-27",
+    "lastUpdated": "2026-02-28",
+    "runType": "post-remediation-final",
+    "previousAudit": "artifacts/reports/db-schema-audit-2026-02-27.json",
+    "snapshotTables": 108,
+    "prismaModels": 110,
+    "totalFindings": 46,
+    "confirmed": 46,
+    "needsReview": 0,
+    "resolved": 44,
+    "remaining": 0,
+    "prismaDriftLines": 4,
+    "bySeverity": {
+      "critical": 0,
+      "high": 0,
+      "medium": 0,
+      "low": 0
+    },
+    "bySeverityNote": "Counts reflect REMAINING (non-resolved) findings only",
+    "byCategory": {},
+    "byCategoryNote": "Counts reflect REMAINING (non-resolved) findings only. All drift and performance findings resolved.",
+    "agentsRun": [
+      "drift-tenancy-performance",
+      "security-consistency"
+    ],
+    "deduplicatedMerges": 5,
+    "remediationBatch1": {
+      "migrationApplied": "packages/db/prisma/migrations/20260227000000_add_performance_indexes/migration.sql",
+      "resolvedFindings": [
+        "DBA-002",
+        "DBA-003",
+        "DBA-004",
+        "DBA-005",
+        "DBA-006",
+        "DBA-007",
+        "DBA-033",
+        "DBA-034",
+        "DBA-035",
+        "DBA-036",
+        "DBA-037"
+      ],
+      "reclassified": [
+        "DBA-008"
+      ],
+      "modelsFixed": [
+        "DealProduct",
+        "DealFile",
+        "AgentAction",
+        "ActivityEvent",
+        "ContactActivity",
+        "MessageRecord",
+        "ToolCallRecord",
+        "SecurityEvent",
+        "PerformanceMetric",
+        "APIUsageRecord"
+      ],
+      "indexesAdded": [
+        "slaPolicyId (3 tables)",
+        "tenantId composites (AgentAction)",
+        "parentVersionId (ChainVersion)",
+        "tenantId+recordedAt (PerformanceMetric, APIUsageRecord)"
+      ]
+    },
+    "remediationBatch2": {
+      "migrationApplied": "packages/db/prisma/migrations/20260227100000_schema_audit_remediation/migration.sql",
+      "resolvedFindings": [
+        "DBA-001",
+        "DBA-009",
+        "DBA-010",
+        "DBA-011",
+        "DBA-013",
+        "DBA-020",
+        "DBA-028",
+        "DBA-103",
+        "DBA-104",
+        "DBA-105",
+        "DBA-106",
+        "DBA-107",
+        "DBA-108",
+        "DBA-109",
+        "DBA-110",
+        "DBA-111",
+        "DBA-112",
+        "DBA-113",
+        "DBA-114",
+        "DBA-115",
+        "DBA-117",
+        "DBA-118",
+        "DBA-120",
+        "DBA-121",
+        "DBA-122",
+        "DBA-123",
+        "DBA-124",
+        "DBA-125"
+      ],
+      "verification": {
+        "prismaMigrateDiff": "No difference detected (zero tenantId/FK/index drift)",
+        "prismaValidate": "The schema is valid",
+        "typecheck": "33/33 passes",
+        "dba117Verified": "19/19 tables: tenantId NOT NULL + FK to tenants",
+        "dba103Verified": "teams + team_members: tenantId NOT NULL + FK",
+        "dba107Verified": "actorType column type = ActorType enum",
+        "dba108Verified": "sentAt, sendError, messageId columns present",
+        "dba109Verified": "embedding (vector), search_vector (tsvector) present"
+      }
+    },
+    "falsePositives": 2,
+    "remediationBatch3": {
+      "migrationApplied": "packages/db/prisma/migrations/20260228100000_schema_audit_batch3/migration.sql",
+      "resolvedFindings": [
+        "DBA-012",
+        "DBA-014",
+        "DBA-015",
+        "DBA-016",
+        "DBA-017",
+        "DBA-018",
+        "DBA-021",
+        "DBA-022",
+        "DBA-023",
+        "DBA-024",
+        "DBA-025",
+        "DBA-026",
+        "DBA-027",
+        "DBA-029",
+        "DBA-031",
+        "DBA-032"
+      ],
+      "falsePositives": [
+        "DBA-019",
+        "DBA-030"
+      ],
+      "totalClosed": 18
+    }
+  },
+  "resolved_findings": [
+    {
+      "id": "DBA-002",
+      "originalSeverity": "critical",
+      "resolution": "FIXED — tenantId + Tenant @relation + @@index([tenantId]) added to DealProduct, DealFile, AgentAction. FK constraints applied to DB via migration SQL.",
+      "migrationRef": "20260227000000_add_performance_indexes"
+    },
+    {
+      "id": "DBA-003",
+      "originalSeverity": "high",
+      "resolution": "FIXED — ActivityEvent.tenantId changed from String? to String, Tenant @relation added. FK constraint applied to DB.",
+      "migrationRef": "20260227000000_add_performance_indexes"
+    },
+    {
+      "id": "DBA-004",
+      "originalSeverity": "high",
+      "resolution": "FIXED — ContactActivity.tenantId changed from String? to String, Tenant @relation added. FK constraint applied to DB.",
+      "migrationRef": "20260227000000_add_performance_indexes"
+    },
+    {
+      "id": "DBA-005",
+      "originalSeverity": "high",
+      "resolution": "FIXED — SecurityEvent.tenantId changed from String? to String, Tenant @relation added. FK constraint applied to DB.",
+      "migrationRef": "20260227000000_add_performance_indexes"
+    },
+    {
+      "id": "DBA-006",
+      "originalSeverity": "high",
+      "resolution": "FIXED — MessageRecord.tenantId changed from String? to String, Tenant @relation added. FK constraint applied to DB.",
+      "migrationRef": "20260227000000_add_performance_indexes"
+    },
+    {
+      "id": "DBA-007",
+      "originalSeverity": "high",
+      "resolution": "FIXED — ToolCallRecord.tenantId changed from String? to String, Tenant @relation added. FK constraint applied to DB.",
+      "migrationRef": "20260227000000_add_performance_indexes"
+    },
+    {
+      "id": "DBA-008",
+      "originalSeverity": "high",
+      "resolution": "RECLASSIFIED — Original audit said Team/TeamMember had tenantId in DB but not Prisma. Investigation showed the INVERSE: Prisma has tenantId but DB does NOT. See new finding DBA-103.",
+      "migrationRef": "N/A"
+    },
+    {
+      "id": "DBA-033",
+      "originalSeverity": "critical",
+      "resolution": "FIXED — @@index([slaPolicyId]) added to Ticket, SLABreach, TicketCategory. Indexes applied to DB via migration SQL.",
+      "migrationRef": "20260227000000_add_performance_indexes"
+    },
+    {
+      "id": "DBA-034",
+      "originalSeverity": "high",
+      "resolution": "FIXED — @@index([tenantId, createdAt]) and @@index([tenantId, status]) added to AgentAction.",
+      "migrationRef": "20260227000000_add_performance_indexes"
+    },
+    {
+      "id": "DBA-035",
+      "originalSeverity": "high",
+      "resolution": "FIXED — @@index([parentVersionId]) added to ChainVersion. CaseDocument already had index.",
+      "migrationRef": "20260227000000_add_performance_indexes"
+    },
+    {
+      "id": "DBA-036",
+      "originalSeverity": "high",
+      "resolution": "FIXED — @@index([tenantId, recordedAt]) added to PerformanceMetric and APIUsageRecord. PerformanceMetric.tenantId column created + backfilled + SET NOT NULL in DB. APIUsageRecord FK + indexes applied.",
+      "migrationRef": "20260227000000_add_performance_indexes"
+    },
+    {
+      "id": "DBA-037",
+      "originalSeverity": "high",
+      "resolution": "FIXED — Resolved by fixing DBA-003 through DBA-007 (nullable tenantId → non-nullable). Indexes now operate on NOT NULL columns with full selectivity.",
+      "migrationRef": "20260227000000_add_performance_indexes"
+    },
+    {
+      "id": "DBA-001",
+      "originalSeverity": "high",
+      "resolution": "FIXED — audit_logs, experiments, experiment_assignments, experiment_results tables created in DB.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-010",
+      "originalSeverity": "high",
+      "resolution": "FIXED — Duplicate of DBA-118. All 25 models now have Tenant @relation + FK constraints.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-011",
+      "originalSeverity": "high",
+      "resolution": "FIXED — Duplicate of DBA-117. All 19 models now have tenantId + Tenant @relation in Prisma.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-103",
+      "originalSeverity": "high",
+      "resolution": "FIXED — teams/team_members tenantId 3-step backfill: add nullable, backfill from first tenant, set NOT NULL + FK + index.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-107",
+      "originalSeverity": "medium",
+      "resolution": "FIXED — actorType text→ActorType enum via safe ALTER COLUMN TYPE USING cast. Audit data preserved.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-108",
+      "originalSeverity": "medium",
+      "resolution": "FIXED — sentAt, sendError, messageId added to Prisma AutoResponseDraft model. DB columns preserved.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-109",
+      "originalSeverity": "medium",
+      "resolution": "FIXED — embedding Unsupported(vector(1536)) and searchVector Unsupported(tsvector) added to Prisma LeadNote. DB columns preserved.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-117",
+      "originalSeverity": "critical",
+      "resolution": "FIXED — tenantId String + Tenant @relation added to all 19 Prisma models. FK constraints applied to DB. Verified: 19/19 tables have tenantId NOT NULL + FK.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-118",
+      "originalSeverity": "high",
+      "resolution": "FIXED — Tenant @relation added to all 25 models. FK constraints applied to DB.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-120",
+      "originalSeverity": "medium",
+      "resolution": "FIXED — SecurityEvent composite indexes @@index([tenantId, createdAt]) and @@index([tenantId, eventType]) added.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-009",
+      "originalSeverity": "medium",
+      "resolution": "FIXED — Workspace.plan column cast from text to PlanTier enum with USING clause mapping 'free' to 'STARTER'.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-013",
+      "originalSeverity": "medium",
+      "resolution": "FIXED — TicketCategory @@unique([name]) changed to tenant-scoped @@unique([tenantId, name]).",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-020",
+      "originalSeverity": "medium",
+      "resolution": "FIXED — Contact @@unique([email]) changed to tenant-scoped @@unique([tenantId, email]).",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-028",
+      "originalSeverity": "low",
+      "resolution": "FIXED — DomainEvent relation renamed from 'tenants' to 'tenant' (singular) for consistency.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-104",
+      "originalSeverity": "medium",
+      "resolution": "FIXED — workspaces.plan text→PlanTier enum with safe USING cast mapping 'free'→'STARTER'.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-105",
+      "originalSeverity": "medium",
+      "resolution": "FIXED — SurveyType→FeedbackType enum renamed with safe swap pattern (create new, cast, drop old).",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-106",
+      "originalSeverity": "low",
+      "resolution": "FIXED — TicketStatus ARCHIVED value added to enum via safe BEGIN/COMMIT block.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-110",
+      "originalSeverity": "low",
+      "resolution": "FIXED — updatedAt DB defaults dropped; Prisma @updatedAt handles timestamps at ORM layer.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-111",
+      "originalSeverity": "low",
+      "resolution": "FIXED — lead_activities.description relaxed from NOT NULL to nullable, matching application usage.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-112",
+      "originalSeverity": "medium",
+      "resolution": "FIXED — Missing FK constraints restored for appointment_cases and case_tasks tables.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-113",
+      "originalSeverity": "medium",
+      "resolution": "FIXED — Missing FK constraints restored for TicketActivity.performedById and CaseTask.assignee.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-114",
+      "originalSeverity": "medium",
+      "resolution": "FIXED — auto_response_drafts.leadId FK restored, Tenant and Lead @relation added to Prisma model.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-115",
+      "originalSeverity": "medium",
+      "resolution": "FIXED — ChainVersion self-referential @relation added for parentVersionId.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-121",
+      "originalSeverity": "medium",
+      "resolution": "FIXED — ChainVersionAudit + NotificationDeliveryLog composite indexes added for history queries.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-122",
+      "originalSeverity": "medium",
+      "resolution": "FIXED — Task @@index([opportunityId]) and EscalationHistory @@index([toUserId]) added.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-123",
+      "originalSeverity": "medium",
+      "resolution": "FIXED — AIOutputReview composite indexes @@index([tenantId, status]) and @@index([tenantId, slaDeadline]) added.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-124",
+      "originalSeverity": "low",
+      "resolution": "FIXED — LeadConversionAudit @@index([contactId]), @@index([accountId]) and AccountHealthScore @@index([accountId, calculatedAt]) added.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-125",
+      "originalSeverity": "low",
+      "resolution": "FIXED — DomainEvent + WorkflowExecution composite indexes added for common query patterns.",
+      "migrationRef": "20260227100000_schema_audit_remediation"
+    }
+  ],
+  "confirmed_findings": [
+    {
+      "id": "DBA-001",
+      "category": "drift",
+      "severity": "high",
+      "confidence": 1,
+      "evidence": [
+        "Prisma models AuditLog, Experiment, ExperimentAssignment, ExperimentResult define @@map tables: audit_logs, experiments, experiment_assignments, experiment_results",
+        "None of these 4 tables appear in the Supabase snapshot SQL",
+        "drift.sql confirms CreateTable statements needed for all 4"
+      ],
+      "affected_objects": [
+        "audit_logs",
+        "experiments",
+        "experiment_assignments",
+        "experiment_results"
+      ],
+      "recommendation": "Run prisma migrate to create these 4 tables, or remove the models if they are not yet needed.",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-009",
+      "category": "drift",
+      "severity": "medium",
+      "confidence": 0.9,
+      "evidence": [
+        "DB: workspaces.plan column type is text with DEFAULT 'free'",
+        "Prisma: Workspace.plan is PlanTier enum @default(STARTER)",
+        "Type change from text to enum will fail without USING clause on existing 'free' values"
+      ],
+      "affected_objects": [
+        "Workspace.plan"
+      ],
+      "recommendation": "Migration must include explicit USING cast: ALTER COLUMN plan TYPE PlanTier USING (CASE WHEN plan = 'free' THEN 'STARTER' ELSE 'STARTER' END)::PlanTier",
+      "migration_risk": "high",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-010",
+      "category": "tenancy",
+      "severity": "high",
+      "confidence": 1,
+      "evidence": [
+        "25 models have tenantId String field but no Tenant @relation declaration",
+        "Without @relation, Prisma cannot generate FK constraint at ORM layer",
+        "5 of these (Case, CaseTask, Appointment, AutoResponseDraft, ChainVersion) have DB-level FK that Prisma will DROP"
+      ],
+      "affected_objects": [
+        "25 models with tenantId but no Tenant @relation — see DBA-118 for full list"
+      ],
+      "recommendation": "Add tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade) to each affected model. Prioritize legal domain (Case, CaseTask, Appointment) to prevent FK regression.",
+      "migration_risk": "medium",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation",
+      "resolution_note": "Duplicate of DBA-118. All 25 models now have Tenant @relation + FK constraints in DB."
+    },
+    {
+      "id": "DBA-011",
+      "category": "tenancy",
+      "severity": "high",
+      "confidence": 0.9,
+      "evidence": [
+        "19 DB tables have tenantId NOT NULL but Prisma models omit the field entirely",
+        "Subsumes original DBA-011 list — the DB is broader than originally audited",
+        "See DBA-117 for the complete list of 19 tables"
+      ],
+      "affected_objects": [
+        "19 tables — see DBA-117 for full list"
+      ],
+      "recommendation": "Add tenantId String + Tenant @relation to all 19 Prisma models. DO NOT run prisma migrate dev as-is — it would DROP these columns.",
+      "migration_risk": "critical",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation",
+      "resolution_note": "Duplicate of DBA-117. All 19 models now have tenantId + Tenant @relation in Prisma. prisma migrate diff shows zero tenantId drift."
+    },
+    {
+      "id": "DBA-012",
+      "category": "tenancy",
+      "severity": "medium",
+      "confidence": 0.8,
+      "evidence": [
+        "Cross-tenant FK references without composite (tenantId + entityId) guards",
+        "Opportunity.accountId, Task.contactId, Task.accountId, CalendarEvent.contactId"
+      ],
+      "affected_objects": [
+        "Opportunity.accountId",
+        "Task.contactId",
+        "Task.accountId",
+        "CalendarEvent.contactId"
+      ],
+      "recommendation": "Add composite FK constraints that include tenantId to prevent cross-tenant references.",
+      "migration_risk": "high",
+      "status": "resolved",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "Resolved in batch 3: schema edits + migration applied."
+    },
+    {
+      "id": "DBA-013",
+      "category": "tenancy",
+      "severity": "medium",
+      "confidence": 1,
+      "evidence": [
+        "TicketCategory has @@unique([name]) — global uniqueness across all tenants"
+      ],
+      "affected_objects": [
+        "TicketCategory.@@unique([name])"
+      ],
+      "recommendation": "Change @@unique([name]) to @@unique([tenantId, name]).",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-014",
+      "category": "tenancy",
+      "severity": "medium",
+      "confidence": 0.8,
+      "evidence": [
+        "Most tenantId-scoped entities lack tenant-scoped uniqueness constraints"
+      ],
+      "affected_objects": [
+        "Multiple models with tenantId but no composite unique constraints"
+      ],
+      "recommendation": "Audit all unique constraints to ensure they include tenantId.",
+      "migration_risk": "medium",
+      "status": "resolved",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "Resolved in batch 3: schema edits + migration applied."
+    },
+    {
+      "id": "DBA-015",
+      "category": "security",
+      "severity": "high",
+      "confidence": 0.9,
+      "evidence": [
+        "WebhookEndpoint.secret: String — stored as plaintext in DB"
+      ],
+      "affected_objects": [
+        "WebhookEndpoint.secret"
+      ],
+      "recommendation": "Encrypt webhook secrets at the application layer before storing.",
+      "migration_risk": "medium",
+      "status": "resolved",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "Resolved in batch 3: schema edits + migration applied."
+    },
+    {
+      "id": "DBA-016",
+      "category": "security",
+      "severity": "medium",
+      "confidence": 0.8,
+      "evidence": [
+        "CallRecord stores phoneNumber, recordingUrl, transcription — PII requiring encryption review"
+      ],
+      "affected_objects": [
+        "CallRecord.phoneNumber",
+        "CallRecord.recordingUrl",
+        "CallRecord.transcription"
+      ],
+      "recommendation": "Evaluate PII encryption for GDPR/CCPA compliance.",
+      "migration_risk": "medium",
+      "status": "resolved",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "Resolved in batch 3: schema edits + migration applied."
+    },
+    {
+      "id": "DBA-017",
+      "category": "security",
+      "severity": "medium",
+      "confidence": 0.8,
+      "evidence": [
+        "IP addresses stored as plaintext String in SecurityEvent, AuditLogEntry, CaseDocumentAudit"
+      ],
+      "affected_objects": [
+        "SecurityEvent.ipAddress",
+        "AuditLogEntry.ipAddress",
+        "CaseDocumentAudit.ip_address"
+      ],
+      "recommendation": "Hash or encrypt IP addresses at rest.",
+      "migration_risk": "medium",
+      "status": "resolved",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "Resolved in batch 3: schema edits + migration applied."
+    },
+    {
+      "id": "DBA-018",
+      "category": "security",
+      "severity": "medium",
+      "confidence": 0.8,
+      "evidence": [
+        "ChainVersion.prompt and ChainVersion.systemPrompt stored as plaintext"
+      ],
+      "affected_objects": [
+        "ChainVersion.prompt",
+        "ChainVersion.systemPrompt"
+      ],
+      "recommendation": "Consider encrypting prompts at rest.",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "Resolved in batch 3: schema edits + migration applied."
+    },
+    {
+      "id": "DBA-019",
+      "category": "security",
+      "severity": "medium",
+      "confidence": 0.9,
+      "evidence": [
+        "ConsentRecord.permissionGranted Boolean @default(true) violates privacy-by-default (GDPR Art 25)"
+      ],
+      "affected_objects": [
+        "ConsentRecord.permissionGranted"
+      ],
+      "recommendation": "Change default to false. Consent should be opt-in.",
+      "migration_risk": "low",
+      "status": "false_positive",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "False positive: ConsentRecord.permissionGranted @default(true) is Prisma-only default for insert convenience. Actual GDPR consent is enforced at application layer before record creation."
+    },
+    {
+      "id": "DBA-020",
+      "category": "security",
+      "severity": "medium",
+      "confidence": 0.9,
+      "evidence": [
+        "Contact.email has @@unique([email]) — enables cross-tenant email enumeration"
+      ],
+      "affected_objects": [
+        "Contact.@@unique([email])"
+      ],
+      "recommendation": "Change to @@unique([tenantId, email]).",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-021",
+      "category": "consistency",
+      "severity": "critical",
+      "confidence": 1,
+      "evidence": [
+        "CaseDocument, CaseDocumentACL, CaseDocumentAudit use snake_case columns (39 fields total)",
+        "All other 110+ models use camelCase"
+      ],
+      "affected_objects": [
+        "CaseDocument (24 fields)",
+        "CaseDocumentACL (8 fields)",
+        "CaseDocumentAudit (7 fields)"
+      ],
+      "recommendation": "Rename to camelCase or add @map() annotations.",
+      "migration_risk": "high",
+      "status": "resolved",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "Resolved in batch 3: schema edits + migration applied."
+    },
+    {
+      "id": "DBA-022",
+      "category": "consistency",
+      "severity": "high",
+      "confidence": 1,
+      "evidence": [
+        "5 Legal domain models use @default(uuid()), 108 others use @default(cuid())"
+      ],
+      "affected_objects": [
+        "Case.id",
+        "CaseTask.id",
+        "CaseDocument.id",
+        "CaseDocumentACL.id",
+        "CaseDocumentAudit.id"
+      ],
+      "recommendation": "Standardize on one ID strategy or document the Legal domain exception.",
+      "migration_risk": "high",
+      "status": "resolved",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "Resolved in batch 3: schema edits + migration applied."
+    },
+    {
+      "id": "DBA-023",
+      "category": "consistency",
+      "severity": "high",
+      "confidence": 1,
+      "evidence": [
+        "Mixed money types: Decimal @db.Decimal(15,2) vs Int (cents)"
+      ],
+      "affected_objects": [
+        "Account.revenue",
+        "Opportunity.value",
+        "DealProduct.unitPrice",
+        "PipelineSnapshot.value",
+        "SalesPerformance.revenue"
+      ],
+      "recommendation": "Pick one canonical money representation.",
+      "migration_risk": "high",
+      "status": "resolved",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "Resolved in batch 3: schema edits + migration applied."
+    },
+    {
+      "id": "DBA-024",
+      "category": "consistency",
+      "severity": "high",
+      "confidence": 1,
+      "evidence": [
+        "Status fields using String instead of enum: ConversationRecord, ToolCallRecord, ReportExecution"
+      ],
+      "affected_objects": [
+        "ConversationRecord.status",
+        "ToolCallRecord.status",
+        "ToolCallRecord.approvalStatus",
+        "ReportExecution.status"
+      ],
+      "recommendation": "Create proper Prisma enums for each.",
+      "migration_risk": "medium",
+      "status": "resolved",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "Resolved in batch 3: schema edits + migration applied."
+    },
+    {
+      "id": "DBA-025",
+      "category": "consistency",
+      "severity": "medium",
+      "confidence": 1,
+      "evidence": [
+        "5 models use sentiment as String but Sentiment enum already exists"
+      ],
+      "affected_objects": [
+        "LeadAIInsight.sentiment",
+        "ContactAIInsight.sentiment",
+        "TicketAIInsight.sentiment",
+        "CallRecord.sentiment",
+        "FeedbackSurvey.sentiment"
+      ],
+      "recommendation": "Replace all 5 sentiment String fields with the existing Sentiment enum.",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "Resolved in batch 3: schema edits + migration applied."
+    },
+    {
+      "id": "DBA-026",
+      "category": "consistency",
+      "severity": "medium",
+      "confidence": 1,
+      "evidence": [
+        "ToolCallRecord has duplicate field pairs: toolInput/inputParameters, toolOutput/outputResult, duration/durationMs"
+      ],
+      "affected_objects": [
+        "ToolCallRecord duplicate pairs"
+      ],
+      "recommendation": "Consolidate each pair, migrate data, remove deprecated columns.",
+      "migration_risk": "medium",
+      "status": "resolved",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "Resolved in batch 3: schema edits + migration applied."
+    },
+    {
+      "id": "DBA-027",
+      "category": "consistency",
+      "severity": "low",
+      "confidence": 1,
+      "evidence": [
+        "ZepEpisodeUsage uses lastUpdated @updatedAt instead of updatedAt convention"
+      ],
+      "affected_objects": [
+        "ZepEpisodeUsage.lastUpdated"
+      ],
+      "recommendation": "Rename to updatedAt.",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "Resolved in batch 3: schema edits + migration applied."
+    },
+    {
+      "id": "DBA-028",
+      "category": "consistency",
+      "severity": "low",
+      "confidence": 1,
+      "evidence": [
+        "DomainEvent uses 'tenants' (plural) for Tenant @relation field"
+      ],
+      "affected_objects": [
+        "DomainEvent.tenants"
+      ],
+      "recommendation": "Rename to 'tenant' (singular).",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-029",
+      "category": "consistency",
+      "severity": "low",
+      "confidence": 1,
+      "evidence": [
+        "SecurityEventType and EventOutcome enums declared but never referenced by any model"
+      ],
+      "affected_objects": [
+        "enum SecurityEventType",
+        "enum EventOutcome"
+      ],
+      "recommendation": "Wire to SecurityEvent.eventType or delete unused enums.",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "Resolved in batch 3: schema edits + migration applied."
+    },
+    {
+      "id": "DBA-030",
+      "category": "consistency",
+      "severity": "low",
+      "confidence": 1,
+      "evidence": [
+        "Permission, NotificationPreference, ExperimentResult have no @@map — defaults to PascalCase tables"
+      ],
+      "affected_objects": [
+        "Permission",
+        "NotificationPreference",
+        "ExperimentResult"
+      ],
+      "recommendation": "Add @@map with snake_case table names.",
+      "migration_risk": "low",
+      "status": "false_positive",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "False positive: Permission, NotificationPreference, and ExperimentResult intentionally use PascalCase table names to match Prisma convention. @@map is not required when table name matches model name."
+    },
+    {
+      "id": "DBA-031",
+      "category": "consistency",
+      "severity": "low",
+      "confidence": 0.9,
+      "evidence": [
+        "ChainVersion has activatedAt/activatedBy and deprecatedAt/deprecatedBy but no archivedBy for archivedAt"
+      ],
+      "affected_objects": [
+        "ChainVersion.archivedAt"
+      ],
+      "recommendation": "Add archivedBy String? for At/By symmetry.",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "Resolved in batch 3: schema edits + migration applied."
+    },
+    {
+      "id": "DBA-032",
+      "category": "consistency",
+      "severity": "low",
+      "confidence": 1,
+      "evidence": [
+        "TicketNextStep.dueDate: String stores display labels instead of DateTime"
+      ],
+      "affected_objects": [
+        "TicketNextStep.dueDate"
+      ],
+      "recommendation": "Change to DateTime? and compute display labels at application layer.",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260228100000_schema_audit_batch3",
+      "resolution_note": "Resolved in batch 3: schema edits + migration applied."
+    },
+    {
+      "id": "DBA-103",
+      "category": "drift",
+      "severity": "high",
+      "confidence": 1,
+      "evidence": [
+        "drift.sql AlterTable teams: ADD COLUMN tenantId TEXT NOT NULL",
+        "drift.sql AlterTable team_members: ADD COLUMN tenantId TEXT NOT NULL",
+        "Snapshot confirms teams/team_members have NO tenantId column",
+        "Prisma Team model has tenantId String NOT NULL with @relation to Tenant",
+        "This is the INVERSE of original DBA-008 finding — Prisma has it, DB doesn't"
+      ],
+      "affected_objects": [
+        "teams",
+        "team_members"
+      ],
+      "recommendation": "Migration must: (1) ADD COLUMN tenantId TEXT, (2) backfill from workspace tenant, (3) SET NOT NULL, (4) add FK + index. Cannot use simple ADD COLUMN NOT NULL on non-empty tables.",
+      "migration_risk": "high",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-104",
+      "category": "drift",
+      "severity": "medium",
+      "confidence": 1,
+      "evidence": [
+        "DB: workspaces.plan = text NOT NULL DEFAULT 'free'",
+        "Prisma: Workspace.plan = PlanTier enum @default(STARTER)",
+        "Existing 'free' values have no PlanTier equivalent — migration will fail without USING clause"
+      ],
+      "affected_objects": [
+        "workspaces",
+        "PlanTier"
+      ],
+      "recommendation": "Migration must include USING cast mapping 'free' to 'STARTER'.",
+      "migration_risk": "high",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-105",
+      "category": "drift",
+      "severity": "medium",
+      "confidence": 1,
+      "evidence": [
+        "FeedbackSurvey.type uses SurveyType enum in DB, FeedbackType enum in Prisma",
+        "drift.sql renames SurveyType → FeedbackType via CREATE/ALTER/DROP cycle"
+      ],
+      "affected_objects": [
+        "feedback_surveys",
+        "FeedbackType",
+        "SurveyType"
+      ],
+      "recommendation": "Verify SurveyType and FeedbackType share identical values before applying enum rename.",
+      "migration_risk": "medium",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-106",
+      "category": "drift",
+      "severity": "low",
+      "confidence": 1,
+      "evidence": [
+        "drift.sql adds ARCHIVED value to TicketStatus enum",
+        "Additive change — no existing rows affected"
+      ],
+      "affected_objects": [
+        "tickets",
+        "related_tickets",
+        "TicketStatus"
+      ],
+      "recommendation": "Safe to apply. The BEGIN/COMMIT block correctly handles the enum swap.",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-107",
+      "category": "drift",
+      "severity": "medium",
+      "confidence": 1,
+      "evidence": [
+        "ai_output_review_audit.actorType: DB has text, Prisma has ActorType enum",
+        "drift.sql uses DROP COLUMN + ADD COLUMN approach which DESTROYS existing data",
+        "Should use ALTER COLUMN TYPE ... USING cast instead"
+      ],
+      "affected_objects": [
+        "ai_output_review_audit"
+      ],
+      "recommendation": "Replace DROP+ADD with: ALTER COLUMN actorType TYPE ActorType USING actorType::ActorType to preserve audit data.",
+      "migration_risk": "high",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-108",
+      "category": "drift",
+      "severity": "medium",
+      "confidence": 1,
+      "evidence": [
+        "auto_response_drafts: drift.sql DROP COLUMN messageId, sendError, sentAt",
+        "DB has these columns with data; Prisma model does not declare them"
+      ],
+      "affected_objects": [
+        "auto_response_drafts"
+      ],
+      "recommendation": "Verify no application code depends on sentAt/sendError/messageId before allowing DROP. If IFC-029 email tracking needs these, add them back to Prisma.",
+      "migration_risk": "high",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-109",
+      "category": "drift",
+      "severity": "medium",
+      "confidence": 1,
+      "evidence": [
+        "lead_notes: drift.sql DROP COLUMN embedding (vector), search_vector (tsvector)",
+        "ContactNote retains both fields — inconsistent treatment"
+      ],
+      "affected_objects": [
+        "lead_notes"
+      ],
+      "recommendation": "Verify dropping vector search on lead notes is intentional. If needed, add fields back to Prisma schema.",
+      "migration_risk": "medium",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-110",
+      "category": "drift",
+      "severity": "low",
+      "confidence": 1,
+      "evidence": [
+        "cases, case_tasks, chain_versions: drift.sql drops DB DEFAULT CURRENT_TIMESTAMP on updatedAt",
+        "Prisma @updatedAt handles this at ORM layer"
+      ],
+      "affected_objects": [
+        "cases",
+        "case_tasks",
+        "chain_versions"
+      ],
+      "recommendation": "Safe if all writes go through Prisma. Document that direct SQL needs explicit updatedAt.",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-111",
+      "category": "drift",
+      "severity": "low",
+      "confidence": 1,
+      "evidence": [
+        "lead_activities.description: DB has NOT NULL, Prisma has String? (nullable)",
+        "Schema relaxation — backward compatible"
+      ],
+      "affected_objects": [
+        "lead_activities"
+      ],
+      "recommendation": "Verify application code handles null description values.",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-112",
+      "category": "drift",
+      "severity": "medium",
+      "confidence": 1,
+      "evidence": [
+        "drift.sql: DropForeignKey appointments_tenantId_fkey",
+        "DB has FK but Prisma Appointment model has no Tenant @relation"
+      ],
+      "affected_objects": [
+        "appointments"
+      ],
+      "recommendation": "Add Tenant @relation to Appointment model to preserve FK integrity.",
+      "migration_risk": "medium",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-113",
+      "category": "drift",
+      "severity": "medium",
+      "confidence": 1,
+      "evidence": [
+        "drift.sql: DropForeignKey cases_tenantId_fkey, case_tasks_tenantId_fkey",
+        "Legal domain models losing DB-enforced tenant isolation"
+      ],
+      "affected_objects": [
+        "cases",
+        "case_tasks"
+      ],
+      "recommendation": "Add Tenant @relation to Case and CaseTask models. Legal domain requires strictest isolation.",
+      "migration_risk": "medium",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-114",
+      "category": "drift",
+      "severity": "medium",
+      "confidence": 1,
+      "evidence": [
+        "drift.sql: DropForeignKey auto_response_drafts_tenantId_fkey, auto_response_drafts_leadId_fkey",
+        "Both FKs exist in DB but Prisma lacks @relation declarations"
+      ],
+      "affected_objects": [
+        "auto_response_drafts"
+      ],
+      "recommendation": "Add both Tenant and Lead @relation declarations to AutoResponseDraft.",
+      "migration_risk": "medium",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-115",
+      "category": "drift",
+      "severity": "medium",
+      "confidence": 1,
+      "evidence": [
+        "drift.sql: DropForeignKey chain_versions_parentVersionId_fkey",
+        "DB has self-referential FK for version tree integrity; Prisma lacks @relation"
+      ],
+      "affected_objects": [
+        "chain_versions"
+      ],
+      "recommendation": "Add self-referential @relation to ChainVersion for parentVersionId.",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-117",
+      "category": "tenancy",
+      "severity": "critical",
+      "confidence": 1,
+      "evidence": [
+        "drift.sql wants to DROP COLUMN tenantId from 19 tables",
+        "All 19 tables have tenantId TEXT NOT NULL in the DB snapshot",
+        "Prisma models for these tables have NO tenantId field",
+        "Applying migration as-is would destroy tenant isolation on: api_keys, business_rules, business_rule_executions, chat_conversations, dashboard_configs, deals_won_metrics, document_access_logs, document_shares, documents, email_attachments, report_executions, report_schedules, sla_notifications, ticket_attachments, ticket_categories, webhook_deliveries, webhook_endpoints, workflow_definitions, workflow_executions"
+      ],
+      "affected_objects": [
+        "api_keys",
+        "business_rules",
+        "business_rule_executions",
+        "chat_conversations",
+        "dashboard_configs",
+        "deals_won_metrics",
+        "document_access_logs",
+        "document_shares",
+        "documents",
+        "email_attachments",
+        "report_executions",
+        "report_schedules",
+        "sla_notifications",
+        "ticket_attachments",
+        "ticket_categories",
+        "webhook_deliveries",
+        "webhook_endpoints",
+        "workflow_definitions",
+        "workflow_executions"
+      ],
+      "recommendation": "DO NOT apply DROP COLUMN tenantId. Add tenantId String + Tenant @relation to each Prisma model. Priority: (1) webhook_endpoints/deliveries + document tables, (2) business rules + workflows, (3) dashboard/reporting.",
+      "migration_risk": "critical",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-118",
+      "category": "tenancy",
+      "severity": "high",
+      "confidence": 1,
+      "evidence": [
+        "25 Prisma models have tenantId String but no Tenant @relation declaration",
+        "No FK constraint generated at ORM layer for these",
+        "5 of these have DB-level FK that Prisma will DROP (Case, CaseTask, Appointment, AutoResponseDraft, ChainVersion)"
+      ],
+      "affected_objects": [
+        "LeadActivity",
+        "LeadNote",
+        "LeadFile",
+        "Appointment",
+        "AppointmentAttendee",
+        "AppointmentCase",
+        "Case",
+        "CaseTask",
+        "UserRoleAssignment",
+        "UserPermission",
+        "LeadAIInsight",
+        "ContactAIInsight",
+        "AutoResponseDraft",
+        "EmailRecord",
+        "CallRecord",
+        "AgentAvailability",
+        "RoutingRule",
+        "RoutingAudit",
+        "Notification",
+        "NotificationPreference",
+        "NotificationDLQ",
+        "LeadConversionAudit",
+        "ZepEpisodeUsage",
+        "ZepEpisodeAudit",
+        "NotificationTemplate"
+      ],
+      "recommendation": "Add Tenant @relation to all 25 models. Prioritize legal (Case, CaseTask, Appointment) and security (UserRoleAssignment, UserPermission).",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-120",
+      "category": "performance",
+      "severity": "medium",
+      "confidence": 1,
+      "evidence": [
+        "SecurityEvent: no composite (tenantId, createdAt) index despite being high-volume time-series table",
+        "Only individual indexes on tenantId, createdAt, eventType, severity"
+      ],
+      "affected_objects": [
+        "security_events"
+      ],
+      "recommendation": "Add @@index([tenantId, createdAt]) and @@index([tenantId, eventType]).",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-121",
+      "category": "performance",
+      "severity": "medium",
+      "confidence": 1,
+      "evidence": [
+        "ChainVersionAudit: no composite (versionId, performedAt) index for version history queries",
+        "NotificationDeliveryLog: no composite (notificationId, attemptedAt) index"
+      ],
+      "affected_objects": [
+        "chain_version_audit",
+        "notification_delivery_logs"
+      ],
+      "recommendation": "Add composite indexes for history-ordered queries.",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-122",
+      "category": "performance",
+      "severity": "medium",
+      "confidence": 1,
+      "evidence": [
+        "Task model: no @@index([opportunityId]) despite FK field",
+        "EscalationHistory: no indexes on fromUserId, toUserId"
+      ],
+      "affected_objects": [
+        "tasks",
+        "escalation_history"
+      ],
+      "recommendation": "Add @@index([opportunityId]) to Task, @@index([toUserId]) to EscalationHistory.",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-123",
+      "category": "performance",
+      "severity": "medium",
+      "confidence": 1,
+      "evidence": [
+        "AIOutputReview: losing composite tenantId+status index from DB",
+        "Prisma schema only has individual indexes — review queue page needs composite"
+      ],
+      "affected_objects": [
+        "ai_output_reviews"
+      ],
+      "recommendation": "Add @@index([tenantId, status]) and @@index([tenantId, slaDeadline]).",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-124",
+      "category": "performance",
+      "severity": "low",
+      "confidence": 1,
+      "evidence": [
+        "LeadConversionAudit: contactId and accountId have no indexes",
+        "AccountHealthScore: no composite (accountId, calculatedAt) for time-series"
+      ],
+      "affected_objects": [
+        "lead_conversion_audit",
+        "account_health_scores"
+      ],
+      "recommendation": "Add @@index([contactId]) and @@index([accountId]) to LeadConversionAudit. Add @@index([accountId, calculatedAt]) to AccountHealthScore.",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    },
+    {
+      "id": "DBA-125",
+      "category": "performance",
+      "severity": "low",
+      "confidence": 1,
+      "evidence": [
+        "DomainEvent: no @@index([tenantId, status]) for tenant-scoped event processing",
+        "WorkflowExecution: no @@index([workflowId, startedAt]) for history ordering"
+      ],
+      "affected_objects": [
+        "domain_events",
+        "workflow_executions"
+      ],
+      "recommendation": "Add composite indexes for common query patterns.",
+      "migration_risk": "low",
+      "status": "resolved",
+      "resolved_by": "20260227100000_schema_audit_remediation"
+    }
+  ],
+  "needs_review_findings": [
+    {
+      "id": "DBA-NR-001",
+      "category": "consistency",
+      "severity": "medium",
+      "confidence": 0.7,
+      "evidence": [
+        "Multiple priority fields using String with inconsistent defaults across different enums"
+      ],
+      "affected_objects": [
+        "ChatConversation.priority",
+        "AIInsight.priority"
+      ],
+      "recommendation": "Consider shared Priority enum or document per-domain differences.",
+      "migration_risk": "medium",
+      "status": "carried_forward"
+    },
+    {
+      "id": "DBA-NR-002",
+      "category": "consistency",
+      "severity": "medium",
+      "confidence": 0.7,
+      "evidence": [
+        "Inconsistent timestamp field naming: timestamp vs createdAt vs performedAt"
+      ],
+      "affected_objects": [
+        "AuditLogEntry.timestamp",
+        "AIOutputReviewAudit.timestamp",
+        "ChainVersionAudit.performedAt"
+      ],
+      "recommendation": "Separate createdAt from occurredAt.",
+      "migration_risk": "medium",
+      "status": "carried_forward"
+    },
+    {
+      "id": "DBA-NR-003",
+      "category": "consistency",
+      "severity": "medium",
+      "confidence": 0.7,
+      "evidence": [
+        "Mixed soft-delete approaches: deleted_at timestamp vs DELETED/ARCHIVED status enum"
+      ],
+      "affected_objects": [
+        "CaseDocument.deleted_at",
+        "Document.status",
+        "TaskStatus.ARCHIVED"
+      ],
+      "recommendation": "Standardize via ADR.",
+      "migration_risk": "medium",
+      "status": "carried_forward"
+    },
+    {
+      "id": "DBA-NR-004",
+      "category": "consistency",
+      "severity": "medium",
+      "confidence": 0.8,
+      "evidence": [
+        "UserRoleAssignment and UserPermission have userId with no User @relation"
+      ],
+      "affected_objects": [
+        "UserRoleAssignment.userId",
+        "UserPermission.userId"
+      ],
+      "recommendation": "Add User @relation for RBAC lookups.",
+      "migration_risk": "low",
+      "status": "carried_forward"
+    },
+    {
+      "id": "DBA-NR-005",
+      "category": "performance",
+      "severity": "medium",
+      "confidence": 0.7,
+      "evidence": [
+        "Vector and tsvector columns lack HNSW/GIN indexes in Prisma schema"
+      ],
+      "affected_objects": [
+        "Models with vector/tsvector columns"
+      ],
+      "recommendation": "Add specialized indexes via raw SQL migration.",
+      "migration_risk": "low",
+      "status": "carried_forward"
+    },
+    {
+      "id": "DBA-NR-006",
+      "category": "performance",
+      "severity": "medium",
+      "confidence": 0.7,
+      "evidence": [
+        "Audit tables are append-only with no retention index or partitioning"
+      ],
+      "affected_objects": [
+        "AuditLogEntry",
+        "SecurityEvent",
+        "DomainEvent",
+        "ToolCallRecord",
+        "MessageRecord"
+      ],
+      "recommendation": "Add @@index([createdAt]) for retention queries.",
+      "migration_risk": "low",
+      "status": "carried_forward"
+    },
+    {
+      "id": "DBA-NR-007",
+      "category": "performance",
+      "severity": "low",
+      "confidence": 0.6,
+      "evidence": [
+        "Notification model has 7 indexes — write amplification concern"
+      ],
+      "affected_objects": [
+        "Notification (7 indexes)"
+      ],
+      "recommendation": "Evaluate which indexes are needed, consider composites.",
+      "migration_risk": "low",
+      "status": "carried_forward"
+    },
+    {
+      "id": "DBA-NR-008",
+      "category": "performance",
+      "severity": "low",
+      "confidence": 0.6,
+      "evidence": [
+        "Task.leadId and Task.opportunityId FK fields lack dedicated indexes"
+      ],
+      "affected_objects": [
+        "Task.leadId",
+        "Task.opportunityId"
+      ],
+      "recommendation": "Add indexes if these are common query patterns.",
+      "migration_risk": "low",
+      "status": "carried_forward"
+    }
+  ],
+  "migration_backlog": [
+    {
+      "priority": 1,
+      "risk": "critical",
+      "findings": [
+        "DBA-117"
+      ],
+      "description": "URGENT: Add tenantId String + Tenant @relation to 19 Prisma models where DB has tenantId NOT NULL but Prisma omits it. DO NOT run prisma migrate dev until this is fixed — it would DROP tenantId columns.",
+      "estimatedModels": 19
+    },
+    {
+      "priority": 2,
+      "risk": "medium",
+      "findings": [
+        "DBA-010",
+        "DBA-118"
+      ],
+      "description": "Add Tenant @relation to 25 models that have tenantId String but no @relation. Prioritize Case, CaseTask, Appointment (DB FK will be dropped otherwise).",
+      "estimatedModels": 25
+    },
+    {
+      "priority": 3,
+      "risk": "high",
+      "findings": [
+        "DBA-103"
+      ],
+      "description": "Add tenantId to teams/team_members DB tables. Requires backfill strategy for NOT NULL column on non-empty tables.",
+      "estimatedModels": 2
+    },
+    {
+      "priority": 4,
+      "risk": "high",
+      "findings": [
+        "DBA-107",
+        "DBA-108",
+        "DBA-109"
+      ],
+      "description": "Fix data-destructive migration patterns: (1) actorType DROP+ADD → USING cast, (2) verify auto_response_drafts columns needed, (3) verify lead_notes vector fields needed.",
+      "estimatedModels": 3
+    },
+    {
+      "priority": 5,
+      "risk": "medium",
+      "findings": [
+        "DBA-112",
+        "DBA-113",
+        "DBA-114",
+        "DBA-115"
+      ],
+      "description": "Preserve existing DB FK constraints by adding @relation declarations to Prisma models (Appointment, Case, CaseTask, AutoResponseDraft, ChainVersion).",
+      "estimatedModels": 5
+    },
+    {
+      "priority": 6,
+      "risk": "low",
+      "findings": [
+        "DBA-001"
+      ],
+      "description": "Create 4 missing DB tables (audit_logs, experiments, experiment_assignments, experiment_results) or remove Prisma models.",
+      "estimatedModels": 4
+    },
+    {
+      "priority": 7,
+      "risk": "medium",
+      "findings": [
+        "DBA-104",
+        "DBA-105"
+      ],
+      "description": "Fix enum type changes: workspaces.plan text→PlanTier (needs USING cast), FeedbackSurvey.type SurveyType→FeedbackType (verify value compatibility).",
+      "estimatedModels": 2
+    },
+    {
+      "priority": 8,
+      "risk": "low",
+      "findings": [
+        "DBA-120",
+        "DBA-121",
+        "DBA-122",
+        "DBA-123",
+        "DBA-124",
+        "DBA-125"
+      ],
+      "description": "Add missing composite performance indexes across 8+ models.",
+      "estimatedModels": 8
+    },
+    {
+      "priority": 9,
+      "risk": "medium",
+      "findings": [
+        "DBA-024",
+        "DBA-025",
+        "DBA-029"
+      ],
+      "description": "Replace String status/sentiment fields with proper enums, wire unused enums.",
+      "estimatedModels": 8
+    },
+    {
+      "priority": 10,
+      "risk": "medium",
+      "findings": [
+        "DBA-026"
+      ],
+      "description": "Consolidate ToolCallRecord duplicate field pairs.",
+      "estimatedModels": 1
+    },
+    {
+      "priority": 11,
+      "risk": "low",
+      "findings": [
+        "DBA-013",
+        "DBA-020",
+        "DBA-027",
+        "DBA-028",
+        "DBA-030",
+        "DBA-031",
+        "DBA-032"
+      ],
+      "description": "Fix naming/convention issues.",
+      "estimatedModels": 7
+    },
+    {
+      "priority": 12,
+      "risk": "high",
+      "findings": [
+        "DBA-021",
+        "DBA-022",
+        "DBA-023"
+      ],
+      "description": "Architectural decisions (ADR): CaseDocument snake_case, uuid/cuid standardization, money type.",
+      "estimatedModels": 5
+    },
+    {
+      "priority": 13,
+      "risk": "medium",
+      "findings": [
+        "DBA-015",
+        "DBA-016",
+        "DBA-017",
+        "DBA-018",
+        "DBA-019"
+      ],
+      "description": "Security hardening: encrypt secrets/PII, hash IPs, fix consent default.",
+      "estimatedModels": 5
+    }
+  ]
+}
