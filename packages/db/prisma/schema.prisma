@@ -519,6 +519,8 @@ model Opportunity {
   @@index([accountId, tenantId])
   @@index([accountId, stage])
   @@index([accountId, createdAt(sort: Desc)])
+  // IFC-192: Composite index for stale contact EXISTS subquery
+  @@index([contactId, stage])
   @@map("opportunities")
 }
 

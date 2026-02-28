@@ -106,6 +106,7 @@ export class PrismaContactRepository implements ContactRepository {
         tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
+        lastContactedAt: record.lastContactedAt ?? undefined, // IFC-192
       })
     );
   }
@@ -131,6 +132,7 @@ export class PrismaContactRepository implements ContactRepository {
         tenantId: record.tenantId,
         createdAt: record.createdAt,
         updatedAt: record.updatedAt,
+        lastContactedAt: record.lastContactedAt ?? undefined, // IFC-192
       })
     );
   }

@@ -22,7 +22,6 @@ export default defineConfig({
     '@opentelemetry/sdk-node',
     '@opentelemetry/semantic-conventions',
     '@sentry/node',
-    '@sentry/tracing',
     '@supabase/supabase-js',
     'zod',
   ],

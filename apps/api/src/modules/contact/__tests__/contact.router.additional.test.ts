@@ -1085,22 +1085,32 @@ describe('Contact Router - Additional Coverage', () => {
 
   // IFC-192: logActivity tests
   describe('logActivity', () => {
-    it('should log EMAIL activity and return updated contact', async () => {
-      const ctx = createTestContext();
-      const caller = contactRouter.createCaller(ctx);
+    const setupLogActivityMocks = (ctx: ReturnType<typeof createTestContext>, overrides?: { lastContactedAt?: Date | null }) => {
+      const contactedAt = overrides?.lastContactedAt ?? new Date();
+      const updatedRecord = { ...mockContact, lastContactedAt: contactedAt, updatedAt: new Date() };
 
       prismaMock.contact.findUnique.mockResolvedValue({ ...mockContact } as any);
       (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: any) => {
         return await fn(prismaMock);
       });
       prismaMock.contactActivity.create.mockResolvedValue({} as any);
+      // tx.contact.update returns the Prisma record (used as the authoritative result)
+      prismaMock.contact.update.mockResolvedValue(updatedRecord as any);
 
-      const domainContact = createMockDomainContact({ lastContactedAt: new Date() });
+      // recordInteraction is called post-transaction for domain event emission
       ctx.services!.contact!.recordInteraction = vi.fn().mockResolvedValue({
         isSuccess: true,
         isFailure: false,
-        value: domainContact,
+        value: createMockDomainContact({ lastContactedAt: contactedAt }),
       });
+
+      return { updatedRecord, contactedAt };
+    };
+
+    it('should log EMAIL activity and return updated contact', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      setupLogActivityMocks(ctx);
 
       const result = await caller.logActivity({
         contactId: TEST_UUIDS.contact1,
@@ -1115,19 +1125,7 @@ describe('Contact Router - Additional Coverage', () => {
     it('should log CALL activity successfully', async () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
-
-      prismaMock.contact.findUnique.mockResolvedValue({ ...mockContact } as any);
-      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: any) => {
-        return await fn(prismaMock);
-      });
-      prismaMock.contactActivity.create.mockResolvedValue({} as any);
-
-      const domainContact = createMockDomainContact({ lastContactedAt: new Date() });
-      ctx.services!.contact!.recordInteraction = vi.fn().mockResolvedValue({
-        isSuccess: true,
-        isFailure: false,
-        value: domainContact,
-      });
+      setupLogActivityMocks(ctx);
 
       const result = await caller.logActivity({
         contactId: TEST_UUIDS.contact1,
@@ -1142,19 +1140,7 @@ describe('Contact Router - Additional Coverage', () => {
     it('should log MEETING activity successfully', async () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
-
-      prismaMock.contact.findUnique.mockResolvedValue({ ...mockContact } as any);
-      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: any) => {
-        return await fn(prismaMock);
-      });
-      prismaMock.contactActivity.create.mockResolvedValue({} as any);
-
-      const domainContact = createMockDomainContact({ lastContactedAt: new Date() });
-      ctx.services!.contact!.recordInteraction = vi.fn().mockResolvedValue({
-        isSuccess: true,
-        isFailure: false,
-        value: domainContact,
-      });
+      setupLogActivityMocks(ctx);
 
       const result = await caller.logActivity({
         contactId: TEST_UUIDS.contact1,
@@ -1180,7 +1166,7 @@ describe('Contact Router - Additional Coverage', () => {
       ).rejects.toThrow(TRPCError);
     });
 
-    it('should wrap activity creation and lastContactedAt update in transaction', async () => {
+    it('should wrap activity creation and contact update in same transaction', async () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
 
@@ -1190,12 +1176,12 @@ describe('Contact Router - Additional Coverage', () => {
       });
       (prismaMock as any).$transaction = txMock;
       prismaMock.contactActivity.create.mockResolvedValue({} as any);
+      prismaMock.contact.update.mockResolvedValue({ ...mockContact, lastContactedAt: new Date() } as any);
 
-      const domainContact = createMockDomainContact({ lastContactedAt: new Date() });
       ctx.services!.contact!.recordInteraction = vi.fn().mockResolvedValue({
         isSuccess: true,
         isFailure: false,
-        value: domainContact,
+        value: createMockDomainContact({ lastContactedAt: new Date() }),
       });
 
       await caller.logActivity({
@@ -1204,26 +1190,17 @@ describe('Contact Router - Additional Coverage', () => {
         title: 'Test email',
       });
 
+      // Both contactActivity.create AND contact.update happen inside the transaction
       expect(txMock).toHaveBeenCalledTimes(1);
+      expect(prismaMock.contactActivity.create).toHaveBeenCalled();
+      expect(prismaMock.contact.update).toHaveBeenCalled();
     });
 
     it('should return updated contact data with lastContactedAt', async () => {
       const ctx = createTestContext();
       const caller = contactRouter.createCaller(ctx);
       const contactedAt = new Date('2026-02-27T12:00:00Z');
-
-      prismaMock.contact.findUnique.mockResolvedValue({ ...mockContact } as any);
-      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: any) => {
-        return await fn(prismaMock);
-      });
-      prismaMock.contactActivity.create.mockResolvedValue({} as any);
-
-      const domainContact = createMockDomainContact({ lastContactedAt: contactedAt });
-      ctx.services!.contact!.recordInteraction = vi.fn().mockResolvedValue({
-        isSuccess: true,
-        isFailure: false,
-        value: domainContact,
-      });
+      setupLogActivityMocks(ctx, { lastContactedAt: contactedAt });
 
       const result = await caller.logActivity({
         contactId: TEST_UUIDS.contact1,

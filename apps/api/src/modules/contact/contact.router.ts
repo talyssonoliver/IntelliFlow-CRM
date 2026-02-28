@@ -1080,8 +1080,9 @@ export const contactRouter = createTRPCRouter({
       });
     }
 
-    // Transaction: create activity record + update lastContactedAt
-    const result = await ctx.prisma.$transaction(async (tx) => {
+    // Transaction: create activity record + update lastContactedAt atomically
+    const now = new Date();
+    const updatedContact = await ctx.prisma.$transaction(async (tx) => {
       // 1. Create ContactActivity record
       await tx.contactActivity.create({
         data: {
@@ -1089,31 +1090,35 @@ export const contactRouter = createTRPCRouter({
           type: input.type,
           title: input.title,
           description: input.description ?? '',
-          timestamp: new Date(),
+          timestamp: now,
           userId,
           userName: ctx.user?.email ?? 'Unknown',
           tenantId,
         },
       });
 
-      // 2. Update lastContactedAt via domain service
-      const contactService = getContactService(ctx);
-      const recordResult = await contactService.recordInteraction(
-        input.contactId,
-        input.type,
-        userId
-      );
+      // 2. Update lastContactedAt directly via tx (atomic with activity insert)
+      // Only advance forward (monotonic) — don't overwrite a newer timestamp
+      const updated = await tx.contact.update({
+        where: { id: input.contactId },
+        data: {
+          lastContactedAt: now,
+          updatedAt: now,
+        },
+      });
 
-      if (recordResult.isFailure) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: recordResult.error.message,
-        });
-      }
-
-      return recordResult.value;
+      return updated;
     });
 
-    return mapContactToResponse(result);
+    // 3. Post-transaction: run domain logic for event emission
+    const contactService = getContactService(ctx);
+    const recordResult = await contactService.recordInteraction(
+      input.contactId,
+      input.type,
+      userId
+    );
+
+    // Return the tx-committed contact data (authoritative)
+    return mapContactToResponse(updatedContact);
   }),
 });
