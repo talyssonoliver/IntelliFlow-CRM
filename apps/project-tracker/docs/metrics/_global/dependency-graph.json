@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-28T01:03:11.517Z",
+  "last_updated": "2026-02-28T01:12:40.148Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -4940,7 +4940,7 @@
     "PG-156": {
       "task_id": "PG-156",
       "sprint": 15,
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "dependencies": [
         "PG-129"
       ],

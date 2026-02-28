@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-28T01:03:11.208Z",
+  "last_updated": "2026-02-28T01:12:39.224Z",
   "total_tasks": 305,
   "current_sprint": 14,
   "active_sprint": "sprint-14",
@@ -326,7 +326,8 @@
     "VALIDATING": [],
     "BLOCKED": [],
     "PLANNED": [
-      "PG-043"
+      "PG-043",
+      "PG-156"
     ],
     "BACKLOG": [
       "IFC-030",
@@ -453,7 +454,6 @@
       "IFC-202",
       "IFC-203",
       "IFC-204",
-      "PG-156",
       "PG-158",
       "PG-159",
       "PG-160",
@@ -8225,7 +8225,7 @@
       "section": "Core CRM",
       "description": "Customizable Daily Goals - settings UI + home.updateDailyGoal mutation + read from User.preferences instead of hardcoded targetValue=5000",
       "owner": "CRM FE+BE (STOA-Foundation)",
-      "status": "BACKLOG",
+      "status": "PLANNED",
       "sprint": 15,
       "dependencies": [
         "PG-129"

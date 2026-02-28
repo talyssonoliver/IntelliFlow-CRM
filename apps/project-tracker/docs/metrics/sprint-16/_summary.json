@@ -21,11 +21,11 @@
     },
     {
       "task_id": "IFC-028",
-      "completed_at": "2026-02-28T01:03:11.421Z",
+      "completed_at": "2026-02-28T01:12:39.912Z",
       "duration_minutes": 15
     }
   ],
-  "notes": "2/25 tasks DONE (8%). Last synced: 2026-02-28T01:03:11.421Z",
+  "notes": "2/25 tasks DONE (8%). Last synced: 2026-02-28T01:12:39.912Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
@@ -41,10 +41,10 @@
       "bottleneck_task_id": "PG-048"
     },
     "schedule_variance": {
-      "sv_minutes": -4406,
-      "spi": 0.1,
+      "sv_minutes": -4367,
+      "spi": 0.11,
       "status": "critical"
     },
-    "calculated_at": "2026-02-28T01:03:11.527Z"
+    "calculated_at": "2026-02-28T01:12:40.159Z"
   }
 }

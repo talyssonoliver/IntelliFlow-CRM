@@ -10,7 +10,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-02-28T01:03:11.431Z",
+    "verified_at": "2026-02-28T01:12:39.928Z",
     "required": [
       "ENV-015-AI",
       "IFC-003",
