@@ -1021,15 +1021,65 @@ items:
     remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
     remediation_sprint: 0
     status: open
+  FAIL-IFC-139-001:
+    origin_task: IFC-139
+    owner: Backend Dev
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T01:19:35.729Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-139-002:
+    origin_task: IFC-139
+    owner: Backend Dev
+    severity: medium
+    description: 9 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:19:35.729Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-184-001:
+    origin_task: IFC-184
+    owner: Tech Lead
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T01:19:44.458Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-184-002:
+    origin_task: IFC-184
+    owner: Tech Lead
+    severity: medium
+    description: 3 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:19:44.458Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-067-001:
+    origin_task: IFC-067
+    owner: Tech Lead
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T01:20:11.954Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
 summary:
-  total_items: 93
+  total_items: 98
   by_severity:
-    critical: 55
+    critical: 58
     high: 0
-    medium: 31
+    medium: 33
     low: 7
   by_status:
-    open: 92
+    open: 97
     in_progress: 0
     resolved: 1
     wont_fix: 0
@@ -1116,6 +1166,11 @@ summary:
     - PLCH-IFC-066-002
     - FAIL-PG-153-001
     - PLCH-PG-153-002
+    - FAIL-IFC-139-001
+    - PLCH-IFC-139-002
+    - FAIL-IFC-184-001
+    - PLCH-IFC-184-002
+    - FAIL-IFC-067-001
 review_schedule:
   cadence: weekly
   next_review: 2025-12-24

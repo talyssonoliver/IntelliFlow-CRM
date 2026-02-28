@@ -1110,15 +1110,35 @@ export const contactRouter = createTRPCRouter({
       return updated;
     });
 
-    // 3. Post-transaction: run domain logic for event emission
+    // 3. Post-transaction: run domain logic for event emission (non-critical)
     const contactService = getContactService(ctx);
-    const recordResult = await contactService.recordInteraction(
-      input.contactId,
-      input.type,
-      userId
-    );
+    await contactService.recordInteraction(input.contactId, input.type, userId);
 
-    // Return the tx-committed contact data (authoritative)
-    return mapContactToResponse(updatedContact);
+    // Return the tx-committed Prisma record (authoritative)
+    return {
+      id: updatedContact.id,
+      email: updatedContact.email,
+      firstName: updatedContact.firstName,
+      lastName: updatedContact.lastName,
+      title: updatedContact.title ?? null,
+      phone: updatedContact.phone ?? null,
+      department: updatedContact.department ?? null,
+      status: updatedContact.status,
+      accountId: updatedContact.accountId ?? null,
+      leadId: updatedContact.leadId ?? null,
+      ownerId: updatedContact.ownerId,
+      tenantId: updatedContact.tenantId,
+      streetAddress: updatedContact.streetAddress ?? null,
+      city: updatedContact.city ?? null,
+      zipCode: updatedContact.zipCode ?? null,
+      company: updatedContact.company ?? null,
+      linkedInUrl: updatedContact.linkedInUrl ?? null,
+      contactType: updatedContact.contactType ?? null,
+      tags: updatedContact.tags ?? [],
+      contactNotes: updatedContact.contactNotes ?? null,
+      lastContactedAt: updatedContact.lastContactedAt ?? null,
+      createdAt: updatedContact.createdAt,
+      updatedAt: updatedContact.updatedAt,
+    };
   }),
 });
