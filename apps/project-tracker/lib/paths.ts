@@ -187,9 +187,6 @@ const _GOVERNANCE_PATHS = {
   get LINT_REPORT() {
     return join(PATHS.artifacts.reports, 'plan-lint-report.json');
   },
-  get DEBT_LEDGER() {
-    return join(PATHS.artifacts.reports, 'debt-ledger.json');
-  },
   get PHANTOM_AUDIT() {
     return join(PATHS.artifacts.reports, 'phantom-completion-audit.json');
   },

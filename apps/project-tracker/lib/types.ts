@@ -153,6 +153,7 @@ export interface Task {
   sprint: SprintNumber; // Target Sprint
   artifacts: string[]; // Parsed from Artifacts To Track
   validation: string; // Validation Method
+  cadence: string; // Cadence (continuous tasks only)
 }
 
 export interface SprintMetrics {

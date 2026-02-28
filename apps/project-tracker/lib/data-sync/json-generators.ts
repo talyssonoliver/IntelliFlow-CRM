@@ -36,6 +36,7 @@ export function updateSprintPlanJson(tasks: TaskRecord[], metricsDir: string): v
       'Target Sprint': task['Target Sprint'],
       'Artifacts To Track': task['Artifacts To Track'],
       'Validation Method': task['Validation Method'],
+      Cadence: task.Cadence || '',
     });
   }
 
@@ -94,6 +95,7 @@ export function updateTaskRegistry(tasks: TaskRecord[], metricsDir: string): voi
           definition_of_done: task['Definition of Done'] || '',
           validation: task['Validation Method'] || '',
           prerequisites: task['Pre-requisites'] || '',
+          cadence: task.Cadence || '',
         }
       : {
           section: task.Section,
@@ -110,6 +112,7 @@ export function updateTaskRegistry(tasks: TaskRecord[], metricsDir: string): voi
           definition_of_done: task['Definition of Done'] || '',
           validation: task['Validation Method'] || '',
           prerequisites: task['Pre-requisites'] || '',
+          cadence: task.Cadence || '',
         };
   }
 

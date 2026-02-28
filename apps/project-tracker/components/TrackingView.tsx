@@ -12,6 +12,7 @@ import {
   SecurityDashboard,
   BuildHealth,
   StatusHistory,
+  ContinuousTaskHealth,
 } from './tracking';
 import CollapsibleSection from './CollapsibleSection';
 
@@ -24,6 +25,7 @@ type TrackingTab =
   | 'ai'
   | 'security'
   | 'build'
+  | 'cadence'
   | 'history';
 
 interface TabConfig {
@@ -83,6 +85,12 @@ const TABS: TabConfig[] = [
     description: 'Build health and validation status',
   },
   {
+    id: 'cadence',
+    label: 'Cadence',
+    icon: 'autorenew',
+    description: 'Continuous task freshness and cadence health',
+  },
+  {
     id: 'history',
     label: 'History',
     icon: 'history',
@@ -111,6 +119,8 @@ export default function TrackingView() {
         return <SecurityDashboard />;
       case 'build':
         return <BuildHealth />;
+      case 'cadence':
+        return <ContinuousTaskHealth />;
       case 'history':
         return <StatusHistory onBack={() => setActiveTab('status')} />;
       default:

@@ -87,6 +87,7 @@ function normalizeCSVData(rows: any[]): Task[] {
       sprint: parseSprint(row['Target Sprint'] || row.sprint),
       artifacts: parseArtifacts(row['Artifacts To Track'] || row.artifacts || ''),
       validation: row['Validation Method'] || row.validation || '',
+      cadence: row['Cadence'] || row.cadence || '',
     };
     return task;
   });

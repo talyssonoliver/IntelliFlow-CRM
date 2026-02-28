@@ -425,9 +425,11 @@ const SKIP_DIRS = new Set([
   '.git',
   '.pnpm',
   'dist',
-  'build',
   '.cache',
 ]);
+
+// Directories to skip only at root or top-level app/package paths (not nested API routes)
+const SKIP_DIRS_TOP_LEVEL = new Set(['build']);
 
 const SKIP_FILES = new Set(['.DS_Store', 'Thumbs.db', '.gitkeep']);
 
@@ -541,6 +543,11 @@ function scanDirectoryRecursive(dir: string, basePath: string = ''): FileEntry[]
         const stats = statSync(fullPath);
 
         if (item.isDirectory()) {
+          // Skip top-level build dirs (e.g., apps/web/build) but not nested ones (e.g., api/tracking/build)
+          const depth = relativePath.split(/[/\\]/).length;
+          if (SKIP_DIRS_TOP_LEVEL.has(item.name) && depth <= 3) {
+            continue;
+          }
           entries.push(...scanDirectoryRecursive(fullPath, relativePath));
         } else if (item.isFile()) {
           const ext = extname(item.name).toLowerCase() || 'none';

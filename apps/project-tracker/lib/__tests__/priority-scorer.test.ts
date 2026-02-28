@@ -34,6 +34,7 @@ function makeTask(overrides: Partial<Task> & { id: string }): Task {
     sprint: 5,
     artifacts: [],
     validation: '',
+    cadence: '',
     ...overrides,
   };
 }

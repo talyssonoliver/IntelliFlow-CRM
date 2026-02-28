@@ -91,6 +91,22 @@ const SAMPLE_SONAR_HISTORY = [
   { date: '2026-01-06', bugs: 3, vulnerabilities: 1, codeSmells: 25 },
 ];
 
+const SAMPLE_CADENCE_FRESHNESS = {
+  audit_metadata: {
+    generated_at: '2026-02-27T23:49:34.264Z',
+    audit_type: 'CADENCE_FRESHNESS_CHECK',
+    continuous_tasks_checked: 5,
+  },
+  summary: {
+    total: 5,
+    fresh: 3,
+    stale: 2,
+    missing: 0,
+    freshness_score: '60%',
+  },
+  tasks: [],
+};
+
 /**
  * Helper to set up the standard 6-file mock chain for GET requests.
  * Route reads: debt-analysis, coverage, sonarqube-metrics, phantom, debt-history, sonar-history
@@ -100,6 +116,7 @@ function setupGetMocks(overrides?: {
   coverage?: any;
   sonar?: any;
   phantom?: any;
+  cadence?: any;
   debtHistory?: any;
   sonarHistory?: any;
 }) {
@@ -108,6 +125,7 @@ function setupGetMocks(overrides?: {
     .mockResolvedValueOnce(JSON.stringify(overrides?.coverage ?? SAMPLE_COVERAGE))
     .mockResolvedValueOnce(JSON.stringify(overrides?.sonar ?? SAMPLE_SONARQUBE))
     .mockResolvedValueOnce(JSON.stringify(overrides?.phantom ?? SAMPLE_PHANTOM))
+    .mockResolvedValueOnce(JSON.stringify(overrides?.cadence ?? SAMPLE_CADENCE_FRESHNESS))
     .mockResolvedValueOnce(JSON.stringify(overrides?.debtHistory ?? SAMPLE_DEBT_HISTORY))
     .mockResolvedValueOnce(JSON.stringify(overrides?.sonarHistory ?? SAMPLE_SONAR_HISTORY));
 
@@ -186,6 +204,33 @@ describe('Quality Metrics API Route', () => {
       expect(data.metrics.phantomAudit.validCount).toBe(45);
     });
 
+    it('parses cadence freshness metrics correctly', async () => {
+      setupGetMocks();
+
+      const response = await GET();
+      const data = await response.json();
+
+      expect(data.metrics.cadenceFreshness).toBeDefined();
+      expect(data.metrics.cadenceFreshness.total).toBe(5);
+      expect(data.metrics.cadenceFreshness.fresh).toBe(3);
+      expect(data.metrics.cadenceFreshness.stale).toBe(2);
+      expect(data.metrics.cadenceFreshness.missing).toBe(0);
+      expect(data.metrics.cadenceFreshness.freshnessScore).toBe('60%');
+    });
+
+    it('returns cadence defaults when report missing', async () => {
+      mockFs.readFile.mockRejectedValue(new Error('File not found'));
+      mockFs.stat.mockRejectedValue(new Error('File not found'));
+
+      const response = await GET();
+      const data = await response.json();
+
+      expect(data.metrics.cadenceFreshness.total).toBe(0);
+      expect(data.metrics.cadenceFreshness.fresh).toBe(0);
+      expect(data.metrics.cadenceFreshness.freshnessScore).toBe('0%');
+      expect(data.metrics.cadenceFreshness.lastUpdated).toBeNull();
+    });
+
     it('includes lastUpdated timestamps for trending', async () => {
       setupGetMocks();
 
@@ -259,12 +304,13 @@ describe('Quality Metrics API Route', () => {
 
     // T-006: GET handles missing history files gracefully (returns empty arrays)
     it('handles missing history files gracefully', async () => {
-      // First 4 reads succeed, last 2 (history) fail
+      // First 5 reads succeed, last 2 (history) fail
       mockFs.readFile
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_ANALYSIS))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_COVERAGE))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONARQUBE))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_PHANTOM))
+        .mockResolvedValueOnce(JSON.stringify(SAMPLE_CADENCE_FRESHNESS))
         .mockRejectedValueOnce(new Error('debt-history.json not found'))
         .mockRejectedValueOnce(new Error('sonarqube-history.json not found'));
 
@@ -304,6 +350,7 @@ describe('Quality Metrics API Route', () => {
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_COVERAGE))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_SONARQUBE))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_PHANTOM))
+        .mockResolvedValueOnce(JSON.stringify(SAMPLE_CADENCE_FRESHNESS))
         .mockResolvedValueOnce(JSON.stringify(SAMPLE_DEBT_HISTORY))
         .mockRejectedValueOnce(new Error('sonarqube-history.json not found'));
 

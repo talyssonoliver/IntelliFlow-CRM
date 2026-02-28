@@ -45,6 +45,14 @@ interface QualityMetrics {
     validCount: number;
     lastUpdated: string | null;
   };
+  cadenceFreshness: {
+    total: number;
+    fresh: number;
+    stale: number;
+    missing: number;
+    freshnessScore: string;
+    lastUpdated: string | null;
+  };
 }
 
 async function readJsonFile<T>(
@@ -64,7 +72,7 @@ async function readJsonFile<T>(
 
 export async function GET() {
   try {
-    // BUG-1 FIX: Read debt-analysis.json (not debt-ledger.json)
+    // Read debt-analysis.json for quality metrics
     const debtPath = path.join(CODE_ANALYSIS_DIR, 'debt-analysis.json');
     const { data: debtData, lastUpdated: debtUpdated } = await readJsonFile<any>(debtPath);
 
@@ -80,6 +88,10 @@ export async function GET() {
     // Read phantom audit
     const phantomPath = path.join(REPORTS_DIR, 'phantom-completion-audit.json');
     const { data: phantomData, lastUpdated: phantomUpdated } = await readJsonFile<any>(phantomPath);
+
+    // Read cadence freshness report
+    const cadencePath = path.join(REPORTS_DIR, 'cadence-freshness-report.json');
+    const { data: cadenceData, lastUpdated: cadenceUpdated } = await readJsonFile<any>(cadencePath);
 
     // FEAT-2: Read history files
     const debtHistoryPath = path.join(CODE_ANALYSIS_DIR, 'debt-history.json');
@@ -123,6 +135,14 @@ export async function GET() {
         phantomCount: phantomData?.summary?.phantom_completions ?? 0,
         validCount: phantomData?.summary?.verified_completions ?? 0,
         lastUpdated: phantomUpdated,
+      },
+      cadenceFreshness: {
+        total: cadenceData?.summary?.total ?? 0,
+        fresh: cadenceData?.summary?.fresh ?? 0,
+        stale: cadenceData?.summary?.stale ?? 0,
+        missing: cadenceData?.summary?.missing ?? 0,
+        freshnessScore: cadenceData?.summary?.freshness_score ?? '0%',
+        lastUpdated: cadenceUpdated,
       },
     };
 

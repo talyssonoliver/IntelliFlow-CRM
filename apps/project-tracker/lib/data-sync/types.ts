@@ -65,6 +65,7 @@ export interface TaskRecord {
   'Planned Finish'?: string;
   'Percent Complete'?: string;
   'Dependency Types'?: string;
+  Cadence?: string;
 }
 
 export interface SafeUpdateResult {

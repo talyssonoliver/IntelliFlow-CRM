@@ -7,6 +7,7 @@ export { default as BuildHealth } from './BuildHealth';
 export { default as FeatureMatrixPanel } from './FeatureMatrixPanel';
 export { default as SpecTrackerPanel } from './SpecTrackerPanel';
 export { default as StatusHistory } from './StatusHistory';
+export { default as ContinuousTaskHealth } from './ContinuousTaskHealth';
 
 // Shared components
 export * from './shared';
