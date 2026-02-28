@@ -1,0 +1,165 @@
+# WCAG 2.1 Conformance Statement — IntelliFlow CRM
+
+**Product:** IntelliFlow CRM Web Application
+**Version:** 0.1.0 (Sprint 14)
+**Date:** 2026-02-24
+**Review Period:** Next review scheduled Sprint 20
+
+---
+
+## 1. Conformance Status
+
+**IntelliFlow CRM partially conforms to WCAG 2.1 Level AA.**
+
+"Partially conforms" means that some aspects of the content do not fully meet the standard. Specifically, one success criterion (SC 1.4.1 Use of Color) is partially supported on the `/deals` pipeline view.
+
+---
+
+## 2. Scope
+
+This statement covers the IntelliFlow CRM web application across all 26 configured routes:
+
+- **4 public routes:** `/` (landing), `/login`, `/signup`, `/pricing`
+- **22 authenticated routes:** `/dashboard`, `/leads`, `/contacts`, `/accounts`, `/deals`, `/deals/forecast`, `/tasks`, `/tickets`, `/email`, `/calendar`, `/cases`, `/documents`, `/agent-approvals`, `/agent-approvals/ai-review`, `/agent-approvals/experiments`, `/analytics`, `/governance`, `/notifications`, `/settings`, `/settings/ai`, `/settings/team`, `/billing`
+
+---
+
+## 3. Conformance Details
+
+| Metric | Value |
+|--------|-------|
+| Total WCAG 2.1 Level A criteria | 30 |
+| Total WCAG 2.1 Level AA criteria | 20 |
+| Level A: Supports | 25 |
+| Level A: Partially Supports | 1 (SC 1.4.1) |
+| Level A: Not Applicable | 4 |
+| Level AA: Supports | 16 |
+| Level AA: Not Applicable | 4 |
+| Routes fully conformant | 25 of 26 |
+| Routes partially conformant | 1 of 26 (`/deals`) |
+
+---
+
+## 4. Technologies Relied Upon
+
+The following technologies are relied upon for conformance:
+
+- HTML5 (semantic elements, landmarks, ARIA attributes)
+- CSS3 (Tailwind CSS utility framework, CSS custom properties)
+- JavaScript/TypeScript (React 19, Next.js 16 App Router)
+- WAI-ARIA 1.2 (roles, states, properties)
+- Radix UI primitives (accessible dialog, tooltip, popover, toast components)
+- shadcn/ui component library (built on Radix UI)
+
+---
+
+## 5. Known Limitations
+
+### SC 1.4.1 Use of Color — `/deals` Pipeline View
+
+**Description:** Pipeline stage visualization uses color-coded chips to represent deal stages (e.g., green for "Won", red for "Lost"). While text labels accompany the color chips, the color coding alone could be ambiguous for users with color vision deficiencies.
+
+**Impact:** Users who cannot distinguish colors may have difficulty quickly parsing pipeline stage information from visual cues alone.
+
+**Workaround:** Stage names are displayed as text labels adjacent to color chips. Screen reader users receive stage names via accessible text.
+
+**Remediation Plan:** Add pattern fills or icons alongside color chips. Tracked for Sprint 16.
+
+---
+
+## 6. Evaluation Approach
+
+This conformance assessment was conducted using the following methods:
+
+### 6.1 Static Code Review
+Manual inspection of React/TypeScript source code across all 26 routes for:
+- ARIA attributes and landmark structure
+- Semantic HTML usage
+- Keyboard interaction handlers
+- Form labels and error messaging
+- Color contrast (CSS custom property analysis)
+
+### 6.2 Lighthouse CI Runtime Audit
+Automated Lighthouse accessibility audit on 4 public routes with a minimum score threshold of 90/100. Accessibility category assertions set to `error` level (blocking).
+
+### 6.3 axe-core Automated Testing
+8 component-level accessibility tests using axe-core via vitest-axe in a jsdom environment:
+- **Tier 1 (Shell):** NotificationBell, MainNav, SearchBar
+- **Tier 2 (Pages):** Login form, Notification list, Data table
+- **Tier 3 (Interactive):** Button with icon, Form with error message
+
+**Known automated testing limitations:**
+- Color contrast cannot be detected in jsdom (Lighthouse CI covers this)
+- Focus trap correctness requires Playwright E2E testing
+- Skip link presence is not in axe-core's scope
+- Component-level rendering cannot detect missing page titles
+- axe-core checks invalid autocomplete values, not absence
+
+---
+
+## 7. Feedback Mechanism
+
+Users who encounter accessibility barriers can report issues via:
+
+- **Email:** accessibility@intelliflow.com
+- **Response time:** Within 5 business days
+- **Alternative formats:** Available upon request
+
+---
+
+## 8. Screen Reader Testing Plan
+
+### 8.1 Assistive Technology Combinations
+
+| # | Screen Reader | Browser | Platform |
+|---|--------------|---------|----------|
+| 1 | NVDA 2024.4+ | Chrome 120+ | Windows 11 |
+| 2 | VoiceOver | Safari 17+ | macOS Sonoma |
+| 3 | VoiceOver | Safari | iOS 17+ |
+| 4 | JAWS 2024+ | Chrome 120+ | Windows 11 |
+
+### 8.2 Test Routes (8 Priority Routes)
+
+| Priority | Route | Rationale |
+|----------|-------|-----------|
+| P0 | `/` | Public landing — first impression |
+| P0 | `/login` | Authentication entry point |
+| P0 | `/dashboard` | Primary authenticated view |
+| P0 | `/leads` | Core CRM workflow with DataTable |
+| P1 | `/notifications` | Live region updates, bell interaction |
+| P1 | `/settings` | Form-heavy configuration page |
+| P1 | `/deals` | Pipeline visualization (SC 1.4.1 known limitation) |
+| P1 | `/documents` | File management with version history |
+
+### 8.3 Test Scenarios per Route (6 Scenarios)
+
+| # | Scenario | What to Verify |
+|---|----------|---------------|
+| 1 | Heading navigation | All headings announced in correct order; no skipped levels |
+| 2 | Landmark navigation | All landmarks discoverable; `<nav>` elements have distinguishing `aria-label` |
+| 3 | Form completion | Labels announced; errors announced via `aria-live`; autocomplete functional |
+| 4 | Table navigation | Column headers announced; row navigation possible; action buttons labeled |
+| 5 | Dialog/modal focus | Focus moves to dialog on open; trapped within dialog; returns on close |
+| 6 | Live regions | Toast notifications announced; notification count updates announced |
+
+### 8.4 Execution Schedule
+
+| Sprint | Scope | AT Combinations |
+|--------|-------|-----------------|
+| Sprint 15 | P0 routes (4 routes) | NVDA+Chrome, VoiceOver+Safari macOS |
+| Sprint 16 | P1 routes (4 routes) | All 4 combinations |
+| Sprint 18+ | Regression automation | Playwright + axe-core integration |
+
+### 8.5 Pass/Fail Criteria
+
+- **Pass:** All 6 scenarios complete without blocking issues on the given AT combination
+- **Fail:** Any scenario where a user cannot complete the intended task or information is inaccessible
+- **Results:** Documented per route/AT combination in `artifacts/reports/screen-reader-test-results.json`
+
+---
+
+## Document Control
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0.0 | 2026-02-24 | Engineering (DOC-008) | Initial conformance statement with screen reader testing plan |

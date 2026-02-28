@@ -1,0 +1,67 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "DOC-010",
+  "section": "Documentation",
+  "description": "Create route reconciliation script comparing conformance-statement.md routes against apps/web/src/app/ directory tree",
+  "owner": "PM (STOA-Automation)",
+  "sprint": "sprint-15",
+  "phase": "phase-1",
+  "stream": null,
+  "status": "IN_PROGRESS",
+  "dependencies": {
+    "required": [
+      "DOC-008"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-02-28T00:53:59.432Z"
+  },
+  "dependencies_resolved": [
+    "DOC-008"
+  ],
+  "started_at": "2026-02-27T23:35:00Z",
+  "completed_at": null,
+  "target_duration_minutes": null,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "route_drift_detection": {
+      "target": "1 CI run",
+      "actual": "pending",
+      "met": false
+    },
+    "false_positives": {
+      "target": 0,
+      "actual": "pending",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "tools/scripts/a11y-route-reconcile.ts"
+    ],
+    "created": [
+      "tools/scripts/a11y-route-reconcile.ts"
+    ],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-02-24T01:30:00Z"
+    },
+    {
+      "status": "Specifying",
+      "at": "2026-02-27T23:35:00Z"
+    },
+    {
+      "status": "Spec Complete",
+      "at": "2026-02-27T23:52:00Z"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-02-28T00:30:00Z"
+    }
+  ],
+  "notes": "Route reconciliation script to prevent accessibility documentation staleness. Compares routes listed in wcag-conformance-statement.md against actual app router directories."
+}

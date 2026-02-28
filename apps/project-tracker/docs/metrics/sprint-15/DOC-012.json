@@ -1,0 +1,55 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "DOC-012",
+  "section": "Documentation",
+  "description": "Establish quarterly accessibility documentation review cadence with recurring sprint task template",
+  "owner": "PM (STOA-Automation)",
+  "sprint": "sprint-15",
+  "phase": "phase-1",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [
+      "DOC-008"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-02-28T00:53:59.436Z"
+  },
+  "dependencies_resolved": [
+    "DOC-008"
+  ],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": null,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "doc_areas_covered": {
+      "target": 5,
+      "actual": "pending",
+      "met": false
+    },
+    "review_cadence": {
+      "target": "every 4 sprints",
+      "actual": "pending",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "docs/compliance/quarterly-a11y-review-template.md"
+    ],
+    "created": [],
+    "missing": [
+      "docs/compliance/quarterly-a11y-review-template.md"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-02-24T01:30:00Z"
+    }
+  ],
+  "notes": "Creates a reusable quarterly review template covering VPAT accuracy, conformance scope, route coverage, known limitations, and AT testing schedule."
+}
