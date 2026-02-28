@@ -6,7 +6,7 @@ RISK-004,Cost,AI API costs exceed monthly budget thresholds,3,4,12,Ollama for de
 RISK-005,Performance,Application response times exceed SLA targets,2,3,6,Performance benchmarks in CI; automated alerting at p95 thresholds; pre-prod load testing,Performance Eng,Mitigated,2025-02-15,Tech Lead if p99 > 300ms,artifacts/benchmarks/ reports,Current p99 at 92ms (target <200ms)
 RISK-006,Security,Authentication bypass vulnerability exposes user data,5,1,5,Supabase Auth with JWT validation; RLS policies on all tables; quarterly penetration testing; bug bounty planned,Security Lead,Mitigated,2025-02-01,CISO for critical findings,docs/security/zero-trust-design.md,Zero critical vulnerabilities in last scan
 RISK-007,Security,SQL injection attacks compromise database,5,1,5,Prisma parameterized queries only; Zod input validation on all endpoints; SAST scanning in CI,Security Lead,Mitigated,2025-02-01,CISO for any injection vector found,SAST scan reports in CI,Prisma eliminates raw SQL
-RISK-008,Compliance,GDPR non-compliance leads to regulatory action,3,5,15,Data governance policies defined; consent management in Sprint 12; audit trail on all PII access; DPIA drafted,Compliance Lead,In Progress,2025-04-01,Legal counsel for compliance gaps,artifacts/reports/gdpr-compliance.md,Phase 2 data subject rights in Sprint 12
+RISK-008,Compliance,GDPR non-compliance leads to regulatory action,1,5,5,34/34 GDPR controls implemented (checklist verified 2025-12-29); consent management live (consents table + cookie consent component); DSAR workflow operational; audit trails encrypted (IFC-124); retention automation active; DPO role in RBAC; remaining work is UI settings pages (PG-118/119/122/123 Sprint 28),Compliance Lead,Mitigated,2026-02-23,Legal counsel for compliance gaps,artifacts/reports/gdpr-compliance.md; artifacts/reports/gdpr-compliance-checklist.csv,Backend controls complete; Sprint 28 UI pages are quality-of-life not compliance-blocking
 RISK-009,Infrastructure,Single region deployment causes availability issues,3,3,9,Blue-green deployment configured; rollback under 5 minutes; multi-region DR planned Sprint 20,DevOps Lead,Accepted,2025-06-01,CTO for regional expansion approval,infra/terraform/ multi-region plans,Accepted for MVP; DR is roadmap item
 RISK-010,Dependency,Vulnerable npm packages introduce security flaws,3,4,12,pnpm audit in CI with fail on high; Snyk integration; automated dependency PRs; weekly review,DevOps Lead,Mitigated,Weekly,Security Lead for critical CVEs,CI pipeline audit logs,Continuous monitoring with auto-remediation
 RISK-011,AI,LLM hallucination produces incorrect lead scores,3,4,12,Human-in-the-loop for scores > 80 or < 20; confidence thresholds at 70%; audit logging all predictions,AI Lead,Mitigated,2025-01-25,Product Owner for business impact,apps/ai-worker/src/chains/scoring.chain.ts,Zod schema validation on all outputs
@@ -36,15 +36,15 @@ Score Range,Classification,Action Required
 Summary Statistics
 Total Risks,25
 Critical (20-25),0
-High (15-19),1
+High (15-19),0
 Medium (10-14),7
-Low (5-9),13
+Low (5-9),14
 Minimal (1-4),4
 
 Risk Status Distribution
-Mitigated,18
+Mitigated,19
 Monitored,5
-In Progress,1
+In Progress,0
 Accepted,1
 
 Overall Risk Profile,LOW-MEDIUM

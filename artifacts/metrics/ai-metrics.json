@@ -357,8 +357,42 @@
       "const result = await withLatencyTracking('op-1', 'gpt-4', 'scoring', async () => await aiCall());"
     ]
   },
-  "lastRefresh": "2026-02-22T20:23:36.866Z",
+  "lastRefresh": "2026-02-23T20:33:58.488Z",
   "drift": {
-    "lastCheck": "2026-02-22T20:23:36.866Z"
+    "lastCheck": "2026-02-23T20:33:58.488Z"
+  },
+  "history": {
+    "drift": [
+      {
+        "date": "2026-02-23",
+        "score": 0,
+        "detected": false
+      },
+      {
+        "date": "2026-02-23",
+        "score": 0,
+        "detected": false
+      }
+    ],
+    "hallucination": [
+      {
+        "date": "2026-02-23",
+        "rate": 0
+      },
+      {
+        "date": "2026-02-23",
+        "rate": 0
+      }
+    ],
+    "costs": [
+      {
+        "date": "2026-02-23",
+        "amount": 0
+      },
+      {
+        "date": "2026-02-23",
+        "amount": 0
+      }
+    ]
   }
 }

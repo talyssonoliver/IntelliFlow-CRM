@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-02-22T20:24:56.877Z",
+    "generated_at": "2026-02-27T22:54:07.420Z",
     "schema_version": "1.0.0",
     "sprint_scope": 0
   },
@@ -198,7 +198,7 @@
         "AI-SETUP-003"
       ],
       "priority": "critical",
-      "days_until_expiry": -23
+      "days_until_expiry": -28
     },
     {
       "rule": "WAIVER_USED",
@@ -212,13 +212,13 @@
     },
     {
       "rule": "WAIVER_EXPIRING",
-      "severity": "warning",
-      "message": "Task ENV-008-AI waiver expires in 5 days (2026-02-28)",
+      "severity": "error",
+      "message": "Task ENV-008-AI waiver has EXPIRED (2026-02-28)",
       "tasks": [
         "ENV-008-AI"
       ],
-      "priority": "high",
-      "days_until_expiry": 5
+      "priority": "critical",
+      "days_until_expiry": 0
     },
     {
       "rule": "WAIVER_USED",
@@ -238,7 +238,7 @@
         "ENV-010-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -23
+      "days_until_expiry": -28
     },
     {
       "rule": "WAIVER_USED",
@@ -258,7 +258,7 @@
         "ENV-011-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -23
+      "days_until_expiry": -28
     },
     {
       "rule": "WAIVER_USED",
@@ -272,13 +272,13 @@
     },
     {
       "rule": "WAIVER_EXPIRING",
-      "severity": "warning",
-      "message": "Task ENV-012-AI waiver expires in 5 days (2026-02-28)",
+      "severity": "error",
+      "message": "Task ENV-012-AI waiver has EXPIRED (2026-02-28)",
       "tasks": [
         "ENV-012-AI"
       ],
-      "priority": "high",
-      "days_until_expiry": 5
+      "priority": "critical",
+      "days_until_expiry": 0
     },
     {
       "rule": "WAIVER_USED",
@@ -292,13 +292,13 @@
     },
     {
       "rule": "WAIVER_EXPIRING",
-      "severity": "warning",
-      "message": "Task ENV-014-AI waiver expires in 5 days (2026-02-28)",
+      "severity": "error",
+      "message": "Task ENV-014-AI waiver has EXPIRED (2026-02-28)",
       "tasks": [
         "ENV-014-AI"
       ],
-      "priority": "high",
-      "days_until_expiry": 5
+      "priority": "critical",
+      "days_until_expiry": 0
     },
     {
       "rule": "WAIVER_USED",
@@ -312,13 +312,13 @@
     },
     {
       "rule": "WAIVER_EXPIRING",
-      "severity": "warning",
-      "message": "Task ENV-015-AI waiver expires in 5 days (2026-02-28)",
+      "severity": "error",
+      "message": "Task ENV-015-AI waiver has EXPIRED (2026-02-28)",
       "tasks": [
         "ENV-015-AI"
       ],
-      "priority": "high",
-      "days_until_expiry": 5
+      "priority": "critical",
+      "days_until_expiry": 0
     },
     {
       "rule": "WAIVER_USED",
@@ -332,13 +332,13 @@
     },
     {
       "rule": "WAIVER_EXPIRING",
-      "severity": "warning",
-      "message": "Task ENV-016-AI waiver expires in 5 days (2026-02-28)",
+      "severity": "error",
+      "message": "Task ENV-016-AI waiver has EXPIRED (2026-02-28)",
       "tasks": [
         "ENV-016-AI"
       ],
-      "priority": "high",
-      "days_until_expiry": 5
+      "priority": "critical",
+      "days_until_expiry": 0
     },
     {
       "rule": "WAIVER_USED",
@@ -352,13 +352,13 @@
     },
     {
       "rule": "WAIVER_EXPIRING",
-      "severity": "warning",
-      "message": "Task AUTOMATION-001 waiver expires in 5 days (2026-02-28)",
+      "severity": "error",
+      "message": "Task AUTOMATION-001 waiver has EXPIRED (2026-02-28)",
       "tasks": [
         "AUTOMATION-001"
       ],
-      "priority": "high",
-      "days_until_expiry": 5
+      "priority": "critical",
+      "days_until_expiry": 0
     },
     {
       "rule": "WAIVER_USED",
@@ -372,13 +372,13 @@
     },
     {
       "rule": "WAIVER_EXPIRING",
-      "severity": "warning",
-      "message": "Task AUTOMATION-002 waiver expires in 5 days (2026-02-28)",
+      "severity": "error",
+      "message": "Task AUTOMATION-002 waiver has EXPIRED (2026-02-28)",
       "tasks": [
         "AUTOMATION-002"
       ],
-      "priority": "high",
-      "days_until_expiry": 5
+      "priority": "critical",
+      "days_until_expiry": 0
     }
   ],
   "review_queue": [

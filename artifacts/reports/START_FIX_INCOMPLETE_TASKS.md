@@ -17,13 +17,13 @@ Track remediation steps for tasks flagged as incomplete or missing artifacts in 
    - Ensure `.specify/sprints/**/attestations/*/context_ack.json` present.
 3) Refresh quality reports  
    - `pnpm test`, `pnpm lint`, update `artifacts/reports/review-queue.json` if new warnings arise.
-4) Log any new incomplete tasks and map to owners within debt-ledger.
+4) Log any new incomplete tasks and map to owners within `docs/debt-ledger.yaml`.
 
 ## Next review
 - Weekly on Mondays; next check: 2026-02-09.
 
 ## Related artifacts
-- `artifacts/reports/debt-ledger.json`
+- `docs/debt-ledger.yaml`
 - `artifacts/reports/review-queue.json`
 - `artifacts/reports/stoa-review-queue.json`
 - `artifacts/reports/task-validation-summary-2025-12-25T18-15-00.json`

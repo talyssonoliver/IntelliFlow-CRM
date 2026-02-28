@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-12-15T07:34:17.584Z",
-  "turboVersion": "2.6.3",
+  "timestamp": "2026-02-28T00:36:45.854Z",
+  "turboVersion": "2.8.10",
   "results": [
     {
       "name": "turbo.json exists",
@@ -27,10 +27,10 @@
     {
       "name": "Input/output coverage",
       "passed": true,
-      "message": "Found 64 input patterns and 28 output patterns",
+      "message": "Found 63 input patterns and 27 output patterns",
       "details": {
-        "totalInputs": 64,
-        "totalOutputs": 28
+        "totalInputs": 63,
+        "totalOutputs": 27
       }
     },
     {
@@ -50,10 +50,10 @@
     {
       "name": "Cache directory",
       "passed": true,
-      "message": "Cache directory exists with 3 entries",
+      "message": "Cache directory exists with 4 entries",
       "details": {
-        "path": "C:\\taly\\intelliFlow-CRM\\.turbo",
-        "entries": 3
+        "path": "C:\\Users\\talys\\projects\\intelliFlow-CRM\\.turbo",
+        "entries": 4
       }
     },
     {
