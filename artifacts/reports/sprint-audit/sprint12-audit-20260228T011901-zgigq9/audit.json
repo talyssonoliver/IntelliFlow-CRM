@@ -1,9 +1,9 @@
 {
   "$schema": "../schemas/sprint-audit-report.schema.json",
   "schema_version": "1.0.0",
-  "run_id": "sprint12-audit-20260228T012132-5406g7",
+  "run_id": "sprint12-audit-20260228T011901-zgigq9",
   "sprint": 12,
-  "generated_at": "2026-02-28T01:27:14.439Z",
+  "generated_at": "2026-02-28T01:24:39.851Z",
   "attestor": "sprint-completion-auditor",
   "verdict": "FAIL",
   "config": {
@@ -299,10 +299,10 @@
           "command": "pnpm test",
           "exitCode": 124,
           "passed": false,
-          "durationMs": 61766,
+          "durationMs": 63575,
           "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "logPath": "artifacts\\reports\\sprint-audit\\sprint12-audit-20260228T012132-5406g7\\evidence\\validation-logs\\IFC-081_1772241721251.log",
-          "timestamp": "2026-02-28T01:22:01.251Z",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint12-audit-20260228T011901-zgigq9\\evidence\\validation-logs\\IFC-081_1772241563793.log",
+          "timestamp": "2026-02-28T01:19:23.793Z",
           "error": "Command timed out after 60000ms"
         }
       ],
@@ -1214,10 +1214,10 @@
           "command": "pnpm test",
           "exitCode": 124,
           "passed": false,
-          "durationMs": 61752,
+          "durationMs": 61855,
           "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "logPath": "artifacts\\reports\\sprint-audit\\sprint12-audit-20260228T012132-5406g7\\evidence\\validation-logs\\PG-013_1772241783892.log",
-          "timestamp": "2026-02-28T01:23:03.892Z",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint12-audit-20260228T011901-zgigq9\\evidence\\validation-logs\\PG-013_1772241629178.log",
+          "timestamp": "2026-02-28T01:20:29.178Z",
           "error": "Command timed out after 60000ms"
         }
       ],
@@ -1943,10 +1943,10 @@
           "command": "pnpm test",
           "exitCode": 124,
           "passed": false,
-          "durationMs": 63286,
+          "durationMs": 62048,
           "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "logPath": "artifacts\\reports\\sprint-audit\\sprint12-audit-20260228T012132-5406g7\\evidence\\validation-logs\\IFC-169_1772241845924.log",
-          "timestamp": "2026-02-28T01:24:05.924Z",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint12-audit-20260228T011901-zgigq9\\evidence\\validation-logs\\IFC-169_1772241691225.log",
+          "timestamp": "2026-02-28T01:21:31.225Z",
           "error": "Command timed out after 60000ms"
         }
       ],
@@ -2094,10 +2094,10 @@
           "command": "pnpm test",
           "exitCode": 124,
           "passed": false,
-          "durationMs": 62085,
+          "durationMs": 62867,
           "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "logPath": "artifacts\\reports\\sprint-audit\\sprint12-audit-20260228T012132-5406g7\\evidence\\validation-logs\\IFC-170_1772241909388.log",
-          "timestamp": "2026-02-28T01:25:09.388Z",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint12-audit-20260228T011901-zgigq9\\evidence\\validation-logs\\IFC-170_1772241753945.log",
+          "timestamp": "2026-02-28T01:22:33.945Z",
           "error": "Command timed out after 60000ms"
         }
       ],
@@ -2252,10 +2252,10 @@
           "command": "pnpm test",
           "exitCode": 124,
           "passed": false,
-          "durationMs": 62344,
+          "durationMs": 62683,
           "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-          "logPath": "artifacts\\reports\\sprint-audit\\sprint12-audit-20260228T012132-5406g7\\evidence\\validation-logs\\IFC-171_1772241971791.log",
-          "timestamp": "2026-02-28T01:26:11.791Z",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint12-audit-20260228T011901-zgigq9\\evidence\\validation-logs\\IFC-171_1772241817024.log",
+          "timestamp": "2026-02-28T01:23:37.024Z",
           "error": "Command timed out after 60000ms"
         }
       ],
@@ -2563,5 +2563,5 @@
       "recommendation": "Create all required artifacts before marking task complete"
     }
   ],
-  "duration_seconds": 341.733
+  "duration_seconds": 338.683
 }
