@@ -46,16 +46,16 @@ export default function TeamPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border">
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <th scope="col" className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Member
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <th scope="col" className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Role
                   </th>
-                  <th className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <th scope="col" className="text-left px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="text-right px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  <th scope="col" className="text-right px-6 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>

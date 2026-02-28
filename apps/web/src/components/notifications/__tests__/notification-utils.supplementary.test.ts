@@ -37,7 +37,7 @@ describe('notification-utils', () => {
       }
     );
 
-    it('returns config for all 35 notification types', () => {
+    it('returns config for all 40 notification types', () => {
       for (const type of NOTIFICATION_TYPES) {
         const config = getTypeConfig(type as NotificationType);
         expect(config).toBeDefined();
@@ -146,12 +146,14 @@ describe('notification-utils', () => {
       expect(groupNames).toContain('System');
       expect(groupNames).toContain('Document');
       expect(groupNames).toContain('Email');
+      expect(groupNames).toContain('Ticket');
+      expect(groupNames).toContain('Case');
     });
 
-    it('contains all 35 types across all groups', () => {
+    it('contains all 40 types across all groups', () => {
       const groups = getTypesByGroup();
       const allTypes = Object.values(groups).flat();
-      expect(allTypes).toHaveLength(35);
+      expect(allTypes).toHaveLength(40);
     });
 
     it('places lead types in Lead group', () => {

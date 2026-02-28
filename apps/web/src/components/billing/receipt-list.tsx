@@ -314,4 +314,3 @@ export function ReceiptList({
   );
 }
 
-export default ReceiptList;

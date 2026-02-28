@@ -287,11 +287,12 @@ export function ReviewQueue() {
         {/* Additional filters: Confidence slider + SLA breached toggle */}
         <div className="flex flex-wrap items-center gap-4 px-1">
           <div className="flex items-center gap-2">
-            <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+            <label htmlFor="confidence-slider" className="text-xs font-medium text-muted-foreground whitespace-nowrap">
               Confidence
             </label>
             <div className="w-40">
               <Slider
+                id="confidence-slider"
                 defaultValue={[0, 100]}
                 max={100}
                 step={5}

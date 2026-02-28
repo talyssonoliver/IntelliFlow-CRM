@@ -126,6 +126,7 @@ export function RecipientPicker({ label, value, onChange, className }: Recipient
         role="combobox"
         aria-expanded={isOpen}
         aria-haspopup="listbox"
+        aria-controls={listboxId}
         aria-owns={listboxId}
         className={cn(
           'flex flex-wrap items-center gap-1 rounded-md border border-input px-2 py-1.5 text-sm',

@@ -16,9 +16,10 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
+import { PinButton } from '@/components/home/PinButton';
 import { AppAvatar } from '@/components/shared/app-avatar';
 import { EscalationAlert } from './EscalationAlert';
-import { ActivityFeed } from '@/components/shared/activity-feed/ActivityFeed';
+import { ActivityFeed } from '@/components/shared/activity-feed';
 import { TicketAssignSidebar } from './TicketAssignSidebar';
 import {
   formatSLATime,
@@ -201,6 +202,13 @@ export function TicketDetail({
               <span className="material-symbols-outlined text-[18px]">edit</span>
               Change Status
             </button>
+            <PinButton
+              entityType="ticket"
+              entityId={ticket.id}
+              title={ticket.subject}
+              icon="confirmation_number"
+              url={`/tickets/${ticket.id}`}
+            />
             <MoreActionsButton onClick={() => setActionSheetOpen(true)} />
           </div>
         </div>
@@ -722,10 +730,11 @@ export function TicketDetail({
 
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        <label htmlFor="resolution-type-select" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                           Resolution Type
                         </label>
                         <select
+                          id="resolution-type-select"
                           value={resolutionType}
                           onChange={(e) => setResolutionType(e.target.value)}
                           className="w-full py-2 px-3 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg text-sm"
@@ -739,10 +748,11 @@ export function TicketDetail({
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        <label htmlFor="root-cause-textarea" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                           Root Cause
                         </label>
                         <textarea
+                          id="root-cause-textarea"
                           value={rootCause}
                           onChange={(e) => setRootCause(e.target.value)}
                           className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 min-h-[80px]"
@@ -750,10 +760,11 @@ export function TicketDetail({
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        <label htmlFor="resolution-summary-textarea" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                           Resolution Summary
                         </label>
                         <textarea
+                          id="resolution-summary-textarea"
                           value={resolutionSummary}
                           onChange={(e) => setResolutionSummary(e.target.value)}
                           className="w-full p-3 border border-slate-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-800 min-h-[120px]"
@@ -1088,7 +1099,7 @@ export function TicketDetail({
               </div>
               <div className="space-y-3">
                 {ticket.nextSteps.map((step) => (
-                  <label key={step.id} className="flex items-start gap-3 group cursor-pointer">
+                  <label key={step.id} aria-label={step.title} className="flex items-start gap-3 group cursor-pointer">
                     <input
                       type="checkbox"
                       defaultChecked={step.completed}

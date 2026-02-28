@@ -90,7 +90,6 @@ export function FolderSidebar({
               key={folder.id}
               ref={(el) => { folderRefs.current[i] = el; }}
               type="button"
-              role="button"
               aria-current={isActive ? 'page' : undefined}
               aria-label={folder.label}
               className={cn(

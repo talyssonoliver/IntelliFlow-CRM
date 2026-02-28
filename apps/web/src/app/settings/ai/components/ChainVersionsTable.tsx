@@ -127,12 +127,12 @@ export function ChainVersionsTable({
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-6">
         <div className="w-48">
-          <label className="text-xs text-muted-foreground mb-1 block">Chain Type</label>
+          <label htmlFor="chain-type-filter" className="text-xs text-muted-foreground mb-1 block">Chain Type</label>
           <Select
             value={selectedChainType}
             onValueChange={(value) => onChainTypeChange(value as ChainType | 'all')}
           >
-            <SelectTrigger>
+            <SelectTrigger id="chain-type-filter">
               <SelectValue placeholder="All Types" />
             </SelectTrigger>
             <SelectContent>
@@ -147,12 +147,12 @@ export function ChainVersionsTable({
         </div>
 
         <div className="w-48">
-          <label className="text-xs text-muted-foreground mb-1 block">Status</label>
+          <label htmlFor="chain-status-filter" className="text-xs text-muted-foreground mb-1 block">Status</label>
           <Select
             value={selectedStatus}
             onValueChange={(value) => onStatusChange(value as ChainVersionStatus | 'all')}
           >
-            <SelectTrigger>
+            <SelectTrigger id="chain-status-filter">
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
             <SelectContent>

@@ -102,6 +102,7 @@ function ToggleSwitch({
 }>) {
   return (
     <label
+      aria-label="Toggle"
       className={`relative inline-flex items-center ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
     >
       <input

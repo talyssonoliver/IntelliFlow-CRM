@@ -147,11 +147,13 @@ export function EntitySearchField({
           aria-label={`Search ${ENTITY_LABELS[entityType].toLowerCase()}s`}
           role="combobox"
           aria-expanded={open}
+          aria-controls="entity-search-listbox"
         />
       )}
 
       {open && !value && debouncedSearch.length > 0 && (
         <div
+          id="entity-search-listbox"
           className="absolute z-50 mt-1 w-full rounded-md border border-input bg-background shadow-lg max-h-48 overflow-y-auto"
           role="listbox"
         >
@@ -167,6 +169,7 @@ export function EntitySearchField({
                 onClick={() => handleSelect(item.id, item.name)}
                 className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
                 role="option"
+                aria-selected={false}
               >
                 {item.name}
               </button>

@@ -218,29 +218,6 @@ export const casePriorityOptions = () => toFilterOptions(CASE_PRIORITIES);
 export const caseStatusChips = () => toFilterChipsWithAll(CASE_STATUSES, CASE_STATUS_COLORS);
 export const casePriorityChips = () => toFilterChipsWithAll(CASE_PRIORITIES, CASE_PRIORITY_COLORS);
 
-// =============================================================================
-// Task Color Mappings
-// =============================================================================
-
-/** Task status colors */
-export const TASK_STATUS_COLORS: Record<string, string> = {
-  PENDING: 'bg-slate-500',
-  IN_PROGRESS: 'bg-blue-500',
-  COMPLETED: 'bg-green-500',
-  CANCELLED: 'bg-red-500',
-  ARCHIVED: 'bg-gray-400',
-};
-
-/** Task priority colors */
-export const TASK_PRIORITY_COLORS: Record<string, string> = {
-  LOW: 'bg-gray-500',
-  MEDIUM: 'bg-yellow-500',
-  HIGH: 'bg-orange-500',
-  URGENT: 'bg-red-500',
-};
-
 // Task filters
 export const taskStatusOptions = () => toFilterOptions(TASK_STATUSES);
 export const taskPriorityOptions = () => toFilterOptions(TASK_PRIORITIES);
-export const taskStatusChips = () => toFilterChipsWithAll(TASK_STATUSES, TASK_STATUS_COLORS);
-export const taskPriorityChips = () => toFilterChipsWithAll(TASK_PRIORITIES, TASK_PRIORITY_COLORS);

@@ -202,7 +202,6 @@ export function DocumentList({
           <button
             onClick={() => handleSort('name')}
             className="flex items-center gap-1"
-            aria-sort={sortField === 'name' ? sortDirection === 'asc' ? 'ascending' : 'descending' : 'none'}
           >
             Name
             {sortField === 'name' && <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>}
@@ -234,7 +233,6 @@ export function DocumentList({
           <button
             onClick={() => handleSort('status')}
             className="flex items-center gap-1"
-            aria-sort={sortField === 'status' ? sortDirection === 'asc' ? 'ascending' : 'descending' : 'none'}
           >
             Status
             {sortField === 'status' && <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>}
@@ -248,7 +246,6 @@ export function DocumentList({
           <button
             onClick={() => handleSort('size')}
             className="flex items-center gap-1"
-            aria-sort={sortField === 'size' ? sortDirection === 'asc' ? 'ascending' : 'descending' : 'none'}
           >
             Size
             {sortField === 'size' && <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>}
@@ -262,7 +259,6 @@ export function DocumentList({
           <button
             onClick={() => handleSort('date')}
             className="flex items-center gap-1"
-            aria-sort={sortField === 'date' ? sortDirection === 'asc' ? 'ascending' : 'descending' : 'none'}
           >
             Date
             {sortField === 'date' && <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>}

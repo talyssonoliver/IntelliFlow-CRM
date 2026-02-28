@@ -12,11 +12,12 @@ export function SearchBar({ placeholder = 'Search...', className = '' }: SearchB
 
   return (
     <div className={`relative ${className}`}>
-      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-lg text-muted-foreground">
+      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-lg text-muted-foreground" aria-hidden="true">
         search
       </span>
       <input
         type="search"
+        aria-label="Search"
         placeholder={placeholder}
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}

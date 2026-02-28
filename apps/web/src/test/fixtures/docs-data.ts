@@ -74,6 +74,6 @@ export const mockDocsCategories: DocCategory[] = [
     href: '/docs/changelog',
     icon: 'history',
     color: 'bg-violet-500',
-    comingSoon: true,
+    docCount: 7,
   },
 ];

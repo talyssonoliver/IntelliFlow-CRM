@@ -18,11 +18,12 @@ import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
+import { PinButton } from '@/components/home/PinButton';
 import { AppAvatar } from '@/components/shared/app-avatar';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 import { UpcomingEventsCard } from '@/components/shared';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
-import { ActivityFeed } from '@/components/shared/activity-feed/ActivityFeed';
+import { ActivityFeed } from '@/components/shared/activity-feed';
 
 // Tab types
 type TabId =
@@ -1105,6 +1106,14 @@ export default function Contact360Page() {
             </svg>
             Log Call
           </button>
+          <PinButton
+            entityType="contact"
+            entityId={contact.id}
+            title={`${contact.firstName} ${contact.lastName}`}
+            subtitle={contact.company || undefined}
+            icon="contacts"
+            url={`/contacts/${contact.id}`}
+          />
           <MoreActionsButton onClick={() => setActionSheetOpen(true)} />
         </div>
       </div>

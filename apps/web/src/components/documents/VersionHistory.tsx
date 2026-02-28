@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { Button } from '@intelliflow/ui';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { formatFileSize, formatDate } from './document-utils';
 import type { VersionHistoryProps, DocumentVersion } from './types';
 
@@ -60,6 +61,8 @@ export function VersionHistory({
     setRestoreTarget(null);
   }, []);
 
+  const restoreDialogRef = useFocusTrap<HTMLDivElement>(!!restoreTarget);
+
   // ─── Empty State ──────────────────────────────────────────────────────────
 
   if (versions.length === 0) {
@@ -79,10 +82,12 @@ export function VersionHistory({
       {/* Restore Confirmation Dialog */}
       {restoreTarget && (
         <div
+          ref={restoreDialogRef}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
           role="dialog"
           aria-modal="true"
           aria-label="Confirm restore"
+          onKeyDown={(e) => { if (e.key === 'Escape') cancelRestore(); }}
         >
           <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Restore version?</h3>
@@ -104,7 +109,7 @@ export function VersionHistory({
       )}
 
       {/* Timeline */}
-      <ol className="relative space-y-0" role="list" aria-label="Version history">
+      <ol className="relative space-y-0" aria-label="Version history">
         {sortedVersions.map((version, index) => {
           const isCurrent = version.id === currentVersionId;
           const prevVersion = sortedVersions[index + 1]; // Previous is the next in the sorted (older) list
@@ -114,7 +119,6 @@ export function VersionHistory({
           return (
             <li
               key={version.id}
-              role="listitem"
               className={`relative pl-8 pb-6 ${index < sortedVersions.length - 1 ? 'border-l-2 border-slate-200 dark:border-slate-700' : ''}`}
               data-testid={`version-item-${version.id}`}
             >

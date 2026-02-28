@@ -20,7 +20,7 @@ export function MainNav({ routes, className }: MainNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav className={cn('hidden lg:flex items-center gap-1', className)}>
+    <nav aria-label="Primary navigation" className={cn('hidden lg:flex items-center gap-1', className)}>
       {routes.map((route) => {
         const isActive = pathname === route.href || pathname?.startsWith(route.href + '/');
         return (

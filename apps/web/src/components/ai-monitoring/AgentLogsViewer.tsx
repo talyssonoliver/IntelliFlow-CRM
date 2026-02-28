@@ -121,6 +121,8 @@ function TranscriptView({ messages }: TranscriptViewProps) {
           <div
             key={idx}
             data-testid="message-bubble"
+            role={isSystem ? 'button' : undefined}
+            tabIndex={isSystem ? 0 : undefined}
             className={cn(
               'rounded-lg px-3 py-2 text-sm max-w-[85%]',
               isUser && 'ml-auto bg-blue-100 dark:bg-blue-900/30',
@@ -130,6 +132,12 @@ function TranscriptView({ messages }: TranscriptViewProps) {
               isSystem && !isExpanded && 'opacity-50 cursor-pointer',
             )}
             onClick={isSystem ? () => toggleMessage(idx) : undefined}
+            onKeyDown={isSystem ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleMessage(idx);
+              }
+            } : undefined}
           >
             <span className="text-xs font-semibold uppercase text-muted-foreground block mb-0.5">
               {msg.role}
@@ -178,8 +186,16 @@ function ToolCallList({ toolCalls }: ToolCallListProps) {
           <div key={idx}>
             <div
               data-testid="tool-call-row"
+              role="button"
+              tabIndex={0}
               className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5"
               onClick={() => setExpandedIdx(isExpanded ? null : idx)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setExpandedIdx(isExpanded ? null : idx);
+                }
+              }}
             >
               <span className="text-sm font-medium">{tc.name}</span>
               <span

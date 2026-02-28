@@ -102,20 +102,20 @@ describe('AppointmentCalendar', () => {
     }
   });
 
-  it('uses ARIA grid pattern in month view', () => {
+  it('uses semantic table in month view', () => {
     render(<AppointmentCalendar {...defaultProps} view="month" />);
-    expect(screen.getByRole('grid')).toBeInTheDocument();
+    expect(screen.getByRole('table')).toBeInTheDocument();
   });
 
-  it('renders column headers with role="columnheader"', () => {
+  it('renders column headers with native th elements', () => {
     render(<AppointmentCalendar {...defaultProps} view="month" />);
     const headers = screen.getAllByRole('columnheader');
     expect(headers.length).toBe(7);
   });
 
-  it('renders gridcells in month view', () => {
+  it('renders cells in month view', () => {
     render(<AppointmentCalendar {...defaultProps} view="month" />);
-    const cells = screen.getAllByRole('gridcell');
+    const cells = screen.getAllByRole('cell');
     expect(cells.length).toBeGreaterThan(0);
   });
 });

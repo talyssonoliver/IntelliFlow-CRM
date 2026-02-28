@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { Button } from '@intelliflow/ui';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { canUserModifyACL, formatDate } from './document-utils';
 import type { ACLManagerProps, AccessLevel } from './types';
 
@@ -65,6 +66,8 @@ export function ACLManager({
   const cancelRevoke = useCallback(() => {
     setRevokeTarget(null);
   }, []);
+
+  const revokeDialogRef = useFocusTrap<HTMLDivElement>(!!revokeTarget);
 
   // ─── Empty State ──────────────────────────────────────────────────────────
 
@@ -229,10 +232,12 @@ export function ACLManager({
       {/* Revoke Confirmation Dialog */}
       {revokeTarget && (
         <div
+          ref={revokeDialogRef}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
           role="dialog"
           aria-modal="true"
           aria-label="Confirm revoke access"
+          onKeyDown={(e) => { if (e.key === 'Escape') cancelRevoke(); }}
         >
           <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Revoke access?</h3>

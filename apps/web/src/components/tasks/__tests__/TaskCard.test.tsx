@@ -10,7 +10,14 @@ import { TaskCard } from '../TaskCard';
 
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className, onClick, role, ...props }: any) => (
-    <div className={className} onClick={onClick} role={role} {...props}>
+    <div
+      className={className}
+      onClick={onClick}
+      role={role ?? 'button'}
+      tabIndex={0}
+      onKeyDown={vi.fn()}
+      {...props}
+    >
       {children}
     </div>
   ),

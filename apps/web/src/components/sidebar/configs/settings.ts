@@ -84,6 +84,12 @@ export const settingsSidebarConfig: SidebarConfig = {
           href: '/docs',
           roles: ['SUPER_ADMIN'],
         },
+        {
+          id: 'developer-portal',
+          label: 'Developer Portal',
+          icon: 'integration_instructions',
+          href: '/developers/apps',
+        },
       ],
     },
   ],

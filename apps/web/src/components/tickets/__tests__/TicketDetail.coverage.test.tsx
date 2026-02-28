@@ -52,8 +52,12 @@ vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className }: any) => <div className={className}>{children}</div>,
 }));
 
+vi.mock('@/components/home/PinButton', () => ({
+  PinButton: () => <button data-testid="pin-button">Pin</button>,
+}));
+
 // Mock ActivityFeed for unified view
-vi.mock('@/components/shared/activity-feed/ActivityFeed', () => ({
+vi.mock('@/components/shared/activity-feed', () => ({
   ActivityFeed: ({ entityType, entityId }: any) => (
     <div data-testid="activity-feed">ActivityFeed: {entityType} {entityId}</div>
   ),

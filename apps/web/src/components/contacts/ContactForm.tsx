@@ -387,11 +387,11 @@ export function ContactForm({
                     {statusOptions.map((opt) => (
                       <label
                         key={opt.value}
+                        aria-label={opt.label}
                         className="flex items-start gap-3 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
                       >
                         <input
                           type="radio"
-                          role="radio"
                           name="status"
                           value={opt.value}
                           checked={formData.status === opt.value}

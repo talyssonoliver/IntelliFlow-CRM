@@ -108,7 +108,6 @@ export function AppSidebar({
       onMouseLeave={() => setHovered(false)}
       role="navigation"
       aria-label={`${config.moduleTitle} navigation`}
-      aria-expanded={isExpanded}
     >
       {/* Module Header */}
       <div
@@ -230,7 +229,7 @@ function SidebarSectionComponent({
           </span>
         </div>
       )}
-      <nav className="flex flex-col gap-1" role="menu" aria-label={section.title}>
+      <nav className="flex flex-col gap-1" aria-label={section.title}>
         {section.items.map((item) => (
           <SidebarItemComponent
             key={item.id}
@@ -263,7 +262,6 @@ function SidebarItemComponent({
   return (
     <Link
       href={item.href}
-      role="menuitem"
       aria-current={isActive ? 'page' : undefined}
       title={!isExpanded ? item.label : undefined}
       className={cn(
@@ -459,6 +457,8 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
   const searchParams = useSearchParams();
   const { user } = useAuth();
   const [mounted, setMounted] = React.useState(false);
+  const drawerRef = React.useRef<HTMLElement>(null);
+  const triggerRef = React.useRef<Element | null>(null);
 
   // Track pathname to close sidebar on navigation
   const prevPathname = React.useRef(pathname);
@@ -534,6 +534,52 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isMobileOpen, closeMobile]);
 
+  // Focus trap: keep Tab/Shift+Tab within the drawer when open
+  React.useEffect(() => {
+    if (!isMobileOpen || !drawerRef.current) return;
+
+    // Save the element that triggered the drawer so we can restore focus
+    triggerRef.current = document.activeElement;
+
+    const drawer = drawerRef.current;
+    const focusableSelector =
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+    // Move focus to the close button (first focusable element in the drawer)
+    const firstFocusable = drawer.querySelector<HTMLElement>(focusableSelector);
+    // Use requestAnimationFrame to ensure the drawer is visible before focusing
+    requestAnimationFrame(() => {
+      firstFocusable?.focus();
+    });
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+
+      const focusables = Array.from(drawer.querySelectorAll<HTMLElement>(focusableSelector));
+      if (focusables.length === 0) return;
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleTab);
+    return () => {
+      document.removeEventListener('keydown', handleTab);
+      // Restore focus to the trigger when the drawer closes
+      if (triggerRef.current instanceof HTMLElement) {
+        triggerRef.current.focus();
+      }
+    };
+  }, [isMobileOpen]);
+
   if (!mounted) return null;
 
   return createPortal(
@@ -550,6 +596,7 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
 
       {/* Drawer */}
       <aside
+        ref={drawerRef}
         className={cn(
           'fixed top-0 left-0 bottom-0 z-50 w-72 bg-card border-r border-border',
           'transform transition-transform duration-300 ease-out lg:hidden',
@@ -596,7 +643,7 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
                       {section.title}
                     </span>
                   </div>
-                  <nav className="flex flex-col gap-1" role="menu" aria-label={section.title}>
+                  <nav className="flex flex-col gap-1" aria-label={section.title}>
                     {section.items.map((item) => (
                       <MobileSidebarItem
                         key={item.id}
@@ -651,7 +698,6 @@ function MobileSidebarItem({ item, isActive, moduleColor, onClick }: MobileSideb
     <Link
       href={item.href}
       onClick={onClick}
-      role="menuitem"
       aria-current={isActive ? 'page' : undefined}
       className={cn(
         'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors',

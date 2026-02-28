@@ -11,12 +11,13 @@ import {
 } from '@/lib/ai-search/search-utils';
 
 interface CitationDisplayProps {
-  citation: string;
   source: string;
   sourceId: string;
   title: string;
   relevanceScore: number;
   createdAt: string;
+  /** Disable the title link (use when already inside a clickable container) */
+  disableLink?: boolean;
 }
 
 function formatRelativeTime(dateStr: string): string {
@@ -35,12 +36,12 @@ function formatRelativeTime(dateStr: string): string {
 }
 
 export function CitationDisplay({
-  citation: _citation,
   source,
   sourceId,
   title,
   relevanceScore,
   createdAt,
+  disableLink = false,
 }: CitationDisplayProps) {
   const icon = getSourceIcon(source);
   const label = getSourceLabel(source);
@@ -49,17 +50,19 @@ export function CitationDisplay({
   const scoreText = formatRelevanceScore(relevanceScore);
   const timeAgo = formatRelativeTime(createdAt);
 
+  const showLink = !disableLink && href !== '#';
+
   return (
     <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
       <span className="material-symbols-outlined text-base" aria-hidden="true">
         {icon}
       </span>
 
-      <Badge variant="secondary" className={cn('text-xs', getSourceLabel(source) ? '' : '')}>
+      <Badge variant="secondary" className="text-xs">
         {label}
       </Badge>
 
-      {href !== '#' ? (
+      {showLink ? (
         <Link
           href={href}
           className="text-primary hover:underline truncate max-w-[200px]"

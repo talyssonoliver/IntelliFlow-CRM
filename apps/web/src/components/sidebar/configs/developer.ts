@@ -29,8 +29,50 @@ export const developerSidebarConfig: SidebarConfig = {
           icon: 'integration_instructions',
           href: '/docs/integrations',
         },
+        {
+          id: 'webhooks',
+          label: 'Webhooks',
+          icon: 'webhook',
+          href: '/docs/webhooks',
+        },
+        {
+          id: 'sdk',
+          label: 'SDK Guides',
+          icon: 'terminal',
+          href: '/docs/sdk',
+        },
+        {
+          id: 'cli',
+          label: 'CLI Reference',
+          icon: 'code_blocks',
+          href: '/docs/cli',
+        },
+        {
+          id: 'auth',
+          label: 'Authentication',
+          icon: 'lock',
+          href: '/docs/auth',
+        },
+        {
+          id: 'changelog',
+          label: 'Changelog',
+          icon: 'history',
+          href: '/docs/changelog',
+        },
       ],
     },
-    // Developer Tools section — items will be added by PG-033 (playground) and PG-035 (changelog)
+    {
+      id: 'developer-tools',
+      title: 'Developer Tools',
+      items: [
+        {
+          id: 'apps',
+          label: 'My Apps',
+          icon: 'apps',
+          href: '/developers/apps',
+        },
+        // PG-033 (playground) will add items here
+      ],
+    },
   ],
 };

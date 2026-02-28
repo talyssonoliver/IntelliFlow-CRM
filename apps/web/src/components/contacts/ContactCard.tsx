@@ -73,10 +73,17 @@ export function ContactCard({ contact, onClick, onCall, onEmail, compact }: Cont
 
   return (
     <div
-      role="article"
+      role={onClick ? 'button' : 'article'}
       aria-label={`Contact card for ${fullName}`}
+      tabIndex={onClick ? 0 : undefined}
       className={`bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4 hover:border-slate-300 dark:hover:border-slate-600 transition-colors ${onClick ? 'cursor-pointer' : ''}`}
       onClick={() => onClick?.(contact)}
+      onKeyDown={onClick ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick(contact);
+        }
+      } : undefined}
     >
       <div className="flex items-start gap-3">
         {/* Avatar */}

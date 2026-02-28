@@ -449,6 +449,7 @@ export default function CreateNewLeadPage() {
                       <input
                         type="text"
                         id="firstName"
+                        autoComplete="given-name"
                         value={formData.firstName}
                         onChange={(e) => updateField('firstName', e.target.value)}
                         placeholder="e.g. Sarah"
@@ -474,6 +475,7 @@ export default function CreateNewLeadPage() {
                       <input
                         type="text"
                         id="lastName"
+                        autoComplete="family-name"
                         value={formData.lastName}
                         onChange={(e) => updateField('lastName', e.target.value)}
                         placeholder="e.g. Connor"
@@ -503,6 +505,7 @@ export default function CreateNewLeadPage() {
                         <input
                           type="email"
                           id="email"
+                          autoComplete="email"
                           value={formData.email}
                           onChange={(e) => updateField('email', e.target.value)}
                           placeholder="sarah@example.com"
@@ -533,6 +536,7 @@ export default function CreateNewLeadPage() {
                         <input
                           type="tel"
                           id="phone"
+                          autoComplete="tel"
                           value={formData.phone}
                           onChange={(e) => updateField('phone', e.target.value)}
                           placeholder="+1 (555) 000-0000"
@@ -552,6 +556,7 @@ export default function CreateNewLeadPage() {
                       <input
                         type="text"
                         id="jobTitle"
+                        autoComplete="organization-title"
                         value={formData.jobTitle}
                         onChange={(e) => updateField('jobTitle', e.target.value)}
                         placeholder="e.g. VP of Marketing"
@@ -653,6 +658,7 @@ export default function CreateNewLeadPage() {
                       <input
                         type="text"
                         id="company"
+                        autoComplete="organization"
                         value={formData.company}
                         onChange={(e) => updateField('company', e.target.value)}
                         placeholder="e.g. Acme Corporation"
@@ -677,6 +683,7 @@ export default function CreateNewLeadPage() {
                         <input
                           type="url"
                           id="website"
+                          autoComplete="url"
                           value={formData.website}
                           onChange={(e) => updateField('website', e.target.value)}
                           placeholder="https://www.example.com"

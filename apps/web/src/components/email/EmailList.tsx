@@ -137,7 +137,6 @@ export function EmailList({
           >
             <input
               type="checkbox"
-              role="checkbox"
               aria-label="Unread"
               checked={filters.unread}
               onChange={() =>
@@ -157,7 +156,6 @@ export function EmailList({
           >
             <input
               type="checkbox"
-              role="checkbox"
               aria-label="Has Attachments"
               checked={filters.hasAttachments}
               onChange={() =>

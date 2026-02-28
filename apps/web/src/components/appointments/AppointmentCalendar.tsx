@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useCallback, useRef, useEffect } from 'react';
+import { useMemo, useState, useCallback, useRef, useEffect, forwardRef } from 'react';
 import {
   getTypeConfig,
   getStatusConfig,
@@ -56,6 +56,12 @@ function isSameDay(a: Date, b: Date): boolean {
   );
 }
 
+function formatHour(hour: number): string {
+  if (hour > 12) return `${hour - 12} PM`;
+  if (hour === 12) return '12 PM';
+  return `${hour} AM`;
+}
+
 const MAX_CHIPS = 3;
 
 export function AppointmentCalendar({
@@ -67,7 +73,7 @@ export function AppointmentCalendar({
   onAppointmentClick,
   onCreateWithSlot,
   isLoading,
-}: AppointmentCalendarProps) {
+}: Readonly<AppointmentCalendarProps>) {
   const [focusedCell, setFocusedCell] = useState<string | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -198,7 +204,7 @@ export function AppointmentCalendar({
           >
             <span className="material-symbols-outlined text-xl">chevron_left</span>
           </button>
-          <h2 className="text-lg font-semibold text-gray-900 min-w-[200px] text-center">
+          <h2 className="text-lg font-semibold text-gray-900 min-w-50 text-center">
             {headerText}
           </h2>
           <button
@@ -219,11 +225,11 @@ export function AppointmentCalendar({
         </div>
 
         {/* View Switcher */}
-        <div
-          className="flex rounded-md border border-gray-300 overflow-hidden"
-          role="group"
+        <fieldset
+          className="flex rounded-md border border-gray-300 overflow-hidden m-0 p-0"
           aria-label="Calendar view"
         >
+          <legend className="sr-only">Calendar view</legend>
           {(['month', 'week', 'day'] as const).map((v) => (
             <button
               key={v}
@@ -239,7 +245,7 @@ export function AppointmentCalendar({
               {v}
             </button>
           ))}
-        </div>
+        </fieldset>
       </div>
 
       {/* Calendar Grid */}
@@ -291,9 +297,77 @@ export function AppointmentCalendar({
   );
 }
 
-// --- Month View ---
+// --- Appointment Chip (extracted to reduce nesting depth) ---
 
-import { forwardRef } from 'react';
+function AppointmentChip({
+  appt,
+  onClick,
+  variant,
+}: Readonly<{
+  appt: CalendarAppointment;
+  onClick: (id: string) => void;
+  variant: 'compact' | 'full';
+}>) {
+  const typeConfig = getTypeConfig(appt.appointmentType);
+
+  if (variant === 'full') {
+    const statusConfig = getStatusConfig(appt.status);
+    return (
+      <button
+        key={appt.id}
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick(appt.id);
+        }}
+        className={`w-full text-left p-2 rounded mb-1 ${typeConfig.bgColor} ${
+          appt.hasConflict ? 'ring-2 ring-red-400' : ''
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <span className={`text-sm font-medium ${typeConfig.color}`}>{appt.title}</span>
+          <span
+            className={`text-xs px-1.5 py-0.5 rounded ${statusConfig.bgColor} ${statusConfig.color}`}
+          >
+            {statusConfig.label}
+          </span>
+        </div>
+        <div className="text-xs text-gray-600 mt-0.5">
+          {formatTimeRange(appt.startTime, appt.endTime)} ·{' '}
+          {formatDuration(appt.startTime, appt.endTime)}
+        </div>
+        {appt.hasConflict && (
+          <div className="flex items-center gap-1 text-xs text-red-600 mt-1">
+            <span className="material-symbols-outlined text-xs">warning</span>
+            <span>Conflict detected</span>
+          </div>
+        )}
+      </button>
+    );
+  }
+
+  return (
+    <button
+      key={appt.id}
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick(appt.id);
+      }}
+      className={`w-full text-left text-xs px-1.5 py-0.5 rounded mb-0.5 truncate ${typeConfig.bgColor} ${typeConfig.color} ${
+        appt.hasConflict ? 'ring-2 ring-red-400' : ''
+      }`}
+      title={appt.title}
+    >
+      {appt.hasConflict && (
+        <span className="material-symbols-outlined text-xs text-red-600 mr-0.5">warning</span>
+      )}
+      {appt.title}
+    </button>
+  );
+}
+
+// --- Month View ---
 
 interface MonthViewProps {
   currentDate: Date;
@@ -318,79 +392,74 @@ const MonthView = forwardRef<HTMLDivElement, MonthViewProps>(function MonthView(
   ref
 ) {
   const days = getMonthDays(currentDate.getFullYear(), currentDate.getMonth());
+  const weeks: Date[][] = [];
+  for (let i = 0; i < days.length; i += 7) {
+    weeks.push(days.slice(i, i + 7));
+  }
 
   return (
-    <div ref={ref} role="grid" aria-label="Appointment calendar">
-      <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-t-lg overflow-hidden">
-        {DAY_HEADERS.map((day) => (
-          <div
-            key={day}
-            role="columnheader"
-            className="bg-gray-50 px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase"
-          >
-            {day}
-          </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-b-lg overflow-hidden">
-        {days.map((date, i) => {
-          const key = toDateKey(date);
-          const dayAppts = appointmentsByDate.get(key) || [];
-          const isCurrentMonth = date.getMonth() === currentDate.getMonth();
-          const isToday = key === todayKey;
-          const overflow = dayAppts.length - MAX_CHIPS;
-
-          return (
-            <div
-              key={key}
-              role="gridcell"
-              data-date={key}
-              tabIndex={focusedCell === key ? 0 : -1}
-              aria-label={`${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}, ${dayAppts.length} appointment${dayAppts.length !== 1 ? 's' : ''}`}
-              className={`bg-white min-h-[100px] p-1 cursor-pointer hover:bg-gray-50 transition-colors ${
-                !isCurrentMonth ? 'opacity-40' : ''
-              } ${isToday ? 'ring-1 ring-primary ring-inset' : ''}`}
-              onClick={() => onCellClick(date)}
-              onKeyDown={(e) => onKeyDown(e, date, i)}
-            >
-              <span
-                className={`text-xs font-medium ${isToday ? 'text-blue-600' : 'text-gray-700'}`}
+    <div ref={ref}>
+      <table className="w-full border-collapse rounded-lg overflow-hidden" aria-label="Appointment calendar">
+        <thead>
+          <tr className="bg-gray-200">
+            {DAY_HEADERS.map((day) => (
+              <th
+                key={day}
+                scope="col"
+                className="bg-gray-50 px-2 py-2 text-center text-xs font-medium text-gray-500 uppercase"
               >
-                {date.getDate()}
-              </span>
-              <div className="mt-1 space-y-0.5">
-                {dayAppts.slice(0, MAX_CHIPS).map((appt) => {
-                  const typeConfig = getTypeConfig(appt.appointmentType);
-                  return (
-                    <button
-                      key={appt.id}
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onAppointmentClick(appt.id);
-                      }}
-                      className={`w-full text-left text-xs px-1.5 py-0.5 rounded truncate ${typeConfig.bgColor} ${typeConfig.color} ${
-                        appt.hasConflict ? 'ring-2 ring-red-400' : ''
-                      }`}
-                      title={appt.title}
+                {day}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {weeks.map((week) => (
+            <tr key={toDateKey(week[0])} className="bg-gray-200">
+              {week.map((date, dayIdx) => {
+                const key = toDateKey(date);
+                const dayAppts = appointmentsByDate.get(key) || [];
+                const isCurrentMonth = date.getMonth() === currentDate.getMonth();
+                const isToday = key === todayKey;
+                const overflow = dayAppts.length - MAX_CHIPS;
+
+                return (
+                  <td
+                    key={key}
+                    data-date={key}
+                    tabIndex={focusedCell === key ? 0 : -1}
+                    aria-label={`${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}, ${dayAppts.length} appointment${dayAppts.length === 1 ? '' : 's'}`}
+                    className={`bg-white min-h-25 p-1 cursor-pointer hover:bg-gray-50 transition-colors ${
+                      isCurrentMonth ? '' : 'opacity-40'
+                    } ${isToday ? 'ring-1 ring-primary ring-inset' : ''}`}
+                    onClick={() => onCellClick(date)}
+                    onKeyDown={(e) => onKeyDown(e, date, dayIdx)}
+                  >
+                    <span
+                      className={`text-xs font-medium ${isToday ? 'text-blue-600' : 'text-gray-700'}`}
                     >
-                      {appt.hasConflict && (
-                        <span className="material-symbols-outlined text-xs text-red-600 mr-0.5">
-                          warning
-                        </span>
+                      {date.getDate()}
+                    </span>
+                    <div className="mt-1 space-y-0.5">
+                      {dayAppts.slice(0, MAX_CHIPS).map((appt) => (
+                        <AppointmentChip
+                          key={appt.id}
+                          appt={appt}
+                          onClick={onAppointmentClick}
+                          variant="compact"
+                        />
+                      ))}
+                      {overflow > 0 && (
+                        <span className="text-xs text-gray-500 pl-1">+{overflow} more</span>
                       )}
-                      {appt.title}
-                    </button>
-                  );
-                })}
-                {overflow > 0 && (
-                  <span className="text-xs text-gray-500 pl-1">+{overflow} more</span>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+                    </div>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 });
@@ -411,88 +480,81 @@ function WeekView({
   appointments,
   onAppointmentClick,
   onCellClick,
-}: WeekViewProps) {
+}: Readonly<WeekViewProps>) {
   const weekDays = getWeekDays(currentDate);
 
   return (
-    <div
-      className="border border-gray-200 rounded-lg overflow-hidden"
-      role="grid"
+    <table
+      className="w-full border-collapse border border-gray-200 rounded-lg overflow-hidden"
       aria-label="Week view"
     >
-      {/* Day headers */}
-      <div className="grid grid-cols-[60px_repeat(7,1fr)] bg-gray-50 border-b">
-        <div className="p-2" />
-        {weekDays.map((d) => {
-          const key = toDateKey(d);
-          const isToday = key === todayKey;
-          return (
-            <div
-              key={key}
-              role="columnheader"
-              className={`p-2 text-center text-xs font-medium ${isToday ? 'text-blue-600 bg-blue-50' : 'text-gray-500'}`}
-            >
-              <div>{DAY_HEADERS[d.getDay()]}</div>
-              <div className="text-lg font-semibold">{d.getDate()}</div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Hour rows */}
-      {HOURS.map((hour) => (
-        <div key={hour} className="grid grid-cols-[60px_repeat(7,1fr)] border-b border-gray-100">
-          <div className="p-1 text-xs text-gray-400 text-right pr-2 pt-1">
-            {hour > 12 ? `${hour - 12} PM` : hour === 12 ? '12 PM' : `${hour} AM`}
-          </div>
+      <thead>
+        <tr className="bg-gray-50 border-b border-gray-200">
+          <th scope="col" className="w-15 p-2 border-r border-gray-200" />
           {weekDays.map((d) => {
             const key = toDateKey(d);
-            const hourAppts = appointments.filter((a) => {
-              const s = new Date(a.startTime);
-              return isSameDay(s, d) && s.getHours() === hour;
-            });
+            const isToday = key === todayKey;
             return (
-              <div
-                key={`${key}-${hour}`}
-                role="gridcell"
-                className="border-l border-gray-100 min-h-[48px] p-0.5 cursor-pointer hover:bg-gray-50"
-                onClick={() => {
-                  const slot = new Date(d);
-                  slot.setHours(hour, 0, 0, 0);
-                  const end = new Date(slot);
-                  end.setHours(hour + 1);
-                  onCellClick(slot);
-                }}
+              <th
+                key={key}
+                scope="col"
+                className={`p-2 text-center text-xs font-medium border-l border-gray-200 ${isToday ? 'text-blue-600 bg-blue-50' : 'text-gray-500 bg-gray-50'}`}
               >
-                {hourAppts.map((appt) => {
-                  const typeConfig = getTypeConfig(appt.appointmentType);
-                  return (
-                    <button
-                      key={appt.id}
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onAppointmentClick(appt.id);
-                      }}
-                      className={`w-full text-left text-xs px-1.5 py-1 rounded mb-0.5 truncate ${typeConfig.bgColor} ${typeConfig.color} ${
-                        appt.hasConflict ? 'ring-2 ring-red-400' : ''
-                      }`}
-                    >
-                      {appt.hasConflict && (
-                        <span className="material-symbols-outlined text-xs text-red-600 mr-0.5">
-                          warning
-                        </span>
-                      )}
-                      {appt.title}
-                    </button>
-                  );
-                })}
-              </div>
+                <div>{DAY_HEADERS[d.getDay()]}</div>
+                <div className="text-lg font-semibold">{d.getDate()}</div>
+              </th>
             );
           })}
-        </div>
-      ))}
-    </div>
+        </tr>
+      </thead>
+      <tbody>
+        {HOURS.map((hour) => (
+          <tr key={hour} className="bg-white">
+            <td className="bg-gray-50 p-1 text-xs text-gray-500 text-right pr-2 pt-1 border-r border-b border-gray-200 w-15">
+              {formatHour(hour)}
+            </td>
+            {weekDays.map((d) => {
+              const key = toDateKey(d);
+              const hourAppts = appointments.filter((a) => {
+                const s = new Date(a.startTime);
+                return isSameDay(s, d) && s.getHours() === hour;
+              });
+              return (
+                <td
+                  key={`${key}-${hour}`}
+                  tabIndex={0}
+                  className="bg-white min-h-12 p-0.5 border-l border-b border-gray-100 cursor-pointer hover:bg-gray-50"
+                  onClick={() => {
+                    const slot = new Date(d);
+                    slot.setHours(hour, 0, 0, 0);
+                    const end = new Date(slot);
+                    end.setHours(hour + 1);
+                    onCellClick(slot);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      const slot = new Date(d);
+                      slot.setHours(hour, 0, 0, 0);
+                      onCellClick(slot);
+                    }
+                  }}
+                >
+                  {hourAppts.map((appt) => (
+                    <AppointmentChip
+                      key={appt.id}
+                      appt={appt}
+                      onClick={onAppointmentClick}
+                      variant="compact"
+                    />
+                  ))}
+                </td>
+              );
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
@@ -505,75 +567,54 @@ interface DayViewProps {
   onCellClick: (date: Date) => void;
 }
 
-function DayView({ currentDate, appointments, onAppointmentClick, onCellClick }: DayViewProps) {
+function DayView({ currentDate, appointments, onAppointmentClick, onCellClick }: Readonly<DayViewProps>) {
   const dayAppts = appointments.filter((a) => isSameDay(new Date(a.startTime), currentDate));
 
   return (
-    <div
-      className="border border-gray-200 rounded-lg overflow-hidden"
-      role="grid"
+    <table
+      className="w-full border-collapse border border-gray-200 rounded-lg overflow-hidden"
       aria-label="Day view"
     >
-      {HOURS.map((hour) => {
-        const hourAppts = dayAppts.filter((a) => new Date(a.startTime).getHours() === hour);
-        return (
-          <div key={hour} className="grid grid-cols-[60px_1fr] border-b border-gray-100">
-            <div className="p-2 text-xs text-gray-400 text-right pr-3 pt-2">
-              {hour > 12 ? `${hour - 12} PM` : hour === 12 ? '12 PM' : `${hour} AM`}
-            </div>
-            <div
-              role="gridcell"
-              className="min-h-[56px] p-1 border-l border-gray-100 cursor-pointer hover:bg-gray-50"
-              onClick={() => {
-                const slot = new Date(currentDate);
-                slot.setHours(hour, 0, 0, 0);
-                const end = new Date(slot);
-                end.setHours(hour + 1);
-                onCellClick(slot);
-              }}
-            >
-              {hourAppts.map((appt) => {
-                const typeConfig = getTypeConfig(appt.appointmentType);
-                const statusConfig = getStatusConfig(appt.status);
-                return (
-                  <button
+      <tbody>
+        {HOURS.map((hour) => {
+          const hourAppts = dayAppts.filter((a) => new Date(a.startTime).getHours() === hour);
+          return (
+            <tr key={hour}>
+              <td className="bg-gray-50 w-15 p-2 text-xs text-gray-500 text-right pr-3 pt-2 border-r border-b border-gray-200">
+                {formatHour(hour)}
+              </td>
+              <td
+                tabIndex={0}
+                className="bg-white min-h-14 p-1 border-b border-gray-100 cursor-pointer hover:bg-gray-50"
+                onClick={() => {
+                  const slot = new Date(currentDate);
+                  slot.setHours(hour, 0, 0, 0);
+                  const end = new Date(slot);
+                  end.setHours(hour + 1);
+                  onCellClick(slot);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    const slot = new Date(currentDate);
+                    slot.setHours(hour, 0, 0, 0);
+                    onCellClick(slot);
+                  }
+                }}
+              >
+                {hourAppts.map((appt) => (
+                  <AppointmentChip
                     key={appt.id}
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onAppointmentClick(appt.id);
-                    }}
-                    className={`w-full text-left p-2 rounded mb-1 ${typeConfig.bgColor} ${
-                      appt.hasConflict ? 'ring-2 ring-red-400' : ''
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className={`text-sm font-medium ${typeConfig.color}`}>
-                        {appt.title}
-                      </span>
-                      <span
-                        className={`text-xs px-1.5 py-0.5 rounded ${statusConfig.bgColor} ${statusConfig.color}`}
-                      >
-                        {statusConfig.label}
-                      </span>
-                    </div>
-                    <div className="text-xs text-gray-600 mt-0.5">
-                      {formatTimeRange(appt.startTime, appt.endTime)} ·{' '}
-                      {formatDuration(appt.startTime, appt.endTime)}
-                    </div>
-                    {appt.hasConflict && (
-                      <div className="flex items-center gap-1 text-xs text-red-600 mt-1">
-                        <span className="material-symbols-outlined text-xs">warning</span>
-                        <span>Conflict detected</span>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        );
-      })}
-    </div>
+                    appt={appt}
+                    onClick={onAppointmentClick}
+                    variant="full"
+                  />
+                ))}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }

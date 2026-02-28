@@ -24,23 +24,6 @@ export function getRiskBadgeClass(level: ChurnRiskLevel): string {
   }
 }
 
-export function getRiskIcon(level: ChurnRiskLevel): string {
-  switch (level) {
-    case 'CRITICAL':
-      return 'error';
-    case 'HIGH':
-      return 'warning';
-    case 'MEDIUM':
-      return 'info';
-    case 'LOW':
-      return 'check_circle';
-    case 'MINIMAL':
-      return 'verified';
-    default:
-      return 'help';
-  }
-}
-
 export function getRiskColor(level: ChurnRiskLevel): string {
   switch (level) {
     case 'CRITICAL':

@@ -325,14 +325,6 @@ export function getTokenTimeRemaining(token: VerificationToken): TokenTimeRemain
   };
 }
 
-/**
- * Check if token is expiring soon (within 1 hour)
- */
-export function isTokenExpiringSoon(token: VerificationToken): boolean {
-  const remaining = getTokenTimeRemaining(token);
-  return !remaining.expired && remaining.hours < 1;
-}
-
 // ============================================
 // Cleanup (for testing/development)
 // ============================================

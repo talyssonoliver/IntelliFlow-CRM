@@ -163,9 +163,9 @@ export default function GovernancePage() {
                       {card.icon}
                     </span>
                   </div>
-                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                  <h2 className="font-semibold text-foreground group-hover:text-primary transition-colors">
                     {card.title}
-                  </h3>
+                  </h2>
                 </div>
                 <p className="text-sm text-muted-foreground">{card.description}</p>
                 <div className="mt-4 flex items-center gap-1 text-primary text-sm font-medium">

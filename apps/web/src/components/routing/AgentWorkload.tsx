@@ -128,9 +128,6 @@ export function AgentWorkload() {
                 </div>
                 <div
                   role="status"
-                  aria-valuenow={capacity}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
                   aria-label={`Capacity: ${capacity}%`}
                 >
                   <Progress value={capacity} className="h-2" />

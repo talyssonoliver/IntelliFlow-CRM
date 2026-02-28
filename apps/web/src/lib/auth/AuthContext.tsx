@@ -28,6 +28,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { trpc } from '../trpc';
 import { useQueryClient } from '@tanstack/react-query';
 import { getSupabaseBrowserClient } from '../supabase-browser';
+import type { OAuthProvider } from '@intelliflow/domain';
+import { getSupabaseProviderName } from './sso-handler';
 
 // ============================================
 // Token Refresh Utilities
@@ -104,7 +106,8 @@ export interface AuthState {
 export interface AuthContextType extends AuthState {
   // Auth methods
   login: (email: string, password: string, rememberMe?: boolean) => Promise<boolean>;
-  loginWithOAuth: (provider: 'google' | 'azure') => Promise<void>;
+  loginWithOAuth: (provider: OAuthProvider) => Promise<void>;
+  loginWithSso: (providerId: string) => Promise<void>;
   verifyMfa: (code: string, method: 'totp' | 'sms' | 'email' | 'backup') => Promise<boolean>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -140,6 +143,7 @@ const AuthContext = createContext<AuthContextType>({
   ...initialState,
   login: async () => false,
   loginWithOAuth: async () => {},
+  loginWithSso: async () => {},
   verifyMfa: async () => false,
   logout: async () => {},
   refreshSession: async () => {},
@@ -484,7 +488,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
    * Login with OAuth provider
    * Uses the Supabase browser client directly for proper session handling
    */
-  const loginWithOAuth = useCallback(async (provider: 'google' | 'azure'): Promise<void> => {
+  const loginWithOAuth = useCallback(async (provider: OAuthProvider): Promise<void> => {
     setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
     try {
@@ -493,11 +497,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('Failed to initialize authentication client');
       }
 
-      const redirectTo =
-        typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined;
+      // Generate CSRF nonce and embed in redirectTo for end-to-end verification
+      const nonce = crypto.randomUUID();
+      sessionStorage.setItem('intelliflow_oauth_nonce', nonce);
 
-      // Map our provider names to Supabase provider names
-      const supabaseProvider = provider === 'azure' ? 'azure' : 'google';
+      const redirectTo =
+        typeof window !== 'undefined'
+          ? `${window.location.origin}/auth/callback?nonce=${nonce}`
+          : undefined;
+
+      // Map our provider names to Supabase provider names (e.g., 'linkedin' → 'linkedin_oidc')
+      const supabaseProvider = getSupabaseProviderName(provider);
 
       console.log(
         '[OAuth] Initiating login with provider:',
@@ -507,7 +517,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
 
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: supabaseProvider,
+        provider: supabaseProvider as 'google' | 'azure' | 'github' | 'linkedin_oidc',
         options: {
           redirectTo,
         },
@@ -523,9 +533,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (data?.url) {
-        // Store session nonce for callback verification
-        sessionStorage.setItem('intelliflow_oauth_nonce', crypto.randomUUID());
-
         // Redirect to OAuth provider
         console.log('[OAuth] Redirecting to:', data.url);
         window.location.href = data.url;
@@ -540,6 +547,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('[OAuth] Error:', error);
       const message = error instanceof Error ? error.message : 'OAuth login failed';
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: message,
+      }));
+    }
+  }, []);
+
+  /**
+   * Login with Enterprise SSO (SAML) provider
+   * Uses Supabase signInWithSSO for SAML-based enterprise authentication
+   */
+  const loginWithSso = useCallback(async (providerId: string): Promise<void> => {
+    setState((prev) => ({ ...prev, isLoading: true, error: null }));
+
+    try {
+      const supabase = getSupabaseBrowserClient();
+      if (!supabase) {
+        throw new Error('Failed to initialize authentication client');
+      }
+
+      // Generate CSRF nonce and embed in redirectTo for end-to-end verification
+      const nonce = crypto.randomUUID();
+      sessionStorage.setItem('intelliflow_oauth_nonce', nonce);
+
+      const redirectTo =
+        typeof window !== 'undefined'
+          ? `${window.location.origin}/auth/callback?nonce=${nonce}`
+          : undefined;
+
+      const { data, error } = await supabase.auth.signInWithSSO({
+        providerId,
+        options: { redirectTo },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.url) {
+        console.log('[SSO] Redirecting to SSO provider:', providerId);
+        window.location.href = data.url;
+      } else {
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: 'SSO provider not configured. Please contact your administrator.',
+        }));
+      }
+    } catch (error) {
+      console.error('[SSO] Error:', error);
+      const message = error instanceof Error ? error.message : 'SSO login failed';
       setState((prev) => ({
         ...prev,
         isLoading: false,
@@ -749,6 +808,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ...state,
     login,
     loginWithOAuth,
+    loginWithSso,
     verifyMfa,
     logout,
     refreshSession,

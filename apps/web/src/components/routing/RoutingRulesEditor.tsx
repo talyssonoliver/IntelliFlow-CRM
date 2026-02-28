@@ -115,6 +115,7 @@ function SortableRule({
       style={style}
       className="flex items-center gap-3 p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors"
       role="option"
+      aria-selected={false}
       aria-grabbed={false}
     >
       <button

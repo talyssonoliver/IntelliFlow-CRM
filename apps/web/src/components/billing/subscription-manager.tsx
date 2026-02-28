@@ -842,4 +842,3 @@ export function SubscriptionManager({
   );
 }
 
-export default SubscriptionManager;

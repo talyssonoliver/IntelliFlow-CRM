@@ -25,6 +25,12 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 // Mock api with tRPC-like hooks
 vi.mock('@/lib/api', () => ({
   api: {
+    useUtils: () => ({
+      account: {
+        list: { invalidate: vi.fn() },
+        stats: { invalidate: vi.fn() },
+      },
+    }),
     account: {
       list: {
         useQuery: vi.fn(() => ({
@@ -62,6 +68,12 @@ vi.mock('@/lib/api', () => ({
             withOpportunities: 6,
             totalRevenue: '50000000',
           },
+          isLoading: false,
+        })),
+      },
+      delete: {
+        useMutation: vi.fn(() => ({
+          mutate: vi.fn(),
           isLoading: false,
         })),
       },

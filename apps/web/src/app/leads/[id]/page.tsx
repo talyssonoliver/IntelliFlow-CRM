@@ -18,11 +18,12 @@ import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
+import { PinButton } from '@/components/home/PinButton';
 import { AppAvatar } from '@/components/shared/app-avatar';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 import { UpcomingEventsCard } from '@/components/shared';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
-import { ActivityFeed } from '@/components/shared/activity-feed/ActivityFeed';
+import { ActivityFeed } from '@/components/shared/activity-feed';
 
 // Tab types matching Contact360 pattern
 type TabId = 'overview' | 'activity' | 'tasks' | 'notes' | 'emails' | 'files' | 'ai-insights';
@@ -1016,6 +1017,14 @@ export default function Lead360Page() {
             <span className="material-symbols-outlined !text-[18px]">call</span>
             Log Call
           </button>
+          <PinButton
+            entityType="lead"
+            entityId={lead.id}
+            title={`${lead.firstName} ${lead.lastName}`}
+            subtitle={lead.company || undefined}
+            icon="person"
+            url={`/leads/${lead.id}`}
+          />
           <MoreActionsButton onClick={() => setActionSheetOpen(true)} />
         </div>
       </div>

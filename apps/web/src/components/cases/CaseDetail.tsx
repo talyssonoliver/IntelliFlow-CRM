@@ -249,16 +249,16 @@ export function CaseDetail({
 
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
                   Case Number
-                </label>
+                </span>
                 <p className="text-sm font-bold text-foreground">{caseNumber}</p>
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block">
                   Client
-                </label>
+                </span>
                 <div className="flex items-center gap-2 mt-1">
                   <div className="size-6 bg-muted rounded flex items-center justify-center">
                     <span className="material-symbols-outlined text-muted-foreground text-sm">
@@ -275,9 +275,9 @@ export function CaseDetail({
               </div>
 
               <div>
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-1">
                   Status
-                </label>
+                </span>
                 {isClosed ? (
                   <span
                     className={cn(
@@ -298,9 +298,9 @@ export function CaseDetail({
 
               {/* Assigned Team */}
               <div className="pt-4 border-t border-border/50">
-                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-3">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest block mb-3">
                   Assigned Team
-                </label>
+                </span>
                 {caseData.assignedTeam && caseData.assignedTeam.length > 0 ? (
                   <>
                     <div className="flex -space-x-2">

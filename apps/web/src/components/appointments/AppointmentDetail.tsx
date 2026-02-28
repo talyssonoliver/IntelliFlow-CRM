@@ -7,6 +7,7 @@ import {
   formatRecurrence,
   getInitials,
 } from '@/lib/appointments/appointment-utils';
+import { useFocusTrap } from '@/hooks/useFocusTrap';
 import type { AppointmentDetailData } from './types';
 
 export interface AppointmentDetailProps {
@@ -67,6 +68,8 @@ export function AppointmentDetail({
   const [searchInput, setSearchInput] = useState('');
   const [noteDraft, setNoteDraft] = useState(appointment.notes ?? '');
   const [isActionLoading, setIsActionLoading] = useState(false);
+
+  const dialogRef = useFocusTrap<HTMLDivElement>(!!activeDialog);
 
   const typeConfig = getTypeConfig(appointment.appointmentType);
   const statusConfig = getStatusConfig(appointment.status);
@@ -472,7 +475,7 @@ export function AppointmentDetail({
       </div>
 
       {activeDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true">
+        <div ref={dialogRef} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" role="dialog" aria-modal="true" onKeyDown={(e) => { if (e.key === 'Escape') setActiveDialog(null); }}>
           <div className="mx-4 w-full max-w-md rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-xl">
             {activeDialog === 'complete' && (
               <>

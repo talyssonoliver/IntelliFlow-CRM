@@ -12,6 +12,7 @@ import {
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useAccountFilterOptions } from '@/hooks/use-dynamic-filters';
+import { invalidateAccountsCache } from './actions';
 
 /**
  * Accounts List Client Island
@@ -127,6 +128,15 @@ export default function AccountsPageClient({ initialStats: serverStats }: Accoun
   const pageSize = 20;
 
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const utils = api.useUtils();
+
+  const deleteMutation = api.account.delete.useMutation({
+    onSuccess: () => {
+      utils.account.list.invalidate();
+      utils.account.stats.invalidate();
+      invalidateAccountsCache();
+    },
+  });
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -172,9 +182,9 @@ export default function AccountsPageClient({ initialStats: serverStats }: Accoun
       onView: (id) => router.push(`/accounts/${id}`),
       onEdit: (id) => router.push(`/accounts/${id}?edit=true`),
       onCreateDeal: (id) => router.push(`/deals/new?accountId=${id}`),
-      onDelete: () => {},
+      onDelete: (id) => deleteMutation.mutate({ id }),
     }),
-    [router]
+    [router, deleteMutation]
   );
 
   const columns = useMemo(() => createAccountColumns(handlers), [handlers]);

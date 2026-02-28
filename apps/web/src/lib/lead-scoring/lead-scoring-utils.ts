@@ -2,41 +2,6 @@
  * Lead Scoring Dashboard Utilities (PG-148)
  */
 
-import type { ScoreTier } from '@intelliflow/ui';
-
-export function getScoreTierBadgeClass(tier: ScoreTier): string {
-  switch (tier) {
-    case 'hot':
-      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-    case 'warm':
-      return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
-    case 'cold':
-      return 'bg-slate-100 text-slate-600 dark:bg-slate-800/50 dark:text-slate-400';
-  }
-}
-
-export function getScoreTierIcon(tier: ScoreTier): string {
-  switch (tier) {
-    case 'hot':
-      return 'local_fire_department';
-    case 'warm':
-      return 'wb_sunny';
-    case 'cold':
-      return 'ac_unit';
-  }
-}
-
-export function getScoreTierLabel(tier: ScoreTier): string {
-  switch (tier) {
-    case 'hot':
-      return 'Hot';
-    case 'warm':
-      return 'Warm';
-    case 'cold':
-      return 'Cold';
-  }
-}
-
 export function formatModelVersion(version: string): string {
   const parts = version.split(':');
   if (parts.length >= 3) {

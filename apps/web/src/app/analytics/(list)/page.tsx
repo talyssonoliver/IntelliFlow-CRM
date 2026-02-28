@@ -214,7 +214,7 @@ export default function AnalyticsPage() {
         {/* Pipeline Overview */}
         <Card className="lg:col-span-2 p-6 bg-card border-border">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-foreground">Pipeline Overview</h3>
+            <h2 className="text-lg font-semibold text-foreground">Pipeline Overview</h2>
             <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
               <span className="material-symbols-outlined">more_horiz</span>
             </button>
@@ -256,7 +256,7 @@ export default function AnalyticsPage() {
         {/* AI Recommendations */}
         <Card className="p-6 bg-card border-border">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-foreground">AI Recommendations</h3>
+            <h2 className="text-lg font-semibold text-foreground">AI Recommendations</h2>
             <Link href="/ai/insights" className="text-sm text-primary hover:underline">
               View All
             </Link>
@@ -290,7 +290,7 @@ export default function AnalyticsPage() {
         {/* Revenue Chart Placeholder */}
         <Card className="p-6 bg-card border-border">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-foreground">Revenue Trend</h3>
+            <h2 className="text-lg font-semibold text-foreground">Revenue Trend</h2>
             <select className="px-2 py-1 text-sm border border-border rounded bg-background text-foreground">
               <option>Last 6 months</option>
               <option>Last 12 months</option>
@@ -309,7 +309,7 @@ export default function AnalyticsPage() {
         {/* Recent Activity */}
         <Card className="p-6 bg-card border-border">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-foreground">Recent Activity</h3>
+            <h2 className="text-lg font-semibold text-foreground">Recent Activity</h2>
             <button className="p-1 text-muted-foreground hover:text-foreground transition-colors">
               <span className="material-symbols-outlined">refresh</span>
             </button>

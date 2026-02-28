@@ -216,7 +216,6 @@ export function ActivityTimeline({
       {/* Timeline */}
       {filtered.length > 0 ? (
         <ol
-          role="list"
           aria-label="Activity timeline, newest first"
           className="relative space-y-4 pl-4"
         >

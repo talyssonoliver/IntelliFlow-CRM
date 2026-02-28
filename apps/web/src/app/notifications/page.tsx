@@ -10,19 +10,13 @@
  * Depends: IFC-183 — Notifications tRPC Router
  */
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { PageHeader, SearchFilterBar, type FilterOption } from '@/components/shared';
+import { PageHeader } from '@/components/shared';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useDebounce } from '@/hooks/useDebounce';
-import { NotificationList, getTypeFilterOptions } from '@/components/notifications';
-
-const priorityOptions: FilterOption[] = [
-  { value: 'high', label: 'High' },
-  { value: 'normal', label: 'Normal' },
-  { value: 'low', label: 'Low' },
-];
+import { NotificationList, NotificationFilters } from '@/components/notifications';
 
 /** Map URL ?filter= values to filter state */
 function getInitialFilters(searchParams: URLSearchParams): {
@@ -110,26 +104,12 @@ export default function NotificationsPage() {
     markAllAsReadMutation.mutate();
   }, [markAllAsReadMutation]);
 
-  // Memoize type options (static data)
-  const typeOptions = useMemo(() => getTypeFilterOptions(), []);
-
-  // Build filter chips with dynamic counts
-  const filterChips = useMemo(
-    () => ({
-      options: [
-        { id: 'all', label: 'All' },
-        { id: 'unread', label: `Unread${totalUnread > 0 ? ` (${totalUnread})` : ''}` },
-        {
-          id: 'high',
-          label: `High Priority${highPriorityCount > 0 ? ` (${highPriorityCount})` : ''}`,
-          color: 'bg-red-500',
-        },
-      ],
-      value: activeTab,
-      onChange: setActiveTab,
-    }),
-    [activeTab, totalUnread, highPriorityCount]
-  );
+  const handleClearFilters = useCallback(() => {
+    setSearchQuery('');
+    setTypeFilter('');
+    setPriorityFilter('');
+    setActiveTab('all');
+  }, []);
 
   // Build filter state object for child components
   const filters = {
@@ -162,29 +142,18 @@ export default function NotificationsPage() {
         ]}
       />
 
-      <SearchFilterBar
-        searchValue={searchQuery}
+      <NotificationFilters
+        searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        searchPlaceholder="Search notifications..."
-        filters={[
-          {
-            id: 'type',
-            label: 'Type',
-            icon: 'category',
-            options: typeOptions,
-            value: typeFilter,
-            onChange: setTypeFilter,
-          },
-          {
-            id: 'priority',
-            label: 'Priority',
-            icon: 'flag',
-            options: priorityOptions,
-            value: priorityFilter,
-            onChange: setPriorityFilter,
-          },
-        ]}
-        filterChips={filterChips}
+        typeFilter={typeFilter}
+        onTypeChange={setTypeFilter}
+        priorityFilter={priorityFilter}
+        onPriorityChange={setPriorityFilter}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        unreadCount={totalUnread}
+        highPriorityCount={highPriorityCount}
+        onClearFilters={handleClearFilters}
       />
 
       <NotificationList

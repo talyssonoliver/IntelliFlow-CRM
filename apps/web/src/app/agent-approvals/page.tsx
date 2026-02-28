@@ -294,9 +294,9 @@ function ActionCard({
             {/* Action Info */}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h3 className="font-semibold text-slate-900 dark:text-white truncate">
+                <h2 className="font-semibold text-slate-900 dark:text-white truncate">
                   {action.description}
-                </h3>
+                </h2>
                 <span
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${statusBadge.className}`}
                 >
@@ -371,9 +371,9 @@ function ActionCard({
                 className="text-base text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0"
               />
               <div>
-                <h4 className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-1">
+                <h3 className="text-sm font-medium text-blue-900 dark:text-blue-200 mb-1">
                   AI Reasoning
-                </h4>
+                </h3>
                 <p
                   className="text-sm text-blue-800 dark:text-blue-300"
                   data-testid="ai-reasoning-content"
@@ -386,10 +386,10 @@ function ActionCard({
 
           {/* Proposed Content */}
           <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-            <h4 className="text-sm font-medium text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+            <h3 className="text-sm font-medium text-slate-900 dark:text-white mb-3 flex items-center gap-2">
               <Icon name="mail" className="text-base" />
               Proposed Email
-            </h4>
+            </h3>
             <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 space-y-2">
               <div>
                 <span className="text-xs text-slate-500 dark:text-slate-400">Subject:</span>
@@ -906,7 +906,7 @@ function AgentApprovalsContent() {
     return (
       <div className="flex flex-col gap-6">
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <h3 className="text-red-800 font-medium">Error loading approvals</h3>
+          <h2 className="text-red-800 font-medium">Error loading approvals</h2>
           <p className="text-red-600 text-sm mt-1">{queryError.message}</p>
           <button
             onClick={() => {
@@ -1022,9 +1022,9 @@ function AgentApprovalsContent() {
               <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4">
                 <Icon name="smart_toy" className="text-3xl text-slate-400" />
               </div>
-              <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-1">
+              <h2 className="text-lg font-medium text-slate-900 dark:text-white mb-1">
                 No actions found
-              </h3>
+              </h2>
               <p className="text-slate-500 dark:text-slate-400 max-w-sm">
                 {filterStatus === 'all'
                   ? 'No auto-response drafts to review at this time. Check back later.'

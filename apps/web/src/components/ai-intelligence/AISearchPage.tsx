@@ -21,6 +21,7 @@ import {
 import { PageHeader } from '@/components/shared';
 import { useAISearch } from '@/lib/ai-search/hooks';
 import { SourceHighlight } from './SourceHighlight';
+import { CitationDisplay } from './CitationDisplay';
 import {
   getSourceIcon,
   getSourceColor,
@@ -522,24 +523,15 @@ function SearchResultCard({ result, query }: { result: SearchResultItem; query: 
             <SourceHighlight text={result.snippet} query={query} maxLength={300} />
           </p>
 
-          {/* Citation metadata (no nested links) */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground flex-wrap">
-            <span className="material-symbols-outlined text-base" aria-hidden="true">
-              {getSourceIcon(result.source)}
-            </span>
-            <Badge variant="secondary" className="text-xs">
-              {getSourceLabel(result.source)}
-            </Badge>
-            <span className="truncate max-w-[200px]" title={result.title}>
-              {result.title}
-            </span>
-            <Badge className={cn('text-xs font-medium', getRelevanceBadgeClass(result.relevanceScore))}>
-              {formatRelevanceScore(result.relevanceScore)}
-            </Badge>
-            <span className="text-xs" title={new Date(result.createdAt).toLocaleString()}>
-              {formatRelativeTime(result.createdAt)}
-            </span>
-          </div>
+          {/* Citation metadata (disableLink to avoid nested <a> tags) */}
+          <CitationDisplay
+            source={result.source}
+            sourceId={result.id}
+            title={result.title}
+            relevanceScore={result.relevanceScore}
+            createdAt={result.createdAt}
+            disableLink
+          />
         </div>
       </CardContent>
     </Card>
@@ -556,17 +548,3 @@ function SearchResultCard({ result, query }: { result: SearchResultItem; query: 
   return card;
 }
 
-function formatRelativeTime(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 30) return `${diffDays}d ago`;
-  return date.toLocaleDateString();
-}

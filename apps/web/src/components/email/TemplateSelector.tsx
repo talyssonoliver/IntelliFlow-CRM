@@ -142,6 +142,12 @@ export function TemplateSelector({ onSelect, currentBody = '', className }: Temp
                   )}
                   onFocus={() => setHighlightIndex(i)}
                   onClick={() => handleSelect(template)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleSelect(template);
+                    }
+                  }}
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{template.name}</span>

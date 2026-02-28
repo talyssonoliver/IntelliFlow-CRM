@@ -325,22 +325,22 @@ function OpportunitiesAtRiskTable({ deals }: { deals: ForecastDeal[] }) {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
-              <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Deal Name
               </th>
-              <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Stage
               </th>
-              <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Value
               </th>
-              <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Probability
               </th>
-              <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Expected Close
               </th>
-              <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <th scope="col" className="px-6 py-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Owner
               </th>
             </tr>

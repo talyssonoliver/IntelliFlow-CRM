@@ -47,7 +47,14 @@ vi.mock('@intelliflow/ui', () => ({
     value: string;
     onValueChange: (v: string) => void;
   }) => (
-    <div data-testid="tabs" data-value={value} onClick={() => onValueChange('test')}>
+    <div
+      data-testid="tabs"
+      data-value={value}
+      role="button"
+      tabIndex={0}
+      onClick={() => onValueChange('test')}
+      onKeyDown={vi.fn()}
+    >
       {children}
     </div>
   ),

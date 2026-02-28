@@ -74,12 +74,21 @@ function TreeNode({
       onFocus={() => onFocus(node.id)}
     >
       <div
+        role="button"
+        tabIndex={0}
         className={`flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors
           ${isCurrent ? 'bg-primary/10 ring-1 ring-primary/30' : 'hover:bg-muted/50'}
           ${isFocused ? 'ring-2 ring-ring' : ''}`}
         onClick={() => {
           if (hasChildren) onToggle(node.id);
           onFocus(node.id);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (hasChildren) onToggle(node.id);
+            onFocus(node.id);
+          }
         }}
       >
         {hasChildren ? (

@@ -444,10 +444,11 @@ export default function UploadDocumentPage() {
             <div className="space-y-4">
               {/* Title */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                <label htmlFor="doc-title" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   Title <span className="text-red-500">*</span>
                 </label>
                 <input
+                  id="doc-title"
                   type="text"
                   value={formData.title}
                   onChange={(e) => updateField('title', e.target.value)}
@@ -463,10 +464,11 @@ export default function UploadDocumentPage() {
 
               {/* Description */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                <label htmlFor="doc-description" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   Description
                 </label>
                 <textarea
+                  id="doc-description"
                   value={formData.description}
                   onChange={(e) => updateField('description', e.target.value)}
                   rows={3}
@@ -479,10 +481,11 @@ export default function UploadDocumentPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Document Type */}
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                  <label htmlFor="doc-document-type" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                     Document Type <span className="text-red-500">*</span>
                   </label>
                   <select
+                    id="doc-document-type"
                     value={formData.documentType}
                     onChange={(e) => updateField('documentType', e.target.value)}
                     className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] transition-colors ${
@@ -506,10 +509,11 @@ export default function UploadDocumentPage() {
 
                 {/* Classification */}
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                  <label htmlFor="doc-classification" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                     Classification
                   </label>
                   <select
+                    id="doc-classification"
                     value={formData.classification}
                     onChange={(e) => updateField('classification', e.target.value)}
                     className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] transition-colors"
@@ -525,7 +529,7 @@ export default function UploadDocumentPage() {
 
               {/* Tags */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                <label htmlFor="doc-tag-input" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   Tags
                 </label>
                 <div className="space-y-3">
@@ -553,6 +557,7 @@ export default function UploadDocumentPage() {
                   {/* Tag Input */}
                   <div className="flex gap-2">
                     <input
+                      id="doc-tag-input"
                       type="text"
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
@@ -605,10 +610,11 @@ export default function UploadDocumentPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Related Case */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                <label htmlFor="doc-related-case" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   Related Case
                 </label>
                 <input
+                  id="doc-related-case"
                   type="text"
                   value={formData.relatedCaseId}
                   onChange={(e) => updateField('relatedCaseId', e.target.value)}
@@ -622,10 +628,11 @@ export default function UploadDocumentPage() {
 
               {/* Related Contact */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                <label htmlFor="doc-related-contact" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                   Related Contact
                 </label>
                 <input
+                  id="doc-related-contact"
                   type="text"
                   value={formData.relatedContactId}
                   onChange={(e) => updateField('relatedContactId', e.target.value)}

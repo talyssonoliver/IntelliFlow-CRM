@@ -373,4 +373,3 @@ function CommentCard({
   );
 }
 
-export default CommentsWidget;

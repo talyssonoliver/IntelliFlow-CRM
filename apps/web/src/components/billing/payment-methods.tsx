@@ -335,7 +335,7 @@ function AddCardForm({ onSuccess, onClose, isAdding, setIsAdding }: AddCardFormP
 
         {/* Card Number — Stripe Element */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Card Number</label>
+          <p className="text-sm font-medium">Card Number</p>
           <div className="h-10 rounded-md border border-input bg-background px-3 py-2.5">
             <CardNumberElement options={stripeElementStyle} />
           </div>
@@ -344,13 +344,13 @@ function AddCardForm({ onSuccess, onClose, isAdding, setIsAdding }: AddCardFormP
         {/* Expiry and CVC — Stripe Elements */}
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">Expiry Date</label>
+            <p className="text-sm font-medium">Expiry Date</p>
             <div className="h-10 rounded-md border border-input bg-background px-3 py-2.5">
               <CardExpiryElement options={stripeElementStyle} />
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">CVC</label>
+            <p className="text-sm font-medium">CVC</p>
             <div className="h-10 rounded-md border border-input bg-background px-3 py-2.5">
               <CardCvcElement options={stripeElementStyle} />
             </div>
@@ -359,8 +359,9 @@ function AddCardForm({ onSuccess, onClose, isAdding, setIsAdding }: AddCardFormP
 
         {/* Cardholder Name — regular Input (not PCI scope) */}
         <div className="space-y-1.5">
-          <label className="text-sm font-medium">Cardholder Name</label>
+          <label htmlFor="billing-cardholder-name" className="text-sm font-medium">Cardholder Name</label>
           <Input
+            id="billing-cardholder-name"
             type="text"
             autoComplete="cc-name"
             placeholder="John Doe"
@@ -760,4 +761,3 @@ export function PaymentMethods({ className }: PaymentMethodsProps) {
   );
 }
 
-export default PaymentMethods;

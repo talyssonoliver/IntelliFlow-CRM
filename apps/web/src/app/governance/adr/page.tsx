@@ -613,10 +613,11 @@ export default function ADRRegistryPage() {
               </div>
               <form onSubmit={handleCreate} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
+                  <label htmlFor="adr-new-title" className="block text-sm font-medium text-foreground mb-1">
                     Title <span className="text-red-500">*</span>
                   </label>
                   <input
+                    id="adr-new-title"
                     type="text"
                     value={newAdrTitle}
                     onChange={(e) => setNewAdrTitle(e.target.value)}
@@ -626,10 +627,11 @@ export default function ADRRegistryPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-foreground mb-1">
+                  <label htmlFor="adr-new-story" className="block text-sm font-medium text-foreground mb-1">
                     Technical Story (Optional)
                   </label>
                   <input
+                    id="adr-new-story"
                     type="text"
                     value={newAdrStory}
                     onChange={(e) => setNewAdrStory(e.target.value)}

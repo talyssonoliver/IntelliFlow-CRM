@@ -351,7 +351,7 @@ export default function PipelineSettingsContent() {
 
                         {/* Active Toggle */}
                         <div className="flex items-center gap-2">
-                          <label className="text-muted-foreground">Active:</label>
+                          <span className="text-muted-foreground">Active:</span>
                           <button
                             onClick={() => {
                               if (isProtected && stage.isActive) {

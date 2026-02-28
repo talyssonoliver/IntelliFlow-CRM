@@ -725,4 +725,3 @@ export function InvoiceDetail({ invoice, isLoading, error, onPayNow }: InvoiceDe
   );
 }
 
-export default InvoiceDetail;

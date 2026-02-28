@@ -78,10 +78,10 @@ vi.mock('@/hooks/useDebounce', () => ({
   useDebounce: vi.fn((value: string) => value),
 }));
 
-// Capture SearchFilterBar props for assertions
-const mockSearchFilterBarProps = vi.hoisted(() => vi.fn());
+// Capture NotificationFilters props for assertions
+const mockNotificationFiltersProps = vi.hoisted(() => vi.fn());
 
-// Mock @/components/shared — SearchFilterBar + PageHeader
+// Mock @/components/shared — PageHeader
 vi.mock('@/components/shared', () => ({
   PageHeader: vi.fn(({ title, actions }: { title: string; actions?: Array<{ label: string; onClick?: () => void }> }) => (
     <div data-testid="page-header">
@@ -97,56 +97,45 @@ vi.mock('@/components/shared', () => ({
       ))}
     </div>
   )),
-  SearchFilterBar: vi.fn((props: Record<string, unknown>) => {
-    mockSearchFilterBarProps(props);
-    const onSearchChange = props.onSearchChange as (v: string) => void;
-    const filters = props.filters as Array<{
-      id: string;
-      onChange: (v: string) => void;
-    }>;
-    const filterChips = props.filterChips as {
-      value: string;
-      onChange: (v: string) => void;
-    } | undefined;
+}));
 
-    const typeFilter = filters?.find((f) => f.id === 'type');
-    const priorityFilter = filters?.find((f) => f.id === 'priority');
+// Mock @/components/notifications — NotificationFilters + NotificationList
+vi.mock('@/components/notifications', () => ({
+  NotificationFilters: vi.fn((props: Record<string, unknown>) => {
+    mockNotificationFiltersProps(props);
+    const onSearchChange = props.onSearchChange as (v: string) => void;
+    const onTypeChange = props.onTypeChange as (v: string) => void;
+    const onPriorityChange = props.onPriorityChange as (v: string) => void;
+    const onTabChange = props.onTabChange as (v: string) => void;
+    const onClearFilters = props.onClearFilters as () => void;
 
     return (
-      <div data-testid="search-filter-bar">
+      <div data-testid="notification-filters">
         <input
           data-testid="search-input"
-          value={props.searchValue as string}
+          value={props.searchQuery as string}
           onChange={(e) => onSearchChange(e.target.value)}
         />
-        {typeFilter && (
-          <button data-testid="type-change" onClick={() => typeFilter.onChange('lead_assigned')}>
-            Type
-          </button>
-        )}
-        {priorityFilter && (
-          <button data-testid="priority-change" onClick={() => priorityFilter.onChange('high')}>
-            Priority
-          </button>
-        )}
-        {filterChips && (
-          <>
-            <button data-testid="tab-unread" onClick={() => filterChips.onChange('unread')}>
-              Unread
-            </button>
-            <button data-testid="tab-all" onClick={() => filterChips.onChange('all')}>
-              All
-            </button>
-            <span data-testid="active-tab">{filterChips.value}</span>
-          </>
-        )}
+        <button data-testid="type-change" onClick={() => onTypeChange('lead_assigned')}>
+          Type
+        </button>
+        <button data-testid="priority-change" onClick={() => onPriorityChange('high')}>
+          Priority
+        </button>
+        <button data-testid="tab-unread" onClick={() => onTabChange('unread')}>
+          Unread
+        </button>
+        <button data-testid="tab-all" onClick={() => onTabChange('all')}>
+          All
+        </button>
+        <button data-testid="clear-filters" onClick={() => onClearFilters()}>
+          Clear
+        </button>
+        <span data-testid="active-tab">{props.activeTab as string}</span>
+        <span data-testid="type-filter">{props.typeFilter as string}</span>
       </div>
     );
   }),
-}));
-
-// Mock @/components/notifications
-vi.mock('@/components/notifications', () => ({
   NotificationList: vi.fn(({ filters, onMarkAsRead, onDismiss }: Record<string, unknown>) => (
     <div data-testid="notification-list">
       <button data-testid="mark-read" onClick={() => (onMarkAsRead as (id: string) => void)('n1')}>
@@ -158,10 +147,6 @@ vi.mock('@/components/notifications', () => ({
       <span data-testid="filters-json">{JSON.stringify(filters)}</span>
     </div>
   )),
-  getTypeFilterOptions: vi.fn(() => [
-    { value: 'lead_assigned', label: 'Lead Assigned' },
-    { value: 'deal_won', label: 'Deal Won' },
-  ]),
 }));
 
 // Import the component under test
@@ -174,9 +159,9 @@ describe('NotificationsPage', () => {
     mockSearchParams.delete('filter');
   });
 
-  it('renders SearchFilterBar component', () => {
+  it('renders NotificationFilters component', () => {
     render(<NotificationsPage />);
-    expect(screen.getByTestId('search-filter-bar')).toBeInTheDocument();
+    expect(screen.getByTestId('notification-filters')).toBeInTheDocument();
   });
 
   it('renders NotificationList component', () => {
@@ -189,17 +174,21 @@ describe('NotificationsPage', () => {
     expect(screen.getByText('Notifications')).toBeInTheDocument();
   });
 
-  it('passes correct props to SearchFilterBar', () => {
+  it('passes correct props to NotificationFilters', () => {
     render(<NotificationsPage />);
-    expect(mockSearchFilterBarProps).toHaveBeenCalled();
-    const props = mockSearchFilterBarProps.mock.calls[0][0];
-    expect(props.searchValue).toBe('');
-    expect(props.searchPlaceholder).toBe('Search notifications...');
-    expect(props.filters).toHaveLength(2);
-    expect(props.filters[0].id).toBe('type');
-    expect(props.filters[1].id).toBe('priority');
-    expect(props.filterChips).toBeDefined();
-    expect(props.filterChips.options).toHaveLength(3);
+    expect(mockNotificationFiltersProps).toHaveBeenCalled();
+    const props = mockNotificationFiltersProps.mock.calls[0][0];
+    expect(props.searchQuery).toBe('');
+    expect(props.typeFilter).toBe('');
+    expect(props.priorityFilter).toBe('');
+    expect(props.activeTab).toBe('all');
+    expect(props.unreadCount).toBe(3);
+    expect(props.highPriorityCount).toBe(1);
+    expect(props.onSearchChange).toBeDefined();
+    expect(props.onTypeChange).toBeDefined();
+    expect(props.onPriorityChange).toBeDefined();
+    expect(props.onTabChange).toBeDefined();
+    expect(props.onClearFilters).toBeDefined();
   });
 
   it('manages search filter state', () => {
@@ -209,24 +198,21 @@ describe('NotificationsPage', () => {
     expect(input).toHaveValue('test search');
   });
 
-  it('manages type filter via SearchFilterBar', () => {
+  it('manages type filter via NotificationFilters', () => {
     render(<NotificationsPage />);
     fireEvent.click(screen.getByTestId('type-change'));
-    // After clicking, SearchFilterBar re-renders with updated type value
-    const latestProps = mockSearchFilterBarProps.mock.calls.at(-1)![0];
-    const typeFilter = latestProps.filters.find((f: { id: string }) => f.id === 'type');
-    expect(typeFilter.value).toBe('lead_assigned');
+    const latestProps = mockNotificationFiltersProps.mock.calls.at(-1)![0];
+    expect(latestProps.typeFilter).toBe('lead_assigned');
   });
 
-  it('manages priority filter via SearchFilterBar', () => {
+  it('manages priority filter via NotificationFilters', () => {
     render(<NotificationsPage />);
     fireEvent.click(screen.getByTestId('priority-change'));
-    const latestProps = mockSearchFilterBarProps.mock.calls.at(-1)![0];
-    const priorityFilter = latestProps.filters.find((f: { id: string }) => f.id === 'priority');
-    expect(priorityFilter.value).toBe('high');
+    const latestProps = mockNotificationFiltersProps.mock.calls.at(-1)![0];
+    expect(latestProps.priorityFilter).toBe('high');
   });
 
-  it('manages tab state via filterChips', () => {
+  it('manages tab state via NotificationFilters', () => {
     render(<NotificationsPage />);
     fireEvent.click(screen.getByTestId('tab-unread'));
     expect(screen.getByTestId('active-tab')).toHaveTextContent('unread');
@@ -271,33 +257,25 @@ describe('NotificationsPage', () => {
     it('?filter=ai-insights sets typeFilter to ai_insight', () => {
       mockSearchParams.set('filter', 'ai-insights');
       render(<NotificationsPage />);
-      const latestProps = mockSearchFilterBarProps.mock.calls.at(-1)![0];
-      const typeFilter = latestProps.filters.find((f: { id: string }) => f.id === 'type');
-      expect(typeFilter.value).toBe('ai_insight');
+      expect(screen.getByTestId('type-filter')).toHaveTextContent('ai_insight');
     });
 
     it('?filter=mentions sets typeFilter to team_mention', () => {
       mockSearchParams.set('filter', 'mentions');
       render(<NotificationsPage />);
-      const latestProps = mockSearchFilterBarProps.mock.calls.at(-1)![0];
-      const typeFilter = latestProps.filters.find((f: { id: string }) => f.id === 'type');
-      expect(typeFilter.value).toBe('team_mention');
+      expect(screen.getByTestId('type-filter')).toHaveTextContent('team_mention');
     });
 
     it('?filter=sla-alerts sets typeFilter to system_alert', () => {
       mockSearchParams.set('filter', 'sla-alerts');
       render(<NotificationsPage />);
-      const latestProps = mockSearchFilterBarProps.mock.calls.at(-1)![0];
-      const typeFilter = latestProps.filters.find((f: { id: string }) => f.id === 'type');
-      expect(typeFilter.value).toBe('system_alert');
+      expect(screen.getByTestId('type-filter')).toHaveTextContent('system_alert');
     });
 
     it('?filter=system sets typeFilter to system_alert', () => {
       mockSearchParams.set('filter', 'system');
       render(<NotificationsPage />);
-      const latestProps = mockSearchFilterBarProps.mock.calls.at(-1)![0];
-      const typeFilter = latestProps.filters.find((f: { id: string }) => f.id === 'type');
-      expect(typeFilter.value).toBe('system_alert');
+      expect(screen.getByTestId('type-filter')).toHaveTextContent('system_alert');
     });
 
     it('no ?filter defaults to activeTab all', () => {
@@ -321,14 +299,10 @@ describe('NotificationsPage', () => {
     expect(classes).not.toContain('lg:p-8');
   });
 
-  it('filter chips include All, Unread (3), and High Priority (1)', () => {
+  it('passes unreadCount and highPriorityCount to NotificationFilters', () => {
     render(<NotificationsPage />);
-    const props = mockSearchFilterBarProps.mock.calls.at(-1)![0];
-    const chips = props.filterChips.options;
-    expect(chips[0]).toEqual({ id: 'all', label: 'All' });
-    expect(chips[1]).toEqual({ id: 'unread', label: 'Unread (3)' });
-    expect(chips[2]).toEqual(
-      expect.objectContaining({ id: 'high', label: 'High Priority (1)' })
-    );
+    const props = mockNotificationFiltersProps.mock.calls.at(-1)![0];
+    expect(props.unreadCount).toBe(3);
+    expect(props.highPriorityCount).toBe(1);
   });
 });

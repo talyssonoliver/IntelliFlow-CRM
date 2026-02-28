@@ -8,6 +8,7 @@ import { Card, Button } from '@intelliflow/ui';
 import { EntityHeader } from '@/components/shared';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
+import { PinButton } from '@/components/home/PinButton';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 
 // Material Symbols icon helper component
@@ -717,7 +718,17 @@ export default function DealDetailPage() {
               onClick: () => {},
             },
           ]}
-          endContent={<MoreActionsButton onClick={() => setActionSheetOpen(true)} />}
+          endContent={
+            <div className="flex items-center gap-2">
+              <PinButton
+                entityType="opportunity"
+                entityId={deal.id}
+                title={deal.name}
+                url={`/deals/${dealId}`}
+              />
+              <MoreActionsButton onClick={() => setActionSheetOpen(true)} />
+            </div>
+          }
         />
 
         <EntityActionSheet

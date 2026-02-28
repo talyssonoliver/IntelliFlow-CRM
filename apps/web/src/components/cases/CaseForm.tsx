@@ -349,6 +349,7 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
                   aria-invalid={!!errors.clientSearch}
                   aria-describedby={errors.clientSearch ? 'client-error' : 'client-help'}
                   role="combobox"
+                  aria-controls="client-listbox"
                   aria-expanded={clientDropdownOpen}
                   autoComplete="off"
                 />
@@ -358,6 +359,7 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
             {/* ── Dropdown results ── */}
             {clientDropdownOpen && !formData.clientId && debouncedClientSearch.length >= 2 && (
               <div
+                id="client-listbox"
                 className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-background shadow-lg max-h-56 overflow-y-auto"
                 role="listbox"
               >
@@ -382,6 +384,7 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
                       onClick={() => handleClientSelect(client.id, client.name)}
                       className="w-full text-left px-3 py-2.5 hover:bg-accent transition-colors flex items-center gap-3"
                       role="option"
+                      aria-selected={false}
                     >
                       <span className="material-symbols-outlined text-muted-foreground text-xl shrink-0" aria-hidden="true">
                         person

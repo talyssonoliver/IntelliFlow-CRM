@@ -22,7 +22,8 @@
 // Types
 // ============================================
 
-export type OAuthProvider = 'google' | 'azure';
+export type { OAuthProvider } from '@intelliflow/domain';
+import type { OAuthProvider } from '@intelliflow/domain';
 
 export interface OAuthParams {
   code: string | null;
@@ -83,9 +84,11 @@ export function extractOAuthParams(searchParams: URLSearchParams): OAuthParams {
   const errorDescription = searchParams.get('error_description');
   const providerRaw = searchParams.get('provider');
 
-  // Validate provider is one of the known types
+  // Validate provider is one of the known types (all 4 OAUTH_PROVIDERS)
   const provider: OAuthProvider | null =
-    providerRaw === 'google' || providerRaw === 'azure' ? providerRaw : null;
+    providerRaw === 'google' || providerRaw === 'azure' || providerRaw === 'github' || providerRaw === 'linkedin'
+      ? providerRaw
+      : null;
 
   return {
     code,

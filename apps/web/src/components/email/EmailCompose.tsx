@@ -240,7 +240,6 @@ export function EmailCompose({
 
   return (
     <form
-      role="form"
       aria-label="Compose email"
       className={cn('flex flex-col bg-card', className)}
       onSubmit={(e) => { e.preventDefault(); handleSend(); }}
@@ -328,6 +327,7 @@ export function EmailCompose({
           ref={bodyRef}
           id="compose-body"
           role="textbox"
+          tabIndex={0}
           aria-label="Message body"
           contentEditable
           suppressContentEditableWarning

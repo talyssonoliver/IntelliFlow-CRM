@@ -17,7 +17,14 @@ vi.mock('../SLAIndicator', () => ({
 // Mock Card from @intelliflow/ui
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className, onClick, role, ...props }: any) => (
-    <div className={className} onClick={onClick} role={role} {...props}>
+    <div
+      className={className}
+      onClick={onClick}
+      role={role ?? 'button'}
+      tabIndex={0}
+      onKeyDown={vi.fn()}
+      {...props}
+    >
       {children}
     </div>
   ),

@@ -13,6 +13,7 @@ import { RevenueChart } from './RevenueChart';
 import { AccountHierarchy } from './AccountHierarchy';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
+import { PinButton } from '@/components/home/PinButton';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 
 interface AccountDetailProps {
@@ -207,6 +208,14 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
             <span className="material-symbols-outlined !text-[18px]">person_add</span>
             Add Contact
           </button>
+          <PinButton
+            entityType="account"
+            entityId={accountId}
+            title={account.name}
+            subtitle={account.industry || undefined}
+            icon="domain"
+            url={`/accounts/${accountId}`}
+          />
           <MoreActionsButton onClick={() => setActionSheetOpen(true)} />
         </div>
       </div>

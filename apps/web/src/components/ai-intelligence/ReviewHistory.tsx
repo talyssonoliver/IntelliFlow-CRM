@@ -169,7 +169,7 @@ function TimelineGroup({
   const contentId = useId();
 
   return (
-    <section role="region" aria-labelledby={headingId} className="mb-6">
+    <section aria-labelledby={headingId} className="mb-6">
       <button
         type="button"
         onClick={() => setIsOpen((v) => !v)}
