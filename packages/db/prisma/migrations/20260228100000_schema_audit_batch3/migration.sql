@@ -275,7 +275,20 @@ CREATE UNIQUE INDEX IF NOT EXISTS "dashboard_configs_tenantId_name_key"
 -- ============================================================
 -- SECTION 12: ADD FK constraints for CaseDocument tenant_id (DBA-021)
 -- Idempotent: drop if exists, then add
+-- First: remap orphan rows whose tenant_id doesn't exist in tenants
 -- ============================================================
+
+-- Remap orphan case_document_audit rows (must go first — child FK)
+UPDATE "case_document_audit" SET "tenant_id" = (SELECT id FROM "tenants" LIMIT 1)
+  WHERE "tenant_id" NOT IN (SELECT id FROM "tenants");
+
+-- Remap orphan case_document_acl rows (child FK)
+UPDATE "case_document_acl" SET "tenant_id" = (SELECT id FROM "tenants" LIMIT 1)
+  WHERE "tenant_id" NOT IN (SELECT id FROM "tenants");
+
+-- Remap orphan case_documents rows (parent)
+UPDATE "case_documents" SET "tenant_id" = (SELECT id FROM "tenants" LIMIT 1)
+  WHERE "tenant_id" NOT IN (SELECT id FROM "tenants");
 
 -- CaseDocument → Tenant
 ALTER TABLE "case_documents" DROP CONSTRAINT IF EXISTS "case_documents_tenant_id_fkey";
