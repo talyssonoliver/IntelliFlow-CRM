@@ -88,6 +88,10 @@ vi.mock('@/components/shared/more-actions-button', () => ({
   ),
 }));
 
+vi.mock('@/components/home/PinButton', () => ({
+  PinButton: () => <button data-testid="pin-button">Pin</button>,
+}));
+
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <div className={className}>{children}</div>
