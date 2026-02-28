@@ -142,13 +142,13 @@ export function MfaQrGenerator({
         {showManual && (
           <div id="manual-entry-section" className="mt-3 p-4 bg-slate-800/50 rounded-lg space-y-3">
             <div className="space-y-1">
-              <label className="text-xs text-slate-500 uppercase tracking-wide">Account</label>
+              <span className="text-xs text-slate-500 uppercase tracking-wide">Account</span>
               <p className="text-sm text-slate-300">{accountName}</p>
             </div>
 
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <label className="text-xs text-slate-500 uppercase tracking-wide">Secret Key</label>
+                <span className="text-xs text-slate-500 uppercase tracking-wide">Secret Key</span>
                 <CopyButton text={secret} aria-label="Copy secret key" />
               </div>
               <p
@@ -212,4 +212,3 @@ export function MfaQrGenerator({
   );
 }
 
-export default MfaQrGenerator;

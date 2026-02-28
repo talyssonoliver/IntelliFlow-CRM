@@ -498,4 +498,3 @@ IntelliFlow
   };
 }
 
-export default ForgotPasswordForm;

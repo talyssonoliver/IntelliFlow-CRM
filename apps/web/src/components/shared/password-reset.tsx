@@ -509,4 +509,3 @@ export function PasswordResetForm({
   );
 }
 
-export default PasswordResetForm;

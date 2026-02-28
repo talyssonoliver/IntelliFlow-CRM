@@ -13,3 +13,5 @@ export {
   type InlineMfaChallengeProps,
   type MfaMethod,
 } from './mfa-challenge';
+
+export { SsoEntryForm, type SsoEntryFormProps } from './SsoEntryForm';

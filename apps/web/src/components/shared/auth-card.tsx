@@ -140,4 +140,3 @@ export function AuthCard({
   );
 }
 
-export default AuthCard;

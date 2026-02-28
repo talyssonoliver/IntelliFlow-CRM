@@ -238,4 +238,3 @@ export function PageHeader({
 // Convenience Export
 // =============================================================================
 
-export default PageHeader;

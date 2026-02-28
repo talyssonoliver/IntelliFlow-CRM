@@ -2,35 +2,41 @@
  * @vitest-environment jsdom
  */
 /**
- * @vitest-environment happy-dom
- *
  * OAuth Callback Component Tests
  *
- * IMPLEMENTS: PG-024 (SSO Callback)
+ * IMPLEMENTS: PG-024 (SSO Callback), PG-124 (nonce-based CSRF verification)
  *
- * Component tests for the OAuth Callback component.
- * Tests rendering, states, and user interactions.
+ * The OAuthCallback component uses Supabase's PKCE flow:
+ * 1. Checks for ?code= or ?error= in URL search params
+ * 2. Verifies nonce from sessionStorage matches ?nonce= param (SF-001)
+ * 3. Calls supabase.auth.getSession() (PKCE exchange happens internally)
+ * 4. Stores tokens, fingerprint, and success flag
+ * 5. Redirects to dashboard or calls onSuccess callback
  */
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Hoist mock functions to ensure they're available before vi.mock runs
+// Hoist mock functions
 const {
-  mockExtractOAuthParams,
-  mockValidateOAuthParams,
-  mockOAuthCallback,
   mockPush,
   mockReplace,
+  mockGetSession,
+  mockGetUser,
+  mockStoreSessionTokens,
   mockStoreSessionFingerprint,
+  mockClearSupabaseLocalStorage,
+  mockSearchParams,
 } = vi.hoisted(() => ({
-  mockExtractOAuthParams: vi.fn(),
-  mockValidateOAuthParams: vi.fn(),
-  mockOAuthCallback: vi.fn(),
   mockPush: vi.fn(),
   mockReplace: vi.fn(),
+  mockGetSession: vi.fn(),
+  mockGetUser: vi.fn(),
+  mockStoreSessionTokens: vi.fn(),
   mockStoreSessionFingerprint: vi.fn(),
+  mockClearSupabaseLocalStorage: vi.fn(),
+  mockSearchParams: new URLSearchParams('code=test123&nonce=test-nonce-uuid'),
 }));
 
 // Mock next/navigation
@@ -40,63 +46,59 @@ vi.mock('next/navigation', () => ({
     replace: mockReplace,
     back: vi.fn(),
   }),
-  useSearchParams: () => new URLSearchParams('code=test123&provider=google'),
+  useSearchParams: () => mockSearchParams,
 }));
 
-// Mock token-exchange utilities
+// Mock supabase-browser
+vi.mock('@/lib/supabase-browser', () => ({
+  getSupabaseBrowserClient: () => ({
+    auth: {
+      getSession: mockGetSession,
+      getUser: mockGetUser,
+    },
+  }),
+  clearSupabaseLocalStorage: mockClearSupabaseLocalStorage,
+}));
+
+// Mock token-exchange
 vi.mock('@/lib/shared/token-exchange', () => ({
-  extractOAuthParams: (params: URLSearchParams) => mockExtractOAuthParams(params),
-  validateOAuthParams: (params: unknown) => mockValidateOAuthParams(params),
-  storeSessionTokens: vi.fn(),
-  clearSessionTokens: vi.fn(),
+  storeSessionTokens: mockStoreSessionTokens,
 }));
 
 // Mock login-security
 vi.mock('@/lib/shared/login-security', () => ({
-  storeSessionFingerprint: () => mockStoreSessionFingerprint(),
+  storeSessionFingerprint: mockStoreSessionFingerprint,
 }));
 
-// Mock tRPC - create a proper hook structure
-vi.mock('@/lib/trpc', () => ({
-  trpc: {
-    auth: {
-      oauthCallback: {
-        useMutation: () => ({
-          mutateAsync: mockOAuthCallback,
-          isLoading: false,
-          error: null,
-        }),
-      },
-    },
-  },
-}));
-
-// Import component after mocks are set up
+// Import component after mocks
 import { OAuthCallback } from '../oauth-callback';
 
 describe('OAuthCallback', () => {
-  const defaultValidParams = {
-    code: 'test123',
-    state: null,
-    error: null,
-    errorDescription: null,
-    provider: 'google' as const,
-  };
-
   beforeEach(() => {
     vi.clearAllMocks();
-    mockExtractOAuthParams.mockReturnValue(defaultValidParams);
-    mockValidateOAuthParams.mockReturnValue({
-      ok: true,
-      value: { code: 'test123', provider: 'google' },
-    });
-    mockOAuthCallback.mockResolvedValue({
-      success: true,
-      session: {
-        accessToken: 'access_token_123',
-        refreshToken: 'refresh_token_123',
+    // Set up valid nonce in sessionStorage
+    sessionStorage.setItem('intelliflow_oauth_nonce', 'test-nonce-uuid');
+    // Reset search params to valid code+nonce
+    Object.defineProperty(mockSearchParams, 'get', {
+      value: (key: string) => {
+        const params = new URLSearchParams('code=test123&nonce=test-nonce-uuid');
+        return params.get(key);
       },
-      user: { id: 'user_1', email: 'user@example.com' },
+      writable: true,
+      configurable: true,
+    });
+    // Default: successful session
+    mockGetSession.mockResolvedValue({
+      data: {
+        session: {
+          access_token: 'access_token_123',
+          refresh_token: 'refresh_token_123',
+        },
+      },
+      error: null,
+    });
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: 'user_1', email: 'user@example.com' } },
     });
   });
 
@@ -106,20 +108,16 @@ describe('OAuthCallback', () => {
   describe('rendering', () => {
     it('renders callback container', () => {
       render(<OAuthCallback />);
-
-      expect(screen.getByRole('main') || screen.getByTestId('oauth-callback')).toBeInTheDocument();
+      expect(screen.getByTestId('oauth-callback')).toBeInTheDocument();
     });
 
-    it('shows loading state initially', async () => {
+    it('shows loading state initially', () => {
       render(<OAuthCallback />);
-
-      // Initial loading state
       expect(screen.getByText(/signing you in|authenticating/i)).toBeInTheDocument();
     });
 
     it('applies custom className', () => {
       const { container } = render(<OAuthCallback className="custom-class" />);
-
       expect(container.firstChild).toHaveClass('custom-class');
     });
   });
@@ -136,14 +134,22 @@ describe('OAuthCallback', () => {
       });
     });
 
-    it('calls oauthCallback mutation with correct params', async () => {
+    it('calls supabase getSession for PKCE exchange', async () => {
       render(<OAuthCallback />);
 
       await waitFor(() => {
-        expect(mockOAuthCallback).toHaveBeenCalledWith({
-          code: 'test123',
-          provider: 'google',
-        });
+        expect(mockGetSession).toHaveBeenCalled();
+      });
+    });
+
+    it('stores session tokens on success', async () => {
+      render(<OAuthCallback />);
+
+      await waitFor(() => {
+        expect(mockStoreSessionTokens).toHaveBeenCalledWith(
+          'access_token_123',
+          'refresh_token_123',
+        );
       });
     });
 
@@ -155,12 +161,33 @@ describe('OAuthCallback', () => {
       });
     });
 
+    it('stores oauth_login_success timestamp in sessionStorage (SF-002)', async () => {
+      render(<OAuthCallback />);
+
+      await waitFor(() => {
+        const stored = sessionStorage.getItem('oauth_login_success');
+        expect(stored).toBeTruthy();
+        expect(Number(stored)).toBeGreaterThan(0);
+      });
+    });
+
+    it('clears supabase localStorage on success', async () => {
+      render(<OAuthCallback />);
+
+      await waitFor(() => {
+        expect(mockClearSupabaseLocalStorage).toHaveBeenCalled();
+      });
+    });
+
     it('calls onSuccess callback with user data', async () => {
       const onSuccess = vi.fn();
       render(<OAuthCallback onSuccess={onSuccess} />);
 
       await waitFor(() => {
-        expect(onSuccess).toHaveBeenCalled();
+        expect(onSuccess).toHaveBeenCalledWith(
+          { id: 'user_1', email: 'user@example.com' },
+          { accessToken: 'access_token_123' },
+        );
       });
     });
 
@@ -171,7 +198,7 @@ describe('OAuthCallback', () => {
         () => {
           expect(mockPush).toHaveBeenCalledWith('/dashboard');
         },
-        { timeout: 3000 }
+        { timeout: 3000 },
       );
     });
 
@@ -182,8 +209,52 @@ describe('OAuthCallback', () => {
         () => {
           expect(mockPush).toHaveBeenCalledWith('/onboarding');
         },
-        { timeout: 3000 }
+        { timeout: 3000 },
       );
+    });
+  });
+
+  // ============================================
+  // Nonce / CSRF Tests (SF-001)
+  // ============================================
+  describe('nonce verification (SF-001)', () => {
+    it('rejects when nonce is missing from sessionStorage', async () => {
+      sessionStorage.removeItem('intelliflow_oauth_nonce');
+
+      render(<OAuthCallback />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/security verification failed/i)).toBeInTheDocument();
+      });
+    });
+
+    it('rejects when nonce does not match URL param', async () => {
+      sessionStorage.setItem('intelliflow_oauth_nonce', 'different-nonce');
+
+      render(<OAuthCallback />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/security verification failed/i)).toBeInTheDocument();
+      });
+    });
+
+    it('removes nonce from sessionStorage after verification', async () => {
+      render(<OAuthCallback />);
+
+      await waitFor(() => {
+        expect(sessionStorage.getItem('intelliflow_oauth_nonce')).toBeNull();
+      });
+    });
+
+    it('calls onError with csrf when nonce fails', async () => {
+      sessionStorage.removeItem('intelliflow_oauth_nonce');
+      const onError = vi.fn();
+
+      render(<OAuthCallback onError={onError} />);
+
+      await waitFor(() => {
+        expect(onError).toHaveBeenCalledWith('csrf');
+      });
     });
   });
 
@@ -191,10 +262,42 @@ describe('OAuthCallback', () => {
   // Error State Tests
   // ============================================
   describe('error states', () => {
-    it('shows error for provider error', async () => {
-      mockValidateOAuthParams.mockReturnValue({
-        ok: false,
-        error: { code: 'PROVIDER_ERROR', message: 'User cancelled the login' },
+    it('shows error when no code or error in URL (bookmarked URL)', async () => {
+      Object.defineProperty(mockSearchParams, 'get', {
+        value: () => null,
+        writable: true,
+        configurable: true,
+      });
+
+      render(<OAuthCallback />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/no authentication data found/i)).toBeInTheDocument();
+      });
+    });
+
+    it('shows provider error from URL params', async () => {
+      Object.defineProperty(mockSearchParams, 'get', {
+        value: (key: string) => {
+          if (key === 'error') return 'access_denied';
+          if (key === 'error_description') return 'User cancelled the login';
+          return null;
+        },
+        writable: true,
+        configurable: true,
+      });
+
+      render(<OAuthCallback />);
+
+      await waitFor(() => {
+        expect(screen.getByText(/user cancelled the login/i)).toBeInTheDocument();
+      });
+    });
+
+    it('shows error when getSession fails', async () => {
+      mockGetSession.mockResolvedValue({
+        data: { session: null },
+        error: { message: 'Session exchange failed' },
       });
 
       render(<OAuthCallback />);
@@ -204,53 +307,31 @@ describe('OAuthCallback', () => {
       });
     });
 
-    it('shows error for missing code', async () => {
-      mockValidateOAuthParams.mockReturnValue({
-        ok: false,
-        error: { code: 'MISSING_CODE', message: 'No authorization code received' },
+    it('shows error when session is null', async () => {
+      mockGetSession.mockResolvedValue({
+        data: { session: null },
+        error: null,
       });
 
       render(<OAuthCallback />);
 
       await waitFor(() => {
-        expect(screen.getByText(/authorization code/i)).toBeInTheDocument();
-      });
-    });
-
-    it('shows error for exchange failure', async () => {
-      mockOAuthCallback.mockRejectedValue(new Error('Exchange failed'));
-
-      render(<OAuthCallback />);
-
-      await waitFor(() => {
-        expect(screen.getByRole('heading', { name: /failed|error/i })).toBeInTheDocument();
-      });
-    });
-
-    it('shows error when session creation fails', async () => {
-      mockOAuthCallback.mockResolvedValue({
-        success: false,
-        error: 'Session creation failed',
-      });
-
-      render(<OAuthCallback />);
-
-      await waitFor(() => {
-        expect(screen.getByRole('heading', { name: /failed|error/i })).toBeInTheDocument();
+        expect(screen.getByText(/session could not be established/i)).toBeInTheDocument();
       });
     });
 
     it('calls onError callback on error', async () => {
-      mockValidateOAuthParams.mockReturnValue({
-        ok: false,
-        error: { code: 'MISSING_CODE', message: 'No authorization code' },
+      Object.defineProperty(mockSearchParams, 'get', {
+        value: () => null,
+        writable: true,
+        configurable: true,
       });
 
       const onError = vi.fn();
       render(<OAuthCallback onError={onError} />);
 
       await waitFor(() => {
-        expect(onError).toHaveBeenCalledWith('No authorization code');
+        expect(onError).toHaveBeenCalled();
       });
     });
   });
@@ -260,9 +341,10 @@ describe('OAuthCallback', () => {
   // ============================================
   describe('navigation', () => {
     it('shows back to login button on error', async () => {
-      mockValidateOAuthParams.mockReturnValue({
-        ok: false,
-        error: { code: 'PROVIDER_ERROR', message: 'Error' },
+      Object.defineProperty(mockSearchParams, 'get', {
+        value: () => null,
+        writable: true,
+        configurable: true,
       });
 
       render(<OAuthCallback />);
@@ -273,9 +355,10 @@ describe('OAuthCallback', () => {
     });
 
     it('navigates to login when back button clicked', async () => {
-      mockValidateOAuthParams.mockReturnValue({
-        ok: false,
-        error: { code: 'PROVIDER_ERROR', message: 'Error' },
+      Object.defineProperty(mockSearchParams, 'get', {
+        value: () => null,
+        writable: true,
+        configurable: true,
       });
 
       render(<OAuthCallback />);
@@ -285,14 +368,14 @@ describe('OAuthCallback', () => {
       });
 
       await userEvent.click(screen.getByRole('button', { name: /sign in|login|back/i }));
-
       expect(mockPush).toHaveBeenCalledWith('/login');
     });
 
     it('shows try again button on error', async () => {
-      mockValidateOAuthParams.mockReturnValue({
-        ok: false,
-        error: { code: 'PROVIDER_ERROR', message: 'Error' },
+      Object.defineProperty(mockSearchParams, 'get', {
+        value: () => null,
+        writable: true,
+        configurable: true,
       });
 
       render(<OAuthCallback />);
@@ -307,50 +390,39 @@ describe('OAuthCallback', () => {
   // Accessibility Tests
   // ============================================
   describe('accessibility', () => {
-    it('has accessible status region', async () => {
+    it('has accessible status region', () => {
       render(<OAuthCallback />);
-
-      await waitFor(() => {
-        const statusRegion = screen.getByRole('status') || document.querySelector('[aria-live]');
-        expect(statusRegion).toBeInTheDocument();
-      });
+      const statusRegion = document.querySelector('[aria-live]');
+      expect(statusRegion).toBeInTheDocument();
     });
 
-    it('buttons have accessible names', async () => {
-      mockValidateOAuthParams.mockReturnValue({
-        ok: false,
-        error: { code: 'PROVIDER_ERROR', message: 'Error' },
+    it('buttons have accessible names on error', async () => {
+      Object.defineProperty(mockSearchParams, 'get', {
+        value: () => null,
+        writable: true,
+        configurable: true,
       });
 
       render(<OAuthCallback />);
 
       await waitFor(() => {
-        const backButton = screen.getByRole('button', { name: /sign in|login|back/i });
+        const backButton = screen.getByRole('button', { name: /sign in|back/i });
         expect(backButton).toHaveAccessibleName();
       });
     });
 
-    it('icons are hidden from screen readers', async () => {
+    it('icons are hidden from screen readers', () => {
       render(<OAuthCallback />);
-
-      await waitFor(() => {
-        const icons = document.querySelectorAll('.material-symbols-outlined');
-        icons.forEach((icon) => {
-          expect(icon).toHaveAttribute('aria-hidden', 'true');
-        });
+      const icons = document.querySelectorAll('.material-symbols-outlined');
+      icons.forEach((icon) => {
+        expect(icon).toHaveAttribute('aria-hidden', 'true');
       });
     });
 
-    it('loading state has aria-busy', async () => {
+    it('main container has aria-busy=true during loading', () => {
       render(<OAuthCallback />);
-
-      // Check initial loading state
-      const container =
-        document.querySelector('[data-testid="oauth-callback"]') || document.querySelector('main');
-      if (container) {
-        // May have aria-busy during loading
-        expect(container).toBeInTheDocument();
-      }
+      const container = screen.getByTestId('oauth-callback');
+      expect(container).toHaveAttribute('aria-busy', 'true');
     });
   });
 
@@ -360,32 +432,7 @@ describe('OAuthCallback', () => {
   describe('loading states', () => {
     it('shows spinner during authentication', () => {
       render(<OAuthCallback />);
-
-      // Check for loading indicator
       expect(screen.getByText(/signing you in|authenticating/i)).toBeInTheDocument();
-    });
-
-    it('shows exchanging state while calling API', async () => {
-      // Delay the mutation to catch the loading state
-      mockOAuthCallback.mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(
-              () =>
-                resolve({
-                  success: true,
-                  session: { accessToken: 'token' },
-                  user: { id: '1' },
-                }),
-              100
-            )
-          )
-      );
-
-      render(<OAuthCallback />);
-
-      // Should show loading/exchanging initially
-      expect(screen.getByText(/signing you in|authenticating|please wait/i)).toBeInTheDocument();
     });
   });
 
@@ -393,22 +440,8 @@ describe('OAuthCallback', () => {
   // Edge Cases
   // ============================================
   describe('edge cases', () => {
-    it('handles missing session in response', async () => {
-      mockOAuthCallback.mockResolvedValue({
-        success: true,
-        session: null,
-        user: { id: '1' },
-      });
-
-      render(<OAuthCallback />);
-
-      await waitFor(() => {
-        expect(screen.getByRole('heading', { name: /failed|error/i })).toBeInTheDocument();
-      });
-    });
-
     it('handles network error gracefully', async () => {
-      mockOAuthCallback.mockRejectedValue(new Error('Network error'));
+      mockGetSession.mockRejectedValue(new Error('Network error'));
 
       render(<OAuthCallback />);
 
@@ -417,85 +450,8 @@ describe('OAuthCallback', () => {
       });
     });
 
-    it('handles timeout error', async () => {
-      mockOAuthCallback.mockRejectedValue(new Error('Request timeout'));
-
-      render(<OAuthCallback />);
-
-      await waitFor(() => {
-        expect(screen.getByRole('heading', { name: /failed|error/i })).toBeInTheDocument();
-      });
-    });
-  });
-
-  // ============================================
-  // PG-024 Enhancement Tests (T-19 through T-25)
-  // ============================================
-  describe('PG-024 enhancements', () => {
-    it('T-19: StrictMode double-mount does not call mutation twice', async () => {
-      // Render twice to simulate StrictMode unmount/remount
-      const { unmount } = render(<OAuthCallback />);
-
-      await waitFor(() => {
-        expect(mockOAuthCallback).toHaveBeenCalledTimes(1);
-      });
-
-      // Unmount and remount — hasCalledRef should prevent second call
-      unmount();
-      render(<OAuthCallback />);
-
-      // Wait a tick to ensure no second call
-      await waitFor(() => {
-        // First render's call is still the only one
-        // (Note: in real StrictMode the ref persists across remount,
-        // but in test the component instance is fresh. This verifies
-        // the guard pattern exists and works for single mount.)
-        expect(mockOAuthCallback).toHaveBeenCalled();
-      });
-    });
-
-    it('T-20: enters exchanging state by calling mutation after validation', async () => {
-      // Track whether mutation was invoked (proves setStatus('exchanging')
-      // was already called, since it precedes the mutation call in code)
-      let mutationCalled = false;
-      mockOAuthCallback.mockImplementation(() => {
-        mutationCalled = true;
-        return new Promise(() => {}); // Never resolves — holds exchanging state
-      });
-
-      render(<OAuthCallback />);
-
-      await waitFor(() => {
-        expect(mutationCalled).toBe(true);
-      });
-
-      // Mutation called ⇒ component progressed through validation ⇒
-      // setStatus('exchanging') was executed before mutateAsync()
-    });
-
-    it('T-21: main container has aria-busy=true during loading', () => {
-      render(<OAuthCallback />);
-
-      const container = screen.getByTestId('oauth-callback');
-      expect(container).toHaveAttribute('aria-busy', 'true');
-    });
-
-    it('T-22: handles TIMEOUT error with user-friendly message', async () => {
-      // Instead of using fake timers (which leak across tests),
-      // directly test the TIMEOUT error handling path by having
-      // the mutation reject with a TIMEOUT Error.
-      mockOAuthCallback.mockRejectedValue(new Error('TIMEOUT'));
-
-      render(<OAuthCallback />);
-
-      await waitFor(() => {
-        expect(screen.getByText(/taking too long/i)).toBeInTheDocument();
-      });
-    });
-
-    it('T-23: handles non-Error thrown in catch block', async () => {
-      // Throw a string instead of an Error object
-      mockOAuthCallback.mockRejectedValue('string_error');
+    it('handles non-Error thrown in catch block', async () => {
+      mockGetSession.mockRejectedValue('string_error');
 
       render(<OAuthCallback />);
 
@@ -504,31 +460,28 @@ describe('OAuthCallback', () => {
       });
     });
 
-    it('T-24: handles null accessToken in session response', async () => {
-      mockOAuthCallback.mockResolvedValue({
-        success: true,
-        session: { accessToken: null, refreshToken: null },
-        user: { id: '1' },
+    it('StrictMode double-mount does not call getSession twice', async () => {
+      const { unmount } = render(<OAuthCallback />);
+
+      await waitFor(() => {
+        expect(mockGetSession).toHaveBeenCalledTimes(1);
       });
 
+      unmount();
+      // Re-render in a fresh mount
+      sessionStorage.setItem('intelliflow_oauth_nonce', 'test-nonce-uuid');
       render(<OAuthCallback />);
 
-      await waitFor(
-        () => {
-          // Component proceeds to success even with null token
-          // (storeSessionTokens conditional guards the null)
-          expect(
-            screen.getByRole('heading', { name: /welcome|failed/i })
-          ).toBeInTheDocument();
-        },
-        { timeout: 5000 }
-      );
+      await waitFor(() => {
+        expect(mockGetSession).toHaveBeenCalled();
+      });
     });
 
-    it('T-25: focuses primary action button on error state', async () => {
-      mockValidateOAuthParams.mockReturnValue({
-        ok: false,
-        error: { code: 'PROVIDER_ERROR', message: 'Test error' },
+    it('focuses primary action button on error state', async () => {
+      Object.defineProperty(mockSearchParams, 'get', {
+        value: () => null,
+        writable: true,
+        configurable: true,
       });
 
       render(<OAuthCallback />);
@@ -540,8 +493,8 @@ describe('OAuthCallback', () => {
       });
     });
 
-    it('T-26: retry button navigates to login on click', async () => {
-      mockOAuthCallback.mockRejectedValue(new Error('test error'));
+    it('retry button navigates to login on click', async () => {
+      mockGetSession.mockRejectedValue(new Error('test error'));
 
       render(<OAuthCallback />);
 
@@ -552,45 +505,14 @@ describe('OAuthCallback', () => {
       await userEvent.click(screen.getByRole('button', { name: /try again|retry/i }));
       expect(mockPush).toHaveBeenCalledWith('/login');
     });
-
-    it('T-27: real 4s timeout fires when mutation hangs', async () => {
-      // Use real timers — mutation never resolves, so the 4s setTimeout
-      // inside the Promise.race timeout callback actually fires
-      mockOAuthCallback.mockImplementation(() => new Promise(() => {}));
-
-      render(<OAuthCallback />);
-
-      await waitFor(
-        () => expect(screen.getByText(/taking too long/i)).toBeInTheDocument(),
-        { timeout: 6000 }
-      );
-    }, 8000);
   });
 
   // ============================================
   // Security Tests
   // ============================================
   describe('security', () => {
-    it('includes state in mutation when present', async () => {
-      mockValidateOAuthParams.mockReturnValue({
-        ok: true,
-        value: { code: 'test123', state: 'csrf_state', provider: 'google' },
-      });
-
-      render(<OAuthCallback />);
-
-      await waitFor(() => {
-        expect(mockOAuthCallback).toHaveBeenCalledWith({
-          code: 'test123',
-          state: 'csrf_state',
-          provider: 'google',
-        });
-      });
-    });
-
     it('displays security badge', () => {
       render(<OAuthCallback />);
-
       expect(screen.getByText(/Secure authentication via OAuth 2\.0/i)).toBeInTheDocument();
     });
   });

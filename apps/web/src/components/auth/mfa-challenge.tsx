@@ -503,4 +503,3 @@ export function InlineMfaChallenge({
   );
 }
 
-export default MfaChallenge;

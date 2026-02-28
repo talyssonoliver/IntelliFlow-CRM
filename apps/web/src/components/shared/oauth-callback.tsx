@@ -103,12 +103,19 @@ export function OAuthCallback({
         return;
       }
 
-      // Verify session nonce (soft check — mobile app switches may lose sessionStorage)
-      const nonce = sessionStorage.getItem('intelliflow_oauth_nonce');
-      if (!nonce) {
-        console.warn('[OAuth] Session nonce missing — possible cross-tab or mobile redirect');
-      }
+      // Verify session nonce end-to-end (SF-001: CSRF prevention)
+      // The nonce was generated before redirect and embedded in the redirectTo URL.
+      // Compare the returned nonce query param against the stored nonce.
+      const storedNonce = sessionStorage.getItem('intelliflow_oauth_nonce');
+      const returnedNonce = searchParams.get('nonce');
       sessionStorage.removeItem('intelliflow_oauth_nonce');
+      if (!storedNonce || storedNonce !== returnedNonce) {
+        setStatus('error');
+        setErrorMessage('Security verification failed. Please try signing in again.');
+        onError?.('csrf');
+        window.location.href = '/login?error=csrf';
+        return;
+      }
 
       // Update status to exchanging
       setStatus('exchanging');
@@ -152,8 +159,8 @@ export function OAuthCallback({
       // Store device fingerprint for session verification
       storeSessionFingerprint();
 
-      // Set OAuth login success flag for AuthContext grace window
-      sessionStorage.setItem('oauth_login_success', 'true');
+      // Set OAuth login success flag for AuthContext grace window (SF-002: use timestamp)
+      sessionStorage.setItem('oauth_login_success', Date.now().toString());
 
       // Clean up Supabase localStorage keys so the SDK doesn't auto-recover
       // a stale session on subsequent page loads (we manage tokens ourselves).
@@ -387,4 +394,3 @@ export function OAuthCallback({
   );
 }
 
-export default OAuthCallback;

@@ -89,7 +89,6 @@ export function ContactForm() {
     <form
       onSubmit={handleSubmit}
       className="space-y-6"
-      role="form"
       aria-label="Contact form"
       noValidate
     >

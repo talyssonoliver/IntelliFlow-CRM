@@ -383,4 +383,3 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: JobDetailTemplatePr
   );
 }
 
-export default JobDetailTemplate;

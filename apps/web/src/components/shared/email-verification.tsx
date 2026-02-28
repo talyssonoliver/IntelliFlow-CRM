@@ -383,4 +383,3 @@ export function EmailVerification({
   );
 }
 
-export default EmailVerification;

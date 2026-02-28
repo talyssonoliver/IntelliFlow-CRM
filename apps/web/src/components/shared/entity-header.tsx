@@ -230,4 +230,3 @@ export function EntityHeader({
 // Convenience Export
 // =============================================================================
 
-export default EntityHeader;

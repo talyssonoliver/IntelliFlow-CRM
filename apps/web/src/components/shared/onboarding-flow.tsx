@@ -372,4 +372,3 @@ export function OnboardingFlow({
   );
 }
 
-export default OnboardingFlow;

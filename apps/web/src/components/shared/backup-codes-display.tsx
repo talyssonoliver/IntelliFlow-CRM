@@ -251,4 +251,3 @@ export function BackupCodesDisplay({
   );
 }
 
-export default BackupCodesDisplay;

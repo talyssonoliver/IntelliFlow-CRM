@@ -86,4 +86,3 @@ export function AuthBackground({ children, className }: AuthBackgroundProps) {
   );
 }
 
-export default AuthBackground;

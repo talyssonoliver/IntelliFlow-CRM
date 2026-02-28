@@ -546,4 +546,3 @@ export function LandingBuilder({ config }: { config: LandingPageConfig }) {
   );
 }
 
-export default LandingBuilder;

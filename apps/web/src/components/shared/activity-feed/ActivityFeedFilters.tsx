@@ -211,15 +211,17 @@ export function ActivityFeedFilters({
       {/* Date range (optional) */}
       {showDateRange && (
         <div className="flex gap-2 items-center">
-          <label className="text-xs text-slate-500">From:</label>
+          <label htmlFor="activity-filter-after" className="text-xs text-slate-500">From:</label>
           <input
+            id="activity-filter-after"
             type="date"
             onChange={handleAfterChange}
             className="text-xs px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
             aria-label="Activity after date"
           />
-          <label className="text-xs text-slate-500">To:</label>
+          <label htmlFor="activity-filter-before" className="text-xs text-slate-500">To:</label>
           <input
+            id="activity-filter-before"
             type="date"
             onChange={handleBeforeChange}
             className="text-xs px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"

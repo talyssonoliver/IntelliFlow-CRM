@@ -233,7 +233,14 @@ export function ShareJobButton({ jobId, jobTitle, className }: ShareJobButtonPro
 
       {showDropdown && (
         <>
-          <div className="fixed inset-0 z-10" onClick={() => setShowDropdown(false)} />
+          <div
+            className="fixed inset-0 z-10"
+            role="button"
+            tabIndex={0}
+            aria-label="Close share menu"
+            onClick={() => setShowDropdown(false)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowDropdown(false); }}
+          />
           <div
             role="menu"
             className="absolute right-0 mt-2 w-48 rounded-lg bg-white dark:bg-slate-800 shadow-lg border border-slate-200 dark:border-slate-700 z-20 py-1"
@@ -261,4 +268,3 @@ export function ShareJobButton({ jobId, jobTitle, className }: ShareJobButtonPro
   );
 }
 
-export default ApplyButton;

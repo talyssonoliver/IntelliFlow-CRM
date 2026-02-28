@@ -102,4 +102,3 @@ export function TrustIndicators({
   );
 }
 
-export default TrustIndicators;
