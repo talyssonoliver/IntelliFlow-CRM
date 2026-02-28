@@ -19,6 +19,7 @@ verification.
 | Password Reset     | IFC-006 | PG-018-021 | COMPLETE |
 | MFA/2FA            | IFC-098 | PG-021-022 | COMPLETE |
 | Email Verification | IFC-006 | PG-023     | COMPLETE |
+| SSO/OAuth Providers | IFC-006 | PG-124     | COMPLETE |
 | Public Pages       | N/A     | PG-001-014 | COMPLETE |
 | Onboarding         | IFC-076 | PG-126     | BACKLOG  |
 
@@ -237,10 +238,10 @@ verification.
 
     ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
     │   PG-037    │  │   PG-038    │  │   PG-039    │  │   PG-040    │  │   PG-041    │
-    │   SDKs      │  │  Webhooks   │  │  Sandbox    │  │  Changelog  │  │  Community  │
+    │   SDKs      │  │  Webhooks   │  │  Dev Apps    │  │  Changelog  │  │  Community  │
     │             │  │   Docs      │  │             │  │             │  │             │
-    │ /sdks       │  │ /webhooks   │  │ /sandbox    │  │ /changelog  │  │ /community  │
-    │ BACKLOG     │  │ BACKLOG     │  │ BACKLOG     │  │ BACKLOG     │  │ BACKLOG     │
+    │ /sdks       │  │ /webhooks   │  │ /dev/apps    │  │ /changelog  │  │ /community  │
+    │ BACKLOG     │  │ BACKLOG     │  │ DONE        │  │ BACKLOG     │  │ BACKLOG     │
     └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘  └─────────────┘
 
     ┌─────────────┐

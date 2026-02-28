@@ -1,650 +1,1811 @@
 # IntelliFlow CRM - Page Registry
 
-> **Location**: `docs/design/page-registry.md` **Purpose**: Central registry of
-> all UI pages with KPIs, artifacts, and ownership **Last Updated**: 2025-12-27
+> **Location**: `docs/design/page-registry.md`
+> **Purpose**: Central registry of all UI pages with task IDs, KPIs, file paths, components, API routers, test paths, and RACI assignments
+> **Last Updated**: 2026-02-24 (as of Sprint 14)
+> **Total Pages**: 105
 
 ---
 
 ## Path Conventions
 
-| Type               | Convention                                       | Example                                          |
-| ------------------ | ------------------------------------------------ | ------------------------------------------------ |
-| **Code**           | `apps/web/src/app/{route}/page.tsx`              | `apps/web/src/app/contacts/(list)/page.tsx`      |
-| **Components**     | `apps/web/src/components/{name}.tsx`             | `apps/web/src/app/leads/(list)/new/page.tsx`     |
-| **Design Mockups** | `docs/design/mockups/{name}.png`                 | `docs/design/mockups/contact-360-view.png`       |
-| **E2E Tests**      | `tests/e2e/{name}.spec.ts`                       | `tests/e2e/contacts.spec.ts`                     |
-| **API Routers**    | `apps/api/src/modules/{domain}/{name}.router.ts` | `apps/api/src/modules/contact/contact.router.ts` |
+| Type | Convention | Example |
+|------|-----------|---------|
+| **Code** | `apps/web/src/app/{route}/page.tsx` | `apps/web/src/app/contacts/(list)/page.tsx` |
+| **Components** | `apps/web/src/components/{domain}/` | `apps/web/src/components/deals/` |
+| **Design Mockups** | `docs/design/mockups/{name}.png` | `docs/design/mockups/contact-360-view.png` |
+| **E2E Tests** | `tests/e2e/{name}.spec.ts` | `tests/e2e/auth-flow.spec.ts` |
+| **API Routers** | `apps/api/src/modules/{domain}/{name}.router.ts` | `apps/api/src/modules/contact/contact.router.ts` |
 
 ### Route Group Convention
 
-We use Next.js route groups to control layout inheritance:
-
-```
-apps/web/src/app/
-├── contacts/
-│   ├── (list)/                    ← Route group (doesn't affect URL)
-│   │   ├── layout.tsx             ← Sidebar layout for list/new pages
-│   │   ├── page.tsx               ← /contacts (HAS sidebar)
-│   │   └── new/
-│   │       └── page.tsx           ← /contacts/new (HAS sidebar)
-│   └── [id]/
-│       └── page.tsx               ← /contacts/123 (NO sidebar, full-width)
-│
-├── leads/
-│   ├── (list)/                    ← Route group
-│   │   ├── layout.tsx             ← Sidebar layout
-│   │   ├── page.tsx               ← /leads (HAS sidebar)
-│   │   └── new/
-│   │       └── page.tsx           ← /leads/new (HAS sidebar)
-│   └── [id]/
-│       └── page.tsx               ← /leads/123 (NO sidebar, full-width)
-```
-
-**Rule**: List and create pages use a shared sidebar layout via
-`(list)/layout.tsx`. Detail pages (`[id]/`) render full-width without the module
-sidebar.
-
----
-
-## Core CRM
-
-### Lead Capture (/leads/new)
-
-- **Task**: IFC-004
-- **KPIs**: Submission <1s, Lighthouse >90
-- **Code**: `apps/web/src/app/leads/page.tsx`,
-  `apps/web/src/app/leads/(list)/new/page.tsx`
-- **API**: `apps/api/src/modules/lead/lead.router.ts`
-- **Tests**: `tests/e2e/leads.spec.ts`
-- **RACI**: R: Frontend Dev / A: PM / C: Sales / I: CEO
-
-### Contact List (/contacts)
-
-- **Task**: IFC-089
-- **KPIs**: Load <200ms, Lighthouse >90
-- **Code**: `apps/web/src/app/contacts/page.tsx`
-- **API**: `apps/api/src/modules/contact/contact.router.ts`
-- **Tests**: `tests/e2e/contacts.spec.ts`
-- **RACI**: R: Frontend Dev / A: PM / C: Sales / I: CEO
-
-### Contact 360 (/contacts/[id])
-
-- **Task**: IFC-090
-- **KPIs**: Load <200ms, SLA visible, Lighthouse >90
-- **Design**: `docs/design/mockups/contact-360-view.png`
-- **Code**: `apps/web/src/app/contacts/[id]/page.tsx`
-- **Components**:
-  - Contact header (photo, name, company, metrics)
-  - Tabs (Overview, Activity Timeline, Deals, Tickets, Documents, AI Insights)
-  - Tasks checklist
-  - AI Insights panel (Conversion %, Lifetime Value, Churn Risk)
-  - Notes section
-- **RACI**: R: Frontend Dev / A: PM / C: Security Eng / I: CEO
-
-### Edit Contact (/contacts/[id]/edit)
-
-- **Task**: IFC-089
-- **KPIs**: Save <200ms
-- **Code**: `apps/web/src/app/contacts/[id]/edit/page.tsx`
-- **RACI**: R: Frontend Dev / A: PM / C: Sales / I: CEO
-
-### Bulk Import (/contacts/import)
-
-- **Task**: IFC-089 (extension)
-- **KPIs**: Upload >5000 contacts in <2m
-- **Code**: `apps/web/src/app/contacts/import/page.tsx`
-- **RACI**: R: Backend Dev / A: PM / C: Data Eng / I: CTO
-
-### Deals Pipeline (/deals)
-
-- **Task**: IFC-091
-- **KPIs**: Stage update <300ms, Forecast >=85%
-- **Design**: `docs/design/mockups/dashboard-overview.png`
-- **Code**: `apps/web/src/app/deals/page.tsx`
-- **Components**:
-  - Pipeline stages (Qualification -> Needs Analysis -> Proposal -> Negotiation
-    -> Closed)
-  - Kanban board with drag-and-drop
-  - Deals by Stage pie chart
-  - Revenue bar chart
-- **API**: `apps/api/src/modules/opportunity/opportunity.router.ts`
-- **RACI**: R: Backend Dev / A: CTO / C: Sales Director / I: CFO
-
-### Deal Detail (/deals/[id])
-
-- **Task**: IFC-091
-- **KPIs**: Load <200ms, Inline edit working
-- **Code**: `apps/web/src/app/deals/[id]/page.tsx`
-- **RACI**: R: Backend Dev / A: PM / C: Sales Ops / I: CTO
-
-### Deal Forecasting (/deals/[id]/forecast)
-
-- **Task**: IFC-092
-- **KPIs**: Forecast accuracy >=85%
-- **Code**: `apps/web/src/app/deals/[id]/forecast/page.tsx`
-- **RACI**: R: Data Eng / A: PM / C: CFO / I: CEO
-
-### Tickets SLA List (/tickets)
-
-- **Task**: IFC-093
-- **KPIs**: SLA alerts <1m, Uptime 99.9%
-- **Code**: `apps/web/src/app/tickets/page.tsx`
-- **RACI**: R: SRE / A: Head of Support / C: AI Specialist / I: COO
-
-### Ticket Detail (/tickets/[id])
-
-- **Task**: ,
-- **KPIs**: Update <200ms
-- **Code**: `apps/web/src/app/tickets/[id]/page.tsx`
-- **RACI**: R: Support Eng / A: PM / C: COO / I: CEO
-
-### Create Ticket (/tickets/new)
-
-- **Task**: IFC-093
-- **KPIs**: Form submission <2s
-- **Code**: `apps/web/src/app/tickets/new/page.tsx`
-- **RACI**: R: Frontend Dev / A: PM / C: Support Lead / I: COO
-
-### Documents (/documents)
-
-- **Task**: IFC-094
-- **KPIs**: Contract signed, Inline preview
-- **Code**: `apps/web/src/app/documents/page.tsx`
-- **RACI**: R: Integration Eng / A: CTO / C: Legal / I: CFO
-
-### Document Detail (/documents/[id])
-
-- **Task**: IFC-094
-- **KPIs**: Load <200ms
-- **Code**: `apps/web/src/app/documents/[id]/page.tsx`
-- **RACI**: R: Backend Dev / A: PM / C: Legal / I: CEO
-
-### E-Signature Flow (/documents/sign)
-
-- **Task**: IFC-094
-- **KPIs**: Sign flow <2min, 99.9% reliability
-- **Code**: `apps/web/src/app/documents/sign/page.tsx`
-- **Integration**: DocuSign/Adobe Sign
-- **RACI**: R: Integration Eng / A: CTO / C: Legal / I: CFO
-
-### Case Timeline (/cases/timeline)
-
-- **Task**: IFC-147
-- **KPIs**: Load <200ms, Deadline alerts <1m, Timeline scroll smooth
-- **Code**: `apps/web/src/app/cases/timeline/page.tsx`
-- **Lib**: `apps/web/lib/cases/reminders-service.ts`
-- **Components**:
-  - Timeline view with event grouping
-  - Deadline countdown indicators
-  - Priority badges (urgent, high, medium, low)
-  - Event type icons (task, deadline, appointment, email)
-  - Overdue alerts with visual highlighting
-- **API**: `apps/api/src/modules/misc/timeline.router.ts`
-- **Domain**: `packages/domain/src/legal/deadlines/deadline-engine.ts`
-- **RACI**: R: Frontend Dev / A: PM / C: Sales Ops / I: CEO
-
----
-
-## Analytics & Reporting
-
-### Analytics Dashboard (/analytics)
-
-- **Task**: IFC-096
-- **KPIs**: Real-time updates <1s
-- **Code**: `apps/web/src/app/analytics/page.tsx`
-- **RACI**: R: Data Eng / A: PM / C: UX / I: CEO
-
-### KPI Detail (/analytics/kpi/[id])
-
-- **Task**: IFC-096
-- **KPIs**: KPI refresh <500ms
-- **Code**: `apps/web/src/app/analytics/kpi/[id]/page.tsx`
-- **RACI**: R: Data Eng / A: PM / C: CEO
-
-### Custom Report Builder (/reports/custom)
-
-- **Task**: IFC-096
-- **KPIs**: Build <5min, Export CSV
-- **Code**: `apps/web/src/app/reports/custom/page.tsx`
-
-### Export Centre (/reports/export)
-
-- **Task**: IFC-096
-- **KPIs**: Exports <30s
-- **Code**: `apps/web/src/app/reports/export/page.tsx`
-
-### Scheduled Reports (/reports/scheduled)
-
-- **Task**: IFC-096
-- **KPIs**: Delivery on-time >99%
-- **Code**: `apps/web/src/app/reports/scheduled/page.tsx`
-
----
-
-## Automation & AI
-
-### Workflow Builder (/automation/workflows)
-
-- **Task**: IFC-031
-- **KPIs**: Flow execution <1s
-- **Code**: `apps/web/src/app/automation/workflows/page.tsx`
-- **RACI**: R: Frontend Dev / A: Architect / C: UX / I: CTO
-
-### Template Library (/automation/workflows/templates)
-
-- **Task**: IFC-031
-- **KPIs**: >10 templates available
-- **Code**: `apps/web/src/app/automation/workflows/templates/page.tsx`
-
-### Workflow Detail (/automation/workflows/[id])
-
-- **Task**: IFC-031
-- **KPIs**: Edit flow <2min
-- **Code**: `apps/web/src/app/automation/workflows/[id]/page.tsx`
-
-### AI Insights (/ai/insights)
-
-- **Task**: IFC-095
-- **KPIs**: AI accuracy >=80%
-- **Code**: `apps/web/src/app/ai/insights/page.tsx`
-
-### Explainability Dashboard (/ai/explainability)
-
-- **Task**: IFC-023
-- **KPIs**: Trust rating >4/5
-- **Code**: `apps/web/src/app/ai/explainability/page.tsx`
-
-### AI Feedback Loop (/ai/feedback)
-
-- **Task**: IFC-025
-- **KPIs**: 100% feedback captured
-- **Code**: `apps/web/src/app/ai/feedback/page.tsx`
-
----
-
-## Support & Knowledge Base
-
-### Knowledge Base (/support/kb)
-
-- **Task**: IFC-046
-- **KPIs**: Deflection >=30%
-- **Code**: `apps/web/src/app/support/kb/page.tsx`
-
-### Article (/support/kb/[id])
-
-- **Task**: IFC-046
-- **KPIs**: Load <200ms
-- **Code**: `apps/web/src/app/support/kb/[id]/page.tsx`
-
-### Live Chat (/support/chat)
-
-- **Task**: IFC-047
-- **KPIs**: First response <30s
-- **Code**: `apps/web/src/app/support/chat/page.tsx`
-
-### SLA Dashboard (/support/status)
-
-- **Task**: IFC-093
-- **KPIs**: SLA visible in real-time
-- **Dashboard**: `artifacts/misc/grafana-dashboard.json`
-
-### FAQ (/support/faq)
-
-- **Task**: IFC-046
-- **KPIs**: Answer click <1s
-- **Code**: `apps/web/src/app/support/faq/page.tsx`
-
----
-
-## Admin & Compliance
-
-### Billing & Subscription (/admin/billing)
-
-- **Task**: IFC-054
-- **KPIs**: Payment success >98%
-- **Code**: `apps/web/src/app/admin/billing/page.tsx`
-
-### User Management (/admin/users)
-
-- **Task**: IFC-098
-- **KPIs**: Create user <2s
-- **Code**: `apps/web/src/app/admin/users/page.tsx`
-
-### Roles & Permissions (/admin/roles)
-
-- **Task**: IFC-098
-- **KPIs**: RBAC changes tracked 100%
-- **Code**: `apps/web/src/app/admin/roles/page.tsx`
-
-### Audit Logs (/admin/audit)
-
-- **Task**: IFC-098
-- **KPIs**: 100% actions logged
-- **Code**: `apps/web/src/app/admin/audit/page.tsx`
-
-### GDPR Management (/admin/compliance/gdpr)
-
-- **Task**: IFC-056
-- **KPIs**: Requests resolved <48h
-- **Code**: `apps/web/src/app/admin/compliance/gdpr/page.tsx`
-
-### Accessibility Dashboard (/admin/compliance/accessibility)
-
-- **Task**: IFC-076
-- **KPIs**: WCAG AA >95%
-- **Code**: `apps/web/src/app/admin/compliance/accessibility/page.tsx`
-
-### Security Settings (/admin/security)
-
-- **Task**: IFC-098
-- **KPIs**: 0 critical vulnerabilities
-- **Code**: `apps/web/src/app/admin/security/page.tsx`
-
-### Integrations Marketplace (/admin/integrations)
-
-- **Task**: IFC-055
-- **KPIs**: Install integration <2min
-- **Code**: `apps/web/src/app/admin/integrations/page.tsx`
-
-### API Keys Management (/admin/api-keys)
-
-- **Task**: IFC-081
-- **KPIs**: Key creation <2s
-- **Code**: `apps/web/src/app/admin/api-keys/page.tsx`
-
-### Webhooks Management (/admin/webhooks)
-
-- **Task**: IFC-055
-- **KPIs**: Event delivery <500ms
-- **Code**: `apps/web/src/app/admin/webhooks/page.tsx`
-
-### System Health Dashboard (/admin/system)
-
-- **Task**: AUTOMATION-002
-- **KPIs**: Uptime >=99.9%
-- **Dashboard**: `artifacts/misc/grafana-dashboard.json`
-
----
-
-## User Settings
-
-### Profile Settings (/settings/profile)
-
-- **KPIs**: Update <200ms
-- **Code**: `apps/web/src/app/settings/profile/page.tsx`
-
-### Preferences (/settings/preferences)
-
-- **KPIs**: Save <200ms
-- **Code**: `apps/web/src/app/settings/preferences/page.tsx`
-
-### Notification Settings (/settings/notifications)
-
-- **KPIs**: Delivery success >95%
-- **Code**: `apps/web/src/app/settings/notifications/page.tsx`
-
-### Device Management (/settings/devices)
-
-- **KPIs**: Device removal <2s
-- **Code**: `apps/web/src/app/settings/devices/page.tsx`
-
-### Activity Log (/settings/activity)
-
-- **KPIs**: Actions visible in <2s
-- **Code**: `apps/web/src/app/settings/activity/page.tsx`
-
----
-
-## Ops & Observability
-
-### Monitoring Dashboard (/ops/monitoring)
-
-- **KPIs**: MTTD <2m
-- **Dashboard**: `artifacts/misc/grafana-dashboard.json`
-
-### Distributed Traces (/ops/traces)
-
-- **KPIs**: Trace resolution <1m
-- **Code**: `apps/web/src/app/ops/traces/page.tsx`
-
-### Log Explorer (/ops/logs)
-
-- **KPIs**: Query latency <1s
-- **Code**: `apps/web/src/app/ops/logs/page.tsx`
-
-### Alert Configurations (/ops/alerts)
-
-- **KPIs**: Alert trigger <30s
-- **Code**: `apps/web/src/app/ops/alerts/page.tsx`
-
----
-
-## Dashboard (/dashboard)
-
-- **Task**: ENV-009-AI (foundation), IFC-090/IFC-091 (full implementation)
-- **KPIs**: Load <1s, Lighthouse >90
-- **Design**: `docs/design/mockups/dashboard-overview.png`
-- **Code**: `apps/web/src/app/dashboard/page.tsx`
-- **Components**:
-  - Stats cards (Total Leads, Qualified, Avg Score, Converted)
-  - Recent Leads list
-  - AI Insights panel
-  - Activity Overview timeline
-- **RACI**: R: Frontend Dev / A: PM / C: UX / I: CEO
-
----
-
-## Implementation Status
-
-| Route          | Task       | Status      | API Connected | Navigation                             | Notes                                                                   |
-| -------------- | ---------- | ----------- | ------------- | -------------------------------------- | ----------------------------------------------------------------------- |
-| /dashboard     | ENV-009-AI | Placeholder | No            | Shared layout                          | 4 stat cards, Recent Leads, AI Insights, Activity Overview - all static |
-| /leads         | IFC-004    | Basic       | No            | Module sidebar via `(list)/layout.tsx` | Table with filters, sample leads                                        |
-| /leads/new     | IFC-004    | Basic       | No            | Module sidebar via `(list)/layout.tsx` | 3-step wizard form                                                      |
-| /contacts      | IFC-089    | Basic       | No            | Module sidebar via `(list)/layout.tsx` | Search + table grid, sample contacts                                    |
-| /contacts/new  | IFC-089    | Basic       | No            | Module sidebar via `(list)/layout.tsx` | 3-step wizard form                                                      |
-| /contacts/[id] | IFC-090    | Basic       | No            | Full-width (no module sidebar)         | Contact 360 view                                                        |
-| /deals         | IFC-091    | BACKLOG     | -             | -                                      | Not implemented                                                         |
-| /analytics     | IFC-096    | Placeholder | No            | **Own nav bar**                        | 4 metric cards, Pipeline placeholder, AI Recommendations                |
+Next.js route groups (parenthesized directories) control layout inheritance without affecting the URL:
+- `(public)/` — Public pages with PublicHeader/PublicFooter
+- `(developer)/` — Developer portal pages
+- `(list)/` — List views with sidebar layout (e.g., `leads/(list)/page.tsx` → `/leads`)
+
+### Entry Format
+
+Each route entry uses this standard table format:
+
+| Field | Description |
+|-------|-------------|
+| **Task ID** | Sprint_plan.csv task identifier(s). Primary listed first for multi-ID routes. |
+| **File Path** | Actual `page.tsx` file path on disk |
+| **Layout** | Nearest `layout.tsx` in parent hierarchy |
+| **API Router** | tRPC/REST router file, or `N/A` if no backend calls |
+| **E2E Test** | Playwright spec file, or `None` |
+| **Unit Tests** | Vitest test file, or `None` |
+| **KPI** | Lighthouse and performance targets |
+| **Status** | `Implemented` (live data) / `Hardcoded` (static/mock data) / `Partial` (mixed) |
+| **RACI** | Responsible / Accountable / Consulted / Informed |
+| **Components** | Key React components (authenticated routes only) |
 
 ### Status Legend
 
-| Status          | Description                                             |
-| --------------- | ------------------------------------------------------- |
-| **BACKLOG**     | Not started, no code exists                             |
-| **Placeholder** | UI exists with static/sample data, no API connection    |
-| **Basic**       | UI functional with placeholder data, some interactivity |
-| **Connected**   | UI connected to API, real data flows                    |
-| **Complete**    | Fully implemented with tests and documentation          |
+| Status | Meaning |
+|--------|---------|
+| **Implemented** | Page uses live tRPC/REST data from backend |
+| **Hardcoded** | Page displays static/mock data (backend not yet wired) |
+| **Partial** | Some data live, some hardcoded constants |
+| **Placeholder** | Stub page with minimal content |
 
 ---
 
-## Current Implementation Details
+## Section 1: Public Pages (25 routes)
 
-### Dashboard (/dashboard)
+### Home Page (`/`)
 
-**File**: `apps/web/src/app/dashboard/page.tsx`
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-001, IFC-000 |
+| **File Path** | `apps/web/src/app/(public)/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | `tests/e2e/smoke.spec.ts` |
+| **Unit Tests** | `apps/web/src/app/(public)/__tests__/home.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; CLS <0.1; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: DevRel / C: Product / I: QA |
 
-**Actual State** (as of 2025-12-27):
+### About (`/about`)
 
-- Uses shared layout with Navigation sidebar (`lg:pl-64` offset)
-- 4 StatCard components in grid:
-  - Total Leads: "--" (placeholder)
-  - Qualified: "--" (placeholder)
-  - Avg Score: "--" (placeholder)
-  - Converted: "--" (placeholder)
-- Recent Leads section: Empty placeholder
-- AI Insights panel: 3 hardcoded items (High-value lead, Engagement pattern,
-  Follow-up reminder)
-- Activity Overview: Empty placeholder
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-004 |
+| **File Path** | `apps/web/src/app/(public)/about/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: DevRel / C: Product / I: QA |
 
-**Missing**:
+### Features (`/features`)
 
-- API connection for real-time metrics
-- Dynamic data loading
-- Charts/visualizations
-- Real activity feed
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-002 |
+| **File Path** | `apps/web/src/app/(public)/features/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/(public)/features/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: DevRel / C: Product / I: QA |
+
+### Pricing (`/pricing`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-003 |
+| **File Path** | `apps/web/src/app/(public)/pricing/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/pricing/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/(public)/pricing/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: DevRel / C: Product / I: QA |
+
+### Contact (`/contact`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-005 |
+| **File Path** | `apps/web/src/app/(public)/contact/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | `tests/e2e/forms.spec.ts` |
+| **Unit Tests** | `apps/web/src/app/(public)/contact/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: DevRel / C: Product / I: QA |
+
+### Partners (`/partners`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-006 |
+| **File Path** | `apps/web/src/app/(public)/partners/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/(public)/partners/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: DevRel / C: Product / I: QA |
+
+### Press (`/press`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-007 |
+| **File Path** | `apps/web/src/app/(public)/press/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: DevRel / C: Product / I: QA |
+
+### Security (`/security`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-008 |
+| **File Path** | `apps/web/src/app/(public)/security/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: DevRel / C: Product / I: QA |
+
+### Status (`/status`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-014 |
+| **File Path** | `apps/web/src/app/(public)/status/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: DevRel / C: Product / I: QA |
+
+### Blog (`/blog`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-009 |
+| **File Path** | `apps/web/src/app/(public)/blog/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: DevRel / C: Product / I: QA |
+
+### Blog Post (`/blog/[slug]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-010 |
+| **File Path** | `apps/web/src/app/(public)/blog/[slug]/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: DevRel / C: Product / I: QA |
+
+### Careers (`/careers`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-011 |
+| **File Path** | `apps/web/src/app/(public)/careers/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: DevRel / C: Product / I: QA |
+
+### Career Detail (`/careers/[id]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-012 |
+| **File Path** | `apps/web/src/app/(public)/careers/[id]/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: DevRel / C: Product / I: QA |
+
+### Landing Page (`/lp/[slug]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-013 |
+| **File Path** | `apps/web/src/app/(public)/lp/[slug]/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: DevRel / C: Product / I: QA |
+
+### Login (`/login`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-015, IFC-001, IFC-006 |
+| **File Path** | `apps/web/src/app/(public)/login/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/login/layout.tsx` |
+| **API Router** | `apps/api/src/modules/auth/auth.router.ts` |
+| **E2E Test** | `tests/e2e/auth-flow.spec.ts` |
+| **Unit Tests** | `apps/web/src/app/(public)/login/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Security / C: Backend / I: QA |
+
+### Signup (`/signup`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-016, IFC-001 |
+| **File Path** | `apps/web/src/app/(public)/signup/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/signup/layout.tsx` |
+| **API Router** | `apps/api/src/modules/auth/auth.router.ts` |
+| **E2E Test** | `tests/e2e/signup.spec.ts` |
+| **Unit Tests** | `apps/web/src/app/(public)/signup/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Security / C: Backend / I: QA |
+
+### Signup Success (`/signup/success`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-017 |
+| **File Path** | `apps/web/src/app/(public)/signup/success/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/signup/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | `tests/e2e/signup.spec.ts` |
+| **Unit Tests** | `apps/web/src/app/(public)/signup/success/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Security / C: Backend / I: QA |
+
+### Forgot Password (`/forgot-password`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-019 |
+| **File Path** | `apps/web/src/app/(public)/forgot-password/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/auth/auth.router.ts` |
+| **E2E Test** | `tests/e2e/auth-flow.spec.ts` |
+| **Unit Tests** | `apps/web/src/app/(public)/forgot-password/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Security / C: Backend / I: QA |
+
+### Reset Password (`/reset-password/[token]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-020 |
+| **File Path** | `apps/web/src/app/(public)/reset-password/[token]/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/auth/auth.router.ts` |
+| **E2E Test** | `tests/e2e/auth-flow.spec.ts` |
+| **Unit Tests** | `apps/web/src/app/(public)/reset-password/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Security / C: Backend / I: QA |
+
+### Reset Password Callback (`/reset-password/callback`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-020 |
+| **File Path** | `apps/web/src/app/(public)/reset-password/callback/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/auth/auth.router.ts` |
+| **E2E Test** | `tests/e2e/auth-flow.spec.ts` |
+| **Unit Tests** | `apps/web/src/app/(public)/reset-password/callback/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Security / C: Backend / I: QA |
+
+### Logout (`/logout`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-018 |
+| **File Path** | `apps/web/src/app/(public)/logout/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/auth/auth.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Security / C: Backend / I: QA |
+
+### Auth Callback (`/auth/callback`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | IFC-001 |
+| **File Path** | `apps/web/src/app/(public)/auth/callback/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/auth/auth.router.ts` |
+| **E2E Test** | `tests/e2e/auth-flow.spec.ts` |
+| **Unit Tests** | `apps/web/src/app/(public)/auth/callback/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Security / C: Backend / I: QA |
+
+### MFA Verify (`/mfa/verify`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-022 |
+| **File Path** | `apps/web/src/app/(public)/mfa/verify/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/auth/auth.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/(public)/mfa/verify/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Security / C: Backend / I: QA |
+
+### Verify Email (`/verify-email/[token]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-023 |
+| **File Path** | `apps/web/src/app/(public)/verify-email/[token]/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/auth/auth.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/(public)/verify-email/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Security / C: Backend / I: QA |
+
+### Verify Email Callback (`/verify-email/callback`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-023 |
+| **File Path** | `apps/web/src/app/(public)/verify-email/callback/page.tsx` |
+| **Layout** | `apps/web/src/app/(public)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/auth/auth.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/(public)/verify-email/callback/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Security / C: Backend / I: QA |
 
 ---
 
-### Leads (/leads)
+## Section 2: Developer Portal (8 routes)
 
-**File**: `apps/web/src/app/leads/(list)/page.tsx`
+### Developer Apps (`/developers/apps`)
 
-**Actual State**:
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-039 |
+| **File Path** | `apps/web/src/app/(developer)/developers/apps/page.tsx` |
+| **Layout** | `apps/web/src/app/(developer)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/webhooks/webhooks.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/(developer)/developers/apps/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: DevRel / A: Engineering / C: Product / I: QA |
 
-- **Navigation**: Uses module sidebar via `(list)/layout.tsx`
-  - Lead Views: All Leads, My Leads, Unread Leads, Recently Viewed
-  - Segments: Hot Leads, New from Web, Follow-up Required
-  - Module Settings link
-- Table with columns: Lead Name/Company, Email, Score, Status, Created Date,
-  Actions
-- 5 hardcoded sample leads with score badges
-- Status filter dropdowns (Status, Score, Sort)
-- Search input with filtering logic
-- Pagination UI
+### Developer App Detail (`/developers/apps/[id]`)
 
-**Missing**:
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-041 |
+| **File Path** | `apps/web/src/app/(developer)/developers/apps/[id]/page.tsx` |
+| **Layout** | `apps/web/src/app/(developer)/layout.tsx` |
+| **API Router** | N/A (demo data) |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/(developer)/developers/apps/[id]/__tests__/page.test.tsx`, `apps/web/src/components/developer/__tests__/app-dashboard.test.tsx`, `apps/web/src/components/developer/__tests__/app-metrics.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: DevRel / A: Engineering / C: Product / I: QA |
 
-- API connection to lead.router.ts
-- Real data from database
-- Working filter dropdowns
+### Docs Index (`/docs`)
 
-### Leads New (/leads/new)
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-032 |
+| **File Path** | `apps/web/src/app/(developer)/docs/page.tsx` |
+| **Layout** | `apps/web/src/app/(developer)/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/(developer)/docs/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: DevRel / A: Engineering / C: Product / I: QA |
 
-**File**: `apps/web/src/app/leads/(list)/new/page.tsx`
+### API Docs (`/docs/api`)
 
-**Actual State**:
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-033 |
+| **File Path** | `apps/web/src/app/(developer)/docs/api/page.tsx` |
+| **Layout** | `apps/web/src/app/(developer)/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/(developer)/docs/api/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: DevRel / A: Engineering / C: Product / I: QA |
 
-- **Navigation**: Uses module sidebar via `(list)/layout.tsx` (shared with list)
-- 3-step wizard form: Basic Info → Company Details → Qualification (BANT)
-- Clickable step indicators for navigation
-- "Other" source specification field (conditional)
-- Form validation with error messages
-- Pro tip card at bottom
+### Changelog (`/docs/changelog`)
 
-**Missing**:
-
-- API connection to create lead
-- Real form submission
-
----
-
-### Contacts (/contacts)
-
-**File**: `apps/web/src/app/contacts/(list)/page.tsx`
-
-**Actual State**:
-
-- **Navigation**: Uses module sidebar via `(list)/layout.tsx`
-  - Contact Views: All Contacts, My Contacts, Recently Added, Recently Viewed
-  - Segments: VIP Clients, Partners, Vendors
-  - Module Settings link
-- Table with columns: Contact Name, Company, Email, Phone, Deals/Tickets,
-  Actions
-- 5 hardcoded sample contacts with deal/ticket badges
-- Filter dropdowns (Status, Company, Sort)
-- Search input with filtering logic
-- Pagination UI
-- Click-through to contact detail page
-
-**Missing**:
-
-- API connection to contact.router.ts
-- Real data from database
-- Working filter dropdowns
-
-### Contacts New (/contacts/new)
-
-**File**: `apps/web/src/app/contacts/(list)/new/page.tsx`
-
-**Actual State**:
-
-- **Navigation**: Uses module sidebar via `(list)/layout.tsx` (shared with list)
-- 3-step wizard form: Personal Details → Company & Role → Additional Info
-- Clickable step indicators for navigation
-- "Other" specification fields for Contact Type and Department (conditional)
-- Form validation with error messages
-- Pro tip card at bottom
-
-**Missing**:
-
-- API connection to create contact
-- Real form submission
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-035 |
+| **File Path** | `apps/web/src/app/(developer)/docs/changelog/page.tsx` |
+| **Layout** | `apps/web/src/app/(developer)/layout.tsx` |
+| **Component** | Server Component |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/(developer)/docs/changelog/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: DevRel / A: Engineering / C: Product / I: QA |
 
 ---
 
-### Analytics (/analytics)
+### Integration Docs (`/docs/integrations`)
 
-**File**: `apps/web/src/app/analytics/page.tsx`
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-036, IFC-042 |
+| **File Path** | `apps/web/src/app/(developer)/docs/integrations/page.tsx` |
+| **Layout** | `apps/web/src/app/(developer)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/integrations/integrations.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/(developer)/docs/integrations/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: DevRel / A: Engineering / C: Product / I: QA |
 
-**Actual State**:
+### Webhook Docs (`/docs/webhooks`)
 
-- **Navigation**: Has its OWN inline nav bar (inconsistent with shared layout)
-- 4 MetricCard components:
-  - Total Revenue: $125,000
-  - Active Leads: 48
-  - Conversion Rate: 23%
-  - Avg Deal Size: $12,500
-- Pipeline Overview: Empty placeholder
-- Top AI Recommendations: 3 RecommendationItem components with sample data
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-036 |
+| **File Path** | `apps/web/src/app/(developer)/docs/webhooks/page.tsx` |
+| **Layout** | `apps/web/src/app/(developer)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/webhooks/webhooks.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/(developer)/docs/webhooks/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: DevRel / A: Engineering / C: Product / I: QA |
 
-**Missing**:
+### SDK Guides (`/docs/sdk`)
 
-- Should use shared Navigation sidebar (currently has own nav)
-- API connection for real metrics
-- Charts and visualizations
-- Date range filtering
-- Export functionality
-
----
-
-## Navigation Architecture
-
-### Resolved: Module Sidebar Pattern (Sprint 6)
-
-The navigation inconsistency has been resolved using **Next.js Route Groups**:
-
-**Pattern**: Each CRM module (contacts, leads) has its own sidebar layout that
-applies only to list/create pages, while detail pages render full-width.
-
-```
-/contacts/
-├── (list)/layout.tsx      ← Module sidebar (Contact Views, Segments, Settings)
-│   ├── page.tsx           ← /contacts (with sidebar)
-│   └── new/page.tsx       ← /contacts/new (with sidebar)
-└── [id]/page.tsx          ← /contacts/123 (NO sidebar, full-width)
-
-/leads/
-├── (list)/layout.tsx      ← Module sidebar (Lead Views, Segments, Settings)
-│   ├── page.tsx           ← /leads (with sidebar)
-│   └── new/page.tsx       ← /leads/new (with sidebar)
-└── [id]/page.tsx          ← /leads/123 (NO sidebar, full-width)
-```
-
-**Benefits**:
-
-- DRY: Sidebar code lives in one place per module
-- Consistent UX: Navigation persists when switching between list and create
-  views
-- Flexibility: Detail pages can have full-width layouts without the module
-  sidebar
-- Maintainable: Easy to update sidebar items in one location
-
-**Remaining Work**:
-
-- `/analytics` still uses inline nav bar (to be refactored)
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-036 |
+| **File Path** | `apps/web/src/app/(developer)/docs/sdk/page.tsx` |
+| **Layout** | `apps/web/src/app/(developer)/layout.tsx` |
+| **API Router** | N/A (static content) |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/(developer)/docs/sdk/__tests__/page.test.tsx`, `apps/web/src/components/developer/__tests__/sdk-guides.test.tsx`, `apps/web/src/lib/developer/__tests__/sdk-downloads.test.ts` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; SEO >=90 |
+| **Status** | Implemented |
+| **RACI** | R: DevRel / A: Engineering / C: Product / I: QA |
 
 ---
 
-## Notes
+## Section 3: Dashboard (3 routes)
 
-- All paths follow Next.js 16 App Router convention:
-  `apps/web/src/app/{route}/page.tsx`
-- **Route Groups**: Use `(list)/` folders for pages that share a module sidebar
-  layout
-- Design mockups must be referenced in Sprint_plan.csv with `DESIGN:` prefix
-- API routers follow tRPC pattern in `apps/api/src/modules/{domain}/`
-- E2E tests use Playwright in `tests/e2e/`
-- Navigation architecture resolved in Sprint 6 using route groups (see
-  Navigation Architecture section)
+### Dashboard (`/dashboard`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-058, PG-129, IFC-182 |
+| **File Path** | `apps/web/src/app/dashboard/page.tsx` |
+| **Layout** | `apps/web/src/app/dashboard/layout.tsx` |
+| **API Router** | `apps/api/src/modules/home/home.router.ts`, `apps/api/src/modules/lead/lead.router.ts` |
+| **E2E Test** | `tests/e2e/smoke.spec.ts` |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | DashboardClient, server-side getAccessToken, fetchLeadStats (cached query) |
+
+### New Dashboard Widget (`/dashboard/new`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-058 |
+| **File Path** | `apps/web/src/app/dashboard/new/page.tsx` |
+| **Layout** | `apps/web/src/app/dashboard/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s |
+| **Status** | Hardcoded |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", Link, inline recordTypes navigation cards |
+
+### Dashboard Customize (`/dashboard/customize`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-058 |
+| **File Path** | `apps/web/src/app/dashboard/customize/page.tsx` |
+| **Layout** | `apps/web/src/app/dashboard/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Hardcoded |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", DndContext, SortableContext (@dnd-kit), LayoutBuilderGrid, WidgetCard, WidgetLibrary, WidgetDropZone, DashboardSidebar |
+
+---
+
+## Section 4: CRM Core — Leads (3 routes)
+
+### Leads List (`/leads`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-059, IFC-004, IFC-014 |
+| **File Path** | `apps/web/src/app/leads/(list)/page.tsx` |
+| **Layout** | `apps/web/src/app/leads/(list)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/lead/lead.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms; JS <300KB |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | Server shell, LeadsPageClient (client island), fetchLeadsFirstPage (cached query) |
+
+### New Lead (`/leads/new`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-060, IFC-004 |
+| **File Path** | `apps/web/src/app/leads/(list)/new/page.tsx` |
+| **Layout** | `apps/web/src/app/leads/(list)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/lead/lead.router.ts` |
+| **E2E Test** | `tests/e2e/forms.spec.ts` |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", multi-step form, Card, ToastProvider, useFormUnsavedChanges |
+
+### Lead Detail (`/leads/[id]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-061, IFC-006 |
+| **File Path** | `apps/web/src/app/leads/[id]/page.tsx` |
+| **Layout** | `apps/web/src/app/leads/layout.tsx` |
+| **API Router** | `apps/api/src/modules/lead/lead.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", Card, Skeleton, ChurnRiskCard, NextBestActionCard, EntityActionSheet, ActivityFeed |
+
+---
+
+## Section 5: CRM Core — Contacts (3 routes)
+
+### Contacts List (`/contacts`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-064, PG-133, IFC-184 |
+| **File Path** | `apps/web/src/app/contacts/(list)/page.tsx` |
+| **Layout** | `apps/web/src/app/contacts/(list)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/contact/contact.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms; JS <300KB |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | Server shell, ContactsPageClient (client island), fetchContactsFirstPage (cached query) |
+
+### New Contact (`/contacts/new`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-064, IFC-184 |
+| **File Path** | `apps/web/src/app/contacts/(list)/new/page.tsx` |
+| **Layout** | `apps/web/src/app/contacts/(list)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/contact/contact.router.ts` |
+| **E2E Test** | `tests/e2e/forms.spec.ts` |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", multi-step form (3 steps), Card, ToastProvider |
+
+### Contact Detail (`/contacts/[id]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-065, PG-133, IFC-184 |
+| **File Path** | `apps/web/src/app/contacts/[id]/page.tsx` |
+| **Layout** | `apps/web/src/app/contacts/layout.tsx` |
+| **API Router** | `apps/api/src/modules/contact/contact.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", Card, Skeleton, ChurnRiskCard, NextBestActionCard, EntityActionSheet, ActivityFeed |
+
+---
+
+## Section 6: CRM Core — Accounts (2 routes)
+
+### Accounts List (`/accounts`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-069, PG-134, IFC-185 |
+| **File Path** | `apps/web/src/app/accounts/(list)/page.tsx` |
+| **Layout** | `apps/web/src/app/accounts/(list)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/account/account.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/accounts/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms; JS <300KB |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | Server shell, AccountsPageClient (client island), fetchAccountStats (cached query) |
+
+### Account Detail (`/accounts/[id]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-070, PG-134, IFC-185 |
+| **File Path** | `apps/web/src/app/accounts/[id]/page.tsx` |
+| **Layout** | `apps/web/src/app/accounts/layout.tsx` |
+| **API Router** | `apps/api/src/modules/account/account.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/accounts/[id]/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", AccountDetail, Card, Skeleton, useRequireAuth |
+
+---
+
+## Section 7: CRM Core — Deals (4 routes)
+
+### Deals List (`/deals`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-073, PG-135, IFC-186 |
+| **File Path** | `apps/web/src/app/deals/(list)/page.tsx` |
+| **Layout** | `apps/web/src/app/deals/(list)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/opportunity/opportunity.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/deals/(list)/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms; JS <300KB |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", PipelineBoard, ValueSummary, DealFilters, DealListView, DealsCharts (dynamic import), PageHeader |
+
+### Deal Detail (`/deals/[id]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-074, IFC-186 |
+| **File Path** | `apps/web/src/app/deals/[id]/page.tsx` |
+| **Layout** | `apps/web/src/app/deals/[id]/layout.tsx` |
+| **API Router** | `apps/api/src/modules/opportunity/opportunity.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Partial |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", Card, Button, EntityHeader, EntityActionSheet, MoreActionsButton, RelatedTasksCard |
+
+### Deal Forecast (`/deals/[id]/forecast`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-131, IFC-025 |
+| **File Path** | `apps/web/src/app/deals/[id]/forecast/page.tsx` |
+| **Layout** | `apps/web/src/app/deals/[id]/layout.tsx` |
+| **API Router** | `apps/api/src/modules/opportunity/opportunity.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/deals/[id]/forecast/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", ForecastHeader, ProbabilityGauge, RiskFactorsCard, RecommendedActions, ForecastHistory, ConfidenceIndicator |
+
+### Pipeline Forecast (`/deals/forecast`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-079, PG-131, IFC-025 |
+| **File Path** | `apps/web/src/app/deals/forecast/page.tsx` |
+| **Layout** | `apps/web/src/app/deals/forecast/layout.tsx` |
+| **API Router** | `apps/api/src/modules/opportunity/opportunity.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/deals/forecast/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Partial |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", ForecastRevenueChart (dynamic import), Card, Button, Skeleton, EntityHeader |
+
+---
+
+## Section 8: CRM Core — Tickets (3 routes)
+
+### Tickets List (`/tickets`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-137, IFC-188, IFC-189 |
+| **File Path** | `apps/web/src/app/tickets/(list)/page.tsx` |
+| **Layout** | `apps/web/src/app/tickets/(list)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/ticket/ticket.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms; JS <300KB |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", TicketList, PageHeader, useTicketFilters, toast |
+
+### New Ticket (`/tickets/new`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-137, IFC-188, IFC-189 |
+| **File Path** | `apps/web/src/app/tickets/new/page.tsx` |
+| **Layout** | `apps/web/src/app/tickets/layout.tsx` |
+| **API Router** | `apps/api/src/modules/ticket/ticket.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", TicketForm, PageHeader, toast |
+
+### Ticket Detail (`/tickets/[id]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-137, IFC-189 |
+| **File Path** | `apps/web/src/app/tickets/[id]/page.tsx` |
+| **Layout** | `apps/web/src/app/tickets/layout.tsx` |
+| **API Router** | `apps/api/src/modules/ticket/ticket.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", TicketDetail, PageHeader, Card, Skeleton, toast, useAuth |
+
+---
+
+## Section 9: CRM Core — Documents (3 routes)
+
+### Documents List (`/documents`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-140, IFC-199 |
+| **File Path** | `apps/web/src/app/documents/(list)/page.tsx` |
+| **Layout** | `apps/web/src/app/documents/(list)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/legal/documents.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms; JS <300KB |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", DataTable, TableRowActions, BulkAction, ConfirmationDialog, PageHeader, SearchFilterBar, DocumentStatusBadge |
+
+### New Document (`/documents/new`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-140, IFC-199 |
+| **File Path** | `apps/web/src/app/documents/(list)/new/page.tsx` |
+| **Layout** | `apps/web/src/app/documents/(list)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/documents/upload.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", Card, toast, useRequireAuth, file upload form |
+
+### Document Detail (`/documents/[id]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-140, IFC-199 |
+| **File Path** | `apps/web/src/app/documents/[id]/page.tsx` |
+| **Layout** | `apps/web/src/app/documents/layout.tsx` |
+| **API Router** | `apps/api/src/modules/legal/documents.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", Card, AppAvatar, ACLManager, VersionHistory, useRequireAuth |
+
+---
+
+## Section 10: CRM Core — Cases (4 routes)
+
+### Cases List (`/cases`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-138, IFC-136, IFC-147 |
+| **File Path** | `apps/web/src/app/cases/(list)/page.tsx` |
+| **Layout** | `apps/web/src/app/cases/(list)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/legal/cases.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms; JS <300KB |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", CaseList, PageHeader, Skeleton, useCaseFilters, useRequireAuth |
+
+### New Case (`/cases/new`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-138, IFC-136 |
+| **File Path** | `apps/web/src/app/cases/(list)/new/page.tsx` |
+| **Layout** | `apps/web/src/app/cases/(list)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/legal/cases.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", CaseForm, PageHeader, toast, useRequireAuth |
+
+### Case Detail (`/cases/[id]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-138, IFC-136, IFC-147 |
+| **File Path** | `apps/web/src/app/cases/[id]/page.tsx` |
+| **Layout** | `apps/web/src/app/cases/layout.tsx` |
+| **API Router** | `apps/api/src/modules/legal/cases.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", CaseDetail, Card, Skeleton, useRequireAuth |
+
+### Case Timeline (`/cases/timeline`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-138, IFC-147 |
+| **File Path** | `apps/web/src/app/cases/timeline/page.tsx` |
+| **Layout** | `apps/web/src/app/cases/layout.tsx` |
+| **API Router** | `apps/api/src/modules/legal/cases.router.ts`, `apps/api/src/modules/misc/timeline.router.ts` |
+| **E2E Test** | `tests/e2e/case-timeline.spec.ts` |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", Card, CardHeader, CardTitle, CardDescription, CardContent, useRequireAuth, useSearchParams |
+
+---
+
+## Section 11: Tasks (2 routes)
+
+### Tasks List (`/tasks`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-081, PG-136, IFC-187 |
+| **File Path** | `apps/web/src/app/tasks/(list)/page.tsx` |
+| **Layout** | `apps/web/src/app/tasks/(list)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/task/task.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms; JS <300KB |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", TaskList, TaskCalendar, TaskForm, ReminderConfig, PageHeader, SearchFilterBar |
+
+### Task Detail (`/tasks/[id]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-082, IFC-187 |
+| **File Path** | `apps/web/src/app/tasks/[id]/page.tsx` |
+| **Layout** | `apps/web/src/app/tasks/layout.tsx` |
+| **API Router** | `apps/api/src/modules/task/task.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", TaskDetail, TaskForm, PageHeader, toast, useRequireAuth |
+
+---
+
+## Section 12: Calendar (3 routes)
+
+### Calendar (`/calendar`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-083, PG-139, IFC-137, IFC-138 |
+| **File Path** | `apps/web/src/app/calendar/(list)/page.tsx` |
+| **Layout** | `apps/web/src/app/calendar/layout.tsx` |
+| **API Router** | `apps/api/src/modules/legal/appointments.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/calendar/(list)/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", AppointmentList, AppointmentCalendar, PageHeader, Skeleton, useAppointmentFilters |
+
+### New Appointment (`/calendar/new`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-139, IFC-137 |
+| **File Path** | `apps/web/src/app/calendar/new/page.tsx` |
+| **Layout** | `apps/web/src/app/calendar/layout.tsx` |
+| **API Router** | `apps/api/src/modules/legal/appointments.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", AppointmentForm, PageHeader, Skeleton, useRequireAuth |
+
+### Appointment Detail (`/calendar/[id]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-139, IFC-137 |
+| **File Path** | `apps/web/src/app/calendar/[id]/page.tsx` |
+| **Layout** | `apps/web/src/app/calendar/layout.tsx` |
+| **API Router** | `apps/api/src/modules/legal/appointments.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", AppointmentDetail, PageHeader, Card, Skeleton, useRequireAuth |
+
+---
+
+## Section 13: Email (2 routes)
+
+### Email Inbox (`/email`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-084, PG-141, IFC-144 |
+| **File Path** | `apps/web/src/app/email/page.tsx` |
+| **Layout** | `apps/web/src/app/email/layout.tsx` |
+| **API Router** | `apps/api/src/modules/email/inbound.router.ts` |
+| **E2E Test** | `tests/e2e/email/inbound-webhook.spec.ts` |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | Server component, EmailPage (client island) |
+
+### Email Detail (`/email/[id]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-084, PG-141, IFC-144 |
+| **File Path** | `apps/web/src/app/email/[id]/page.tsx` |
+| **Layout** | `apps/web/src/app/email/layout.tsx` |
+| **API Router** | `apps/api/src/modules/email/inbound.router.ts` |
+| **E2E Test** | `tests/e2e/email/inbound-webhook.spec.ts` |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | Server component, EmailPage with initialEmailId prop |
+
+---
+
+## Section 14: AI & Automation (14 routes)
+
+### Agent Approvals Hub (`/agent-approvals`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | IFC-029, IFC-149 |
+| **File Path** | `apps/web/src/app/agent-approvals/page.tsx` |
+| **Layout** | `apps/web/src/app/agent-approvals/layout.tsx` |
+| **API Router** | `apps/api/src/modules/autoresponse/autoresponse.router.ts` |
+| **E2E Test** | `tests/e2e/agent-approvals.spec.ts` |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: AI Team / A: Product / C: Frontend / I: QA |
+| **Components** | "use client", Card, Button, ApprovalMetrics, useRequireAuth, useSearchParams |
+
+### Active Agents (`/agent-approvals/agents`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-151, IFC-197 |
+| **File Path** | `apps/web/src/app/agent-approvals/agents/page.tsx` |
+| **Layout** | `apps/web/src/app/agent-approvals/layout.tsx` |
+| **API Router** | `apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: AI Team / A: Product / C: Frontend / I: QA |
+| **Components** | "use client", ActiveAgentsDashboard, Skeleton, Suspense, useRequireAuth |
+
+### AI Review Queue (`/agent-approvals/ai-review`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | IFC-181 |
+| **File Path** | `apps/web/src/app/agent-approvals/ai-review/page.tsx` |
+| **Layout** | `apps/web/src/app/agent-approvals/layout.tsx` |
+| **API Router** | `apps/api/src/modules/ai-review/ai-review.router.ts` |
+| **E2E Test** | `tests/e2e/ai-features/ai-approvals.spec.ts` |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: AI Team / A: Product / C: Frontend / I: QA |
+| **Components** | "use client", ReviewQueue, Skeleton, Suspense, useRequireAuth |
+
+### AI Review Detail (`/agent-approvals/ai-review/[id]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | IFC-181 |
+| **File Path** | `apps/web/src/app/agent-approvals/ai-review/[id]/page.tsx` |
+| **Layout** | `apps/web/src/app/agent-approvals/layout.tsx` |
+| **API Router** | `apps/api/src/modules/ai-review/ai-review.router.ts` |
+| **E2E Test** | `tests/e2e/ai-features/ai-approvals.spec.ts` |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: AI Team / A: Product / C: Frontend / I: QA |
+| **Components** | "use client", Card, Badge, Textarea, Skeleton, StatusBadge, ConfidenceIndicator, useReviewDetail |
+
+### AI Search (`/agent-approvals/ai-search`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-144, IFC-039 |
+| **File Path** | `apps/web/src/app/agent-approvals/ai-search/page.tsx` |
+| **Layout** | `apps/web/src/app/agent-approvals/layout.tsx` |
+| **API Router** | `apps/api/src/modules/intelligence/intelligence.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: AI Team / A: Product / C: Frontend / I: QA |
+| **Components** | "use client", AISearchPage, Skeleton, Suspense, useRequireAuth |
+
+### Churn Risk (`/agent-approvals/churn-risk`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-143, IFC-039 |
+| **File Path** | `apps/web/src/app/agent-approvals/churn-risk/page.tsx` |
+| **Layout** | `apps/web/src/app/agent-approvals/layout.tsx` |
+| **API Router** | `apps/api/src/modules/intelligence/intelligence.router.ts` |
+| **E2E Test** | `tests/e2e/ai-features/ai-predictions.spec.ts` |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: AI Team / A: Product / C: Frontend / I: QA |
+| **Components** | "use client", ChurnDashboard, Skeleton, Suspense, useRequireAuth |
+
+### Model Drift (`/agent-approvals/drift`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-146, IFC-117, IFC-197 |
+| **File Path** | `apps/web/src/app/agent-approvals/drift/page.tsx` |
+| **Layout** | `apps/web/src/app/agent-approvals/layout.tsx` |
+| **API Router** | `apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: AI Team / A: Product / C: Frontend / I: QA |
+| **Components** | "use client", DriftDashboard, Skeleton, Suspense, useRequireAuth |
+
+### Experiments (`/agent-approvals/experiments`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-149, IFC-025 |
+| **File Path** | `apps/web/src/app/agent-approvals/experiments/page.tsx` |
+| **Layout** | `apps/web/src/app/agent-approvals/layout.tsx` |
+| **API Router** | `apps/api/src/modules/experiment/experiment.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/agent-approvals/experiments/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: AI Team / A: Product / C: Frontend / I: QA |
+| **Components** | "use client", ExperimentsDashboard, Skeleton, Suspense, useRequireAuth |
+
+### AI History (`/agent-approvals/history`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-150, IFC-181 |
+| **File Path** | `apps/web/src/app/agent-approvals/history/page.tsx` |
+| **Layout** | `apps/web/src/app/agent-approvals/layout.tsx` |
+| **API Router** | `apps/api/src/modules/ai-review/ai-review.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: AI Team / A: Product / C: Frontend / I: QA |
+| **Components** | "use client", ReviewHistory, Skeleton, Suspense, useRequireAuth |
+
+### Latency Monitor (`/agent-approvals/latency`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-153, IFC-197 |
+| **File Path** | `apps/web/src/app/agent-approvals/latency/page.tsx` |
+| **Layout** | `apps/web/src/app/agent-approvals/layout.tsx` |
+| **API Router** | `apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: AI Team / A: Product / C: Frontend / I: QA |
+| **Components** | "use client", LatencyMonitorDashboard, Skeleton, Suspense, useRequireAuth |
+
+### Lead Scoring (`/agent-approvals/lead-scoring`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-148, IFC-005, IFC-039 |
+| **File Path** | `apps/web/src/app/agent-approvals/lead-scoring/page.tsx` |
+| **Layout** | `apps/web/src/app/agent-approvals/layout.tsx` |
+| **API Router** | `apps/api/src/modules/intelligence/intelligence.router.ts` |
+| **E2E Test** | `tests/e2e/ai-features/ai-scoring.spec.ts` |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: AI Team / A: Product / C: Frontend / I: QA |
+| **Components** | "use client", LeadScoringDashboard, Skeleton, Suspense, useRequireAuth |
+
+### Agent Logs (`/agent-approvals/logs`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-152, IFC-197 |
+| **File Path** | `apps/web/src/app/agent-approvals/logs/page.tsx` |
+| **Layout** | `apps/web/src/app/agent-approvals/layout.tsx` |
+| **API Router** | `apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: AI Team / A: Product / C: Frontend / I: QA |
+| **Components** | "use client", AgentLogsViewer, Skeleton, Suspense, useRequireAuth, useSearchParams |
+
+### AI Preview (`/agent-approvals/preview`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | IFC-149 |
+| **File Path** | `apps/web/src/app/agent-approvals/preview/page.tsx` |
+| **Layout** | `apps/web/src/app/agent-approvals/layout.tsx` |
+| **API Router** | `apps/api/src/modules/autoresponse/autoresponse.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s |
+| **Status** | Hardcoded |
+| **RACI** | R: AI Team / A: Product / C: Frontend / I: QA |
+| **Components** | "use client", Card, Button, ApprovalMetrics, useSearchParams — uses MOCK_ACTIONS array |
+
+### Sentiment Analysis (`/agent-approvals/sentiment`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-142, IFC-039 |
+| **File Path** | `apps/web/src/app/agent-approvals/sentiment/page.tsx` |
+| **Layout** | `apps/web/src/app/agent-approvals/layout.tsx` |
+| **API Router** | `apps/api/src/modules/intelligence/intelligence.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: AI Team / A: Product / C: Frontend / I: QA |
+| **Components** | "use client", SentimentDashboard, Skeleton, Suspense, useRequireAuth |
+
+---
+
+## Section 15: Analytics (2 routes)
+
+### Analytics Dashboard (`/analytics`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | ANALYTICS-001, IFC-037, IFC-038, IFC-190 |
+| **File Path** | `apps/web/src/app/analytics/(list)/page.tsx` |
+| **Layout** | `apps/web/src/app/analytics/(list)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/analytics/analytics.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Hardcoded |
+| **RACI** | R: Frontend / A: Product / C: AI Team / I: QA |
+| **Components** | "use client", Card, exportAnalyticsToCSV, exportPipelineToCSV, exportAnalyticsToPDF — hardcoded metrics arrays |
+
+### Feedback Analytics (`/analytics/feedback`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | IFC-068 |
+| **File Path** | `apps/web/src/app/analytics/(list)/feedback/page.tsx` |
+| **Layout** | `apps/web/src/app/analytics/(list)/layout.tsx` |
+| **API Router** | `apps/api/src/modules/feedback/feedbackSurvey.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/analytics/__tests__/feedback-page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: AI Team / I: QA |
+| **Components** | "use client", NpsGauge, NpsTrendChart, SentimentDistributionChart (lazy loaded), useFeedbackSurveyDashboard |
+
+---
+
+## Section 16: Settings (9 routes)
+
+### Settings Overview (`/settings`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-104 |
+| **File Path** | `apps/web/src/app/settings/page.tsx` |
+| **Layout** | `apps/web/src/app/settings/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/settings/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", SearchInput, PageHeader, SettingsNav, SETTINGS_ITEMS, filterSettings |
+
+### Account Settings (`/settings/account`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-106 |
+| **File Path** | `apps/web/src/app/settings/account/page.tsx` |
+| **Layout** | `apps/web/src/app/settings/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s |
+| **Status** | Hardcoded |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", Card, Link — stub page |
+
+### Team Settings (`/settings/team`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-108 |
+| **File Path** | `apps/web/src/app/settings/team/page.tsx` |
+| **Layout** | `apps/web/src/app/settings/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s |
+| **Status** | Hardcoded |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", Card, Link — static teamMembers array |
+
+### AI Settings (`/settings/ai`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-128, IFC-086 |
+| **File Path** | `apps/web/src/app/settings/ai/page.tsx` |
+| **Layout** | `apps/web/src/app/settings/layout.tsx` |
+| **API Router** | `apps/api/src/modules/chain-version/chain-version.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/settings/ai/__tests__/AISettingsContent.test.tsx`, `apps/web/src/app/settings/ai/__tests__/components.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: AI Team / I: QA |
+| **Components** | "use client", AISettingsContent (dynamic import), Skeleton, Card |
+
+### Integrations (`/settings/integrations`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-115 |
+| **File Path** | `apps/web/src/app/settings/integrations/page.tsx` |
+| **Layout** | `apps/web/src/app/settings/layout.tsx` |
+| **API Router** | `apps/api/src/modules/integrations/integrations.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s |
+| **Status** | Hardcoded |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", Card, Link — static integrations list |
+
+### Notification Settings (`/settings/notifications`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-116 |
+| **File Path** | `apps/web/src/app/settings/notifications/page.tsx` |
+| **Layout** | `apps/web/src/app/settings/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s |
+| **Status** | Hardcoded |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", Card, Link — static notification preferences |
+
+### Pipeline Settings (`/settings/pipeline`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-077, IFC-063 |
+| **File Path** | `apps/web/src/app/settings/pipeline/page.tsx` |
+| **Layout** | `apps/web/src/app/settings/layout.tsx` |
+| **API Router** | `apps/api/src/modules/opportunity/pipeline-config.router.ts` |
+| **E2E Test** | `tests/e2e/pipeline-settings.spec.ts` |
+| **Unit Tests** | `apps/web/src/app/settings/pipeline/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", PipelineSettingsContent (dynamic import), Skeleton, Card |
+
+### Routing Rules (`/settings/routing`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-132, IFC-030 |
+| **File Path** | `apps/web/src/app/settings/routing/page.tsx` |
+| **Layout** | `apps/web/src/app/settings/layout.tsx` |
+| **API Router** | `apps/api/src/modules/routing/routing.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/settings/routing/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", RoutingContent (dynamic import), Skeleton, Card |
+
+### MFA Setup (`/settings/security/mfa`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-021, IFC-120 |
+| **File Path** | `apps/web/src/app/settings/security/mfa/page.tsx` |
+| **Layout** | `apps/web/src/app/settings/layout.tsx` |
+| **API Router** | `apps/api/src/modules/auth/auth.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/settings/security/mfa/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Security / C: Backend / I: QA |
+| **Components** | "use client", Card, PageHeader, MfaQrGenerator, BackupCodesDisplay, useAuth |
+
+---
+
+## Section 17: Billing (7 routes)
+
+### Billing Overview (`/billing`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-025, IFC-198 |
+| **File Path** | `apps/web/src/app/billing/page.tsx` |
+| **Layout** | `apps/web/src/app/billing/layout.tsx` |
+| **API Router** | `apps/api/src/modules/billing/billing.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", BillingPortal, PageHeader |
+
+### Checkout (`/billing/checkout`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-026, IFC-198 |
+| **File Path** | `apps/web/src/app/billing/checkout/page.tsx` |
+| **Layout** | `apps/web/src/app/billing/layout.tsx` |
+| **API Router** | `apps/api/src/modules/billing/billing.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/billing/checkout/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Partial |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", CheckoutForm, Elements (Stripe), stripePromise, getPlanById, Suspense |
+
+### Subscriptions (`/billing/subscriptions`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-030, IFC-198 |
+| **File Path** | `apps/web/src/app/billing/subscriptions/page.tsx` |
+| **Layout** | `apps/web/src/app/billing/layout.tsx` |
+| **API Router** | `apps/api/src/modules/subscription/subscription.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", SubscriptionManager |
+
+### Payment Methods (`/billing/payment-methods`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-029, IFC-198 |
+| **File Path** | `apps/web/src/app/billing/payment-methods/page.tsx` |
+| **Layout** | `apps/web/src/app/billing/layout.tsx` |
+| **API Router** | `apps/api/src/modules/billing/billing.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/billing/payment-methods/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", PaymentMethods, PageHeader |
+
+### Invoices (`/billing/invoices`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-027, IFC-198 |
+| **File Path** | `apps/web/src/app/billing/invoices/page.tsx` |
+| **Layout** | `apps/web/src/app/billing/layout.tsx` |
+| **API Router** | `apps/api/src/modules/billing/billing.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/billing/invoices/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", InvoiceList, trpc.billing.listInvoices |
+
+### Invoice Detail (`/billing/invoices/[id]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-028, IFC-198 |
+| **File Path** | `apps/web/src/app/billing/invoices/[id]/page.tsx` |
+| **Layout** | `apps/web/src/app/billing/layout.tsx` |
+| **API Router** | `apps/api/src/modules/billing/billing.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/billing/invoices/[id]/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", InvoiceDetail, trpc.billing.getInvoice |
+
+### Receipts (`/billing/receipts`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-031, IFC-198 |
+| **File Path** | `apps/web/src/app/billing/receipts/page.tsx` |
+| **Layout** | `apps/web/src/app/billing/layout.tsx` |
+| **API Router** | `apps/api/src/modules/billing/billing.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s |
+| **Status** | Hardcoded |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", ReceiptList, sendReceiptEmail — uses MOCK_RECEIPTS array |
+
+---
+
+## Section 18: Governance (6 routes)
+
+### Governance Dashboard (`/governance`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | IFC-044 |
+| **File Path** | `apps/web/src/app/governance/page.tsx` |
+| **Layout** | `apps/web/src/app/governance/layout.tsx` |
+| **API Router** | N/A (uses REST: `/api/adr?action=stats`) |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: DevRel / A: Engineering / C: Product / I: QA |
+| **Components** | "use client", Card, fetch('/api/adr') |
+
+### ADR Registry (`/governance/adr`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | IFC-135 |
+| **File Path** | `apps/web/src/app/governance/adr/page.tsx` |
+| **Layout** | `apps/web/src/app/governance/layout.tsx` |
+| **API Router** | N/A (uses REST: `/api/adr`, `/api/adr/index`, `/api/adr?action=graph`) |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: DevRel / A: Engineering / C: Product / I: QA |
+| **Components** | "use client", Card, fetch('/api/adr/*') |
+
+### Compliance Dashboard (`/governance/compliance`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | IFC-008, IFC-124 |
+| **File Path** | `apps/web/src/app/governance/compliance/page.tsx` |
+| **Layout** | `apps/web/src/app/governance/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/governance/compliance/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Hardcoded |
+| **RACI** | R: DevRel / A: Engineering / C: Product / I: QA |
+| **Components** | "use client", Card, RiskHeatMap, ComplianceTimeline, ComplianceDetailPanel, ExportReportButton |
+
+### Policies (`/governance/policies`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | IFC-140 |
+| **File Path** | `apps/web/src/app/governance/policies/page.tsx` |
+| **Layout** | `apps/web/src/app/governance/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s |
+| **Status** | Hardcoded |
+| **RACI** | R: DevRel / A: Engineering / C: Product / I: QA |
+| **Components** | "use client", Card — static policies array |
+
+### Quality Reports (`/governance/quality-reports`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | IFC-045, IFC-129 |
+| **File Path** | `apps/web/src/app/governance/quality-reports/page.tsx` |
+| **Layout** | `apps/web/src/app/governance/layout.tsx` |
+| **API Router** | N/A (uses REST: `/api/quality-reports`) |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/governance/quality-reports/__tests__/integration.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: DevRel / A: Engineering / C: Product / I: QA |
+| **Components** | "use client", Card, Button, Progress, PageHeader, TestRunnerModal |
+
+### Quality Report Detail (`/governance/quality-reports/[reportId]`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | IFC-045, IFC-129 |
+| **File Path** | `apps/web/src/app/governance/quality-reports/[reportId]/page.tsx` |
+| **Layout** | `apps/web/src/app/governance/layout.tsx` |
+| **API Router** | N/A (uses REST: `/api/quality-reports`) |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: DevRel / A: Engineering / C: Product / I: QA |
+| **Components** | Server shell, QualityReportDetailClient (client island), Suspense |
+
+---
+
+## Section 19: Notifications (2 routes)
+
+### Notifications (`/notifications`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-130, IFC-157, IFC-183 |
+| **File Path** | `apps/web/src/app/notifications/page.tsx` |
+| **Layout** | `apps/web/src/app/notifications/layout.tsx` |
+| **API Router** | `apps/api/src/modules/notifications/notifications.router.ts` |
+| **E2E Test** | None |
+| **Unit Tests** | `apps/web/src/app/notifications/__tests__/page.test.tsx` |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms |
+| **Status** | Implemented |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", PageHeader, NotificationList, NotificationFilters, useRequireAuth, useDebounce |
+
+### Notification Settings (`/notifications/settings`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-116, IFC-157 |
+| **File Path** | `apps/web/src/app/notifications/settings/page.tsx` |
+| **Layout** | `apps/web/src/app/notifications/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s |
+| **Status** | Hardcoded |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", Link — initialNotificationTypes array (preferences not wired) |
+
+---
+
+## Section 20: Profile (1 route)
+
+### User Profile (`/profile`)
+
+| Field | Value |
+|-------|-------|
+| **Task ID** | PG-105 |
+| **File Path** | `apps/web/src/app/profile/page.tsx` |
+| **Layout** | `apps/web/src/app/profile/layout.tsx` |
+| **API Router** | N/A |
+| **E2E Test** | None |
+| **Unit Tests** | None |
+| **KPI** | Lighthouse >=90; FCP <1s; LCP <2.5s |
+| **Status** | Hardcoded |
+| **RACI** | R: Frontend / A: Product / C: Backend / I: QA |
+| **Components** | "use client", Card, Link — hardcoded profile data stub |
+
+---
+
+## Summary Tables
+
+### Page Count Summary
+
+| Section | Routes | Implemented | Hardcoded | Partial |
+|---------|--------|-------------|-----------|---------|
+| 1. Public Pages | 25 | 25 | 0 | 0 |
+| 2. Developer Portal | 8 | 8 | 0 | 0 |
+| 3. Dashboard | 3 | 1 | 2 | 0 |
+| 4. Leads | 3 | 3 | 0 | 0 |
+| 5. Contacts | 3 | 3 | 0 | 0 |
+| 6. Accounts | 2 | 2 | 0 | 0 |
+| 7. Deals | 4 | 2 | 0 | 2 |
+| 8. Tickets | 3 | 3 | 0 | 0 |
+| 9. Documents | 3 | 3 | 0 | 0 |
+| 10. Cases | 4 | 4 | 0 | 0 |
+| 11. Tasks | 2 | 2 | 0 | 0 |
+| 12. Calendar | 3 | 3 | 0 | 0 |
+| 13. Email | 2 | 2 | 0 | 0 |
+| 14. AI & Automation | 14 | 13 | 1 | 0 |
+| 15. Analytics | 2 | 1 | 1 | 0 |
+| 16. Settings | 9 | 4 | 5 | 0 |
+| 17. Billing | 7 | 5 | 1 | 1 |
+| 18. Governance | 6 | 4 | 2 | 0 |
+| 19. Notifications | 2 | 1 | 1 | 0 |
+| 20. Profile | 1 | 0 | 1 | 0 |
+| **Total** | **104** | **87** | **14** | **3** |
+
+### Backend Integration Status
+
+| Status | Count | Sections |
+|--------|-------|----------|
+| **Implemented** (live tRPC/REST) | 86 | All CRM core, AI, billing, notifications, email, calendar, tasks |
+| **Hardcoded** (static/mock data) | 14 | Dashboard customize/new, AI preview, analytics main, settings stubs, billing receipts, governance compliance/policies, notifications settings, profile |
+| **Partial** (mixed live/static) | 3 | Deal detail, pipeline forecast, billing checkout |
+
+### Test Coverage Matrix
+
+| Section | E2E Specs | Unit Tests | Coverage Gap |
+|---------|-----------|------------|-------------|
+| 1. Public Pages | 4 (auth-flow, signup, forms, smoke) | 16 | Low — 9 routes with no tests |
+| 2. Developer Portal | 0 | 6 | No E2E coverage |
+| 3. Dashboard | 1 (smoke) | 0 | No unit tests |
+| 4. Leads | 1 (forms) | 0 | No dedicated E2E or unit |
+| 5. Contacts | 1 (forms) | 0 | No dedicated E2E or unit |
+| 6. Accounts | 0 | 2 | No E2E coverage |
+| 7. Deals | 0 | 3 | No E2E coverage |
+| 8. Tickets | 0 | 0 | No coverage |
+| 9. Documents | 0 | 0 | No coverage |
+| 10. Cases | 1 (case-timeline) | 0 | Only timeline has E2E |
+| 11. Tasks | 0 | 0 | No coverage |
+| 12. Calendar | 0 | 1 | No E2E coverage |
+| 13. Email | 1 (inbound-webhook) | 0 | E2E covers webhook only |
+| 14. AI & Automation | 3 (agent-approvals, ai-approvals, ai-scoring) | 1 | Good E2E, low unit |
+| 15. Analytics | 0 | 1 | No E2E coverage |
+| 16. Settings | 1 (pipeline-settings) | 5 | Only pipeline has E2E |
+| 17. Billing | 0 | 4 | No E2E coverage |
+| 18. Governance | 0 | 2 | No E2E coverage |
+| 19. Notifications | 0 | 1 | No E2E coverage |
+| 20. Profile | 0 | 0 | No coverage |
+| **Total** | **14 spec files** | **41 test files** | |
+
+### Navigation Architecture
+
+| Section | Header Nav | Sidebar | In-Page Links | User Menu |
+|---------|-----------|---------|---------------|-----------|
+| Public Pages | PublicHeader | N/A | Footer links | N/A |
+| Developer Portal | -- | settings sidebar (SUPER_ADMIN) | Docs index links | -- |
+| Dashboard | CORE_CRM module | -- | Quick actions, widget cards | Logo link |
+| CRM Core (Leads-Cases) | CORE_CRM / LEGAL / SUPPORT | Section sidebars (17 configs) | List row → detail, breadcrumbs | -- |
+| Tasks | CORE_CRM | tasks sidebar | List row → detail | -- |
+| Calendar | CORE_CRM | calendar sidebar | List row → detail | -- |
+| Email | CORE_CRM | email sidebar | List row → detail | -- |
+| AI & Automation | AI_INTELLIGENCE module | agent-approvals sidebar | Sub-page links | -- |
+| Analytics | ANALYTICS module | analytics sidebar | -- | -- |
+| Settings | -- | settings sidebar | Settings search, section links | User menu → Settings |
+| Billing | -- | settings sidebar "More" | Billing portal tabs | -- |
+| Governance | -- | -- | Dashboard links to sub-pages | User menu → Governance |
+| Notifications | -- | -- | Bell icon → "View All" | -- |
+| Profile | -- | -- | -- | User menu → Profile |
+
+---
+
+## Planned Pages (Sprint 16)
+
+The following 28 pages are referenced as ghost links in navigation components but do not yet have `page.tsx` files. Tracked in `docs/design/navigation-reachability-audit.md` Section 7.
+
+| Planned Route | Section | Target Sprint | Task ID |
+|--------------|---------|---------------|---------|
+| `/billing/usage` | Billing | 16 | PG-172 (proposed) |
+| `/billing/credits` | Billing | 16 | PG-172 (proposed) |
+| `/billing/tax-settings` | Billing | 16 | PG-172 (proposed) |
+| `/billing/payment-history` | Billing | 16 | PG-172 (proposed) |
+| `/tickets/sla` | Tickets | 16 | PG-173 (proposed) |
+| `/tickets/macros` | Tickets | 16 | PG-173 (proposed) |
+| `/tickets/satisfaction` | Tickets | 16 | PG-173 (proposed) |
+| `/tickets/reports` | Tickets | 16 | PG-173 (proposed) |
+| `/notifications/templates` | Notifications | 16 | PG-174 (proposed) |
+| `/notifications/channels` | Notifications | 16 | PG-174 (proposed) |
+| `/notifications/rules` | Notifications | 16 | PG-174 (proposed) |
+| `/deals/compare` | Deals | 16 | PG-175 (proposed) |
+| `/deals/import` | Deals | 16 | PG-175 (proposed) |
+| `/deals/reports` | Deals | 16 | PG-175 (proposed) |
+| `/governance/audit-log` | Governance | 16 | PG-176 (proposed) |
+| `/governance/data-retention` | Governance | 16 | PG-176 (proposed) |
+| `/governance/access-control` | Governance | 16 | PG-176 (proposed) |
+| `/governance/risk-register` | Governance | 16 | PG-176 (proposed) |
+| `/analytics/custom` | Analytics | 16 | PG-177 (proposed) |
+| `/analytics/reports` | Analytics | 16 | PG-177 (proposed) |
+| `/analytics/export` | Analytics | 16 | PG-177 (proposed) |
+| `/analytics/scheduled` | Analytics | 16 | PG-177 (proposed) |
+| `/settings/webhooks` | Settings | 16 | PG-178 (proposed) |
+| `/settings/api-keys` | Settings | 16 | PG-178 (proposed) |
+| `/settings/audit-log` | Settings | 16 | PG-178 (proposed) |
+| `/settings/roles` | Settings | 16 | PG-178 (proposed) |
+| `/settings/branding` | Settings | 16 | PG-178 (proposed) |
+| `/settings/import-export` | Settings | 16 | PG-178 (proposed) |

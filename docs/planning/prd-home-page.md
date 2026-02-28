@@ -10,7 +10,7 @@
 | **Target Sprint** | 13-14                                     |
 | **Created Date**  | 2026-02-03                                |
 | **Last Updated**  | 2026-02-23                                |
-| **Related Tasks** | IFC-182, PG-001, PG-129, IFC-069, IFC-183, PG-165 |
+| **Related Tasks** | IFC-182, PG-001, PG-129, IFC-069, IFC-183, PG-165, IFC-195, PG-157 |
 
 ## Problem Statement
 
@@ -422,7 +422,7 @@ From `Sprint_plan.csv` Dependencies column:
 **Explicitly NOT included in this release:**
 
 - ML-based AI insights (using rule-based) <!-- Deferred: PG-162 -->
-- Customizable daily goal types/targets <!-- Deferred: PG-156 -->
+- ~~Customizable daily goal types/targets~~ — Implemented: IFC-195
 - Drag-and-drop reorder for pinned items <!-- Deferred: PG-158 -->
 - Calendar widget
 
@@ -434,7 +434,7 @@ From `Sprint_plan.csv` Dependencies column:
 **Future Considerations:**
 
 - ML-based insights with LangChain - Target: Sprint 16 (PG-162)
-- Customizable goals in user settings - Target: Sprint 17 (PG-156)
+- ~~Customizable goals in user settings~~ — Implemented: IFC-195 (Sprint 15)
 - Drag-and-drop reorder for pinned items (PG-158)
 
 ## Timeline

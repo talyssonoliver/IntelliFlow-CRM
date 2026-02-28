@@ -297,13 +297,24 @@ Legend:
 | `/tickets/[id]` | -- | -- | -- | IP | OK | From list rows |
 | `/tickets/new` | -- | -- | -- | IP | OK | List action |
 
-### Developer Docs (3 routes)
+### Developer Docs (4 routes)
 
 | Route | H | UM | SB | IP | Reachable? | Notes |
 |-------|:-:|:--:|:--:|:--:|:----------:|-------|
 | `/docs` | -- | -- | SB | -- | YES | Settings sidebar "More" section, SUPER_ADMIN only |
 | `/docs/api` | -- | -- | SB | -- | YES | Developer sidebar |
 | `/docs/integrations` | -- | -- | SB | -- | YES | Developer sidebar |
+| `/docs/webhooks` | -- | -- | SB | -- | YES | Developer sidebar |
+
+### Developer Portal (5 routes)
+
+| Route | H | UM | SB | IP | Reachable? | Notes |
+|-------|:-:|:--:|:--:|:--:|:----------:|-------|
+| `/developers` | -- | -- | SB | -- | YES | Developer sidebar |
+| `/developers/apps` | -- | -- | SB | -- | YES | Developer sidebar |
+| `/developers/apps/new` | -- | -- | -- | IP | YES | List page action button |
+| `/developers/apps/[id]` | -- | -- | -- | IP | YES | List table row link |
+| `/developers/apps/[id]/edit` | -- | -- | -- | IP | YES | Detail page breadcrumb + edit action |
 
 ---
 
@@ -416,7 +427,7 @@ To prevent unreachable pages from shipping again:
 
 | Source | Path | Used For |
 |--------|------|----------|
-| Page routes | `apps/web/src/app/**/page.tsx` (101 files) | All existing pages |
+| Page routes | `apps/web/src/app/**/page.tsx` (103 files) | All existing pages |
 | Sidebar configs | `apps/web/src/components/sidebar/configs/*.ts` (17 files) | Sidebar nav entries |
 | Navigation | `apps/web/src/components/navigation.tsx` | Active header — uses useEnabledModules() |
 | Module routes | `packages/domain/src/platform/modules/ModuleRoutes.ts` | Dynamic header route source |

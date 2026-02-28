@@ -32,6 +32,7 @@ Location: `apps/project-tracker/docs/metrics/_global/` (gitignored, local only).
 - `Target Sprint`: Sprint number (0-33) or "Continuous"
 - `Artifacts To Track`: Specific files/directories to be created
 - `Validation Method`: How to verify task completion
+- `Cadence`: Operational refresh cadence for continuous tasks (e.g., `daily:1d`, `weekly:7d`)
 
 ## Pre-requisite Prefixes
 

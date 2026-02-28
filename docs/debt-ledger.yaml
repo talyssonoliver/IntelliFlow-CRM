@@ -421,15 +421,195 @@ items:
     remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
     remediation_sprint: 0
     status: open
+  PLCH-IFC-077-001:
+    origin_task: IFC-077
+    owner: Tech Lead
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:11:17.373Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-076-001:
+    origin_task: IFC-076
+    owner: Security Engineer
+    severity: medium
+    description: 83 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:11:50.869Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-004-001:
+    origin_task: IFC-004
+    owner: Backend Dev
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T01:11:58.780Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-004-002:
+    origin_task: IFC-004
+    owner: Backend Dev
+    severity: medium
+    description: 25 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:11:58.780Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-005-001:
+    origin_task: IFC-005
+    owner: Backend Dev
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:11:58.866Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-108-002:
+    origin_task: IFC-108
+    owner: Tech Lead
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T01:12:03.494Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-012-001:
+    origin_task: IFC-012
+    owner: Backend Dev
+    severity: critical
+    description: "Validation failed: pnpm build (exit code: 124)"
+    created_at: 2026-02-28T01:12:18.646Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm build" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-013-001:
+    origin_task: IFC-013
+    owner: AI Specialist
+    severity: medium
+    description: 3 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:12:18.855Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-081-001:
+    origin_task: IFC-081
+    owner: Tech Lead
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T01:12:50.554Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-009-001:
+    origin_task: PG-009
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:12:51.110Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-010-001:
+    origin_task: PG-010
+    owner: Tech Lead
+    severity: medium
+    description: 4 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:12:51.247Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-PG-011-001:
+    origin_task: PG-011
+    owner: Tech Lead
+    severity: medium
+    description: 14 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:12:51.762Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-099-001:
+    origin_task: IFC-099
+    owner: AI Specialist
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T01:12:53.769Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-099-002:
+    origin_task: IFC-099
+    owner: AI Specialist
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:12:53.769Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-113-001:
+    origin_task: IFC-113
+    owner: AI Specialist
+    severity: medium
+    description: 1 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T01:12:54.239Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-045-001:
+    origin_task: IFC-045
+    owner: Tech Lead
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T01:12:54.786Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-072-001:
+    origin_task: IFC-072
+    owner: Security Engineer
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T01:13:00.533Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-110-001:
+    origin_task: IFC-110
+    owner: Tech Lead
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T01:13:04.736Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
 summary:
-  total_items: 33
+  total_items: 51
   by_severity:
-    critical: 17
+    critical: 25
     high: 0
-    medium: 9
+    medium: 19
     low: 7
   by_status:
-    open: 32
+    open: 50
     in_progress: 0
     resolved: 1
     wont_fix: 0
@@ -456,6 +636,24 @@ summary:
     - PLCH-IFC-044-002
     - FAIL-DOC-001-001
     - PLCH-IFC-160-001
+    - PLCH-IFC-077-001
+    - PLCH-IFC-076-001
+    - FAIL-IFC-004-001
+    - PLCH-IFC-004-002
+    - PLCH-IFC-005-001
+    - FAIL-IFC-108-002
+    - FAIL-IFC-012-001
+    - PLCH-IFC-013-001
+    - FAIL-IFC-081-001
+    - PLCH-PG-009-001
+    - PLCH-PG-010-001
+    - PLCH-PG-011-001
+    - FAIL-IFC-099-001
+    - PLCH-IFC-099-002
+    - PLCH-IFC-113-001
+    - FAIL-IFC-045-001
+    - FAIL-IFC-072-001
+    - FAIL-IFC-110-001
 review_schedule:
   cadence: weekly
   next_review: 2025-12-24

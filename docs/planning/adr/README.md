@@ -45,6 +45,12 @@ These ADRs cover advanced topics for later sprints:
 | [ADR-023](./ADR-023-communications-inbox.md)              | Communications & Inbox               | ✅ Accepted | -    | 0      | IFC-144, IFC-170-173                       |
 | [ADR-024](./ADR-024-scheduling-calendar.md)               | Scheduling & Calendar Integration    | ✅ Accepted | -    | 0      | IFC-136-138, IFC-172                       |
 
+### Auth & Security ADRs
+
+| ADR                                                        | Title                                | Status       | Date       | Sprint | Technical Story |
+| ---------------------------------------------------------- | ------------------------------------ | ------------ | ---------- | ------ | --------------- |
+| [ADR-039](./ADR-039-saml-sso-integration.md)               | SAML SSO Integration for Enterprise  | ⏳ Proposed  | 2026-02-25 | 15     | PG-124          |
+
 ## ADR Relationships
 
 ### Dependency Graph
@@ -181,7 +187,7 @@ New ADRs should follow the
 
 ## Metrics
 
-- **Total ADRs**: 38 (including feasibility and process ADRs)
+- **Total ADRs**: 38 (including feasibility, process, and accessibility ADRs)
 - **Sprint 1 Foundation**: 5 ADRs (ADR-001 to ADR-005)
 - **High-Risk Coverage**: Security (ADR-015), Analytics (ADR-016), Workflow
   (ADR-017), Performance (ADR-018), Core CRM (ADR-019), Web/Auth (ADR-020),
@@ -204,9 +210,15 @@ New ADRs should follow the
 | [ADR-036](./ADR-036-event-consumers.md) | Event Consumer Framework | ✅ Accepted | 2026-02-22 | IFC-151, IFC-168 |
 | [ADR-037](./ADR-037-ai-output-review.md) | AI Output Review Layer | ✅ Accepted | 2026-02-22 | IFC-176–IFC-181 |
 
+### Sprint 14 ADRs (Accessibility & Documentation)
+
+| ADR | Title | Status | Date | Technical Story |
+| --- | ----- | ------ | ---- | --------------- |
+| [ADR-038](./ADR-038-accessibility-architecture.md) | Accessibility Architecture | ✅ Accepted | 2026-02-23 | DOC-007, DOC-008 |
+
 ## Next Steps
 
-Future ADRs will use IDs **038+** to avoid collisions with existing records.
+Future ADRs will use IDs **039+** to avoid collisions with existing records.
 
 ADRs 025-029 were created during sprints 1-14. ADRs 030-037 were retroactively
 backfilled on 2026-02-22 to document decisions made during early implementation.

@@ -6,11 +6,11 @@
 | ----------------- | ------------------------------------------------------ |
 | **Feature Name**  | Developer Portal & API Documentation                                    |
 | **Owner**         | Architecture Team                                      |
-| **Status**        | Draft (Retroactive — backfilled from completed tasks)  |
+| **Status**        | Active                                                 |
 | **Target Sprint** | Sprint 15                                         |
 | **Created Date**  | 2026-02-22                                               |
-| **Last Updated**  | 2026-02-23                                               |
-| **Related Tasks** | PG-032, PG-033, PG-034, PG-039                            |
+| **Last Updated**  | 2026-02-25                                               |
+| **Related Tasks** | PG-032, PG-033, PG-034, PG-035, PG-036, PG-037, PG-038, PG-039, PG-040, PG-041, PG-042    |
 
 > **Note**: This PRD was retroactively created to document requirements for tasks
 > that were completed before PRD governance was integrated into the workflow.
@@ -36,6 +36,25 @@ Without a developer portal, API consumers must rely on reading source code or in
 
 **As a** developer **I want to** search documentation by topic **So that** I can quickly find relevant integration guides.
 
+### User Story 3
+
+**As a** developer **I want to** view a changelog of platform updates **So that** I can track breaking changes, new features, and plan my integration upgrades.
+
+### User Story 4
+
+**As a** developer **I want to** subscribe to an RSS feed of changelog updates **So that** I can be notified of platform changes automatically.
+
+### User Story 5
+
+**As a** developer **I want to** access SDK installation guides and quickstart examples **So that** I can integrate IntelliFlow CRM into my TypeScript/JavaScript application quickly.
+
+### User Story 6
+
+**As a** developer **I want to** view available SDK download options **So that** I can choose the right package for my project setup.
+
+### User Story 7
+
+**As a** developer **I want to** read authentication guides covering OAuth, JWT, MFA, and API keys **So that** I can implement secure authentication flows in my integration.
 
 ## Acceptance Criteria
 

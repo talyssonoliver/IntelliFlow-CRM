@@ -24,7 +24,8 @@ structure, and user flows in the IntelliFlow CRM web application.
 5. [User Flows Summary](#user-flows-summary)
 6. [Route Groups & Layouts](#route-groups--layouts)
 7. [API Routes](#api-routes)
-8. [Flow Documentation Reference](#flow-documentation-reference)
+8. [Integration Checklist](#integration-checklist)
+9. [Flow Documentation Reference](#flow-documentation-reference)
 
 ---
 
@@ -34,56 +35,78 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category        | Count |
 | --------------- | ----- |
-| Total Pages     | 68    |
-| Public Pages    | 20    |
-| Protected Pages | 48    |
-| API Routes      | 16    |
-| Layouts         | 15    |
+| Total Pages     | 107   |
+| Public Pages    | 25    |
+| Developer Pages | 9     |
+| Protected Pages | 73    |
+| API Routes      | 19    |
+| Layouts         | 35    |
+
+> Total Pages counts distinct `page.tsx` files. Query-parameter variants (e.g., `/leads?view=my`) are views within the same page and are excluded from the total.
 
 ---
 
 ## Page Map by Category
 
-### 1. Public Pages (No Authentication Required)
+### 1. Public Pages (25 — No Authentication Required)
 
-These pages are accessible without login. Located in `(public)` route group.
+Located in `(public)` route group. Accessible without login.
 
-| Route                     | Page            | Description                                                                |
-| ------------------------- | --------------- | -------------------------------------------------------------------------- |
-| `/`                       | Home            | Landing page (shows PublicHomePage or AuthenticatedHomePage based on auth) |
-| `/login`                  | Login           | Email/password + OAuth login                                               |
-| `/signup`                 | Sign Up         | New account registration                                                   |
-| `/signup/success`         | Sign Up Success | Registration confirmation                                                  |
-| `/forgot-password`        | Forgot Password | Password reset request                                                     |
-| `/reset-password/[token]` | Reset Password  | Password reset with token                                                  |
-| `/logout`                 | Logout          | Session termination                                                        |
-| `/about`                  | About           | Company information                                                        |
-| `/features`               | Features        | Product features showcase                                                  |
-| `/pricing`                | Pricing         | Subscription plans                                                         |
-| `/security`               | Security        | Security practices                                                         |
-| `/contact`                | Contact         | Contact form                                                               |
-| `/partners`               | Partners        | Partner program                                                            |
-| `/press`                  | Press           | Press releases                                                             |
-| `/status`                 | Status          | System status page                                                         |
-| `/blog`                   | Blog            | Blog listing                                                               |
-| `/blog/[slug]`            | Blog Post       | Individual blog article                                                    |
-| `/careers`                | Careers         | Job listings                                                               |
-| `/careers/[id]`           | Job Detail      | Individual job posting                                                     |
-| `/lp/[slug]`              | Landing Page    | Dynamic marketing landing pages                                            |
-
----
-
-### 2. Authentication Pages
-
-| Route                        | Page               | Description                                     |
-| ---------------------------- | ------------------ | ----------------------------------------------- |
-| `/auth/callback`             | OAuth Callback     | Handles OAuth provider redirects (Google, etc.) |
-| `/auth/mfa/verify`           | MFA Verification   | Two-factor authentication input                 |
-| `/auth/verify-email/[token]` | Email Verification | Email confirmation with token                   |
+| Route                     | Page                    | Description                                                               |
+| ------------------------- | ----------------------- | ------------------------------------------------------------------------- |
+| `/`                       | Home                    | Landing page (shows PublicHomePage or AuthenticatedHomePage based on auth) |
+| `/login`                  | Login                   | Email/password + OAuth login                                              |
+| `/signup`                 | Sign Up                 | New account registration                                                  |
+| `/signup/success`         | Sign Up Success         | Registration confirmation                                                 |
+| `/forgot-password`        | Forgot Password         | Password reset request                                                    |
+| `/reset-password/[token]` | Reset Password          | Password reset with token                                                 |
+| `/reset-password/callback`| Reset Password Callback | Supabase password reset redirect handler                                  |
+| `/logout`                 | Logout                  | Session termination                                                       |
+| `/auth/callback`          | OAuth Callback          | Handles OAuth provider redirects (Google, etc.)                           |
+| `/sso`                    | Enterprise SSO          | SSO email lookup form for enterprise SAML/OAuth providers (PG-124)        |
+| `/mfa/verify`             | MFA Verification        | Two-factor authentication input                                           |
+| `/verify-email/[token]`   | Email Verification      | Email confirmation with token                                             |
+| `/verify-email/callback`  | Email Verify Callback   | Supabase email verification redirect handler                              |
+| `/about`                  | About                   | Company information                                                       |
+| `/features`               | Features                | Product features showcase                                                 |
+| `/pricing`                | Pricing                 | Subscription plans                                                        |
+| `/security`               | Security                | Security practices                                                        |
+| `/contact`                | Contact                 | Contact form                                                              |
+| `/partners`               | Partners                | Partner program                                                           |
+| `/press`                  | Press                   | Press releases                                                            |
+| `/status`                 | Status                  | System status page                                                        |
+| `/blog`                   | Blog                    | Blog listing                                                              |
+| `/blog/[slug]`            | Blog Post               | Individual blog article                                                   |
+| `/careers`                | Careers                 | Job listings                                                              |
+| `/careers/[id]`           | Job Detail              | Individual job posting                                                    |
+| `/lp/[slug]`              | Landing Page            | Dynamic marketing landing pages                                           |
 
 ---
 
-### 3. Dashboard
+### 2. Developer Portal (9 pages)
+
+Located in `(developer)` route group. Sidebar-gated via `roles: ['SUPER_ADMIN']` in `settings.ts:85`. Uses `developerSidebarConfig` from `configs/developer.ts`.
+
+The `(developer)` route group has its own `layout.tsx` that renders the developer sidebar. These pages are accessible through the Settings sidebar "More" section (SUPER_ADMIN only).
+
+| Route                | Page              | Description                                      |
+| -------------------- | ----------------- | ------------------------------------------------ |
+| `/developers/apps`      | App Registry      | Developer app management, API keys, webhooks     |
+| `/developers/apps/new`  | Create New App    | Developer app creation with OAuth credentials    |
+| `/developers/apps/[id]` | App Detail        | Individual app dashboard, metrics, logs          |
+| `/developers/apps/[id]/edit` | App Edit     | Edit app settings, scopes, webhook configuration |
+| `/docs`                 | Dev Docs Home     | Documentation overview with category cards       |
+| `/docs/api`          | API Reference     | Interactive OpenAPI/tRPC reference               |
+| `/docs/changelog`    | Changelog         | Release history, version notes, feature updates  |
+| `/docs/integrations` | Integration Guides| Third-party integration documentation            |
+| `/docs/webhooks`     | Webhook Docs      | Webhook configuration, events, and tester        |
+| `/docs/sdk`          | SDK Guides        | Client libraries, install guides, quickstart     |
+| `/docs/cli`          | CLI Reference     | Monorepo CLI commands for development            |
+| `/docs/auth`         | Auth Guides       | OAuth 2.0, JWT, MFA, sessions, and API keys      |
+
+---
+
+### 3. Dashboard (3 pages)
 
 | Route                  | Page                | Description                             |
 | ---------------------- | ------------------- | --------------------------------------- |
@@ -93,7 +116,7 @@ These pages are accessible without login. Located in `(public)` route group.
 
 ---
 
-### 4. CRM Core - Leads
+### 4. CRM Core — Leads (3 pages)
 
 | Route                     | Page            | Description                       | Sidebar Section |
 | ------------------------- | --------------- | --------------------------------- | --------------- |
@@ -109,7 +132,7 @@ These pages are accessible without login. Located in `(public)` route group.
 
 ---
 
-### 5. CRM Core - Contacts
+### 5. CRM Core — Contacts (3 pages)
 
 | Route            | Page           | Description                 |
 | ---------------- | -------------- | --------------------------- |
@@ -119,7 +142,16 @@ These pages are accessible without login. Located in `(public)` route group.
 
 ---
 
-### 6. CRM Core - Deals (Opportunities)
+### 6. CRM Core — Accounts (2 pages)
+
+| Route            | Page           | Description                      |
+| ---------------- | -------------- | -------------------------------- |
+| `/accounts`      | Accounts List  | Company/account list with filters and stats |
+| `/accounts/[id]` | Account Detail | Account 360° view                |
+
+---
+
+### 7. CRM Core — Deals (4 pages)
 
 | Route                  | Page              | Description                 |
 | ---------------------- | ----------------- | --------------------------- |
@@ -130,16 +162,45 @@ These pages are accessible without login. Located in `(public)` route group.
 
 ---
 
-### 7. CRM Core - Tickets (Support)
+### 8. CRM Core — Tasks (2 pages)
+
+| Route        | Page        | Description                                            |
+| ------------ | ----------- | ------------------------------------------------------ |
+| `/tasks`     | Task List   | Task queue with list/calendar toggle, filters, priority|
+| `/tasks/[id]`| Task Detail | Task view with assignee and status                     |
+
+---
+
+### 9. CRM Core — Calendar/Appointments (3 pages)
+
+| Route           | Page               | Description                              |
+| --------------- | ------------------ | ---------------------------------------- |
+| `/calendar`     | Calendar View      | Appointment calendar (month/week/day views) |
+| `/calendar/new` | New Appointment    | Create appointment form                  |
+| `/calendar/[id]`| Appointment Detail | Appointment detail and edit              |
+
+---
+
+### 10. CRM Core — Email (2 pages)
+
+| Route        | Page         | Description        |
+| ------------ | ------------ | ------------------ |
+| `/email`     | Email Inbox  | Email list and compose |
+| `/email/[id]`| Email Detail | Email thread view  |
+
+---
+
+### 11. CRM Core — Tickets (3 pages)
 
 | Route           | Page          | Description                   |
 | --------------- | ------------- | ----------------------------- |
 | `/tickets`      | Tickets List  | Support tickets queue         |
+| `/tickets/new`  | New Ticket    | Create ticket form            |
 | `/tickets/[id]` | Ticket Detail | Ticket view with conversation |
 
 ---
 
-### 8. Documents
+### 12. Documents (3 pages)
 
 | Route             | Page            | Description                   |
 | ----------------- | --------------- | ----------------------------- |
@@ -149,31 +210,55 @@ These pages are accessible without login. Located in `(public)` route group.
 
 ---
 
-### 9. AI & Agent Actions
+### 13. Cases (4 pages)
 
-| Route              | Page          | Description                       |
-| ------------------ | ------------- | --------------------------------- |
-| `/agent-approvals` | Agent Actions | AI agent approval queue (IFC-149) |
-
----
-
-### 10. Analytics & Reports
-
-| Route        | Page                | Description               |
-| ------------ | ------------------- | ------------------------- |
-| `/analytics` | Analytics Dashboard | Charts, metrics, and KPIs |
+| Route             | Page          | Description                        |
+| ----------------- | ------------- | ---------------------------------- |
+| `/cases`          | Cases List    | Legal/service case queue with stats and filters |
+| `/cases/new`      | New Case      | Case creation form                 |
+| `/cases/[id]`     | Case Detail   | Case detail with documents         |
+| `/cases/timeline` | Case Timeline | Case history and deadline engine   |
 
 ---
 
-### 11. Cases (Legal/Service)
+### 14. AI & Agent Actions (14 pages)
 
-| Route             | Page          | Description             |
-| ----------------- | ------------- | ----------------------- |
-| `/cases/timeline` | Case Timeline | Case history and events |
+| Route                            | Page               | Task         |
+| -------------------------------- | ------------------ | ------------ |
+| `/agent-approvals`               | Approval Queue     | IFC-029/IFC-149 |
+| `/agent-approvals/agents`        | Active Agents      | PG-151       |
+| `/agent-approvals/ai-review`     | AI Review Queue    | IFC-181      |
+| `/agent-approvals/ai-review/[id]`| Review Detail      | IFC-181      |
+| `/agent-approvals/ai-search`     | AI Search (RAG)    | PG-144       |
+| `/agent-approvals/churn-risk`    | Churn Risk         | PG-143       |
+| `/agent-approvals/drift`         | Drift Detection    | PG-146       |
+| `/agent-approvals/experiments`   | Experiments        | PG-149       |
+| `/agent-approvals/history`       | Review History     | PG-150       |
+| `/agent-approvals/latency`       | Latency Monitor    | PG-153       |
+| `/agent-approvals/lead-scoring`  | Lead Scoring       | PG-148       |
+| `/agent-approvals/logs`          | Agent Logs         | PG-152       |
+| `/agent-approvals/preview`       | Preview Mode       | —            |
+| `/agent-approvals/sentiment`     | Sentiment Analysis | PG-142       |
+
+**Sidebar groupings** (from `agent-approvals.ts`):
+- **Intelligence**: Sentiment, Churn Risk, Lead Scoring
+- **AI Tools**: AI Search, Experiments
+- **AI Review**: AI Review Queue
+- **Monitoring**: Active Agents, Drift, Latency, Logs
+- **History**: Review History
 
 ---
 
-### 12. Notifications
+### 15. Analytics & Reports (2 pages)
+
+| Route                | Page               | Description                                    |
+| -------------------- | ------------------ | ---------------------------------------------- |
+| `/analytics`         | Analytics Dashboard| Charts, metrics, and KPIs                      |
+| `/analytics/feedback`| Feedback Analytics | NPS/CSAT/CES metrics, trend charts             |
+
+---
+
+### 16. Notifications (2 pages)
 
 | Route                     | Page                  | Description              |
 | ------------------------- | --------------------- | ------------------------ |
@@ -182,7 +267,7 @@ These pages are accessible without login. Located in `(public)` route group.
 
 ---
 
-### 13. User Profile
+### 17. User Profile (1 page)
 
 | Route      | Page         | Description          |
 | ---------- | ------------ | -------------------- |
@@ -190,7 +275,7 @@ These pages are accessible without login. Located in `(public)` route group.
 
 ---
 
-### 14. Settings
+### 18. Settings (9 pages)
 
 | Route                     | Page                  | Description                     |
 | ------------------------- | --------------------- | ------------------------------- |
@@ -201,25 +286,26 @@ These pages are accessible without login. Located in `(public)` route group.
 | `/settings/integrations`  | Integrations          | Third-party integrations        |
 | `/settings/notifications` | Notification Settings | Alert preferences               |
 | `/settings/pipeline`      | Pipeline Settings     | Sales pipeline stages           |
+| `/settings/routing`       | Routing Settings      | Smart lead routing rules        |
 | `/settings/security/mfa`  | MFA Settings          | Two-factor authentication setup |
 
 ---
 
-### 15. Billing
+### 19. Billing (7 pages)
 
 | Route                      | Page             | Description                      |
 | -------------------------- | ---------------- | -------------------------------- |
 | `/billing`                 | Billing Overview | Subscription summary             |
 | `/billing/checkout`        | Checkout         | Payment processing               |
 | `/billing/subscriptions`   | Subscriptions    | Manage subscription plans        |
-| `/billing/payment-methods` | Payment Methods  | Credit cards and payment options |
+| `/billing/payment-methods` | Payment Methods  | Credit cards and payment options  |
 | `/billing/invoices`        | Invoices         | Invoice history                  |
 | `/billing/invoices/[id]`   | Invoice Detail   | Individual invoice view          |
 | `/billing/receipts`        | Receipts         | Payment receipts                 |
 
 ---
 
-### 16. Governance
+### 20. Governance (6 pages)
 
 | Route                                    | Page                | Description                   |
 | ---------------------------------------- | ------------------- | ----------------------------- |
@@ -241,36 +327,46 @@ These pages are accessible without login. Located in `(public)` route group.
 │                        ROUTE PROTECTION                         │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  PUBLIC (No Auth)          PROTECTED (Auth Required)           │
-│  ─────────────────         ─────────────────────────           │
-│  /                         /dashboard     [USER+]              │
-│  /login                    /leads         [USER+]              │
-│  /signup                   /contacts      [USER+]              │
-│  /forgot-password          /deals         [USER+]              │
-│  /reset-password/*         /tickets       [USER+]              │
-│  /about                    /documents     [USER+]              │
-│  /features                 /analytics     [MANAGER+]           │
-│  /pricing                  /settings      [USER+]              │
-│  /blog/*                   /admin         [ADMIN]              │
-│  /careers/*                /governance    [USER+]              │
-│  /auth/callback            /billing       [USER+]              │
+│  PUBLIC (No Auth)          PROTECTED (Auth Required)            │
+│  ─────────────────         ─────────────────────────            │
+│  /                         /dashboard     [USER+]               │
+│  /login                    /leads         [USER+]               │
+│  /signup                   /contacts      [USER+]               │
+│  /forgot-password          /accounts      [USER+]               │
+│  /reset-password/*         /deals         [USER+]               │
+│  /about                    /tasks         [USER+]               │
+│  /features                 /calendar      [USER+]               │
+│  /pricing                  /email         [USER+]               │
+│  /blog/*                   /tickets       [USER+]               │
+│  /careers/*                /documents     [USER+]               │
+│  /auth/callback            /cases         [USER+]               │
+│  /mfa/verify               /analytics     [MANAGER+]            │
+│  /verify-email/*           /agent-approvals [USER+]             │
+│  /lp/*                     /settings      [USER+]               │
+│  /partners                 /billing       [USER+]               │
+│  /press                    /governance    [USER+]               │
+│  /security                 /notifications [USER+]               │
+│  /status                   /profile       [USER+]               │
+│  /contact                  /developers    [SUPER_ADMIN]         │
+│  /logout                   /docs          [SUPER_ADMIN]         │
 │                                                                 │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Role Hierarchy
 
-| Role      | Access Level | Description                      |
-| --------- | ------------ | -------------------------------- |
-| `USER`    | Basic        | Standard CRM access              |
-| `MANAGER` | Elevated     | Team analytics + user management |
-| `ADMIN`   | Full         | System administration            |
+| Role          | Access Level | Description                      |
+| ------------- | ------------ | -------------------------------- |
+| `USER`        | Basic        | Standard CRM access              |
+| `MANAGER`     | Elevated     | Team analytics + user management |
+| `ADMIN`       | Full         | System administration            |
+| `SUPER_ADMIN` | Root         | Developer portal + all admin     |
 
 ### Authentication Flow
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│                         AUTHENTICATION FLOW                               │
+│                         AUTHENTICATION FLOW                              │
 └──────────────────────────────────────────────────────────────────────────┘
 
     ┌─────────┐
@@ -296,14 +392,14 @@ These pages are accessible without login. Located in `(public)` route group.
            │                  └────────┬───────┘
            │                           │
            │                           ▼
-           │                  ┌────────────────┐     Yes    ┌─────────────────┐
-           │                  │  MFA Enabled?  │───────────►│ /auth/mfa/verify│
-           │                  └────────┬───────┘            └────────┬────────┘
-           │                           │ No                          │
-           │                           │                             │
-           │                           ▼                             │
-           │              ┌─────────────────────┐                    │
-           └─────────────►│  Set Cookies:       │◄───────────────────┘
+           │                  ┌────────────────┐     Yes    ┌──────────────┐
+           │                  │  MFA Enabled?  │───────────►│ /mfa/verify  │
+           │                  └────────┬───────┘            └──────┬───────┘
+           │                           │ No                        │
+           │                           │                           │
+           │                           ▼                           │
+           │              ┌─────────────────────┐                  │
+           └─────────────►│  Set Cookies:       │◄─────────────────┘
                           │  - accessToken      │
                           │  - session          │
                           └──────────┬──────────┘
@@ -319,26 +415,27 @@ These pages are accessible without login. Located in `(public)` route group.
 
 ## Navigation Structure
 
-### Main Navigation Bar (Header)
+### Main Navigation Bar (Header) — Dynamic Module-Gated
 
-Visible to authenticated users only.
+Visible to authenticated users only. Header items are dynamically rendered via `useEnabledModules()` + `ModuleRoutes.ts`.
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│ [Logo]  Dashboard  Leads  Contacts  Deals  Tickets  Documents  Agent  Reports │ [Search] [🔔] [User] │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│ [Logo]  Dashboard  Leads  Contacts  Accounts  Deals  Tasks  Calendar  Email  Cases  ...  │
+│                                                         Tickets  AI&Agents  Reports       │
+│                                                                    [Search] [🔔] [User]  │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-| Nav Item      | Route              | Icon                  |
-| ------------- | ------------------ | --------------------- |
-| Dashboard     | `/dashboard`       | `dashboard`           |
-| Leads         | `/leads`           | `group`               |
-| Contacts      | `/contacts`        | `person`              |
-| Deals         | `/deals`           | `handshake`           |
-| Tickets       | `/tickets`         | `confirmation_number` |
-| Documents     | `/documents`       | `description`         |
-| Agent Actions | `/agent-approvals` | `smart_toy`           |
-| Reports       | `/analytics`       | `bar_chart`           |
+| Module          | Nav Items                                                                      |
+| --------------- | ------------------------------------------------------------------------------ |
+| CORE_CRM        | Dashboard, Leads, Contacts, Accounts, Deals, Tasks, Calendar, Email (8 items) |
+| LEGAL           | Cases (1 item)                                                                 |
+| SUPPORT         | Tickets (1 item)                                                               |
+| AI_INTELLIGENCE | AI & Agents (1 item)                                                           |
+| ANALYTICS       | Reports (1 item)                                                               |
+
+> Header items dynamically rendered via `useEnabledModules()` + `ModuleRoutes.ts`. Each module is enabled/disabled per tenant.
 
 ### Context Sidebars
 
@@ -367,20 +464,30 @@ Settings
 ├── Team                /settings/team
 ├── AI Chains           /settings/ai
 ├── Integrations        /settings/integrations
-└── Notifications       /settings/notifications
+├── Pipeline            /settings/pipeline
+├── Notifications       /settings/notifications
+├── Routing             /settings/routing
+└── Security            /settings/security/mfa
 
 More
-└── Governance          /governance
+├── Governance          /governance
+├── Billing             /billing
+└── Developer Docs      /docs (SUPER_ADMIN only)
 ```
 
-### Available Sidebars
+### Available Sidebar Configs (17)
 
 | Module          | Config File                  |
 | --------------- | ---------------------------- |
 | Leads           | `configs/leads.ts`           |
 | Contacts        | `configs/contacts.ts`        |
+| Accounts        | `configs/accounts.ts`        |
 | Documents       | `configs/documents.ts`       |
 | Deals           | `configs/deals.ts`           |
+| Tasks           | `configs/tasks.ts`           |
+| Appointments    | `configs/appointments.ts`    |
+| Email           | `configs/email.ts`           |
+| Cases           | `configs/cases.ts`           |
 | Tickets         | `configs/tickets.ts`         |
 | Analytics       | `configs/analytics.ts`       |
 | Agent Approvals | `configs/agent-approvals.ts` |
@@ -388,6 +495,7 @@ More
 | Governance      | `configs/governance.ts`      |
 | Settings        | `configs/settings.ts`        |
 | Billing         | `configs/billing.ts`         |
+| Developer       | `configs/developer.ts`       |
 
 ---
 
@@ -427,6 +535,9 @@ More
 | `/tickets/[id]`         | **FLOW-012, 013, 014** | Routing, SLA, resolution          |
 | `/contacts/[id]`        | **FLOW-020**           | Activity timeline                 |
 | `/analytics`            | **FLOW-023**           | Report builder                    |
+| `/calendar`             | **FLOW-019**           | Appointment scheduling            |
+| `/email`                | **FLOW-016**           | Email with tracking               |
+| `/cases`                | **FLOW-041**           | Case RAG retrieval                |
 | `/search`               | **FLOW-039**           | Document search (FTS + semantic)  |
 | `/settings/ai`          | **FLOW-045**           | AI chain versioning admin         |
 | `/agent-approvals`      | IFC-149                | AI agent action approvals         |
@@ -456,7 +567,7 @@ More
               │
               ▼ (Email Link)
     ┌─────────────────────────┐
-    │ /auth/verify-email/[t]  │ ◄── Verify email token
+    │ /verify-email/[token]   │ ◄── Verify email token
     └─────────┬───────────────┘
               │
               ▼
@@ -610,8 +721,14 @@ More
     │ /reset-password/[token]     │ ◄── Enter new password
     └─────────────┬───────────────┘
                   │
-                  │ Password updated
+                  │ Supabase redirect
                   ▼
+    ┌───────────────────────────────┐
+    │ /reset-password/callback      │ ◄── Handle Supabase callback
+    └───────────────┬───────────────┘
+                    │
+                    │ Password updated
+                    ▼
     ┌─────────────┐
     │   /login    │ ◄── Login with new password
     └─────────────┘
@@ -681,7 +798,7 @@ More
          │
          ▼
     ┌───────────────────────────┐
-    │ /agent-approvals  │ ◄── Review queue
+    │ /agent-approvals          │ ◄── Review queue
     │                           │
     │  ┌─────────────────────┐  │
     │  │ Pending Actions     │  │
@@ -701,206 +818,113 @@ More
 
 ---
 
-### Flow 8: Document Search (FLOW-039)
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    DOCUMENT SEARCH FLOW (FLOW-039)                          │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-    User Query (Header Search Bar)
-         │
-         ▼
-    ┌─────────────────────────────────────────┐
-    │         Search Processing               │
-    │  ┌─────────────┐   ┌─────────────────┐ │
-    │  │ Full-Text   │   │    Semantic     │ │
-    │  │   Search    │   │   (Embeddings)  │ │
-    │  └──────┬──────┘   └────────┬────────┘ │
-    │         │                   │          │
-    │         └─────────┬─────────┘          │
-    │                   │                    │
-    │                   ▼                    │
-    │         ┌─────────────────┐            │
-    │         │  Hybrid Merge   │            │
-    │         │  + ACL Filter   │            │
-    │         └────────┬────────┘            │
-    └──────────────────┼─────────────────────┘
-                       │
-                       ▼
-    ┌─────────────────────────────────────────┐
-    │           /search (Results)             │
-    │  ┌─────────────────────────────────┐   │
-    │  │ 📄 Contract_2024.pdf (98%)      │   │
-    │  │ 📄 Proposal_Draft.docx (87%)    │   │
-    │  │ 📧 Email: Re: Pricing (82%)     │   │
-    │  └─────────────────────────────────┘   │
-    │                                         │
-    │  Filters: [Type ▼] [Date ▼] [Owner ▼]  │
-    └─────────────────────────────────────────┘
-```
-
----
-
-### Flow 9: AI Chain Configuration (FLOW-045)
-
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    AI CHAIN VERSIONING (FLOW-045)                           │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-    /settings/ai
-         │
-         ▼
-    ┌─────────────────────────────────────────────────────────────────────────┐
-    │                    AI Chain Management Dashboard                        │
-    │  ┌─────────────────────────────────────────────────────────────────┐   │
-    │  │ Chain Versions                                                   │   │
-    │  │ ┌───────────────┬──────────┬──────────┬──────────┬───────────┐ │   │
-    │  │ │ Chain         │ Version  │ Status   │ Traffic  │ Actions   │ │   │
-    │  │ ├───────────────┼──────────┼──────────┼──────────┼───────────┤ │   │
-    │  │ │ lead-scoring  │ v2.3.1   │ ● Active │ 100%     │ [Rollback]│ │   │
-    │  │ │ churn-risk    │ v1.2.0   │ ● Active │ 80%      │ [A/B Test]│ │   │
-    │  │ │ auto-response │ v3.0.0   │ ○ Shadow │ 20%      │ [Promote] │ │   │
-    │  │ └───────────────┴──────────┴──────────┴──────────┴───────────┘ │   │
-    │  └─────────────────────────────────────────────────────────────────┘   │
-    │                                                                         │
-    │  ┌─────────────────────┐  ┌─────────────────────┐                      │
-    │  │ Zep Memory Budget   │  │ Experiment Results  │                      │
-    │  │ ████████░░ 78%      │  │ v3.0.0 +12% better  │                      │
-    │  └─────────────────────┘  └─────────────────────┘                      │
-    └─────────────────────────────────────────────────────────────────────────┘
-```
-
----
-
-### Flow Documentation Structure
-
-Each flow file (`FLOW-XXX.md`) contains:
-
-```yaml
-# Standard Flow Structure
-id: FLOW-XXX
-name: Flow Name
-category: Category
-priority: Critical/High/Medium/Low
-sprint: Target Sprint
-
-actors:
-  - Actor list
-
-pre_conditions:
-  - Required conditions
-
-flow_steps:
-  step_name:
-    description: 'Step description'
-    validations: [...]
-    artifacts: [...]
-
-edge_cases:
-  - case_name: 'Description'
-
-technical_artifacts:
-  database: [schemas, indexes]
-  monitoring: [metrics, alerts]
-  security: [logs, compliance]
-
-success_metrics:
-  - metric_name: target_value
-```
-
-### Mermaid Diagrams
-
-All flows also include Mermaid sequence diagrams. Example from FLOW-001:
-
-```mermaid
-sequenceDiagram
-    participant U as User
-    participant F as Frontend
-    participant A as API Auth
-    participant S as Supabase
-    participant P as OAuth Provider
-
-    U->>F: Access /login
-    F->>A: GET /auth/options
-    A-->>F: Available options
-    F-->>U: Login form
-
-    U->>F: Choose SSO
-    F->>P: OAuth2 redirect
-    P-->>F: Token + user info
-    F->>A: POST /auth/oauth
-    A->>S: Validate token
-
-    A->>A: Check MFA required
-    A-->>F: MFA challenge
-    U->>F: Enter code
-    F->>A: POST /auth/mfa
-
-    A->>A: Create session
-    A-->>F: JWT tokens
-    F-->>U: Redirect /dashboard
-```
-
----
-
 ## Route Groups & Layouts
 
-### Layout Hierarchy
+### Layout Hierarchy (35 layouts)
 
 ```
 app/
-├── layout.tsx                    # Root layout (Navigation, Theme, Providers)
+├── layout.tsx                       # Root layout (Navigation, Theme, Providers)
 │
-├── (public)/                     # Public route group
-│   └── layout.tsx                # Public layout (minimal, no auth nav)
+├── (public)/                        # Public route group
+│   ├── layout.tsx                   # Public layout (minimal, no auth nav)
+│   ├── login/layout.tsx             # Login layout
+│   ├── pricing/layout.tsx           # Pricing layout
+│   └── signup/layout.tsx            # Signup layout
+│
+├── (developer)/                     # Developer portal route group
+│   └── layout.tsx                   # Developer sidebar layout (developerSidebarConfig)
 │
 ├── dashboard/
-│   └── page.tsx                  # Uses root layout
+│   └── layout.tsx                   # Dashboard layout
 │
 ├── leads/
 │   └── (list)/
-│       └── layout.tsx            # Leads sidebar layout
+│       └── layout.tsx               # Leads sidebar layout
 │
 ├── contacts/
-│   └── (list)/
-│       └── layout.tsx            # Contacts sidebar layout
+│   └── layout.tsx                   # Contacts layout
+│
+├── accounts/
+│   └── layout.tsx                   # Accounts layout
 │
 ├── deals/
 │   ├── (list)/
-│   │   └── layout.tsx            # Deals sidebar layout
+│   │   └── layout.tsx               # Deals sidebar layout
 │   ├── [id]/
-│   │   └── layout.tsx            # Deal detail layout
+│   │   └── layout.tsx               # Deal detail layout
 │   └── forecast/
-│       └── layout.tsx            # Forecast layout
+│       └── layout.tsx               # Forecast layout
+│
+├── tasks/
+│   └── layout.tsx                   # Tasks layout
+│
+├── tickets/
+│   └── layout.tsx                   # Tickets layout
+│
+├── documents/
+│   └── layout.tsx                   # Documents layout
+│
+├── cases/
+│   └── layout.tsx                   # Cases layout
+│
+├── calendar/
+│   └── layout.tsx                   # Calendar layout
+│
+├── email/
+│   └── layout.tsx                   # Email layout
+│
+├── agent-approvals/
+│   └── layout.tsx                   # Agent approvals layout
+│
+├── analytics/
+│   └── (list)/
+│       └── layout.tsx               # Analytics sidebar layout
+│
+├── notifications/
+│   └── layout.tsx                   # Notifications layout
+│
+├── profile/
+│   └── layout.tsx                   # Profile layout
 │
 ├── settings/
-│   └── layout.tsx                # Settings sidebar layout
+│   └── layout.tsx                   # Settings sidebar layout
 │
 ├── billing/
-│   └── layout.tsx                # Billing sidebar layout
+│   └── layout.tsx                   # Billing sidebar layout
 │
-├── governance/
-│   └── layout.tsx                # Governance sidebar layout
-│
-└── notifications/
-    └── layout.tsx                # Notifications layout
+└── governance/
+    └── layout.tsx                   # Governance sidebar layout
 ```
+
+### `_layout-shell.tsx` Pattern
+
+Seven modules use an RSC + Client component split pattern where `layout.tsx` exports metadata (React Server Component) and delegates sidebar/provider logic to a `_layout-shell.tsx` (`'use client'`):
+
+| Module          | Shell File                                          |
+| --------------- | --------------------------------------------------- |
+| Agent Approvals | `agent-approvals/_layout-shell.tsx`                 |
+| Billing         | `billing/_layout-shell.tsx`                         |
+| Calendar        | `calendar/_layout-shell.tsx`                        |
+| Email           | `email/_layout-shell.tsx`                           |
+| Governance      | `governance/_layout-shell.tsx`                      |
+| Notifications   | `notifications/_layout-shell.tsx`                   |
+| Settings        | `settings/_layout-shell.tsx`                        |
 
 ### Route Group Purposes
 
-| Group      | Purpose                               |
-| ---------- | ------------------------------------- |
-| `(public)` | Marketing pages, no auth required     |
-| `(list)`   | List views with sidebar navigation    |
-| `[id]`     | Dynamic detail pages                  |
-| `[slug]`   | Dynamic content pages (blog, careers) |
-| `[token]`  | Token-based verification pages        |
+| Group         | Purpose                               |
+| ------------- | ------------------------------------- |
+| `(public)`    | Marketing pages, no auth required     |
+| `(developer)` | Developer portal pages, SUPER_ADMIN sidebar-gated |
+| `(list)`      | List views with sidebar navigation    |
+| `[id]`        | Dynamic detail pages                  |
+| `[slug]`      | Dynamic content pages (blog, careers) |
+| `[token]`     | Token-based verification pages        |
 
 ---
 
-## API Routes
+## API Routes (19)
 
 ### Internal API Endpoints
 
@@ -922,33 +946,51 @@ app/
 | `/api/quality-reports/test-run`         | POST     | Trigger test run            |
 | `/api/quality-reports/test-run/[runId]` | GET      | Test run status             |
 | `/api/quality-reports/test-run/events`  | GET      | SSE events                  |
+| `/api/avatar-proxy`                     | GET      | Avatar image proxy with CORS bypass |
+| `/api/openapi`                          | GET      | OpenAPI JSON spec endpoint  |
+| `/api/developer/webhook-test`           | POST     | Webhook delivery test tool  |
 
 ---
 
 ## Integration Checklist
 
-### Pages Requiring Backend Integration
+### Assessed Pages
 
 | Page                     | Integration Status | Required APIs                                                                                               |
 | ------------------------ | ------------------ | ----------------------------------------------------------------------------------------------------------- |
-| `/` (Authenticated Home) | 🔴 Hardcoded       | `dashboard.getWelcomeSummary`, `feed.getItems`, `ai.getDailyInsights`, `goals.getTodayFocus`, `pins.getAll` |
-| `/dashboard`             | 🟡 Partial         | `dashboard.getMetrics`, `dashboard.getWidgets`                                                              |
-| `/leads`                 | 🟢 Integrated      | `leads.list`, `leads.getById`                                                                               |
-| `/leads/[id]`            | 🟡 Partial         | `leads.getById`, `activities.getByLead`                                                                     |
-| `/contacts`              | 🟢 Integrated      | `contacts.list`, `contacts.getById`                                                                         |
-| `/deals`                 | 🟢 Integrated      | `deals.list`, `deals.getById`                                                                               |
-| `/deals/[id]/forecast`   | 🔴 Hardcoded       | `ai.getDealForecast`                                                                                        |
-| `/tickets`               | 🟢 Integrated      | `tickets.list`, `tickets.getById`                                                                           |
-| `/analytics`             | 🟡 Partial         | `analytics.getMetrics`                                                                                      |
-| `/agent-approvals`       | 🟡 Partial         | `agentActions.getPending`                                                                                   |
-| `/billing`               | 🔴 Hardcoded       | Stripe integration                                                                                          |
-| `/governance/*`          | 🟢 Integrated      | Local file system APIs                                                                                      |
+| `/` (Authenticated Home) | Hardcoded       | `dashboard.getWelcomeSummary`, `feed.getItems`, `ai.getDailyInsights`, `goals.getTodayFocus`, `pins.getAll` |
+| `/dashboard`             | Partial         | `dashboard.getMetrics`, `dashboard.getWidgets`                                                              |
+| `/leads`                 | Integrated      | `leads.list`, `leads.getById`                                                                               |
+| `/leads/[id]`            | Partial         | `leads.getById`, `activities.getByLead`                                                                     |
+| `/contacts`              | Integrated      | `contacts.list`, `contacts.getById`                                                                         |
+| `/deals`                 | Integrated      | `deals.list`, `deals.getById`                                                                               |
+| `/deals/[id]/forecast`   | Hardcoded       | `ai.getDealForecast`                                                                                        |
+| `/tickets`               | Integrated      | `tickets.list`, `tickets.getById`                                                                           |
+| `/analytics`             | Partial         | `analytics.getMetrics`                                                                                      |
+| `/agent-approvals`       | Partial         | `agentActions.getPending`                                                                                   |
+| `/billing`               | Hardcoded       | Stripe integration                                                                                          |
+| `/governance/*`          | Integrated      | Local file system APIs                                                                                      |
+
+### Unassessed Pages (Pending Assessment)
+
+| Page                  | Status             | Notes                              |
+| --------------------- | ------------------ | ---------------------------------- |
+| `/accounts`           | Pending Assessment | Account list/detail — API TBD      |
+| `/tasks`              | Pending Assessment | Task list/detail — API TBD         |
+| `/calendar`           | Pending Assessment | Calendar/appointment — API TBD     |
+| `/email`              | Pending Assessment | Email inbox/thread — API TBD       |
+| `/cases`              | Pending Assessment | Cases list/detail/timeline — API TBD |
+| `/developers/apps`    | Pending Assessment | Developer app registry — API TBD   |
+| `/docs/webhooks`      | Pending Assessment | Webhook docs/tester — API TBD      |
+| `/analytics/feedback` | Pending Assessment | Feedback metrics — API TBD         |
+| `/settings/routing`   | Pending Assessment | Lead routing rules — API TBD       |
 
 ### Legend
 
-- 🔴 Hardcoded - Uses static/mock data
-- 🟡 Partial - Some integration, some hardcoded
-- 🟢 Integrated - Fully connected to backend
+- **Hardcoded** — Uses static/mock data
+- **Partial** — Some integration, some hardcoded
+- **Integrated** — Fully connected to backend
+- **Pending Assessment** — Not yet evaluated (deferred to DOC-005/DOC-006)
 
 ---
 
@@ -1001,6 +1043,16 @@ app/
 | FLOW-041 | Case RAG Retrieval (Agent Tool)         | Search & AI              | 12-13  | Critical |
 | FLOW-045 | AI Chain Versioning Admin UI            | AI & Configuration       | 14     | High     |
 
+### Route-to-Flow Mappings (New Modules)
+
+| Route       | Flow     | Description              |
+| ----------- | -------- | ------------------------ |
+| `/calendar` | FLOW-019 | Appointment scheduling   |
+| `/email`    | FLOW-016 | Email with tracking      |
+| `/cases`    | FLOW-041 | Case RAG retrieval       |
+| `/tasks`    | —        | No flow defined yet      |
+| `/accounts` | —        | No flow defined yet      |
+
 ### File Locations
 
 ```
@@ -1032,3 +1084,4 @@ apps/project-tracker/docs/metrics/_global/flows/
 | ------- | ---------- | ----------- | ---------------------------------------------- |
 | 1.0     | 2026-02-02 | Claude Code | Initial documentation                          |
 | 1.1     | 2026-02-02 | Claude Code | Added reference to existing flow documentation |
+| 2.0     | 2026-02-24 | Claude Code | DOC-003: Updated 68→103 pages; added Developer Portal (5), Accounts (2), Tasks (2), Calendar (3), Email (2) sections; expanded Agent Approvals (1→14), Cases (1→4); corrected auth paths (`/mfa/verify`, `/verify-email/[token]`); added `/reset-password/callback`, `/verify-email/callback`; updated nav structure (static→dynamic module-gated); added `_layout-shell.tsx` pattern (7 modules); updated sidebar configs (11→17); updated API routes (16→19); expanded integration checklist with assessed/unassessed split; added route-to-flow mappings for calendar/email/cases |

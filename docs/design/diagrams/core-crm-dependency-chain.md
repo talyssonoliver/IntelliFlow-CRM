@@ -250,5 +250,16 @@ and frontend layers.
 
 **Total New Tasks Required: 10** (IFC-189 completed 2026-02-07)
 
+## Cross-Cutting: PinButton (PG-157)
+
+PinButton component (`apps/web/src/components/home/PinButton.tsx`) adds visible pin/unpin toggle to all 5 entity detail page headers:
+- `deals/[id]/page.tsx` → PinButton (entityType: opportunity)
+- `contacts/[id]/page.tsx` → PinButton (entityType: contact)
+- `leads/[id]/page.tsx` → PinButton (entityType: lead)
+- `TicketDetail.tsx` → PinButton (entityType: ticket)
+- `AccountDetail.tsx` → PinButton (entityType: account)
+
+Dependency: PinButton → useEntityPin hook → home tRPC routes (getPinnedItems, pinItem, unpinItem)
+
 - 5 Backend (IFC-184 to IFC-188, IFC-189 ✅)
 - 5 Frontend (PG-133 to PG-137)

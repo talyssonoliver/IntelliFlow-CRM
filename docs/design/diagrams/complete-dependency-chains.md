@@ -66,6 +66,12 @@ When implementing new features or modifying existing ones:
    chain here
 5. **Keep domain-specific files in sync** - Update the relevant domain file
    alongside this master
+6. **Update page documentation when UI layer ships** - When a UI task (the
+   rightmost node in a chain) is completed and creates `page.tsx` files, update:
+   - `docs/design/PAGE_MAP_AND_FLOWS.md` — add route entries, update total count
+   - `docs/design/sitemap.md` — update total page count
+   - `docs/design/navigation-reachability-audit.md` — add reachability row
+   - This is enforced by TC-31 (automated) and plan-reviewer category CC
 
 ---
 
@@ -714,7 +720,7 @@ Dependency Chain:
 
 ---
 
-## Sentiment Analysis (UI MISSING)
+## Sentiment Analysis (COMPLETE)
 
 ```
                                     ┌──────────────────┐
@@ -978,10 +984,20 @@ Frontend (next): IFC-037 ⬜ ──► IFC-038 ⬜ (wires IFC-190 to UI)
                                     │    PG-129        │
                                     │  Home Page       │
                                     │      ⏳ 60%      │
+                                    └───┬──────────────┘
+                                        │
+                                        ▼
+                                    ┌──────────────────┐
+                                    │    PG-157        │
+                                    │  PinButton       │
+                                    │      ✅          │
                                     └──────────────────┘
+                                    Consumed by: deals/[id], contacts/[id],
+                                    leads/[id], TicketDetail, AccountDetail
+                                    Uses: useEntityPin → home tRPC routes
 
 Dependency Chain:
-  IFC-182 (Router) ✅ ──► PG-129 (UI) ⏳60%
+  IFC-182 (Router) ✅ ──► PG-129 (UI) ⏳60% ──► PG-157 (PinButton) ✅
 ```
 
 ---
@@ -1803,7 +1819,7 @@ AI Review:     IFC-128 ✅ ──► IFC-176 ✅ ──► IFC-177 ✅ ──►
 ## Chains In Progress - 1 Total
 
 ```
-Home Page:     IFC-182 ✅ ──► PG-129 ⏳60%
+Home Page:     IFC-182 ✅ ──► IFC-191 ✅ ──► PG-129 ⏳60%
 ```
 
 ## Chains Missing UI Only (Router Exists) - 11 Total
@@ -1922,6 +1938,65 @@ apps/project-tracker/lib/risk-domain.ts (TRACK-003)
   ← apps/project-tracker/__tests__/tracking/RiskRegister.test.ts
   ← apps/project-tracker/__tests__/tracking/risk-api.test.ts
 ```
+
+---
+
+## 12. Developer Portal
+
+### Documentation Pages Chain
+
+```
+PG-032 (Docs Index) ✅ ──► PG-034 (Webhooks Docs) ✅
+                     └──► PG-033 (API Playground) ⬜
+                     └──► PG-035 (Changelog) ✅
+                     └──► PG-036 (SDK Guides) ✅
+                     └──► PG-037 (CLI Docs) ✅
+                     └──► PG-038 (Auth Guides) ✅
+
+PG-039 (Dev Apps) ✅ ──► PG-040 (New Dev App) ✅
+                   └──► PG-041 (App Detail) ✅ ──► PG-042 (App Edit) ✅
+```
+
+---
+
+## Accessibility Compliance Chain (Sprint 14)
+
+```
+DOC-007 (Gap Assessment) ─── COMPLETE
+  └── DOC-008 (VPAT + CI Enforcement) ─── COMPLETE
+        Artifacts:
+          docs/compliance/vpat-2.5.md
+          docs/compliance/wcag-conformance-statement.md
+          tests/a11y/axe-core.spec.ts
+          tests/a11y/vitest.config.ts
+          tests/a11y/setup.ts
+          docs/planning/adr/ADR-038-accessibility-architecture.md
+        Config changes:
+          lighthouserc.js (accessibility: warn→error)
+          audit-matrix.yml (lighthouse-ci: tier 2, required)
+          .github/workflows/pr-checks.yml (4 public URLs, configPath)
+          apps/web/eslint.config.mjs (6 jsx-a11y rules: warn→error)
+```
+
+---
+
+## Information Architecture Documentation Chain (Sprint 14)
+
+```
+DOC-002 (Sitemap Update) ─── COMPLETE
+  ├── DOC-003 (PAGE_MAP_AND_FLOWS.md) ─── COMPLETE
+  ├── DOC-004 (ui-flow-mapping.md) ─── COMPLETE
+  ├── DOC-005 (page-registry.md) ─── COMPLETE
+  │     Artifacts:
+  │       docs/design/page-registry.md (103 routes, 20 sections)
+  │     Regression Guard:
+  │       apps/web/src/app/__tests__/sitemap-reconciliation.test.ts (TC-32)
+  └── DOC-006 (Unified IA Reference) ─── BACKLOG
+        Depends: DOC-002 + DOC-003 + DOC-004 + DOC-005
+        Artifact: docs/design/information-architecture.md
+```
+
+---
 
 ## Critical Blockers
 
