@@ -65,11 +65,12 @@ describe('DocsPage Integration', () => {
     expect(screen.getByText('Integration Resources')).toBeInTheDocument();
     expect(screen.getByText('Changelog & Updates')).toBeInTheDocument();
 
-    // API Reference and Integration Resources are active internal links
+    // API Reference, Integration Resources, and Changelog are active internal links
     const links = screen.queryAllByRole('link');
-    expect(links.length).toBe(2);
+    expect(links.length).toBe(3);
     expect(links[0]).toHaveAttribute('href', '/docs/api');
     expect(links[1]).toHaveAttribute('href', '/docs/integrations');
+    expect(links[2]).toHaveAttribute('href', '/docs/changelog');
   });
 
   it('partial match filters categories correctly', async () => {
@@ -86,7 +87,7 @@ describe('DocsPage Integration', () => {
     expect(screen.getByText('Developer Guides')).toBeInTheDocument();
   });
 
-  it('"Coming Soon" categories remain visible but non-clickable during search', async () => {
+  it('changelog category is now an active link (no longer Coming Soon)', async () => {
     render(<DocsPage />);
 
     const input = screen.getByPlaceholderText('Search documentation...');
@@ -97,12 +98,12 @@ describe('DocsPage Integration', () => {
     });
 
     expect(screen.getByText('Changelog & Updates')).toBeInTheDocument();
-    expect(screen.getByText('Coming Soon')).toBeInTheDocument();
 
-    // Verify it's not a clickable link
+    // Changelog should now be a clickable link
     const links = screen.queryAllByRole('link');
     const changelogLink = links.find((l) => l.textContent?.includes('Changelog'));
-    expect(changelogLink).toBeUndefined();
+    expect(changelogLink).toBeDefined();
+    expect(changelogLink).toHaveAttribute('href', '/docs/changelog');
   });
 
   it('no results state shows message', async () => {

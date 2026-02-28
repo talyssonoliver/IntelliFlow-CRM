@@ -35,6 +35,7 @@ import {
   AuthBackground,
   AuthCard,
   PasswordInput,
+  EnterpriseSsoLink,
 } from '@/components/shared';
 import {
   sanitizeEmail,
@@ -306,6 +307,32 @@ export default function LoginPage() {
     }
   };
 
+  const handleGitHubLogin = async () => {
+    try {
+      await auth.loginWithOAuth('github');
+    } catch (error) {
+      setToast({
+        open: true,
+        variant: 'destructive',
+        title: 'GitHub sign-in failed',
+        description: error instanceof Error ? error.message : 'Please try again',
+      });
+    }
+  };
+
+  const handleLinkedInLogin = async () => {
+    try {
+      await auth.loginWithOAuth('linkedin');
+    } catch (error) {
+      setToast({
+        open: true,
+        variant: 'destructive',
+        title: 'LinkedIn sign-in failed',
+        description: error instanceof Error ? error.message : 'Please try again',
+      });
+    }
+  };
+
   const handleMfaVerify = async (code: string, method: MfaMethod): Promise<boolean> => {
     const success = await auth.verifyMfa(code, method);
 
@@ -523,6 +550,8 @@ export default function LoginPage() {
           <SocialLoginGrid
             onGoogleLogin={handleGoogleLogin}
             onMicrosoftLogin={handleMicrosoftLogin}
+            onGitHubLogin={handleGitHubLogin}
+            onLinkedInLogin={handleLinkedInLogin}
             onError={(error) =>
               setToast({
                 open: true,
@@ -533,6 +562,9 @@ export default function LoginPage() {
             }
             disabled={isLoading || rateLimitInfo.isLimited}
           />
+
+          {/* Enterprise SSO link */}
+          <EnterpriseSsoLink />
 
           {/* Sign up link */}
           <div className="text-center pt-4 border-t border-white/10">

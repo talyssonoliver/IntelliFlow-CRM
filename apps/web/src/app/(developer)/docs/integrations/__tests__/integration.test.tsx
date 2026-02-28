@@ -30,24 +30,29 @@ describe('IntegrationsPage Integration', () => {
 
     const reactHooksLink = screen.getByText('React Hooks').closest('a');
     expect(reactHooksLink).toBeInTheDocument();
-    expect(reactHooksLink).toHaveAttribute('href', '/docs/api');
+    expect(reactHooksLink).toHaveAttribute('href', '/docs/sdk');
   });
 
   it('Coming Soon integrations visible but not clickable (no <a> tag)', () => {
     render(<IntegrationsPage />);
-    const cliText = screen.getByText('CLI Tools');
-    expect(cliText).toBeInTheDocument();
-    expect(cliText.closest('a')).toBeNull();
-
     const apiKeysText = screen.getByText('API Keys');
     expect(apiKeysText).toBeInTheDocument();
     expect(apiKeysText.closest('a')).toBeNull();
   });
 
-  it('status badges visible — "Beta" on TypeScript SDK, "Coming Soon" on API Keys/CLI', () => {
+  it('CLI Tools is now available and rendered as a link', () => {
+    render(<IntegrationsPage />);
+    const cliText = screen.getByText('CLI Tools');
+    expect(cliText).toBeInTheDocument();
+    const cliLink = cliText.closest('a');
+    expect(cliLink).toBeInTheDocument();
+    expect(cliLink).toHaveAttribute('href', '/docs/cli');
+  });
+
+  it('status badges visible — "Beta" on TypeScript SDK, "Coming Soon" on API Keys', () => {
     render(<IntegrationsPage />);
     expect(screen.getAllByText('Beta').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('Coming Soon').length).toBe(2);
+    expect(screen.getAllByText('Coming Soon').length).toBe(1); // API Keys only
   });
 
   it('accessible structure: h1 heading, multiple h2s', () => {
