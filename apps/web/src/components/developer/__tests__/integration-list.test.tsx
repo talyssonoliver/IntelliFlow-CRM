@@ -30,12 +30,12 @@ describe('IntegrationList', () => {
 
   it('renders Coming Soon items as divs (not links), non-clickable', () => {
     render(<IntegrationList />);
-    const cliText = screen.getByText('CLI Tools');
-    const cliCard = cliText.closest('[aria-disabled="true"]');
-    expect(cliCard).toBeInTheDocument();
-    expect(cliCard?.tagName).toBe('DIV');
+    const apiKeysText = screen.getByText('API Keys');
+    const apiKeysCard = apiKeysText.closest('[aria-disabled="true"]');
+    expect(apiKeysCard).toBeInTheDocument();
+    expect(apiKeysCard?.tagName).toBe('DIV');
     // Should not be wrapped in a link
-    expect(cliText.closest('a')).toBeNull();
+    expect(apiKeysText.closest('a')).toBeNull();
   });
 
   it('renders Beta items as links with "Beta" badge', () => {
@@ -54,7 +54,7 @@ describe('IntegrationList', () => {
     const betaBadges = screen.getAllByText('Beta');
     expect(betaBadges.length).toBeGreaterThanOrEqual(1);
     const comingSoonBadges = screen.getAllByText('Coming Soon');
-    expect(comingSoonBadges.length).toBe(2); // CLI Tools + API Keys
+    expect(comingSoonBadges.length).toBe(1); // API Keys only (CLI Tools is now available)
   });
 
   it('icons have aria-hidden="true" attribute', () => {
@@ -87,7 +87,7 @@ describe('IntegrationList', () => {
   it('has aria-disabled="true" on Coming Soon card containers', () => {
     render(<IntegrationList />);
     const disabledCards = document.querySelectorAll('[aria-disabled="true"]');
-    expect(disabledCards.length).toBe(2); // CLI Tools + API Keys
+    expect(disabledCards.length).toBe(1); // API Keys only (CLI Tools is now available)
   });
 
   it('external links have target="_blank" and rel="noopener noreferrer"', () => {
@@ -115,9 +115,9 @@ describe('IntegrationList', () => {
 
   it('disabled cards have opacity-70 and cursor-not-allowed classes', () => {
     render(<IntegrationList />);
-    const cliCard = screen.getByText('CLI Tools').closest('.p-4');
-    expect(cliCard?.className).toContain('opacity-70');
-    expect(cliCard?.className).toContain('cursor-not-allowed');
+    const apiKeysCard = screen.getByText('API Keys').closest('.p-4');
+    expect(apiKeysCard?.className).toContain('opacity-70');
+    expect(apiKeysCard?.className).toContain('cursor-not-allowed');
   });
 
   it('each category section is wrapped in a section with aria-labelledby', () => {
