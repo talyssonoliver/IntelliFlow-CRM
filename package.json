@@ -114,7 +114,6 @@
   "devDependencies": {
     "@eslint/js": "^10.0.0",
     "@lhci/cli": "^0.15.1",
-    "@microsoft/api-extractor": "^7.56.3",
     "@playwright/test": "^1.48.0",
     "@testcontainers/postgresql": "^11.11.0",
     "@testing-library/jest-dom": "^6.9.1",
@@ -129,7 +128,6 @@
     "@typescript-eslint/parser": "^8.56.0",
     "@vitest/coverage-v8": "^4.0.16",
     "axe-core": "^4.11.1",
-    "baseline-browser-mapping": "^2.9.19",
     "concurrently": "^9.2.1",
     "cspell": "^9.4.0",
     "depcheck": "^1.4.7",
@@ -155,7 +153,6 @@
     "react-dom": "^19.2.4",
     "testcontainers": "^11.11.0",
     "ts-node": "^10.9.2",
-    "ts-prune": "^0.10.3",
     "tsx": "^4.7.0",
     "turbo": "^2.8.10",
     "typescript": "^5.3.3",
