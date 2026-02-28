@@ -6,42 +6,28 @@
   "status": "DONE",
   "status_history": [
     {
-      "from": "Backlog",
-      "to": "Specifying",
-      "timestamp": "2026-02-13T00:00:00Z",
-      "executor": "claude-opus-4-6"
+      "status": "In Progress",
+      "at": "2026-02-13T00:00:00Z"
     },
     {
-      "from": "Specifying",
-      "to": "Spec Complete",
-      "timestamp": "2026-02-13T00:01:00Z",
-      "executor": "claude-opus-4-6"
+      "status": "In Progress",
+      "at": "2026-02-13T00:01:00Z"
     },
     {
-      "from": "Spec Complete",
-      "to": "Planning",
-      "timestamp": "2026-02-13T12:00:00Z",
-      "executor": "claude-opus-4-6"
+      "status": "In Progress",
+      "at": "2026-02-13T12:00:00Z"
     },
     {
-      "from": "Planning",
-      "to": "Plan Complete",
-      "timestamp": "2026-02-13T13:00:00Z",
-      "executor": "claude-opus-4-6"
+      "status": "In Progress",
+      "at": "2026-02-13T13:00:00Z"
     },
     {
-      "from": "Plan Complete",
-      "to": "In Progress",
-      "timestamp": "2026-02-15T22:16:00Z",
-      "executor": "claude-opus-4-6",
-      "note": "exec session started (coverage remediation)"
+      "status": "In Progress",
+      "at": "2026-02-15T22:16:00Z"
     },
     {
-      "from": "In Progress",
-      "to": "Completed",
-      "timestamp": "2026-02-15T22:35:00Z",
-      "executor": "claude-opus-4-6",
-      "note": "exec completed — 65 tests pass (30 utils + 7 hooks + 28 component), typecheck clean, lint clean, all gates PASS"
+      "status": "Completed",
+      "at": "2026-02-15T22:35:00Z"
     }
   ],
   "execution": {
@@ -84,7 +70,7 @@
       "command": "npx vitest run src/lib/sentiment/__tests__/sentiment-utils.test.ts src/lib/sentiment/__tests__/hooks.test.ts src/components/ai-intelligence/__tests__/SentimentDashboard.test.tsx --root apps/web",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-15T22:30:25Z",
+      "executed_at": "2026-02-15T22:30:25Z",
       "duration_ms": 2640
     },
     {
@@ -92,7 +78,7 @@
       "command": "npx eslint (all 9 PG-142 source + test files)",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-15T22:30:30Z",
+      "executed_at": "2026-02-15T22:30:30Z",
       "duration_ms": 3000
     },
     {
@@ -100,7 +86,7 @@
       "command": "npx tsc --noEmit -p apps/web/tsconfig.json (PG-142 files clean)",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-15T22:30:35Z",
+      "executed_at": "2026-02-15T22:30:35Z",
       "duration_ms": 15000
     }
   ],

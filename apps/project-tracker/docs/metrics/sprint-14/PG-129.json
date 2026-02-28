@@ -5,7 +5,7 @@
   "description": "Authenticated Home Page - Welcome summary activity feed AI insights pinned items goals",
   "owner": "CRM FE+BE (STOA-Foundation)",
   "sprint": "sprint-14",
-  "phase": null,
+  "phase": "phase-1",
   "stream": null,
   "dependencies": {
     "required": [
@@ -14,7 +14,7 @@
       "IFC-095"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-02-23T22:15:24.957Z"
+    "verified_at": "2026-02-28T00:50:22.657Z"
   },
   "status": "DONE",
   "started_at": "2026-02-09T10:00:00.000Z",
@@ -76,7 +76,7 @@
       "command": "pnpm --filter @intelliflow/web typecheck",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-10T21:22:00.000Z",
+      "executed_at": "2026-02-10T21:22:00.000Z",
       "duration_ms": 15000
     },
     {
@@ -84,7 +84,7 @@
       "command": "cd apps/web && npx vitest run src/components/home",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-10T21:25:00.000Z",
+      "executed_at": "2026-02-10T21:25:00.000Z",
       "duration_ms": 2230
     },
     {
@@ -92,7 +92,7 @@
       "command": "pnpm --filter @intelliflow/web lint",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-10T21:23:00.000Z",
+      "executed_at": "2026-02-10T21:23:00.000Z",
       "duration_ms": 8000
     },
     {
@@ -100,7 +100,7 @@
       "command": "pnpm --filter @intelliflow/web build",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-10T21:24:00.000Z",
+      "executed_at": "2026-02-10T21:24:00.000Z",
       "duration_ms": 60000
     }
   ],

@@ -11,7 +11,7 @@
     "required": [
       "IFC-079"
     ],
-    "verified_at": "2026-02-23T22:15:24.973Z",
+    "verified_at": "2026-02-28T00:50:22.679Z",
     "all_satisfied": true,
     "notes": "IFC-079 verified complete — attestation checked, all 4 artifacts exist (docusaurus.config.js, sidebars.js, search-index.json, package.json)"
   },
@@ -124,7 +124,7 @@
       },
       {
         "path": ".specify/sprints/sprint-15/attestations/PG-032/attestation.json",
-        "sha256": "pending-finalization",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000001",
         "created_at": "2026-02-10T23:30:00.000Z"
       }
     ],

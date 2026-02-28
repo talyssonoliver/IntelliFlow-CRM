@@ -77,7 +77,7 @@ export const benchmarkEnvironmentSchema = z
     openai_configured: z.boolean().optional().describe('Whether OpenAI API key was configured'),
     ollama_available: z.boolean().optional().describe('Whether Ollama server was available'),
   })
-  .passthrough();
+  .loose();
 
 // Results organized by category
 export const benchmarkResultsSchema = z
@@ -89,7 +89,7 @@ export const benchmarkResultsSchema = z
     build: z.array(benchmarkResultSchema).optional(),
     models: z.array(modelBenchmarkSchema).optional().describe('AI model benchmark results'),
   })
-  .passthrough();
+  .loose();
 
 // KPI validation summary
 export const kpiValidationSchema = z.object({
@@ -110,7 +110,7 @@ export const benchmarkReferencesSchema = z
     lighthouseConfig: z.string().optional(),
     benchmarkScript: z.string().optional(),
   })
-  .passthrough();
+  .loose();
 
 // Main benchmark schema
 export const benchmarkSchema = z.object({
@@ -132,7 +132,7 @@ export const benchmarkSchema = z.object({
   instructions: z.array(z.string()).optional().describe('Instructions (alias for prerequisites)'),
 
   budgets: z
-    .union([z.array(performanceBudgetSchema), z.record(z.string(), z.object({}).passthrough())])
+    .union([z.array(performanceBudgetSchema), z.record(z.string(), z.object({}).loose())])
     .optional()
     .describe('Performance budget definitions - array or object format'),
   results: benchmarkResultsSchema.optional().describe('Benchmark results by category'),

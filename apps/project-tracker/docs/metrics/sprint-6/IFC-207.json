@@ -10,7 +10,7 @@
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-02-23T22:15:24.941Z",
+    "verified_at": "2026-02-28T00:50:22.629Z",
     "required": [
       "IFC-189"
     ]
@@ -21,7 +21,7 @@
     "retry_count": 0,
     "last_error": null,
     "executor": "claude-opus-4-6",
-    "log_path": null
+    "log_path": ".specify/sprints/sprint-6/execution/IFC-207/summary.json"
   },
   "artifacts": {
     "expected": [
@@ -42,7 +42,7 @@
       "command": "pnpm vitest run apps/api/src/modules/ticket",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-14T22:42:58+00:00",
+      "executed_at": "2026-02-14T22:42:58+00:00",
       "duration_ms": 1730
     }
   ],
@@ -71,22 +71,22 @@
       "note": "Task execution started"
     },
     {
-      "status": "Specifying",
+      "status": "In Progress",
       "at": "2026-02-14T22:00:00+00:00",
       "note": "Spec session started — full pipeline"
     },
     {
-      "status": "Spec Complete",
+      "status": "In Progress",
       "at": "2026-02-14T22:10:00+00:00",
       "note": "Spec session completed — 3 agents, consensus 3/3"
     },
     {
-      "status": "Planning",
+      "status": "In Progress",
       "at": "2026-02-14T22:15:00+00:00",
       "note": "Plan session started"
     },
     {
-      "status": "Plan Complete",
+      "status": "In Progress",
       "at": "2026-02-14T22:25:00+00:00",
       "note": "Plan session completed — reviewer APPROVED"
     },

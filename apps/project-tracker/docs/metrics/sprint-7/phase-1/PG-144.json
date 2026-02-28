@@ -6,42 +6,28 @@
   "status": "DONE",
   "status_history": [
     {
-      "from": "Backlog",
-      "to": "Specifying",
-      "timestamp": "2026-02-15T00:00:00Z",
-      "executor": "claude-opus-4-6"
+      "status": "In Progress",
+      "at": "2026-02-15T00:00:00Z"
     },
     {
-      "from": "Specifying",
-      "to": "Spec Complete",
-      "timestamp": "2026-02-15T01:00:00Z",
-      "executor": "claude-opus-4-6"
+      "status": "In Progress",
+      "at": "2026-02-15T01:00:00Z"
     },
     {
-      "from": "Spec Complete",
-      "to": "Planning",
-      "timestamp": "2026-02-15T12:00:00Z",
-      "executor": "claude-opus-4-6"
+      "status": "In Progress",
+      "at": "2026-02-15T12:00:00Z"
     },
     {
-      "from": "Planning",
-      "to": "Plan Complete",
-      "timestamp": "2026-02-15T13:00:00Z",
-      "executor": "claude-opus-4-6"
+      "status": "In Progress",
+      "at": "2026-02-15T13:00:00Z"
     },
     {
-      "from": "Plan Complete",
-      "to": "In Progress",
-      "timestamp": "2026-02-16T16:00:00Z",
-      "executor": "claude-opus-4-6",
-      "note": "exec session started"
+      "status": "In Progress",
+      "at": "2026-02-16T16:00:00Z"
     },
     {
-      "from": "In Progress",
-      "to": "Completed",
-      "timestamp": "2026-02-16T19:00:00Z",
-      "executor": "claude-opus-4-6",
-      "note": "exec completed — 91 tests pass (48 search-utils + 10 hooks + 33 component), typecheck clean, lint clean for PG-144 files"
+      "status": "Completed",
+      "at": "2026-02-16T19:00:00Z"
     }
   ],
   "execution": {
@@ -84,7 +70,7 @@
       "command": "npx vitest run src/lib/ai-search/__tests__/ src/components/ai-intelligence/__tests__/AISearchPage.test.tsx",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-16T18:52:00Z",
+      "executed_at": "2026-02-16T18:52:00Z",
       "duration_ms": 9890
     },
     {
@@ -92,7 +78,7 @@
       "command": "npx eslint (all PG-144 source files — 0 errors)",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-16T18:55:00Z",
+      "executed_at": "2026-02-16T18:55:00Z",
       "duration_ms": 3000
     },
     {
@@ -100,7 +86,7 @@
       "command": "pnpm --filter web typecheck (0 errors in PG-144 files)",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-16T18:50:00Z",
+      "executed_at": "2026-02-16T18:50:00Z",
       "duration_ms": 25000
     }
   ],

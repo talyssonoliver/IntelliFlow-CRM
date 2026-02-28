@@ -111,7 +111,7 @@ export const missingReasonSchema = z.union([
         .object({
           reason: z.string(),
         })
-        .passthrough()
+        .loose()
     )
     .describe('Detailed explanations by artifact key'),
 ]);

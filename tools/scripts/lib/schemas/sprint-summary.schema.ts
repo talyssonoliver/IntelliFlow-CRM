@@ -49,7 +49,7 @@ export const sprintPhaseSchema = z
     task_ids: z.array(z.string()).optional(), // Alternative field for task list
     completed: z.number().optional(), // Completed count
   })
-  .passthrough();
+  .loose();
 
 // Task summary counts
 export const taskSummarySchema = z.object({

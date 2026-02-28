@@ -6,11 +6,11 @@
   "owner": "Platform FE (STOA-Foundation)",
   "status": "DONE",
   "sprint": "sprint-13",
-  "phase": null,
+  "phase": "phase-1",
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-02-23T22:15:25.110Z",
+    "verified_at": "2026-02-28T00:50:22.790Z",
     "required": [
       "PG-016",
       "IFC-006"

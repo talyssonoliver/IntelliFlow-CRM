@@ -4,6 +4,7 @@
   "title": "AI Model Accuracy Benchmarks for Lead Scoring",
   "description": "Real benchmark results from actual Ollama inference operations (IFC-174)",
   "timestamp": "2026-02-22T22:52:49.557Z",
+  "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
     "platform": "win32",
@@ -24,7 +25,7 @@
   "results": {
     "models": [
       {
-        "model_id": "mistral",
+        "model": "mistral",
         "provider": "ollama",
         "accuracy_metrics": {
           "avg_score": 62.87,

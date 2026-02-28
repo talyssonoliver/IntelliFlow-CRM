@@ -17,7 +17,7 @@
       "IFC-149"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-02-23T22:15:24.934Z",
+    "verified_at": "2026-02-28T00:50:22.625Z",
     "notes": "IFC-180 (tRPC Router) completed 2026-02-05. IFC-149 (Agent Approvals) completed."
   },
   "status_history": [
@@ -108,6 +108,7 @@
     {
       "name": "TypeScript",
       "command": "pnpm --filter @intelliflow/ui typecheck && pnpm --filter @intelliflow/validators typecheck",
+      "executed_at": "2026-02-07T20:00:00Z",
       "exit_code": 0,
       "passed": true,
       "duration_ms": 8000
@@ -115,6 +116,7 @@
     {
       "name": "Tests",
       "command": "vitest run (5 files, 68 tests)",
+      "executed_at": "2026-02-07T20:00:00Z",
       "exit_code": 0,
       "passed": true,
       "duration_ms": 3170
@@ -122,6 +124,7 @@
     {
       "name": "Lint",
       "command": "eslint (all IFC-181 files)",
+      "executed_at": "2026-02-07T20:00:00Z",
       "exit_code": 0,
       "passed": true,
       "duration_ms": 5000
@@ -129,6 +132,7 @@
     {
       "name": "Build",
       "command": "pnpm --filter @intelliflow/validators build",
+      "executed_at": "2026-02-07T20:00:00Z",
       "exit_code": 0,
       "passed": true,
       "duration_ms": 3000

@@ -48,7 +48,7 @@
       "IFC-089"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-02-23T22:15:25.112Z",
+    "verified_at": "2026-02-28T00:50:22.792Z",
     "notes": "IFC-003 (tRPC Foundation) and IFC-089 (Entity Routers) both complete"
   },
   "execution": {
@@ -113,7 +113,7 @@
       "command": "pnpm --filter api typecheck",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-06T21:03:00.000Z",
+      "executed_at": "2026-02-06T21:03:00.000Z",
       "duration_ms": 3500
     },
     {
@@ -121,7 +121,7 @@
       "command": "pnpm --filter api test -- --run home.router.test",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-06T21:06:52.000Z",
+      "executed_at": "2026-02-06T21:06:52.000Z",
       "duration_ms": 490
     },
     {
@@ -129,7 +129,7 @@
       "command": "pnpm --filter api lint",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-06T21:04:00.000Z",
+      "executed_at": "2026-02-06T21:04:00.000Z",
       "duration_ms": 4000
     },
     {
@@ -137,7 +137,7 @@
       "command": "pnpm --filter @intelliflow/validators build",
       "exit_code": 0,
       "passed": true,
-      "timestamp": "2026-02-06T21:05:30.000Z",
+      "executed_at": "2026-02-06T21:05:30.000Z",
       "duration_ms": 5000
     }
   ]

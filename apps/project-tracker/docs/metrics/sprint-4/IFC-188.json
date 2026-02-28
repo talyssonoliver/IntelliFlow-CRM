@@ -12,7 +12,7 @@
       "IFC-002",
       "IFC-003"
     ],
-    "verified_at": "2026-02-23T22:15:24.925Z",
+    "verified_at": "2026-02-28T00:50:22.614Z",
     "all_satisfied": true,
     "notes": "IFC-002 (DDD domain models) and IFC-003 (tRPC foundation) are prerequisites"
   },
@@ -32,22 +32,22 @@
       "note": "Initial status from Sprint_plan.csv"
     },
     {
-      "status": "Specifying",
+      "status": "In Progress",
       "at": "2026-02-04T15:00:00.000Z",
       "note": "spec session started via /spec-session command"
     },
     {
-      "status": "Spec Complete",
+      "status": "In Progress",
       "at": "2026-02-04T15:45:00.000Z",
       "note": "spec session completed - 4 agents reached consensus"
     },
     {
-      "status": "Planning",
+      "status": "In Progress",
       "at": "2026-02-05T08:00:00.000Z",
       "note": "plan session started via /plan-session command"
     },
     {
-      "status": "Plan Complete",
+      "status": "In Progress",
       "at": "2026-02-05T08:30:00.000Z",
       "note": "plan session completed - TDD execution plan generated with 4 phases, 225 min PERT estimate"
     },
@@ -125,7 +125,7 @@
       "command": "npx vitest run --project=root packages/domain/src/crm/ticket",
       "exit_code": 0,
       "passed": true,
-      "at": "2026-02-05T18:23:00.000Z",
+      "executed_at": "2026-02-05T18:23:00.000Z",
       "notes": "119 tests passed (25 TicketId, 25 TicketEvents, 69 Ticket)"
     },
     {
@@ -133,7 +133,7 @@
       "command": "npx vitest run --project=root packages/domain/src/crm/ticket --coverage --coverage.include='packages/domain/src/crm/ticket/**/*.ts'",
       "exit_code": 0,
       "passed": true,
-      "at": "2026-02-05T18:22:30.000Z",
+      "executed_at": "2026-02-05T18:22:30.000Z",
       "notes": "95.21% statements, 98.73% lines - exceeds >95% target"
     },
     {
@@ -141,7 +141,7 @@
       "command": "pnpm --filter @intelliflow/domain typecheck",
       "exit_code": 0,
       "passed": true,
-      "at": "2026-02-05T18:22:45.000Z",
+      "executed_at": "2026-02-05T18:22:45.000Z",
       "notes": "No TypeScript errors in domain package"
     },
     {
@@ -149,7 +149,7 @@
       "command": "pnpm --filter @intelliflow/domain lint",
       "exit_code": 0,
       "passed": true,
-      "at": "2026-02-05T18:23:15.000Z",
+      "executed_at": "2026-02-05T18:23:15.000Z",
       "notes": "No lint errors"
     },
     {
@@ -157,7 +157,7 @@
       "command": "pnpm --filter @intelliflow/domain build",
       "exit_code": 0,
       "passed": true,
-      "at": "2026-02-05T18:22:00.000Z",
+      "executed_at": "2026-02-05T18:22:00.000Z",
       "notes": "Clean build with DTS generation"
     }
   ],

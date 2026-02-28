@@ -23,7 +23,7 @@ export const eventContextSchema = z
       .optional()
       .describe('Non-PII stable identifier (UUID). Do not use email/name.'),
   })
-  .passthrough();
+  .loose();
 
 // Main analytics event schema
 export const analyticsEventSchema = z.object({

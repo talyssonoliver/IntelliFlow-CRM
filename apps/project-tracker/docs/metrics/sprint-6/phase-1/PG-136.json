@@ -16,7 +16,7 @@
       "IFC-187"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-02-23T22:15:24.936Z",
+    "verified_at": "2026-02-28T00:50:22.626Z",
     "notes": "IFC-187 (Task tRPC Router) marked Completed. All 10 endpoints available in router (create, getById, list, update, delete, complete, assign, reschedule, getReminders, getByEntity)."
   },
   "status_history": [
@@ -26,12 +26,12 @@
       "note": "Task created during sprint planning"
     },
     {
-      "status": "Specifying",
+      "status": "In Progress",
       "at": "2026-02-09T22:00:00.000Z",
       "note": "Spec session started. Agents: Frontend-Lead, Domain-Expert, Test-Engineer, A11y-Expert"
     },
     {
-      "status": "Spec Complete",
+      "status": "In Progress",
       "at": "2026-02-09T23:00:00.000Z",
       "note": "Spec session completed. 4/4 agents approved."
     },
@@ -120,6 +120,7 @@
     {
       "name": "TypeScript",
       "command": "pnpm --filter @intelliflow/web typecheck",
+      "executed_at": "2026-02-10T23:35:00Z",
       "exit_code": 0,
       "passed": true,
       "duration_ms": 15000
@@ -127,6 +128,7 @@
     {
       "name": "Tests",
       "command": "npx vitest run src/components/tasks/__tests__/",
+      "executed_at": "2026-02-10T23:35:00Z",
       "exit_code": 0,
       "passed": true,
       "duration_ms": 2010
@@ -134,6 +136,7 @@
     {
       "name": "Lint",
       "command": "pnpm --filter @intelliflow/web lint (task files)",
+      "executed_at": "2026-02-10T23:35:00Z",
       "exit_code": 0,
       "passed": true,
       "duration_ms": 8000
@@ -141,6 +144,7 @@
     {
       "name": "Build",
       "command": "pnpm --filter @intelliflow/web build",
+      "executed_at": "2026-02-10T23:35:00Z",
       "exit_code": 0,
       "passed": true,
       "duration_ms": 63124

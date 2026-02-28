@@ -186,7 +186,7 @@ export const attestationSchema = z.object({
             verified: z.boolean().optional(),
             verification_method: z.string().optional(),
           })
-          .passthrough()
+          .loose()
       ),
     ])
     .optional()

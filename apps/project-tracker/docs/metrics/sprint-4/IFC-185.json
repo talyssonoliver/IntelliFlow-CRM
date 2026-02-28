@@ -17,22 +17,22 @@
       "note": "Initial status"
     },
     {
-      "status": "Specifying",
+      "status": "In Progress",
       "at": "2026-02-04T00:00:00.000Z",
       "note": "spec session started"
     },
     {
-      "status": "Spec Complete",
+      "status": "In Progress",
       "at": "2026-02-04T01:00:00.000Z",
       "note": "spec session completed"
     },
     {
-      "status": "Planning",
+      "status": "In Progress",
       "at": "2026-02-05T00:00:00.000Z",
       "note": "plan session started"
     },
     {
-      "status": "Plan Complete",
+      "status": "In Progress",
       "at": "2026-02-05T01:00:00.000Z",
       "note": "plan session completed"
     },
@@ -95,7 +95,7 @@
     ],
     "pending": [],
     "all_satisfied": true,
-    "verified_at": "2026-02-23T22:15:24.924Z",
+    "verified_at": "2026-02-28T00:50:22.613Z",
     "required": [
       "IFC-103",
       "IFC-107",
