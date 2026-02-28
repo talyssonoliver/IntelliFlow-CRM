@@ -2393,6 +2393,62 @@ gate_profiles:
     description: 'Architecture boundary tests'
     required: true
 
+DOC-002:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+  acceptance_owner: 'DevRel Lead'
+  debt_allowed: no
+  evidence_required:
+    - docs/design/sitemap.md
+    - apps/web/src/app/sitemap.ts
+    - apps/web/src/app/robots.ts
+  notes: 'Sitemap and robots.ts generation. 32 tests, 100% coverage.'
+
+DOC-007:
+  tier: A
+  gate_profile:
+    - manual_review
+    - a11y_audit
+  acceptance_owner: 'QA Lead'
+  debt_allowed: no
+  evidence_required:
+    - docs/compliance/accessibility-gap-assessment.md
+    - artifacts/reports/accessibility-audit-results.json
+  notes: 'WCAG 2.1 AA gap assessment. 16 failures fixed, 56% to 96% conformance.'
+
+DOC-008:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - a11y_audit
+  acceptance_owner: 'QA Lead'
+  debt_allowed: no
+  evidence_required:
+    - docs/compliance/vpat-2.5.md
+    - docs/compliance/wcag-conformance-statement.md
+    - tests/a11y/axe-core.spec.ts
+    - docs/planning/adr/ADR-038-accessibility-architecture.md
+  notes: 'VPAT 2.5, conformance statement, axe-core test suite, ADR-038.'
+
+DOC-009:
+  tier: A
+  gate_profile:
+    - manual_review
+    - docs_build
+  acceptance_owner: 'DevRel Lead'
+  debt_allowed: no
+  evidence_required:
+    - docs/design/content-audit.md
+    - artifacts/reports/content-audit-results.json
+  notes: 'Content audit framework. 103 routes inventoried, SEO + stale content detection.'
+
 # -----------------------------------------------------------------------------
 # METADATA
 # -----------------------------------------------------------------------------
@@ -2400,11 +2456,11 @@ gate_profiles:
 _meta:
   description: 'Plan overrides for Sprint plan validation and governance'
   created: '2025-12-17'
-  updated: '2026-02-17'
+  updated: '2026-02-27'
   author: 'Plan Linter System'
   version: '2.0.0'
   sprint_scope: 'all'
-  total_overrides: 91
+  total_overrides: 95
   cycles_fixed: 2
   cross_sprint_fixes: 25
-  tier_a_definitions: 65
+  tier_a_definitions: 69

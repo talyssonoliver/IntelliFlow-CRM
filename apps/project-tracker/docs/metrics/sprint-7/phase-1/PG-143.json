@@ -33,7 +33,7 @@
       "IFC-181"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-02-23T22:15:25.073Z"
+    "verified_at": "2026-02-28T00:57:23.748Z"
   },
   "execution": {
     "started_at": "2026-02-14T23:30:00Z",
@@ -56,7 +56,8 @@
       "apps/web/src/components/ai-intelligence/RiskIndicators.tsx",
       "apps/web/src/components/ai-intelligence/ChurnTrendChart.tsx",
       "apps/web/src/components/ai-intelligence/InterventionAlerts.tsx",
-      "apps/web/src/components/ai-intelligence/__tests__/ChurnDashboard.test.tsx"
+      "apps/web/src/components/ai-intelligence/__tests__/ChurnDashboard.test.tsx",
+      "apps/web/src/lib/churn-risk/churn-utils.ts"
     ],
     "created": [
       "apps/web/src/app/agent-approvals/churn-risk/page.tsx",
@@ -65,7 +66,8 @@
       "apps/web/src/components/ai-intelligence/RiskIndicators.tsx",
       "apps/web/src/components/ai-intelligence/ChurnTrendChart.tsx",
       "apps/web/src/components/ai-intelligence/InterventionAlerts.tsx",
-      "apps/web/src/components/ai-intelligence/__tests__/ChurnDashboard.test.tsx"
+      "apps/web/src/components/ai-intelligence/__tests__/ChurnDashboard.test.tsx",
+      "apps/web/src/lib/churn-risk/churn-utils.ts"
     ],
     "missing": []
   },
@@ -116,7 +118,7 @@
     }
   },
   "blockers": [],
-  "notes": "PG-143 Churn Risk Dashboard implemented following PG-142 Sentiment Dashboard pattern. All 7 component files created plus test file. 28 tests passing across 4 categories: Rendering (9), Data Display (7), Interactions (7), Edge Cases (5). tRPC endpoint getChurnDashboard added to intelligence router. No regressions in web (4865 tests) or API suites. Lighthouse KPI deferred to integration testing as it requires a running development server.",
+  "notes": "PG-143 Churn Risk Dashboard implemented following PG-142 Sentiment Dashboard pattern. All 7 component files created plus test file plus churn-utils.ts (canonical at lib/churn-risk/churn-utils.ts, not components/ai-intelligence/ as originally planned). 28 tests passing across 4 categories: Rendering (9), Data Display (7), Interactions (7), Edge Cases (5). tRPC endpoint getChurnDashboard added to intelligence router. No regressions in web (4865 tests) or API suites. Lighthouse KPI deferred to integration testing as it requires a running development server. Path correction: dead re-export shim at components/ai-intelligence/churn-utils.ts removed; artifacts updated to reference canonical lib/churn-risk/churn-utils.ts.",
   "dependencies_resolved": [
     "IFC-095",
     "IFC-181"

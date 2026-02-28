@@ -9,7 +9,7 @@
   "stream": "parallel-c",
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-02-23T22:15:24.870Z",
+    "verified_at": "2026-02-28T00:57:23.549Z",
     "required": [
       "ENV-001-AI",
       "ENV-002-AI"

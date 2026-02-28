@@ -5,7 +5,7 @@
   "description": "Billing Portal",
   "owner": "Platform BE (STOA-Foundation)",
   "sprint": "sprint-14",
-  "phase": null,
+  "phase": "phase-1",
   "stream": null,
   "dependencies": {
     "required": [
@@ -13,7 +13,7 @@
       "IFC-198"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-02-23T22:15:24.951Z"
+    "verified_at": "2026-02-28T00:57:23.638Z"
   },
   "status": "DONE",
   "started_at": "2026-02-14T20:00:00.000Z",
@@ -22,22 +22,22 @@
   "actual_duration_minutes": 270,
   "status_history": [
     {
-      "status": "Specifying",
+      "status": "In Progress",
       "at": "2026-02-14T20:00:00.000Z",
       "note": "spec session started"
     },
     {
-      "status": "Spec Complete",
+      "status": "In Progress",
       "at": "2026-02-14T21:00:00.000Z",
       "note": "spec session completed"
     },
     {
-      "status": "Planning",
+      "status": "In Progress",
       "at": "2026-02-14T22:00:00.000Z",
       "note": "plan session started"
     },
     {
-      "status": "Plan Complete",
+      "status": "In Progress",
       "at": "2026-02-14T23:30:00.000Z",
       "note": "plan session completed — plan reviewer APPROVED"
     },
@@ -86,6 +86,7 @@
     {
       "name": "TypeScript",
       "command": "pnpm typecheck",
+      "executed_at": "2026-02-17T23:55:00Z",
       "exit_code": 0,
       "passed": true,
       "duration_ms": 45000
@@ -93,6 +94,7 @@
     {
       "name": "Tests",
       "command": "npx vitest run --environment jsdom apps/web/src/components/billing/__tests__/billing-portal.test.tsx",
+      "executed_at": "2026-02-17T23:55:00Z",
       "exit_code": 0,
       "passed": true,
       "duration_ms": 2760
@@ -100,6 +102,7 @@
     {
       "name": "Lint",
       "command": "npx eslint apps/web/src/components/billing/billing-portal.tsx",
+      "executed_at": "2026-02-17T23:55:00Z",
       "exit_code": 0,
       "passed": true,
       "duration_ms": 5000
@@ -107,6 +110,7 @@
     {
       "name": "Build",
       "command": "pnpm --filter web build",
+      "executed_at": "2026-02-17T23:55:00Z",
       "exit_code": 0,
       "passed": true,
       "duration_ms": 120000
