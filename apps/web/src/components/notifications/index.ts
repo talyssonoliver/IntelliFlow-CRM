@@ -1,6 +1,8 @@
 // Components
 export { NotificationList } from './NotificationList';
 export { NotificationItem } from './NotificationItem';
+export { NotificationFilters } from './NotificationFilters';
+export type { NotificationFiltersProps } from './NotificationFilters';
 export { NotificationBell } from './NotificationBell';
 export { NotificationItemSkeleton } from './NotificationItemSkeleton';
 
