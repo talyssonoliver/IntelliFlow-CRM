@@ -144,16 +144,11 @@ export {
   resolveBlocker,
   generateHumanPacket,
   saveHumanPacket,
-  loadDebtLedger,
-  saveDebtLedger,
-  createDebtEntry,
-  appendToDebtLedger,
   processVerdictRemediation,
   generateRemediationReport,
   type ReviewQueueItem,
   type BlockerRecord,
   type HumanPacket,
-  type DebtLedgerEntry,
   type RemediationResult,
 } from './remediation.js';
 

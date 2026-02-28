@@ -73,6 +73,6 @@ Write verdict JSON to:
 
 - Run ALL Tier 1 gates regardless of individual results
 - Log each gate's stdout/stderr to evidence files
-- If a non-Tier-1 gate command is not available, create a waiver record. Tier 1 gates (typecheck, build, lint) can NEVER be waived.
+- If a non-Tier-1 gate command is not available, document the gap in findings. Tier 1 gates (typecheck, build, lint) can NEVER be waived.
 - Report exact exit codes and durations for each gate
 - FAIL verdict blocks task completion — issues must be fixed

@@ -1,7 +1,7 @@
 /**
  * STOA Remediation Workflow
  *
- * Implements structured follow-ups for WARN/FAIL/NEEDS_HUMAN outcomes
+ * Implements structured follow-ups for FAIL/NEEDS_HUMAN outcomes
  * as defined in Framework.md Section 6.2 and 7.
  *
  * @module tools/scripts/lib/stoa/remediation
@@ -60,19 +60,6 @@ export interface HumanPacket {
   status: 'pending' | 'acknowledged' | 'resolved';
 }
 
-export interface DebtLedgerEntry {
-  id: string;
-  taskId: string;
-  runId: string;
-  type: 'technical_debt' | 'waiver_debt' | 'coverage_gap' | 'quality_gap';
-  description: string;
-  severity: 'low' | 'medium' | 'high';
-  estimatedEffort: string | null;
-  createdAt: string;
-  dueBy: string | null;
-  resolvedAt: string | null;
-}
-
 // ============================================================================
 // Review Queue Management
 // ============================================================================
@@ -120,7 +107,7 @@ export function createReviewQueueItem(
     runId,
     verdict: verdict.verdict,
     stoa: verdict.stoa,
-    severity: isBlocking ? 'blocking' : verdict.verdict === 'WARN' ? 'warning' : 'info',
+    severity: isBlocking ? 'blocking' : 'info',
     summary: verdict.rationale,
     findings: verdict.findings,
     createdAt: new Date().toISOString(),
@@ -354,60 +341,6 @@ pnpm matop ${packet.taskId}
 }
 
 // ============================================================================
-// Debt Ledger Management
-// ============================================================================
-
-const DEBT_LEDGER_PATH = 'artifacts/reports/debt-ledger.json';
-
-export function loadDebtLedger(repoRoot: string): DebtLedgerEntry[] {
-  const ledgerPath = join(repoRoot, DEBT_LEDGER_PATH);
-  if (!existsSync(ledgerPath)) {
-    return [];
-  }
-  try {
-    return JSON.parse(readFileSync(ledgerPath, 'utf-8'));
-  } catch {
-    return [];
-  }
-}
-
-export function saveDebtLedger(repoRoot: string, ledger: DebtLedgerEntry[]): void {
-  const ledgerPath = join(repoRoot, DEBT_LEDGER_PATH);
-  mkdirSync(dirname(ledgerPath), { recursive: true });
-  writeFileSync(ledgerPath, JSON.stringify(ledger, null, 2));
-}
-
-export function createDebtEntry(
-  taskId: string,
-  runId: string,
-  type: DebtLedgerEntry['type'],
-  description: string,
-  severity: DebtLedgerEntry['severity'],
-  dueBy?: string
-): DebtLedgerEntry {
-  const id = `DEBT-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-  return {
-    id,
-    taskId,
-    runId,
-    type,
-    description,
-    severity,
-    estimatedEffort: null,
-    createdAt: new Date().toISOString(),
-    dueBy: dueBy || null,
-    resolvedAt: null,
-  };
-}
-
-export function appendToDebtLedger(repoRoot: string, entry: DebtLedgerEntry): void {
-  const ledger = loadDebtLedger(repoRoot);
-  ledger.push(entry);
-  saveDebtLedger(repoRoot, ledger);
-}
-
-// ============================================================================
 // Unified Remediation Handler
 // ============================================================================
 
@@ -415,7 +348,6 @@ export interface RemediationResult {
   reviewQueueItem?: ReviewQueueItem;
   blocker?: BlockerRecord;
   humanPacket?: HumanPacket;
-  debtEntries: DebtLedgerEntry[];
   actions: string[];
 }
 
@@ -424,7 +356,6 @@ export interface RemediationResult {
  *
  * Based on Framework.md Section 6.2:
  * - PASS → Close review queue items for task
- * - WARN → Create Review Queue entry + optional Debt Ledger entry
  * - FAIL → Create Review Queue item with "blocking" flag
  * - NEEDS_HUMAN → Produce Human Packet and halt retries
  */
@@ -436,7 +367,6 @@ export function processVerdictRemediation(
   gateResults: Array<{ toolId: string; exitCode: number; logPath: string }>
 ): RemediationResult {
   const result: RemediationResult = {
-    debtEntries: [],
     actions: [],
   };
 
@@ -445,33 +375,6 @@ export function processVerdictRemediation(
       // Close any open review queue items for this task
       closeReviewQueueItems(repoRoot, verdict.taskId, runId);
       result.actions.push(`Closed review queue items for ${verdict.taskId}`);
-      break;
-
-    case 'WARN':
-      // Create Review Queue entry
-      result.reviewQueueItem = createReviewQueueItem(verdict, runId, false);
-      appendToReviewQueue(repoRoot, result.reviewQueueItem);
-      result.actions.push(`Created review queue item: ${result.reviewQueueItem.id}`);
-
-      // Create debt entries for waiver-related findings
-      for (const finding of verdict.findings) {
-        if (finding.source.includes('waiver') || finding.severity === 'medium') {
-          const debt = createDebtEntry(
-            verdict.taskId,
-            runId,
-            'waiver_debt',
-            `${finding.source}: ${finding.message}`,
-            'medium',
-            // Set due date 30 days from now for waiver debt
-            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-          );
-          appendToDebtLedger(repoRoot, debt);
-          result.debtEntries.push(debt);
-        }
-      }
-      if (result.debtEntries.length > 0) {
-        result.actions.push(`Created ${result.debtEntries.length} debt ledger entries`);
-      }
       break;
 
     case 'FAIL':
@@ -586,25 +489,11 @@ export function generateRemediationReport(result: RemediationResult, verdict: St
     report += `See: \`artifacts/human-intervention-required/${verdict.taskId}-*.md\`\n\n`;
   }
 
-  if (result.debtEntries.length > 0) {
-    report += `### Technical Debt Recorded\n\n`;
-    for (const debt of result.debtEntries) {
-      report += `- **${debt.id}**: ${debt.description} (${debt.severity})\n`;
-    }
-    report += '\n';
-  }
-
   // Add resolution guidance based on verdict
   report += `### Next Steps\n\n`;
   switch (verdict.verdict) {
     case 'PASS':
       report += `Task has passed validation. No action required.\n`;
-      break;
-    case 'WARN':
-      report += `1. Review the findings above\n`;
-      report += `2. Address any debt entries before their due date\n`;
-      report += `3. Consider approving pending waivers if justified\n`;
-      report += `4. Re-run validation: \`pnpm matop ${verdict.taskId}\`\n`;
       break;
     case 'FAIL':
       report += `1. Review failed gates and their logs\n`;

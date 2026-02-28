@@ -26,7 +26,7 @@ Before reviewing, you MUST read:
 3. The **Sprint_plan.csv** row for the task (Artifacts To Track, KPIs,
    Definition of Done)
 
-## Review Checklist (29 Categories)
+## Review Checklist (33 Categories)
 
 ### A. Files Summary Accuracy (CRITICAL — caught in PG-032)
 
@@ -295,6 +295,84 @@ Before reviewing, you MUST read:
      architectural decisions should be documented
 103. Plan's "Files to Create" or "Files to Modify" must include any PRD/ADR paths that
      were created or updated during spec-session. Missing from plan file lists → **WARN**
+
+### CC. Page Documentation Co-Change Enforcement (CRITICAL — prevents doc drift)
+
+104. Scan ALL plan steps for any `page.tsx` in "Files to Create:" sections
+105. If ANY `page.tsx` is being created:
+     - Verify `docs/design/PAGE_MAP_AND_FLOWS.md` appears in "Files to Modify:" → if missing → **ERROR**
+       ("New page(s) created without PAGE_MAP_AND_FLOWS.md update — doc will drift from filesystem.
+       Add a plan step to update the Summary Statistics table and add route entries for each new page.")
+     - Verify `apps/web/src/app/__tests__/sitemap-reconciliation.test.ts` appears in "Files to Modify:"
+       → if missing → **WARN** ("TC-25 regression guard count may need updating for new pages")
+106. If plan creates pages under NEW route prefixes not in the existing PAGE_MAP:
+     - Verify plan includes a step to add a NEW SECTION to PAGE_MAP → if missing → **ERROR**
+       ("New module routes require a new section in PAGE_MAP_AND_FLOWS.md")
+107. If plan creates pages, verify plan includes updating `docs/design/sitemap.md` total count
+     → if missing → **WARN** ("sitemap.md total page count will go stale")
+108. Cross-check: if plan modifies PAGE_MAP but does NOT create any `page.tsx`, verify the
+     plan is a documentation-only task (DOC-*) → if NOT → **INFO** ("PAGE_MAP modified without
+     new pages — confirm this is intentional")
+
+### DD. Exhaustive vs Sampling Language (caught in DOC-005)
+
+109. For each plan step that reads or processes a set of items, check if the step
+     uses sampling language: "sample", "random subset", "20-30 of", "pick N",
+     "representative set", "subset of"
+110. Cross-reference the matching spec AC — does it say "all", "every", "each",
+     or specify an exact count?
+111. If spec requires exhaustive coverage but plan uses sampling → **ERROR**
+112. If plan says "sample N of M" but spec says "all M" → **ERROR** — change to
+     "ALL M" in the plan step
+
+### EE. Duplicate Detection Across Monorepo (CRITICAL — caught in Knip cleanup sprint)
+
+113. For EACH file in "Files to Create", search the monorepo for files with the same
+     basename: `Glob **/<filename>` (e.g., if plan creates `retry-policy.ts`, search
+     for `**/retry-policy.ts`)
+114. If a match exists in a shared package (`packages/*`), verify the plan file isn't
+     duplicating existing functionality. Read both files — if >80% similar → **ERROR**
+     ("Duplicate of `<existing-path>` — import from the existing package instead of
+     creating a local copy")
+115. Types/interfaces that already exist in `@intelliflow/domain` or `@intelliflow/validators`
+     MUST be imported, not redefined locally → **ERROR** if redefined
+116. If creating a barrel `index.ts` that only re-exports from another barrel, verify the
+     source barrel isn't already importable directly → if it is → **WARN** ("unnecessary
+     indirection — consumers can import from source directly")
+
+### FF. Cross-Step Import Chain Verification (CRITICAL — caught in Knip cleanup sprint)
+
+117. For each "supporting" file in the plan (fixtures, utils, barrels, re-export files),
+     identify which LATER step/file is expected to import from it
+118. The plan MUST explicitly state the consumer in the step description or validation
+     checkbox. E.g., Step 3.1 creates `case-data.ts` → Step 3.2 MUST say "import
+     fixtures from `case-data.ts`" in its description
+119. If a file is created but NO later step references importing from it → **ERROR**
+     ("File `<path>` has no planned consumer — either wire it in a later step or remove
+     it from the plan")
+120. Specific sub-checks:
+     - **Barrel files** (`index.ts`): At least one step must import from the barrel path
+     - **Test fixtures**: The corresponding test step must explicitly import the fixture
+     - **Server actions** (`'use server'`): A client component step must import and call it
+     - **Handler factories**: A server/router step must mount the handler
+121. A fixture file that each test re-invents inline (instead of importing) means the
+     fixture is dead → plan should either remove the fixture OR explicitly state tests
+     import from it
+
+### GG. Wiring Verification for Runtime Code (caught in Knip cleanup sprint)
+
+122. For each created file that exports functions/classes/handlers:
+     - If it's a **server action** (`'use server'`): plan MUST include a step where a
+       client component imports and calls the exported function. Empty stub handlers
+       (`onDelete: () => {}`) next to a feature they should use → **ERROR**
+     - If it's an **API handler/endpoint factory**: plan MUST include a step where the
+       handler is mounted on an HTTP server or router. Creating handlers with no server
+       to mount them on → **ERROR**
+     - If it's a **service class**: plan MUST include a container registration step
+       (already covered by Phase 2.5 container check, but verify it's in the plan)
+123. For barrels and re-export files: at least one consumer must be identified in the plan.
+     If the plan creates a barrel but all consumers import directly from source files
+     → **WARN** ("barrel will be dead code — remove it or update consumer imports")
 
 ## Output Format
 

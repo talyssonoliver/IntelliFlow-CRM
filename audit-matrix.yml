@@ -318,15 +318,26 @@ tools:
   # Tier 3 scheduled/manual
   # ---------------------------------------------------------------------------
   - id: lighthouse-ci
-    tier: 3
-    enabled: false
-    required: false
+    tier: 2
+    enabled: true
+    required: true
     owner: 'Performance Engineer'
     scope: 'workspace'
     command: 'pnpm exec lighthouse-ci autorun'
     thresholds:
       performance_min: 90
+      accessibility_min: 90
     expected_outputs: ['log', 'json']
+
+  - id: cadence-freshness
+    tier: 3
+    enabled: true
+    required: false
+    owner: 'PM'
+    scope: 'repo'
+    command: 'npx tsx tools/scripts/check-cadence-freshness.ts'
+    thresholds: {}
+    expected_outputs: ['json']
 
   - id: k6
     tier: 3
