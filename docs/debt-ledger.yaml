@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-last_updated: 2025-12-29
+last_updated: 2026-02-28
 maintainer: Tech Lead
 items:
   DEBT-001:
@@ -225,7 +225,7 @@ items:
     origin_task: IFC-096
     owner: Tech Lead
     severity: critical
-    description: 'Validation failed: pnpm build (exit code: 124)'
+    description: "Validation failed: pnpm build (exit code: 124)"
     created_at: 2025-12-29T14:34:38.107Z
     expiry_date: 2026-01-28
     remediation_plan: Fix issues causing "pnpm build" to fail
@@ -255,7 +255,7 @@ items:
     origin_task: IFC-145
     owner: Tech Lead
     severity: critical
-    description: 'Validation failed: pnpm test (exit code: 124)'
+    description: "Validation failed: pnpm test (exit code: 124)"
     created_at: 2025-12-29T15:27:16.023Z
     expiry_date: 2026-01-28
     remediation_plan: Fix issues causing "pnpm test" to fail
@@ -265,32 +265,197 @@ items:
     origin_task: IFC-151
     owner: Tech Lead
     severity: critical
-    description: 'Validation failed: pnpm test (exit code: 124)'
+    description: "Validation failed: pnpm test (exit code: 124)"
     created_at: 2025-12-29T15:33:37.120Z
     expiry_date: 2026-01-28
     remediation_plan: Fix issues causing "pnpm test" to fail
     remediation_sprint: 0
     status: open
+  FAIL-EXC-INIT-001-001:
+    origin_task: EXC-INIT-001
+    owner: Tech Lead
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T00:39:13.618Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-AI-SETUP-001-001:
+    origin_task: AI-SETUP-001
+    owner: AI Specialist
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T00:40:14.294Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-AI-SETUP-003-001:
+    origin_task: AI-SETUP-003
+    owner: AI Specialist
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T00:41:16.182Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-ENV-001-AI-001:
+    origin_task: ENV-001-AI
+    owner: Tech Lead
+    severity: critical
+    description: "Validation failed: pnpm build (exit code: 124)"
+    created_at: 2026-02-28T00:42:16.952Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm build" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-ENV-001-AI-002:
+    origin_task: ENV-001-AI
+    owner: Tech Lead
+    severity: medium
+    description: 7 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T00:42:16.952Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-ENV-006-AI-001:
+    origin_task: ENV-006-AI
+    owner: Backend Dev
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T00:43:36.938Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  MISS-ENV-009-AI-001:
+    origin_task: ENV-009-AI
+    owner: Frontend Dev
+    severity: critical
+    description: Task ENV-009-AI has no verified artifacts
+    created_at: 2026-02-28T00:43:37.011Z
+    expiry_date: 2026-03-30
+    remediation_plan: Create all required artifacts listed in Sprint_plan.csv
+    remediation_sprint: 0
+    status: open
+  FAIL-ENV-010-AI-001:
+    origin_task: ENV-010-AI
+    owner: QA Lead
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T00:44:39.165Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-ENV-010-AI-002:
+    origin_task: ENV-010-AI
+    owner: QA Lead
+    severity: medium
+    description: 7 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T00:44:39.165Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  MISS-ENV-011-AI-001:
+    origin_task: ENV-011-AI
+    owner: AI Specialist
+    severity: critical
+    description: Task ENV-011-AI has no verified artifacts
+    created_at: 2026-02-28T00:44:39.187Z
+    expiry_date: 2026-03-30
+    remediation_plan: Create all required artifacts listed in Sprint_plan.csv
+    remediation_sprint: 0
+    status: open
+  FAIL-ENV-015-AI-001:
+    origin_task: ENV-015-AI
+    owner: Backend Dev
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T00:45:41.291Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  FAIL-IFC-044-001:
+    origin_task: IFC-044
+    owner: Backend Dev
+    severity: critical
+    description: "Validation failed: pnpm test (exit code: 124)"
+    created_at: 2026-02-28T00:46:43.878Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm test" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-044-002:
+    origin_task: IFC-044
+    owner: Backend Dev
+    severity: medium
+    description: 7 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T00:46:43.878Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
+  FAIL-DOC-001-001:
+    origin_task: DOC-001
+    owner: CEO + All Leads
+    severity: critical
+    description: "Validation failed: pnpm lint (exit code: 124)"
+    created_at: 2026-02-28T00:47:45.942Z
+    expiry_date: 2026-03-30
+    remediation_plan: Fix issues causing "pnpm lint" to fail
+    remediation_sprint: 0
+    status: open
+  PLCH-IFC-160-001:
+    origin_task: IFC-160
+    owner: Tech Lead
+    severity: medium
+    description: 2 placeholder(s) found in task artifacts
+    created_at: 2026-02-28T00:49:12.038Z
+    expiry_date: 2026-03-30
+    remediation_plan: Remove TODO, FIXME, STUB comments and implement placeholder code
+    remediation_sprint: 0
+    status: open
 summary:
-  total_items: 18
+  total_items: 33
   by_severity:
-    critical: 6
+    critical: 17
     high: 0
-    medium: 5
+    medium: 9
     low: 7
   by_status:
-    open: 18
+    open: 32
     in_progress: 0
-    resolved: 0
+    resolved: 1
     wont_fix: 0
   expiring_soon:
-    - DEBT-009
-    - MISS-IFC-096-001
-    - FAIL-IFC-096-002
-    - MISS-IFC-108-001
-    - MISS-IFC-110-001
-    - FAIL-IFC-145-001
-    - FAIL-IFC-151-001
+    - DEBT-002
+    - DEBT-005
+    - DEBT-006
+    - DEBT-007
+    - DEBT-008
+    - DEBT-011
+    - DEBT-012
+    - FAIL-EXC-INIT-001-001
+    - FAIL-AI-SETUP-001-001
+    - FAIL-AI-SETUP-003-001
+    - FAIL-ENV-001-AI-001
+    - PLCH-ENV-001-AI-002
+    - FAIL-ENV-006-AI-001
+    - MISS-ENV-009-AI-001
+    - FAIL-ENV-010-AI-001
+    - PLCH-ENV-010-AI-002
+    - MISS-ENV-011-AI-001
+    - FAIL-ENV-015-AI-001
+    - FAIL-IFC-044-001
+    - PLCH-IFC-044-002
+    - FAIL-DOC-001-001
+    - PLCH-IFC-160-001
 review_schedule:
   cadence: weekly
   next_review: 2025-12-24
@@ -304,5 +469,5 @@ review_schedule:
 alerts:
   expiry_warning_days: 30
   notification_channels:
-    - slack: '#tech-debt'
+    - slack: "#tech-debt"
     - email: tech-lead@intelliflow.dev
