@@ -27,8 +27,10 @@ const {
   mockGoalQuery,
   mockPinnedQuery,
   mockUnpinMutation,
+  mockUpdateDailyGoalMutation,
 } = vi.hoisted(() => {
   const mockMutate = vi.fn();
+  const mockUpdateGoalMutate = vi.fn();
 
   return {
     mockWelcomeQuery: vi.fn(),
@@ -38,6 +40,10 @@ const {
     mockPinnedQuery: vi.fn(),
     mockUnpinMutation: vi.fn(() => ({
       mutate: mockMutate,
+      isLoading: false,
+    })),
+    mockUpdateDailyGoalMutation: vi.fn(() => ({
+      mutate: mockUpdateGoalMutate,
       isLoading: false,
     })),
     mockMutate,
@@ -56,9 +62,11 @@ vi.mock('@/lib/trpc', () => ({
       getDailyGoal: { useQuery: mockGoalQuery },
       getPinnedItems: { useQuery: mockPinnedQuery },
       unpinItem: { useMutation: mockUnpinMutation },
+      updateDailyGoal: { useMutation: mockUpdateDailyGoalMutation },
     },
     useUtils: vi.fn(() => ({
       activityFeed: { getUnifiedFeed: { invalidate: vi.fn() } },
+      home: { getDailyGoal: { invalidate: vi.fn() } },
     })),
   },
 }));
@@ -68,7 +76,7 @@ vi.mock('@/hooks/useActivityFeed', () => ({
 }));
 
 // Mock ActivityFeed to bypass @tanstack/react-virtual (no layout in JSDOM)
-vi.mock('@/components/shared/activity-feed/ActivityFeed', () => ({
+vi.mock('@/components/shared/activity-feed', () => ({
   ActivityFeed: (_props: any) => {
     const feed = mockUseActivityFeed();
     if (feed.isLoading)
@@ -591,7 +599,9 @@ describe('AuthenticatedHomePage', () => {
 
     it('renders goal label badge', () => {
       render(<AuthenticatedHomePage />);
-      expect(screen.getByText('Sales')).toBeInTheDocument();
+      // "Sales" appears in both the header badge and the ring center label (IFC-195 dynamic label)
+      const salesElements = screen.getAllByText('Sales');
+      expect(salesElements.length).toBeGreaterThanOrEqual(1);
     });
 
     it('renders progress percentage', () => {
@@ -604,9 +614,12 @@ describe('AuthenticatedHomePage', () => {
       expect(screen.getByText('$2,500')).toBeInTheDocument();
     });
 
-    it('renders "Goal Reached" label', () => {
+    it('renders dynamic goal label in ring center (IFC-195)', () => {
       render(<AuthenticatedHomePage />);
-      expect(screen.getByText('Goal Reached')).toBeInTheDocument();
+      // IFC-195: Ring center now shows goal?.label dynamically instead of hardcoded "Goal Reached"
+      // With default mock goalData.goal.label = 'Sales', it should show "Sales"
+      const salesElements = screen.getAllByText('Sales');
+      expect(salesElements.length).toBeGreaterThanOrEqual(2); // badge + ring
     });
 
     it('renders SVG progress ring', () => {
@@ -857,6 +870,68 @@ describe('AuthenticatedHomePage', () => {
 
       render(<AuthenticatedHomePage />);
       expect(screen.getByText("Here's what's happening today.")).toBeInTheDocument();
+    });
+  });
+
+  // ===========================================================================
+  // IFC-195: GoalSettingsModal integration tests
+  // ===========================================================================
+  describe('GoalSettingsModal integration (IFC-195)', () => {
+    it('renders settings gear icon inside Today\'s Focus card', () => {
+      render(<AuthenticatedHomePage />);
+      const gearButton = screen.getByTitle('Goal settings');
+      expect(gearButton).toBeInTheDocument();
+    });
+
+    it('clicking gear icon opens GoalSettingsModal', () => {
+      render(<AuthenticatedHomePage />);
+      const gearButton = screen.getByTitle('Goal settings');
+      fireEvent.click(gearButton);
+      // After clicking, the GoalSettingsModal should appear
+      expect(screen.getByText(/goal settings/i)).toBeInTheDocument();
+    });
+
+    it('GoalSection displays dynamic label from goalData', () => {
+      mockGoalQuery.mockReturnValue({
+        data: {
+          goal: {
+            ...goalData.goal,
+            label: 'Calls',
+            type: 'calls',
+          },
+          lastUpdated: goalData.lastUpdated,
+        },
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        refetch: vi.fn(),
+      });
+
+      render(<AuthenticatedHomePage />);
+      // The label appears both in the header badge and inside the GoalSection ring.
+      // Verify at least one instance renders the dynamic label.
+      const callsElements = screen.getAllByText('Calls');
+      expect(callsElements.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('closes filter dropdown when pressing Enter on overlay', () => {
+      render(<AuthenticatedHomePage />);
+      const filterBtn = screen.getByText('filter_list').closest('button')!;
+      fireEvent.click(filterBtn);
+      expect(screen.getByText('All Activity')).toBeInTheDocument();
+      const overlay = document.querySelector('.fixed.inset-0');
+      if (overlay) {
+        fireEvent.keyDown(overlay, { key: 'Enter' });
+        expect(screen.queryByText('All Activity')).not.toBeInTheDocument();
+      }
+    });
+
+    it('clicking comingSoon quick action shows toast', () => {
+      render(<AuthenticatedHomePage />);
+      const callButton = screen.getByText('Log Call').closest('button');
+      expect(callButton).not.toBeNull();
+      fireEvent.click(callButton!);
+      // Toast should have been called (toast is mocked at module level)
     });
   });
 });

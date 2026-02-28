@@ -4,19 +4,19 @@
   "section": "Core CRM",
   "description": "Customizable Daily Goals - Multi-type goal support (revenue calls meetings tasks custom) with user preferences",
   "owner": "Backend Dev (STOA-Domain)",
-  "status": "BACKLOG",
-  "sprint": "sprint-0",
-  "phase": "phase-0-initialisation",
+  "status": "DONE",
+  "sprint": "sprint-15",
+  "phase": "phase-1-validation",
   "stream": null,
   "dependencies": {
     "all_satisfied": true,
-    "verified_at": "2026-02-23T22:15:24.981Z",
+    "verified_at": "2026-02-28T00:50:22.685Z",
     "required": [
       "IFC-182"
     ]
   },
-  "started_at": "2026-02-13T23:41:32+00:00",
-  "completed_at": null,
+  "started_at": "2026-02-27T00:00:00+00:00",
+  "completed_at": "2026-02-28T00:28:01.895Z",
   "execution": {
     "retry_count": 0,
     "last_error": null,
@@ -25,23 +25,119 @@
   },
   "artifacts": {
     "expected": [],
-    "created": [],
+    "created": [
+      {
+        "path": ".specify/sprints/sprint-15/specifications/IFC-195-spec.md",
+        "sha256": "pending",
+        "created_at": "2026-02-27T13:00:00Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-15/context/IFC-195/IFC-195-agent-selection.json",
+        "sha256": "pending",
+        "created_at": "2026-02-27T12:30:00Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-15/planning/IFC-195-plan.md",
+        "sha256": "pending",
+        "created_at": "2026-02-27T14:30:00Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-15/context/IFC-195/IFC-195-plan-session.json",
+        "sha256": "pending",
+        "created_at": "2026-02-27T14:30:00Z"
+      }
+    ],
     "missing": []
   },
-  "validations": [],
-  "kpis": {},
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck",
+      "executed_at": "2026-02-28T00:20:00Z",
+      "exit_code": 0,
+      "passed": true,
+      "duration_ms": 61268
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter api exec vitest run home.router.test --run && pnpm --filter @intelliflow/validators exec vitest run home.test --run && pnpm --filter web exec vitest run GoalSettingsModal.test --run && pnpm --filter web exec vitest run AuthenticatedHomePage.test --run",
+      "executed_at": "2026-02-28T00:22:00Z",
+      "exit_code": 0,
+      "passed": true,
+      "duration_ms": 7600
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint",
+      "executed_at": "2026-02-28T00:22:30Z",
+      "exit_code": 0,
+      "passed": true,
+      "duration_ms": 16536
+    },
+    {
+      "name": "Build",
+      "command": "pnpm run build",
+      "executed_at": "2026-02-28T00:22:00Z",
+      "exit_code": 0,
+      "passed": true,
+      "duration_ms": 97233
+    }
+  ],
+  "kpis": {
+    "test_coverage_stmts": {
+      "target": ">=90%",
+      "actual": "96.02%",
+      "met": true
+    },
+    "test_coverage_branch": {
+      "target": ">=80%",
+      "actual": "90.09%",
+      "met": true
+    },
+    "new_tests_added": {
+      "target": ">30",
+      "actual": "57",
+      "met": true
+    }
+  },
   "blockers": [],
   "status_history": [
     {
       "status": "In Progress",
       "at": "2026-02-13T23:41:32+00:00",
       "note": "Task execution started"
+    },
+    {
+      "status": "Specifying",
+      "at": "2026-02-27T12:00:00+00:00",
+      "note": "Spec session started - 4 agents selected"
+    },
+    {
+      "status": "Spec Complete",
+      "at": "2026-02-27T13:00:00+00:00",
+      "note": "Specification finalized with consensus from Backend-Architect, Frontend-Lead, Domain-Expert, Test-Engineer"
+    },
+    {
+      "status": "Planning",
+      "at": "2026-02-27T14:00:00+00:00",
+      "note": "Plan session started - dependency deep verification passed"
+    },
+    {
+      "status": "Plan Complete",
+      "at": "2026-02-27T14:30:00+00:00",
+      "note": "TDD plan finalized - 10 steps, 9 files, plan-reviewer APPROVE after 5 ERROR fixes"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-02-28T00:26:00+00:00",
+      "note": "Exec session complete: 57 new tests, all 4 validations pass, coverage >=90%, 8/8 ACs met"
     }
   ],
-  "current_phase": "ARCHITECT_SPEC",
-  "updated_at": "2026-02-13T23:41:34+00:00",
+  "current_phase": "COMPLETED",
+  "updated_at": "2026-02-28T00:26:00+00:00",
   "attempt": 0,
   "dependencies_resolved": [
     "IFC-182"
-  ]
+  ],
+  "actual_duration_minutes": 15
 }

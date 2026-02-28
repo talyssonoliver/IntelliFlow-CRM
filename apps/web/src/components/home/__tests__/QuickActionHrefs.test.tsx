@@ -56,7 +56,7 @@ vi.mock('@/hooks/useActivityFeed', () => ({
   useActivityFeed: mockUseActivityFeed,
 }));
 
-vi.mock('@/components/shared/activity-feed/ActivityFeed', () => ({
+vi.mock('@/components/shared/activity-feed', () => ({
   ActivityFeed: () => <div data-testid="activity-feed-mock" />,
 }));
 

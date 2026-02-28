@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
-import { ActivityFeed } from '@/components/shared/activity-feed/ActivityFeed';
+import { ActivityFeed } from '@/components/shared/activity-feed';
 import type { ActivityFeedType } from '@intelliflow/domain';
 import type { PinnableEntityType } from '@intelliflow/validators';
 import { toast } from '@intelliflow/ui';
@@ -17,6 +17,7 @@ import {
   loadPinnedGroups,
   getPinnedIcon,
 } from './PinnedItemsSheet';
+import { GoalSettingsModal } from './GoalSettingsModal';
 
 // Activity feed type filter options — values match ActivityFeedType (IFC-069 unified feed, all 17 types)
 const FEED_FILTER_OPTIONS = [
@@ -352,7 +353,7 @@ function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
         </svg>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
           <span className="text-2xl font-bold text-slate-900 dark:text-white">{progress}%</span>
-          <p className="text-[10px] text-slate-500 uppercase font-semibold">Goal Reached</p>
+          <p className="text-[10px] text-slate-500 uppercase font-semibold">{goal?.label || 'Goal Reached'}</p>
         </div>
       </div>
       <p className="text-sm text-center text-slate-600 dark:text-slate-400">
@@ -428,6 +429,7 @@ export function AuthenticatedHomePage() {
   const [enabledActionIds, setEnabledActionIds] = useState<Set<string>>(() => loadEnabledActions());
   const [isPinnedNavSheetOpen, setIsPinnedNavSheetOpen] = useState(false);
   const [pinnedGroupIds, setPinnedGroupIds] = useState<Set<string>>(() => loadPinnedGroups());
+  const [isGoalSettingsOpen, setIsGoalSettingsOpen] = useState(false);
 
   // Only fetch data when authenticated
   const queryEnabled = isAuthenticated && !authLoading;
@@ -651,7 +653,16 @@ export function AuthenticatedHomePage() {
                     <>
                       <div
                         className="fixed inset-0 z-10"
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Close filter menu"
                         onClick={() => setShowFeedFilterMenu(false)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setShowFeedFilterMenu(false);
+                          }
+                        }}
                       />
                       <div className="absolute right-0 top-full mt-1 z-20 bg-white dark:bg-[#1e2936] border border-[#e2e8f0] dark:border-[#334155] rounded-lg shadow-lg py-1 min-w-[180px] max-h-[320px] overflow-y-auto">
                         {FEED_FILTER_OPTIONS.map((option) => (
@@ -690,9 +701,19 @@ export function AuthenticatedHomePage() {
             <div className="col-span-1 bg-white dark:bg-[#1e2936] rounded-xl border border-[#e2e8f0] dark:border-[#334155] shadow-sm p-5">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-slate-900 dark:text-white">Today&apos;s Focus</h3>
-                <span className="text-xs font-medium bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-600 dark:text-slate-400">
-                  {goalData?.goal.label || 'Sales'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-600 dark:text-slate-400">
+                    {goalData?.goal.label || 'Sales'}
+                  </span>
+                  <button
+                    onClick={() => setIsGoalSettingsOpen(true)}
+                    className="text-slate-400 hover:text-[#137fec] transition-colors"
+                    title="Goal settings"
+                    data-testid="goal-settings-button"
+                  >
+                    <span className="material-symbols-outlined text-sm">settings</span>
+                  </button>
+                </div>
               </div>
               <GoalSection isLoading={goalLoading} goal={goalData?.goal} />
             </div>
@@ -958,6 +979,13 @@ export function AuthenticatedHomePage() {
         onSave={handlePinnedNavSave}
         pinnedItems={pinnedData?.items}
         onUnpin={handleUnpin}
+      />
+
+      {/* Goal Settings Modal (IFC-195) */}
+      <GoalSettingsModal
+        open={isGoalSettingsOpen}
+        onOpenChange={setIsGoalSettingsOpen}
+        currentGoal={goalData?.goal}
       />
     </div>
   );
