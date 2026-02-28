@@ -1,0 +1,64 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "PG-179",
+  "section": "Public Pages",
+  "description": "Press Release Detail Page - dynamic /press/[id] route for individual press releases linked from /press index page (content audit finding F-004)",
+  "owner": "CRM FE (STOA-Foundation)",
+  "sprint": "sprint-15",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [
+      "PG-007"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-02-28T00:55:04.075Z"
+  },
+  "dependencies_resolved": [
+    "PG-007"
+  ],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": null,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "response_time": {
+      "target": "<200ms",
+      "actual": "pending",
+      "met": false
+    },
+    "lighthouse_score": {
+      "target": ">=90",
+      "actual": "pending",
+      "met": false
+    },
+    "seo_score": {
+      "target": ">=80",
+      "actual": "pending",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/(public)/press/[id]/page.tsx",
+      "apps/web/src/components/press/PressReleaseDetail.tsx",
+      "apps/web/src/components/press/__tests__/PressReleaseDetail.test.tsx"
+    ],
+    "created": [],
+    "missing": [
+      "apps/web/src/app/(public)/press/[id]/page.tsx",
+      "apps/web/src/components/press/PressReleaseDetail.tsx",
+      "apps/web/src/components/press/__tests__/PressReleaseDetail.test.tsx"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-02-25T23:00:00Z"
+    }
+  ],
+  "notes": "Content audit finding F-004: /press page links to /press/[id] but no detail route exists, causing 404 errors. PG-007 built the press index page but not the detail route."
+}
