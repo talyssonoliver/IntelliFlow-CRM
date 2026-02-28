@@ -1,0 +1,61 @@
+{
+  "$schema": "../../schemas/task-status.schema.json",
+  "task_id": "IFC-210",
+  "section": "SEO",
+  "description": "Fill SEO metadata gaps on public pages - add description OG and Twitter tags to /pricing, complete OG tags on /about and /features, add layout-level metadata for auth-flow pages (content audit findings F-010 F-011 F-012)",
+  "owner": "CRM FE (STOA-Foundation)",
+  "sprint": "sprint-15",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [
+      "DOC-009"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-02-28T00:50:22.695Z"
+  },
+  "dependencies_resolved": [
+    "DOC-009"
+  ],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": null,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "avg_seo_score": {
+      "target": ">=75",
+      "actual": "pending",
+      "met": false
+    },
+    "metadata_coverage": {
+      "target": "all public pages have description + OG + Twitter",
+      "actual": "pending",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/(public)/pricing/page.tsx",
+      "apps/web/src/app/(public)/about/page.tsx",
+      "apps/web/src/app/(public)/features/page.tsx",
+      "apps/web/src/app/(public)/login/layout.tsx"
+    ],
+    "created": [
+      "apps/web/src/app/(public)/pricing/page.tsx",
+      "apps/web/src/app/(public)/about/page.tsx",
+      "apps/web/src/app/(public)/features/page.tsx",
+      "apps/web/src/app/(public)/login/layout.tsx"
+    ],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-02-25T23:00:00Z"
+    }
+  ],
+  "notes": "Content audit findings F-010 (/pricing lacks description/OG/Twitter), F-011 (/about and /features have incomplete OG tags), F-012 (auth-flow pages fall back to root layout defaults with no page-level metadata)."
+}

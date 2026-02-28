@@ -89,8 +89,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           <Providers>
             <div className="relative min-h-screen bg-background">
+              <a
+                href="#main-content"
+                className="sr-only focus:not-sr-only focus:absolute focus:z-[100] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:text-sm focus:font-medium"
+              >
+                Skip to main content
+              </a>
               <Navigation />
-              <main>{children}</main>
+              <div id="main-content">{children}</div>
             </div>
             <Toaster />
             <CookieConsentBanner privacyPolicyUrl="/privacy" cookiePolicyUrl="/cookies" />

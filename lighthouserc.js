@@ -47,6 +47,8 @@ module.exports = {
         'http://localhost:3000/settings/ai',              // AI settings
         'http://localhost:3000/settings/team',            // Team settings
         'http://localhost:3000/billing',                  // Billing
+        // Developer portal
+        'http://localhost:3000/docs/sdk',                   // SDK Guides
       ],
 
       // Number of runs per URL (for statistical reliability)
@@ -82,7 +84,7 @@ module.exports = {
       assertions: {
         // Categories (Sprint Plan requirement: Lighthouse score >90)
         'categories:performance': ['error', { minScore: 0.9 }],
-        'categories:accessibility': ['warn', { minScore: 0.9 }],
+        'categories:accessibility': ['error', { minScore: 0.9 }],
         'categories:best-practices': ['warn', { minScore: 0.9 }],
         'categories:seo': ['warn', { minScore: 0.9 }],
 
@@ -128,10 +130,10 @@ module.exports = {
         'redirects-http': 'off',
 
         // Accessibility
-        'color-contrast': 'warn',
-        'image-alt': 'warn',
-        'label': 'warn',
-        'link-name': 'warn',
+        'color-contrast': 'error',
+        'image-alt': 'error',
+        'label': 'error',
+        'link-name': 'error',
 
         // SEO
         'meta-description': 'warn',

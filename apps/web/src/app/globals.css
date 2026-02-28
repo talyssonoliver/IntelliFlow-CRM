@@ -2,7 +2,8 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-@source "../../../packages/ui/src";
+@source "../../../../packages/ui/src";
+@source inline("inset-y-0 inset-x-0 inset-0 w-3/4 h-full sm:max-w-sm sm:max-w-[500px] slide-out-to-top slide-out-to-bottom slide-out-to-left slide-out-to-right slide-in-from-top slide-in-from-bottom slide-in-from-left slide-in-from-right fade-in-0 fade-out-0 animate-in animate-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=open]:slide-in-from-right data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-left data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-top data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-bottom data-[state=closed]:slide-out-to-bottom data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=closed]:duration-300 data-[state=open]:duration-500");
 
 @theme inline {
   /* Font family */
@@ -112,7 +113,7 @@
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 215 28% 17%;
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215 16% 47%;
+    --muted-foreground: 215 16% 43%;
     --accent: 210 40% 96.1%;
     --accent-foreground: 215 28% 17%;
     --destructive: 0 84% 60%;
