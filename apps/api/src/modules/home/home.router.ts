@@ -20,11 +20,15 @@ import {
   pinItemInputSchema,
   unpinItemInputSchema,
   reorderPinnedItemsInputSchema,
+  updateDailyGoalInputSchema,
+  GOAL_DEFAULTS,
   type WelcomeSummary,
   type AIInsightsResponse,
   type DailyGoalResponse,
   type PinnedItemsResponse,
+  type GoalType,
 } from '@intelliflow/validators';
+import { z } from 'zod';
 
 // =============================================================================
 // Helper Functions
@@ -50,8 +54,24 @@ function getUserId(ctx: Context): string {
   return ctx.user.userId;
 }
 
-function getGreeting(): string {
-  const hour = new Date().getHours();
+function getGreeting(timezone: string = 'UTC'): string {
+  let hour: number;
+  try {
+    const formatted = new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      hour12: false,
+      timeZone: timezone,
+    }).format(new Date());
+    hour = parseInt(formatted, 10);
+  } catch {
+    // Fallback to UTC if timezone is invalid
+    const formatted = new Intl.DateTimeFormat('en-US', {
+      hour: 'numeric',
+      hour12: false,
+      timeZone: 'UTC',
+    }).format(new Date());
+    hour = parseInt(formatted, 10);
+  }
   if (hour < 12) return 'Good morning';
   if (hour < 17) return 'Good afternoon';
   return 'Good evening';
@@ -67,6 +87,9 @@ const DEAL_RISK_DAYS = 14;
 
 /** Minimum lead score to be considered a "hot" lead */
 const HOT_LEAD_SCORE = 80;
+
+/** IFC-192: Days threshold for stale contact warnings */
+const STALE_CONTACT_DAYS = 30;
 
 // =============================================================================
 // Router Implementation
@@ -89,7 +112,7 @@ export const homeRouter = createTRPCRouter({
     const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const twoMonthsAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
 
-    // Fetch user name
+    // Fetch user name (timezone comes from ctx.user session)
     const user = await ctx.prisma.user.findUnique({
       where: { id: userId },
       select: { name: true, email: true },
@@ -254,7 +277,7 @@ export const homeRouter = createTRPCRouter({
 
     return {
       userName: user?.name || user?.email?.split('@')[0] || 'User',
-      greeting: getGreeting(),
+      greeting: getGreeting(ctx.user?.timezone ?? 'UTC'),
       todayDate: now,
       stats: {
         highPriorityTasksCount: highPriorityTasks,
@@ -363,6 +386,47 @@ export const homeRouter = createTRPCRouter({
       });
     }
 
+    // IFC-192: Check for stale contacts with open opportunities
+    const staleCutoff = new Date(now.getTime() - STALE_CONTACT_DAYS * 24 * 60 * 60 * 1000);
+    const staleContacts = await ctx.prisma.contact.findMany({
+      where: {
+        tenantId,
+        ownerId: userId,
+        OR: [
+          { lastContactedAt: { lt: staleCutoff } },
+          { lastContactedAt: null },
+        ],
+        opportunities: {
+          some: { stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] } },
+        },
+      },
+      take: 2,
+      select: { id: true, firstName: true, lastName: true, lastContactedAt: true },
+    });
+
+    staleContacts.forEach((contact) => {
+      const name = `${contact.firstName} ${contact.lastName}`.trim();
+      const days = contact.lastContactedAt
+        ? Math.floor(
+            (now.getTime() - contact.lastContactedAt.getTime()) / (24 * 60 * 60 * 1000)
+          )
+        : null;
+      insights.push({
+        id: `stale-contact-${contact.id}`,
+        type: 'warning',
+        title: `Stale Contact: ${name}`,
+        description: days
+          ? `No interaction in ${days} days. This contact has open opportunities.`
+          : `Never contacted. This contact has open opportunities.`,
+        suggestedAction: 'Schedule a follow-up',
+        entityType: 'contact',
+        entityId: contact.id,
+        actionUrl: `/contacts/${contact.id}`,
+        priority: 'medium',
+        createdAt: now,
+      });
+    });
+
     // Add achievement if no urgent items
     if (insights.length === 0) {
       insights.push({
@@ -393,10 +457,9 @@ export const homeRouter = createTRPCRouter({
   /**
    * Get daily goal progress
    *
-   * @remarks Currently only supports the 'revenue' goal type with a hardcoded
-   * $5,000 daily target. Other goal types (calls, meetings, tasks, custom)
-   * are not yet implemented and will require user settings infrastructure.
-   * See IFC-195 for the customizable goals feature.
+   * Supports 5 goal types: revenue, calls, meetings, tasks, custom.
+   * Reads user preferences from User.preferences.dailyGoal; defaults to revenue/$5000.
+   * Task: IFC-195 - Customizable Daily Goals
    */
   getDailyGoal: protectedProcedure.query(async ({ ctx }): Promise<DailyGoalResponse> => {
     const startTime = performance.now();
@@ -406,21 +469,91 @@ export const homeRouter = createTRPCRouter({
     const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 
-    // Get deals closed today (revenue goal)
-    const todayRevenue = await ctx.prisma.opportunity.aggregate({
-      where: {
-        tenantId,
-        ownerId: userId,
-        stage: 'CLOSED_WON',
-        closedAt: { gte: todayStart, lt: todayEnd },
-      },
-      _sum: { value: true },
+    // Read user preferences for goal type
+    const user = await ctx.prisma.user.findUnique({
+      where: { id: userId },
+      select: { preferences: true },
     });
 
-    const currentValue = Number(todayRevenue._sum.value) || 0;
-    const targetValue = 5000; // Default daily target, could be fetched from user settings
+    const prefs = (user?.preferences as any) || {};
+    const goalPrefSchema = z.object({
+      type: z.enum(['revenue', 'calls', 'meetings', 'tasks', 'custom']),
+      targetValue: z.number().int().positive(),
+      label: z.string().optional(),
+      customUnit: z.string().optional(),
+    });
+    const parsed = goalPrefSchema.safeParse(prefs.dailyGoal);
+
+    const goalType: GoalType = parsed.success ? parsed.data.type : 'revenue';
+    const defaults = GOAL_DEFAULTS[goalType];
+    const targetValue = parsed.success ? parsed.data.targetValue : defaults.targetValue;
+    const label = (parsed.success && parsed.data.label) || defaults.label;
+    const unit = (parsed.success && goalType === 'custom' && parsed.data.customUnit) || defaults.unit;
+
+    // Compute currentValue based on goal type
+    let currentValue = 0;
+
+    switch (goalType) {
+      case 'revenue': {
+        const todayRevenue = await ctx.prisma.opportunity.aggregate({
+          where: {
+            tenantId,
+            ownerId: userId,
+            stage: 'CLOSED_WON',
+            closedAt: { gte: todayStart, lt: todayEnd },
+          },
+          _sum: { value: true },
+        });
+        currentValue = Number(todayRevenue._sum.value) || 0;
+        break;
+      }
+      case 'calls': {
+        currentValue = await ctx.prisma.callRecord.count({
+          where: {
+            tenantId,
+            userId,
+            startedAt: { gte: todayStart, lt: todayEnd },
+            status: 'COMPLETED',
+          },
+        });
+        break;
+      }
+      case 'meetings': {
+        currentValue = await ctx.prisma.appointment.count({
+          where: {
+            tenantId,
+            OR: [{ organizerId: userId }, { attendees: { some: { userId } } }],
+            completedAt: { gte: todayStart, lt: todayEnd },
+            status: 'COMPLETED',
+          },
+        });
+        break;
+      }
+      case 'tasks': {
+        currentValue = await ctx.prisma.task.count({
+          where: {
+            tenantId,
+            ownerId: userId,
+            completedAt: { gte: todayStart, lt: todayEnd },
+            status: 'COMPLETED',
+          },
+        });
+        break;
+      }
+      case 'custom': {
+        currentValue = 0;
+        break;
+      }
+    }
+
     const progress = Math.min(100, Math.round((currentValue / targetValue) * 100));
     const remainingToTarget = Math.max(0, targetValue - currentValue);
+
+    // Format remaining based on goal type
+    const remainingFormatted =
+      goalType === 'revenue'
+        ? `$${remainingToTarget.toLocaleString()}`
+        : `${remainingToTarget} ${unit}`;
 
     const duration = performance.now() - startTime;
     if (duration > 200) {
@@ -429,19 +562,54 @@ export const homeRouter = createTRPCRouter({
 
     return {
       goal: {
-        id: 'daily-revenue',
-        type: 'revenue',
-        label: 'Sales',
+        id: `daily-${goalType}`,
+        type: goalType,
+        label,
         targetValue,
         currentValue,
-        unit: '$',
+        unit,
         progress,
         remainingToTarget,
-        remainingFormatted: `$${remainingToTarget.toLocaleString()}`,
+        remainingFormatted,
       },
       lastUpdated: now,
     };
   }),
+
+  /**
+   * Update daily goal preferences
+   *
+   * Saves goal type and target to User.preferences.dailyGoal using
+   * read-merge-write pattern (same as pinItem).
+   * Task: IFC-195 - Customizable Daily Goals
+   */
+  updateDailyGoal: protectedProcedure
+    .input(updateDailyGoalInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      const userId = getUserId(ctx);
+      const { type, targetValue, label, customUnit } = input;
+
+      // Get current preferences
+      const user = await ctx.prisma.user.findUnique({
+        where: { id: userId },
+        select: { preferences: true },
+      });
+
+      const prefs = (user?.preferences as any) || {};
+
+      // Merge dailyGoal into preferences
+      await ctx.prisma.user.update({
+        where: { id: userId },
+        data: {
+          preferences: {
+            ...prefs,
+            dailyGoal: { type, targetValue, label, customUnit },
+          },
+        },
+      });
+
+      return { success: true, message: 'Daily goal updated successfully' };
+    }),
 
   /**
    * Get pinned items

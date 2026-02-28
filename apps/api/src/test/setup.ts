@@ -209,6 +209,7 @@ export function createTestContext(overrides?: Partial<BaseContext>): BaseContext
       email: 'test@example.com',
       role: 'USER',
       tenantId,
+      timezone: 'UTC',
     },
     // Tenant context required by tenantContextMiddleware
     tenant: {
@@ -354,6 +355,7 @@ export const mockContact = {
   contactType: 'customer',
   tags: ['enterprise', 'vip'],
   contactNotes: 'Key technical contact',
+  lastContactedAt: null, // IFC-192
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 };
@@ -413,6 +415,7 @@ export const mockUser = {
   email: 'test@example.com',
   name: 'Test User',
   avatarUrl: 'https://example.com/avatar.jpg',
+  timezone: 'UTC',
 };
 
 export const mockAIScore = {

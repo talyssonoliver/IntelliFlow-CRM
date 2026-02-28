@@ -47,6 +47,7 @@ const createMockDomainContact = (overrides: Record<string, unknown> = {}) => ({
   contactType: null,
   tags: [],
   contactNotes: null,
+  lastContactedAt: null, // IFC-192
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
   getDomainEvents: () => [],
@@ -1079,6 +1080,158 @@ describe('Contact Router - Additional Coverage', () => {
 
       expect(result.events).toHaveLength(1);
       expect(result.events[0].actor?.name).toBe('Unknown');
+    });
+  });
+
+  // IFC-192: logActivity tests
+  describe('logActivity', () => {
+    it('should log EMAIL activity and return updated contact', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findUnique.mockResolvedValue({ ...mockContact } as any);
+      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: any) => {
+        return await fn(prismaMock);
+      });
+      prismaMock.contactActivity.create.mockResolvedValue({} as any);
+
+      const domainContact = createMockDomainContact({ lastContactedAt: new Date() });
+      ctx.services!.contact!.recordInteraction = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: domainContact,
+      });
+
+      const result = await caller.logActivity({
+        contactId: TEST_UUIDS.contact1,
+        type: 'EMAIL',
+        title: 'Follow-up email sent',
+      });
+
+      expect(result.id).toBe(TEST_UUIDS.contact1);
+      expect(prismaMock.contactActivity.create).toHaveBeenCalled();
+    });
+
+    it('should log CALL activity successfully', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findUnique.mockResolvedValue({ ...mockContact } as any);
+      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: any) => {
+        return await fn(prismaMock);
+      });
+      prismaMock.contactActivity.create.mockResolvedValue({} as any);
+
+      const domainContact = createMockDomainContact({ lastContactedAt: new Date() });
+      ctx.services!.contact!.recordInteraction = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: domainContact,
+      });
+
+      const result = await caller.logActivity({
+        contactId: TEST_UUIDS.contact1,
+        type: 'CALL',
+        title: 'Discovery call',
+        description: 'Discussed requirements',
+      });
+
+      expect(result.id).toBe(TEST_UUIDS.contact1);
+    });
+
+    it('should log MEETING activity successfully', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findUnique.mockResolvedValue({ ...mockContact } as any);
+      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: any) => {
+        return await fn(prismaMock);
+      });
+      prismaMock.contactActivity.create.mockResolvedValue({} as any);
+
+      const domainContact = createMockDomainContact({ lastContactedAt: new Date() });
+      ctx.services!.contact!.recordInteraction = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: domainContact,
+      });
+
+      const result = await caller.logActivity({
+        contactId: TEST_UUIDS.contact1,
+        type: 'MEETING',
+        title: 'Quarterly review',
+      });
+
+      expect(result.id).toBe(TEST_UUIDS.contact1);
+    });
+
+    it('should return NOT_FOUND for non-existent contact', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findUnique.mockResolvedValue(null);
+
+      await expect(
+        caller.logActivity({
+          contactId: TEST_UUIDS.nonExistent,
+          type: 'EMAIL',
+          title: 'Test',
+        })
+      ).rejects.toThrow(TRPCError);
+    });
+
+    it('should wrap activity creation and lastContactedAt update in transaction', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+
+      prismaMock.contact.findUnique.mockResolvedValue({ ...mockContact } as any);
+      const txMock = vi.fn().mockImplementation(async (fn: any) => {
+        return await fn(prismaMock);
+      });
+      (prismaMock as any).$transaction = txMock;
+      prismaMock.contactActivity.create.mockResolvedValue({} as any);
+
+      const domainContact = createMockDomainContact({ lastContactedAt: new Date() });
+      ctx.services!.contact!.recordInteraction = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: domainContact,
+      });
+
+      await caller.logActivity({
+        contactId: TEST_UUIDS.contact1,
+        type: 'EMAIL',
+        title: 'Test email',
+      });
+
+      expect(txMock).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return updated contact data with lastContactedAt', async () => {
+      const ctx = createTestContext();
+      const caller = contactRouter.createCaller(ctx);
+      const contactedAt = new Date('2026-02-27T12:00:00Z');
+
+      prismaMock.contact.findUnique.mockResolvedValue({ ...mockContact } as any);
+      (prismaMock as any).$transaction = vi.fn().mockImplementation(async (fn: any) => {
+        return await fn(prismaMock);
+      });
+      prismaMock.contactActivity.create.mockResolvedValue({} as any);
+
+      const domainContact = createMockDomainContact({ lastContactedAt: contactedAt });
+      ctx.services!.contact!.recordInteraction = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: domainContact,
+      });
+
+      const result = await caller.logActivity({
+        contactId: TEST_UUIDS.contact1,
+        type: 'CALL',
+        title: 'Follow-up',
+      });
+
+      expect(result.lastContactedAt).toEqual(contactedAt);
     });
   });
 });

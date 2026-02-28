@@ -49,19 +49,6 @@ export const safePromptSchema = z.object({
 
 export type SafePrompt = z.infer<typeof safePromptSchema>;
 
-/**
- * Sanitized output schema
- * Ensures AI responses don't leak sensitive data
- */
-export const sanitizedOutputSchema = z.object({
-  content: z.string(),
-  redactedFields: z.array(z.string()).default([]),
-  containsPII: z.boolean().default(false),
-  safe: z.boolean(),
-});
-
-export type SanitizedOutput = z.infer<typeof sanitizedOutputSchema>;
-
 // ============================================
 // DANGEROUS PATTERNS
 // ============================================
@@ -158,83 +145,6 @@ export function sanitizePrompt(input: unknown): {
   };
 
   return { sanitized, issues };
-}
-
-/**
- * Sanitize AI output before returning to user
- */
-export function sanitizeOutput(output: string, userId: string): SanitizedOutput {
-  let sanitized = output;
-  const redactedFields: string[] = [];
-  let containsPII = false;
-
-  // Detect and redact PII
-  for (const [fieldName, pattern] of Object.entries(PII_PATTERNS)) {
-    const matches = sanitized.match(pattern);
-    if (matches) {
-      containsPII = true;
-      redactedFields.push(fieldName);
-
-      // Redact with masked version
-      sanitized = sanitized.replace(pattern, (match) => {
-        // For emails, preserve first 2 chars and domain suffix
-        if (fieldName === 'email') {
-          const atIndex = match.indexOf('@');
-          if (atIndex > 0) {
-            const localPart = match.slice(0, atIndex);
-            const domain = match.slice(atIndex);
-            const domainParts = domain.split('.');
-            const tld = domainParts[domainParts.length - 1];
-            const maskedLocal =
-              localPart.slice(0, 2) + '*'.repeat(Math.max(localPart.length - 2, 0));
-            const maskedDomain = domainParts.length > 1 ? '***.' + tld : '***';
-            return maskedLocal + '@' + maskedDomain;
-          }
-        }
-        // For other PII, show first 2 and last 2 chars
-        const masked =
-          match.slice(0, 2) + '*'.repeat(Math.max(match.length - 4, 0)) + match.slice(-2);
-        logger.warn(
-          {
-            userId,
-            fieldName,
-            originalLength: match.length,
-          },
-          'PII redacted from AI output'
-        );
-        return masked;
-      });
-    }
-  }
-
-  // Check for dangerous patterns in output (AI might be manipulated to output them)
-  for (const pattern of DANGEROUS_PATTERNS) {
-    if (pattern.test(sanitized)) {
-      logger.error(
-        {
-          userId,
-          pattern: pattern.source,
-        },
-        'AI output contains dangerous pattern - blocking response'
-      );
-
-      // Return safe error message instead
-      return {
-        content:
-          'The AI response was blocked due to security concerns. Please try rephrasing your question.',
-        redactedFields: ['entire_response'],
-        containsPII: false,
-        safe: false,
-      };
-    }
-  }
-
-  return {
-    content: sanitized,
-    redactedFields,
-    containsPII,
-    safe: true,
-  };
 }
 
 /**
@@ -343,24 +253,3 @@ export async function sanitizationPipeline(input: {
   return sanitized;
 }
 
-/**
- * Log security event for audit trail
- */
-export function logSecurityEvent(event: {
-  userId: string;
-  eventType: 'prompt_injection' | 'data_leakage' | 'rate_limit' | 'pii_detected';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  details: Record<string, unknown>;
-}): void {
-  logger[event.severity === 'critical' || event.severity === 'high' ? 'error' : 'warn'](
-    {
-      securityEvent: true,
-      ...event,
-      timestamp: new Date().toISOString(),
-    },
-    `Security event: ${event.eventType}`
-  );
-
-  // In production, also send to security monitoring system (e.g., Sentry, DataDog)
-  // Example: securityMonitor.track(event);
-}

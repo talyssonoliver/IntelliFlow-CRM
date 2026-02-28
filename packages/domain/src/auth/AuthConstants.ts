@@ -33,6 +33,8 @@ export type MfaMethod = (typeof MFA_METHODS)[number];
 export const OAUTH_PROVIDERS = [
   'google', // Google OAuth
   'azure', // Microsoft Azure AD / Entra ID
+  'github', // GitHub OAuth
+  'linkedin', // LinkedIn (Supabase maps to 'linkedin_oidc')
 ] as const;
 
 export type OAuthProvider = (typeof OAUTH_PROVIDERS)[number];

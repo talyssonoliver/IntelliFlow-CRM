@@ -10,6 +10,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   Contact,
+  CONTACT_INTERACTION_TYPES,
   ContactAlreadyHasAccountError,
   ContactNotAssociatedWithAccountError,
 } from '../Contact';
@@ -21,6 +22,7 @@ import {
   ContactAccountAssociatedEvent,
   ContactAccountDisassociatedEvent,
   ContactConvertedFromLeadEvent,
+  ContactInteractedEvent,
 } from '../ContactEvents';
 
 describe('Contact Aggregate', () => {
@@ -622,6 +624,238 @@ describe('Contact Aggregate', () => {
 
       contact.clearDomainEvents();
       expect(contact.getDomainEvents()).toHaveLength(0);
+    });
+  });
+
+  // IFC-192: Contact Activity Tracking
+  describe('lastContactedAt (IFC-192)', () => {
+    it('should initialize lastContactedAt as undefined on create()', () => {
+      const result = Contact.create({
+        email: 'new@example.com',
+        firstName: 'New',
+        lastName: 'Contact',
+        ownerId: 'owner-123',
+        tenantId: 'tenant-1',
+      });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.lastContactedAt).toBeUndefined();
+    });
+
+    it('should preserve lastContactedAt through reconstitute()', () => {
+      const id = ContactId.generate();
+      const pastDate = new Date('2026-01-15T10:00:00Z');
+
+      const contact = Contact.reconstitute(id, {
+        email: 'recon@example.com',
+        firstName: 'Recon',
+        lastName: 'Test',
+        ownerId: 'owner-1',
+        tenantId: 'tenant-1',
+        lastContactedAt: pastDate,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      expect(contact.lastContactedAt).toEqual(pastDate);
+    });
+
+    it('should return undefined lastContactedAt for new contacts', () => {
+      const result = Contact.create({
+        email: 'getter@example.com',
+        firstName: 'Getter',
+        lastName: 'Test',
+        ownerId: 'owner-1',
+        tenantId: 'tenant-1',
+      });
+
+      expect(result.value.lastContactedAt).toBeUndefined();
+    });
+
+    it('should return Date when lastContactedAt is set', () => {
+      const id = ContactId.generate();
+      const date = new Date('2026-02-01T12:00:00Z');
+
+      const contact = Contact.reconstitute(id, {
+        email: 'dated@example.com',
+        firstName: 'Dated',
+        lastName: 'Contact',
+        ownerId: 'owner-1',
+        tenantId: 'tenant-1',
+        lastContactedAt: date,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      expect(contact.lastContactedAt).toBeInstanceOf(Date);
+      expect(contact.lastContactedAt).toEqual(date);
+    });
+
+    it('should include lastContactedAt in toJSON() as ISO string or null', () => {
+      // With lastContactedAt set
+      const id = ContactId.generate();
+      const date = new Date('2026-02-10T08:30:00Z');
+
+      const contactWithDate = Contact.reconstitute(id, {
+        email: 'json@example.com',
+        firstName: 'JSON',
+        lastName: 'Test',
+        ownerId: 'owner-1',
+        tenantId: 'tenant-1',
+        lastContactedAt: date,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      const jsonWithDate = contactWithDate.toJSON();
+      expect(jsonWithDate.lastContactedAt).toBe('2026-02-10T08:30:00.000Z');
+
+      // Without lastContactedAt
+      const result = Contact.create({
+        email: 'jsonnull@example.com',
+        firstName: 'JSON',
+        lastName: 'Null',
+        ownerId: 'owner-1',
+        tenantId: 'tenant-1',
+      });
+
+      const jsonNull = result.value.toJSON();
+      expect(jsonNull.lastContactedAt).toBeNull();
+    });
+  });
+
+  describe('recordInteraction() (IFC-192)', () => {
+    let contact: Contact;
+
+    beforeEach(() => {
+      const result = Contact.create({
+        email: 'interact@example.com',
+        firstName: 'Interact',
+        lastName: 'Test',
+        ownerId: 'owner-123',
+        tenantId: 'tenant-1',
+      });
+      contact = result.value;
+      contact.clearDomainEvents();
+    });
+
+    it('should set lastContactedAt for EMAIL interaction', () => {
+      const before = new Date();
+      const result = contact.recordInteraction('EMAIL', 'user-1');
+      const after = new Date();
+
+      expect(result.isSuccess).toBe(true);
+      expect(contact.lastContactedAt).toBeDefined();
+      expect(contact.lastContactedAt!.getTime()).toBeGreaterThanOrEqual(before.getTime());
+      expect(contact.lastContactedAt!.getTime()).toBeLessThanOrEqual(after.getTime());
+    });
+
+    it('should set lastContactedAt for CALL interaction', () => {
+      const result = contact.recordInteraction('CALL', 'user-1');
+
+      expect(result.isSuccess).toBe(true);
+      expect(contact.lastContactedAt).toBeDefined();
+    });
+
+    it('should set lastContactedAt for MEETING interaction', () => {
+      const result = contact.recordInteraction('MEETING', 'user-1');
+
+      expect(result.isSuccess).toBe(true);
+      expect(contact.lastContactedAt).toBeDefined();
+    });
+
+    it('should update updatedAt when recording interaction', () => {
+      const originalUpdatedAt = contact.updatedAt;
+      // Small delay to ensure timestamps differ
+      const result = contact.recordInteraction('EMAIL', 'user-1');
+
+      expect(result.isSuccess).toBe(true);
+      expect(contact.updatedAt.getTime()).toBeGreaterThanOrEqual(originalUpdatedAt.getTime());
+    });
+
+    it('should return Result.ok(undefined) on success', () => {
+      const result = contact.recordInteraction('EMAIL', 'user-1');
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value).toBeUndefined();
+    });
+
+    it('should enforce monotonic advancement — older timestamp does not overwrite newer', () => {
+      // First interaction
+      contact.recordInteraction('EMAIL', 'user-1');
+      const firstTimestamp = contact.lastContactedAt!;
+
+      // Manually set a far-future time to test monotonic guard
+      const id = ContactId.generate();
+      const futureDate = new Date('2027-01-01T00:00:00Z');
+      const futureContact = Contact.reconstitute(id, {
+        email: 'future@example.com',
+        firstName: 'Future',
+        lastName: 'Contact',
+        ownerId: 'owner-1',
+        tenantId: 'tenant-1',
+        lastContactedAt: futureDate,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      });
+
+      // Recording interaction should still work (now() < 2027), so it should NOT overwrite
+      futureContact.recordInteraction('EMAIL', 'user-1');
+      expect(futureContact.lastContactedAt!.getTime()).toBe(futureDate.getTime());
+    });
+
+    it('should allow rapid double call — second call wins when both newer', () => {
+      contact.recordInteraction('EMAIL', 'user-1');
+      const first = contact.lastContactedAt!;
+
+      contact.recordInteraction('CALL', 'user-2');
+      const second = contact.lastContactedAt!;
+
+      expect(second.getTime()).toBeGreaterThanOrEqual(first.getTime());
+    });
+
+    it('should emit ContactInteractedEvent', () => {
+      contact.recordInteraction('EMAIL', 'user-1');
+
+      const events = contact.getDomainEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0]).toBeInstanceOf(ContactInteractedEvent);
+
+      const event = events[0] as ContactInteractedEvent;
+      expect(event.eventType).toBe('contact.interacted');
+      expect(event.contactId).toBe(contact.id);
+      expect(event.interactionType).toBe('EMAIL');
+      expect(event.recordedBy).toBe('user-1');
+    });
+
+    it('should emit event with correct interactionType', () => {
+      contact.recordInteraction('MEETING', 'user-2');
+
+      const events = contact.getDomainEvents();
+      const event = events[0] as ContactInteractedEvent;
+      expect(event.interactionType).toBe('MEETING');
+    });
+
+    it('should NOT update lastContactedAt via updateContactInfo()', () => {
+      contact.recordInteraction('EMAIL', 'user-1');
+      const lastContacted = contact.lastContactedAt!;
+
+      contact.updateContactInfo({ firstName: 'Updated' }, 'user-2');
+
+      expect(contact.lastContactedAt!.getTime()).toBe(lastContacted.getTime());
+    });
+  });
+
+  describe('CONTACT_INTERACTION_TYPES (IFC-192)', () => {
+    it('should export CONTACT_INTERACTION_TYPES with correct values', () => {
+      expect(CONTACT_INTERACTION_TYPES).toEqual(['EMAIL', 'CALL', 'MEETING']);
+    });
+
+    it('should be a readonly tuple (3 values)', () => {
+      expect(CONTACT_INTERACTION_TYPES).toHaveLength(3);
+      expect(CONTACT_INTERACTION_TYPES[0]).toBe('EMAIL');
+      expect(CONTACT_INTERACTION_TYPES[1]).toBe('CALL');
+      expect(CONTACT_INTERACTION_TYPES[2]).toBe('MEETING');
     });
   });
 });

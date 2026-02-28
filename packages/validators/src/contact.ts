@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { emailSchema, phoneSchema, idSchema, paginationSchema, nameSchema } from './common';
-import { CONTACT_TYPES, CONTACT_STATUSES } from '@intelliflow/domain';
+import { CONTACT_TYPES, CONTACT_STATUSES, CONTACT_INTERACTION_TYPES } from '@intelliflow/domain';
 
 // Re-export common schemas used by API routers
 export { idSchema } from './common';
@@ -11,6 +11,19 @@ export type ContactType = z.infer<typeof contactTypeSchema>;
 
 export const contactStatusSchema = z.enum(CONTACT_STATUSES);
 export type ContactStatus = z.infer<typeof contactStatusSchema>;
+
+// IFC-192: Contact interaction types
+export const contactInteractionTypeSchema = z.enum(CONTACT_INTERACTION_TYPES);
+export type ContactInteractionType = z.infer<typeof contactInteractionTypeSchema>;
+
+// IFC-192: Log activity input schema
+export const logActivitySchema = z.object({
+  contactId: idSchema,
+  type: contactInteractionTypeSchema,
+  title: z.string().min(1).max(200),
+  description: z.string().max(2000).optional(),
+});
+export type LogActivityInput = z.infer<typeof logActivitySchema>;
 
 // Base contact fields schema (DRY - used by create and update)
 const baseContactFieldsSchema = z.object({
@@ -79,6 +92,7 @@ export const contactResponseSchema = z.object({
   contactType: z.string().nullable(),
   tags: z.array(z.string()),
   contactNotes: z.string().nullable(),
+  lastContactedAt: z.coerce.date().nullable(), // IFC-192
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });

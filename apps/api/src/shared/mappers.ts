@@ -57,6 +57,7 @@ export function mapContactToResponse(contact: Contact) {
     contactType: contact.contactType ?? null,
     tags: contact.tags ?? [],
     contactNotes: contact.contactNotes ?? null,
+    lastContactedAt: contact.lastContactedAt ?? null, // IFC-192
     createdAt: contact.createdAt,
     updatedAt: contact.updatedAt,
   };

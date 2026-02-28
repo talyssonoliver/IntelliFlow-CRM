@@ -17,7 +17,7 @@ export { leadScoreSchema, type LeadScoreInput } from '@intelliflow/validators';
  */
 export const scoringResponseSchema = z.object({
   /** Lead ID that was scored */
-  leadId: z.string().uuid(),
+  leadId: z.uuid(),
   /** The scoring result */
   scoring: z.object({
     score: z.number().int().min(0).max(100),
@@ -34,7 +34,7 @@ export const scoringResponseSchema = z.object({
   /** Tier classification based on score */
   tier: z.enum(['HOT', 'WARM', 'COLD']),
   /** ISO timestamp when scoring was performed */
-  scoredAt: z.string().datetime(),
+  scoredAt: z.iso.datetime(),
   /** Processing time in milliseconds */
   latencyMs: z.number().int().nonnegative(),
 });
@@ -45,7 +45,7 @@ export type ScoringResponse = z.infer<typeof scoringResponseSchema>;
  * Batch scoring request schema
  */
 export const batchScoringRequestSchema = z.object({
-  leadIds: z.array(z.string().uuid()).min(1).max(100),
+  leadIds: z.array(z.uuid()).min(1).max(100),
   options: z
     .object({
       skipCached: z.boolean().default(false),
@@ -80,10 +80,10 @@ export type BatchScoringResponse = z.infer<typeof batchScoringResponseSchema>;
  * Human override schema for correcting AI scores
  */
 export const scoreOverrideSchema = z.object({
-  leadId: z.string().uuid(),
+  leadId: z.uuid(),
   overrideScore: z.number().int().min(0).max(100),
   reason: z.string().min(10).max(500),
-  overriddenBy: z.string().uuid(),
+  overriddenBy: z.uuid(),
 });
 
 export type ScoreOverride = z.infer<typeof scoreOverrideSchema>;

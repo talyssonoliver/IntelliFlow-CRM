@@ -121,4 +121,4 @@ export * from './audit';
 
 // Shared utilities (IFC-125)
 export { detectScoreBias } from './shared/bias-detector';
-export type { BiasMetric, BiasViolation, BiasReport } from './shared/bias-detector';
+export type { BiasMetric, BiasViolation, LeadScoringBiasCheck } from './shared/bias-detector';

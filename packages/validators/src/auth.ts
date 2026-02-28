@@ -200,6 +200,26 @@ export const oauthCallbackSchema = z.object({
 
 export type OAuthCallbackInput = z.infer<typeof oauthCallbackSchema>;
 
+/**
+ * SSO domain resolution schemas
+ * Used for enterprise SSO email-domain lookup
+ *
+ * IMPLEMENTS: PG-124 (SSO/OAuth social login providers)
+ */
+export const ssoResolveSchema = z.object({
+  email: z.string().email(),
+});
+
+export type SsoResolveInput = z.infer<typeof ssoResolveSchema>;
+
+export const ssoResolutionSchema = z.object({
+  provider_id: z.string(),
+  provider_name: z.string(),
+  redirect_url: z.string().url(),
+});
+
+export type SsoResolution = z.infer<typeof ssoResolutionSchema>;
+
 // ============================================
 // SESSION SCHEMAS
 // ============================================

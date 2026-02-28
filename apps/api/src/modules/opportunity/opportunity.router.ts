@@ -85,9 +85,9 @@ export const opportunityRouter = createTRPCRouter({
       body: `Deal "${result.value.name}" has been created`,
       priority: 'normal',
       entityType: 'opportunity',
-      entityId: result.value.id,
+      entityId: result.value.id.value,
       entityName: result.value.name,
-      actionUrl: `/deals/${result.value.id}`,
+      actionUrl: `/deals/${result.value.id.value}`,
     }).catch(() => {});
 
     return mapOpportunityToResponse(result.value);
@@ -366,9 +366,9 @@ export const opportunityRouter = createTRPCRouter({
       body: `"${result.value.name}" moved to ${input.targetStage}`,
       priority: notifPriority,
       entityType: 'opportunity',
-      entityId: result.value.id,
+      entityId: result.value.id.value,
       entityName: result.value.name,
-      actionUrl: `/deals/${result.value.id}`,
+      actionUrl: `/deals/${result.value.id.value}`,
     }).catch(() => {});
 
     return mapOpportunityToResponse(result.value);
@@ -667,7 +667,7 @@ export const opportunityRouter = createTRPCRouter({
         avatar:
           opp.owner?.name
             ?.split(' ')
-            .map((n) => n[0])
+            .map((n: string) => n[0])
             .join('')
             .toUpperCase() || 'NA',
       },
@@ -737,7 +737,7 @@ export const opportunityRouter = createTRPCRouter({
         include: {
           owner: { select: { id: true, name: true, email: true } },
           account: { select: { id: true, name: true } },
-          contact: { select: { id: true, name: true, title: true } },
+          contact: { select: { id: true, firstName: true, lastName: true, title: true } },
         },
       });
 
@@ -924,7 +924,7 @@ export const opportunityRouter = createTRPCRouter({
       const ownerName = opportunity.owner?.name || 'Unassigned';
       const ownerAvatar = ownerName
         .split(' ')
-        .map((n) => n[0])
+        .map((n: string) => n[0])
         .join('')
         .toUpperCase();
 
@@ -939,7 +939,7 @@ export const opportunityRouter = createTRPCRouter({
           owner: { name: ownerName, avatar: ownerAvatar },
           account: opportunity.account ? { name: opportunity.account.name } : null,
           contact: opportunity.contact
-            ? { name: opportunity.contact.name, title: opportunity.contact.title ?? '' }
+            ? { name: `${opportunity.contact.firstName} ${opportunity.contact.lastName}`.trim(), title: opportunity.contact.title ?? '' }
             : null,
         },
         riskFactors,

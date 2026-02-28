@@ -13,6 +13,7 @@ import {
   CreateContactProps,
   ContactSearchParams,
   ContactSearchResult,
+  ContactInteractionType,
 } from '@intelliflow/domain';
 import { EventBusPort } from '../ports/external';
 import { PersistenceError, ValidationError, NotFoundError } from '../errors';
@@ -360,6 +361,40 @@ export class ContactService {
 
     await this.publishEvents(contact);
 
+    return Result.ok(contact);
+  }
+
+  /**
+   * Record an interaction on a contact (IFC-192)
+   * Updates lastContactedAt and emits ContactInteractedEvent
+   */
+  async recordInteraction(
+    contactId: string,
+    interactionType: ContactInteractionType,
+    userId: string
+  ): Promise<Result<Contact, DomainError>> {
+    const contactIdResult = ContactId.create(contactId);
+    if (contactIdResult.isFailure) {
+      return Result.fail(contactIdResult.error);
+    }
+
+    const contact = await this.contactRepository.findById(contactIdResult.value);
+    if (!contact) {
+      return Result.fail(new NotFoundError(`Contact not found: ${contactId}`));
+    }
+
+    const result = contact.recordInteraction(interactionType, userId);
+    if (result.isFailure) {
+      return Result.fail(result.error);
+    }
+
+    try {
+      await this.contactRepository.save(contact);
+    } catch (error) {
+      return Result.fail(new PersistenceError('Failed to save contact'));
+    }
+
+    await this.publishEvents(contact);
     return Result.ok(contact);
   }
 

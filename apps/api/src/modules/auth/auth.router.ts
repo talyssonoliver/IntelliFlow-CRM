@@ -36,6 +36,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   signupSchema,
+  ssoResolveSchema,
   type LoginResponse,
 } from '@intelliflow/validators';
 import {
@@ -121,6 +122,57 @@ function createEmailRateLimiter(limit: number, windowMs: number) {
 // 3 requests per email per 15 minutes (AC-008)
 const passwordResetLimiter = createEmailRateLimiter(3, 900000);
 const verificationResendLimiter = createEmailRateLimiter(3, 900000);
+
+// 10 OAuth initiation requests per IP per 5 minutes (PG-124 SF-003)
+const oauthInitLimiter = createEmailRateLimiter(10, 300000);
+
+// 5 SSO resolve requests per email per 5 minutes (PG-124)
+const ssoResolveLimiter = createEmailRateLimiter(5, 300000);
+
+/**
+ * SSO provider configuration.
+ * In production this would be stored in the database; currently static.
+ * IMPLEMENTS: PG-124 (server-side SSO resolution)
+ */
+const SSO_PROVIDER_CONFIG = {
+  providers: [
+    {
+      domain: 'example-corp.com',
+      provider_id: 'sso-example-corp',
+      provider_name: 'Example Corp SSO',
+      provider_type: 'saml' as const,
+      enabled: true,
+    },
+  ],
+  fallback: {
+    message: 'Your organization has not configured SSO. Please use standard login.',
+  },
+};
+
+/**
+ * Validate redirect URL against an allowlist of safe internal paths.
+ * Prevents open redirect attacks.
+ */
+const REDIRECT_ALLOWLIST = ['/', '/dashboard', '/settings', '/auth/callback'];
+
+function isAllowedRedirect(url: string, appUrl: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const app = new URL(appUrl);
+    // Must be same origin
+    if (parsed.origin !== app.origin) return false;
+    // Path must start with an allowed prefix
+    return REDIRECT_ALLOWLIST.some(
+      (allowed) => parsed.pathname === allowed || parsed.pathname.startsWith(`${allowed}/`)
+    );
+  } catch {
+    // Relative path check
+    if (!url.startsWith('/')) return false;
+    return REDIRECT_ALLOWLIST.some(
+      (allowed) => url === allowed || url.startsWith(`${allowed}/`)
+    );
+  }
+}
 
 /**
  * Mask email for logging: user@example.com → us***@example.com (NF-003)
@@ -258,18 +310,44 @@ export const authRouter = createTRPCRouter({
    * Initiate OAuth sign-in flow
    *
    * Returns the OAuth provider URL to redirect the user to.
+   * SF-003: Server-side redirectTo validation prevents open redirect attacks.
    */
-  loginWithOAuth: publicProcedure.input(oauthInitSchema).mutation(async ({ input }) => {
+  loginWithOAuth: publicProcedure.input(oauthInitSchema).mutation(async ({ ctx, input }) => {
+    // Rate limit OAuth initiation by IP (PG-124 SF-003)
+    const oauthHeaders = ctx.req?.headers;
+    const ipAddress =
+      getHeaderFromContext(oauthHeaders, 'x-forwarded-for') ||
+      getHeaderFromContext(oauthHeaders, 'x-real-ip') ||
+      'unknown';
+    const rateCheck = oauthInitLimiter.check(ipAddress);
+    if (!rateCheck.allowed) {
+      throw new TRPCError({
+        code: 'TOO_MANY_REQUESTS',
+        message: `Too many login attempts. Please try again in ${Math.ceil(rateCheck.retryAfterSeconds / 60)} minutes.`,
+      });
+    }
+
     const provider = input.provider as OAuthProvider;
+
+    // SF-003: Validate redirectTo against allowlist (prevent open redirect)
+    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    let safeRedirectTo = input.redirectTo;
+    if (safeRedirectTo) {
+      if (!isAllowedRedirect(safeRedirectTo, appUrl)) {
+        console.warn('[OAuth] Server: Blocked non-allowlisted redirectTo:', safeRedirectTo);
+        safeRedirectTo = `${appUrl}/auth/callback`;
+      }
+    }
+
     console.log(
       '[OAuth] Server: Initiating OAuth for provider:',
       provider,
       'redirectTo:',
-      input.redirectTo
+      safeRedirectTo
     );
 
     const { url, error } = await signInWithOAuth(provider, {
-      redirectTo: input.redirectTo,
+      redirectTo: safeRedirectTo,
     });
 
     console.log(
@@ -290,6 +368,52 @@ export const authRouter = createTRPCRouter({
     }
 
     return { url, provider };
+  }),
+
+  /**
+   * Resolve SSO provider for a given email domain.
+   *
+   * Rate-limited server-side endpoint that resolves an email address
+   * to its enterprise SSO provider configuration.
+   *
+   * IMPLEMENTS: PG-124 (SSO server-side resolution)
+   */
+  resolveSso: publicProcedure.input(ssoResolveSchema).query(async ({ input }) => {
+    // Rate limit SSO resolution by email (PG-124)
+    const rateCheck = ssoResolveLimiter.check(input.email);
+    if (!rateCheck.allowed) {
+      throw new TRPCError({
+        code: 'TOO_MANY_REQUESTS',
+        message: `Too many requests. Please try again in ${Math.ceil(rateCheck.retryAfterSeconds / 60)} minutes.`,
+      });
+    }
+
+    const domain = input.email.split('@')[1]?.toLowerCase();
+    if (!domain) {
+      return { found: false as const };
+    }
+
+    console.log('[SSO] Server-side resolution for domain:', maskEmail(input.email));
+
+    // Look up SSO provider configuration for the domain.
+    // In production this would query the Supabase SSO provider table;
+    // currently resolves from the static SSO_PROVIDER_CONFIG.
+    const provider = SSO_PROVIDER_CONFIG.providers.find(
+      (p) => p.domain.toLowerCase() === domain && p.enabled,
+    );
+
+    if (provider) {
+      return {
+        found: true as const,
+        config: {
+          provider_id: provider.provider_id,
+          provider_name: provider.provider_name,
+          provider_type: provider.provider_type,
+        },
+      };
+    }
+
+    return { found: false as const, suggestion: SSO_PROVIDER_CONFIG.fallback.message };
   }),
 
   /**

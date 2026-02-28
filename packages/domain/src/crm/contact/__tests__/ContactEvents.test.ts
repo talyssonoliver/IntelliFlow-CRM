@@ -5,6 +5,7 @@ import {
   ContactAccountAssociatedEvent,
   ContactAccountDisassociatedEvent,
   ContactConvertedFromLeadEvent,
+  ContactInteractedEvent,
 } from '../ContactEvents';
 import { ContactId } from '../ContactId';
 import { Email } from '../../lead/Email';
@@ -139,5 +140,46 @@ describe('ContactConvertedFromLeadEvent', () => {
     expect(payload.contactId).toBe(contactId.value);
     expect(payload.leadId).toBe('lead-123');
     expect(payload.convertedBy).toBe('user-456');
+  });
+});
+
+// IFC-192: Contact Activity Tracking
+describe('ContactInteractedEvent', () => {
+  it('should have eventType "contact.interacted"', () => {
+    const contactId = ContactId.generate();
+    const interactedAt = new Date('2026-02-27T10:00:00Z');
+    const event = new ContactInteractedEvent(contactId, 'EMAIL', interactedAt, 'user-123');
+
+    expect(event.eventType).toBe('contact.interacted');
+  });
+
+  it('should serialize toPayload() with correct shape', () => {
+    const contactId = ContactId.generate();
+    const interactedAt = new Date('2026-02-27T10:00:00Z');
+    const event = new ContactInteractedEvent(contactId, 'CALL', interactedAt, 'user-456');
+
+    const payload = event.toPayload();
+
+    expect(payload.contactId).toBe(contactId.value);
+    expect(payload.interactionType).toBe('CALL');
+    expect(payload.interactedAt).toBe('2026-02-27T10:00:00.000Z');
+    expect(payload.recordedBy).toBe('user-456');
+  });
+
+  it('should pass through correct interactionType', () => {
+    const contactId = ContactId.generate();
+    const event = new ContactInteractedEvent(contactId, 'MEETING', new Date(), 'user-789');
+
+    expect(event.interactionType).toBe('MEETING');
+    expect(event.toPayload().interactionType).toBe('MEETING');
+  });
+
+  it('should have eventId and occurredAt from base DomainEvent', () => {
+    const contactId = ContactId.generate();
+    const event = new ContactInteractedEvent(contactId, 'EMAIL', new Date(), 'user-1');
+
+    expect(event.eventId).toBeDefined();
+    expect(typeof event.eventId).toBe('string');
+    expect(event.occurredAt).toBeInstanceOf(Date);
   });
 });

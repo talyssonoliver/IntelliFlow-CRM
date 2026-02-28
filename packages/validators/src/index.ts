@@ -82,3 +82,6 @@ export * from './feedback-survey';
 
 // Ticket Routing Schemas (IFC-067: Automatic Ticket Routing Engine)
 export * from './ticket-routing';
+
+// User Schemas (IFC-191: User Timezone Support)
+export * from './user';

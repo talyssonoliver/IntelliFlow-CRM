@@ -25,6 +25,7 @@ export interface UserSession {
   role: string;
   tenantId: string;
   stripeCustomerId?: string;
+  timezone?: string;
 }
 
 /**
@@ -182,7 +183,7 @@ export const createWSContext = async (authHeader?: string): Promise<BaseContext>
         if (!error && supabaseUser) {
           const dbUser = await apiPrisma.user.findUnique({
             where: { id: supabaseUser.id },
-            select: { id: true, email: true, name: true, role: true, tenantId: true },
+            select: { id: true, email: true, name: true, role: true, tenantId: true, timezone: true },
           });
 
           if (dbUser) {
@@ -192,6 +193,7 @@ export const createWSContext = async (authHeader?: string): Promise<BaseContext>
               name: dbUser.name ?? undefined,
               role: dbUser.role,
               tenantId: dbUser.tenantId,
+              timezone: dbUser.timezone ?? 'UTC',
             };
           }
         }
@@ -258,6 +260,7 @@ export const createContext = async (opts?: {
             role: true,
             tenantId: true,
             stripeCustomerId: true,
+            timezone: true,
           },
         });
 
@@ -269,6 +272,7 @@ export const createContext = async (opts?: {
             role: dbUser.role,
             tenantId: dbUser.tenantId,
             stripeCustomerId: dbUser.stripeCustomerId ?? undefined,
+            timezone: dbUser.timezone ?? 'UTC',
           };
         } else {
           // User exists in Supabase Auth but not in database

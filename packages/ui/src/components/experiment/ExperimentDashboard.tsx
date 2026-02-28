@@ -487,4 +487,3 @@ export function ExperimentDashboard({
   );
 }
 
-export default ExperimentDashboard;

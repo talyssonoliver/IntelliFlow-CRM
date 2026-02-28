@@ -7,7 +7,13 @@
  * @module @intelliflow/application/services/ChainVersionService
  */
 
-import { CHAIN_VERSION_DEFAULTS, DomainEvent } from '@intelliflow/domain';
+import {
+  CHAIN_VERSION_DEFAULTS,
+  ChainVersionCreatedEvent,
+  ChainVersionActivatedEvent,
+  ChainVersionDeprecatedEvent,
+  ChainVersionRolledBackEvent,
+} from '@intelliflow/domain';
 import type {
   ChainType,
   ChainVersionStatus,
@@ -122,92 +128,15 @@ export interface FeatureFlagProviderPort {
 }
 
 // =============================================================================
-// Domain Events
+// Domain Events (re-exported from @intelliflow/domain)
 // =============================================================================
 
-export class ChainVersionCreatedEvent extends DomainEvent {
-  readonly eventType = 'chain_version.created';
-  constructor(
-    public readonly versionId: string,
-    public readonly chainType: ChainType,
-    public readonly createdBy: string,
-    public readonly tenantId: string
-  ) {
-    super();
-  }
-
-  toPayload(): Record<string, unknown> {
-    return {
-      versionId: this.versionId,
-      chainType: this.chainType,
-      createdBy: this.createdBy,
-      tenantId: this.tenantId,
-    };
-  }
-}
-
-export class ChainVersionActivatedEvent extends DomainEvent {
-  readonly eventType = 'chain_version.activated';
-  constructor(
-    public readonly versionId: string,
-    public readonly chainType: ChainType,
-    public readonly previousVersionId: string | null,
-    public readonly activatedBy: string
-  ) {
-    super();
-  }
-
-  toPayload(): Record<string, unknown> {
-    return {
-      versionId: this.versionId,
-      chainType: this.chainType,
-      previousVersionId: this.previousVersionId,
-      activatedBy: this.activatedBy,
-    };
-  }
-}
-
-export class ChainVersionDeprecatedEvent extends DomainEvent {
-  readonly eventType = 'chain_version.deprecated';
-  constructor(
-    public readonly versionId: string,
-    public readonly chainType: ChainType,
-    public readonly deprecatedBy: string
-  ) {
-    super();
-  }
-
-  toPayload(): Record<string, unknown> {
-    return {
-      versionId: this.versionId,
-      chainType: this.chainType,
-      deprecatedBy: this.deprecatedBy,
-    };
-  }
-}
-
-export class ChainVersionRolledBackEvent extends DomainEvent {
-  readonly eventType = 'chain_version.rolled_back';
-  constructor(
-    public readonly fromVersionId: string,
-    public readonly toVersionId: string,
-    public readonly chainType: ChainType,
-    public readonly reason: string,
-    public readonly rolledBackBy: string
-  ) {
-    super();
-  }
-
-  toPayload(): Record<string, unknown> {
-    return {
-      fromVersionId: this.fromVersionId,
-      toVersionId: this.toVersionId,
-      chainType: this.chainType,
-      reason: this.reason,
-      rolledBackBy: this.rolledBackBy,
-    };
-  }
-}
+export {
+  ChainVersionCreatedEvent,
+  ChainVersionActivatedEvent,
+  ChainVersionDeprecatedEvent,
+  ChainVersionRolledBackEvent,
+};
 
 // =============================================================================
 // Chain Version Service

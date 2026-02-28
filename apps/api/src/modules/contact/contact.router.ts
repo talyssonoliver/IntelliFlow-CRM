@@ -24,6 +24,7 @@ import {
   unlinkFromLeadSchema,
   contactTimelineSchema,
   contactTimelineResponseSchema,
+  logActivitySchema,
 } from '@intelliflow/validators/contact';
 import {
   bulkEmailContactsSchema,
@@ -205,7 +206,7 @@ export const contactRouter = createTRPCRouter({
       }
 
       // For relations, use Prisma
-      const contactWithRelations = await typedCtx.prismaWithTenant.contact.findUnique({
+      const contactWithRelations = await typedCtx.prismaWithTenant.contact.findFirst({
         where: { email: input.email },
         include: {
           owner: {
@@ -1061,4 +1062,58 @@ export const contactRouter = createTRPCRouter({
         meetsKpi: durationMs < 1000,
       };
     }),
+
+  // IFC-192: Log activity on a contact (updates lastContactedAt for qualifying types)
+  logActivity: tenantProcedure.input(logActivitySchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = ctx as TenantAwareContext;
+    const { tenantId, userId } = typedCtx.tenant;
+
+    // Verify contact exists and belongs to tenant
+    const contact = await typedCtx.prismaWithTenant.contact.findUnique({
+      where: { id: input.contactId },
+    });
+
+    if (!contact) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Contact not found: ${input.contactId}`,
+      });
+    }
+
+    // Transaction: create activity record + update lastContactedAt
+    const result = await ctx.prisma.$transaction(async (tx) => {
+      // 1. Create ContactActivity record
+      await tx.contactActivity.create({
+        data: {
+          contactId: input.contactId,
+          type: input.type,
+          title: input.title,
+          description: input.description ?? '',
+          timestamp: new Date(),
+          userId,
+          userName: ctx.user?.email ?? 'Unknown',
+          tenantId,
+        },
+      });
+
+      // 2. Update lastContactedAt via domain service
+      const contactService = getContactService(ctx);
+      const recordResult = await contactService.recordInteraction(
+        input.contactId,
+        input.type,
+        userId
+      );
+
+      if (recordResult.isFailure) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: recordResult.error.message,
+        });
+      }
+
+      return recordResult.value;
+    });
+
+    return mapContactToResponse(result);
+  }),
 });

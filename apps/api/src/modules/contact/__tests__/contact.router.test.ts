@@ -41,6 +41,7 @@ const createMockDomainContact = (overrides: Record<string, unknown> = {}) => ({
   tenantId: TEST_UUIDS.tenant,
   hasAccount: true,
   isConvertedFromLead: false,
+  lastContactedAt: null, // IFC-192
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
   getDomainEvents: () => [],
@@ -247,7 +248,7 @@ describe('Contact Router', () => {
         value: createMockDomainContact(),
       });
 
-      prismaMock.contact.findUnique.mockResolvedValue(contactWithRelations);
+      prismaMock.contact.findFirst.mockResolvedValue(contactWithRelations);
 
       const result = await caller.getByEmail({ email: 'contact@example.com' });
 

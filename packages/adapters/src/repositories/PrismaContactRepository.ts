@@ -50,6 +50,7 @@ export class PrismaContactRepository implements ContactRepository {
       tenantId: contact.tenantId,
       createdAt: contact.createdAt,
       updatedAt: contact.updatedAt,
+      lastContactedAt: contact.lastContactedAt ?? null, // IFC-192
     };
 
     await this.prisma.contact.upsert({
@@ -80,6 +81,7 @@ export class PrismaContactRepository implements ContactRepository {
       tenantId: record.tenantId,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
+      lastContactedAt: record.lastContactedAt ?? undefined, // IFC-192
     });
   }
 
@@ -134,7 +136,7 @@ export class PrismaContactRepository implements ContactRepository {
   }
 
   async findByEmail(email: Email): Promise<Contact | null> {
-    const record = await this.prisma.contact.findUnique({
+    const record = await this.prisma.contact.findFirst({
       where: { email: email.value },
     });
 
@@ -154,6 +156,7 @@ export class PrismaContactRepository implements ContactRepository {
       tenantId: record.tenantId,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
+      lastContactedAt: record.lastContactedAt ?? undefined, // IFC-192
     });
   }
 
@@ -191,6 +194,7 @@ export class PrismaContactRepository implements ContactRepository {
       tenantId: record.tenantId,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
+      lastContactedAt: record.lastContactedAt ?? undefined, // IFC-192
     });
   }
 

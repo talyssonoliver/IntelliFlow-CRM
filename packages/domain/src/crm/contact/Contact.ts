@@ -11,6 +11,7 @@ import {
   ContactConvertedFromLeadEvent,
   ContactLinkedToLeadEvent,
   ContactUnlinkedFromLeadEvent,
+  ContactInteractedEvent,
 } from './ContactEvents';
 
 // Canonical enum values - single source of truth (IFC-089)
@@ -31,9 +32,13 @@ export const CONTACT_STATUSES = [
   'FORMER_CUSTOMER',
 ] as const;
 
+// IFC-192: Interaction types that trigger lastContactedAt update
+export const CONTACT_INTERACTION_TYPES = ['EMAIL', 'CALL', 'MEETING'] as const;
+
 // Derive types from const arrays
 export type ContactType = (typeof CONTACT_TYPES)[number];
 export type ContactStatus = (typeof CONTACT_STATUSES)[number];
+export type ContactInteractionType = (typeof CONTACT_INTERACTION_TYPES)[number];
 
 export class ContactAlreadyHasAccountError extends DomainError {
   readonly code = 'CONTACT_ALREADY_HAS_ACCOUNT';
@@ -84,6 +89,7 @@ interface ContactProps {
   contactType?: ContactType;
   tags?: string[];
   contactNotes?: string;
+  lastContactedAt?: Date; // IFC-192
   createdAt: Date;
   updatedAt: Date;
 }
@@ -223,6 +229,11 @@ export class Contact extends AggregateRoot<ContactId> {
 
   get contactNotes(): string | undefined {
     return this.props.contactNotes;
+  }
+
+  // IFC-192: Last time this contact was interacted with
+  get lastContactedAt(): Date | undefined {
+    return this.props.lastContactedAt;
   }
 
   // Factory method
@@ -504,6 +515,35 @@ export class Contact extends AggregateRoot<ContactId> {
     return Result.ok(undefined);
   }
 
+  /**
+   * Record an interaction with this contact (IFC-192)
+   * Sets lastContactedAt (monotonic: only advances forward)
+   */
+  recordInteraction(
+    interactionType: ContactInteractionType,
+    recordedBy: string
+  ): Result<void, DomainError> {
+    const now = new Date();
+
+    // Monotonic: only update if new timestamp is >= existing
+    if (this.props.lastContactedAt && now < this.props.lastContactedAt) {
+      // Still emit event but don't update the timestamp
+      this.addDomainEvent(
+        new ContactInteractedEvent(this.id, interactionType, now, recordedBy)
+      );
+      return Result.ok(undefined);
+    }
+
+    this.props.lastContactedAt = now;
+    this.props.updatedAt = now;
+
+    this.addDomainEvent(
+      new ContactInteractedEvent(this.id, interactionType, now, recordedBy)
+    );
+
+    return Result.ok(undefined);
+  }
+
   updateEmail(newEmail: string, updatedBy: string): Result<void, DomainError> {
     const emailResult = Email.create(newEmail);
     if (emailResult.isFailure) {
@@ -542,6 +582,7 @@ export class Contact extends AggregateRoot<ContactId> {
       contactType: this.contactType,
       tags: this.tags,
       contactNotes: this.contactNotes,
+      lastContactedAt: this.lastContactedAt?.toISOString() ?? null,
       createdAt: this.createdAt.toISOString(),
       updatedAt: this.updatedAt.toISOString(),
     };

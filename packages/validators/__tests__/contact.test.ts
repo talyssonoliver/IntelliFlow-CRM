@@ -463,6 +463,7 @@ describe('Contact Validators', () => {
         contactType: 'customer',
         tags: ['enterprise'],
         contactNotes: 'Important client',
+        lastContactedAt: '2024-01-15T10:00:00Z',
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-02T00:00:00Z',
       };
@@ -493,6 +494,7 @@ describe('Contact Validators', () => {
         contactType: null,
         tags: [],
         contactNotes: null,
+        lastContactedAt: null,
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-02T00:00:00Z',
       };
@@ -523,6 +525,7 @@ describe('Contact Validators', () => {
         contactType: null,
         tags: [],
         contactNotes: null,
+        lastContactedAt: null,
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-02T00:00:00Z',
       };
@@ -558,6 +561,7 @@ describe('Contact Validators', () => {
         contactType: null,
         tags: [],
         contactNotes: null,
+        lastContactedAt: null,
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-02T00:00:00Z',
       };
@@ -588,6 +592,7 @@ describe('Contact Validators', () => {
         contactType: null,
         tags: [],
         contactNotes: null,
+        lastContactedAt: null,
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-02T00:00:00Z',
       };
@@ -622,6 +627,7 @@ describe('Contact Validators', () => {
             contactType: 'customer',
             tags: ['vip', 'enterprise'],
             contactNotes: null,
+            lastContactedAt: null,
             createdAt: '2024-01-01T00:00:00Z',
             updatedAt: '2024-01-02T00:00:00Z',
           },
@@ -699,6 +705,7 @@ describe('Contact Validators', () => {
             contactType: 'customer',
             tags: ['vip'],
             contactNotes: null,
+            lastContactedAt: '2024-01-10T09:00:00Z',
             createdAt: '2024-01-01T00:00:00Z',
             updatedAt: '2024-01-02T00:00:00Z',
           },
@@ -723,6 +730,7 @@ describe('Contact Validators', () => {
             contactType: 'prospect',
             tags: [],
             contactNotes: null,
+            lastContactedAt: null,
             createdAt: '2024-01-01T00:00:00Z',
             updatedAt: '2024-01-02T00:00:00Z',
           },

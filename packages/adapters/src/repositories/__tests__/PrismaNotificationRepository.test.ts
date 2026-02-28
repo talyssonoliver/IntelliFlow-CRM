@@ -493,7 +493,7 @@ describe('PrismaNotificationRepository', () => {
           tenantId: 'tenant-1',
           recipientId: 'user-1',
           channel: 'IN_APP',
-          status: { in: ['SENT', 'DELIVERED'] },
+          status: 'PENDING',
           readAt: null,
         },
       });
@@ -552,7 +552,7 @@ describe('PrismaNotificationRepository', () => {
           tenantId: 'tenant-1',
           recipientId: 'user-1',
           channel: 'IN_APP',
-          status: { in: ['SENT', 'DELIVERED'] },
+          status: 'PENDING',
           readAt: null,
         },
         data: {

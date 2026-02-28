@@ -9,7 +9,7 @@
  * Target: ≥90% coverage
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@prisma/client';
 import { homeRouter } from '../home.router';
@@ -231,6 +231,7 @@ describe('Home Router', () => {
       ] as any);
       prismaMock.lead.findMany.mockResolvedValue([]);
       prismaMock.task.count.mockResolvedValue(0);
+      prismaMock.contact.findMany.mockResolvedValue([]); // IFC-192
 
       const result = await caller.getAIInsights();
 
@@ -253,6 +254,7 @@ describe('Home Router', () => {
         },
       ] as any);
       prismaMock.task.count.mockResolvedValue(0);
+      prismaMock.contact.findMany.mockResolvedValue([]); // IFC-192
 
       const result = await caller.getAIInsights();
 
@@ -266,6 +268,7 @@ describe('Home Router', () => {
       prismaMock.opportunity.findMany.mockResolvedValue([]);
       prismaMock.lead.findMany.mockResolvedValue([]);
       prismaMock.task.count.mockResolvedValue(5);
+      prismaMock.contact.findMany.mockResolvedValue([]); // IFC-192
 
       const result = await caller.getAIInsights();
 
@@ -279,6 +282,7 @@ describe('Home Router', () => {
       prismaMock.opportunity.findMany.mockResolvedValue([]);
       prismaMock.lead.findMany.mockResolvedValue([]);
       prismaMock.task.count.mockResolvedValue(0);
+      prismaMock.contact.findMany.mockResolvedValue([]); // IFC-192
 
       const result = await caller.getAIInsights();
 
@@ -306,6 +310,7 @@ describe('Home Router', () => {
 
       // 5 overdue tasks
       prismaMock.task.count.mockResolvedValue(5);
+      prismaMock.contact.findMany.mockResolvedValue([]); // IFC-192
 
       const result = await caller.getAIInsights();
 
@@ -317,6 +322,7 @@ describe('Home Router', () => {
       prismaMock.opportunity.findMany.mockResolvedValue([]);
       prismaMock.lead.findMany.mockResolvedValue([]);
       prismaMock.task.count.mockResolvedValue(0);
+      prismaMock.contact.findMany.mockResolvedValue([]); // IFC-192
 
       const before = new Date();
       const result = await caller.getAIInsights();
@@ -333,7 +339,10 @@ describe('Home Router', () => {
   // NOTE: getActivityFeed tests removed — endpoint was moved to activityFeed.getUnifiedFeed (IFC-069)
 
   describe('getDailyGoal', () => {
-    it('should calculate revenue goal progress', async () => {
+    // --- Existing tests updated for IFC-195 (add user.findUnique mock for preferences read) ---
+    it('should calculate revenue goal progress (default preferences)', async () => {
+      // IFC-195: getDailyGoal now reads user preferences first
+      prismaMock.user.findUnique.mockResolvedValue({ preferences: null } as any);
       prismaMock.opportunity.aggregate.mockResolvedValue({
         _sum: { value: new Prisma.Decimal(2500) },
       } as any);
@@ -349,6 +358,7 @@ describe('Home Router', () => {
     });
 
     it('should cap progress at 100%', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({ preferences: null } as any);
       prismaMock.opportunity.aggregate.mockResolvedValue({
         _sum: { value: new Prisma.Decimal(7500) },
       } as any);
@@ -360,6 +370,7 @@ describe('Home Router', () => {
     });
 
     it('should handle zero revenue', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({ preferences: null } as any);
       prismaMock.opportunity.aggregate.mockResolvedValue({
         _sum: { value: null },
       } as any);
@@ -372,6 +383,7 @@ describe('Home Router', () => {
     });
 
     it('should include lastUpdated timestamp', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({ preferences: null } as any);
       prismaMock.opportunity.aggregate.mockResolvedValue({
         _sum: { value: new Prisma.Decimal(1000) },
       } as any);
@@ -382,6 +394,400 @@ describe('Home Router', () => {
 
       expect(result.lastUpdated.getTime()).toBeGreaterThanOrEqual(before.getTime());
       expect(result.lastUpdated.getTime()).toBeLessThanOrEqual(after.getTime());
+    });
+
+    // --- IFC-195: New multi-type getDailyGoal tests ---
+    it('should use explicit revenue preferences with custom target', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { dailyGoal: { type: 'revenue', targetValue: 10000 } },
+      } as any);
+      prismaMock.opportunity.aggregate.mockResolvedValue({
+        _sum: { value: new Prisma.Decimal(3000) },
+      } as any);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.type).toBe('revenue');
+      expect(result.goal.targetValue).toBe(10000);
+      expect(result.goal.currentValue).toBe(3000);
+      expect(result.goal.progress).toBe(30);
+      expect(result.goal.id).toBe('daily-revenue');
+    });
+
+    it('should calculate calls goal progress', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { dailyGoal: { type: 'calls', targetValue: 10 } },
+      } as any);
+      prismaMock.callRecord.count.mockResolvedValue(4);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.type).toBe('calls');
+      expect(result.goal.targetValue).toBe(10);
+      expect(result.goal.currentValue).toBe(4);
+      expect(result.goal.progress).toBe(40);
+      expect(result.goal.id).toBe('daily-calls');
+    });
+
+    it('should handle zero calls', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { dailyGoal: { type: 'calls', targetValue: 10 } },
+      } as any);
+      prismaMock.callRecord.count.mockResolvedValue(0);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.currentValue).toBe(0);
+      expect(result.goal.progress).toBe(0);
+    });
+
+    it('should cap calls progress at 100%', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { dailyGoal: { type: 'calls', targetValue: 5 } },
+      } as any);
+      prismaMock.callRecord.count.mockResolvedValue(8);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.progress).toBe(100);
+      expect(result.goal.remainingToTarget).toBe(0);
+    });
+
+    it('should calculate meetings goal progress', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { dailyGoal: { type: 'meetings', targetValue: 3 } },
+      } as any);
+      prismaMock.appointment.count.mockResolvedValue(2);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.type).toBe('meetings');
+      expect(result.goal.targetValue).toBe(3);
+      expect(result.goal.currentValue).toBe(2);
+      expect(result.goal.progress).toBe(67);
+      expect(result.goal.id).toBe('daily-meetings');
+    });
+
+    it('should handle zero meetings', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { dailyGoal: { type: 'meetings', targetValue: 3 } },
+      } as any);
+      prismaMock.appointment.count.mockResolvedValue(0);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.currentValue).toBe(0);
+      expect(result.goal.progress).toBe(0);
+    });
+
+    it('should cap meetings progress at 100%', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { dailyGoal: { type: 'meetings', targetValue: 2 } },
+      } as any);
+      prismaMock.appointment.count.mockResolvedValue(5);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.progress).toBe(100);
+      expect(result.goal.remainingToTarget).toBe(0);
+    });
+
+    it('should calculate tasks goal progress', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { dailyGoal: { type: 'tasks', targetValue: 5 } },
+      } as any);
+      prismaMock.task.count.mockResolvedValue(3);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.type).toBe('tasks');
+      expect(result.goal.targetValue).toBe(5);
+      expect(result.goal.currentValue).toBe(3);
+      expect(result.goal.progress).toBe(60);
+      expect(result.goal.id).toBe('daily-tasks');
+    });
+
+    it('should handle zero tasks', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { dailyGoal: { type: 'tasks', targetValue: 5 } },
+      } as any);
+      prismaMock.task.count.mockResolvedValue(0);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.currentValue).toBe(0);
+      expect(result.goal.progress).toBe(0);
+    });
+
+    it('should cap tasks progress at 100%', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { dailyGoal: { type: 'tasks', targetValue: 3 } },
+      } as any);
+      prismaMock.task.count.mockResolvedValue(7);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.progress).toBe(100);
+      expect(result.goal.remainingToTarget).toBe(0);
+    });
+
+    it('should return currentValue 0 for custom goal', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { dailyGoal: { type: 'custom', targetValue: 10, customUnit: 'demos' } },
+      } as any);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.type).toBe('custom');
+      expect(result.goal.currentValue).toBe(0);
+      expect(result.goal.id).toBe('daily-custom');
+    });
+
+    it('should default to revenue/$5000 when no preferences at all', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({ preferences: null } as any);
+      prismaMock.opportunity.aggregate.mockResolvedValue({
+        _sum: { value: new Prisma.Decimal(1000) },
+      } as any);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.type).toBe('revenue');
+      expect(result.goal.targetValue).toBe(5000);
+      expect(result.goal.label).toBe('Sales');
+    });
+
+    it('should default to revenue when preferences exist but no dailyGoal key', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { pinnedItems: [] },
+      } as any);
+      prismaMock.opportunity.aggregate.mockResolvedValue({
+        _sum: { value: new Prisma.Decimal(500) },
+      } as any);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.type).toBe('revenue');
+      expect(result.goal.targetValue).toBe(5000);
+    });
+
+    it('should format revenue remaining as "$N,NNN"', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { dailyGoal: { type: 'revenue', targetValue: 5000 } },
+      } as any);
+      prismaMock.opportunity.aggregate.mockResolvedValue({
+        _sum: { value: new Prisma.Decimal(2800) },
+      } as any);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.remainingFormatted).toBe('$2,200');
+    });
+
+    it('should format calls remaining as "N calls"', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { dailyGoal: { type: 'calls', targetValue: 10 } },
+      } as any);
+      prismaMock.callRecord.count.mockResolvedValue(3);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.remainingFormatted).toBe('7 calls');
+    });
+
+    it('should format meetings remaining as "N meetings"', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { dailyGoal: { type: 'meetings', targetValue: 5 } },
+      } as any);
+      prismaMock.appointment.count.mockResolvedValue(2);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.remainingFormatted).toBe('3 meetings');
+    });
+
+    it('should format tasks remaining as "N tasks"', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { dailyGoal: { type: 'tasks', targetValue: 5 } },
+      } as any);
+      prismaMock.task.count.mockResolvedValue(1);
+
+      const result = await caller.getDailyGoal();
+
+      expect(result.goal.remainingFormatted).toBe('4 tasks');
+    });
+
+    it('should fallback to defaults on malformed preferences.dailyGoal', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { dailyGoal: { type: 'INVALID', targetValue: -1 } },
+      } as any);
+      prismaMock.opportunity.aggregate.mockResolvedValue({
+        _sum: { value: new Prisma.Decimal(0) },
+      } as any);
+
+      const result = await caller.getDailyGoal();
+
+      // Should fallback to defaults (revenue/$5000)
+      expect(result.goal.type).toBe('revenue');
+      expect(result.goal.targetValue).toBe(5000);
+    });
+  });
+
+  // =============================================================================
+  // updateDailyGoal (IFC-195)
+  // =============================================================================
+  describe('updateDailyGoal', () => {
+    it('should save revenue goal preference', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { pinnedItems: [] },
+      } as any);
+      prismaMock.user.update.mockResolvedValue({} as any);
+
+      const result = await caller.updateDailyGoal({
+        type: 'revenue',
+        targetValue: 8000,
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.message).toBe('Daily goal updated successfully');
+      expect(prismaMock.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            preferences: expect.objectContaining({
+              dailyGoal: expect.objectContaining({
+                type: 'revenue',
+                targetValue: 8000,
+              }),
+            }),
+          },
+        })
+      );
+    });
+
+    it('should save calls goal preference', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({ preferences: {} } as any);
+      prismaMock.user.update.mockResolvedValue({} as any);
+
+      const result = await caller.updateDailyGoal({
+        type: 'calls',
+        targetValue: 15,
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should save tasks goal preference', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({ preferences: {} } as any);
+      prismaMock.user.update.mockResolvedValue({} as any);
+
+      const result = await caller.updateDailyGoal({
+        type: 'tasks',
+        targetValue: 8,
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should save meetings goal preference', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({ preferences: {} } as any);
+      prismaMock.user.update.mockResolvedValue({} as any);
+
+      const result = await caller.updateDailyGoal({
+        type: 'meetings',
+        targetValue: 4,
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should save custom goal preference with customUnit', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({ preferences: {} } as any);
+      prismaMock.user.update.mockResolvedValue({} as any);
+
+      const result = await caller.updateDailyGoal({
+        type: 'custom',
+        targetValue: 10,
+        label: 'Demos',
+        customUnit: 'demos',
+      });
+
+      expect(result.success).toBe(true);
+      expect(prismaMock.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            preferences: expect.objectContaining({
+              dailyGoal: expect.objectContaining({
+                type: 'custom',
+                customUnit: 'demos',
+              }),
+            }),
+          },
+        })
+      );
+    });
+
+    it('should reject negative targetValue', async () => {
+      await expect(
+        caller.updateDailyGoal({ type: 'revenue', targetValue: -100 })
+      ).rejects.toThrow();
+    });
+
+    it('should reject zero targetValue', async () => {
+      await expect(
+        caller.updateDailyGoal({ type: 'revenue', targetValue: 0 })
+      ).rejects.toThrow();
+    });
+
+    it('should reject invalid goal type', async () => {
+      await expect(
+        caller.updateDailyGoal({ type: 'invalid' as any, targetValue: 10 })
+      ).rejects.toThrow();
+    });
+
+    it('should preserve existing preferences (pinnedItems survive)', async () => {
+      const existingPinned = [{ entityType: 'lead', entityId: 'lead-1' }];
+      prismaMock.user.findUnique.mockResolvedValue({
+        preferences: { pinnedItems: existingPinned },
+      } as any);
+      prismaMock.user.update.mockResolvedValue({} as any);
+
+      await caller.updateDailyGoal({ type: 'calls', targetValue: 10 });
+
+      expect(prismaMock.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            preferences: expect.objectContaining({
+              pinnedItems: existingPinned,
+              dailyGoal: expect.objectContaining({ type: 'calls' }),
+            }),
+          },
+        })
+      );
+    });
+
+    it('should create preferences when none exist', async () => {
+      prismaMock.user.findUnique.mockResolvedValue({ preferences: null } as any);
+      prismaMock.user.update.mockResolvedValue({} as any);
+
+      await caller.updateDailyGoal({ type: 'revenue', targetValue: 5000 });
+
+      expect(prismaMock.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: {
+            preferences: expect.objectContaining({
+              dailyGoal: expect.objectContaining({ type: 'revenue' }),
+            }),
+          },
+        })
+      );
+    });
+
+    it('should throw UNAUTHORIZED for public context', async () => {
+      const publicCtx = createPublicContext();
+      const publicCaller = homeRouter.createCaller(publicCtx);
+
+      await expect(
+        publicCaller.updateDailyGoal({ type: 'revenue', targetValue: 5000 })
+      ).rejects.toThrow();
     });
   });
 
@@ -669,6 +1075,7 @@ describe('Home Router', () => {
           },
         ] as any);
         prismaMock.task.count.mockResolvedValue(0);
+        prismaMock.contact.findMany.mockResolvedValue([]); // IFC-192
 
         const result = await caller.getAIInsights();
 
@@ -687,6 +1094,7 @@ describe('Home Router', () => {
           },
         ] as any);
         prismaMock.task.count.mockResolvedValue(0);
+        prismaMock.contact.findMany.mockResolvedValue([]); // IFC-192
 
         const result = await caller.getAIInsights();
 
@@ -697,10 +1105,116 @@ describe('Home Router', () => {
         prismaMock.opportunity.findMany.mockResolvedValue([]);
         prismaMock.lead.findMany.mockResolvedValue([]);
         prismaMock.task.count.mockResolvedValue(1);
+        prismaMock.contact.findMany.mockResolvedValue([]); // IFC-192
 
         const result = await caller.getAIInsights();
 
         expect(result.insights[0].title).toBe('1 Overdue Task');
+      });
+    });
+
+    // IFC-192: Stale contact warning tests
+    describe('stale contact warnings (IFC-192)', () => {
+      it('should return warning for stale contact with lastContactedAt > 30 days and open opportunity', async () => {
+        const fortyDaysAgo = new Date();
+        fortyDaysAgo.setDate(fortyDaysAgo.getDate() - 40);
+
+        prismaMock.opportunity.findMany.mockResolvedValue([]);
+        prismaMock.lead.findMany.mockResolvedValue([]);
+        prismaMock.task.count.mockResolvedValue(0);
+        prismaMock.contact.findMany.mockResolvedValue([
+          {
+            id: TEST_UUIDS.contact1,
+            firstName: 'Jane',
+            lastName: 'Smith',
+            lastContactedAt: fortyDaysAgo,
+          },
+        ] as any);
+
+        const result = await caller.getAIInsights();
+
+        expect(result.insights).toHaveLength(1);
+        expect(result.insights[0].type).toBe('warning');
+        expect(result.insights[0].title).toContain('Stale Contact');
+        expect(result.insights[0].title).toContain('Jane Smith');
+        expect(result.insights[0].description).toContain('40 days');
+        expect(result.insights[0].entityType).toBe('contact');
+        expect(result.insights[0].actionUrl).toBe(`/contacts/${TEST_UUIDS.contact1}`);
+        expect(result.insights[0].priority).toBe('medium');
+      });
+
+      it('should return warning for contact with lastContactedAt = null and open opportunity', async () => {
+        prismaMock.opportunity.findMany.mockResolvedValue([]);
+        prismaMock.lead.findMany.mockResolvedValue([]);
+        prismaMock.task.count.mockResolvedValue(0);
+        prismaMock.contact.findMany.mockResolvedValue([
+          {
+            id: TEST_UUIDS.contact1,
+            firstName: 'Jane',
+            lastName: 'Smith',
+            lastContactedAt: null,
+          },
+        ] as any);
+
+        const result = await caller.getAIInsights();
+
+        expect(result.insights).toHaveLength(1);
+        expect(result.insights[0].description).toContain('Never contacted');
+      });
+
+      it('should NOT return warning for recently contacted contact (< 30 days)', async () => {
+        prismaMock.opportunity.findMany.mockResolvedValue([]);
+        prismaMock.lead.findMany.mockResolvedValue([]);
+        prismaMock.task.count.mockResolvedValue(0);
+        // The Prisma query filters by lastContactedAt < staleCutoff,
+        // so recently contacted contacts won't be returned by the query
+        prismaMock.contact.findMany.mockResolvedValue([]);
+
+        const result = await caller.getAIInsights();
+
+        // Only the "all good" achievement should show
+        expect(result.insights).toHaveLength(1);
+        expect(result.insights[0].type).toBe('achievement');
+      });
+
+      it('should NOT return warning for stale contact with NO open opportunities', async () => {
+        prismaMock.opportunity.findMany.mockResolvedValue([]);
+        prismaMock.lead.findMany.mockResolvedValue([]);
+        prismaMock.task.count.mockResolvedValue(0);
+        // The Prisma query filters by opportunities: { some: { stage: { notIn: [...] } } }
+        // so contacts without open opportunities won't be returned
+        prismaMock.contact.findMany.mockResolvedValue([]);
+
+        const result = await caller.getAIInsights();
+
+        expect(result.insights).toHaveLength(1);
+        expect(result.insights[0].type).toBe('achievement');
+      });
+
+      it('should cap stale contacts at 2 within the 5-insight total', async () => {
+        const twoWeeksAgo = new Date();
+        twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 20);
+
+        // 3 deals at risk + 2 hot leads + 1 overdue + 2 stale contacts = 8
+        prismaMock.opportunity.findMany.mockResolvedValue([
+          { id: '1', name: 'Deal 1', updatedAt: twoWeeksAgo },
+          { id: '2', name: 'Deal 2', updatedAt: twoWeeksAgo },
+          { id: '3', name: 'Deal 3', updatedAt: twoWeeksAgo },
+        ] as any);
+        prismaMock.lead.findMany.mockResolvedValue([
+          { id: '1', firstName: 'Lead', lastName: '1', company: null, score: 90 },
+          { id: '2', firstName: 'Lead', lastName: '2', company: null, score: 95 },
+        ] as any);
+        prismaMock.task.count.mockResolvedValue(3);
+        prismaMock.contact.findMany.mockResolvedValue([
+          { id: 'c1', firstName: 'Stale', lastName: 'Contact1', lastContactedAt: null },
+          { id: 'c2', firstName: 'Stale', lastName: 'Contact2', lastContactedAt: null },
+        ] as any);
+
+        const result = await caller.getAIInsights();
+
+        // Total capped at 5
+        expect(result.insights.length).toBeLessThanOrEqual(5);
       });
     });
   });
@@ -730,6 +1244,85 @@ describe('Home Router', () => {
     // The presentation logic now lives in the frontend component
     // (apps/web/src/components/shared/activity-feed/ActivityFeedItem.tsx)
     // and is tested there.
+  });
+
+  // =============================================================================
+  // Timezone-aware greeting (IFC-191)
+  // =============================================================================
+  describe('getWelcomeSummary — timezone-aware greeting', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    function setupMocksForGreeting() {
+      prismaMock.user.findUnique.mockResolvedValue(mockUser as any);
+      prismaMock.task.count.mockResolvedValue(0);
+      prismaMock.lead.count.mockResolvedValue(0);
+      prismaMock.appointment.count.mockResolvedValue(0);
+      prismaMock.opportunity.count.mockResolvedValue(0);
+    }
+
+    it('should return Good morning for Asia/Tokyo user at UTC 00:00', async () => {
+      vi.useFakeTimers({ now: new Date('2026-01-15T00:00:00Z') });
+
+      // Create context with timezone on ctx.user (the real code path)
+      const tokyoCtx = createTestContext({
+        user: { userId: TEST_UUIDS.user1, email: 'test@example.com', role: 'USER', tenantId: 'test-tenant-id', timezone: 'Asia/Tokyo' },
+      });
+      const tokyoCaller = homeRouter.createCaller(tokyoCtx);
+
+      setupMocksForGreeting();
+
+      const result = await tokyoCaller.getWelcomeSummary();
+
+      // UTC 00:00 = JST 09:00 → Good morning
+      expect(result.greeting).toBe('Good morning');
+    });
+
+    it('should return Good evening for America/New_York user at UTC 22:00', async () => {
+      vi.useFakeTimers({ now: new Date('2026-01-15T22:00:00Z') });
+
+      const nyCtx = createTestContext({
+        user: { userId: TEST_UUIDS.user1, email: 'test@example.com', role: 'USER', tenantId: 'test-tenant-id', timezone: 'America/New_York' },
+      });
+      const nyCaller = homeRouter.createCaller(nyCtx);
+
+      setupMocksForGreeting();
+
+      const result = await nyCaller.getWelcomeSummary();
+
+      // UTC 22:00 = EST 17:00 → Good evening
+      expect(result.greeting).toBe('Good evening');
+    });
+
+    it('should fallback to UTC-based greeting when timezone is undefined', async () => {
+      vi.useFakeTimers({ now: new Date('2026-01-15T08:00:00Z') });
+
+      // Context without timezone set → falls back to UTC
+      const noTzCtx = createTestContext({
+        user: { userId: TEST_UUIDS.user1, email: 'test@example.com', role: 'USER', tenantId: 'test-tenant-id' },
+      });
+      const noTzCaller = homeRouter.createCaller(noTzCtx);
+
+      setupMocksForGreeting();
+
+      const result = await noTzCaller.getWelcomeSummary();
+
+      // UTC 08:00 → Good morning
+      expect(result.greeting).toBe('Good morning');
+    });
+
+    it('should use UTC when timezone is explicitly UTC', async () => {
+      vi.useFakeTimers({ now: new Date('2026-01-15T15:00:00Z') });
+
+      setupMocksForGreeting();
+
+      // Default context has timezone: 'UTC'
+      const result = await caller.getWelcomeSummary();
+
+      // UTC 15:00 → Good afternoon
+      expect(result.greeting).toBe('Good afternoon');
+    });
   });
 
   // =============================================================================

@@ -150,6 +150,26 @@ export type ActivityFeedResponse = z.infer<typeof activityFeedResponseSchema>;
 // Daily Goal Schemas
 // =============================================================================
 
+// IFC-195: Customizable Daily Goals
+export const GOAL_TYPES = ['revenue', 'calls', 'meetings', 'tasks', 'custom'] as const;
+export type GoalType = (typeof GOAL_TYPES)[number];
+
+export const GOAL_DEFAULTS: Record<GoalType, { targetValue: number; label: string; unit: string }> = {
+  revenue: { targetValue: 5000, label: 'Sales', unit: '$' },
+  calls: { targetValue: 10, label: 'Calls', unit: 'calls' },
+  meetings: { targetValue: 3, label: 'Meetings', unit: 'meetings' },
+  tasks: { targetValue: 5, label: 'Tasks', unit: 'tasks' },
+  custom: { targetValue: 10, label: 'Custom Goal', unit: 'units' },
+};
+
+export const updateDailyGoalInputSchema = z.object({
+  type: z.enum(GOAL_TYPES),
+  targetValue: z.number().int().positive(),
+  label: z.string().min(1).max(100).optional(),
+  customUnit: z.string().min(1).max(50).optional(),
+});
+export type UpdateDailyGoalInput = z.infer<typeof updateDailyGoalInputSchema>;
+
 export const dailyGoalSchema = z.object({
   id: z.string(),
   type: z.enum(['revenue', 'calls', 'meetings', 'tasks', 'custom']),

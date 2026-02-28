@@ -215,38 +215,44 @@ describe('opportunityRouter additional coverage', () => {
 
   describe('moveStage - CLOSED_LOST without reason', () => {
     it('should pass empty reason when not provided', async () => {
-      mockServices.opportunity.markAsLost.mockResolvedValue({
+      mockServices.closeDealLost.execute.mockResolvedValue({
         isFailure: false,
-        value: { id: OPP_ID, stage: 'CLOSED_LOST' },
-      });
-      const caller = opportunityRouter.createCaller(ctx);
-
-      const result = await caller.moveStage({
-        id: OPP_ID,
-        targetStage: 'CLOSED_LOST',
-      });
-
-      expect(mockServices.opportunity.markAsLost).toHaveBeenCalledWith(OPP_ID, '', USER_ID);
-    });
-
-    it('should pass reason when provided', async () => {
-      mockServices.opportunity.markAsLost.mockResolvedValue({
-        isFailure: false,
-        value: { id: OPP_ID, stage: 'CLOSED_LOST' },
+        value: { id: { value: OPP_ID }, name: 'Test Deal', stage: 'CLOSED_LOST' },
       });
       const caller = opportunityRouter.createCaller(ctx);
 
       await caller.moveStage({
         id: OPP_ID,
         targetStage: 'CLOSED_LOST',
-        reason: 'Budget cut',
       });
 
-      expect(mockServices.opportunity.markAsLost).toHaveBeenCalledWith(
-        OPP_ID,
-        'Budget cut',
-        USER_ID
-      );
+      expect(mockServices.closeDealLost.execute).toHaveBeenCalledWith({
+        opportunityId: OPP_ID,
+        reason: '',
+        closedBy: USER_ID,
+        tenantId: TENANT_ID,
+      });
+    });
+
+    it('should pass reason when provided', async () => {
+      mockServices.closeDealLost.execute.mockResolvedValue({
+        isFailure: false,
+        value: { id: { value: OPP_ID }, name: 'Test Deal', stage: 'CLOSED_LOST' },
+      });
+      const caller = opportunityRouter.createCaller(ctx);
+
+      await caller.moveStage({
+        id: OPP_ID,
+        targetStage: 'CLOSED_LOST',
+        reason: 'Budget cut forced cancellation',
+      });
+
+      expect(mockServices.closeDealLost.execute).toHaveBeenCalledWith({
+        opportunityId: OPP_ID,
+        reason: 'Budget cut forced cancellation',
+        closedBy: USER_ID,
+        tenantId: TENANT_ID,
+      });
     });
   });
 

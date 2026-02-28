@@ -27,6 +27,9 @@ import {
   pinItemInputSchema,
   unpinItemInputSchema,
   reorderPinnedItemsInputSchema,
+  updateDailyGoalInputSchema,
+  GOAL_TYPES,
+  GOAL_DEFAULTS,
   AI_INSIGHT_TYPES,
   ACTIVITY_FEED_TYPES,
   PINNABLE_ENTITY_TYPES,
@@ -790,6 +793,106 @@ describe('Home Page Validators', () => {
         items: [{ entityType: 'lead', entityId: '1' }],
       });
       expect(result.success).toBe(false);
+    });
+  });
+
+  // =============================================================================
+  // updateDailyGoalInputSchema (IFC-195)
+  // =============================================================================
+  describe('updateDailyGoalInputSchema', () => {
+    it('accepts valid revenue goal input', () => {
+      const result = updateDailyGoalInputSchema.safeParse({
+        type: 'revenue',
+        targetValue: 5000,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts valid calls goal input', () => {
+      const result = updateDailyGoalInputSchema.safeParse({
+        type: 'calls',
+        targetValue: 10,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts valid custom goal with customUnit', () => {
+      const result = updateDailyGoalInputSchema.safeParse({
+        type: 'custom',
+        targetValue: 20,
+        label: 'Demos Given',
+        customUnit: 'demos',
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.customUnit).toBe('demos');
+      }
+    });
+
+    it('rejects negative targetValue', () => {
+      const result = updateDailyGoalInputSchema.safeParse({
+        type: 'revenue',
+        targetValue: -100,
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects zero targetValue', () => {
+      const result = updateDailyGoalInputSchema.safeParse({
+        type: 'revenue',
+        targetValue: 0,
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('rejects invalid goal type string', () => {
+      const result = updateDailyGoalInputSchema.safeParse({
+        type: 'invalid_type',
+        targetValue: 10,
+      });
+      expect(result.success).toBe(false);
+    });
+
+    it('label is optional', () => {
+      const result = updateDailyGoalInputSchema.safeParse({
+        type: 'tasks',
+        targetValue: 5,
+      });
+      expect(result.success).toBe(true);
+    });
+
+    it('customUnit is optional', () => {
+      const result = updateDailyGoalInputSchema.safeParse({
+        type: 'meetings',
+        targetValue: 3,
+        label: 'Team Meetings',
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.customUnit).toBeUndefined();
+      }
+    });
+  });
+
+  // =============================================================================
+  // GOAL_TYPES and GOAL_DEFAULTS constants (IFC-195)
+  // =============================================================================
+  describe('GOAL_TYPES and GOAL_DEFAULTS', () => {
+    it('GOAL_TYPES contains all 5 types', () => {
+      expect(GOAL_TYPES).toEqual(['revenue', 'calls', 'meetings', 'tasks', 'custom']);
+    });
+
+    it('GOAL_DEFAULTS has entries for all 5 types', () => {
+      for (const type of GOAL_TYPES) {
+        expect(GOAL_DEFAULTS[type]).toBeDefined();
+        expect(GOAL_DEFAULTS[type].targetValue).toBeGreaterThan(0);
+        expect(GOAL_DEFAULTS[type].label).toBeTruthy();
+        expect(GOAL_DEFAULTS[type].unit).toBeTruthy();
+      }
+    });
+
+    it('GOAL_DEFAULTS revenue has $5000 target', () => {
+      expect(GOAL_DEFAULTS.revenue).toEqual({ targetValue: 5000, label: 'Sales', unit: '$' });
     });
   });
 

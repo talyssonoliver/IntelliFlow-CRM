@@ -1,6 +1,7 @@
 import { DomainEvent } from '../../shared/DomainEvent';
 import { ContactId } from './ContactId';
 import { Email } from '../lead/Email';
+import type { ContactInteractionType } from './Contact';
 
 /**
  * Event: Contact was created
@@ -169,6 +170,32 @@ export class ContactUnlinkedFromLeadEvent extends DomainEvent {
       previousLeadId: this.previousLeadId,
       unlinkedBy: this.unlinkedBy,
       unlinkedAt: this.unlinkedAt.toISOString(),
+    };
+  }
+}
+
+/**
+ * Event: Contact was interacted with (IFC-192)
+ * Fired when a qualifying interaction (EMAIL, CALL, MEETING) is recorded.
+ */
+export class ContactInteractedEvent extends DomainEvent {
+  readonly eventType = 'contact.interacted';
+
+  constructor(
+    public readonly contactId: ContactId,
+    public readonly interactionType: ContactInteractionType,
+    public readonly interactedAt: Date,
+    public readonly recordedBy: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      contactId: this.contactId.value,
+      interactionType: this.interactionType,
+      interactedAt: this.interactedAt.toISOString(),
+      recordedBy: this.recordedBy,
     };
   }
 }

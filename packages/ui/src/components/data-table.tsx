@@ -104,9 +104,9 @@ export function TableRowActions<T>({
           key={index}
           onClick={action.onClick}
           className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"
-          title={action.label}
+          aria-label={action.label}
         >
-          <span className="material-symbols-outlined text-[18px]">{action.icon}</span>
+          <span className="material-symbols-outlined text-[18px]" aria-hidden="true">{action.icon}</span>
         </button>
       ))}
 
@@ -128,9 +128,9 @@ export function TableRowActions<T>({
           <DropdownMenuTrigger asChild>
             <button
               className="p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"
-              title="More actions"
+              aria-label="More actions"
             >
-              <span className="material-symbols-outlined text-[18px]">more_vert</span>
+              <span className="material-symbols-outlined text-[18px]" aria-hidden="true">more_vert</span>
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
@@ -195,20 +195,28 @@ export function ConfirmationDialog({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => onOpenChange(false)}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirmation-dialog-title"
+        aria-describedby={description ? 'confirmation-dialog-desc' : undefined}
+        className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => { if (e.key === 'Escape') onOpenChange(false); }}
+      >
         <div className="flex items-start gap-4">
           {icon && (
             <div
               className={`p-2 rounded-full ${variant === 'destructive' ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' : 'bg-primary/10 text-primary'}`}
             >
-              <span className="material-symbols-outlined text-xl">{icon}</span>
+              <span className="material-symbols-outlined text-xl" aria-hidden="true">{icon}</span>
             </div>
           )}
           <div className="flex-1">
-            <h2 className="text-lg font-semibold">{title}</h2>
+            <h2 id="confirmation-dialog-title" className="text-lg font-semibold">{title}</h2>
             {description && (
-              <p className="mt-2 text-slate-600 dark:text-slate-400 text-sm">{description}</p>
+              <p id="confirmation-dialog-desc" className="mt-2 text-slate-600 dark:text-slate-400 text-sm">{description}</p>
             )}
           </div>
         </div>
@@ -224,7 +232,7 @@ export function ConfirmationDialog({
             disabled={isLoading}
           >
             {isLoading && (
-              <span className="material-symbols-outlined text-sm mr-2 animate-spin">
+              <span className="material-symbols-outlined text-sm mr-2 animate-spin" aria-hidden="true">
                 progress_activity
               </span>
             )}
@@ -272,14 +280,24 @@ export function StatusSelectDialog({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-        <h2 className="text-lg font-semibold">{title}</h2>
-        {description && <p className="mt-2 text-slate-600 dark:text-slate-400">{description}</p>}
-        <div className="mt-4 space-y-2">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => onOpenChange(false)}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="status-dialog-title"
+        aria-describedby={description ? 'status-dialog-desc' : undefined}
+        className="bg-white dark:bg-slate-900 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => { if (e.key === 'Escape') onOpenChange(false); }}
+      >
+        <h2 id="status-dialog-title" className="text-lg font-semibold">{title}</h2>
+        {description && <p id="status-dialog-desc" className="mt-2 text-slate-600 dark:text-slate-400">{description}</p>}
+        <div className="mt-4 space-y-2" role="radiogroup" aria-label={title}>
           {options.map((option) => (
             <button
               key={option.value}
+              role="radio"
+              aria-checked={selectedValue === option.value}
               className={`w-full text-left px-4 py-2 rounded ${
                 selectedValue === option.value
                   ? 'bg-primary text-primary-foreground'
@@ -514,7 +532,10 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
                   onClick={() => onRowClick?.(row.original)}
-                  className={`bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 ${onRowClick ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50' : ''}`}
+                  onKeyDown={onRowClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRowClick(row.original); } } : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  role={onRowClick ? 'button' : undefined}
+                  className={`bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 ${onRowClick ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset' : ''}`}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell

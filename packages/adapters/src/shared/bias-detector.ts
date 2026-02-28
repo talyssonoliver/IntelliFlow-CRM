@@ -1,6 +1,3 @@
-import { writeFile, readFile } from 'fs/promises';
-import { join } from 'path';
-
 // Simple logger - in production, integrate with existing logging infrastructure
 const logger = {
   info: (data: unknown, msg: string) => console.log(`[INFO] ${msg}`, data),
@@ -41,14 +38,6 @@ export interface LeadScoringBiasCheck {
     company?: string;
     source?: string;
   };
-}
-
-export interface BiasReport {
-  period: string;
-  totalScored: number;
-  biasDetected: boolean;
-  violations: BiasViolation[];
-  summary: Record<string, number>;
 }
 
 export interface BiasViolation {
@@ -154,112 +143,6 @@ export function detectScoreBias(scores: LeadScoringBiasCheck[]): {
   };
 }
 
-/**
- * Monitor model drift over time
- */
-export async function detectModelDrift(
-  currentMetrics: BiasMetric[],
-  historicalMetricsPath: string
-): Promise<{
-  driftDetected: boolean;
-  driftMetrics: Array<{ metric: string; drift: number }>;
-}> {
-  try {
-    // Load historical metrics
-    const historicalData = await readFile(historicalMetricsPath, 'utf-8');
-    const historicalMetrics: BiasMetric[] = parseCSV(historicalData);
-
-    // Compare current vs historical
-    const driftMetrics: Array<{ metric: string; drift: number }> = [];
-
-    for (const current of currentMetrics) {
-      const historical = historicalMetrics
-        .filter(
-          (h) =>
-            h.metric_name === current.metric_name &&
-            h.demographic_segment === current.demographic_segment
-        )
-        .slice(-10); // Last 10 data points
-
-      if (historical.length < 3) {
-        continue; // Not enough historical data
-      }
-
-      const historicalMean = historical.reduce((sum, h) => sum + h.value, 0) / historical.length;
-      const drift = Math.abs(current.value - historicalMean) / historicalMean;
-
-      if (drift > 0.15) {
-        // 15% drift threshold
-        driftMetrics.push({
-          metric: `${current.demographic_segment}:${current.metric_name}`,
-          drift,
-        });
-
-        logger.warn(
-          {
-            metric: current.metric_name,
-            segment: current.demographic_segment,
-            current: current.value,
-            historical: historicalMean,
-            drift,
-          },
-          'Model drift detected'
-        );
-      }
-    }
-
-    return {
-      driftDetected: driftMetrics.length > 0,
-      driftMetrics,
-    };
-  } catch (error) {
-    logger.error({ error }, 'Failed to detect model drift');
-    return {
-      driftDetected: false,
-      driftMetrics: [],
-    };
-  }
-}
-
-/**
- * Save bias metrics to CSV
- */
-export async function saveBiasMetrics(metrics: BiasMetric[], outputPath: string): Promise<void> {
-  const csv = metricsToCSV(metrics);
-  await writeFile(outputPath, csv, 'utf-8');
-  logger.info({ outputPath, count: metrics.length }, 'Bias metrics saved');
-}
-
-/**
- * Generate bias report
- */
-export function generateBiasReport(period: string, allScores: LeadScoringBiasCheck[]): BiasReport {
-  const { biasDetected, violations, metrics } = detectScoreBias(allScores);
-
-  // Calculate summary statistics
-  const summary: Record<string, number> = {
-    total_scored: allScores.length,
-    violations_count: violations.length,
-    high_severity: violations.filter((v) => v.severity === 'high').length,
-    medium_severity: violations.filter((v) => v.severity === 'medium').length,
-    low_severity: violations.filter((v) => v.severity === 'low').length,
-  };
-
-  // Calculate score distribution
-  const scores = allScores.map((s) => s.score);
-  summary.mean_score = scores.reduce((sum, s) => sum + s, 0) / scores.length;
-  summary.std_dev = Math.sqrt(
-    scores.reduce((sum, s) => sum + Math.pow(s - summary.mean_score, 2), 0) / scores.length
-  );
-
-  return {
-    period,
-    totalScored: allScores.length,
-    biasDetected,
-    violations,
-    summary,
-  };
-}
 
 // ============================================
 // HELPER FUNCTIONS

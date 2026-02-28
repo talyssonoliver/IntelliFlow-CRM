@@ -332,24 +332,3 @@ export async function sanitizationPipeline(input: {
   return sanitized;
 }
 
-/**
- * Log security event for audit trail
- */
-export function logSecurityEvent(event: {
-  userId: string;
-  eventType: 'prompt_injection' | 'data_leakage' | 'rate_limit' | 'pii_detected';
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  details: Record<string, unknown>;
-}): void {
-  logger[event.severity === 'critical' || event.severity === 'high' ? 'error' : 'warn'](
-    {
-      securityEvent: true,
-      ...event,
-      timestamp: new Date().toISOString(),
-    },
-    `Security event: ${event.eventType}`
-  );
-
-  // In production, also send to security monitoring system (e.g., Sentry, DataDog)
-  // Example: securityMonitor.track(event);
-}

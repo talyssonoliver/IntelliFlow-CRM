@@ -48,7 +48,7 @@ export const predictionInputSchema = z.object({
         message: 'userId is required and must be valid UUID',
       }),
     })
-    .passthrough(),
+    .loose(),
   correlationId: z.string().optional(),
   priority: z.number().min(1).max(10).default(5),
 });

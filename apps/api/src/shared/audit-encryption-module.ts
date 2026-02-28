@@ -317,9 +317,3 @@ export function getAuditEncryption(config?: EncryptionConfig): AuditEncryption {
   return encryptionInstance;
 }
 
-/**
- * Reset encryption instance (for testing)
- */
-export function resetAuditEncryption(): void {
-  encryptionInstance = null;
-}
