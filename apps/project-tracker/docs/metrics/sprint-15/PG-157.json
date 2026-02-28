@@ -2,7 +2,7 @@
   "$schema": "../../schemas/task-status.schema.json",
   "task_id": "PG-157",
   "section": "Core CRM",
-  "description": "Visible Pin to Home buttons on entity detail page headers",
+  "description": "Visible Pin to Home buttons on entity list items and detail page headers - not just hidden in 3-dot MoreActionsButton sheet",
   "owner": "CRM FE (STOA-Foundation)",
   "sprint": "sprint-15",
   "phase": null,
@@ -11,7 +11,7 @@
     "required": [
       "PG-129"
     ],
-    "verified_at": "2026-02-28T00:33:00Z",
+    "verified_at": "2026-02-28T01:03:11.393Z",
     "all_satisfied": true,
     "notes": "PG-129 verified complete — useEntityPin hook, PinnedItemsSheet, AuthenticatedHomePage all exist."
   },

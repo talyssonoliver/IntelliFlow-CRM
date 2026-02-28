@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-28T00:57:23.489Z",
+  "last_updated": "2026-02-28T01:03:11.208Z",
   "total_tasks": 305,
   "current_sprint": 14,
   "active_sprint": "sprint-14",
@@ -319,11 +319,10 @@
       "DOC-006",
       "DOC-007",
       "DOC-008",
-      "DOC-009"
-    ],
-    "IN_PROGRESS": [
+      "DOC-009",
       "DOC-010"
     ],
+    "IN_PROGRESS": [],
     "VALIDATING": [],
     "BLOCKED": [],
     "PLANNED": [
@@ -8792,15 +8791,15 @@
       "section": "Documentation",
       "description": "Create route reconciliation script comparing conformance-statement.md routes against apps/web/src/app/ directory tree",
       "owner": "PM (STOA-Automation)",
-      "status": "IN_PROGRESS",
-      "sprint": 15,
+      "status": "DONE",
+      "sprint": 41,
       "dependencies": [
         "DOC-008"
       ],
       "artifacts": [
-        "ARTIFACT:tools/scripts/a11y-route-reconcile.ts"
+        "ARTIFACT:tools/scripts/a11y-route-reconcile.ts;ARTIFACT:tools/scripts/a11y-route-reconcile.test.ts"
       ],
-      "kpis": "Detects route drift within 1 CI run; zero false positives on current routes",
+      "kpis": "Detects route drift within 1 CI run; zero false positives on current routes; 41 tests; 93%+ coverage; CI wired in pr-checks.yml",
       "definition_of_done": "Route reconciliation TypeScript script created; scans conformance-statement.md route list vs actual app router directories; reports added/removed/missing routes; exits non-zero on drift; integrated as CI check; verified by: script execution with intentional drift",
       "validation": "VALIDATE:npx tsx tools/scripts/a11y-route-reconcile.ts;AUDIT:manual-review",
       "prerequisites": "FILE:docs/compliance/wcag-conformance-statement.md;FILE:apps/web/src/app",

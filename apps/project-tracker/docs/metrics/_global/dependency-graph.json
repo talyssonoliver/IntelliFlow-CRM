@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-02-28T00:57:23.799Z",
+  "last_updated": "2026-02-28T01:03:11.517Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -5252,8 +5252,8 @@
     },
     "DOC-010": {
       "task_id": "DOC-010",
-      "sprint": 15,
-      "status": "IN_PROGRESS",
+      "sprint": 41,
+      "status": "DONE",
       "dependencies": [
         "DOC-008"
       ],
@@ -9110,7 +9110,7 @@
       "from_task": "DOC-008",
       "to_task": "DOC-010",
       "from_sprint": 14,
-      "to_sprint": 15,
+      "to_sprint": 41,
       "dependency_type": "REQUIRED"
     },
     {
@@ -9350,7 +9350,6 @@
         "PG-170"
       ],
       "group-3": [
-        "DOC-010",
         "DOC-011",
         "DOC-012",
         "DOC-013"

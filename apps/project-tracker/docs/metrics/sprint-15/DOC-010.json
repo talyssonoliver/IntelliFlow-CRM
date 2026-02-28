@@ -7,7 +7,7 @@
   "sprint": "sprint-15",
   "phase": "phase-1",
   "stream": null,
-  "status": "IN_PROGRESS",
+  "status": "Completed",
   "dependencies": {
     "required": [
       "DOC-008"
@@ -19,31 +19,115 @@
     "DOC-008"
   ],
   "started_at": "2026-02-27T23:35:00Z",
-  "completed_at": null,
+  "completed_at": "2026-02-28T01:01:04Z",
   "target_duration_minutes": null,
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 86,
+  "execution": {
+    "started_at": "2026-02-28T00:45:00Z",
+    "completed_at": "2026-02-28T01:01:04Z",
+    "duration_minutes": 16,
+    "executor": "Claude Code",
+    "agents": ["Foundation STOA"],
+    "execution_log": ".specify/sprints/sprint-15/execution/DOC-010/20260228004513-7a2b1591/DOC-010-delivery.md",
+    "retry_count": 0,
+    "last_error": null
+  },
   "kpis": {
     "route_drift_detection": {
       "target": "1 CI run",
-      "actual": "pending",
-      "met": false
+      "actual": "pr-checks.yml step added with VALIDATION_STRICT=1",
+      "met": true
     },
     "false_positives": {
       "target": 0,
-      "actual": "pending",
-      "met": false
+      "actual": 0,
+      "met": true
+    },
+    "statement_coverage": {
+      "target": ">=90%",
+      "actual": "93.20%",
+      "met": true
+    },
+    "branch_coverage": {
+      "target": ">=80%",
+      "actual": "89.47%",
+      "met": true
+    },
+    "function_coverage": {
+      "target": ">=90%",
+      "actual": "92.85%",
+      "met": true
+    },
+    "line_coverage": {
+      "target": ">=90%",
+      "actual": "94.56%",
+      "met": true
+    },
+    "test_count": {
+      "target": ">=38",
+      "actual": "41",
+      "met": true
     }
   },
   "artifacts": {
     "expected": [
-      "tools/scripts/a11y-route-reconcile.ts"
+      "tools/scripts/a11y-route-reconcile.ts",
+      "tools/scripts/a11y-route-reconcile.test.ts"
     ],
     "created": [
-      "tools/scripts/a11y-route-reconcile.ts"
+      {
+        "path": "tools/scripts/a11y-route-reconcile.ts",
+        "sha256": "3389905d5d81755fd7b68e337546ca622006d64e3e86db4f414bd787c2446d40",
+        "created_at": "2026-02-28T00:48:00Z"
+      },
+      {
+        "path": "tools/scripts/a11y-route-reconcile.test.ts",
+        "sha256": "980a9cd29fe3b0fe85404452bfa3089cd75fa5b1ba050481cfd0006e23ff3e7e",
+        "created_at": "2026-02-28T00:46:00Z"
+      },
+      {
+        "path": "package.json",
+        "sha256": "8a39694c6ed7efca2370e82dc6cc330f6282009ec69f55d8693ef19c08d59dd9",
+        "created_at": "2026-02-28T00:49:00Z"
+      },
+      {
+        "path": ".github/workflows/pr-checks.yml",
+        "sha256": "ac26e062d82936d60ae94eb888a4860be10f53cd2a24356c2a19d6f46194a6f7",
+        "created_at": "2026-02-28T00:49:30Z"
+      }
     ],
     "missing": []
   },
-  "validations": [],
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck",
+      "executed_at": "2026-02-28T00:50:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run tools/scripts/a11y-route-reconcile.test.ts",
+      "executed_at": "2026-02-28T00:51:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint",
+      "executed_at": "2026-02-28T00:52:00Z",
+      "exit_code": 0,
+      "passed": true
+    },
+    {
+      "name": "Build",
+      "command": "pnpm run build",
+      "executed_at": "2026-02-28T00:53:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
   "blockers": [],
   "status_history": [
     {
@@ -61,7 +145,11 @@
     {
       "status": "In Progress",
       "at": "2026-02-28T00:30:00Z"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-02-28T01:01:04Z"
     }
   ],
-  "notes": "Route reconciliation script to prevent accessibility documentation staleness. Compares routes listed in wcag-conformance-statement.md against actual app router directories."
+  "notes": "Route reconciliation script to prevent accessibility documentation staleness. Compares routes listed in wcag-conformance-statement.md against actual app router directories. 41 tests, 93%+ coverage, CI wired in pr-checks.yml."
 }
