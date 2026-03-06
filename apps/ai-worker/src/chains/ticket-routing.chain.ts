@@ -88,7 +88,18 @@ type LLMOutput = z.infer<typeof llmOutputSchema>;
 
 const CATEGORY_KEYWORDS: Record<TicketCategory, string[]> = {
   BILLING: ['invoice', 'charge', 'refund', 'subscription', 'payment', 'billing', 'price', 'cost'],
-  TECHNICAL: ['crash', 'error', 'bug', 'performance', 'slow', 'broken', 'auth', 'login', 'password', 'api'],
+  TECHNICAL: [
+    'crash',
+    'error',
+    'bug',
+    'performance',
+    'slow',
+    'broken',
+    'auth',
+    'login',
+    'password',
+    'api',
+  ],
   SALES: ['pricing', 'demo', 'upgrade', 'plan', 'enterprise', 'discount', 'quote'],
   GENERAL: ['question', 'feedback', 'how-to', 'help', 'info', 'general'],
   FEATURE_REQUEST: ['wish', 'want', 'improve', 'feature', 'request', 'suggest', 'enhancement'],
@@ -211,20 +222,19 @@ IMPORTANT: The assigneeId MUST be one of the agent IDs listed above.
 
       const response = await this.model.invoke(formattedPrompt);
       const content =
-        typeof response.content === 'string'
-          ? response.content
-          : JSON.stringify(response.content);
+        typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
 
       const parsed: LLMOutput = await this.parser.parse(content);
 
       // Post-parse validation: ensure assigneeId is in the candidate roster
-      const validCandidate = input.agentCandidates.find(
-        (a) => a.agentId === parsed.assigneeId
-      );
+      const validCandidate = input.agentCandidates.find((a) => a.agentId === parsed.assigneeId);
 
       if (!validCandidate) {
         logger.warn(
-          { llmAssigneeId: parsed.assigneeId, candidates: input.agentCandidates.map((a) => a.agentId) },
+          {
+            llmAssigneeId: parsed.assigneeId,
+            candidates: input.agentCandidates.map((a) => a.agentId),
+          },
           'LLM returned unrecognised assigneeId — triggering fallback'
         );
         return this.generateFallbackResult(input, Date.now() - startTime);
@@ -257,10 +267,7 @@ IMPORTANT: The assigneeId MUST be one of the agent IDs listed above.
    * Fallback heuristic when LLM is unavailable.
    * Uses keyword matching for category + lowest-load agent selection.
    */
-  generateFallbackResult(
-    input: TicketRoutingInput,
-    executionTimeMs: number
-  ): TicketRoutingResult {
+  generateFallbackResult(input: TicketRoutingInput, executionTimeMs: number): TicketRoutingResult {
     const text = `${input.subject} ${input.description || ''}`.toLowerCase();
 
     // Keyword-based category inference
@@ -331,7 +338,8 @@ function createLazyTicketRoutingProxy(): TicketRoutingChain {
   return new Proxy({} as TicketRoutingChain, {
     get(_target, prop) {
       const chain = getTicketRoutingChain();
-      const value = (chain as unknown as Record<string, unknown>)[prop as string];
+      const key = prop as keyof TicketRoutingChain;
+      const value = chain[key];
       return typeof value === 'function' ? value.bind(chain) : value;
     },
   });

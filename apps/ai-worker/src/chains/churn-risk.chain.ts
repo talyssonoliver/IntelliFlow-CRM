@@ -754,7 +754,8 @@ function createLazyChurnRiskProxy(): ChurnRiskChain {
   return new Proxy({} as ChurnRiskChain, {
     get(_target, prop) {
       const chain = getChurnRiskChain();
-      const value = (chain as unknown as Record<string, unknown>)[prop as string];
+      const key = prop as keyof ChurnRiskChain;
+      const value = chain[key];
       return typeof value === 'function' ? value.bind(chain) : value;
     },
   });

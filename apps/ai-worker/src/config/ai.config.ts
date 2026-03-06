@@ -166,5 +166,8 @@ export function calculateCost(model: string, inputTokens: number, outputTokens: 
 
 /**
  * Default configuration instance
+ *
+ * NOTE: This relies on env.ts being imported first in the ai-worker entry point
+ * so that process.env is populated before this module evaluates.
  */
 export const aiConfig = loadAIConfig();

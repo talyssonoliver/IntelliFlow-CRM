@@ -12,51 +12,45 @@ const mocks = vi.hoisted(() => ({
       .mockReturnValue({ totalWindows: 10, highSeverityCount: 0, activeDriftMetrics: [] }),
   },
   hallucinationChecker: {
-    getStats: vi
-      .fn()
-      .mockReturnValue({
-        totalChecks: 100,
-        hallucinationsDetected: 3,
-        hallucinationRate: 0.03,
-        byType: {},
-        byModel: {},
-        averageConfidence: 0.85,
-        periodStart: new Date(),
-        periodEnd: new Date(),
-        kpiCompliant: true,
-      }),
+    getStats: vi.fn().mockReturnValue({
+      totalChecks: 100,
+      hallucinationsDetected: 3,
+      hallucinationRate: 0.03,
+      byType: {},
+      byModel: {},
+      averageConfidence: 0.85,
+      periodStart: new Date(),
+      periodEnd: new Date(),
+      kpiCompliant: true,
+    }),
   },
   roiTracker: {
-    getStats: vi
-      .fn()
-      .mockReturnValue({
-        totalCosts: 50,
-        totalValue: 150,
-        currentROI: 200,
-        costsByModel: {},
-        valueByType: {},
-      }),
+    getStats: vi.fn().mockReturnValue({
+      totalCosts: 50,
+      totalValue: 150,
+      currentROI: 200,
+      costsByModel: {},
+      valueByType: {},
+    }),
   },
   latencyMonitor: {
-    getStats: vi
-      .fn()
-      .mockReturnValue({
-        totalMeasurements: 500,
-        percentiles: {
-          p50: 50,
-          p75: 100,
-          p90: 150,
-          p95: 180,
-          p99: 250,
-          max: 500,
-          min: 10,
-          mean: 80,
-          stdDev: 30,
-        },
-        sloCompliance: { overallCompliant: true, p95Actual: 180, p95Target: 200 },
-        byModel: {},
-        byOperation: {},
-      }),
+    getStats: vi.fn().mockReturnValue({
+      totalMeasurements: 500,
+      percentiles: {
+        p50: 50,
+        p75: 100,
+        p90: 150,
+        p95: 180,
+        p99: 250,
+        max: 500,
+        min: 10,
+        mean: 80,
+        stdDev: 30,
+      },
+      sloCompliance: { overallCompliant: true, p95Actual: 180, p95Target: 200 },
+      byModel: {},
+      byOperation: {},
+    }),
   },
 }));
 

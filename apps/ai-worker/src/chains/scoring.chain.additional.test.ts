@@ -292,7 +292,10 @@ describe('LeadScoringChain - additional', () => {
       expect(fetchFn).toBeTypeOf('function');
       // Call fetch without signal — should apply AbortSignal.timeout
       await fetchFn('http://localhost:11434/api', {});
-      expect(globalThis.fetch).toHaveBeenCalledWith('http://localhost:11434/api', expect.objectContaining({ signal: expect.any(AbortSignal) }));
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        'http://localhost:11434/api',
+        expect.objectContaining({ signal: expect.any(AbortSignal) })
+      );
     } finally {
       globalThis.fetch = origFetch;
     }
@@ -307,7 +310,10 @@ describe('LeadScoringChain - additional', () => {
       const fetchFn = model._opts?.fetch;
       const customSignal = AbortSignal.timeout(5000);
       await fetchFn('http://localhost:11434/api', { signal: customSignal });
-      expect(globalThis.fetch).toHaveBeenCalledWith('http://localhost:11434/api', expect.objectContaining({ signal: customSignal }));
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        'http://localhost:11434/api',
+        expect.objectContaining({ signal: customSignal })
+      );
     } finally {
       globalThis.fetch = origFetch;
     }

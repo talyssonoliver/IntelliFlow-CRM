@@ -15,6 +15,7 @@
  * @module @intelliflow/ai-worker/services/embedding-purge
  */
 
+import { randomUUID } from 'node:crypto';
 import { PrismaClient } from '@intelliflow/db';
 
 // ============================================
@@ -109,7 +110,7 @@ export class EmbeddingPurgeService {
       // Create audit log entry for the purge
       // Use DELETE action type for purge operations (closest match in AuditAction enum)
       // Generate unique eventId using crypto for audit trail
-      const eventId = `dsar-purge-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+      const eventId = `dsar-purge-${randomUUID()}`;
 
       const audit = await tx.auditLogEntry.create({
         data: {

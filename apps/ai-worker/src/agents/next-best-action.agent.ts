@@ -302,7 +302,8 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
     }
     if (context.entityType === 'opportunity') {
       parts.push('deal closing strategies');
-    } else if (context.entityType === 'lead') {
+    }
+    if (context.entityType === 'lead') {
       parts.push('lead qualification next steps');
     }
 
@@ -408,7 +409,7 @@ Valid ACTION_TYPES: ${ACTION_TYPES.join(', ')}
   private parseRecommendations(response: string, context: NBAContext): RecommendedAction[] {
     try {
       // Try to extract JSON from response
-      const jsonMatch = response.match(/\[[\s\S]*\]/);
+      const jsonMatch = response.match(/\[[^[\]]{0,50000}\]/);
       if (!jsonMatch) {
         throw new Error('No JSON array found in response');
       }

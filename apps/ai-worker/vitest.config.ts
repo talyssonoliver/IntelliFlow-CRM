@@ -8,16 +8,8 @@ export default defineConfig({
     include: ['src/**/*.{test,spec}.ts'],
     exclude: ['node_modules', 'dist', '.turbo'],
 
-    // ============================================================
-    // MEMORY OPTIMIZATION - Vitest v4.x
-    // AI worker tests may use more memory due to LLM mocking
-    // ============================================================
-
-    // Pool configuration - forks for stability
     pool: 'forks',
-    isolate: true,
 
-    // Memory management
     execArgv: ['--max-old-space-size=4096', '--expose-gc'],
     maxWorkers: 4,
     minWorkers: 1,
@@ -34,8 +26,8 @@ export default defineConfig({
     hookTimeout: 30000,
     teardownTimeout: 10000,
 
-    // Prevent hanging and stale state
-    forceExit: true,
+    // Prevent hanging and stale state (disabled during coverage runs to allow Istanbul write)
+    forceExit: process.env['COVERAGE_RUN'] !== '1',
     cache: false,
 
     // Handle worker exit errors gracefully
@@ -53,8 +45,11 @@ export default defineConfig({
       }
     },
 
+    // Using Istanbul provider: V8 with pool:forks creates one tmp file per test
+    // file, and the V8 merge hangs before forceExit kills it.
+    // Istanbul uses maxWorkers tmp files (4) — merges fast.
     coverage: {
-      provider: 'v8',
+      provider: 'istanbul',
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/**',

@@ -79,7 +79,7 @@ export interface DocumentToIndex {
   id: string;
   title: string;
   description: string | null;
-  extracted_text: string | null;
+  extractedText: string | null;
   tags: string[];
 }
 
@@ -151,8 +151,8 @@ function simpleHash(str: string): number {
 // ============================================
 
 export class DocumentIndexer {
-  private config: IndexerConfig;
-  private embeddingChain: EmbeddingChain;
+  private readonly config: IndexerConfig;
+  private readonly embeddingChain: EmbeddingChain;
   private embeddingProvider: IEmbeddingProvider | null = null;
 
   constructor(
@@ -423,7 +423,7 @@ export class DocumentIndexer {
     const allResults: IndexResult[] = [];
 
     // Get total count
-    const whereClause = tenantId ? { tenant_id: tenantId, deleted_at: null } : { deleted_at: null };
+    const whereClause = tenantId ? { tenantId: tenantId, deletedAt: null } : { deletedAt: null };
 
     const totalCount = await this.prisma.caseDocument.count({
       where: whereClause,
@@ -441,7 +441,7 @@ export class DocumentIndexer {
         select: { id: true },
         skip: batch * this.config.batchSize,
         take: this.config.batchSize,
-        orderBy: { created_at: 'asc' },
+        orderBy: { createdAt: 'asc' },
       });
 
       const batchResult = await this.indexBatch(documents.map((d) => d.id));
@@ -607,7 +607,7 @@ export class DocumentIndexer {
     notes: { total: number; indexed: number; unindexed: number };
   }> {
     const docTotal = await this.prisma.caseDocument.count({
-      where: tenantId ? { tenant_id: tenantId, deleted_at: null } : { deleted_at: null },
+      where: tenantId ? { tenantId: tenantId, deletedAt: null } : { deletedAt: null },
     });
 
     // Use separate queries based on tenantId to avoid nested $queryRaw issues
@@ -667,7 +667,7 @@ export class DocumentIndexer {
     const parts = [
       doc.title,
       doc.description || '',
-      doc.extracted_text || '',
+      doc.extractedText || '',
       doc.tags?.join(' ') || '',
     ];
 

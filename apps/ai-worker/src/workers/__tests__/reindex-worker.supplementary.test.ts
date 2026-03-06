@@ -7,7 +7,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 let capturedProcessor: any = null;
 const capturedEventHandlers: Record<string, (...args: any[]) => any> = {};
 
-const mockWorkerOn = vi.fn().mockImplementation(function (event: string, handler: (...args: any[]) => any) {
+const mockWorkerOn = vi.fn().mockImplementation(function (
+  event: string,
+  handler: (...args: any[]) => any
+) {
   capturedEventHandlers[event] = handler;
 });
 const mockWorkerClose = vi.fn().mockResolvedValue(undefined);
@@ -98,7 +101,9 @@ describe('ReindexWorker - event handlers', () => {
   afterEach(async () => {
     try {
       await worker.stop();
-    } catch (_e) { /* cleanup may fail if worker never started */ }
+    } catch (_e) {
+      /* cleanup may fail if worker never started */
+    }
   });
 
   it('should register completed, failed, and progress handlers', () => {
@@ -146,7 +151,9 @@ describe('ReindexWorker - processJob via captured processor', () => {
   afterEach(async () => {
     try {
       await worker.stop();
-    } catch (_e) { /* cleanup may fail if worker never started */ }
+    } catch (_e) {
+      /* cleanup may fail if worker never started */
+    }
   });
 
   it('should capture the processor function', () => {
@@ -205,7 +212,9 @@ describe('ReindexWorker - audit log failure', () => {
   afterEach(async () => {
     try {
       await worker.stop();
-    } catch (_e) { /* cleanup may fail if worker never started */ }
+    } catch (_e) {
+      /* cleanup may fail if worker never started */
+    }
   });
 
   it('should not fail when audit log write fails', async () => {

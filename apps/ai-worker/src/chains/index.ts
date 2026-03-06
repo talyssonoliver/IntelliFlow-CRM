@@ -113,6 +113,19 @@ export {
 } from './ticket-routing.chain';
 
 // =============================================================================
+// Insight Generation Chain
+// =============================================================================
+export {
+  InsightGenerationChain,
+  insightGenerationChain,
+  getInsightGenerationChain,
+  InsightGenerationInputSchema,
+  GeneratedInsightSchema,
+  type InsightGenerationInput,
+  type GeneratedInsight,
+} from './insight-generation.chain';
+
+// =============================================================================
 // Chain Utilities
 // =============================================================================
 export {

@@ -14,6 +14,7 @@
  */
 
 import { ChatOpenAI } from '@langchain/openai';
+import { ChatOllama } from '@langchain/ollama';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { StructuredOutputParser } from '@langchain/core/output_parsers';
 import type { BaseMessage } from '@langchain/core/messages';
@@ -174,6 +175,26 @@ export class SentimentAnalysisChain {
             ]
           : undefined,
       });
+    } else if (aiConfig.provider === 'ollama') {
+      const ollamaTimeout = aiConfig.ollama.timeout;
+      this.model = new ChatOllama({
+        baseUrl: aiConfig.ollama.baseUrl,
+        model: aiConfig.ollama.model,
+        temperature: 0.1,
+        numCtx: 4096,
+        format: 'json',
+        fetch: (url: string | URL | Request, init?: RequestInit) => {
+          return globalThis.fetch(url, {
+            ...init,
+            signal: init?.signal ?? AbortSignal.timeout(ollamaTimeout),
+          });
+        },
+      });
+
+      logger.info(
+        { baseUrl: aiConfig.ollama.baseUrl, model: aiConfig.ollama.model },
+        'Initialized Ollama provider for sentiment analysis'
+      );
     } else if (aiConfig.provider === 'mock') {
       this.model = {
         invoke: async () => ({ content: this.getMockResponse() }),

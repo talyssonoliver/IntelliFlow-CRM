@@ -133,7 +133,7 @@ export interface FeedbackAnalytics {
  * Feedback Analytics Generator
  */
 export class FeedbackAnalyticsGenerator {
-  private outputPath: string;
+  private readonly outputPath: string;
 
   constructor(outputPath: string = 'artifacts/misc/feedback-analytics.json') {
     this.outputPath = outputPath;
@@ -267,6 +267,9 @@ export class FeedbackAnalyticsGenerator {
         ? directionalChanges.reduce((a, b) => a + b, 0) / directionalChanges.length
         : 0;
 
+    const downOrNeutral: 'down' | 'neutral' = avgDirection < -2 ? 'down' : 'neutral';
+    const averageDirection: 'up' | 'down' | 'neutral' = avgDirection > 2 ? 'up' : downOrNeutral;
+
     return {
       minor,
       moderate,
@@ -274,7 +277,7 @@ export class FeedbackAnalyticsGenerator {
       severe,
       averageMagnitude: Math.round(averageMagnitude * 100) / 100,
       medianMagnitude,
-      averageDirection: avgDirection > 2 ? 'up' : avgDirection < -2 ? 'down' : 'neutral',
+      averageDirection,
     };
   }
 
@@ -290,15 +293,17 @@ export class FeedbackAnalyticsGenerator {
       return [];
     }
 
-    const categoryMap = new Map<FeedbackCategory, FeedbackRecord[]>();
-
-    for (const record of corrections) {
-      const cat = record.correctionCategory!;
-      if (!categoryMap.has(cat)) {
-        categoryMap.set(cat, []);
-      }
-      categoryMap.get(cat)!.push(record);
-    }
+    const categoryMap = corrections.reduce<Map<FeedbackCategory, FeedbackRecord[]>>(
+      (map, record) => {
+        const cat = record.correctionCategory!;
+        if (!map.has(cat)) {
+          map.set(cat, []);
+        }
+        map.get(cat)!.push(record);
+        return map;
+      },
+      new Map<FeedbackCategory, FeedbackRecord[]>()
+    );
 
     return Array.from(categoryMap.entries())
       .map(([category, catRecords]) => ({

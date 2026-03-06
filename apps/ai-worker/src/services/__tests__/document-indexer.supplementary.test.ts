@@ -2,20 +2,16 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('../../chains/embedding.chain', () => {
   const EmbeddingChain = vi.fn();
-  EmbeddingChain.prototype.generateEmbedding = vi
-    .fn()
-    .mockResolvedValue({
-      vector: Array(1536).fill(0.1),
-      dimensions: 1536,
-      model: 'text-embedding-3-small',
-    });
-  EmbeddingChain.prototype.generateBatchEmbeddings = vi
-    .fn()
-    .mockResolvedValue({
-      embeddings: [
-        { vector: Array(1536).fill(0.1), dimensions: 1536, model: 'text-embedding-3-small' },
-      ],
-    });
+  EmbeddingChain.prototype.generateEmbedding = vi.fn().mockResolvedValue({
+    vector: Array(1536).fill(0.1),
+    dimensions: 1536,
+    model: 'text-embedding-3-small',
+  });
+  EmbeddingChain.prototype.generateBatchEmbeddings = vi.fn().mockResolvedValue({
+    embeddings: [
+      { vector: Array(1536).fill(0.1), dimensions: 1536, model: 'text-embedding-3-small' },
+    ],
+  });
   return { EmbeddingChain };
 });
 
@@ -41,20 +37,16 @@ describe('DocumentIndexer supplementary', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Re-setup prototype mocks after mockReset
-    (EmbeddingChain as any).prototype.generateEmbedding = vi
-      .fn()
-      .mockResolvedValue({
-        vector: Array(1536).fill(0.1),
-        dimensions: 1536,
-        model: 'text-embedding-3-small',
-      });
-    (EmbeddingChain as any).prototype.generateBatchEmbeddings = vi
-      .fn()
-      .mockResolvedValue({
-        embeddings: [
-          { vector: Array(1536).fill(0.1), dimensions: 1536, model: 'text-embedding-3-small' },
-        ],
-      });
+    (EmbeddingChain as any).prototype.generateEmbedding = vi.fn().mockResolvedValue({
+      vector: Array(1536).fill(0.1),
+      dimensions: 1536,
+      model: 'text-embedding-3-small',
+    });
+    (EmbeddingChain as any).prototype.generateBatchEmbeddings = vi.fn().mockResolvedValue({
+      embeddings: [
+        { vector: Array(1536).fill(0.1), dimensions: 1536, model: 'text-embedding-3-small' },
+      ],
+    });
     process.env.MOCK_EMBEDDINGS = 'true';
     process.env.NODE_ENV = 'test';
     idx = createDocumentIndexer(mp as any, { maxConcurrent: 2 });
@@ -84,14 +76,14 @@ describe('DocumentIndexer supplementary', () => {
   });
   it('indexDocument succeeds', async () => {
     mp.$queryRaw.mockResolvedValue([
-      { id: 'd', title: 'T', description: 'D', extracted_text: 'E', tags: ['a'] },
+      { id: 'd', title: 'T', description: 'D', extractedText: 'E', tags: ['a'] },
     ]);
     mp.$executeRaw.mockResolvedValue(1);
     expect((await idx.indexDocument('d')).success).toBe(true);
   });
   it('indexDocument handles nulls', async () => {
     mp.$queryRaw.mockResolvedValue([
-      { id: 'd', title: 'T', description: null, extracted_text: null, tags: [] },
+      { id: 'd', title: 'T', description: null, extractedText: null, tags: [] },
     ]);
     mp.$executeRaw.mockResolvedValue(1);
     expect((await idx.indexDocument('d')).success).toBe(true);
@@ -102,7 +94,7 @@ describe('DocumentIndexer supplementary', () => {
   });
   it('indexBatch processes chunks', async () => {
     mp.$queryRaw.mockResolvedValue([
-      { id: 'x', title: 'D', description: null, extracted_text: 't', tags: [] },
+      { id: 'x', title: 'D', description: null, extractedText: 't', tags: [] },
     ]);
     mp.$executeRaw.mockResolvedValue(1);
     expect((await idx.indexBatch(['a', 'b', 'c', 'd', 'e'])).total).toBe(5);
@@ -113,7 +105,7 @@ describe('DocumentIndexer supplementary', () => {
   it('indexBatch counts failures', async () => {
     mp.$queryRaw
       .mockResolvedValueOnce([
-        { id: 'a', title: 'D', description: null, extracted_text: 't', tags: [] },
+        { id: 'a', title: 'D', description: null, extractedText: 't', tags: [] },
       ])
       .mockResolvedValueOnce([]);
     mp.$executeRaw.mockResolvedValue(1);
@@ -132,7 +124,7 @@ describe('DocumentIndexer supplementary', () => {
     mp.caseDocument.count.mockResolvedValue(2);
     mp.caseDocument.findMany.mockResolvedValue([{ id: 'a' }, { id: 'b' }]);
     mp.$queryRaw.mockResolvedValue([
-      { id: 'x', title: 'D', description: null, extracted_text: 't', tags: [] },
+      { id: 'x', title: 'D', description: null, extractedText: 't', tags: [] },
     ]);
     mp.$executeRaw.mockResolvedValue(1);
     const p: any[] = [];
@@ -143,12 +135,12 @@ describe('DocumentIndexer supplementary', () => {
     mp.caseDocument.count.mockResolvedValue(1);
     mp.caseDocument.findMany.mockResolvedValue([{ id: 'a' }]);
     mp.$queryRaw.mockResolvedValue([
-      { id: 'a', title: 'D', description: null, extracted_text: 't', tags: [] },
+      { id: 'a', title: 'D', description: null, extractedText: 't', tags: [] },
     ]);
     mp.$executeRaw.mockResolvedValue(1);
     await idx.reindexAll('t1');
     expect(mp.caseDocument.count).toHaveBeenCalledWith(
-      expect.objectContaining({ where: expect.objectContaining({ tenant_id: 't1' }) })
+      expect.objectContaining({ where: expect.objectContaining({ tenantId: 't1' }) })
     );
   });
   it('getIndexStats zero counts', async () => {
@@ -191,7 +183,7 @@ describe('DocumentIndexer supplementary', () => {
     process.env.NODE_ENV = 'production';
     const pi = createDocumentIndexer(mp as any);
     mp.$queryRaw.mockResolvedValue([
-      { id: 'dp', title: 'P', description: 'd', extracted_text: 't', tags: [] },
+      { id: 'dp', title: 'P', description: 'd', extractedText: 't', tags: [] },
     ]);
     mp.$executeRaw.mockResolvedValue(1);
     expect((await pi.indexDocument('dp')).success).toBe(true);

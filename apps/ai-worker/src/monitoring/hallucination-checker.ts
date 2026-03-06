@@ -72,6 +72,25 @@ export interface HallucinationCheckerConfig {
 }
 
 /**
+ * Compute the expected result of a simple arithmetic operation.
+ * Returns null for unknown operators (caller should skip the match).
+ */
+function computeExpected(operator: string | undefined, num1: number, num2: number): number | null {
+  switch (operator) {
+    case '+':
+      return num1 + num2;
+    case '-':
+      return num1 - num2;
+    case '*':
+      return num1 * num2;
+    case '/':
+      return num2 !== 0 ? num1 / num2 : NaN;
+    default:
+      return null;
+  }
+}
+
+/**
  * Semantic similarity check result
  */
 interface SemanticCheck {
@@ -479,8 +498,18 @@ export class HallucinationChecker {
   } {
     const errors: string[] = [];
 
-    // Extract calculations
-    const calcPattern = /(\d+(?:\.\d+)?)\s*[+\-*/]\s*(\d+(?:\.\d+)?)\s*=\s*(\d+(?:\.\d+)?)/g;
+    this.checkCalculations(output, errors);
+    this.checkPercentages(output, errors);
+
+    const totalNumericalClaims = (output.match(/\d+/g) || []).length;
+    const score = totalNumericalClaims > 0 ? errors.length / totalNumericalClaims : 0;
+
+    return { errors, score };
+  }
+
+  private checkCalculations(output: string, errors: string[]): void {
+    const calcPattern =
+      /(\d{1,20}(?:\.\d{1,10})?)\s*[+\-*/]\s*(\d{1,20}(?:\.\d{1,10})?)\s*=\s*(\d{1,20}(?:\.\d{1,10})?)/g;
     let match;
 
     while ((match = calcPattern.exec(output)) !== null) {
@@ -488,33 +517,20 @@ export class HallucinationChecker {
       const operator = match[0].match(/[+\-*/]/)?.[0];
       const num2 = parseFloat(match[2]);
       const result = parseFloat(match[3]);
+      const expected = computeExpected(operator, num1, num2);
 
-      let expected: number;
-      switch (operator) {
-        case '+':
-          expected = num1 + num2;
-          break;
-        case '-':
-          expected = num1 - num2;
-          break;
-        case '*':
-          expected = num1 * num2;
-          break;
-        case '/':
-          expected = num2 !== 0 ? num1 / num2 : NaN;
-          break;
-        default:
-          continue;
-      }
-
+      if (expected === null) continue;
       if (!isNaN(expected) && Math.abs(expected - result) > 0.001) {
         errors.push(`${num1} ${operator} ${num2} = ${result} (should be ${expected})`);
       }
     }
+  }
 
-    // Check percentage claims
+  private checkPercentages(output: string, errors: string[]): void {
     const percentPattern =
-      /(\d+(?:\.\d+)?)\s*%\s*of\s*(\d+(?:\.\d+)?)\s*(?:is|=)\s*(\d+(?:\.\d+)?)/gi;
+      /(\d{1,20}(?:\.\d{1,10})?)\s*%\s*of\s*(\d{1,20}(?:\.\d{1,10})?)\s*(?:is|=)\s*(\d{1,20}(?:\.\d{1,10})?)/gi;
+    let match;
+
     while ((match = percentPattern.exec(output)) !== null) {
       const percent = parseFloat(match[1]) / 100;
       const total = parseFloat(match[2]);
@@ -525,11 +541,6 @@ export class HallucinationChecker {
         errors.push(`${match[1]}% of ${total} = ${result} (should be ${expected.toFixed(2)})`);
       }
     }
-
-    const totalNumericalClaims = (output.match(/\d+/g) || []).length;
-    const score = totalNumericalClaims > 0 ? errors.length / totalNumericalClaims : 0;
-
-    return { errors, score };
   }
 
   /**
@@ -567,7 +578,7 @@ export class HallucinationChecker {
       /\b(is|are|was|were|has|have|had)\b/i,
       /\b(in \d{4}|since \d{4}|from \d{4})\b/i,
       /\b(according to|research shows|studies indicate)\b/i,
-      /\d+(\.\d+)?%/,
+      /\d{1,20}(?:\.\d{1,10})?%/,
       /\$[\d,]+/,
     ];
 

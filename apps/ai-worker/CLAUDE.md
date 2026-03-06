@@ -10,16 +10,21 @@
 ## Key Patterns
 
 ### Scoring Pipeline
+
 `src/chains/scoring.chain.ts` — LangChain structured outputs for lead scoring.
 Target: < 2s per lead.
 
 ### Agent Framework
-`src/agents/` — CrewAI agents for lead qualification, email generation, follow-ups.
+
+`src/agents/` — CrewAI agents for lead qualification, email generation,
+follow-ups.
 
 ### Human-in-the-Loop
+
 All AI outputs include confidence scores and allow human override/feedback.
 
 ### Cost Optimization
+
 - Ollama for development/testing (free, local)
 - OpenAI for production
 - Caching and rate limiting to control costs

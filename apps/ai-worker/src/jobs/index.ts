@@ -29,5 +29,15 @@ export {
   type PredictionType,
 } from './prediction.job';
 
+export {
+  INSIGHT_QUEUE,
+  processInsightJob,
+  InsightJobDataSchema,
+  InsightJobResultSchema,
+  DEFAULT_INSIGHT_JOB_OPTIONS,
+  type InsightJobData,
+  type InsightJobResult,
+} from './insight-generation.job';
+
 /** All queue names this worker processes */
-export const AI_WORKER_QUEUES = ['ai-scoring', 'ai-prediction'] as const;
+export const AI_WORKER_QUEUES = ['ai-scoring', 'ai-prediction', 'ai-insights'] as const;

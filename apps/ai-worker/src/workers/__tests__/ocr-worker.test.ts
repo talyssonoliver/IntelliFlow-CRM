@@ -12,7 +12,7 @@
  * - All OCR engine variants
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   OCRWorker,
   createOCRWorker,
@@ -63,6 +63,10 @@ describe('OCRWorker', () => {
   beforeEach(() => {
     worker = new OCRWorker({ maxRetries: 2, retryDelayMs: 10, defaultEngine: 'tesseract' });
     vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    worker.removeAllListeners();
   });
 
   describe('constructor', () => {

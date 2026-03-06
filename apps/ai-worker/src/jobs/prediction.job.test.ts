@@ -52,7 +52,7 @@ function createMockJob(data: PredictionJobData): Job<PredictionJobData> {
     log: vi.fn().mockResolvedValue(undefined),
     progress: 0,
     attemptsMade: 0,
-  } as unknown as Job<PredictionJobData>;
+  } as any; // partial mock of BullMQ Job<PredictionJobData>
 }
 
 describe('PredictionJob', () => {

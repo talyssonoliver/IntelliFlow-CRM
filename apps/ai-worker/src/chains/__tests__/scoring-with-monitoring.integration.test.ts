@@ -20,7 +20,10 @@ import {
   type ChainMonitorConfig,
 } from '../../monitoring/chain-monitor';
 import { DriftDetector, defaultDriftConfig } from '../../monitoring/drift-detector';
-import { HallucinationChecker, defaultHallucinationConfig } from '../../monitoring/hallucination-checker';
+import {
+  HallucinationChecker,
+  defaultHallucinationConfig,
+} from '../../monitoring/hallucination-checker';
 import { ROITracker, defaultROIConfig } from '../../monitoring/roi-tracker';
 import { LatencyMonitor, defaultLatencyConfig } from '../../monitoring/latency-monitor';
 import { getAllMetrics, getMonitoringStatus } from '../../monitoring';

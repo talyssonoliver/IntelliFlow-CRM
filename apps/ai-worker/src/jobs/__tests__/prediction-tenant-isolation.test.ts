@@ -79,7 +79,7 @@ function createMockJob(data: Partial<PredictionJobData>): Job<PredictionJobData>
     progress: vi.fn(),
     updateProgress: vi.fn(),
     log: vi.fn(),
-  } as unknown as Job<PredictionJobData>;
+  } as any; // partial mock of BullMQ Job<PredictionJobData>
 }
 
 describe('Prediction Job Tenant Isolation (IFC-095 P1)', () => {

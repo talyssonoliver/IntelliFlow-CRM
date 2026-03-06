@@ -431,7 +431,7 @@ describe('ReindexWorker', () => {
       // Get the mocked Queue class
       const { Queue } = await import('bullmq');
       // Queue is mocked as a function that returns a mock object
-      const mockQueue = (Queue as unknown as ReturnType<typeof vi.fn>)();
+      const mockQueue = (Queue as any)(); // Queue is mocked as a vi.fn() constructor
 
       const stats = {
         waiting: await mockQueue.getWaitingCount(),

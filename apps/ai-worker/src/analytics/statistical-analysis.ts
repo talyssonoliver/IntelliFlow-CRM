@@ -603,7 +603,11 @@ function incompleteBeta(x: number, a: number, b: number): number {
   if (x < (a + 1) / (a + b + 2)) {
     return (bt * betaCF(x, a, b)) / a;
   } else {
-    return 1 - (bt * betaCF(1 - x, b, a)) / b;
+    // Use symmetry: I(x;a,b) = 1 - I(1-x;b,a)
+    const mirrorX = 1 - x;
+    const mirrorA = b;
+    const mirrorB = a;
+    return 1 - (bt * betaCF(mirrorX, mirrorA, mirrorB)) / b;
   }
 }
 

@@ -209,7 +209,7 @@ export class OCRWorker extends EventEmitter {
         .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
         // Normalize quotes
         .replace(/[""]/g, '"')
-        .replace(/['']/g, "'")
+        .replace(/'/g, "'")
         // Normalize dashes
         .replace(/[–—]/g, '-')
         // Trim

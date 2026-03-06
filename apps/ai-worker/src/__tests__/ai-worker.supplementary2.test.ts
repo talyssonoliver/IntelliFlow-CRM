@@ -55,11 +55,13 @@ vi.mock('@intelliflow/worker-shared', () => ({
 // Mock jobs
 // ============================================================
 vi.mock('../jobs', () => ({
-  AI_WORKER_QUEUES: ['ai-scoring', 'ai-prediction'],
+  AI_WORKER_QUEUES: ['ai-scoring', 'ai-prediction', 'ai-insights'],
   SCORING_QUEUE: 'ai-scoring',
   PREDICTION_QUEUE: 'ai-prediction',
+  INSIGHT_QUEUE: 'ai-insights',
   processScoringJob: mocks.mockProcessScoringJob,
   processPredictionJob: mocks.mockProcessPredictionJob,
+  processInsightJob: vi.fn().mockResolvedValue({}),
 }));
 
 // ============================================================
@@ -167,7 +169,7 @@ describe('AIWorker', () => {
       await worker.start();
       expect(mocks.mockLoggerInfo).toHaveBeenCalledWith(
         expect.objectContaining({
-          queues: ['ai-scoring', 'ai-prediction'],
+          queues: ['ai-scoring', 'ai-prediction', 'ai-insights'],
         }),
         'AI Worker ready to process jobs'
       );

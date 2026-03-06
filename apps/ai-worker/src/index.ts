@@ -3,35 +3,13 @@
  * Entry point for AI processing services
  */
 
-import dotenv from 'dotenv';
+// CRITICAL: env.ts MUST be the first import.
+// ES import hoisting causes all module-level code to run before any statements.
+// This module loads .env, .env.local, .env.development into process.env
+// so that aiConfig and chain constructors see the correct values.
+import './env';
+
 import pino from 'pino';
-import path from 'node:path';
-import fs from 'node:fs';
-
-// Load environment variables from multiple .env files
-// Order: .env -> .env.local -> .env.development (later files override earlier)
-function loadEnvFiles() {
-  // Find project root (monorepo root with pnpm-workspace.yaml)
-  let root = process.cwd();
-  while (root !== path.dirname(root)) {
-    if (fs.existsSync(path.join(root, 'pnpm-workspace.yaml'))) break;
-    root = path.dirname(root);
-  }
-
-  const envFiles = [
-    path.join(root, '.env'),
-    path.join(root, '.env.local'),
-    path.join(root, '.env.development'),
-  ];
-
-  for (const envFile of envFiles) {
-    if (fs.existsSync(envFile)) {
-      dotenv.config({ path: envFile });
-    }
-  }
-}
-
-loadEnvFiles();
 
 const logger = pino({
   name: 'ai-worker',
@@ -62,6 +40,19 @@ export {
   createQualificationTask,
 } from './agents/qualification.agent';
 export { createLogger, withContext, withTiming } from './utils/logger';
+
+// IFC-154: Export OCR worker for cross-worker reuse
+export {
+  OCRWorker,
+  createOCRWorker,
+  type OCRJobInput,
+  type OCRJobResult,
+  type OCRProvenance,
+  type OCRQualityMetrics,
+  type ExtractedTextArtifact,
+  type SupportedFormat,
+  type OCREngine,
+} from './workers/ocr-worker';
 
 // IFC-155: Export services for search index management
 export {
@@ -95,14 +86,19 @@ export {
   AI_WORKER_QUEUES,
   SCORING_QUEUE,
   PREDICTION_QUEUE,
+  INSIGHT_QUEUE,
   processScoringJob,
   processPredictionJob,
+  processInsightJob,
   ScoringJobDataSchema,
   ScoringJobResultSchema,
   PredictionJobDataSchema,
   PredictionJobResultSchema,
+  InsightJobDataSchema,
+  InsightJobResultSchema,
   DEFAULT_SCORING_JOB_OPTIONS,
   DEFAULT_PREDICTION_JOB_OPTIONS,
+  DEFAULT_INSIGHT_JOB_OPTIONS,
 } from './jobs';
 
 // Export types
@@ -126,6 +122,8 @@ export type {
   PredictionJobData,
   PredictionJobResult,
   PredictionType,
+  InsightJobData,
+  InsightJobResult,
 } from './jobs';
 
 // Additional chain exports (IFC-029, IFC-039, IFC-095)
@@ -152,6 +150,11 @@ export {
   ragContextResultSchema,
   contextItemSchema,
   chainLeadInputSchema,
+  InsightGenerationChain,
+  insightGenerationChain,
+  getInsightGenerationChain,
+  InsightGenerationInputSchema,
+  GeneratedInsightSchema,
 } from './chains';
 export type {
   AutoResponseInput,
@@ -173,6 +176,8 @@ export type {
   IRetrievalService,
   ChainLeadInput,
   ChainScoringResult,
+  InsightGenerationInput,
+  GeneratedInsight,
 } from './chains';
 
 // Analytics module (IFC-024, IFC-025)
@@ -204,21 +209,23 @@ async function initializeWorker() {
     // Validate configuration
     const { aiConfig } = await import('./config/ai.config.js');
 
+    const modelName =
+      aiConfig.provider === 'openai'
+        ? aiConfig.openai.model
+        : aiConfig.provider === 'ollama'
+          ? aiConfig.ollama.model
+          : 'mock';
+    const endpointUrl =
+      aiConfig.provider === 'openai'
+        ? aiConfig.openai.baseUrl || 'https://api.openai.com'
+        : aiConfig.provider === 'ollama'
+          ? aiConfig.ollama.baseUrl
+          : 'mock';
     logger.info(
       {
         provider: aiConfig.provider,
-        model:
-          aiConfig.provider === 'openai'
-            ? aiConfig.openai.model
-            : aiConfig.provider === 'ollama'
-              ? aiConfig.ollama.model
-              : 'mock',
-        endpoint:
-          aiConfig.provider === 'openai'
-            ? aiConfig.openai.baseUrl || 'https://api.openai.com'
-            : aiConfig.provider === 'ollama'
-              ? aiConfig.ollama.baseUrl
-              : 'mock',
+        model: modelName,
+        endpoint: endpointUrl,
         costTrackingEnabled: aiConfig.costTracking.enabled,
         cacheEnabled: aiConfig.performance.cacheEnabled,
       },
@@ -338,8 +345,9 @@ async function main() {
     setupSignalHandlers();
     await initializeWorker();
     logger.info('AI Worker running in library mode (no queue processing)');
-    // Keep process alive for library mode
-    await new Promise(() => {});
+    // Keep the process alive indefinitely in library mode. The promise is never resolved;
+    // SIGINT/SIGTERM handlers registered by setupSignalHandlers() handle graceful shutdown.
+    await new Promise<never>(() => undefined);
   } else {
     // Queue mode - use the new AIWorker class (IFC-168)
     logger.info('🤖 Starting AI Worker in queue mode...');

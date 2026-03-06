@@ -27,9 +27,7 @@ function getMetricsToken(): string {
 /**
  * Authenticate a metrics request using Bearer token
  */
-export function authenticateMetricsRequest(
-  authHeader: string | undefined
-): boolean {
+export function authenticateMetricsRequest(authHeader: string | undefined): boolean {
   if (!authHeader) return false;
   const token = authHeader.replace('Bearer ', '');
   return token === getMetricsToken();

@@ -1,5 +1,8 @@
 import { OpenAIEmbeddings } from '@langchain/openai';
+import { OllamaEmbeddings } from '@langchain/ollama';
+import type { Embeddings } from '@langchain/core/embeddings';
 import { z } from 'zod';
+import { aiConfig } from '../config/ai.config';
 import { getOpenAIClientSettings } from '../utils/openai-client';
 import pino from 'pino';
 
@@ -46,32 +49,44 @@ export interface BatchEmbeddingResult {
  * Optimized for use with pgvector in Supabase
  */
 export class EmbeddingChain {
-  private embeddings: OpenAIEmbeddings;
-  private modelName: string;
-  private dimensions: number;
+  private readonly embeddings: Embeddings;
+  private readonly modelName: string;
+  private readonly dimensions: number;
 
   constructor() {
-    // Initialize OpenAI Embeddings
-    // Using text-embedding-3-small for cost efficiency (OpenAI recommended for pgvector)
-    this.modelName = process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
-    this.dimensions = parseInt(process.env.EMBEDDING_DIMENSIONS || '1536', 10);
-    const openAIClientSettings = getOpenAIClientSettings();
+    if (aiConfig.provider === 'ollama') {
+      // Ollama local embeddings (free, no API key needed)
+      this.modelName = process.env.OLLAMA_EMBEDDING_MODEL || 'nomic-embed-text';
+      this.dimensions = parseInt(process.env.EMBEDDING_DIMENSIONS || '768', 10);
 
-    this.embeddings = new OpenAIEmbeddings({
-      modelName: this.modelName,
-      apiKey: openAIClientSettings.apiKey,
-      configuration: openAIClientSettings.configuration,
-      stripNewLines: true,
-      timeout: 30000,
-    });
-
-    logger.info(
-      {
+      this.embeddings = new OllamaEmbeddings({
+        baseUrl: aiConfig.ollama.baseUrl,
         model: this.modelName,
-        dimensions: this.dimensions,
-      },
-      'Embedding chain initialized'
-    );
+      });
+
+      logger.info(
+        { model: this.modelName, dimensions: this.dimensions, provider: 'ollama' },
+        'Embedding chain initialized with Ollama'
+      );
+    } else {
+      // OpenAI embeddings (production)
+      this.modelName = process.env.EMBEDDING_MODEL || 'text-embedding-3-small';
+      this.dimensions = parseInt(process.env.EMBEDDING_DIMENSIONS || '1536', 10);
+      const openAIClientSettings = getOpenAIClientSettings();
+
+      this.embeddings = new OpenAIEmbeddings({
+        modelName: this.modelName,
+        apiKey: openAIClientSettings.apiKey,
+        configuration: openAIClientSettings.configuration,
+        stripNewLines: true,
+        timeout: 30000,
+      });
+
+      logger.info(
+        { model: this.modelName, dimensions: this.dimensions, provider: 'openai' },
+        'Embedding chain initialized with OpenAI'
+      );
+    }
   }
 
   /**

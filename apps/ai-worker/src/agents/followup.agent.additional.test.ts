@@ -103,11 +103,44 @@ function makeInput(overrides?: Partial<FollowupInput>): FollowupInput {
 // Tests
 // ============================================================================
 
+// Default response used by tests that rely on the initial mock
+const defaultFollowupResponse = JSON.stringify({
+  shouldFollowUp: true,
+  urgency: 'HIGH',
+  recommendedAction: 'PHONE_CALL',
+  reasoning: 'Lead shows strong engagement and is at qualified stage.',
+  confidence: 0.82,
+  suggestedTiming: {
+    optimalDay: 'TUESDAY',
+    optimalTimeSlot: 'MORNING',
+    reasonForTiming: 'B2B leads respond best Tuesday-Thursday mornings.',
+  },
+  emailSuggestions: {
+    subject: 'Quick follow-up on our discussion',
+    keyPoints: ['Recap value proposition', 'Address concerns'],
+    tone: 'PROFESSIONAL',
+  },
+  callScript: {
+    opening: 'Hi, this is Jane from IntelliFlow.',
+    keyQuestions: ['Timeline for implementation?'],
+    objectionsToAnticipate: ['Budget concerns'],
+    closingStatement: 'Available for a 30-min demo next week?',
+  },
+  nextSteps: [{ action: 'Call lead', deadline: 'Tuesday 10 AM', owner: 'Sales Rep' }],
+  riskFactors: ['Long sales cycle'],
+  opportunitySignals: ['High engagement', 'Urgent timeline'],
+});
+
 describe('FollowupAgent - Execution', () => {
   let agent: FollowupAgent;
 
   beforeEach(() => {
     agent = new FollowupAgent();
+    // Override model to ensure deterministic behavior regardless of mock load order
+    // (with isolate:false, another file's @langchain/openai mock factory may win)
+    (agent as any).model = {
+      invoke: vi.fn().mockResolvedValue({ content: defaultFollowupResponse }),
+    };
   });
 
   afterEach(() => {

@@ -17,8 +17,16 @@
  */
 
 import { ChatOpenAI } from '@langchain/openai';
+import { ChatOllama } from '@langchain/ollama';
+import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { aiConfig } from '../config/ai.config';
 import { getOpenAIClientSettings } from '../utils/openai-client';
+import pino from 'pino';
+
+const logger = pino({
+  name: 'auto-response-chain',
+  level: process.env.LOG_LEVEL || 'info',
+});
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import {
   withMonitoring,
@@ -87,7 +95,7 @@ export interface ValidationResult {
  * IFC-029: All user inputs are sanitized before prompt construction.
  */
 export class AutoResponseChain {
-  private llm: ChatOpenAI;
+  private llm: BaseChatModel;
   private modelVersion: string;
   private chainMonitor = createChainMonitor({ latencyThresholdMs: 1000 });
 
@@ -103,16 +111,41 @@ export class AutoResponseChain {
   private static readonly MAX_CUSTOM_INSTRUCTIONS_LENGTH = 500;
 
   constructor() {
-    const openAIClientSettings = getOpenAIClientSettings();
-    this.llm = new ChatOpenAI({
-      modelName: aiConfig.openai.model,
-      temperature: aiConfig.openai.temperature,
-      maxTokens: aiConfig.openai.maxTokens,
-      timeout: aiConfig.openai.timeout,
-      apiKey: openAIClientSettings.apiKey,
-      configuration: openAIClientSettings.configuration,
-    });
-    this.modelVersion = `${openAIClientSettings.endpoint}:${aiConfig.openai.model}:v1`;
+    if (aiConfig.provider === 'openai') {
+      const openAIClientSettings = getOpenAIClientSettings();
+      this.llm = new ChatOpenAI({
+        modelName: aiConfig.openai.model,
+        temperature: aiConfig.openai.temperature,
+        maxTokens: aiConfig.openai.maxTokens,
+        timeout: aiConfig.openai.timeout,
+        apiKey: openAIClientSettings.apiKey,
+        configuration: openAIClientSettings.configuration,
+      });
+      this.modelVersion = `${openAIClientSettings.endpoint}:${aiConfig.openai.model}:v1`;
+    } else if (aiConfig.provider === 'ollama') {
+      const ollamaTimeout = aiConfig.ollama.timeout;
+      this.llm = new ChatOllama({
+        baseUrl: aiConfig.ollama.baseUrl,
+        model: aiConfig.ollama.model,
+        temperature: aiConfig.ollama.temperature,
+        numCtx: 4096,
+        format: 'json',
+        fetch: (url: string | URL | Request, init?: RequestInit) => {
+          return globalThis.fetch(url, {
+            ...init,
+            signal: init?.signal ?? AbortSignal.timeout(ollamaTimeout),
+          });
+        },
+      });
+      this.modelVersion = `ollama:${aiConfig.ollama.model}:v1`;
+
+      logger.info(
+        { baseUrl: aiConfig.ollama.baseUrl, model: aiConfig.ollama.model },
+        'Initialized Ollama provider for auto-response'
+      );
+    } else {
+      throw new Error(`Unsupported AI provider: ${aiConfig.provider}`);
+    }
   }
 
   /**
@@ -175,7 +208,7 @@ export class AutoResponseChain {
       return JSON.parse(content);
     } catch {
       // Fallback: extract JSON from markdown code blocks
-      const match = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+      const match = content.match(/```(?:json)?[ \t\r\n]{0,10}([^`]{0,20000})```/);
       if (match) {
         try {
           return JSON.parse(match[1].trim());

@@ -161,7 +161,7 @@ describe('DocumentIndexer Integration (IFC-155)', () => {
       // indexBatch calls indexDocument sequentially — each call does its own $queryRaw
       mockPrisma.$queryRaw
         .mockResolvedValueOnce([doc1])
-        .mockResolvedValueOnce([])       // missing doc
+        .mockResolvedValueOnce([]) // missing doc
         .mockResolvedValueOnce([doc2]);
       mockPrisma.$executeRaw.mockResolvedValue(1);
 

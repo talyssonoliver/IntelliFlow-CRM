@@ -105,28 +105,28 @@ interface OpportunityRecord {
 }
 
 interface DocumentAclRecord {
-  principal_type: string;
-  principal_id: string;
-  access_level: string;
+  principalType: string;
+  principalId: string;
+  accessLevel: string;
 }
 
 interface CaseDocumentRecord {
   id: string;
   title: string;
   description: string | null;
-  document_type: string;
+  documentType: string;
   classification: string;
   status: string;
-  version_major: number;
-  version_minor: number;
-  version_patch: number;
-  created_by: string;
-  created_at: Date;
-  updated_at: Date;
+  versionMajor: number;
+  versionMinor: number;
+  versionPatch: number;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
   acl: DocumentAclRecord[];
   // IFC-155: Search fields
-  extracted_text?: string | null;
-  related_case_id?: string | null;
+  extractedText?: string | null;
+  relatedCaseId?: string | null;
 }
 
 // IFC-155: FTS search result from PostgreSQL (reserved for future use)
@@ -535,7 +535,7 @@ export class RetrievalService {
     // GATE:no-null-fallback - Must use actual embeddings, not null fallback
     this.embeddingChain = embeddingChain || new EmbeddingChain();
     // Reserved for IFC-155 document search - suppress unused warning
-    void this._searchDocuments;
+    void this._searchDocuments; // NOSONAR javascript:S3735
   }
 
   /**
@@ -698,7 +698,7 @@ export class RetrievalService {
     const documents = await this.prisma.caseDocument.findMany({
       where: {
         id: { in: docIds },
-        tenant_id: tenantId,
+        tenantId: tenantId,
       },
       include: { acl: true },
     });
@@ -753,7 +753,7 @@ export class RetrievalService {
     const documents = await this.prisma.caseDocument.findMany({
       where: {
         id: { in: docIds },
-        tenant_id: tenantId,
+        tenantId: tenantId,
       },
       include: { acl: true },
     });
@@ -919,11 +919,11 @@ export class RetrievalService {
     const accessibleDocs = documents.filter((doc: CaseDocumentRecord) => {
       const hasAccess = doc.acl.some(
         (acl: DocumentAclRecord) =>
-          (acl.principal_type === 'USER' && acl.principal_id === aclContext.userId) ||
-          (acl.principal_type === 'ROLE' && aclContext.roles.includes(acl.principal_id)) ||
-          (acl.principal_type === 'TENANT' && acl.principal_id === aclContext.tenantId)
+          (acl.principalType === 'USER' && acl.principalId === aclContext.userId) ||
+          (acl.principalType === 'ROLE' && aclContext.roles.includes(acl.principalId)) ||
+          (acl.principalType === 'TENANT' && acl.principalId === aclContext.tenantId)
       );
-      const isCreator = doc.created_by === aclContext.userId;
+      const isCreator = doc.createdBy === aclContext.userId;
       return hasAccess || isCreator || aclContext.roles.includes('ADMIN');
     });
 
@@ -938,24 +938,24 @@ export class RetrievalService {
           ftsResult?.snippet || this.generateSnippet(`${doc.title} ${doc.description || ''}`, ''),
         relevanceScore: ftsResult?.rank || 0,
         metadata: {
-          documentType: doc.document_type,
+          documentType: doc.documentType,
           classification: doc.classification,
           status: doc.status,
-          version: `${doc.version_major}.${doc.version_minor}.${doc.version_patch}`,
-          caseId: doc.related_case_id,
+          version: `${doc.versionMajor}.${doc.versionMinor}.${doc.versionPatch}`,
+          caseId: doc.relatedCaseId,
         },
         acl: {
           viewableBy: doc.acl
             .filter((a: DocumentAclRecord) =>
-              ['VIEW', 'COMMENT', 'EDIT', 'ADMIN'].includes(a.access_level)
+              ['VIEW', 'COMMENT', 'EDIT', 'ADMIN'].includes(a.accessLevel)
             )
-            .map((a: DocumentAclRecord) => a.principal_id),
+            .map((a: DocumentAclRecord) => a.principalId),
           editableBy: doc.acl
-            .filter((a: DocumentAclRecord) => ['EDIT', 'ADMIN'].includes(a.access_level))
-            .map((a: DocumentAclRecord) => a.principal_id),
+            .filter((a: DocumentAclRecord) => ['EDIT', 'ADMIN'].includes(a.accessLevel))
+            .map((a: DocumentAclRecord) => a.principalId),
         },
-        createdAt: doc.created_at,
-        updatedAt: doc.updated_at,
+        createdAt: doc.createdAt,
+        updatedAt: doc.updatedAt,
       };
     });
   }
@@ -974,11 +974,11 @@ export class RetrievalService {
     const accessibleDocs = documents.filter((doc: CaseDocumentRecord) => {
       const hasAccess = doc.acl.some(
         (acl: DocumentAclRecord) =>
-          (acl.principal_type === 'USER' && acl.principal_id === aclContext.userId) ||
-          (acl.principal_type === 'ROLE' && aclContext.roles.includes(acl.principal_id)) ||
-          (acl.principal_type === 'TENANT' && acl.principal_id === aclContext.tenantId)
+          (acl.principalType === 'USER' && acl.principalId === aclContext.userId) ||
+          (acl.principalType === 'ROLE' && aclContext.roles.includes(acl.principalId)) ||
+          (acl.principalType === 'TENANT' && acl.principalId === aclContext.tenantId)
       );
-      const isCreator = doc.created_by === aclContext.userId;
+      const isCreator = doc.createdBy === aclContext.userId;
       return hasAccess || isCreator || aclContext.roles.includes('ADMIN');
     });
 
@@ -992,25 +992,25 @@ export class RetrievalService {
         snippet: this.generateSnippet(`${doc.title} ${doc.description || ''}`, ''),
         relevanceScore: semanticResult?.similarity || 0,
         metadata: {
-          documentType: doc.document_type,
+          documentType: doc.documentType,
           classification: doc.classification,
           status: doc.status,
-          version: `${doc.version_major}.${doc.version_minor}.${doc.version_patch}`,
-          caseId: doc.related_case_id,
+          version: `${doc.versionMajor}.${doc.versionMinor}.${doc.versionPatch}`,
+          caseId: doc.relatedCaseId,
           searchType: 'semantic',
         },
         acl: {
           viewableBy: doc.acl
             .filter((a: DocumentAclRecord) =>
-              ['VIEW', 'COMMENT', 'EDIT', 'ADMIN'].includes(a.access_level)
+              ['VIEW', 'COMMENT', 'EDIT', 'ADMIN'].includes(a.accessLevel)
             )
-            .map((a: DocumentAclRecord) => a.principal_id),
+            .map((a: DocumentAclRecord) => a.principalId),
           editableBy: doc.acl
-            .filter((a: DocumentAclRecord) => ['EDIT', 'ADMIN'].includes(a.access_level))
-            .map((a: DocumentAclRecord) => a.principal_id),
+            .filter((a: DocumentAclRecord) => ['EDIT', 'ADMIN'].includes(a.accessLevel))
+            .map((a: DocumentAclRecord) => a.principalId),
         },
-        createdAt: doc.created_at,
-        updatedAt: doc.updated_at,
+        createdAt: doc.createdAt,
+        updatedAt: doc.updatedAt,
       };
     });
   }
@@ -1226,9 +1226,9 @@ export class RetrievalService {
     // For documents, we need to check ACL more carefully
     const documents = await this.prisma.caseDocument.findMany({
       where: {
-        tenant_id: aclFilter.tenantId as string,
-        deleted_at: null,
-        is_latest_version: true,
+        tenantId: aclFilter.tenantId as string,
+        deletedAt: null,
+        isLatestVersion: true,
         OR: [
           { title: { contains: config.query, mode: 'insensitive' } },
           { description: { contains: config.query, mode: 'insensitive' } },
@@ -1238,7 +1238,7 @@ export class RetrievalService {
         acl: true,
       },
       take: 100,
-      orderBy: { updated_at: 'desc' },
+      orderBy: { updatedAt: 'desc' },
     });
 
     // Filter by ACL
@@ -1246,13 +1246,13 @@ export class RetrievalService {
       // Check if user has explicit access
       const hasAccess = doc.acl.some(
         (acl: DocumentAclRecord) =>
-          (acl.principal_type === 'USER' && acl.principal_id === aclContext.userId) ||
-          (acl.principal_type === 'ROLE' && aclContext.roles.includes(acl.principal_id)) ||
-          (acl.principal_type === 'TENANT' && acl.principal_id === aclContext.tenantId)
+          (acl.principalType === 'USER' && acl.principalId === aclContext.userId) ||
+          (acl.principalType === 'ROLE' && aclContext.roles.includes(acl.principalId)) ||
+          (acl.principalType === 'TENANT' && acl.principalId === aclContext.tenantId)
       );
 
       // Check if user created the document
-      const isCreator = doc.created_by === aclContext.userId;
+      const isCreator = doc.createdBy === aclContext.userId;
 
       return hasAccess || isCreator || aclContext.roles.includes('ADMIN');
     });
@@ -1265,23 +1265,23 @@ export class RetrievalService {
       snippet: this.generateSnippet(`${doc.title} ${doc.description || ''}`, config.query),
       relevanceScore: this.calculateFullTextScore(config.query, doc.title),
       metadata: {
-        documentType: doc.document_type,
+        documentType: doc.documentType,
         classification: doc.classification,
         status: doc.status,
-        version: `${doc.version_major}.${doc.version_minor}.${doc.version_patch}`,
+        version: `${doc.versionMajor}.${doc.versionMinor}.${doc.versionPatch}`,
       },
       acl: {
         viewableBy: doc.acl
           .filter((a: DocumentAclRecord) =>
-            ['VIEW', 'COMMENT', 'EDIT', 'ADMIN'].includes(a.access_level)
+            ['VIEW', 'COMMENT', 'EDIT', 'ADMIN'].includes(a.accessLevel)
           )
-          .map((a: DocumentAclRecord) => a.principal_id),
+          .map((a: DocumentAclRecord) => a.principalId),
         editableBy: doc.acl
-          .filter((a: DocumentAclRecord) => ['EDIT', 'ADMIN'].includes(a.access_level))
-          .map((a: DocumentAclRecord) => a.principal_id),
+          .filter((a: DocumentAclRecord) => ['EDIT', 'ADMIN'].includes(a.accessLevel))
+          .map((a: DocumentAclRecord) => a.principalId),
       },
-      createdAt: doc.created_at,
-      updatedAt: doc.updated_at,
+      createdAt: doc.createdAt,
+      updatedAt: doc.updatedAt,
     }));
   }
 

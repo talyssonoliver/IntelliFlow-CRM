@@ -121,8 +121,10 @@ export interface LatencyAlert {
 export class LatencyMonitor {
   private measurements: LatencyMeasurement[] = [];
   private alerts: LatencyAlert[] = [];
-  private operationTimers: Map<string, { startTime: number; phases: Record<string, number> }> =
-    new Map();
+  private readonly operationTimers: Map<
+    string,
+    { startTime: number; phases: Record<string, number> }
+  > = new Map();
 
   constructor(private readonly config: LatencyMonitorConfig) {
     logger.info({ config }, 'LatencyMonitor initialized');
@@ -210,6 +212,7 @@ export class LatencyMonitor {
 
     // Apply sampling
     if (Math.random() <= this.config.samplingRate) {
+      // NOSONAR - non-security: probabilistic sampling decision, not used for auth or tokens
       this.measurements.push(...measurements);
     }
 
@@ -243,6 +246,7 @@ export class LatencyMonitor {
     };
 
     if (Math.random() <= this.config.samplingRate) {
+      // NOSONAR - non-security: probabilistic sampling decision, not used for auth or tokens
       this.measurements.push(entry);
     }
 
@@ -490,7 +494,7 @@ export class LatencyMonitor {
     duration: number
   ): void {
     const alert: LatencyAlert = {
-      id: `latency-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id: `latency-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, // NOSONAR - non-security: internal alert deduplication ID, not used for auth or tokens
       timestamp: new Date(),
       severity,
       model,
@@ -605,6 +609,18 @@ export const defaultLatencyConfig: LatencyMonitorConfig = {
 export const latencyMonitor = new LatencyMonitor(defaultLatencyConfig);
 
 /**
+ * Map a histogram bucket value to its approximate cumulative percentile ratio
+ */
+function getBucketRatio(bucket: number, percentiles: LatencyPercentiles): number {
+  if (bucket <= percentiles.p50) return 0.5;
+  if (bucket <= percentiles.p75) return 0.75;
+  if (bucket <= percentiles.p90) return 0.9;
+  if (bucket <= percentiles.p95) return 0.95;
+  if (bucket <= percentiles.p99) return 0.99;
+  return 1.0;
+}
+
+/**
  * Prometheus metrics format for latency monitoring
  */
 export function getLatencyMetrics(): string {
@@ -621,18 +637,7 @@ export function getLatencyMetrics(): string {
   // Approximate bucket counts from percentiles
   const totalMeasurements = stats.sampleCount;
   for (const bucket of buckets) {
-    const ratio =
-      bucket <= stats.percentiles.p50
-        ? 0.5
-        : bucket <= stats.percentiles.p75
-          ? 0.75
-          : bucket <= stats.percentiles.p90
-            ? 0.9
-            : bucket <= stats.percentiles.p95
-              ? 0.95
-              : bucket <= stats.percentiles.p99
-                ? 0.99
-                : 1.0;
+    const ratio = getBucketRatio(bucket, stats.percentiles);
     const count = Math.round(totalMeasurements * ratio);
     metrics += `intelliflow_ai_latency_seconds_bucket{le="${(bucket / 1000).toFixed(3)}"} ${count}\n`;
   }

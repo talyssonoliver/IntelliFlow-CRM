@@ -146,8 +146,8 @@ export class DriftDetector {
     const timestamp = new Date();
 
     // Track user satisfaction (thumbs up = 1, thumbs down = 0, correction = 0.5)
-    const satisfactionValue =
-      feedback.feedbackType === 'THUMBS_UP' ? 1 : feedback.feedbackType === 'THUMBS_DOWN' ? 0 : 0.5;
+    const thumbsDownOrCorrection = feedback.feedbackType === 'THUMBS_DOWN' ? 0 : 0.5;
+    const satisfactionValue = feedback.feedbackType === 'THUMBS_UP' ? 1 : thumbsDownOrCorrection;
 
     this.recordSample({
       value: satisfactionValue,

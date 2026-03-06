@@ -17,7 +17,11 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { VersionLoader, createVersionLoader, createStandaloneVersionLoader } from '../version-loader';
+import {
+  VersionLoader,
+  createVersionLoader,
+  createStandaloneVersionLoader,
+} from '../version-loader';
 import type { LoadedVersion, ExecutionContext } from '../version-loader';
 import type { ChainType } from '@intelliflow/domain';
 
@@ -40,19 +44,21 @@ function createMockVersionService(
       if (shouldThrow) {
         throw new Error('Version service unavailable');
       }
-      return response ?? {
-        version: {
-          id: 'v-active-1',
-          chainType: 'SCORING',
-          status: 'ACTIVE',
-          prompt: 'Score this lead.',
-          model: 'gpt-4-turbo-preview',
-          temperature: 0.7,
-          maxTokens: 2000,
-          additionalParams: null,
-        },
-        selectedBy: 'direct',
-      };
+      return (
+        response ?? {
+          version: {
+            id: 'v-active-1',
+            chainType: 'SCORING',
+            status: 'ACTIVE',
+            prompt: 'Score this lead.',
+            model: 'gpt-4-turbo-preview',
+            temperature: 0.7,
+            maxTokens: 2000,
+            additionalParams: null,
+          },
+          selectedBy: 'direct',
+        }
+      );
     }),
   };
 }

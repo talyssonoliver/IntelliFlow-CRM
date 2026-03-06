@@ -190,9 +190,7 @@ describe('Prometheus Exporter (IFC-117)', () => {
       handler(req, res as any);
 
       expect(res.statusCode).toBe(401);
-      expect(res.end).toHaveBeenCalledWith(
-        JSON.stringify({ error: 'Unauthorized' })
-      );
+      expect(res.end).toHaveBeenCalledWith(JSON.stringify({ error: 'Unauthorized' }));
     });
 
     it('should return 401 with wrong token', () => {
@@ -215,13 +213,8 @@ describe('Prometheus Exporter (IFC-117)', () => {
       handler(req, res as any);
 
       expect(res.statusCode).toBe(200);
-      expect(res.setHeader).toHaveBeenCalledWith(
-        'Content-Type',
-        'text/plain; charset=utf-8'
-      );
-      expect(res.end).toHaveBeenCalledWith(
-        expect.stringContaining('ai_drift_score')
-      );
+      expect(res.setHeader).toHaveBeenCalledWith('Content-Type', 'text/plain; charset=utf-8');
+      expect(res.end).toHaveBeenCalledWith(expect.stringContaining('ai_drift_score'));
     });
   });
 
@@ -240,10 +233,7 @@ describe('Prometheus Exporter (IFC-117)', () => {
 
       handler(req, res as any);
 
-      expect(res.setHeader).toHaveBeenCalledWith(
-        'Content-Type',
-        'application/json'
-      );
+      expect(res.setHeader).toHaveBeenCalledWith('Content-Type', 'application/json');
       const body = JSON.parse(res.end.mock.calls[0][0]);
       expect(body.healthy).toBe(true);
     });
