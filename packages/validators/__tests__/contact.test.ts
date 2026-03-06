@@ -275,24 +275,20 @@ describe('Contact Validators', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should validate email update', () => {
-      const validData = {
+    it('should strip email from update input (email is read-only)', () => {
+      const dataWithEmail = {
         id: '123e4567-e89b-12d3-a456-426614174000',
         email: 'newemail@example.com',
+        firstName: 'Updated',
       };
 
-      const result = updateContactSchema.safeParse(validData);
+      const result = updateContactSchema.safeParse(dataWithEmail);
       expect(result.success).toBe(true);
-    });
-
-    it('should reject invalid email when provided', () => {
-      const invalidData = {
-        id: '123e4567-e89b-12d3-a456-426614174000',
-        email: 'invalid-email',
-      };
-
-      const result = updateContactSchema.safeParse(invalidData);
-      expect(result.success).toBe(false);
+      if (result.success) {
+        // email should not appear in parsed output
+        expect('email' in result.data).toBe(false);
+        expect(result.data.firstName).toBe('Updated');
+      }
     });
 
     it('should reject empty firstName when provided', () => {

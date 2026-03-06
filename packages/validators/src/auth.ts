@@ -347,7 +347,11 @@ export const signupSchema = z
     email: emailSchema,
     password: strongPasswordSchema,
     confirmPassword: z.string(),
-    name: z.string().min(1).max(100).transform(v => v.trim()),
+    name: z
+      .string()
+      .min(1)
+      .max(100)
+      .transform((v) => v.trim()),
     acceptTerms: z.literal(true, {
       message: 'You must accept the terms and conditions',
     }),

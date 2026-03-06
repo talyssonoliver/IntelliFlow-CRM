@@ -52,7 +52,8 @@ export const createContactSchema = baseContactFieldsSchema;
 export type CreateContactInput = z.infer<typeof createContactSchema>;
 
 // Update Contact Schema - all fields optional except id
-export const updateContactSchema = baseContactFieldsSchema.partial().extend({
+// Email is omitted: use updateContactEmail service method for email changes
+export const updateContactSchema = baseContactFieldsSchema.omit({ email: true }).partial().extend({
   id: idSchema,
   accountId: idSchema.optional().nullable(), // Allow unsetting account
 });
@@ -109,6 +110,17 @@ export const contactListResponseSchema = z.object({
 });
 
 export type ContactListResponse = z.infer<typeof contactListResponseSchema>;
+
+// Vector search result schema (validates Supabase RPC response)
+export const contactSearchResultSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  firstName: z.string(),
+  lastName: z.string(),
+  similarity: z.number(),
+});
+
+export type ContactSearchResultValidated = z.infer<typeof contactSearchResultSchema>;
 
 // IFC-184: Link/Unlink Lead Schemas
 export const linkToLeadSchema = z.object({

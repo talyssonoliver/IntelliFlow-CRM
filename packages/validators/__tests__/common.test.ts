@@ -24,16 +24,22 @@ import {
 import { z } from 'zod';
 
 describe('Common Validators', () => {
-  describe('idSchema (UUID)', () => {
+  describe('idSchema (UUID | CUID)', () => {
     it('should validate valid UUID', () => {
       const validUuid = '123e4567-e89b-12d3-a456-426614174000';
       const result = idSchema.safeParse(validUuid);
       expect(result.success).toBe(true);
     });
 
-    it('should reject invalid UUID format', () => {
-      const invalidUuid = 'not-a-uuid';
-      const result = idSchema.safeParse(invalidUuid);
+    it('should validate valid CUID', () => {
+      const validCuid = 'clh1x2p3y0000qwer1234asdf';
+      const result = idSchema.safeParse(validCuid);
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject invalid format', () => {
+      const invalid = 'not-a-uuid-or-cuid';
+      const result = idSchema.safeParse(invalid);
       expect(result.success).toBe(false);
     });
 
@@ -55,12 +61,14 @@ describe('Common Validators', () => {
   });
 
   describe('uuidSchema', () => {
-    it('should be an alias for idSchema', () => {
+    it('should validate UUID only', () => {
       const validUuid = '123e4567-e89b-12d3-a456-426614174000';
-      const idResult = idSchema.safeParse(validUuid);
-      const uuidResult = uuidSchema.safeParse(validUuid);
+      expect(uuidSchema.safeParse(validUuid).success).toBe(true);
+    });
 
-      expect(idResult.success).toBe(uuidResult.success);
+    it('should reject CUID', () => {
+      const validCuid = 'clh1x2p3y0000qwer1234asdf';
+      expect(uuidSchema.safeParse(validCuid).success).toBe(false);
     });
   });
 

@@ -12,6 +12,7 @@ import {
   ROUTING_CONDITION_FIELDS,
   ROUTING_CONDITION_OPERATORS,
   ROUTING_ACTION_TYPES,
+  ROUTING_REASONS,
 } from '@intelliflow/domain';
 
 // --- Condition Schema ---
@@ -46,3 +47,19 @@ export const updateRoutingRuleSchema = createRoutingRuleSchema.partial().extend(
   id: z.string(),
 });
 export type UpdateRoutingRuleInput = z.infer<typeof updateRoutingRuleSchema>;
+
+// --- Auto Route Lead Schema (IFC-030) ---
+export const autoRouteLeadInputSchema = z.object({
+  leadId: z.string().min(1),
+  reason: z.enum(ROUTING_REASONS).optional(),
+  forceReroute: z.boolean().default(false),
+});
+export type AutoRouteLeadInput = z.infer<typeof autoRouteLeadInputSchema>;
+
+// --- Suggest Lead Assignee Schema (IFC-030) ---
+export const suggestLeadAssigneeInputSchema = z.object({
+  leadId: z.string().min(1),
+  scoreTier: z.enum(['HOT', 'WARM', 'COLD'] as const).optional(),
+  limit: z.number().int().min(1).max(10).default(5),
+});
+export type SuggestLeadAssigneeInput = z.infer<typeof suggestLeadAssigneeInputSchema>;

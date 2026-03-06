@@ -16,10 +16,9 @@ import { z } from 'zod';
 export const timezoneSchema = z
   .string()
   .min(1, 'Timezone is required')
-  .refine(
-    (tz) => tz === 'UTC' || tz.includes('/'),
-    { message: 'Timezone must be a canonical IANA identifier (e.g. America/New_York) or UTC' }
-  )
+  .refine((tz) => tz === 'UTC' || tz.includes('/'), {
+    message: 'Timezone must be a canonical IANA identifier (e.g. America/New_York) or UTC',
+  })
   .refine(
     (tz) => {
       try {

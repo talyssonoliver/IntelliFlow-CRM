@@ -72,6 +72,23 @@ export const aiInsightsResponseSchema = z.object({
 
 export type AIInsightsResponse = z.infer<typeof aiInsightsResponseSchema>;
 
+// PG-160: "View All" paginated insights endpoint
+export const getAllInsightsQuerySchema = z.object({
+  limit: z.number().min(1).max(50).default(20),
+  cursor: z.string().optional(),
+  types: z.array(aiInsightTypeSchema).optional(),
+});
+export type GetAllInsightsQuery = z.infer<typeof getAllInsightsQuerySchema>;
+
+export const getAllInsightsResponseSchema = z.object({
+  insights: z.array(aiInsightSchema),
+  nextCursor: z.string().optional().nullable(),
+  hasMore: z.boolean(),
+  total: z.number(),
+  lastRefreshed: z.date(),
+});
+export type GetAllInsightsResponse = z.infer<typeof getAllInsightsResponseSchema>;
+
 // =============================================================================
 // Activity Feed Schemas
 // =============================================================================
@@ -154,13 +171,14 @@ export type ActivityFeedResponse = z.infer<typeof activityFeedResponseSchema>;
 export const GOAL_TYPES = ['revenue', 'calls', 'meetings', 'tasks', 'custom'] as const;
 export type GoalType = (typeof GOAL_TYPES)[number];
 
-export const GOAL_DEFAULTS: Record<GoalType, { targetValue: number; label: string; unit: string }> = {
-  revenue: { targetValue: 5000, label: 'Sales', unit: '$' },
-  calls: { targetValue: 10, label: 'Calls', unit: 'calls' },
-  meetings: { targetValue: 3, label: 'Meetings', unit: 'meetings' },
-  tasks: { targetValue: 5, label: 'Tasks', unit: 'tasks' },
-  custom: { targetValue: 10, label: 'Custom Goal', unit: 'units' },
-};
+export const GOAL_DEFAULTS: Record<GoalType, { targetValue: number; label: string; unit: string }> =
+  {
+    revenue: { targetValue: 5000, label: 'Sales', unit: '$' },
+    calls: { targetValue: 10, label: 'Calls', unit: 'calls' },
+    meetings: { targetValue: 3, label: 'Meetings', unit: 'meetings' },
+    tasks: { targetValue: 5, label: 'Tasks', unit: 'tasks' },
+    custom: { targetValue: 10, label: 'Custom Goal', unit: 'units' },
+  };
 
 export const updateDailyGoalInputSchema = z.object({
   type: z.enum(GOAL_TYPES),
@@ -220,6 +238,7 @@ export const pinnedItemSchema = z.object({
   url: z.string(),
   pinnedAt: z.date(),
   position: z.number(),
+  isAvailable: z.boolean().default(true),
 });
 
 export type PinnedItem = z.infer<typeof pinnedItemSchema>;

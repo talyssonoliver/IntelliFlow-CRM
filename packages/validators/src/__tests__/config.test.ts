@@ -410,7 +410,7 @@ describe('Config Validators', () => {
       const env = {
         NODE_ENV: 'development',
         DATABASE_URL: 'postgresql://localhost:5432/intelliflow_dev',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = validateEnv(env);
       expect(result.NODE_ENV).toBe('development');
@@ -419,7 +419,7 @@ describe('Config Validators', () => {
     it('should use testEnvSchema for test NODE_ENV', () => {
       const env = {
         NODE_ENV: 'test',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = validateEnv(env);
       expect(result.NODE_ENV).toBe('test');
@@ -433,7 +433,7 @@ describe('Config Validators', () => {
         SESSION_SECRET: 'a]veryLongProductionSessionSecretAtLeast32Chars!',
         SENTRY_DSN: 'https://examplePublicKey@sentry.io/1',
         CORS_ORIGIN: 'https://app.intelliflow.com',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = validateEnv(env);
       expect(result.NODE_ENV).toBe('production');
@@ -442,7 +442,7 @@ describe('Config Validators', () => {
     it('should default to devEnvSchema when NODE_ENV is not set', () => {
       const env = {
         DATABASE_URL: 'postgresql://localhost:5432/intelliflow_dev',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = validateEnv(env);
       expect(result.NODE_ENV).toBe('development');
@@ -454,7 +454,7 @@ describe('Config Validators', () => {
       const env = {
         NODE_ENV: 'production',
         // Missing required production fields
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       expect(() => validateEnv(env)).toThrow(
         'Invalid environment configuration. Check the errors above.'
@@ -467,7 +467,7 @@ describe('Config Validators', () => {
       const env = {
         NODE_ENV: 'staging',
         DATABASE_URL: 'postgresql://localhost:5432/intelliflow_staging',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = validateEnv(env);
       expect(result).toBeDefined();
@@ -481,7 +481,7 @@ describe('Config Validators', () => {
     it('should return success: true for valid env', () => {
       const env = {
         NODE_ENV: 'test',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = safeValidateEnv(env);
       expect(result.success).toBe(true);
@@ -491,7 +491,7 @@ describe('Config Validators', () => {
       const env = {
         NODE_ENV: 'production',
         // Missing required production fields
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = safeValidateEnv(env);
       expect(result.success).toBe(false);
@@ -500,7 +500,7 @@ describe('Config Validators', () => {
     it('should not throw on invalid env', () => {
       const env = {
         NODE_ENV: 'production',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       expect(() => safeValidateEnv(env)).not.toThrow();
     });
@@ -508,7 +508,7 @@ describe('Config Validators', () => {
     it('should default to dev schema when NODE_ENV is missing', () => {
       const env = {
         DATABASE_URL: 'postgresql://localhost:5432/intelliflow_dev',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = safeValidateEnv(env);
       expect(result.success).toBe(true);
@@ -517,7 +517,7 @@ describe('Config Validators', () => {
     it('should use test schema for test NODE_ENV', () => {
       const env = {
         NODE_ENV: 'test',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = safeValidateEnv(env);
       expect(result.success).toBe(true);

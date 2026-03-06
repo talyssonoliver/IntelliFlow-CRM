@@ -447,7 +447,7 @@ describe('Env Validators', () => {
     it('should use devEnvSchema for development NODE_ENV', () => {
       const env = {
         NODE_ENV: 'development',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       // devEnvSchema has defaults for DATABASE_URL, JWT_SECRET, SESSION_SECRET
       const result = validateEnv(env);
@@ -457,7 +457,7 @@ describe('Env Validators', () => {
     it('should use testEnvSchema for test NODE_ENV', () => {
       const env = {
         NODE_ENV: 'test',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = validateEnv(env);
       expect(result.NODE_ENV).toBe('test');
@@ -471,14 +471,14 @@ describe('Env Validators', () => {
         SESSION_SECRET: 'a]veryLongProductionSessionSecretAtLeast32Chars!',
         SENTRY_DSN: 'https://examplePublicKey@sentry.io/1',
         CORS_ORIGIN: 'https://app.intelliflow.com',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = validateEnv(env);
       expect(result.NODE_ENV).toBe('production');
     });
 
     it('should default to devEnvSchema when NODE_ENV is not set', () => {
-      const env = {} as unknown as NodeJS.ProcessEnv;
+      const env = {} as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = validateEnv(env);
       expect(result.NODE_ENV).toBe('development');
@@ -490,7 +490,7 @@ describe('Env Validators', () => {
       const env = {
         NODE_ENV: 'production',
         // Missing required production fields
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       expect(() => validateEnv(env)).toThrow(
         'Invalid environment configuration. Check the errors above.'
@@ -504,7 +504,7 @@ describe('Env Validators', () => {
 
       const env = {
         NODE_ENV: 'production',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       try {
         validateEnv(env);
@@ -520,7 +520,7 @@ describe('Env Validators', () => {
     it('should use devEnvSchema for staging NODE_ENV', () => {
       const env = {
         NODE_ENV: 'staging',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = validateEnv(env);
       expect(result).toBeDefined();
@@ -534,7 +534,7 @@ describe('Env Validators', () => {
     it('should return success: true for valid test env', () => {
       const env = {
         NODE_ENV: 'test',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = safeValidateEnv(env);
       expect(result.success).toBe(true);
@@ -543,7 +543,7 @@ describe('Env Validators', () => {
     it('should return success: false for invalid production env', () => {
       const env = {
         NODE_ENV: 'production',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = safeValidateEnv(env);
       expect(result.success).toBe(false);
@@ -552,7 +552,7 @@ describe('Env Validators', () => {
     it('should not throw on invalid env', () => {
       const env = {
         NODE_ENV: 'production',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       expect(() => safeValidateEnv(env)).not.toThrow();
     });
@@ -560,7 +560,7 @@ describe('Env Validators', () => {
     it('should return error details on failure', () => {
       const env = {
         NODE_ENV: 'production',
-      } as unknown as NodeJS.ProcessEnv;
+      } as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = safeValidateEnv(env);
       expect(result.success).toBe(false);
@@ -571,7 +571,7 @@ describe('Env Validators', () => {
     });
 
     it('should default to dev schema when NODE_ENV is missing', () => {
-      const env = {} as unknown as NodeJS.ProcessEnv;
+      const env = {} as any; // intentional wrong type for validation test — plain object passed where NodeJS.ProcessEnv is expected;
 
       const result = safeValidateEnv(env);
       expect(result.success).toBe(true);

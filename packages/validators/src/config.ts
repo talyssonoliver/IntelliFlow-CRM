@@ -19,7 +19,10 @@ import { NODE_ENVIRONMENTS, LOG_LEVELS } from '@intelliflow/domain';
 const nodeEnvSchema = z.enum(NODE_ENVIRONMENTS).default('development');
 
 // Database configuration
-const databaseUrlSchema = z.string().url().refine(v => v.startsWith('postgresql://'), 'Must start with postgresql://');
+const databaseUrlSchema = z
+  .string()
+  .url()
+  .refine((v) => v.startsWith('postgresql://'), 'Must start with postgresql://');
 
 // API configuration
 const apiConfigSchema = z.object({
@@ -135,7 +138,10 @@ export type Env = z.infer<typeof envSchema>;
 export const devEnvSchema = envSchema.extend({
   // NOTE: No default for DATABASE_URL - must be explicitly set in .env file
   // This prevents accidental connection to wrong database
-  DATABASE_URL: z.string().url().refine(v => v.startsWith('postgresql://'), 'Must start with postgresql://'),
+  DATABASE_URL: z
+    .string()
+    .url()
+    .refine((v) => v.startsWith('postgresql://'), 'Must start with postgresql://'),
   JWT_SECRET: z.string().optional().default('dev-secret-change-in-production-min-32-chars'),
   SESSION_SECRET: z.string().optional().default('dev-session-secret-change-in-production'),
 });
@@ -148,7 +154,10 @@ export const devEnvSchema = envSchema.extend({
  */
 export const prodEnvSchema = envSchema.extend({
   NODE_ENV: z.literal('production'),
-  DATABASE_URL: z.string().url().refine(v => v.startsWith('postgresql://'), 'Must start with postgresql://'),
+  DATABASE_URL: z
+    .string()
+    .url()
+    .refine((v) => v.startsWith('postgresql://'), 'Must start with postgresql://'),
   JWT_SECRET: z.string().min(32),
   SESSION_SECRET: z.string().min(32),
   SENTRY_DSN: z.string().url(), // Required in production
@@ -165,7 +174,11 @@ export const prodEnvSchema = envSchema.extend({
 export const testEnvSchema = envSchema.extend({
   NODE_ENV: z.literal('test'),
   // NOTE: Test DATABASE_URL should be set in .env.test, not defaulted
-  DATABASE_URL: z.string().url().refine(v => v.startsWith('postgresql://'), 'Must start with postgresql://').optional(),
+  DATABASE_URL: z
+    .string()
+    .url()
+    .refine((v) => v.startsWith('postgresql://'), 'Must start with postgresql://')
+    .optional(),
   JWT_SECRET: z.string().optional().default('test-secret-min-32-characters-long'),
   SESSION_SECRET: z.string().optional().default('test-session-secret-min-32-chars'),
 });
@@ -197,7 +210,9 @@ export function validateEnv(env: NodeJS.ProcessEnv = process.env): Env {
     if (error instanceof z.ZodError) {
       console.error('❌ Environment validation failed:');
       console.error(JSON.stringify(error.format(), null, 2));
-      throw new Error('Invalid environment configuration. Check the errors above.', { cause: error });
+      throw new Error('Invalid environment configuration. Check the errors above.', {
+        cause: error,
+      });
     }
     throw error;
   }

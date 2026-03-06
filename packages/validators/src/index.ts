@@ -85,3 +85,6 @@ export * from './ticket-routing';
 
 // User Schemas (IFC-191: User Timezone Support)
 export * from './user';
+
+// Calendar Schemas (custom calendar management)
+export * from './calendar';

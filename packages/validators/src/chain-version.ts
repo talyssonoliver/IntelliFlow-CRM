@@ -72,7 +72,10 @@ export const createChainVersionSchema = z.object({
     .max(100)
     .default(CHAIN_VERSION_DEFAULTS.DEFAULT_ROLLOUT_PERCENT)
     .optional(),
-  experimentId: z.string().regex(/^c[a-z0-9]{8,}$/).optional(),
+  experimentId: z
+    .string()
+    .regex(/^c[a-z0-9]{8,}$/)
+    .optional(),
 });
 
 export type CreateChainVersionInput = z.infer<typeof createChainVersionSchema>;
@@ -90,7 +93,11 @@ export const updateChainVersionSchema = z.object({
   description: z.string().max(1000).optional(),
   rolloutStrategy: versionRolloutStrategySchema.optional(),
   rolloutPercent: z.number().int().min(1).max(100).optional(),
-  experimentId: z.string().regex(/^c[a-z0-9]{8,}$/).nullable().optional(),
+  experimentId: z
+    .string()
+    .regex(/^c[a-z0-9]{8,}$/)
+    .nullable()
+    .optional(),
 });
 
 export type UpdateChainVersionInput = z.infer<typeof updateChainVersionSchema>;
@@ -116,7 +123,10 @@ export const chainVersionSchema = z.object({
   parentVersionId: z.string().uuid().nullable(),
   rolloutStrategy: versionRolloutStrategySchema,
   rolloutPercent: z.number().int().nullable(),
-  experimentId: z.string().regex(/^c[a-z0-9]{8,}$/).nullable(),
+  experimentId: z
+    .string()
+    .regex(/^c[a-z0-9]{8,}$/)
+    .nullable(),
   createdBy: z.string(),
   createdAt: dateOrString,
   updatedAt: dateOrString,
@@ -202,9 +212,15 @@ export type ChainVersionAudit = z.infer<typeof chainVersionAuditSchema>;
 export const versionContextSchema = z.object({
   userId: z.string().optional(),
   sessionId: z.string().optional(),
-  leadId: z.string().regex(/^c[a-z0-9]{8,}$/).optional(),
+  leadId: z
+    .string()
+    .regex(/^c[a-z0-9]{8,}$/)
+    .optional(),
   tenantId: z.string(),
-  experimentId: z.string().regex(/^c[a-z0-9]{8,}$/).optional(),
+  experimentId: z
+    .string()
+    .regex(/^c[a-z0-9]{8,}$/)
+    .optional(),
 });
 
 export type VersionContext = z.infer<typeof versionContextSchema>;

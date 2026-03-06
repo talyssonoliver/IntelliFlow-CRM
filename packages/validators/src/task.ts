@@ -22,6 +22,7 @@ export const createTaskSchema = z.object({
   leadId: idSchema.optional(),
   contactId: idSchema.optional(),
   opportunityId: idSchema.optional(),
+  calendarId: z.string().optional().nullable(),
 });
 
 export type CreateTaskInput = z.infer<typeof createTaskSchema>;
@@ -37,6 +38,7 @@ export const updateTaskSchema = z.object({
   leadId: idSchema.optional().nullable(),
   contactId: idSchema.optional().nullable(),
   opportunityId: idSchema.optional().nullable(),
+  calendarId: z.string().optional().nullable(),
 });
 
 export type UpdateTaskInput = z.infer<typeof updateTaskSchema>;

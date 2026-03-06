@@ -11,9 +11,7 @@
 import { z } from 'zod';
 
 /** Zod v4 replacement for z.SafeParseReturnType */
-type SafeParseResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: z.ZodError };
+type SafeParseResult<T> = { success: true; data: T } | { success: false; error: z.ZodError };
 
 // ============================================================================
 // Event Metadata Schema
@@ -43,7 +41,10 @@ export type EventMetadataOutput = z.output<typeof eventMetadataSchema>;
  * Base domain event schema
  */
 export const baseDomainEventSchema = z.object({
-  id: z.string().regex(/^[a-z0-9]{8,}$/).optional(),
+  id: z
+    .string()
+    .regex(/^[a-z0-9]{8,}$/)
+    .optional(),
   eventType: z
     .string()
     .min(1)
@@ -171,9 +172,7 @@ export type RegisteredEventType = keyof typeof eventPayloadSchemas;
  * @param metadata - The metadata to validate
  * @returns Validation result with parsed data or errors
  */
-export function validateEventMetadata(
-  metadata: unknown
-): SafeParseResult<EventMetadataOutput> {
+export function validateEventMetadata(metadata: unknown): SafeParseResult<EventMetadataOutput> {
   return eventMetadataSchema.safeParse(metadata);
 }
 
@@ -204,9 +203,7 @@ export function validateEventPayload(
  * @param event - The event to validate
  * @returns Validation result with parsed data or errors
  */
-export function validateOutboxEvent(
-  event: unknown
-): SafeParseResult<OutboxEventOutput> {
+export function validateOutboxEvent(event: unknown): SafeParseResult<OutboxEventOutput> {
   return outboxEventSchema.safeParse(event);
 }
 

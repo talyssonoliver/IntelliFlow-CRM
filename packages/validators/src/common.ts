@@ -2,17 +2,17 @@ import { z } from 'zod';
 import { PhoneNumber, Money, WebsiteUrl, DateRange, Percentage } from '@intelliflow/domain';
 
 // Common ID schemas
-// Use UUID as the standard ID format (database-compatible)
-export const idSchema = z.string().uuid();
-
-// Keep cuid for legacy compatibility if needed
+// Prisma uses @default(cuid()) while seed data uses deterministic UUIDs.
+// Accept both formats so runtime-created and seeded entities both pass validation.
+export const uuidSchema = z.string().uuid();
 export const cuidSchema = z.string().regex(/^c[a-z0-9]{8,}$/, 'Invalid CUID');
-
-// Alias for clarity
-export const uuidSchema = idSchema;
+export const idSchema = z.union([uuidSchema, cuidSchema]);
 
 // Common string schemas
-export const emailSchema = z.string().email('Invalid email address').transform(v => v.toLowerCase().trim());
+export const emailSchema = z
+  .string()
+  .email('Invalid email address')
+  .transform((v) => v.toLowerCase().trim());
 
 // Name validation with consistent rules (used across all entities)
 export const nameSchema = z
@@ -133,7 +133,9 @@ export type DateRangeInput = z.infer<typeof dateRangeSchema>;
 // Search/filter schema
 export const searchSchema = z.object({
   query: z.string().min(1).max(200).optional(),
-  filters: z.record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.array(z.string())])).optional(),
+  filters: z
+    .record(z.string(), z.union([z.string(), z.number(), z.boolean(), z.array(z.string())]))
+    .optional(),
 });
 
 export type SearchInput = z.infer<typeof searchSchema>;

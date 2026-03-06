@@ -132,14 +132,16 @@ export const invoiceSchema = z.object({
   discount: z.number().optional(),
   customerEmail: z.string().optional(),
   customerName: z.string().optional(),
-  billingAddress: z.object({
-    line1: z.string().optional(),
-    line2: z.string().optional(),
-    city: z.string().optional(),
-    state: z.string().optional(),
-    postalCode: z.string().optional(),
-    country: z.string().optional(),
-  }).optional(),
+  billingAddress: z
+    .object({
+      line1: z.string().optional(),
+      line2: z.string().optional(),
+      city: z.string().optional(),
+      state: z.string().optional(),
+      postalCode: z.string().optional(),
+      country: z.string().optional(),
+    })
+    .optional(),
   lineItems: z.array(invoiceLineItemSchema).optional(),
 });
 

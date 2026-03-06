@@ -2,7 +2,8 @@
 
 ## Purpose
 
-Runtime validation schemas derived from domain constants. Provides type-safe validation for API inputs, form data, and AI outputs.
+Runtime validation schemas derived from domain constants. Provides type-safe
+validation for API inputs, form data, and AI outputs.
 
 ## Key Pattern: DRY Enum Derivation
 
@@ -17,7 +18,8 @@ import { LEAD_STATUSES } from '@intelliflow/domain';
 export const leadStatusSchema = z.enum(LEAD_STATUSES);
 ```
 
-**Adding new enum values**: Edit domain const array ONLY. Validators auto-derive.
+**Adding new enum values**: Edit domain const array ONLY. Validators
+auto-derive.
 
 ## Entities with DRY Enum Pattern
 
@@ -45,9 +47,12 @@ src/
 
 ## Key Rules
 
-1. **Depends on**: `packages/domain/` only — derives Zod schemas from domain constants
-2. **Architecture test**: `__tests__/enum-consistency.test.ts` enforces that validator enums match domain constants
-3. **After modifying**: Run `pnpm --filter @intelliflow/validators build` — other packages import from dist
+1. **Depends on**: `packages/domain/` only — derives Zod schemas from domain
+   constants
+2. **Architecture test**: `__tests__/enum-consistency.test.ts` enforces that
+   validator enums match domain constants
+3. **After modifying**: Run `pnpm --filter @intelliflow/validators build` —
+   other packages import from dist
 4. **Zod transforms**: Use `.transform()` carefully — can break type inference
 5. **All API inputs** must use validator schemas — enforced in tRPC routers
 

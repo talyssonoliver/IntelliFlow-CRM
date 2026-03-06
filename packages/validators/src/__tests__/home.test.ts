@@ -642,6 +642,57 @@ describe('Home Page Validators', () => {
       });
       expect(result.success).toBe(true);
     });
+
+    // PG-159: isAvailable field tests (T-018, T-019, T-020)
+    it('validates with isAvailable: true (T-018)', () => {
+      const result = pinnedItemSchema.safeParse({
+        id: 'pin-1',
+        entityType: 'lead',
+        entityId: '123',
+        title: 'Lead',
+        url: '/leads/123',
+        pinnedAt: new Date(),
+        position: 0,
+        isAvailable: true,
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.isAvailable).toBe(true);
+      }
+    });
+
+    it('validates with isAvailable: false (T-019)', () => {
+      const result = pinnedItemSchema.safeParse({
+        id: 'pin-1',
+        entityType: 'contact',
+        entityId: '456',
+        title: 'Deleted Contact',
+        url: '/contacts/456',
+        pinnedAt: new Date(),
+        position: 1,
+        isAvailable: false,
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.isAvailable).toBe(false);
+      }
+    });
+
+    it('defaults isAvailable to true when field omitted (T-020)', () => {
+      const result = pinnedItemSchema.safeParse({
+        id: 'pin-1',
+        entityType: 'document',
+        entityId: 'doc-1',
+        title: 'Contract',
+        url: '/documents/doc-1',
+        pinnedAt: new Date(),
+        position: 0,
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.isAvailable).toBe(true);
+      }
+    });
   });
 
   describe('pinnedItemsResponseSchema', () => {

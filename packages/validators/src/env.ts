@@ -19,7 +19,10 @@ const nodeEnvSchema = z
   .default('development');
 
 // Database configuration
-const databaseUrlSchema = z.string().url().refine(v => v.startsWith('postgresql://'), 'Must start with postgresql://');
+const databaseUrlSchema = z
+  .string()
+  .url()
+  .refine((v) => v.startsWith('postgresql://'), 'Must start with postgresql://');
 
 // API configuration
 const apiConfigSchema = z.object({
@@ -146,7 +149,10 @@ export const devEnvSchema = envSchema.extend({
  */
 export const prodEnvSchema = envSchema.extend({
   NODE_ENV: z.literal('production'),
-  DATABASE_URL: z.string().url().refine(v => v.startsWith('postgresql://'), 'Must start with postgresql://'),
+  DATABASE_URL: z
+    .string()
+    .url()
+    .refine((v) => v.startsWith('postgresql://'), 'Must start with postgresql://'),
   JWT_SECRET: z.string().min(32),
   SESSION_SECRET: z.string().min(32),
   SENTRY_DSN: z.string().url(), // Required in production
@@ -199,7 +205,9 @@ export function validateEnv(env: NodeJS.ProcessEnv = process.env): Env {
     if (error instanceof z.ZodError) {
       console.error('❌ Environment validation failed:');
       console.error(JSON.stringify(error.format(), null, 2));
-      throw new Error('Invalid environment configuration. Check the errors above.', { cause: error });
+      throw new Error('Invalid environment configuration. Check the errors above.', {
+        cause: error,
+      });
     }
     throw error;
   }

@@ -44,11 +44,11 @@ export const createLeadSchema = baseLeadFieldsSchema.extend({
 
 export type CreateLeadInput = z.infer<typeof createLeadSchema>;
 
-// Update Lead Schema - extends base with id and status, all fields optional
-export const updateLeadSchema = baseLeadFieldsSchema.partial().extend({
-  id: idSchema,
-  status: leadStatusSchema.optional(),
-});
+// Update Lead Schema - omits immutable fields (email, source); status is updatable via this schema
+export const updateLeadSchema = baseLeadFieldsSchema
+  .omit({ email: true, source: true })
+  .partial()
+  .extend({ id: idSchema, status: leadStatusSchema.optional() });
 
 export type UpdateLeadInput = z.infer<typeof updateLeadSchema>;
 
@@ -152,3 +152,15 @@ export const leadListResponseSchema = z.object({
 });
 
 export type LeadListResponse = z.infer<typeof leadListResponseSchema>;
+
+// Vector search result schema (validates Supabase RPC response)
+export const leadSearchResultSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  company: z.string().nullable(),
+  similarity: z.number(),
+});
+
+export type LeadSearchResultValidated = z.infer<typeof leadSearchResultSchema>;

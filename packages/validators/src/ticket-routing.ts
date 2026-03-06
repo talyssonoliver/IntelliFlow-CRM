@@ -1,9 +1,5 @@
 import { z } from 'zod';
-import {
-  TICKET_CATEGORIES,
-  ROUTING_REASONS,
-  TICKET_ROUTING_STRATEGIES,
-} from '@intelliflow/domain';
+import { TICKET_CATEGORIES, ROUTING_REASONS, TICKET_ROUTING_STRATEGIES } from '@intelliflow/domain';
 
 // =============================================================================
 // IFC-067: Ticket Routing Validation Schemas
