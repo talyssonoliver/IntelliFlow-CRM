@@ -23,13 +23,9 @@ export default defineConfig({
     unstubGlobals: true,
     unstubEnvs: true,
 
-    // Use forks pool for better memory isolation
-    pool: 'forks',
-    isolate: true,
+    pool: 'forks', // Do not change to vmForks/threads — causes vi.mock() conflicts
 
-    // Memory management - control heap size per worker
-    // Note: vmMemoryLimit only works with vmThreads pool, not forks
-    execArgv: ['--max-old-space-size=4096', '--expose-gc'],
+    execArgv: ['--max-old-space-size=4096', '--expose-gc', '--no-experimental-webstorage'],
     maxWorkers: 4,
     // @ts-expect-error minWorkers exists at runtime but not in types
     minWorkers: 1,
@@ -42,8 +38,19 @@ export default defineConfig({
     hookTimeout: 30000,
     teardownTimeout: 10000,
 
-    // Force exit after tests complete to prevent hanging
-    forceExit: true,
+    // Force exit after tests complete to prevent hanging (disabled during coverage runs
+    // to allow Istanbul to finish writing coverage-final.json before process exits)
+    forceExit: process.env['COVERAGE_RUN'] !== '1',
+
+    // Coverage configuration
+    // Using Istanbul provider (not V8) because V8 with pool:forks creates one
+    // tmp file per test file (~393 files), and the V8 merge process hangs before
+    // forceExit kills it. Istanbul uses maxWorkers tmp files (4) — merges fast.
+    coverage: {
+      provider: 'istanbul',
+      // Write coverage even when some tests fail
+      reportOnFailure: true,
+    },
 
     // Handle worker exit errors gracefully - uses generic type to match Vitest's callback signature
     onUnhandledError(error): boolean | void {
@@ -62,14 +69,40 @@ export default defineConfig({
   },
   resolve: {
     alias: [
-      // Stub uninstalled optional dependencies — CSS sub-path must come before package alias
+      // Stub CSS-only imports that break in test env
       {
         find: /^@scalar\/api-reference-react\/style\.css$/,
         replacement: path.resolve(__dirname, './src/test/__mocks__/empty.ts'),
       },
       {
+        find: /^@schedule-x\/theme-default\/dist\/index\.css$/,
+        replacement: path.resolve(__dirname, './src/test/__mocks__/empty.ts'),
+      },
+      // Stub temporal polyfill side-effect import
+      {
+        find: /^temporal-polyfill\/global$/,
+        replacement: path.resolve(__dirname, './src/test/__mocks__/empty.ts'),
+      },
+      {
         find: /^@scalar\/api-reference-react$/,
         replacement: path.resolve(__dirname, './src/test/__mocks__/scalar-stub.ts'),
+      },
+      // Stub @trpc/react-query to prevent loading the @tanstack/react-query
+      // module graph. @tanstack/react-query registers focusManager + onlineManager
+      // on window with addEventListener, which hold QueryClient references and
+      // prevent GC between tests. This is a belt-and-suspenders stub in case
+      // any module imports @trpc/react-query without being covered by vi.mock().
+      {
+        find: /^@trpc\/react-query$/,
+        replacement: path.resolve(__dirname, './src/test/__mocks__/trpc-react-query-stub.ts'),
+      },
+      {
+        find: /^@intelliflow\/api$/,
+        replacement: path.resolve(__dirname, './src/test/__mocks__/empty.ts'),
+      },
+      {
+        find: /^@intelliflow\/api-client$/,
+        replacement: path.resolve(__dirname, './src/test/__mocks__/empty.ts'),
       },
       { find: '@/components', replacement: path.resolve(__dirname, './src/components') },
       { find: '@/lib', replacement: path.resolve(__dirname, './src/lib') },

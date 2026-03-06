@@ -374,20 +374,56 @@ export class SLANotificationManager {
 }
 
 /**
- * React hook for SLA notifications
+ * React hook for SLA notifications.
+ * Subscribes to slaNotificationManager events and returns live notification state.
+ *
+ * Must be called inside a React component tree (or wrapped with renderHook in tests).
  */
 export function useSLANotifications(config: Partial<NotificationConfig> = {}): {
   notifications: SLANotification[];
   unacknowledgedCount: number;
   acknowledge: (id: string) => void;
 } {
-  // This is a placeholder - in a real app, this would use React state
-  // and integrate with the notification manager
-  return {
-    notifications: [],
-    unacknowledgedCount: 0,
-    acknowledge: () => {},
-  };
+  const { useState, useEffect, useCallback } = require('react') as typeof import('react');
+
+  const [manager] = useState<SLANotificationManager>(() => {
+    const m = new SLANotificationManager(config);
+    m.initialize();
+    return m;
+  });
+
+  const [notifications, setNotifications] = useState<SLANotification[]>(() =>
+    manager.getRecentNotifications()
+  );
+
+  const [unacknowledgedCount, setUnacknowledgedCount] = useState<number>(() =>
+    manager.getUnacknowledgedCount()
+  );
+
+  useEffect(() => {
+    const unsubscribe = manager.onNotification(() => {
+      setNotifications(manager.getRecentNotifications());
+      setUnacknowledgedCount(manager.getUnacknowledgedCount());
+    });
+
+    return () => {
+      unsubscribe();
+      manager.dispose();
+    };
+    // config intentionally excluded: manager is created once at mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [manager]);
+
+  const acknowledge = useCallback(
+    (id: string) => {
+      manager.acknowledgeNotification(id, 'current-user');
+      setNotifications(manager.getRecentNotifications());
+      setUnacknowledgedCount(manager.getUnacknowledgedCount());
+    },
+    [manager]
+  );
+
+  return { notifications, unacknowledgedCount, acknowledge };
 }
 
 // Export singleton instance

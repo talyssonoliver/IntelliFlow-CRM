@@ -586,8 +586,12 @@ export function useActivitySubscription(options: ActivitySubscriptionOptions = {
     return {
       status,
       metrics,
-      subscribe: () => {},
-      unsubscribe: async () => {},
+      subscribe: () => {
+        /* No-op: tRPC subscriptions are managed by individual hooks above, not by a manual subscribe call */
+      },
+      unsubscribe: async () => {
+        /* No-op: tRPC subscriptions clean up automatically when hooks unmount */
+      },
       isConnected: status === 'connected',
       activities,
     };

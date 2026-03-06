@@ -9,14 +9,23 @@ const nextConfig = {
   reactStrictMode: true,
 
   // Configure server external packages (fix Prisma in monorepo)
-  serverExternalPackages: ['@prisma/client', '.prisma/client', '@prisma/engines'],
+  serverExternalPackages: [
+    '@prisma/client',
+    '.prisma/client',
+    '@prisma/engines',
+    '@prisma/adapter-pg',
+    '@intelliflow/db',
+  ],
 
   // Compiler options
   compiler: {
     // Remove console logs in production
-    removeConsole: process.env.NODE_ENV === 'production' ? {
-      exclude: ['error', 'warn'],
-    } : false,
+    removeConsole:
+      process.env.NODE_ENV === 'production'
+        ? {
+            exclude: ['error', 'warn'],
+          }
+        : false,
   },
 
   // Experimental features
@@ -49,7 +58,7 @@ const nextConfig = {
       {
         protocol: 'http',
         hostname: 'localhost',
-      }
+      },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -92,7 +101,8 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "frame-src 'self' https://js.stripe.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com;",
+            value:
+              "frame-src 'self' https://js.stripe.com; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://js.stripe.com;",
           },
         ],
       },
@@ -123,6 +133,15 @@ const nextConfig = {
   // Environment variables to expose to browser
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
+  },
+
+  // Webpack: resolve Prisma 7 generated .js → .ts extension imports
+  webpack: (config) => {
+    config.resolve.extensionAlias = {
+      ...config.resolve.extensionAlias,
+      '.js': ['.js', '.ts'],
+    };
+    return config;
   },
 
   // TypeScript configuration

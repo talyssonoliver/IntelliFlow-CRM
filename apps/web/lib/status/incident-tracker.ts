@@ -52,6 +52,17 @@ export interface StatusSubscriber {
   services?: string[]; // Empty = all services
 }
 
+// ─── Health Check Result Record ─────────────────────────────────────────────
+
+interface HealthCheckRecord {
+  serviceId: string;
+  timestamp: Date;
+  healthy: boolean;
+}
+
+/** Maximum number of health check records kept per service (circular buffer) */
+const MAX_HEALTH_CHECK_RECORDS = 1000;
+
 /**
  * In-memory store for demo purposes.
  * In production, this would be backed by a database.
@@ -60,6 +71,8 @@ const store = {
   services: new Map<string, ServiceHealth>(),
   incidents: new Map<string, Incident>(),
   subscribers: new Map<string, StatusSubscriber>(),
+  /** Circular buffer of health check results, keyed by serviceId */
+  healthCheckHistory: new Map<string, HealthCheckRecord[]>(),
 };
 
 /**
@@ -293,12 +306,36 @@ export function getSubscribersForService(serviceId: string): StatusSubscriber[] 
 }
 
 /**
- * Calculate uptime percentage for a service over the last N days
+ * Calculate uptime percentage for a service over the last N days.
+ *
+ * Uses the in-memory health check history recorded by `healthCheck()`.
+ * Calculates: (successful checks / total checks) * 100 within the window.
+ *
+ * Returns 100 when no history exists yet (service assumed healthy until
+ * a check result proves otherwise), clamped to [0, 100].
  */
-export function calculateUptime(_serviceId: string, _days = 90): number {
-  // In production, this would query historical data
-  // For now, return a simulated value
-  return 99.9 + Math.random() * 0.09;
+export function calculateUptime(serviceId: string, days = 90): number {
+  const history = store.healthCheckHistory.get(serviceId);
+
+  if (!history || history.length === 0) {
+    // No recorded checks yet — optimistic default
+    return 100;
+  }
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+
+  const windowRecords = history.filter((r) => r.timestamp >= cutoff);
+
+  if (windowRecords.length === 0) {
+    // All records are older than the window — optimistic default
+    return 100;
+  }
+
+  const successfulChecks = windowRecords.filter((r) => r.healthy).length;
+  const uptime = (successfulChecks / windowRecords.length) * 100;
+
+  return Math.min(100, Math.max(0, Math.round(uptime * 100) / 100));
 }
 
 /**
@@ -334,12 +371,32 @@ export async function healthCheck(
       updateServiceStatus(serviceId, 'major_outage', responseTime);
     }
 
+    // Record the result in the uptime history buffer
+    recordHealthCheckResult(serviceId, healthy);
+
     return { healthy, responseTime };
   } catch {
     const responseTime = Date.now() - start;
     updateServiceStatus(serviceId, 'major_outage', responseTime);
+    recordHealthCheckResult(serviceId, false);
     return { healthy: false, responseTime };
   }
+}
+
+/**
+ * Record the result of a health check in the in-memory circular buffer.
+ * Caps history per service at MAX_HEALTH_CHECK_RECORDS to prevent memory leaks.
+ */
+function recordHealthCheckResult(serviceId: string, healthy: boolean): void {
+  const history = store.healthCheckHistory.get(serviceId) ?? [];
+  history.push({ serviceId, timestamp: new Date(), healthy });
+
+  // Trim oldest entries when over capacity
+  if (history.length > MAX_HEALTH_CHECK_RECORDS) {
+    history.splice(0, history.length - MAX_HEALTH_CHECK_RECORDS);
+  }
+
+  store.healthCheckHistory.set(serviceId, history);
 }
 
 /**
@@ -349,6 +406,7 @@ export function resetStore(): void {
   store.services.clear();
   store.incidents.clear();
   store.subscribers.clear();
+  store.healthCheckHistory.clear();
 }
 
 export default {
