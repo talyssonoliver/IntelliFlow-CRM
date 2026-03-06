@@ -64,42 +64,31 @@ Could you please specify what you want to execute?
 Please let me know what you'd like to run, and I'll execute it for you!`;
 }
 
-/**
- * Parses user input into a structured RunRequest
- * @throws Error if input is invalid, unsafe, or too long
- */
-export function parseRunInput(input: string): RunRequest {
-  // Validate input
+function validateInput(input: string): void {
   if (!input || input.trim() === '') {
     throw new Error('Please specify what you want to run');
   }
-
   if (input.length > MAX_INPUT_LENGTH) {
     throw new Error(`Input too long (max ${MAX_INPUT_LENGTH} characters)`);
   }
+}
 
-  const trimmed = input.trim();
-
-  // Check for unsafe patterns
+function assertSafeCommand(cmd: string, errorMsg: string): void {
   for (const pattern of UNSAFE_PATTERNS) {
-    if (pattern.test(trimmed)) {
-      throw new Error('Unsafe command detected: command chaining or injection not allowed');
+    if (pattern.test(cmd)) {
+      throw new Error(errorMsg);
     }
   }
+}
 
-  // Parse different request types
-  const lowerInput = trimmed.toLowerCase();
-
-  // Build process
+function matchBuildRequest(lowerInput: string): RunRequest | null {
   if (lowerInput.includes('build process') || lowerInput === 'build') {
-    return {
-      kind: 'build',
-      command: 'pnpm run build',
-      description: 'Build all packages',
-    };
+    return { kind: 'build', command: 'pnpm run build', description: 'Build all packages' };
   }
+  return null;
+}
 
-  // Tests for a package
+function matchTestRequest(lowerInput: string): RunRequest | null {
   const testMatch = lowerInput.match(
     /tests?\s+(?:for\s+)?(?:a\s+)?(?:particular\s+)?(?:package\s+)?(\w+)/i
   );
@@ -112,8 +101,10 @@ export function parseRunInput(input: string): RunRequest {
       package: pkg,
     };
   }
+  return null;
+}
 
-  // Database migrations
+function matchMigrateRequest(lowerInput: string): RunRequest | null {
   if (
     lowerInput.includes('database') ||
     lowerInput.includes('migration') ||
@@ -125,38 +116,45 @@ export function parseRunInput(input: string): RunRequest {
       description: 'Run database migrations',
     };
   }
+  return null;
+}
 
-  // Development server
+function matchDevRequest(lowerInput: string): RunRequest | null {
   if (lowerInput.includes('development server') || lowerInput.includes('dev server')) {
-    return {
-      kind: 'dev',
-      command: 'pnpm run dev',
-      description: 'Start development server',
-    };
+    return { kind: 'dev', command: 'pnpm run dev', description: 'Start development server' };
   }
+  return null;
+}
 
-  // Custom/something else
-  if (lowerInput.startsWith('something else:')) {
-    const customCmd = trimmed.slice('something else:'.length).trim();
-    // Re-validate the custom command
-    for (const pattern of UNSAFE_PATTERNS) {
-      if (pattern.test(customCmd)) {
-        throw new Error('Unsafe command detected in custom request');
-      }
+function matchCustomRequest(trimmed: string, lowerInput: string): RunRequest | null {
+  if (!lowerInput.startsWith('something else:')) return null;
+  const customCmd = trimmed.slice('something else:'.length).trim();
+  assertSafeCommand(customCmd, 'Unsafe command detected in custom request');
+  return { kind: 'custom', command: customCmd, description: 'Custom command' };
+}
+
+/**
+ * Parses user input into a structured RunRequest
+ * @throws Error if input is invalid, unsafe, or too long
+ */
+export function parseRunInput(input: string): RunRequest {
+  validateInput(input);
+  const trimmed = input.trim();
+  assertSafeCommand(trimmed, 'Unsafe command detected: command chaining or injection not allowed');
+
+  const lowerInput = trimmed.toLowerCase();
+
+  return (
+    matchBuildRequest(lowerInput) ??
+    matchTestRequest(lowerInput) ??
+    matchMigrateRequest(lowerInput) ??
+    matchDevRequest(lowerInput) ??
+    matchCustomRequest(trimmed, lowerInput) ?? {
+      kind: 'command',
+      command: trimmed,
+      description: 'Execute specific command',
     }
-    return {
-      kind: 'custom',
-      command: customCmd,
-      description: 'Custom command',
-    };
-  }
-
-  // Default: treat as specific command
-  return {
-    kind: 'command',
-    command: trimmed,
-    description: 'Execute specific command',
-  };
+  );
 }
 
 /**

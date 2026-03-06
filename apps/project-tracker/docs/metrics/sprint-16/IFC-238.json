@@ -1,0 +1,58 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-238",
+  "section": "Core CRM",
+  "description": "Lead Detail Status Type Fix + Auth Guard. Fix 2 CRITICAL issues: (1) LeadStatus type union at leads/[id]/page.tsx line 139 omits NEGOTIATING - runtime crash when lead has this status [S1]. (2) leads/(list)/new/page.tsx missing useRequireAuth() hook - unauthenticated users can access create lead form [F1]. Also fix trpc vs api import inconsistency in create page [F8]. Fix: Add NEGOTIATING to LeadStatus type, add useRequireAuth() to create page, standardize import.",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-16",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-03-06T22:22:15.972Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "primary_kpi": {
+      "target": "0 missing status values in LeadStatus type",
+      "actual": "",
+      "met": false
+    },
+    "kpi_2": {
+      "target": "auth guard present on /leads/new",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      "apps/web/src/app/leads/(list)/new/page.tsx"
+    ],
+    "created": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      "apps/web/src/app/leads/(list)/new/page.tsx"
+    ],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Comprehensive flow analysis findings: S1,F1,F8"
+}

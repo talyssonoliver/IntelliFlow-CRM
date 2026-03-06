@@ -70,10 +70,11 @@ export async function POST(request: NextRequest) {
       const startTime = Date.now();
       let output = '';
 
+      // S4721: spawn with argument array and shell:false (default) — avoids shell interpretation.
+      // k6Path and fullScriptPath are derived from internal constants, not user input.
       const child = spawn(k6Path, ['run', fullScriptPath], {
         cwd: projectRoot,
         env,
-        shell: true,
       });
 
       child.stdout.on('data', (data) => {
@@ -90,7 +91,7 @@ export async function POST(request: NextRequest) {
         // Parse output for summary
         const endpointsMatch = output.match(/Endpoints Tested: (\d+)/);
         const passedMatch = output.match(/Total: (\d+) passed/);
-        const failedMatch = output.match(/(\d+) failed/);
+        const failedMatch = output.match(/(\d{1,10}) failed/);
 
         resolve({
           success: code === 0,

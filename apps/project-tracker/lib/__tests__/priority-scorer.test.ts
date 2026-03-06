@@ -244,7 +244,7 @@ describe('scoreTimeCriticality', () => {
     });
 
     it('non-numeric sprint returns low urgency for sprint component', () => {
-      const val = scoreTimeCriticality('T1', new Map(), 'Continuous' as unknown as number, 5);
+      const val = scoreTimeCriticality('T1', new Map(), 'Continuous' as any, 5); // testing non-numeric sprint input
       expect(val).toBe(1);
     });
   });
@@ -808,7 +808,7 @@ describe('computePriorityScores', () => {
         emptyPhases,
         5
       );
-      const entry = result[0] as unknown as Record<string, unknown>;
+      const entry = result[0] as any as Record<string, unknown>;
       expect(entry).not.toHaveProperty('_isCriticalPath');
       expect(entry).not.toHaveProperty('_totalFloat');
     });

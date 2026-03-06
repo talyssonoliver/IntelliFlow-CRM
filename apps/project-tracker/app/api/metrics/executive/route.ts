@@ -87,9 +87,9 @@ interface CompletionIntegrityDetail {
   description: string;
   issues: string[];
   checkbox_pct: number | null;
-  has_attestation: boolean;
+  has_attestation: boolean | null;
   attestation_verdict: string | null;
-  validation_count: number;
+  validation_count: number | null;
 }
 
 interface ExecutiveMetrics {
@@ -143,6 +143,22 @@ interface ParsedArtifacts {
   raw: string[]; // All items for backward compatibility
 }
 
+type PathPrefixKey = (typeof PATH_PREFIXES)[number];
+const PREFIX_TO_FIELD: Record<PathPrefixKey, keyof Omit<ParsedArtifacts, 'raw'>> = {
+  'ARTIFACT:': 'artifacts',
+  'EVIDENCE:': 'evidence',
+  'SPEC:': 'specs',
+  'PLAN:': 'plans',
+  'CONTEXT:': 'contexts',
+  'PRD:': 'prds',
+};
+
+function isEmptyArtifactsStr(artifactsStr: string): boolean {
+  return (
+    !artifactsStr || artifactsStr.trim() === '' || artifactsStr === '-' || artifactsStr === 'N/A'
+  );
+}
+
 function parseArtifactsWithPrefixes(artifactsStr: string): ParsedArtifacts {
   const result: ParsedArtifacts = {
     artifacts: [],
@@ -154,12 +170,7 @@ function parseArtifactsWithPrefixes(artifactsStr: string): ParsedArtifacts {
     raw: [],
   };
 
-  if (
-    !artifactsStr ||
-    artifactsStr.trim() === '' ||
-    artifactsStr === '-' ||
-    artifactsStr === 'N/A'
-  ) {
+  if (isEmptyArtifactsStr(artifactsStr)) {
     return result;
   }
 
@@ -171,34 +182,22 @@ function parseArtifactsWithPrefixes(artifactsStr: string): ParsedArtifacts {
   for (const item of items) {
     result.raw.push(item);
 
-    // Check for path prefixes (ARTIFACT:, EVIDENCE:, SPEC:, PLAN:)
     const pathPrefix = PATH_PREFIXES.find((prefix) => item.startsWith(prefix));
     if (pathPrefix) {
       const path = item.slice(pathPrefix.length).trim();
       if (path) {
-        if (pathPrefix === 'ARTIFACT:') {
-          result.artifacts.push(path);
-        } else if (pathPrefix === 'EVIDENCE:') {
-          result.evidence.push(path);
-        } else if (pathPrefix === 'SPEC:') {
-          result.specs.push(path);
-        } else if (pathPrefix === 'PLAN:') {
-          result.plans.push(path);
-        } else if (pathPrefix === 'CONTEXT:') {
-          result.contexts.push(path);
-        } else if (pathPrefix === 'PRD:') {
-          result.prds.push(path);
-        }
+        (result[PREFIX_TO_FIELD[pathPrefix]] as string[]).push(path);
       }
+      continue;
     }
+
     // Skip metadata prefixes (VALIDATE:, GATE:, AUDIT:, etc.)
-    else if (METADATA_PREFIXES.some((prefix) => item.startsWith(prefix))) {
-      // Intentionally skip - these are not file paths
+    if (METADATA_PREFIXES.some((prefix) => item.startsWith(prefix))) {
+      continue;
     }
+
     // Legacy: items without prefix are treated as artifact paths
-    else {
-      result.artifacts.push(item);
-    }
+    result.artifacts.push(item);
   }
 
   return result;
@@ -217,7 +216,7 @@ async function checkArtifactExists(artifactPath: string): Promise<boolean> {
     // Handle glob patterns by checking if any matching file exists
     if (artifactPath.includes('*')) {
       // For patterns, just check if parent directory exists
-      const parentDir = artifactPath.split('*')[0].replace(/\/+$/, '');
+      const parentDir = artifactPath.split('*')[0].replace(/\/{1,100}$/, '');
       if (parentDir) {
         await access(join(process.cwd(), '..', '..', parentDir));
         return true;
@@ -281,7 +280,11 @@ async function getUntrackedArtifactsWithDetails(
 
 // --- Context & Plan deliverable helpers ---
 
-function getAttestationDirs(taskId: string, sprintNumber: number | null, allSprintDirs: string[]): string[] {
+function getAttestationDirs(
+  taskId: string,
+  sprintNumber: number | null,
+  allSprintDirs: string[]
+): string[] {
   const dirs: string[] = [];
   const root = join(MONOREPO_ROOT, '.specify', 'sprints');
 
@@ -304,7 +307,11 @@ function getAttestationDirs(taskId: string, sprintNumber: number | null, allSpri
   return dirs;
 }
 
-function checkContextExists(taskId: string, sprintNumber: number | null, allSprintDirs: string[]): { hasPack: boolean; hasAck: boolean } {
+function checkContextExists(
+  taskId: string,
+  sprintNumber: number | null,
+  allSprintDirs: string[]
+): { hasPack: boolean; hasAck: boolean } {
   const dirs = getAttestationDirs(taskId, sprintNumber, allSprintDirs);
 
   let hasPack = false;
@@ -312,8 +319,10 @@ function checkContextExists(taskId: string, sprintNumber: number | null, allSpri
 
   for (const dir of dirs) {
     if (!hasPack) {
-      if (existsSync(join(dir, 'context_pack.manifest.json')) ||
-          existsSync(join(dir, `${taskId}-context_pack.manifest.json`))) {
+      if (
+        existsSync(join(dir, 'context_pack.manifest.json')) ||
+        existsSync(join(dir, `${taskId}-context_pack.manifest.json`))
+      ) {
         hasPack = true;
       }
     }
@@ -330,12 +339,17 @@ function checkContextExists(taskId: string, sprintNumber: number | null, allSpri
             if (parsed.context_acknowledgment) {
               hasAck = true;
             }
-          } catch { /* invalid JSON */ }
+          } catch {
+            /* invalid JSON */
+          }
         }
       }
       // Also check standalone context_ack.json OR {taskId}-context_ack.json
-      if (!hasAck && (existsSync(join(dir, 'context_ack.json')) ||
-                      existsSync(join(dir, `${taskId}-context_ack.json`)))) {
+      if (
+        !hasAck &&
+        (existsSync(join(dir, 'context_ack.json')) ||
+          existsSync(join(dir, `${taskId}-context_ack.json`)))
+      ) {
         hasAck = true;
       }
     }
@@ -349,8 +363,26 @@ function checkPlanDeliverables(
   taskId: string,
   sprintNumber: number | null,
   allSprintDirs: string[]
-): { planExists: boolean; planPath: string; total: number; verified: number; missingFiles: string[]; checkboxTotal: number; checkboxChecked: number; checkboxPct: number | null } {
-  const result = { planExists: false, planPath: '', total: 0, verified: 0, missingFiles: [] as string[], checkboxTotal: 0, checkboxChecked: 0, checkboxPct: null as number | null };
+): {
+  planExists: boolean;
+  planPath: string;
+  total: number;
+  verified: number;
+  missingFiles: string[];
+  checkboxTotal: number;
+  checkboxChecked: number;
+  checkboxPct: number | null;
+} {
+  const result = {
+    planExists: false,
+    planPath: '',
+    total: 0,
+    verified: 0,
+    missingFiles: [] as string[],
+    checkboxTotal: 0,
+    checkboxChecked: 0,
+    checkboxPct: null as number | null,
+  };
 
   // Look for plan file in sprint-based planning dir and legacy locations
   const root = join(MONOREPO_ROOT, '.specify', 'sprints');
@@ -372,17 +404,21 @@ function checkPlanDeliverables(
     if (existsSync(candidate)) {
       try {
         planContent = readFileSync(candidate, 'utf-8');
-        result.planPath = candidate.replace(MONOREPO_ROOT + '/', '').replace(MONOREPO_ROOT + '\\', '');
+        result.planPath = candidate
+          .replace(MONOREPO_ROOT + '/', '')
+          .replace(MONOREPO_ROOT + '\\', '');
         result.planExists = true;
         break;
-      } catch { /* can't read */ }
+      } catch {
+        /* can't read */
+      }
     }
   }
 
   if (!planContent) return result;
 
   // Count plan checkboxes (same regex as validation-summary API)
-  const checkboxRegex = /^(\s*)-\s*\[([ xX])\]\s*(.+)$/;
+  const checkboxRegex = /^(\s*)-\s*\[([ xX])\]\s*([^\n]{1,500})$/;
   for (const line of planContent.split('\n')) {
     const match = line.replace(/\r$/, '').match(checkboxRegex);
     if (match) {
@@ -390,14 +426,16 @@ function checkPlanDeliverables(
       if (match[2].toLowerCase() === 'x') result.checkboxChecked++;
     }
   }
-  result.checkboxPct = result.checkboxTotal > 0
-    ? Math.round((result.checkboxChecked / result.checkboxTotal) * 1000) / 10
-    : null;
+  result.checkboxPct =
+    result.checkboxTotal > 0
+      ? Math.round((result.checkboxChecked / result.checkboxTotal) * 1000) / 10
+      : null;
 
   // Extract files from "Files to Create:" and "Files to Modify:" sections
   // Only take the FIRST backtick-wrapped string per list item (the file path).
   // Subsequent backticks on the same line are descriptions/annotations (e.g., `contactId`).
-  const fileRegex = /\*\*Files to (?:Create|Modify):\*\*\s*\n((?:\s*-\s*`[^`]+`.*\n?)*)/gi;
+  const fileRegex =
+    /\*\*Files to (?:Create|Modify):\*\*\s*\n((?:[ \t]*-[ \t]*`[^`]+`[^\n]{0,500}\n?){0,200})/gi;
   const linePathRegex = /^\s*-\s*`([^`]+)`/;
   const filePaths: string[] = [];
 
@@ -413,26 +451,25 @@ function checkPlanDeliverables(
     }
   }
 
+  function getExtensionVariant(fp: string): string | null {
+    if (fp.endsWith('.tsx')) return fp.slice(0, -1);
+    if (fp.endsWith('.ts')) return fp + 'x';
+    if (fp.endsWith('.jsx')) return fp.slice(0, -1);
+    if (fp.endsWith('.js')) return fp + 'x';
+    return null;
+  }
+
   result.total = filePaths.length;
   for (const fp of filePaths) {
     if (existsSync(join(MONOREPO_ROOT, fp))) {
       result.verified++;
+      continue;
+    }
+    const extVariant = getExtensionVariant(fp);
+    if (extVariant && existsSync(join(MONOREPO_ROOT, extVariant))) {
+      result.verified++;
     } else {
-      // Check extension variants: .ts↔.tsx, .js↔.jsx (plans sometimes list wrong extension)
-      const extVariant = fp.endsWith('.ts') && !fp.endsWith('.tsx')
-        ? fp + 'x'
-        : fp.endsWith('.tsx')
-          ? fp.slice(0, -1)
-          : fp.endsWith('.js') && !fp.endsWith('.jsx')
-            ? fp + 'x'
-            : fp.endsWith('.jsx')
-              ? fp.slice(0, -1)
-              : null;
-      if (extVariant && existsSync(join(MONOREPO_ROOT, extVariant))) {
-        result.verified++;
-      } else {
-        result.missingFiles.push(fp);
-      }
+      result.missingFiles.push(fp);
     }
   }
 
@@ -453,10 +490,14 @@ function checkAttestationIntegrity(
       if (existsSync(attestPath)) {
         try {
           const raw = JSON.parse(readFileSync(attestPath, 'utf-8'));
-          const validationCount = Array.isArray(raw.validation_results) ? raw.validation_results.length : 0;
+          const validationCount = Array.isArray(raw.validation_results)
+            ? raw.validation_results.length
+            : 0;
           const verdict = raw.verdict ?? raw.status ?? null;
           return { exists: true, verdict, validationCount };
-        } catch { /* invalid JSON */ }
+        } catch {
+          /* invalid JSON */
+        }
       }
     }
   }
@@ -486,11 +527,15 @@ function checkContextHashes(
         if (existsSync(manifestPath)) {
           try {
             const raw = JSON.parse(readFileSync(manifestPath, 'utf-8'));
-            manifestFiles = (raw.files || []).map((f: { path: string; sha256?: string; hash?: string }) => ({
-              path: f.path,
-              sha256: f.sha256 || f.hash || '',
-            }));
-          } catch { /* invalid */ }
+            manifestFiles = (raw.files || []).map(
+              (f: { path: string; sha256?: string; hash?: string }) => ({
+                path: f.path,
+                sha256: f.sha256 || f.hash || '',
+              })
+            );
+          } catch {
+            /* invalid */
+          }
         }
       }
     }
@@ -505,12 +550,16 @@ function checkContextHashes(
           try {
             const raw = JSON.parse(readFileSync(attestPath, 'utf-8'));
             if (raw.context_acknowledgment?.files_read) {
-              ackFiles = raw.context_acknowledgment.files_read.map((f: { path: string; sha256?: string; hash?: string }) => ({
-                path: f.path,
-                sha256: f.sha256 || f.hash || '',
-              }));
+              ackFiles = raw.context_acknowledgment.files_read.map(
+                (f: { path: string; sha256?: string; hash?: string }) => ({
+                  path: f.path,
+                  sha256: f.sha256 || f.hash || '',
+                })
+              );
             }
-          } catch { /* invalid */ }
+          } catch {
+            /* invalid */
+          }
         }
       }
       // Check standalone context_ack.json and prefixed variant
@@ -522,11 +571,15 @@ function checkContextHashes(
           if (existsSync(ackPath)) {
             try {
               const raw = JSON.parse(readFileSync(ackPath, 'utf-8'));
-              ackFiles = (raw.files_read || []).map((f: { path: string; sha256?: string; hash?: string }) => ({
-                path: f.path,
-                sha256: f.sha256 || f.hash || '',
-              }));
-            } catch { /* invalid */ }
+              ackFiles = (raw.files_read || []).map(
+                (f: { path: string; sha256?: string; hash?: string }) => ({
+                  path: f.path,
+                  sha256: f.sha256 || f.hash || '',
+                })
+              );
+            } catch {
+              /* invalid */
+            }
           }
         }
       }
@@ -536,6 +589,34 @@ function checkContextHashes(
   }
 
   if (!manifestFiles || !ackFiles) return result;
+
+  // Check if manifest was backfilled — hashes reflect current file state,
+  // not execution-time state, so comparison would produce false mismatches
+  let isBackfilled = false;
+  for (const dir of dirs) {
+    const manifestNames = ['context_pack.manifest.json', `${taskId}-context_pack.manifest.json`];
+    for (const name of manifestNames) {
+      const manifestPath = join(dir, name);
+      if (existsSync(manifestPath)) {
+        try {
+          const raw = JSON.parse(readFileSync(manifestPath, 'utf-8'));
+          if (raw.backfilled === true) isBackfilled = true;
+        } catch {
+          /* invalid */
+        }
+        break;
+      }
+    }
+    if (isBackfilled) break;
+  }
+
+  if (isBackfilled) {
+    // Report as having both files but with no mismatches — hashes are expected to differ
+    result.hasBoth = true;
+    result.total = manifestFiles.filter((f) => f.sha256).length;
+    result.matched = result.total;
+    return result;
+  }
 
   result.hasBoth = true;
   const ackMap = new Map(ackFiles.map((f) => [f.path, f.sha256]));
@@ -553,6 +634,34 @@ function checkContextHashes(
   }
 
   return result;
+}
+
+async function checkPrefixedPaths(paths: string[], prefix: string): Promise<string[]> {
+  const missing: string[] = [];
+  for (const p of paths) {
+    const exists = await checkArtifactExists(p);
+    if (!exists) missing.push(prefix ? `${prefix}${p}` : p);
+  }
+  return missing;
+}
+
+async function collectMissingPaths(
+  parsed: ParsedArtifacts
+): Promise<{ missingArtifacts: string[]; missingEvidence: string[] }> {
+  const [missingArt, missingEv, missingSpec, missingPlan, missingCtx, missingPrd] =
+    await Promise.all([
+      checkPrefixedPaths(parsed.artifacts, ''),
+      checkPrefixedPaths(parsed.evidence, 'EVIDENCE:'),
+      checkPrefixedPaths(parsed.specs, 'SPEC:'),
+      checkPrefixedPaths(parsed.plans, 'PLAN:'),
+      checkPrefixedPaths(parsed.contexts, 'CONTEXT:'),
+      checkPrefixedPaths(parsed.prds, 'PRD:'),
+    ]);
+
+  return {
+    missingArtifacts: [...missingArt, ...missingSpec, ...missingPlan, ...missingCtx, ...missingPrd],
+    missingEvidence: missingEv,
+  };
 }
 
 export async function GET(request: Request) {
@@ -654,67 +763,15 @@ export async function GET(request: Request) {
         parsed.contexts.length > 0 ||
         parsed.prds.length > 0;
       if (isCompleted && hasPathsToCheck) {
-        const missingArtifacts: string[] = [];
-        const missingEvidence: string[] = [];
+        const { missingArtifacts, missingEvidence } = await collectMissingPaths(parsed);
 
-        // Check ARTIFACT: paths
-        for (const artifact of parsed.artifacts) {
-          const exists = await checkArtifactExists(artifact);
-          if (!exists) {
-            missingArtifacts.push(artifact);
-          }
-        }
-
-        // Check EVIDENCE: paths
-        for (const evidence of parsed.evidence) {
-          const exists = await checkArtifactExists(evidence);
-          if (!exists) {
-            missingEvidence.push(`EVIDENCE:${evidence}`);
-          }
-        }
-
-        // Check SPEC: paths
-        for (const spec of parsed.specs) {
-          const exists = await checkArtifactExists(spec);
-          if (!exists) {
-            missingArtifacts.push(`SPEC:${spec}`);
-          }
-        }
-
-        // Check PLAN: paths
-        for (const plan of parsed.plans) {
-          const exists = await checkArtifactExists(plan);
-          if (!exists) {
-            missingArtifacts.push(`PLAN:${plan}`);
-          }
-        }
-
-        // Check CONTEXT: paths
-        for (const context of parsed.contexts) {
-          const exists = await checkArtifactExists(context);
-          if (!exists) {
-            missingArtifacts.push(`CONTEXT:${context}`);
-          }
-        }
-
-        // Check PRD: paths
-        for (const prd of parsed.prds) {
-          const exists = await checkArtifactExists(prd);
-          if (!exists) {
-            missingArtifacts.push(`PRD:${prd}`);
-          }
-        }
-
-        // If any artifacts or evidence missing, track as mismatch
         if (missingArtifacts.length > 0 || missingEvidence.length > 0) {
-          // Add to mismatch details (for backward compatibility)
           mismatchDetails.push({
             task_id: task['Task ID'],
             description: task.Description?.substring(0, 50) + '...' || '',
             missing_artifacts: [...missingArtifacts, ...missingEvidence],
           });
 
-          // Add to tasks requiring revert (new governance feature)
           tasksRequiringRevertDetails.push({
             task_id: task['Task ID'],
             description: task.Description?.substring(0, 50) + '...' || '',
@@ -735,9 +792,11 @@ export async function GET(request: Request) {
     try {
       const entries = readdirSync(sprintAttestationRoot, { withFileTypes: true });
       allSprintDirs = entries
-        .filter(e => e.isDirectory() && e.name.startsWith('sprint-'))
-        .map(e => e.name);
-    } catch { /* .specify/sprints/ doesn't exist */ }
+        .filter((e) => e.isDirectory() && e.name.startsWith('sprint-'))
+        .map((e) => e.name);
+    } catch {
+      /* .specify/sprints/ doesn't exist */
+    }
 
     // Only check tasks that have EVIDENCE: artifacts (went through formal attestation workflow).
     // Tasks without EVIDENCE: are legacy/simple tasks that predate the context pack system.
@@ -788,7 +847,8 @@ export async function GET(request: Request) {
       const plan = checkPlanDeliverables(taskId, sprintNum, allSprintDirs);
       if (plan.planExists) {
         const hasMissingFiles = plan.total > 0 && plan.verified < plan.total;
-        const hasUncheckedSteps = plan.checkboxTotal > 0 && plan.checkboxChecked < plan.checkboxTotal;
+        const hasUncheckedSteps =
+          plan.checkboxTotal > 0 && plan.checkboxChecked < plan.checkboxTotal;
         if (hasMissingFiles || hasUncheckedSteps) {
           planGapDetails.push({
             task_id: taskId,
@@ -837,7 +897,11 @@ export async function GET(request: Request) {
       const planResult = checkPlanDeliverables(taskId, sprintNum, allSprintDirs);
 
       // Check 1: Plan checkbox completion — completed tasks must have 100%
-      if (planResult.planExists && planResult.checkboxTotal > 0 && planResult.checkboxChecked < planResult.checkboxTotal) {
+      if (
+        planResult.planExists &&
+        planResult.checkboxTotal > 0 &&
+        planResult.checkboxChecked < planResult.checkboxTotal
+      ) {
         issues.push(
           `Plan steps: ${planResult.checkboxChecked}/${planResult.checkboxTotal} checked (${planResult.checkboxPct}%) — must be 100% for completed tasks`
         );
@@ -846,24 +910,47 @@ export async function GET(request: Request) {
       // Check 2: Plan deliverables — files listed in plan but missing on disk
       if (planResult.planExists && planResult.total > 0 && planResult.verified < planResult.total) {
         const missingCount = planResult.total - planResult.verified;
-        const sample = planResult.missingFiles.slice(0, 3).map(f => f.split('/').pop()).join(', ');
+        const sample = planResult.missingFiles
+          .slice(0, 3)
+          .map((f) => f.split('/').pop())
+          .join(', ');
         issues.push(
           `Plan deliverables: ${planResult.verified}/${planResult.total} files exist on disk (missing: ${sample}${missingCount > 3 ? ` +${missingCount - 3} more` : ''})`
         );
       }
 
       // Check 3: Attestation existence and completeness
-      const attestResult = checkAttestationIntegrity(taskId, sprintNum, allSprintDirs);
-      if (!attestResult.exists) {
-        issues.push('Missing attestation.json');
-      } else {
-        if (attestResult.verdict && attestResult.verdict !== 'COMPLETE' && attestResult.verdict !== 'PASS') {
-          issues.push(`Attestation verdict: ${attestResult.verdict} (expected COMPLETE)`);
-        }
-        if (attestResult.validationCount < 4) {
-          issues.push(
-            `Only ${attestResult.validationCount}/4 validations recorded (need TypeScript, Tests, Lint, Build)`
-          );
+      // Skip for continuous/operational tasks — they don't go through /exec workflow.
+      // For sprint-based tasks: only require attestation from sprint 16+ (automation enforcement date).
+      // Sprints 0-15 were completed under the old manual-review regime.
+      const isContinuousTask = (task['Target Sprint'] || '').toLowerCase() === 'continuous';
+      const ATTESTATION_REQUIRED_FROM_SPRINT = 16;
+      const skipAttestationCheck =
+        isContinuousTask || (sprintNum !== null && sprintNum < ATTESTATION_REQUIRED_FROM_SPRINT);
+      let attestExists: boolean | null = null;
+      let attestVerdict: string | null = null;
+      let attestValidationCount: number | null = null;
+
+      if (!skipAttestationCheck) {
+        const attestResult = checkAttestationIntegrity(taskId, sprintNum, allSprintDirs);
+        attestExists = attestResult.exists;
+        attestVerdict = attestResult.verdict;
+        attestValidationCount = attestResult.validationCount;
+        if (!attestResult.exists) {
+          issues.push('Missing attestation.json');
+        } else {
+          if (
+            attestResult.verdict &&
+            attestResult.verdict !== 'COMPLETE' &&
+            attestResult.verdict !== 'PASS'
+          ) {
+            issues.push(`Attestation verdict: ${attestResult.verdict} (expected COMPLETE)`);
+          }
+          if (attestResult.validationCount < 4) {
+            issues.push(
+              `Only ${attestResult.validationCount}/4 validations recorded (need TypeScript, Tests, Lint, Build)`
+            );
+          }
         }
       }
 
@@ -873,9 +960,9 @@ export async function GET(request: Request) {
           description: (task.Description || '').substring(0, 80),
           issues,
           checkbox_pct: planResult.checkboxPct ?? null,
-          has_attestation: attestResult.exists,
-          attestation_verdict: attestResult.verdict,
-          validation_count: attestResult.validationCount,
+          has_attestation: attestExists,
+          attestation_verdict: attestVerdict,
+          validation_count: attestValidationCount,
         });
       }
     }

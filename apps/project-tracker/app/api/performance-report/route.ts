@@ -134,6 +134,8 @@ export async function GET() {
       | undefined;
 
     // Use k6 load test data if available, otherwise use API benchmark data
+    const pendingStatus: 'pending' | 'running' | 'completed' | 'failed' =
+      data.status === 'COMPLETED' ? 'completed' : 'pending';
     const performanceMetrics = hasPerformanceData
       ? {
           // Response times: prefer load test results, fallback to API benchmark
@@ -167,11 +169,7 @@ export async function GET() {
           total_tests: null,
           passed_tests: null,
           failed_tests: null,
-          status: (data.status === 'COMPLETED'
-            ? 'completed'
-            : data.status === 'PARTIAL'
-              ? 'pending'
-              : 'pending') as 'pending' | 'running' | 'completed' | 'failed',
+          status: pendingStatus,
           load_test_timestamp: null,
           load_test_duration_seconds: null,
           load_test_thresholds_passed: null,
@@ -228,7 +226,9 @@ export async function GET() {
         fails: check.fails,
         total: check.passes + check.fails,
         success_rate:
-          check.passes + check.fails > 0 ? (check.passes / (check.passes + check.fails)) * 100 : 0,
+          check.passes > 0 && check.passes + check.fails > 0
+            ? (check.passes / (check.passes + check.fails)) * 100
+            : 0,
       }));
 
     // Extract k6 test configuration

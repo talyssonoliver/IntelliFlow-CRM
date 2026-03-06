@@ -120,10 +120,7 @@ export default function BuildHealth() {
     data?.turbo.tasks_cached ?? 0
   );
 
-  const testPassRate = computeTestPassRate(
-    data?.tests.passed ?? 0,
-    data?.tests.total ?? 0
-  );
+  const testPassRate = computeTestPassRate(data?.tests.passed ?? 0, data?.tests.total ?? 0);
 
   return (
     <div className="space-y-6">

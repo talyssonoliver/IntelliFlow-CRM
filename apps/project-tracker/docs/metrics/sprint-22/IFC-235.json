@@ -1,0 +1,65 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-235",
+  "section": "Core CRM",
+  "description": "Lead Detail AI Chat Panel - Add AI chat panel to Lead detail page for entity-scoped conversations. Backend: conversation.router.ts is fully built with 13 endpoints but NOT registered in router.ts - register it. Frontend: build LeadChatPanel component using conversation API with contextType=LEAD, contextId=leadId. Similar to dashboard TeamChatWidget but with real API calls (TeamChatWidget is decorative with hardcoded messages). ConversationRecord/MessageRecord Prisma models exist.",
+  "owner": "Full Stack Dev (STOA-Domain)",
+  "sprint": "sprint-22",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [
+      "IFC-069"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-03-06T22:22:16.082Z"
+  },
+  "dependencies_resolved": [
+    "IFC-069"
+  ],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 120,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "message_send_latency": {
+      "target": "<500ms",
+      "actual": "",
+      "met": false
+    },
+    "chat_history_load": {
+      "target": "<1s",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/components/leads/LeadChatPanel.tsx",
+      "apps/api/src/router.ts",
+      ".specify/sprints/sprint-22/attestations/IFC-235/context_ack.json"
+    ],
+    "created": [
+      "apps/api/src/router.ts"
+    ],
+    "missing": [
+      "apps/web/src/components/leads/LeadChatPanel.tsx",
+      ".specify/sprints/sprint-22/attestations/IFC-235/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Wiring debt: conversation.router.ts fully built but not registered in router.ts."
+}

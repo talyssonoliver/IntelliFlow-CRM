@@ -154,14 +154,16 @@ function loadSprintCompletion(sprintNumber: number): {
   }
 
   const percentage = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
-  const status: SprintCompletion['status'] =
-    percentage === 0
-      ? 'not-started'
-      : percentage === 100
-        ? 'completed'
-        : percentage >= 80
-          ? 'partial'
-          : 'in-progress';
+  let status: SprintCompletion['status'];
+  if (percentage === 0) {
+    status = 'not-started';
+  } else if (percentage === 100) {
+    status = 'completed';
+  } else if (percentage >= 80) {
+    status = 'partial';
+  } else {
+    status = 'in-progress';
+  }
 
   return {
     tasks: tasks.sort((a, b) => b.completedAt.localeCompare(a.completedAt)),
@@ -178,6 +180,12 @@ function loadSprintCompletion(sprintNumber: number): {
       },
     },
   };
+}
+
+function getPhaseStatus(summary: any): string {
+  if (summary.completed_tasks === summary.total_tasks) return 'completed';
+  if (summary.completed_tasks > 0) return 'in-progress';
+  return 'not-started';
 }
 
 // Load phase completion from phase summaries
@@ -211,12 +219,7 @@ function loadPhaseCompletion(sprintNumber: number): any[] {
                 summary.total_tasks > 0
                   ? Math.round((summary.completed_tasks / summary.total_tasks) * 100)
                   : 0,
-              status:
-                summary.completed_tasks === summary.total_tasks
-                  ? 'completed'
-                  : summary.completed_tasks > 0
-                    ? 'in-progress'
-                    : 'not-started',
+              status: getPhaseStatus(summary),
             });
           }
         }
@@ -252,8 +255,8 @@ function generateMarkdown(
     md += `| Phase | Status | Progress |\n`;
     md += `|-------|--------|----------|\n`;
     for (const phase of phases) {
-      const statusEmoji =
-        phase.status === 'completed' ? '✅' : phase.status === 'in-progress' ? '🔄' : '⏳';
+      const inProgressEmoji = phase.status === 'in-progress' ? '🔄' : '⏳';
+      const statusEmoji = phase.status === 'completed' ? '✅' : inProgressEmoji;
       md += `| ${phase.name} | ${statusEmoji} ${phase.status} | ${phase.completed}/${phase.total} (${phase.percentage}%) |\n`;
     }
     md += `\n`;
@@ -272,6 +275,13 @@ function generateMarkdown(
   }
 
   return md;
+}
+
+function getCompletionRecommendation(completion: SprintCompletion): string {
+  if (completion.status === 'completed') return 'Sprint completed successfully!';
+  if (completion.status === 'partial')
+    return `${completion.totalTasks - completion.completedTasks} tasks remaining for full completion`;
+  return `Continue working on sprint tasks - ${completion.completionPercentage}% complete`;
 }
 
 export async function GET(request: NextRequest) {
@@ -344,12 +354,7 @@ export async function GET(request: NextRequest) {
         kpiSuccess: t.kpisTotal > 0 ? `${t.kpisMet}/${t.kpisTotal}` : 'N/A',
       })),
       artifacts: tasks.flatMap((t) => t.artifacts).slice(0, 20),
-      recommendation:
-        completion.status === 'completed'
-          ? 'Sprint completed successfully!'
-          : completion.status === 'partial'
-            ? `${completion.totalTasks - completion.completedTasks} tasks remaining for full completion`
-            : `Continue working on sprint tasks - ${completion.completionPercentage}% complete`,
+      recommendation: getCompletionRecommendation(completion),
     };
 
     // If no fresh data available, try fallback

@@ -167,9 +167,10 @@ export async function GET() {
         by_model: {},
       },
       hallucination: {
-        rate: hallucinationKpi?.current_percentage != null
-          ? hallucinationKpi.current_percentage / 100
-          : null,
+        rate:
+          hallucinationKpi?.current_percentage != null
+            ? hallucinationKpi.current_percentage / 100
+            : null,
         threshold: (hallucinationKpi?.target_percentage ?? 5) / 100,
         samples_checked: 0,
         history: aiData?.history?.hallucination ?? [],
@@ -233,7 +234,9 @@ export async function POST(_request: NextRequest) {
       history.drift = driftHistory;
     }
 
-    const hallucinationHistory = Array.isArray(history.hallucination) ? [...history.hallucination] : [];
+    const hallucinationHistory = Array.isArray(history.hallucination)
+      ? [...history.hallucination]
+      : [];
     hallucinationHistory.push({ date: currentDate, rate: 0 });
     if (hallucinationHistory.length > 30) {
       history.hallucination = hallucinationHistory.slice(-30);

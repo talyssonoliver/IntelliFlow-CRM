@@ -66,14 +66,10 @@ export default function PlanDeliverablesStatus({
     );
   }
 
-  const overallColor =
-    data.overallStatus === 'complete'
-      ? 'bg-green-500'
-      : data.overallStatus === 'partial'
-        ? 'bg-yellow-500'
-        : data.overallStatus === 'no-plan'
-          ? 'bg-gray-300'
-          : 'bg-red-500';
+  const noPlanOrFailColor = data.overallStatus === 'no-plan' ? 'bg-gray-300' : 'bg-red-500';
+  const partialOrLowerColor =
+    data.overallStatus === 'partial' ? 'bg-yellow-500' : noPlanOrFailColor;
+  const overallColor = data.overallStatus === 'complete' ? 'bg-green-500' : partialOrLowerColor;
 
   if (compact) {
     return (
@@ -132,9 +128,9 @@ export default function PlanDeliverablesStatus({
           <span className="text-sm font-medium">
             {data.deliverables.verified}/{data.deliverables.total}
           </span>
-          {data.deliverables.missing > 0 && (
+          {data.deliverables.missing > 0 ? (
             <span className="text-xs text-red-600">({data.deliverables.missing} missing)</span>
-          )}
+          ) : null}
         </div>
         <div className="flex items-center gap-2">
           <Icon name="check_box" size="sm" className="text-gray-400" />
@@ -142,18 +138,26 @@ export default function PlanDeliverablesStatus({
           <span className="text-sm font-medium">
             {data.checkboxes.checked}/{data.checkboxes.total}
           </span>
-          {data.checkboxes.unchecked > 0 && (
+          {data.checkboxes.unchecked > 0 ? (
             <span className="text-xs text-yellow-600">({data.checkboxes.unchecked} unchecked)</span>
-          )}
+          ) : null}
         </div>
       </div>
 
       {/* Deliverables Section */}
-      {data.deliverables.total > 0 && (
+      {data.deliverables.total > 0 ? (
         <div className="border-t border-gray-200">
           <div
             className="px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-gray-50"
             onClick={() => setExpandedFiles(!expandedFiles)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setExpandedFiles(!expandedFiles);
+              }
+            }}
+            role="button"
+            tabIndex={0}
           >
             <h4 className="text-sm font-medium text-gray-700">
               Plan Deliverables ({data.deliverables.total})
@@ -165,31 +169,38 @@ export default function PlanDeliverablesStatus({
             )}
           </div>
 
-          {expandedFiles && (
+          {expandedFiles ? (
             <div className="px-4 pb-3">
               <div className="bg-gray-50 rounded-lg p-2 font-mono text-xs space-y-1 max-h-48 overflow-y-auto">
                 {data.deliverables.items.map((file, idx) => (
                   <div
                     key={idx}
                     className={`flex items-center justify-between py-1 px-2 rounded ${
-                      file.status === 'exists' || file.status === 'deleted' ? 'bg-green-50' : 'bg-red-50'
+                      file.status === 'exists' || file.status === 'deleted'
+                        ? 'bg-green-50'
+                        : 'bg-red-50'
                     }`}
                   >
                     <span
                       className={`truncate flex-1 ${
-                        file.status === 'exists' || file.status === 'deleted' ? 'text-gray-700' : 'text-red-700'
+                        file.status === 'exists' || file.status === 'deleted'
+                          ? 'text-gray-700'
+                          : 'text-red-700'
                       }`}
                       title={file.path}
                     >
-                      {file.path}{file.status === 'deleted' ? ' (deleted)' : ''}
+                      {file.path}
+                      {file.status === 'deleted' ? ' (deleted)' : ''}
                     </span>
                     <div className="flex items-center gap-2 ml-2">
-                      {file.size && (
+                      {file.size ? (
                         <span className="text-gray-500 text-[10px]">{formatBytes(file.size)}</span>
-                      )}
+                      ) : null}
                       <span
                         className={`w-4 h-4 flex items-center justify-center ${
-                          file.status === 'exists' || file.status === 'deleted' ? 'text-green-600' : 'text-red-600'
+                          file.status === 'exists' || file.status === 'deleted'
+                            ? 'text-green-600'
+                            : 'text-red-600'
                         }`}
                       >
                         {file.status === 'exists' || file.status === 'deleted' ? '✓' : '✗'}
@@ -199,16 +210,24 @@ export default function PlanDeliverablesStatus({
                 ))}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
-      )}
+      ) : null}
 
       {/* Checkboxes Section */}
-      {data.checkboxes.total > 0 && (
+      {data.checkboxes.total > 0 ? (
         <div className="border-t border-gray-200">
           <div
             className="px-4 py-2 flex items-center justify-between cursor-pointer hover:bg-gray-50"
             onClick={() => setExpandedCheckboxes(!expandedCheckboxes)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                setExpandedCheckboxes(!expandedCheckboxes);
+              }
+            }}
+            role="button"
+            tabIndex={0}
           >
             <h4 className="text-sm font-medium text-gray-700">
               Implementation Steps ({data.checkboxes.total})
@@ -220,7 +239,7 @@ export default function PlanDeliverablesStatus({
             )}
           </div>
 
-          {expandedCheckboxes && (
+          {expandedCheckboxes ? (
             <div className="px-4 pb-3">
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {/* Group by phase */}
@@ -258,16 +277,16 @@ export default function PlanDeliverablesStatus({
                 ))}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
-      )}
+      ) : null}
 
       {/* Plan Path */}
-      {data.planPath && (
+      {data.planPath ? (
         <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-xs text-gray-500">
           Plan: {data.planPath}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -280,14 +299,10 @@ function _PlanVerificationIndicator({
   overallStatus: PlanDeliverablesVerification['overallStatus'];
   completionPercentage: number;
 }) {
-  const color =
-    overallStatus === 'complete'
-      ? 'bg-green-500'
-      : overallStatus === 'partial'
-        ? 'bg-yellow-500'
-        : overallStatus === 'no-plan'
-          ? 'bg-gray-300'
-          : 'bg-red-500';
+  const noPlanOrFailIndicatorColor = overallStatus === 'no-plan' ? 'bg-gray-300' : 'bg-red-500';
+  const partialOrLowerIndicatorColor =
+    overallStatus === 'partial' ? 'bg-yellow-500' : noPlanOrFailIndicatorColor;
+  const color = overallStatus === 'complete' ? 'bg-green-500' : partialOrLowerIndicatorColor;
 
   return (
     <div

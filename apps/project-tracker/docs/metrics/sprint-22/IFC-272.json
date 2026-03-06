@@ -1,0 +1,58 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-272",
+  "section": "Core CRM",
+  "description": "Account Event Pipeline — Worker Handlers + Event Types. (1) Zero account event handlers in events worker (W-01). (2) Zero account event types in DOMAIN_EVENT_TYPES map (W-02). (3) Audit handler has 3 account event mappings (Created/Updated/Deleted) but events never reach it because worker has no handlers and dispatcher has no types (W-03). Add event handlers for AccountCreated, AccountUpdated, AccountDeleted (requires IFC-271), AccountRevenueUpdated, AccountHierarchyUpdated, AccountIndustryCategorized to events worker. Register all types in DOMAIN_EVENT_TYPES. Cross-ref: W-01/W-02 pattern shared with Contact (IFC-261). Audit: docs/audit/account-detail-wiring-audit.md section 14.",
+  "owner": "Backend Dev (STOA-Domain)",
+  "sprint": "sprint-22",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [
+      "IFC-271:FS"
+    ],
+    "all_satisfied": false,
+    "verified_at": "2026-03-06T22:22:16.086Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "wiring_complete": {
+      "target": "6/6 event types handled; audit trail populated for account mutations",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/workers/events-worker/src/main.ts",
+      "apps/workers/events-worker/src/outbox/event-dispatcher.ts",
+      ".specify/sprints/sprint-22/attestations/IFC-272/context_ack.json"
+    ],
+    "created": [
+      "apps/workers/events-worker/src/main.ts",
+      "apps/workers/events-worker/src/outbox/event-dispatcher.ts"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-22/attestations/IFC-272/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Account domain wiring audit finding. See docs/audit/account-detail-wiring-audit.md."
+}

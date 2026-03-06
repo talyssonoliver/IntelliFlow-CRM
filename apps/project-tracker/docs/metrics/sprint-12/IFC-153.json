@@ -5,12 +5,7 @@
   "description": "Ingestion pipeline for case files: upload/email attachment intake, antivirus scan, metadata extraction, storage, and indexing triggers",
   "owner": "Backend Dev",
   "dependencies": {
-    "required": [
-      "IFC-152",
-      "IFC-144",
-      "IFC-151",
-      "IFC-106"
-    ],
+    "required": ["IFC-152", "IFC-144", "IFC-151", "IFC-106"],
     "verified_at": "2026-02-16T18:47:56.049Z",
     "all_satisfied": true
   },
@@ -23,12 +18,8 @@
     }
   ],
   "artifacts": {
-    "expected": [
-      "packages/application/src/services/IngestionOrchestrator.ts"
-    ],
-    "created": [
-      "packages/application/src/services/IngestionOrchestrator.ts"
-    ],
+    "expected": ["packages/application/src/services/IngestionOrchestrator.ts"],
+    "created": ["packages/application/src/services/IngestionOrchestrator.ts"],
     "missing": []
   },
   "validations": [
@@ -61,10 +52,5 @@
   "started_at": "2025-12-31T04:48:00Z",
   "completed_at": "2025-12-31T05:30:00Z",
   "actual_duration_minutes": 42,
-  "dependencies_resolved": [
-    "IFC-152",
-    "IFC-144",
-    "IFC-151",
-    "IFC-106"
-  ]
+  "dependencies_resolved": ["IFC-152", "IFC-144", "IFC-151", "IFC-106"]
 }

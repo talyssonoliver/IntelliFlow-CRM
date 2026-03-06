@@ -9,7 +9,7 @@
 
 import { readdirSync, statSync, existsSync } from 'fs';
 import { join, extname } from 'path';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 import { MONOREPO_ROOT } from './paths';
 
 // =============================================================================
@@ -253,7 +253,8 @@ const CONTENT_ISSUE_PATTERNS: Array<{
   },
   {
     type: 'placeholder',
-    pattern: /return\s*null\s*;?\s*\/\/\s*(placeholder|TODO|fallback)/gi,
+    pattern:
+      /return[ \t]{0,20}null[ \t]{0,20};?[ \t]{0,20}\/\/[ \t]{0,20}(placeholder|TODO|fallback)/gi,
     message: 'Returns null with placeholder/TODO comment',
   },
   // Not yet implemented throws (IFC-086)
@@ -265,18 +266,20 @@ const CONTENT_ISSUE_PATTERNS: Array<{
   // Hardcoded prediction values (IFC-095)
   {
     type: 'mock_data',
-    pattern: /\/\/\s*TODO:\s*Implement\s+with\s+real\s+.*chain/gi,
+    pattern:
+      /\/\/[ \t]{0,20}TODO:[ \t]{0,20}Implement[ \t]{1,20}with[ \t]{1,20}real[ \t]{1,20}[^\n]{0,200}chain/gi,
     message: 'Contains TODO for implementing real AI chain',
   },
   {
     type: 'mock_data',
-    pattern: /return\s*\{\s*(confidence|score|risk):\s*\d+\.?\d*\s*,/gi,
+    pattern:
+      /return[ \t]{0,20}\{[ \t]{0,20}(confidence|score|risk):[ \t]{0,20}\d{1,20}(?:\.\d{1,20})?[ \t]{0,20},/gi,
     message: 'Returns hardcoded confidence/score value instead of AI prediction',
   },
   // Deferred audit logging (IFC-125)
   {
     type: 'pending_status',
-    pattern: /\/\/\s*TODO:?\s*.*audit\s*log/gi,
+    pattern: /\/\/[ \t]{0,20}TODO:?[ \t]{0,20}[^\n]{0,200}audit[ \t]{0,20}log/gi,
     message: 'Contains deferred TODO for audit logging integration',
   },
   // Placeholder demonstration comments (IFC-128)
@@ -418,15 +421,7 @@ function _isLikelyFabricated(content: string): boolean {
 // SKIP PATTERNS
 // =============================================================================
 
-const SKIP_DIRS = new Set([
-  'node_modules',
-  '.next',
-  '.turbo',
-  '.git',
-  '.pnpm',
-  'dist',
-  '.cache',
-]);
+const SKIP_DIRS = new Set(['node_modules', '.next', '.turbo', '.git', '.pnpm', 'dist', '.cache']);
 
 // Directories to skip only at root or top-level app/package paths (not nested API routes)
 const SKIP_DIRS_TOP_LEVEL = new Set(['build']);
@@ -437,74 +432,64 @@ const SKIP_FILES = new Set(['.DS_Store', 'Thumbs.db', '.gitkeep']);
 // CATEGORY DETECTION
 // =============================================================================
 
+const DIRECTORY_MAP: Record<string, DirectoryType> = {
+  apps: 'apps',
+  packages: 'packages',
+  docs: 'docs',
+  infra: 'infra',
+  scripts: 'scripts',
+  tools: 'tools',
+  artifacts: 'artifacts',
+  tests: 'tests',
+  '.claude': '.claude',
+  '.github': '.github',
+  '.specify': '.specify',
+};
+
 function detectDirectory(relativePath: string): DirectoryType {
   const firstPart = relativePath.split(/[/\\]/)[0];
+  return DIRECTORY_MAP[firstPart] ?? 'root';
+}
 
-  if (firstPart === 'apps') return 'apps';
-  if (firstPart === 'packages') return 'packages';
-  if (firstPart === 'docs') return 'docs';
-  if (firstPart === 'infra') return 'infra';
-  if (firstPart === 'scripts') return 'scripts';
-  if (firstPart === 'tools') return 'tools';
-  if (firstPart === 'artifacts') return 'artifacts';
-  if (firstPart === 'tests') return 'tests';
-  if (firstPart === '.claude') return '.claude';
-  if (firstPart === '.github') return '.github';
-  if (firstPart === '.specify') return '.specify';
+const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx']);
+const ARTIFACT_KEYWORD_CATEGORIES: Array<[string, FileCategory]> = [
+  ['attestation', 'attestation'],
+  ['benchmark', 'benchmark'],
+  ['coverage', 'coverage'],
+  ['report', 'report'],
+  ['metric', 'metric'],
+  ['log', 'log'],
+];
+const TOOL_CONFIG_EXTENSIONS = new Set(['.json', '.yml', '.yaml', '.js']);
 
-  return 'root';
+function detectArtifactCategory(pathLower: string): FileCategory {
+  for (const [keyword, category] of ARTIFACT_KEYWORD_CATEGORIES) {
+    if (pathLower.includes(keyword)) return category;
+  }
+  return 'generated';
 }
 
 function detectCategory(relativePath: string, extension: string): FileCategory {
   const pathLower = relativePath.toLowerCase();
   const dir = detectDirectory(relativePath);
 
-  // Test files
   if (pathLower.includes('.test.') || pathLower.includes('.spec.') || dir === 'tests') {
     return 'test-source';
   }
 
-  // Source code
-  if (
-    dir === 'apps' &&
-    (extension === '.ts' || extension === '.tsx' || extension === '.js' || extension === '.jsx')
-  ) {
-    return 'app-source';
-  }
-  if (
-    dir === 'packages' &&
-    (extension === '.ts' || extension === '.tsx' || extension === '.js' || extension === '.jsx')
-  ) {
-    return 'package-source';
-  }
+  if (dir === 'apps' && SOURCE_EXTENSIONS.has(extension)) return 'app-source';
+  if (dir === 'packages' && SOURCE_EXTENSIONS.has(extension)) return 'package-source';
 
-  // Artifacts
-  if (dir === 'artifacts') {
-    if (pathLower.includes('attestation')) return 'attestation';
-    if (pathLower.includes('benchmark')) return 'benchmark';
-    if (pathLower.includes('coverage')) return 'coverage';
-    if (pathLower.includes('report')) return 'report';
-    if (pathLower.includes('metric')) return 'metric';
-    if (pathLower.includes('log')) return 'log';
-    return 'generated';
-  }
+  if (dir === 'artifacts') return detectArtifactCategory(pathLower);
 
-  // Configuration
   if (dir === '.github') return 'ci-config';
   if (dir === 'infra') return 'infra-config';
   if (dir === '.claude') return 'claude-config';
-  if (
-    dir === 'root' &&
-    (extension === '.json' || extension === '.yml' || extension === '.yaml' || extension === '.js')
-  ) {
-    return 'tool-config';
-  }
+  if (dir === 'root' && TOOL_CONFIG_EXTENSIONS.has(extension)) return 'tool-config';
 
-  // Documentation
   if (dir === 'docs') return 'docs';
   if (extension === '.md') return 'readme';
 
-  // Tools/Scripts
   if (dir === 'tools') return 'tool';
   if (dir === 'scripts') return 'script';
 
@@ -608,67 +593,72 @@ export interface ParsedTaskFileRefs {
   spec: string[];
 }
 
+type PrefixKey = 'ARTIFACT:' | 'EVIDENCE:' | 'CONTEXT:' | 'PLAN:' | 'SPEC:';
+const SKIP_PREFIXES = ['VALIDATE:', 'GATE:', 'AUDIT:'];
+
+function classifyArtifactLine(trimmed: string, result: ParsedTaskFileRefs): void {
+  const prefixMap: Record<PrefixKey, keyof ParsedTaskFileRefs> = {
+    'ARTIFACT:': 'artifacts',
+    'EVIDENCE:': 'evidence',
+    'CONTEXT:': 'context',
+    'PLAN:': 'plan',
+    'SPEC:': 'spec',
+  };
+
+  for (const [prefix, key] of Object.entries(prefixMap) as Array<
+    [PrefixKey, keyof ParsedTaskFileRefs]
+  >) {
+    if (trimmed.startsWith(prefix)) {
+      (result[key] as string[]).push(trimmed.slice(prefix.length).trim());
+      return;
+    }
+  }
+
+  const isSkipped = SKIP_PREFIXES.some((p) => trimmed.startsWith(p));
+  if (!isSkipped && trimmed) {
+    result.artifacts.push(trimmed);
+  }
+}
+
 export function parseTaskFileRefs(
   artifactsField: string,
   prerequisitesField: string,
   validationField: string
 ): ParsedTaskFileRefs {
-  const artifacts: string[] = [];
-  const evidence: string[] = [];
-  const files: string[] = [];
-  const context: string[] = [];
-  const plan: string[] = [];
-  const spec: string[] = [];
+  const result: ParsedTaskFileRefs = {
+    artifacts: [],
+    evidence: [],
+    files: [],
+    context: [],
+    plan: [],
+    spec: [],
+  };
 
-  // Parse Artifacts To Track field
   if (artifactsField) {
-    const lines = artifactsField.split(/[,;\n]/);
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (trimmed.startsWith('ARTIFACT:')) {
-        artifacts.push(trimmed.replace('ARTIFACT:', '').trim());
-      } else if (trimmed.startsWith('EVIDENCE:')) {
-        evidence.push(trimmed.replace('EVIDENCE:', '').trim());
-      } else if (trimmed.startsWith('CONTEXT:')) {
-        context.push(trimmed.replace('CONTEXT:', '').trim());
-      } else if (trimmed.startsWith('PLAN:')) {
-        plan.push(trimmed.replace('PLAN:', '').trim());
-      } else if (trimmed.startsWith('SPEC:')) {
-        spec.push(trimmed.replace('SPEC:', '').trim());
-      } else if (
-        trimmed &&
-        !trimmed.startsWith('VALIDATE:') &&
-        !trimmed.startsWith('GATE:') &&
-        !trimmed.startsWith('AUDIT:')
-      ) {
-        artifacts.push(trimmed);
-      }
+    for (const line of artifactsField.split(/[,;\n]/)) {
+      classifyArtifactLine(line.trim(), result);
     }
   }
 
-  // Parse Pre-requisites for FILE: references
   if (prerequisitesField) {
-    const lines = prerequisitesField.split(/[,;\n]/);
-    for (const line of lines) {
+    for (const line of prerequisitesField.split(/[,;\n]/)) {
       const trimmed = line.trim();
       if (trimmed.startsWith('FILE:')) {
-        files.push(trimmed.replace('FILE:', '').trim());
+        result.files.push(trimmed.slice('FILE:'.length).trim());
       }
     }
   }
 
-  // Parse Validation Method for EVIDENCE: references
   if (validationField) {
-    const lines = validationField.split(/[,;\n]/);
-    for (const line of lines) {
+    for (const line of validationField.split(/[,;\n]/)) {
       const trimmed = line.trim();
       if (trimmed.startsWith('EVIDENCE:')) {
-        evidence.push(trimmed.replace('EVIDENCE:', '').trim());
+        result.evidence.push(trimmed.slice('EVIDENCE:'.length).trim());
       }
     }
   }
 
-  return { artifacts, evidence, files, context, plan, spec };
+  return result;
 }
 
 // =============================================================================
@@ -722,6 +712,39 @@ export function buildTaskFileMap(
   return map;
 }
 
+function addTaskIdToPath(
+  pathToTasks: Record<string, string[]>,
+  normalizedPath: string,
+  taskId: string
+): void {
+  if (!pathToTasks[normalizedPath]) {
+    pathToTasks[normalizedPath] = [];
+  }
+  if (!pathToTasks[normalizedPath].includes(taskId)) {
+    pathToTasks[normalizedPath].push(taskId);
+  }
+}
+
+function linkGlobPath(
+  path: string,
+  taskId: string,
+  files: FileEntry[],
+  pathToTasks: Record<string, string[]>
+): void {
+  const normalizedPath = path.replace(/\\/g, '/').toLowerCase();
+  const regexPattern = normalizedPath
+    .replace(/\./g, '\\.')
+    .replace(/\*\*/g, '.*')
+    .replace(/\*/g, '[^/]*');
+  const regex = new RegExp(`^${regexPattern}$`, 'i');
+
+  for (const file of files) {
+    if (regex.test(file.path.toLowerCase())) {
+      addTaskIdToPath(pathToTasks, file.path, taskId);
+    }
+  }
+}
+
 export function linkFilesToTasks(files: FileEntry[], taskMap: TaskFileMap): FileEntry[] {
   const pathToTasks: Record<string, string[]> = {};
 
@@ -736,40 +759,17 @@ export function linkFilesToTasks(files: FileEntry[], taskMap: TaskFileMap): File
     ];
 
     for (const path of allPaths) {
-      const normalizedPath = path.replace(/\\/g, '/').toLowerCase();
-
       if (path.includes('*')) {
-        const regexPattern = normalizedPath
-          .replace(/\./g, '\\.')
-          .replace(/\*\*/g, '.*')
-          .replace(/\*/g, '[^/]*');
-        const regex = new RegExp(`^${regexPattern}$`, 'i');
-
-        for (const file of files) {
-          if (regex.test(file.path.toLowerCase())) {
-            if (!pathToTasks[file.path]) {
-              pathToTasks[file.path] = [];
-            }
-            if (!pathToTasks[file.path].includes(taskId)) {
-              pathToTasks[file.path].push(taskId);
-            }
-          }
-        }
+        linkGlobPath(path, taskId, files, pathToTasks);
       } else {
-        if (!pathToTasks[normalizedPath]) {
-          pathToTasks[normalizedPath] = [];
-        }
-        if (!pathToTasks[normalizedPath].includes(taskId)) {
-          pathToTasks[normalizedPath].push(taskId);
-        }
+        const normalizedPath = path.replace(/\\/g, '/').toLowerCase();
+        addTaskIdToPath(pathToTasks, normalizedPath, taskId);
       }
     }
   }
 
   return files.map((file) => {
-    const normalizedPath = file.path.toLowerCase();
-    const linkedTasks = pathToTasks[normalizedPath] || [];
-
+    const linkedTasks = pathToTasks[file.path.toLowerCase()] || [];
     return {
       ...file,
       linkedTasks,
@@ -865,59 +865,60 @@ export function findMissingFiles(files: FileEntry[], taskMap: TaskFileMap): Miss
 const ONE_MONTH_MS = 30 * 24 * 60 * 60 * 1000;
 const LARGE_FILE_THRESHOLD = 1024 * 1024; // 1MB
 
+function buildOrphanSuggestions(file: FileEntry, now: number): CleanupSuggestion[] {
+  const suggestions: CleanupSuggestion[] = [];
+
+  if (file.size > LARGE_FILE_THRESHOLD) {
+    suggestions.push({
+      path: file.path,
+      reason: `Large orphan file (${(file.size / 1024 / 1024).toFixed(2)} MB) not linked to any task`,
+      category: 'large-file',
+      size: file.size,
+      lastModified: file.lastModified,
+      priority: file.size > LARGE_FILE_THRESHOLD * 10 ? 'high' : 'medium',
+    });
+  }
+
+  const fileAge = now - new Date(file.lastModified).getTime();
+  if (fileAge > ONE_MONTH_MS && file.directory === 'artifacts') {
+    suggestions.push({
+      path: file.path,
+      reason: `Stale artifact not modified in ${Math.floor(fileAge / (24 * 60 * 60 * 1000))} days`,
+      category: 'stale',
+      size: file.size,
+      lastModified: file.lastModified,
+      priority: 'low',
+    });
+  }
+
+  if (file.directory === 'artifacts' && file.size > 0) {
+    suggestions.push({
+      path: file.path,
+      reason: 'Artifact not linked to any task in Sprint_plan.csv',
+      category: 'orphan',
+      size: file.size,
+      lastModified: file.lastModified,
+      priority: 'medium',
+    });
+  }
+
+  return suggestions;
+}
+
 export function generateCleanupSuggestions(files: FileEntry[]): CleanupSuggestion[] {
   const suggestions: CleanupSuggestion[] = [];
   const now = Date.now();
 
   for (const file of files) {
-    // Skip non-orphans for most suggestions
     if (file.isOrphan) {
-      // Large orphan files
-      if (file.size > LARGE_FILE_THRESHOLD) {
-        suggestions.push({
-          path: file.path,
-          reason: `Large orphan file (${(file.size / 1024 / 1024).toFixed(2)} MB) not linked to any task`,
-          category: 'large-file',
-          size: file.size,
-          lastModified: file.lastModified,
-          priority: file.size > LARGE_FILE_THRESHOLD * 10 ? 'high' : 'medium',
-        });
-      }
-
-      // Stale orphan files (not modified in 30+ days)
-      const fileAge = now - new Date(file.lastModified).getTime();
-      if (fileAge > ONE_MONTH_MS && file.directory === 'artifacts') {
-        suggestions.push({
-          path: file.path,
-          reason: `Stale artifact not modified in ${Math.floor(fileAge / (24 * 60 * 60 * 1000))} days`,
-          category: 'stale',
-          size: file.size,
-          lastModified: file.lastModified,
-          priority: 'low',
-        });
-      }
-
-      // Orphan artifacts
-      if (file.directory === 'artifacts' && file.size > 0) {
-        suggestions.push({
-          path: file.path,
-          reason: 'Artifact not linked to any task in Sprint_plan.csv',
-          category: 'orphan',
-          size: file.size,
-          lastModified: file.lastModified,
-          priority: 'medium',
-        });
-      }
+      suggestions.push(...buildOrphanSuggestions(file, now));
     }
   }
 
-  // Sort by priority and size
+  const priorityOrder = { high: 0, medium: 1, low: 2 };
   return suggestions.sort((a, b) => {
-    const priorityOrder = { high: 0, medium: 1, low: 2 };
-    if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
-      return priorityOrder[a.priority] - priorityOrder[b.priority];
-    }
-    return b.size - a.size;
+    const priDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+    return priDiff !== 0 ? priDiff : b.size - a.size;
   });
 }
 
@@ -976,14 +977,19 @@ function getGitHistoryForFile(
 
   try {
     // Get creation commit (first commit that added this file)
-    const creationCmd = `git log --follow --diff-filter=A --format="%H|%aI|%an|%s" -- "${relativePath}"`;
+    // S4721: use execFileSync with argument array — relativePath comes from internal fs scan
+    // but avoiding shell interpolation is safer and satisfies S4721.
     let creationOutput = '';
     try {
-      creationOutput = execSync(creationCmd, {
-        cwd: MONOREPO_ROOT,
-        encoding: 'utf-8',
-        timeout: 5000,
-      }).trim();
+      creationOutput = execFileSync(
+        'git', // NOSONAR S4036 — PATH inherited from developer environment, internal tooling only
+        ['log', '--follow', '--diff-filter=A', '--format=%H|%aI|%an|%s', '--', relativePath],
+        {
+          cwd: MONOREPO_ROOT,
+          encoding: 'utf-8',
+          timeout: 5000,
+        }
+      ).trim();
     } catch {
       // File might not be tracked
     }
@@ -1004,14 +1010,18 @@ function getGitHistoryForFile(
     }
 
     // Get last modification commit
-    const modifyCmd = `git log -1 --format="%H|%aI|%an|%s" -- "${relativePath}"`;
+    // S4721: use execFileSync with argument array — avoids shell interpretation.
     let modifyOutput = '';
     try {
-      modifyOutput = execSync(modifyCmd, {
-        cwd: MONOREPO_ROOT,
-        encoding: 'utf-8',
-        timeout: 5000,
-      }).trim();
+      modifyOutput = execFileSync(
+        'git', // NOSONAR S4036 — PATH inherited from developer environment, internal tooling only
+        ['log', '-1', '--format=%H|%aI|%an|%s', '--', relativePath],
+        {
+          cwd: MONOREPO_ROOT,
+          encoding: 'utf-8',
+          timeout: 5000,
+        }
+      ).trim();
     } catch {
       // File might not be tracked
     }
@@ -1077,86 +1087,94 @@ function _enrichWithGitHistoryBatch(
 // HEALTH METRICS
 // =============================================================================
 
+const ALL_CATEGORIES: FileCategory[] = [
+  'app-source',
+  'package-source',
+  'test-source',
+  'attestation',
+  'benchmark',
+  'coverage',
+  'report',
+  'metric',
+  'log',
+  'generated',
+  'ci-config',
+  'infra-config',
+  'tool-config',
+  'claude-config',
+  'docs',
+  'readme',
+  'tool',
+  'script',
+  'misc',
+];
+
+function getOrInitDirSummary(
+  byDirectory: Map<DirectoryType, DirectorySummary>,
+  dir: DirectoryType
+): DirectorySummary {
+  if (!byDirectory.has(dir)) {
+    byDirectory.set(dir, {
+      directory: dir,
+      fileCount: 0,
+      totalSize: 0,
+      linkedCount: 0,
+      orphanCount: 0,
+      byExtension: {},
+    });
+  }
+  return byDirectory.get(dir)!;
+}
+
+function accumulateFileStats(
+  file: FileEntry,
+  byCategory: Record<FileCategory, number>,
+  byExtension: Record<string, number>,
+  byDirectory: Map<DirectoryType, DirectorySummary>
+): { totalSize: number; linked: number; orphan: number } {
+  byCategory[file.category] = (byCategory[file.category] || 0) + 1;
+  byExtension[file.extension] = (byExtension[file.extension] || 0) + 1;
+
+  const dirSummary = getOrInitDirSummary(byDirectory, file.directory);
+  dirSummary.fileCount++;
+  dirSummary.totalSize += file.size;
+  dirSummary.byExtension[file.extension] = (dirSummary.byExtension[file.extension] || 0) + 1;
+
+  if (file.isOrphan) {
+    dirSummary.orphanCount++;
+    return { totalSize: file.size, linked: 0, orphan: 1 };
+  } else {
+    dirSummary.linkedCount++;
+    return { totalSize: file.size, linked: 1, orphan: 0 };
+  }
+}
+
 export function generateCodebaseHealth(files: FileEntry[], missing: MissingFile[]): CodebaseHealth {
   const byDirectory: Map<DirectoryType, DirectorySummary> = new Map();
-  const byCategory: Record<FileCategory, number> = {} as Record<FileCategory, number>;
+  const byCategory: Record<FileCategory, number> = Object.fromEntries(
+    ALL_CATEGORIES.map((cat) => [cat, 0])
+  ) as Record<FileCategory, number>;
   const byExtension: Record<string, number> = {};
 
   let totalSize = 0;
   let linkedCount = 0;
   let orphanCount = 0;
 
-  // Initialize categories
-  const allCategories: FileCategory[] = [
-    'app-source',
-    'package-source',
-    'test-source',
-    'attestation',
-    'benchmark',
-    'coverage',
-    'report',
-    'metric',
-    'log',
-    'generated',
-    'ci-config',
-    'infra-config',
-    'tool-config',
-    'claude-config',
-    'docs',
-    'readme',
-    'tool',
-    'script',
-    'misc',
-  ];
-  for (const cat of allCategories) {
-    byCategory[cat] = 0;
-  }
-
   for (const file of files) {
-    // Global stats
-    totalSize += file.size;
-    byCategory[file.category] = (byCategory[file.category] || 0) + 1;
-    byExtension[file.extension] = (byExtension[file.extension] || 0) + 1;
-
-    if (file.isOrphan) {
-      orphanCount++;
-    } else {
-      linkedCount++;
-    }
-
-    // Directory stats
-    if (!byDirectory.has(file.directory)) {
-      byDirectory.set(file.directory, {
-        directory: file.directory,
-        fileCount: 0,
-        totalSize: 0,
-        linkedCount: 0,
-        orphanCount: 0,
-        byExtension: {},
-      });
-    }
-
-    const dirSummary = byDirectory.get(file.directory)!;
-    dirSummary.fileCount++;
-    dirSummary.totalSize += file.size;
-    dirSummary.byExtension[file.extension] = (dirSummary.byExtension[file.extension] || 0) + 1;
-
-    if (file.isOrphan) {
-      dirSummary.orphanCount++;
-    } else {
-      dirSummary.linkedCount++;
-    }
+    const stats = accumulateFileStats(file, byCategory, byExtension, byDirectory);
+    totalSize += stats.totalSize;
+    linkedCount += stats.linked;
+    orphanCount += stats.orphan;
   }
 
-  // Calculate test coverage
   const sourceFiles = files.filter(
     (f) => f.category === 'app-source' || f.category === 'package-source'
   );
-  const filesWithTests = sourceFiles.filter((f) => f.hasTest);
   const testCoverage =
-    sourceFiles.length > 0 ? (filesWithTests.length / sourceFiles.length) * 100 : 0;
+    sourceFiles.length > 0
+      ? (sourceFiles.filter((f) => f.hasTest).length / sourceFiles.length) * 100
+      : 0;
 
-  // Calculate documentation coverage (packages with README)
   const packageDirs = new Set(
     files
       .filter((f) => f.directory === 'packages')

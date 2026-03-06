@@ -70,9 +70,7 @@ export function isValidTransition(from: RiskStatus, to: RiskStatus): boolean {
 
 // ─── Score Classification ────────────────────────────────────────────────────
 
-export function classifyScore(
-  score: number
-): 'Critical' | 'High' | 'Medium' | 'Low' | 'Minimal' {
+export function classifyScore(score: number): 'Critical' | 'High' | 'Medium' | 'Low' | 'Minimal' {
   if (score >= 20) return 'Critical';
   if (score >= 15) return 'High';
   if (score >= 10) return 'Medium';

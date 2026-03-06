@@ -86,6 +86,27 @@ export default function ContractTagList({
   const tags = useMemo(() => parseContractTags(rawString), [rawString]);
   const tagCounts = useMemo(() => getTagCounts(tags), [tags]);
 
+  // Full mode - detailed list grouped by type
+  const groupedTags = useMemo(() => {
+    const groups: Record<ContractTagType, ParsedTag[]> = {
+      FILE: [],
+      DIR: [],
+      ENV: [],
+      POLICY: [],
+      EVIDENCE: [],
+      VALIDATE: [],
+      GATE: [],
+      AUDIT: [],
+      ARTIFACT: [],
+    };
+
+    tags.forEach((tag) => {
+      groups[tag.type].push(tag);
+    });
+
+    return groups;
+  }, [tags]);
+
   if (tags.length === 0) {
     return <div className="text-sm text-gray-500 italic">No contract tags found</div>;
   }
@@ -121,26 +142,6 @@ export default function ContractTagList({
   }
 
   // Full mode - detailed list grouped by type
-  const groupedTags = useMemo(() => {
-    const groups: Record<ContractTagType, ParsedTag[]> = {
-      FILE: [],
-      DIR: [],
-      ENV: [],
-      POLICY: [],
-      EVIDENCE: [],
-      VALIDATE: [],
-      GATE: [],
-      AUDIT: [],
-      ARTIFACT: [],
-    };
-
-    tags.forEach((tag) => {
-      groups[tag.type].push(tag);
-    });
-
-    return groups;
-  }, [tags]);
-
   const orderedTypes: ContractTagType[] = [
     'FILE',
     'DIR',
@@ -199,21 +200,14 @@ function _ContractComplianceIndicator({
 
   const allComplete = hasPrereqs && hasArtifacts && hasValidation && hasContextAck;
   const partial = hasPrereqs || hasArtifacts || hasValidation;
+  const partialDotColor = partial ? 'bg-yellow-500' : 'bg-gray-300';
+  const dotColor = allComplete ? 'bg-green-500' : partialDotColor;
+  const partialTitle = partial ? 'Partial contract tags' : 'No contract tags';
+  const complianceTitle = allComplete ? 'Full contract compliance' : partialTitle;
 
   return (
     <div className="flex items-center gap-2">
-      <div
-        className={`w-2 h-2 rounded-full ${
-          allComplete ? 'bg-green-500' : partial ? 'bg-yellow-500' : 'bg-gray-300'
-        }`}
-        title={
-          allComplete
-            ? 'Full contract compliance'
-            : partial
-              ? 'Partial contract tags'
-              : 'No contract tags'
-        }
-      />
+      <div className={`w-2 h-2 rounded-full ${dotColor}`} title={complianceTitle} />
       <div className="flex gap-1">
         <span
           className={`text-xs ${hasPrereqs ? 'text-blue-600' : 'text-gray-400'}`}

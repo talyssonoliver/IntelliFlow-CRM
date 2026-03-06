@@ -220,6 +220,17 @@ function loadSprintSummary(sprintNumber: number): any | null {
   return null;
 }
 
+function getValidationRecommendation(
+  status: SprintValidation['overallStatus'],
+  failedCount: number
+): string {
+  if (status === 'passed') return 'All validations passed - sprint is validated';
+  if (status === 'failed') return 'CRITICAL: All validations failed - review required';
+  if (status === 'partial')
+    return `${failedCount} validations failed - address before sprint close`;
+  return 'Run validations to verify sprint completion';
+}
+
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
@@ -259,11 +270,8 @@ export async function GET(request: NextRequest) {
     const byType = validations.reduce(
       (acc, v) => {
         if (!acc[v.validationType]) acc[v.validationType] = { passed: 0, failed: 0 };
-        if (v.passed) {
-          acc[v.validationType].passed++;
-        } else {
-          acc[v.validationType].failed++;
-        }
+        const key = v.passed ? 'passed' : 'failed';
+        acc[v.validationType][key]++;
         return acc;
       },
       {} as Record<string, { passed: number; failed: number }>
@@ -338,14 +346,7 @@ export async function GET(request: NextRequest) {
           passed: v.passed,
           timestamp: v.timestamp,
         })),
-      recommendation:
-        overallStatus === 'passed'
-          ? 'All validations passed - sprint is validated'
-          : overallStatus === 'failed'
-            ? 'CRITICAL: All validations failed - review required'
-            : overallStatus === 'partial'
-              ? `${failedValidations} validations failed - address before sprint close`
-              : 'Run validations to verify sprint completion',
+      recommendation: getValidationRecommendation(overallStatus, failedValidations),
     };
 
     // If no attestations available, try fallback

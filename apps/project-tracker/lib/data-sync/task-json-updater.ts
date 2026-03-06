@@ -8,6 +8,24 @@ import type { TaskRecord } from './types';
 import { mapCsvStatusToIndividual, parseDependencies } from './csv-mapping';
 import { readJsonTolerant, writeJsonFile, findTaskFile, findRepoRoot } from './file-io';
 
+function classifyArtifacts(
+  expectedArtifacts: string[],
+  repoRoot: string
+): { created: string[]; missing: string[] } {
+  const created: string[] = [];
+  const missing: string[] = [];
+  for (const artifact of expectedArtifacts) {
+    if (!artifact || artifact === null) continue;
+    const artifactPath = artifact.includes('*') ? null : join(repoRoot, artifact);
+    if (artifactPath && existsSync(artifactPath)) {
+      created.push(artifact);
+    } else if (artifact && !artifact.includes('*')) {
+      missing.push(artifact);
+    }
+  }
+  return { created, missing };
+}
+
 /**
  * Update an individual task JSON file
  */
@@ -68,19 +86,7 @@ export function updateIndividualTaskFile(
   if (taskData.artifacts) {
     const repoRoot = findRepoRoot(metricsDir) || metricsDir;
     const expectedArtifacts = taskData.artifacts.expected || [];
-    const created: string[] = [];
-    const missing: string[] = [];
-
-    for (const artifact of expectedArtifacts) {
-      if (!artifact || artifact === null) continue;
-      const artifactPath = artifact.includes('*') ? null : join(repoRoot, artifact);
-
-      if (artifactPath && existsSync(artifactPath)) {
-        created.push(artifact);
-      } else if (artifact && !artifact.includes('*')) {
-        missing.push(artifact);
-      }
-    }
+    const { created, missing } = classifyArtifacts(expectedArtifacts, repoRoot);
 
     if (expectedArtifacts.length > 0 && expectedArtifacts.some((a: any) => a !== null)) {
       taskData.artifacts.created = created;

@@ -150,7 +150,7 @@ describe('ENV-007: Run Assistant Prompt & Execution', () => {
           new Promise(() => {
             /* never resolve */
           })
-      ) as unknown as MockExec;
+      ) as any as MockExec; // mock that never resolves for timeout test
 
       const req: RunRequest = {
         kind: 'command',

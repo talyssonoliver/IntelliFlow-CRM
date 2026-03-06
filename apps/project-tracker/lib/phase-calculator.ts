@@ -185,7 +185,7 @@ function identifyParallelStreams(
   const signatureGroups = new Map<string, string[]>();
 
   for (const task of tasks) {
-    const signature = task.dependencies.sort().join(',') || 'no-deps';
+    const signature = task.dependencies.sort((a, b) => a.localeCompare(b)).join(',') || 'no-deps';
     if (!signatureGroups.has(signature)) {
       signatureGroups.set(signature, []);
     }

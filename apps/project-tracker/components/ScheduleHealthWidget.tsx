@@ -205,17 +205,18 @@ export default function ScheduleHealthWidget({ sprint = 0 }: ScheduleHealthWidge
           <span className="font-medium text-gray-900">{data.criticalPathCompletion}%</span>
         </div>
         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-          <div
-            className={clsx(
-              'h-full rounded-full transition-all',
-              data.criticalPathCompletion >= 100
-                ? 'bg-green-500'
-                : data.criticalPathCompletion >= 50
-                  ? 'bg-blue-500'
-                  : 'bg-red-500'
-            )}
-            style={{ width: `${data.criticalPathCompletion}%` }}
-          />
+          {(() => {
+            const criticalPathColor =
+              data.criticalPathCompletion >= 50 ? 'bg-blue-500' : 'bg-red-500';
+            const criticalPathBarColor =
+              data.criticalPathCompletion >= 100 ? 'bg-green-500' : criticalPathColor;
+            return (
+              <div
+                className={clsx('h-full rounded-full transition-all', criticalPathBarColor)}
+                style={{ width: `${data.criticalPathCompletion}%` }}
+              />
+            );
+          })()}
         </div>
       </div>
 

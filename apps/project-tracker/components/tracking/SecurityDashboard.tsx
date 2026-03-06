@@ -97,20 +97,24 @@ export const STALE_THRESHOLD_MINUTES = 10080; // 7 * 24 * 60
 export function getSecurityStatus(vulns: VulnerabilityCounts) {
   const hasCritical = vulns.critical > 0;
   const hasVulnerabilities = vulns.total > 0;
+  const vulnOrSafeBannerClass = hasVulnerabilities
+    ? 'bg-yellow-50 border-yellow-200'
+    : 'bg-green-50 border-green-200';
+  const bannerClass = hasCritical ? 'bg-red-50 border-red-200' : vulnOrSafeBannerClass;
+  const vulnOrSafeIconName = hasVulnerabilities ? 'shield' : 'verified_user';
+  const iconName = hasCritical ? 'gpp_maybe' : vulnOrSafeIconName;
+  const vulnOrSafeStatusText = hasVulnerabilities
+    ? `${vulns.total} Vulnerabilities Found`
+    : 'No Vulnerabilities Detected';
+  const statusText = hasCritical
+    ? `${vulns.critical} Critical Vulnerabilities Found`
+    : vulnOrSafeStatusText;
   return {
     hasCritical,
     hasVulnerabilities,
-    bannerClass: hasCritical
-      ? 'bg-red-50 border-red-200'
-      : hasVulnerabilities
-        ? 'bg-yellow-50 border-yellow-200'
-        : 'bg-green-50 border-green-200',
-    iconName: hasCritical ? 'gpp_maybe' : hasVulnerabilities ? 'shield' : 'verified_user',
-    statusText: hasCritical
-      ? `${vulns.critical} Critical Vulnerabilities Found`
-      : hasVulnerabilities
-        ? `${vulns.total} Vulnerabilities Found`
-        : 'No Vulnerabilities Detected',
+    bannerClass,
+    iconName,
+    statusText,
   };
 }
 
@@ -144,9 +148,7 @@ export function getHistoryItemColor(critical: number) {
   return critical > 0 ? 'text-red-600' : 'text-green-600';
 }
 
-export function getVulnerabilityDefaults(
-  data: VulnerabilityCounts | null
-): VulnerabilityCounts {
+export function getVulnerabilityDefaults(data: VulnerabilityCounts | null): VulnerabilityCounts {
   return data ?? { critical: 0, high: 0, moderate: 0, low: 0, total: 0 };
 }
 
@@ -345,7 +347,14 @@ export default function SecurityDashboard() {
   const btnState = getScanButtonState(scanning);
   const remediationDisplay = data?.remediation
     ? getRemediationSummary(data.remediation)
-    : { isEmpty: true, emptyMessage: 'No vulnerabilities to track', fixedCount: 0, openCount: 0, waiverCount: 0, mttrDisplay: 'N/A' };
+    : {
+        isEmpty: true,
+        emptyMessage: 'No vulnerabilities to track',
+        fixedCount: 0,
+        openCount: 0,
+        waiverCount: 0,
+        mttrDisplay: 'N/A',
+      };
 
   return (
     <div className="space-y-6">
@@ -360,7 +369,11 @@ export default function SecurityDashboard() {
           <div>
             <h3 className="text-lg font-semibold text-gray-900">Security Dashboard</h3>
             {data?.lastScan && (
-              <StaleIndicator lastUpdated={data.lastScan} thresholdMinutes={STALE_THRESHOLD_MINUTES} showTime />
+              <StaleIndicator
+                lastUpdated={data.lastScan}
+                thresholdMinutes={STALE_THRESHOLD_MINUTES}
+                showTime
+              />
             )}
           </div>
         </div>
@@ -400,37 +413,31 @@ export default function SecurityDashboard() {
       {/* Security Status Banner */}
       <div className={`rounded-lg p-4 border ${status.bannerClass}`}>
         <div className="flex items-center gap-3">
-          <Icon
-            name={status.iconName}
-            className={
-              status.hasCritical
-                ? 'text-red-500'
-                : status.hasVulnerabilities
-                  ? 'text-yellow-600'
-                  : 'text-green-600'
-            }
-            size="2xl"
-          />
-          <div>
-            <div
-              className={`text-lg font-semibold ${
-                status.hasCritical
-                  ? 'text-red-700'
-                  : status.hasVulnerabilities
-                    ? 'text-yellow-700'
-                    : 'text-green-700'
-              }`}
-            >
-              {status.statusText}
-            </div>
-            <div className="text-sm text-gray-600">
-              {status.hasCritical
-                ? 'Immediate action required - critical security issues detected'
-                : status.hasVulnerabilities
-                  ? 'Review and address vulnerabilities as appropriate'
-                  : 'Your dependencies are secure'}
-            </div>
-          </div>
+          {(() => {
+            const vulnOrSafeIconClass = status.hasVulnerabilities
+              ? 'text-yellow-600'
+              : 'text-green-600';
+            const iconClass = status.hasCritical ? 'text-red-500' : vulnOrSafeIconClass;
+            const vulnOrSafeHeadingClass = status.hasVulnerabilities
+              ? 'text-yellow-700'
+              : 'text-green-700';
+            const headingClass = status.hasCritical ? 'text-red-700' : vulnOrSafeHeadingClass;
+            const vulnOrSafeBodyText = status.hasVulnerabilities
+              ? 'Review and address vulnerabilities as appropriate'
+              : 'Your dependencies are secure';
+            const bodyText = status.hasCritical
+              ? 'Immediate action required - critical security issues detected'
+              : vulnOrSafeBodyText;
+            return (
+              <>
+                <Icon name={status.iconName} className={iconClass} size="2xl" />
+                <div>
+                  <div className={`text-lg font-semibold ${headingClass}`}>{status.statusText}</div>
+                  <div className="text-sm text-gray-600">{bodyText}</div>
+                </div>
+              </>
+            );
+          })()}
         </div>
       </div>
 
@@ -479,14 +486,16 @@ export default function SecurityDashboard() {
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
           <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
             <Icon name="difference" size="base" />
-            Baseline Comparison (from {(() => { const d = new Date(data.baseline.date); return isNaN(d.getTime()) ? data.baseline.date : d.toLocaleDateString(); })()})
+            Baseline Comparison (from{' '}
+            {(() => {
+              const d = new Date(data.baseline.date);
+              return isNaN(d.getTime()) ? data.baseline.date : d.toLocaleDateString();
+            })()}
+            )
           </h4>
           <div className="grid grid-cols-2 gap-4">
             {(['critical', 'high'] as const).map((severity) => {
-              const delta = getBaselineDelta(
-                vulns[severity],
-                data.baseline![severity]
-              );
+              const delta = getBaselineDelta(vulns[severity], data.baseline![severity]);
               return (
                 <div key={severity} className="flex items-center gap-3">
                   <span className="text-gray-500 capitalize">{severity}:</span>
@@ -551,7 +560,12 @@ export default function SecurityDashboard() {
                 icon="info"
                 variant="info"
               />
-              <MetricCard title="Total" value={data.outdatedDeps.total} icon="list" variant="default" />
+              <MetricCard
+                title="Total"
+                value={data.outdatedDeps.total}
+                icon="list"
+                variant="default"
+              />
             </div>
             {data.outdatedDeps.packages.length > 0 && (
               <details className="text-sm">
@@ -575,11 +589,17 @@ export default function SecurityDashboard() {
                           <td className="py-1 pr-4 text-gray-500">{pkg.current}</td>
                           <td className="py-1 pr-4">{pkg.latest}</td>
                           <td className="py-1">
-                            <span className={`px-1.5 py-0.5 rounded text-xs ${
-                              pkg.type === 'major' ? 'bg-red-100 text-red-700' :
-                              pkg.type === 'minor' ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-blue-100 text-blue-700'
-                            }`}>{pkg.type}</span>
+                            <span
+                              className={`px-1.5 py-0.5 rounded text-xs ${
+                                pkg.type === 'major'
+                                  ? 'bg-red-100 text-red-700'
+                                  : pkg.type === 'minor'
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : 'bg-blue-100 text-blue-700'
+                              }`}
+                            >
+                              {pkg.type}
+                            </span>
                           </td>
                         </tr>
                       ))}
@@ -600,7 +620,10 @@ export default function SecurityDashboard() {
           <Icon name="shield" size="base" />
           Secret Scan
         </h4>
-        {data?.secretScan && (data.secretScan.lastScan || data.secretScan.leaksFound > 0 || data.secretScan.filesScanned > 0) ? (
+        {data?.secretScan &&
+        (data.secretScan.lastScan ||
+          data.secretScan.leaksFound > 0 ||
+          data.secretScan.filesScanned > 0) ? (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-4">
               <MetricCard
@@ -617,7 +640,11 @@ export default function SecurityDashboard() {
               />
             </div>
             {data.secretScan.lastScan && (
-              <StaleIndicator lastUpdated={data.secretScan.lastScan} thresholdMinutes={STALE_THRESHOLD_MINUTES} showTime />
+              <StaleIndicator
+                lastUpdated={data.secretScan.lastScan}
+                thresholdMinutes={STALE_THRESHOLD_MINUTES}
+                showTime
+              />
             )}
           </div>
         ) : (
@@ -666,15 +693,30 @@ export default function SecurityDashboard() {
         {!remediationDisplay.isEmpty ? (
           <>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-              <MetricCard title="Fixed" value={remediationDisplay.fixedCount} icon="check_circle" variant="success" />
+              <MetricCard
+                title="Fixed"
+                value={remediationDisplay.fixedCount}
+                icon="check_circle"
+                variant="success"
+              />
               <MetricCard
                 title="Open"
                 value={remediationDisplay.openCount}
                 icon="error"
                 variant={remediationDisplay.openCount > 0 ? 'error' : 'default'}
               />
-              <MetricCard title="Waived" value={remediationDisplay.waiverCount} icon="do_not_disturb" variant="default" />
-              <MetricCard title="MTTR" value={remediationDisplay.mttrDisplay} icon="schedule" variant="default" />
+              <MetricCard
+                title="Waived"
+                value={remediationDisplay.waiverCount}
+                icon="do_not_disturb"
+                variant="default"
+              />
+              <MetricCard
+                title="MTTR"
+                value={remediationDisplay.mttrDisplay}
+                icon="schedule"
+                variant="default"
+              />
             </div>
             {data?.remediation?.items && data.remediation.items.length > 0 && (
               <div className="overflow-x-auto">
@@ -690,16 +732,23 @@ export default function SecurityDashboard() {
                   </thead>
                   <tbody>
                     {data.remediation.items.map((item, idx) => (
-                      <tr key={`${item.id}-${item.module}-${idx}`} className="border-b border-gray-100">
+                      <tr
+                        key={`${item.id}-${item.module}-${idx}`}
+                        className="border-b border-gray-100"
+                      >
                         <td className="py-1 pr-3 font-mono">{item.id}</td>
                         <td className="py-1 pr-3">{item.module}</td>
                         <td className="py-1 pr-3">
-                          <span className={`px-1.5 py-0.5 rounded text-xs ${getSeverityBadgeClass(item.severity)}`}>
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-xs ${getSeverityBadgeClass(item.severity)}`}
+                          >
                             {item.severity}
                           </span>
                         </td>
                         <td className="py-1 pr-3">
-                          <span className={`px-1.5 py-0.5 rounded text-xs ${getStatusBadgeClass(item.status)}`}>
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-xs ${getStatusBadgeClass(item.status)}`}
+                          >
                             {item.status}
                           </span>
                         </td>
@@ -723,21 +772,19 @@ export default function SecurityDashboard() {
           Compliance Status
         </h4>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {([
+          {[
             { key: 'owasp_top10' as const, label: 'OWASP Top 10' },
             { key: 'dependency_check' as const, label: 'Dependency Check' },
             { key: 'secret_scan' as const, label: 'Secret Scan' },
             { key: 'deps_current' as const, label: 'Deps Current' },
-          ]).map(({ key, label }) => {
+          ].map(({ key, label }) => {
             const value = data?.compliance?.[key] ?? false;
             const ci = getComplianceIcon(value);
             return (
               <div
                 key={key}
                 className={`flex items-center gap-2 p-3 rounded-lg ${
-                  value
-                    ? 'bg-green-50 border border-green-200'
-                    : 'bg-red-50 border border-red-200'
+                  value ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'
                 }`}
               >
                 <Icon name={ci.icon} className={ci.colorClass} size="lg" />

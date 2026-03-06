@@ -259,8 +259,12 @@ export async function GET(request: Request) {
     }
 
     // Collect unique values
-    const uniqueSections = [...new Set(tasks.map((t) => t.section))].sort();
-    const uniqueOwners = [...new Set(tasks.map((t) => t.owner))].filter(Boolean).sort();
+    const uniqueSections = [...new Set(tasks.map((t) => t.section))].sort((a, b) =>
+      a.localeCompare(b)
+    );
+    const uniqueOwners = [...new Set(tasks.map((t) => t.owner))]
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
     const uniqueSprints = [...new Set(tasks.map((t) => t.sprint))].sort((a, b) => {
       if (a === 'Continuous') return 1;
       if (b === 'Continuous') return -1;

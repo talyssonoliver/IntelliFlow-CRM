@@ -249,6 +249,11 @@ export default function PerformanceReportView() {
   if (!data) return null;
 
   const performanceStatus = data.performance_metrics?.status || 'pending';
+  const failedOrPendingStatusClass = performanceStatus === 'failed' ? 'bg-red-500' : 'bg-gray-500';
+  const runningOrLowerStatusClass =
+    performanceStatus === 'running' ? 'bg-yellow-500' : failedOrPendingStatusClass;
+  const performanceStatusClass =
+    performanceStatus === 'completed' ? 'bg-green-500' : runningOrLowerStatusClass;
 
   return (
     <div className="space-y-6">
@@ -276,15 +281,7 @@ export default function PerformanceReportView() {
               <span>
                 Status:{' '}
                 <strong
-                  className={`px-2 py-0.5 rounded text-xs uppercase ${
-                    performanceStatus === 'completed'
-                      ? 'bg-green-500'
-                      : performanceStatus === 'running'
-                        ? 'bg-yellow-500'
-                        : performanceStatus === 'failed'
-                          ? 'bg-red-500'
-                          : 'bg-gray-500'
-                  }`}
+                  className={`px-2 py-0.5 rounded text-xs uppercase ${performanceStatusClass}`}
                 >
                   {performanceStatus}
                 </strong>
@@ -732,17 +729,21 @@ export default function PerformanceReportView() {
                     <span className="text-xs bg-indigo-100 text-indigo-700 px-1.5 py-0.5 rounded">
                       {validator.schemas} schemas
                     </span>
-                    <span
-                      className={`text-xs px-1.5 py-0.5 rounded ${
+                    {(() => {
+                      const moderateOrSimpleComplexClass =
+                        validator.complexity === 'moderate'
+                          ? 'bg-yellow-100 text-yellow-700'
+                          : 'bg-green-100 text-green-700';
+                      const complexityClass =
                         validator.complexity === 'complex'
                           ? 'bg-red-100 text-red-700'
-                          : validator.complexity === 'moderate'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : 'bg-green-100 text-green-700'
-                      }`}
-                    >
-                      {validator.complexity}
-                    </span>
+                          : moderateOrSimpleComplexClass;
+                      return (
+                        <span className={`text-xs px-1.5 py-0.5 rounded ${complexityClass}`}>
+                          {validator.complexity}
+                        </span>
+                      );
+                    })()}
                   </div>
                 </div>
               ))}
@@ -1473,29 +1474,31 @@ export default function PerformanceReportView() {
                   });
                 }
 
-                return recommendations.map((rec) => (
-                  <div key={rec.title} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                return recommendations.map((rec) => {
+                  const infoPriorityClass = rec.priority === 'info' ? 'bg-cyan-500' : 'bg-blue-500';
+                  const successOrLowerPriorityClass =
+                    rec.priority === 'success' ? 'bg-green-500' : infoPriorityClass;
+                  const mediumOrLowerPriorityClass =
+                    rec.priority === 'medium' ? 'bg-amber-500' : successOrLowerPriorityClass;
+                  const recPriorityClass =
+                    rec.priority === 'high' ? 'bg-red-500' : mediumOrLowerPriorityClass;
+                  return (
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${
-                        rec.priority === 'high'
-                          ? 'bg-red-500'
-                          : rec.priority === 'medium'
-                            ? 'bg-amber-500'
-                            : rec.priority === 'success'
-                              ? 'bg-green-500'
-                              : rec.priority === 'info'
-                                ? 'bg-cyan-500'
-                                : 'bg-blue-500'
-                      }`}
+                      key={rec.title}
+                      className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg"
                     >
-                      {rec.icon}
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-white font-bold ${recPriorityClass}`}
+                      >
+                        {rec.icon}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-800">{rec.title}</h4>
+                        <p className="text-sm text-gray-600 mt-1">{rec.desc}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold text-gray-800">{rec.title}</h4>
-                      <p className="text-sm text-gray-600 mt-1">{rec.desc}</p>
-                    </div>
-                  </div>
-                ));
+                  );
+                });
               })()}
             </div>
           ) : (

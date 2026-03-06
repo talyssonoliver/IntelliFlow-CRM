@@ -459,12 +459,12 @@ export default function GanttChart({
               <div className="w-4 h-3 bg-green-500 rounded" />
               <span className="text-gray-500">Complete</span>
             </div>
-            {showFloat && (
+            {showFloat ? (
               <div className="flex items-center gap-1">
                 <div className="w-4 h-3 bg-gray-300 rounded" />
                 <span className="text-gray-500">Float</span>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
@@ -545,10 +545,18 @@ export default function GanttChart({
                 onMouseEnter={() => setHoveredTask(task.taskId)}
                 onMouseLeave={() => setHoveredTask(null)}
                 onClick={() => onTaskClick?.(task.taskId)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onTaskClick?.(task.taskId);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
               >
-                {task.isCritical && (
+                {task.isCritical ? (
                   <Icon name="warning" size="xs" className="text-red-500 flex-shrink-0" />
-                )}
+                ) : null}
                 <span
                   className={clsx(
                     'text-sm truncate',
@@ -617,12 +625,8 @@ export default function GanttChart({
                 const progressWidth = (width * task.percentComplete) / 100;
 
                 // Determine bar color
-                const barColor =
-                  task.percentComplete >= 100
-                    ? '#22c55e' // green
-                    : task.isCritical
-                      ? '#ef4444' // red
-                      : '#3b82f6'; // blue
+                const incompleteBarColor = task.isCritical ? '#ef4444' : '#3b82f6';
+                const barColor = task.percentComplete >= 100 ? '#22c55e' : incompleteBarColor;
 
                 return (
                   <g
@@ -633,7 +637,7 @@ export default function GanttChart({
                     onClick={() => onTaskClick?.(task.taskId)}
                   >
                     {/* Row background on hover */}
-                    {hoveredTask === task.taskId && (
+                    {hoveredTask === task.taskId ? (
                       <rect
                         x={0}
                         y={index * ROW_HEIGHT}
@@ -641,10 +645,10 @@ export default function GanttChart({
                         height={ROW_HEIGHT}
                         fill="#eff6ff"
                       />
-                    )}
+                    ) : null}
 
                     {/* Float bar */}
-                    {floatWidth > 0 && (
+                    {floatWidth > 0 ? (
                       <rect
                         x={startX + width}
                         y={y + 4}
@@ -653,7 +657,7 @@ export default function GanttChart({
                         rx={2}
                         fill="#e5e7eb"
                       />
-                    )}
+                    ) : null}
 
                     {/* Task bar background */}
                     <rect
@@ -689,7 +693,7 @@ export default function GanttChart({
                     />
 
                     {/* Percent text */}
-                    {width > 40 && (
+                    {width > 40 ? (
                       <text
                         x={startX + width / 2}
                         y={y + TASK_BAR_HEIGHT / 2 + 4}
@@ -699,7 +703,7 @@ export default function GanttChart({
                       >
                         {task.percentComplete}%
                       </text>
-                    )}
+                    ) : null}
                   </g>
                 );
               })}
@@ -730,14 +734,26 @@ export default function GanttChart({
       </div>
 
       {/* Period Overview Modal */}
-      {modalOpen && selectedPeriod && (
+      {modalOpen && selectedPeriod ? (
         <div
           className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
           onClick={closeModal}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') closeModal();
+          }}
+          role="presentation"
+          aria-hidden="true"
         >
           <div
             className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
+            role="presentation"
           >
             {/* Modal Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
@@ -745,9 +761,9 @@ export default function GanttChart({
                 <h3 className="text-lg font-semibold text-gray-900">{selectedPeriod.label}</h3>
                 <p className="text-sm text-gray-500">
                   {formatDate(selectedPeriod.start)}
-                  {selectedPeriod.start.getTime() !== selectedPeriod.end.getTime() && (
+                  {selectedPeriod.start.getTime() !== selectedPeriod.end.getTime() ? (
                     <> - {formatDate(selectedPeriod.end)}</>
-                  )}{' '}
+                  ) : null}{' '}
                   ({getDaysBetween(selectedPeriod.start, selectedPeriod.end) + 1} days)
                 </p>
               </div>
@@ -805,20 +821,29 @@ export default function GanttChart({
                         closeModal();
                         onTaskClick?.(task.taskId);
                       }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          closeModal();
+                          onTaskClick?.(task.taskId);
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
                     >
                       {/* Status Indicator */}
-                      <div
-                        className={clsx(
-                          'w-3 h-3 rounded-full flex-shrink-0',
-                          task.percentComplete >= 100
-                            ? 'bg-green-500'
-                            : task.isCritical
-                              ? 'bg-red-500'
-                              : task.percentComplete > 0
-                                ? 'bg-amber-500'
-                                : 'bg-gray-300'
-                        )}
-                      />
+                      {(() => {
+                        const inProgressDotColor =
+                          task.percentComplete > 0 ? 'bg-amber-500' : 'bg-gray-300';
+                        const criticalDotColor = task.isCritical
+                          ? 'bg-red-500'
+                          : inProgressDotColor;
+                        const dotColor =
+                          task.percentComplete >= 100 ? 'bg-green-500' : criticalDotColor;
+                        return (
+                          <div className={clsx('w-3 h-3 rounded-full flex-shrink-0', dotColor)} />
+                        );
+                      })()}
 
                       {/* Task Info */}
                       <div className="flex-1 min-w-0">
@@ -831,15 +856,15 @@ export default function GanttChart({
                           >
                             {task.taskId}
                           </span>
-                          {task.isCritical && (
+                          {task.isCritical ? (
                             <span className="px-1.5 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded">
                               Critical
                             </span>
-                          )}
+                          ) : null}
                         </div>
-                        {task.description && (
+                        {task.description ? (
                           <p className="text-xs text-gray-500 truncate">{task.description}</p>
-                        )}
+                        ) : null}
                       </div>
 
                       {/* Progress */}
@@ -901,7 +926,7 @@ export default function GanttChart({
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

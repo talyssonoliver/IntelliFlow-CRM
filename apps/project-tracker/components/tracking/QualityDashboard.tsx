@@ -68,7 +68,9 @@ export default function QualityDashboard() {
       setData(result.metrics);
       setErrors({});
     } catch (err) {
-      setErrors((prev) => buildErrorState(prev, 'global', err instanceof Error ? err.message : 'Unknown error'));
+      setErrors((prev) =>
+        buildErrorState(prev, 'global', err instanceof Error ? err.message : 'Unknown error')
+      );
     } finally {
       setLoading(false);
     }
@@ -84,7 +86,9 @@ export default function QualityDashboard() {
       await fetchData();
       setErrors((prev) => ({ ...prev, [type]: null }));
     } catch (err) {
-      setErrors((prev) => buildErrorState(prev, type, err instanceof Error ? err.message : 'Refresh failed'));
+      setErrors((prev) =>
+        buildErrorState(prev, type, err instanceof Error ? err.message : 'Refresh failed')
+      );
     } finally {
       setRefreshing((prev) => ({ ...prev, [type]: false }));
     }
@@ -261,9 +265,7 @@ export default function QualityDashboard() {
             />
           </div>
         )}
-        {errors['debt'] && (
-          <div className="mt-2 text-xs text-red-500">{errors['debt']}</div>
-        )}
+        {errors['debt'] && <div className="mt-2 text-xs text-red-500">{errors['debt']}</div>}
       </div>
 
       {/* SonarQube Section */}
@@ -331,9 +333,7 @@ export default function QualityDashboard() {
             />
           </div>
         )}
-        {errors['sonar'] && (
-          <div className="mt-2 text-xs text-red-500">{errors['sonar']}</div>
-        )}
+        {errors['sonar'] && <div className="mt-2 text-xs text-red-500">{errors['sonar']}</div>}
       </div>
 
       {/* Phantom Audit Section */}
@@ -345,7 +345,10 @@ export default function QualityDashboard() {
           </h4>
           <div className="flex items-center gap-2">
             {data?.phantomAudit.lastUpdated && (
-              <StaleIndicator lastUpdated={data.phantomAudit.lastUpdated} thresholdMinutes={10080} />
+              <StaleIndicator
+                lastUpdated={data.phantomAudit.lastUpdated}
+                thresholdMinutes={10080}
+              />
             )}
             <RefreshButton
               onRefresh={() => handleRefresh('phantom')}
@@ -356,9 +359,7 @@ export default function QualityDashboard() {
             />
           </div>
         </div>
-        {errors['phantom'] && (
-          <div className="mb-2 text-xs text-red-500">{errors['phantom']}</div>
-        )}
+        {errors['phantom'] && <div className="mb-2 text-xs text-red-500">{errors['phantom']}</div>}
         <div className="grid grid-cols-2 gap-4">
           <MetricCard
             title="Phantom Tasks"

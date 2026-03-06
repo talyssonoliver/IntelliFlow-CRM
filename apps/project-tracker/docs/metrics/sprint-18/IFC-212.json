@@ -1,0 +1,78 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-212",
+  "section": "AI/ML",
+  "description": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
+  "owner": "Backend Dev + AI Specialist (STOA-Intelligence)",
+  "sprint": "sprint-18",
+  "phase": "phase-1-validation",
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [
+      "IFC-015",
+      "IFC-125",
+      "IFC-168"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-03-06T22:22:15.997Z"
+  },
+  "dependencies_resolved": [
+    "IFC-015",
+    "IFC-125",
+    "IFC-168"
+  ],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 180,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "enqueue_success_rate": {
+      "target": ">=99%",
+      "actual": "",
+      "met": false
+    },
+    "scoring_completion_sla_p95": {
+      "target": "<=30s",
+      "actual": "",
+      "met": false
+    },
+    "queue_failure_rate": {
+      "target": "<1%",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/api/src/services/queue/QueueAIService.ts",
+      "apps/api/src/container.ts",
+      "apps/api/src/modules/leads/__tests__/LeadService.queue-ai.test.ts",
+      "apps/ai-worker/src/queue/jobs/scoring.job.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-212/context_ack.json"
+    ],
+    "created": [
+      "apps/api/src/container.ts"
+    ],
+    "missing": [
+      "apps/api/src/services/queue/QueueAIService.ts",
+      "apps/api/src/modules/leads/__tests__/LeadService.queue-ai.test.ts",
+      "apps/ai-worker/src/queue/jobs/scoring.job.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-212/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-04T22:04:00Z"
+    }
+  ],
+  "notes": "Follow-up to IFC-015 initial BullMQ setup. Wires API lead scoring through QueueAIService while preserving GuardrailsAIService as the outer decorator."
+}

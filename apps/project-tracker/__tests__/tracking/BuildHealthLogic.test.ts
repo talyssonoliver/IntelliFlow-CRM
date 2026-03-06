@@ -78,7 +78,14 @@ describe('BuildHealthLogic', () => {
 
     it('returns false when turbo.success is false', () => {
       const data = makeBuildMetrics({
-        turbo: { success: false, tasks_run: 10, tasks_cached: 5, duration_ms: 5000, errors: ['err'], lastRun: null },
+        turbo: {
+          success: false,
+          tasks_run: 10,
+          tasks_cached: 5,
+          duration_ms: 5000,
+          errors: ['err'],
+          lastRun: null,
+        },
       });
       expect(computeAllPassing(data)).toBe(false);
     });
@@ -106,7 +113,14 @@ describe('BuildHealthLogic', () => {
 
     it('returns false for mixed failures (turbo fail + lint pass + tests ok)', () => {
       const data = makeBuildMetrics({
-        turbo: { success: false, tasks_run: 10, tasks_cached: 0, duration_ms: 1000, errors: [], lastRun: null },
+        turbo: {
+          success: false,
+          tasks_run: 10,
+          tasks_cached: 0,
+          duration_ms: 1000,
+          errors: [],
+          lastRun: null,
+        },
       });
       expect(computeAllPassing(data)).toBe(false);
     });

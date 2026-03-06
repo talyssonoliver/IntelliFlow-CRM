@@ -86,7 +86,7 @@ export async function POST(request: Request) {
       taskId,
       session,
       timeout,
-      onComplete: async (finalResult) => {
+      onComplete: (finalResult) => {
         // Update status on completion
         if (finalResult.status === 'completed') {
           const successStatus: Record<SessionType, WorkflowStatus> = {
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
             plan: 'Plan Complete',
             exec: 'Completed',
           };
-          await updateTaskStatus(taskId, successStatus[session]);
+          void updateTaskStatus(taskId, successStatus[session]);
         } else if (finalResult.status === 'failed' || finalResult.status === 'timeout') {
           const failureStatus: Record<SessionType, WorkflowStatus> = {
             hydrate: 'Backlog',
@@ -103,7 +103,7 @@ export async function POST(request: Request) {
             plan: 'Spec Complete',
             exec: 'Failed',
           };
-          await updateTaskStatus(taskId, failureStatus[session]);
+          void updateTaskStatus(taskId, failureStatus[session]);
         }
       },
     });

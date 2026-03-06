@@ -84,44 +84,8 @@ export function loadExecutionHistory(
     }
   }
 
-  // Also look for MATOP evidence summary files
-  if (existsSync(stoaRunsDir)) {
-    try {
-      const stoaDirs = readdirSync(stoaRunsDir, { withFileTypes: true })
-        .filter((d) => d.isDirectory())
-        .map((d) => d.name);
-
-      for (const dir of stoaDirs) {
-        const summaryPath = join(stoaRunsDir, dir, 'summary.json');
-        if (existsSync(summaryPath)) {
-          const stats = statSync(summaryPath);
-          allFiles.push({ name: `${dir}-summary.json`, path: summaryPath, mtime: stats.mtimeMs });
-        }
-      }
-    } catch {
-      // Ignore errors reading STOA dirs
-    }
-  }
-
-  // Also include system-audit (MATOP) summaries
-  if (existsSync(systemAuditDir)) {
-    try {
-      const auditDirs = readdirSync(systemAuditDir, { withFileTypes: true }).filter((d) =>
-        d.isDirectory()
-      );
-      for (const dir of auditDirs) {
-        const summaryFinal = join(systemAuditDir, dir.name, 'summary-final.json');
-        const summary = join(systemAuditDir, dir.name, 'summary.json');
-        const target = existsSync(summaryFinal) ? summaryFinal : summary;
-        if (existsSync(target)) {
-          const stats = statSync(target);
-          allFiles.push({ name: `${dir.name}-summary.json`, path: target, mtime: stats.mtimeMs });
-        }
-      }
-    } catch {
-      // Ignore errors reading system audit dirs
-    }
-  }
+  collectStoaSummaries(stoaRunsDir, allFiles);
+  collectSystemAuditSummaries(systemAuditDir, allFiles);
 
   if (allFiles.length === 0) {
     return {
@@ -192,6 +156,98 @@ export function loadExecutionHistory(
   };
 }
 
+function parseMATOPRun(data: any, filename: string): ExecutionRun {
+  return {
+    runId: data.runId || filename.replace('.json', ''),
+    sprintNumber: parseInt(data.sprint, 10) || 0,
+    timestamp: data.timestamp || new Date().toISOString(),
+    status: determineStatus(data),
+    totalTasks: data.totalTasks || data.tasks?.length || 0,
+    results: {
+      pass: data.results?.pass || 0,
+      warn: data.results?.warn || 0,
+      fail: data.results?.fail || 0,
+      error: data.results?.error || 0,
+      skipped: data.results?.skipped || 0,
+    },
+    duration: data.duration || 0,
+    tasks: data.tasks?.map((t: any) => ({
+      taskId: t.taskId,
+      description: t.description,
+      status: t.status,
+      verdict: t.verdict || 'SKIPPED',
+      duration: t.duration || 0,
+      evidenceDir: t.evidenceDir,
+      error: t.error,
+    })),
+  };
+}
+
+function parseSystemAuditRun(
+  data: any,
+  filename: string,
+  taskSprintMap?: Map<string, number>
+): ExecutionRun {
+  const passCount = data.aggregate_metrics?.total_gates_passed || 0;
+  const failCount = data.aggregate_metrics?.total_gates_failed || 0;
+  const totalGates = data.aggregate_metrics?.total_gates_executed || passCount + failCount;
+  const verdict = data.consensus?.verdict || 'FAILED';
+  const status: ExecutionRun['status'] =
+    verdict === 'PASS' || verdict === 'WARN' ? 'completed' : 'failed';
+  const sprintNumber =
+    data.taskId && taskSprintMap?.get(data.taskId) !== undefined
+      ? (taskSprintMap.get(data.taskId) as number)
+      : 0;
+
+  return {
+    runId: data.runId || filename.replace('.json', ''),
+    sprintNumber,
+    timestamp: data.timestamp || new Date().toISOString(),
+    status,
+    totalTasks: Math.max(totalGates, 1),
+    results: {
+      pass: passCount,
+      warn: verdict === 'WARN' ? 1 : 0,
+      fail: failCount,
+      error: 0,
+      skipped: 0,
+    },
+    duration: 0,
+    tasks: [
+      {
+        taskId: data.taskId || 'UNKNOWN',
+        description: data.taskName || '',
+        status,
+        verdict: verdict === 'PASS' ? 'PASS' : verdict === 'WARN' ? 'WARN' : 'FAIL',
+        duration: 0,
+        evidenceDir: data.evidence_location,
+        error: verdict === 'PASS' || verdict === 'WARN' ? undefined : data.consensus?.reason,
+      },
+    ],
+  };
+}
+
+function parseSprintOrchestratorRun(data: any, filename: string): ExecutionRun {
+  return {
+    runId: data.runId || filename.replace('.json', ''),
+    sprintNumber: data.sprintNumber || 0,
+    timestamp: data.startedAt || new Date().toISOString(),
+    status: data.status || 'completed',
+    totalTasks:
+      data.phaseProgress?.reduce((sum: number, p: any) => sum + (p.totalTasks || 0), 0) || 0,
+    results: {
+      pass: data.completedTasks?.length || 0,
+      warn: 0,
+      fail: data.failedTasks?.length || 0,
+      error: 0,
+      skipped: data.needsHumanTasks?.length || 0,
+    },
+    duration: data.completedAt
+      ? new Date(data.completedAt).getTime() - new Date(data.startedAt).getTime()
+      : 0,
+  };
+}
+
 /**
  * Parse raw execution run data into typed structure
  */
@@ -200,96 +256,12 @@ function parseExecutionRun(
   filename: string,
   taskSprintMap?: Map<string, number>
 ): ExecutionRun {
-  // Handle both MATOP format and Sprint Orchestrator format
   const isMATOPFormat = 'results' in data && typeof data.results === 'object';
   const isSystemAuditFormat = 'consensus' in data && 'aggregate_metrics' in data;
 
-  if (isMATOPFormat) {
-    // MATOP format (from matop-sprint.ts)
-    return {
-      runId: data.runId || filename.replace('.json', ''),
-      sprintNumber: parseInt(data.sprint, 10) || 0,
-      timestamp: data.timestamp || new Date().toISOString(),
-      status: determineStatus(data),
-      totalTasks: data.totalTasks || data.tasks?.length || 0,
-      results: {
-        pass: data.results?.pass || 0,
-        warn: data.results?.warn || 0,
-        fail: data.results?.fail || 0,
-        error: data.results?.error || 0,
-        skipped: data.results?.skipped || 0,
-      },
-      duration: data.duration || 0,
-      tasks: data.tasks?.map((t: any) => ({
-        taskId: t.taskId,
-        description: t.description,
-        status: t.status,
-        verdict: t.verdict || 'SKIPPED',
-        duration: t.duration || 0,
-        evidenceDir: t.evidenceDir,
-        error: t.error,
-      })),
-    };
-  } else if (isSystemAuditFormat) {
-    // MATOP system-audit evidence bundle summary
-    const passCount = data.aggregate_metrics?.total_gates_passed || 0;
-    const failCount = data.aggregate_metrics?.total_gates_failed || 0;
-    const totalGates = data.aggregate_metrics?.total_gates_executed || passCount + failCount;
-    const verdict = data.consensus?.verdict || 'FAILED';
-    const status: ExecutionRun['status'] =
-      verdict === 'PASS' || verdict === 'WARN' ? 'completed' : 'failed';
-    const sprintNumber =
-      (data.taskId && taskSprintMap?.get(data.taskId)) !== undefined
-        ? (taskSprintMap?.get(data.taskId) as number)
-        : 0;
-
-    return {
-      runId: data.runId || filename.replace('.json', ''),
-      sprintNumber,
-      timestamp: data.timestamp || new Date().toISOString(),
-      status,
-      totalTasks: Math.max(totalGates, 1),
-      results: {
-        pass: passCount,
-        warn: verdict === 'WARN' ? 1 : 0,
-        fail: failCount,
-        error: 0,
-        skipped: 0,
-      },
-      duration: 0,
-      tasks: [
-        {
-          taskId: data.taskId || 'UNKNOWN',
-          description: data.taskName || '',
-          status,
-          verdict: verdict === 'PASS' ? 'PASS' : verdict === 'WARN' ? 'WARN' : 'FAIL',
-          duration: 0,
-          evidenceDir: data.evidence_location,
-          error: verdict === 'PASS' || verdict === 'WARN' ? undefined : data.consensus?.reason,
-        },
-      ],
-    };
-  } else {
-    // Sprint Orchestrator format (from sprint/execute)
-    return {
-      runId: data.runId || filename.replace('.json', ''),
-      sprintNumber: data.sprintNumber || 0,
-      timestamp: data.startedAt || new Date().toISOString(),
-      status: data.status || 'completed',
-      totalTasks:
-        data.phaseProgress?.reduce((sum: number, p: any) => sum + (p.totalTasks || 0), 0) || 0,
-      results: {
-        pass: data.completedTasks?.length || 0,
-        warn: 0,
-        fail: data.failedTasks?.length || 0,
-        error: 0,
-        skipped: data.needsHumanTasks?.length || 0,
-      },
-      duration: data.completedAt
-        ? new Date(data.completedAt).getTime() - new Date(data.startedAt).getTime()
-        : 0,
-    };
-  }
+  if (isMATOPFormat) return parseMATOPRun(data, filename);
+  if (isSystemAuditFormat) return parseSystemAuditRun(data, filename, taskSprintMap);
+  return parseSprintOrchestratorRun(data, filename);
 }
 
 /**
@@ -330,6 +302,36 @@ function buildTaskSprintMap(projectRoot: string): Map<string, number> {
 /**
  * Get a specific execution run by ID
  */
+function collectStoaSummaries(
+  dir: string,
+  allFiles: Array<{ name: string; path: string; mtime: number }>
+) {
+  if (!existsSync(dir)) return;
+  const files = readdirSync(dir)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => {
+      const fullPath = join(dir, f);
+      const stats = statSync(fullPath);
+      return { name: f, path: fullPath, mtime: stats.mtimeMs };
+    });
+  allFiles.push(...files);
+}
+
+function collectSystemAuditSummaries(
+  dir: string,
+  allFiles: Array<{ name: string; path: string; mtime: number }>
+) {
+  if (!existsSync(dir)) return;
+  const files = readdirSync(dir)
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => {
+      const fullPath = join(dir, f);
+      const stats = statSync(fullPath);
+      return { name: f, path: fullPath, mtime: stats.mtimeMs };
+    });
+  allFiles.push(...files);
+}
+
 export function getExecutionRun(projectRoot: string, runId: string): ExecutionRun | null {
   const runsDir = join(projectRoot, 'artifacts', 'reports', 'sprint-runs');
   const runPath = join(runsDir, `${runId}.json`);

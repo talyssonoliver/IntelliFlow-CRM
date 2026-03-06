@@ -96,14 +96,16 @@ export default function ScheduleView() {
 
   // Fetch schedule data
   useEffect(() => {
-    setLoading(true);
-    setError(null);
+    const fetchScheduleData = async () => {
+      setLoading(true);
+      setError(null);
 
-    Promise.all([
-      fetch(`/api/schedule/calculate?sprint=${sprintParam}`).then((res) => res.json()),
-      fetch(`/api/schedule/critical-path?sprint=${sprintParam}`).then((res) => res.json()),
-    ])
-      .then(([scheduleRes, criticalRes]) => {
+      try {
+        const [scheduleRes, criticalRes] = await Promise.all([
+          fetch(`/api/schedule/calculate?sprint=${sprintParam}`).then((res) => res.json()),
+          fetch(`/api/schedule/critical-path?sprint=${sprintParam}`).then((res) => res.json()),
+        ]);
+
         if (scheduleRes.error) {
           setError(scheduleRes.error);
         } else {
@@ -115,11 +117,14 @@ export default function ScheduleView() {
         }
 
         setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message || 'Failed to fetch schedule data');
+      } catch (err) {
+        const error = err instanceof Error ? err : new Error(String(err));
+        setError(error.message || 'Failed to fetch schedule data');
         setLoading(false);
-      });
+      }
+    };
+
+    fetchScheduleData(); // NOSONAR
   }, [sprintParam]);
 
   // Compute "Today's Critical Work" from ready tasks on critical path
@@ -467,6 +472,14 @@ export default function ScheduleView() {
                 key={scored.taskId}
                 className="flex items-center gap-3 p-2 rounded-lg hover:bg-red-50 cursor-pointer transition-colors"
                 onClick={() => handleTaskClick(scored.taskId)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleTaskClick(scored.taskId);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
               >
                 <span className="text-xs font-bold text-red-500 w-4">{idx + 1}.</span>
                 <span className="font-mono text-sm text-blue-700">{scored.taskId}</span>

@@ -1,0 +1,58 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-240",
+  "section": "Core CRM",
+  "description": "Lead Audit Logging. Add audit log entries to all 20 lead router procedures using SecurityAuditService. GDPR-relevant operations (delete, bulkDelete, convert, export) MUST have audit trail. Include: actor (userId), action, entityType (Lead), entityId, tenantId, timestamp, metadata (old/new values for mutations). Integrate with existing audit infrastructure at apps/api/src/security/audit/.",
+  "owner": "Backend Dev (STOA-Security)",
+  "sprint": "sprint-18",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-03-06T22:22:16.003Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "primary_kpi": {
+      "target": "20/20 procedures with audit logging",
+      "actual": "",
+      "met": false
+    },
+    "kpi_2": {
+      "target": "100% GDPR-relevant ops covered",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/api/src/modules/lead/lead.router.ts",
+      "apps/api/src/security/audit/"
+    ],
+    "created": [
+      "apps/api/src/modules/lead/lead.router.ts",
+      "apps/api/src/security/audit/"
+    ],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Comprehensive flow analysis findings: S8"
+}

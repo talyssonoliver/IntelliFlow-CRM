@@ -127,6 +127,37 @@ function computeCrossSprintDeps(
   return result;
 }
 
+function groupTasksByDepKey(
+  taskIds: string[],
+  nodes: Record<string, DependencyNode>
+): Record<string, string[]> {
+  const depGroups: Record<string, string[]> = {};
+  for (const taskId of taskIds) {
+    const node = nodes[taskId];
+    if (node.status === 'DONE') continue;
+    const depKey = node.dependencies.sort((a, b) => a.localeCompare(b)).join(',') || 'no-deps';
+    if (!depGroups[depKey]) depGroups[depKey] = [];
+    depGroups[depKey].push(taskId);
+  }
+  return depGroups;
+}
+
+function buildParallelGroupsForSprint(
+  taskIds: string[],
+  nodes: Record<string, DependencyNode>
+): Record<string, string[]> {
+  const depGroups = groupTasksByDepKey(taskIds, nodes);
+  const parallelGroups: Record<string, string[]> = {};
+  let groupIndex = 1;
+  for (const [, taskList] of Object.entries(depGroups)) {
+    if (taskList.length > 1) {
+      parallelGroups[`group-${groupIndex}`] = taskList;
+      groupIndex++;
+    }
+  }
+  return parallelGroups;
+}
+
 /**
  * Compute parallel execution groups
  */
@@ -138,40 +169,14 @@ export function computeParallelGroups(
   const tasksBySprint: Record<number, string[]> = {};
   for (const [taskId, node] of Object.entries(nodes)) {
     if (node.sprint < 0) continue;
-    if (!tasksBySprint[node.sprint]) {
-      tasksBySprint[node.sprint] = [];
-    }
+    if (!tasksBySprint[node.sprint]) tasksBySprint[node.sprint] = [];
     tasksBySprint[node.sprint].push(taskId);
   }
 
   for (const [sprintNum, taskIds] of Object.entries(tasksBySprint)) {
     const sprint = parseInt(sprintNum, 10);
     if (sprint < 0) continue;
-
-    const depGroups: Record<string, string[]> = {};
-    for (const taskId of taskIds) {
-      const node = nodes[taskId];
-      if (node.status !== 'DONE') {
-        const depKey = node.dependencies.sort().join(',') || 'no-deps';
-        if (!depGroups[depKey]) {
-          depGroups[depKey] = [];
-        }
-        depGroups[depKey].push(taskId);
-      }
-    }
-
-    const parallelGroups: Record<string, string[]> = {};
-    let groupIndex = 1;
-    for (const [, taskList] of Object.entries(depGroups)) {
-      if (taskList.length > 1) {
-        parallelGroups[`group-${groupIndex}`] = taskList;
-        groupIndex++;
-      }
-    }
-
-    if (Object.keys(parallelGroups).length > 0) {
-      groups[`sprint-${sprint}`] = parallelGroups;
-    }
+    groups[`sprint-${sprint}`] = buildParallelGroupsForSprint(taskIds, nodes);
   }
 
   return groups;
@@ -229,6 +234,29 @@ export function computeCriticalPaths(
   return paths;
 }
 
+function collectViolationsForTask(
+  taskId: string,
+  node: DependencyNode,
+  nodes: Record<string, DependencyNode>
+): Array<{ task_id: string; violation: string }> {
+  const violations: Array<{ task_id: string; violation: string }> = [];
+
+  for (const depId of node.dependencies) {
+    if (!nodes[depId]) {
+      violations.push({
+        task_id: taskId,
+        violation: `Missing dependency: ${depId} does not exist`,
+      });
+    }
+  }
+
+  if (node.dependencies.includes(taskId)) {
+    violations.push({ task_id: taskId, violation: 'Self-referencing dependency' });
+  }
+
+  return violations;
+}
+
 /**
  * Detect dependency violations
  */
@@ -238,21 +266,7 @@ export function detectDependencyViolations(
   const violations: Array<{ task_id: string; violation: string }> = [];
 
   for (const [taskId, node] of Object.entries(nodes)) {
-    for (const depId of node.dependencies) {
-      if (!nodes[depId]) {
-        violations.push({
-          task_id: taskId,
-          violation: `Missing dependency: ${depId} does not exist`,
-        });
-      }
-    }
-
-    if (node.dependencies.includes(taskId)) {
-      violations.push({
-        task_id: taskId,
-        violation: 'Self-referencing dependency',
-      });
-    }
+    violations.push(...collectViolationsForTask(taskId, node, nodes));
   }
 
   return violations;

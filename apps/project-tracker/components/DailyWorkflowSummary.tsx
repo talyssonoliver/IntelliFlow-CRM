@@ -483,7 +483,8 @@ export function DailyWorkflowSummary({ tasks, sprint, onTaskClick }: DailyWorkfl
 
   // Get current date and time
   const now = new Date();
-  const timeOfDay = now.getHours() < 12 ? 'morning' : now.getHours() < 17 ? 'afternoon' : 'evening';
+  const afternoonOrEvening = now.getHours() < 17 ? 'afternoon' : 'evening';
+  const timeOfDay = now.getHours() < 12 ? 'morning' : afternoonOrEvening;
   const dateStr = now.toLocaleDateString('en-US', {
     weekday: 'long',
     month: 'short',
@@ -1025,6 +1026,14 @@ function PriorityBucket({
         key={scored.taskId}
         className="p-2 hover:bg-gray-50 cursor-pointer"
         onClick={() => fullTask && onTaskClick?.(fullTask)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            if (fullTask) onTaskClick?.(fullTask);
+          }
+        }}
+        role="button"
+        tabIndex={0}
       >
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1118,6 +1127,14 @@ function PriorityBucket({
                     key={scored.taskId}
                     className="p-2 hover:bg-gray-50 cursor-pointer"
                     onClick={() => fullTask && onTaskClick?.(fullTask)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        if (fullTask) onTaskClick?.(fullTask);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -1283,6 +1300,14 @@ function TaskRow({
     <div
       className="p-2 hover:bg-gray-50 cursor-pointer"
       onClick={() => fullTask && onTaskClick?.(fullTask)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (fullTask) onTaskClick?.(fullTask);
+        }
+      }}
+      role="button"
+      tabIndex={0}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

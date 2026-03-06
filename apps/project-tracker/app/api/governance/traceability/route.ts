@@ -144,65 +144,70 @@ function findAttestation(taskId: string): TraceLink | null {
   return null;
 }
 
+const TEST_DIRS = [
+  'tests',
+  'apps/web/src',
+  'apps/api/src',
+  'packages/domain/src',
+  'packages/application/src',
+  'packages/validators',
+  'packages/ui',
+];
+
+function isTestFile(fileName: string): boolean {
+  return (
+    fileName.includes('.test.') || fileName.includes('.spec.') || fileName.includes('__tests__')
+  );
+}
+
+function matchesTaskPattern(fileName: string, patterns: string[]): boolean {
+  return patterns.some((pattern) => fileName.includes(pattern));
+}
+
+function collectTestLinksFromDir(
+  testDir: string,
+  projectRoot: string,
+  patterns: string[]
+): TraceLink[] {
+  const found: TraceLink[] = [];
+  const fullDir = join(projectRoot, testDir);
+  try {
+    if (!existsSync(fullDir)) return found;
+    const files = readdirSync(fullDir, { recursive: true });
+    for (const file of files) {
+      const fileName = String(file).toLowerCase();
+      if (!isTestFile(fileName) || !matchesTaskPattern(fileName, patterns)) continue;
+      const filePath = join(testDir, String(file));
+      const info = getFileInfo(filePath);
+      if (info.exists) {
+        found.push({
+          type: 'test',
+          path: filePath,
+          exists: true,
+          size: info.size,
+          modifiedAt: info.modifiedAt,
+        });
+      }
+    }
+  } catch {
+    // Ignore directory errors
+  }
+  return found;
+}
+
 // Find related test files by task ID pattern
 function findRelatedTests(taskId: string): TraceLink[] {
   const projectRoot = getProjectRoot();
-  const tests: TraceLink[] = [];
-
-  // Common test directories
-  const testDirs = [
-    'tests',
-    'apps/web/src',
-    'apps/api/src',
-    'packages/domain/src',
-    'packages/application/src',
-    'packages/validators',
-    'packages/ui',
-  ];
-
-  // Convert task ID to possible test file patterns
   const patterns = [
     taskId.toLowerCase(),
     taskId.replace(/-/g, '_').toLowerCase(),
     taskId.replace(/-/g, '').toLowerCase(),
   ];
 
-  for (const testDir of testDirs) {
-    const fullDir = join(projectRoot, testDir);
-    try {
-      if (!existsSync(fullDir)) continue;
-
-      const files = readdirSync(fullDir, { recursive: true });
-      for (const file of files) {
-        const fileName = String(file).toLowerCase();
-        if (
-          fileName.includes('.test.') ||
-          fileName.includes('.spec.') ||
-          fileName.includes('__tests__')
-        ) {
-          for (const pattern of patterns) {
-            if (fileName.includes(pattern)) {
-              const filePath = join(testDir, String(file));
-              const info = getFileInfo(filePath);
-              if (info.exists) {
-                tests.push({
-                  type: 'test',
-                  path: filePath,
-                  exists: true,
-                  size: info.size,
-                  modifiedAt: info.modifiedAt,
-                });
-              }
-              break;
-            }
-          }
-        }
-      }
-    } catch {
-      // Ignore directory errors
-    }
+  const tests: TraceLink[] = [];
+  for (const testDir of TEST_DIRS) {
+    tests.push(...collectTestLinksFromDir(testDir, projectRoot, patterns));
   }
-
   return tests;
 }
 
@@ -266,6 +271,17 @@ function findRelatedDocs(taskId: string, _section: string): TraceLink[] {
   }
 
   return docs;
+}
+
+function applyCoverageFilter(
+  matrix: TaskTraceability[],
+  filter: string | null
+): TaskTraceability[] {
+  if (filter === 'low') return matrix.filter((t) => t.overallCoverage < 33);
+  if (filter === 'medium')
+    return matrix.filter((t) => t.overallCoverage >= 33 && t.overallCoverage < 66);
+  if (filter === 'high') return matrix.filter((t) => t.overallCoverage >= 66);
+  return matrix;
 }
 
 export async function GET(request: NextRequest) {
@@ -394,18 +410,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Apply coverage filter
-    let finalMatrix = traceabilityMatrix;
-    if (coverageFilter) {
-      if (coverageFilter === 'low') {
-        finalMatrix = traceabilityMatrix.filter((t) => t.overallCoverage < 33);
-      } else if (coverageFilter === 'medium') {
-        finalMatrix = traceabilityMatrix.filter(
-          (t) => t.overallCoverage >= 33 && t.overallCoverage < 66
-        );
-      } else if (coverageFilter === 'high') {
-        finalMatrix = traceabilityMatrix.filter((t) => t.overallCoverage >= 66);
-      }
-    }
+    const finalMatrix = applyCoverageFilter(traceabilityMatrix, coverageFilter);
 
     // Sort by coverage (lowest first for visibility)
     finalMatrix.sort((a, b) => a.overallCoverage - b.overallCoverage);

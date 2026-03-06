@@ -26,10 +26,7 @@ function getDriftBarWidth(score: number, threshold: number): number {
   return Math.min((score / threshold) * 100, 100);
 }
 
-function getLatencyColor(
-  ms: number,
-  thresholds: { green: number; yellow: number }
-): string {
+function getLatencyColor(ms: number, thresholds: { green: number; yellow: number }): string {
   if (ms < thresholds.green) return 'text-green-600';
   if (ms < thresholds.yellow) return 'text-yellow-600';
   return 'text-red-600';
@@ -50,10 +47,7 @@ function getSloComplianceStatus(
   return 'compliant';
 }
 
-function getRoiVariant(
-  roi: number | null,
-  _target: number
-): string {
+function getRoiVariant(roi: number | null, _target: number): string {
   if (roi === null) return 'default';
   if (roi >= 200) return 'success';
   if (roi >= 100) return 'warning';

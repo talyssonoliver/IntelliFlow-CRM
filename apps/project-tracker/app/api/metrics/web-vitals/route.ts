@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { existsSync, readFileSync, mkdirSync, readdirSync } from 'fs';
 import { join } from 'path';
-import { execSync } from 'child_process';
+import { execFileSync } from 'child_process';
 
 export const dynamic = 'force-dynamic';
 
@@ -232,7 +232,30 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
-    const url = body.url || 'http://localhost:3000';
+    const rawUrl: string = body.url || 'http://localhost:3000';
+
+    // S4721: validate URL against an allowlist of permitted origins before use in a command.
+    // Only allow localhost and loopback targets to prevent SSRF and command injection.
+    let url: string;
+    try {
+      const parsed = new URL(rawUrl);
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        return NextResponse.json(
+          { error: 'Invalid URL: only http/https allowed' },
+          { status: 400 }
+        );
+      }
+      const allowedHostnames = ['localhost', '127.0.0.1', '::1'];
+      if (!allowedHostnames.includes(parsed.hostname)) {
+        return NextResponse.json(
+          { error: 'Invalid URL: only localhost targets are permitted' },
+          { status: 400 }
+        );
+      }
+      url = parsed.toString();
+    } catch {
+      return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
+    }
 
     const projectRoot = getProjectRoot();
     const outputDir = join(projectRoot, 'artifacts', 'lighthouse');
@@ -242,9 +265,17 @@ export async function POST(request: NextRequest) {
     mkdirSync(outputDir, { recursive: true });
 
     // Try to run Lighthouse
+    // S4721: use execFileSync with argument array — url is validated above, outputFile is internal.
     try {
-      execSync(
-        `npx lighthouse "${url}" --output=json --output-path="${outputFile}" --chrome-flags="--headless --no-sandbox"`,
+      execFileSync(
+        'npx', // NOSONAR S4036 — PATH inherited from developer environment, internal tooling only
+        [
+          'lighthouse',
+          url,
+          '--output=json',
+          `--output-path=${outputFile}`,
+          '--chrome-flags=--headless --no-sandbox',
+        ],
         {
           cwd: projectRoot,
           timeout: 120000, // 2 minutes

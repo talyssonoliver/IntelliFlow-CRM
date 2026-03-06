@@ -7,10 +7,7 @@
   "sprint": "sprint-11",
   "phase": "phase-1-ai-security",
   "dependencies": {
-    "required": [
-      "IFC-005",
-      "IFC-008"
-    ],
+    "required": ["IFC-005", "IFC-008"],
     "verified_at": "2026-02-16T18:04:31.325Z",
     "all_satisfied": true
   },
@@ -61,12 +58,7 @@
     "completed_at": "2026-02-08T12:16:30.000Z",
     "duration_minutes": 45,
     "executor": "Claude Code /exec",
-    "agents": [
-      "Foundation",
-      "Security",
-      "Quality",
-      "Domain"
-    ],
+    "agents": ["Foundation", "Security", "Quality", "Domain"],
     "retry_count": 0,
     "last_error": null
   },
@@ -167,9 +159,6 @@
     "specification_path": ".specify/sprints/sprint-11/specifications/IFC-125-spec.md"
   },
   "notes": "Implementation complete and verified. All 78 tests pass: 21 AISecurityEventTypes, 18 DurableAuditLogAdapter, 20 GuardrailsAIService.audit, 19 errors. GuardrailsAIService requires AuditLogPort (mandatory dependency), DurableAuditLogAdapter implements hash chain integrity with HMAC-SHA256, cross-tenant isolation, GDPR retention, PII encryption. Container.ts wires DurableAuditLogAdapter into GuardrailsAIService. No deferred TODO comments remain.",
-  "dependencies_resolved": [
-    "IFC-005",
-    "IFC-008"
-  ],
+  "dependencies_resolved": ["IFC-005", "IFC-008"],
   "actual_duration_minutes": 15
 }

@@ -23,7 +23,7 @@ vi.mock('fs', async () => {
 // Import after mocking
 const { GET, POST } = await import('../../app/api/tracking/ai/route');
 
-const mockFs = fs as unknown as {
+const mockFs = fs as any as {
   readFile: ReturnType<typeof vi.fn>;
   writeFile: ReturnType<typeof vi.fn>;
   stat: ReturnType<typeof vi.fn>;
@@ -356,7 +356,9 @@ Infrastructure,1000,800,950
       mockFs.writeFile.mockResolvedValue(undefined);
       mockFs.mkdir.mockResolvedValue(undefined);
 
-      const response = await POST(new Request('http://localhost/api/tracking/ai', { method: 'POST' }) as never);
+      const response = await POST(
+        new Request('http://localhost/api/tracking/ai', { method: 'POST' }) as never
+      );
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -444,7 +446,9 @@ Infrastructure,1000,800,950
       mockFs.writeFile.mockResolvedValue(undefined);
       mockFs.mkdir.mockResolvedValue(undefined);
 
-      const response = await POST(new Request('http://localhost/api/tracking/ai', { method: 'POST' }) as never);
+      const response = await POST(
+        new Request('http://localhost/api/tracking/ai', { method: 'POST' }) as never
+      );
       expect(response.status).toBe(200);
     });
 
@@ -459,7 +463,9 @@ Infrastructure,1000,800,950
       mockFs.writeFile.mockRejectedValue(new Error('EPERM'));
       mockFs.mkdir.mockResolvedValue(undefined);
 
-      const response = await POST(new Request('http://localhost/api/tracking/ai', { method: 'POST' }) as never);
+      const response = await POST(
+        new Request('http://localhost/api/tracking/ai', { method: 'POST' }) as never
+      );
       expect(response.status).toBe(500);
     });
 

@@ -119,7 +119,22 @@ export async function GET(_request: NextRequest) {
     score -= riskCounts.low * 2;
     score = Math.max(0, score);
 
-    const status = riskCounts.high > 0 ? 'failing' : riskCounts.medium > 0 ? 'warning' : 'passing';
+    let zapStatus: string;
+    if (riskCounts.high > 0) {
+      zapStatus = 'failing';
+    } else if (riskCounts.medium > 0) {
+      zapStatus = 'warning';
+    } else {
+      zapStatus = 'passing';
+    }
+    const mediumOrSafeRecommendation =
+      riskCounts.medium > 0
+        ? 'Review and remediate medium-risk findings'
+        : 'Web application security posture is acceptable';
+    const zapRecommendation =
+      riskCounts.high > 0
+        ? 'CRITICAL: Address high-risk vulnerabilities before production'
+        : mediumOrSafeRecommendation;
 
     // Map to OWASP Top 10 categories
     const owaspMapping = new Map<string, string[]>();
@@ -144,7 +159,7 @@ export async function GET(_request: NextRequest) {
         source: 'fresh',
         timestamp: new Date().toISOString(),
         pattern: 'RSI',
-        status,
+        status: zapStatus,
         score,
         site: zapReport.site,
         lastScan: zapReport.timestamp,
@@ -170,12 +185,7 @@ export async function GET(_request: NextRequest) {
             name: a.name,
             count: a.count,
           })),
-        recommendation:
-          riskCounts.high > 0
-            ? 'CRITICAL: Address high-risk vulnerabilities before production'
-            : riskCounts.medium > 0
-              ? 'Review and remediate medium-risk findings'
-              : 'Web application security posture is acceptable',
+        recommendation: zapRecommendation,
       },
       {
         headers: {

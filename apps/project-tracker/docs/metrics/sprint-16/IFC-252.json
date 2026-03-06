@@ -1,0 +1,51 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-252",
+  "section": "Core CRM",
+  "description": "Contact Router Security — Tenant Isolation Fixes. CRITICAL: (1) search procedure has no createTenantWhereClause — cross-tenant search by name/email (R-02). (2) logActivity transaction uses raw ctx.prisma with no tenantId in WHERE — cross-tenant update (R-03). (3) bulkEmail/bulkExport no tenant filter — email exfiltration via guessed UUIDs (R-04). (4) stats ignores typedCtx tenant — no tenantId boundary (R-05). (5) getById/getByEmail double-fetch through unscoped domain repo (R-06). Cross-ref: R-01 (prismaWithTenant raw) is cross-cutting and shared with IFC-237. Audit: docs/audit/contact-detail-wiring-audit.md §15.",
+  "owner": "Backend Dev (STOA-Domain)",
+  "sprint": "sprint-16",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-03-06T22:22:15.974Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "audit_findings_resolved": {
+      "target": "Resolve findings: R-02,R-03,R-04,R-05,R-06",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/api/src/modules/contact/contact.router.ts"
+    ],
+    "created": [
+      "apps/api/src/modules/contact/contact.router.ts"
+    ],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Contact audit finding: R-02,R-03,R-04,R-05,R-06. See docs/audit/contact-detail-wiring-audit.md"
+}

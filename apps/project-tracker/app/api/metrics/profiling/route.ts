@@ -141,10 +141,10 @@ function generateSyntheticBenchmarks(): BenchmarkResult[] {
             .replace(/[\\/]/g, '/');
           endpoints.push({
             operation: `API: ${routePath}`,
-            meanTime: Math.random() * 50 + 10, // Synthetic: 10-60ms
-            p95Time: Math.random() * 80 + 20, // Synthetic: 20-100ms
-            p99Time: Math.random() * 120 + 30, // Synthetic: 30-150ms
-            opsPerSecond: Math.random() * 100 + 50,
+            meanTime: Math.random() * 50 + 10, // NOSONAR — synthetic benchmark data, not security-sensitive
+            p95Time: Math.random() * 80 + 20, // NOSONAR — synthetic benchmark data, not security-sensitive
+            p99Time: Math.random() * 120 + 30, // NOSONAR — synthetic benchmark data, not security-sensitive
+            opsPerSecond: Math.random() * 100 + 50, // NOSONAR — synthetic benchmark data, not security-sensitive
             target: 100,
             met: true,
           });

@@ -247,11 +247,7 @@ function parseBaseline(baselineData: any): Baseline | null {
   return {
     critical: vulns?.critical ?? baselineData.critical ?? 0,
     high: vulns?.high ?? baselineData.high ?? 0,
-    date:
-      baselineData.generated_at ||
-      baselineData.date ||
-      baselineData.lastUpdated ||
-      'Unknown',
+    date: baselineData.generated_at || baselineData.date || baselineData.lastUpdated || 'Unknown',
   };
 }
 
@@ -404,7 +400,10 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error reading security metrics:', error);
-    return NextResponse.json({ status: 'error', message: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { status: 'error', message: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -458,6 +457,9 @@ export async function POST(_request: NextRequest) {
     });
   } catch (error) {
     console.error('Error starting security scan:', error);
-    return NextResponse.json({ status: 'error', message: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { status: 'error', message: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

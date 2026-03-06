@@ -420,7 +420,7 @@ function buildCoverageMetrics(coverage: FileCoverage, threshold: number): Covera
  * Extract H2 headings from markdown content
  */
 function extractMarkdownSections(content: string): string[] {
-  const headingRegex = /^##\s+(.+)$/gm;
+  const headingRegex = /^##\s+([^\n]{1,500})$/gm;
   const sections: string[] = [];
   let match;
   while ((match = headingRegex.exec(content)) !== null) {
@@ -433,7 +433,7 @@ function extractMarkdownSections(content: string): string[] {
  * Extract title from markdown content (first H1)
  */
 function extractMarkdownTitle(content: string): string | undefined {
-  const match = content.match(/^#\s+(.+)$/m);
+  const match = content.match(/^#\s+([^\n]{1,500})$/m);
   return match ? match[1].trim() : undefined;
 }
 
@@ -653,7 +653,18 @@ async function parsePlanDeliverables(
     // Skip paths that are clearly not project files (e.g., npm package names, partial paths)
     if (filePath.startsWith('node_modules/') || filePath.startsWith('http')) continue;
     // Skip partial paths that don't start with a known project directory
-    const knownPrefixes = ['apps/', 'packages/', 'infra/', 'docs/', 'tests/', 'scripts/', 'artifacts/', '.specify/', '.claude/', '.github/'];
+    const knownPrefixes = [
+      'apps/',
+      'packages/',
+      'infra/',
+      'docs/',
+      'tests/',
+      'scripts/',
+      'artifacts/',
+      '.specify/',
+      '.claude/',
+      '.github/',
+    ];
     if (!knownPrefixes.some((p) => filePath.startsWith(p))) continue;
     if (!deliverables.some((d) => d.path === filePath)) {
       const fullPath = join(repoRoot, filePath);
@@ -676,13 +687,13 @@ async function parsePlanDeliverables(
     const line = lines[i].replace(/\r$/, ''); // Strip trailing CR for CRLF files
 
     // Track current phase (e.g., "### Phase 1: RED", "## Final Validation")
-    const phaseMatch = line.match(/^#{2,3}\s+(?:Phase \d+[:\s]*)?(.+)$/);
+    const phaseMatch = line.match(/^#{2,3}\s+(?:Phase \d+[:\s]*)?([^\n]{1,500})$/);
     if (phaseMatch) {
       currentPhase = phaseMatch[1].trim();
     }
 
     // Match checkboxes: - [ ] or - [x]
-    const checkboxMatch = line.match(/^(\s*)-\s*\[([ xX])\]\s*(.+)$/);
+    const checkboxMatch = line.match(/^(\s*)-\s*\[([ xX])\]\s*([^\n]{1,500})$/);
     if (checkboxMatch) {
       const isChecked = checkboxMatch[2].toLowerCase() === 'x';
       const text = checkboxMatch[3].trim();
@@ -697,7 +708,9 @@ async function parsePlanDeliverables(
   }
 
   // Calculate verification summary
-  const verifiedCount = deliverables.filter((d) => d.status === 'exists' || d.status === 'deleted').length;
+  const verifiedCount = deliverables.filter(
+    (d) => d.status === 'exists' || d.status === 'deleted'
+  ).length;
   const missingCount = deliverables.filter((d) => d.status === 'missing').length;
   const checkedCount = checkboxItems.filter((c) => c.checked).length;
 
@@ -714,8 +727,6 @@ async function parsePlanDeliverables(
       overallStatus = 'complete';
     } else if (completionPercentage > 0) {
       overallStatus = 'partial';
-    } else {
-      overallStatus = 'incomplete';
     }
   }
 
@@ -770,9 +781,9 @@ async function loadMATOPSummary(
       .filter((entry) => {
         const fullPath = join(executionDir, entry);
         // Match both bare timestamp dirs (20260205-225700) and prefixed dirs (IFC-180-validation-20260205-225700)
-        return statSync(fullPath).isDirectory() && /(?:^|\w+-)\d{8}-\d{6}$/.test(entry);
+        return statSync(fullPath).isDirectory() && /(?:^|\w{1,100}-)\d{8}-\d{6}$/.test(entry);
       })
-      .sort()
+      .sort((a, b) => a.localeCompare(b))
       .reverse();
 
     if (runDirs.length === 0) return null;
@@ -798,7 +809,7 @@ async function loadMATOPSummary(
         // Extract STOA results from delivery table (| STOA | Verdict | Notes |)
         const stoaResults: Record<string, import('@/lib/types').STOAVerdict> = {};
         const stoaRowRegex =
-          /\|\s*(Foundation|Security|Quality|Domain|Intelligence)\s*\|\s*(PASS|WARN|FAIL)\s*\|\s*([^|]*)\|/gi;
+          /\|[ \t]{0,20}(Foundation|Security|Quality|Domain|Intelligence)[ \t]{0,20}\|[ \t]{0,20}(PASS|WARN|FAIL)[ \t]{0,20}\|[ \t]{0,20}([^|]{0,200})\|/gi;
         let stoaMatch;
         let stoaPassed = 0;
         let stoaTotal = 0;
@@ -1115,7 +1126,8 @@ export async function GET(request: Request, { params }: Params) {
     const validationItems = buildValidationItems(attestation);
     const allPassed = validationItems.every((i) => i.status === 'pass');
     const anyFailed = validationItems.some((i) => i.status === 'fail');
-    const overall = anyFailed ? 'fail' : allPassed ? 'pass' : 'partial';
+    const passOrPartial = allPassed ? 'pass' : 'partial';
+    const overall = anyFailed ? 'fail' : passOrPartial;
 
     // Build KPI results
     const kpiResults: AttestationKPIResult[] = (attestation?.kpi_results || []).map((r) => ({

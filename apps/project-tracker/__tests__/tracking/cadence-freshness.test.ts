@@ -70,10 +70,7 @@ describe('Cadence Freshness Checker', () => {
       const result = parseArtifacts(
         'ARTIFACT:artifacts/reports/status.json;ARTIFACT:artifacts/reports/tasks.txt'
       );
-      expect(result).toEqual([
-        'artifacts/reports/status.json',
-        'artifacts/reports/tasks.txt',
-      ]);
+      expect(result).toEqual(['artifacts/reports/status.json', 'artifacts/reports/tasks.txt']);
     });
 
     it('skips EVIDENCE: paths (one-time attestation files)', () => {
@@ -87,9 +84,7 @@ describe('Cadence Freshness Checker', () => {
       const result = parseArtifacts(
         'ARTIFACT:docs/debt-ledger.yaml;EVIDENCE:.specify/foo/bar.json'
       );
-      expect(result).toEqual([
-        'docs/debt-ledger.yaml',
-      ]);
+      expect(result).toEqual(['docs/debt-ledger.yaml']);
     });
 
     it('skips raw paths without ARTIFACT: prefix', () => {

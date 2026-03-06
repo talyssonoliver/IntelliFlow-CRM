@@ -193,9 +193,11 @@ async function processTaskLog(taskId: string, logPath: string): Promise<TaskInfo
     taskPhaseInfo.currentPhase === 'WATCHDOG_STUCK' ||
     taskPhaseInfo.currentPhase === 'STOPPED_BY_OPERATOR';
 
+  const stuckOrRunning = isStuck ? 'stuck' : 'running';
+  const taskStatus = needsHumanReview ? 'needs_human' : stuckOrRunning;
   return {
     taskId,
-    status: needsHumanReview ? 'needs_human' : isStuck ? 'stuck' : 'running',
+    status: taskStatus,
     phase: displayPhase,
     currentPhase: taskPhaseInfo.currentPhase,
     attempt: taskPhaseInfo.attempt,

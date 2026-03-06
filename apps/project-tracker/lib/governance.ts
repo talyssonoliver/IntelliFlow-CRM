@@ -143,55 +143,40 @@ export function loadCSVTasks(): CSVTask[] {
   }
 }
 
+function isTierATask(taskId: string, section: string, dependentCount: number): boolean {
+  const lc = section.toLowerCase();
+  if (taskId.includes('SEC') || lc.includes('security')) return true;
+  if (taskId.startsWith('IFC-0') && parseInt(taskId.replace('IFC-', '')) <= 10) return true;
+  if (dependentCount >= 5) return true;
+  if (taskId.startsWith('EXC-')) return true;
+  if (lc.includes('planning') || lc.includes('strategy')) return true;
+  if (
+    taskId.startsWith('DOC-001') ||
+    taskId.startsWith('BRAND-001') ||
+    taskId.startsWith('GTM-') ||
+    taskId.startsWith('ANALYTICS-001')
+  )
+    return true;
+  return false;
+}
+
+function isTierBTask(taskId: string, dependentCount: number): boolean {
+  if (taskId.startsWith('ENV-') || taskId.startsWith('AI-SETUP-')) return true;
+  if (taskId.startsWith('AUTOMATION-')) return true;
+  if (dependentCount >= 2) return true;
+  if (taskId.startsWith('ENG-OPS-') || taskId.startsWith('PM-OPS-')) return true;
+  return false;
+}
+
 /**
  * Compute default tier based on task properties
  */
 export function computeDefaultTier(task: CSVTask, allTasks: CSVTask[]): TaskTier {
   const { taskId, section } = task;
-
   const dependentCount = allTasks.filter((t) => t.dependencies.includes(taskId)).length;
 
-  // TIER A: Critical tasks
-  if (taskId.includes('SEC') || section.toLowerCase().includes('security')) {
-    return 'A';
-  }
-  if (taskId.startsWith('IFC-0') && parseInt(taskId.replace('IFC-', '')) <= 10) {
-    return 'A';
-  }
-  if (dependentCount >= 5) {
-    return 'A';
-  }
-  if (taskId.startsWith('EXC-')) {
-    return 'A';
-  }
-  if (
-    section.toLowerCase().includes('planning') ||
-    section.toLowerCase().includes('strategy') ||
-    taskId.startsWith('DOC-001') ||
-    taskId.startsWith('BRAND-001') ||
-    taskId.startsWith('GTM-')
-  ) {
-    return 'A';
-  }
-  if (taskId.startsWith('ANALYTICS-001')) {
-    return 'A';
-  }
-
-  // TIER B: Important tasks
-  if (taskId.startsWith('ENV-') || taskId.startsWith('AI-SETUP-')) {
-    return 'B';
-  }
-  if (taskId.startsWith('AUTOMATION-')) {
-    return 'B';
-  }
-  if (dependentCount >= 2) {
-    return 'B';
-  }
-  if (taskId.startsWith('ENG-OPS-') || taskId.startsWith('PM-OPS-')) {
-    return 'B';
-  }
-
-  // TIER C: Standard tasks (default)
+  if (isTierATask(taskId, section, dependentCount)) return 'A';
+  if (isTierBTask(taskId, dependentCount)) return 'B';
   return 'C';
 }
 
@@ -517,20 +502,7 @@ export function getGovernanceSummary(sprint: number | 'all' = 0): GovernanceSumm
 
   for (const task of allTasksWithGov) {
     tierCompletion[task.tier].total++;
-
-    const status = task.status.toLowerCase();
-    if (status === 'completed' || status === 'done') {
-      tierCompletion[task.tier].done++;
-      taskSummary.done++;
-    } else if (status === 'in progress' || status === 'in_progress') {
-      taskSummary.in_progress++;
-    } else if (status === 'blocked') {
-      taskSummary.blocked++;
-    } else if (status === 'failed') {
-      taskSummary.failed++;
-    } else {
-      taskSummary.not_started++;
-    }
+    accumulateTaskStatus(task, tierCompletion, taskSummary);
   }
 
   let filteredReviewQueue = reviewQueue?.items || [];
@@ -624,6 +596,36 @@ export interface TierTaskDetail {
   gateProfile: string[];
   waiverExpiry?: string;
   debtAllowed: boolean;
+}
+
+type TierKey = 'A' | 'B' | 'C';
+type TierCompletion = Record<TierKey, { done: number; total: number }>;
+type TaskSummary = {
+  done: number;
+  in_progress: number;
+  blocked: number;
+  not_started: number;
+  failed: number;
+};
+
+function accumulateTaskStatus(
+  task: { tier: TierKey; status: string },
+  tierCompletion: TierCompletion,
+  taskSummary: TaskSummary
+): void {
+  const status = task.status.toLowerCase();
+  if (status === 'completed' || status === 'done') {
+    tierCompletion[task.tier].done++;
+    taskSummary.done++;
+  } else if (status === 'in progress' || status === 'in_progress') {
+    taskSummary.in_progress++;
+  } else if (status === 'blocked') {
+    taskSummary.blocked++;
+  } else if (status === 'failed') {
+    taskSummary.failed++;
+  } else {
+    taskSummary.not_started++;
+  }
 }
 
 function buildTaskLintErrorsMap(lintReport: LintReport | null): Record<string, string[]> {

@@ -666,8 +666,8 @@ export default function TaskModal({
                       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-700">
                         No EVIDENCE tags found. Raw artifacts:
                         <ul className="mt-2 font-mono text-xs space-y-1">
-                          {displayTask.artifacts?.map((a, i) => (
-                            <li key={i}>{a}</li>
+                          {displayTask.artifacts?.map((a) => (
+                            <li key={a}>{a}</li>
                           ))}
                         </ul>
                       </div>
@@ -837,17 +837,24 @@ export default function TaskModal({
                         </span>
                       </div>
                       <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-                        <div
-                          className={clsx(
-                            'h-full rounded-full transition-all',
+                        {(() => {
+                          const incompleteBarColor = scheduleData.isCritical
+                            ? 'bg-red-500'
+                            : 'bg-blue-500';
+                          const progressBarColor =
                             scheduleData.percentComplete >= 100
                               ? 'bg-green-500'
-                              : scheduleData.isCritical
-                                ? 'bg-red-500'
-                                : 'bg-blue-500'
-                          )}
-                          style={{ width: `${Math.min(100, scheduleData.percentComplete)}%` }}
-                        />
+                              : incompleteBarColor;
+                          return (
+                            <div
+                              className={clsx(
+                                'h-full rounded-full transition-all',
+                                progressBarColor
+                              )}
+                              style={{ width: `${Math.min(100, scheduleData.percentComplete)}%` }}
+                            />
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
@@ -948,40 +955,38 @@ export default function TaskModal({
                   <div>
                     <h3 className="text-sm font-medium text-gray-500 mb-3">Float / Slack</h3>
                     <div className="grid grid-cols-2 gap-4">
-                      <div
-                        className={clsx(
-                          'rounded-lg p-4 border',
+                      {(() => {
+                        const lowFloatContainerClass =
+                          scheduleData.totalFloat < 60
+                            ? 'bg-amber-50 border-amber-200'
+                            : 'bg-green-50 border-green-200';
+                        const floatContainerClass =
                           scheduleData.totalFloat <= 0
                             ? 'bg-red-50 border-red-200'
-                            : scheduleData.totalFloat < 60
-                              ? 'bg-amber-50 border-amber-200'
-                              : 'bg-green-50 border-green-200'
-                        )}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="text-xs text-gray-500 mb-1">Total Float</div>
-                            <div
-                              className={clsx(
-                                'text-2xl font-bold',
-                                scheduleData.totalFloat <= 0
-                                  ? 'text-red-700'
-                                  : scheduleData.totalFloat < 60
-                                    ? 'text-amber-700'
-                                    : 'text-green-700'
+                            : lowFloatContainerClass;
+                        const lowFloatTextClass =
+                          scheduleData.totalFloat < 60 ? 'text-amber-700' : 'text-green-700';
+                        const floatTextClass =
+                          scheduleData.totalFloat <= 0 ? 'text-red-700' : lowFloatTextClass;
+                        return (
+                          <div className={clsx('rounded-lg p-4 border', floatContainerClass)}>
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <div className="text-xs text-gray-500 mb-1">Total Float</div>
+                                <div className={clsx('text-2xl font-bold', floatTextClass)}>
+                                  {scheduleData.totalFloat} min
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  {Math.round((scheduleData.totalFloat / 60) * 10) / 10} hours
+                                </div>
+                              </div>
+                              {scheduleData.totalFloat <= 0 && (
+                                <Icon name="warning" size="xl" className="text-red-400" />
                               )}
-                            >
-                              {scheduleData.totalFloat} min
-                            </div>
-                            <div className="text-xs text-gray-400">
-                              {Math.round((scheduleData.totalFloat / 60) * 10) / 10} hours
                             </div>
                           </div>
-                          {scheduleData.totalFloat <= 0 && (
-                            <Icon name="warning" size="xl" className="text-red-400" />
-                          )}
-                        </div>
-                      </div>
+                        );
+                      })()}
                       <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                         <div className="text-xs text-gray-500 mb-1">Free Float</div>
                         <div className="text-2xl font-bold text-gray-700">
@@ -1479,34 +1484,43 @@ export default function TaskModal({
                   )}
 
                   {/* Attestation Summary */}
-                  {validationSummary.attestation.exists && (
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <Icon name="workspace_premium" size="sm" className="text-amber-500" />
-                        <span className="text-sm font-medium">Attestation</span>
-                        <span
-                          className={clsx(
-                            'px-2 py-0.5 text-xs font-medium rounded',
-                            validationSummary.attestation.verdict === 'COMPLETE'
-                              ? 'bg-green-100 text-green-700'
-                              : validationSummary.attestation.verdict === 'INCOMPLETE'
-                                ? 'bg-amber-100 text-amber-700'
-                                : 'bg-red-100 text-red-700'
-                          )}
-                        >
-                          {validationSummary.attestation.verdict}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-4 text-xs text-gray-500">
-                        {validationSummary.attestation.artifactsVerified !== undefined && (
-                          <span>{validationSummary.attestation.artifactsVerified} artifacts</span>
-                        )}
-                        {validationSummary.attestation.gatesPassed !== undefined && (
-                          <span>{validationSummary.attestation.gatesPassed} gates passed</span>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  {validationSummary.attestation.exists &&
+                    (() => {
+                      const incompleteVerdictClass =
+                        validationSummary.attestation.verdict === 'INCOMPLETE'
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-red-100 text-red-700';
+                      const verdictClass =
+                        validationSummary.attestation.verdict === 'COMPLETE'
+                          ? 'bg-green-100 text-green-700'
+                          : incompleteVerdictClass;
+                      return (
+                        <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <Icon name="workspace_premium" size="sm" className="text-amber-500" />
+                            <span className="text-sm font-medium">Attestation</span>
+                            <span
+                              className={clsx(
+                                'px-2 py-0.5 text-xs font-medium rounded',
+                                verdictClass
+                              )}
+                            >
+                              {validationSummary.attestation.verdict}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                            {validationSummary.attestation.artifactsVerified !== undefined && (
+                              <span>
+                                {validationSummary.attestation.artifactsVerified} artifacts
+                              </span>
+                            )}
+                            {validationSummary.attestation.gatesPassed !== undefined && (
+                              <span>{validationSummary.attestation.gatesPassed} gates passed</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
                 </>
               ) : (
                 <div className="bg-gray-50 rounded-lg p-8 text-center">

@@ -106,9 +106,7 @@ function getHistoryItemColor(critical: number) {
   return critical > 0 ? 'text-red-600' : 'text-green-600';
 }
 
-function getVulnerabilityDefaults(
-  data: VulnerabilityCounts | null
-): VulnerabilityCounts {
+function getVulnerabilityDefaults(data: VulnerabilityCounts | null): VulnerabilityCounts {
   return data ?? { critical: 0, high: 0, moderate: 0, low: 0, total: 0 };
 }
 
@@ -374,8 +372,20 @@ describe('getRemediationSummary', () => {
       waiverCount: 0,
       mttrHours: 0.5,
       items: [
-        { id: 'CVE-1', module: 'lodash', severity: 'high', status: 'fixed', fixApplied: 'Override' },
-        { id: 'CVE-2', module: 'esbuild', severity: 'moderate', status: 'fixed', fixApplied: 'Update' },
+        {
+          id: 'CVE-1',
+          module: 'lodash',
+          severity: 'high',
+          status: 'fixed',
+          fixApplied: 'Override',
+        },
+        {
+          id: 'CVE-2',
+          module: 'esbuild',
+          severity: 'moderate',
+          status: 'fixed',
+          fixApplied: 'Update',
+        },
         { id: 'CVE-3', module: 'diff', severity: 'low', status: 'fixed', fixApplied: 'Override' },
       ],
     });
@@ -392,7 +402,13 @@ describe('getRemediationSummary', () => {
       waiverCount: 1,
       mttrHours: 2.0,
       items: [
-        { id: 'CVE-1', module: 'lodash', severity: 'high', status: 'fixed', fixApplied: 'Override' },
+        {
+          id: 'CVE-1',
+          module: 'lodash',
+          severity: 'high',
+          status: 'fixed',
+          fixApplied: 'Override',
+        },
         { id: 'CVE-2', module: 'esbuild', severity: 'critical', status: 'open' },
         { id: 'CVE-3', module: 'diff', severity: 'moderate', status: 'open' },
         { id: 'CVE-4', module: 'axios', severity: 'low', status: 'waived' },
@@ -411,7 +427,13 @@ describe('getRemediationSummary', () => {
       waiverCount: 0,
       mttrHours: null,
       items: [
-        { id: 'CVE-1', module: 'lodash', severity: 'high', status: 'fixed', fixApplied: 'Override' },
+        {
+          id: 'CVE-1',
+          module: 'lodash',
+          severity: 'high',
+          status: 'fixed',
+          fixApplied: 'Override',
+        },
       ],
     });
     expect(result.mttrDisplay).toBe('N/A');

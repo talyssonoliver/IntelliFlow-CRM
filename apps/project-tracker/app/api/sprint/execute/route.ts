@@ -262,7 +262,7 @@ export async function POST(request: Request) {
       runId,
       startedAt: new Date().toISOString(),
       status: 'running',
-      currentPhase: startFromPhase ?? 0,
+      currentPhase: startFromPhase,
       totalPhases: phases.length,
       phaseProgress: phases.map((p) => ({
         phaseNumber: p.phaseNumber,

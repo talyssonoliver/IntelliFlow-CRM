@@ -213,23 +213,25 @@ function calculateBySection(
 function getRecentCompletions(
   tasks: StatusSnapshot['tasks']
 ): Array<{ task_id: string; description: string; completed_at: string }> {
-  return Object.entries(tasks)
-    .filter(([, task]) => {
-      const s = task.status.trim();
-      return s === 'Completed' || s === 'Done';
-    })
-    .map(([taskId, task]) => ({
-      task_id: taskId,
-      // G8 fix: use Description column, fallback to section
-      description: task.description || task.section,
-      // G7 fix: use Planned Finish, fallback to now()
-      completed_at: task.planned_finish
-        ? new Date(task.planned_finish + 'T00:00:00').toISOString()
-        : new Date().toISOString(),
-    }))
-    // G10 fix: sort by completed_at descending
-    .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())
-    .slice(0, 10);
+  return (
+    Object.entries(tasks)
+      .filter(([, task]) => {
+        const s = task.status.trim();
+        return s === 'Completed' || s === 'Done';
+      })
+      .map(([taskId, task]) => ({
+        task_id: taskId,
+        // G8 fix: use Description column, fallback to section
+        description: task.description || task.section,
+        // G7 fix: use Planned Finish, fallback to now()
+        completed_at: task.planned_finish
+          ? new Date(task.planned_finish + 'T00:00:00').toISOString()
+          : new Date().toISOString(),
+      }))
+      // G10 fix: sort by completed_at descending
+      .sort((a, b) => new Date(b.completed_at).getTime() - new Date(a.completed_at).getTime())
+      .slice(0, 10)
+  );
 }
 
 /**

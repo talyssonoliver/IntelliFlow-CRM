@@ -149,12 +149,14 @@ export async function GET(_request: NextRequest) {
     // Overall status
     const envHealthy = envSummary.missing.length === 0;
     const servicesHealthy = serviceSummary.unhealthy === 0;
-    const overallStatus =
-      envHealthy && servicesHealthy
-        ? 'healthy'
-        : envHealthy || servicesHealthy
-          ? 'degraded'
-          : 'unhealthy';
+    let overallStatus: string;
+    if (envHealthy && servicesHealthy) {
+      overallStatus = 'healthy';
+    } else if (envHealthy || servicesHealthy) {
+      overallStatus = 'degraded';
+    } else {
+      overallStatus = 'unhealthy';
+    }
 
     // Environment readiness by category
     const categoryReadiness: Record<string, { ready: number; total: number }> = {};

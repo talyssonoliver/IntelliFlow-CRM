@@ -60,6 +60,9 @@ function getSprintDataFromCsv(tasks: CsvTask[], sprintNumber: string) {
   }
 
   // Create KPI summary
+  const measuringOrBelowTarget = statusCounts.done > 0 ? 'MEASURING' : 'BELOW_TARGET';
+  const completionRateStatus =
+    statusCounts.done === statusCounts.total ? 'MET' : measuringOrBelowTarget;
   const kpiSummary: Record<
     string,
     { target: number; actual: number; status: string; unit: string }
@@ -67,12 +70,7 @@ function getSprintDataFromCsv(tasks: CsvTask[], sprintNumber: string) {
     completion_rate: {
       target: 100,
       actual: statusCounts.total > 0 ? (statusCounts.done / statusCounts.total) * 100 : 0,
-      status:
-        statusCounts.done === statusCounts.total
-          ? 'MET'
-          : statusCounts.done > 0
-            ? 'MEASURING'
-            : 'BELOW_TARGET',
+      status: completionRateStatus,
       unit: 'percent',
     },
     tasks_completed: {

@@ -115,6 +115,14 @@ export default function ContextPackStatus({ data, compact = false }: ContextPack
           allValid ? 'bg-green-50' : 'bg-gray-50'
         }`}
         onClick={() => setExpanded(!expanded)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            setExpanded(!expanded);
+          }
+        }}
+        role="button"
+        tabIndex={0}
       >
         <div className="flex items-center gap-2">
           <Icon

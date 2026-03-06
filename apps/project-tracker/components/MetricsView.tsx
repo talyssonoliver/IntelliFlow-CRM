@@ -424,21 +424,22 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold">Velocity Trend</h2>
-            <span
-              className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                velocityData.actual.healthStatus === 'healthy'
-                  ? 'bg-green-100 text-green-700'
-                  : velocityData.actual.healthStatus === 'warning'
-                    ? 'bg-yellow-100 text-yellow-700'
-                    : 'bg-red-100 text-red-700'
-              }`}
-            >
-              {velocityData.actual.healthStatus === 'healthy'
-                ? 'On Track'
-                : velocityData.actual.healthStatus === 'warning'
-                  ? 'Below Target'
-                  : 'Critical'}
-            </span>
+            {(() => {
+              const hs = velocityData.actual.healthStatus;
+              const nonHealthyBadgeClass =
+                hs === 'warning' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700';
+              const velocityBadgeClass =
+                hs === 'healthy' ? 'bg-green-100 text-green-700' : nonHealthyBadgeClass;
+              const nonHealthyBadgeText = hs === 'warning' ? 'Below Target' : 'Critical';
+              const velocityBadgeText = hs === 'healthy' ? 'On Track' : nonHealthyBadgeText;
+              return (
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-semibold ${velocityBadgeClass}`}
+                >
+                  {velocityBadgeText}
+                </span>
+              );
+            })()}
           </div>
           <p className="text-sm text-gray-600 mb-4">{velocityData.config.velocityGoal}</p>
 
@@ -451,16 +452,17 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
                   className="flex-1 flex flex-col items-center gap-1"
                   title={`Sprint ${bar.sprint}: ${bar.velocity}% (${bar.completed}/${bar.planned})`}
                 >
-                  <div
-                    className={`w-full rounded-t transition-all ${
-                      bar.velocity >= (velocityData.config.targetVelocity || 80)
-                        ? 'bg-green-500'
-                        : bar.velocity >= 50
-                          ? 'bg-blue-500'
-                          : 'bg-orange-400'
-                    }`}
-                    style={{ height: `${Math.max(4, bar.percentage)}%` }}
-                  />
+                  {(() => {
+                    const target = velocityData.config.targetVelocity || 80;
+                    const lowBarColor = bar.velocity >= 50 ? 'bg-blue-500' : 'bg-orange-400';
+                    const barColorClass = bar.velocity >= target ? 'bg-green-500' : lowBarColor;
+                    return (
+                      <div
+                        className={`w-full rounded-t transition-all ${barColorClass}`}
+                        style={{ height: `${Math.max(4, bar.percentage)}%` }}
+                      />
+                    );
+                  })()}
                   <span className="text-xs text-gray-500">{bar.sprint}</span>
                 </div>
               ))}
@@ -477,21 +479,16 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
               <p className="text-sm text-gray-600">Current Velocity</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <p
-                className={`text-2xl font-bold ${
-                  velocityData.actual.trend === 'improving'
-                    ? 'text-green-600'
-                    : velocityData.actual.trend === 'declining'
-                      ? 'text-red-600'
-                      : 'text-gray-600'
-                }`}
-              >
-                {velocityData.actual.trend === 'improving'
-                  ? 'Improving'
-                  : velocityData.actual.trend === 'declining'
-                    ? 'Declining'
-                    : 'Stable'}
-              </p>
+              {(() => {
+                const trend = velocityData.actual.trend;
+                const nonImprovingTrendColor =
+                  trend === 'declining' ? 'text-red-600' : 'text-gray-600';
+                const trendColor =
+                  trend === 'improving' ? 'text-green-600' : nonImprovingTrendColor;
+                const nonImprovingTrendText = trend === 'declining' ? 'Declining' : 'Stable';
+                const trendText = trend === 'improving' ? 'Improving' : nonImprovingTrendText;
+                return <p className={`text-2xl font-bold ${trendColor}`}>{trendText}</p>;
+              })()}
               <p className="text-sm text-gray-600">Trend</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
@@ -534,17 +531,12 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
               <p className="text-sm text-gray-600">Capacity (days)</p>
             </div>
             <div className="text-center p-3 bg-gray-50 rounded-lg">
-              <p
-                className={`text-2xl font-bold ${
-                  capacityData.summary.totalUtilization > 90
-                    ? 'text-red-600'
-                    : capacityData.summary.totalUtilization > 70
-                      ? 'text-orange-500'
-                      : 'text-green-600'
-                }`}
-              >
-                {capacityData.summary.totalUtilization}%
-              </p>
+              {(() => {
+                const util = capacityData.summary.totalUtilization;
+                const midUtilColor = util > 70 ? 'text-orange-500' : 'text-green-600';
+                const utilColor = util > 90 ? 'text-red-600' : midUtilColor;
+                return <p className={`text-2xl font-bold ${utilColor}`}>{util}%</p>;
+              })()}
               <p className="text-sm text-gray-600">Utilization</p>
             </div>
           </div>
@@ -560,16 +552,17 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div
-                    className={`h-3 rounded-full transition-all ${
-                      role.utilization > 90
-                        ? 'bg-red-500'
-                        : role.utilization > 70
-                          ? 'bg-orange-400'
-                          : 'bg-green-500'
-                    }`}
-                    style={{ width: `${Math.min(100, role.utilization)}%` }}
-                  />
+                  {(() => {
+                    const midRoleBarColor =
+                      role.utilization > 70 ? 'bg-orange-400' : 'bg-green-500';
+                    const roleBarColor = role.utilization > 90 ? 'bg-red-500' : midRoleBarColor;
+                    return (
+                      <div
+                        className={`h-3 rounded-full transition-all ${roleBarColor}`}
+                        style={{ width: `${Math.min(100, role.utilization)}%` }}
+                      />
+                    );
+                  })()}
                 </div>
               </div>
             ))}
@@ -635,73 +628,72 @@ export default function MetricsView({ selectedSprint }: Readonly<MetricsViewProp
           </div>
 
           {/* Overall Risk Level */}
-          <div
-            className={`p-3 rounded-lg mb-4 ${
-              riskData.summary.overallLevel === 'critical'
-                ? 'bg-red-50 border border-red-200'
-                : riskData.summary.overallLevel === 'high'
-                  ? 'bg-orange-50 border border-orange-200'
-                  : riskData.summary.overallLevel === 'medium'
-                    ? 'bg-yellow-50 border border-yellow-200'
-                    : 'bg-green-50 border border-green-200'
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-medium">Overall Risk Level</span>
-              <span
-                className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                  riskData.summary.overallLevel === 'critical'
-                    ? 'bg-red-500 text-white'
-                    : riskData.summary.overallLevel === 'high'
-                      ? 'bg-orange-500 text-white'
-                      : riskData.summary.overallLevel === 'medium'
-                        ? 'bg-yellow-500 text-white'
-                        : 'bg-green-500 text-white'
-                }`}
-              >
-                {riskData.summary.overallLevel.toUpperCase()}
-              </span>
-            </div>
-            <p className="text-sm text-gray-600 mt-1">
-              Average score: {riskData.summary.overallScore}/12
-            </p>
-          </div>
+          {(() => {
+            const ol = riskData.summary.overallLevel;
+            const medOrLowContainerClass =
+              ol === 'medium'
+                ? 'bg-yellow-50 border border-yellow-200'
+                : 'bg-green-50 border border-green-200';
+            const highOrLowerContainerClass =
+              ol === 'high' ? 'bg-orange-50 border border-orange-200' : medOrLowContainerClass;
+            const riskContainerClass =
+              ol === 'critical' ? 'bg-red-50 border border-red-200' : highOrLowerContainerClass;
+            const medOrLowBadgeClass =
+              ol === 'medium' ? 'bg-yellow-500 text-white' : 'bg-green-500 text-white';
+            const highOrLowerBadgeClass =
+              ol === 'high' ? 'bg-orange-500 text-white' : medOrLowBadgeClass;
+            const riskBadgeClass =
+              ol === 'critical' ? 'bg-red-500 text-white' : highOrLowerBadgeClass;
+            return (
+              <div className={`p-3 rounded-lg mb-4 ${riskContainerClass}`}>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Overall Risk Level</span>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-semibold ${riskBadgeClass}`}
+                  >
+                    {ol.toUpperCase()}
+                  </span>
+                </div>
+                <p className="text-sm text-gray-600 mt-1">
+                  Average score: {riskData.summary.overallScore}/12
+                </p>
+              </div>
+            );
+          })()}
 
           {/* Top Risks */}
           <div className="space-y-2">
             <h3 className="font-medium text-sm text-gray-700 mb-2">Top Risks</h3>
-            {riskData.risks.slice(0, 5).map((risk) => (
-              <div
-                key={risk.id}
-                className="flex items-center gap-3 p-2 rounded border border-gray-100 hover:bg-gray-50"
-              >
-                <span
-                  className={`px-2 py-1 rounded text-xs font-mono font-semibold ${
-                    risk.scoreLevel === 'critical'
-                      ? 'bg-red-100 text-red-700'
-                      : risk.scoreLevel === 'high'
-                        ? 'bg-orange-100 text-orange-700'
-                        : risk.scoreLevel === 'medium'
-                          ? 'bg-yellow-100 text-yellow-700'
-                          : 'bg-green-100 text-green-700'
-                  }`}
+            {riskData.risks.slice(0, 5).map((risk) => {
+              const sl = risk.scoreLevel;
+              const medOrLowScoreClass =
+                sl === 'medium' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700';
+              const highOrLowerScoreClass =
+                sl === 'high' ? 'bg-orange-100 text-orange-700' : medOrLowScoreClass;
+              const scoreLevelClass =
+                sl === 'critical' ? 'bg-red-100 text-red-700' : highOrLowerScoreClass;
+              const rs = risk.status.toLowerCase();
+              const monitoringOrOtherClass =
+                rs === 'monitoring' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-700';
+              const riskStatusClass =
+                rs === 'mitigated' ? 'bg-blue-100 text-blue-700' : monitoringOrOtherClass;
+              return (
+                <div
+                  key={risk.id}
+                  className="flex items-center gap-3 p-2 rounded border border-gray-100 hover:bg-gray-50"
                 >
-                  {risk.id}
-                </span>
-                <span className="flex-1 text-sm truncate">{risk.risk}</span>
-                <span
-                  className={`px-2 py-1 rounded text-xs ${
-                    risk.status.toLowerCase() === 'mitigated'
-                      ? 'bg-blue-100 text-blue-700'
-                      : risk.status.toLowerCase() === 'monitoring'
-                        ? 'bg-purple-100 text-purple-700'
-                        : 'bg-gray-100 text-gray-700'
-                  }`}
-                >
-                  {risk.status}
-                </span>
-              </div>
-            ))}
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-mono font-semibold ${scoreLevelClass}`}
+                  >
+                    {risk.id}
+                  </span>
+                  <span className="flex-1 text-sm truncate">{risk.risk}</span>
+                  <span className={`px-2 py-1 rounded text-xs ${riskStatusClass}`}>
+                    {risk.status}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

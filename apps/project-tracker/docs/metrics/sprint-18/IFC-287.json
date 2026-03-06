@@ -1,0 +1,58 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-287",
+  "section": "Core CRM",
+  "description": "Deal Filter Wiring & Type Safety. (1) DealFilters state (filters) captured in page but NEVER passed to trpc.opportunity.list.useQuery — ownerId and dateRange selections have no effect on kanban view data (F-10, deals/(list)/page.tsx:214,226). (2) 'More Filters' button has no onClick handler (F-11, DealFilters.tsx). (3) Owner filter only has 2 hardcoded options: 'All Deals' and 'My Deals' — no dynamic user list (F-12). (4) transformDeals uses loose Record<string,unknown> casting at API boundary instead of typed response (F-19, types.ts:102-119). Wire filters to API query params; add server-side owner filter with user list; type-safe API response handling. Audit: docs/audit/deal-detail-wiring-audit.md sections 3, 8.",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-18",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-03-06T22:22:16.016Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 120,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "wiring_complete": {
+      "target": "Filter selections affect displayed data; owner list from API",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/deals/(list)/page.tsx",
+      "apps/web/src/components/deals/DealFilters.tsx",
+      "apps/web/src/components/deals/types.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-287/context_ack.json"
+    ],
+    "created": [
+      "apps/web/src/app/deals/(list)/page.tsx",
+      "apps/web/src/components/deals/DealFilters.tsx",
+      "apps/web/src/components/deals/types.ts"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-18/attestations/IFC-287/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-06T00:00:00Z"
+    }
+  ],
+  "notes": "Deal/opportunity domain wiring audit finding. See docs/audit/deal-detail-wiring-audit.md."
+}

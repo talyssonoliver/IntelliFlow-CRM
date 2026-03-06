@@ -51,9 +51,7 @@ export default function TrendSparkline({
   if (!data || data.length === 0) return null;
 
   if (data.length < 2) {
-    return (
-      <span className="text-xs text-gray-400 italic">No trend data yet</span>
-    );
+    return <span className="text-xs text-gray-400 italic">No trend data yet</span>;
   }
 
   const points = calculateSparklinePoints(data, width, height);
@@ -76,10 +74,7 @@ export default function TrendSparkline({
         strokeLinejoin="round"
         strokeLinecap="round"
       />
-      {showDots &&
-        points.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r={2} fill={color} />
-        ))}
+      {showDots && points.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r={2} fill={color} />)}
     </svg>
   );
 }

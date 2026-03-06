@@ -1,0 +1,54 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-236",
+  "section": "Core CRM",
+  "description": "Recent Activity Empty State CTA - Overview tab shows generic 'No activities yet' with no call to action. Add 'Log your first activity' CTA button linking to Activity tab textarea. Apply same pattern to Contact detail page. Page: leads/[id]/page.tsx line 1600.",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-16",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-03-06T22:22:15.970Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 60,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "cta_present": {
+      "target": "CTA visible on empty state",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      ".specify/sprints/sprint-16/attestations/IFC-236/context_ack.json"
+    ],
+    "created": [
+      "apps/web/src/app/leads/[id]/page.tsx"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-16/attestations/IFC-236/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Wiring debt: Recent Activity empty state has no CTA to guide users."
+}

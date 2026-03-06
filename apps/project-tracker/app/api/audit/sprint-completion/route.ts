@@ -274,21 +274,17 @@ function parseCSV(content: string): Record<string, string>[] {
   let inQuotes = false;
 
   // First, split into logical lines (handling multi-line quoted fields)
-  for (let i = 0; i < content.length; i++) {
-    const char = content[i];
-
+  // Normalize \r\n and \r to \n before iterating to avoid loop counter mutation
+  const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  for (const char of normalized) {
     if (char === '"') {
       inQuotes = !inQuotes;
       currentLine += char;
-    } else if ((char === '\n' || char === '\r') && !inQuotes) {
+    } else if (char === '\n' && !inQuotes) {
       if (currentLine.trim()) {
         lines.push(currentLine);
       }
       currentLine = '';
-      // Skip \r\n as single newline
-      if (char === '\r' && content[i + 1] === '\n') {
-        i++;
-      }
     } else {
       currentLine += char;
     }

@@ -89,7 +89,15 @@ interface ExecutiveMetrics {
   generated_at: string;
 }
 
-type ExpandableMetric = 'mismatches' | 'untracked' | 'forward' | 'bottleneck' | 'context' | 'plandeliverables' | 'hashmismatch' | 'integrity';
+type ExpandableMetric =
+  | 'mismatches'
+  | 'untracked'
+  | 'forward'
+  | 'bottleneck'
+  | 'context'
+  | 'plandeliverables'
+  | 'hashmismatch'
+  | 'integrity';
 
 interface ExecutiveSummaryProps {
   readonly sprint?: number | 'all' | 'Continuous';
@@ -341,8 +349,12 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
             {/* Missing Context Pack & Ack - Expandable */}
             <React.Fragment key="context-section">
               {(() => {
-                const ackMissing = metrics.missing_context_tasks_details.filter((d) => d.missing_ack);
-                const packOnlyMissing = metrics.missing_context_tasks_details.filter((d) => !d.missing_ack && d.missing_pack);
+                const ackMissing = metrics.missing_context_tasks_details.filter(
+                  (d) => d.missing_ack
+                );
+                const packOnlyMissing = metrics.missing_context_tasks_details.filter(
+                  (d) => !d.missing_ack && d.missing_pack
+                );
                 const headlineCount = ackMissing.length;
                 const hasAny = metrics.missing_context_tasks_details.length > 0;
                 return (
@@ -396,7 +408,9 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                                 {ackMissing.slice(0, 15).map((detail, idx) => (
                                   <div key={`ctx-ack-${detail.task_id}-${idx}`} className="text-xs">
                                     <div className="flex items-center gap-2 text-slate-300">
-                                      <span className="font-mono text-orange-400">{detail.task_id}</span>
+                                      <span className="font-mono text-orange-400">
+                                        {detail.task_id}
+                                      </span>
                                       <span className="text-slate-500">-</span>
                                       <span className="truncate">{detail.description}</span>
                                       <div className="flex gap-1 ml-auto">
@@ -413,7 +427,9 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                                   </div>
                                 ))}
                                 {ackMissing.length > 15 && (
-                                  <div className="text-xs text-slate-500">+{ackMissing.length - 15} more</div>
+                                  <div className="text-xs text-slate-500">
+                                    +{ackMissing.length - 15} more
+                                  </div>
                                 )}
                               </>
                             )}
@@ -423,7 +439,10 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                                   Missing pack only ({packOnlyMissing.length}):
                                 </div>
                                 {packOnlyMissing.slice(0, 10).map((detail, idx) => (
-                                  <div key={`ctx-pack-${detail.task_id}-${idx}`} className="text-xs">
+                                  <div
+                                    key={`ctx-pack-${detail.task_id}-${idx}`}
+                                    className="text-xs"
+                                  >
                                     <div className="flex items-center gap-2 text-slate-400">
                                       <span className="font-mono">{detail.task_id}</span>
                                       <span className="text-slate-600">-</span>
@@ -432,7 +451,9 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                                   </div>
                                 ))}
                                 {packOnlyMissing.length > 10 && (
-                                  <div className="text-xs text-slate-600">+{packOnlyMissing.length - 10} more</div>
+                                  <div className="text-xs text-slate-600">
+                                    +{packOnlyMissing.length - 10} more
+                                  </div>
                                 )}
                               </>
                             )}
@@ -477,42 +498,48 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                   </span>
                 </td>
               </tr>
-              {expanded.has('plandeliverables') && metrics.incomplete_plan_deliverables_details.length > 0 && (
-                <tr>
-                  <td colSpan={2} className="px-3 pb-3">
-                    <div className="ml-11 bg-slate-800/50 rounded-lg p-3 space-y-2">
-                      {metrics.incomplete_plan_deliverables_details.map((detail, idx) => (
-                        <div key={`plan-${detail.task_id}-${idx}`} className="text-xs">
-                          <div className="flex items-center gap-2 text-slate-300">
-                            <span className="font-mono text-orange-400">{detail.task_id}</span>
-                            <span className="text-slate-500">-</span>
-                            <span className="truncate">{detail.description}</span>
-                            <div className="flex gap-2 ml-auto shrink-0">
-                              {detail.total_files > 0 && (
-                                <span className={`${detail.verified_files < detail.total_files ? 'text-orange-400' : 'text-green-400'}`}>
-                                  Files {detail.verified_files}/{detail.total_files}
-                                </span>
-                              )}
-                              {detail.checkbox_total > 0 && (
-                                <span className={`${detail.checkbox_checked < detail.checkbox_total ? 'text-orange-400' : 'text-green-400'}`}>
-                                  Steps {detail.checkbox_checked}/{detail.checkbox_total}
-                                </span>
-                              )}
+              {expanded.has('plandeliverables') &&
+                metrics.incomplete_plan_deliverables_details.length > 0 && (
+                  <tr>
+                    <td colSpan={2} className="px-3 pb-3">
+                      <div className="ml-11 bg-slate-800/50 rounded-lg p-3 space-y-2">
+                        {metrics.incomplete_plan_deliverables_details.map((detail, idx) => (
+                          <div key={`plan-${detail.task_id}-${idx}`} className="text-xs">
+                            <div className="flex items-center gap-2 text-slate-300">
+                              <span className="font-mono text-orange-400">{detail.task_id}</span>
+                              <span className="text-slate-500">-</span>
+                              <span className="truncate">{detail.description}</span>
+                              <div className="flex gap-2 ml-auto shrink-0">
+                                {detail.total_files > 0 && (
+                                  <span
+                                    className={`${detail.verified_files < detail.total_files ? 'text-orange-400' : 'text-green-400'}`}
+                                  >
+                                    Files {detail.verified_files}/{detail.total_files}
+                                  </span>
+                                )}
+                                {detail.checkbox_total > 0 && (
+                                  <span
+                                    className={`${detail.checkbox_checked < detail.checkbox_total ? 'text-orange-400' : 'text-green-400'}`}
+                                  >
+                                    Steps {detail.checkbox_checked}/{detail.checkbox_total}
+                                  </span>
+                                )}
+                              </div>
                             </div>
+                            {detail.missing_files.length > 0 && (
+                              <div className="ml-4 mt-1 text-slate-500">
+                                Missing:{' '}
+                                {detail.missing_files.map((f) => f.split('/').pop()).join(', ')}
+                                {detail.total_files - detail.verified_files > 5 &&
+                                  ` +${detail.total_files - detail.verified_files - detail.missing_files.length} more`}
+                              </div>
+                            )}
                           </div>
-                          {detail.missing_files.length > 0 && (
-                            <div className="ml-4 mt-1 text-slate-500">
-                              Missing: {detail.missing_files.map((f) => f.split('/').pop()).join(', ')}
-                              {detail.total_files - detail.verified_files > 5 &&
-                                ` +${detail.total_files - detail.verified_files - detail.missing_files.length} more`}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              )}
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                )}
             </React.Fragment>
 
             {/* Completion Integrity - Expandable */}
@@ -558,7 +585,7 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                             <span className="text-slate-500">-</span>
                             <span className="truncate">{detail.description}</span>
                             <div className="flex gap-1 ml-auto shrink-0">
-                              {!detail.has_attestation && (
+                              {detail.has_attestation === false && (
                                 <span className="px-1.5 py-0.5 bg-red-500/10 text-red-400 rounded text-[10px]">
                                   no attestation
                                 </span>
@@ -573,7 +600,7 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                                   {detail.validation_count}/4 validations
                                 </span>
                               )}
-                              {detail.issues.some(i => i.startsWith('Plan deliverables:')) && (
+                              {detail.issues.some((i) => i.startsWith('Plan deliverables:')) && (
                                 <span className="px-1.5 py-0.5 bg-orange-500/10 text-orange-400 rounded text-[10px]">
                                   missing files
                                 </span>
@@ -630,31 +657,34 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
                   </span>
                 </td>
               </tr>
-              {expanded.has('hashmismatch') && metrics.context_hash_mismatches_details.length > 0 && (
-                <tr>
-                  <td colSpan={2} className="px-3 pb-3">
-                    <div className="ml-11 bg-slate-800/50 rounded-lg p-3 space-y-2">
-                      {metrics.context_hash_mismatches_details.map((detail, idx) => (
-                        <div key={`hash-${detail.task_id}-${idx}`} className="text-xs">
-                          <div className="flex items-center gap-2 text-slate-300">
-                            <span className="font-mono text-red-400">{detail.task_id}</span>
-                            <span className="text-slate-500">-</span>
-                            <span className="truncate">{detail.description}</span>
-                            <span className="text-slate-500 ml-auto">
-                              {detail.matched_count}/{detail.total_files} matched
-                            </span>
+              {expanded.has('hashmismatch') &&
+                metrics.context_hash_mismatches_details.length > 0 && (
+                  <tr>
+                    <td colSpan={2} className="px-3 pb-3">
+                      <div className="ml-11 bg-slate-800/50 rounded-lg p-3 space-y-2">
+                        {metrics.context_hash_mismatches_details.map((detail, idx) => (
+                          <div key={`hash-${detail.task_id}-${idx}`} className="text-xs">
+                            <div className="flex items-center gap-2 text-slate-300">
+                              <span className="font-mono text-red-400">{detail.task_id}</span>
+                              <span className="text-slate-500">-</span>
+                              <span className="truncate">{detail.description}</span>
+                              <span className="text-slate-500 ml-auto">
+                                {detail.matched_count}/{detail.total_files} matched
+                              </span>
+                            </div>
+                            <div className="ml-4 mt-1 text-slate-500">
+                              Mismatched:{' '}
+                              {detail.mismatched_files.map((f) => f.split('/').pop()).join(', ')}
+                              {detail.mismatched_files.length <
+                                detail.total_files - detail.matched_count &&
+                                ` +${detail.total_files - detail.matched_count - detail.mismatched_files.length} more`}
+                            </div>
                           </div>
-                          <div className="ml-4 mt-1 text-slate-500">
-                            Mismatched: {detail.mismatched_files.map((f) => f.split('/').pop()).join(', ')}
-                            {detail.mismatched_files.length < detail.total_files - detail.matched_count &&
-                              ` +${detail.total_files - detail.matched_count - detail.mismatched_files.length} more`}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              )}
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                )}
             </React.Fragment>
 
             {/* Untracked Code Artifacts - Expandable */}
@@ -844,17 +874,19 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
       <div className="px-6 py-3 bg-slate-800/30 border-t border-slate-700">
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-1.5">
-            <div
-              className={`w-2 h-2 rounded-full ${metrics.completed.percentage > 50 ? 'bg-green-400' : metrics.completed.percentage > 25 ? 'bg-yellow-400' : 'bg-red-400'}`}
-            />
-            <span className="text-slate-400">
-              Health:{' '}
-              {metrics.completed.percentage > 50
-                ? 'Good'
-                : metrics.completed.percentage > 25
-                  ? 'Moderate'
-                  : 'Needs Attention'}
-            </span>
+            {(() => {
+              const pct = metrics.completed.percentage;
+              const lowDotColor = pct > 25 ? 'bg-yellow-400' : 'bg-red-400';
+              const healthDotColor = pct > 50 ? 'bg-green-400' : lowDotColor;
+              const lowHealthText = pct > 25 ? 'Moderate' : 'Needs Attention';
+              const healthText = pct > 50 ? 'Good' : lowHealthText;
+              return (
+                <>
+                  <div className={`w-2 h-2 rounded-full ${healthDotColor}`} />
+                  <span className="text-slate-400">Health: {healthText}</span>
+                </>
+              );
+            })()}
           </div>
           {metrics.forward_dependencies > 0 && (
             <div className="flex items-center gap-1.5 text-red-400">
@@ -871,7 +903,10 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
           {metrics.missing_context_tasks_details.filter((d) => d.missing_ack).length > 0 && (
             <div className="flex items-center gap-1.5 text-orange-400">
               <Icon name="folder" size="xs" />
-              <span>{metrics.missing_context_tasks_details.filter((d) => d.missing_ack).length} missing ack</span>
+              <span>
+                {metrics.missing_context_tasks_details.filter((d) => d.missing_ack).length} missing
+                ack
+              </span>
             </div>
           )}
           {metrics.completion_integrity_failures > 0 && (

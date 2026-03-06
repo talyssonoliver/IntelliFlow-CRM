@@ -1,0 +1,60 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-246",
+  "section": "AI Foundation",
+  "description": "Domain Model Lead 360 Alignment. Fix 4 HIGH issues: (1) Lead.toJSON() omits aiInsight, activities, notes, files, tasks relations - domain events carry incomplete snapshots [D1]. (2) qualify() only allows from NEW/CONTACTED but UI doesn't reflect this constraint [D2]. (3) LeadScoringChain throws unhandled error for unknown AI_PROVIDER [D3]. (4) AI scoring prompt only receives basic lead data, ignores activity count, engagement history, note count [D4]. Fix: Extend toJSON, expose allowed transitions, add provider fallback, enrich scoring prompt.",
+  "owner": "AI Specialist (STOA-Intelligence)",
+  "sprint": "sprint-20",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-03-06T22:22:16.060Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "primary_kpi": {
+      "target": "toJSON() includes 5 relation fields",
+      "actual": "",
+      "met": false
+    },
+    "kpi_2": {
+      "target": "scoring prompt includes >=3 360 data points",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "packages/domain/src/crm/lead/Lead.ts",
+      "packages/domain/src/crm/lead/LeadScore.ts",
+      "apps/ai-worker/src/chains/"
+    ],
+    "created": [
+      "packages/domain/src/crm/lead/Lead.ts",
+      "packages/domain/src/crm/lead/LeadScore.ts",
+      "apps/ai-worker/src/chains/"
+    ],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Comprehensive flow analysis findings: D1,D2,D3,D4"
+}

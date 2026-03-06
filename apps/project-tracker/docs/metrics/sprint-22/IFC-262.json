@@ -1,0 +1,53 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-262",
+  "section": "Core CRM",
+  "description": "Contact Merge & Duplicate Detection Wiring. (1) mergeContacts deletes secondary without re-parenting all child records — orphaned opportunities/tasks (W-03). (2) findPotentialDuplicates exists in service but no tRPC procedure exposes it (W-09). (3) mergeContacts exists but no router procedure wraps it (W-10). (4) mergeContacts no cross-tenant check between primary and secondary (W-12). (5) associateWithAccount inside mergeContacts causes double-save and potential double event emission (W-13). Audit: docs/audit/contact-detail-wiring-audit.md §17.",
+  "owner": "Backend Dev (STOA-Domain)",
+  "sprint": "sprint-22",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-03-06T22:22:16.084Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 480,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "audit_findings_resolved": {
+      "target": "Resolve findings: W-03,W-09,W-10,W-12,W-13",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/api/src/modules/contact/contact.router.ts",
+      "packages/application/src/services/ContactService.ts"
+    ],
+    "created": [
+      "apps/api/src/modules/contact/contact.router.ts",
+      "packages/application/src/services/ContactService.ts"
+    ],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Contact audit finding: W-03,W-09,W-10,W-12,W-13. See docs/audit/contact-detail-wiring-audit.md"
+}

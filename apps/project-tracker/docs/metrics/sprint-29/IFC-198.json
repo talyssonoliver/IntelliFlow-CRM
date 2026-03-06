@@ -8,10 +8,7 @@
   "phase": "billing-domain",
   "stream": null,
   "dependencies": {
-    "required": [
-      "IFC-099",
-      "IFC-107"
-    ],
+    "required": ["IFC-099", "IFC-107"],
     "all_satisfied": true,
     "verified_at": "2026-02-16T18:04:31.342Z"
   },
@@ -42,10 +39,7 @@
     "completed_at": "2026-02-09T18:30:00.000Z",
     "duration_minutes": 390,
     "executor": "Claude Code /exec",
-    "agents": [
-      "Foundation",
-      "Domain"
-    ],
+    "agents": ["Foundation", "Domain"],
     "retry_count": 1,
     "last_error": null
   },
@@ -140,8 +134,5 @@
     }
   ],
   "notes": "Domain + Application layer implementation. Invoice aggregate with full state machine (DRAFT→OPEN→PAID/VOID/UNCOLLECTIBLE), Receipt immutable aggregate, 12 value objects, 6 domain events. 152 domain tests + 35 application tests = 187 total. No Prisma/DB changes required.",
-  "dependencies_resolved": [
-    "IFC-099",
-    "IFC-107"
-  ]
+  "dependencies_resolved": ["IFC-099", "IFC-107"]
 }

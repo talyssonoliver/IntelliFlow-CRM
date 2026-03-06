@@ -52,7 +52,8 @@ const TABS: TabConfig[] = [
     id: 'specTracker',
     label: 'Spec Tracker',
     icon: 'fact_check',
-    description: 'Cross-references specs, attestations, plans, and CSV status to verify real completion',
+    description:
+      'Cross-references specs, attestations, plans, and CSV status to verify real completion',
   },
   {
     id: 'quality',
@@ -171,11 +172,7 @@ export default function TrackingView() {
       </div>
 
       {/* Tab Content (wrapped in tabpanel div since CollapsibleSection doesn't forward ARIA props) */}
-      <div
-        role="tabpanel"
-        aria-labelledby={`tab-${activeTab}`}
-        id={`tabpanel-${activeTab}`}
-      >
+      <div role="tabpanel" aria-labelledby={`tab-${activeTab}`} id={`tabpanel-${activeTab}`}>
         <CollapsibleSection
           storageKey={`tracking-${activeTab}`}
           title={TABS.find((t) => t.id === activeTab)?.label ?? 'Tracking'}

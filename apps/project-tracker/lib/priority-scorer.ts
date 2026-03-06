@@ -129,44 +129,47 @@ function toFibonacci(normalized: number): number {
  *   B = ENV setup, AI-SETUP, automation, 2-4 dependents
  *   C = everything else
  */
+function isTierAId(taskId: string, lcSection: string, dependentCount: number): boolean {
+  if (taskId.includes('SEC') || lcSection.includes('security')) return true;
+  if (taskId.startsWith('IFC-0') && parseInt(taskId.replace('IFC-', ''), 10) <= 10) return true;
+  if (dependentCount >= 5) return true;
+  if (taskId.startsWith('EXC-')) return true;
+  if (lcSection.includes('planning') || lcSection.includes('strategy')) return true;
+  if (
+    taskId.startsWith('DOC-001') ||
+    taskId.startsWith('BRAND-001') ||
+    taskId.startsWith('GTM-') ||
+    taskId.startsWith('ANALYTICS-001')
+  )
+    return true;
+  return false;
+}
+
+function isTierBId(taskId: string, dependentCount: number): boolean {
+  if (taskId.startsWith('ENV-') || taskId.startsWith('AI-SETUP-')) return true;
+  if (taskId.startsWith('AUTOMATION-')) return true;
+  if (dependentCount >= 2) return true;
+  if (taskId.startsWith('ENG-OPS-') || taskId.startsWith('PM-OPS-')) return true;
+  return false;
+}
+
 export function scoreBusinessValue(
   taskId: string,
   section: string,
   dependentCount: number,
   isCriticalPath: boolean
 ): number {
-  // Derive governance tier inline (same logic as governance.ts)
-  let tierScore: number;
   const lcSection = section.toLowerCase();
 
-  if (
-    taskId.includes('SEC') ||
-    lcSection.includes('security') ||
-    (taskId.startsWith('IFC-0') && parseInt(taskId.replace('IFC-', ''), 10) <= 10) ||
-    dependentCount >= 5 ||
-    taskId.startsWith('EXC-') ||
-    lcSection.includes('planning') ||
-    lcSection.includes('strategy') ||
-    taskId.startsWith('DOC-001') ||
-    taskId.startsWith('BRAND-001') ||
-    taskId.startsWith('GTM-') ||
-    taskId.startsWith('ANALYTICS-001')
-  ) {
+  let tierScore: number;
+  if (isTierAId(taskId, lcSection, dependentCount)) {
     tierScore = 0.85; // Tier A → Fibonacci 8-13
-  } else if (
-    taskId.startsWith('ENV-') ||
-    taskId.startsWith('AI-SETUP-') ||
-    taskId.startsWith('AUTOMATION-') ||
-    dependentCount >= 2 ||
-    taskId.startsWith('ENG-OPS-') ||
-    taskId.startsWith('PM-OPS-')
-  ) {
+  } else if (isTierBId(taskId, dependentCount)) {
     tierScore = 0.5; // Tier B → Fibonacci 3-5
   } else {
     tierScore = 0.2; // Tier C → Fibonacci 1-2
   }
 
-  // Critical path bonus: push score up by ~0.3
   if (isCriticalPath) {
     tierScore = Math.min(1, tierScore + 0.3);
   }
@@ -189,50 +192,49 @@ export function scoreBusinessValue(
  * This replaces the naive earlyFinish date comparison with proper
  * CPM-based schedule pressure metrics.
  */
+function floatToScore(totalFloat: number): number {
+  if (totalFloat <= 0) return 1.0;
+  if (totalFloat <= 60) return 0.8;
+  if (totalFloat <= 480) return 0.6;
+  if (totalFloat <= 2400) return 0.3;
+  return 0.0;
+}
+
+function earlyFinishToScore(earlyFinish: string): number {
+  const diffMs = new Date(earlyFinish).getTime() - Date.now();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  if (diffDays < 0) return 1.0;
+  if (diffDays < 1) return 0.8;
+  if (diffDays < 7) return 0.5;
+  if (diffDays < 14) return 0.2;
+  return 0.0;
+}
+
+function sprintDistanceToScore(taskSprint: number | string, currentSprint: number): number {
+  if (typeof taskSprint !== 'number') return 0;
+  const distance = taskSprint - currentSprint;
+  if (distance <= 0) return 1.0;
+  if (distance === 1) return 0.6;
+  if (distance === 2) return 0.3;
+  return 0;
+}
+
 export function scoreTimeCriticality(
   taskId: string,
   scheduleTaskMap: Map<string, ScheduleTaskInfo>,
   taskSprint: number | string,
   currentSprint: number
 ): number {
+  const info = scheduleTaskMap.get(taskId);
   let floatScore = 0;
 
-  const info = scheduleTaskMap.get(taskId);
   if (info?.totalFloat !== undefined) {
-    // totalFloat is in minutes. Map to [0,1]:
-    //   <= 0 min (overdue/critical) → 1.0
-    //   1-60 min (very tight) → 0.8
-    //   60-480 min (1-8 hours) → 0.6
-    //   480-2400 min (1-5 days) → 0.3
-    //   > 2400 min (5+ days) → 0.0
-    const f = info.totalFloat;
-    if (f <= 0) floatScore = 1.0;
-    else if (f <= 60) floatScore = 0.8;
-    else if (f <= 480) floatScore = 0.6;
-    else if (f <= 2400) floatScore = 0.3;
-    else floatScore = 0.0;
+    floatScore = floatToScore(info.totalFloat);
   } else if (info?.earlyFinish) {
-    // Fallback: naive date comparison when float unavailable
-    const diffMs = new Date(info.earlyFinish).getTime() - Date.now();
-    const diffDays = diffMs / (1000 * 60 * 60 * 24);
-    if (diffDays < 0) floatScore = 1.0;
-    else if (diffDays < 1) floatScore = 0.8;
-    else if (diffDays < 7) floatScore = 0.5;
-    else if (diffDays < 14) floatScore = 0.2;
-    else floatScore = 0.0;
+    floatScore = earlyFinishToScore(info.earlyFinish);
   }
 
-  // Sprint distance: current or past → 1.0, +1 → 0.6, +2 → 0.3, 3+ → 0
-  let sprintScore = 0;
-  if (typeof taskSprint === 'number') {
-    const distance = taskSprint - currentSprint;
-    if (distance <= 0) sprintScore = 1.0;
-    else if (distance === 1) sprintScore = 0.6;
-    else if (distance === 2) sprintScore = 0.3;
-    // else 0
-  }
-
-  // Weighted blend: 60% float pressure, 40% sprint proximity
+  const sprintScore = sprintDistanceToScore(taskSprint, currentSprint);
   const combined = floatScore * 0.6 + sprintScore * 0.4;
   return toFibonacci(combined);
 }

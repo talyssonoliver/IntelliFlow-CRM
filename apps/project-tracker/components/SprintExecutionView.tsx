@@ -688,6 +688,14 @@ export default function SprintExecutionView({ sprintNumber }: SprintExecutionVie
                         <div
                           key={task.taskId}
                           onClick={() => openTaskModal(task)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              openTaskModal(task);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
                           className={clsx(
                             'flex items-center gap-3 p-2 rounded bg-white border cursor-pointer hover:shadow-md transition-shadow',
                             {

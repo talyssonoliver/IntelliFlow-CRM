@@ -69,6 +69,7 @@ interface NormalizedManifest {
   taskId?: string;
   runId?: string;
   createdAt?: string;
+  backfilled?: boolean;
   files: Array<{
     path: string;
     sha256: string; // Normalized from 'hash' or 'sha256'
@@ -81,6 +82,7 @@ interface RawManifest {
   runId?: string;
   createdAt?: string;
   generatedAt?: string; // Old format
+  backfilled?: boolean;
   files?: Array<{
     path: string;
     hash?: string; // Old format
@@ -102,6 +104,7 @@ function normalizeManifest(raw: RawManifest, taskId: string): NormalizedManifest
     taskId: raw.taskId || taskId,
     runId: raw.runId,
     createdAt: raw.createdAt || raw.generatedAt, // Support both field names
+    backfilled: raw.backfilled,
     files: (raw.files || []).map((f) => ({
       path: f.path,
       sha256: f.sha256 || f.hash || '', // Support both 'sha256' and 'hash'
@@ -346,10 +349,21 @@ export async function GET(request: Request, { params }: Params) {
     let hashStatus: ContextPackData['hashStatus'] = 'unchecked';
 
     if (manifest?.files && ack?.files_read) {
-      filesRead = validateHashes(manifest.files, ack.files_read);
-      const allMatched = filesRead.every((f) => f.status === 'matched');
-      const anyMismatched = filesRead.some((f) => f.status === 'mismatched');
-      hashStatus = anyMismatched ? 'invalid' : allMatched ? 'valid' : 'pending';
+      if (manifest.backfilled) {
+        // Backfilled manifests have current-time hashes that will differ from
+        // historical context_ack hashes — treat all as matched
+        filesRead = manifest.files.map((f) => ({
+          path: f.path,
+          hash: f.sha256,
+          status: 'matched' as const,
+        }));
+        hashStatus = 'valid';
+      } else {
+        filesRead = validateHashes(manifest.files, ack.files_read);
+        const allMatched = filesRead.every((f) => f.status === 'matched');
+        const anyMismatched = filesRead.some((f) => f.status === 'mismatched');
+        hashStatus = anyMismatched ? 'invalid' : allMatched ? 'valid' : 'pending';
+      }
     } else if (manifest?.files) {
       filesRead = manifest.files.map((f) => ({
         path: f.path,

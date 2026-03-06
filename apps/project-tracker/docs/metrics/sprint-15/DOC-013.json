@@ -7,31 +7,31 @@
   "sprint": "sprint-15",
   "phase": "phase-1",
   "stream": null,
-  "status": "BACKLOG",
+  "status": "DONE",
   "dependencies": {
     "required": [
       "DOC-008"
     ],
     "all_satisfied": true,
-    "verified_at": "2026-02-28T01:12:39.893Z"
+    "verified_at": "2026-03-06T22:22:15.934Z"
   },
   "dependencies_resolved": [
     "DOC-008"
   ],
-  "started_at": null,
-  "completed_at": null,
+  "started_at": "2026-03-02T22:48:13Z",
+  "completed_at": "2026-03-02T23:18:31.581Z",
   "target_duration_minutes": null,
-  "actual_duration_minutes": null,
+  "actual_duration_minutes": 15,
   "kpis": {
     "trigger_categories": {
       "target": 4,
-      "actual": "pending",
-      "met": false
+      "actual": 4,
+      "met": true
     },
     "enforcement_links": {
       "target": "DOC-010, DOC-011, DOC-012",
-      "actual": "pending",
-      "met": false
+      "actual": "DOC-010, DOC-011, DOC-012",
+      "met": true
     }
   },
   "artifacts": {
@@ -43,12 +43,40 @@
     ],
     "missing": []
   },
-  "validations": [],
+  "validations": [
+    {
+      "name": "Lint",
+      "command": "pnpm lint",
+      "executed_at": "2026-03-02T23:12:00Z",
+      "exit_code": 0,
+      "passed": true
+    }
+  ],
   "blockers": [],
   "status_history": [
     {
       "status": "Backlog",
       "at": "2026-02-24T01:30:00Z"
+    },
+    {
+      "status": "Specifying",
+      "at": "2026-03-02T22:48:13Z"
+    },
+    {
+      "status": "Spec Complete",
+      "at": "2026-03-02T22:55:00Z"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-03-02T23:11:00Z"
+    },
+    {
+      "status": "Validating",
+      "at": "2026-03-02T23:12:00Z"
+    },
+    {
+      "status": "Completed",
+      "at": "2026-03-02T23:17:00Z"
     }
   ],
   "notes": "Amends ADR-038 to define update triggers (new routes, component changes, WCAG scope changes, AT findings), responsible party, review frequency, and links to DOC-010/011/012 as enforcement mechanisms."

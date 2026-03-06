@@ -1,0 +1,51 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-256",
+  "section": "Core CRM",
+  "description": "Contact Detail Hardcoded Tabs — Tickets & Documents. (1) Tickets tab fully hardcoded with 'TKT-1234' and static timestamp (F-02, F-21). ContactWithRelations has no tickets relation. Tab badge hardcoded to 0. (2) Documents tab hardcoded with 2 static PDFs — apiContact.documents data exists in interface but is completely ignored (F-03). Need: wire tickets via TicketService query, wire documents from apiContact.documents or file infrastructure. Audit: docs/audit/contact-detail-wiring-audit.md §5,§9,§16.",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-18",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-03-06T22:22:16.007Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "audit_findings_resolved": {
+      "target": "Resolve findings: F-02,F-03,F-21",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/contacts/[id]/page.tsx"
+    ],
+    "created": [
+      "apps/web/src/app/contacts/[id]/page.tsx"
+    ],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Contact audit finding: F-02,F-03,F-21. See docs/audit/contact-detail-wiring-audit.md"
+}

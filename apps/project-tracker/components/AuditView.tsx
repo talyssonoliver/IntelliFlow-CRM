@@ -149,7 +149,7 @@ function generateFixPrompt(bundle: BundleDetailResponse): string {
       // Extract DoD unverified count from issues
       let dodUnverified = 0;
       for (const issue of task.issues || []) {
-        const match = issue.match(/(\d+) DoD criteria unverified/);
+        const match = issue.match(/(\d{1,10}) DoD criteria unverified/);
         if (match) {
           dodUnverified = parseInt(match[1], 10);
         }

@@ -624,6 +624,14 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                             <div
                               key={task.taskId}
                               onClick={() => handleTaskClick(task.taskId)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                  e.preventDefault();
+                                  handleTaskClick(task.taskId);
+                                }
+                              }}
+                              role="button"
+                              tabIndex={0}
                               className="p-3 hover:bg-gray-50 cursor-pointer transition-colors"
                             >
                               <div className="flex items-start justify-between">
@@ -639,12 +647,14 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                                     {scoredMap.has(task.taskId) &&
                                       (() => {
                                         const scored = scoredMap.get(task.taskId)!;
+                                        const nextOrLaterColor =
+                                          scored.bucket === 'next'
+                                            ? 'bg-amber-100 text-amber-700'
+                                            : 'bg-gray-100 text-gray-500';
                                         const badgeColor =
                                           scored.bucket === 'now'
                                             ? 'bg-red-100 text-red-700'
-                                            : scored.bucket === 'next'
-                                              ? 'bg-amber-100 text-amber-700'
-                                              : 'bg-gray-100 text-gray-500';
+                                            : nextOrLaterColor;
                                         return (
                                           <span
                                             className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${badgeColor}`}
@@ -798,6 +808,14 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                 <div
                   key={task.taskId}
                   onClick={() => handleTaskClick(task.taskId)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleTaskClick(task.taskId);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
                   className="border border-orange-200 rounded-lg p-3 hover:bg-orange-50 cursor-pointer transition-colors"
                 >
                   <div className="flex items-start justify-between">
@@ -813,20 +831,24 @@ export default function NextStepsView({ onTaskClick, sprint = 'all' }: NextSteps
                       <p className="text-sm text-gray-700 mt-1 line-clamp-1">{task.description}</p>
                       <div className="flex flex-wrap gap-1 mt-2">
                         <span className="text-xs text-orange-600">Blocked by:</span>
-                        {task.pendingDeps.map((dep) => (
-                          <span
-                            key={dep.taskId}
-                            className={`text-xs px-1.5 py-0.5 rounded ${
-                              dep.status === 'IN_PROGRESS'
-                                ? 'bg-blue-100 text-blue-700'
-                                : dep.status === 'BLOCKED'
-                                  ? 'bg-red-100 text-red-700'
-                                  : 'bg-gray-100 text-gray-700'
-                            }`}
-                          >
-                            {dep.taskId} ({dep.status})
-                          </span>
-                        ))}
+                        {task.pendingDeps.map((dep) => {
+                          const blockedOrDefaultDepClass =
+                            dep.status === 'BLOCKED'
+                              ? 'bg-red-100 text-red-700'
+                              : 'bg-gray-100 text-gray-700';
+                          const depStatusClass =
+                            dep.status === 'IN_PROGRESS'
+                              ? 'bg-blue-100 text-blue-700'
+                              : blockedOrDefaultDepClass;
+                          return (
+                            <span
+                              key={dep.taskId}
+                              className={`text-xs px-1.5 py-0.5 rounded ${depStatusClass}`}
+                            >
+                              {dep.taskId} ({dep.status})
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>

@@ -92,10 +92,21 @@ export default function RiskRegister() {
       a.click();
       URL.revokeObjectURL(url);
     } else {
-      const json = generateJSONExport(filteredRisks, summary || {
-        total: 0, open: 0, mitigated: 0, monitoring: 0, closed: 0,
-        inProgress: 0, accepted: 0, highRisk: 0, mediumRisk: 0, lowRisk: 0,
-      });
+      const json = generateJSONExport(
+        filteredRisks,
+        summary || {
+          total: 0,
+          open: 0,
+          mitigated: 0,
+          monitoring: 0,
+          closed: 0,
+          inProgress: 0,
+          accepted: 0,
+          highRisk: 0,
+          mediumRisk: 0,
+          lowRisk: 0,
+        }
+      );
       const blob = new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -262,9 +273,7 @@ export default function RiskRegister() {
                     className={`border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
                       expandedRow === risk.id ? 'bg-blue-50' : ''
                     }`}
-                    onClick={() =>
-                      setExpandedRow(expandedRow === risk.id ? null : risk.id)
-                    }
+                    onClick={() => setExpandedRow(expandedRow === risk.id ? null : risk.id)}
                   >
                     <td className="p-3 font-mono text-sm text-blue-600">{risk.id}</td>
                     <td className="p-3 text-sm text-gray-700">{risk.category}</td>
@@ -283,9 +292,7 @@ export default function RiskRegister() {
                       </span>
                     </td>
                     <td className="p-3 text-center">
-                      <span
-                        className={`px-2 py-1 rounded text-xs ${getStatusColor(risk.status)}`}
-                      >
+                      <span className={`px-2 py-1 rounded text-xs ${getStatusColor(risk.status)}`}>
                         {risk.status}
                       </span>
                     </td>
@@ -331,9 +338,7 @@ export default function RiskRegister() {
                           </div>
                           <div>
                             <h4 className="text-sm font-medium text-gray-700 mb-1">Notes</h4>
-                            <p className="text-sm text-gray-600">
-                              {risk.notes || 'No notes'}
-                            </p>
+                            <p className="text-sm text-gray-600">{risk.notes || 'No notes'}</p>
                           </div>
                           <div>
                             <h4 className="text-sm font-medium text-gray-700 mb-1">
@@ -342,9 +347,7 @@ export default function RiskRegister() {
                             <p className="text-sm text-gray-600">{risk.lastReviewed}</p>
                           </div>
                           <div>
-                            <h4 className="text-sm font-medium text-gray-700 mb-1">
-                              Review Date
-                            </h4>
+                            <h4 className="text-sm font-medium text-gray-700 mb-1">Review Date</h4>
                             <p className="text-sm text-gray-600">
                               {risk.reviewDate}
                               {risk.reviewDate &&
@@ -425,9 +428,7 @@ function RiskModal({
   });
 
   const computedScore = formData.impact * formData.likelihood;
-  const validTransitions = isEdit
-    ? VALID_RISK_TRANSITIONS[editRisk!.status] || []
-    : [];
+  const validTransitions = isEdit ? (VALID_RISK_TRANSITIONS[editRisk?.status ?? 'Open'] ?? []) : [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -511,9 +512,7 @@ function RiskModal({
               <label className="block text-sm text-gray-600 mb-1">Impact (1-5)</label>
               <select
                 value={formData.impact}
-                onChange={(e) =>
-                  setFormData({ ...formData, impact: parseInt(e.target.value) })
-                }
+                onChange={(e) => setFormData({ ...formData, impact: parseInt(e.target.value) })}
                 className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
               >
                 {[1, 2, 3, 4, 5].map((v) => (
@@ -527,9 +526,7 @@ function RiskModal({
               <label className="block text-sm text-gray-600 mb-1">Likelihood (1-5)</label>
               <select
                 value={formData.likelihood}
-                onChange={(e) =>
-                  setFormData({ ...formData, likelihood: parseInt(e.target.value) })
-                }
+                onChange={(e) => setFormData({ ...formData, likelihood: parseInt(e.target.value) })}
                 className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
               >
                 {[1, 2, 3, 4, 5].map((v) => (
@@ -554,12 +551,10 @@ function RiskModal({
               <label className="block text-sm text-gray-600 mb-1">Status</label>
               <select
                 value={formData.status}
-                onChange={(e) =>
-                  setFormData({ ...formData, status: e.target.value as RiskStatus })
-                }
+                onChange={(e) => setFormData({ ...formData, status: e.target.value as RiskStatus })}
                 className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
               >
-                <option value={editRisk!.status}>{editRisk!.status} (current)</option>
+                <option value={editRisk?.status}>{editRisk?.status} (current)</option>
                 {validTransitions.map((s) => (
                   <option key={s} value={s}>
                     {s}
@@ -598,9 +593,7 @@ function RiskModal({
                 <input
                   type="text"
                   value={formData.escalationPath}
-                  onChange={(e) =>
-                    setFormData({ ...formData, escalationPath: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, escalationPath: e.target.value })}
                   className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
                   placeholder="Who to escalate to..."
                 />
@@ -610,9 +603,7 @@ function RiskModal({
                 <input
                   type="text"
                   value={formData.evidence}
-                  onChange={(e) =>
-                    setFormData({ ...formData, evidence: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, evidence: e.target.value })}
                   className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-gray-900"
                   placeholder="File paths, links, or descriptions..."
                 />

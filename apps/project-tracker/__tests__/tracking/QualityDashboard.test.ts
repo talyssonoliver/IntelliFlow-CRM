@@ -453,7 +453,6 @@ describe('QualityDashboard Component Logic', () => {
       return { ...current, [type]: true };
     }
 
-
     it('sets single section to refreshing', () => {
       const result = buildRefreshState({}, 'debt');
       expect(result).toEqual({ debt: true });
@@ -484,7 +483,6 @@ describe('QualityDashboard Component Logic', () => {
     ): Record<string, string | null> {
       return { ...current, [type]: msg };
     }
-
 
     it('sets error on one section', () => {
       const result = buildErrorState({}, 'debt', 'Network error');

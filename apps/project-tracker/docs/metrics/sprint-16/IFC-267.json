@@ -1,0 +1,58 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-267",
+  "section": "Core CRM",
+  "description": "Account Detail No-Op Action Buttons. Wire 6 non-functional buttons: (1) Create Deal button no onClick (F-05, AccountDetail.tsx:229). (2) Add Contact button no onClick in overview (F-06, AccountDetail.tsx:233). (3-4) Add Contact buttons no onClick in contacts tab header and empty state (F-07/F-08, AccountContactsList.tsx:61,85). (5-6) Create Opportunity buttons no onClick in opportunities tab header and empty state (F-10/F-11, AccountOpportunitiesList.tsx:68,116). Each button should open the appropriate create form or association dialog with accountId pre-filled. Audit: docs/audit/account-detail-wiring-audit.md sections 3-5.",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-16",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-03-06T22:22:15.976Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 120,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "wiring_complete": {
+      "target": "6/6 buttons functional; create forms pre-fill accountId",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/components/accounts/AccountDetail.tsx",
+      "apps/web/src/components/accounts/AccountContactsList.tsx",
+      "apps/web/src/components/accounts/AccountOpportunitiesList.tsx",
+      ".specify/sprints/sprint-16/attestations/IFC-267/context_ack.json"
+    ],
+    "created": [
+      "apps/web/src/components/accounts/AccountDetail.tsx",
+      "apps/web/src/components/accounts/AccountContactsList.tsx",
+      "apps/web/src/components/accounts/AccountOpportunitiesList.tsx"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-16/attestations/IFC-267/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Account domain wiring audit finding. See docs/audit/account-detail-wiring-audit.md."
+}

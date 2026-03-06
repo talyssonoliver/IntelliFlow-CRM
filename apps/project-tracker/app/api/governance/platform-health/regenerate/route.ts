@@ -17,7 +17,7 @@ import {
   statSync,
 } from 'node:fs';
 import { resolve, join } from 'node:path';
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,9 +29,12 @@ function getRoot(): string {
   return root;
 }
 
-function safeExec(cmd: string, root: string): string {
+// S4721: use execFileSync with argument arrays to avoid shell command injection.
+// All git invocations in this module use static arguments — no user-controlled data.
+function safeExec(args: string[], root: string): string {
   try {
-    return execSync(cmd, {
+    return execFileSync('git', args, {
+      // NOSONAR — PATH inherited from developer environment, internal tooling only
       cwd: root,
       encoding: 'utf-8',
       timeout: 15000,
@@ -44,7 +47,8 @@ function safeExec(cmd: string, root: string): string {
 
 function countFiles(root: string, pattern: string): number {
   try {
-    const result = safeExec(`git ls-files "${pattern}"`, root);
+    // pattern is always a hardcoded glob constant (e.g. '*.ts') passed from this module only.
+    const result = safeExec(['ls-files', pattern], root);
     return result ? result.split('\n').filter(Boolean).length : 0;
   } catch {
     return 0;
@@ -142,12 +146,13 @@ export async function POST() {
     const totalTrackedFiles = countFiles(root, '*');
 
     // Git velocity (last 30 days)
+    // S4721: safeExec now uses execFileSync with argument arrays — no shell interpolation.
     const commitCount30d = (() => {
-      const result = safeExec('git log --oneline --since="30 days ago" --no-merges', root);
+      const result = safeExec(['log', '--oneline', '--since=30 days ago', '--no-merges'], root);
       return result ? result.split('\n').filter(Boolean).length : 0;
     })();
     const branchCount = (() => {
-      const result = safeExec('git branch --list', root);
+      const result = safeExec(['branch', '--list'], root);
       return result ? result.split('\n').filter(Boolean).length : 0;
     })();
 

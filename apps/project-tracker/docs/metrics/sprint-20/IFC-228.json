@@ -1,0 +1,63 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-228",
+  "section": "Core CRM",
+  "description": "Lead Owner Reassignment UI - Owner card on Lead detail (lines 1468-1487) is read-only. Add reassignment capability for MANAGER/ADMIN roles: user picker dropdown, reassign mutation via lead.update, audit trail entry. Apply RBAC check to show/hide reassign button. Extend to Contact and Account detail pages.",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-20",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [
+      "IFC-095"
+    ],
+    "all_satisfied": true,
+    "verified_at": "2026-03-06T22:22:16.054Z"
+  },
+  "dependencies_resolved": [
+    "IFC-095"
+  ],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 120,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "reassignment_latency": {
+      "target": "<500ms",
+      "actual": "",
+      "met": false
+    },
+    "rbac_enforced": {
+      "target": "MANAGER/ADMIN only",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      ".specify/sprints/sprint-20/attestations/IFC-228/context_ack.json"
+    ],
+    "created": [
+      "apps/web/src/app/leads/[id]/page.tsx"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-20/attestations/IFC-228/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Wiring debt: Owner card is read-only with no reassignment capability."
+}

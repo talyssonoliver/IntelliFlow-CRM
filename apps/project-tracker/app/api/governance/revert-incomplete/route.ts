@@ -82,7 +82,7 @@ function parseArtifactsWithPrefixes(artifactsStr: string): {
 async function checkPathExists(artifactPath: string): Promise<boolean> {
   try {
     if (artifactPath.includes('*')) {
-      const parentDir = artifactPath.split('*')[0].replace(/\/+$/, '');
+      const parentDir = artifactPath.split('*')[0].replace(/\/{1,100}$/, '');
       if (parentDir) {
         await access(join(process.cwd(), '..', '..', parentDir));
         return true;

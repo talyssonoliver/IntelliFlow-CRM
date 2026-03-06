@@ -1,0 +1,55 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-260",
+  "section": "Core CRM",
+  "description": "Contact Domain Model Fixes. (1) reconstitute() silently substitutes unknown@unknown.com for invalid emails — should Result.fail or throw (D-01). (2) mergeContacts no cross-tenant check — linkToLead correctly checks but merge doesn't (D-02). (3) No ContactDeletedEvent — deleteContact publishes no events, audit handler has mapping but event never emitted (D-04). (4) No ContactEmailChangedEvent — old email not captured in generic ContactUpdatedEvent (D-05). (5) Tags update always emits event without deep equality check (D-07). Audit: docs/audit/contact-detail-wiring-audit.md §18.",
+  "owner": "Backend Dev (STOA-Domain)",
+  "sprint": "sprint-20",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-03-06T22:22:16.064Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "audit_findings_resolved": {
+      "target": "Resolve findings: D-01,D-02,D-04,D-05,D-07",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "packages/domain/src/crm/contact/Contact.ts",
+      "packages/domain/src/crm/contact/ContactEvents.ts",
+      "packages/application/src/services/ContactService.ts"
+    ],
+    "created": [
+      "packages/domain/src/crm/contact/Contact.ts",
+      "packages/domain/src/crm/contact/ContactEvents.ts",
+      "packages/application/src/services/ContactService.ts"
+    ],
+    "missing": []
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Contact audit finding: D-01,D-02,D-04,D-05,D-07. See docs/audit/contact-detail-wiring-audit.md"
+}

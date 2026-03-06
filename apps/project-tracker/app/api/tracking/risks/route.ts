@@ -177,7 +177,10 @@ export async function GET() {
     });
   } catch (error) {
     console.error('Error reading risk register:', error);
-    return NextResponse.json({ status: 'error', message: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { status: 'error', message: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -319,7 +322,8 @@ export async function POST(request: NextRequest) {
       if (updates.status) updatedRisk.status = updates.status as RiskStatus;
       if (updates.owner) updatedRisk.owner = sanitizeCSVField(updates.owner);
       if (updates.mitigation) updatedRisk.mitigation = sanitizeCSVField(updates.mitigation);
-      if (updates.escalationPath) updatedRisk.escalationPath = sanitizeCSVField(updates.escalationPath);
+      if (updates.escalationPath)
+        updatedRisk.escalationPath = sanitizeCSVField(updates.escalationPath);
       if (updates.evidence) updatedRisk.evidence = sanitizeCSVField(updates.evidence);
       if (updates.notes) updatedRisk.notes = sanitizeCSVField(updates.notes);
 
@@ -343,6 +347,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: 'error', message: 'Invalid action' }, { status: 400 });
   } catch (error) {
     console.error('Error updating risk register:', error);
-    return NextResponse.json({ status: 'error', message: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { status: 'error', message: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

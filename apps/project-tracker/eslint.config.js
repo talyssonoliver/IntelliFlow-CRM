@@ -5,7 +5,14 @@ import tseslint from 'typescript-eslint';
 
 const eslintConfig = tseslint.config(
   {
-    ignores: ['.next/**', 'node_modules/**', '*.config.js', '*.config.ts', '.turbo/**', 'tsconfig.tsbuildinfo'],
+    ignores: [
+      '.next/**',
+      'node_modules/**',
+      '*.config.js',
+      '*.config.ts',
+      '.turbo/**',
+      'tsconfig.tsbuildinfo',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

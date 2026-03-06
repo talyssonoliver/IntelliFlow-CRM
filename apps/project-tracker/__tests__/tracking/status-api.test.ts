@@ -25,7 +25,7 @@ vi.mock('fs', async () => {
 // Import after mocking
 const { GET, POST } = await import('../../app/api/tracking/status/route');
 
-const mockFs = fs as unknown as {
+const mockFs = fs as any as {
   readFile: ReturnType<typeof vi.fn>;
   writeFile: ReturnType<typeof vi.fn>;
   appendFile: ReturnType<typeof vi.fn>;
@@ -266,8 +266,8 @@ IFC-001,"Architecture, Design","Technical Architecture Spike, Phase 1",Completed
 
     it('appends entry to history JSONL file', async () => {
       mockFs.readFile
-        .mockResolvedValueOnce(SAMPLE_CSV)  // CSV read
-        .mockResolvedValueOnce('');           // JSONL read for cap check
+        .mockResolvedValueOnce(SAMPLE_CSV) // CSV read
+        .mockResolvedValueOnce(''); // JSONL read for cap check
       mockFs.mkdir.mockResolvedValueOnce(undefined);
       mockFs.writeFile.mockResolvedValue(undefined);
       mockFs.appendFile.mockResolvedValueOnce(undefined);
@@ -282,9 +282,7 @@ IFC-001,"Architecture, Design","Technical Architecture Spike, Phase 1",Completed
     });
 
     it('writes both snapshot JSON and JSONL on POST', async () => {
-      mockFs.readFile
-        .mockResolvedValueOnce(SAMPLE_CSV)
-        .mockResolvedValueOnce('');
+      mockFs.readFile.mockResolvedValueOnce(SAMPLE_CSV).mockResolvedValueOnce('');
       mockFs.mkdir.mockResolvedValueOnce(undefined);
       mockFs.writeFile.mockResolvedValue(undefined);
       mockFs.appendFile.mockResolvedValueOnce(undefined);

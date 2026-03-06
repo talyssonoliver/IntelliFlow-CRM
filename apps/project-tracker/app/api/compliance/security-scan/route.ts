@@ -140,14 +140,25 @@ export async function GET(_request: NextRequest) {
     score -= severityCounts.low * 1;
     score = Math.max(0, score);
 
-    const status =
+    let status: string;
+    if (severityCounts.critical > 0) {
+      status = 'critical';
+    } else if (severityCounts.high > 0) {
+      status = 'warning';
+    } else if (score >= 80) {
+      status = 'passing';
+    } else {
+      status = 'warning';
+    }
+
+    const highOrAcceptable =
+      severityCounts.high > 0
+        ? 'Fix high severity vulnerabilities before deployment'
+        : 'Security posture acceptable';
+    const recommendation =
       severityCounts.critical > 0
-        ? 'critical'
-        : severityCounts.high > 0
-          ? 'warning'
-          : score >= 80
-            ? 'passing'
-            : 'warning';
+        ? 'URGENT: Fix critical vulnerabilities immediately'
+        : highOrAcceptable;
 
     return NextResponse.json(
       {
@@ -171,12 +182,7 @@ export async function GET(_request: NextRequest) {
         },
         criticalVulnerabilities: uniqueVulns.filter((v) => v.severity === 'critical').slice(0, 10),
         highVulnerabilities: uniqueVulns.filter((v) => v.severity === 'high').slice(0, 10),
-        recommendation:
-          severityCounts.critical > 0
-            ? 'URGENT: Fix critical vulnerabilities immediately'
-            : severityCounts.high > 0
-              ? 'Fix high severity vulnerabilities before deployment'
-              : 'Security posture acceptable',
+        recommendation,
       },
       {
         headers: {

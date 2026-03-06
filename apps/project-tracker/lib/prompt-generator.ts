@@ -318,6 +318,85 @@ function generateExecutionStrategy(
   return lines.join('\n');
 }
 
+const KEY_OBJECTIVES_LINES = [
+  '### Key Objectives',
+  '',
+  '- Code: Deliver high-quality, tested code for the web app',
+  '- Integration: Seamlessly integrate new features into existing architecture',
+  '- Security: Ensure robust security and compliance',
+  '- Performance: Optimize for speed and responsiveness',
+  '- Aviability: Ensure high availability and reliability',
+  '- Maintainability: Write clean, maintainable code',
+  '- Documentation: Provide clear documentation and specs',
+  '',
+];
+
+function appendPrerequisitesSection(lines: string[], csvTask: CSVTask): void {
+  if (!csvTask['Pre-requisites']) return;
+  lines.push('#### Pre-requisites');
+  const prereqs = csvTask['Pre-requisites'].split(';').map((p) => p.trim());
+  for (const prereq of prereqs) {
+    if (prereq) lines.push(`- ${prereq}`);
+  }
+  lines.push('');
+}
+
+function appendDefinitionOfDoneSection(lines: string[], csvTask: CSVTask): void {
+  if (!csvTask['Definition of Done']) return;
+  lines.push('#### Tasks');
+  const tasks = csvTask['Definition of Done'].split(';').map((t) => t.trim());
+  let taskNum = 1;
+  for (const task of tasks) {
+    if (task) {
+      lines.push(`${taskNum}. ${task}`);
+      taskNum++;
+    }
+  }
+  lines.push(...KEY_OBJECTIVES_LINES);
+  lines.push('');
+}
+
+function appendValidationSection(lines: string[], csvTask: CSVTask): void {
+  if (!csvTask['Validation Method']) return;
+  lines.push('#### Validation');
+  lines.push('```bash');
+  const validations = csvTask['Validation Method'].split(';').map((v) => v.trim());
+  for (const validation of validations) {
+    if (validation) lines.push(`# ${validation}`);
+  }
+  lines.push('```');
+  lines.push('');
+}
+
+function appendKpisSection(lines: string[], csvTask: CSVTask): void {
+  if (!csvTask.KPIs) return;
+  lines.push('#### KPIs');
+  const kpis = csvTask.KPIs.split(';').map((k) => k.trim());
+  for (const kpi of kpis) {
+    if (kpi) lines.push(`- ${kpi}`);
+  }
+  lines.push('');
+}
+
+function appendArtifactsSection(lines: string[], csvTask: CSVTask): void {
+  if (!csvTask['Artifacts To Track']) return;
+  lines.push('#### Artifacts');
+  lines.push('| Type | Path | Description |');
+  lines.push('|------|------|-------------|');
+  const artifacts = csvTask['Artifacts To Track'].split(';').map((a) => a.trim());
+  for (const artifact of artifacts) {
+    if (!artifact) continue;
+    const match = artifact.match(/^(ARTIFACT|EVIDENCE|SPEC|PLAN):(.+)$/);
+    if (match) {
+      const type = match[1];
+      const path = match[2].trim();
+      lines.push(`| ${type} | ${path} | ${inferArtifactDescription(path)} |`);
+    } else {
+      lines.push(`| ARTIFACT | ${artifact} | ${inferArtifactDescription(artifact)} |`);
+    }
+  }
+}
+
 /**
  * Generate individual task specification
  */
@@ -326,100 +405,18 @@ function generateTaskSpecification(csvTask: CSVTask, phaseEntry: TaskPhaseEntry)
 
   lines.push(`### ${csvTask['Task ID']}: ${csvTask.Description}`);
   lines.push('');
-  lines.push('### Key Objectives');
-  lines.push('');
-  lines.push('- Code: Deliver high-quality, tested code for the web app');
-  lines.push('- Integration: Seamlessly integrate new features into existing architecture');
-  lines.push('- Security: Ensure robust security and compliance');
-  lines.push('- Performance: Optimize for speed and responsiveness');
-  lines.push('- Aviability: Ensure high availability and reliability');
-  lines.push('- Maintainability: Write clean, maintainable code');
-  lines.push('- Documentation: Provide clear documentation and specs');
-  lines.push('');
+  lines.push(...KEY_OBJECTIVES_LINES);
   lines.push('#### Context');
   lines.push(`Dependency: ${csvTask.Dependencies || 'None'}`);
   lines.push(`Owner: ${csvTask.Owner}`);
   lines.push(`Execution Mode: ${phaseEntry.executionMode.toUpperCase()}`);
   lines.push('');
 
-  // Pre-requisites
-  if (csvTask['Pre-requisites']) {
-    lines.push('#### Pre-requisites');
-    const prereqs = csvTask['Pre-requisites'].split(';').map((p) => p.trim());
-    for (const prereq of prereqs) {
-      if (prereq) lines.push(`- ${prereq}`);
-    }
-    lines.push('');
-  }
-
-  // Tasks (from Definition of Done)
-  if (csvTask['Definition of Done']) {
-    lines.push('#### Tasks');
-    const tasks = csvTask['Definition of Done'].split(';').map((t) => t.trim());
-    let taskNum = 1;
-    for (const task of tasks) {
-      if (task) {
-        lines.push(`${taskNum}. ${task}`);
-        taskNum++;
-      }
-    }
-    lines.push('### Key Objectives');
-    lines.push('');
-    lines.push('- Code: Deliver high-quality, tested code for the web app');
-    lines.push('- Integration: Seamlessly integrate new features into existing architecture');
-    lines.push('- Security: Ensure robust security and compliance');
-    lines.push('- Performance: Optimize for speed and responsiveness');
-    lines.push('- Aviability: Ensure high availability and reliability');
-    lines.push('- Maintainability: Write clean, maintainable code');
-    lines.push('- Documentation: Provide clear documentation and specs');
-    lines.push('');
-    lines.push('');
-  }
-
-  // Validation
-  if (csvTask['Validation Method']) {
-    lines.push('#### Validation');
-    lines.push('```bash');
-    const validations = csvTask['Validation Method'].split(';').map((v) => v.trim());
-    for (const validation of validations) {
-      if (validation) lines.push(`# ${validation}`);
-    }
-    lines.push('```');
-    lines.push('');
-  }
-
-  // KPIs
-  if (csvTask.KPIs) {
-    lines.push('#### KPIs');
-    const kpis = csvTask.KPIs.split(';').map((k) => k.trim());
-    for (const kpi of kpis) {
-      if (kpi) lines.push(`- ${kpi}`);
-    }
-    lines.push('');
-  }
-
-  // Artifacts - use table format for better clarity
-  if (csvTask['Artifacts To Track']) {
-    lines.push('#### Artifacts');
-    lines.push('| Type | Path | Description |');
-    lines.push('|------|------|-------------|');
-    const artifacts = csvTask['Artifacts To Track'].split(';').map((a) => a.trim());
-    for (const artifact of artifacts) {
-      if (artifact) {
-        // Parse artifact type prefix (ARTIFACT:, EVIDENCE:, SPEC:, PLAN:)
-        const match = artifact.match(/^(ARTIFACT|EVIDENCE|SPEC|PLAN):(.+)$/);
-        if (match) {
-          const type = match[1];
-          const path = match[2].trim();
-          const desc = inferArtifactDescription(path);
-          lines.push(`| ${type} | ${path} | ${desc} |`);
-        } else {
-          // Legacy format without prefix
-          lines.push(`| ARTIFACT | ${artifact} | ${inferArtifactDescription(artifact)} |`);
-        }
-      }
-    }
-  }
+  appendPrerequisitesSection(lines, csvTask);
+  appendDefinitionOfDoneSection(lines, csvTask);
+  appendValidationSection(lines, csvTask);
+  appendKpisSection(lines, csvTask);
+  appendArtifactsSection(lines, csvTask);
 
   return lines.join('\n');
 }
@@ -869,6 +866,20 @@ function inferTheme(tasks: CSVTask[]): string {
   return themeMap[topSection] || topSection;
 }
 
+const STREAM_THEME_MAP: Array<[string[], string]> = [
+  [['security', 'compliance'], 'Security & Compliance'],
+  [['architecture', 'governance'], 'Architecture & Governance'],
+  [['infrastructure', 'observability'], 'Infrastructure & Observability'],
+  [['design', 'commercial', 'brand'], 'Design & Commercial'],
+];
+
+function inferStreamTheme(sectionLower: string): string | null {
+  for (const [keywords, theme] of STREAM_THEME_MAP) {
+    if (keywords.some((kw) => sectionLower.includes(kw))) return theme;
+  }
+  return null;
+}
+
 /**
  * Infer stream name from tasks
  */
@@ -878,30 +889,10 @@ function inferStreamName(tasks: TaskPhaseEntry[]): string {
   const sections = tasks.map((t) => t.section);
   const uniqueSections = [...new Set(sections)];
 
-  if (uniqueSections.length === 1) {
-    return uniqueSections[0];
-  }
+  if (uniqueSections.length === 1) return uniqueSections[0];
 
-  // Find common theme
   const sectionLower = uniqueSections.join(' ').toLowerCase();
-  if (sectionLower.includes('security') || sectionLower.includes('compliance')) {
-    return 'Security & Compliance';
-  }
-  if (sectionLower.includes('architecture') || sectionLower.includes('governance')) {
-    return 'Architecture & Governance';
-  }
-  if (sectionLower.includes('infrastructure') || sectionLower.includes('observability')) {
-    return 'Infrastructure & Observability';
-  }
-  if (
-    sectionLower.includes('design') ||
-    sectionLower.includes('commercial') ||
-    sectionLower.includes('brand')
-  ) {
-    return 'Design & Commercial';
-  }
-
-  return uniqueSections.slice(0, 2).join(' & ');
+  return inferStreamTheme(sectionLower) ?? uniqueSections.slice(0, 2).join(' & ');
 }
 
 /**

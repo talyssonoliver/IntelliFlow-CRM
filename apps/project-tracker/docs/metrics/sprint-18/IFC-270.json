@@ -1,0 +1,58 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-270",
+  "section": "Core CRM",
+  "description": "Account Router Missing Procedures & Update Fix. (1) Update procedure silently drops revenue/employees/industry/parentAccountId fields accepted by schema (B-08). (2) accountListResponseSchema uses 'data' key but router returns 'accounts' — mismatch (B-09). (3) No updateRevenue procedure — domain Account.updateRevenue() unreachable via API (B-10). (4) No updateEmployeeCount procedure (B-11). (5) No categorizeIndustry procedure (B-12). (6) mapAccountToResponse returns raw WebsiteUrl value object instead of string (B-13). Audit: docs/audit/account-detail-wiring-audit.md section 12.",
+  "owner": "Backend Dev (STOA-Domain)",
+  "sprint": "sprint-18",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-03-06T22:22:16.010Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 240,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "wiring_complete": {
+      "target": "All schema fields persist on update; 3 new procedures functional",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/api/src/modules/account/account.router.ts",
+      "packages/validators/src/account.ts",
+      "packages/application/src/services/AccountService.ts",
+      ".specify/sprints/sprint-18/attestations/IFC-270/context_ack.json"
+    ],
+    "created": [
+      "apps/api/src/modules/account/account.router.ts",
+      "packages/validators/src/account.ts",
+      "packages/application/src/services/AccountService.ts"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-18/attestations/IFC-270/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Account domain wiring audit finding. See docs/audit/account-detail-wiring-audit.md."
+}

@@ -40,7 +40,7 @@ vi.mock('util', async () => {
 // Import after mocking
 const { GET, POST } = await import('../../app/api/tracking/build/route');
 
-const mockFs = fs as unknown as {
+const mockFs = fs as any as {
   readFile: ReturnType<typeof vi.fn>;
   writeFile: ReturnType<typeof vi.fn>;
   stat: ReturnType<typeof vi.fn>;
@@ -98,9 +98,7 @@ function setupGetMocks(overrides?: {
   if (overrides?.coverageFails) {
     mockFs.readFile.mockRejectedValueOnce(new Error('File not found'));
   } else {
-    mockFs.readFile.mockResolvedValueOnce(
-      JSON.stringify(overrides?.coverage ?? SAMPLE_COVERAGE)
-    );
+    mockFs.readFile.mockResolvedValueOnce(JSON.stringify(overrides?.coverage ?? SAMPLE_COVERAGE));
   }
 
   mockFs.stat.mockResolvedValue({ mtime: new Date('2026-01-06T10:00:00Z') });
@@ -417,7 +415,10 @@ describe('Build API Route', () => {
     it('runs both typecheck and lint when type=all', async () => {
       // First call for typecheck, second for lint
       mockExecAsync
-        .mockResolvedValueOnce({ stdout: 'Tasks:    8 successful, 8 total\nCached:    6 cached, 8 total\n', stderr: '' })
+        .mockResolvedValueOnce({
+          stdout: 'Tasks:    8 successful, 8 total\nCached:    6 cached, 8 total\n',
+          stderr: '',
+        })
         .mockResolvedValueOnce({ stdout: '0 errors\n', stderr: '' });
       setupGetMocks();
 
@@ -495,10 +496,9 @@ describe('Build API Route', () => {
       });
       await POST(request);
 
-      expect(mockFs.mkdir).toHaveBeenCalledWith(
-        expect.stringContaining('reports'),
-        { recursive: true }
-      );
+      expect(mockFs.mkdir).toHaveBeenCalledWith(expect.stringContaining('reports'), {
+        recursive: true,
+      });
     });
 
     it('calls writeFile with JSON-serialized state', async () => {

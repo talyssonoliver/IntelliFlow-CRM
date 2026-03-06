@@ -25,7 +25,7 @@ vi.mock('fs', async () => {
 // Import after mocking
 const { GET, POST } = await import('../../app/api/tracking/risks/route');
 
-const mockFs = fs as unknown as {
+const mockFs = fs as any as {
   readFile: ReturnType<typeof vi.fn>;
   writeFile: ReturnType<typeof vi.fn>;
   appendFile: ReturnType<typeof vi.fn>;
@@ -321,9 +321,7 @@ RISK-001,Technology,"Description with, commas and ""quotes""",4,4,16,"Mitigation
 
       // Verify audit trail was written
       const writeCalls = mockFs.writeFile.mock.calls;
-      const auditWrite = writeCalls.find((c: string[]) =>
-        c[0]?.includes('risk-register-history')
-      );
+      const auditWrite = writeCalls.find((c: string[]) => c[0]?.includes('risk-register-history'));
       expect(auditWrite).toBeDefined();
       if (auditWrite) {
         const auditData = JSON.parse(auditWrite[1]);

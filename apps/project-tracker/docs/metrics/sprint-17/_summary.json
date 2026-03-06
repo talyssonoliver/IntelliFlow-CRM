@@ -7,14 +7,20 @@
   "phases": [],
   "task_summary": {
     "total": 12,
-    "done": 0,
+    "done": 1,
     "in_progress": 0,
     "blocked": 0,
-    "not_started": 12,
+    "not_started": 11,
     "failed": 0
   },
-  "completed_tasks": [],
-  "notes": "0/12 tasks DONE (0%). Last synced: 2026-02-28T01:12:39.920Z",
+  "completed_tasks": [
+    {
+      "task_id": "IFC-030",
+      "completed_at": "2026-03-03T00:58:50.290Z",
+      "duration_minutes": 15
+    }
+  ],
+  "notes": "1/12 tasks DONE (8%). Last synced: 2026-03-06T22:22:15.990Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
@@ -31,10 +37,10 @@
       "bottleneck_task_id": "PG-050"
     },
     "schedule_variance": {
-      "sv_minutes": -1950,
-      "spi": 0,
+      "sv_minutes": -1755,
+      "spi": 0.1,
       "status": "critical"
     },
-    "calculated_at": "2026-02-28T01:12:40.160Z"
+    "calculated_at": "2026-03-06T22:22:16.181Z"
   }
 }

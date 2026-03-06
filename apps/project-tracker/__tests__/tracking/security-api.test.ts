@@ -38,7 +38,7 @@ vi.mock('util', async () => {
 // Import after mocking
 const { GET, POST } = await import('../../app/api/tracking/security/route');
 
-const mockFs = fs as unknown as {
+const mockFs = fs as any as {
   readFile: ReturnType<typeof vi.fn>;
   writeFile: ReturnType<typeof vi.fn>;
   mkdir: ReturnType<typeof vi.fn>;

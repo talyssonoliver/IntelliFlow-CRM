@@ -51,6 +51,38 @@ function getProjectRoot(): string {
   return process.cwd().replace(/[\\/]apps[\\/]project-tracker$/, '');
 }
 
+function computeVelocityTrend(sprintBars: SprintBar[]): 'improving' | 'stable' | 'declining' {
+  const recentSprints = sprintBars.slice(-3);
+  const previousSprints = sprintBars.slice(-6, -3);
+  if (recentSprints.length < 2 || previousSprints.length < 1) return 'stable';
+  const avgRecent = recentSprints.reduce((sum, s) => sum + s.velocity, 0) / recentSprints.length;
+  const avgPrevious =
+    previousSprints.reduce((sum, s) => sum + s.velocity, 0) / previousSprints.length;
+  if (avgRecent > avgPrevious * 1.1) return 'improving';
+  if (avgRecent < avgPrevious * 0.9) return 'declining';
+  return 'stable';
+}
+
+function computeConfidence(
+  avgVelocity: number | null,
+  thresholds: { high: number; medium: number; low: number }
+): 'high' | 'medium' | 'low' {
+  if (avgVelocity === null) return 'low';
+  if (avgVelocity >= thresholds.high) return 'high';
+  if (avgVelocity >= thresholds.medium) return 'medium';
+  return 'low';
+}
+
+function computeHealthStatus(
+  currentVelocity: number,
+  minVelocityWarning: number,
+  targetVelocity: number
+): 'healthy' | 'warning' | 'critical' {
+  if (currentVelocity < minVelocityWarning) return 'critical';
+  if (currentVelocity < targetVelocity) return 'warning';
+  return 'healthy';
+}
+
 function loadVelocityConfig(): VelocityConfig | null {
   const projectRoot = getProjectRoot();
   const configPath = join(projectRoot, 'artifacts', 'misc', 'velocity-prediction.json');
@@ -121,18 +153,7 @@ export async function GET() {
       totalPlanned > 0 ? Math.round((totalCompleted / totalPlanned) * 100) : 0;
 
     // Calculate trend from recent sprints
-    const recentSprints = sprintBars.slice(-3);
-    const previousSprints = sprintBars.slice(-6, -3);
-    let trend: 'improving' | 'stable' | 'declining' = 'stable';
-
-    if (recentSprints.length >= 2 && previousSprints.length >= 1) {
-      const avgRecent =
-        recentSprints.reduce((sum, s) => sum + s.velocity, 0) / recentSprints.length;
-      const avgPrevious =
-        previousSprints.reduce((sum, s) => sum + s.velocity, 0) / previousSprints.length;
-      if (avgRecent > avgPrevious * 1.1) trend = 'improving';
-      else if (avgRecent < avgPrevious * 0.9) trend = 'declining';
-    }
+    const trend = computeVelocityTrend(sprintBars);
 
     // Get target velocity from config or use default
     const targetVelocity = config?.config?.targetVelocity ?? 80;
@@ -150,22 +171,13 @@ export async function GET() {
           )
         : null;
 
-    // Determine confidence based on thresholds
     const confidenceThresholds = config?.forecast?.confidenceThresholds ?? {
       high: 80,
       medium: 60,
       low: 40,
     };
-    let confidence: 'high' | 'medium' | 'low' = 'low';
-    if (avgVelocity !== null) {
-      if (avgVelocity >= confidenceThresholds.high) confidence = 'high';
-      else if (avgVelocity >= confidenceThresholds.medium) confidence = 'medium';
-    }
-
-    // Determine health status
-    let healthStatus: 'healthy' | 'warning' | 'critical' = 'healthy';
-    if (currentVelocity < minVelocityWarning) healthStatus = 'critical';
-    else if (currentVelocity < targetVelocity) healthStatus = 'warning';
+    const confidence = computeConfidence(avgVelocity, confidenceThresholds);
+    const healthStatus = computeHealthStatus(currentVelocity, minVelocityWarning, targetVelocity);
 
     return NextResponse.json(
       {

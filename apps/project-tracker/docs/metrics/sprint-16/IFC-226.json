@@ -1,0 +1,54 @@
+{
+  "$schema": "../schemas/task-status.schema.json",
+  "task_id": "IFC-226",
+  "section": "Core CRM",
+  "description": "Lead Detail Null-State UX - Fix engagement/churn/sentiment showing raw 'Unknown' string when aiInsight is null. Replace with styled 'Not analyzed' state with visual distinction from real AI data. Page: leads/[id]/page.tsx lines 588, 2258.",
+  "owner": "Frontend Dev (STOA-Quality)",
+  "sprint": "sprint-16",
+  "phase": null,
+  "stream": null,
+  "status": "BACKLOG",
+  "dependencies": {
+    "required": [],
+    "all_satisfied": true,
+    "verified_at": "2026-03-06T22:22:15.967Z"
+  },
+  "dependencies_resolved": [],
+  "started_at": null,
+  "completed_at": null,
+  "target_duration_minutes": 120,
+  "actual_duration_minutes": null,
+  "kpis": {
+    "null_state_rendering": {
+      "target": "No raw 'Unknown' strings",
+      "actual": "",
+      "met": false
+    },
+    "test_coverage": {
+      "target": ">=90%",
+      "actual": "",
+      "met": false
+    }
+  },
+  "artifacts": {
+    "expected": [
+      "apps/web/src/app/leads/[id]/page.tsx",
+      ".specify/sprints/sprint-16/attestations/IFC-226/context_ack.json"
+    ],
+    "created": [
+      "apps/web/src/app/leads/[id]/page.tsx"
+    ],
+    "missing": [
+      ".specify/sprints/sprint-16/attestations/IFC-226/context_ack.json"
+    ]
+  },
+  "validations": [],
+  "blockers": [],
+  "status_history": [
+    {
+      "status": "Backlog",
+      "at": "2026-03-05T00:00:00Z"
+    }
+  ],
+  "notes": "Wiring debt: Raw 'Unknown' string renders as badge label when aiInsight is null."
+}

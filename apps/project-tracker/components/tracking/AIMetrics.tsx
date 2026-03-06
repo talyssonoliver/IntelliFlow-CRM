@@ -22,10 +22,7 @@ export function getDriftBarWidth(score: number, threshold: number): number {
   return Math.min((score / threshold) * 100, 100);
 }
 
-export function getLatencyColor(
-  ms: number,
-  thresholds: { green: number; yellow: number }
-): string {
+export function getLatencyColor(ms: number, thresholds: { green: number; yellow: number }): string {
   if (ms < thresholds.green) return 'text-green-600';
   if (ms < thresholds.yellow) return 'text-yellow-600';
   return 'text-red-600';
@@ -46,10 +43,7 @@ export function getSloComplianceStatus(
   return 'compliant';
 }
 
-export function getRoiVariant(
-  roi: number | null,
-  _target: number
-): string {
+export function getRoiVariant(roi: number | null, _target: number): string {
   if (roi === null) return 'default';
   if (roi >= 200) return 'success';
   if (roi >= 100) return 'warning';
@@ -194,17 +188,37 @@ export default function AIMetrics() {
     ? calculateCostUtilization(data.costs.current_month, data.costs.budget)
     : 0;
 
-  const sloStatus = data ? getSloComplianceStatus(data.slo.p95_compliant, data.slo.p99_compliant) : 'pending';
+  const sloStatus = data
+    ? getSloComplianceStatus(data.slo.p95_compliant, data.slo.p99_compliant)
+    : 'pending';
+  const sloViolationOrPendingClass =
+    sloStatus === 'violation' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500';
+  const sloBadgeClass =
+    sloStatus === 'compliant' ? 'bg-green-100 text-green-700' : sloViolationOrPendingClass;
+  const sloViolationOrPendingText = sloStatus === 'violation' ? 'Violation' : 'Pending';
+  const sloBadgeText = sloStatus === 'compliant' ? 'Compliant' : sloViolationOrPendingText;
+  const p95VariantFalse = data?.slo.p95_compliant === false ? 'error' : 'default';
+  const p95Variant: 'success' | 'error' | 'default' =
+    data?.slo.p95_compliant === true ? 'success' : p95VariantFalse;
+  const p99VariantFalse = data?.slo.p99_compliant === false ? 'error' : 'default';
+  const p99Variant: 'success' | 'error' | 'default' =
+    data?.slo.p99_compliant === true ? 'success' : p99VariantFalse;
 
   // Aggregate health status
   const getHealthStatus = (): 'green' | 'yellow' | 'red' | 'pending' => {
     if (!data) return 'pending';
     const hasDrift = data.drift.detected;
-    const hasHallucinationIssue = data.hallucination.rate !== null && data.hallucination.rate > data.hallucination.threshold;
+    const hasHallucinationIssue =
+      data.hallucination.rate !== null && data.hallucination.rate > data.hallucination.threshold;
     const hasSloViolation = sloStatus === 'violation';
     const hasRoiIssue = data.roi.current_percentage !== null && data.roi.current_percentage < 100;
 
-    if (data.drift.score === null && data.hallucination.rate === null && data.slo.p95_actual_ms === null && data.roi.current_percentage === null) {
+    if (
+      data.drift.score === null &&
+      data.hallucination.rate === null &&
+      data.slo.p95_actual_ms === null &&
+      data.roi.current_percentage === null
+    ) {
       return 'pending';
     }
     if (hasDrift || hasHallucinationIssue || hasSloViolation || hasRoiIssue) return 'red';
@@ -219,7 +233,12 @@ export default function AIMetrics() {
     red: 'bg-red-50 border-red-200 text-red-700',
     pending: 'bg-gray-50 border-gray-200 text-gray-500',
   };
-  const healthLabels = { green: 'Healthy', yellow: 'Partial Data', red: 'Issues Detected', pending: 'Pending' };
+  const healthLabels = {
+    green: 'Healthy',
+    yellow: 'Partial Data',
+    red: 'Issues Detected',
+    pending: 'Pending',
+  };
 
   return (
     <div className="space-y-6">
@@ -240,10 +259,12 @@ export default function AIMetrics() {
       {/* Health Status Banner */}
       <div className={`rounded-lg p-3 border ${healthColors[healthStatus]}`}>
         <div className="flex items-center gap-2 text-sm font-medium">
-          <Icon
-            name={healthStatus === 'green' ? 'check_circle' : healthStatus === 'red' ? 'error' : 'info'}
-            size="base"
-          />
+          {(() => {
+            const redOrPendingHealthIcon = healthStatus === 'red' ? 'error' : 'info';
+            const healthIconName =
+              healthStatus === 'green' ? 'check_circle' : redOrPendingHealthIcon;
+            return <Icon name={healthIconName} size="base" />;
+          })()}
           AI System Health: {healthLabels[healthStatus]}
         </div>
       </div>
@@ -266,9 +287,7 @@ export default function AIMetrics() {
               <span className="font-medium text-gray-900">Model Drift</span>
             </div>
             <span className={`text-sm ${data?.drift.detected ? 'text-red-600' : 'text-green-600'}`}>
-              {data?.drift.score !== null
-                ? (data?.drift.detected ? 'DETECTED' : 'OK')
-                : 'Pending'}
+              {data?.drift.score !== null ? (data?.drift.detected ? 'DETECTED' : 'OK') : 'Pending'}
             </span>
           </div>
           <div className="flex items-center gap-4 text-sm">
@@ -291,7 +310,11 @@ export default function AIMetrics() {
             <div
               className={`h-full ${data?.drift.detected ? 'bg-red-500' : 'bg-green-500'}`}
               role="progressbar"
-              aria-valuenow={data && data.drift.score !== null ? getDriftBarWidth(data.drift.score, data.drift.threshold) : 0}
+              aria-valuenow={
+                data && data.drift.score !== null
+                  ? getDriftBarWidth(data.drift.score, data.drift.threshold)
+                  : 0
+              }
               aria-valuemin={0}
               aria-valuemax={100}
               style={{
@@ -314,7 +337,9 @@ export default function AIMetrics() {
             <div className="mt-3 space-y-1">
               {data.drift.alerts.map((alert, i) => (
                 <div key={i} className="text-xs flex items-center gap-2">
-                  <span className={`font-medium ${alert.severity === 'critical' ? 'text-red-600' : 'text-yellow-600'}`}>
+                  <span
+                    className={`font-medium ${alert.severity === 'critical' ? 'text-red-600' : 'text-yellow-600'}`}
+                  >
                     [{alert.severity}]
                   </span>
                   <span className="text-gray-600">{alert.message}</span>
@@ -328,7 +353,9 @@ export default function AIMetrics() {
         {/* Hallucination Rate */}
         <div
           className={`rounded-lg p-4 border ${
-            data && data.hallucination.rate !== null && data.hallucination.rate > data.hallucination.threshold
+            data &&
+            data.hallucination.rate !== null &&
+            data.hallucination.rate > data.hallucination.threshold
               ? 'bg-red-50 border-red-200'
               : 'bg-green-50 border-green-200'
           }`}
@@ -338,7 +365,9 @@ export default function AIMetrics() {
               <Icon
                 name="psychology"
                 className={
-                  data && data.hallucination.rate !== null && data.hallucination.rate > data.hallucination.threshold
+                  data &&
+                  data.hallucination.rate !== null &&
+                  data.hallucination.rate > data.hallucination.threshold
                     ? 'text-red-600'
                     : 'text-green-600'
                 }
@@ -348,7 +377,9 @@ export default function AIMetrics() {
             </div>
             <span
               className={`text-sm ${
-                data && data.hallucination.rate !== null && data.hallucination.rate > data.hallucination.threshold
+                data &&
+                data.hallucination.rate !== null &&
+                data.hallucination.rate > data.hallucination.threshold
                   ? 'text-red-600'
                   : 'text-green-600'
               }`}
@@ -390,34 +421,42 @@ export default function AIMetrics() {
         <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-4">
           <Icon name="speed" size="base" />
           SLO Compliance
-          <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${
-            sloStatus === 'compliant' ? 'bg-green-100 text-green-700' :
-            sloStatus === 'violation' ? 'bg-red-100 text-red-700' :
-            'bg-gray-100 text-gray-500'
-          }`}>
-            {sloStatus === 'compliant' ? 'Compliant' : sloStatus === 'violation' ? 'Violation' : 'Pending'}
+          <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${sloBadgeClass}`}>
+            {sloBadgeText}
           </span>
         </h4>
         <div className="grid grid-cols-3 gap-4">
           <MetricCard
             title="P95 Latency"
-            value={data && data.slo.p95_actual_ms !== null ? `${data.slo.p95_actual_ms}ms` : 'Pending'}
+            value={
+              data && data.slo.p95_actual_ms !== null ? `${data.slo.p95_actual_ms}ms` : 'Pending'
+            }
             subtitle={`Target: ${data?.slo.p95_target_ms ?? 2000}ms`}
             icon="timer"
-            variant={data?.slo.p95_compliant === true ? 'success' : data?.slo.p95_compliant === false ? 'error' : 'default'}
+            variant={p95Variant}
           />
           <MetricCard
             title="P99 Latency"
-            value={data && data.slo.p99_actual_ms !== null ? `${data.slo.p99_actual_ms}ms` : 'Pending'}
+            value={
+              data && data.slo.p99_actual_ms !== null ? `${data.slo.p99_actual_ms}ms` : 'Pending'
+            }
             subtitle={`Target: ${data?.slo.p99_target_ms ?? 5000}ms`}
             icon="timer"
-            variant={data?.slo.p99_compliant === true ? 'success' : data?.slo.p99_compliant === false ? 'error' : 'default'}
+            variant={p99Variant}
           />
           <MetricCard
             title="Success Rate"
-            value={data && data.slo.success_rate !== null ? `${(data.slo.success_rate * 100).toFixed(1)}%` : 'Pending'}
+            value={
+              data && data.slo.success_rate !== null
+                ? `${(data.slo.success_rate * 100).toFixed(1)}%`
+                : 'Pending'
+            }
             icon="check_circle"
-            variant={data && data.slo.success_rate !== null && data.slo.success_rate >= 0.99 ? 'success' : 'default'}
+            variant={
+              data && data.slo.success_rate !== null && data.slo.success_rate >= 0.99
+                ? 'success'
+                : 'default'
+            }
           />
         </div>
       </div>
@@ -427,17 +466,24 @@ export default function AIMetrics() {
         <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2 mb-4">
           <Icon name="trending_up" size="base" />
           ROI Tracking
-          {data?.roi.trend && (
-            <span className="text-xs text-gray-500">({data.roi.trend})</span>
-          )}
+          {data?.roi.trend && <span className="text-xs text-gray-500">({data.roi.trend})</span>}
         </h4>
         <div className="grid grid-cols-3 gap-4">
           <MetricCard
             title="Current ROI"
-            value={data && data.roi.current_percentage !== null ? `${data.roi.current_percentage}%` : 'Tracking — no data yet'}
+            value={
+              data && data.roi.current_percentage !== null
+                ? `${data.roi.current_percentage}%`
+                : 'Tracking — no data yet'
+            }
             subtitle={`Target: ${data?.roi.target_percentage ?? 200}%`}
             icon="analytics"
-            variant={getRoiVariant(data?.roi.current_percentage ?? null, data?.roi.target_percentage ?? 200) as 'success' | 'warning' | 'error' | 'default'}
+            variant={
+              getRoiVariant(
+                data?.roi.current_percentage ?? null,
+                data?.roi.target_percentage ?? 200
+              ) as 'success' | 'warning' | 'error' | 'default'
+            }
           />
           <MetricCard
             title="Total Cost"
@@ -489,20 +535,20 @@ export default function AIMetrics() {
           />
         </div>
         <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-          <div
-            className={`h-full transition-all ${
-              costUtilization > 90
-                ? 'bg-red-500'
-                : costUtilization > 70
-                  ? 'bg-yellow-500'
-                  : 'bg-green-500'
-            }`}
-            role="progressbar"
-            aria-valuenow={Math.min(costUtilization, 100)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            style={{ width: `${Math.min(costUtilization, 100)}%` }}
-          />
+          {(() => {
+            const midCostBarColor = costUtilization > 70 ? 'bg-yellow-500' : 'bg-green-500';
+            const costBarColor = costUtilization > 90 ? 'bg-red-500' : midCostBarColor;
+            return (
+              <div
+                className={`h-full transition-all ${costBarColor}`}
+                role="progressbar"
+                aria-valuenow={Math.min(costUtilization, 100)}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                style={{ width: `${Math.min(costUtilization, 100)}%` }}
+              />
+            );
+          })()}
         </div>
         {/* Per-model cost breakdown */}
         {data?.costs.by_model && Object.keys(data.costs.by_model).length > 0 && (
@@ -555,7 +601,9 @@ export default function AIMetrics() {
                 <th className="text-center text-xs font-medium text-gray-500 p-3">Accuracy</th>
                 <th className="text-center text-xs font-medium text-gray-500 p-3">Cost/1K</th>
                 <th className="text-center text-xs font-medium text-gray-500 p-3">Cost Total</th>
-                <th className="text-center text-xs font-medium text-gray-500 p-3">Requests (24h)</th>
+                <th className="text-center text-xs font-medium text-gray-500 p-3">
+                  Requests (24h)
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -564,7 +612,9 @@ export default function AIMetrics() {
                   <td className="p-3 font-medium text-gray-900">{model.name}</td>
                   <td className="p-3 text-center">
                     {model.latency_p50 !== null ? (
-                      <span className={`font-mono text-sm ${getLatencyColor(model.latency_p50, { green: 500, yellow: 1000 })}`}>
+                      <span
+                        className={`font-mono text-sm ${getLatencyColor(model.latency_p50, { green: 500, yellow: 1000 })}`}
+                      >
                         {model.latency_p50}ms
                       </span>
                     ) : (
@@ -573,7 +623,9 @@ export default function AIMetrics() {
                   </td>
                   <td className="p-3 text-center">
                     {model.latency_p95 !== null ? (
-                      <span className={`font-mono text-sm ${getLatencyColor(model.latency_p95, { green: 1000, yellow: 2000 })}`}>
+                      <span
+                        className={`font-mono text-sm ${getLatencyColor(model.latency_p95, { green: 1000, yellow: 2000 })}`}
+                      >
                         {model.latency_p95}ms
                       </span>
                     ) : (

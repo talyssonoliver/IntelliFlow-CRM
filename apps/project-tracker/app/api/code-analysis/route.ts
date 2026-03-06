@@ -186,6 +186,7 @@ function runKnip(): AnalysisResult['knip'] {
     let output = '';
     try {
       output = execSync('npx knip --reporter json --exclude unlisted,unresolved --no-gitignore', {
+        // NOSONAR: PATH inherited from developer environment — internal tooling only, not user-facing
         cwd: PROJECT_ROOT,
         encoding: 'utf-8',
         timeout: 120000, // 2 minutes
@@ -246,7 +247,7 @@ function runDepcheck(): AnalysisResult['depcheck'] {
     let output = '';
     try {
       output = execSync(
-        'npx depcheck --json --ignores="@types/*,eslint-*,prettier,husky,lint-staged,turbo"',
+        'npx depcheck --json --ignores="@types/*,eslint-*,prettier,husky,lint-staged,turbo"', // NOSONAR S4036 — PATH inherited from developer environment, internal tooling only
         {
           cwd: PROJECT_ROOT,
           encoding: 'utf-8',

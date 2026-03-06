@@ -29,6 +29,36 @@ interface MilestonePayment {
   releaseDate?: string;
 }
 
+function computeBudgetLineStatus(spent: number, allocated: number): 'under' | 'on-track' | 'over' {
+  if (spent > allocated) return 'over';
+  if (spent >= allocated * 0.9) return 'on-track';
+  return 'under';
+}
+
+function computeMilestoneStatus(status: string | undefined): 'pending' | 'approved' | 'released' {
+  const normalizedStatus = status?.toLowerCase() || '';
+  if (normalizedStatus === 'completed') return 'released';
+  if (normalizedStatus === 'in progress') return 'approved';
+  return 'pending';
+}
+
+function computeBudgetHealth(spendPercentage: number): 'healthy' | 'warning' | 'critical' {
+  if (spendPercentage > 100) return 'critical';
+  if (spendPercentage >= 90) return 'warning';
+  return 'healthy';
+}
+
+function computeBudgetRecommendation(health: 'healthy' | 'warning' | 'critical'): string {
+  switch (health) {
+    case 'critical':
+      return 'Immediate budget review required. Reduce non-essential spending.';
+    case 'warning':
+      return 'Monitor spending closely. Evaluate upcoming milestones.';
+    case 'healthy':
+      return 'Budget is on track. Continue execution as planned.';
+  }
+}
+
 function getProjectRoot(): string {
   return process.cwd().replace(/[\\/]apps[\\/]project-tracker$/, '');
 }
@@ -74,7 +104,7 @@ function loadBudgetData(): { lines: BudgetLine[]; milestones: MilestonePayment[]
       allocated,
       spent,
       remaining: allocated - spent,
-      status: spent > allocated ? 'over' : spent > allocated * 0.8 ? 'on-track' : 'under',
+      status: computeBudgetLineStatus(spent, allocated),
     });
   }
 
@@ -101,12 +131,7 @@ function loadBudgetData(): { lines: BudgetLine[]; milestones: MilestonePayment[]
             milestone: gates[taskId].name,
             taskId,
             amount: gates[taskId].amount,
-            status:
-              status === 'completed' || status === 'done'
-                ? 'released'
-                : status === 'in progress'
-                  ? 'approved'
-                  : 'pending',
+            status: computeMilestoneStatus(status),
           });
         }
       }
@@ -136,14 +161,7 @@ export async function GET(_request: NextRequest) {
 
     // Budget health
     const spendPercentage = Math.round((totalSpent / totalAllocated) * 100);
-    const health =
-      spendPercentage < 50
-        ? 'healthy'
-        : spendPercentage < 80
-          ? 'moderate'
-          : spendPercentage < 100
-            ? 'caution'
-            : 'over-budget';
+    const health = computeBudgetHealth(spendPercentage);
 
     // Burn rate (monthly)
     const monthlyBurn = totalSpent; // Simplified - would calculate from historical data
@@ -188,12 +206,7 @@ export async function GET(_request: NextRequest) {
             severity: l.status === 'over' ? 'high' : 'medium',
           })),
         nextMilestone: milestones.find((m) => m.status === 'pending') || null,
-        recommendation:
-          health === 'healthy'
-            ? 'Budget utilization is optimal'
-            : health === 'over-budget'
-              ? 'URGENT: Review and reduce spending'
-              : 'Monitor spending closely',
+        recommendation: computeBudgetRecommendation(health),
       },
       {
         headers: {

@@ -31,9 +31,8 @@ interface CsvTask {
 export async function POST(request: Request) {
   try {
     const body: GenerateTaskPromptRequest = await request.json();
-    const taskIds =
-      (body.taskIds && body.taskIds.length > 0 && body.taskIds) ||
-      (body.taskId ? [body.taskId] : []);
+    const taskIds: string[] =
+      body.taskIds && body.taskIds.length > 0 ? body.taskIds : body.taskId ? [body.taskId] : [];
 
     if (!taskIds || taskIds.length === 0) {
       return NextResponse.json({ error: 'taskId or taskIds is required' }, { status: 400 });
@@ -95,9 +94,7 @@ export async function POST(request: Request) {
         ? `artifacts/prompts/task-${taskIds[0]}.md`
         : `artifacts/prompts/tasks-${timestamp}.md`;
     const finalPath = body.outputPath || defaultPath;
-    const fullPath = finalPath.startsWith('/')
-      ? join(projectRoot, finalPath)
-      : join(projectRoot, finalPath);
+    const fullPath = join(projectRoot, finalPath);
 
     await mkdir(dirname(fullPath), { recursive: true });
 

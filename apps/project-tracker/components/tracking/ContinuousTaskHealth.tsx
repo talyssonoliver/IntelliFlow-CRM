@@ -77,12 +77,7 @@ export default function ContinuousTaskHealth() {
 
   const { total, fresh, stale, missing, freshnessScore, lastUpdated } = data;
 
-  const variant =
-    stale === 0 && missing === 0
-      ? 'success'
-      : stale > 0
-        ? 'warning'
-        : 'error';
+  const variant = stale === 0 && missing === 0 ? 'success' : stale > 0 ? 'warning' : 'error';
 
   const variantStyles = {
     success: 'border-green-200 bg-green-50',
@@ -109,9 +104,7 @@ export default function ContinuousTaskHealth() {
           <Icon name="autorenew" size="lg" className="text-gray-600" />
           <h3 className="text-sm font-medium text-gray-600">Continuous Task Health</h3>
         </div>
-        <span
-          className={`rounded-full px-2 py-0.5 text-xs font-medium ${badgeStyles[variant]}`}
-        >
+        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badgeStyles[variant]}`}>
           {fresh}/{total} fresh
         </span>
       </div>

@@ -124,9 +124,10 @@ export default function SpecTrackerPanel() {
     return matchesStatus && matchesSearch;
   });
 
-  const completionRate = data.summary.total_specs_analyzed > 0
-    ? ((data.summary.completed / data.summary.total_specs_analyzed) * 100).toFixed(1)
-    : '0';
+  const completionRate =
+    data.summary.total_specs_analyzed > 0
+      ? ((data.summary.completed / data.summary.total_specs_analyzed) * 100).toFixed(1)
+      : '0';
 
   return (
     <div className="space-y-6">
@@ -171,12 +172,7 @@ export default function SpecTrackerPanel() {
           icon="draft"
           variant="default"
         />
-        <MetricCard
-          title="Uncertain"
-          value={data.summary.uncertain}
-          icon="help"
-          variant="error"
-        />
+        <MetricCard title="Uncertain" value={data.summary.uncertain} icon="help" variant="error" />
       </div>
 
       {/* Issues Section */}
@@ -184,9 +180,7 @@ export default function SpecTrackerPanel() {
         <div className="rounded-lg border border-gray-200 bg-white">
           <div className="border-b border-gray-200 px-4 py-3 flex items-center gap-2">
             <Icon name="report" size="lg" className="text-red-500" />
-            <h4 className="font-semibold text-gray-900">
-              Issues ({data.issues.length})
-            </h4>
+            <h4 className="font-semibold text-gray-900">Issues ({data.issues.length})</h4>
           </div>
           <div className="divide-y divide-gray-100">
             {data.issues.map((issue) => (
@@ -302,7 +296,9 @@ export default function SpecTrackerPanel() {
                 <tr
                   key={task.task_id}
                   className={`hover:bg-blue-50 transition-colors cursor-pointer ${selectedTaskId === task.task_id ? 'bg-blue-50 ring-1 ring-inset ring-blue-300' : ''}`}
-                  onClick={() => setSelectedTaskId(selectedTaskId === task.task_id ? null : task.task_id)}
+                  onClick={() =>
+                    setSelectedTaskId(selectedTaskId === task.task_id ? null : task.task_id)
+                  }
                 >
                   <td className="px-4 py-3">
                     <div>
@@ -380,8 +376,8 @@ export default function SpecTrackerPanel() {
 
       {/* Source info */}
       <p className="text-xs text-gray-500">
-        Generated from <code>artifacts/reports/spec-tracker.json</code>.
-        Last generated: {new Date(data.generated_at).toLocaleString()}.
+        Generated from <code>artifacts/reports/spec-tracker.json</code>. Last generated:{' '}
+        {new Date(data.generated_at).toLocaleString()}.
       </p>
     </div>
   );
@@ -516,9 +512,7 @@ function TaskDetailPanel({ task, issue, onClose }: Readonly<TaskDetailPanelProps
               <Icon name="report" size="base" className="mt-0.5 flex-shrink-0" />
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <p className="text-xs font-bold uppercase">
-                    {issue.severity} Severity Issue
-                  </p>
+                  <p className="text-xs font-bold uppercase">{issue.severity} Severity Issue</p>
                 </div>
                 <p className="text-sm">{issue.issue}</p>
                 <div className="rounded-md bg-white/60 p-3">

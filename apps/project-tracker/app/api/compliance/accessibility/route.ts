@@ -114,9 +114,13 @@ export async function GET(_request: NextRequest) {
     }
     score = Math.max(0, score);
 
+    const warningOrFailingStatus = score >= 70 ? 'warning' : 'failing';
+    const accessibilityStatus = score >= 90 ? 'passing' : warningOrFailingStatus;
+    const aOrNonCompliant = score >= 70 ? 'A' : 'Non-compliant';
+    const wcagLevel = score >= 90 ? 'AA' : aOrNonCompliant;
     const summary = {
       score,
-      status: score >= 90 ? 'passing' : score >= 70 ? 'warning' : 'failing',
+      status: accessibilityStatus,
       issueCount: {
         critical: issues.filter((i) => i.impact === 'critical').length,
         serious: issues.filter((i) => i.impact === 'serious').length,
@@ -135,7 +139,7 @@ export async function GET(_request: NextRequest) {
         summary,
         issues: issues.slice(0, 20), // Top 20 issues
         kpis: accessibilityKPIs,
-        wcagLevel: score >= 90 ? 'AA' : score >= 70 ? 'A' : 'Non-compliant',
+        wcagLevel,
         lastScan: axeResults?.timestamp || null,
         recommendation:
           score < 90
