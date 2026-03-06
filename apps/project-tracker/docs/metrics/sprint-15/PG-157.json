@@ -11,7 +11,7 @@
     "required": [
       "PG-129"
     ],
-    "verified_at": "2026-03-06T22:22:15.929Z",
+    "verified_at": "2026-03-06T23:11:46.779Z",
     "all_satisfied": true,
     "notes": "PG-129 verified complete — useEntityPin hook, PinnedItemsSheet, AuthenticatedHomePage all exist."
   },

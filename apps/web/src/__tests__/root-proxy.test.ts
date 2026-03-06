@@ -224,9 +224,7 @@ describe('root proxy.ts', () => {
     it('redirects /appointments to /calendar with permanent flag', async () => {
       const nextConfig = require('../../next.config.js');
       const redirects = await nextConfig.redirects();
-      const rule = redirects.find(
-        (r: { source: string }) => r.source === '/appointments'
-      );
+      const rule = redirects.find((r: { source: string }) => r.source === '/appointments');
       expect(rule).toBeDefined();
       expect(rule.destination).toBe('/calendar');
       expect(rule.permanent).toBe(true);
@@ -236,9 +234,7 @@ describe('root proxy.ts', () => {
     it('redirects /appointments/:path* to /calendar/:path* with permanent flag', async () => {
       const nextConfig = require('../../next.config.js');
       const redirects = await nextConfig.redirects();
-      const rule = redirects.find(
-        (r: { source: string }) => r.source === '/appointments/:path*'
-      );
+      const rule = redirects.find((r: { source: string }) => r.source === '/appointments/:path*');
       expect(rule).toBeDefined();
       expect(rule.destination).toBe('/calendar/:path*');
       expect(rule.permanent).toBe(true);

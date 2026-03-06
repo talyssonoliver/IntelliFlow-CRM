@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { readFileSync, statSync } from 'fs';
-import { execSync } from 'child_process';
+import { readFileSync, statSync, readdirSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -145,11 +144,18 @@ describe('Content Audit Results Schema Validation', () => {
 
   // TC-02: summary.total_routes equals filesystem page.tsx count (AC-001, TR-002)
   it('TC-02: summary.total_routes equals filesystem page.tsx count', () => {
-    const countOutput = execSync(
-      'find apps/web/src/app -name "page.tsx" | wc -l',
-      { cwd: REPO_ROOT, encoding: 'utf-8' }
-    ).trim();
-    const filesystemCount = parseInt(countOutput, 10);
+    function countPageFiles(dir: string): number {
+      let count = 0;
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        if (entry.isDirectory()) {
+          count += countPageFiles(resolve(dir, entry.name));
+        } else if (entry.name === 'page.tsx') {
+          count++;
+        }
+      }
+      return count;
+    }
+    const filesystemCount = countPageFiles(resolve(REPO_ROOT, 'apps/web/src/app'));
 
     expect(auditData.summary.total_routes).toBe(filesystemCount);
     expect(auditData.routes.length).toBe(filesystemCount);
@@ -158,9 +164,17 @@ describe('Content Audit Results Schema Validation', () => {
   // TC-03: Every route entry has all required fields (AC-002)
   it('TC-03: every route entry has all required fields', () => {
     const requiredMetadataFields = [
-      'title', 'description', 'og_title', 'og_description', 'og_url',
-      'og_site_name', 'og_image', 'twitter_card', 'twitter_title',
-      'twitter_description', 'robots_noindex',
+      'title',
+      'description',
+      'og_title',
+      'og_description',
+      'og_url',
+      'og_site_name',
+      'og_image',
+      'twitter_card',
+      'twitter_title',
+      'twitter_description',
+      'robots_noindex',
     ];
 
     for (const route of auditData.routes) {
@@ -180,10 +194,10 @@ describe('Content Audit Results Schema Validation', () => {
     }
   });
 
-  // TC-04: All 25 public routes have seo_score as integer 0-100 (AC-003)
+  // TC-04: All 26 public routes have seo_score as integer 0-100 (AC-003)
   it('TC-04: all public routes have integer seo_score 0-100', () => {
-    const publicRoutes = auditData.routes.filter(r => r.access_tier === 'public');
-    expect(publicRoutes.length).toBe(25);
+    const publicRoutes = auditData.routes.filter((r) => r.access_tier === 'public');
+    expect(publicRoutes.length).toBe(26);
 
     for (const route of publicRoutes) {
       expect(typeof route.seo_score).toBe('number');
@@ -196,9 +210,9 @@ describe('Content Audit Results Schema Validation', () => {
   // TC-05: Auth-gated and developer routes have seo_score: null (AC-003)
   it('TC-05: auth-gated and developer routes have seo_score null', () => {
     const nonPublicRoutes = auditData.routes.filter(
-      r => r.access_tier === 'auth-gated' || r.access_tier === 'developer'
+      (r) => r.access_tier === 'auth-gated' || r.access_tier === 'developer'
     );
-    expect(nonPublicRoutes.length).toBe(auditData.routes.length - 25);
+    expect(nonPublicRoutes.length).toBe(auditData.routes.length - 26);
 
     for (const route of nonPublicRoutes) {
       expect(route.seo_score).toBeNull();
@@ -231,7 +245,7 @@ describe('Content Audit Results Schema Validation', () => {
   // TC-08: findings.critical contains entry referencing /privacy (AC-005, TR-004)
   it('TC-08: findings.critical contains legal page reference', () => {
     const privacyFinding = auditData.findings.critical.find(
-      f => f.description.includes('/privacy') || f.route === '/privacy'
+      (f) => f.description.includes('/privacy') || f.route === '/privacy'
     );
     expect(privacyFinding).toBeDefined();
   });
@@ -239,9 +253,10 @@ describe('Content Audit Results Schema Validation', () => {
   // TC-09: findings.high contains /press/[id] broken link entry (AC-006)
   it('TC-09: findings.high contains /press/[id] broken link', () => {
     const pressFinding = auditData.findings.high.find(
-      f => f.description.includes('/press/[id]') ||
-           f.description.includes('/press/') ||
-           f.route === '/press/[id]'
+      (f) =>
+        f.description.includes('/press/[id]') ||
+        f.description.includes('/press/') ||
+        f.route === '/press/[id]'
     );
     expect(pressFinding).toBeDefined();
   });
@@ -249,9 +264,10 @@ describe('Content Audit Results Schema Validation', () => {
   // TC-10: findings contains sitemap.ts lastModified defect with medium severity (AC-007)
   it('TC-10: findings contains sitemap.ts lastModified defect', () => {
     const sitemapFinding = auditData.findings.medium.find(
-      f => f.description.includes('sitemap.ts') ||
-           f.description.includes('lastModified') ||
-           f.file === 'sitemap.ts'
+      (f) =>
+        f.description.includes('sitemap.ts') ||
+        f.description.includes('lastModified') ||
+        f.file === 'sitemap.ts'
     );
     expect(sitemapFinding).toBeDefined();
   });
@@ -259,16 +275,17 @@ describe('Content Audit Results Schema Validation', () => {
   // TC-11: findings contains lighthouserc.js SEO warn with high severity (AC-008)
   it('TC-11: findings contains lighthouserc.js SEO warn level', () => {
     const lhFinding = auditData.findings.high.find(
-      f => f.description.includes('lighthouserc') ||
-           f.description.includes('Lighthouse') ||
-           f.file === 'lighthouserc.js'
+      (f) =>
+        f.description.includes('lighthouserc') ||
+        f.description.includes('Lighthouse') ||
+        f.file === 'lighthouserc.js'
     );
     expect(lhFinding).toBeDefined();
   });
 
   // TC-12: Routes sorted lexicographically by route field (NF-002)
   it('TC-12: routes are sorted lexicographically by route', () => {
-    const routes = auditData.routes.map(r => r.route);
+    const routes = auditData.routes.map((r) => r.route);
     const sorted = [...routes].sort();
     expect(routes).toEqual(sorted);
   });
@@ -282,7 +299,7 @@ describe('Content Audit Results Schema Validation', () => {
   // TC-14: No fabricated http_status or response_time_ms for auth-gated routes (NF-005)
   it('TC-14: no fabricated values for auth-gated routes', () => {
     const nonPublicRoutes = auditData.routes.filter(
-      r => r.access_tier === 'auth-gated' || r.access_tier === 'developer'
+      (r) => r.access_tier === 'auth-gated' || r.access_tier === 'developer'
     );
 
     for (const route of nonPublicRoutes) {

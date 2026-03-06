@@ -6,15 +6,15 @@
   "completed_at": null,
   "phases": [],
   "task_summary": {
-    "total": 20,
+    "total": 21,
     "done": 0,
     "in_progress": 0,
     "blocked": 0,
-    "not_started": 20,
+    "not_started": 21,
     "failed": 0
   },
   "completed_tasks": [],
-  "notes": "0/20 tasks DONE (0%). Last synced: 2026-03-06T22:22:16.089Z",
+  "notes": "0/21 tasks DONE (0%). Last synced: 2026-03-06T23:11:46.883Z",
   "schedule": {
     "sprint_start_date": null,
     "sprint_end_date": null,
@@ -30,10 +30,10 @@
       "bottleneck_task_id": "PG-087"
     },
     "schedule_variance": {
-      "sv_minutes": -3973,
+      "sv_minutes": -4233,
       "spi": 0,
       "status": "critical"
     },
-    "calculated_at": "2026-03-06T22:22:16.186Z"
+    "calculated_at": "2026-03-06T23:11:46.987Z"
   }
 }

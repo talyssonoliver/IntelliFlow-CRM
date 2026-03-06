@@ -17,6 +17,7 @@ import pino from 'pino';
 import { z } from 'zod';
 import { BaseWorker, type ComponentHealth } from '@intelliflow/worker-shared';
 import { EmailChannel, createEmailChannel, type EmailPayload } from './channels/email';
+import { SMSChannel, createSMSChannel, type SMSPayload } from './channels/sms';
 
 // ============================================================================
 // Queue Names
@@ -94,6 +95,7 @@ interface NotificationsWorkerConfig {
 
 export class NotificationsWorker extends BaseWorker<NotificationJob, NotificationResult> {
   private emailChannel: EmailChannel | null = null;
+  private smsChannel: SMSChannel | null = null;
   private readonly workerConfig: NotificationsWorkerConfig;
   private sentByChannel: Record<string, number> = {};
   private failedByChannel: Record<string, number> = {};
@@ -156,8 +158,21 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
       this.logger.info('Email channel initialized');
     }
 
-    // SMS and Webhook channels can be initialized here when their providers are configured.
-    // SMS requires TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN (or SMS_PROVIDER=messagebird).
+    // Initialize SMS channel
+    if (this.workerConfig.enableSMS) {
+      try {
+        this.smsChannel = createSMSChannel(this.logger);
+        await this.smsChannel.initialize();
+        this.logger.info('SMS channel initialized');
+      } catch (error) {
+        this.logger.warn(
+          { error: error instanceof Error ? error.message : String(error) },
+          'SMS channel initialization failed — degrading gracefully'
+        );
+        this.smsChannel = null;
+      }
+    }
+
     // Webhook delivery is fully implemented and fires HTTP POST to recipient URLs.
     // Push notifications require FCM/APNs credentials (ENABLE_PUSH=true).
 
@@ -180,6 +195,12 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
     if (this.emailChannel) {
       await this.emailChannel.close();
       this.emailChannel = null;
+    }
+
+    // Close SMS channel
+    if (this.smsChannel) {
+      await this.smsChannel.close();
+      this.smsChannel = null;
     }
   }
 
@@ -245,6 +266,7 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
     const totalFailed = Object.values(this.failedByChannel).reduce((a, b) => a + b, 0);
 
     const emailStats = this.emailChannel?.getStats();
+    const smsStats = this.smsChannel?.getStats();
 
     return {
       email: {
@@ -259,9 +281,13 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
         lastCheck: new Date().toISOString(),
       },
       sms: {
-        status: this.workerConfig.enableSMS ? 'ok' : 'degraded',
-        message: this.workerConfig.enableSMS
-          ? `Sent: ${this.sentByChannel.sms}`
+        status: this.smsChannel
+          ? smsStats?.circuitState === 'OPEN'
+            ? 'degraded'
+            : 'ok'
+          : 'degraded',
+        message: this.smsChannel
+          ? `Sent: ${smsStats?.sent || 0}, Failed: ${smsStats?.failed || 0}, Circuit: ${smsStats?.circuitState || 'N/A'}`
           : 'SMS channel disabled',
         lastCheck: new Date().toISOString(),
       },
@@ -369,10 +395,21 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
     this.logger.info(
       {
         notificationId: notification.notificationId,
-        phone: notification.recipient.phone,
       },
       'Processing SMS notification'
     );
+
+    if (!this.smsChannel) {
+      this.failedByChannel.sms++;
+      return {
+        notificationId: notification.notificationId,
+        channel: 'SMS',
+        success: false,
+        failedAt: new Date().toISOString(),
+        error: 'SMS channel not initialized',
+        deliveryTimeMs: Date.now() - startTime,
+      };
+    }
 
     if (!notification.recipient.phone) {
       this.failedByChannel.sms++;
@@ -386,16 +423,42 @@ export class NotificationsWorker extends BaseWorker<NotificationJob, Notificatio
       };
     }
 
-    // SMS provider not yet configured
-    this.failedByChannel.sms++;
-    return {
-      notificationId: notification.notificationId,
-      channel: 'SMS',
-      success: false,
-      failedAt: new Date().toISOString(),
-      error: 'SMS provider not configured (Twilio/MessageBird)',
-      deliveryTimeMs: Date.now() - startTime,
+    const smsPayload: SMSPayload = {
+      to: notification.recipient.phone,
+      body: notification.content.body,
     };
+
+    const result = await this.smsChannel.deliver(smsPayload, {
+      correlationId: notification.notificationId,
+      tenantId: notification.tenantId,
+      ...notification.metadata,
+    });
+
+    if (result.success) {
+      this.sentByChannel.sms++;
+      return {
+        notificationId: notification.notificationId,
+        channel: 'SMS',
+        success: true,
+        deliveredAt: result.deliveredAt,
+        providerResponse: {
+          messageId: result.messageId,
+          status: result.status,
+          segmentCount: result.segmentCount,
+        },
+        deliveryTimeMs: result.deliveryTimeMs,
+      };
+    } else {
+      this.failedByChannel.sms++;
+      return {
+        notificationId: notification.notificationId,
+        channel: 'SMS',
+        success: false,
+        failedAt: result.deliveredAt,
+        error: result.error,
+        deliveryTimeMs: result.deliveryTimeMs,
+      };
+    }
   }
 
   private async deliverWebhook(
@@ -586,3 +649,5 @@ if (require.main === module) {
 // Exports - NotificationsWorker and QUEUE_NAMES are already exported at declaration
 export { EmailChannel, createEmailChannel } from './channels/email';
 export type { EmailPayload, EmailDeliveryResult } from './channels/email';
+export { SMSChannel, createSMSChannel } from './channels/sms';
+export type { SMSPayload, SMSDeliveryResult, SMSChannelConfig } from './channels/sms';

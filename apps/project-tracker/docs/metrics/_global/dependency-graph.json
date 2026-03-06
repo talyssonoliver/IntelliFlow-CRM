@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/dependency-graph.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-03-06T22:22:16.168Z",
+  "last_updated": "2026-03-06T23:11:46.973Z",
   "description": "Cross-sprint dependency tracking for all tasks",
   "nodes": {
     "EXC-INIT-001": {
@@ -5993,6 +5993,74 @@
       "status": "BACKLOG",
       "dependencies": [],
       "dependents": []
+    },
+    "IFC-288": {
+      "task_id": "IFC-288",
+      "sprint": 21,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-037:FS"
+      ],
+      "dependents": []
+    },
+    "IFC-289": {
+      "task_id": "IFC-289",
+      "sprint": 22,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-139:FS;IFC-148:FS"
+      ],
+      "dependents": []
+    },
+    "IFC-290": {
+      "task_id": "IFC-290",
+      "sprint": 23,
+      "status": "BACKLOG",
+      "dependencies": [],
+      "dependents": []
+    },
+    "IFC-291": {
+      "task_id": "IFC-291",
+      "sprint": 23,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-068:FS"
+      ],
+      "dependents": []
+    },
+    "IFC-292": {
+      "task_id": "IFC-292",
+      "sprint": 24,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-140:FS;IFC-152:FS"
+      ],
+      "dependents": []
+    },
+    "IFC-293": {
+      "task_id": "IFC-293",
+      "sprint": 24,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-157:FS"
+      ],
+      "dependents": []
+    },
+    "IFC-294": {
+      "task_id": "IFC-294",
+      "sprint": 25,
+      "status": "BACKLOG",
+      "dependencies": [
+        "IFC-025:FS;IFC-095:FS"
+      ],
+      "dependents": []
+    },
+    "IFC-295": {
+      "task_id": "IFC-295",
+      "sprint": 25,
+      "status": "BACKLOG",
+      "dependencies": [],
+      "dependents": []
     }
   },
   "critical_paths": [
@@ -10078,6 +10146,7 @@
     "PG-078",
     "PG-081",
     "IFC-123",
+    "IFC-288",
     "IFC-038",
     "IFC-041",
     "PG-049",
@@ -10086,16 +10155,20 @@
     "PG-085",
     "PG-086",
     "IFC-272",
+    "IFC-289",
     "PG-088",
     "PG-090",
     "PG-092",
     "PG-093",
+    "IFC-291",
     "PG-094",
     "PG-095",
     "PG-096",
     "PG-097",
     "PG-098",
     "PG-099",
+    "IFC-292",
+    "IFC-293",
     "IFC-040",
     "IFC-043",
     "IFC-059",
@@ -10103,6 +10176,7 @@
     "PG-100",
     "PG-103",
     "IFC-115",
+    "IFC-294",
     "IFC-049",
     "IFC-050",
     "PG-108",
@@ -10236,6 +10310,7 @@
     "PG-089",
     "PG-091",
     "IFC-216",
+    "IFC-290",
     "IFC-166",
     "IFC-175",
     "IFC-251",
@@ -10247,6 +10322,7 @@
     "PG-102",
     "PG-105",
     "IFC-201",
+    "IFC-295",
     "PG-106",
     "PG-107",
     "PG-145",
@@ -10285,6 +10361,30 @@
     {
       "task_id": "IFC-286",
       "violation": "Missing dependency: IFC-278:FS;IFC-280:FS does not exist"
+    },
+    {
+      "task_id": "IFC-288",
+      "violation": "Missing dependency: IFC-037:FS does not exist"
+    },
+    {
+      "task_id": "IFC-289",
+      "violation": "Missing dependency: IFC-139:FS;IFC-148:FS does not exist"
+    },
+    {
+      "task_id": "IFC-291",
+      "violation": "Missing dependency: IFC-068:FS does not exist"
+    },
+    {
+      "task_id": "IFC-292",
+      "violation": "Missing dependency: IFC-140:FS;IFC-152:FS does not exist"
+    },
+    {
+      "task_id": "IFC-293",
+      "violation": "Missing dependency: IFC-157:FS does not exist"
+    },
+    {
+      "task_id": "IFC-294",
+      "violation": "Missing dependency: IFC-025:FS;IFC-095:FS does not exist"
     }
   ],
   "parallel_execution_groups": {

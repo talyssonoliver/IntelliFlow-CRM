@@ -102,6 +102,7 @@ function mapInsightTypeToDbType(type: GeneratedInsight['type']): string {
 function mapEntityTypeToCategory(entityType: GeneratedInsight['entityType']): string {
   const categoryMap: Record<string, string> = {
     opportunity: 'risk',
+    deal: 'risk',
     lead: 'sales',
     contact: 'engagement',
     task: 'support',
@@ -169,7 +170,7 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
         description: insight.description,
         confidence: Math.round(insight.confidence * 100),
         priority: insight.priority,
-        entityType: insight.entityType,
+        entityType: insight.entityType === 'deal' ? 'opportunity' : insight.entityType,
         entityId: insight.entityId,
         actionable: insight.suggestedActions.length > 0,
         suggestedActions: insight.suggestedActions,

@@ -63,7 +63,7 @@ function validateProviderForProduction(): void {
 // =============================================================================
 
 /** Entity types that can be analyzed for insights */
-const INSIGHT_ENTITY_TYPES = ['opportunity', 'lead', 'contact', 'task'] as const;
+const INSIGHT_ENTITY_TYPES = ['opportunity', 'lead', 'contact', 'task', 'deal'] as const;
 
 /** Insight types produced by the chain */
 const INSIGHT_TYPES = ['warning', 'opportunity', 'reminder', 'achievement'] as const;

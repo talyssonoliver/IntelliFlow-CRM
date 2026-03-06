@@ -1,11 +1,11 @@
 {
-  "generated_at": "2026-03-06T22:22:17.445Z",
+  "generated_at": "2026-03-06T23:11:47.841Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 320,
     "completed": 316,
-    "partially_done": 1,
-    "spec_only": 2,
+    "partially_done": 2,
+    "spec_only": 1,
     "uncertain": 1
   },
   "status_legend": {
@@ -3768,14 +3768,14 @@
       "spec_path": ".specify/sprints/sprint-14/specifications/IFC-223-spec.md",
       "has_spec": true,
       "has_plan": false,
-      "has_attestation": false,
+      "has_attestation": true,
       "csv_status": "Spec Complete",
       "metric_status": "PLANNED",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-157"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-001",

@@ -1,7 +1,7 @@
 {
   "$schema": "../schemas/task-registry.schema.json",
   "version": "1.0.0",
-  "last_updated": "2026-03-06T22:22:15.748Z",
+  "last_updated": "2026-03-06T23:11:46.615Z",
   "total_tasks": 380,
   "current_sprint": 14,
   "active_sprint": "sprint-14",
@@ -674,7 +674,15 @@
       "IFC-284",
       "IFC-285",
       "IFC-286",
-      "IFC-287"
+      "IFC-287",
+      "IFC-288",
+      "IFC-289",
+      "IFC-290",
+      "IFC-291",
+      "IFC-292",
+      "IFC-293",
+      "IFC-294",
+      "IFC-295"
     ],
     "FAILED": [],
     "NEEDS_HUMAN": [],
@@ -10325,7 +10333,7 @@
     },
     "IFC-277": {
       "section": "Core CRM",
-      "description": "Account Service Dead Code & Minor Fixes. (1) calculateAccountHealth() unreachable from router — decide: wire or remove (D-02). (2) getAccountWithContext() unreachable from router — decide: wire or remove (D-03). (3) Revenue NaN risk — Number(revenue) on non-numeric string renders '$NaNM' (F-14). (4) Health bar arbitrary scale — no documented max value (F-15). (5) Contact firstName[0] undefined risk in AccountContactsList (F-18). (6) findAncestors N+1 query pattern (B-14). (7) Merge/Archive toast stubs referencing IFC-044 (F-03/F-04). Audit: docs/audit/account-detail-wiring-audit.md sections 9, 13, 16-17.",
+      "description": "Account Service Dead Code & Minor Fixes. (1) calculateAccountHealth() unreachable from router — decide: wire (D-02). (2) getAccountWithContext() unreachable from router — decide: wire (D-03). (3) Revenue NaN risk — Number(revenue) on non-numeric string renders '$NaNM' (F-14). (4) Health bar arbitrary scale — no documented max value (F-15). (5) Contact firstName[0] undefined risk in AccountContactsList (F-18). (6) findAncestors N+1 query pattern (B-14). (7) Merge/Archive toast stubs referencing IFC-044 (F-03/F-04). Audit: docs/audit/account-detail-wiring-audit.md sections 9, 13, 16-17.",
       "owner": "Backend Dev (STOA-Domain)",
       "status": "BACKLOG",
       "sprint": 24,
@@ -10501,6 +10509,146 @@
       "definition_of_done": "DealFilters ownerId/dateRange passed to API query; More Filters opens filter panel; owner dropdown shows team members from API; transformDeals properly typed; tests >=90%",
       "validation": "VALIDATE:pnpm test --filter @intelliflow/web",
       "prerequisites": "FILE:docs/audit/deal-detail-wiring-audit.md",
+      "cadence": ""
+    },
+    "IFC-288": {
+      "section": "Core CRM",
+      "description": "Analytics Dashboard Endpoint Wiring. Wire 9 dead analytics router endpoints: exportConversionFunnel, exportMetrics, exportReport, getConversionFunnel, getLeadMetrics, getOverview, getSalesMetrics, getTimeSeriesData, leadStats. Backend built (ANALYTICS-001), zero web callers. Decision: wire to analytics dashboard UI (IFC-037) with charts/export buttons. Audit: artifacts/reports/dead-endpoints-audit.csv rows 20-28.",
+      "owner": "Frontend Dev (STOA-Quality)",
+      "status": "BACKLOG",
+      "sprint": 21,
+      "dependencies": [
+        "IFC-037:FS"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/api/src/modules/analytics/analytics.router.ts;ARTIFACT:apps/web/src/app/analytics/(list)/page.tsx"
+      ],
+      "kpis": "9/9 analytics endpoints wired to UI",
+      "definition_of_done": "All 9 analytics endpoints wired to dashboard UI with working charts/exports; zero dead endpoints in analytics router; tests >=90%",
+      "validation": "VALIDATE:pnpm test --filter @intelliflow/api --filter @intelliflow/web",
+      "prerequisites": "FILE:artifacts/reports/dead-endpoints-audit.csv",
+      "cadence": ""
+    },
+    "IFC-289": {
+      "section": "Core CRM",
+      "description": "Agent/Conversation Chat UI Wiring. Wire 11 dead agent + conversation router endpoints: agent.executeTool, agent.getPendingCount, agent.getTool, agent.listTools, conversation.addMessage, conversation.approveToolCall, conversation.archiveOld, conversation.endConversation, conversation.getBySessionId, conversation.recordToolCall, conversation.updateToolCall. Backend built (IFC-139, IFC-148), zero web callers. Decision: build agent chat panel (IFC-235) to consume these. Audit: artifacts/reports/dead-endpoints-audit.csv rows 4-18.",
+      "owner": "Frontend Dev (STOA-Quality)",
+      "status": "BACKLOG",
+      "sprint": 22,
+      "dependencies": [
+        "IFC-139:FS;IFC-148:FS"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/api/src/modules/agent/conversation.router.ts"
+      ],
+      "kpis": "11/11 agent endpoints wired to UI",
+      "definition_of_done": "All 11 agent/conversation endpoints wired to chat UI panel; zero dead endpoints in agent and conversation routers; tests >=90%",
+      "validation": "VALIDATE:pnpm test --filter @intelliflow/api --filter @intelliflow/web",
+      "prerequisites": "FILE:artifacts/reports/dead-endpoints-audit.csv",
+      "cadence": ""
+    },
+    "IFC-290": {
+      "section": "Core CRM",
+      "description": "Integrations Dashboard Endpoint Wiring. Wire 5 dead integrations router endpoints: getAllConnectorsHealth, getConnectorHealth, getConnectorsByType, getDashboardConfig, triggerSync. Backend built (IFC-003), zero web callers. Decision: build integrations settings page to consume these. Audit: artifacts/reports/dead-endpoints-audit.csv rows 61-65.",
+      "owner": "Frontend Dev (STOA-Quality)",
+      "status": "BACKLOG",
+      "sprint": 23,
+      "dependencies": [],
+      "artifacts": [
+        "ARTIFACT:apps/api/src/modules/integrations/integrations.router.ts"
+      ],
+      "kpis": "5/5 integrations endpoints wired to UI",
+      "definition_of_done": "All 5 integrations endpoints wired to dashboard UI; zero dead endpoints in integrations router; tests >=90%",
+      "validation": "VALIDATE:pnpm test --filter @intelliflow/api --filter @intelliflow/web",
+      "prerequisites": "FILE:artifacts/reports/dead-endpoints-audit.csv",
+      "cadence": ""
+    },
+    "IFC-291": {
+      "section": "Core CRM",
+      "description": "Feedback Submission UI Wiring. Wire 5 dead feedback router endpoints: checkRetraining, exportTrainingData, getForLead, submitCorrection, submitSimple. Backend built (IFC-068), zero web callers. Decision: add feedback UI to AI review workflow. Audit: artifacts/reports/dead-endpoints-audit.csv rows 55-60.",
+      "owner": "Frontend Dev (STOA-Quality)",
+      "status": "BACKLOG",
+      "sprint": 23,
+      "dependencies": [
+        "IFC-068:FS"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/api/src/modules/feedback/feedback.router.ts"
+      ],
+      "kpis": "5/5 feedback endpoints wired to UI",
+      "definition_of_done": "All 5 feedback endpoints wired to feedback UI; zero dead endpoints in feedback router; tests >=90%",
+      "validation": "VALIDATE:pnpm test --filter @intelliflow/api --filter @intelliflow/web",
+      "prerequisites": "FILE:artifacts/reports/dead-endpoints-audit.csv",
+      "cadence": ""
+    },
+    "IFC-292": {
+      "section": "Core CRM",
+      "description": "Legal Document Management UI Wiring. Wire 6 dead legal router endpoints: appointments.findNextSlot, documents.grantAccess, documents.placeLegalHold, documents.releaseLegalHold, documents.revokeAccess, documents.submitForReview. Backend built (IFC-137, IFC-140, IFC-152), zero web callers. Decision: build legal management UIs to consume these. Audit: artifacts/reports/dead-endpoints-audit.csv rows 78-83.",
+      "owner": "Frontend Dev (STOA-Quality)",
+      "status": "BACKLOG",
+      "sprint": 24,
+      "dependencies": [
+        "IFC-140:FS;IFC-152:FS"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/api/src/modules/legal/documents.router.ts;ARTIFACT:apps/api/src/modules/legal/appointments.router.ts"
+      ],
+      "kpis": "6/6 legal endpoints wired to UI",
+      "definition_of_done": "All 6 legal endpoints wired to management UI; zero dead endpoints in legal router; tests >=90%",
+      "validation": "VALIDATE:pnpm test --filter @intelliflow/api --filter @intelliflow/web",
+      "prerequisites": "FILE:artifacts/reports/dead-endpoints-audit.csv",
+      "cadence": ""
+    },
+    "IFC-293": {
+      "section": "Core CRM",
+      "description": "Security Admin + Notifications Settings Wiring. Wire 6 dead endpoints: security.audit.getByResource, security.audit.getMyActivity, security.audit.getSecurityEvents, notifications.batchAction, notifications.getPreferences, notifications.updatePreferences. Backend built (IFC-098, IFC-072, IFC-046, IFC-157), zero web callers. Decision: build admin security page + notification settings page (PG-116). Audit: artifacts/reports/dead-endpoints-audit.csv rows 93-95, 101-103.",
+      "owner": "Frontend Dev (STOA-Quality)",
+      "status": "BACKLOG",
+      "sprint": 24,
+      "dependencies": [
+        "IFC-157:FS"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/api/src/security/audit/audit-logger.ts;ARTIFACT:apps/api/src/modules/notifications/notifications.router.ts"
+      ],
+      "kpis": "6/6 security+notification endpoints wired to UI",
+      "definition_of_done": "All 6 security/notification endpoints wired to admin pages; zero dead endpoints in security.audit and notifications routers; tests >=90%",
+      "validation": "VALIDATE:pnpm test --filter @intelliflow/api --filter @intelliflow/web",
+      "prerequisites": "FILE:artifacts/reports/dead-endpoints-audit.csv",
+      "cadence": ""
+    },
+    "IFC-294": {
+      "section": "Core CRM",
+      "description": "Experiment + Intelligence + AI Monitoring Wiring. Wire 7 dead endpoints: experiment.assignVariant, experiment.recordConversion, experiment.recordScore, intelligence.getInsightsSummary, intelligence.triggerPrediction, intelligence.updateContactInsights, ai-monitoring.getHallucinationReport. Backend built (IFC-025, IFC-095, IFC-117), zero web callers. Decision: wire to experiment dashboard (IFC-181) and AI monitoring page. Audit: artifacts/reports/dead-endpoints-audit.csv rows 19, 52-54, 66-69.",
+      "owner": "Frontend Dev (STOA-Quality)",
+      "status": "BACKLOG",
+      "sprint": 25,
+      "dependencies": [
+        "IFC-025:FS;IFC-095:FS"
+      ],
+      "artifacts": [
+        "ARTIFACT:apps/api/src/modules/intelligence/intelligence.router.ts"
+      ],
+      "kpis": "7/7 experiment+intelligence+AI-monitoring endpoints wired to UI",
+      "definition_of_done": "All 7 experiment/intelligence/AI-monitoring endpoints wired to dashboards; zero dead endpoints in these routers; tests >=90%",
+      "validation": "VALIDATE:pnpm test --filter @intelliflow/api --filter @intelliflow/web",
+      "prerequisites": "FILE:artifacts/reports/dead-endpoints-audit.csv",
+      "cadence": ""
+    },
+    "IFC-295": {
+      "section": "Core CRM",
+      "description": "Billing/Auth/Subscription/Admin Miscellaneous Wiring. Wire 8 dead endpoints: billing.ensureCustomer, billing.getUsageMetrics, billing.updateBillingInformation, auth.getSessions, subscription.getPlans, subscription.toggleModule, autoresponse.submitForApproval, admin.queues.getByName. Backend built across IFC-006/IFC-014/IFC-028/IFC-099, zero web callers. admin.queues.getByName is completely phantom (no tests, no matrix entry) � needs queue inspector or admin tools UI. Audit: artifacts/reports/dead-endpoints-audit.csv rows 2, 29, 33-37, 104-105.",
+      "owner": "Frontend Dev (STOA-Quality)",
+      "status": "BACKLOG",
+      "sprint": 25,
+      "dependencies": [],
+      "artifacts": [
+        "ARTIFACT:apps/api/src/modules/billing/billing.router.ts;ARTIFACT:apps/api/src/modules/auth/auth.router.ts"
+      ],
+      "kpis": "8/8 misc endpoints wired to UI",
+      "definition_of_done": "All 8 miscellaneous endpoints wired to appropriate UI pages; zero dead endpoints in billing/auth/subscription/autoresponse/admin routers; tests >=90%",
+      "validation": "VALIDATE:pnpm test --filter @intelliflow/api --filter @intelliflow/web",
+      "prerequisites": "FILE:artifacts/reports/dead-endpoints-audit.csv",
       "cadence": ""
     }
   }

@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-last_updated: 2026-03-04
+last_updated: 2026-03-06
 maintainer: Tech Lead
 items:
   FAIL-IFC-105-001:
@@ -3782,15 +3782,165 @@ items:
     remediation_plan: IFC-219
     remediation_sprint: 20
     status: open
+  DEAD-ANALYTICS-001:
+    origin_task: IFC-037
+    owner: Frontend Dev
+    severity: medium
+    description: "9 dead analytics router endpoints: exportConversionFunnel, exportMetrics, exportReport, getConversionFunnel, getLeadMetrics, getOverview, getSalesMetrics, getTimeSeriesData, leadStats. Backend built (ANALYTICS-001), zero web callers. IFC-037 (analytics dashboard UI) is Backlog sprint 21 but does not wire these procedures."
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-288
+    remediation_sprint: 21
+    status: open
+  DEAD-AGENT-001:
+    origin_task: IFC-139
+    owner: Frontend Dev
+    severity: medium
+    description: "11 dead agent/conversation router endpoints: agent.executeTool, agent.getPendingCount, agent.getTool, agent.listTools, conversation.addMessage, conversation.approveToolCall, conversation.archiveOld, conversation.endConversation, conversation.getBySessionId, conversation.recordToolCall, conversation.updateToolCall. Backend built (IFC-139, IFC-148), zero web callers — no agent chat UI or tool management page exists."
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-289
+    remediation_sprint: 22
+    status: open
+  DEAD-INTEGRATIONS-001:
+    origin_task: IFC-003
+    owner: Frontend Dev
+    severity: medium
+    description: "5 dead integrations router endpoints: getAllConnectorsHealth, getConnectorHealth, getConnectorsByType, getDashboardConfig, triggerSync. Backend built (IFC-003), zero web callers — no integrations dashboard UI planned."
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-290
+    remediation_sprint: 23
+    status: open
+  DEAD-FEEDBACK-001:
+    origin_task: IFC-068
+    owner: Frontend Dev
+    severity: low
+    description: "5 dead feedback router endpoints: checkRetraining, exportTrainingData, getForLead, submitCorrection, submitSimple. Backend built (IFC-068), zero web callers — no feedback submission or correction UI exists."
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-291
+    remediation_sprint: 23
+    status: open
+  DEAD-LEGAL-001:
+    origin_task: IFC-140
+    owner: Frontend Dev
+    severity: low
+    description: "6 dead legal router endpoints: appointments.findNextSlot, documents.grantAccess, documents.placeLegalHold, documents.releaseLegalHold, documents.revokeAccess, documents.submitForReview. Backend built (IFC-137, IFC-140, IFC-152), zero web callers — no legal ACL UI, scheduling wizard, or review workflow UI."
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-292
+    remediation_sprint: 24
+    status: open
+  DEAD-SECURITY-001:
+    origin_task: IFC-098
+    owner: Frontend Dev
+    severity: medium
+    description: "3 dead security/audit router endpoints: audit.getByResource, audit.getMyActivity, audit.getSecurityEvents. Backend built (IFC-098, IFC-072, IFC-046), zero web callers — no admin security events page or profile activity section."
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-293
+    remediation_sprint: 24
+    status: open
+  DEAD-NOTIFICATION-001:
+    origin_task: IFC-157
+    owner: Frontend Dev
+    severity: low
+    description: "3 dead notifications router endpoints: batchAction, getPreferences, updatePreferences. Backend built (IFC-157), zero web callers — no notification preferences settings page or batch action UI."
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-293
+    remediation_sprint: 24
+    status: open
+  DEAD-EXPERIMENT-001:
+    origin_task: IFC-025
+    owner: Frontend Dev
+    severity: low
+    description: "3 dead experiment router endpoints: assignVariant, recordConversion, recordScore. Backend A/B framework built (IFC-025), zero web callers — no experiment tracking code or runner calls these procedures."
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-294
+    remediation_sprint: 25
+    status: open
+  DEAD-INTELLIGENCE-001:
+    origin_task: IFC-095
+    owner: Frontend Dev
+    severity: low
+    description: "3 dead intelligence router endpoints: getInsightsSummary, triggerPrediction, updateContactInsights. Backend AI scoring built (IFC-095), zero web callers — no insights summary dashboard or prediction trigger UI."
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-294
+    remediation_sprint: 25
+    status: open
+  DEAD-AI-MONITORING-001:
+    origin_task: IFC-117
+    owner: Frontend Dev
+    severity: low
+    description: "1 dead ai-monitoring router endpoint: getHallucinationReport. Backend built (IFC-117), zero web callers — no hallucination report dashboard section."
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-294
+    remediation_sprint: 25
+    status: open
+  DEAD-BILLING-001:
+    origin_task: IFC-099
+    owner: Frontend Dev
+    severity: low
+    description: "3 dead billing router endpoints: ensureCustomer, getUsageMetrics, updateBillingInformation. Backend built (IFC-099, IFC-107), zero web callers — no checkout flow, usage metrics page, or billing settings page wires these."
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-295
+    remediation_sprint: 25
+    status: open
+  DEAD-AUTH-001:
+    origin_task: IFC-006
+    owner: Frontend Dev
+    severity: low
+    description: "1 dead auth router endpoint: getSessions. Backend built (IFC-006), zero web callers — no session list/management UI in security settings."
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-295
+    remediation_sprint: 25
+    status: open
+  DEAD-SUBSCRIPTION-001:
+    origin_task: IFC-014
+    owner: Frontend Dev
+    severity: low
+    description: "2 dead subscription router endpoints: getPlans, toggleModule. Backend built (IFC-014, IFC-016), zero web callers — pricing/upgrade UI uses Stripe portal directly, no module toggle settings page."
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-295
+    remediation_sprint: 25
+    status: open
+  DEAD-AUTORESPONSE-001:
+    origin_task: IFC-028
+    owner: Frontend Dev
+    severity: low
+    description: "1 dead autoresponse router endpoint: submitForApproval. Backend built (IFC-028, IFC-029), zero web callers — no approval submission UI or workflow trigger."
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-295
+    remediation_sprint: 25
+    status: open
+  DEAD-ADMIN-001:
+    origin_task: N/A
+    owner: Tech Lead
+    severity: low
+    description: "1 dead admin router endpoint: queues.getByName. Zero web callers, zero API internal callers, zero tests. Needs queue inspector or admin tools UI."
+    created_at: 2026-03-06T00:00:00.000Z
+    expiry_date: 2026-04-05
+    remediation_plan: IFC-295
+    remediation_sprint: 25
+    status: open
 summary:
-  total_items: 378
+  total_items: 393
   by_severity:
     critical: 241
     high: 2
-    medium: 132
-    low: 3
+    medium: 136
+    low: 14
   by_status:
-    open: 378
+    open: 393
     in_progress: 0
     resolved: 0
     wont_fix: 0
@@ -4173,6 +4323,21 @@ summary:
     - WIRE-PG-141-001
     - WIRE-IFC-095-001
     - WIRE-IFC-069-001
+    - DEAD-ANALYTICS-001
+    - DEAD-AGENT-001
+    - DEAD-INTEGRATIONS-001
+    - DEAD-FEEDBACK-001
+    - DEAD-LEGAL-001
+    - DEAD-SECURITY-001
+    - DEAD-NOTIFICATION-001
+    - DEAD-EXPERIMENT-001
+    - DEAD-INTELLIGENCE-001
+    - DEAD-AI-MONITORING-001
+    - DEAD-BILLING-001
+    - DEAD-AUTH-001
+    - DEAD-SUBSCRIPTION-001
+    - DEAD-AUTORESPONSE-001
+    - DEAD-ADMIN-001
 review_schedule:
   cadence: weekly
   next_review: 2026-03-02
