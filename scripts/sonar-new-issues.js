@@ -10,6 +10,26 @@
 const fs = require('node:fs');
 const path = require('node:path');
 
+function stripQuotes(value) {
+  if (value.length < 2) return value;
+  const first = value[0];
+  const last = value.at(-1);
+  if ((first === '"' || first === "'") && first === last) return value.slice(1, -1);
+  return value;
+}
+
+function parseDotenvLine(line) {
+  const raw = line.trim();
+  if (!raw || raw.startsWith('#')) return null;
+  const normalized = raw.startsWith('export ') ? raw.slice('export '.length).trim() : raw;
+  const idx = normalized.indexOf('=');
+  if (idx <= 0) return null;
+  const key = normalized.slice(0, idx).trim();
+  if (!key || key.includes(' ')) return null;
+  const value = stripQuotes(normalized.slice(idx + 1).trim());
+  return { key, value };
+}
+
 function loadDotenvLocal(repoRoot) {
   const envPath = path.join(repoRoot, '.env.local');
   if (!fs.existsSync(envPath)) return;
@@ -17,21 +37,10 @@ function loadDotenvLocal(repoRoot) {
   try {
     const content = fs.readFileSync(envPath, 'utf8');
     for (const line of content.split(/\r?\n/)) {
-      const raw = line.trim();
-      if (!raw || raw.startsWith('#')) continue;
-      const normalized = raw.startsWith('export ') ? raw.slice('export '.length).trim() : raw;
-      const idx = normalized.indexOf('=');
-      if (idx <= 0) continue;
-      const key = normalized.slice(0, idx).trim();
-      let value = normalized.slice(idx + 1).trim();
-      if (!key || key.includes(' ')) continue;
-      if (
-        value.length >= 2 &&
-        ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))
-      ) {
-        value = value.slice(1, -1);
+      const entry = parseDotenvLine(line);
+      if (entry && process.env[entry.key] === undefined) {
+        process.env[entry.key] = entry.value;
       }
-      if (process.env[key] === undefined) process.env[key] = value;
     }
   } catch {
     // ignore
@@ -156,13 +165,14 @@ async function main() {
 
   const outDir = path.join(repoRoot, 'sonar-reports');
   fs.mkdirSync(outDir, { recursive: true });
-  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+  const stamp = new Date().toISOString().replaceAll(':', '-').replaceAll('.', '-').slice(0, -5);
   const outPath = path.join(outDir, `sonar-new-issues-${stamp}.json`);
   fs.writeFileSync(outPath, JSON.stringify(data, null, 2), { encoding: 'utf8' });
   console.log(`\nSaved: ${outPath}`);
 }
 
 main().catch((err) => {
+  // NOSONAR — top-level await requires ESM; this script is CJS
   console.error(err instanceof Error ? err.message : String(err));
   process.exit(1);
 });

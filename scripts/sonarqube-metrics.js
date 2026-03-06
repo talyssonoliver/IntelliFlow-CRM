@@ -45,12 +45,17 @@ function loadEnv() {
       if (idx <= 0) continue;
       const key = normalized.slice(0, idx).trim();
       let value = normalized.slice(idx + 1).trim();
-      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      if (
+        (value.startsWith('"') && value.endsWith('"')) ||
+        (value.startsWith("'") && value.endsWith("'"))
+      ) {
         value = value.slice(1, -1);
       }
       if (!process.env[key]) process.env[key] = value;
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 loadEnv();
@@ -66,7 +71,7 @@ async function checkSonarHealth() {
   try {
     const response = await fetch(`${SONAR_HOST}/api/system/status`, {
       method: 'GET',
-      headers: SONAR_TOKEN ? { 'Authorization': `Bearer ${SONAR_TOKEN}` } : {}
+      headers: SONAR_TOKEN ? { Authorization: `Bearer ${SONAR_TOKEN}` } : {},
     });
     if (!response.ok) return { available: false, reason: `HTTP ${response.status}` };
     const data = await response.json();
@@ -81,10 +86,20 @@ async function checkSonarHealth() {
  */
 async function fetchMetrics() {
   const metricKeys = [
-    'bugs', 'vulnerabilities', 'code_smells', 'security_hotspots',
-    'coverage', 'duplicated_lines_density', 'ncloc', 'complexity',
-    'reliability_rating', 'security_rating', 'sqale_rating',
-    'sqale_debt_ratio', 'alert_status', 'quality_gate_details'
+    'bugs',
+    'vulnerabilities',
+    'code_smells',
+    'security_hotspots',
+    'coverage',
+    'duplicated_lines_density',
+    'ncloc',
+    'complexity',
+    'reliability_rating',
+    'security_rating',
+    'sqale_rating',
+    'sqale_debt_ratio',
+    'alert_status',
+    'quality_gate_details',
   ].join(',');
 
   try {
@@ -92,7 +107,7 @@ async function fetchMetrics() {
       `${SONAR_HOST}/api/measures/component?component=${PROJECT_KEY}&metricKeys=${metricKeys}`,
       {
         method: 'GET',
-        headers: SONAR_TOKEN ? { 'Authorization': `Bearer ${SONAR_TOKEN}` } : {}
+        headers: SONAR_TOKEN ? { Authorization: `Bearer ${SONAR_TOKEN}` } : {},
       }
     );
 
@@ -122,7 +137,7 @@ async function fetchQualityGate() {
       `${SONAR_HOST}/api/qualitygates/project_status?projectKey=${PROJECT_KEY}`,
       {
         method: 'GET',
-        headers: SONAR_TOKEN ? { 'Authorization': `Bearer ${SONAR_TOKEN}` } : {}
+        headers: SONAR_TOKEN ? { Authorization: `Bearer ${SONAR_TOKEN}` } : {},
       }
     );
 
@@ -134,7 +149,7 @@ async function fetchQualityGate() {
     return {
       success: true,
       status: data.projectStatus?.status || 'UNKNOWN',
-      conditions: data.projectStatus?.conditions || []
+      conditions: data.projectStatus?.conditions || [],
     };
   } catch (error) {
     return { success: false, error: error.message };
@@ -150,7 +165,7 @@ async function fetchIssues(severity = 'CRITICAL,BLOCKER') {
       `${SONAR_HOST}/api/issues/search?componentKeys=${PROJECT_KEY}&severities=${severity}&statuses=OPEN,CONFIRMED&ps=10`,
       {
         method: 'GET',
-        headers: SONAR_TOKEN ? { 'Authorization': `Bearer ${SONAR_TOKEN}` } : {}
+        headers: SONAR_TOKEN ? { Authorization: `Bearer ${SONAR_TOKEN}` } : {},
       }
     );
 
@@ -162,14 +177,14 @@ async function fetchIssues(severity = 'CRITICAL,BLOCKER') {
     return {
       success: true,
       total: data.total || 0,
-      issues: (data.issues || []).map(i => ({
+      issues: (data.issues || []).map((i) => ({
         key: i.key,
         severity: i.severity,
         type: i.type,
         message: i.message,
         component: i.component?.split(':').pop(),
-        line: i.line
-      }))
+        line: i.line,
+      })),
     };
   } catch (error) {
     return { success: false, error: error.message };
@@ -204,7 +219,9 @@ function saveToHistory(metrics) {
   if (existsSync(HISTORY_FILE)) {
     try {
       history = JSON.parse(readFileSync(HISTORY_FILE, 'utf-8'));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   const today = new Date().toISOString().split('T')[0];
@@ -216,19 +233,17 @@ function saveToHistory(metrics) {
     codeSmells: metrics.codeSmells,
     coverage: metrics.coverage,
     debtRatio: metrics.debtRatio,
-    gateStatus: metrics.qualityGate?.status
+    gateStatus: metrics.qualityGate?.status,
   };
 
-  const existingIndex = history.snapshots.findIndex(s => s.date === today);
+  const existingIndex = history.snapshots.findIndex((s) => s.date === today);
   if (existingIndex >= 0) {
     history.snapshots[existingIndex] = snapshot;
   } else {
     history.snapshots.push(snapshot);
   }
 
-  history.snapshots = history.snapshots
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 90);
+  history.snapshots = history.snapshots.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 90);
 
   mkdirSync(dirname(HISTORY_FILE), { recursive: true });
   writeFileSync(HISTORY_FILE, JSON.stringify(history, null, 2));
@@ -244,7 +259,9 @@ function calculateTrending(metrics) {
   if (existsSync(HISTORY_FILE)) {
     try {
       history = JSON.parse(readFileSync(HISTORY_FILE, 'utf-8'));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   const snapshots = history.snapshots || [];
@@ -255,11 +272,11 @@ function calculateTrending(metrics) {
   const recent = snapshots.slice(0, 7);
   const current = {
     bugs: parseInt(metrics.bugs) || 0,
-    vulnerabilities: parseInt(metrics.vulnerabilities) || 0
+    vulnerabilities: parseInt(metrics.vulnerabilities) || 0,
   };
   const previous = {
     bugs: recent[1]?.bugs || current.bugs,
-    vulnerabilities: recent[1]?.vulnerabilities || current.vulnerabilities
+    vulnerabilities: recent[1]?.vulnerabilities || current.vulnerabilities,
   };
 
   const bugChange = current.bugs - previous.bugs;
@@ -273,12 +290,12 @@ function calculateTrending(metrics) {
     trend,
     bugChange,
     vulnerabilityChange: vulnChange,
-    history: recent.map(s => ({
+    history: recent.map((s) => ({
       date: s.date,
       bugs: s.bugs,
       vulnerabilities: s.vulnerabilities,
-      coverage: s.coverage
-    }))
+      coverage: s.coverage,
+    })),
   };
 }
 
@@ -296,7 +313,7 @@ async function fetchAllMetrics(options = {}) {
         source: 'cache',
         sonarAvailable: false,
         reason: health.reason,
-        cachedAt: cached.timestamp
+        cachedAt: cached.timestamp,
       };
     }
 
@@ -304,15 +321,16 @@ async function fetchAllMetrics(options = {}) {
       success: false,
       sonarAvailable: false,
       reason: health.reason,
-      message: 'SonarQube unavailable and no cached data. Run `node scripts/sonarqube-helper.js start` to start SonarQube.',
-      timestamp: new Date().toISOString()
+      message:
+        'SonarQube unavailable and no cached data. Run `node scripts/sonarqube-helper.js start` to start SonarQube.',
+      timestamp: new Date().toISOString(),
     };
   }
 
   const [metricsResult, gateResult, issuesResult] = await Promise.all([
     fetchMetrics(),
     fetchQualityGate(),
-    fetchIssues()
+    fetchIssues(),
   ]);
 
   if (!metricsResult.success) {
@@ -320,7 +338,7 @@ async function fetchAllMetrics(options = {}) {
       success: false,
       sonarAvailable: true,
       error: metricsResult.error,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -350,28 +368,32 @@ async function fetchAllMetrics(options = {}) {
     debtRatio: parseFloat(m.sqale_debt_ratio) || 0,
 
     // Quality Gate
-    qualityGate: gateResult.success ? {
-      status: gateResult.status,
-      passed: gateResult.status === 'OK',
-      conditions: gateResult.conditions.map(c => ({
-        metric: c.metricKey,
-        status: c.status,
-        actual: c.actualValue,
-        threshold: c.errorThreshold
-      }))
-    } : { status: 'UNKNOWN', passed: false },
+    qualityGate: gateResult.success
+      ? {
+          status: gateResult.status,
+          passed: gateResult.status === 'OK',
+          conditions: gateResult.conditions.map((c) => ({
+            metric: c.metricKey,
+            status: c.status,
+            actual: c.actualValue,
+            threshold: c.errorThreshold,
+          })),
+        }
+      : { status: 'UNKNOWN', passed: false },
 
     // Critical/Blocker issues
-    criticalIssues: issuesResult.success ? {
-      total: issuesResult.total,
-      issues: issuesResult.issues
-    } : { total: 0, issues: [] },
+    criticalIssues: issuesResult.success
+      ? {
+          total: issuesResult.total,
+          issues: issuesResult.issues,
+        }
+      : { total: 0, issues: [] },
 
     // Health score calculation
     healthScore: calculateHealthScore(m, gateResult),
 
     // Compliance with quality-gate-config.json
-    compliance: checkCompliance(m, gateResult)
+    compliance: checkCompliance(m, gateResult),
   };
 
   // Add trending
@@ -431,7 +453,9 @@ function checkCompliance(measures, gateResult) {
   if (existsSync(configPath)) {
     try {
       config = JSON.parse(readFileSync(configPath, 'utf-8'));
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   if (!config) {
@@ -448,7 +472,7 @@ function checkCompliance(measures, gateResult) {
       metric: 'technicalDebtRatio',
       actual: debtRatio,
       threshold: thresholds.technicalDebtRatioMax || 3,
-      message: `Debt ratio ${debtRatio}% exceeds max ${thresholds.technicalDebtRatioMax || 3}%`
+      message: `Debt ratio ${debtRatio}% exceeds max ${thresholds.technicalDebtRatioMax || 3}%`,
     });
   }
 
@@ -459,7 +483,7 @@ function checkCompliance(measures, gateResult) {
       metric: 'coverageOverall',
       actual: coverage,
       threshold: thresholds.coverageMinOverall || 90,
-      message: `Coverage ${coverage}% below min ${thresholds.coverageMinOverall || 90}%`
+      message: `Coverage ${coverage}% below min ${thresholds.coverageMinOverall || 90}%`,
     });
   }
 
@@ -467,7 +491,7 @@ function checkCompliance(measures, gateResult) {
     configured: true,
     compliant: violations.length === 0,
     violations,
-    checkedAt: new Date().toISOString()
+    checkedAt: new Date().toISOString(),
   };
 }
 
@@ -476,7 +500,7 @@ const args = process.argv.slice(2);
 const options = {
   json: args.includes('--json'),
   save: args.includes('--save'),
-  gate: args.includes('--gate')
+  gate: args.includes('--gate'),
 };
 
 (async () => {
@@ -494,7 +518,9 @@ const options = {
       if (gate.conditions) {
         for (const c of gate.conditions) {
           const icon = c.status === 'OK' ? '✓' : '✗';
-          console.log(`  ${icon} ${c.metricKey}: ${c.actualValue} (threshold: ${c.errorThreshold})`);
+          console.log(
+            `  ${icon} ${c.metricKey}: ${c.actualValue} (threshold: ${c.errorThreshold})`
+          );
         }
       }
     }
@@ -519,7 +545,9 @@ const options = {
 
     if (metrics.success) {
       console.log(`\nHealth Score: ${metrics.healthScore}/100`);
-      console.log(`Quality Gate: ${metrics.qualityGate?.status} ${metrics.qualityGate?.passed ? '✓' : '✗'}`);
+      console.log(
+        `Quality Gate: ${metrics.qualityGate?.status} ${metrics.qualityGate?.passed ? '✓' : '✗'}`
+      );
       console.log(`\nMetrics:`);
       console.log(`  Bugs: ${metrics.bugs}`);
       console.log(`  Vulnerabilities: ${metrics.vulnerabilities}`);

@@ -36,8 +36,15 @@ vi.mock('next/navigation', () => ({
 
 // Mock next/link
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) =>
-    React.createElement('a', { href, ...props }, children),
+  default: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+    [key: string]: unknown;
+  }) => React.createElement('a', { href, ...props }, children),
 }));
 
 // Mock tRPC hooks used by NotificationBell
@@ -116,7 +123,9 @@ describe('Tier 2: Page Skeletons', () => {
       React.createElement(
         'form',
         { 'aria-label': 'Sign in to your account' },
-        React.createElement('div', null,
+        React.createElement(
+          'div',
+          null,
           React.createElement('label', { htmlFor: 'email' }, 'Email'),
           React.createElement('input', {
             id: 'email',
@@ -126,7 +135,9 @@ describe('Tier 2: Page Skeletons', () => {
             required: true,
           })
         ),
-        React.createElement('div', null,
+        React.createElement(
+          'div',
+          null,
           React.createElement('label', { htmlFor: 'password' }, 'Password'),
           React.createElement('input', {
             id: 'password',
@@ -223,7 +234,9 @@ describe('Tier 3: Interactive Components', () => {
       React.createElement(
         'div',
         null,
-        React.createElement(Button, { 'aria-label': 'Delete item', variant: 'destructive' },
+        React.createElement(
+          Button,
+          { 'aria-label': 'Delete item', variant: 'destructive' },
           React.createElement('span', { 'aria-hidden': 'true' }, '🗑'),
           ' Delete'
         ),
@@ -240,7 +253,9 @@ describe('Tier 3: Interactive Components', () => {
       React.createElement(
         'form',
         { 'aria-label': 'Contact form' },
-        React.createElement('div', null,
+        React.createElement(
+          'div',
+          null,
           React.createElement('label', { htmlFor: 'name' }, 'Name'),
           React.createElement('input', {
             id: 'name',
@@ -248,12 +263,16 @@ describe('Tier 3: Interactive Components', () => {
             'aria-describedby': 'name-error',
             'aria-invalid': 'true',
           }),
-          React.createElement('p', {
-            id: 'name-error',
-            role: 'alert',
-            'aria-live': 'polite',
-            className: 'text-sm text-destructive',
-          }, 'Name is required')
+          React.createElement(
+            'p',
+            {
+              id: 'name-error',
+              role: 'alert',
+              'aria-live': 'polite',
+              className: 'text-sm text-destructive',
+            },
+            'Name is required'
+          )
         ),
         React.createElement('button', { type: 'submit' }, 'Submit')
       );

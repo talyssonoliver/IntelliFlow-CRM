@@ -139,8 +139,8 @@ export function parseArtifactSpec(artifactsToTrack: string): string[] {
     .split(/[,;\n]/)
     .map((a) => a.trim())
     .filter((a) => a.length > 0)
-    // Remove ARTIFACT: prefix if present
-    .map((a) => a.replace(/^ARTIFACT:\s*/i, ''));
+    // Remove ARTIFACT:/EVIDENCE:/SPEC:/PLAN:/CONTEXT: prefixes
+    .map((a) => a.replace(/^(?:ARTIFACT|EVIDENCE|SPEC|PLAN|CONTEXT):\s*/i, ''));
 
   return artifacts;
 }
@@ -180,6 +180,55 @@ function getMinFileSize(extension: string): number {
 // =============================================================================
 
 /**
+ * Attempts to find an evidence file at alternative sprint paths when the
+ * declared sprint path doesn't match the actual execution sprint.
+ * Returns the resolved path (relative to repoRoot) if found, or null.
+ */
+function findAlternativeSprintPath(artifactPath: string, repoRoot: string): string | null {
+  // Only applies to .specify/sprints/sprint-N/ paths
+  const sprintPathMatch = artifactPath.match(/^(\.specify\/sprints\/)sprint-(\d+)(\/.*)/);
+  if (!sprintPathMatch) return null;
+
+  const prefix = sprintPathMatch[1]; // .specify/sprints/
+  const suffix = sprintPathMatch[3]; // /attestations/TASK-ID/file.json
+
+  // Also try plain filename if prefixed (e.g. IFC-021-context_ack.json → context_ack.json)
+  const filename = path.basename(suffix);
+  const plainFilename = filename.replace(/^[A-Z]+-\d+-/, '');
+  const altSuffix = plainFilename !== filename ? suffix.replace(filename, plainFilename) : null;
+
+  // Scan existing sprint directories
+  const sprintsDir = path.join(repoRoot, prefix);
+  if (!fs.existsSync(sprintsDir)) return null;
+
+  const sprintDirs = fs
+    .readdirSync(sprintsDir)
+    .filter((d) => /^sprint-\d+$/.test(d))
+    .sort((a, b) => {
+      const numA = parseInt(a.replace('sprint-', ''), 10);
+      const numB = parseInt(b.replace('sprint-', ''), 10);
+      return numB - numA; // newest first
+    });
+
+  for (const dir of sprintDirs) {
+    // Try exact suffix
+    const candidate = path.join(repoRoot, prefix, dir, suffix.slice(1));
+    if (fs.existsSync(candidate)) {
+      return path.join(prefix, dir, suffix.slice(1)).replace(/\\/g, '/');
+    }
+    // Try plain filename variant
+    if (altSuffix) {
+      const altCandidate = path.join(repoRoot, prefix, dir, altSuffix.slice(1));
+      if (fs.existsSync(altCandidate)) {
+        return path.join(prefix, dir, altSuffix.slice(1)).replace(/\\/g, '/');
+      }
+    }
+  }
+
+  return null;
+}
+
+/**
  * Verifies a single artifact file
  */
 export async function verifyArtifact(
@@ -192,21 +241,32 @@ export async function verifyArtifact(
   let status: ArtifactStatus = 'found';
   let size: number | null = null;
   let sha256: string | null = null;
+  let resolvedPath = artifactPath;
 
-  // Check if file exists
+  // Check if file exists — if not, try alternative sprint paths
   if (!fs.existsSync(absolutePath)) {
-    return {
-      path: artifactPath,
-      expectedBy: taskId,
-      status: 'missing',
-      size: null,
-      sha256: null,
-      issues: [`Artifact not found: ${artifactPath}`],
-    };
+    const altPath = findAlternativeSprintPath(artifactPath, repoRoot);
+    if (altPath) {
+      resolvedPath = altPath;
+      issues.push(
+        `Sprint path mismatch: CSV declares ${artifactPath}, found at ${altPath}. Update CSV "Artifacts To Track" to match.`
+      );
+    } else {
+      return {
+        path: artifactPath,
+        expectedBy: taskId,
+        status: 'missing',
+        size: null,
+        sha256: null,
+        issues: [`Artifact not found: ${artifactPath}`],
+      };
+    }
   }
 
+  const resolvedAbsolutePath = path.join(repoRoot, resolvedPath);
+
   try {
-    const stats = fs.statSync(absolutePath);
+    const stats = fs.statSync(resolvedAbsolutePath);
 
     // Skip directories
     if (stats.isDirectory()) {
@@ -221,7 +281,7 @@ export async function verifyArtifact(
     }
 
     size = stats.size;
-    const extension = path.extname(artifactPath).toLowerCase();
+    const extension = path.extname(resolvedPath).toLowerCase();
     const minSize = getMinFileSize(extension);
 
     // Check for empty file
@@ -242,7 +302,7 @@ export async function verifyArtifact(
     }
 
     // Read content for deeper analysis
-    const content = fs.readFileSync(absolutePath, 'utf-8');
+    const content = fs.readFileSync(resolvedAbsolutePath, 'utf-8');
 
     // Check for stub content
     if (isStubContent(content, extension)) {
@@ -251,7 +311,7 @@ export async function verifyArtifact(
     }
 
     // Generate hash
-    sha256 = sha256File(absolutePath);
+    sha256 = sha256File(resolvedAbsolutePath);
 
     // Additional checks for specific file types
     if (extension === '.json') {

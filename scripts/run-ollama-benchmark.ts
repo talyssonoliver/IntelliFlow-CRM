@@ -115,9 +115,7 @@ function sampleStdDev(arr: number[]): number {
   const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
   const squareDiffs = arr.map((v) => Math.pow(v - mean, 2));
   // NF-004: sample stddev uses (n-1) denominator
-  return Math.sqrt(
-    squareDiffs.reduce((a, b) => a + b, 0) / (arr.length - 1)
-  );
+  return Math.sqrt(squareDiffs.reduce((a, b) => a + b, 0) / (arr.length - 1));
 }
 
 function percentile(arr: number[], p: number): number {
@@ -217,9 +215,7 @@ async function runBenchmark(): Promise<void> {
     console.log(
       '  1. docker compose -f docker-compose.yml -f docker-compose.ollama.yml up -d ollama'
     );
-    console.log(
-      '  2. docker exec intelliflow-ollama ollama pull mistral'
-    );
+    console.log('  2. docker exec intelliflow-ollama ollama pull mistral');
     console.log('  3. Verify: curl http://localhost:11434/api/tags');
     console.log('  4. Re-run: npx tsx scripts/run-ollama-benchmark.ts');
     console.log();
@@ -237,10 +233,7 @@ async function runBenchmark(): Promise<void> {
   let leadScoringChain: any;
   try {
     // On Windows, dynamic import needs file:// URL for absolute paths
-    const scoringChainPath = path.join(
-      projectRoot,
-      'apps/ai-worker/src/chains/scoring.chain'
-    );
+    const scoringChainPath = path.join(projectRoot, 'apps/ai-worker/src/chains/scoring.chain');
     const importPath =
       process.platform === 'win32'
         ? `file:///${scoringChainPath.replace(/\\/g, '/')}`
@@ -250,9 +243,7 @@ async function runBenchmark(): Promise<void> {
     console.log('Loaded scoring chain\n');
   } catch (error) {
     console.log('Failed to load AI worker modules:', error);
-    console.log(
-      'Make sure to build the ai-worker package first: pnpm --filter ai-worker build'
-    );
+    console.log('Make sure to build the ai-worker package first: pnpm --filter ai-worker build');
     process.exit(1);
   }
 
@@ -281,8 +272,7 @@ async function runBenchmark(): Promise<void> {
 
     for (let i = 0; i < TEST_LEADS.length; i++) {
       const lead = TEST_LEADS[i];
-      const tier: 'high' | 'medium' | 'low' =
-        i < 2 ? 'high' : i < 4 ? 'medium' : 'low';
+      const tier: 'high' | 'medium' | 'low' = i < 2 ? 'high' : i < 4 ? 'medium' : 'low';
 
       // NF-003: performance.now() for sub-millisecond precision
       const start = performance.now();
@@ -329,15 +319,11 @@ async function runBenchmark(): Promise<void> {
   const confidences = successfulResults.map((r) => r.result.confidence);
   const latencies = successfulResults.map((r) => r.latencyMs);
 
-  const highScores = successfulResults
-    .filter((r) => r.tier === 'high')
-    .map((r) => r.result.score);
+  const highScores = successfulResults.filter((r) => r.tier === 'high').map((r) => r.result.score);
   const mediumScores = successfulResults
     .filter((r) => r.tier === 'medium')
     .map((r) => r.result.score);
-  const lowScores = successfulResults
-    .filter((r) => r.tier === 'low')
-    .map((r) => r.result.score);
+  const lowScores = successfulResults.filter((r) => r.tier === 'low').map((r) => r.result.score);
 
   const avgHighQuality = avg(highScores);
   const avgMediumQuality = avg(mediumScores);
@@ -347,15 +333,11 @@ async function runBenchmark(): Promise<void> {
   // Factor completeness: % of results with >=4 factors and reasoning >=10 chars
   const factorComplete = successfulResults.filter((r) => {
     const hasEnoughFactors = r.result.factors.length >= 4;
-    const allHaveReasoning = r.result.factors.every(
-      (f) => f.reasoning && f.reasoning.length >= 10
-    );
+    const allHaveReasoning = r.result.factors.every((f) => f.reasoning && f.reasoning.length >= 10);
     return hasEnoughFactors && allHaveReasoning;
   });
   const factorCompletenessPct =
-    successfulResults.length > 0
-      ? (factorComplete.length / successfulResults.length) * 100
-      : 0;
+    successfulResults.length > 0 ? (factorComplete.length / successfulResults.length) * 100 : 0;
 
   const totalOps = allResults.length;
   const errorRate = errors / totalOps;
@@ -390,18 +372,12 @@ async function runBenchmark(): Promise<void> {
   console.log(
     `  Average Score: ${avg(scores).toFixed(1)} (stddev=${sampleStdDev(scores).toFixed(1)})`
   );
-  console.log(
-    `  Average Confidence: ${(avg(confidences) * 100).toFixed(1)}%`
-  );
+  console.log(`  Average Confidence: ${(avg(confidences) * 100).toFixed(1)}%`);
   console.log(`  High Quality Avg: ${avgHighQuality.toFixed(1)}`);
   console.log(`  Medium Quality Avg: ${avgMediumQuality.toFixed(1)}`);
   console.log(`  Low Quality Avg: ${avgLowQuality.toFixed(1)}`);
-  console.log(
-    `  Score Differentiation: ${scoreDifferentiation.toFixed(1)}`
-  );
-  console.log(
-    `  Factor Completeness: ${factorCompletenessPct.toFixed(1)}%`
-  );
+  console.log(`  Score Differentiation: ${scoreDifferentiation.toFixed(1)}`);
+  console.log(`  Factor Completeness: ${factorCompletenessPct.toFixed(1)}%`);
   console.log();
 
   console.log('Latency:');
@@ -438,8 +414,7 @@ async function runBenchmark(): Promise<void> {
     $schema: '../schemas/benchmark.schema.json',
     benchmark_id: 'IFC-174-ollama-benchmark',
     title: 'AI Model Accuracy Benchmarks for Lead Scoring',
-    description:
-      'Real benchmark results from actual Ollama inference operations (IFC-174)',
+    description: 'Real benchmark results from actual Ollama inference operations (IFC-174)',
     timestamp,
     environment: {
       node: process.version,
@@ -470,12 +445,8 @@ async function runBenchmark(): Promise<void> {
             high_quality_avg: Number(avgHighQuality.toFixed(2)),
             medium_quality_avg: Number(avgMediumQuality.toFixed(2)),
             low_quality_avg: Number(avgLowQuality.toFixed(2)),
-            score_differentiation: Number(
-              scoreDifferentiation.toFixed(2)
-            ),
-            factor_completeness_pct: Number(
-              factorCompletenessPct.toFixed(2)
-            ),
+            score_differentiation: Number(scoreDifferentiation.toFixed(2)),
+            factor_completeness_pct: Number(factorCompletenessPct.toFixed(2)),
           },
           latency_ms: {
             avg: Number(avg(latencies).toFixed(2)),
@@ -496,16 +467,11 @@ async function runBenchmark(): Promise<void> {
       `Score differentiation: ${scoreDifferentiation.toFixed(1)} points between high and low quality leads`,
       `Factor completeness: ${factorCompletenessPct.toFixed(1)}%`,
       'Cost per 1K leads: $0.00 (Ollama is free)',
-      errors > 0
-        ? `Error rate: ${(errorRate * 100).toFixed(1)}%`
-        : 'No errors during benchmark',
+      errors > 0 ? `Error rate: ${(errorRate * 100).toFixed(1)}%` : 'No errors during benchmark',
     ],
   };
 
-  const benchmarkPath = path.join(
-    projectRoot,
-    'artifacts/benchmarks/accuracy-benchmarks.json'
-  );
+  const benchmarkPath = path.join(projectRoot, 'artifacts/benchmarks/accuracy-benchmarks.json');
   fs.writeFileSync(benchmarkPath, JSON.stringify(accuracyBenchmarks, null, 2));
   console.log(`Accuracy benchmarks written to: ${benchmarkPath}`);
 
@@ -519,10 +485,8 @@ async function runBenchmark(): Promise<void> {
     dependencies: ['IFC-085', 'IFC-168'],
     timestamp,
     methodology: {
-      approach:
-        'Score 6 test leads across 5 iterations using real Ollama inference',
-      warmup:
-        '1 warmup lead scored and discarded to avoid cold-start model loading skew',
+      approach: 'Score 6 test leads across 5 iterations using real Ollama inference',
+      warmup: '1 warmup lead scored and discarded to avoid cold-start model loading skew',
       timing: 'performance.now() for sub-millisecond precision (NF-003)',
       statistics: 'Sample standard deviation with n-1 denominator (NF-004)',
       minimum_operations: `${totalOps} operations (>= 30 MIN_SAMPLE_SIZE per AIConstants.ts)`,
@@ -574,10 +538,7 @@ async function runBenchmark(): Promise<void> {
     conclusions: accuracyBenchmarks.conclusions,
   };
 
-  const reportPath = path.join(
-    projectRoot,
-    'artifacts/reports/ollama-real-benchmark-report.json'
-  );
+  const reportPath = path.join(projectRoot, 'artifacts/reports/ollama-real-benchmark-report.json');
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
   console.log(`Detailed report written to: ${reportPath}`);
   console.log();

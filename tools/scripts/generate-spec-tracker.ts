@@ -14,7 +14,11 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, basename, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Papa from 'papaparse';
-import { findRepoRoot, writeJsonFile, findTaskFile } from '../../apps/project-tracker/lib/data-sync/file-io';
+import {
+  findRepoRoot,
+  writeJsonFile,
+  findTaskFile,
+} from '../../apps/project-tracker/lib/data-sync/file-io';
 import { parseDependencies } from '../../apps/project-tracker/lib/data-sync/csv-mapping';
 
 // ---------------------------------------------------------------------------
@@ -134,8 +138,9 @@ export function scanSpecifyDirectory(specifyDir: string): Map<string, TaskArtifa
 
   if (!existsSync(sprintsDir)) return result;
 
-  const sprintDirs = readdirSync(sprintsDir, { withFileTypes: true })
-    .filter((d) => d.isDirectory() && /^sprint-\d+$/.test(d.name));
+  const sprintDirs = readdirSync(sprintsDir, { withFileTypes: true }).filter(
+    (d) => d.isDirectory() && /^sprint-\d+$/.test(d.name)
+  );
 
   for (const sprintDir of sprintDirs) {
     const sprintNum = parseInt(sprintDir.name.replace('sprint-', ''), 10);
@@ -171,8 +176,9 @@ export function scanSpecifyDirectory(specifyDir: string): Map<string, TaskArtifa
     // Scan attestations
     const attestDir = join(sprintPath, 'attestations');
     if (existsSync(attestDir)) {
-      const taskDirs = readdirSync(attestDir, { withFileTypes: true })
-        .filter((d) => d.isDirectory());
+      const taskDirs = readdirSync(attestDir, { withFileTypes: true }).filter((d) =>
+        d.isDirectory()
+      );
       for (const taskDir of taskDirs) {
         const taskId = taskDir.name;
         if (!result.has(taskId)) {
@@ -198,7 +204,9 @@ export function readAttestationVerdict(attestDirs: string[], taskId: string): At
       try {
         const data = JSON.parse(readFileSync(attestPath, 'utf-8'));
         return { verdict: data.verdict || 'UNKNOWN', variant: 'attestation' };
-      } catch { /* skip malformed */ }
+      } catch {
+        /* skip malformed */
+      }
     }
 
     // Also try {TASK_ID}-attestation.json
@@ -207,7 +215,9 @@ export function readAttestationVerdict(attestDirs: string[], taskId: string): At
       try {
         const data = JSON.parse(readFileSync(prefixedAttestPath, 'utf-8'));
         return { verdict: data.verdict || 'UNKNOWN', variant: 'attestation' };
-      } catch { /* skip malformed */ }
+      } catch {
+        /* skip malformed */
+      }
     }
 
     // Variant B/C: context_ack.json
@@ -216,7 +226,9 @@ export function readAttestationVerdict(attestDirs: string[], taskId: string): At
       try {
         const data = JSON.parse(readFileSync(ctxAckPath, 'utf-8'));
         return { verdict: data.verdict || 'UNKNOWN', variant: 'context_ack' };
-      } catch { /* skip malformed */ }
+      } catch {
+        /* skip malformed */
+      }
     }
 
     // Also try context_ack.json without prefix
@@ -225,7 +237,9 @@ export function readAttestationVerdict(attestDirs: string[], taskId: string): At
       try {
         const data = JSON.parse(readFileSync(bareCtxAck, 'utf-8'));
         return { verdict: data.verdict || 'UNKNOWN', variant: 'context_ack' };
-      } catch { /* skip malformed */ }
+      } catch {
+        /* skip malformed */
+      }
     }
 
     // Variant A: validation.json
@@ -236,7 +250,9 @@ export function readAttestationVerdict(attestDirs: string[], taskId: string): At
         // validation.json uses passed/failed booleans
         const passed = data.passed !== undefined ? !data.failed : false;
         return { verdict: passed ? 'PASS' : 'INCOMPLETE', variant: 'validation' };
-      } catch { /* skip malformed */ }
+      } catch {
+        /* skip malformed */
+      }
     }
 
     const bareValPath = join(dir, 'validation.json');
@@ -245,7 +261,9 @@ export function readAttestationVerdict(attestDirs: string[], taskId: string): At
         const data = JSON.parse(readFileSync(bareValPath, 'utf-8'));
         const passed = data.passed !== undefined ? !data.failed : false;
         return { verdict: passed ? 'PASS' : 'INCOMPLETE', variant: 'validation' };
-      } catch { /* skip malformed */ }
+      } catch {
+        /* skip malformed */
+      }
     }
   }
 
@@ -352,7 +370,10 @@ export function determineRealStatus(signals: {
 
   // SPEC_ONLY: has spec only, no plan/attestation, CSV=Backlog
   if (signals.hasSpec && !signals.hasAttestation) {
-    const csvBacklog = signals.csvStatus === 'Backlog' || signals.csvStatus === 'Planned' || signals.csvStatus === 'Not Started';
+    const csvBacklog =
+      signals.csvStatus === 'Backlog' ||
+      signals.csvStatus === 'Planned' ||
+      signals.csvStatus === 'Not Started';
     if (csvBacklog) {
       return 'SPEC_ONLY';
     }
@@ -360,7 +381,8 @@ export function determineRealStatus(signals: {
 
   // If none of the above, fall through based on CSV
   if (csvCompleted) return 'UNCERTAIN';
-  if (signals.csvStatus === 'In Progress' || signals.csvStatus === 'Validating') return 'PARTIALLY_DONE';
+  if (signals.csvStatus === 'In Progress' || signals.csvStatus === 'Validating')
+    return 'PARTIALLY_DONE';
 
   return 'SPEC_ONLY';
 }
@@ -383,7 +405,8 @@ export function detectIssues(tasks: TaskEntry[], csvMap: Map<string, CsvRow>): I
         task_id: task.task_id,
         severity: 'HIGH',
         issue: `CSV says Completed but NO attestation file exists and metric status is ${task.metric_status}. Task may not be truly implemented.`,
-        recommendation: 'Verify actual codebase for implementation. Run /exec or /matop-execute to generate proper attestation.',
+        recommendation:
+          'Verify actual codebase for implementation. Run /exec or /matop-execute to generate proper attestation.',
       });
     }
 
@@ -450,11 +473,20 @@ export function detectIssues(tasks: TaskEntry[], csvMap: Map<string, CsvRow>): I
 // ---------------------------------------------------------------------------
 
 export function generateSpecTracker(opts?: GenerateOptions): SpecTrackerOutput {
-  const repoRoot = opts?.repoRoot || findRepoRoot(dirname(fileURLToPath(import.meta.url))) || process.cwd();
+  const repoRoot =
+    opts?.repoRoot || findRepoRoot(dirname(fileURLToPath(import.meta.url))) || process.cwd();
   const writeOutput = opts?.writeOutput ?? true;
 
   // 1. Parse CSV
-  const csvPath = join(repoRoot, 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
+  const csvPath = join(
+    repoRoot,
+    'apps',
+    'project-tracker',
+    'docs',
+    'metrics',
+    '_global',
+    'Sprint_plan.csv'
+  );
   if (!existsSync(csvPath)) {
     throw new Error(`Sprint_plan.csv not found at ${csvPath}`);
   }
@@ -494,7 +526,9 @@ export function generateSpecTracker(opts?: GenerateOptions): SpecTrackerOutput {
     const attestResult = readAttestationVerdict(artifacts.attestDirs, taskId);
 
     // Count plan checkboxes (use first plan found)
-    const planCheckboxes = hasPlan ? countPlanCheckboxes(artifacts.plans[0]) : { checked: 0, unchecked: 0, ratio: 0 };
+    const planCheckboxes = hasPlan
+      ? countPlanCheckboxes(artifacts.plans[0])
+      : { checked: 0, unchecked: 0, ratio: 0 };
 
     // Count acceptance criteria (use first spec found)
     const acCount = hasSpec ? countAcceptanceCriteria(artifacts.specs[0]) : 0;
@@ -520,7 +554,10 @@ export function generateSpecTracker(opts?: GenerateOptions): SpecTrackerOutput {
 
     // Build spec_path relative to repo root
     const specPath = hasSpec
-      ? artifacts.specs[0].replace(repoRoot + '\\', '').replace(repoRoot + '/', '').replace(/\\/g, '/')
+      ? artifacts.specs[0]
+          .replace(repoRoot + '\\', '')
+          .replace(repoRoot + '/', '')
+          .replace(/\\/g, '/')
       : null;
 
     taskEntries.push({
@@ -601,16 +638,19 @@ export function generateSpecTracker(opts?: GenerateOptions): SpecTrackerOutput {
 // ---------------------------------------------------------------------------
 
 const __filename = fileURLToPath(import.meta.url);
-const isMainModule = process.argv[1] && (
-  process.argv[1] === __filename ||
-  process.argv[1].replace(/\\/g, '/') === __filename.replace(/\\/g, '/')
-);
+const isMainModule =
+  process.argv[1] &&
+  (process.argv[1] === __filename ||
+    process.argv[1].replace(/\\/g, '/') === __filename.replace(/\\/g, '/'));
 
 if (isMainModule) {
   try {
     generateSpecTracker();
   } catch (err) {
-    console.error('Failed to generate spec-tracker.json:', err instanceof Error ? err.message : err);
+    console.error(
+      'Failed to generate spec-tracker.json:',
+      err instanceof Error ? err.message : err
+    );
     process.exit(1);
   }
 }

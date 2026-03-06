@@ -55,6 +55,8 @@ export interface ContextPackManifest {
   files: FileManifestEntry[];
   totalSizeBytes: number;
   truncatedDueToSize: boolean;
+  /** True when generated retroactively by backfill — hashes reflect current file state, not execution-time state. Hash comparison with context_ack.json should be skipped. */
+  backfilled?: boolean;
 }
 
 export interface FileManifestEntry {
@@ -185,7 +187,8 @@ export function generateFileExcerpt(absolutePath: string, repoRoot: string): Fil
 export function buildContextPack(
   taskId: string,
   runId: string,
-  repoRoot?: string
+  repoRoot?: string,
+  options?: { backfilled?: boolean }
 ): ContextPackResult {
   const root = repoRoot || findRepoRoot();
   const errors: string[] = [];
@@ -319,6 +322,7 @@ export function buildContextPack(
     files: manifestEntries,
     totalSizeBytes: Buffer.byteLength(packContent, 'utf-8'),
     truncatedDueToSize,
+    ...(options?.backfilled ? { backfilled: true } : {}),
   };
 
   // Write files

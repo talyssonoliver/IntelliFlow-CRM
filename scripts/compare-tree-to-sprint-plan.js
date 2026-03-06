@@ -21,7 +21,7 @@ const defaultPlanPath = path.join(
   'docs',
   'metrics',
   '_global',
-  'Sprint_plan.csv',
+  'Sprint_plan.csv'
 );
 const defaultOutPath = path.join(repoRoot, 'artifacts', 'misc', 'tree-vs-sprint-report.txt');
 const defaultExtrasOutPath = path.join(repoRoot, 'artifacts', 'misc', 'tree-vs-sprint-extras.txt');
@@ -31,7 +31,10 @@ function normalizePath(rawPath) {
   if (!rawPath) {
     return '';
   }
-  const cleaned = rawPath.replace(/\\/g, '/').replace(/^\.\/+/, '').replace(/^\/+/, '');
+  const cleaned = rawPath
+    .replace(/\\/g, '/')
+    .replace(/^\.\/+/, '')
+    .replace(/^\/+/, '');
   const normalized = path.posix.normalize(cleaned);
   return normalized.endsWith('/') ? normalized.slice(0, -1) : normalized;
 }
@@ -72,8 +75,7 @@ function parseArgs() {
         .split(',')
         .map((item) => item.trim().toUpperCase())
         .filter(Boolean);
-      options.statuses =
-        parsed.includes('ALL') || parsed.includes('*') ? [] : parsed;
+      options.statuses = parsed.includes('ALL') || parsed.includes('*') ? [] : parsed;
       i += 1;
     } else if (arg === '--help' || arg === '-h') {
       printHelp();
@@ -89,11 +91,21 @@ function printHelp() {
   console.log('');
   console.log('Options:');
   console.log('  --tree, -t <path>     Path to tree_intelliflow_crm.txt (default: repo root)');
-  console.log('  --plan, -p <path>     Path to Sprint_plan.csv (default: apps/project-tracker/docs/metrics/_global/Sprint_plan.csv)');
-  console.log('  --include <types>     Comma-separated prefixes to track (default: ARTIFACT,EVIDENCE)');
-  console.log('  --out, -o <path>      Where to write the report (default: artifacts/misc/tree-vs-sprint-report.txt)');
-  console.log('  --extras-out <path>   Where to write non-plan file list (default: artifacts/misc/tree-vs-sprint-extras.txt)');
-  console.log('  --status <statuses>   Comma-separated task statuses to include (default: Completed)');
+  console.log(
+    '  --plan, -p <path>     Path to Sprint_plan.csv (default: apps/project-tracker/docs/metrics/_global/Sprint_plan.csv)'
+  );
+  console.log(
+    '  --include <types>     Comma-separated prefixes to track (default: ARTIFACT,EVIDENCE)'
+  );
+  console.log(
+    '  --out, -o <path>      Where to write the report (default: artifacts/misc/tree-vs-sprint-report.txt)'
+  );
+  console.log(
+    '  --extras-out <path>   Where to write non-plan file list (default: artifacts/misc/tree-vs-sprint-extras.txt)'
+  );
+  console.log(
+    '  --status <statuses>   Comma-separated task statuses to include (default: Completed)'
+  );
   console.log('  --help, -h            Show this help');
 }
 
@@ -277,7 +289,7 @@ function buildReport(actualPaths, expectedEntries, pathToTasks) {
   }
 
   const expectedBasenames = new Set(
-    expectedEntries.map((entry) => path.posix.basename(entry.normalizedPath)),
+    expectedEntries.map((entry) => path.posix.basename(entry.normalizedPath))
   );
   const relevantActualSet = new Set();
   actualSet.forEach((p) => {
@@ -298,7 +310,7 @@ function buildReport(actualPaths, expectedEntries, pathToTasks) {
 
     const base = path.posix.basename(entry.normalizedPath);
     const alternatives = (actualByBasename.get(base) || []).filter(
-      (candidate) => candidate !== entry.normalizedPath,
+      (candidate) => candidate !== entry.normalizedPath
     );
 
     if (alternatives.length > 0) {
@@ -364,14 +376,14 @@ function renderReport(report, context) {
   lines.push(
     `Tracked statuses: ${
       context.statuses && context.statuses.length > 0 ? context.statuses.join(', ') : 'ALL'
-    }`,
+    }`
   );
   lines.push('');
 
   lines.push('Summary');
   lines.push(`  Expected artifacts: ${report.stats.totalExpected}`);
   lines.push(
-    `  Entries on disk (matching expected basenames): ${report.stats.totalActualRelevant} (total in tree: ${report.stats.totalActual})`,
+    `  Entries on disk (matching expected basenames): ${report.stats.totalActualRelevant} (total in tree: ${report.stats.totalActual})`
   );
   lines.push(`  Found in expected location: ${report.found.length}`);
   lines.push(`  Missing: ${report.missing.length}`);
@@ -381,8 +393,10 @@ function renderReport(report, context) {
 
   renderSection(
     'Missing artifacts:',
-    report.missing.map((entry) => `[${entry.taskId}] ${entry.type} ${entry.normalizedPath || entry.rawPath}`),
-    lines,
+    report.missing.map(
+      (entry) => `[${entry.taskId}] ${entry.type} ${entry.normalizedPath || entry.rawPath}`
+    ),
+    lines
   );
 
   renderSection(
@@ -391,7 +405,7 @@ function renderReport(report, context) {
       const alt = item.alternatives.join(', ');
       return `[${item.entry.taskId}] ${item.entry.type} ${item.entry.normalizedPath || item.entry.rawPath} -> candidates: ${alt}`;
     }),
-    lines,
+    lines
   );
 
   renderSection(
@@ -400,13 +414,13 @@ function renderReport(report, context) {
       const tasks = dup.tasks.map((t) => `${t.taskId} (${t.type})`).join(', ');
       return `${dup.artifactPath} <- ${tasks}`;
     }),
-    lines,
+    lines
   );
 
   renderSection(
     'Potential duplicates on disk (same basename in multiple locations):',
     report.diskDuplicates.map((dup) => `${dup.base} -> ${dup.paths.join(', ')}`),
-    lines,
+    lines
   );
 
   return lines.join('\n');
@@ -436,10 +450,10 @@ function main() {
       extrasLines.push(`Tree file: ${options.treeFile}`);
       extrasLines.push(`Sprint plan: ${options.planFile}`);
       extrasLines.push(
-        `Statuses: ${options.statuses && options.statuses.length > 0 ? options.statuses.join(', ') : 'ALL'}`,
+        `Statuses: ${options.statuses && options.statuses.length > 0 ? options.statuses.join(', ') : 'ALL'}`
       );
       extrasLines.push(
-        `Include types: ${options.includeTypes && options.includeTypes.length > 0 ? options.includeTypes.join(', ') : 'ALL'}`,
+        `Include types: ${options.includeTypes && options.includeTypes.length > 0 ? options.includeTypes.join(', ') : 'ALL'}`
       );
       extrasLines.push(`Total extras: ${report.extras.length}`);
       extrasLines.push('');
@@ -472,7 +486,7 @@ function main() {
 
     console.log(`Wrote report to ${options.outFile}`);
     console.log(
-      `Summary: expected ${report.stats.totalExpected}, relevant on disk ${report.stats.totalActualRelevant} (tree total ${report.stats.totalActual}), found ${report.found.length}, missing ${report.missing.length}, misplaced ${report.misplaced.length}, plan duplicates ${report.duplicatesInPlan.length}, disk basename duplicates ${report.diskDuplicates.length}`,
+      `Summary: expected ${report.stats.totalExpected}, relevant on disk ${report.stats.totalActualRelevant} (tree total ${report.stats.totalActual}), found ${report.found.length}, missing ${report.missing.length}, misplaced ${report.misplaced.length}, plan duplicates ${report.duplicatesInPlan.length}, disk basename duplicates ${report.diskDuplicates.length}`
     );
   } catch (error) {
     console.error(`[ERROR] ${error instanceof Error ? error.message : String(error)}`);

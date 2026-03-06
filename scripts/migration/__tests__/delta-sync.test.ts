@@ -219,13 +219,13 @@ describe('ENUM_MAPPINGS', () => {
   it('completeness: all integer values in source range have mappings (no gaps)', () => {
     for (const [table, fields] of Object.entries(ENUM_MAPPINGS)) {
       for (const [field, mapping] of Object.entries(fields)) {
-        const keys = Object.keys(mapping).map(Number).sort((a, b) => a - b);
+        const keys = Object.keys(mapping)
+          .map(Number)
+          .sort((a, b) => a - b);
         const min = keys[0];
         const max = keys[keys.length - 1];
         for (let i = min; i <= max; i++) {
-          expect(mapping[i]).toBeDefined(
-            `${table}.${field}: missing mapping for integer key ${i}`
-          );
+          expect(mapping[i]).toBeDefined(`${table}.${field}: missing mapping for integer key ${i}`);
         }
       }
     }
@@ -249,8 +249,12 @@ describe('checkpoint/resume (RED — not yet implemented)', () => {
       timestamp: new Date().toISOString(),
     };
     const path = '/tmp/test-checkpoint.json';
-    await (mod as Record<string, unknown> as { saveCheckpoint: (s: unknown, p: string) => Promise<void> }).saveCheckpoint(state, path);
-    const loaded = await (mod as Record<string, unknown> as { loadCheckpoint: (p: string) => Promise<unknown> }).loadCheckpoint(path);
+    await (
+      mod as Record<string, unknown> as { saveCheckpoint: (s: unknown, p: string) => Promise<void> }
+    ).saveCheckpoint(state, path);
+    const loaded = await (
+      mod as Record<string, unknown> as { loadCheckpoint: (p: string) => Promise<unknown> }
+    ).loadCheckpoint(path);
     expect(loaded).toMatchObject(state);
   });
 });
@@ -258,7 +262,10 @@ describe('checkpoint/resume (RED — not yet implemented)', () => {
 describe('circuit breaker', () => {
   it('opens after threshold consecutive failures, rejects new calls when open', async () => {
     const mod = await import('../delta-sync');
-    const CircuitBreaker = (mod as Record<string, unknown>).CircuitBreaker as new (opts: { threshold: number; cooldown: number }) => {
+    const CircuitBreaker = (mod as Record<string, unknown>).CircuitBreaker as new (opts: {
+      threshold: number;
+      cooldown: number;
+    }) => {
       execute: <T>(fn: () => Promise<T>) => Promise<T>;
       getState: () => string;
     };
@@ -340,9 +347,11 @@ describe('PII redaction (RED — not yet implemented)', () => {
 describe('schema drift', () => {
   it('validateSchemaVersion() rejects mismatched source schema version', async () => {
     const mod = await import('../delta-sync');
-    const validateSchemaVersion = (mod as Record<string, unknown>).validateSchemaVersion as (
-      sourceSchema: { version: string }
-    ) => { valid: boolean; message: string };
+    const validateSchemaVersion = (mod as Record<string, unknown>)
+      .validateSchemaVersion as (sourceSchema: { version: string }) => {
+      valid: boolean;
+      message: string;
+    };
 
     expect(typeof validateSchemaVersion).toBe('function');
 
@@ -352,10 +361,13 @@ describe('schema drift', () => {
 
   it('validateSchemaVersion() accepts matching schema version', async () => {
     const mod = await import('../delta-sync');
-    const validateSchemaVersion = (mod as Record<string, unknown>).validateSchemaVersion as (
-      sourceSchema: { version: string }
-    ) => { valid: boolean; message: string };
-    const EXPECTED_SCHEMA_VERSION = (mod as Record<string, unknown>).EXPECTED_SCHEMA_VERSION as string;
+    const validateSchemaVersion = (mod as Record<string, unknown>)
+      .validateSchemaVersion as (sourceSchema: { version: string }) => {
+      valid: boolean;
+      message: string;
+    };
+    const EXPECTED_SCHEMA_VERSION = (mod as Record<string, unknown>)
+      .EXPECTED_SCHEMA_VERSION as string;
 
     const valid = validateSchemaVersion({ version: EXPECTED_SCHEMA_VERSION });
     expect(valid.valid).toBe(true);

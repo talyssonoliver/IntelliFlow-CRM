@@ -533,7 +533,8 @@ describe('Attachment Handler', () => {
     });
 
     it('should reject oversized files', () => {
-      const largeContent = Buffer.alloc(30 * 1024 * 1024); // 30 MB
+      // Use a fake buffer to avoid allocating 30MB — only .length is checked for size validation
+      const largeContent = { length: 30 * 1024 * 1024 } as any; // fake buffer — only .length is checked for size validation
       const result = handler.validate(largeContent, 'large.pdf');
 
       expect(result.valid).toBe(false);
@@ -571,7 +572,7 @@ describe('Attachment Handler', () => {
       const result = await infectedHandler.process(content, 'file.txt', 'email-123');
 
       expect(result.success).toBe(false);
-      expect(result.errors).toContain('Virus detected: Simulated.Threat.A');
+      expect(result.errors).toContain('Virus detected: Mock.Simulated.Threat');
     });
 
     it('should extract text content from text files', async () => {

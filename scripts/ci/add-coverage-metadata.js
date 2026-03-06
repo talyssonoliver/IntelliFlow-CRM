@@ -99,9 +99,21 @@ function checkThresholds(coverage) {
 
   const total = coverage.total;
   const details = {
-    statements: { target: THRESHOLDS.statements, actual: Math.round(total.statements?.pct || 0), met: false },
-    branches: { target: THRESHOLDS.branches, actual: Math.round(total.branches?.pct || 0), met: false },
-    functions: { target: THRESHOLDS.functions, actual: Math.round(total.functions?.pct || 0), met: false },
+    statements: {
+      target: THRESHOLDS.statements,
+      actual: Math.round(total.statements?.pct || 0),
+      met: false,
+    },
+    branches: {
+      target: THRESHOLDS.branches,
+      actual: Math.round(total.branches?.pct || 0),
+      met: false,
+    },
+    functions: {
+      target: THRESHOLDS.functions,
+      actual: Math.round(total.functions?.pct || 0),
+      met: false,
+    },
     lines: { target: THRESHOLDS.lines, actual: Math.round(total.lines?.pct || 0), met: false },
   };
 
@@ -170,7 +182,10 @@ function main() {
   if (!fs.existsSync(miscCoverageDir)) {
     fs.mkdirSync(miscCoverageDir, { recursive: true });
   }
-  fs.writeFileSync(path.join(miscCoverageDir, 'coverage-summary.json'), JSON.stringify(coverage, null, 2));
+  fs.writeFileSync(
+    path.join(miscCoverageDir, 'coverage-summary.json'),
+    JSON.stringify(coverage, null, 2)
+  );
 
   // Log summary
   console.log('\nCoverage Metadata Added:');
@@ -184,10 +199,12 @@ function main() {
 
   if (coverage.total) {
     const t = coverage.total;
-    console.log(`  Coverage: Stmts ${Math.round(t.statements?.pct || 0)}%, ` +
-                `Branch ${Math.round(t.branches?.pct || 0)}%, ` +
-                `Funcs ${Math.round(t.functions?.pct || 0)}%, ` +
-                `Lines ${Math.round(t.lines?.pct || 0)}%`);
+    console.log(
+      `  Coverage: Stmts ${Math.round(t.statements?.pct || 0)}%, ` +
+        `Branch ${Math.round(t.branches?.pct || 0)}%, ` +
+        `Funcs ${Math.round(t.functions?.pct || 0)}%, ` +
+        `Lines ${Math.round(t.lines?.pct || 0)}%`
+    );
   }
 
   console.log(`\nOutput: ${COVERAGE_SUMMARY_PATH}`);

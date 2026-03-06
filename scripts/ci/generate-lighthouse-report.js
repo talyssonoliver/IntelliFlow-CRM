@@ -27,10 +27,10 @@ const scores = {
   performance: Math.round((summary.performance || 0) * 100),
   accessibility: Math.round((summary.accessibility || 0) * 100),
   bestPractices: Math.round((summary['best-practices'] || 0) * 100),
-  seo: Math.round((summary.seo || 0) * 100)
+  seo: Math.round((summary.seo || 0) * 100),
 };
 
-const getScoreClass = (score) => score >= 90 ? 'good' : score >= 50 ? 'average' : 'poor';
+const getScoreClass = (score) => (score >= 90 ? 'good' : score >= 50 ? 'average' : 'poor');
 
 const html = `<!DOCTYPE html>
 <html lang="en">
@@ -141,7 +141,12 @@ const html = `<!DOCTYPE html>
     </header>
 
     <div class="scores">
-      ${Object.entries({ Performance: scores.performance, Accessibility: scores.accessibility, 'Best Practices': scores.bestPractices, SEO: scores.seo })
+      ${Object.entries({
+        Performance: scores.performance,
+        Accessibility: scores.accessibility,
+        'Best Practices': scores.bestPractices,
+        SEO: scores.seo,
+      })
         .map(([label, score]) => {
           const circumference = 2 * Math.PI * 52;
           const offset = circumference - (score / 100) * circumference;
@@ -158,7 +163,8 @@ const html = `<!DOCTYPE html>
         </div>
         <div class="score-label">${label}</div>
       </div>`;
-        }).join('')}
+        })
+        .join('')}
     </div>
 
     <div class="info-card">
@@ -197,9 +203,9 @@ const jsonSummary = {
     performance: 90,
     accessibility: 90,
     bestPractices: 90,
-    seo: 90
+    seo: 90,
   },
-  passed: Object.values(scores).every(s => s >= 90)
+  passed: Object.values(scores).every((s) => s >= 90),
 };
 
 fs.writeFileSync(
@@ -210,4 +216,6 @@ fs.writeFileSync(
 console.log('Lighthouse reports generated:');
 console.log(`  - ${outputDir}/lighthouse-report.html`);
 console.log(`  - ${outputDir}/lighthouse-summary.json`);
-console.log(`Scores: Performance=${scores.performance}, Accessibility=${scores.accessibility}, Best Practices=${scores.bestPractices}, SEO=${scores.seo}`);
+console.log(
+  `Scores: Performance=${scores.performance}, Accessibility=${scores.accessibility}, Best Practices=${scores.bestPractices}, SEO=${scores.seo}`
+);

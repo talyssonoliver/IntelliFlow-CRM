@@ -56,7 +56,7 @@ OPTIONS:
   --skip-validations         Skip running validation commands (faster)
   --json                     Output JSON report to stdout instead of files
   --parallel <number>        Max parallel operations (default: 4)
-  --timeout <ms>             Validation command timeout (default: 60000)
+  --timeout <ms>             Validation command timeout (default: 1000000)
   --repo-root <path>         Repository root (default: cwd)
   --run-id <string>          Custom run ID (default: auto-generated)
   --help, -h                 Show this help message
@@ -101,7 +101,7 @@ function parseCliArgs(): CliOptions {
         'skip-validations': { type: 'boolean', default: false },
         json: { type: 'boolean', default: false },
         parallel: { type: 'string', default: '4' },
-        timeout: { type: 'string', default: '60000' },
+        timeout: { type: 'string', default: '1000000' },
         'repo-root': { type: 'string' },
         'run-id': { type: 'string' },
         help: { type: 'boolean', short: 'h', default: false },
@@ -134,7 +134,7 @@ function parseCliArgs(): CliOptions {
       help: false,
       repoRoot: values['repo-root'] || process.cwd(),
       parallelLimit: parseInt(values.parallel || '4', 10),
-      timeout: parseInt(values.timeout || '60000', 10),
+      timeout: parseInt(values.timeout || '1000000', 10),
       runId: values['run-id'],
     };
   } catch (error) {

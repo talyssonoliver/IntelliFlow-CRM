@@ -15,8 +15,7 @@ describe('rollback procedures', () => {
     expect(content).toContain('rollback');
 
     // Verify time-based SLAs are documented (may use different exact phrasing)
-    const hasTimeLimits =
-      content.includes('minute') || content.includes('min');
+    const hasTimeLimits = content.includes('minute') || content.includes('min');
     expect(hasTimeLimits).toBe(true);
   });
 

@@ -16,7 +16,7 @@
  * @module tools/scripts/lib/context-ack-gatekeeper
  */
 
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { isStrictMode, type Severity, type GateResult } from './validation-utils.js';
 import { parseTaskContract, requiresContextAck, getFilePrerequisites } from './contract-parser.js';
@@ -187,7 +187,7 @@ export function validateContextAck(
   const warnings: string[] = [];
 
   // Paths - sprint-based structure: .specify/sprints/sprint-{N}/attestations/{taskId}/
-  const contextDir = join(
+  let contextDir = join(
     repoRoot,
     '.specify',
     'sprints',
@@ -195,17 +195,62 @@ export function validateContextAck(
     'attestations',
     taskId
   );
-  const ackPath = join(contextDir, 'context_ack.json');
-  const manifestPath = join(contextDir, 'context_pack.manifest.json');
+  let ackPath = join(contextDir, 'context_ack.json');
+  let manifestPath = join(contextDir, 'context_pack.manifest.json');
 
   // Check if ack file exists
   if (!existsSync(ackPath)) {
-    return {
-      valid: false,
-      severity: isStrictMode() ? 'FAIL' : 'WARN',
-      errors: [`context_ack.json not found at: ${ackPath}`],
-      warnings: [],
-    };
+    // Check for common misname: TASK-ID-context_ack.json (prefixed convention)
+    const prefixedPath = join(contextDir, `${taskId}-context_ack.json`);
+    if (existsSync(prefixedPath)) {
+      return {
+        valid: false,
+        severity: 'FAIL',
+        errors: [
+          `context_ack.json not found at expected path: ${ackPath}`,
+          `Found wrong filename: ${taskId}-context_ack.json — rename to plain context_ack.json (no task ID prefix)`,
+        ],
+        warnings: [],
+      };
+    }
+
+    // Sprint path fallback: scan other sprint dirs for the same task's context_ack
+    const sprintsDir = join(repoRoot, '.specify', 'sprints');
+    let foundAlternative = false;
+    if (existsSync(sprintsDir)) {
+      const sprintDirs = readdirSync(sprintsDir)
+        .filter((d) => /^sprint-\d+$/.test(d))
+        .sort((a, b) => {
+          const numA = parseInt(a.replace('sprint-', ''), 10);
+          const numB = parseInt(b.replace('sprint-', ''), 10);
+          return numB - numA; // newest first
+        });
+
+      for (const dir of sprintDirs) {
+        const altDir = join(sprintsDir, dir, 'attestations', taskId);
+        const altAck = join(altDir, 'context_ack.json');
+        if (existsSync(altAck)) {
+          // Found at alternative sprint path — use it but warn
+          contextDir = altDir;
+          ackPath = altAck;
+          manifestPath = join(altDir, 'context_pack.manifest.json');
+          foundAlternative = true;
+          warnings.push(
+            `Sprint path mismatch: expected sprint-${sprintNumber}, found context_ack.json at ${dir}. Update CSV "Artifacts To Track" to match.`
+          );
+          break;
+        }
+      }
+    }
+
+    if (!foundAlternative) {
+      return {
+        valid: false,
+        severity: isStrictMode() ? 'FAIL' : 'WARN',
+        errors: [`context_ack.json not found at: ${ackPath}`],
+        warnings: [],
+      };
+    }
   }
 
   // Load and parse ack
@@ -252,10 +297,18 @@ export function validateContextAck(
       const manifestContent = readFileSync(manifestPath, 'utf-8');
       manifest = JSON.parse(manifestContent) as ContextPackManifest;
 
-      // Validate file prerequisites against manifest
-      const fileValidation = validateFilePrerequisites(ack, manifest, filePrerequisites);
-      errors.push(...fileValidation.errors);
-      warnings.push(...fileValidation.warnings);
+      // Skip hash comparison for backfilled manifests — hashes reflect current file state,
+      // not execution-time state, so they will naturally differ from context_ack.json
+      if (manifest.backfilled) {
+        warnings.push(
+          'Manifest was backfilled; hash cross-verification skipped (expected divergence)'
+        );
+      } else {
+        // Validate file prerequisites against manifest
+        const fileValidation = validateFilePrerequisites(ack, manifest, filePrerequisites);
+        errors.push(...fileValidation.errors);
+        warnings.push(...fileValidation.warnings);
+      }
     } catch (error) {
       warnings.push(
         `Failed to parse manifest: ${error instanceof Error ? error.message : String(error)}`

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 
 describe('checkpoint/resume mechanism', () => {
   it('checkpoint save: creates JSON file with tableName, lastProcessedId, idMap, timestamp', async () => {
-    const mod = await import('../delta-sync') as Record<string, unknown>;
+    const mod = (await import('../delta-sync')) as Record<string, unknown>;
     const saveCheckpoint = mod.saveCheckpoint as (
       state: unknown,
       path: string
@@ -37,7 +37,7 @@ describe('checkpoint/resume mechanism', () => {
   });
 
   it('checkpoint load: restores state from JSON file correctly', async () => {
-    const mod = await import('../delta-sync') as Record<string, unknown>;
+    const mod = (await import('../delta-sync')) as Record<string, unknown>;
     const loadCheckpoint = mod.loadCheckpoint as (
       path: string
     ) => Promise<unknown> | unknown | undefined;
@@ -67,7 +67,7 @@ describe('checkpoint/resume mechanism', () => {
   it('resume from checkpoint: sync skips already-processed tables', async () => {
     // This test verifies the concept of table skipping.
     // Full integration requires checkpoint save/load and main() --resume flag (Step 7)
-    const mod = await import('../delta-sync') as Record<string, unknown>;
+    const mod = (await import('../delta-sync')) as Record<string, unknown>;
     const loadCheckpoint = mod.loadCheckpoint as (
       path: string
     ) => Promise<unknown> | unknown | undefined;
@@ -91,7 +91,7 @@ describe('checkpoint/resume mechanism', () => {
 
   it('adaptive batch size: batch size reduces on timeout', async () => {
     // Verify the CircuitBreaker class supports adaptive batch sizing
-    const mod = await import('../delta-sync') as Record<string, unknown>;
+    const mod = (await import('../delta-sync')) as Record<string, unknown>;
     const CircuitBreaker = mod.CircuitBreaker as new (opts: {
       threshold: number;
       cooldown: number;
@@ -118,7 +118,7 @@ describe('checkpoint/resume mechanism', () => {
   });
 
   it('circuit breaker integration: pauses after consecutive failures, retries after cooldown', async () => {
-    const mod = await import('../delta-sync') as Record<string, unknown>;
+    const mod = (await import('../delta-sync')) as Record<string, unknown>;
     const CircuitBreaker = mod.CircuitBreaker as new (opts: {
       threshold: number;
       cooldown: number;

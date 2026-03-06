@@ -141,8 +141,8 @@ describe('parseTagList', () => {
   });
 
   it('returns empty array for null/undefined', () => {
-    expect(parseTagList(null as unknown as string)).toEqual([]);
-    expect(parseTagList(undefined as unknown as string)).toEqual([]);
+    expect(parseTagList(null as any)).toEqual([]);
+    expect(parseTagList(undefined as any)).toEqual([]);
   });
 
   it('skips invalid tags in list', () => {

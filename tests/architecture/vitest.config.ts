@@ -18,7 +18,7 @@ export default defineConfig({
     // Pool configuration
     pool: 'forks',
     isolate: true,
-    forceExit: true,
+    forceExit: process.env['COVERAGE_RUN'] !== '1',
     cache: false,
 
     // Memory management

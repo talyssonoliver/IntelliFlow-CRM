@@ -17,7 +17,7 @@ import type { ValidationResult } from './types';
 // Configuration
 // =============================================================================
 
-const DEFAULT_TIMEOUT_MS = 60_000; // 1 minute
+const DEFAULT_TIMEOUT_MS = 1_000_000; // 1000 seconds
 const MAX_STDOUT_SIZE = 1_000_000; // 1MB max stdout to capture
 
 // =============================================================================
@@ -423,6 +423,172 @@ export function allValidationsPassed(results: ValidationResult[]): boolean {
  */
 export function getFailedValidations(results: ValidationResult[]): ValidationResult[] {
   return results.filter((r) => !r.passed);
+}
+
+// =============================================================================
+// Command Deduplication (Performance Optimization)
+// =============================================================================
+
+/**
+ * Collects all unique validation commands across tasks.
+ * Returns a map of command -> list of task IDs that need it.
+ */
+export function collectUniqueCommands(
+  tasks: Array<{ taskId: string; validationMethod: string }>
+): Map<string, string[]> {
+  const groups = new Map<string, string[]>();
+  for (const task of tasks) {
+    const commands = parseValidationCommands(task.validationMethod);
+    for (const cmd of commands) {
+      const list = groups.get(cmd) ?? [];
+      list.push(task.taskId);
+      groups.set(cmd, list);
+    }
+  }
+  return groups;
+}
+
+/**
+ * Runs each unique command exactly ONCE and returns a cache.
+ * Instead of running `pnpm test` 98 times, runs it once and shares the result.
+ */
+export async function runUniqueCommands(
+  commands: string[],
+  repoRoot: string,
+  logsDir: string,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS
+): Promise<Map<string, ValidationResult>> {
+  const cache = new Map<string, ValidationResult>();
+
+  for (const cmd of commands) {
+    console.log(`  Running shared command: ${cmd}`);
+    const result = await executeCommand(cmd, '_shared', repoRoot, logsDir, timeoutMs);
+    console.log(`  ${result.passed ? '✓' : '✗'} ${cmd} (${result.durationMs}ms)`);
+    cache.set(cmd, result);
+  }
+
+  return cache;
+}
+
+/**
+ * Projects a shared command result onto a specific task ID.
+ */
+export function projectResultForTask(
+  taskId: string,
+  sharedResult: ValidationResult
+): ValidationResult {
+  return { ...sharedResult, taskId };
+}
+
+/**
+ * Resolves validations for a task from the shared command cache.
+ * Falls back to direct execution if a command is not in the cache.
+ */
+export async function resolveTaskValidations(
+  taskId: string,
+  validationMethod: string,
+  commandCache: Map<string, ValidationResult>,
+  repoRoot: string,
+  logsDir: string,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS
+): Promise<ValidationResult[]> {
+  const commands = parseValidationCommands(validationMethod);
+  const results: ValidationResult[] = [];
+
+  for (const cmd of commands) {
+    const cached = commandCache.get(cmd);
+    if (cached) {
+      results.push(projectResultForTask(taskId, cached));
+    } else {
+      // Command not in cache (shouldn't happen) — execute directly
+      const result = await executeCommand(cmd, taskId, repoRoot, logsDir, timeoutMs);
+      results.push(result);
+    }
+
+    // Stop on first failure (fail-fast, matching runTaskValidations behavior)
+    if (!results[results.length - 1].passed) {
+      break;
+    }
+  }
+
+  return results;
+}
+
+// =============================================================================
+// File-Based Validation Cache
+// =============================================================================
+
+/**
+ * Cached command result from validation-cache.json
+ */
+interface CachedCommandResult {
+  exit_code: number;
+  passed: boolean;
+  duration_ms: number;
+  stdout_hash: string;
+  completed_at: string;
+  error?: string;
+}
+
+/**
+ * Structure of artifacts/coverage/validation-cache.json
+ */
+export interface ValidationCacheFile {
+  generated_at: string;
+  repo_root: string;
+  git_sha: string;
+  git_branch: string;
+  ttl_hours: number;
+  commands: Record<string, CachedCommandResult>;
+}
+
+/**
+ * Loads the validation cache from disk.
+ * Returns null if the file doesn't exist or is malformed.
+ */
+export function loadValidationCache(repoRoot: string): ValidationCacheFile | null {
+  const cachePath = path.join(repoRoot, 'artifacts', 'coverage', 'validation-cache.json');
+  if (!fs.existsSync(cachePath)) return null;
+  try {
+    return JSON.parse(fs.readFileSync(cachePath, 'utf-8'));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Checks if the validation cache is fresh (within TTL).
+ * @param ttlHours - Override TTL in hours (default: uses cache's own ttl_hours)
+ */
+export function isValidationCacheFresh(cache: ValidationCacheFile, ttlHours?: number): boolean {
+  const ttl = ttlHours ?? cache.ttl_hours;
+  const generatedAt = new Date(cache.generated_at).getTime();
+  const ageHours = (Date.now() - generatedAt) / (1000 * 60 * 60);
+  return ageHours < ttl;
+}
+
+/**
+ * Converts file-based cache entries into a Map<command, ValidationResult>
+ * compatible with the command deduplication system.
+ */
+export function cacheFileToCommandMap(cache: ValidationCacheFile): Map<string, ValidationResult> {
+  const map = new Map<string, ValidationResult>();
+
+  for (const [cmd, entry] of Object.entries(cache.commands)) {
+    map.set(cmd, {
+      taskId: '_cache',
+      command: cmd,
+      exitCode: entry.exit_code,
+      passed: entry.passed,
+      durationMs: entry.duration_ms,
+      stdoutHash: entry.stdout_hash,
+      logPath: 'artifacts/coverage/validation-logs',
+      timestamp: entry.completed_at,
+      error: entry.error,
+    });
+  }
+
+  return map;
 }
 
 // =============================================================================

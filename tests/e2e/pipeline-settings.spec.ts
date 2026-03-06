@@ -24,7 +24,9 @@ import { test, expect } from '@playwright/test';
  */
 async function waitForStagesLoaded(page: import('@playwright/test').Page) {
   // First confirm we're on the pipeline page (not redirected to login)
-  await page.locator('h1:has-text("Pipeline Stages")').waitFor({ state: 'visible', timeout: 15000 });
+  await page
+    .locator('h1:has-text("Pipeline Stages")')
+    .waitFor({ state: 'visible', timeout: 15000 });
   // Then wait for stage data to load (past skeleton state)
   await page.locator('text=PROSPECTING').waitFor({ state: 'visible', timeout: 15000 });
 }
@@ -50,7 +52,9 @@ test.describe('Pipeline Settings (IFC-063)', () => {
       await expect(settingsLink).toBeVisible();
 
       // The breadcrumb "Pipeline" text — use .first() to handle multiple matches
-      const pipelineText = page.locator('span.text-foreground.font-medium:has-text("Pipeline")').first();
+      const pipelineText = page
+        .locator('span.text-foreground.font-medium:has-text("Pipeline")')
+        .first();
       await expect(pipelineText).toBeVisible();
     });
 

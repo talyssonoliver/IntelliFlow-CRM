@@ -19,6 +19,26 @@ const SONARQUBE_URL = 'http://localhost:9000';
 const PROJECT_KEY = 'IntelliFlow';
 const REPORT_DIR = 'sonar-reports';
 
+function stripQuotes(value) {
+  if (value.length < 2) return value;
+  const first = value[0];
+  const last = value.at(-1);
+  if ((first === '"' || first === "'") && first === last) return value.slice(1, -1);
+  return value;
+}
+
+function parseDotenvLine(line) {
+  const raw = line.trim();
+  if (!raw || raw.startsWith('#')) return null;
+  const normalized = raw.startsWith('export ') ? raw.slice('export '.length).trim() : raw;
+  const idx = normalized.indexOf('=');
+  if (idx <= 0) return null;
+  const key = normalized.slice(0, idx).trim();
+  if (!key || key.includes(' ')) return null;
+  const value = stripQuotes(normalized.slice(idx + 1).trim());
+  return { key, value };
+}
+
 function loadDotenvLocal() {
   const envPath = path.join(REPO_ROOT, '.env.local');
   if (!fs.existsSync(envPath)) return;
@@ -26,21 +46,10 @@ function loadDotenvLocal() {
   try {
     const content = fs.readFileSync(envPath, 'utf8');
     for (const line of content.split(/\r?\n/)) {
-      const raw = line.trim();
-      if (!raw || raw.startsWith('#')) continue;
-      const normalized = raw.startsWith('export ') ? raw.slice('export '.length).trim() : raw;
-      const idx = normalized.indexOf('=');
-      if (idx <= 0) continue;
-      const key = normalized.slice(0, idx).trim();
-      let value = normalized.slice(idx + 1).trim();
-      if (!key || key.includes(' ')) continue;
-      if (
-        value.length >= 2 &&
-        ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))
-      ) {
-        value = value.slice(1, -1);
+      const entry = parseDotenvLine(line);
+      if (entry && process.env[entry.key] === undefined) {
+        process.env[entry.key] = entry.value;
       }
-      if (process.env[key] === undefined) process.env[key] = value;
     }
   } catch {
     // ignore
@@ -57,7 +66,9 @@ const authUser = SONARQUBE_ADMIN_USER || SONAR_TOKEN;
 const authPass = SONARQUBE_ADMIN_USER ? SONARQUBE_ADMIN_PASSWORD : '';
 
 if (!authUser) {
-  console.error('❌ No SonarQube credentials found (set SONAR_TOKEN, or SONARQUBE_ADMIN_USER + SONARQUBE_ADMIN_PASSWORD).');
+  console.error(
+    '❌ No SonarQube credentials found (set SONAR_TOKEN, or SONARQUBE_ADMIN_USER + SONARQUBE_ADMIN_PASSWORD).'
+  );
   process.exit(1);
 }
 
@@ -76,11 +87,11 @@ function makeRequest(endpoint) {
     const client = url.startsWith('https://') ? https : http;
 
     client
-      .get(url, options, res => {
+      .get(url, options, (res) => {
         const status = res.statusCode || 0;
         let data = '';
 
-        res.on('data', chunk => (data += chunk));
+        res.on('data', (chunk) => (data += chunk));
         res.on('end', () => {
           if (status >= 400) {
             reject(new Error(`HTTP ${String(status)}: ${data.slice(0, 300)}`));
@@ -140,9 +151,10 @@ function generateMetricsTable(metrics) {
 function generateIssueDetails(issue, index) {
   let details = `#### ${index}. ${formatSeverity(issue.severity)} - ${formatType(issue.type)}\n\n`;
   details += `**Message:** ${issue.message}\n\n`;
-  details += `**Location:** Line ${issue.line || 'N/A'}`;
-  if (issue.textRange) {
-    details += ` (columns ${issue.textRange.startOffset}-${issue.textRange.endOffset})`;
+  const line = issue.line || issue.textRange?.startLine || 'N/A';
+  details += `**Location:** Line ${line}`;
+  if (issue.textRange && issue.textRange.startLine !== issue.textRange.endLine) {
+    details += `-${issue.textRange.endLine}`;
   }
   details += `\n\n`;
 
@@ -184,8 +196,10 @@ function groupIssuesByFile(allIssues) {
 
 function generateFileIssuesSection(issuesByFile) {
   let section = `## 🔍 Issues by File\n\n`;
-  const sortedFiles = Object.keys(issuesByFile).sort((a, b) => issuesByFile[b].length - issuesByFile[a].length);
-  
+  const sortedFiles = Object.keys(issuesByFile).sort(
+    (a, b) => issuesByFile[b].length - issuesByFile[a].length
+  );
+
   const totalIssues = Object.values(issuesByFile).reduce((sum, issues) => sum + issues.length, 0);
   section += `**Total Issues:** ${totalIssues}\n\n`;
 
@@ -201,7 +215,7 @@ function generateFileIssuesSection(issuesByFile) {
       section += generateIssueDetails(issue, index);
     }
   }
-  
+
   return section;
 }
 
@@ -212,7 +226,9 @@ function generateSummaries(allIssues) {
     severityCounts[issue.severity] = (severityCounts[issue.severity] || 0) + 1;
   }
 
-  const sortedSeverities = Object.keys(severityCounts).sort((a, b) => severityOrder[a] - severityOrder[b]);
+  const sortedSeverities = Object.keys(severityCounts).sort(
+    (a, b) => severityOrder[a] - severityOrder[b]
+  );
   for (const severity of sortedSeverities) {
     summary += `- ${formatSeverity(severity)}: ${severityCounts[severity]}\n`;
   }
@@ -228,6 +244,154 @@ function generateSummaries(allIssues) {
   }
 
   return summary;
+}
+
+function generateCoverageAnalysis(metrics) {
+  const sonarCoverage = Number.parseFloat(metrics.coverage || '0');
+  const linesToCover = Number(metrics.lines_to_cover || 0);
+  const uncoveredLines = Number(metrics.uncovered_lines || 0);
+  const coveredLines = linesToCover - uncoveredLines;
+  const branchCoverage = metrics.branch_coverage
+    ? Number.parseFloat(metrics.branch_coverage)
+    : null;
+
+  // Read Istanbul merged coverage if available
+  let istanbulStats = null;
+  const coverageSummaryPath = path.join(
+    REPO_ROOT,
+    'artifacts',
+    'coverage',
+    'coverage-summary.json'
+  );
+  try {
+    if (fs.existsSync(coverageSummaryPath)) {
+      const summary = JSON.parse(fs.readFileSync(coverageSummaryPath, 'utf8'));
+      const total = summary.total;
+      istanbulStats = {
+        lines: total.lines?.pct ?? null,
+        statements: total.statements?.pct ?? null,
+        functions: total.functions?.pct ?? null,
+        branches: total.branches?.pct ?? null,
+        fileCount: Object.keys(summary).filter((k) => k !== 'total').length,
+      };
+    }
+  } catch {
+    /* ignore */
+  }
+
+  let section = `## 📊 Coverage Analysis\n\n`;
+  section += `| Metric | SonarQube | Istanbul (tested files) |\n`;
+  section += `|--------|-----------|------------------------|\n`;
+  section += `| Line Coverage | ${sonarCoverage}% | ${istanbulStats?.lines == null ? 'N/A' : istanbulStats.lines + '%'} |\n`;
+  if (branchCoverage != null || istanbulStats?.branches != null) {
+    section += `| Branch Coverage | ${branchCoverage == null ? 'N/A' : branchCoverage + '%'} | ${istanbulStats?.branches == null ? 'N/A' : istanbulStats.branches + '%'} |\n`;
+  }
+  if (istanbulStats?.functions != null) {
+    section += `| Function Coverage | — | ${istanbulStats.functions}% |\n`;
+  }
+  if (istanbulStats?.statements != null) {
+    section += `| Statement Coverage | — | ${istanbulStats.statements}% |\n`;
+  }
+  section += `| Lines to Cover | ${linesToCover.toLocaleString()} | ${istanbulStats?.fileCount == null ? 'N/A' : istanbulStats.fileCount + ' files'} |\n`;
+  section += `| Covered Lines | ${coveredLines.toLocaleString()} | — |\n`;
+  section += `| Uncovered Lines | ${uncoveredLines.toLocaleString()} | — |\n`;
+  section += `\n`;
+
+  if (istanbulStats?.lines != null && istanbulStats.lines > sonarCoverage) {
+    // eslint-disable-line no-negated-condition
+    const gap = (istanbulStats.lines - sonarCoverage).toFixed(1);
+    section += `> **⚠️ Coverage Gap: ${gap} percentage points**\n`;
+    section += `> SonarQube counts **all** ${linesToCover.toLocaleString()} coverable lines (including source files with no tests → 0%), `;
+    section += `while Istanbul reports only the ${istanbulStats.fileCount} files that have test coverage. `;
+    section += `To close this gap, add tests for uncovered source files.\n\n`;
+  }
+
+  return section;
+}
+
+function generateCriticalIssuesSection(bugIssues, vulnIssues, hotspotIssues) {
+  const hasBugs = bugIssues.length > 0;
+  const hasVulns = vulnIssues.length > 0;
+  const hasHotspots = hotspotIssues.length > 0;
+
+  if (!hasBugs && !hasVulns && !hasHotspots) return '';
+
+  let section = `## 🚨 Critical Issues (Bugs, Vulnerabilities & Security Hotspots)\n\n`;
+
+  if (hasBugs) {
+    section += `### 🐛 Bugs (${bugIssues.length})\n\n`;
+    section += `| Severity | File | Line | Message |\n`;
+    section += `|----------|------|------|---------|\n`;
+    for (const bug of bugIssues) {
+      const file = bug.component.split(':').slice(1).join(':') || bug.component;
+      const line = bug.line || bug.textRange?.startLine || '—';
+      section += `| ${formatSeverity(bug.severity)} | ${file} | ${line} | ${bug.message} |\n`;
+    }
+    section += `\n`;
+  }
+
+  if (hasVulns) {
+    section += `### 🔒 Vulnerabilities (${vulnIssues.length})\n\n`;
+    section += `| Severity | File | Line | Message |\n`;
+    section += `|----------|------|------|---------|\n`;
+    for (const vuln of vulnIssues) {
+      const file = vuln.component.split(':').slice(1).join(':') || vuln.component;
+      const line = vuln.line || vuln.textRange?.startLine || '—';
+      section += `| ${formatSeverity(vuln.severity)} | ${file} | ${line} | ${vuln.message} |\n`;
+    }
+    section += `\n`;
+  }
+
+  if (hasHotspots) {
+    section += `### 🔥 Security Hotspots (${hotspotIssues.length})\n\n`;
+    section += `| Status | File | Line | Message |\n`;
+    section += `|--------|------|------|---------|\n`;
+    for (const hs of hotspotIssues) {
+      const file = hs.component?.split(':').slice(1).join(':') || hs.component || '';
+      const line = hs.line || hs.textRange?.startLine || '—';
+      section += `| ${hs.vulnerabilityProbability || hs.status || '—'} | ${file} | ${line} | ${hs.message} |\n`;
+    }
+    section += `\n`;
+  }
+
+  return section;
+}
+
+function generateIssuesByRule(allIssues) {
+  // Count by rule
+  const ruleCounts = {};
+  const tagCounts = {};
+  for (const issue of allIssues) {
+    ruleCounts[issue.rule] = (ruleCounts[issue.rule] || 0) + 1;
+    for (const tag of issue.tags || []) {
+      tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+    }
+  }
+
+  const sortedRules = Object.entries(ruleCounts).sort((a, b) => b[1] - a[1]);
+  const sortedTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]);
+
+  let section = `## 📏 Issues by Rule\n\n`;
+  section += `| # | Rule | Count | % |\n`;
+  section += `|---|------|-------|---|\n`;
+  const totalIssues = allIssues.length;
+  sortedRules.forEach(([rule, count], i) => {
+    const pct = ((count / totalIssues) * 100).toFixed(1);
+    section += `| ${i + 1} | \`${rule}\` | ${count} | ${pct}% |\n`;
+  });
+  section += `\n`;
+
+  if (sortedTags.length > 0) {
+    section += `### 🏷️ Most Common Tags\n\n`;
+    section += `| Tag | Count |\n`;
+    section += `|-----|-------|\n`;
+    for (const [tag, count] of sortedTags.slice(0, 15)) {
+      section += `| \`${tag}\` | ${count} |\n`;
+    }
+    section += `\n`;
+  }
+
+  return section;
 }
 
 function generateReportFooter() {
@@ -293,7 +457,7 @@ async function generateComprehensiveReport() {
     // Get project measures
     console.log('📊 Fetching project metrics...');
     const measures = await makeRequest(
-      `/measures/component?component=${PROJECT_KEY}&metricKeys=bugs,vulnerabilities,security_hotspots,code_smells,coverage,duplicated_lines_density,ncloc,ncloc_language_distribution,complexity,cognitive_complexity,violations`
+      `/measures/component?component=${PROJECT_KEY}&metricKeys=bugs,vulnerabilities,security_hotspots,code_smells,coverage,duplicated_lines_density,ncloc,ncloc_language_distribution,complexity,cognitive_complexity,violations,lines_to_cover,uncovered_lines,branch_coverage,conditions_to_cover,uncovered_conditions`
     );
 
     if (!measures.component) {
@@ -308,20 +472,56 @@ async function generateComprehensiveReport() {
 
     report += generateMetricsTable(metrics);
 
-    // Get all issues
-    console.log('🔍 Fetching issues...');
-    const issues = await makeRequest(`/issues/search?componentKeys=${PROJECT_KEY}&ps=500&s=SEVERITY&asc=false`);
-
+    // Fetch all issues (code smells + bugs + vulns combined)
+    console.log('🔍 Fetching all issues...');
+    const issues = await makeRequest(
+      `/issues/search?componentKeys=${PROJECT_KEY}&ps=500&s=SEVERITY&asc=false`
+    );
     const allIssues = issues.issues || [];
-    const jsonReport = { timestamp: new Date().toISOString(), project: PROJECT_KEY, metrics, issues: allIssues };
+
+    // Issues summary by severity and type (right after metrics)
+    report += generateSummaries(allIssues);
+
+    // Fetch bugs, vulnerabilities, and hotspots separately for the critical section
+    console.log('🚨 Fetching critical issues (bugs, vulnerabilities, hotspots)...');
+    const [bugsResult, vulnsResult, hotspotsResult] = await Promise.all([
+      makeRequest(
+        `/issues/search?componentKeys=${PROJECT_KEY}&types=BUG&ps=500&statuses=OPEN,CONFIRMED&s=SEVERITY&asc=false`
+      ),
+      makeRequest(
+        `/issues/search?componentKeys=${PROJECT_KEY}&types=VULNERABILITY&ps=500&statuses=OPEN,CONFIRMED&s=SEVERITY&asc=false`
+      ),
+      makeRequest(`/hotspots/search?project=${PROJECT_KEY}&ps=500`).catch(() => ({ hotspots: [] })),
+    ]);
+
+    const bugIssues = bugsResult.issues || [];
+    const vulnIssues = vulnsResult.issues || [];
+    const hotspotIssues = hotspotsResult.hotspots || [];
+
+    report += generateCriticalIssuesSection(bugIssues, vulnIssues, hotspotIssues);
+
+    // Coverage analysis (SonarQube vs Istanbul) — after critical issues
+    report += generateCoverageAnalysis(metrics);
+
+    const jsonReport = {
+      timestamp: new Date().toISOString(),
+      project: PROJECT_KEY,
+      metrics,
+      issues: allIssues,
+      bugs: bugIssues,
+      vulnerabilities: vulnIssues,
+      hotspots: hotspotIssues,
+    };
 
     // Save JSON report
     fs.writeFileSync(jsonReportFile, JSON.stringify(jsonReport, null, 2));
     console.log(`📄 JSON report saved: ${jsonReportFile}`);
 
+    // Issues by rule + tags (before file-level detail)
+    report += generateIssuesByRule(allIssues);
+
     const issuesByFile = groupIssuesByFile(allIssues);
     report += generateFileIssuesSection(issuesByFile);
-    report += generateSummaries(allIssues);
     report += generateReportFooter();
 
     // Save markdown report
@@ -337,6 +537,9 @@ async function generateComprehensiveReport() {
 try {
   await generateComprehensiveReport();
 } catch (error) {
-  console.error('❌ Error generating report:', error instanceof Error ? error.message : String(error));
+  console.error(
+    '❌ Error generating report:',
+    error instanceof Error ? error.message : String(error)
+  );
   process.exit(1);
 }

@@ -17,11 +17,12 @@ fi
 echo "Changed files:"
 echo "$CHANGED_FILES"
 
-# Run tests with coverage
+# Run tests with coverage (writes to artifacts/coverage-vitest/ by default;
+# the merged SonarQube coverage lives in artifacts/coverage/).
 node --max-old-space-size=8192 ./node_modules/vitest/vitest.mjs run --coverage --silent 2>/dev/null
 
 # Check if coverage report exists
-COVERAGE_FILE="artifacts/coverage/coverage-summary.json"
+COVERAGE_FILE="artifacts/coverage-vitest/coverage-summary.json"
 if [ ! -f "$COVERAGE_FILE" ]; then
   echo "Coverage report not found"
   exit 1

@@ -113,8 +113,22 @@ describe('generateCSV', () => {
   const sampleResult: ReconciliationResult = {
     timestamp: '2026-02-19T10:00:00.000Z',
     entityCounts: [
-      makeEntityCount({ entity: 'User', expected: 100, actual: 100, variance: 0, variancePercent: 0, status: 'PASS' }),
-      makeEntityCount({ entity: 'Lead', expected: 200, actual: 198, variance: -2, variancePercent: 1.0, status: 'WARN' }),
+      makeEntityCount({
+        entity: 'User',
+        expected: 100,
+        actual: 100,
+        variance: 0,
+        variancePercent: 0,
+        status: 'PASS',
+      }),
+      makeEntityCount({
+        entity: 'Lead',
+        expected: 200,
+        actual: 198,
+        variance: -2,
+        variancePercent: 1.0,
+        status: 'WARN',
+      }),
     ],
     validationChecks: [
       makeValidationCheck({ check: 'EMAIL_UNIQUENESS', entity: 'User', passed: true }),
@@ -151,9 +165,7 @@ describe('generateCSV', () => {
       entityCounts: [
         makeEntityCount({ entity: 'User', expected: 100, actual: 100, status: 'PASS' }),
       ],
-      validationChecks: [
-        makeValidationCheck({ passed: true }),
-      ],
+      validationChecks: [makeValidationCheck({ passed: true })],
       qualityMetrics: [
         { metric: 'DATA_COMPLETENESS', value: 100, threshold: 99.0, status: 'PASS' },
       ],
@@ -173,9 +185,7 @@ describe('generateCSV', () => {
       validationChecks: [
         makeValidationCheck({ passed: false, check: 'FK_CHECK', details: 'Orphaned references' }),
       ],
-      qualityMetrics: [
-        { metric: 'DATA_COMPLETENESS', value: 85, threshold: 99.0, status: 'FAIL' },
-      ],
+      qualityMetrics: [{ metric: 'DATA_COMPLETENESS', value: 85, threshold: 99.0, status: 'FAIL' }],
       overallStatus: 'FAIL',
       completenessPercent: 85,
     };
@@ -191,14 +201,19 @@ describe('generateCSV', () => {
 describe('entity counts', () => {
   it('all 9 entity types present in EXPECTED_COUNTS', () => {
     const expectedEntities = [
-      'User', 'Lead', 'Contact', 'Account', 'Opportunity',
-      'Task', 'AuditLogEntry', 'AIScore', 'SecurityEvent',
+      'User',
+      'Lead',
+      'Contact',
+      'Account',
+      'Opportunity',
+      'Task',
+      'AuditLogEntry',
+      'AIScore',
+      'SecurityEvent',
     ];
 
     for (const entity of expectedEntities) {
-      expect(EXPECTED_COUNTS[entity]).toBeDefined(
-        `EXPECTED_COUNTS missing entity: ${entity}`
-      );
+      expect(EXPECTED_COUNTS[entity]).toBeDefined(`EXPECTED_COUNTS missing entity: ${entity}`);
       expect(EXPECTED_COUNTS[entity]).toBeGreaterThan(0);
     }
   });

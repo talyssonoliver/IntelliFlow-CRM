@@ -53,7 +53,8 @@ function loadDotenvFile(filename) {
       if (!key || key.includes(' ')) continue;
       if (
         value.length >= 2 &&
-        ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))
+        ((value.startsWith('"') && value.endsWith('"')) ||
+          (value.startsWith("'") && value.endsWith("'")))
       ) {
         value = value.slice(1, -1);
       }
@@ -140,7 +141,7 @@ async function waitForSonarQube() {
       return true;
     }
     process.stdout.write('.');
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    await new Promise((resolve) => setTimeout(resolve, 5000));
   }
   log('SonarQube did not become ready within timeout', 'error');
   return false;
@@ -157,7 +158,10 @@ async function startSonarQube() {
     log('Waiting for SonarQube to be ready...', 'info');
     await waitForSonarQube();
   } catch (error) {
-    log(`Failed to start SonarQube: ${error instanceof Error ? error.message : String(error)}`, 'error');
+    log(
+      `Failed to start SonarQube: ${error instanceof Error ? error.message : String(error)}`,
+      'error'
+    );
     process.exit(1);
   }
 }
@@ -171,7 +175,10 @@ function stopSonarQube() {
     });
     log('SonarQube containers stopped!', 'success');
   } catch (error) {
-    log(`Failed to stop SonarQube: ${error instanceof Error ? error.message : String(error)}`, 'error');
+    log(
+      `Failed to stop SonarQube: ${error instanceof Error ? error.message : String(error)}`,
+      'error'
+    );
     process.exit(1);
   }
 }
@@ -263,7 +270,10 @@ function runAnalysis() {
     execSync('npx sonarqube-scanner', { stdio: 'inherit', cwd: REPO_ROOT });
     log('SonarQube analysis completed successfully!', 'success');
   } catch (error) {
-    log(`SonarQube analysis failed: ${error instanceof Error ? error.message : String(error)}`, 'error');
+    log(
+      `SonarQube analysis failed: ${error instanceof Error ? error.message : String(error)}`,
+      'error'
+    );
     process.exit(1);
   }
 }
@@ -328,4 +338,3 @@ try {
   log(`Unexpected error: ${error instanceof Error ? error.message : String(error)}`, 'error');
   process.exit(1);
 }
-

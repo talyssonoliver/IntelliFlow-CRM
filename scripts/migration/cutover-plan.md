@@ -144,7 +144,7 @@ Infrastructure Team + Application Team
    - [ ] Confirm all UPDATE/DELETE operations are blocked
    - [ ] Verify SELECT operations still work
    - [ ] Wait 2 minutes for all connections to respect setting
-   - [ ] Log timestamp: ****\_\_\_\_****
+   - [ ] Log timestamp: \***\*\_\_\_\_\*\***
 
 2. **Disconnect Legacy Application Servers**
    - [ ] Stop application servers (graceful shutdown, 60 second timeout)
@@ -156,16 +156,17 @@ Infrastructure Team + Application Team
    - [ ] Compress application logs for archival
    - [ ] Upload to backup storage
    - [ ] Verify integrity (SHA256 hash match)
-   - [ ] Log location: ****\_\_\_\_****
+   - [ ] Log location: \***\*\_\_\_\_\*\***
 
 4. **Create Pre-Migration Snapshot**
+
    ```bash
    # Snapshot created at T+0:20
    pg_dump --format=custom legacy-db-prod > /db-snapshots/legacy-2025-12-29-cutover.sql
    ```
 
    - [ ] Verify snapshot size: ≥800 MB
-   - [ ] Calculate SHA256: ****\_\_\_\_****
+   - [ ] Calculate SHA256: \***\*\_\_\_\_\*\***
    - [ ] Confirm backup location is accessible
    - [ ] Test restore procedure (simulation only)
 
@@ -191,9 +192,9 @@ Migration Team + Database Team
      --since 2025-12-29T15:00:00Z
    ```
 
-   - [ ] Records to sync: ****\_\_\_\_****
+   - [ ] Records to sync: \***\*\_\_\_\_\*\***
    - [ ] Transformation pipeline complete
-   - [ ] Conflicts identified and resolved: ****\_\_\_\_****
+   - [ ] Conflicts identified and resolved: \***\*\_\_\_\_\*\***
    - [ ] Data integrity checks passed
 
 2. **Validate Sync Completeness**
@@ -203,6 +204,7 @@ Migration Team + Database Team
    - [ ] No data loss or truncation detected
 
 3. **Final Reconciliation**
+
    ```bash
    # Run reconciliation report
    python3 scripts/migration/reconciliation.py \
@@ -369,10 +371,10 @@ users can access system. **Go/No-Go Decision**: ✅ GO / ❌ NO-GO
 #### Steps
 
 1. **Data Verification** (5 minutes)
-   - [ ] Query lead count: Expected 8,234, Actual: ****\_\_****
-   - [ ] Query contact count: Expected 5,421, Actual: ****\_\_****
-   - [ ] Query account count: Expected 1,847, Actual: ****\_\_****
-   - [ ] Query user count: Expected 156, Actual: ****\_\_****
+   - [ ] Query lead count: Expected 8,234, Actual: \***\*\_\_\*\***
+   - [ ] Query contact count: Expected 5,421, Actual: \***\*\_\_\*\***
+   - [ ] Query account count: Expected 1,847, Actual: \***\*\_\_\*\***
+   - [ ] Query user count: Expected 156, Actual: \***\*\_\_\*\***
    - [ ] Spot check 5 random records match legacy system
 
 2. **Application Functionality** (15 minutes)

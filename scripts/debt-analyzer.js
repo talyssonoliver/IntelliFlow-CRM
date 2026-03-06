@@ -71,13 +71,13 @@ function saveSnapshot(analysis) {
   const today = new Date().toISOString().split('T')[0];
 
   // Only keep one snapshot per day
-  const existingIndex = history.snapshots.findIndex(s => s.date === today);
+  const existingIndex = history.snapshots.findIndex((s) => s.date === today);
   const snapshot = {
     date: today,
     timestamp: new Date().toISOString(),
     totals: analysis.summary,
     bySeverity: analysis.bySeverity,
-    byOwner: analysis.byOwner
+    byOwner: analysis.byOwner,
   };
 
   if (existingIndex >= 0) {
@@ -87,9 +87,7 @@ function saveSnapshot(analysis) {
   }
 
   // Keep last 90 days of history
-  history.snapshots = history.snapshots
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 90);
+  history.snapshots = history.snapshots.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 90);
 
   mkdirSync(dirname(HISTORY_FILE), { recursive: true });
   writeFileSync(HISTORY_FILE, JSON.stringify(history, null, 2));
@@ -141,7 +139,12 @@ function analyzeDebt() {
 
       if (daysUntilExpiry < 0 && status !== 'resolved' && status !== 'wont_fix') {
         overdue.push({ id, ...item, daysOverdue: Math.abs(daysUntilExpiry) });
-      } else if (daysUntilExpiry <= 30 && daysUntilExpiry >= 0 && status !== 'resolved' && status !== 'wont_fix') {
+      } else if (
+        daysUntilExpiry <= 30 &&
+        daysUntilExpiry >= 0 &&
+        status !== 'resolved' &&
+        status !== 'wont_fix'
+      ) {
         expiringSoon.push({ id, ...item, daysUntilExpiry });
       }
     }
@@ -154,10 +157,10 @@ function analyzeDebt() {
   const resolvedCount = byStatus.resolved.length;
 
   let healthScore = 100;
-  healthScore -= criticalCount * 5;  // -5 per critical
-  healthScore -= overdueCount * 10;  // -10 per overdue
-  healthScore -= bySeverity.high?.length * 2 || 0;  // -2 per high
-  healthScore += resolvedCount * 2;  // +2 per resolved
+  healthScore -= criticalCount * 5; // -5 per critical
+  healthScore -= overdueCount * 10; // -10 per overdue
+  healthScore -= bySeverity.high?.length * 2 || 0; // -2 per high
+  healthScore += resolvedCount * 2; // +2 per resolved
   healthScore = Math.max(0, Math.min(100, healthScore));
 
   // Determine status
@@ -177,25 +180,25 @@ function analyzeDebt() {
       resolved: byStatus.resolved.length,
       critical: criticalCount,
       overdue: overdueCount,
-      expiringSoon: expiringSoon.length
+      expiringSoon: expiringSoon.length,
     },
     bySeverity: {
       critical: bySeverity.critical.length,
       high: bySeverity.high?.length || 0,
       medium: bySeverity.medium.length,
-      low: bySeverity.low.length
+      low: bySeverity.low.length,
     },
     byOwner,
-    criticalItems: bySeverity.critical.map(i => ({
+    criticalItems: bySeverity.critical.map((i) => ({
       id: i.id,
       description: i.description?.split('\n')[0] || 'No description',
       owner: i.owner,
       expiry: i.expiry_date,
-      origin: i.origin_task
+      origin: i.origin_task,
     })),
     overdueItems: overdue.sort((a, b) => b.daysOverdue - a.daysOverdue),
     expiringSoonItems: expiringSoon.sort((a, b) => a.daysUntilExpiry - b.daysUntilExpiry),
-    actionItems: generateActionItems(bySeverity, overdue, expiringSoon)
+    actionItems: generateActionItems(bySeverity, overdue, expiringSoon),
   };
 
   return analysis;
@@ -216,18 +219,20 @@ function generateActionItems(bySeverity, overdue, expiringSoon) {
       task: `Resolve overdue debt: ${item.id}`,
       description: item.description?.split('\n')[0] || 'No description',
       owner: item.owner,
-      daysOverdue: item.daysOverdue
+      daysOverdue: item.daysOverdue,
     });
   }
 
   // Critical items not overdue
-  for (const item of bySeverity.critical.filter(i => !overdue.find(o => o.id === i.id)).slice(0, 5)) {
+  for (const item of bySeverity.critical
+    .filter((i) => !overdue.find((o) => o.id === i.id))
+    .slice(0, 5)) {
     immediate.push({
       priority: 'high',
       task: `Address critical debt: ${item.id}`,
       description: item.description?.split('\n')[0] || 'No description',
       owner: item.owner,
-      expiry: item.expiry_date
+      expiry: item.expiry_date,
     });
   }
 
@@ -238,7 +243,7 @@ function generateActionItems(bySeverity, overdue, expiringSoon) {
       task: `Resolve before expiry: ${item.id}`,
       description: item.description?.split('\n')[0] || 'No description',
       owner: item.owner,
-      daysUntilExpiry: item.daysUntilExpiry
+      daysUntilExpiry: item.daysUntilExpiry,
     });
   }
 
@@ -248,7 +253,7 @@ function generateActionItems(bySeverity, overdue, expiringSoon) {
       priority: 'medium',
       task: `Plan remediation: ${item.id}`,
       description: item.description?.split('\n')[0] || 'No description',
-      owner: item.owner
+      owner: item.owner,
     });
   }
 
@@ -258,7 +263,7 @@ function generateActionItems(bySeverity, overdue, expiringSoon) {
       priority: 'low',
       task: `Schedule fix: ${item.id}`,
       description: item.description?.split('\n')[0] || 'No description',
-      owner: item.owner
+      owner: item.owner,
     });
   }
 
@@ -276,7 +281,7 @@ function calculateTrending(analysis) {
     return { trend: 'stable', change: 0, history: [] };
   }
 
-  const recent = snapshots.slice(0, 7);  // Last 7 days
+  const recent = snapshots.slice(0, 7); // Last 7 days
   const current = analysis.summary.total;
   const previous = recent[1]?.totals?.total || current;
 
@@ -289,11 +294,11 @@ function calculateTrending(analysis) {
     trend,
     change,
     percentChange: previous > 0 ? ((change / previous) * 100).toFixed(1) : 0,
-    history: recent.map(s => ({
+    history: recent.map((s) => ({
       date: s.date,
       total: s.totals?.total || 0,
-      critical: s.bySeverity?.critical || 0
-    }))
+      critical: s.bySeverity?.critical || 0,
+    })),
   };
 }
 
@@ -310,7 +315,7 @@ function runAnalysis(options = {}) {
     trending,
     generatedAt: new Date().toISOString(),
     source: 'debt-analyzer',
-    version: '1.0.0'
+    version: '1.0.0',
   };
 
   if (options.save) {
@@ -327,7 +332,7 @@ const args = process.argv.slice(2);
 const options = {
   json: args.includes('--json'),
   save: args.includes('--save'),
-  actionItems: args.includes('--action-items')
+  actionItems: args.includes('--action-items'),
 };
 
 const result = runAnalysis(options);
@@ -357,7 +362,9 @@ if (options.actionItems) {
   console.log(`  Critical: ${result.summary.critical}`);
   console.log(`  Overdue: ${result.summary.overdue}`);
   console.log(`  Expiring Soon: ${result.summary.expiringSoon}`);
-  console.log(`\nTrend: ${result.trending.trend} (${result.trending.change >= 0 ? '+' : ''}${result.trending.change})`);
+  console.log(
+    `\nTrend: ${result.trending.trend} (${result.trending.change >= 0 ? '+' : ''}${result.trending.change})`
+  );
 
   if (result.criticalItems.length > 0) {
     console.log('\n=== CRITICAL ITEMS ===\n');

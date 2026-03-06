@@ -109,11 +109,7 @@ interface RunResult {
   error?: string;
 }
 
-function runGenerator(
-  command: string,
-  description: string,
-  taskId: string
-): RunResult {
+function runGenerator(command: string, description: string, taskId: string): RunResult {
   const start = Date.now();
   console.log(`  Running: ${description}...`);
 
@@ -129,8 +125,7 @@ function runGenerator(
     return { taskId, generator: description, success: true, duration_ms: duration };
   } catch (err: unknown) {
     const duration = Date.now() - start;
-    const message =
-      err instanceof Error ? err.message.split('\n')[0] : String(err);
+    const message = err instanceof Error ? err.message.split('\n')[0] : String(err);
     console.log(`  ✗ ${description} (${duration}ms): ${message}`);
     return {
       taskId,
@@ -145,21 +140,15 @@ function runGenerator(
 function main(): void {
   const args = process.argv.slice(2);
   const checkOnly = args.includes('--check-only');
-  const taskFilter = args.includes('--task')
-    ? args[args.indexOf('--task') + 1]
-    : null;
+  const taskFilter = args.includes('--task') ? args[args.indexOf('--task') + 1] : null;
 
   console.log('=== Continuous Task Refresh Runner ===\n');
 
-  const tasksToRun = taskFilter
-    ? TASKS.filter((t) => t.taskId === taskFilter)
-    : TASKS;
+  const tasksToRun = taskFilter ? TASKS.filter((t) => t.taskId === taskFilter) : TASKS;
 
   if (taskFilter && tasksToRun.length === 0) {
     console.log(`No task found matching: ${taskFilter}`);
-    console.log(
-      `Available tasks: ${TASKS.map((t) => t.taskId).join(', ')}`
-    );
+    console.log(`Available tasks: ${TASKS.map((t) => t.taskId).join(', ')}`);
     return;
   }
 
@@ -182,9 +171,7 @@ function main(): void {
   const startTime = Date.now();
 
   for (const task of tasksToRun) {
-    console.log(
-      `[${task.taskId}] ${task.description} (${task.cadence})`
-    );
+    console.log(`[${task.taskId}] ${task.description} (${task.cadence})`);
 
     if (task.generators.length === 0) {
       console.log('  (no generators — manually maintained artifacts)\n');
@@ -219,10 +206,11 @@ function main(): void {
   // Run freshness check after refresh
   console.log('\n--- Running freshness check ---\n');
   try {
-    const output = execSync(
-      'npx tsx tools/scripts/check-cadence-freshness.ts',
-      { cwd: ROOT, encoding: 'utf-8', timeout: 30_000 }
-    );
+    const output = execSync('npx tsx tools/scripts/check-cadence-freshness.ts', {
+      cwd: ROOT,
+      encoding: 'utf-8',
+      timeout: 30_000,
+    });
     console.log(output);
   } catch {
     console.log('(freshness check failed — run manually)');

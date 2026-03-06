@@ -18,7 +18,7 @@
  */
 
 import { describe, it, expect, beforeAll, beforeEach, afterAll, afterEach, vi } from 'vitest';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@intelliflow/db';
 import { TRPCError } from '@trpc/server';
 import {
   extractTenantContext,
@@ -80,7 +80,7 @@ const mockPrisma = {
     create: vi.fn(),
   },
   $executeRawUnsafe: vi.fn(),
-} as unknown as PrismaClient;
+} as any; // partial mock of PrismaClient for cross-tenant tests
 
 /**
  * Test fixtures

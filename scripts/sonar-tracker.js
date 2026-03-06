@@ -51,10 +51,10 @@ function makeRequest(endpoint) {
     const client = url.startsWith('https://') ? https : http;
 
     client
-      .get(url, options, res => {
+      .get(url, options, (res) => {
         let data = '';
 
-        res.on('data', chunk => (data += chunk));
+        res.on('data', (chunk) => (data += chunk));
         res.on('end', () => {
           try {
             resolve(JSON.parse(data));
@@ -102,7 +102,9 @@ async function trackAnalysis() {
     console.log('\n🔍 RECENT ISSUES');
     console.log('-'.repeat(15));
 
-    const issues = await makeRequest(`/issues/search?componentKeys=${PROJECT_KEY}&ps=10&s=SEVERITY&asc=false`);
+    const issues = await makeRequest(
+      `/issues/search?componentKeys=${PROJECT_KEY}&ps=10&s=SEVERITY&asc=false`
+    );
 
     if (issues.issues && issues.issues.length > 0) {
       let index = 0;
@@ -132,6 +134,9 @@ async function trackAnalysis() {
 try {
   await trackAnalysis();
 } catch (error) {
-  console.error('❌ Error fetching analysis results:', error instanceof Error ? error.message : String(error));
+  console.error(
+    '❌ Error fetching analysis results:',
+    error instanceof Error ? error.message : String(error)
+  );
   process.exit(1);
 }

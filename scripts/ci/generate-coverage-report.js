@@ -16,12 +16,12 @@ const prNumber = process.env.PR_NUMBER || 'N/A';
 
 // Possible coverage summary locations (in priority order)
 const coveragePaths = [
-  'artifacts/misc/coverage/coverage-summary.json',  // Main aggregated coverage
+  'artifacts/misc/coverage/coverage-summary.json', // Main aggregated coverage
   'artifacts/coverage/coverage-summary.json',
   'coverage/coverage-summary.json',
   'packages/domain/artifacts/coverage/lcov.info',
   'packages/application/artifacts/coverage/lcov.info',
-  'artifacts/coverage/lcov.info'
+  'artifacts/coverage/lcov.info',
 ];
 
 let coverageData = null;
@@ -39,7 +39,7 @@ for (const coveragePath of coveragePaths) {
       const branches = { total: 0, covered: 0 };
       const functions = { total: 0, covered: 0 };
 
-      lcov.split('\n').forEach(line => {
+      lcov.split('\n').forEach((line) => {
         if (line.startsWith('LF:')) lines.total += parseInt(line.slice(3));
         if (line.startsWith('LH:')) lines.covered += parseInt(line.slice(3));
         if (line.startsWith('BRF:')) branches.total += parseInt(line.slice(4));
@@ -50,11 +50,27 @@ for (const coveragePath of coveragePaths) {
 
       coverageData = {
         total: {
-          lines: { total: lines.total, covered: lines.covered, pct: lines.total ? (lines.covered / lines.total * 100) : 0 },
-          branches: { total: branches.total, covered: branches.covered, pct: branches.total ? (branches.covered / branches.total * 100) : 0 },
-          functions: { total: functions.total, covered: functions.covered, pct: functions.total ? (functions.covered / functions.total * 100) : 0 },
-          statements: { total: lines.total, covered: lines.covered, pct: lines.total ? (lines.covered / lines.total * 100) : 0 }
-        }
+          lines: {
+            total: lines.total,
+            covered: lines.covered,
+            pct: lines.total ? (lines.covered / lines.total) * 100 : 0,
+          },
+          branches: {
+            total: branches.total,
+            covered: branches.covered,
+            pct: branches.total ? (branches.covered / branches.total) * 100 : 0,
+          },
+          functions: {
+            total: functions.total,
+            covered: functions.covered,
+            pct: functions.total ? (functions.covered / functions.total) * 100 : 0,
+          },
+          statements: {
+            total: lines.total,
+            covered: lines.covered,
+            pct: lines.total ? (lines.covered / lines.total) * 100 : 0,
+          },
+        },
       };
       break;
     }
@@ -69,8 +85,8 @@ if (!coverageData) {
       lines: { total: 0, covered: 0, pct: 0 },
       branches: { total: 0, covered: 0, pct: 0 },
       functions: { total: 0, covered: 0, pct: 0 },
-      statements: { total: 0, covered: 0, pct: 0 }
-    }
+      statements: { total: 0, covered: 0, pct: 0 },
+    },
   };
 }
 
@@ -79,14 +95,14 @@ const metrics = {
   lines: Math.round(total.lines?.pct || 0),
   branches: Math.round(total.branches?.pct || 0),
   functions: Math.round(total.functions?.pct || 0),
-  statements: Math.round(total.statements?.pct || 0)
+  statements: Math.round(total.statements?.pct || 0),
 };
 
 const overallCoverage = Math.round(
   (metrics.lines + metrics.branches + metrics.functions + metrics.statements) / 4
 );
 
-const getScoreClass = (score) => score >= 90 ? 'good' : score >= 70 ? 'average' : 'poor';
+const getScoreClass = (score) => (score >= 90 ? 'good' : score >= 70 ? 'average' : 'poor');
 
 const html = `<!DOCTYPE html>
 <html lang="en">
@@ -227,8 +243,14 @@ const html = `<!DOCTYPE html>
     </div>
 
     <div class="metrics">
-      ${Object.entries({ Lines: metrics.lines, Branches: metrics.branches, Functions: metrics.functions, Statements: metrics.statements })
-        .map(([label, value]) => `
+      ${Object.entries({
+        Lines: metrics.lines,
+        Branches: metrics.branches,
+        Functions: metrics.functions,
+        Statements: metrics.statements,
+      })
+        .map(
+          ([label, value]) => `
       <div class="metric-card">
         <div class="metric-header">
           <span class="metric-label">${label}</span>
@@ -237,7 +259,9 @@ const html = `<!DOCTYPE html>
         <div class="progress-bar">
           <div class="progress-fill ${getScoreClass(value)}" style="width: ${value}%"></div>
         </div>
-      </div>`).join('')}
+      </div>`
+        )
+        .join('')}
     </div>
 
     <div class="info-card">
@@ -278,7 +302,7 @@ const html = `<!DOCTYPE html>
 const htmlOutputDir = 'artifacts/misc/coverage-reports';
 const jsonOutputDir = 'artifacts/coverage';
 
-[htmlOutputDir, jsonOutputDir].forEach(dir => {
+[htmlOutputDir, jsonOutputDir].forEach((dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
@@ -297,15 +321,15 @@ const jsonSummary = {
     lines: metrics.lines,
     branches: metrics.branches,
     functions: metrics.functions,
-    statements: metrics.statements
+    statements: metrics.statements,
   },
   thresholds: {
     domain: 95,
     application: 90,
-    overall: 90
+    overall: 90,
   },
   passed: overallCoverage >= 90,
-  raw: total
+  raw: total,
 };
 
 fs.writeFileSync(
@@ -316,4 +340,6 @@ fs.writeFileSync(
 console.log('Coverage reports generated:');
 console.log(`  - ${htmlOutputDir}/ui-coverage.html`);
 console.log(`  - ${jsonOutputDir}/coverage-summary.json`);
-console.log(`Overall coverage: ${overallCoverage}% (${overallCoverage >= 90 ? 'PASSED' : 'FAILED'})`);
+console.log(
+  `Overall coverage: ${overallCoverage}% (${overallCoverage >= 90 ? 'PASSED' : 'FAILED'})`
+);

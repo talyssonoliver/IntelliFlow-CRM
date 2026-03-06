@@ -22,7 +22,8 @@ describe('ETL integration', () => {
   });
 
   it('reconciliation dry-run: generates CSV report structure without database', async () => {
-    const { generateCSV, EXPECTED_COUNTS, calculateQualityMetrics } = await import('../reconciliation');
+    const { generateCSV, EXPECTED_COUNTS, calculateQualityMetrics } =
+      await import('../reconciliation');
 
     // Simulated counts matching reconciliation.ts dry-run behavior
     const actualCounts: Record<string, number> = {};
@@ -34,7 +35,12 @@ describe('ETL integration', () => {
       const actual = actualCounts[entity] ?? 0;
       const variance = actual - expected;
       const variancePercent = expected > 0 ? Math.abs((variance / expected) * 100) : 0;
-      const status = variancePercent > 2 ? 'FAIL' as const : variancePercent > 0.5 ? 'WARN' as const : 'PASS' as const;
+      const status =
+        variancePercent > 2
+          ? ('FAIL' as const)
+          : variancePercent > 0.5
+            ? ('WARN' as const)
+            : ('PASS' as const);
       return { entity, expected, actual, variance, variancePercent, status };
     });
 
@@ -61,7 +67,14 @@ describe('ETL integration', () => {
       endTime: new Date().toISOString(),
       totalDuration: 100,
       results: [
-        { category: 'PRIMARY_KEY', check: 'UNIQUENESS', entity: 'users', passed: true, message: 'All unique', duration: 5 },
+        {
+          category: 'PRIMARY_KEY',
+          check: 'UNIQUENESS',
+          entity: 'users',
+          passed: true,
+          message: 'All unique',
+          duration: 5,
+        },
       ],
       totalChecks: 1,
       passed: 1,
@@ -75,7 +88,7 @@ describe('ETL integration', () => {
 
   it('governance columns: transformed records include classification, retention_policy, legal_hold', async () => {
     // This test will PASS once addGovernanceColumns is implemented (Step 9)
-    const mod = await import('../delta-sync') as Record<string, unknown>;
+    const mod = (await import('../delta-sync')) as Record<string, unknown>;
     const addGovernanceColumns = mod.addGovernanceColumns as (
       record: Record<string, unknown>,
       entityType: string

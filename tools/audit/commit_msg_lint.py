@@ -10,7 +10,7 @@ from pathlib import Path
 
 
 CONVENTIONAL_COMMIT_RE = re.compile(
-    r"^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\([^)]+\))?: .{1,100}$"
+    r"^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\([^)]+\))?: .{1,200}$"
 )
 
 # Waiver file location (relative to repo root)

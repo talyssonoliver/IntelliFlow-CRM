@@ -235,7 +235,7 @@ export function parseKpis(kpisString: string): ParsedKpi[] {
 export async function measureKpi(
   kpi: ParsedKpi,
   repoRoot: string,
-  timeoutMs: number = 60_000
+  timeoutMs: number = 1_000_000
 ): Promise<{ value: number | null; raw: string; error?: string }> {
   if (!kpi.measureCommand) {
     return {

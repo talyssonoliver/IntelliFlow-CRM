@@ -22,9 +22,7 @@ const useLegacy = args.includes('--legacy');
 // Determine report directory
 let REPORT_DIR;
 if (useLegacy) {
-  console.warn(
-    '⚠️  Warning: --legacy is deprecated. Use sprint-based paths instead.'
-  );
+  console.warn('⚠️  Warning: --legacy is deprecated. Use sprint-based paths instead.');
   REPORT_DIR = path.join(__dirname, '../artifacts/reports/package-review');
 } else {
   // Sprint-based canonical path
@@ -53,9 +51,7 @@ const monorepoSonarCoveragePath = path.join(
 );
 if (fs.existsSync(monorepoSonarCoveragePath)) {
   try {
-    monorepoSonarCoverage = JSON.parse(
-      fs.readFileSync(monorepoSonarCoveragePath, 'utf8')
-    );
+    monorepoSonarCoverage = JSON.parse(fs.readFileSync(monorepoSonarCoveragePath, 'utf8'));
     console.log('📊 Using monorepo coverage data from artifacts/coverage/');
   } catch {
     console.warn('⚠️  Could not parse monorepo coverage data');
@@ -67,9 +63,9 @@ console.log(`   Sprint: ${sprint}`);
 console.log(`   Output: ${REPORT_DIR}\n`);
 
 // Get all workspace packages
-const workspacesJson = execSync('pnpm list -r --depth -1 --json', { 
+const workspacesJson = execSync('pnpm list -r --depth -1 --json', {
   encoding: 'utf8',
-  stdio: ['pipe', 'pipe', 'ignore']
+  stdio: ['pipe', 'pipe', 'ignore'],
 });
 
 const workspaces = JSON.parse(workspacesJson);
@@ -91,7 +87,7 @@ for (const pkg of workspaces) {
     score: 0,
     metrics: {},
     risks: [],
-    priority: 'LOW'
+    priority: 'LOW',
   };
 
   console.log(`📦 Analyzing ${pkg.name}...`);
@@ -101,24 +97,24 @@ for (const pkg of workspaces) {
     const pkgJsonPath = path.join(pkg.path, 'package.json');
     if (fs.existsSync(pkgJsonPath)) {
       const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
-      
+
       // Count dependencies
       const depCount = Object.keys(pkgJson.dependencies || {}).length;
       const devDepCount = Object.keys(pkgJson.devDependencies || {}).length;
       analysis.metrics.dependencies = depCount;
       analysis.metrics.devDependencies = devDepCount;
-      
+
       // High dependency count increases risk
       if (depCount > 20) {
         analysis.risks.push('High dependency count');
         analysis.score += 10;
       }
-      
+
       // Check for scripts in package
       let hasTests = !!(pkgJson.scripts?.test || pkgJson.scripts?.['test:unit']);
       analysis.metrics.hasTypeCheck = !!pkgJson.scripts?.typecheck;
       analysis.metrics.hasBuild = !!pkgJson.scripts?.build;
-      
+
       // If no test script in package, check root (monorepo pattern)
       if (!hasTests) {
         const rootPkgJsonPath = path.join(__dirname, '../package.json');
@@ -130,9 +126,9 @@ for (const pkg of workspaces) {
           }
         }
       }
-      
+
       analysis.metrics.hasTests = hasTests;
-      
+
       // Missing critical scripts increases risk
       if (!analysis.metrics.hasTests) {
         analysis.risks.push('No test script');
@@ -151,7 +147,7 @@ for (const pkg of workspaces) {
         let count = 0;
         let lines = 0;
         const files = fs.readdirSync(dir, { withFileTypes: true });
-        
+
         for (const file of files) {
           const fullPath = path.join(dir, file.name);
           if (file.isDirectory()) {
@@ -175,7 +171,7 @@ for (const pkg of workspaces) {
       const fileMetrics = countFiles(srcPath);
       analysis.metrics.sourceFiles = fileMetrics.count;
       analysis.metrics.linesOfCode = fileMetrics.lines;
-      
+
       // Large packages need more review
       if (fileMetrics.count > 50) {
         analysis.risks.push('Large package (>50 files)');
@@ -204,7 +200,7 @@ for (const pkg of workspaces) {
           statements: total.statements.pct,
           functions: total.functions.pct,
           branches: total.branches.pct,
-          source: 'package'
+          source: 'package',
         };
         foundCoverage = true;
       } catch {
@@ -216,10 +212,7 @@ for (const pkg of workspaces) {
     if (!foundCoverage && monorepoSonarCoverage) {
       // Try to find this package's coverage in the monorepo data
       // Keys are relative paths like "/packages/domain/src/..."
-      const pkgRelativePath = path.relative(
-        path.join(__dirname, '..'),
-        pkg.path
-      );
+      const pkgRelativePath = path.relative(path.join(__dirname, '..'), pkg.path);
 
       let totalLines = 0;
       let coveredLines = 0;
@@ -227,9 +220,7 @@ for (const pkg of workspaces) {
       let coveredBranches = 0;
 
       // Search for files matching this package
-      for (const [filePath, fileCoverage] of Object.entries(
-        monorepoSonarCoverage
-      )) {
+      for (const [filePath, fileCoverage] of Object.entries(monorepoSonarCoverage)) {
         if (filePath !== 'total' && filePath.includes(pkgRelativePath)) {
           if (fileCoverage.lines) {
             totalLines += fileCoverage.lines.total || 0;
@@ -245,15 +236,13 @@ for (const pkg of workspaces) {
       if (totalLines > 0) {
         const linePct = Math.round((coveredLines / totalLines) * 100);
         const branchPct =
-          totalBranches > 0
-            ? Math.round((coveredBranches / totalBranches) * 100)
-            : 0;
+          totalBranches > 0 ? Math.round((coveredBranches / totalBranches) * 100) : 0;
         analysis.metrics.coverage = {
           lines: linePct,
           statements: linePct,
           functions: 0, // Not available in summary
           branches: branchPct,
-          source: 'monorepo'
+          source: 'monorepo',
         };
         foundCoverage = true;
       }
@@ -282,10 +271,10 @@ for (const pkg of workspaces) {
       'platform',
       'db',
       'validators',
-      'auth'
+      'auth',
     ];
-    
-    if (criticalPackages.some(c => pkg.name.includes(c))) {
+
+    if (criticalPackages.some((c) => pkg.name.includes(c))) {
       analysis.risks.push('Critical business logic');
       analysis.score += 20;
     }
@@ -321,7 +310,6 @@ for (const pkg of workspaces) {
 
     packageAnalysis.push(analysis);
     console.log(`   ✓ Score: ${analysis.score}, Priority: ${analysis.priority}`);
-
   } catch (error) {
     console.error(`   ✗ Error analyzing ${pkg.name}:`, error.message);
   }
@@ -348,10 +336,10 @@ const jsonReport = {
     CRITICAL: packageAnalysis.filter((p) => p.priority === 'CRITICAL').length,
     HIGH: packageAnalysis.filter((p) => p.priority === 'HIGH').length,
     MEDIUM: packageAnalysis.filter((p) => p.priority === 'MEDIUM').length,
-    LOW: packageAnalysis.filter((p) => p.priority === 'LOW').length
+    LOW: packageAnalysis.filter((p) => p.priority === 'LOW').length,
   },
   coverageSource: monorepoSonarCoverage ? 'monorepo' : 'per-package',
-  packages: packageAnalysis
+  packages: packageAnalysis,
 };
 
 fs.writeFileSync(
@@ -379,12 +367,12 @@ for (const pkg of packageAnalysis) {
     CRITICAL: '🔴',
     HIGH: '🟠',
     MEDIUM: '🟡',
-    LOW: '🟢'
+    LOW: '🟢',
   }[pkg.priority];
 
   mdReport += `### ${priorityIcon} ${pkg.name} (Score: ${pkg.score})\n\n`;
   mdReport += `**Priority:** ${pkg.priority}\n\n`;
-  
+
   if (pkg.risks.length > 0) {
     mdReport += `**Risks:**\n`;
     for (const risk of pkg.risks) {
@@ -392,29 +380,26 @@ for (const pkg of packageAnalysis) {
     }
     mdReport += `\n`;
   }
-  
+
   mdReport += `**Metrics:**\n`;
   mdReport += `- Source files: ${pkg.metrics.sourceFiles || 0}\n`;
   mdReport += `- Lines of code: ${pkg.metrics.linesOfCode || 0}\n`;
   mdReport += `- Dependencies: ${pkg.metrics.dependencies || 0}\n`;
-  
+
   if (pkg.metrics.coverage) {
     mdReport += `- Test coverage: ${pkg.metrics.coverage.lines}% lines, ${pkg.metrics.coverage.branches}% branches\n`;
   } else {
     mdReport += `- Test coverage: N/A\n`;
   }
-  
+
   if (pkg.metrics.todoComments) {
     mdReport += `- TODO/FIXME comments: ${pkg.metrics.todoComments}\n`;
   }
-  
+
   mdReport += `\n---\n\n`;
 }
 
-fs.writeFileSync(
-  path.join(REPORT_DIR, 'REVIEW-PRIORITY.md'),
-  mdReport
-);
+fs.writeFileSync(path.join(REPORT_DIR, 'REVIEW-PRIORITY.md'), mdReport);
 
 // 3. CSV report for spreadsheet import
 let csvReport = 'Package,Priority,Score,SourceFiles,LOC,Dependencies,Coverage,Risks\n';
@@ -424,13 +409,10 @@ for (const pkg of packageAnalysis) {
   csvReport += `"${pkg.name}","${pkg.priority}",${pkg.score},${pkg.metrics.sourceFiles || 0},${pkg.metrics.linesOfCode || 0},${pkg.metrics.dependencies || 0},"${coverage}","${risks}"\n`;
 }
 
-fs.writeFileSync(
-  path.join(REPORT_DIR, 'package-review-priorities.csv'),
-  csvReport
-);
+fs.writeFileSync(path.join(REPORT_DIR, 'package-review-priorities.csv'), csvReport);
 
 // Display summary
-console.log('=' .repeat(60));
+console.log('='.repeat(60));
 console.log('📊 CODE REVIEW PRIORITY SUMMARY');
 console.log('='.repeat(60));
 console.log(`\n🔴 CRITICAL Priority: ${jsonReport.priorityCounts.CRITICAL} packages`);

@@ -39,7 +39,8 @@ function loadDotenvLocal(repoRoot) {
       if (!key || key.includes(' ')) continue;
       if (
         value.length >= 2 &&
-        ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))
+        ((value.startsWith('"') && value.endsWith('"')) ||
+          (value.startsWith("'") && value.endsWith("'")))
       ) {
         value = value.slice(1, -1);
       }
@@ -130,13 +131,18 @@ async function main() {
 
   const props = readSonarProjectProperties(repoRoot);
 
-  const hostUrl = getArgValue(['--host']) || process.env.SONAR_HOST_URL || props['sonar.host.url'] || 'http://localhost:9000';
+  const hostUrl =
+    getArgValue(['--host']) ||
+    process.env.SONAR_HOST_URL ||
+    props['sonar.host.url'] ||
+    'http://localhost:9000';
   const projectKey =
     getArgValue(['--project', '--projectKey']) ||
     process.env.SONAR_PROJECT_KEY ||
     props['sonar.projectKey'] ||
     'IntelliFlow';
-  const branch = getArgValue(['--branch']) || process.env.SONAR_BRANCH || process.env.GITHUB_REF_NAME || 'main';
+  const branch =
+    getArgValue(['--branch']) || process.env.SONAR_BRANCH || process.env.GITHUB_REF_NAME || 'main';
   const analysisOverride = getArgValue(['--analysis']);
 
   const authHeader = getAuth();
@@ -180,4 +186,3 @@ main().catch((err) => {
   console.error(err instanceof Error ? err.message : String(err));
   process.exit(1);
 });
-

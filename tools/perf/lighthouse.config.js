@@ -28,7 +28,8 @@ module.exports = {
       deviceScaleFactor: 2,
       disabled: false,
     },
-    emulatedUserAgent: 'Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36',
+    emulatedUserAgent:
+      'Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36',
   },
 
   // Specify which audits to run
@@ -162,7 +163,7 @@ module.exports = {
 
     // Additional performance metrics
     'speed-index': ['warn', { maxNumericValue: 3000 }],
-    'interactive': ['warn', { maxNumericValue: 3500 }],
+    interactive: ['warn', { maxNumericValue: 3500 }],
     'server-response-time': ['warn', { maxNumericValue: 200 }], // API <200ms target
   },
 

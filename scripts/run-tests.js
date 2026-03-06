@@ -28,7 +28,7 @@ const additionalArgs = process.argv.slice(2);
 const vitest = spawn(
   'node',
   [
-    '--max-old-space-size=16384',
+    '--max-old-space-size=8192',
     '--expose-gc',
     './node_modules/vitest/vitest.mjs',
     'run',

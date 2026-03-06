@@ -93,11 +93,11 @@ class MockWorkflowEngine implements IWorkflowEngine {
   ): Promise<WorkflowHandle<TOutput>> {
     const handle = new MockWorkflowHandle(workflowId, workflowName, input);
     this.workflows.set(workflowId, handle);
-    return handle as unknown as WorkflowHandle<TOutput>;
+    return handle as any as WorkflowHandle<TOutput>;
   }
 
   async getWorkflowHandle<TOutput>(workflowId: string): Promise<WorkflowHandle<TOutput> | null> {
-    return (this.workflows.get(workflowId) as unknown as WorkflowHandle<TOutput>) ?? null;
+    return (this.workflows.get(workflowId) as any as WorkflowHandle<TOutput>) ?? null;
   }
 
   async listWorkflows(): Promise<

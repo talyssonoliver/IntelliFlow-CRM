@@ -25,7 +25,7 @@ const DEFAULT_PATHS = {
   plan_overrides: 'apps/project-tracker/docs/metrics/plan-overrides.yaml',
   validation_rules: 'apps/project-tracker/docs/metrics/validation.yaml',
   review_queue: 'apps/project-tracker/docs/metrics/review-queue.json',
-  lint_report: 'artifacts/reports/plan-lint-report.json'
+  lint_report: 'artifacts/reports/plan-lint-report.json',
 };
 
 // -----------------------------------------------------------------------------
@@ -33,7 +33,7 @@ const DEFAULT_PATHS = {
 // -----------------------------------------------------------------------------
 
 function parseCSV(content) {
-  const lines = content.split('\n').filter(line => line.trim());
+  const lines = content.split('\n').filter((line) => line.trim());
   if (lines.length === 0) return [];
 
   // Parse header
@@ -103,7 +103,10 @@ function loadYAML(filepath) {
 function parseDependencies(depString) {
   if (!depString || depString.trim() === '') return [];
   // Split on comma or semicolon (defensive: CSV standard is comma, but handle semicolons too)
-  return depString.split(/[,;]/).map(d => d.trim()).filter(d => d);
+  return depString
+    .split(/[,;]/)
+    .map((d) => d.trim())
+    .filter((d) => d);
 }
 
 function applyDependencyOverrides(taskId, deps, overrides) {
@@ -113,7 +116,7 @@ function applyDependencyOverrides(taskId, deps, overrides) {
   let updated = deps;
 
   if (Array.isArray(override.override_deps_remove) && override.override_deps_remove.length > 0) {
-    updated = updated.filter(d => !override.override_deps_remove.includes(d));
+    updated = updated.filter((d) => !override.override_deps_remove.includes(d));
   }
 
   if (Array.isArray(override.override_deps_add) && override.override_deps_add.length > 0) {
@@ -126,9 +129,9 @@ function applyDependencyOverrides(taskId, deps, overrides) {
 
 function buildDependencyGraph(tasks, overrides) {
   const graph = new Map();
-  const taskIds = new Set(tasks.map(t => t['Task ID']));
+  const taskIds = new Set(tasks.map((t) => t['Task ID']));
 
-  tasks.forEach(task => {
+  tasks.forEach((task) => {
     const id = task['Task ID'];
     const deps = applyDependencyOverrides(
       id,
@@ -185,7 +188,7 @@ function detectCrossSprintDeps(tasks, overrides) {
   const sprintMap = new Map();
 
   // Build sprint map
-  tasks.forEach(task => {
+  tasks.forEach((task) => {
     const id = task['Task ID'];
     let sprint = parseInt(task['Target Sprint'], 10);
 
@@ -200,7 +203,7 @@ function detectCrossSprintDeps(tasks, overrides) {
   });
 
   // Check for violations
-  tasks.forEach(task => {
+  tasks.forEach((task) => {
     const id = task['Task ID'];
     const taskSprint = sprintMap.get(id);
     if (taskSprint === undefined) return;
@@ -211,14 +214,14 @@ function detectCrossSprintDeps(tasks, overrides) {
     if (overrides && overrides[id]) {
       const override = overrides[id];
       if (override.override_deps_remove) {
-        deps = deps.filter(d => !override.override_deps_remove.includes(d));
+        deps = deps.filter((d) => !override.override_deps_remove.includes(d));
       }
       if (override.override_deps_add) {
         deps = [...deps, ...override.override_deps_add];
       }
     }
 
-    deps.forEach(dep => {
+    deps.forEach((dep) => {
       const depSprint = sprintMap.get(dep);
       if (depSprint !== undefined && depSprint > taskSprint) {
         violations.push({
@@ -226,9 +229,11 @@ function detectCrossSprintDeps(tasks, overrides) {
           taskSprint,
           dependency: dep,
           depSprint,
-          resolved: overrides && overrides[id] &&
-                   overrides[id].override_deps_remove &&
-                   overrides[id].override_deps_remove.includes(dep)
+          resolved:
+            overrides &&
+            overrides[id] &&
+            overrides[id].override_deps_remove &&
+            overrides[id].override_deps_remove.includes(dep),
         });
       }
     });
@@ -240,9 +245,9 @@ function detectCrossSprintDeps(tasks, overrides) {
 function computeFanout(tasks) {
   const dependentCount = new Map();
 
-  tasks.forEach(task => {
+  tasks.forEach((task) => {
     const deps = parseDependencies(task['Dependencies'] || task['CleanDependencies']);
-    deps.forEach(dep => {
+    deps.forEach((dep) => {
       dependentCount.set(dep, (dependentCount.get(dep) || 0) + 1);
     });
   });
@@ -256,18 +261,19 @@ function computeFanout(tasks) {
 
 function checkValidationCoverage(tasks, validationRules, sprint) {
   const missing = [];
-  const validatedIds = new Set(Object.keys(validationRules || {}).filter(
-    k => !k.startsWith('global_')
-  ));
+  const validatedIds = new Set(
+    Object.keys(validationRules || {}).filter((k) => !k.startsWith('global_'))
+  );
 
-  tasks.filter(t => sprint === undefined || parseInt(t['Target Sprint'], 10) === sprint)
-    .forEach(task => {
+  tasks
+    .filter((t) => sprint === undefined || parseInt(t['Target Sprint'], 10) === sprint)
+    .forEach((task) => {
       const id = task['Task ID'];
       if (!validatedIds.has(id)) {
         missing.push({
           task_id: id,
           section: task['Section'],
-          description: task['Description']
+          description: task['Description'],
         });
       }
     });
@@ -283,7 +289,7 @@ function computeTiers(tasks, overrides, fanout, config) {
   const tiers = new Map();
   const defaults = config?.tier_defaults || {};
 
-  tasks.forEach(task => {
+  tasks.forEach((task) => {
     const id = task['Task ID'];
 
     // Skip rows with empty task IDs
@@ -308,19 +314,19 @@ function computeTiers(tasks, overrides, fanout, config) {
     }
 
     // High fan-out tasks
-    if (depCount >= (config?.soft_rules?.find(r => r.id === 'HIGH_FANOUT')?.threshold || 3)) {
+    if (depCount >= (config?.soft_rules?.find((r) => r.id === 'HIGH_FANOUT')?.threshold || 3)) {
       tiers.set(id, defaults.high_fanout || 'A');
       return;
     }
 
     // Security tasks
-    if (defaults.security_prefix?.some(p => id.startsWith(p))) {
+    if (defaults.security_prefix?.some((p) => id.startsWith(p))) {
       tiers.set(id, defaults.security_tier || 'A');
       return;
     }
 
     // Foundation tasks
-    if (defaults.foundation_prefix?.some(p => id.startsWith(p))) {
+    if (defaults.foundation_prefix?.some((p) => id.startsWith(p))) {
       tiers.set(id, defaults.foundation_tier || 'B');
       return;
     }
@@ -343,28 +349,28 @@ function checkHardRules(tasks, overrides, validationRules, config) {
   // Check for cycles
   const cycles = detectCycles(graph);
   if (cycles.length > 0) {
-    cycles.forEach(cycle => {
+    cycles.forEach((cycle) => {
       errors.push({
         rule: 'NO_CYCLES',
         severity: 'error',
         message: `Dependency cycle detected: ${cycle.join(' -> ')}`,
         tasks: cycle,
-        fix: 'Add override_deps_remove in plan-overrides.yaml to break cycle'
+        fix: 'Add override_deps_remove in plan-overrides.yaml to break cycle',
       });
     });
   }
 
   // Check for cross-sprint dependencies
   const crossSprintViolations = detectCrossSprintDeps(tasks, overrides);
-  const unresolvedViolations = crossSprintViolations.filter(v => !v.resolved);
+  const unresolvedViolations = crossSprintViolations.filter((v) => !v.resolved);
 
-  unresolvedViolations.forEach(v => {
+  unresolvedViolations.forEach((v) => {
     errors.push({
       rule: 'NO_CROSS_SPRINT_UNRESOLVED',
       severity: 'error',
       message: `Cross-sprint dependency: ${v.task} (Sprint ${v.taskSprint}) depends on ${v.dependency} (Sprint ${v.depSprint})`,
       tasks: [v.task, v.dependency],
-      fix: 'Add sprint_override or override_deps_remove in plan-overrides.yaml'
+      fix: 'Add sprint_override or override_deps_remove in plan-overrides.yaml',
     });
   });
 
@@ -372,7 +378,7 @@ function checkHardRules(tasks, overrides, validationRules, config) {
   const fanout = computeFanout(tasks);
   const tiers = computeTiers(tasks, overrides, fanout, config);
 
-  tasks.forEach(task => {
+  tasks.forEach((task) => {
     const id = task['Task ID'];
 
     // Skip rows with empty task IDs
@@ -391,7 +397,7 @@ function checkHardRules(tasks, overrides, validationRules, config) {
           severity: 'error',
           message: `Tier A task ${id} missing gate_profile`,
           tasks: [id],
-          fix: 'Add gate_profile array to task in plan-overrides.yaml'
+          fix: 'Add gate_profile array to task in plan-overrides.yaml',
         });
       }
 
@@ -401,7 +407,7 @@ function checkHardRules(tasks, overrides, validationRules, config) {
           severity: 'error',
           message: `Tier A task ${id} missing acceptance_owner`,
           tasks: [id],
-          fix: 'Add acceptance_owner to task in plan-overrides.yaml'
+          fix: 'Add acceptance_owner to task in plan-overrides.yaml',
         });
       }
 
@@ -411,23 +417,23 @@ function checkHardRules(tasks, overrides, validationRules, config) {
           severity: 'error',
           message: `Tier A task ${id} missing evidence_required`,
           tasks: [id],
-          fix: 'Add evidence_required array to task in plan-overrides.yaml'
+          fix: 'Add evidence_required array to task in plan-overrides.yaml',
         });
       }
     }
   });
 
   // Check dependency resolution
-  tasks.forEach(task => {
+  tasks.forEach((task) => {
     const deps = parseDependencies(task['Dependencies'] || task['CleanDependencies']);
-    deps.forEach(dep => {
+    deps.forEach((dep) => {
       if (!taskIds.has(dep)) {
         errors.push({
           rule: 'DEPS_RESOLVE',
           severity: 'error',
           message: `Task ${task['Task ID']} has unresolved dependency: ${dep}`,
           tasks: [task['Task ID']],
-          fix: 'Fix typo in dependency or add missing task to Sprint_plan.csv'
+          fix: 'Fix typo in dependency or add missing task to Sprint_plan.csv',
         });
       }
     });
@@ -442,31 +448,32 @@ function checkSoftRules(tasks, overrides, validationRules, config, sprint) {
   const tiers = computeTiers(tasks, overrides, fanout, config);
 
   // Filter by sprint if specified
-  const sprintTasks = sprint !== undefined
-    ? tasks.filter(t => parseInt(t['Target Sprint'], 10) === sprint)
-    : tasks;
+  const sprintTasks =
+    sprint !== undefined ? tasks.filter((t) => parseInt(t['Target Sprint'], 10) === sprint) : tasks;
 
   // Check validation coverage
   const missingValidation = checkValidationCoverage(sprintTasks, validationRules, sprint);
-  missingValidation.forEach(m => {
+  missingValidation.forEach((m) => {
     warnings.push({
       rule: 'MISSING_VALIDATION',
       severity: 'warning',
       message: `Task ${m.task_id} has no validation commands in validation.yaml`,
       tasks: [m.task_id],
       priority: 'high',
-      section: m.section
+      section: m.section,
     });
   });
 
   // Check AI/predictive tasks
-  sprintTasks.forEach(task => {
+  sprintTasks.forEach((task) => {
     const id = task['Task ID'];
     const desc = task['Description'] || '';
 
-    if (desc.toLowerCase().includes('predictive') ||
-        desc.toLowerCase().includes('ai-optimized') ||
-        desc.toLowerCase().includes('ai-generated')) {
+    if (
+      desc.toLowerCase().includes('predictive') ||
+      desc.toLowerCase().includes('ai-optimized') ||
+      desc.toLowerCase().includes('ai-generated')
+    ) {
       const override = overrides?.[id];
       if (!override || !override.notes?.includes('MVP')) {
         warnings.push({
@@ -474,15 +481,15 @@ function checkSoftRules(tasks, overrides, validationRules, config, sprint) {
           severity: 'warning',
           message: `AI/Predictive task ${id} should have MVP criteria defined`,
           tasks: [id],
-          priority: 'medium'
+          priority: 'medium',
         });
       }
     }
   });
 
   // Check high fan-out tasks
-  const threshold = config?.soft_rules?.find(r => r.id === 'HIGH_FANOUT')?.threshold || 3;
-  sprintTasks.forEach(task => {
+  const threshold = config?.soft_rules?.find((r) => r.id === 'HIGH_FANOUT')?.threshold || 3;
+  sprintTasks.forEach((task) => {
     const id = task['Task ID'];
     const count = fanout.get(id) || 0;
 
@@ -493,13 +500,13 @@ function checkSoftRules(tasks, overrides, validationRules, config, sprint) {
         message: `Task ${id} has ${count} direct dependents (high fan-out)`,
         tasks: [id],
         priority: 'high',
-        dependentCount: count
+        dependentCount: count,
       });
     }
   });
 
   // Check Tier B without gates
-  sprintTasks.forEach(task => {
+  sprintTasks.forEach((task) => {
     const id = task['Task ID'];
     const tier = overrides?.[id]?.tier || tiers.get(id);
     const override = overrides?.[id];
@@ -510,13 +517,13 @@ function checkSoftRules(tasks, overrides, validationRules, config, sprint) {
         severity: 'warning',
         message: `Tier B task ${id} missing gate_profile`,
         tasks: [id],
-        priority: 'medium'
+        priority: 'medium',
       });
     }
   });
 
   // Check waivers
-  sprintTasks.forEach(task => {
+  sprintTasks.forEach((task) => {
     const id = task['Task ID'];
     const override = overrides?.[id];
 
@@ -527,7 +534,7 @@ function checkSoftRules(tasks, overrides, validationRules, config, sprint) {
         message: `Task ${id} has debt_allowed=true`,
         tasks: [id],
         priority: 'low',
-        waiver_expiry: override.waiver_expiry
+        waiver_expiry: override.waiver_expiry,
       });
     }
 
@@ -543,7 +550,7 @@ function checkSoftRules(tasks, overrides, validationRules, config, sprint) {
           message: `Task ${id} waiver expires in ${daysUntilExpiry} days (${override.waiver_expiry})`,
           tasks: [id],
           priority: 'high',
-          days_until_expiry: daysUntilExpiry
+          days_until_expiry: daysUntilExpiry,
         });
       } else if (daysUntilExpiry <= 0) {
         warnings.push({
@@ -552,7 +559,7 @@ function checkSoftRules(tasks, overrides, validationRules, config, sprint) {
           message: `Task ${id} waiver has EXPIRED (${override.waiver_expiry})`,
           tasks: [id],
           priority: 'critical',
-          days_until_expiry: daysUntilExpiry
+          days_until_expiry: daysUntilExpiry,
         });
       }
     }
@@ -564,7 +571,7 @@ function checkSoftRules(tasks, overrides, validationRules, config, sprint) {
         message: `Task ${id} uses exception_policy: ${override.exception_policy}`,
         tasks: [id],
         priority: 'medium',
-        policy: override.exception_policy
+        policy: override.exception_policy,
       });
     }
   });
@@ -583,11 +590,10 @@ function generateReviewQueue(tasks, overrides, validationRules, config, errors, 
   const reviewConfig = config?.review_queue || {};
 
   // Filter by sprint if specified
-  const sprintTasks = sprint !== undefined
-    ? tasks.filter(t => parseInt(t['Target Sprint'], 10) === sprint)
-    : tasks;
+  const sprintTasks =
+    sprint !== undefined ? tasks.filter((t) => parseInt(t['Target Sprint'], 10) === sprint) : tasks;
 
-  sprintTasks.forEach(task => {
+  sprintTasks.forEach((task) => {
     const id = task['Task ID'];
     const tier = overrides?.[id]?.tier || tiers.get(id);
     const override = overrides?.[id] || {};
@@ -602,22 +608,26 @@ function generateReviewQueue(tasks, overrides, validationRules, config, errors, 
     }
 
     // Check high fan-out
-    if (reviewConfig.include_high_fanout &&
-        dependentCount >= (reviewConfig.fanout_threshold || 3)) {
+    if (
+      reviewConfig.include_high_fanout &&
+      dependentCount >= (reviewConfig.fanout_threshold || 3)
+    ) {
       reasons.push(`High fan-out (${dependentCount} dependents)`);
     }
 
     // Check waivers
-    if (reviewConfig.include_waivers &&
-        (override.debt_allowed === true || override.waiver_expiry)) {
+    if (
+      reviewConfig.include_waivers &&
+      (override.debt_allowed === true || override.waiver_expiry)
+    ) {
       reasons.push('Has waiver or debt_allowed');
     }
 
     // Check for errors related to this task
-    const taskErrors = errors.filter(e => e.tasks?.includes(id));
+    const taskErrors = errors.filter((e) => e.tasks?.includes(id));
     if (taskErrors.length > 0) {
       reasons.push(`Has ${taskErrors.length} error(s)`);
-      taskErrors.forEach(e => {
+      taskErrors.forEach((e) => {
         if (e.rule === 'TIER_A_EVIDENCE_REQUIRED') {
           evidenceMissing.push('evidence_required not defined');
         }
@@ -625,8 +635,8 @@ function generateReviewQueue(tasks, overrides, validationRules, config, errors, 
     }
 
     // Check for warnings
-    const taskWarnings = warnings.filter(w => w.tasks?.includes(id));
-    const missingValidation = taskWarnings.find(w => w.rule === 'MISSING_VALIDATION');
+    const taskWarnings = warnings.filter((w) => w.tasks?.includes(id));
+    const missingValidation = taskWarnings.find((w) => w.rule === 'MISSING_VALIDATION');
     if (missingValidation) {
       reasons.push('Missing validation.yaml entry');
     }
@@ -643,9 +653,14 @@ function generateReviewQueue(tasks, overrides, validationRules, config, errors, 
         evidence_missing: evidenceMissing.length > 0 ? evidenceMissing : undefined,
         dependent_count: dependentCount > 0 ? dependentCount : undefined,
         waiver_expiry: override.waiver_expiry,
-        priority: tier === 'A' ? 'critical' :
-                  dependentCount >= 3 ? 'high' :
-                  taskErrors.length > 0 ? 'high' : 'medium'
+        priority:
+          tier === 'A'
+            ? 'critical'
+            : dependentCount >= 3
+              ? 'high'
+              : taskErrors.length > 0
+                ? 'high'
+                : 'medium',
       });
     }
   });
@@ -661,16 +676,24 @@ function generateReviewQueue(tasks, overrides, validationRules, config, errors, 
 // REPORT GENERATION
 // -----------------------------------------------------------------------------
 
-function generateReport(tasks, overrides, validationRules, config, errors, warnings, reviewQueue, sprint) {
+function generateReport(
+  tasks,
+  overrides,
+  validationRules,
+  config,
+  errors,
+  warnings,
+  reviewQueue,
+  sprint
+) {
   const fanout = computeFanout(tasks);
   const tiers = computeTiers(tasks, overrides, fanout, config);
 
-  const sprintTasks = sprint !== undefined
-    ? tasks.filter(t => parseInt(t['Target Sprint'], 10) === sprint)
-    : tasks;
+  const sprintTasks =
+    sprint !== undefined ? tasks.filter((t) => parseInt(t['Target Sprint'], 10) === sprint) : tasks;
 
   const tierCounts = { A: 0, B: 0, C: 0 };
-  sprintTasks.forEach(task => {
+  sprintTasks.forEach((task) => {
     const tier = overrides?.[task['Task ID']]?.tier || tiers.get(task['Task ID']) || 'C';
     tierCounts[tier]++;
   });
@@ -679,7 +702,7 @@ function generateReport(tasks, overrides, validationRules, config, errors, warni
     meta: {
       generated_at: new Date().toISOString(),
       schema_version: '1.0.0',
-      sprint_scope: sprint !== undefined ? sprint : 'all'
+      sprint_scope: sprint !== undefined ? sprint : 'all',
     },
     summary: {
       total_tasks: sprintTasks.length,
@@ -688,25 +711,35 @@ function generateReport(tasks, overrides, validationRules, config, errors, warni
       warning_count: warnings.length,
       review_queue_size: reviewQueue.length,
       validation_coverage: {
-        tasks_with_validation: sprintTasks.filter(t =>
-          validationRules && validationRules[t['Task ID']]
+        tasks_with_validation: sprintTasks.filter(
+          (t) => validationRules && validationRules[t['Task ID']]
         ).length,
-        tasks_without_validation: sprintTasks.filter(t =>
-          !validationRules || !validationRules[t['Task ID']]
+        tasks_without_validation: sprintTasks.filter(
+          (t) => !validationRules || !validationRules[t['Task ID']]
         ).length,
         coverage_percentage: validationRules
-          ? Math.round((sprintTasks.filter(t => validationRules[t['Task ID']]).length / sprintTasks.length) * 100)
-          : 0
-      }
+          ? Math.round(
+              (sprintTasks.filter((t) => validationRules[t['Task ID']]).length /
+                sprintTasks.length) *
+                100
+            )
+          : 0,
+      },
     },
     errors,
     warnings,
     review_queue: reviewQueue,
     tasks_by_tier: {
-      A: sprintTasks.filter(t => (overrides?.[t['Task ID']]?.tier || tiers.get(t['Task ID'])) === 'A').map(t => t['Task ID']),
-      B: sprintTasks.filter(t => (overrides?.[t['Task ID']]?.tier || tiers.get(t['Task ID'])) === 'B').map(t => t['Task ID']),
-      C: sprintTasks.filter(t => (overrides?.[t['Task ID']]?.tier || tiers.get(t['Task ID'])) === 'C').map(t => t['Task ID'])
-    }
+      A: sprintTasks
+        .filter((t) => (overrides?.[t['Task ID']]?.tier || tiers.get(t['Task ID'])) === 'A')
+        .map((t) => t['Task ID']),
+      B: sprintTasks
+        .filter((t) => (overrides?.[t['Task ID']]?.tier || tiers.get(t['Task ID'])) === 'B')
+        .map((t) => t['Task ID']),
+      C: sprintTasks
+        .filter((t) => (overrides?.[t['Task ID']]?.tier || tiers.get(t['Task ID'])) === 'C')
+        .map((t) => t['Task ID']),
+    },
   };
 }
 
@@ -717,7 +750,7 @@ function generateReport(tasks, overrides, validationRules, config, errors, warni
 async function main() {
   const args = process.argv.slice(2);
   const verbose = args.includes('--verbose') || args.includes('-v');
-  const sprintArg = args.find(a => a.startsWith('--sprint='));
+  const sprintArg = args.find((a) => a.startsWith('--sprint='));
   const sprint = sprintArg ? parseInt(sprintArg.split('=')[1], 10) : 0; // Default to Sprint 0
 
   console.log('========================================');
@@ -762,7 +795,7 @@ async function main() {
   console.log(`\nParsed ${tasks.length} tasks from Sprint plan`);
 
   if (sprint !== undefined) {
-    const sprintTasks = tasks.filter(t => parseInt(t['Target Sprint'], 10) === sprint);
+    const sprintTasks = tasks.filter((t) => parseInt(t['Target Sprint'], 10) === sprint);
     console.log(`Filtering to Sprint ${sprint}: ${sprintTasks.length} tasks\n`);
   }
 
@@ -774,10 +807,27 @@ async function main() {
   const warnings = checkSoftRules(tasks, overrides, validationRules, config, sprint);
 
   console.log('Generating review queue...');
-  const reviewQueue = generateReviewQueue(tasks, overrides, validationRules, config, errors, warnings, sprint);
+  const reviewQueue = generateReviewQueue(
+    tasks,
+    overrides,
+    validationRules,
+    config,
+    errors,
+    warnings,
+    sprint
+  );
 
   // Generate report
-  const report = generateReport(tasks, overrides, validationRules, config, errors, warnings, reviewQueue, sprint);
+  const report = generateReport(
+    tasks,
+    overrides,
+    validationRules,
+    config,
+    errors,
+    warnings,
+    reviewQueue,
+    sprint
+  );
 
   // Output results
   console.log('\n========================================');
@@ -785,7 +835,9 @@ async function main() {
   console.log('========================================\n');
 
   console.log(`Total tasks (Sprint ${sprint}): ${report.summary.total_tasks}`);
-  console.log(`Tier breakdown: A=${report.summary.tier_breakdown.A}, B=${report.summary.tier_breakdown.B}, C=${report.summary.tier_breakdown.C}`);
+  console.log(
+    `Tier breakdown: A=${report.summary.tier_breakdown.A}, B=${report.summary.tier_breakdown.B}, C=${report.summary.tier_breakdown.C}`
+  );
   console.log(`Validation coverage: ${report.summary.validation_coverage.coverage_percentage}%`);
   console.log(`\nErrors: ${errors.length}`);
   console.log(`Warnings: ${warnings.length}`);
@@ -793,7 +845,7 @@ async function main() {
 
   if (errors.length > 0) {
     console.log('\n--- ERRORS ---');
-    errors.forEach(e => {
+    errors.forEach((e) => {
       console.log(`  [${e.rule}] ${e.message}`);
       if (verbose) console.log(`    Fix: ${e.fix}`);
     });
@@ -801,7 +853,7 @@ async function main() {
 
   if (verbose && warnings.length > 0) {
     console.log('\n--- WARNINGS ---');
-    warnings.forEach(w => {
+    warnings.forEach((w) => {
       console.log(`  [${w.rule}] ${w.message}`);
     });
   }
@@ -809,14 +861,21 @@ async function main() {
   // Write output files
   const reviewQueuePath = path.join(ROOT_DIR, paths.review_queue);
   fs.mkdirSync(path.dirname(reviewQueuePath), { recursive: true });
-  fs.writeFileSync(reviewQueuePath, JSON.stringify({
-    meta: {
-      generated_at: new Date().toISOString(),
-      sprint_scope: sprint,
-      total_items: reviewQueue.length
-    },
-    items: reviewQueue
-  }, null, 2));
+  fs.writeFileSync(
+    reviewQueuePath,
+    JSON.stringify(
+      {
+        meta: {
+          generated_at: new Date().toISOString(),
+          sprint_scope: sprint,
+          total_items: reviewQueue.length,
+        },
+        items: reviewQueue,
+      },
+      null,
+      2
+    )
+  );
   console.log(`\nReview queue written to ${paths.review_queue}`);
 
   const reportPath = path.join(ROOT_DIR, paths.lint_report);
@@ -834,7 +893,7 @@ async function main() {
   process.exit(0);
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('Unexpected error:', err);
   process.exit(2);
 });

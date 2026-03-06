@@ -21,7 +21,7 @@
  */
 
 import { vi } from 'vitest';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient } from '@intelliflow/db';
 
 /**
  * Type-safe Prisma mock
@@ -109,7 +109,7 @@ export const mockPrisma = {
   // Middleware
   $use: vi.fn(),
   $on: vi.fn(),
-} as unknown as MockPrismaClient;
+} satisfies Partial<MockPrismaClient> as MockPrismaClient;
 
 /**
  * Reset all Prisma mocks

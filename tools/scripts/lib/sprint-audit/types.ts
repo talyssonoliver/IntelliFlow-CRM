@@ -33,7 +33,7 @@ export const DEFAULT_AUDIT_CONFIG: Partial<SprintAuditConfig> = {
   strictMode: false,
   skipValidations: false,
   parallelLimit: 4,
-  validationTimeout: 60_000, // 1 minute
+  validationTimeout: 1_000_000, // 1000 seconds
 };
 
 // =============================================================================

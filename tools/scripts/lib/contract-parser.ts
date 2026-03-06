@@ -280,9 +280,13 @@ export function getFlowFilePath(flowId: string): string {
 
 /**
  * Check if a contract requires context acknowledgement.
+ * Matches both bare `context_ack` tokens and full paths ending in `context_ack.json`.
  */
 export function requiresContextAck(contract: ParsedContract): boolean {
-  return contract.artifacts.some((t) => t.type === 'EVIDENCE' && t.value === 'context_ack');
+  return contract.artifacts.some(
+    (t) =>
+      t.type === 'EVIDENCE' && (t.value === 'context_ack' || t.value.endsWith('context_ack.json'))
+  );
 }
 
 /**

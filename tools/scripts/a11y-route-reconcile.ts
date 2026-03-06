@@ -131,10 +131,7 @@ export function normalizeAppRoute(relPath: string): string | null {
  * Compare doc-declared routes against filesystem routes.
  * Produces gate results for each reconciliation check.
  */
-export function reconcileRoutes(
-  docRoutes: string[],
-  fsRoutes: string[]
-): ReconcileResult {
+export function reconcileRoutes(docRoutes: string[], fsRoutes: string[]): ReconcileResult {
   // Deduplicate and normalize to lowercase
   const docSet = new Set(docRoutes.map((r) => r.toLowerCase()));
   const fsSet = new Set(fsRoutes.map((r) => r.toLowerCase()));
@@ -246,10 +243,8 @@ function scanAppRoutes(appDir: string): string[] {
 export function runReconciliation(options?: ReconcileOptions): void {
   const repoRoot = findRepoRoot();
   const conformancePath =
-    options?.conformancePath ??
-    resolve(repoRoot, 'docs/compliance/wcag-conformance-statement.md');
-  const appDir =
-    options?.appDir ?? resolve(repoRoot, 'apps/web/src/app');
+    options?.conformancePath ?? resolve(repoRoot, 'docs/compliance/wcag-conformance-statement.md');
+  const appDir = options?.appDir ?? resolve(repoRoot, 'apps/web/src/app');
   const shouldPrint = options?.printSummary !== false;
   const exitFn = options?.exitFn ?? ((code: number) => process.exit(code) as never);
 

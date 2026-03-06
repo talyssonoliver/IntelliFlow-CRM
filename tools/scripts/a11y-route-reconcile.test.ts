@@ -114,10 +114,7 @@ This section has no backtick-enclosed routes.
 
   // P08: Parses real conformance statement and extracts >=26 routes
   it('P08: parses real conformance statement and extracts >=26 routes', () => {
-    const realPath = resolve(
-      __dirname,
-      '../../docs/compliance/wcag-conformance-statement.md'
-    );
+    const realPath = resolve(__dirname, '../../docs/compliance/wcag-conformance-statement.md');
     const content = readFileSync(realPath, 'utf-8');
     const routes = parseConformanceRoutes(content);
     expect(routes.length).toBeGreaterThanOrEqual(26);
@@ -186,9 +183,7 @@ describe('normalizeAppRoute', () => {
 
   // N06: Handles deeply nested paths
   it('N06: handles deeply nested paths', () => {
-    expect(normalizeAppRoute('agent-approvals/page.tsx')).toBe(
-      '/agent-approvals'
-    );
+    expect(normalizeAppRoute('agent-approvals/page.tsx')).toBe('/agent-approvals');
   });
 
   // N07: Handles Windows backslash separators
@@ -269,9 +264,7 @@ describe('reconcileRoutes', () => {
     const docRoutes = ['/dashboard'];
     const fsRoutes = ['/dashboard', '/undocumented'];
     const result = reconcileRoutes(docRoutes, fsRoutes);
-    const g4 = result.gates.find(
-      (g) => g.name === 'DISK_COVERED_BY_STATEMENT'
-    );
+    const g4 = result.gates.find((g) => g.name === 'DISK_COVERED_BY_STATEMENT');
     expect(g4).toBeDefined();
     expect(g4!.severity).toBe('WARN');
   });
@@ -348,12 +341,9 @@ describe('reconcileRoutes', () => {
 describe('runReconciliation', () => {
   // RN01: Calls exitFn(0) when all routes match
   it('RN01: calls exitFn(0) when all routes match', () => {
-    const exitFn = vi.fn() as unknown as (code: number) => never;
+    const exitFn = vi.fn() as any; // mock for process.exit — (code: number) => never
     runReconciliation({
-      conformancePath: resolve(
-        __dirname,
-        '../../docs/compliance/wcag-conformance-statement.md'
-      ),
+      conformancePath: resolve(__dirname, '../../docs/compliance/wcag-conformance-statement.md'),
       appDir: resolve(__dirname, '../../apps/web/src/app'),
       printSummary: false,
       exitFn,
@@ -363,7 +353,7 @@ describe('runReconciliation', () => {
 
   // RN02: Calls exitFn(1) when docOnlyRoutes non-empty
   it('RN02: calls exitFn(1) when docOnlyRoutes non-empty', () => {
-    const exitFn = vi.fn() as unknown as (code: number) => never;
+    const exitFn = vi.fn() as any; // mock for process.exit — (code: number) => never
     // Create a temp conformance file with a fake route
     const fakeContent = `
 ## 2. Scope
@@ -388,13 +378,10 @@ Routes: \`/dashboard\`, \`/nonexistent-route-xyz\`
 
   // RN03: Does not throw when printSummary is false
   it('RN03: does not throw when printSummary is false', () => {
-    const exitFn = vi.fn() as unknown as (code: number) => never;
+    const exitFn = vi.fn() as any; // mock for process.exit — (code: number) => never
     expect(() => {
       runReconciliation({
-        conformancePath: resolve(
-          __dirname,
-          '../../docs/compliance/wcag-conformance-statement.md'
-        ),
+        conformancePath: resolve(__dirname, '../../docs/compliance/wcag-conformance-statement.md'),
         appDir: resolve(__dirname, '../../apps/web/src/app'),
         printSummary: false,
         exitFn,
@@ -404,11 +391,8 @@ Routes: \`/dashboard\`, \`/nonexistent-route-xyz\`
 
   // RN04: Reads conformancePath from options
   it('RN04: reads conformancePath from options', () => {
-    const exitFn = vi.fn() as unknown as (code: number) => never;
-    const customPath = resolve(
-      __dirname,
-      '../../docs/compliance/wcag-conformance-statement.md'
-    );
+    const exitFn = vi.fn() as any; // mock for process.exit — (code: number) => never
+    const customPath = resolve(__dirname, '../../docs/compliance/wcag-conformance-statement.md');
     runReconciliation({
       conformancePath: customPath,
       appDir: resolve(__dirname, '../../apps/web/src/app'),
@@ -421,13 +405,10 @@ Routes: \`/dashboard\`, \`/nonexistent-route-xyz\`
 
   // RN05: Reads appDir from options
   it('RN05: reads appDir from options', () => {
-    const exitFn = vi.fn() as unknown as (code: number) => never;
+    const exitFn = vi.fn() as any; // mock for process.exit — (code: number) => never
     const customAppDir = resolve(__dirname, '../../apps/web/src/app');
     runReconciliation({
-      conformancePath: resolve(
-        __dirname,
-        '../../docs/compliance/wcag-conformance-statement.md'
-      ),
+      conformancePath: resolve(__dirname, '../../docs/compliance/wcag-conformance-statement.md'),
       appDir: customAppDir,
       printSummary: false,
       exitFn,
@@ -437,7 +418,7 @@ Routes: \`/dashboard\`, \`/nonexistent-route-xyz\`
 
   // Error path: non-existent conformancePath exits 1
   it('exits 1 when conformancePath does not exist', () => {
-    const exitFn = vi.fn() as unknown as (code: number) => never;
+    const exitFn = vi.fn() as any; // mock for process.exit — (code: number) => never
     runReconciliation({
       conformancePath: '/nonexistent/path/conformance.md',
       appDir: resolve(__dirname, '../../apps/web/src/app'),
@@ -449,12 +430,9 @@ Routes: \`/dashboard\`, \`/nonexistent-route-xyz\`
 
   // Error path: non-existent appDir exits 1
   it('exits 1 when appDir does not exist', () => {
-    const exitFn = vi.fn() as unknown as (code: number) => never;
+    const exitFn = vi.fn() as any; // mock for process.exit — (code: number) => never
     runReconciliation({
-      conformancePath: resolve(
-        __dirname,
-        '../../docs/compliance/wcag-conformance-statement.md'
-      ),
+      conformancePath: resolve(__dirname, '../../docs/compliance/wcag-conformance-statement.md'),
       appDir: '/nonexistent/app/dir',
       printSummary: false,
       exitFn,
@@ -464,13 +442,10 @@ Routes: \`/dashboard\`, \`/nonexistent-route-xyz\`
 
   // Coverage path: printSummary true exercises logging code paths
   it('runs with printSummary enabled without error', () => {
-    const exitFn = vi.fn() as unknown as (code: number) => never;
+    const exitFn = vi.fn() as any; // mock for process.exit — (code: number) => never
     expect(() => {
       runReconciliation({
-        conformancePath: resolve(
-          __dirname,
-          '../../docs/compliance/wcag-conformance-statement.md'
-        ),
+        conformancePath: resolve(__dirname, '../../docs/compliance/wcag-conformance-statement.md'),
         appDir: resolve(__dirname, '../../apps/web/src/app'),
         printSummary: true,
         exitFn,

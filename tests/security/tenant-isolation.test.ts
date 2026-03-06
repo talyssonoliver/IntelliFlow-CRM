@@ -195,6 +195,7 @@ describe('Tenant Context', () => {
       expect(() => {
         validateTenantOperation(tenant, 'create', { ownerId: 'user-123' });
       }).not.toThrow();
+      expect(tenant.userId).toBe('user-123');
     });
 
     it('should block creating for another user', () => {
@@ -223,6 +224,7 @@ describe('Tenant Context', () => {
       expect(() => {
         validateTenantOperation(tenant, 'create', { ownerId: 'any-user' });
       }).not.toThrow();
+      expect(tenant.canAccessAllTenantData).toBe(true);
     });
 
     it('should allow manager to create for team members', () => {
@@ -238,6 +240,7 @@ describe('Tenant Context', () => {
       expect(() => {
         validateTenantOperation(tenant, 'create', { ownerId: 'team-member-1' });
       }).not.toThrow();
+      expect(tenant.teamMemberIds).toContain('team-member-1');
     });
   });
 
@@ -252,7 +255,7 @@ describe('Tenant Context', () => {
           canAccessAllTenantData: false,
         },
         prisma: mockPrisma,
-      } as unknown as TenantAwareContext;
+      } as any; // partial mock — TenantAwareContext fields provided above
 
       const result = await verifyTenantAccess(mockCtx, 'user-123');
 
@@ -269,7 +272,7 @@ describe('Tenant Context', () => {
           canAccessAllTenantData: false,
         },
         prisma: mockPrisma,
-      } as unknown as TenantAwareContext;
+      } as any; // partial mock — TenantAwareContext fields provided above
 
       const result = await verifyTenantAccess(mockCtx, 'other-user');
 
@@ -287,7 +290,7 @@ describe('Tenant Context', () => {
           canAccessAllTenantData: true,
         },
         prisma: mockPrisma,
-      } as unknown as TenantAwareContext;
+      } as any; // partial mock — TenantAwareContext fields provided above
 
       const result = await verifyTenantAccess(mockCtx, 'any-user');
 
@@ -306,7 +309,7 @@ describe('Tenant Context', () => {
           canAccessAllTenantData: true,
         },
         prisma: mockPrisma,
-      } as unknown as TenantAwareContext;
+      } as any; // partial mock — TenantAwareContext fields provided above
 
       const result = await verifyTenantAccess(mockCtx, 'team-member');
 
@@ -422,6 +425,9 @@ describe('Tenant Resource Limiter', () => {
       await expect(
         enforceResourceLimit(mockPrisma as any, 'user-123', 'leads')
       ).resolves.not.toThrow();
+      expect(mockPrisma.lead.count).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.anything() })
+      );
     });
 
     it('should throw FORBIDDEN when at limit', async () => {
@@ -435,28 +441,37 @@ describe('Tenant Resource Limiter', () => {
   });
 
   describe('rate limiting', () => {
-    it('should track rate limit increments', () => {
+    it('should track rate limit increments', async () => {
       incrementRateLimit('user-123');
       incrementRateLimit('user-123');
       incrementRateLimit('user-123');
 
-      // Check internal state
-      // Note: In real tests, we'd check via checkResourceUsage
+      mockPrisma.user.findUnique.mockResolvedValue({ role: 'USER' });
+      const usage = await checkResourceUsage(
+        mockPrisma as any,
+        'user-123',
+        'api_requests_per_minute'
+      );
+      expect(usage.current).toBe(3);
     });
 
-    it('should track daily request increments', () => {
+    it('should track daily request increments', async () => {
       incrementDailyRequests('user-123');
       incrementDailyRequests('user-123');
 
-      // Verified via checkResourceUsage in integration tests
+      mockPrisma.user.findUnique.mockResolvedValue({ role: 'USER' });
+      const usage = await checkResourceUsage(mockPrisma as any, 'user-123', 'api_requests_per_day');
+      expect(usage.current).toBe(2);
     });
 
-    it('should track concurrent requests', () => {
+    it('should track concurrent requests', async () => {
       trackConcurrentRequestStart('user-123');
       trackConcurrentRequestStart('user-123');
       trackConcurrentRequestEnd('user-123');
 
-      // One request should still be tracked
+      mockPrisma.user.findUnique.mockResolvedValue({ role: 'USER' });
+      const usage = await checkResourceUsage(mockPrisma as any, 'user-123', 'concurrent_requests');
+      expect(usage.current).toBe(1);
     });
   });
 
@@ -496,15 +511,26 @@ describe('Tenant Resource Limiter', () => {
   });
 
   describe('clearRateLimitState', () => {
-    it('should clear all rate limit state', () => {
+    it('should clear all rate limit state', async () => {
       incrementRateLimit('user-123');
       incrementDailyRequests('user-123');
       trackConcurrentRequestStart('user-123');
 
       clearRateLimitState();
 
-      // State should be cleared
-      // Verified via subsequent checkResourceUsage calls returning 0
+      mockPrisma.user.findUnique.mockResolvedValue({ role: 'USER' });
+      const rateUsage = await checkResourceUsage(
+        mockPrisma as any,
+        'user-123',
+        'api_requests_per_minute'
+      );
+      const concurrentUsage = await checkResourceUsage(
+        mockPrisma as any,
+        'user-123',
+        'concurrent_requests'
+      );
+      expect(rateUsage.current).toBe(0);
+      expect(concurrentUsage.current).toBe(0);
     });
   });
 });
@@ -523,7 +549,7 @@ describe('Tenant Isolation Security Tests', () => {
       const mockCtx = {
         tenant: userA,
         prisma: mockPrisma,
-      } as unknown as TenantAwareContext;
+      } as any; // partial mock — TenantAwareContext fields provided above
 
       const result = await verifyTenantAccess(mockCtx, 'user-b');
 
@@ -579,7 +605,9 @@ describe('Tenant Isolation Security Tests', () => {
       mockPrisma.user.findUnique.mockResolvedValueOnce({ role: 'USER' });
       mockPrisma.lead.count.mockResolvedValueOnce(1000);
 
-      await expect(enforceResourceLimit(mockPrisma as any, 'user-a', 'leads')).rejects.toThrow();
+      await expect(enforceResourceLimit(mockPrisma as any, 'user-a', 'leads')).rejects.toThrow(
+        TRPCError
+      );
 
       // User B under limit
       mockPrisma.user.findUnique.mockResolvedValueOnce({ role: 'USER' });
@@ -588,19 +616,31 @@ describe('Tenant Isolation Security Tests', () => {
       await expect(
         enforceResourceLimit(mockPrisma as any, 'user-b', 'leads')
       ).resolves.not.toThrow();
+      expect(mockPrisma.lead.count).toHaveBeenCalledTimes(2);
     });
   });
 
   describe('Rate Limiting Independence', () => {
-    it('should track rate limits per tenant', () => {
+    it('should track rate limits per tenant', async () => {
       // User A makes requests
       incrementRateLimit('user-a');
       incrementRateLimit('user-a');
       incrementRateLimit('user-a');
 
       // User B's limits should be independent
-      // This is verified by the fact that incrementing user-a
-      // doesn't affect user-b's count
+      mockPrisma.user.findUnique.mockResolvedValue({ role: 'USER' });
+      const usageA = await checkResourceUsage(
+        mockPrisma as any,
+        'user-a',
+        'api_requests_per_minute'
+      );
+      const usageB = await checkResourceUsage(
+        mockPrisma as any,
+        'user-b',
+        'api_requests_per_minute'
+      );
+      expect(usageA.current).toBe(3);
+      expect(usageB.current).toBe(0);
     });
   });
 });

@@ -49,7 +49,10 @@ function checkSonarQubeHealth() {
     execSync('curl -s --max-time 5 http://localhost:9000 > /dev/null', { stdio: 'pipe' });
     return true;
   } catch (error) {
-    log(`Health check failed: ${error instanceof Error ? error.message : String(error)}`, 'warning');
+    log(
+      `Health check failed: ${error instanceof Error ? error.message : String(error)}`,
+      'warning'
+    );
     return false;
   }
 }
@@ -58,7 +61,9 @@ function startSonarQube() {
   log('Checking if SonarQube is already running...');
   try {
     // Check if containers are already running
-    const result = execSync('docker compose -f docker-compose.sonarqube.yml ps --quiet', { encoding: 'utf8' });
+    const result = execSync('docker compose -f docker-compose.sonarqube.yml ps --quiet', {
+      encoding: 'utf8',
+    });
     if (result.trim()) {
       log('SonarQube containers are already running', 'success');
       return waitForSonarQube();
@@ -114,7 +119,7 @@ function runAnalysis() {
     // Run analysis using npx
     execSync('npx sonarqube-scanner', {
       stdio: 'inherit',
-      cwd: path.resolve(__dirname, '..')
+      cwd: path.resolve(__dirname, '..'),
     });
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -161,7 +166,8 @@ function manualMode() {
     if (key === '\r' || key === '\n') {
       runAnalysis();
       console.log('\nPress Enter to run again, or "q" to quit');
-    } else if (key === 'q' || key === '\u0003') { // Ctrl+C
+    } else if (key === 'q' || key === '\u0003') {
+      // Ctrl+C
       log('Exiting manual mode', 'info');
       process.exit(0);
     }
@@ -220,7 +226,7 @@ function watchMode() {
   });
 
   console.log('\nWatching for file changes... Press Ctrl+C to stop\n');
-  
+
   // Keep process running
   process.stdin.resume();
 }
@@ -239,7 +245,7 @@ function watchFiles(callback) {
     'apps/ai-worker/src',
     'apps/project-tracker/app',
     'apps/project-tracker/components',
-    'packages'
+    'packages',
   ];
 
   const watchers = [];
@@ -249,7 +255,13 @@ function watchFiles(callback) {
     if (fs.existsSync(dirPath)) {
       try {
         const watcher = fs.watch(dirPath, { recursive: true }, (eventType, filename) => {
-          if (filename && (filename.endsWith('.ts') || filename.endsWith('.tsx') || filename.endsWith('.js') || filename.endsWith('.jsx'))) {
+          if (
+            filename &&
+            (filename.endsWith('.ts') ||
+              filename.endsWith('.tsx') ||
+              filename.endsWith('.js') ||
+              filename.endsWith('.jsx'))
+          ) {
             // Debounce to avoid multiple triggers
             clearTimeout(watcher._timeout);
             watcher._timeout = setTimeout(() => {
@@ -276,7 +288,10 @@ async function main() {
   if (!checkSonarQubeHealth()) {
     if (skipStart) {
       log('SonarQube is not running, skipping auto-start', 'warning');
-      log('Please start SonarQube manually: docker compose -f docker-compose.sonarqube.yml up -d', 'info');
+      log(
+        'Please start SonarQube manually: docker compose -f docker-compose.sonarqube.yml up -d',
+        'info'
+      );
       process.exit(1);
     } else {
       log('SonarQube is not running', 'warning');
@@ -347,7 +362,10 @@ process.on('SIGINT', () => {
       watcher.close();
     } catch (error) {
       // Ignore close errors during shutdown - watchers may already be closed
-      log(`Watcher close warning: ${error instanceof Error ? error.message : String(error)}`, 'warning');
+      log(
+        `Watcher close warning: ${error instanceof Error ? error.message : String(error)}`,
+        'warning'
+      );
     }
   }
   process.exit(0);
@@ -360,7 +378,10 @@ process.on('SIGTERM', () => {
       watcher.close();
     } catch (error) {
       // Ignore close errors during shutdown - watchers may already be closed
-      log(`Watcher close warning: ${error instanceof Error ? error.message : String(error)}`, 'warning');
+      log(
+        `Watcher close warning: ${error instanceof Error ? error.message : String(error)}`,
+        'warning'
+      );
     }
   }
   process.exit(0);

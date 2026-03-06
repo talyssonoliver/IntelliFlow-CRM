@@ -19,8 +19,8 @@ describe('generateCleanDependencies', () => {
   });
 
   it('returns empty string for null/undefined', () => {
-    expect(generateCleanDependencies(null as unknown as string)).toBe('');
-    expect(generateCleanDependencies(undefined as unknown as string)).toBe('');
+    expect(generateCleanDependencies(null as any)).toBe('');
+    expect(generateCleanDependencies(undefined as any)).toBe('');
   });
 
   it('trims whitespace from dependencies', () => {

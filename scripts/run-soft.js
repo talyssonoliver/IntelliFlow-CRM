@@ -33,8 +33,9 @@ if (result.error) {
 
 const code = typeof result.status === 'number' ? result.status : 0;
 if (code !== 0) {
-  console.warn(`[WARN] Ignoring non-zero exit code (${code}) from: ${command} ${args.join(' ')}`.trim());
+  console.warn(
+    `[WARN] Ignoring non-zero exit code (${code}) from: ${command} ${args.join(' ')}`.trim()
+  );
 }
 
 process.exit(0);
-

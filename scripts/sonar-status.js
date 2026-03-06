@@ -38,7 +38,8 @@ function loadDotenvFile(filename) {
       if (!key || key.includes(' ')) continue;
       if (
         value.length >= 2 &&
-        ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))
+        ((value.startsWith('"') && value.endsWith('"')) ||
+          (value.startsWith("'") && value.endsWith("'")))
       ) {
         value = value.slice(1, -1);
       }
@@ -119,7 +120,9 @@ function statusLabel(status) {
 }
 
 async function checkQualityGate(projectKey) {
-  const qg = await fetchJson(`/qualitygates/project_status?projectKey=${encodeURIComponent(projectKey)}`);
+  const qg = await fetchJson(
+    `/qualitygates/project_status?projectKey=${encodeURIComponent(projectKey)}`
+  );
   const projectStatus = qg?.projectStatus;
   if (!projectStatus) {
     console.error(`Project not found: ${projectKey}`);
@@ -145,7 +148,9 @@ try {
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     const shouldFallback =
-      projectKeyEnv && projectKeyEnv !== projectKeyFallback && (msg.includes('not found') || msg.includes('HTTP 404'));
+      projectKeyEnv &&
+      projectKeyEnv !== projectKeyFallback &&
+      (msg.includes('not found') || msg.includes('HTTP 404'));
     if (!shouldFallback) throw error;
 
     console.warn(
@@ -157,6 +162,8 @@ try {
   }
 } catch (error) {
   console.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
-  console.error('Tip: start SonarQube with `pnpm run sonar:start` (or `node scripts/sonarqube-helper.js start`).');
+  console.error(
+    'Tip: start SonarQube with `pnpm run sonar:start` (or `node scripts/sonarqube-helper.js start`).'
+  );
   process.exit(1);
 }

@@ -735,7 +735,92 @@ function Get-LayerCell($infos, [string]$layerName, [bool]$required) {
 $layerNames = @('Entity','Domain','Database','Adapter','Router','Frontend')
 $matrix = New-Object System.Collections.Generic.List[object]
 $atRisk = New-Object System.Collections.Generic.List[object]
-$missingByLayer = @{ Entity = 0; Domain = 0; Database = 0; Adapter = 0; Router = 0; Frontend = 0 }
+$missingByLayer = @{ Entity = 0; Domain = 0; Database = 0; Adapter = 0; Router = 0; Frontend = 0; 'Frontend-List' = 0; 'Frontend-Detail' = 0 }
+
+# ── Wiring audit data (from entity detail wiring audits 2026-03-03 to 2026-03-06) ──
+$auditedGroups = @('Lead','Contact','Account','Deal')
+$wiringAudit = @{
+  'Lead|Lead to Contact Conversion Logic' = 'verified'
+  'Lead|Lead to Deal Conversion Logic' = 'issues'
+  'Contact|Account contacts panel' = 'issues'
+  'Contact|Contact 360 Page' = 'issues'
+  'Contact|Contact activity timeline' = 'issues'
+  'Contact|Contact Activity Tracking' = 'issues'
+  'Contact|Contact filters' = 'verified'
+  'Contact|Contact relationship view' = 'verified'
+  'Contact|Contact search' = 'verified'
+  'Contact|Contact tRPC Router' = 'issues'
+  'Contact|Contacts Module' = 'issues'
+  'Account|Account hierarchy view' = 'verified'
+  'Account|Account opportunities panel' = 'issues'
+  'Account|Account revenue charts' = 'verified'
+  'Deal|Company & Product Master Brief' = 'verified'
+  'Deal|Deal forecast history' = 'verified'
+  'Deal|Deal forecast probability gauge' = 'verified'
+  'Deal|Deal forecast recommendations' = 'verified'
+  'Deal|Deal forecast risk factors' = 'verified'
+  'Deal|Deal Forecasting & Reporting' = 'issues'
+  'Deal|Deal Lost Closure Workflow' = 'issues'
+  'Deal|Deal pipeline Kanban board' = 'verified'
+  'Deal|Deal stage drag-drop' = 'verified'
+  'Deal|Deal Won Closure Workflow' = 'issues'
+  'Deal|Deal/Opportunity tRPC Router' = 'issues'
+  'Deal|Deals Pipeline - Kanban Board' = 'verified'
+  'Deal|Fix 6 broken Quick Action hrefs' = 'verified'
+  'Deal|LangChain Pipeline Design' = 'verified'
+  'Deal|Pipeline filtering' = 'issues'
+  'Deal|Pipeline Stage Customization' = 'verified'
+  'Deal|Ticket Stats Enhancement' = 'issues'
+}
+$groupEvents = @{
+  Lead = 'partial (3/5 handlers)'; Contact = 'partial (2/4 handlers)'
+  Account = 'not-wired (0/5 handlers)'; Deal = 'partial (1/4 handlers)'
+}
+$groupSecurity = @{
+  Lead = 'issues (no audit logging)'; Contact = 'issues (raw ctx.prisma, no audit logging)'
+  Account = 'critical (no tenantId, no audit logging)'; Deal = 'critical (no tenantId, no audit logging)'
+}
+# Frontend split heuristics
+$listPatterns = @('\blist\b','\bpipeline board\b','\bkanban board\b','\bimport\b','\bmerge\b','\bpipeline filtering\b','\bindex\b','\bqueue\b')
+$detailPatterns = @('\bdetail\b','\b360\b','^edit\s','^new\s','\btimeline\b','\bhierarchy view\b','\bpanel\b','\bcharts\b','\bforecast history\b','\bforecast probability\b','\bforecast recommend\b','\bforecast risk\b')
+
+function Get-WiringStatus([string]$group, [string]$feature, [string]$status) {
+  if ($status -in @('planned','in_progress')) { return '-' }
+  if ($status -ne 'done') { return '-' }
+  if ($group -notin $auditedGroups) { return '-' }
+  foreach ($key in $wiringAudit.Keys) {
+    $parts = $key -split '\|', 2
+    if ($parts[0] -eq $group -and $feature.StartsWith($parts[1])) { return $wiringAudit[$key] }
+  }
+  return 'unaudited'
+}
+
+function Split-Frontend([string]$feature, [string]$frontendVal) {
+  if ($frontendVal -in @('not_required','missing','')) { return @($frontendVal, $frontendVal) }
+  $fl = $feature.ToLower().Trim()
+  $isList = $false; $isDetail = $false
+  foreach ($p in $listPatterns) { if ($fl -match $p) { $isList = $true; break } }
+  foreach ($p in $detailPatterns) { if ($fl -match $p) { $isDetail = $true; break } }
+  if ($isList -and -not $isDetail) { return @($frontendVal, 'not_required') }
+  if ($isDetail -and -not $isList) { return @('not_required', $frontendVal) }
+  return @($frontendVal, $frontendVal)
+}
+
+function Get-EventsStatus([string]$group, [string]$adapterVal, [string]$routerVal, [string]$domainVal) {
+  $vals = @($adapterVal, $routerVal, $domainVal)
+  if (($vals | Where-Object { $_ -notin @('not_required','missing','') }).Count -eq 0) { return 'not_required' }
+  if ($groupEvents.ContainsKey($group)) { return $groupEvents[$group] }
+  if ($group -notin $auditedGroups) { return '-' }
+  return 'unaudited'
+}
+
+function Get-SecurityStatus([string]$group, [string]$adapterVal, [string]$routerVal) {
+  $vals = @($adapterVal, $routerVal)
+  if (($vals | Where-Object { $_ -notin @('not_required','missing','') }).Count -eq 0) { return 'not_required' }
+  if ($groupSecurity.ContainsKey($group)) { return $groupSecurity[$group] }
+  if ($group -notin $auditedGroups) { return '-' }
+  return 'unaudited'
+}
 
 foreach ($f in $baseFeatures) {
   $immediate = @($f.ImmediateTasks | Sort-Object -Unique)
@@ -881,10 +966,24 @@ foreach ($f in $baseFeatures) {
     })
   }
 
+  $featureClean = Clean-Cell $f.Feature
+  $statusClean = $f.Status
+  $groupClean = Clean-Cell $f.Group
+  $frontendClean = Clean-Cell $layerCells['Frontend']
+  $adapterClean = Clean-Cell $layerCells['Adapter']
+  $routerClean = Clean-Cell $layerCells['Router']
+  $domainClean = Clean-Cell $layerCells['Domain']
+
+  $wiringStatus = Get-WiringStatus $groupClean $featureClean $statusClean
+  $feSplit = Split-Frontend $featureClean $frontendClean
+  $eventsStatus = Get-EventsStatus $groupClean $adapterClean $routerClean $domainClean
+  $securityStatus = Get-SecurityStatus $groupClean $adapterClean $routerClean
+
   $matrix.Add([pscustomobject]@{
-    Group = Clean-Cell $f.Group
-    Feature = Clean-Cell $f.Feature
-    Status = $f.Status
+    Group = $groupClean
+    Feature = $featureClean
+    Status = $statusClean
+    WiringStatus = $wiringStatus
     ForecastRisk = $forecastRisk
     PlanCoverage = $planCoverage
     RequiredLayers = Format-FullList @($requiredList)
@@ -898,11 +997,14 @@ foreach ($f in $baseFeatures) {
     ADRRef = $adrRefText
     SharedContextRef = $sharedContextRefText
     Entity = Clean-Cell $layerCells['Entity']
-    Domain = Clean-Cell $layerCells['Domain']
+    Domain = $domainClean
     Database = Clean-Cell $layerCells['Database']
-    Adapter = Clean-Cell $layerCells['Adapter']
-    Router = Clean-Cell $layerCells['Router']
-    Frontend = Clean-Cell $layerCells['Frontend']
+    Adapter = $adapterClean
+    Router = $routerClean
+    FrontendList = $feSplit[0]
+    FrontendDetail = $feSplit[1]
+    Events = $eventsStatus
+    Security = $securityStatus
     KPIRef = Format-FullList @($kpiIds)
     ValidationRef = Format-FullList @($validationRefs)
     EvidenceRef = Format-FullList @($evidenceRefs)
@@ -935,7 +1037,8 @@ $auditDate = (Get-Date).ToString('yyyy-MM-dd')
 [void]$sb.AppendLine('This matrix is the canonical view for:')
 [void]$sb.AppendLine('- Feature status (`planned`, `in_progress`, `done`)')
 [void]$sb.AppendLine('- Requirement traceability (`Related Task (CSV)`, `Flow Ref`, task-scoped `PRD Ref` / `ADR Ref`, `Shared Context Ref`)')
-[void]$sb.AppendLine('- End-to-end chain coverage (`Entity -> Domain -> Database -> Adapter -> Router -> Frontend`)')
+[void]$sb.AppendLine('- End-to-end chain coverage')
+[void]$sb.AppendLine('  (`Entity -> Domain -> Database -> Adapter -> Router -> Frontend-List/Detail + Events/Security gates`)')
 [void]$sb.AppendLine('- Validation sources (`KPI`, `Validation Method`, evidence artifacts)')
 [void]$sb.AppendLine('- Missing CSV tasks needed to fully plan or complete a feature')
 [void]$sb.AppendLine('')
@@ -946,6 +1049,21 @@ $auditDate = (Get-Date).ToString('yyyy-MM-dd')
 [void]$sb.AppendLine('| `done` | Implemented and wired to active data/API paths for the primary user flow |')
 [void]$sb.AppendLine('| `in_progress` | Partially implemented, mock/placeholder behavior, or known integration gaps |')
 [void]$sb.AppendLine('| `planned` | Backlog item with no production-ready flow yet |')
+[void]$sb.AppendLine('')
+[void]$sb.AppendLine('### Wiring Status (Audit Overlay)')
+[void]$sb.AppendLine('')
+[void]$sb.AppendLine('Wiring status is determined by entity detail wiring audits (2026-03-03 to 2026-03-06).')
+[void]$sb.AppendLine('Audited entities: Lead, Contact, Account, Deal.')
+[void]$sb.AppendLine('')
+[void]$sb.AppendLine('| Wiring Status | Definition |')
+[void]$sb.AppendLine('|---|---|')
+[void]$sb.AppendLine('| `verified` | Audit-confirmed: wiring is functional end-to-end for the primary user flow |')
+[void]$sb.AppendLine('| `issues` | Audit found defects: functional but with gaps (no-op buttons, missing handlers, security issues) |')
+[void]$sb.AppendLine('| `unaudited` | Feature is `done` but has not yet been audited for wiring correctness |')
+[void]$sb.AppendLine('| `-` | Not applicable (feature is `planned`/`in_progress`, or group not yet audited) |')
+[void]$sb.AppendLine('')
+[void]$sb.AppendLine('Audit documents: `docs/audit/{lead,contact,account,deal}-detail-wiring-audit.md`')
+[void]$sb.AppendLine('Cross-reference: `docs/audit/feature-matrix-vs-audit-comparison.md`')
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('## Completeness Rubric')
 [void]$sb.AppendLine('')
@@ -969,7 +1087,17 @@ $auditDate = (Get-Date).ToString('yyyy-MM-dd')
 [void]$sb.AppendLine('Layer cell legend:')
 [void]$sb.AppendLine('- `not_required` = layer is not required for this feature type')
 [void]$sb.AppendLine('- `missing` = required layer has no linked CSV task')
-[void]$sb.AppendLine('- `done/in_progress/planned/partial (N task(s))` = layer has linked task coverage')
+[void]$sb.AppendLine('- `done/in_progress/planned/partial (N task(s))` = layer has linked task')
+[void]$sb.AppendLine('')
+[void]$sb.AppendLine('Quality gate legend (Events / Security columns):')
+[void]$sb.AppendLine('')
+[void]$sb.AppendLine('- `verified` = audit-confirmed functional')
+[void]$sb.AppendLine('- `issues (detail)` = audit found non-critical defects')
+[void]$sb.AppendLine('- `critical (detail)` = audit found CRITICAL security/data issues')
+[void]$sb.AppendLine('- `partial (N/M handlers)` = some event handlers implemented')
+[void]$sb.AppendLine('- `not-wired (0/M handlers)` = events defined but zero handlers registered')
+[void]$sb.AppendLine('- `not_required` = quality gate not applicable for this feature type')
+[void]$sb.AppendLine('- `unaudited` = not yet audited')
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('## Coverage Snapshot')
 [void]$sb.AppendLine('')
@@ -982,6 +1110,10 @@ $auditDate = (Get-Date).ToString('yyyy-MM-dd')
 [void]$sb.AppendLine("- Plan coverage: complete=$completeCount, partial=$partialCount, gap=$gapCount, at_risk=$atRiskCount")
 [void]$sb.AppendLine('- Missing required layers (count of features):')
 foreach ($ln in @('Entity','Domain','Database','Adapter','Router','Frontend')) { [void]$sb.AppendLine("  - ${ln}: $($missingByLayer[$ln])") }
+[void]$sb.AppendLine("  - Frontend-List: $($missingByLayer['Frontend-List'])")
+[void]$sb.AppendLine("  - Frontend-Detail: $($missingByLayer['Frontend-Detail'])")
+[void]$sb.AppendLine('  - Events: n/a (quality gate)')
+[void]$sb.AppendLine('  - Security: n/a (quality gate)')
 [void]$sb.AppendLine('')
 
 if ($topAtRisk.Count -gt 0) {
@@ -999,10 +1131,10 @@ if ($topAtRisk.Count -gt 0) {
 
 [void]$sb.AppendLine('## Feature Matrix')
 [void]$sb.AppendLine('')
-[void]$sb.AppendLine('| Group | Feature | Status | Forecast Risk | Plan Coverage | Required Layers | Purpose | Owner | Priority | Related Task (CSV) | Requirements | Flow Ref | PRD Ref | ADR Ref | Shared Context Ref | Entity | Domain | Database | Adapter | Router | Frontend | KPI Ref | Validation Ref | Evidence Ref | Missing CSV Task(s) | Notes |')
-[void]$sb.AppendLine('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|')
+[void]$sb.AppendLine('| Group | Feature | Status | Wiring Status | Forecast Risk | Plan Coverage | Required Layers | Purpose | Owner | Priority | Related Task (CSV) | Requirements | Flow Ref | PRD Ref | ADR Ref | Shared Context Ref | Entity | Domain | Database | Adapter | Router | Frontend-List | Frontend-Detail | Events | Security | KPI Ref | Validation Ref | Evidence Ref | Missing CSV Task(s) | Notes |')
+[void]$sb.AppendLine('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|')
 foreach ($m in $sorted) {
-  [void]$sb.AppendLine("| $($m.Group) | $($m.Feature) | $($m.Status) | $($m.ForecastRisk) | $($m.PlanCoverage) | $($m.RequiredLayers) | $($m.Purpose) | $($m.Owner) | $($m.Priority) | $($m.RelatedTask) | $($m.Requirements) | $($m.FlowRef) | $($m.PRDRef) | $($m.ADRRef) | $($m.SharedContextRef) | $($m.Entity) | $($m.Domain) | $($m.Database) | $($m.Adapter) | $($m.Router) | $($m.Frontend) | $($m.KPIRef) | $($m.ValidationRef) | $($m.EvidenceRef) | $($m.MissingTasks) | $($m.Notes) |")
+  [void]$sb.AppendLine("| $($m.Group) | $($m.Feature) | $($m.Status) | $($m.WiringStatus) | $($m.ForecastRisk) | $($m.PlanCoverage) | $($m.RequiredLayers) | $($m.Purpose) | $($m.Owner) | $($m.Priority) | $($m.RelatedTask) | $($m.Requirements) | $($m.FlowRef) | $($m.PRDRef) | $($m.ADRRef) | $($m.SharedContextRef) | $($m.Entity) | $($m.Domain) | $($m.Database) | $($m.Adapter) | $($m.Router) | $($m.FrontendList) | $($m.FrontendDetail) | $($m.Events) | $($m.Security) | $($m.KPIRef) | $($m.ValidationRef) | $($m.EvidenceRef) | $($m.MissingTasks) | $($m.Notes) |")
 }
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('## Maintenance Rules')
@@ -1021,6 +1153,7 @@ $featureRowsForHtml = @(
       Group = $_.Group
       Feature = $_.Feature
       Status = $_.Status
+      WiringStatus = $_.WiringStatus
       ForecastRisk = $_.ForecastRisk
       PlanCoverage = $_.PlanCoverage
       RequiredLayers = $_.RequiredLayers
@@ -1038,7 +1171,10 @@ $featureRowsForHtml = @(
       Database = $_.Database
       Adapter = $_.Adapter
       Router = $_.Router
-      Frontend = $_.Frontend
+      FrontendList = $_.FrontendList
+      FrontendDetail = $_.FrontendDetail
+      Events = $_.Events
+      Security = $_.Security
       KPIRef = $_.KPIRef
       ValidationRef = $_.ValidationRef
       EvidenceRef = $_.EvidenceRef
@@ -1455,7 +1591,10 @@ $htmlTemplate = @'
             ['Forecast Risk', r.ForecastRisk || 'low'],
             ['Owner / Priority', r.Owner + ' / ' + r.Priority],
             ['Requirements', r.Requirements],
-            ['Layer Status', 'Entity: ' + r.Entity + '\nDomain: ' + r.Domain + '\nDatabase: ' + r.Database + '\nAdapter: ' + r.Adapter + '\nRouter: ' + r.Router + '\nFrontend: ' + r.Frontend],
+            ['Wiring Status', r.WiringStatus || '-'],
+            ['Layer Status', 'Entity: ' + r.Entity + '\nDomain: ' + r.Domain + '\nDatabase: ' + r.Database + '\nAdapter: ' + r.Adapter + '\nRouter: ' + r.Router + '\nFE-List: ' + r.FrontendList + '\nFE-Detail: ' + r.FrontendDetail],
+            ['Events', r.Events || 'unaudited'],
+            ['Security', r.Security || 'unaudited'],
             ['KPI Ref', r.KPIRef],
             ['Validation Ref', r.ValidationRef],
             ['Evidence Ref', r.EvidenceRef],

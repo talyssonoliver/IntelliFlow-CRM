@@ -30,12 +30,12 @@ beforeAll(() => {
   }
 
   originalResizeObserver = globalThis.ResizeObserver;
-  globalThis.ResizeObserver = class ResizeObserver {
+  globalThis.ResizeObserver = class MockResizeObserver implements ResizeObserver {
     observe = vi.fn();
     unobserve = vi.fn();
     disconnect = vi.fn();
     constructor(_callback: ResizeObserverCallback) {}
-  } as unknown as typeof ResizeObserver;
+  };
 });
 
 // Cleanup after each test

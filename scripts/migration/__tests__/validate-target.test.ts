@@ -6,12 +6,53 @@ import { generateLog, type ValidationSummary, type ValidationResult } from '../v
 // ============================================
 function makeSummary(overrides: Partial<ValidationSummary> = {}): ValidationSummary {
   const results: ValidationResult[] = overrides.results ?? [
-    { category: 'PRIMARY_KEY', check: 'UNIQUENESS', entity: 'users', passed: true, message: 'All primary keys unique', duration: 5 },
-    { category: 'FOREIGN_KEY', check: 'leads.owner_id -> users.id', entity: 'leads', passed: true, message: 'All references valid', duration: 8 },
-    { category: 'NOT_NULL', check: 'users.email', entity: 'users', passed: true, message: 'No NULL values', duration: 2 },
-    { category: 'DATA_FORMAT', check: 'EMAIL_FORMAT', entity: 'users', passed: true, message: 'All emails valid', duration: 15 },
-    { category: 'INDEX', check: 'KEY_INDEXES_EXIST', passed: true, message: 'Found 45 indexes', duration: 12 },
-    { category: 'PERFORMANCE', check: 'SIMPLE_QUERY_TIME', entity: 'leads', passed: true, message: 'Query completed in 8ms', duration: 8 },
+    {
+      category: 'PRIMARY_KEY',
+      check: 'UNIQUENESS',
+      entity: 'users',
+      passed: true,
+      message: 'All primary keys unique',
+      duration: 5,
+    },
+    {
+      category: 'FOREIGN_KEY',
+      check: 'leads.owner_id -> users.id',
+      entity: 'leads',
+      passed: true,
+      message: 'All references valid',
+      duration: 8,
+    },
+    {
+      category: 'NOT_NULL',
+      check: 'users.email',
+      entity: 'users',
+      passed: true,
+      message: 'No NULL values',
+      duration: 2,
+    },
+    {
+      category: 'DATA_FORMAT',
+      check: 'EMAIL_FORMAT',
+      entity: 'users',
+      passed: true,
+      message: 'All emails valid',
+      duration: 15,
+    },
+    {
+      category: 'INDEX',
+      check: 'KEY_INDEXES_EXIST',
+      passed: true,
+      message: 'Found 45 indexes',
+      duration: 12,
+    },
+    {
+      category: 'PERFORMANCE',
+      check: 'SIMPLE_QUERY_TIME',
+      entity: 'leads',
+      passed: true,
+      message: 'Query completed in 8ms',
+      duration: 8,
+    },
   ];
 
   return {
@@ -58,8 +99,22 @@ describe('generateLog', () => {
   it('lists failed checks in dedicated section', () => {
     const summary = makeSummary({
       results: [
-        { category: 'PRIMARY_KEY', check: 'UNIQUENESS', entity: 'users', passed: false, message: 'Found 3 duplicates', duration: 5 },
-        { category: 'FOREIGN_KEY', check: 'FK_CHECK', entity: 'leads', passed: true, message: 'All valid', duration: 8 },
+        {
+          category: 'PRIMARY_KEY',
+          check: 'UNIQUENESS',
+          entity: 'users',
+          passed: false,
+          message: 'Found 3 duplicates',
+          duration: 5,
+        },
+        {
+          category: 'FOREIGN_KEY',
+          check: 'FK_CHECK',
+          entity: 'leads',
+          passed: true,
+          message: 'All valid',
+          duration: 8,
+        },
       ],
     });
     // Recalculate passed/failed
@@ -126,11 +181,16 @@ describe('NOT_NULL checks', () => {
   it('validates required columns across all tables', async () => {
     // The validateNotNullConstraints function checks these columns
     const requiredColumns = [
-      'users.email', 'users.tenant_id',
-      'leads.first_name', 'leads.email', 'leads.tenant_id',
-      'contacts.first_name', 'contacts.email',
+      'users.email',
+      'users.tenant_id',
+      'leads.first_name',
+      'leads.email',
+      'leads.tenant_id',
+      'contacts.first_name',
+      'contacts.email',
       'accounts.name',
-      'opportunities.name', 'opportunities.stage',
+      'opportunities.name',
+      'opportunities.stage',
     ];
 
     // Verify function is exported

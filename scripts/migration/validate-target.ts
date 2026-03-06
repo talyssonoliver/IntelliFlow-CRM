@@ -140,7 +140,9 @@ export async function validateForeignKeys(prisma: PrismaClient): Promise<Validat
   return results;
 }
 
-export async function validateNotNullConstraints(prisma: PrismaClient): Promise<ValidationResult[]> {
+export async function validateNotNullConstraints(
+  prisma: PrismaClient
+): Promise<ValidationResult[]> {
   const results: ValidationResult[] = [];
 
   const notNullChecks = [

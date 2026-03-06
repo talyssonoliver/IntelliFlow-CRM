@@ -14,14 +14,8 @@ import { fileURLToPath } from 'node:url';
 import { parse } from 'csv-parse/sync';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const CSV_PATH = join(
-  __dirname,
-  '../../apps/project-tracker/docs/metrics/_global/Sprint_plan.csv'
-);
-const OUTPUT_PATH = join(
-  __dirname,
-  '../../artifacts/reports/cadence-freshness-report.json'
-);
+const CSV_PATH = join(__dirname, '../../apps/project-tracker/docs/metrics/_global/Sprint_plan.csv');
+const OUTPUT_PATH = join(__dirname, '../../artifacts/reports/cadence-freshness-report.json');
 
 // ============================================================================
 // TYPES
@@ -94,19 +88,14 @@ function parseArtifacts(artifactStr: string): string[] {
 /**
  * Check artifact freshness against threshold.
  */
-function checkArtifactFreshness(
-  artifactPath: string,
-  thresholdDays: number
-): ArtifactFreshness {
+function checkArtifactFreshness(artifactPath: string, thresholdDays: number): ArtifactFreshness {
   const fullPath = join(process.cwd(), artifactPath);
 
   try {
     const stats = statSync(fullPath);
     const now = new Date();
     const mtime = stats.mtime;
-    const ageDays = Math.floor(
-      (now.getTime() - mtime.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const ageDays = Math.floor((now.getTime() - mtime.getTime()) / (1000 * 60 * 60 * 24));
 
     return {
       path: artifactPath,
@@ -142,10 +131,7 @@ function main(): void {
 
   // Filter to continuous tasks with cadence values that are completed
   const continuousTasks = tasks.filter(
-    (t) =>
-      t['Cadence'] &&
-      t['Cadence'].trim() !== '' &&
-      t['Status']?.toLowerCase() === 'completed'
+    (t) => t['Cadence'] && t['Cadence'].trim() !== '' && t['Status']?.toLowerCase() === 'completed'
   );
 
   console.log(`Total tasks: ${tasks.length}`);
@@ -160,9 +146,7 @@ function main(): void {
     const thresholdDays = parseCadenceThreshold(cadence);
     const artifactPaths = parseArtifacts(task['Artifacts To Track'] || '');
 
-    const artifactResults = artifactPaths.map((p) =>
-      checkArtifactFreshness(p, thresholdDays)
-    );
+    const artifactResults = artifactPaths.map((p) => checkArtifactFreshness(p, thresholdDays));
 
     // Task is stale if ANY artifact is stale or missing
     let taskStatus: 'fresh' | 'stale' | 'missing' = 'fresh';
@@ -172,9 +156,7 @@ function main(): void {
       taskStatus = 'stale';
     }
 
-    console.log(
-      `[${taskId}] ${cadence} → ${taskStatus} (${artifactResults.length} artifacts)`
-    );
+    console.log(`[${taskId}] ${cadence} → ${taskStatus} (${artifactResults.length} artifacts)`);
 
     taskResults.push({
       task_id: taskId,

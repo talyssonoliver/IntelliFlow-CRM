@@ -7,7 +7,7 @@
   "created_by": "Security Engineer",
   "expires_at": "2026-03-23T23:59:59Z",
   "closed_at": "2025-12-29T12:01:01Z",
-  "closure_notes": "Semgrep gate enabled in audit-matrix.yml; waiver retired and debt closed.",
+  "closure_notes": "Semgrep-security-audit gate enabled in audit-matrix.yml; waiver retired and debt closed.",
   "review_cadence": "quarterly",
   "alternative_controls": [
     "eslint-max-warnings-0 (enabled, covers code quality)",

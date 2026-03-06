@@ -22,9 +22,7 @@ async function callWebhook(request: any, payload: Record<string, unknown>) {
 }
 
 test.describe('Inbound Email Webhook (email.webhook)', () => {
-  test('POST valid SendGrid inbound payload returns 200 + success', async ({
-    request,
-  }) => {
+  test('POST valid SendGrid inbound payload returns 200 + success', async ({ request }) => {
     const response = await callWebhook(request, {
       from: 'sender@example.com',
       to: 'inbox@intelliflow-crm.com',
@@ -47,9 +45,7 @@ test.describe('Inbound Email Webhook (email.webhook)', () => {
     expect(typeof data.emailId).toBe('string');
   });
 
-  test('POST malformed payload (missing required info) returns error', async ({
-    request,
-  }) => {
+  test('POST malformed payload (missing required info) returns error', async ({ request }) => {
     // No headers, no rawEmail, no provider — triggers "Unable to parse email format"
     const response = await callWebhook(request, {});
 
@@ -64,9 +60,7 @@ test.describe('Inbound Email Webhook (email.webhook)', () => {
     }
   });
 
-  test('POST with rawEmail format returns 200 + success', async ({
-    request,
-  }) => {
+  test('POST with rawEmail format returns 200 + success', async ({ request }) => {
     const rawEmail = [
       'From: rawtest@example.com',
       'To: inbox@intelliflow-crm.com',

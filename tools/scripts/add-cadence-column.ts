@@ -15,10 +15,7 @@ import Papa from 'papaparse';
 import { splitSprintPlan } from './split-sprint-plan.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const CSV_PATH = join(
-  __dirname,
-  '../../apps/project-tracker/docs/metrics/_global/Sprint_plan.csv'
-);
+const CSV_PATH = join(__dirname, '../../apps/project-tracker/docs/metrics/_global/Sprint_plan.csv');
 
 /** Cadence values for the 5 continuous EXP-REPORTS tasks */
 const CADENCE_MAP: Record<string, string> = {
@@ -74,9 +71,7 @@ function main(): void {
   console.log('\nRegenerating split files...');
   const result = splitSprintPlan();
   if (result.success) {
-    console.log(
-      `Split files regenerated: ${result.parts.length} parts, ${result.sourceRows} rows`
-    );
+    console.log(`Split files regenerated: ${result.parts.length} parts, ${result.sourceRows} rows`);
   } else {
     console.error(`Split failed: ${result.error}`);
   }

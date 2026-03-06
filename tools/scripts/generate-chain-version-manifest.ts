@@ -12,7 +12,8 @@
 
 import fs from 'fs';
 import path from 'path';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@intelliflow/db';
+import { PrismaPg } from '@prisma/adapter-pg';
 import { CHAIN_TYPES, CHAIN_VERSION_DEFAULTS } from '@intelliflow/domain';
 
 // =============================================================================
@@ -196,7 +197,8 @@ async function getChainVersionsFromDatabase(): Promise<Record<string, ChainConfi
     return null;
   }
 
-  const prisma = new PrismaClient();
+  const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+  const prisma = new PrismaClient({ adapter });
 
   try {
     // Query all chain versions grouped by chain type

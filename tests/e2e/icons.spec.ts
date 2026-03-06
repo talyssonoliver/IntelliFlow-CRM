@@ -11,6 +11,13 @@
 
 import { test, expect } from '@playwright/test';
 
+declare global {
+  interface Window {
+    layoutShifts: number[];
+    capturedIconTexts: string[];
+  }
+}
+
 test.describe('Material Symbols Icons Loading', () => {
   test.describe('Font Loading', () => {
     test('should add fonts-ready class once fonts are loaded', async ({ page }) => {
@@ -95,14 +102,12 @@ test.describe('Material Symbols Icons Loading', () => {
     test('icons should not cause layout shift on load', async ({ page }) => {
       // Set up layout shift observer before navigation
       await page.addInitScript(() => {
-        (window as unknown as { layoutShifts: number[] }).layoutShifts = [];
+        window.layoutShifts = [];
         new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
             const layoutShiftEntry = entry as PerformanceEntry & { value: number };
             if (layoutShiftEntry.value !== undefined) {
-              (window as unknown as { layoutShifts: number[] }).layoutShifts.push(
-                layoutShiftEntry.value
-              );
+              window.layoutShifts.push(layoutShiftEntry.value);
             }
           }
         }).observe({ entryTypes: ['layout-shift'] });
@@ -118,7 +123,7 @@ test.describe('Material Symbols Icons Loading', () => {
 
       // Get cumulative layout shift
       const cls = await page.evaluate(() => {
-        const shifts = (window as unknown as { layoutShifts: number[] }).layoutShifts || [];
+        const shifts = window.layoutShifts || [];
         return shifts.reduce((sum, value) => sum + value, 0);
       });
 
@@ -141,12 +146,12 @@ test.describe('Material Symbols Icons Loading', () => {
 
       await page.addInitScript(() => {
         // Override to capture icon text content early
-        (window as unknown as { capturedIconTexts: string[] }).capturedIconTexts = [];
+        window.capturedIconTexts = [];
         const observer = new MutationObserver(() => {
           document.querySelectorAll('.material-symbols-outlined').forEach((el) => {
             const text = el.textContent?.trim() || '';
             if (text && !document.documentElement.classList.contains('fonts-ready')) {
-              (window as unknown as { capturedIconTexts: string[] }).capturedIconTexts.push(text);
+              window.capturedIconTexts.push(text);
             }
           });
         });

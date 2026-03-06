@@ -517,9 +517,10 @@ export function sanitizeForLog(record: Record<string, unknown>): Record<string, 
 
 export const EXPECTED_SCHEMA_VERSION = '1.0.0';
 
-export function validateSchemaVersion(
-  sourceSchema: { version: string }
-): { valid: boolean; message: string } {
+export function validateSchemaVersion(sourceSchema: { version: string }): {
+  valid: boolean;
+  message: string;
+} {
   if (sourceSchema.version !== EXPECTED_SCHEMA_VERSION) {
     return {
       valid: false,
