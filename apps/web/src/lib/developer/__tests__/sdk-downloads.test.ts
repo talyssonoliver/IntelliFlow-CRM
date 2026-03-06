@@ -1,9 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import {
-  SDK_REGISTRY,
-  getInstallCommand,
-  getSdkByLanguage,
-} from '../sdk-downloads';
+import { SDK_REGISTRY, getInstallCommand, getSdkByLanguage } from '../sdk-downloads';
 
 describe('sdk-downloads', () => {
   describe('SDK_REGISTRY', () => {

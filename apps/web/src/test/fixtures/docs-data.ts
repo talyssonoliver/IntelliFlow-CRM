@@ -40,23 +40,21 @@ export const mockDocsCategories: DocCategory[] = [
     id: 'architecture',
     title: 'Architecture',
     description:
-      'Hexagonal architecture, DDD bounded contexts, and 25 Architecture Decision Records',
-    href: 'https://intelliflow-crm.dev/docs/architecture',
+      'Hexagonal architecture, DDD bounded contexts, and 43 Architecture Decision Records',
+    href: '/docs/architecture',
     icon: 'architecture',
     color: 'bg-indigo-500',
-    docCount: 25,
-    external: true,
+    docCount: 43,
   },
   {
     id: 'developer-guides',
     title: 'Developer Guides',
     description:
       'Step-by-step tutorials for building features, testing strategies, and best practices',
-    href: 'https://intelliflow-crm.dev/docs/guides',
+    href: '/docs/guides',
     icon: 'code',
     color: 'bg-emerald-500',
     docCount: 20,
-    external: true,
   },
   {
     id: 'integration-resources',
@@ -75,5 +73,14 @@ export const mockDocsCategories: DocCategory[] = [
     icon: 'history',
     color: 'bg-violet-500',
     docCount: 7,
+  },
+  {
+    id: 'video-tutorials',
+    title: 'Video Tutorials',
+    description: 'Step-by-step video guides for common CRM workflows and features',
+    href: '/docs/videos',
+    icon: 'play_circle',
+    color: 'bg-rose-500',
+    comingSoon: true,
   },
 ];

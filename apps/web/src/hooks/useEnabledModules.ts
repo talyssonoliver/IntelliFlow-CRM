@@ -35,18 +35,15 @@ export interface UseEnabledModulesResult {
 }
 
 export function useEnabledModules(): UseEnabledModulesResult {
-  const { data, isLoading, isError } = trpc.moduleAccess.getEnabledModules.useQuery(
-    undefined,
-    {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnWindowFocus: false,
-      // Fallback: if query fails, show Professional-tier modules (graceful degradation)
-      placeholderData: {
-        modules: [...MODULE_PLAN_MAP.PROFESSIONAL] as ModuleId[],
-        plan: 'PROFESSIONAL' as const,
-      },
-    }
-  );
+  const { data, isLoading, isError } = trpc.moduleAccess.getEnabledModules.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: false,
+    // Fallback: if query fails, show Professional-tier modules (graceful degradation)
+    placeholderData: {
+      modules: [...MODULE_PLAN_MAP.PROFESSIONAL] as ModuleId[],
+      plan: 'PROFESSIONAL' as const,
+    },
+  });
 
   const enabledModules = (data?.modules ?? [...MODULE_PLAN_MAP.PROFESSIONAL]) as ModuleId[];
   const plan = data?.plan;
@@ -56,10 +53,7 @@ export function useEnabledModules(): UseEnabledModulesResult {
     return (moduleId: ModuleId) => enabledSet.has(moduleId);
   }, [enabledModules]);
 
-  const enabledRoutes = useMemo(
-    () => getRoutesForModules(enabledModules),
-    [enabledModules]
-  );
+  const enabledRoutes = useMemo(() => getRoutesForModules(enabledModules), [enabledModules]);
 
   return {
     enabledModules,

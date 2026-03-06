@@ -134,7 +134,7 @@ describe('toFilterOptions', () => {
   });
 
   it('handles empty array', () => {
-    const options = toFilterOptions([] as unknown as readonly string[]);
+    const options = toFilterOptions([] as any as readonly string[]); // test-only mock
     expect(options).toEqual([]);
   });
 });
@@ -179,7 +179,7 @@ describe('toFilterChips', () => {
   });
 
   it('handles empty array', () => {
-    expect(toFilterChips([] as unknown as readonly string[])).toEqual([]);
+    expect(toFilterChips([] as any as readonly string[])).toEqual([]); // test-only mock
   });
 });
 

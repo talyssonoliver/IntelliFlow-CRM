@@ -64,7 +64,7 @@ describe('AuthBroadcast supplementary2', () => {
     MockBroadcastChannel.clearInstances();
     storageListeners = [];
 
-    globalThis.BroadcastChannel = MockBroadcastChannel as unknown as typeof BroadcastChannel;
+    globalThis.BroadcastChannel = MockBroadcastChannel as any; // test-only mock
 
     // Track storage event listeners
     const origAddEvent = window.addEventListener.bind(window);
@@ -278,7 +278,7 @@ describe('AuthBroadcast supplementary2', () => {
 
       bc.destroy();
       // Restore BroadcastChannel
-      globalThis.BroadcastChannel = MockBroadcastChannel as unknown as typeof BroadcastChannel;
+      globalThis.BroadcastChannel = MockBroadcastChannel as any; // test-only mock
     });
 
     it('ignores storage event with wrong key', async () => {
@@ -300,7 +300,7 @@ describe('AuthBroadcast supplementary2', () => {
       expect(cb).not.toHaveBeenCalled();
 
       bc.destroy();
-      globalThis.BroadcastChannel = MockBroadcastChannel as unknown as typeof BroadcastChannel;
+      globalThis.BroadcastChannel = MockBroadcastChannel as any; // test-only mock
     });
 
     it('ignores storage event with null newValue', async () => {
@@ -322,7 +322,7 @@ describe('AuthBroadcast supplementary2', () => {
       expect(cb).not.toHaveBeenCalled();
 
       bc.destroy();
-      globalThis.BroadcastChannel = MockBroadcastChannel as unknown as typeof BroadcastChannel;
+      globalThis.BroadcastChannel = MockBroadcastChannel as any; // test-only mock
     });
   });
 

@@ -221,7 +221,7 @@ export function sanitizeInput(input: string): string {
   return (
     input
       // Remove HTML tags
-      .replace(/<[^>]*>/g, '')
+      .replace(/<[^>]{0,2000}>/g, '')
       // Escape HTML entities
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -251,7 +251,7 @@ export function sanitizeEmail(email: string): string {
     .toLowerCase()
     .trim()
     // Remove any HTML/script tags
-    .replace(/<[^>]*>/g, '')
+    .replace(/<[^>]{0,2000}>/g, '')
     // Remove null bytes
     .replace(/\0/g, '');
 
@@ -277,11 +277,19 @@ export function sanitizeEmail(email: string): string {
 export function sanitizePassword(password: string): string {
   if (!password) return '';
 
-  return (
-    password
-      // Remove null bytes and other control characters
-      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
-  );
+  // Remove disallowed control characters while preserving the rest of the password verbatim.
+  return Array.from(password)
+    .filter((char) => {
+      const code = char.charCodeAt(0);
+      return !(
+        (code >= 0 && code <= 8) ||
+        code === 11 ||
+        code === 12 ||
+        (code >= 14 && code <= 31) ||
+        code === 127
+      );
+    })
+    .join('');
 }
 
 // ============================================

@@ -86,7 +86,10 @@ export function extractOAuthParams(searchParams: URLSearchParams): OAuthParams {
 
   // Validate provider is one of the known types (all 4 OAUTH_PROVIDERS)
   const provider: OAuthProvider | null =
-    providerRaw === 'google' || providerRaw === 'azure' || providerRaw === 'github' || providerRaw === 'linkedin'
+    providerRaw === 'google' ||
+    providerRaw === 'azure' ||
+    providerRaw === 'github' ||
+    providerRaw === 'linkedin'
       ? providerRaw
       : null;
 

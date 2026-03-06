@@ -220,8 +220,7 @@ export function canRemoveCard(
   if (hasActiveSubscription && card.isDefault && allPaymentMethods.length > 1) {
     return {
       canRemove: true,
-      reason:
-        'This is your default payment method. Removing it will set another card as default.',
+      reason: 'This is your default payment method. Removing it will set another card as default.',
     };
   }
 

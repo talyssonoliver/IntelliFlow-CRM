@@ -457,7 +457,9 @@ describe('getPaymentErrorMessage', () => {
 
   it('should return message for THREE_D_SECURE_FAILED', () => {
     const message = getPaymentErrorMessage('THREE_D_SECURE_FAILED');
-    expect(message).toBe('3D Secure verification failed. Please try again or use a different card.');
+    expect(message).toBe(
+      '3D Secure verification failed. Please try again or use a different card.'
+    );
   });
 
   it('should return generic message for unknown error', () => {

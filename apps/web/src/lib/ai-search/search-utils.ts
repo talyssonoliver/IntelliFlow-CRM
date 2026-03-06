@@ -41,7 +41,9 @@ export function getSourceIcon(source: string): string {
 }
 
 export function getSourceColor(source: string): string {
-  return SOURCE_COLORS[source] ?? 'bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400';
+  return (
+    SOURCE_COLORS[source] ?? 'bg-gray-100 text-gray-600 dark:bg-gray-900/30 dark:text-gray-400'
+  );
 }
 
 export function getSourceLabel(source: string): string {
@@ -66,7 +68,8 @@ export function getSourceHref(source: string, id: string): string {
 
 export function getRelevanceBadgeClass(score: number): string {
   if (score > 0.8) return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-  if (score >= 0.6) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+  if (score >= 0.6)
+    return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
   return 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400';
 }
 

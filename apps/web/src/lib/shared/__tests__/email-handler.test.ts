@@ -70,7 +70,7 @@ describe('Email Handler', () => {
         phone: '+1 (234) 567-890',
       };
 
-      const payload = buildContactEmailPayload(dataWithPhone as unknown as ContactFormInput);
+      const payload = buildContactEmailPayload(dataWithPhone as any as ContactFormInput); // test-only mock
 
       expect(payload.htmlBody).toContain('234');
     });

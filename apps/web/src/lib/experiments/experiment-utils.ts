@@ -19,10 +19,7 @@ export function formatPValue(pValue: number): string {
 }
 
 /** Get plain-English significance description */
-export function getSignificanceDescription(
-  pValue: number,
-  alpha: number = 0.05
-): string {
+export function getSignificanceDescription(pValue: number, alpha: number = 0.05): string {
   if (pValue < alpha) {
     if (pValue < 0.001) return 'Highly significant (p < 0.001)';
     if (pValue < 0.01) return 'Very significant (p < 0.01)';
@@ -41,10 +38,7 @@ export function interpretEffectSize(d: number): string {
 }
 
 /** Format confidence interval for display */
-export function formatConfidenceInterval(
-  lower: number,
-  upper: number
-): string {
+export function formatConfidenceInterval(lower: number, upper: number): string {
   return `[${lower.toFixed(1)}, ${upper.toFixed(1)}]`;
 }
 
@@ -90,9 +84,7 @@ export function getExperimentActions(
 ): { label: string; action: string; icon: string }[] {
   switch (status) {
     case 'DRAFT':
-      return [
-        { label: 'Start', action: 'start', icon: 'play_arrow' },
-      ];
+      return [{ label: 'Start', action: 'start', icon: 'play_arrow' }];
     case 'RUNNING':
       return [
         { label: 'Pause', action: 'pause', icon: 'pause' },
@@ -104,9 +96,7 @@ export function getExperimentActions(
         { label: 'Complete', action: 'complete', icon: 'check_circle' },
       ];
     case 'COMPLETED':
-      return [
-        { label: 'Archive', action: 'archive', icon: 'archive' },
-      ];
+      return [{ label: 'Archive', action: 'archive', icon: 'archive' }];
     default:
       return [];
   }
@@ -117,20 +107,13 @@ export function getExperimentActions(
 // =============================================================================
 
 /** Compute aggregate stats from experiment list */
-export function computeExperimentStats(
-  experiments: ExperimentSummary[]
-): ExperimentStats {
+export function computeExperimentStats(experiments: ExperimentSummary[]): ExperimentStats {
   const running = experiments.filter((e) => e.status === 'RUNNING').length;
   const completed = experiments.filter((e) => e.status === 'COMPLETED').length;
-  const significant = experiments.filter(
-    (e) => e.isSignificant === true
-  ).length;
+  const significant = experiments.filter((e) => e.isSignificant === true).length;
   const avgProgress =
     experiments.length > 0
-      ? Math.round(
-          experiments.reduce((sum, e) => sum + e.progressPercent, 0) /
-            experiments.length
-        )
+      ? Math.round(experiments.reduce((sum, e) => sum + e.progressPercent, 0) / experiments.length)
       : 0;
 
   return {

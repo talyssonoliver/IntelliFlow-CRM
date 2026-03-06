@@ -16,6 +16,4 @@ const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
  * - Returns null if the publishable key env var is missing
  * - Calls loadStripe exactly once and caches the result
  */
-export const stripePromise: Promise<Stripe | null> | null = key
-  ? loadStripe(key)
-  : null;
+export const stripePromise: Promise<Stripe | null> | null = key ? loadStripe(key) : null;

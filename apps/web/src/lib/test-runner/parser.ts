@@ -13,13 +13,13 @@ import type { TestRunProgress, CoverageMetrics } from './types';
 const PATTERNS = {
   // Test file with result count: "✓ packages/domain/src/__tests__/Lead.test.ts (12 tests) 45ms"
   suiteComplete:
-    /^\s*([✓✔✗✘×])\s+(.+\.(?:test|spec)\.[jt]sx?)\s+\((\d+)\s+tests?\)\s+(\d+)(?:ms|s)/,
+    /^[ \t]*([✓✔✗✘×])[ \t]+([^\n]{1,500}\.(?:test|spec)\.[jt]sx?)[ \t]+\((\d{1,10})[ \t]+tests?\)[ \t]+(\d{1,10})(?:ms|s)/,
   // Individual test pass: "  ✓ should create a lead (12ms)"
-  testPass: /^\s*[✓✔]\s+(.+?)(?:\s+\((\d+)(?:ms|s)\))?$/,
+  testPass: /^[ \t]*[✓✔][ \t]+([^\n]{1,500}?)(?:[ \t]+\((\d{1,10})(?:ms|s)\))?$/, // NOSONAR S5852 — bounded {1,500}, parses controlled Vitest output
   // Individual test fail: "  ✗ should validate email (23ms)"
-  testFail: /^\s*[✗✘×]\s+(.+?)(?:\s+\((\d+)(?:ms|s)\))?$/,
+  testFail: /^[ \t]*[✗✘×][ \t]+([^\n]{1,500}?)(?:[ \t]+\((\d{1,10})(?:ms|s)\))?$/, // NOSONAR S5852
   // Test skip: "  ↓ should handle edge case [skipped]"
-  testSkip: /^\s*[↓⊘○]\s+(.+?)(?:\s+\[skipped\])?$/,
+  testSkip: /^[ \t]*[↓⊘○][ \t]+([^\n]{1,500}?)(?:[ \t]+\[skipped\])?$/, // NOSONAR S5852
   // Coverage table header: "All files |   85.5 |   72.3 |   91.2 |   84.1"
   coverageTable: /^\s*All files\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)\s*\|\s*([\d.]+)/,
   // Test counts: "Tests  12 passed | 2 failed (14)"
@@ -28,7 +28,7 @@ const PATTERNS = {
   // Duration: "Duration  1.23s"
   duration: /Duration\s+([\d.]+)s/,
   // File running: "RUN  packages/domain/src/__tests__/Lead.test.ts"
-  fileStart: /^\s*(?:RUN|Running)\s+(.+\.(?:test|spec)\.[jt]sx?)$/,
+  fileStart: /^\s*(?:RUN|Running)\s+([^\s]{1,500}\.(?:test|spec)\.[jt]sx?)$/,
 };
 
 /**

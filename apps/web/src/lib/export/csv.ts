@@ -165,4 +165,3 @@ export function exportPipelineToCSV(stages: PipelineStage[], filename = 'pipelin
 
   exportToCSV(data, { filename, headers });
 }
-

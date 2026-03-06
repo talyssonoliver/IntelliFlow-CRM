@@ -129,7 +129,7 @@ export function validateExpiry(expiry: string): ValidationResult {
   }
 
   // Remove non-numeric except /
-  const cleaned = expiry.replace(/[^\d/-]/g, '').replace(/-/g, '/');
+  const cleaned = expiry.replace(/[^\d/-]/g, '').replaceAll('-', '/');
 
   // Extract month and year
   let month: number;

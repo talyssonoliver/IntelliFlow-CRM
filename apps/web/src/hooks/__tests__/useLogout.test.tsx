@@ -151,7 +151,7 @@ describe('useLogout', () => {
       });
 
       const { authBroadcast } = await import('@/lib/broadcast');
-      expect(authBroadcast.broadcast).toHaveBeenCalledWith('LOGOUT_EVENT');
+      expect(authBroadcast!.broadcast).toHaveBeenCalledWith('LOGOUT_EVENT');
     });
 
     it('should attempt server notification via tRPC', async () => {

@@ -161,7 +161,7 @@ describe('downloadCSV', () => {
       style: {},
       click: vi.fn(),
     };
-    vi.spyOn(document, 'createElement').mockReturnValue(mockLink as unknown as HTMLElement);
+    vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any as HTMLElement);
     vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
     vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
 
@@ -217,7 +217,7 @@ describe('exportToCSV', () => {
       style: {},
       click: vi.fn(),
     };
-    vi.spyOn(document, 'createElement').mockReturnValue(mockLink as unknown as HTMLElement);
+    vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any as HTMLElement);
     vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
     vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
     globalThis.URL.createObjectURL = vi.fn().mockReturnValue('blob:url');
@@ -255,7 +255,7 @@ describe('exportAnalyticsToCSV', () => {
       style: {},
       click: vi.fn(),
     };
-    vi.spyOn(document, 'createElement').mockReturnValue(mockLink as unknown as HTMLElement);
+    vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any as HTMLElement);
     vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
     vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
     globalThis.URL.createObjectURL = vi.fn().mockReturnValue('blob:url');
@@ -290,7 +290,7 @@ describe('exportPipelineToCSV', () => {
       style: {},
       click: vi.fn(),
     };
-    vi.spyOn(document, 'createElement').mockReturnValue(mockLink as unknown as HTMLElement);
+    vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any as HTMLElement);
     vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
     vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
     globalThis.URL.createObjectURL = vi.fn().mockReturnValue('blob:url');

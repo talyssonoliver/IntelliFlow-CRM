@@ -6,6 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { renderHook } from '@testing-library/react';
 
 // Mock the domain module
 vi.mock('@intelliflow/domain', () => ({}));
@@ -720,18 +721,18 @@ describe('SLANotificationManager', () => {
 });
 
 describe('useSLANotifications', () => {
-  it('should return default values (placeholder hook)', () => {
-    const result = useSLANotifications();
+  it('should return default values', () => {
+    const { result } = renderHook(() => useSLANotifications());
 
-    expect(result.notifications).toEqual([]);
-    expect(result.unacknowledgedCount).toBe(0);
-    expect(typeof result.acknowledge).toBe('function');
+    expect(result.current.notifications).toEqual([]);
+    expect(result.current.unacknowledgedCount).toBe(0);
+    expect(typeof result.current.acknowledge).toBe('function');
   });
 
   it('should accept config parameter', () => {
-    const result = useSLANotifications({ channels: ['browser'] });
+    const { result } = renderHook(() => useSLANotifications({ channels: ['browser'] }));
 
-    expect(result.notifications).toEqual([]);
+    expect(result.current.notifications).toEqual([]);
   });
 });
 

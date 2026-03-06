@@ -28,8 +28,8 @@ describe('receipt-emailer', () => {
     });
 
     it('returns false for null/undefined', () => {
-      expect(isValidEmail(null as unknown as string)).toBe(false);
-      expect(isValidEmail(undefined as unknown as string)).toBe(false);
+      expect(isValidEmail(null as any as string)).toBe(false); // test-only mock
+      expect(isValidEmail(undefined as any as string)).toBe(false); // test-only mock
     });
   });
 

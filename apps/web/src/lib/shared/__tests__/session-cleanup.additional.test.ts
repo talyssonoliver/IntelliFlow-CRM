@@ -86,15 +86,17 @@ describe('session-cleanup (additional coverage)', () => {
     it('handles errors during localStorage iteration', () => {
       localStorage.setItem('accessToken', 'value');
       localStorage.setItem('intelliflow_cache', 'data');
+      localStorage.setItem('intelliflow_extra1', 'data1');
+      localStorage.setItem('intelliflow_extra2', 'data2');
 
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-      // Mock localStorage.key to throw on iteration (for intelliflow_ key scan)
+      // Mock localStorage.key to throw on second call (for intelliflow_ key scan)
       let callCount = 0;
       const originalKey = localStorage.key.bind(localStorage);
       vi.spyOn(localStorage, 'key').mockImplementation((index: number) => {
         callCount++;
-        if (callCount > 2) throw new Error('Storage error');
+        if (callCount > 1) throw new Error('Storage error');
         return originalKey(index);
       });
 

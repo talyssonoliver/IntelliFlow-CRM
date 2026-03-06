@@ -76,7 +76,7 @@ function storeAssignment(assignment: ExperimentAssignment): void {
  */
 function selectVariant(variants: Variant[]): Variant {
   const totalWeight = variants.reduce((sum, v) => sum + v.weight, 0);
-  let random = Math.random() * totalWeight;
+  let random = Math.random() * totalWeight; // NOSONAR — statistical sampling for A/B test variant selection, not security-sensitive
 
   for (const variant of variants) {
     random -= variant.weight;
@@ -181,20 +181,18 @@ function queueConversion(event: ConversionEvent): void {
  */
 function sendConversion(event: ConversionEvent): void {
   // Integration with analytics providers
-  if (typeof window !== 'undefined') {
-    // Google Analytics 4
-    if ('gtag' in window && typeof (window as { gtag?: Function }).gtag === 'function') {
-      (window as { gtag: Function }).gtag('event', 'ab_conversion', {
-        experiment_id: event.experimentId,
-        variant_id: event.variantId,
-        event_type: event.eventType,
-        ...event.metadata,
-      });
-    }
-
-    // Custom event for internal tracking
-    window.dispatchEvent(new CustomEvent('ab_conversion', { detail: event }));
+  // Google Analytics 4
+  if ('gtag' in window && typeof (window as { gtag?: Function }).gtag === 'function') {
+    (window as { gtag: Function }).gtag('event', 'ab_conversion', {
+      experiment_id: event.experimentId,
+      variant_id: event.variantId,
+      event_type: event.eventType,
+      ...event.metadata,
+    });
   }
+
+  // Custom event for internal tracking
+  window.dispatchEvent(new CustomEvent('ab_conversion', { detail: event }));
 }
 
 /**

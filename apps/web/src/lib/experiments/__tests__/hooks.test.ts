@@ -26,11 +26,7 @@ vi.mock('@/lib/api', () => ({
 import { api } from '@/lib/api';
 const mockApi = vi.mocked(api);
 
-import {
-  useExperimentsDashboard,
-  useExperimentResults,
-  useExperimentActions,
-} from '../hooks';
+import { useExperimentsDashboard, useExperimentResults, useExperimentActions } from '../hooks';
 
 describe('useExperimentsDashboard', () => {
   beforeEach(() => {

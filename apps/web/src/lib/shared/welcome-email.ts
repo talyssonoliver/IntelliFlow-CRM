@@ -428,7 +428,7 @@ export async function sendWelcomeEmail(
     return {
       ok: true,
       value: {
-        messageId: `welcome-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        messageId: `welcome-${Date.now()}-${crypto.randomUUID().replace(/-/g, '')}`,
         status: 'sent',
         timestamp: new Date().toISOString(),
       },

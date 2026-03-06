@@ -36,7 +36,12 @@ describe('useSentimentDashboard', () => {
   });
 
   it('calls tRPC useQuery with correct filter params', () => {
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: true, error: null, refetch: vi.fn() });
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+      refetch: vi.fn(),
+    });
     renderHook(() => useSentimentDashboard(defaultFilters));
 
     expect(mockUseQuery).toHaveBeenCalledWith({
@@ -48,7 +53,12 @@ describe('useSentimentDashboard', () => {
   });
 
   it('returns loading state when query is loading', () => {
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: true, error: null, refetch: vi.fn() });
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+      refetch: vi.fn(),
+    });
     const { result } = renderHook(() => useSentimentDashboard(defaultFilters));
 
     expect(result.current.isLoading).toBe(true);
@@ -65,7 +75,12 @@ describe('useSentimentDashboard', () => {
       recentAnalyses: mockSentimentAnalyses,
       trends: mockSentimentTrends,
     };
-    mockUseQuery.mockReturnValue({ data: dashboardData, isLoading: false, error: null, refetch: vi.fn() });
+    mockUseQuery.mockReturnValue({
+      data: dashboardData,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
     const { result } = renderHook(() => useSentimentDashboard(defaultFilters));
 
     expect(result.current.isLoading).toBe(false);
@@ -93,7 +108,12 @@ describe('useSentimentDashboard', () => {
   });
 
   it('passes different filter values to useQuery', () => {
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: false, error: null, refetch: vi.fn() });
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
     const filters: SentimentFilters = {
       entityType: 'lead',
       dateRange: '7d',

@@ -189,8 +189,8 @@ describe('login-security', () => {
     });
 
     it('returns empty for falsy input', () => {
-      expect(sanitizeInput(null as unknown as string)).toBe('');
-      expect(sanitizeInput(undefined as unknown as string)).toBe('');
+      expect(sanitizeInput(null as any)).toBe(''); // test-only: testing falsy input handling
+      expect(sanitizeInput(undefined as any)).toBe(''); // test-only: testing falsy input handling
     });
   });
 
@@ -200,7 +200,7 @@ describe('login-security', () => {
     });
 
     it('returns empty string for falsy input', () => {
-      expect(sanitizeEmail(null as unknown as string)).toBe('');
+      expect(sanitizeEmail(null as any)).toBe(''); // test-only: testing falsy input handling
     });
 
     it('lowercases email', () => {
@@ -245,7 +245,7 @@ describe('login-security', () => {
     });
 
     it('returns empty for falsy input', () => {
-      expect(sanitizePassword(null as unknown as string)).toBe('');
+      expect(sanitizePassword(null as any)).toBe(''); // test-only: testing falsy input handling
     });
 
     it('removes null bytes', () => {

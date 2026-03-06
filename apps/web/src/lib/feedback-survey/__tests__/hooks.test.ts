@@ -19,8 +19,12 @@ vi.mock('@/lib/api', () => ({
 }));
 
 // Import after mocks
-const { useFeedbackSurveyDashboard, useFeedbackNPSTrend, useFeedbackSentiment, useFeedbackExportData } =
-  await import('../hooks');
+const {
+  useFeedbackSurveyDashboard,
+  useFeedbackNPSTrend,
+  useFeedbackSentiment,
+  useFeedbackExportData,
+} = await import('../hooks');
 
 describe('Feedback Survey Hooks', () => {
   beforeEach(() => {
@@ -49,10 +53,7 @@ describe('Feedback Survey Hooks', () => {
       };
       useFeedbackSurveyDashboard(filters);
 
-      expect(mockUseQuery).toHaveBeenCalledWith(
-        filters,
-        expect.any(Object)
-      );
+      expect(mockUseQuery).toHaveBeenCalledWith(filters, expect.any(Object));
     });
 
     it('sets refetchInterval: 30_000', () => {
@@ -76,10 +77,7 @@ describe('Feedback Survey Hooks', () => {
   describe('useFeedbackNPSTrend', () => {
     it('calls trpc.feedbackSurvey.getNPSTrend', () => {
       useFeedbackNPSTrend({ granularity: 'day' });
-      expect(mockUseQuery).toHaveBeenCalledWith(
-        { granularity: 'day' },
-        expect.any(Object)
-      );
+      expect(mockUseQuery).toHaveBeenCalledWith({ granularity: 'day' }, expect.any(Object));
     });
 
     it('sets placeholderData to keep previous data', () => {
@@ -93,10 +91,7 @@ describe('Feedback Survey Hooks', () => {
   describe('useFeedbackSentiment', () => {
     it('calls trpc.feedbackSurvey.getSentimentBreakdown', () => {
       useFeedbackSentiment({ granularity: 'month' });
-      expect(mockUseQuery).toHaveBeenCalledWith(
-        { granularity: 'month' },
-        expect.any(Object)
-      );
+      expect(mockUseQuery).toHaveBeenCalledWith({ granularity: 'month' }, expect.any(Object));
     });
 
     it('sets placeholderData to keep previous data', () => {

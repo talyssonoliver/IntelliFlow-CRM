@@ -22,7 +22,7 @@ export function useAISearch(filters: AISearchFilters) {
       limit: filters.limit,
       offset: filters.offset,
     },
-    { enabled: hasQuery },
+    { enabled: hasQuery }
   );
 
   const data = query.data as AISearchResponse | undefined;

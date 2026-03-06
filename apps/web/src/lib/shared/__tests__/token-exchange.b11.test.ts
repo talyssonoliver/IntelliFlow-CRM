@@ -117,7 +117,7 @@ describe('token-exchange (b11 coverage)', () => {
 
   describe('extractOAuthParams - invalid provider', () => {
     it('returns null provider for unknown provider value', () => {
-      const params = new URLSearchParams('code=abc&provider=github');
+      const params = new URLSearchParams('code=abc&provider=facebook');
       const result = extractOAuthParams(params);
 
       expect(result.provider).toBeNull();

@@ -13,15 +13,7 @@
  * Uses crypto.randomUUID when available, falls back to manual generation.
  */
 function generateUUID(): string {
-  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-  // Fallback for environments without crypto.randomUUID
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
+  return crypto.randomUUID();
 }
 
 // =============================================================================
@@ -562,7 +554,7 @@ export async function getApprovalMetrics(
   // Calculate average review time for reviewed actions
   const reviewedActions = actionsInPeriod.filter((a) => a.reviewedAt);
   const totalReviewTime = reviewedActions.reduce(
-    (sum, a) => sum + (a.reviewedAt!.getTime() - a.createdAt.getTime()),
+    (sum, a) => sum + ((a.reviewedAt?.getTime() ?? 0) - a.createdAt.getTime()),
     0
   );
   const avgReviewTimeMs = reviewedActions.length > 0 ? totalReviewTime / reviewedActions.length : 0;

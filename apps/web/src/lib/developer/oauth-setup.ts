@@ -16,9 +16,7 @@ function bytesToHex(bytes: Uint8Array): string {
     .join('');
 }
 
-export function generateOAuthCredentials(
-  environment: 'production' | 'sandbox'
-): OAuthCredentials {
+export function generateOAuthCredentials(environment: 'production' | 'sandbox'): OAuthCredentials {
   const prefix = environment === 'production' ? 'prod' : 'test';
 
   const idBytes = new Uint8Array(16);
@@ -44,6 +42,7 @@ export function isValidWebhookUrl(
 
   const lower = url.toLowerCase();
   if (lower.startsWith('javascript:') || lower.startsWith('data:') || lower.startsWith('file:')) {
+    // NOSONAR — this is a security guard rejecting dangerous protocols, not using them
     return 'Invalid URL protocol';
   }
 

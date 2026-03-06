@@ -83,8 +83,9 @@ const PRIORITY_LEAD_TIMES: Record<TimelinePriority, number> = {
 // =============================================================================
 
 class RemindersService {
-  private reminders: Map<string, Reminder> = new Map();
-  private notificationCallbacks: Set<(notification: ReminderNotification) => void> = new Set();
+  private readonly reminders: Map<string, Reminder> = new Map();
+  private readonly notificationCallbacks: Set<(notification: ReminderNotification) => void> =
+    new Set();
   private checkInterval: NodeJS.Timeout | null = null;
 
   /**
@@ -126,7 +127,7 @@ class RemindersService {
    */
   createReminder(input: CreateReminderInput): Reminder {
     const reminder: Reminder = {
-      id: `reminder-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `reminder-${crypto.randomUUID()}`,
       type: input.type,
       title: input.title,
       description: input.description,

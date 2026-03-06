@@ -92,8 +92,8 @@ export function useAppointmentFilters() {
   const queryParams = useMemo(
     () => ({
       search: filters.search || undefined,
-      status: filters.status || undefined,
-      appointmentType: filters.appointmentType || undefined,
+      status: filters.status ? [filters.status] : undefined,
+      appointmentType: filters.appointmentType ? [filters.appointmentType] : undefined,
       startTimeFrom: filters.startTimeFrom?.toISOString(),
       startTimeTo: filters.startTimeTo?.toISOString(),
       caseId: filters.caseId || undefined,

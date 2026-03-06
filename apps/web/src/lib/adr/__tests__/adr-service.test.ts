@@ -67,14 +67,14 @@ import {
 } from '../adr-service';
 
 // Cast to Mock type for convenience
-const readFileSync = fs.readFileSync as unknown as Mock;
-const existsSync = fs.existsSync as unknown as Mock;
-const readdirSync = fs.readdirSync as unknown as Mock;
-const writeFileSync = fs.writeFileSync as unknown as Mock;
-const mkdirSync = fs.mkdirSync as unknown as Mock;
-const pathResolve = path.resolve as unknown as Mock;
-const pathRelative = path.relative as unknown as Mock;
-const pathJoin = path.join as unknown as Mock;
+const readFileSync = fs.readFileSync as any as Mock; // test-only mock;
+const existsSync = fs.existsSync as any as Mock; // test-only mock;
+const readdirSync = fs.readdirSync as any as Mock; // test-only mock;
+const writeFileSync = fs.writeFileSync as any as Mock; // test-only mock;
+const mkdirSync = fs.mkdirSync as any as Mock; // test-only mock;
+const pathResolve = path.resolve as any as Mock; // test-only mock;
+const pathRelative = path.relative as any as Mock; // test-only mock;
+const pathJoin = path.join as any as Mock; // test-only mock;
 
 const SAMPLE_ADR_CONTENT = `# ADR-001: Use TypeScript for Backend
 

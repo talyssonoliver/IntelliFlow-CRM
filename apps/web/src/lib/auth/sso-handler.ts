@@ -58,7 +58,7 @@ export const REDIRECT_ALLOWLIST = ['/', '/dashboard', '/settings'] as const;
  * @returns SsoResolution - found with config, or not found with optional suggestion
  */
 export function resolveSsoProvider(email: string): SsoResolution {
-  if (!email || !email.includes('@')) {
+  if (!email?.includes('@')) {
     return { found: false };
   }
 
@@ -68,7 +68,7 @@ export function resolveSsoProvider(email: string): SsoResolution {
   }
 
   const config = (providerConfig as ProviderConfigFile).providers.find(
-    (p) => p.domain.toLowerCase() === domain && p.enabled,
+    (p) => p.domain.toLowerCase() === domain && p.enabled
   );
 
   if (config) {
@@ -123,7 +123,5 @@ export function validateRedirectUrl(url: string): boolean {
   }
 
   // Check against allowlist — path must start with an allowed prefix
-  return REDIRECT_ALLOWLIST.some(
-    (allowed) => url === allowed || url.startsWith(`${allowed}/`),
-  );
+  return REDIRECT_ALLOWLIST.some((allowed) => url === allowed || url.startsWith(`${allowed}/`));
 }

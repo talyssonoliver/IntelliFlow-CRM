@@ -63,39 +63,35 @@ export function openInvoicePdf(url: string): void {
 }
 
 /**
- * Download invoice PDF file
- * Uses fetch to get the file and triggers browser download
+ * Download invoice PDF file.
+ * Fetches the PDF through our same-origin `/api/billing/pdf-proxy` route
+ * to avoid CORS blocks from Stripe, then creates a blob URL for download.
  */
 export async function downloadInvoicePdf(url: string, filename: string): Promise<void> {
   if (!isValidPdfUrl(url)) {
     throw new Error('Invalid PDF URL provided');
   }
 
-  try {
-    const response = await fetch(url);
+  const proxyUrl = `/api/billing/pdf-proxy?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
+  const response = await fetch(proxyUrl);
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch PDF: ${response.statusText}`);
-    }
-
-    const blob = await response.blob();
-    const blobUrl = URL.createObjectURL(blob);
-
-    const link = document.createElement('a');
-    link.href = blobUrl;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    // Clean up blob URL after download starts
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 100);
-  } catch (error) {
-    console.error('Failed to download invoice PDF:', error);
-    // Fallback: open in new tab if download fails
-    openInvoicePdf(url);
-    throw error;
+  if (!response.ok) {
+    const text = await response.text().catch(() => response.statusText);
+    throw new Error(`Failed to download PDF: ${text}`);
   }
+
+  const blob = await response.blob();
+  const blobUrl = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  // Clean up blob URL after browser starts the download
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
 }
 
 // ============================================

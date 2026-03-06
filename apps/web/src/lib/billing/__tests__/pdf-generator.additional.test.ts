@@ -117,28 +117,32 @@ describe('pdf-generator additional', () => {
       await expect(downloadInvoicePdf('bad', 'f.pdf')).rejects.toThrow('Invalid PDF URL');
     });
 
-    it('downloads via blob', async () => {
-      const blob = new Blob(['p']);
+    it('fetches via proxy and triggers blob download', async () => {
+      const blob = new Blob(['pdf-content'], { type: 'application/pdf' });
       mocks.fetch.mockResolvedValue({ ok: true, blob: vi.fn().mockResolvedValue(blob) });
       await downloadInvoicePdf('https://x.com/f.pdf', 'inv.pdf');
-      expect(mocks.fetch).toHaveBeenCalledWith('https://x.com/f.pdf');
+      expect(mocks.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/billing/pdf-proxy?url=')
+      );
       expect(mocks.click).toHaveBeenCalled();
-      vi.advanceTimersByTime(150);
-      expect(mocks.revokeObjectURL).toHaveBeenCalled();
     });
 
-    it('throws on non-ok response and falls back to window.open', async () => {
-      mocks.fetch.mockResolvedValue({ ok: false, statusText: 'Not Found' });
-      vi.spyOn(console, 'error').mockImplementation(() => {});
-      await expect(downloadInvoicePdf('https://x.com/f.pdf', 'i.pdf')).rejects.toThrow('Not Found');
-      expect(mocks.windowOpen).toHaveBeenCalled();
+    it('throws on non-ok proxy response', async () => {
+      mocks.fetch.mockResolvedValue({
+        ok: false,
+        text: vi.fn().mockResolvedValue('Host is not allowed.'),
+        statusText: 'Forbidden',
+      });
+      await expect(downloadInvoicePdf('https://x.com/f.pdf', 'i.pdf')).rejects.toThrow(
+        'Failed to download PDF'
+      );
     });
 
-    it('falls back on network error', async () => {
-      mocks.fetch.mockRejectedValue(new Error('Net'));
-      vi.spyOn(console, 'error').mockImplementation(() => {});
-      await expect(downloadInvoicePdf('https://x.com/f.pdf', 'i.pdf')).rejects.toThrow('Net');
-      expect(mocks.windowOpen).toHaveBeenCalled();
+    it('throws on network error', async () => {
+      mocks.fetch.mockRejectedValue(new Error('Network failure'));
+      await expect(downloadInvoicePdf('https://x.com/f.pdf', 'i.pdf')).rejects.toThrow(
+        'Network failure'
+      );
     });
   });
 

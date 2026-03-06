@@ -169,7 +169,7 @@ describe('printInvoice', () => {
       onload: null as unknown,
     };
 
-    vi.spyOn(document, 'createElement').mockReturnValue(mockIframe as unknown as HTMLElement);
+    vi.spyOn(document, 'createElement').mockReturnValue(mockIframe as any as HTMLElement); // test-only mock
     vi.spyOn(document.body, 'appendChild').mockImplementation((node) => node);
     vi.spyOn(document.body, 'removeChild').mockImplementation((node) => node);
   });

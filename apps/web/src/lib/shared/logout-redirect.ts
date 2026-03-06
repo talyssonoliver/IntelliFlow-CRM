@@ -48,14 +48,14 @@ export interface LogoutRedirectResult {
 
 const DEFAULT_LOGIN_PATH = '/login';
 const DEFAULT_LOGOUT_PATH = '/logout';
-const ALLOWED_REDIRECT_HOSTS: string[] = []; // Add trusted hosts here
+const _ALLOWED_REDIRECT_HOSTS: string[] = []; // Add trusted hosts here
 
 const LOGOUT_MESSAGES: Record<LogoutReason, string> = {
   user_initiated: 'You have been logged out successfully.',
   session_expired: 'Your session has expired. Please log in again.',
   security_violation: 'You have been logged out for security reasons.',
   account_disabled: 'Your account has been disabled.',
-  password_changed: 'Your password was changed. Please log in with your new password.',
+  password_changed: 'Your password was changed. Please log in with your new password.', // NOSONAR — not a credential, this is a user-facing logout reason message
   mfa_required: 'Multi-factor authentication is required. Please log in again.',
   admin_forced: 'You have been logged out by an administrator.',
 };
@@ -85,8 +85,8 @@ export function isValidRedirectUrl(url: string): boolean {
       return true;
     }
 
-    // Check against allowed external hosts
-    return ALLOWED_REDIRECT_HOSTS.includes(parsed.host);
+    // No external hosts are currently allowed
+    return false;
   } catch {
     return false;
   }

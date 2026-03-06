@@ -46,16 +46,12 @@ describe('useLeadScoringDashboard', () => {
 
   it('TC-H1: calls tRPC with correct dateRange filter', () => {
     renderHook(() => useLeadScoringDashboard({ ...defaultFilters, dateRange: '7d' }));
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ dateRange: '7d' })
-    );
+    expect(mockUseQuery).toHaveBeenCalledWith(expect.objectContaining({ dateRange: '7d' }));
   });
 
   it('TC-H2: calls tRPC with correct pagination params (page, limit)', () => {
     renderHook(() => useLeadScoringDashboard({ ...defaultFilters, page: 3, limit: 50 }));
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.objectContaining({ page: 3, limit: 50 })
-    );
+    expect(mockUseQuery).toHaveBeenCalledWith(expect.objectContaining({ page: 3, limit: 50 }));
   });
 
   it('TC-H3: transforms API data correctly', () => {
@@ -117,14 +113,11 @@ describe('useLeadScoringDashboard', () => {
   });
 
   it('TC-H8: pagination parameter updates trigger re-fetch', () => {
-    const { rerender } = renderHook(
-      ({ filters }) => useLeadScoringDashboard(filters),
-      { initialProps: { filters: defaultFilters } }
-    );
+    const { rerender } = renderHook(({ filters }) => useLeadScoringDashboard(filters), {
+      initialProps: { filters: defaultFilters },
+    });
     rerender({ filters: { ...defaultFilters, page: 2 } });
     // useQuery was called with updated page
-    expect(mockUseQuery).toHaveBeenLastCalledWith(
-      expect.objectContaining({ page: 2 })
-    );
+    expect(mockUseQuery).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }));
   });
 });

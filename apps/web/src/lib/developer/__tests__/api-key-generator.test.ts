@@ -3,7 +3,11 @@ import { generateApiKey, maskApiKey } from '../api-key-generator';
 
 describe('generateApiKey', () => {
   it('returns object with all required fields', () => {
-    const result = generateApiKey({ name: 'Test Key', environment: 'production', scopes: ['read'] });
+    const result = generateApiKey({
+      name: 'Test Key',
+      environment: 'production',
+      scopes: ['read'],
+    });
     expect(result).toHaveProperty('id');
     expect(result).toHaveProperty('name');
     expect(result).toHaveProperty('key');
@@ -14,12 +18,20 @@ describe('generateApiKey', () => {
   });
 
   it('production key starts with ifc_live_ prefix', () => {
-    const result = generateApiKey({ name: 'Prod Key', environment: 'production', scopes: ['read'] });
+    const result = generateApiKey({
+      name: 'Prod Key',
+      environment: 'production',
+      scopes: ['read'],
+    });
     expect(result.key).toMatch(/^ifc_live_/);
   });
 
   it('sandbox key starts with ifc_test_ prefix', () => {
-    const result = generateApiKey({ name: 'Sandbox Key', environment: 'sandbox', scopes: ['read'] });
+    const result = generateApiKey({
+      name: 'Sandbox Key',
+      environment: 'sandbox',
+      scopes: ['read'],
+    });
     expect(result.key).toMatch(/^ifc_test_/);
   });
 
@@ -52,9 +64,7 @@ describe('generateApiKey', () => {
 
   it('id is a valid UUID format', () => {
     const result = generateApiKey({ name: 'Test', environment: 'production', scopes: ['read'] });
-    expect(result.id).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
-    );
+    expect(result.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
   });
 
   it('createdAt is a valid ISO 8601 timestamp', () => {
@@ -69,7 +79,11 @@ describe('generateApiKey', () => {
   });
 
   it('name matches input name', () => {
-    const result = generateApiKey({ name: 'My Custom Key', environment: 'production', scopes: ['read'] });
+    const result = generateApiKey({
+      name: 'My Custom Key',
+      environment: 'production',
+      scopes: ['read'],
+    });
     expect(result.name).toBe('My Custom Key');
   });
 });

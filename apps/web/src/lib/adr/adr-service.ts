@@ -54,7 +54,7 @@ export function parseADR(filePath: string): ADRMetadata | null {
     const content = fs.readFileSync(filePath, 'utf-8');
 
     // Extract title from first heading
-    const titleMatch = content.match(/^#\s+(.+)$/m);
+    const titleMatch = content.match(/^#\s+([^\r\n]{1,500})$/m);
     const title = titleMatch ? titleMatch[1].trim() : 'Unknown';
 
     // Extract ID from filename or title
@@ -128,7 +128,7 @@ export function getAllADRFiles(): string[] {
     }
   }
 
-  return files.sort();
+  return files.sort((a, b) => a.localeCompare(b));
 }
 
 /**

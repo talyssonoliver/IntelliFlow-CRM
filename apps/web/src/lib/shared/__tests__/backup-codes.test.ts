@@ -31,7 +31,7 @@ describe('Backup Codes Utility', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     Object.assign(navigator, { clipboard: mockClipboard });
-    vi.spyOn(document, 'createElement').mockReturnValue(mockLink as unknown as HTMLElement);
+    vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any as HTMLElement); // test-only mock
     vi.spyOn(URL, 'createObjectURL').mockImplementation(mockCreateObjectURL);
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(mockRevokeObjectURL);
   });
@@ -215,7 +215,7 @@ describe('Backup Codes Utility', () => {
         print: mockPrint,
         close: mockClose,
       };
-      vi.spyOn(window, 'open').mockReturnValue(mockWindow as unknown as Window);
+      vi.spyOn(window, 'open').mockReturnValue(mockWindow as any as Window); // test-only mock
 
       const { printBackupCodes } = await import('../backup-codes');
       const codes = ['A1B2C3D4E5'];

@@ -12,4 +12,3 @@ export async function fetchAccountStats(token: string | null) {
   const caller = await createCallerFromToken(token);
   return caller.account.stats();
 }
-

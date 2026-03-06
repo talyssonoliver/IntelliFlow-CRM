@@ -206,12 +206,13 @@ export async function copyInvoiceLink(invoice: InvoiceData): Promise<InvoiceActi
 }
 
 // ============================================
-// Email Action (Placeholder)
+// Email Action
 // ============================================
 
 /**
  * Email invoice to recipient
- * Opens default email client with invoice link
+ * Opens the default email client pre-populated with the invoice link.
+ * For server-side delivery (SMTP/SendGrid), use the billing.sendReceiptEmail tRPC mutation instead.
  */
 export function emailInvoice(invoice: InvoiceData, recipientEmail?: string): InvoiceActionResult {
   const pdfInfo = getInvoicePdfInfo(invoice.invoicePdf, invoice.hostedInvoiceUrl);

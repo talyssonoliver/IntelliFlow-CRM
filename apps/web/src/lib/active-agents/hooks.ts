@@ -39,8 +39,8 @@ export function useActiveAgentsDashboard() {
   const error = agentsQuery.error ?? statusQuery.error ?? null;
 
   const refetch = () => {
-    void agentsQuery.refetch();
-    void statusQuery.refetch();
+    void agentsQuery.refetch(); // NOSONAR typescript:S3735 — intentional fire-and-forget
+    void statusQuery.refetch(); // NOSONAR typescript:S3735 — intentional fire-and-forget
   };
 
   return {

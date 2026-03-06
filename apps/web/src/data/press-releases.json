@@ -10,7 +10,20 @@
       "title": "IntelliFlow CRM Launches AI-Powered Lead Scoring Engine",
       "summary": "New machine learning capabilities enable sales teams to prioritize leads with 95% accuracy, reducing time-to-conversion by 40%.",
       "category": "Product",
-      "featured": true
+      "featured": true,
+      "body": "## AI-Powered Lead Scoring Transforms Sales Prioritization\n\n**LONDON, January 15, 2025** — IntelliFlow CRM, the AI-powered customer relationship management platform for modern sales teams, today announced the launch of its AI-Powered Lead Scoring Engine, a machine learning system designed to help sales organizations prioritize high-value prospects with unprecedented accuracy.\n\n## Key Capabilities\n\nThe new lead scoring engine analyzes over 50 behavioral and demographic signals to assign predictive scores to incoming leads. By combining historical conversion data with real-time engagement patterns, the system identifies which prospects are most likely to convert, enabling sales representatives to focus their efforts where they matter most.\n\nIn pilot testing with early adopters, the engine demonstrated 95% accuracy in predicting lead conversion outcomes, while reducing average time-to-conversion by 40%. These results represent a significant improvement over traditional rule-based scoring methods, which typically achieve 60-70% accuracy.\n\n## How It Works\n\nThe scoring engine operates continuously in the background, re-evaluating lead scores as new data becomes available. Key signals include website engagement frequency, email response rates, content download patterns, and firmographic alignment with ideal customer profiles. The system also incorporates natural language processing to analyze communication sentiment and buying intent signals.\n\nScores are recalculated every time a lead interacts with any touchpoint, ensuring that sales teams always have the most current assessment of prospect readiness. The engine also detects engagement velocity, identifying leads whose activity is accelerating and may be approaching a buying decision.\n\n## Enterprise-Grade Governance\n\nUnlike black-box scoring solutions, IntelliFlow's engine provides full transparency into scoring decisions. Sales managers can view the specific factors contributing to each lead's score, adjust weighting parameters, and set custom thresholds for routing and escalation workflows. All scoring activities are logged in an immutable audit trail for compliance and reporting purposes.\n\n## Availability\n\nThe AI-Powered Lead Scoring Engine is available immediately to all IntelliFlow CRM customers on Professional and Enterprise plans at no additional cost. Existing customers will see the feature automatically enabled in their dashboards.",
+      "quotes": [
+        {
+          "text": "Our AI lead scoring engine represents a breakthrough in sales intelligence. By combining advanced machine learning with transparent governance, we're giving sales teams the confidence to act on data-driven insights without sacrificing accountability.",
+          "attribution": "Sarah Chen, CEO, IntelliFlow"
+        },
+        {
+          "text": "In our pilot program, customers reported a 40% reduction in time-to-conversion and a measurable increase in pipeline velocity. This validates our approach of making AI practical and trustworthy for enterprise sales.",
+          "attribution": "Dr. James Rivera, VP of AI, IntelliFlow"
+        }
+      ],
+      "boilerplate": "IntelliFlow CRM is an AI-powered customer relationship management platform helping modern sales teams automate workflows with enterprise-grade governance. Founded in 2024 and headquartered in London, IntelliFlow serves over 100 customers worldwide. For more information, visit intelliflow-crm.com.",
+      "readTime": "4 min read"
     },
     {
       "id": "pr-003",
@@ -18,7 +31,16 @@
       "title": "IntelliFlow CRM Achieves ISO 27001 Certification",
       "summary": "Enterprise-grade security validation demonstrates commitment to protecting customer data with governance-grade controls.",
       "category": "Security",
-      "featured": false
+      "featured": false,
+      "body": "## ISO 27001 Certification Validates Enterprise Security Standards\n\n**LONDON, December 20, 2024** — IntelliFlow CRM today announced that it has achieved ISO 27001:2022 certification for its information security management system (ISMS), validating the company's commitment to protecting customer data with the highest international security standards.\n\n## Certification Scope\n\nThe certification covers all aspects of IntelliFlow's operations, including its cloud infrastructure, application development processes, data handling procedures, and employee security practices. The independent audit was conducted by a leading international certification body and assessed over 100 security controls across the organization.\n\nThe audit process evaluated IntelliFlow against 93 controls defined in Annex A of the ISO 27001:2022 standard, covering areas such as organizational controls, people controls, physical controls, and technological controls. IntelliFlow demonstrated compliance across all applicable control categories.\n\n## What This Means for Customers\n\nISO 27001 certification provides IntelliFlow's customers with third-party assurance that their CRM data is protected by a comprehensive and continuously monitored security framework. The certification is particularly important for enterprise customers in regulated industries such as financial services, healthcare, and government, where data protection compliance is mandatory.\n\nCustomers can request a copy of the certification and the Statement of Applicability through their account manager or by contacting IntelliFlow's security team directly.\n\n## Security Architecture\n\nIntelliFlow's security architecture incorporates multiple layers of protection, including encryption at rest and in transit, role-based access controls, multi-factor authentication, and continuous monitoring with automated threat detection. The platform also maintains a complete audit trail of all data access and modifications, supporting customers' own compliance and regulatory requirements.\n\n## Ongoing Commitment\n\nISO 27001 certification requires annual surveillance audits and a full re-certification every three years, ensuring that IntelliFlow maintains and improves its security posture on an ongoing basis. The company has also begun the process of pursuing SOC 2 Type II certification, expected to be completed in the first half of 2025.",
+      "quotes": [
+        {
+          "text": "Achieving ISO 27001 certification is a milestone that validates our security-first approach to building enterprise software. Our customers trust us with their most sensitive business data, and this certification demonstrates that trust is well-placed.",
+          "attribution": "Michael Torres, CTO, IntelliFlow"
+        }
+      ],
+      "boilerplate": "IntelliFlow CRM is an AI-powered customer relationship management platform helping modern sales teams automate workflows with enterprise-grade governance. Founded in 2024 and headquartered in London, IntelliFlow serves over 100 customers worldwide. For more information, visit intelliflow-crm.com.",
+      "readTime": "3 min read"
     },
     {
       "id": "pr-002",
@@ -26,7 +48,20 @@
       "title": "IntelliFlow CRM Announces Partnership with Major ERP Providers",
       "summary": "New integrations with SAP and Oracle enable seamless data flow between CRM and enterprise resource planning systems.",
       "category": "Partnership",
-      "featured": false
+      "featured": false,
+      "body": "## Strategic ERP Partnerships Expand Enterprise Integration Capabilities\n\n**LONDON, November 15, 2024** — IntelliFlow CRM today announced strategic integration partnerships with SAP and Oracle, two of the world's leading enterprise resource planning (ERP) providers. The new partnerships enable bi-directional data synchronization between IntelliFlow CRM and SAP S/4HANA and Oracle Cloud ERP systems.\n\n## Integration Capabilities\n\nThe new integrations provide seamless data flow between CRM and ERP systems, eliminating manual data entry and reducing the risk of data inconsistencies. Key capabilities include real-time synchronization of customer records, automatic order-to-cash workflow bridging, unified financial reporting across sales and accounting, and shared product catalog management.\n\nThe synchronization engine processes changes in near real-time, with configurable batch intervals for organizations that prefer scheduled data transfers over continuous streaming.\n\n## Enterprise Customer Benefits\n\nEnterprise organizations typically operate with both CRM and ERP systems, but data silos between these platforms create inefficiencies and increase the risk of errors. IntelliFlow's ERP integrations address this challenge by providing a unified view of customer interactions and financial transactions.\n\nThe integrations support both cloud and on-premise ERP deployments, with configurable mapping rules that adapt to each organization's unique data structures and business processes. Organizations can define custom field mappings, transformation rules, and validation logic without writing code.\n\n## Technical Architecture\n\nThe integration layer is built on IntelliFlow's event-driven architecture, using an outbox pattern for reliable message delivery. Data transformations are handled by a configurable mapping engine that supports complex field-level transformations, validation rules, and conflict resolution policies. All data transfers are encrypted and logged for audit compliance.\n\n## Availability\n\nThe SAP integration is available immediately for IntelliFlow Enterprise plan customers. The Oracle integration will be available in general access starting January 2025. Both integrations include dedicated onboarding support and migration assistance. Implementation typically takes two to four weeks depending on the complexity of existing data structures and business process requirements.",
+      "quotes": [
+        {
+          "text": "Our ERP partnerships represent a significant step forward in our mission to break down enterprise data silos. By connecting CRM and ERP systems at the data layer, we're enabling organizations to operate with a single source of truth for customer relationships.",
+          "attribution": "Sarah Chen, CEO, IntelliFlow"
+        },
+        {
+          "text": "The integration architecture we've built is designed for enterprise-grade reliability. Every data synchronization is idempotent, every transformation is auditable, and every conflict is resolved deterministically.",
+          "attribution": "Michael Torres, CTO, IntelliFlow"
+        }
+      ],
+      "boilerplate": "IntelliFlow CRM is an AI-powered customer relationship management platform helping modern sales teams automate workflows with enterprise-grade governance. Founded in 2024 and headquartered in London, IntelliFlow serves over 100 customers worldwide. For more information, visit intelliflow-crm.com.",
+      "readTime": "4 min read"
     },
     {
       "id": "pr-001",
@@ -34,7 +69,20 @@
       "title": "IntelliFlow CRM Emerges from Stealth with $5M Seed Funding",
       "summary": "AI-first CRM platform launches with backing from leading venture capital firms, targeting modern sales teams seeking automation with governance.",
       "category": "Company",
-      "featured": false
+      "featured": false,
+      "body": "## IntelliFlow CRM Launches with $5M to Transform Sales Automation\n\n**LONDON, October 1, 2024** — IntelliFlow CRM today emerged from stealth mode with $5 million in seed funding, led by Horizon Ventures with participation from TechBridge Capital and several prominent angel investors. The company is building an AI-powered CRM platform designed to bring enterprise-grade governance to sales automation.\n\n## The Problem\n\nModern sales teams face a fundamental tension: they need AI-powered automation to stay competitive, but they also need governance, transparency, and accountability to maintain trust with customers and comply with regulations. Existing CRM solutions force teams to choose between powerful automation and reliable oversight.\n\nThis gap in the market has become more pronounced as regulatory frameworks such as GDPR, CCPA, and the EU AI Act introduce stricter requirements around automated decision-making and data processing transparency.\n\n## The IntelliFlow Approach\n\nIntelliFlow resolves this tension by embedding governance directly into its AI automation layer. Every automated action, from lead scoring to email outreach to pipeline forecasting, is logged in an immutable audit trail with full explainability. Sales managers can set approval workflows for AI-initiated actions, review AI decision rationale, and maintain complete control over automated processes.\n\n## Founding Team\n\nIntelliFlow was founded by a team of enterprise software veterans with deep experience in CRM, AI, and information security. The founding team brings together expertise from organizations including Salesforce, Microsoft, and DeepMind.\n\n## Use of Funds\n\nThe seed funding will be used to expand the engineering team, accelerate product development, and support the company's go-to-market strategy. IntelliFlow plans to launch its open beta program in December 2024 and achieve general availability in the first quarter of 2025.\n\n## Early Traction\n\nDuring its stealth period, IntelliFlow onboarded 25 early-access customers across financial services, technology, and professional services industries. Early feedback has validated the market demand for AI-powered CRM with built-in governance capabilities.",
+      "quotes": [
+        {
+          "text": "We founded IntelliFlow because we believe sales teams shouldn't have to choose between powerful automation and trustworthy governance. Our platform proves that AI and accountability can work together to drive better outcomes for everyone.",
+          "attribution": "Sarah Chen, CEO & Co-Founder, IntelliFlow"
+        },
+        {
+          "text": "IntelliFlow's approach to embedding governance into AI automation is exactly what the enterprise market needs. We're excited to back a team that understands that trust is the foundation of lasting customer relationships.",
+          "attribution": "David Park, Managing Partner, Horizon Ventures"
+        }
+      ],
+      "boilerplate": "IntelliFlow CRM is an AI-powered customer relationship management platform helping modern sales teams automate workflows with enterprise-grade governance. Founded in 2024 and headquartered in London, IntelliFlow serves over 100 customers worldwide. For more information, visit intelliflow-crm.com.",
+      "readTime": "4 min read"
     }
   ],
   "mediaKit": {

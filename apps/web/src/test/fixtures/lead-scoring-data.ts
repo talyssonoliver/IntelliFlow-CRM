@@ -94,9 +94,7 @@ export const mockScoredLeads: ScoredLead[] = [
     company: 'Startup LLC',
     score: 55,
     confidence: 0.82,
-    factors: [
-      { name: 'Qualification', impact: 5, reasoning: 'Budget partially confirmed' },
-    ],
+    factors: [{ name: 'Qualification', impact: 5, reasoning: 'Budget partially confirmed' }],
     modelVersion: 'openai:gpt-3.5-turbo:v2',
     scoredAt: daysAgo(2),
     tier: 'warm',

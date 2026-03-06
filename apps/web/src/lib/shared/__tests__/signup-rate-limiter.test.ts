@@ -277,20 +277,15 @@ describe('Signup Rate Limiter', () => {
     });
 
     it('handles localStorage errors gracefully', () => {
-      // Mock localStorage.setItem to throw
-      const originalSetItem = localStorage.setItem;
+      // Mock localStorage.setItem to throw using vi.spyOn for reliable interception
       const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      localStorage.setItem = () => {
+      vi.spyOn(localStorage, 'setItem').mockImplementation(() => {
         throw new Error('QuotaExceeded');
-      };
+      });
 
       // Should not throw
       expect(() => recordSignupAttempt('test@example.com')).not.toThrow();
       expect(consoleWarnSpy).toHaveBeenCalled();
-
-      localStorage.setItem = originalSetItem;
-      consoleWarnSpy.mockRestore();
     });
 
     it('handles corrupted localStorage data', () => {

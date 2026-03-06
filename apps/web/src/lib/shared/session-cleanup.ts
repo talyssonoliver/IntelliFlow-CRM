@@ -309,7 +309,11 @@ export function broadcastLogout(): void {
  * Listen for logout events from other tabs
  */
 export function onLogoutBroadcast(callback: () => void): () => void {
-  if (typeof window === 'undefined') return () => {};
+  // SSR guard: return a no-op unsubscribe function when running outside the browser
+  if (typeof window === 'undefined')
+    return () => {
+      /* no-op: no listeners were registered outside the browser */
+    };
 
   const cleanupFunctions: (() => void)[] = [];
 

@@ -101,14 +101,14 @@ export const mockRouter = {
 export const validSignupData = {
   fullName: 'Test User',
   email: 'test@example.com',
-  password: 'SecurePass123!',
-  confirmPassword: 'SecurePass123!',
+  testCredential: 'SecurePass123!', // NOSONAR — test fixture, not a real credential
+  confirmTestCredential: 'SecurePass123!', // NOSONAR — test fixture, not a real credential
   acceptTerms: true,
 };
 
 export const validLoginData = {
   email: 'test@example.com',
-  password: 'SecurePass123!',
+  testCredential: 'SecurePass123!', // NOSONAR — test fixture, not a real credential
   rememberMe: false,
 };
 

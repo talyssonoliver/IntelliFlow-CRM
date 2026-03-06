@@ -26,10 +26,7 @@ export function useExperimentsDashboard() {
  * Query hook for experiment statistical results
  */
 export function useExperimentResults(experimentId: string) {
-  return api.experiment.getResults.useQuery(
-    { experimentId },
-    { enabled: !!experimentId }
-  );
+  return api.experiment.getResults.useQuery({ experimentId }, { enabled: !!experimentId });
 }
 
 /**

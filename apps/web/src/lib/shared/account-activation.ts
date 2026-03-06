@@ -290,10 +290,7 @@ function incrementRateLimit(email: string): void {
  * Build the email verification URL
  */
 export function buildVerificationUrl(token: string, baseUrl?: string): string {
-  const base =
-    baseUrl ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    'https://intelliflow-crm.com';
+  const base = baseUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://intelliflow-crm.com';
   return `${base}/verify-email/${token}`;
 }
 

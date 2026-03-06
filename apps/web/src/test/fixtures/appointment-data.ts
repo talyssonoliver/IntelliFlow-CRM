@@ -90,6 +90,7 @@ export const mockAppointment1: CalendarAppointment = {
   hasConflict: false,
   linkedCaseCount: 1,
   isRecurring: false,
+  calendarId: null,
 };
 
 export const mockAppointment2: CalendarAppointment = {
@@ -104,6 +105,7 @@ export const mockAppointment2: CalendarAppointment = {
   hasConflict: true,
   linkedCaseCount: 1,
   isRecurring: false,
+  calendarId: null,
 };
 
 export const mockAppointment3: CalendarAppointment = {
@@ -118,6 +120,7 @@ export const mockAppointment3: CalendarAppointment = {
   hasConflict: false,
   linkedCaseCount: 0,
   isRecurring: false,
+  calendarId: null,
 };
 
 export const mockAppointment4: CalendarAppointment = {
@@ -131,6 +134,7 @@ export const mockAppointment4: CalendarAppointment = {
   hasConflict: false,
   linkedCaseCount: 0,
   isRecurring: true,
+  calendarId: null,
 };
 
 export const mockAppointments: CalendarAppointment[] = [

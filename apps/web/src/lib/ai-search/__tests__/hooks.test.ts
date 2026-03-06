@@ -23,7 +23,12 @@ describe('useAISearch', () => {
   });
 
   it('calls api.intelligence.ragSearch.useQuery with correct params', () => {
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: false, error: null, refetch: vi.fn() });
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
 
     renderHook(() =>
       useAISearch({
@@ -33,7 +38,7 @@ describe('useAISearch', () => {
         dateRange: '7d',
         limit: 20,
         offset: 0,
-      }),
+      })
     );
 
     expect(mockUseQuery).toHaveBeenCalledWith(
@@ -46,19 +51,29 @@ describe('useAISearch', () => {
         offset: 0,
         minRelevance: undefined,
       },
-      { enabled: true },
+      { enabled: true }
     );
   });
 
   it('returns loading state when query is in progress', () => {
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: true, error: null, refetch: vi.fn() });
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+      refetch: vi.fn(),
+    });
 
     const { result } = renderHook(() => useAISearch({ query: 'test' }));
     expect(result.current.isLoading).toBe(true);
   });
 
   it('returns data on successful response', () => {
-    mockUseQuery.mockReturnValue({ data: mockSearchResponse, isLoading: false, error: null, refetch: vi.fn() });
+    mockUseQuery.mockReturnValue({
+      data: mockSearchResponse,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
 
     const { result } = renderHook(() => useAISearch({ query: 'test' }));
     expect(result.current.results).toEqual(mockSearchResponse.results);
@@ -70,7 +85,12 @@ describe('useAISearch', () => {
 
   it('returns error on API failure', () => {
     const mockError = new Error('API error');
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: false, error: mockError, refetch: vi.fn() });
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: mockError,
+      refetch: vi.fn(),
+    });
 
     const { result } = renderHook(() => useAISearch({ query: 'test' }));
     expect(result.current.error).toBe(mockError);
@@ -78,14 +98,24 @@ describe('useAISearch', () => {
 
   it('returns refetch function', () => {
     const refetchFn = vi.fn();
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: false, error: null, refetch: refetchFn });
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+      refetch: refetchFn,
+    });
 
     const { result } = renderHook(() => useAISearch({ query: 'test' }));
     expect(result.current.refetch).toBe(refetchFn);
   });
 
   it('handles undefined data fields gracefully', () => {
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: false, error: null, refetch: vi.fn() });
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
 
     const { result } = renderHook(() => useAISearch({ query: 'test' }));
     expect(result.current.results).toEqual([]);
@@ -96,7 +126,12 @@ describe('useAISearch', () => {
   });
 
   it('passes filter changes to query', () => {
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: false, error: null, refetch: vi.fn() });
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
 
     renderHook(() =>
       useAISearch({
@@ -105,7 +140,7 @@ describe('useAISearch', () => {
         searchType: 'semantic',
         dateRange: '30d',
         minRelevance: 0.5,
-      }),
+      })
     );
 
     expect(mockUseQuery).toHaveBeenCalledWith(
@@ -115,30 +150,42 @@ describe('useAISearch', () => {
         dateRange: '30d',
         minRelevance: 0.5,
       }),
-      { enabled: true },
+      { enabled: true }
     );
   });
 
   it('does not call query when query string is empty', () => {
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: false, error: null, refetch: vi.fn() });
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
 
     renderHook(() => useAISearch({ query: '' }));
 
-    expect(mockUseQuery).toHaveBeenCalledWith(
-      expect.anything(),
-      { enabled: false },
-    );
+    expect(mockUseQuery).toHaveBeenCalledWith(expect.anything(), { enabled: false });
   });
 
   it('returns empty results array when data is undefined', () => {
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: false, error: null, refetch: vi.fn() });
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
+    });
 
     const { result } = renderHook(() => useAISearch({ query: 'test' }));
     expect(result.current.results).toEqual([]);
   });
 
   it('returns isLoading false when query is empty even if useQuery says loading', () => {
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: true, error: null, refetch: vi.fn() });
+    mockUseQuery.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+      error: null,
+      refetch: vi.fn(),
+    });
 
     const { result } = renderHook(() => useAISearch({ query: '' }));
     expect(result.current.isLoading).toBe(false);

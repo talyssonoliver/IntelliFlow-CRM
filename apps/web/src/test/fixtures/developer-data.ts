@@ -77,7 +77,9 @@ export interface MockAppEditFormData {
   webhookUrl: string;
 }
 
-export function createMockEditFormData(overrides?: Partial<MockAppEditFormData>): MockAppEditFormData {
+export function createMockEditFormData(
+  overrides?: Partial<MockAppEditFormData>
+): MockAppEditFormData {
   return {
     name: 'Test App',
     description: 'A test developer application',

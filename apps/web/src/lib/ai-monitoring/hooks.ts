@@ -136,7 +136,7 @@ function filterAndSortLogs(
   logs: AgentLog[],
   search?: string,
   toolStatus?: string,
-  sort?: 'newest' | 'oldest',
+  sort?: 'newest' | 'oldest'
 ): AgentLog[] {
   let result = [...logs];
 
@@ -145,24 +145,18 @@ function filterAndSortLogs(
     result = result.filter(
       (log) =>
         log.agentType.toLowerCase().includes(q) ||
-        log.messages.some((m) => m.content.toLowerCase().includes(q)),
+        log.messages.some((m) => m.content.toLowerCase().includes(q))
     );
   }
 
   if (toolStatus) {
-    result = result.filter((log) =>
-      log.toolCalls.some((tc) => tc.status === toolStatus),
-    );
+    result = result.filter((log) => log.toolCalls.some((tc) => tc.status === toolStatus));
   }
 
   if (sort === 'oldest') {
-    result.sort(
-      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    );
+    result.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   } else {
-    result.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
+    result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 
   return result;
@@ -180,16 +174,14 @@ export function useAgentLogs(params: AgentLogsParams): AgentLogsData {
     },
     {
       staleTime: 60_000,
-    },
+    }
   );
 
-  const data = query.data as
-    | { logs: AgentLog[]; total: number; hasMore: boolean }
-    | undefined;
+  const data = query.data as { logs: AgentLog[]; total: number; hasMore: boolean } | undefined;
 
   const logs = useMemo(
     () => filterAndSortLogs(data?.logs ?? [], params.search, params.toolStatus, params.sort),
-    [data?.logs, params.search, params.toolStatus, params.sort],
+    [data?.logs, params.search, params.toolStatus, params.sort]
   );
 
   return {
@@ -250,7 +242,7 @@ export function useLatencyDashboard(filters?: LatencyFilters): LatencyDashboardD
     {
       staleTime: 20000,
       refetchInterval: 30000,
-    },
+    }
   );
 
   const periodMinutes = filters?.timeRange
@@ -265,7 +257,7 @@ export function useLatencyDashboard(filters?: LatencyFilters): LatencyDashboardD
     {
       staleTime: 20000,
       refetchInterval: 60000,
-    },
+    }
   );
 
   const metricsData = metricsQuery.data as

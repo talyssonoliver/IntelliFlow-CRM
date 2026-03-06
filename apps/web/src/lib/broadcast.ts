@@ -199,5 +199,5 @@ export function createAuthBroadcast(): AuthBroadcast {
 /**
  * Singleton instance for app-wide use
  */
-export const authBroadcast =
-  typeof window !== 'undefined' ? new AuthBroadcast() : (null as unknown as AuthBroadcast);
+export const authBroadcast: AuthBroadcast | null =
+  typeof window !== 'undefined' ? new AuthBroadcast() : null;

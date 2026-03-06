@@ -105,10 +105,7 @@ export function computeAgentStats(agents: ActiveAgent[]): AgentStats {
   };
 }
 
-export function filterAgents(
-  agents: ActiveAgent[],
-  filters: ActiveAgentFilters,
-): ActiveAgent[] {
+export function filterAgents(agents: ActiveAgent[], filters: ActiveAgentFilters): ActiveAgent[] {
   let result = [...agents];
 
   if (filters.status) {
@@ -127,25 +124,20 @@ export function filterAgents(
         getAgentTypeLabel(a.type).toLowerCase().includes(q) ||
         (a.currentTask?.toLowerCase().includes(q) ?? false) ||
         a.model.toLowerCase().includes(q) ||
-        (a.agentId?.toLowerCase().includes(q) ?? false),
+        (a.agentId?.toLowerCase().includes(q) ?? false)
     );
   }
 
   switch (filters.sort) {
     case 'lastActive':
-      result.sort(
-        (a, b) =>
-          new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime(),
-      );
+      result.sort((a, b) => new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime());
       break;
     case 'type':
       result.sort((a, b) => a.type.localeCompare(b.type));
       break;
     case 'status': {
       const order: Record<string, number> = { active: 0, idle: 1, error: 2 };
-      result.sort(
-        (a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3),
-      );
+      result.sort((a, b) => (order[a.status] ?? 3) - (order[b.status] ?? 3));
       break;
     }
   }

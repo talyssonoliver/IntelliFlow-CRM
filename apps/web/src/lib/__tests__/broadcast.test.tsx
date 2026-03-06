@@ -72,7 +72,7 @@ describe('AuthBroadcast', () => {
       clear: vi.fn(),
       length: 0,
       key: vi.fn(),
-    } as unknown as Storage;
+    } as any as Storage; // test-only mock
 
     MockBroadcastChannel.clearInstances();
   });
@@ -86,7 +86,7 @@ describe('AuthBroadcast', () => {
 
   describe('BroadcastChannel support', () => {
     it('should use BroadcastChannel when available', () => {
-      globalThis.BroadcastChannel = MockBroadcastChannel as unknown as typeof BroadcastChannel;
+      globalThis.BroadcastChannel = MockBroadcastChannel as any; // test-only mock
 
       const broadcast = createAuthBroadcast();
       const callback = vi.fn();
@@ -119,7 +119,7 @@ describe('AuthBroadcast', () => {
 
   describe('logout broadcast', () => {
     it('should broadcast LOGOUT_EVENT to other tabs', () => {
-      globalThis.BroadcastChannel = MockBroadcastChannel as unknown as typeof BroadcastChannel;
+      globalThis.BroadcastChannel = MockBroadcastChannel as any; // test-only mock
 
       const broadcast1 = createAuthBroadcast();
       const broadcast2 = createAuthBroadcast();
@@ -134,7 +134,7 @@ describe('AuthBroadcast', () => {
     });
 
     it('should debounce multiple rapid broadcasts', () => {
-      globalThis.BroadcastChannel = MockBroadcastChannel as unknown as typeof BroadcastChannel;
+      globalThis.BroadcastChannel = MockBroadcastChannel as any; // test-only mock
 
       const broadcast1 = createAuthBroadcast();
       const broadcast2 = createAuthBroadcast();
@@ -154,12 +154,12 @@ describe('AuthBroadcast', () => {
     });
 
     it('should handle broadcast errors gracefully', () => {
-      globalThis.BroadcastChannel = MockBroadcastChannel as unknown as typeof BroadcastChannel;
+      globalThis.BroadcastChannel = MockBroadcastChannel as any; // test-only mock
 
       const broadcast = createAuthBroadcast();
 
       // Force an error by mocking postMessage to throw
-      const mockChannel = MockBroadcastChannel as unknown as {
+      const mockChannel = MockBroadcastChannel as any as {
         prototype: { postMessage: () => void };
       };
       const originalPostMessage = mockChannel.prototype.postMessage;
@@ -179,7 +179,7 @@ describe('AuthBroadcast', () => {
 
   describe('listener', () => {
     it('should call callback when LOGOUT_EVENT received', () => {
-      globalThis.BroadcastChannel = MockBroadcastChannel as unknown as typeof BroadcastChannel;
+      globalThis.BroadcastChannel = MockBroadcastChannel as any; // test-only mock
 
       const broadcast1 = createAuthBroadcast();
       const broadcast2 = createAuthBroadcast();
@@ -194,7 +194,7 @@ describe('AuthBroadcast', () => {
     });
 
     it('should unsubscribe when cleanup called', () => {
-      globalThis.BroadcastChannel = MockBroadcastChannel as unknown as typeof BroadcastChannel;
+      globalThis.BroadcastChannel = MockBroadcastChannel as any; // test-only mock
 
       const broadcast1 = createAuthBroadcast();
       const broadcast2 = createAuthBroadcast();

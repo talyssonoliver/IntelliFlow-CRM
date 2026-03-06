@@ -179,7 +179,21 @@ describe('useDriftDashboard', () => {
     const roiRefetch = vi.fn();
     setupMocks({
       status: { refetch: statusRefetch, data: undefined, isLoading: false, error: null },
-      drift: { refetch: driftRefetch, isLoading: false, error: null, data: { status: { trackedMetrics: 0, totalSamples: 0, driftDetected: false, highSeverityCount: 0, lastCheck: null }, history: [] } },
+      drift: {
+        refetch: driftRefetch,
+        isLoading: false,
+        error: null,
+        data: {
+          status: {
+            trackedMetrics: 0,
+            totalSamples: 0,
+            driftDetected: false,
+            highSeverityCount: 0,
+            lastCheck: null,
+          },
+          history: [],
+        },
+      },
       roi: { refetch: roiRefetch, isLoading: false, error: null, data: undefined },
     });
     const result = useDriftDashboard();
@@ -194,7 +208,9 @@ describe('useDriftDashboard', () => {
 // useLatencyDashboard (PG-153)
 // ---------------------------------------------------------------------------
 
-const mockLatencyMetricsQuery = api.aiMonitoring.getLatencyMetrics.useQuery as ReturnType<typeof vi.fn>;
+const mockLatencyMetricsQuery = api.aiMonitoring.getLatencyMetrics.useQuery as ReturnType<
+  typeof vi.fn
+>;
 const mockLatencyTrendQuery = api.aiMonitoring.getLatencyTrend.useQuery as ReturnType<typeof vi.fn>;
 
 const baseLatencyMetrics = {
@@ -387,7 +403,7 @@ describe('useLatencyDashboard', () => {
     useLatencyDashboard({ model: 'gpt-4' });
     expect(mockLatencyMetricsQuery).toHaveBeenCalledWith(
       expect.objectContaining({ model: 'gpt-4' }),
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 
@@ -396,7 +412,7 @@ describe('useLatencyDashboard', () => {
     useLatencyDashboard({ timeRange: '6h' });
     expect(mockLatencyMetricsQuery).toHaveBeenCalledWith(
       expect.objectContaining({ startTime: expect.any(Date) }),
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 });
@@ -433,7 +449,8 @@ const baseLogs = [
 
 function setupAgentLogsMocks(overrides: Record<string, any> = {}) {
   mockAgentLogsQuery.mockReturnValue({
-    data: overrides.data !== undefined ? overrides.data : { logs: baseLogs, total: 3, hasMore: false },
+    data:
+      overrides.data !== undefined ? overrides.data : { logs: baseLogs, total: 3, hasMore: false },
     isLoading: false,
     error: null,
     refetch: vi.fn(),
@@ -511,7 +528,7 @@ describe('useAgentLogs', () => {
     useAgentLogs({ agentId: 'not-a-uuid' });
     expect(mockAgentLogsQuery).toHaveBeenCalledWith(
       expect.objectContaining({ agentId: undefined }),
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 
@@ -520,7 +537,7 @@ describe('useAgentLogs', () => {
     useAgentLogs({ agentId: '12345678-1234-1234-1234-123456789abc' });
     expect(mockAgentLogsQuery).toHaveBeenCalledWith(
       expect.objectContaining({ agentId: '12345678-1234-1234-1234-123456789abc' }),
-      expect.any(Object),
+      expect.any(Object)
     );
   });
 

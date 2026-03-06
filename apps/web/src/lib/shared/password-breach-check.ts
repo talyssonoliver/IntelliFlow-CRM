@@ -53,7 +53,7 @@ export async function checkPasswordBreach(password: string): Promise<BreachCheck
     // Hash password with SHA-1
     const encoder = new TextEncoder();
     const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+    const hashBuffer = await crypto.subtle.digest('SHA-1', data); // NOSONAR: SHA-1 required by HaveIBeenPwned k-anonymity API — not used for password storage
     const hashHex = arrayBufferToHex(hashBuffer);
 
     // Use k-anonymity: send first 5 chars, check suffix locally

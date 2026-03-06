@@ -18,6 +18,14 @@ import type { AppRouter } from '@intelliflow/api-client';
 // tRPC error type for subscriptions
 type SubscriptionError = TRPCClientErrorLike<AppRouter>;
 
+/** Convert a tRPC subscription error to a standard Error for consumer callbacks */
+function toError(err: SubscriptionError): Error {
+  if (err instanceof Error) return err;
+  const error = new Error(err.message);
+  error.name = 'TRPCSubscriptionError';
+  return error;
+}
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -226,7 +234,7 @@ export function useLeadScoredSubscription(options: UseLeadScoredSubscriptionOpti
         console.error('[useLeadScoredSubscription] Error:', err);
         setStatus('error');
         recordError();
-        onErrorRef.current?.(err as unknown as Error);
+        onErrorRef.current?.(toError(err));
       },
     }
   );
@@ -325,7 +333,7 @@ export function useTaskAssignedSubscription(options: UseTaskAssignedSubscription
       console.error('[useTaskAssignedSubscription] Error:', err);
       setStatus('error');
       recordError();
-      onErrorRef.current?.(err as unknown as Error);
+      onErrorRef.current?.(toError(err));
     },
   });
 
@@ -423,7 +431,7 @@ export function useSystemEventSubscription(options: UseSystemEventSubscriptionOp
       console.error('[useSystemEventSubscription] Error:', err);
       setStatus('error');
       recordError();
-      onErrorRef.current?.(err as unknown as Error);
+      onErrorRef.current?.(toError(err));
     },
   });
 
@@ -540,7 +548,7 @@ export function useAIProgressSubscription(options: UseAIProgressSubscriptionOpti
         console.error(`[useAIProgressSubscription:${jobId}] Error:`, err);
         setStatus('error');
         recordError();
-        onErrorRef.current?.(err as unknown as Error);
+        onErrorRef.current?.(toError(err));
       },
     }
   );
