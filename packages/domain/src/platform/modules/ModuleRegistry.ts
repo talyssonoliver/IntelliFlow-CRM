@@ -33,12 +33,7 @@ export type ModuleId = (typeof CRM_MODULES)[number];
 /**
  * Subscription plan tiers in ascending order of capability.
  */
-export const PLAN_TIERS = [
-  'STARTER',
-  'PROFESSIONAL',
-  'ENTERPRISE',
-  'CUSTOM',
-] as const;
+export const PLAN_TIERS = ['STARTER', 'PROFESSIONAL', 'ENTERPRISE', 'CUSTOM'] as const;
 
 export type PlanTier = (typeof PLAN_TIERS)[number];
 

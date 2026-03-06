@@ -683,12 +683,22 @@ describe('CaseDocument', () => {
 
       // Uppercase hex
       expect(() =>
-        doc.sign(VALID_UUID_3, '127.0.0.1', 'UA', 'CF83E1357EEFB8BDF1542850D66D8007D620E4050B5715DC83F4A921D36CE9CE')
+        doc.sign(
+          VALID_UUID_3,
+          '127.0.0.1',
+          'UA',
+          'CF83E1357EEFB8BDF1542850D66D8007D620E4050B5715DC83F4A921D36CE9CE'
+        )
       ).toThrow('signatureHash must be a valid 64-character lowercase hex string');
 
       // Non-hex chars
       expect(() =>
-        doc.sign(VALID_UUID_3, '127.0.0.1', 'UA', 'zz83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce')
+        doc.sign(
+          VALID_UUID_3,
+          '127.0.0.1',
+          'UA',
+          'zz83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce'
+        )
       ).toThrow('signatureHash must be a valid 64-character lowercase hex string');
     });
 

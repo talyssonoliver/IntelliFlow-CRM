@@ -71,7 +71,7 @@ interface NotificationPreferenceProps {
 }
 
 export class NotificationPreference extends Entity<string> {
-  private props: NotificationPreferenceProps;
+  private readonly props: NotificationPreferenceProps;
 
   private constructor(id: string, props: NotificationPreferenceProps) {
     super(id);

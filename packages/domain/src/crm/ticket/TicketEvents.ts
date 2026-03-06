@@ -242,6 +242,7 @@ export class TicketResolutionSlaBreachedEvent extends DomainEvent {
   toPayload(): Record<string, unknown> {
     return {
       ticketId: this.ticketId.value,
+      slaType: 'resolution',
       dueAt: this.dueAt.toISOString(),
       breachedAt: this.breachedAt.toISOString(),
       slaPolicyId: this.slaPolicyId,

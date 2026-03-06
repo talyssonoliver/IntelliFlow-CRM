@@ -40,14 +40,14 @@ describe('TicketId', () => {
     });
 
     it('should reject null', () => {
-      const result = TicketId.create(null as unknown as string);
+      const result = TicketId.create(null as any);
 
       expect(result.isFailure).toBe(true);
       expect(result.error).toBeInstanceOf(InvalidTicketIdError);
     });
 
     it('should reject undefined', () => {
-      const result = TicketId.create(undefined as unknown as string);
+      const result = TicketId.create(undefined as any);
 
       expect(result.isFailure).toBe(true);
       expect(result.error).toBeInstanceOf(InvalidTicketIdError);
@@ -155,13 +155,13 @@ describe('TicketId', () => {
     it('should return false for null', () => {
       const ticketId = TicketId.generate();
 
-      expect(ticketId.equals(null as unknown as TicketId)).toBe(false);
+      expect(ticketId.equals(null as any)).toBe(false);
     });
 
     it('should return false for undefined', () => {
       const ticketId = TicketId.generate();
 
-      expect(ticketId.equals(undefined as unknown as TicketId)).toBe(false);
+      expect(ticketId.equals(undefined as any)).toBe(false);
     });
   });
 
@@ -194,7 +194,7 @@ describe('TicketId', () => {
   describe('immutability', () => {
     it('should have frozen props', () => {
       const ticketId = TicketId.generate();
-      const props = (ticketId as unknown as { props: Record<string, unknown> }).props;
+      const props = (ticketId as any).props; // test: access internal state
 
       expect(Object.isFrozen(props)).toBe(true);
     });
@@ -203,7 +203,7 @@ describe('TicketId', () => {
       const ticketId = TicketId.generate();
 
       expect(() => {
-        (ticketId as unknown as { props: { value: string } }).props.value = 'changed';
+        (ticketId as any).props.value = 'changed'; // test: access internal state
       }).toThrow();
     });
   });

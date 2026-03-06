@@ -358,18 +358,11 @@ export class Contact extends AggregateRoot<ContactId> {
     }
 
     if (updates.phone !== undefined) {
-      let newPhone: PhoneNumber | undefined;
-
-      if (typeof updates.phone === 'string') {
-        const phoneResult = PhoneNumber.create(updates.phone);
-        if (phoneResult.isFailure) {
-          return Result.fail(phoneResult.error);
-        }
-        newPhone = phoneResult.value;
-      } else {
-        newPhone = updates.phone;
+      const resolvedPhone = this.resolvePhone(updates.phone);
+      if (resolvedPhone.isFailure) {
+        return Result.fail(resolvedPhone.error);
       }
-
+      const newPhone = resolvedPhone.value;
       if (!this.props.phone?.equals(newPhone)) {
         this.props.phone = newPhone;
         updatedFields.push('phone');
@@ -433,6 +426,17 @@ export class Contact extends AggregateRoot<ContactId> {
     }
 
     return Result.ok(undefined);
+  }
+
+  private resolvePhone(phone: string | PhoneNumber): Result<PhoneNumber, DomainError> {
+    if (typeof phone === 'string') {
+      const phoneResult = PhoneNumber.create(phone);
+      if (phoneResult.isFailure) {
+        return Result.fail(phoneResult.error);
+      }
+      return Result.ok(phoneResult.value);
+    }
+    return Result.ok(phone);
   }
 
   associateWithAccount(
@@ -528,18 +532,14 @@ export class Contact extends AggregateRoot<ContactId> {
     // Monotonic: only update if new timestamp is >= existing
     if (this.props.lastContactedAt && now < this.props.lastContactedAt) {
       // Still emit event but don't update the timestamp
-      this.addDomainEvent(
-        new ContactInteractedEvent(this.id, interactionType, now, recordedBy)
-      );
+      this.addDomainEvent(new ContactInteractedEvent(this.id, interactionType, now, recordedBy));
       return Result.ok(undefined);
     }
 
     this.props.lastContactedAt = now;
     this.props.updatedAt = now;
 
-    this.addDomainEvent(
-      new ContactInteractedEvent(this.id, interactionType, now, recordedBy)
-    );
+    this.addDomainEvent(new ContactInteractedEvent(this.id, interactionType, now, recordedBy));
 
     return Result.ok(undefined);
   }

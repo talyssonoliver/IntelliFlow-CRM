@@ -131,3 +131,30 @@ export class LeadConvertedEvent extends DomainEvent {
     };
   }
 }
+
+/**
+ * Event: Lead was routed to an agent (IFC-030)
+ */
+export class LeadRoutedEvent extends DomainEvent {
+  readonly eventType = 'lead.routed';
+
+  constructor(
+    public readonly leadId: LeadId,
+    public readonly assigneeId: string,
+    public readonly routingMethod: string,
+    public readonly ruleId: string | null,
+    public readonly reason: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      leadId: this.leadId.value,
+      assigneeId: this.assigneeId,
+      routingMethod: this.routingMethod,
+      ruleId: this.ruleId,
+      reason: this.reason,
+    };
+  }
+}

@@ -42,18 +42,13 @@ export const MODULE_NAV_ROUTES: Record<ModuleId, readonly NavRouteConfig[]> = {
     { label: 'Calendar', href: '/calendar', icon: 'calendar_month' },
     { label: 'Email', href: '/email', icon: 'mail' },
   ],
-  LEGAL: [
-    { label: 'Cases', href: '/cases', icon: 'gavel' },
-  ],
+  LEGAL: [{ label: 'Cases', href: '/cases', icon: 'gavel' }],
   SUPPORT: [
     { label: 'Tickets', href: '/tickets', icon: 'confirmation_number' },
+    { label: 'Help Center', href: '/help-center', icon: 'help_center' },
   ],
-  AI_INTELLIGENCE: [
-    { label: 'AI & Agents', href: '/agent-approvals', icon: 'smart_toy' },
-  ],
-  ANALYTICS: [
-    { label: 'Reports', href: '/analytics', icon: 'bar_chart' },
-  ],
+  AI_INTELLIGENCE: [{ label: 'AI & Agents', href: '/agent-approvals', icon: 'smart_toy' }],
+  ANALYTICS: [{ label: 'Reports', href: '/analytics', icon: 'bar_chart' }],
   COMMERCE: [
     // No routes yet — Products pages not built
   ],

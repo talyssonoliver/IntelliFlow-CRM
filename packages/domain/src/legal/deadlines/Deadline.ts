@@ -83,7 +83,7 @@ export interface CreateDeadlineProps {
  * Represents a legal deadline with due date, status tracking, and reminders
  */
 export class Deadline extends Entity<DeadlineId> {
-  private props: DeadlineProps;
+  private readonly props: DeadlineProps;
 
   private constructor(id: DeadlineId, props: DeadlineProps) {
     super(id);

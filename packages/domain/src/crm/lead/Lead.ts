@@ -327,9 +327,29 @@ export class Lead extends AggregateRoot<LeadId> {
   }
 
   updateContactInfo(
-    props: Partial<Pick<LeadProps, 'firstName' | 'lastName' | 'company' | 'title' | 'phone'>>
+    props: Partial<
+      Pick<
+        LeadProps,
+        | 'firstName'
+        | 'lastName'
+        | 'company'
+        | 'title'
+        | 'phone'
+        | 'location'
+        | 'website'
+        | 'avatarUrl'
+        | 'lastContactedAt'
+        | 'estimatedValue'
+        | 'tags'
+      >
+    >
   ): void {
-    Object.assign(this.props, props);
+    // Only apply fields that are explicitly provided (not undefined)
+    // to prevent partial updates from clearing existing data
+    Object.assign(
+      this.props,
+      Object.fromEntries(Object.entries(props).filter(([, v]) => v !== undefined))
+    );
     this.props.updatedAt = new Date();
   }
 

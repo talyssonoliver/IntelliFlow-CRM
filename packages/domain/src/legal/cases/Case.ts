@@ -88,7 +88,7 @@ export interface CreateCaseProps {
  * Represents a legal case/matter with associated tasks and deadlines
  */
 export class Case extends AggregateRoot<CaseId> {
-  private props: CaseProps;
+  private readonly props: CaseProps;
 
   private constructor(id: CaseId, props: CaseProps) {
     super(id);

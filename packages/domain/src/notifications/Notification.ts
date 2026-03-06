@@ -86,7 +86,7 @@ interface CreateNotificationInput {
 }
 
 export class Notification extends AggregateRoot<NotificationId> {
-  private props: NotificationProps;
+  private readonly props: NotificationProps;
 
   private constructor(id: NotificationId, props: NotificationProps) {
     super(id);

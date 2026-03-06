@@ -34,12 +34,12 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
-    "uuid": "^9.0.0",
+    "uuid": "^11.0.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@intelliflow/typescript-config": "workspace:*",
-    "@types/node": "^22.0.0",
+    "@types/node": "^25.3.2",
     "@types/uuid": "^9.0.0",
     "@vitest/coverage-v8": "^4.0.16",
     "tsup": "^8.0.0",

@@ -68,6 +68,7 @@ export class AIOutputReview extends AggregateRoot<ReviewId> {
   private _reviewerId?: string;
   private _reviewDecision?: ReviewDecision;
   private _reviewNotes?: string;
+  private _lockToken?: string;
   private _createdAt: Date;
   private _updatedAt: Date;
 
@@ -204,6 +205,14 @@ export class AIOutputReview extends AggregateRoot<ReviewId> {
 
   get lockExpiresAt(): Date | undefined {
     return this._lockExpiresAt;
+  }
+
+  get lockToken(): string | undefined {
+    return this._lockToken;
+  }
+
+  set lockToken(token: string | undefined) {
+    this._lockToken = token;
   }
 
   get reviewerId(): string | undefined {

@@ -550,7 +550,6 @@ export class CaseDocument {
     this.data.updatedBy = releasedBy;
     this.data.updatedAt = new Date();
   }
-
 }
 
 // ============================================================================

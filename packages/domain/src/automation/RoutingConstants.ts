@@ -25,8 +25,7 @@ export const ROUTING_CONDITION_OPERATORS = [
   'not_in',
   'contains',
 ] as const;
-export type RoutingConditionOperator =
-  (typeof ROUTING_CONDITION_OPERATORS)[number];
+export type RoutingConditionOperator = (typeof ROUTING_CONDITION_OPERATORS)[number];
 
 export const ROUTING_CONDITION_FIELDS = [
   'leadScore',
@@ -47,13 +46,7 @@ export const ROUTING_ACTION_TYPES = [
 ] as const;
 export type RoutingActionType = (typeof ROUTING_ACTION_TYPES)[number];
 
-export const AGENT_STATUSES = [
-  'ONLINE',
-  'BUSY',
-  'AWAY',
-  'OFFLINE',
-  'ON_BREAK',
-] as const;
+export const AGENT_STATUSES = ['ONLINE', 'BUSY', 'AWAY', 'OFFLINE', 'ON_BREAK'] as const;
 export type AgentStatusType = (typeof AGENT_STATUSES)[number];
 
 // =============================================================================

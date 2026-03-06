@@ -170,7 +170,7 @@ export interface RehydrateAutoResponseDraftProps {
  * Represents an AI-generated response awaiting human approval
  */
 export class AutoResponseDraft extends AggregateRoot<AutoResponseDraftId> {
-  private props: AutoResponseDraftProps;
+  private readonly props: AutoResponseDraftProps;
 
   // IFC-029: Escalation limit to prevent infinite escalation cycles
   private static readonly MAX_ESCALATIONS = 3;

@@ -99,7 +99,7 @@ describe('AIOutputReview', () => {
       const review = AIOutputReview.create(defaultProps);
       review.claim('reviewer-123');
       // Simulate expired lock
-      (review as unknown as { _lockExpiresAt: Date })._lockExpiresAt = new Date(Date.now() - 1000);
+      (review as any)._lockExpiresAt = new Date(Date.now() - 1000); // test: access internal state
       const result = review.claim('reviewer-456');
       expect(result.isSuccess).toBe(true);
       expect(review.lockedBy).toBe('reviewer-456');
@@ -224,11 +224,11 @@ describe('AIOutputReview', () => {
       const review = AIOutputReview.create(defaultProps);
       review.escalate(); // depth 1
       // Reset status to allow further escalations
-      (review as unknown as { _status: ReviewStatus })._status = ReviewStatus.PENDING;
+      (review as any)._status = ReviewStatus.PENDING; // test: access internal state
       review.escalate(); // depth 2
-      (review as unknown as { _status: ReviewStatus })._status = ReviewStatus.PENDING;
+      (review as any)._status = ReviewStatus.PENDING; // test: access internal state
       review.escalate(); // depth 3
-      (review as unknown as { _status: ReviewStatus })._status = ReviewStatus.PENDING;
+      (review as any)._status = ReviewStatus.PENDING; // test: access internal state
       const result = review.escalate(); // should fail at depth 3
       expect(result.isFailure).toBe(true);
       expect(review.escalationDepth).toBe(3);
@@ -251,11 +251,11 @@ describe('AIOutputReview', () => {
     it('should return false when depth >= MAX_ESCALATION_DEPTH', () => {
       const review = AIOutputReview.create(defaultProps);
       review.escalate();
-      (review as unknown as { _status: ReviewStatus })._status = ReviewStatus.PENDING;
+      (review as any)._status = ReviewStatus.PENDING; // test: access internal state
       review.escalate();
-      (review as unknown as { _status: ReviewStatus })._status = ReviewStatus.PENDING;
+      (review as any)._status = ReviewStatus.PENDING; // test: access internal state
       review.escalate();
-      (review as unknown as { _status: ReviewStatus })._status = ReviewStatus.PENDING;
+      (review as any)._status = ReviewStatus.PENDING; // test: access internal state
       expect(review.canEscalate()).toBe(false);
     });
 
@@ -270,7 +270,7 @@ describe('AIOutputReview', () => {
     it('should transition to EXPIRED when SLA deadline passed', () => {
       const review = AIOutputReview.create(defaultProps);
       // Simulate past deadline
-      (review as unknown as { _slaDeadline: Date })._slaDeadline = new Date(Date.now() - 1000);
+      (review as any)._slaDeadline = new Date(Date.now() - 1000); // test: access internal state
       const result = review.expire();
       expect(result.isSuccess).toBe(true);
       expect(review.status).toBe(ReviewStatus.EXPIRED);
@@ -304,7 +304,7 @@ describe('AIOutputReview', () => {
 
     it('should not allow transition from EXPIRED to any state', () => {
       const review = AIOutputReview.create(defaultProps);
-      (review as unknown as { _slaDeadline: Date })._slaDeadline = new Date(Date.now() - 1000);
+      (review as any)._slaDeadline = new Date(Date.now() - 1000); // test: access internal state
       review.expire();
 
       expect(review.approve('r').isFailure).toBe(true);

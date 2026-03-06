@@ -216,100 +216,26 @@ export class Invoice extends AggregateRoot<InvoiceId> {
   static create(props: CreateInvoiceProps): Result<Invoice, InvalidInvoiceError> {
     const currency = props.currency ?? 'USD';
 
-    // Validate
-    if (!props.customerId || props.customerId.trim().length === 0) {
-      return Result.fail(new InvalidInvoiceError('Customer ID is required'));
-    }
-    if (!props.tenantId || props.tenantId.trim().length === 0) {
-      return Result.fail(new InvalidInvoiceError('Tenant ID is required'));
-    }
-    if (!props.lineItems || props.lineItems.length === 0) {
-      return Result.fail(new InvalidInvoiceError('Invoice must have at least one line item'));
-    }
-    if (!props.billingEmail || props.billingEmail.trim().length === 0) {
-      return Result.fail(new InvalidInvoiceError('Billing email is required'));
-    }
+    const validationError = Invoice.validateRequiredFields(props);
+    if (validationError) return Result.fail(validationError);
 
-    // Build line items
-    const lineItems: LineItem[] = [];
-    for (const itemProps of props.lineItems) {
-      const itemResult = LineItem.create({ ...itemProps, currency });
-      if (itemResult.isFailure) {
-        return Result.fail(
-          new InvalidInvoiceError(`Invalid line item: ${itemResult.error.message}`)
-        );
-      }
-      lineItems.push(itemResult.value);
-    }
+    const lineItemsResult = Invoice.buildLineItems(props.lineItems, currency);
+    if (lineItemsResult.isFailure) return Result.fail(lineItemsResult.error);
+    const lineItems = lineItemsResult.value;
 
-    // Calculate subtotal
-    let subtotal = Money.zero(currency);
-    for (const item of lineItems) {
-      const addResult = subtotal.add(item.total);
-      if (addResult.isFailure) {
-        return Result.fail(new InvalidInvoiceError(`Currency mismatch in line items`));
-      }
-      subtotal = addResult.value;
-    }
+    const totalsResult = Invoice.calculateTotals(lineItems, props, currency);
+    if (totalsResult.isFailure) return Result.fail(totalsResult.error);
+    const { subtotal, totalTax, totalAmount, taxRate } = totalsResult.value;
 
-    // Tax
-    const taxRateValue = props.taxRate ?? 0;
-    const taxType = props.taxType ?? 'NONE';
-    const taxRateResult = TaxRate.create(taxRateValue, taxType, props.taxJurisdiction);
-    if (taxRateResult.isFailure) {
-      return Result.fail(
-        new InvalidInvoiceError(`Invalid tax rate: ${taxRateResult.error.message}`)
-      );
-    }
-    const taxRate = taxRateResult.value;
-    const totalTax = taxRate.calculate(subtotal);
-
-    // Total
-    const totalResult = subtotal.add(totalTax);
-    if (totalResult.isFailure) {
-      return Result.fail(new InvalidInvoiceError('Failed to calculate total'));
-    }
-    const totalAmount = totalResult.value;
-
-    // Payment terms & dates
     const issueDate = props.issueDate ?? new Date();
-    let dueDate: Date;
-    let paymentTerms: PaymentTerms;
-
-    if (props.dueDate) {
-      dueDate = props.dueDate;
-      if (dueDate < issueDate) {
-        return Result.fail(new InvalidInvoiceError('Due date cannot be before issue date'));
-      }
-      const daysDiff = Math.ceil((dueDate.getTime() - issueDate.getTime()) / (1000 * 60 * 60 * 24));
-      const termsDesc =
-        props.paymentTermsDescription ?? (daysDiff === 0 ? 'Due on Receipt' : `Net ${daysDiff}`);
-      const termsResult = PaymentTerms.create(daysDiff, termsDesc);
-      if (termsResult.isFailure) {
-        return Result.fail(
-          new InvalidInvoiceError(`Invalid payment terms: ${termsResult.error.message}`)
-        );
-      }
-      paymentTerms = termsResult.value;
-    } else {
-      const days = props.paymentTermsDays ?? 30;
-      const desc = props.paymentTermsDescription ?? (days === 0 ? 'Due on Receipt' : `Net ${days}`);
-      const termsResult = PaymentTerms.create(days, desc);
-      if (termsResult.isFailure) {
-        return Result.fail(
-          new InvalidInvoiceError(`Invalid payment terms: ${termsResult.error.message}`)
-        );
-      }
-      paymentTerms = termsResult.value;
-      dueDate = paymentTerms.calculateDueDate(issueDate);
-    }
+    const termsResult = Invoice.resolvePaymentTerms(props, issueDate);
+    if (termsResult.isFailure) return Result.fail(termsResult.error);
+    const { paymentTerms, dueDate } = termsResult.value;
 
     const id = InvoiceId.generate();
     const now = new Date();
-    const invoiceNumber = generateInvoiceNumber();
-
     const invoice = new Invoice(id, {
-      invoiceNumber,
+      invoiceNumber: generateInvoiceNumber(),
       customerId: props.customerId.trim(),
       tenantId: props.tenantId.trim(),
       status: 'DRAFT',
@@ -346,6 +272,113 @@ export class Invoice extends AggregateRoot<InvoiceId> {
     );
 
     return Result.ok(invoice);
+  }
+
+  private static validateRequiredFields(props: CreateInvoiceProps): InvalidInvoiceError | null {
+    if (!props.customerId || props.customerId.trim().length === 0) {
+      return new InvalidInvoiceError('Customer ID is required');
+    }
+    if (!props.tenantId || props.tenantId.trim().length === 0) {
+      return new InvalidInvoiceError('Tenant ID is required');
+    }
+    if (!props.lineItems || props.lineItems.length === 0) {
+      return new InvalidInvoiceError('Invoice must have at least one line item');
+    }
+    if (!props.billingEmail || props.billingEmail.trim().length === 0) {
+      return new InvalidInvoiceError('Billing email is required');
+    }
+    return null;
+  }
+
+  private static buildLineItems(
+    itemProps: CreateLineItemProps[],
+    currency: string
+  ): Result<LineItem[], InvalidInvoiceError> {
+    const lineItems: LineItem[] = [];
+    for (const item of itemProps) {
+      const itemResult = LineItem.create({ ...item, currency });
+      if (itemResult.isFailure) {
+        return Result.fail(
+          new InvalidInvoiceError(`Invalid line item: ${itemResult.error.message}`)
+        );
+      }
+      lineItems.push(itemResult.value);
+    }
+    return Result.ok(lineItems);
+  }
+
+  private static calculateTotals(
+    lineItems: LineItem[],
+    props: CreateInvoiceProps,
+    currency: string
+  ): Result<
+    { subtotal: Money; totalTax: Money; totalAmount: Money; taxRate: TaxRate },
+    InvalidInvoiceError
+  > {
+    let subtotal = Money.zero(currency);
+    for (const item of lineItems) {
+      const addResult = subtotal.add(item.total);
+      if (addResult.isFailure) {
+        return Result.fail(new InvalidInvoiceError('Currency mismatch in line items'));
+      }
+      subtotal = addResult.value;
+    }
+
+    const taxRateResult = TaxRate.create(
+      props.taxRate ?? 0,
+      props.taxType ?? 'NONE',
+      props.taxJurisdiction
+    );
+    if (taxRateResult.isFailure) {
+      return Result.fail(
+        new InvalidInvoiceError(`Invalid tax rate: ${taxRateResult.error.message}`)
+      );
+    }
+    const taxRate = taxRateResult.value;
+    const totalTax = taxRate.calculate(subtotal);
+
+    const totalResult = subtotal.add(totalTax);
+    if (totalResult.isFailure) {
+      return Result.fail(new InvalidInvoiceError('Failed to calculate total'));
+    }
+
+    return Result.ok({ subtotal, totalTax, totalAmount: totalResult.value, taxRate });
+  }
+
+  private static resolvePaymentTerms(
+    props: CreateInvoiceProps,
+    issueDate: Date
+  ): Result<{ paymentTerms: PaymentTerms; dueDate: Date }, InvalidInvoiceError> {
+    if (props.dueDate) {
+      if (props.dueDate < issueDate) {
+        return Result.fail(new InvalidInvoiceError('Due date cannot be before issue date'));
+      }
+      const daysDiff = Math.ceil(
+        (props.dueDate.getTime() - issueDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+      const desc =
+        props.paymentTermsDescription ?? (daysDiff === 0 ? 'Due on Receipt' : `Net ${daysDiff}`);
+      const termsResult = PaymentTerms.create(daysDiff, desc);
+      if (termsResult.isFailure) {
+        return Result.fail(
+          new InvalidInvoiceError(`Invalid payment terms: ${termsResult.error.message}`)
+        );
+      }
+      return Result.ok({ paymentTerms: termsResult.value, dueDate: props.dueDate });
+    }
+
+    const days = props.paymentTermsDays ?? 30;
+    const desc = props.paymentTermsDescription ?? (days === 0 ? 'Due on Receipt' : `Net ${days}`);
+    const termsResult = PaymentTerms.create(days, desc);
+    if (termsResult.isFailure) {
+      return Result.fail(
+        new InvalidInvoiceError(`Invalid payment terms: ${termsResult.error.message}`)
+      );
+    }
+    return Result.ok({
+      paymentTerms: termsResult.value,
+      dueDate: termsResult.value.calculateDueDate(issueDate),
+    });
   }
 
   static reconstitute(id: InvoiceId, props: InvoiceProps): Invoice {
