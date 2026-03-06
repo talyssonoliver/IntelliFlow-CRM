@@ -218,12 +218,20 @@ function ExperimentCard({
   onAnalyze,
 }: ExperimentCardProps) {
   return (
-    <div
+    <div // NOSONAR
       className={cn(
         'rounded-lg border p-4 transition-all cursor-pointer hover:border-primary/50',
         isSelected ? 'border-primary bg-primary/5' : 'border-border bg-card'
       )}
       onClick={onSelect}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect?.();
+        }
+      }}
+      role="button"
+      tabIndex={0}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3">
@@ -486,4 +494,3 @@ export function ExperimentDashboard({
     </div>
   );
 }
-

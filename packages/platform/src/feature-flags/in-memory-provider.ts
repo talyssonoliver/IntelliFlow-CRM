@@ -31,8 +31,8 @@ function firstMatchingRule(
     if (matches) {
       return {
         key: definition.key,
-        enabled: rule.then.enabled,
-        variant: rule.then.variant,
+        enabled: rule.result.enabled,
+        variant: rule.result.variant,
         reason: 'rule_match',
       };
     }

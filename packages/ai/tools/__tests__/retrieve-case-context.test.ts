@@ -89,8 +89,8 @@ describe('Case RAG Tool - IFC-156', () => {
 
       it('should handle empty input', () => {
         expect(sanitizeContent('')).toBe('');
-        expect(sanitizeContent(null as unknown as string)).toBe('');
-        expect(sanitizeContent(undefined as unknown as string)).toBe('');
+        expect(sanitizeContent(null as any)).toBe('');
+        expect(sanitizeContent(undefined as any)).toBe('');
       });
 
       it('should preserve normal content', () => {

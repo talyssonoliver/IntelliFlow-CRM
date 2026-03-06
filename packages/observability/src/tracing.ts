@@ -28,7 +28,7 @@
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-import { Resource } from '@opentelemetry/resources';
+import { resourceFromAttributes } from '@opentelemetry/resources';
 
 // Use stable string literals to avoid version compatibility issues with semantic-conventions
 const SEMRESATTR_SERVICE_NAME = 'service.name';
@@ -84,7 +84,7 @@ export function initTracing(config: TracingConfig): void {
     return;
   }
 
-  const resource = new Resource({
+  const resource = resourceFromAttributes({
     [SEMRESATTR_SERVICE_NAME]: config.serviceName,
     [SEMRESATTR_SERVICE_VERSION]: config.serviceVersion || process.env.SERVICE_VERSION || '0.1.0',
     'deployment.environment': config.environment || process.env.ENVIRONMENT || 'development',

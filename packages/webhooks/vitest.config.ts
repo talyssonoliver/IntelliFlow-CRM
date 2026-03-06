@@ -1,22 +1,22 @@
 import { defineConfig } from 'vitest/config';
+import path from 'node:path';
 
 export default defineConfig({
   test: {
-    name: 'observability',
+    name: 'webhooks',
     globals: true,
     environment: 'node',
-    passWithNoTests: true,
-    include: ['src/**/*.{test,spec}.ts'],
+    include: ['src/**/*.{test,spec}.ts', '__tests__/**/*.{test,spec}.ts'],
     exclude: ['node_modules', 'dist'],
 
-    // Memory optimization
+    // Memory optimization (Vitest v4)
     restoreMocks: true,
     clearMocks: true,
-    resetMocks: true,
+    mockReset: true,
     unstubGlobals: true,
     unstubEnvs: true,
 
-    // Pool configuration
+    // Pool and isolation
     pool: 'forks',
     isolate: true,
     forceExit: process.env['COVERAGE_RUN'] !== '1',
@@ -31,13 +31,10 @@ export default defineConfig({
     testTimeout: 30000,
     hookTimeout: 30000,
     teardownTimeout: 10000,
-
-    coverage: {
-      provider: 'istanbul',
-      reporter: ['text', 'json', 'html', 'lcov'],
-      reportsDirectory:
-        process.env['COVERAGE_RUN'] === '1' ? 'artifacts/coverage' : 'artifacts/coverage-vitest',
-      exclude: ['dist/', '**/*.config.ts', '**/*.d.ts'],
+  },
+  resolve: {
+    alias: {
+      '@intelliflow/webhooks': path.resolve(__dirname, './src'),
     },
   },
 });

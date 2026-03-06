@@ -10,7 +10,8 @@ interface WidgetDropZoneProps {
 
 export function WidgetDropZone({ isOver = false, onClick, className = '' }: WidgetDropZoneProps) {
   return (
-    <div
+    <button
+      type="button"
       onClick={onClick}
       className={`
         col-span-1 h-[150px] border-2 border-dashed rounded-xl
@@ -25,7 +26,7 @@ export function WidgetDropZone({ isOver = false, onClick, className = '' }: Widg
     >
       <span className="material-symbols-outlined text-3xl mb-2">add_circle</span>
       <span className="text-sm font-medium">{isOver ? 'Drop Widget Here' : 'Add Widget'}</span>
-    </div>
+    </button>
   );
 }
 

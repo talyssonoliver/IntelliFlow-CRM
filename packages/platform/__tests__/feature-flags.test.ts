@@ -176,11 +176,11 @@ describe('Feature Flags Module', () => {
             rules: [
               {
                 when: { plan: 'premium' },
-                then: { enabled: true },
+                result: { enabled: true },
               },
               {
                 when: { plan: 'free' },
-                then: { enabled: false },
+                result: { enabled: false },
               },
             ],
           },
@@ -225,11 +225,11 @@ describe('Feature Flags Module', () => {
             rules: [
               {
                 when: { env: 'production' },
-                then: { enabled: true, variant: 'prod-variant' },
+                result: { enabled: true, variant: 'prod-variant' },
               },
               {
                 when: { env: 'production' },
-                then: { enabled: false, variant: 'second-variant' },
+                result: { enabled: false, variant: 'second-variant' },
               },
             ],
           },
@@ -263,7 +263,7 @@ describe('Feature Flags Module', () => {
             rules: [
               {
                 when: { plan: 'premium', region: 'us-east', beta: true },
-                then: { enabled: true },
+                result: { enabled: true },
               },
             ],
           },
@@ -301,7 +301,7 @@ describe('Feature Flags Module', () => {
             rules: [
               {
                 when: { name: 'test', count: 42, active: true },
-                then: { enabled: true },
+                result: { enabled: true },
               },
             ],
           },
@@ -331,7 +331,7 @@ describe('Feature Flags Module', () => {
             rules: [
               {
                 when: { plan: 'premium' },
-                then: { enabled: true },
+                result: { enabled: true },
               },
             ],
           },
@@ -358,7 +358,7 @@ describe('Feature Flags Module', () => {
             rules: [
               {
                 when: { plan: 'premium' },
-                then: { enabled: true },
+                result: { enabled: true },
               },
             ],
           },
@@ -607,7 +607,7 @@ describe('Feature Flags Module', () => {
             rules: [
               {
                 when: { override: 'yes' },
-                then: { enabled: true, variant: 'override-variant' },
+                result: { enabled: true, variant: 'override-variant' },
               },
             ],
           },
@@ -641,7 +641,7 @@ describe('Feature Flags Module', () => {
             rules: [
               {
                 when: { plan: 'enterprise' },
-                then: { enabled: false },
+                result: { enabled: false },
               },
             ],
           },
@@ -723,11 +723,11 @@ describe('Feature Flags Module', () => {
             rules: [
               {
                 when: { admin: true },
-                then: { enabled: true },
+                result: { enabled: true },
               },
               {
                 when: { admin: false },
-                then: { enabled: false },
+                result: { enabled: false },
               },
             ],
           },
@@ -787,7 +787,7 @@ describe('Feature Flags Module', () => {
             rules: [
               {
                 when: { env: 'production' },
-                then: { enabled: true, variant: 'prod' },
+                result: { enabled: true, variant: 'prod' },
               },
             ],
           },
@@ -921,7 +921,7 @@ describe('Feature Flags Module', () => {
                   numberAttr: 42,
                   boolAttr: true,
                 },
-                then: { enabled: true },
+                result: { enabled: true },
               },
             ],
           },
@@ -1045,11 +1045,11 @@ describe('Feature Flags Module', () => {
             rules: [
               {
                 when: { vip: true },
-                then: { enabled: true, variant: 'vip-experience' },
+                result: { enabled: true, variant: 'vip-experience' },
               },
               {
                 when: { beta: true },
-                then: { enabled: true, variant: 'beta-experience' },
+                result: { enabled: true, variant: 'beta-experience' },
               },
             ],
           },
@@ -1130,7 +1130,7 @@ describe('Feature Flags Module', () => {
             rules: [
               {
                 when: { premium: true },
-                then: { enabled: true, variant: 'premium' },
+                result: { enabled: true, variant: 'premium' },
               },
             ],
           },

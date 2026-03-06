@@ -117,14 +117,10 @@ export function createLogger(config: LoggerConfig): pino.Logger {
         }
       : undefined;
 
-  return pino(
-    options,
-    transport
-      ? pino.transport(transport)
-      : config.destination
-        ? pino.destination(config.destination)
-        : undefined
-  );
+  const destinationOrUndefined = config.destination
+    ? pino.destination(config.destination)
+    : undefined;
+  return pino(options, transport ? pino.transport(transport) : destinationOrUndefined);
 }
 
 /**
@@ -294,7 +290,8 @@ export function logApiRequest(
   duration: number,
   context?: LogContext
 ): void {
-  const level = statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'info';
+  const warnOrInfo = statusCode >= 400 ? 'warn' : 'info';
+  const level = statusCode >= 500 ? 'error' : warnOrInfo;
 
   getLogger()[level](
     {

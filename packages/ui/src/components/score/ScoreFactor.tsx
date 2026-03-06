@@ -72,7 +72,7 @@ function ScoreFactor({
           <span className="text-sm text-foreground truncate">{factor.name}</span>
 
           {/* Expand/collapse button */}
-          {hasReasoning && (
+          {hasReasoning ? (
             <button
               type="button"
               onClick={() => setIsExpanded(!isExpanded)}
@@ -90,7 +90,7 @@ function ScoreFactor({
                 expand_more
               </span>
             </button>
-          )}
+          ) : null}
         </div>
 
         {/* Impact value */}
@@ -110,7 +110,7 @@ function ScoreFactor({
       {showImpactBar && <ImpactBar impact={factor.impact} />}
 
       {/* Reasoning (collapsible) */}
-      {hasReasoning && (
+      {hasReasoning ? (
         <div
           className={cn(
             'overflow-hidden transition-all duration-200',
@@ -122,7 +122,7 @@ function ScoreFactor({
             {factor.reasoning}
           </p>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

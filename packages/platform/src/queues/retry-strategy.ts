@@ -41,7 +41,7 @@ export function calculateBackoffDelay(attemptNumber: number, config: RetryBackof
   // Apply jitter (randomness to prevent thundering herd)
   if (jitter > 0) {
     const jitterRange = calculatedDelay * jitter;
-    const randomJitter = (Math.random() - 0.5) * 2 * jitterRange;
+    const randomJitter = (Math.random() - 0.5) * 2 * jitterRange; // NOSONAR — jitter to prevent thundering herd in retry backoff, not security-sensitive
     calculatedDelay = Math.max(0, calculatedDelay + randomJitter);
   }
 

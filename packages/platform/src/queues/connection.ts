@@ -22,7 +22,7 @@ export interface RedisConnectionConfig {
   password?: string;
   db?: number;
   tls?: boolean;
-  maxRetriesPerRequest?: number;
+  maxRetriesPerRequest?: number | null;
   enableReadyCheck?: boolean;
   lazyConnect?: boolean;
 }
@@ -38,7 +38,7 @@ export function getDefaultConnectionConfig(): RedisConnectionConfig {
     password: process.env.REDIS_PASSWORD || undefined,
     db: parseInt(process.env.REDIS_DB || '0', 10),
     tls: process.env.REDIS_TLS === 'true',
-    maxRetriesPerRequest: null as unknown as number, // BullMQ requires null for blocking commands
+    maxRetriesPerRequest: null, // BullMQ requires null for blocking commands
     enableReadyCheck: true,
     lazyConnect: false,
   };

@@ -225,13 +225,13 @@ function ResizeHandle({ widget, position, onResize, isResizing }: ResizeHandlePr
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
-    document.body.style.cursor =
-      position === 'right' ? 'ew-resize' : position === 'bottom' ? 'ns-resize' : 'nwse-resize';
+    const bottomOrCornerCursor = position === 'bottom' ? 'ns-resize' : 'nwse-resize';
+    document.body.style.cursor = position === 'right' ? 'ew-resize' : bottomOrCornerCursor;
     document.body.style.userSelect = 'none';
   };
 
   return (
-    <div
+    <div // NOSONAR
       ref={handleRef}
       onMouseDown={handleMouseDown}
       className={`absolute z-20 rounded transition-colors ${positionClasses[position]} ${

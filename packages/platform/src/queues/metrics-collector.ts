@@ -264,7 +264,7 @@ export class JobMetricsCollector {
  * Collects metrics across all queues
  */
 export class AggregateMetricsCollector {
-  private collectors: Map<string, JobMetricsCollector> = new Map();
+  private readonly collectors: Map<string, JobMetricsCollector> = new Map();
 
   /**
    * Get or create collector for a queue

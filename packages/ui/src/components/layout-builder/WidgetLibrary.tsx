@@ -105,7 +105,7 @@ export function WidgetLibrary({
           );
         })}
 
-        {filteredTemplates.length === 0 && (
+        {filteredTemplates.length === 0 ? (
           <div className="text-center py-8 text-slate-400">
             {searchQuery ? (
               <>
@@ -125,7 +125,7 @@ export function WidgetLibrary({
               </>
             )}
           </div>
-        )}
+        ) : null}
       </div>
     </aside>
   );
@@ -145,6 +145,14 @@ export function WidgetLibraryItem({
   return (
     <div
       onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+      role="button"
+      tabIndex={0}
       className={`
         bg-white dark:bg-[#1a2632] p-3 rounded-lg border border-border-light dark:border-border-dark shadow-sm
         cursor-grab hover:border-ds-primary hover:shadow-md transition-all flex items-center gap-3 group

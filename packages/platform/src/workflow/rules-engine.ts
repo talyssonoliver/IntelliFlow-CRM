@@ -181,9 +181,9 @@ export interface RulesEngineMetrics {
  * Rules Engine - Evaluates business rules against events
  */
 export class RulesEngine {
-  private rules: Map<string, RuleDefinition> = new Map();
-  private eventToRulesIndex: Map<string, Set<string>> = new Map();
-  private config: Required<RulesEngineConfig>;
+  private readonly rules: Map<string, RuleDefinition> = new Map();
+  private readonly eventToRulesIndex: Map<string, Set<string>> = new Map();
+  private readonly config: Required<RulesEngineConfig>;
   private metrics: RulesEngineMetrics = {
     totalEvaluations: 0,
     totalRulesMatched: 0,
@@ -191,7 +191,7 @@ export class RulesEngine {
     averageEvaluationTimeMs: 0,
     errors: 0,
   };
-  private actionHandlers: Map<ActionType, ActionHandler> = new Map();
+  private readonly actionHandlers: Map<ActionType, ActionHandler> = new Map();
 
   constructor(config: RulesEngineConfig = {}) {
     this.config = {

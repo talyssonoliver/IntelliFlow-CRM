@@ -413,7 +413,7 @@ export function CookieConsentBanner({
   return (
     <>
       {/* Main Banner */}
-      {showBanner && !settingsOpen && (
+      {showBanner && !settingsOpen ? (
         <div
           role="dialog"
           aria-modal="true"
@@ -483,10 +483,10 @@ export function CookieConsentBanner({
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Settings Panel (Modal) */}
-      {settingsOpen && (
+      {settingsOpen ? (
         <div
           className="fixed inset-0 z-50 overflow-y-auto"
           role="dialog"
@@ -598,7 +598,7 @@ export function CookieConsentBanner({
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </>
   );
 }
@@ -674,7 +674,7 @@ function CookieCategorySection({
       </div>
 
       {/* Cookie List */}
-      {expanded && (
+      {expanded ? (
         <div className="border-t dark:border-gray-700">
           <table className="w-full text-sm">
             <thead className="bg-gray-100 dark:bg-gray-800">
@@ -701,7 +701,7 @@ function CookieCategorySection({
             </tbody>
           </table>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

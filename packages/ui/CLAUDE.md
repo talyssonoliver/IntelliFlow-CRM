@@ -2,7 +2,8 @@
 
 ## Purpose
 
-Shared React component library based on shadcn/ui. Used by `apps/web/` for consistent UI across the CRM.
+Shared React component library based on shadcn/ui. Used by `apps/web/` for
+consistent UI across the CRM.
 
 ## Structure
 
@@ -16,10 +17,13 @@ src/
 
 ## Key Rules
 
-1. **shadcn/ui based**: All components extend shadcn/ui primitives with Tailwind CSS
-2. **Brand compliant**: Must follow IntelliFlow design system (see `docs/company/brand/DESIGN_SYSTEM_LLM_INDEX.md`)
+1. **shadcn/ui based**: All components extend shadcn/ui primitives with Tailwind
+   CSS
+2. **Brand compliant**: Must follow IntelliFlow design system (see
+   `docs/company/brand/DESIGN_SYSTEM_LLM_INDEX.md`)
 3. **Accessibility**: WCAG 2.1 AA compliance required
-4. **No business logic**: Pure presentation components only — business logic lives in domain/application layers
+4. **No business logic**: Pure presentation components only — business logic
+   lives in domain/application layers
 5. **Responsive**: Mobile-first design, all breakpoints supported
 
 ## Adding Components

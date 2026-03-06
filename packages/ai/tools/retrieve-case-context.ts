@@ -143,13 +143,14 @@ const INJECTION_PATTERNS = [
 
 /**
  * Dangerous characters that could break prompt structure
- * Note: The [CONTENT_FILTERED] marker's brackets are protected by using a placeholder
+ * Note: The [CONTENT_FILTERED] marker's brackets are protected by using a sentinel token
  */
 const DANGEROUS_CHARS_PATTERN = /[<>{}[\]\\`]/g;
 
 /**
- * Placeholder used during sanitization to protect our markers
- * Uses only alphanumeric and underscore chars to avoid escaping
+ * Sentinel token used during sanitization to protect our markers from character escaping.
+ * Applied before the escape pass, then replaced back with the final FILTERED_MARKER.
+ * Uses only alphanumeric and underscore chars so it is unaffected by the escape map.
  */
 const FILTERED_PLACEHOLDER = '___XFILTEREDX___';
 const FILTERED_MARKER = '[CONTENT_FILTERED]';
@@ -165,10 +166,10 @@ export function sanitizeContent(content: string): string {
   let sanitized = content;
 
   // 1. Check for and neutralize injection patterns FIRST (before escaping)
-  // Use a placeholder that won't be affected by escaping
+  // Substitute with a sentinel token that won't be affected by the escape pass below
   for (const pattern of INJECTION_PATTERNS) {
     if (pattern.test(sanitized)) {
-      // Replace the suspicious pattern with a placeholder
+      // Replace the suspicious pattern with the sentinel token
       sanitized = sanitized.replace(pattern, FILTERED_PLACEHOLDER);
     }
   }
@@ -188,7 +189,7 @@ export function sanitizeContent(content: string): string {
     return escapeMap[char] || char;
   });
 
-  // 3. Replace placeholders with the actual marker
+  // 3. Replace sentinel tokens with the final human-readable marker
   sanitized = sanitized.replaceAll(FILTERED_PLACEHOLDER, FILTERED_MARKER);
 
   // 4. Limit consecutive newlines to prevent structure manipulation

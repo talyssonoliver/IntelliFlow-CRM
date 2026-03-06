@@ -217,7 +217,7 @@ export interface TemporalEngineConfig {
  */
 export class TemporalWorkflowEngine implements IWorkflowEngine {
   readonly engineType: WorkflowEngineType = 'temporal';
-  private config: TemporalEngineConfig;
+  private readonly config: TemporalEngineConfig;
   private client: TemporalClientAdapter | null = null;
 
   constructor(config: TemporalEngineConfig) {
@@ -312,7 +312,7 @@ export class TemporalWorkflowEngine implements IWorkflowEngine {
  */
 class TemporalWorkflowHandle<TOutput> implements WorkflowHandle<TOutput> {
   readonly workflowId: string;
-  private handle: InternalTemporalHandle;
+  private readonly handle: InternalTemporalHandle;
 
   constructor(handle: InternalTemporalHandle) {
     this.workflowId = handle.workflowId;
@@ -353,9 +353,9 @@ class TemporalWorkflowHandle<TOutput> implements WorkflowHandle<TOutput> {
  * Abstracts the actual Temporal SDK to allow testing and gradual integration
  */
 class TemporalClientAdapter {
-  private config: TemporalEngineConfig;
+  private readonly config: TemporalEngineConfig;
   private connected = false;
-  private workflows = new Map<string, InternalTemporalHandle>();
+  private readonly workflows = new Map<string, InternalTemporalHandle>();
 
   constructor(config: TemporalEngineConfig) {
     this.config = config;
@@ -394,10 +394,17 @@ class TemporalClientAdapter {
     limit?: number;
     offset?: number;
   }): Promise<WorkflowInstance[]> {
+    const instances = await this.collectMatchingInstances(query?.status);
+    return this.paginateInstances(instances, query?.offset, query?.limit);
+  }
+
+  private async collectMatchingInstances(
+    statusFilter?: WorkflowStatus
+  ): Promise<WorkflowInstance[]> {
     const instances: WorkflowInstance[] = [];
     for (const [id, handle] of this.workflows) {
       const status = await handle.getStatus();
-      if (!query?.status || status === query.status) {
+      if (!statusFilter || status === statusFilter) {
         instances.push({
           id,
           definitionId: handle.workflowName,
@@ -406,7 +413,15 @@ class TemporalClientAdapter {
         });
       }
     }
-    return instances.slice(query?.offset ?? 0, (query?.offset ?? 0) + (query?.limit ?? 100));
+    return instances;
+  }
+
+  private paginateInstances(
+    instances: WorkflowInstance[],
+    offset = 0,
+    limit = 100
+  ): WorkflowInstance[] {
+    return instances.slice(offset, offset + limit);
   }
 }
 
@@ -417,10 +432,10 @@ class InternalTemporalHandle {
   readonly workflowId: string;
   readonly workflowName: string;
   readonly startedAt: Date;
-  private input: unknown;
+  private readonly input: unknown;
   private status: WorkflowStatus = 'running';
   private _result: unknown = null;
-  private signals: Array<{ name: string; payload: unknown }> = [];
+  private readonly signals: Array<{ name: string; payload: unknown }> = [];
 
   constructor(workflowId: string, workflowName: string, input: unknown) {
     this.workflowId = workflowId;
@@ -470,7 +485,7 @@ class InternalTemporalHandle {
  * Factory for creating workflow engines
  */
 export class WorkflowEngineFactory {
-  private static engines = new Map<WorkflowEngineType, IWorkflowEngine>();
+  private static readonly engines = new Map<WorkflowEngineType, IWorkflowEngine>();
 
   /**
    * Create or get a Temporal engine instance
@@ -513,7 +528,8 @@ export class WorkflowEngineFactory {
  * Routes events to appropriate workflow engines based on configuration
  */
 export class WorkflowRouter {
-  private routes: Map<string, { engine: WorkflowEngineType; workflowName: string }> = new Map();
+  private readonly routes: Map<string, { engine: WorkflowEngineType; workflowName: string }> =
+    new Map();
 
   /**
    * Register a route from event type to workflow
@@ -575,25 +591,23 @@ function eventTypeToWorkflowName(eventType: string): string {
  */
 export function createDefaultWorkflowRouter(): WorkflowRouter {
   const router = new WorkflowRouter();
-
-  // Register case event routes from the domain routing map
-  for (const [eventType, engine] of Object.entries(CASE_EVENT_WORKFLOW_ROUTING)) {
-    // Skip 'rules' engine as it's handled synchronously, not via workflow
-    if (engine === 'rules') continue;
-
-    const workflowName = eventTypeToWorkflowName(eventType);
-    router.registerRoute(eventType, engine as WorkflowEngineType, workflowName);
-  }
-
-  // Lead workflows -> LangGraph (AI)
+  registerCaseEventRoutes(router);
   router.registerRoute('lead.created', 'langgraph', 'leadQualificationWorkflow');
   router.registerRoute('lead.scored', 'langgraph', 'leadNurturingWorkflow');
-
-  // Simple notifications -> BullMQ (background)
   router.registerRoute('notification.requested', 'bullmq', 'sendNotificationJob');
   router.registerRoute('email.requested', 'bullmq', 'sendEmailJob');
-
   return router;
+}
+
+function registerCaseEventRoutes(router: WorkflowRouter): void {
+  for (const [eventType, engine] of Object.entries(CASE_EVENT_WORKFLOW_ROUTING)) {
+    if (engine === 'rules') continue;
+    router.registerRoute(
+      eventType,
+      engine as WorkflowEngineType,
+      eventTypeToWorkflowName(eventType)
+    );
+  }
 }
 
 /**

@@ -41,8 +41,8 @@
     "@tanstack/react-table": "^8.11.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
-    "react-hook-form": "^7.69.0",
-    "tailwind-merge": "^3.4.0"
+    "react-hook-form": "^7.71.2",
+    "tailwind-merge": "^3.5.0"
   },
   "peerDependencies": {
     "react": "^19.2.3",
@@ -55,18 +55,18 @@
     "@storybook/addon-links": "^8.6.15",
     "@storybook/addon-onboarding": "^8.6.15",
     "@storybook/react": "^8.6.15",
-    "@storybook/react-vite": "^8.6.15",
+    "@storybook/react-vite": "^10.2.13",
     "@storybook/test": "^8.6.15",
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.5.1",
-    "@types/react": "^19.2.3",
+    "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.0.0",
     "@vitest/coverage-v8": "^4.0.16",
     "axe-core": "^4.8.4",
-    "jsdom": "^23.0.1",
-    "storybook": "^8.6.15",
+    "jsdom": "^28.1.0",
+    "storybook": "^10.2.13",
     "typescript": "^5.3.3",
     "vitest": "^4.0.16",
     "vitest-axe": "^0.1.0"

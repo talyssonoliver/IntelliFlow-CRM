@@ -24,10 +24,10 @@ import { JobMetricsCollector } from './metrics-collector';
  * Queue registry for managing queue instances
  */
 class QueueRegistry {
-  private queues: Map<string, Queue> = new Map();
-  private workers: Map<string, Worker> = new Map();
-  private events: Map<string, QueueEvents> = new Map();
-  private metricsCollectors: Map<string, JobMetricsCollector> = new Map();
+  private readonly queues: Map<string, Queue> = new Map();
+  private readonly workers: Map<string, Worker> = new Map();
+  private readonly events: Map<string, QueueEvents> = new Map();
+  private readonly metricsCollectors: Map<string, JobMetricsCollector> = new Map();
 
   /**
    * Create or get an existing queue

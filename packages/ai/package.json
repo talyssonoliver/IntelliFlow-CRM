@@ -12,12 +12,12 @@
   },
   "dependencies": {
     "@intelliflow/db": "workspace:*",
-    "@langchain/core": "^1.1.8",
+    "@langchain/core": "^1.1.29",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@intelliflow/typescript-config": "workspace:*",
-    "@types/node": "^22.0.0",
+    "@types/node": "^25.3.2",
     "typescript": "^5.3.3",
     "vitest": "^4.0.16"
   }

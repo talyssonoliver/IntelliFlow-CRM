@@ -87,8 +87,6 @@ export function removeQueueFromBullBoard(queueName: string): void {
  * Returns the configured Bull Board instance
  */
 export function setupBullBoard(config: BullBoardConfig = {}): ReturnType<typeof createBullBoard> {
-  const mergedConfig = { ...DEFAULT_CONFIG, ...config };
-
   // Create adapters for all known queues
   const adapters = createQueueAdapters();
 

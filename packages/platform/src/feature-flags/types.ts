@@ -28,7 +28,7 @@ export interface FeatureFlagDecision {
 
 export interface FeatureFlagRule {
   when: Record<string, string | number | boolean>;
-  then: { enabled: boolean; variant?: string };
+  result: { enabled: boolean; variant?: string };
 }
 
 export interface FeatureFlagDefinition {
