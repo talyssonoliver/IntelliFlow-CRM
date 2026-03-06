@@ -16,12 +16,7 @@
  * - NotificationServicePort: deal-won email notification
  */
 
-import {
-  Result,
-  DomainError,
-  Opportunity,
-  DealWonEnrichedEvent,
-} from '@intelliflow/domain';
+import { Result, DomainError, Opportunity, DealWonEnrichedEvent } from '@intelliflow/domain';
 import { OpportunityService } from '../../services/OpportunityService';
 import { EventBusPort } from '../../ports/external';
 import { NotificationServicePort } from '../../ports/external/NotificationServicePort';
@@ -51,10 +46,7 @@ export class CloseDealWonUseCase {
   async execute(input: CloseDealWonInput): Promise<Result<Opportunity, DomainError>> {
     // 1. Delegate domain transition to OpportunityService.markAsWon()
     // This handles: validation, stage change, persistence, and base domain events
-    const result = await this.opportunityService.markAsWon(
-      input.opportunityId,
-      input.closedBy
-    );
+    const result = await this.opportunityService.markAsWon(input.opportunityId, input.closedBy);
 
     if (result.isFailure) {
       return result;

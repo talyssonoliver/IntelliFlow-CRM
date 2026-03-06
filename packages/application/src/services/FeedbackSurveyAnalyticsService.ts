@@ -28,7 +28,10 @@ export interface FeedbackDashboardData {
 export class FeedbackSurveyAnalyticsService {
   constructor(private readonly repo: FeedbackSurveyRepositoryPort) {}
 
-  async getDashboardSummary(tenantId: string, filters: FeedbackAnalyticsQuery): Promise<FeedbackDashboardData> {
+  async getDashboardSummary(
+    tenantId: string,
+    filters: FeedbackAnalyticsQuery
+  ): Promise<FeedbackDashboardData> {
     const summary = await this.repo.getDashboardSummary(tenantId, filters);
 
     if (!summary.hasData) {
@@ -63,8 +66,14 @@ export class FeedbackSurveyAnalyticsService {
     return {
       hasData: true,
       nps: { score: npsScore, distribution: npsDistribution },
-      csat: summary.csatScores.length > 0 ? { score: csatScore, totalResponses: summary.csatScores.length } : null,
-      ces: summary.cesScores.length > 0 ? { score: cesScore, totalResponses: summary.cesScores.length } : null,
+      csat:
+        summary.csatScores.length > 0
+          ? { score: csatScore, totalResponses: summary.csatScores.length }
+          : null,
+      ces:
+        summary.cesScores.length > 0
+          ? { score: cesScore, totalResponses: summary.cesScores.length }
+          : null,
       sentiment,
       trends,
       responseRates,

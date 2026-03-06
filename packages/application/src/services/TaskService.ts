@@ -725,80 +725,23 @@ export class TaskService {
     entityId: string
   ): Promise<TaskAssignmentValidation> {
     try {
+      let validationPromise: Promise<TaskAssignmentValidation>;
+
       switch (entityType) {
-        case 'lead': {
-          const leadIdResult = LeadId.create(entityId);
-          if (leadIdResult.isFailure) {
-            return { entityType, entityId, isValid: false, reason: 'Invalid lead ID format' };
-          }
-          const lead = await this.leadRepository.findById(leadIdResult.value);
-          if (!lead) {
-            return { entityType, entityId, isValid: false, reason: `Lead not found: ${entityId}` };
-          }
-          // Business rule: Cannot assign tasks to converted leads
-          if (lead.isConverted) {
-            return {
-              entityType,
-              entityId,
-              isValid: false,
-              reason:
-                'Cannot assign tasks to converted leads. Assign to the resulting contact instead.',
-            };
-          }
-          return { entityType, entityId, isValid: true };
-        }
-
-        case 'contact': {
-          const contactIdResult = ContactId.create(entityId);
-          if (contactIdResult.isFailure) {
-            return { entityType, entityId, isValid: false, reason: 'Invalid contact ID format' };
-          }
-          const contact = await this.contactRepository.findById(contactIdResult.value);
-          if (!contact) {
-            return {
-              entityType,
-              entityId,
-              isValid: false,
-              reason: `Contact not found: ${entityId}`,
-            };
-          }
-          return { entityType, entityId, isValid: true };
-        }
-
-        case 'opportunity': {
-          const oppIdResult = OpportunityId.create(entityId);
-          if (oppIdResult.isFailure) {
-            return {
-              entityType,
-              entityId,
-              isValid: false,
-              reason: 'Invalid opportunity ID format',
-            };
-          }
-          const opportunity = await this.opportunityRepository.findById(oppIdResult.value);
-          if (!opportunity) {
-            return {
-              entityType,
-              entityId,
-              isValid: false,
-              reason: `Opportunity not found: ${entityId}`,
-            };
-          }
-          // Business rule: Cannot assign tasks to closed opportunities
-          if (opportunity.isClosed) {
-            return {
-              entityType,
-              entityId,
-              isValid: false,
-              reason: 'Cannot assign tasks to closed opportunities',
-            };
-          }
-          return { entityType, entityId, isValid: true };
-        }
-
+        case 'lead':
+          validationPromise = this.validateLeadAssignment(entityId);
+          break;
+        case 'contact':
+          validationPromise = this.validateContactAssignment(entityId);
+          break;
+        case 'opportunity':
+          validationPromise = this.validateOpportunityAssignment(entityId);
+          break;
         default:
           return { entityType, entityId, isValid: false, reason: 'Unknown entity type' };
       }
+
+      return await validationPromise;
     } catch (error) {
       return {
         entityType,
@@ -807,6 +750,63 @@ export class TaskService {
         reason: 'Error validating entity assignment',
       };
     }
+  }
+
+  private async validateLeadAssignment(entityId: string): Promise<TaskAssignmentValidation> {
+    const entityType = 'lead' as const;
+    const leadIdResult = LeadId.create(entityId);
+    if (leadIdResult.isFailure) {
+      return { entityType, entityId, isValid: false, reason: 'Invalid lead ID format' };
+    }
+    const lead = await this.leadRepository.findById(leadIdResult.value);
+    if (!lead) {
+      return { entityType, entityId, isValid: false, reason: `Lead not found: ${entityId}` };
+    }
+    // Business rule: Cannot assign tasks to converted leads
+    if (lead.isConverted) {
+      return {
+        entityType,
+        entityId,
+        isValid: false,
+        reason: 'Cannot assign tasks to converted leads. Assign to the resulting contact instead.',
+      };
+    }
+    return { entityType, entityId, isValid: true };
+  }
+
+  private async validateContactAssignment(entityId: string): Promise<TaskAssignmentValidation> {
+    const entityType = 'contact' as const;
+    const contactIdResult = ContactId.create(entityId);
+    if (contactIdResult.isFailure) {
+      return { entityType, entityId, isValid: false, reason: 'Invalid contact ID format' };
+    }
+    const contact = await this.contactRepository.findById(contactIdResult.value);
+    if (!contact) {
+      return { entityType, entityId, isValid: false, reason: `Contact not found: ${entityId}` };
+    }
+    return { entityType, entityId, isValid: true };
+  }
+
+  private async validateOpportunityAssignment(entityId: string): Promise<TaskAssignmentValidation> {
+    const entityType = 'opportunity' as const;
+    const oppIdResult = OpportunityId.create(entityId);
+    if (oppIdResult.isFailure) {
+      return { entityType, entityId, isValid: false, reason: 'Invalid opportunity ID format' };
+    }
+    const opportunity = await this.opportunityRepository.findById(oppIdResult.value);
+    if (!opportunity) {
+      return { entityType, entityId, isValid: false, reason: `Opportunity not found: ${entityId}` };
+    }
+    // Business rule: Cannot assign tasks to closed opportunities
+    if (opportunity.isClosed) {
+      return {
+        entityType,
+        entityId,
+        isValid: false,
+        reason: 'Cannot assign tasks to closed opportunities',
+      };
+    }
+    return { entityType, entityId, isValid: true };
   }
 
   private async publishEvents(task: Task): Promise<void> {

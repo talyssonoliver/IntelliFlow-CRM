@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Result, DomainError, Opportunity, OpportunityId, DealWonEnrichedEvent, Money } from '@intelliflow/domain';
+import {
+  Result,
+  DomainError,
+  Opportunity,
+  OpportunityId,
+  DealWonEnrichedEvent,
+  Money,
+} from '@intelliflow/domain';
 import { CloseDealWonUseCase, CloseDealWonInput } from '../CloseDealWonUseCase';
 import type { EventBusPort } from '../../../ports/external';
 import type { NotificationServicePort } from '../../../ports/external/NotificationServicePort';
@@ -10,19 +17,21 @@ import type { OpportunityService } from '../../../services/OpportunityService';
 // Stable UUIDs for deterministic tests
 const MOCK_OPP_ID = OpportunityId.generate();
 
-function createMockOpportunity(overrides: Partial<{
-  name: string;
-  value: number;
-  currency: string;
-  stage: string;
-  probability: number;
-  accountId: string;
-  contactId: string | undefined;
-  ownerId: string;
-  tenantId: string;
-  createdAt: Date;
-  closedAt: Date | undefined;
-}> = {}): Opportunity {
+function createMockOpportunity(
+  overrides: Partial<{
+    name: string;
+    value: number;
+    currency: string;
+    stage: string;
+    probability: number;
+    accountId: string;
+    contactId: string | undefined;
+    ownerId: string;
+    tenantId: string;
+    createdAt: Date;
+    closedAt: Date | undefined;
+  }> = {}
+): Opportunity {
   const defaults = {
     name: 'Enterprise Deal',
     value: 50000,
@@ -40,7 +49,9 @@ function createMockOpportunity(overrides: Partial<{
 
   // Create a mock that mimics Opportunity getters
   const moneyResult = Money.create(defaults.value, defaults.currency);
-  const mockMoney = moneyResult.isSuccess ? moneyResult.value : { amount: defaults.value, currency: defaults.currency };
+  const mockMoney = moneyResult.isSuccess
+    ? moneyResult.value
+    : { amount: defaults.value, currency: defaults.currency };
 
   return {
     id: MOCK_OPP_ID,
@@ -58,7 +69,7 @@ function createMockOpportunity(overrides: Partial<{
     isWon: defaults.stage === 'CLOSED_WON',
     getDomainEvents: vi.fn().mockReturnValue([]),
     clearDomainEvents: vi.fn(),
-  } as unknown as Opportunity;
+  } as any as Opportunity;
 }
 
 const mockOpportunityService: Record<string, any> = {
@@ -72,7 +83,9 @@ const mockEventBus: Record<string, any> = {
 };
 
 const mockNotificationService: Record<string, any> = {
-  sendEmail: vi.fn().mockResolvedValue(Result.ok({ id: 'notif-1', channel: 'email', status: 'sent' })),
+  sendEmail: vi
+    .fn()
+    .mockResolvedValue(Result.ok({ id: 'notif-1', channel: 'email', status: 'sent' })),
   sendSms: vi.fn(),
   sendPush: vi.fn(),
   schedule: vi.fn(),
@@ -102,9 +115,9 @@ describe('CloseDealWonUseCase', () => {
     mockOpportunityService.markAsWon.mockResolvedValue(Result.ok(mockOpp));
 
     useCase = new CloseDealWonUseCase(
-      mockOpportunityService as unknown as OpportunityService,
-      mockEventBus as unknown as EventBusPort,
-      mockNotificationService as unknown as NotificationServicePort
+      mockOpportunityService as any as OpportunityService,
+      mockEventBus as any as EventBusPort,
+      mockNotificationService as any as NotificationServicePort
     );
   });
 

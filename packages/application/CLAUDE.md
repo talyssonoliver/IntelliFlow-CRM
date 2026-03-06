@@ -2,7 +2,9 @@
 
 ## Purpose
 
-Orchestrates domain logic via use cases. Defines **ports** (interfaces) that adapters implement. This layer sits between domain and infrastructure in the hexagonal architecture.
+Orchestrates domain logic via use cases. Defines **ports** (interfaces) that
+adapters implement. This layer sits between domain and infrastructure in the
+hexagonal architecture.
 
 ## Structure
 
@@ -19,8 +21,10 @@ src/
 
 1. **Depends on**: `packages/domain/` only — NEVER import from adapters or apps
 2. **No infrastructure**: No Prisma, no HTTP, no file system access
-3. **Ports are interfaces**: Define what the application needs; adapters provide implementations
-4. **Use cases coordinate**: They call domain entities/services and ports, but contain no business logic themselves
+3. **Ports are interfaces**: Define what the application needs; adapters provide
+   implementations
+4. **Use cases coordinate**: They call domain entities/services and ports, but
+   contain no business logic themselves
 5. **Coverage target**: >90% (CI enforced)
 
 ## Port Pattern

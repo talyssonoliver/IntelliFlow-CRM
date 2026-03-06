@@ -67,43 +67,17 @@ export class ScheduleAppointmentUseCase {
     input: ScheduleAppointmentInput
   ): Promise<Result<ScheduleAppointmentOutput, DomainError>> {
     try {
-      // Create buffer if provided
-      let buffer = Buffer.none();
-      if (input.bufferMinutesBefore !== undefined || input.bufferMinutesAfter !== undefined) {
-        const bufferResult = Buffer.create(
-          input.bufferMinutesBefore ?? 0,
-          input.bufferMinutesAfter ?? 0
-        );
-        if (bufferResult.isFailure) {
-          return Result.fail(bufferResult.error);
-        }
-        buffer = bufferResult.value;
-      }
+      const bufferResult = this.createBuffer(input);
+      if (bufferResult.isFailure) return Result.fail(bufferResult.error);
+      const buffer = bufferResult.value;
 
-      // Create recurrence if provided
-      let recurrence: Recurrence | undefined;
-      if (input.recurrence) {
-        const recurrenceResult = this.createRecurrence(input.recurrence);
-        if (recurrenceResult.isFailure) {
-          return Result.fail(recurrenceResult.error);
-        }
-        recurrence = recurrenceResult.value;
-      }
+      const recurrenceResult = this.resolveRecurrence(input);
+      if (recurrenceResult.isFailure) return Result.fail(recurrenceResult.error);
 
-      // Convert case IDs
-      const linkedCaseIds: CaseId[] = [];
-      if (input.linkedCaseIds) {
-        for (const caseIdStr of input.linkedCaseIds) {
-          const caseIdResult = CaseId.create(caseIdStr);
-          if (caseIdResult.isFailure) {
-            return Result.fail(caseIdResult.error);
-          }
-          linkedCaseIds.push(caseIdResult.value);
-        }
-      }
+      const caseIdsResult = this.parseLinkedCaseIds(input.linkedCaseIds);
+      if (caseIdsResult.isFailure) return Result.fail(caseIdsResult.error);
 
-      // Create the appointment
-      const createProps: CreateAppointmentProps = {
+      const appointmentResult = Appointment.create({
         title: input.title,
         description: input.description,
         startTime: input.startTime,
@@ -113,76 +87,86 @@ export class ScheduleAppointmentUseCase {
         organizerId: input.organizerId,
         tenantId: input.tenantId,
         attendeeIds: input.attendeeIds,
-        linkedCaseIds,
+        linkedCaseIds: caseIdsResult.value,
         buffer,
-        recurrence,
+        recurrence: recurrenceResult.value,
         reminderMinutes: input.reminderMinutes,
-      };
-
-      const appointmentResult = Appointment.create(createProps);
-      if (appointmentResult.isFailure) {
-        return Result.fail(appointmentResult.error);
-      }
+      });
+      if (appointmentResult.isFailure) return Result.fail(appointmentResult.error);
 
       const appointment = appointmentResult.value;
 
-      // Check for conflicts
-      const allAttendees = [input.organizerId, ...(input.attendeeIds ?? [])];
       const timeSlotResult = TimeSlot.create(input.startTime, input.endTime);
-      if (timeSlotResult.isFailure) {
-        return Result.fail(timeSlotResult.error);
-      }
+      if (timeSlotResult.isFailure) return Result.fail(timeSlotResult.error);
 
-      let existingAppointments: Appointment[];
-      try {
-        existingAppointments = await this.appointmentRepository.findForConflictCheck(allAttendees, {
-          startTime: buffer.adjustStartTime(input.startTime),
-          endTime: buffer.adjustEndTime(input.endTime),
-        });
-      } catch (error) {
-        // Wrap repository errors as ConflictDetectionError
-        return Result.fail(
-          new ConflictDetectionError(
-            `Failed to fetch appointments for conflict check: ${error instanceof Error ? error.message : 'Unknown error'}`
-          )
-        );
-      }
-
+      const existingAppointments = await this.fetchConflictCandidates(input, buffer);
       const conflictResult = ConflictDetector.checkConflicts(appointment, existingAppointments);
+      const conflictWarnings = this.mapConflictWarnings(conflictResult);
 
-      // If conflicts exist and not forcing override
       if (conflictResult.hasConflicts && !input.forceOverrideConflicts) {
-        const conflictWarnings = conflictResult.conflicts.map((c) => ({
-          appointmentId: c.conflictingAppointmentId.value,
-          overlapMinutes: c.overlapMinutes,
-        }));
-
-        // Return appointment but with conflict warnings (user must confirm)
-        return Result.ok({
-          appointment,
-          conflictWarnings,
-        });
+        return Result.ok({ appointment, conflictWarnings });
       }
 
-      // Save the appointment
       await this.appointmentRepository.save(appointment);
-
-      return Result.ok({
-        appointment,
-        conflictWarnings: conflictResult.hasConflicts
-          ? conflictResult.conflicts.map((c) => ({
-              appointmentId: c.conflictingAppointmentId.value,
-              overlapMinutes: c.overlapMinutes,
-            }))
-          : undefined,
-      });
+      return Result.ok({ appointment, conflictWarnings });
     } catch (error) {
+      if (error instanceof ConflictDetectionError) return Result.fail(error);
       return Result.fail(
         new PersistenceError(
           `Failed to schedule appointment: ${error instanceof Error ? error.message : 'Unknown error'}`
         )
       );
     }
+  }
+
+  private createBuffer(input: ScheduleAppointmentInput): Result<Buffer, DomainError> {
+    if (input.bufferMinutesBefore === undefined && input.bufferMinutesAfter === undefined) {
+      return Result.ok(Buffer.none());
+    }
+    return Buffer.create(input.bufferMinutesBefore ?? 0, input.bufferMinutesAfter ?? 0);
+  }
+
+  private resolveRecurrence(
+    input: ScheduleAppointmentInput
+  ): Result<Recurrence | undefined, DomainError> {
+    if (!input.recurrence) return Result.ok(undefined);
+    return this.createRecurrence(input.recurrence);
+  }
+
+  private parseLinkedCaseIds(caseIdStrings?: string[]): Result<CaseId[], DomainError> {
+    if (!caseIdStrings) return Result.ok([]);
+    const ids: CaseId[] = [];
+    for (const str of caseIdStrings) {
+      const result = CaseId.create(str);
+      if (result.isFailure) return Result.fail(result.error);
+      ids.push(result.value);
+    }
+    return Result.ok(ids);
+  }
+
+  private async fetchConflictCandidates(
+    input: ScheduleAppointmentInput,
+    buffer: Buffer
+  ): Promise<Appointment[]> {
+    const allAttendees = [input.organizerId, ...(input.attendeeIds ?? [])];
+    try {
+      return await this.appointmentRepository.findForConflictCheck(allAttendees, {
+        startTime: buffer.adjustStartTime(input.startTime),
+        endTime: buffer.adjustEndTime(input.endTime),
+      });
+    } catch (error) {
+      throw new ConflictDetectionError(
+        `Failed to fetch appointments for conflict check: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  }
+
+  private mapConflictWarnings(conflictResult: ReturnType<typeof ConflictDetector.checkConflicts>) {
+    if (!conflictResult.hasConflicts) return undefined;
+    return conflictResult.conflicts.map((c) => ({
+      appointmentId: c.conflictingAppointmentId.value,
+      overlapMinutes: c.overlapMinutes,
+    }));
   }
 
   private createRecurrence(

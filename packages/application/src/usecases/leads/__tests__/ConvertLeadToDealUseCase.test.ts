@@ -133,7 +133,8 @@ function createQualifiedLead(props: Parameters<typeof Lead.create>[0]): Lead {
   const lead = result.value;
   // Qualify the lead (from NEW → QUALIFIED)
   const qualifyResult = lead.qualify('qualifier', 'Meets conversion criteria');
-  if (qualifyResult.isFailure) throw new Error(`Failed to qualify lead: ${qualifyResult.error.message}`);
+  if (qualifyResult.isFailure)
+    throw new Error(`Failed to qualify lead: ${qualifyResult.error.message}`);
   lead.clearDomainEvents();
   return lead;
 }
@@ -157,10 +158,10 @@ describe('ConvertLeadToDealUseCase', () => {
     opportunityRepository = new MockOpportunityRepository();
     eventBus = new MockEventBus();
     useCase = new ConvertLeadToDealUseCase(
-      leadRepository as unknown as LeadRepository,
-      contactRepository as unknown as ContactRepository,
-      accountRepository as unknown as AccountRepository,
-      opportunityRepository as unknown as OpportunityRepository,
+      leadRepository as any as LeadRepository,
+      contactRepository as any as ContactRepository,
+      accountRepository as any as AccountRepository,
+      opportunityRepository as any as OpportunityRepository,
       eventBus
     );
   });
@@ -770,7 +771,9 @@ describe('ConvertLeadToDealUseCase', () => {
       leadRepository.setLead(lead);
 
       // Make opportunity save throw
-      opportunityRepository.save = async () => { throw new Error('DB connection lost'); };
+      opportunityRepository.save = async () => {
+        throw new Error('DB connection lost');
+      };
 
       const input: ConvertLeadToDealInput = {
         leadId: lead.id.value,
@@ -797,7 +800,9 @@ describe('ConvertLeadToDealUseCase', () => {
       leadRepository.setLead(lead);
 
       // Make account save throw
-      accountRepository.save = async () => { throw new Error('DB write failed'); };
+      accountRepository.save = async () => {
+        throw new Error('DB write failed');
+      };
 
       const input: ConvertLeadToDealInput = {
         leadId: lead.id.value,
@@ -824,7 +829,9 @@ describe('ConvertLeadToDealUseCase', () => {
       leadRepository.setLead(lead);
 
       // Make contact save throw
-      contactRepository.save = async () => { throw new Error('DB write failed'); };
+      contactRepository.save = async () => {
+        throw new Error('DB write failed');
+      };
 
       const input: ConvertLeadToDealInput = {
         leadId: lead.id.value,
@@ -997,7 +1004,9 @@ describe('ConvertLeadToDealUseCase', () => {
       leadRepository.setLead(lead);
 
       // Make event bus throw
-      eventBus.publishAll = async () => { throw new Error('Event bus down'); };
+      eventBus.publishAll = async () => {
+        throw new Error('Event bus down');
+      };
 
       const input: ConvertLeadToDealInput = {
         leadId: lead.id.value,

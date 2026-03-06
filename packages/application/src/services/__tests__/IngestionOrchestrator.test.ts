@@ -19,10 +19,12 @@ describe('IngestionOrchestrator', () => {
     mockRepository = {
       save: vi.fn(),
       findById: vi.fn(),
+      findLatestVersion: vi.fn(),
+      findAllVersions: vi.fn().mockResolvedValue([]),
       findByCaseId: vi.fn(),
       findAccessibleByUser: vi.fn(),
       delete: vi.fn(),
-    } as unknown as CaseDocumentRepository;
+    } as CaseDocumentRepository;
 
     mockEventBus = {
       publish: vi.fn(),
@@ -99,7 +101,10 @@ describe('IngestionOrchestrator', () => {
     });
 
     it('should validate file size limits', async () => {
-      const largeFile = Buffer.alloc(55 * 1024 * 1024); // 55MB
+      // Use a fake buffer with only the .length property to avoid allocating 55MB of real memory.
+      // validateFile() only checks file.length and returns early, so no buffer content is needed.
+      // Only .length is checked by validateFile(); no actual buffer content needed.
+      const largeFile = { length: 55 * 1024 * 1024 } as Buffer;
       const metadata = {
         tenantId: TEST_TENANT_ID,
         filename: 'large.pdf',

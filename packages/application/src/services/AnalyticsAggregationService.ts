@@ -318,10 +318,14 @@ export class AnalyticsAggregationService {
     const prevRange = { startDate: prevMonthStart, endDate: prevMonthEnd };
 
     const [
-      totalLeads, prevLeads,
-      totalRevenue, prevRevenue,
-      openOpportunities, newContacts,
-      closedWon, closedLost,
+      totalLeads,
+      prevLeads,
+      totalRevenue,
+      prevRevenue,
+      openOpportunities,
+      newContacts,
+      closedWon,
+      closedLost,
       recentActivity,
     ] = await Promise.all([
       this.analyticsRepository.countLeadsInRange(tenantId, range),
@@ -359,13 +363,14 @@ export class AnalyticsAggregationService {
     dateRange: DateRangeQuery,
     ownerId?: string
   ): Promise<SalesMetricsResult> {
-    const [pipelineValue, closedWon, closedLost, avgSalesCycleDays, totalRevenue] = await Promise.all([
-      this.analyticsRepository.getPipelineValue(tenantId, dateRange, ownerId),
-      this.analyticsRepository.countClosedWonInRange(tenantId, dateRange, ownerId),
-      this.analyticsRepository.countClosedLostInRange(tenantId, dateRange, ownerId),
-      this.analyticsRepository.getAvgSalesCycleLength(tenantId, dateRange, ownerId),
-      this.analyticsRepository.getRevenueInRange(tenantId, dateRange, ownerId),
-    ]);
+    const [pipelineValue, closedWon, closedLost, avgSalesCycleDays, totalRevenue] =
+      await Promise.all([
+        this.analyticsRepository.getPipelineValue(tenantId, dateRange, ownerId),
+        this.analyticsRepository.countClosedWonInRange(tenantId, dateRange, ownerId),
+        this.analyticsRepository.countClosedLostInRange(tenantId, dateRange, ownerId),
+        this.analyticsRepository.getAvgSalesCycleLength(tenantId, dateRange, ownerId),
+        this.analyticsRepository.getRevenueInRange(tenantId, dateRange, ownerId),
+      ]);
 
     const totalDeals = closedWon + closedLost;
     const winRate = totalDeals > 0 ? Math.round((closedWon / totalDeals) * 100 * 10) / 10 : 0;
@@ -439,7 +444,8 @@ export class AnalyticsAggregationService {
       if (index > 0) {
         const prevData = stageMap.get(FUNNEL_STAGE_ORDER[index - 1]);
         const prevCount = prevData?._count ?? 0;
-        conversionFromPrevious = prevCount > 0 ? Math.round((count / prevCount) * 100 * 10) / 10 : 0;
+        conversionFromPrevious =
+          prevCount > 0 ? Math.round((count / prevCount) * 100 * 10) / 10 : 0;
       }
 
       return {
@@ -494,7 +500,11 @@ export class AnalyticsAggregationService {
     reportType: ReportType,
     dateRange: DateRangeQuery,
     format: 'csv' | 'json',
-    options?: { metrics?: ExtendedMetricType[]; granularity?: TimeSeriesGranularity; ownerId?: string }
+    options?: {
+      metrics?: ExtendedMetricType[];
+      granularity?: TimeSeriesGranularity;
+      ownerId?: string;
+    }
   ): Promise<ExportResult> {
     let data: unknown;
 
@@ -580,7 +590,8 @@ export class AnalyticsAggregationService {
       );
 
       // Clamp to actual date range
-      const effectiveStart = startOfMonth < dateRange.startDate ? dateRange.startDate : startOfMonth;
+      const effectiveStart =
+        startOfMonth < dateRange.startDate ? dateRange.startDate : startOfMonth;
       const effectiveEnd = endOfMonth > dateRange.endDate ? dateRange.endDate : endOfMonth;
 
       const label = current.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
@@ -615,7 +626,15 @@ export class AnalyticsAggregationService {
 
       switch (granularity) {
         case 'day': {
-          bucketEnd = new Date(current.getFullYear(), current.getMonth(), current.getDate(), 23, 59, 59, 999);
+          bucketEnd = new Date(
+            current.getFullYear(),
+            current.getMonth(),
+            current.getDate(),
+            23,
+            59,
+            59,
+            999
+          );
           label = current.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
           break;
         }
@@ -703,7 +722,12 @@ export class AnalyticsAggregationService {
     const result: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
       const fullKey = prefix ? `${prefix}.${key}` : key;
-      if (typeof value === 'object' && value !== null && !Array.isArray(value) && !(value instanceof Date)) {
+      if (
+        typeof value === 'object' &&
+        value !== null &&
+        !Array.isArray(value) &&
+        !(value instanceof Date)
+      ) {
         Object.assign(result, this.flattenObject(value as Record<string, unknown>, fullKey));
       } else if (Array.isArray(value)) {
         result[fullKey] = JSON.stringify(value);

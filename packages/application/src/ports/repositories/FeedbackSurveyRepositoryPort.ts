@@ -52,9 +52,22 @@ export interface ResponseRate {
 }
 
 export interface FeedbackSurveyRepositoryPort {
-  getDashboardSummary(tenantId: string, filters: FeedbackAnalyticsQuery): Promise<FeedbackDashboardSummary>;
+  getDashboardSummary(
+    tenantId: string,
+    filters: FeedbackAnalyticsQuery
+  ): Promise<FeedbackDashboardSummary>;
   getNPSDistribution(tenantId: string, from: Date, to: Date): Promise<NPSDistribution>;
-  getTrendData(tenantId: string, from: Date, to: Date, granularity: 'day' | 'week' | 'month'): Promise<FeedbackTrendPoint[]>;
-  getSentimentBreakdown(tenantId: string, from: Date, to: Date, type?: SurveyType): Promise<SentimentBreakdown>;
+  getTrendData(
+    tenantId: string,
+    from: Date,
+    to: Date,
+    granularity: 'day' | 'week' | 'month'
+  ): Promise<FeedbackTrendPoint[]>;
+  getSentimentBreakdown(
+    tenantId: string,
+    from: Date,
+    to: Date,
+    type?: SurveyType
+  ): Promise<SentimentBreakdown>;
   getResponseRateByType(tenantId: string, from: Date, to: Date): Promise<ResponseRate[]>;
 }

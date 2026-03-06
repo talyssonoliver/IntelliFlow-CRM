@@ -42,11 +42,10 @@ function createMockCache(): CachePort {
   return {
     get: vi.fn().mockResolvedValue(null),
     set: vi.fn().mockResolvedValue(undefined),
-    del: vi.fn().mockResolvedValue(undefined),
+    delete: vi.fn().mockResolvedValue(undefined),
     exists: vi.fn().mockResolvedValue(false),
-    incr: vi.fn().mockResolvedValue(1),
-    expire: vi.fn().mockResolvedValue(undefined),
-  } as unknown as CachePort;
+    clear: vi.fn().mockResolvedValue(undefined),
+  };
 }
 
 describe('ActivityFeedService', () => {

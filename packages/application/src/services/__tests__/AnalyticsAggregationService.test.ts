@@ -44,7 +44,7 @@ describe('AnalyticsAggregationService', () => {
 
   beforeEach(() => {
     mockRepo = createMockRepo();
-    service = new AnalyticsAggregationService(mockRepo as unknown as AnalyticsRepository);
+    service = new AnalyticsAggregationService(mockRepo as AnalyticsRepository);
   });
 
   // ============================================
@@ -313,21 +313,23 @@ describe('AnalyticsAggregationService', () => {
     it('defaults to limit of 10', async () => {
       await service.getRecentActivity(TENANT_ID);
 
-      expect(mockRepo.getRecentAuditLogs).toHaveBeenCalledWith(
-        TENANT_ID,
-        10,
-        ['CREATE', 'QUALIFY', 'CONVERT', 'UPDATE']
-      );
+      expect(mockRepo.getRecentAuditLogs).toHaveBeenCalledWith(TENANT_ID, 10, [
+        'CREATE',
+        'QUALIFY',
+        'CONVERT',
+        'UPDATE',
+      ]);
     });
 
     it('passes correct AuditAction enum values to repository', async () => {
       await service.getRecentActivity(TENANT_ID, 5);
 
-      expect(mockRepo.getRecentAuditLogs).toHaveBeenCalledWith(
-        TENANT_ID,
-        5,
-        ['CREATE', 'QUALIFY', 'CONVERT', 'UPDATE']
-      );
+      expect(mockRepo.getRecentAuditLogs).toHaveBeenCalledWith(TENANT_ID, 5, [
+        'CREATE',
+        'QUALIFY',
+        'CONVERT',
+        'UPDATE',
+      ]);
     });
   });
 
@@ -485,11 +487,10 @@ describe('AnalyticsAggregationService', () => {
         () => service.getRecentActivity(TENANT_ID),
         () => service.getLeadStats(TENANT_ID),
         () =>
-          service.exportMetrics(
-            TENANT_ID,
-            { startDate: monthsAgo(6), endDate: new Date() },
-            ['revenue', 'leads']
-          ),
+          service.exportMetrics(TENANT_ID, { startDate: monthsAgo(6), endDate: new Date() }, [
+            'revenue',
+            'leads',
+          ]),
         () =>
           service.exportConversionFunnel(TENANT_ID, {
             startDate: monthsAgo(6),

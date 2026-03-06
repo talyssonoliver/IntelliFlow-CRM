@@ -129,7 +129,7 @@ export class ClaimReviewUseCase {
     }
 
     // Store lock token internally (for verification on subsequent operations)
-    (review as unknown as { _lockToken: string })._lockToken = lockToken;
+    review.lockToken = lockToken;
 
     // 6. Save with optimistic locking
     const saved = await this.repository.saveWithOptimisticLock(review, 0);

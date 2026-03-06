@@ -15,7 +15,7 @@ import { EventBusPort } from '../../../ports/external';
 // Mock Implementations
 // =============================================================================
 
-class MockAIOutputReviewRepository implements Partial<IAIOutputReviewRepository> {
+class MockAIOutputReviewRepository implements IAIOutputReviewRepository {
   public savedReviews: AIOutputReview[] = [];
   public shouldFailOnSave = false;
   public saveError: Error | null = null;
@@ -27,27 +27,30 @@ class MockAIOutputReviewRepository implements Partial<IAIOutputReviewRepository>
     this.savedReviews.push(review);
   }
 
-  async findById(): Promise<AIOutputReview | null> {
+  async findById(_id: string, _tenantId: string): Promise<AIOutputReview | null> {
     return null;
   }
 
-  async findByIdForUpdate(): Promise<AIOutputReview | null> {
+  async findByIdForUpdate(_id: string, _tenantId: string): Promise<AIOutputReview | null> {
     return null;
   }
 
-  async saveWithOptimisticLock(): Promise<boolean> {
+  async saveWithOptimisticLock(
+    _review: AIOutputReview,
+    _expectedVersion: number
+  ): Promise<boolean> {
     return true;
   }
 
-  async findPending(): Promise<AIOutputReview[]> {
+  async findPending(_tenantId: string): Promise<AIOutputReview[]> {
     return [];
   }
 
-  async countPending(): Promise<number> {
+  async countPending(_tenantId: string): Promise<number> {
     return 0;
   }
 
-  async findWithExpiredLocks(): Promise<AIOutputReview[]> {
+  async findWithExpiredLocks(_cutoffTime: Date): Promise<AIOutputReview[]> {
     return [];
   }
 }
@@ -80,7 +83,7 @@ describe('CreateReviewUseCase', () => {
   beforeEach(() => {
     repository = new MockAIOutputReviewRepository();
     eventBus = new MockEventBus();
-    useCase = new CreateReviewUseCase(repository as unknown as IAIOutputReviewRepository, eventBus);
+    useCase = new CreateReviewUseCase(repository, eventBus);
   });
 
   describe('Happy Path', () => {

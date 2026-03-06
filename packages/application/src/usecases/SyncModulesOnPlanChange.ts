@@ -25,10 +25,7 @@ export class SyncModulesOnPlanChange {
   constructor(private readonly moduleAccess: ModuleAccessPort) {}
 
   async execute(input: SyncModulesOnPlanChangeInput): Promise<SyncModulesOnPlanChangeResult> {
-    const enabledModules = await this.moduleAccess.syncModulesToPlan(
-      input.tenantId,
-      input.newPlan
-    );
+    const enabledModules = await this.moduleAccess.syncModulesToPlan(input.tenantId, input.newPlan);
 
     return {
       tenantId: input.tenantId,

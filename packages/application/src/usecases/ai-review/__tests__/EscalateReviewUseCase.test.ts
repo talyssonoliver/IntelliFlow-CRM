@@ -16,7 +16,7 @@ import crypto from 'crypto';
 // Mock Implementations
 // =============================================================================
 
-class MockAIOutputReviewRepository implements Partial<IAIOutputReviewRepository> {
+class MockAIOutputReviewRepository implements IAIOutputReviewRepository {
   private reviews: Map<string, AIOutputReview> = new Map();
   public savedReviews: AIOutputReview[] = [];
   public shouldFailOptimisticLock = false;
@@ -42,7 +42,7 @@ class MockAIOutputReviewRepository implements Partial<IAIOutputReviewRepository>
     this.reviews.set(review.id.toValue(), review);
   }
 
-  async saveWithOptimisticLock(review: AIOutputReview): Promise<boolean> {
+  async saveWithOptimisticLock(review: AIOutputReview, _expectedVersion: number): Promise<boolean> {
     if (this.shouldFailOptimisticLock) {
       return false;
     }
@@ -50,15 +50,15 @@ class MockAIOutputReviewRepository implements Partial<IAIOutputReviewRepository>
     return true;
   }
 
-  async findPending(): Promise<AIOutputReview[]> {
+  async findPending(_tenantId: string): Promise<AIOutputReview[]> {
     return [];
   }
 
-  async countPending(): Promise<number> {
+  async countPending(_tenantId: string): Promise<number> {
     return 0;
   }
 
-  async findWithExpiredLocks(): Promise<AIOutputReview[]> {
+  async findWithExpiredLocks(_cutoffTime: Date): Promise<AIOutputReview[]> {
     return [];
   }
 }
@@ -104,7 +104,7 @@ function createClaimedReview(
   });
 
   review.claim(userId);
-  (review as unknown as { _lockToken: string })._lockToken = lockToken;
+  review.lockToken = lockToken;
 
   return review;
 }
@@ -121,11 +121,7 @@ describe('EscalateReviewUseCase', () => {
   beforeEach(() => {
     repository = new MockAIOutputReviewRepository();
     eventBus = new MockEventBus();
-    useCase = new EscalateReviewUseCase(
-      repository as unknown as IAIOutputReviewRepository,
-      eventBus,
-      LOCK_TOKEN_SECRET
-    );
+    useCase = new EscalateReviewUseCase(repository, eventBus, LOCK_TOKEN_SECRET);
   });
 
   describe('Happy Path', () => {
@@ -200,8 +196,7 @@ describe('EscalateReviewUseCase', () => {
       const lockToken = generateLockToken();
       const review = createClaimedReview('user-456', lockToken);
       // Set escalation depth to max
-      (review as unknown as { _escalationDepth: number })._escalationDepth =
-        REVIEW_SLA_CONFIG.MAX_ESCALATION_DEPTH;
+      (review as any)._escalationDepth = REVIEW_SLA_CONFIG.MAX_ESCALATION_DEPTH;
       review.clearDomainEvents();
       repository.setReview(review);
 

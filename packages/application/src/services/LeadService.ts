@@ -506,6 +506,82 @@ export class LeadService {
   }
 
   /**
+   * Update lead with all editable fields
+   * Unified method for the update procedure — handles contact + Lead 360 fields
+   */
+  async updateLead(
+    leadId: string,
+    updates: {
+      firstName?: string;
+      lastName?: string;
+      company?: string;
+      title?: string;
+      phone?: string;
+      location?: string;
+      website?: string;
+      avatarUrl?: string;
+      lastContactedAt?: Date;
+      estimatedValue?: number;
+      tags?: string[];
+    }
+  ): Promise<Result<Lead, DomainError>> {
+    const leadIdResult = LeadId.create(leadId);
+    if (leadIdResult.isFailure) {
+      return Result.fail(leadIdResult.error);
+    }
+
+    const lead = await this.leadRepository.findById(leadIdResult.value);
+    if (!lead) {
+      return Result.fail(new NotFoundError(`Lead not found: ${leadId}`));
+    }
+
+    if (lead.isConverted) {
+      return Result.fail(new ValidationError('Cannot update a converted lead'));
+    }
+
+    // Build props for domain method — only include fields the caller actually provided
+    const updateProps: Parameters<Lead['updateContactInfo']>[0] = {};
+
+    const simpleFields = [
+      'firstName',
+      'lastName',
+      'company',
+      'title',
+      'location',
+      'website',
+      'avatarUrl',
+      'lastContactedAt',
+      'estimatedValue',
+      'tags',
+    ] as const;
+    for (const field of simpleFields) {
+      if (updates[field] !== undefined) {
+        (updateProps as Record<string, unknown>)[field] = updates[field];
+      }
+    }
+
+    if (updates.phone !== undefined) {
+      const phoneResult = PhoneNumber.create(updates.phone);
+      if (phoneResult.isFailure) {
+        return Result.fail(phoneResult.error);
+      }
+      updateProps.phone = phoneResult.value;
+    }
+
+    lead.updateContactInfo(updateProps);
+
+    try {
+      await this.leadRepository.save(lead);
+    } catch (error) {
+      return Result.fail(new PersistenceError('Failed to save lead'));
+    }
+
+    await this.publishEvents(lead);
+
+    return Result.ok(lead);
+  }
+
+  /**
    * Change lead status with business rule validation
    */
   async changeLeadStatus(

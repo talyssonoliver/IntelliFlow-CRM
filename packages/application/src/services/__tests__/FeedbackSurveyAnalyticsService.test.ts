@@ -1,6 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { FeedbackSurveyAnalyticsService } from '../FeedbackSurveyAnalyticsService';
-import type { FeedbackSurveyRepositoryPort, FeedbackAnalyticsQuery } from '../../ports/repositories/FeedbackSurveyRepositoryPort';
+import type {
+  FeedbackSurveyRepositoryPort,
+  FeedbackAnalyticsQuery,
+} from '../../ports/repositories/FeedbackSurveyRepositoryPort';
 
 function createMockRepo(): Record<string, any> {
   return {
@@ -52,8 +55,18 @@ describe('FeedbackSurveyAnalyticsService', () => {
       cesScores: [],
       hasData: true,
     });
-    mockRepo.getNPSDistribution.mockResolvedValue({ promoters: 2, passives: 1, detractors: 1, total: 4 });
-    mockRepo.getSentimentBreakdown.mockResolvedValue({ positive: 2, neutral: 1, negative: 1, total: 4 });
+    mockRepo.getNPSDistribution.mockResolvedValue({
+      promoters: 2,
+      passives: 1,
+      detractors: 1,
+      total: 4,
+    });
+    mockRepo.getSentimentBreakdown.mockResolvedValue({
+      positive: 2,
+      neutral: 1,
+      negative: 1,
+      total: 4,
+    });
     mockRepo.getTrendData.mockResolvedValue([]);
     mockRepo.getResponseRateByType.mockResolvedValue([]);
 
@@ -74,8 +87,18 @@ describe('FeedbackSurveyAnalyticsService', () => {
       cesScores: [],
       hasData: true,
     });
-    mockRepo.getNPSDistribution.mockResolvedValue({ promoters: 2, passives: 0, detractors: 0, total: 2 });
-    mockRepo.getSentimentBreakdown.mockResolvedValue({ positive: 2, neutral: 0, negative: 0, total: 2 });
+    mockRepo.getNPSDistribution.mockResolvedValue({
+      promoters: 2,
+      passives: 0,
+      detractors: 0,
+      total: 2,
+    });
+    mockRepo.getSentimentBreakdown.mockResolvedValue({
+      positive: 2,
+      neutral: 0,
+      negative: 0,
+      total: 2,
+    });
     mockRepo.getTrendData.mockResolvedValue([]);
     mockRepo.getResponseRateByType.mockResolvedValue([]);
 
@@ -92,8 +115,18 @@ describe('FeedbackSurveyAnalyticsService', () => {
       cesScores: [],
       hasData: true,
     });
-    mockRepo.getNPSDistribution.mockResolvedValue({ promoters: 0, passives: 0, detractors: 0, total: 0 });
-    mockRepo.getSentimentBreakdown.mockResolvedValue({ positive: 2, neutral: 0, negative: 1, total: 3 });
+    mockRepo.getNPSDistribution.mockResolvedValue({
+      promoters: 0,
+      passives: 0,
+      detractors: 0,
+      total: 0,
+    });
+    mockRepo.getSentimentBreakdown.mockResolvedValue({
+      positive: 2,
+      neutral: 0,
+      negative: 1,
+      total: 3,
+    });
     mockRepo.getTrendData.mockResolvedValue([]);
     mockRepo.getResponseRateByType.mockResolvedValue([]);
 
@@ -116,8 +149,18 @@ describe('FeedbackSurveyAnalyticsService', () => {
       cesScores: [3, 5, 7], // average = 5
       hasData: true,
     });
-    mockRepo.getNPSDistribution.mockResolvedValue({ promoters: 0, passives: 0, detractors: 0, total: 0 });
-    mockRepo.getSentimentBreakdown.mockResolvedValue({ positive: 1, neutral: 1, negative: 1, total: 3 });
+    mockRepo.getNPSDistribution.mockResolvedValue({
+      promoters: 0,
+      passives: 0,
+      detractors: 0,
+      total: 0,
+    });
+    mockRepo.getSentimentBreakdown.mockResolvedValue({
+      positive: 1,
+      neutral: 1,
+      negative: 1,
+      total: 3,
+    });
     mockRepo.getTrendData.mockResolvedValue([]);
     mockRepo.getResponseRateByType.mockResolvedValue([]);
 
@@ -139,8 +182,18 @@ describe('FeedbackSurveyAnalyticsService', () => {
       cesScores: [],
       hasData: true,
     });
-    mockRepo.getNPSDistribution.mockResolvedValue({ promoters: 0, passives: 0, detractors: 0, total: 0 });
-    mockRepo.getSentimentBreakdown.mockResolvedValue({ positive: 0, neutral: 1, negative: 0, total: 1 });
+    mockRepo.getNPSDistribution.mockResolvedValue({
+      promoters: 0,
+      passives: 0,
+      detractors: 0,
+      total: 0,
+    });
+    mockRepo.getSentimentBreakdown.mockResolvedValue({
+      positive: 0,
+      neutral: 1,
+      negative: 0,
+      total: 1,
+    });
     mockRepo.getTrendData.mockResolvedValue([]);
     mockRepo.getResponseRateByType.mockResolvedValue([]);
 

@@ -163,10 +163,10 @@ describe('ConvertLeadToContactUseCase', () => {
     conversionAuditRepository = new MockLeadConversionAuditRepository();
     eventBus = new MockEventBus();
     useCase = new ConvertLeadToContactUseCase(
-      leadRepository as unknown as LeadRepository,
-      contactRepository as unknown as ContactRepository,
-      accountRepository as unknown as AccountRepository,
-      conversionAuditRepository as unknown as LeadConversionAuditRepository,
+      leadRepository as any as LeadRepository,
+      contactRepository as any as ContactRepository,
+      accountRepository as any as AccountRepository,
+      conversionAuditRepository as any as LeadConversionAuditRepository,
       eventBus
     );
   });

@@ -110,7 +110,7 @@ export class FeedbackService {
     tenantId: string
   ): Promise<FeedbackRecord> {
     const feedback = await this.feedbackRepository.create({
-      feedbackType: input.feedbackType as FeedbackType,
+      feedbackType: input.feedbackType as FeedbackType, // NOSONAR
       originalScore: input.originalScore,
       originalConfidence: input.originalConfidence,
       modelVersion: input.modelVersion,
@@ -129,7 +129,7 @@ export class FeedbackService {
       new ScoreFeedbackSubmittedEvent(
         feedback.id,
         feedback.leadId,
-        feedback.feedbackType as FeedbackType,
+        feedback.feedbackType as FeedbackType, // NOSONAR
         feedback.originalScore,
         null,
         null,

@@ -134,9 +134,7 @@ export class ConvertLeadToDealUseCase {
 
     // 4.5. QUALIFIED gate — only qualified leads can be converted to deals (AC-008)
     if (lead.status !== 'QUALIFIED') {
-      return Result.fail(
-        new ValidationError('Only qualified leads can be converted to deals')
-      );
+      return Result.fail(new ValidationError('Only qualified leads can be converted to deals'));
     }
 
     // 4.6. Capture ConversionSnapshot for audit trail (AC-012)

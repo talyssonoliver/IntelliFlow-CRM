@@ -4,6 +4,7 @@ import {
   Contact,
   ContactId,
   ContactStatus,
+  ContactType,
   Email,
   ContactRepository,
   AccountRepository,
@@ -121,6 +122,14 @@ export class ContactService {
       phone?: string;
       department?: string;
       status?: ContactStatus;
+      streetAddress?: string;
+      city?: string;
+      zipCode?: string;
+      company?: string;
+      linkedInUrl?: string;
+      contactType?: ContactType;
+      tags?: string[];
+      contactNotes?: string;
     },
     updatedBy: string
   ): Promise<Result<Contact, DomainError>> {

@@ -16,7 +16,7 @@ import crypto from 'crypto';
 // Mock Implementations
 // =============================================================================
 
-class MockAIOutputReviewRepository implements Partial<IAIOutputReviewRepository> {
+class MockAIOutputReviewRepository implements IAIOutputReviewRepository {
   private reviews: Map<string, AIOutputReview> = new Map();
   public savedReviews: AIOutputReview[] = [];
   public shouldFailOptimisticLock = false;
@@ -42,7 +42,7 @@ class MockAIOutputReviewRepository implements Partial<IAIOutputReviewRepository>
     this.reviews.set(review.id.toValue(), review);
   }
 
-  async saveWithOptimisticLock(review: AIOutputReview): Promise<boolean> {
+  async saveWithOptimisticLock(review: AIOutputReview, _expectedVersion: number): Promise<boolean> {
     if (this.shouldFailOptimisticLock) {
       return false;
     }
@@ -50,15 +50,15 @@ class MockAIOutputReviewRepository implements Partial<IAIOutputReviewRepository>
     return true;
   }
 
-  async findPending(): Promise<AIOutputReview[]> {
+  async findPending(_tenantId: string): Promise<AIOutputReview[]> {
     return [];
   }
 
-  async countPending(): Promise<number> {
+  async countPending(_tenantId: string): Promise<number> {
     return 0;
   }
 
-  async findWithExpiredLocks(): Promise<AIOutputReview[]> {
+  async findWithExpiredLocks(_cutoffTime: Date): Promise<AIOutputReview[]> {
     return [];
   }
 }
@@ -110,7 +110,7 @@ function createClaimedReview(
   }
 
   // Store lock token in review (mock internal state)
-  (review as unknown as { _lockToken: string })._lockToken = lockToken;
+  review.lockToken = lockToken;
 
   return review;
 }
@@ -127,11 +127,7 @@ describe('ApproveReviewUseCase', () => {
   beforeEach(() => {
     repository = new MockAIOutputReviewRepository();
     eventBus = new MockEventBus();
-    useCase = new ApproveReviewUseCase(
-      repository as unknown as IAIOutputReviewRepository,
-      eventBus,
-      LOCK_TOKEN_SECRET
-    );
+    useCase = new ApproveReviewUseCase(repository, eventBus, LOCK_TOKEN_SECRET);
   });
 
   describe('Happy Path', () => {
@@ -245,7 +241,7 @@ describe('ApproveReviewUseCase', () => {
       const lockToken = generateLockToken();
       const review = createClaimedReview('user-456', lockToken);
       // Manually expire the lock
-      (review as unknown as { _lockExpiresAt: Date })._lockExpiresAt = new Date(Date.now() - 1000);
+      (review as any)._lockExpiresAt = new Date(Date.now() - 1000);
       review.clearDomainEvents();
       repository.setReview(review);
 
@@ -326,7 +322,7 @@ describe('ApproveReviewUseCase', () => {
       const lockToken = generateLockToken();
       const review = createClaimedReview('user-456', lockToken);
       // Lock expires just before approval
-      (review as unknown as { _lockExpiresAt: Date })._lockExpiresAt = new Date(Date.now() - 100);
+      (review as any)._lockExpiresAt = new Date(Date.now() - 100);
       review.clearDomainEvents();
       repository.setReview(review);
 

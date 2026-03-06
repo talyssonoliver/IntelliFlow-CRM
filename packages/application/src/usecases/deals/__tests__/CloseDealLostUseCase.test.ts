@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Result, DomainError, Opportunity, OpportunityId, DealLostEnrichedEvent, Money } from '@intelliflow/domain';
+import {
+  Result,
+  DomainError,
+  Opportunity,
+  OpportunityId,
+  DealLostEnrichedEvent,
+  Money,
+} from '@intelliflow/domain';
 import { CloseDealLostUseCase, CloseDealLostInput } from '../CloseDealLostUseCase';
 import type { EventBusPort } from '../../../ports/external';
 import type { NotificationServicePort } from '../../../ports/external/NotificationServicePort';
@@ -9,19 +16,21 @@ import type { OpportunityService } from '../../../services/OpportunityService';
 
 const MOCK_OPP_ID = OpportunityId.generate();
 
-function createMockOpportunity(overrides: Partial<{
-  name: string;
-  value: number;
-  currency: string;
-  stage: string;
-  probability: number;
-  accountId: string;
-  contactId: string | undefined;
-  ownerId: string;
-  tenantId: string;
-  createdAt: Date;
-  closedAt: Date | undefined;
-}> = {}): Opportunity {
+function createMockOpportunity(
+  overrides: Partial<{
+    name: string;
+    value: number;
+    currency: string;
+    stage: string;
+    probability: number;
+    accountId: string;
+    contactId: string | undefined;
+    ownerId: string;
+    tenantId: string;
+    createdAt: Date;
+    closedAt: Date | undefined;
+  }> = {}
+): Opportunity {
   const defaults = {
     name: 'Enterprise Deal',
     value: 50000,
@@ -38,7 +47,9 @@ function createMockOpportunity(overrides: Partial<{
   };
 
   const moneyResult = Money.create(defaults.value, defaults.currency);
-  const mockMoney = moneyResult.isSuccess ? moneyResult.value : { amount: defaults.value, currency: defaults.currency };
+  const mockMoney = moneyResult.isSuccess
+    ? moneyResult.value
+    : { amount: defaults.value, currency: defaults.currency };
 
   return {
     id: MOCK_OPP_ID,
@@ -57,7 +68,7 @@ function createMockOpportunity(overrides: Partial<{
     isLost: defaults.stage === 'CLOSED_LOST',
     getDomainEvents: vi.fn().mockReturnValue([]),
     clearDomainEvents: vi.fn(),
-  } as unknown as Opportunity;
+  } as any as Opportunity;
 }
 
 const mockOpportunityService: Record<string, any> = {
@@ -72,7 +83,9 @@ const mockEventBus: Record<string, any> = {
 };
 
 const mockNotificationService: Record<string, any> = {
-  sendEmail: vi.fn().mockResolvedValue(Result.ok({ id: 'notif-1', channel: 'email', status: 'sent' })),
+  sendEmail: vi
+    .fn()
+    .mockResolvedValue(Result.ok({ id: 'notif-1', channel: 'email', status: 'sent' })),
   sendSms: vi.fn(),
   sendPush: vi.fn(),
   schedule: vi.fn(),
@@ -108,9 +121,9 @@ describe('CloseDealLostUseCase', () => {
     mockOpportunityService.markAsLost.mockResolvedValue(Result.ok(postLossOpp));
 
     useCase = new CloseDealLostUseCase(
-      mockOpportunityService as unknown as OpportunityService,
-      mockEventBus as unknown as EventBusPort,
-      mockNotificationService as unknown as NotificationServicePort
+      mockOpportunityService as any as OpportunityService,
+      mockEventBus as any as EventBusPort,
+      mockNotificationService as any as NotificationServicePort
     );
   });
 
@@ -204,7 +217,10 @@ describe('CloseDealLostUseCase', () => {
     });
 
     it('should handle reason with leading/trailing whitespace', async () => {
-      const result = await useCase.execute({ ...defaultInput, reason: '  Lost to competitor pricing  ' });
+      const result = await useCase.execute({
+        ...defaultInput,
+        reason: '  Lost to competitor pricing  ',
+      });
       expect(result.isSuccess).toBe(true);
       expect(mockOpportunityService.markAsLost).toHaveBeenCalledWith(
         defaultInput.opportunityId,

@@ -391,8 +391,13 @@ export class ConversationSearchService {
       Error
     >
   > {
-    // This would typically be implemented in the repository
-    // For now, return a stub that the repository would implement
-    return Result.fail(new Error('Statistics endpoint should be implemented in repository'));
+    // Statistics aggregation is intentionally not part of ConversationRepositoryPort to avoid
+    // coupling the port to a specific aggregation strategy. Implement this in a dedicated
+    // ConversationStatsRepository or add an aggregation method to ConversationRepositoryPort.
+    return Result.fail(
+      new Error(
+        'Statistics endpoint should be implemented in repository. Add an aggregation method to ConversationRepositoryPort and wire a repository implementation.'
+      )
+    );
   }
 }

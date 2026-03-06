@@ -15,7 +15,7 @@ import { EventBusPort } from '../../../ports/external';
 // Mock Implementations
 // =============================================================================
 
-class MockAIOutputReviewRepository implements Partial<IAIOutputReviewRepository> {
+class MockAIOutputReviewRepository implements IAIOutputReviewRepository {
   private reviews: Map<string, AIOutputReview> = new Map();
   public savedReviews: AIOutputReview[] = [];
   public shouldFailOptimisticLock = false;
@@ -41,7 +41,7 @@ class MockAIOutputReviewRepository implements Partial<IAIOutputReviewRepository>
     this.reviews.set(review.id.toValue(), review);
   }
 
-  async saveWithOptimisticLock(review: AIOutputReview): Promise<boolean> {
+  async saveWithOptimisticLock(review: AIOutputReview, _expectedVersion: number): Promise<boolean> {
     if (this.shouldFailOptimisticLock) {
       return false;
     }
@@ -49,15 +49,15 @@ class MockAIOutputReviewRepository implements Partial<IAIOutputReviewRepository>
     return true;
   }
 
-  async findPending(): Promise<AIOutputReview[]> {
+  async findPending(_tenantId: string): Promise<AIOutputReview[]> {
     return [];
   }
 
-  async countPending(): Promise<number> {
+  async countPending(_tenantId: string): Promise<number> {
     return 0;
   }
 
-  async findWithExpiredLocks(): Promise<AIOutputReview[]> {
+  async findWithExpiredLocks(_cutoffTime: Date): Promise<AIOutputReview[]> {
     return [];
   }
 }
@@ -104,11 +104,7 @@ describe('ClaimReviewUseCase', () => {
   beforeEach(() => {
     repository = new MockAIOutputReviewRepository();
     eventBus = new MockEventBus();
-    useCase = new ClaimReviewUseCase(
-      repository as unknown as IAIOutputReviewRepository,
-      eventBus,
-      lockTokenSecret
-    );
+    useCase = new ClaimReviewUseCase(repository, eventBus, lockTokenSecret);
   });
 
   describe('Happy Path', () => {
@@ -289,7 +285,7 @@ describe('ClaimReviewUseCase', () => {
       const review = createPendingReview('tenant-123');
       review.claim('user-1');
       // Manually set lock to expired
-      (review as unknown as { _lockExpiresAt: Date })._lockExpiresAt = new Date(Date.now() - 1000);
+      (review as any)._lockExpiresAt = new Date(Date.now() - 1000);
       review.clearDomainEvents();
       repository.setReview(review);
 

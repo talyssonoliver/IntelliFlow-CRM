@@ -229,17 +229,38 @@ export interface AnalyticsRepository {
   countLeadsThisMonth(tenantId: string): Promise<number>;
 
   // IFC-190: Sales metrics
-  countClosedWonInRange(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number>;
-  countClosedLostInRange(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number>;
+  countClosedWonInRange(
+    tenantId: string,
+    dateRange: DateRangeQuery,
+    ownerId?: string
+  ): Promise<number>;
+  countClosedLostInRange(
+    tenantId: string,
+    dateRange: DateRangeQuery,
+    ownerId?: string
+  ): Promise<number>;
   getPipelineValue(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number>;
-  getAvgSalesCycleLength(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number | null>;
+  getAvgSalesCycleLength(
+    tenantId: string,
+    dateRange: DateRangeQuery,
+    ownerId?: string
+  ): Promise<number | null>;
   getRevenueInRange(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number>;
 
   // IFC-190: Lead metrics
-  getLeadsBySourceInRange(tenantId: string, dateRange: DateRangeQuery): Promise<LeadGroupByResult[]>;
-  getLeadsByStatus(tenantId: string, dateRange: DateRangeQuery): Promise<Array<{ status: string; _count: number }>>;
+  getLeadsBySourceInRange(
+    tenantId: string,
+    dateRange: DateRangeQuery
+  ): Promise<LeadGroupByResult[]>;
+  getLeadsByStatus(
+    tenantId: string,
+    dateRange: DateRangeQuery
+  ): Promise<Array<{ status: string; _count: number }>>;
   countConvertedLeadsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number>;
 
   // IFC-190: Conversion funnel
-  getOpportunitiesByStageInRange(tenantId: string, dateRange: DateRangeQuery): Promise<Array<{ stage: string; _count: number; _sum: { value: number | null } }>>;
+  getOpportunitiesByStageInRange(
+    tenantId: string,
+    dateRange: DateRangeQuery
+  ): Promise<Array<{ stage: string; _count: number; _sum: { value: number | null } }>>;
 }

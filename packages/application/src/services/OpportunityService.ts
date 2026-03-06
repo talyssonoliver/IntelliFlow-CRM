@@ -198,11 +198,11 @@ export class OpportunityService {
     }
 
     // Sort
-    const sortBy = params.sortBy || 'createdAt';
+    const sortBy = (params.sortBy || 'createdAt') as keyof Opportunity;
     const sortOrder = params.sortOrder || 'desc';
     filtered.sort((a, b) => {
-      const aVal = (a as unknown as Record<string, unknown>)[sortBy];
-      const bVal = (b as unknown as Record<string, unknown>)[sortBy];
+      const aVal = a[sortBy] as unknown;
+      const bVal = b[sortBy] as unknown;
       if (aVal === bVal) return 0;
       if (aVal === null || aVal === undefined) return 1;
       if (bVal === null || bVal === undefined) return -1;
@@ -292,21 +292,8 @@ export class OpportunityService {
     }
 
     if (data.stage !== undefined) {
-      // Validate stage transition
-      const allowedTransitions = STAGE_TRANSITION_RULES[opportunity.stage];
-      if (!allowedTransitions.includes(data.stage) && opportunity.stage !== data.stage) {
-        return Result.fail(
-          new ValidationError(
-            `Invalid stage transition from ${opportunity.stage} to ${data.stage}. Allowed: ${allowedTransitions.join(', ')}`
-          )
-        );
-      }
-      if (opportunity.stage !== data.stage) {
-        const stageResult = opportunity.changeStage(data.stage, updatedBy);
-        if (stageResult.isFailure) {
-          return Result.fail(stageResult.error);
-        }
-      }
+      const stageError = this.applyStageChange(opportunity, data.stage, updatedBy);
+      if (stageError) return Result.fail(stageError);
     }
 
     if (data.expectedCloseDate !== undefined) {
@@ -790,6 +777,26 @@ export class OpportunityService {
     }
 
     return Result.ok(undefined);
+  }
+
+  /**
+   * Validate and apply a stage change to an opportunity.
+   * Returns a DomainError if invalid, or null on success.
+   */
+  private applyStageChange(
+    opportunity: Opportunity,
+    newStage: OpportunityStage,
+    changedBy: string
+  ): DomainError | null {
+    if (opportunity.stage === newStage) return null;
+    const allowedTransitions = STAGE_TRANSITION_RULES[opportunity.stage];
+    if (!allowedTransitions.includes(newStage)) {
+      return new ValidationError(
+        `Invalid stage transition from ${opportunity.stage} to ${newStage}. Allowed: ${allowedTransitions.join(', ')}`
+      );
+    }
+    const stageResult = opportunity.changeStage(newStage, changedBy);
+    return stageResult.isFailure ? stageResult.error : null;
   }
 
   /**

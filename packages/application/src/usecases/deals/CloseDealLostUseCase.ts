@@ -17,12 +17,7 @@
  * - NotificationServicePort: deal-lost email notification
  */
 
-import {
-  Result,
-  DomainError,
-  Opportunity,
-  DealLostEnrichedEvent,
-} from '@intelliflow/domain';
+import { Result, DomainError, Opportunity, DealLostEnrichedEvent } from '@intelliflow/domain';
 import { OpportunityService } from '../../services/OpportunityService';
 import { EventBusPort } from '../../ports/external';
 import { NotificationServicePort } from '../../ports/external/NotificationServicePort';
