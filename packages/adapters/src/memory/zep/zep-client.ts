@@ -137,12 +137,12 @@ export interface EpisodeBudget {
 // =============================================================================
 
 export class ZepMemoryAdapter {
-  private apiKey: string;
-  private projectId?: string;
+  private readonly apiKey: string;
+  private readonly projectId?: string;
   private episodeCount = 0;
-  private maxEpisodes: number;
-  private warningThresholdPercent: number;
-  private hardLimitPercent: number;
+  private readonly maxEpisodes: number;
+  private readonly warningThresholdPercent: number;
+  private readonly hardLimitPercent: number;
   private isInitializedFlag = false;
 
   // In-memory fallback when approaching limit
@@ -150,8 +150,8 @@ export class ZepMemoryAdapter {
   private useFallback = false;
 
   // Prisma persistence
-  private prisma?: ZepPrismaClient;
-  private tenantId: string;
+  private readonly prisma?: ZepPrismaClient;
+  private readonly tenantId: string;
   private isPersisted = false;
   private lastSyncedAt: Date | null = null;
 

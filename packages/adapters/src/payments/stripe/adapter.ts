@@ -41,6 +41,7 @@ import {
   getInvoice as getInvoiceHandler,
   listInvoices as listInvoicesHandler,
   payInvoice as payInvoiceHandler,
+  retrieveUpcomingInvoice as retrieveUpcomingInvoiceHandler,
   constructWebhookEvent as constructWebhookEventHandler,
   checkConnection as checkConnectionHandler,
 } from './handlers';
@@ -103,6 +104,7 @@ export interface PaymentServicePort {
   getInvoice(invoiceId: string): Promise<Result<StripeInvoice | null, DomainError>>;
   listInvoices(customerId: string): Promise<Result<StripeInvoice[], DomainError>>;
   payInvoice(invoiceId: string): Promise<Result<StripeInvoice, DomainError>>;
+  retrieveUpcomingInvoice(customerId: string): Promise<Result<StripeInvoice | null, DomainError>>;
   constructWebhookEvent(
     payload: string,
     signature: string
@@ -217,6 +219,10 @@ export class StripeAdapter implements PaymentServicePort {
 
   payInvoice(invoiceId: string) {
     return payInvoiceHandler(this.config, invoiceId);
+  }
+
+  retrieveUpcomingInvoice(customerId: string) {
+    return retrieveUpcomingInvoiceHandler(this.config, customerId);
   }
 
   // Webhook Operations

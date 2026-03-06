@@ -12,29 +12,59 @@ import { PrismaContactRepository } from '../src/repositories/PrismaContactReposi
 import { Contact, ContactId, Email } from '@intelliflow/domain';
 import type { PrismaClient } from '@intelliflow/db';
 
-// Mock Prisma Client
-const createMockPrismaClient = () => {
+type ContactPrismaDelegateDouble = {
+  upsert: ReturnType<typeof vi.fn>;
+  findUnique: ReturnType<typeof vi.fn>;
+  findFirst: ReturnType<typeof vi.fn>;
+  findMany: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
+  count: ReturnType<typeof vi.fn>;
+};
+
+interface ContactPrismaClientDouble {
+  client: PrismaClient;
+  contact: ContactPrismaDelegateDouble;
+}
+
+const createMockPrismaClient = (): ContactPrismaClientDouble => {
+  const contact: ContactPrismaDelegateDouble = {
+    upsert: vi.fn(),
+    findUnique: vi.fn(),
+    findFirst: vi.fn(),
+    findMany: vi.fn(),
+    delete: vi.fn(),
+    count: vi.fn(),
+  };
+
+  const partialClient = {
+    contact,
+  } satisfies Pick<PrismaClient, 'contact'>;
+
   return {
-    contact: {
-      upsert: vi.fn(),
-      findUnique: vi.fn(),
-      findFirst: vi.fn(),
-      findMany: vi.fn(),
-      delete: vi.fn(),
-      count: vi.fn(),
-    },
-  } as unknown as PrismaClient;
+    // Fail fast when repository code accesses undeclared Prisma delegates in tests.
+    client: new Proxy(partialClient, {
+      get(target, property, receiver) {
+        if (!(property in target)) {
+          throw new Error(
+            `Unexpected Prisma delegate access in Contact repository tests: ${String(property)}`
+          );
+        }
+        return Reflect.get(target, property, receiver);
+      },
+    }) as PrismaClient,
+    contact,
+  };
 };
 
 describe('PrismaContactRepository', () => {
   let repository: PrismaContactRepository;
-  let mockPrisma: PrismaClient;
+  let mockPrisma: ContactPrismaClientDouble;
   let testContact: Contact;
   let testContactId: ContactId;
 
   beforeEach(() => {
     mockPrisma = createMockPrismaClient();
-    repository = new PrismaContactRepository(mockPrisma);
+    repository = new PrismaContactRepository(mockPrisma.client);
 
     // Create a test contact
     const contactResult = Contact.create({
@@ -58,8 +88,8 @@ describe('PrismaContactRepository', () => {
 
   describe('save()', () => {
     it('should call prisma.contact.upsert with correct data', async () => {
-      const upsertMock = vi.fn().mockResolvedValue({});
-      (mockPrisma.contact.upsert as any) = upsertMock;
+      const upsertMock = mockPrisma.contact.upsert;
+      upsertMock.mockResolvedValue({});
 
       await repository.save(testContact);
 
@@ -92,8 +122,8 @@ describe('PrismaContactRepository', () => {
         tenantId: 'tenant-123',
       });
 
-      const upsertMock = vi.fn().mockResolvedValue({});
-      (mockPrisma.contact.upsert as any) = upsertMock;
+      const upsertMock = mockPrisma.contact.upsert;
+      upsertMock.mockResolvedValue({});
 
       await repository.save(minimalContactResult.value);
 
@@ -111,8 +141,8 @@ describe('PrismaContactRepository', () => {
     });
 
     it('should handle prisma errors', async () => {
-      const upsertMock = vi.fn().mockRejectedValue(new Error('Database error'));
-      (mockPrisma.contact.upsert as any) = upsertMock;
+      const upsertMock = mockPrisma.contact.upsert;
+      upsertMock.mockRejectedValue(new Error('Database error'));
 
       await expect(repository.save(testContact)).rejects.toThrow('Database error');
     });
@@ -136,8 +166,8 @@ describe('PrismaContactRepository', () => {
         updatedAt: new Date(),
       };
 
-      const findUniqueMock = vi.fn().mockResolvedValue(mockRecord);
-      (mockPrisma.contact.findUnique as any) = findUniqueMock;
+      const findUniqueMock = mockPrisma.contact.findUnique;
+      findUniqueMock.mockResolvedValue(mockRecord);
 
       const result = await repository.findById(testContactId);
 
@@ -153,8 +183,8 @@ describe('PrismaContactRepository', () => {
     });
 
     it('should return null when not found', async () => {
-      const findUniqueMock = vi.fn().mockResolvedValue(null);
-      (mockPrisma.contact.findUnique as any) = findUniqueMock;
+      const findUniqueMock = mockPrisma.contact.findUnique;
+      findUniqueMock.mockResolvedValue(null);
 
       const result = await repository.findById(testContactId);
 
@@ -178,8 +208,8 @@ describe('PrismaContactRepository', () => {
         updatedAt: new Date(),
       };
 
-      const findUniqueMock = vi.fn().mockResolvedValue(mockRecord);
-      (mockPrisma.contact.findUnique as any) = findUniqueMock;
+      const findUniqueMock = mockPrisma.contact.findUnique;
+      findUniqueMock.mockResolvedValue(mockRecord);
 
       const result = await repository.findById(testContactId);
 
@@ -225,8 +255,8 @@ describe('PrismaContactRepository', () => {
         },
       ];
 
-      const findManyMock = vi.fn().mockResolvedValue(mockRecords);
-      (mockPrisma.contact.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.contact.findMany;
+      findManyMock.mockResolvedValue(mockRecords);
 
       const results = await repository.findByAccountId('account-123');
 
@@ -241,8 +271,8 @@ describe('PrismaContactRepository', () => {
     });
 
     it('should return empty array when no contacts found', async () => {
-      const findManyMock = vi.fn().mockResolvedValue([]);
-      (mockPrisma.contact.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.contact.findMany;
+      findManyMock.mockResolvedValue([]);
 
       const results = await repository.findByAccountId('account-999');
 
@@ -270,8 +300,8 @@ describe('PrismaContactRepository', () => {
         },
       ];
 
-      const findManyMock = vi.fn().mockResolvedValue(mockRecords);
-      (mockPrisma.contact.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.contact.findMany;
+      findManyMock.mockResolvedValue(mockRecords);
 
       const results = await repository.findByOwnerId('owner-123');
 
@@ -284,8 +314,8 @@ describe('PrismaContactRepository', () => {
     });
 
     it('should return empty array when no contacts found', async () => {
-      const findManyMock = vi.fn().mockResolvedValue([]);
-      (mockPrisma.contact.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.contact.findMany;
+      findManyMock.mockResolvedValue([]);
 
       const results = await repository.findByOwnerId('owner-999');
 
@@ -311,13 +341,13 @@ describe('PrismaContactRepository', () => {
         updatedAt: new Date(),
       };
 
-      const findUniqueMock = vi.fn().mockResolvedValue(mockRecord);
-      (mockPrisma.contact.findUnique as any) = findUniqueMock;
+      const findFirstMock = mockPrisma.contact.findFirst;
+      findFirstMock.mockResolvedValue(mockRecord);
 
       const emailResult = Email.create('john.doe@example.com');
       const result = await repository.findByEmail(emailResult.value);
 
-      expect(findUniqueMock).toHaveBeenCalledWith({
+      expect(findFirstMock).toHaveBeenCalledWith({
         where: { email: 'john.doe@example.com' },
       });
 
@@ -326,20 +356,23 @@ describe('PrismaContactRepository', () => {
     });
 
     it('should return null when not found', async () => {
-      const findUniqueMock = vi.fn().mockResolvedValue(null);
-      (mockPrisma.contact.findUnique as any) = findUniqueMock;
+      const findFirstMock = mockPrisma.contact.findFirst;
+      findFirstMock.mockResolvedValue(null);
 
       const emailResult = Email.create('nonexistent@example.com');
       const result = await repository.findByEmail(emailResult.value);
 
+      expect(findFirstMock).toHaveBeenCalledWith({
+        where: { email: 'nonexistent@example.com' },
+      });
       expect(result).toBeNull();
     });
   });
 
   describe('delete()', () => {
     it('should call prisma.contact.delete with correct ID', async () => {
-      const deleteMock = vi.fn().mockResolvedValue({});
-      (mockPrisma.contact.delete as any) = deleteMock;
+      const deleteMock = mockPrisma.contact.delete;
+      deleteMock.mockResolvedValue({});
 
       await repository.delete(testContactId);
 
@@ -349,8 +382,8 @@ describe('PrismaContactRepository', () => {
     });
 
     it('should propagate prisma errors', async () => {
-      const deleteMock = vi.fn().mockRejectedValue(new Error('Record not found'));
-      (mockPrisma.contact.delete as any) = deleteMock;
+      const deleteMock = mockPrisma.contact.delete;
+      deleteMock.mockRejectedValue(new Error('Record not found'));
 
       await expect(repository.delete(testContactId)).rejects.toThrow('Record not found');
     });
@@ -358,8 +391,8 @@ describe('PrismaContactRepository', () => {
 
   describe('existsByEmail()', () => {
     it('should return true when email exists', async () => {
-      const countMock = vi.fn().mockResolvedValue(1);
-      (mockPrisma.contact.count as any) = countMock;
+      const countMock = mockPrisma.contact.count;
+      countMock.mockResolvedValue(1);
 
       const emailResult = Email.create('john.doe@example.com');
       const exists = await repository.existsByEmail(emailResult.value);
@@ -372,8 +405,8 @@ describe('PrismaContactRepository', () => {
     });
 
     it('should return false when email does not exist', async () => {
-      const countMock = vi.fn().mockResolvedValue(0);
-      (mockPrisma.contact.count as any) = countMock;
+      const countMock = mockPrisma.contact.count;
+      countMock.mockResolvedValue(0);
 
       const emailResult = Email.create('nonexistent@example.com');
       const exists = await repository.existsByEmail(emailResult.value);
@@ -400,8 +433,8 @@ describe('PrismaContactRepository', () => {
         updatedAt: new Date(),
       };
 
-      const findUniqueMock = vi.fn().mockResolvedValue(mockRecord);
-      (mockPrisma.contact.findUnique as any) = findUniqueMock;
+      const findUniqueMock = mockPrisma.contact.findUnique;
+      findUniqueMock.mockResolvedValue(mockRecord);
 
       await expect(repository.findById(testContactId)).rejects.toThrow(/Invalid ContactId/);
     });
@@ -425,11 +458,10 @@ describe('PrismaContactRepository', () => {
         updatedAt: testContact.updatedAt,
       };
 
-      const upsertMock = vi.fn().mockResolvedValue(mockRecord);
-      const findUniqueMock = vi.fn().mockResolvedValue(mockRecord);
-
-      (mockPrisma.contact.upsert as any) = upsertMock;
-      (mockPrisma.contact.findUnique as any) = findUniqueMock;
+      const upsertMock = mockPrisma.contact.upsert;
+      const findUniqueMock = mockPrisma.contact.findUnique;
+      upsertMock.mockResolvedValue(mockRecord);
+      findUniqueMock.mockResolvedValue(mockRecord);
 
       await repository.save(testContact);
       const found = await repository.findById(testContact.id);

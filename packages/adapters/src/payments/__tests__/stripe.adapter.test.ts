@@ -10,7 +10,7 @@ import { StripeAdapter, StripeConfig } from '../stripe/client';
 
 // Mock fetch globally
 const mockFetch = vi.fn();
-global.fetch = mockFetch as unknown as typeof fetch;
+global.fetch = mockFetch as typeof fetch;
 
 describe('StripeAdapter', () => {
   let adapter: StripeAdapter;
@@ -83,7 +83,7 @@ describe('StripeAdapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 429,
-        headers: new Map([['Retry-After', '30']]) as unknown as Headers,
+        headers: new Map([['Retry-After', '30']]) as any, // test: mock external SDK
         json: () =>
           Promise.resolve({
             error: { message: 'Rate limited' },

@@ -44,47 +44,47 @@ const DOC_GRANDCHILD_ID = '00000000-0000-4000-8000-000000000012';
 const CONTACT_ID = '00000000-0000-4000-8000-000000000020';
 const HASH = 'a'.repeat(64);
 
-// Helper to create a mock Prisma record
+// Helper to create a mock Prisma record (camelCase per Prisma 7)
 function createMockDbRecord(overrides: Record<string, unknown> = {}) {
   return {
     id: DOC_ID,
-    tenant_id: TENANT_ID,
-    version_major: 1,
-    version_minor: 0,
-    version_patch: 0,
+    tenantId: TENANT_ID,
+    versionMajor: 1,
+    versionMinor: 0,
+    versionPatch: 0,
     status: 'DRAFT',
     title: 'Test Document',
     description: 'A test document description',
-    document_type: 'CONTRACT',
+    documentType: 'CONTRACT',
     classification: 'INTERNAL',
     tags: ['legal', 'contract'],
-    related_case_id: CASE_ID,
-    related_contact_id: CONTACT_ID,
-    storage_key: '/storage/doc-001.pdf',
-    content_hash: HASH,
-    mime_type: 'application/pdf',
-    size_bytes: 1024,
-    created_by: USER_ID,
-    updated_by: USER_ID,
-    created_at: new Date('2026-01-15T10:00:00Z'),
-    updated_at: new Date('2026-01-15T10:00:00Z'),
-    parent_version_id: null,
-    is_latest_version: true,
-    retention_until: null,
-    deleted_at: null,
-    signed_by: null,
-    signed_at: null,
-    signature_hash: null,
-    signature_ip_address: null,
-    signature_user_agent: null,
+    relatedCaseId: CASE_ID,
+    relatedContactId: CONTACT_ID,
+    storageKey: '/storage/doc-001.pdf',
+    contentHash: HASH,
+    mimeType: 'application/pdf',
+    sizeBytes: 1024,
+    createdBy: USER_ID,
+    updatedBy: USER_ID,
+    createdAt: new Date('2026-01-15T10:00:00Z'),
+    updatedAt: new Date('2026-01-15T10:00:00Z'),
+    parentVersionId: null,
+    isLatestVersion: true,
+    retentionUntil: null,
+    deletedAt: null,
+    signedBy: null,
+    signedAt: null,
+    signatureHash: null,
+    signatureIpAddress: null,
+    signatureUserAgent: null,
     acl: [
       {
-        principal_id: USER_ID,
-        principal_type: 'USER',
-        access_level: 'EDIT',
-        granted_by: USER_ID,
-        granted_at: new Date('2026-01-15T10:00:00Z'),
-        expires_at: null,
+        principalId: USER_ID,
+        principalType: 'USER',
+        accessLevel: 'EDIT',
+        grantedBy: USER_ID,
+        grantedAt: new Date('2026-01-15T10:00:00Z'),
+        expiresAt: null,
       },
     ],
     ...overrides,
@@ -146,17 +146,17 @@ describe('PrismaCaseDocumentRepository', () => {
 
       expect(call.where.id).toBe(doc.id);
       expect(call.create.id).toBe(doc.id);
-      expect(call.create.tenant_id).toBe(TENANT_ID);
-      expect(call.create.version_major).toBe(1);
-      expect(call.create.version_minor).toBe(0);
-      expect(call.create.version_patch).toBe(0);
+      expect(call.create.tenantId).toBe(TENANT_ID);
+      expect(call.create.versionMajor).toBe(1);
+      expect(call.create.versionMinor).toBe(0);
+      expect(call.create.versionPatch).toBe(0);
       expect(call.create.status).toBe('DRAFT');
       expect(call.create.title).toBe('Test Document');
-      expect(call.create.storage_key).toBe('/storage/test-doc.pdf');
-      expect(call.create.content_hash).toBe(HASH);
-      expect(call.create.mime_type).toBe('application/pdf');
-      expect(call.create.size_bytes).toBe(2048);
-      expect(call.create.created_by).toBe(USER_ID);
+      expect(call.create.storageKey).toBe('/storage/test-doc.pdf');
+      expect(call.create.contentHash).toBe(HASH);
+      expect(call.create.mimeType).toBe('application/pdf');
+      expect(call.create.sizeBytes).toBe(2048);
+      expect(call.create.createdBy).toBe(USER_ID);
     });
 
     it('should include update fields in upsert', async () => {
@@ -167,7 +167,7 @@ describe('PrismaCaseDocumentRepository', () => {
       await repo.save(doc);
 
       const call = mockPrisma.caseDocument.upsert.mock.calls[0][0];
-      expect(call.update.version_major).toBe(1);
+      expect(call.update.versionMajor).toBe(1);
       expect(call.update.status).toBe('DRAFT');
       expect(call.update.title).toBe('Test Document');
     });
@@ -184,19 +184,19 @@ describe('PrismaCaseDocumentRepository', () => {
 
       // ACL should be deleted first
       expect(mockPrisma.caseDocumentACL.deleteMany).toHaveBeenCalledWith({
-        where: { document_id: doc.id },
+        where: { documentId: doc.id },
       });
 
       // Then new ACL created
       expect(mockPrisma.caseDocumentACL.createMany).toHaveBeenCalledWith({
         data: expect.arrayContaining([
           expect.objectContaining({
-            document_id: doc.id,
-            tenant_id: TENANT_ID,
-            principal_id: USER2_ID,
-            principal_type: 'USER',
-            access_level: 'VIEW',
-            granted_by: USER_ID,
+            documentId: doc.id,
+            tenantId: TENANT_ID,
+            principalId: USER2_ID,
+            principalType: 'USER',
+            accessLevel: 'VIEW',
+            grantedBy: USER_ID,
           }),
         ]),
       });
@@ -229,11 +229,11 @@ describe('PrismaCaseDocumentRepository', () => {
       await repo.save(doc);
 
       const call = mockPrisma.caseDocument.upsert.mock.calls[0][0];
-      expect(call.create.signed_by).toBe(USER_ID);
-      expect(call.create.signed_at).toBeInstanceOf(Date);
-      expect(call.create.signature_hash).toBeDefined();
-      expect(call.create.signature_ip_address).toBe('192.168.1.1');
-      expect(call.create.signature_user_agent).toBe('Mozilla/5.0');
+      expect(call.create.signedBy).toBe(USER_ID);
+      expect(call.create.signedAt).toBeInstanceOf(Date);
+      expect(call.create.signatureHash).toBeDefined();
+      expect(call.create.signatureIpAddress).toBe('192.168.1.1');
+      expect(call.create.signatureUserAgent).toBe('Mozilla/5.0');
     });
 
     it('should set null for optional fields when not present', async () => {
@@ -244,10 +244,10 @@ describe('PrismaCaseDocumentRepository', () => {
       await repo.save(doc);
 
       const call = mockPrisma.caseDocument.upsert.mock.calls[0][0];
-      expect(call.create.parent_version_id).toBeNull();
-      expect(call.create.retention_until).toBeNull();
-      expect(call.create.deleted_at).toBeNull();
-      expect(call.create.signed_by).toBeNull();
+      expect(call.create.parentVersionId).toBeNull();
+      expect(call.create.retentionUntil).toBeNull();
+      expect(call.create.deletedAt).toBeNull();
+      expect(call.create.signedBy).toBeNull();
     });
   });
 
@@ -291,20 +291,20 @@ describe('PrismaCaseDocumentRepository', () => {
       const record = createMockDbRecord({
         acl: [
           {
-            principal_id: USER_ID,
-            principal_type: 'USER',
-            access_level: 'EDIT',
-            granted_by: USER_ID,
-            granted_at: new Date('2026-01-15T10:00:00Z'),
-            expires_at: null,
+            principalId: USER_ID,
+            principalType: 'USER',
+            accessLevel: 'EDIT',
+            grantedBy: USER_ID,
+            grantedAt: new Date('2026-01-15T10:00:00Z'),
+            expiresAt: null,
           },
           {
-            principal_id: USER2_ID,
-            principal_type: 'ROLE',
-            access_level: 'VIEW',
-            granted_by: USER_ID,
-            granted_at: new Date('2026-01-16T10:00:00Z'),
-            expires_at: new Date('2026-12-31T23:59:59Z'),
+            principalId: USER2_ID,
+            principalType: 'ROLE',
+            accessLevel: 'VIEW',
+            grantedBy: USER_ID,
+            grantedAt: new Date('2026-01-16T10:00:00Z'),
+            expiresAt: new Date('2026-12-31T23:59:59Z'),
           },
         ],
       });
@@ -325,11 +325,11 @@ describe('PrismaCaseDocumentRepository', () => {
 
     it('should handle record with eSignature', async () => {
       const record = createMockDbRecord({
-        signed_by: USER_ID,
-        signed_at: new Date('2026-01-20T10:00:00Z'),
-        signature_hash: HASH,
-        signature_ip_address: '10.0.0.1',
-        signature_user_agent: 'Chrome/120',
+        signedBy: USER_ID,
+        signedAt: new Date('2026-01-20T10:00:00Z'),
+        signatureHash: HASH,
+        signatureIpAddress: '10.0.0.1',
+        signatureUserAgent: 'Chrome/120',
         status: 'SIGNED',
       });
       mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
@@ -356,8 +356,8 @@ describe('PrismaCaseDocumentRepository', () => {
     it('should handle null description and optional metadata', async () => {
       const record = createMockDbRecord({
         description: null,
-        related_case_id: null,
-        related_contact_id: null,
+        relatedCaseId: null,
+        relatedContactId: null,
         tags: [],
       });
       mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
@@ -385,7 +385,7 @@ describe('PrismaCaseDocumentRepository', () => {
   // ============================================
   describe('findLatestVersion()', () => {
     it('should find latest version by OR condition', async () => {
-      const record = createMockDbRecord({ is_latest_version: true });
+      const record = createMockDbRecord({ isLatestVersion: true });
       mockPrisma.caseDocument.findFirst.mockResolvedValue(record);
 
       const result = await repo.findLatestVersion(DOC_ID);
@@ -396,8 +396,8 @@ describe('PrismaCaseDocumentRepository', () => {
       expect(mockPrisma.caseDocument.findFirst).toHaveBeenCalledWith({
         where: {
           OR: [
-            { id: DOC_ID, is_latest_version: true },
-            { parent_version_id: DOC_ID, is_latest_version: true },
+            { id: DOC_ID, isLatestVersion: true },
+            { parentVersionId: DOC_ID, isLatestVersion: true },
           ],
         },
         include: { acl: true },
@@ -429,10 +429,10 @@ describe('PrismaCaseDocumentRepository', () => {
       // Child document that has a parent
       const childRecord = {
         id: DOC_CHILD_ID,
-        parent_version_id: DOC_ID,
+        parentVersionId: DOC_ID,
       };
       // Root document (no parent)
-      const rootRecord = createMockDbRecord({ id: DOC_ID, parent_version_id: null });
+      const rootRecord = createMockDbRecord({ id: DOC_ID, parentVersionId: null });
 
       // First call: get the child document
       mockPrisma.caseDocument.findUnique
@@ -450,10 +450,10 @@ describe('PrismaCaseDocumentRepository', () => {
       mockPrisma.caseDocument.findUnique.mockResolvedValueOnce(
         createMockDbRecord({
           id: DOC_CHILD_ID,
-          parent_version_id: DOC_ID,
-          version_major: 2,
-          version_minor: 0,
-          version_patch: 0,
+          parentVersionId: DOC_ID,
+          versionMajor: 2,
+          versionMinor: 0,
+          versionPatch: 0,
         })
       );
 
@@ -468,7 +468,7 @@ describe('PrismaCaseDocumentRepository', () => {
     it('should handle root document with no parent', async () => {
       const rootRecord = createMockDbRecord({
         id: DOC_ID,
-        parent_version_id: null,
+        parentVersionId: null,
         acl: [],
       });
 
@@ -489,18 +489,18 @@ describe('PrismaCaseDocumentRepository', () => {
     it('should sort versions by major > minor > patch', async () => {
       const v1 = createMockDbRecord({
         id: DOC_ID,
-        version_major: 1,
-        version_minor: 0,
-        version_patch: 0,
-        parent_version_id: null,
+        versionMajor: 1,
+        versionMinor: 0,
+        versionPatch: 0,
+        parentVersionId: null,
         acl: [],
       });
       const v2 = createMockDbRecord({
         id: DOC_CHILD_ID,
-        version_major: 2,
-        version_minor: 0,
-        version_patch: 0,
-        parent_version_id: DOC_ID,
+        versionMajor: 2,
+        versionMinor: 0,
+        versionPatch: 0,
+        parentVersionId: DOC_ID,
         acl: [],
       });
 
@@ -540,12 +540,12 @@ describe('PrismaCaseDocumentRepository', () => {
       expect(result).toHaveLength(2);
       expect(mockPrisma.caseDocument.findMany).toHaveBeenCalledWith({
         where: {
-          related_case_id: CASE_ID,
-          deleted_at: null,
-          is_latest_version: true,
+          relatedCaseId: CASE_ID,
+          deletedAt: null,
+          isLatestVersion: true,
         },
         include: { acl: true },
-        orderBy: { created_at: 'desc' },
+        orderBy: { createdAt: 'desc' },
       });
     });
 
@@ -569,18 +569,18 @@ describe('PrismaCaseDocumentRepository', () => {
 
       const call = mockPrisma.caseDocument.findMany.mock.calls[0][0];
 
-      expect(call.where.tenant_id).toBe(TENANT_ID);
-      expect(call.where.deleted_at).toBeNull();
-      expect(call.where.is_latest_version).toBe(true);
+      expect(call.where.tenantId).toBe(TENANT_ID);
+      expect(call.where.deletedAt).toBeNull();
+      expect(call.where.isLatestVersion).toBe(true);
       expect(call.where.OR).toBeDefined();
       expect(call.where.OR).toHaveLength(2);
 
-      // First OR: created_by user
-      expect(call.where.OR[0]).toEqual({ created_by: USER_ID });
+      // First OR: createdBy user
+      expect(call.where.OR[0]).toEqual({ createdBy: USER_ID });
 
       // Second OR: ACL access
-      expect(call.where.OR[1].acl.some.principal_id).toBe(USER_ID);
-      expect(call.where.OR[1].acl.some.access_level).toEqual({ not: 'NONE' });
+      expect(call.where.OR[1].acl.some.principalId).toBe(USER_ID);
+      expect(call.where.OR[1].acl.some.accessLevel).toEqual({ not: 'NONE' });
     });
 
     it('should filter out expired ACL entries', async () => {
@@ -593,9 +593,9 @@ describe('PrismaCaseDocumentRepository', () => {
 
       // Should check for null or future expiry
       expect(aclCondition.OR).toBeDefined();
-      expect(aclCondition.OR).toContainEqual({ expires_at: null });
+      expect(aclCondition.OR).toContainEqual({ expiresAt: null });
       expect(aclCondition.OR).toContainEqual({
-        expires_at: { gt: expect.any(Date) },
+        expiresAt: { gt: expect.any(Date) },
       });
     });
 
@@ -609,14 +609,14 @@ describe('PrismaCaseDocumentRepository', () => {
       expect(result[0].id).toBe(DOC_ID);
     });
 
-    it('should order by created_at descending', async () => {
+    it('should order by createdAt descending', async () => {
       mockPrisma.caseDocument.findMany.mockResolvedValue([]);
 
       await repo.findAccessibleByUser(USER_ID, TENANT_ID);
 
       expect(mockPrisma.caseDocument.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
-          orderBy: { created_at: 'desc' },
+          orderBy: { createdAt: 'desc' },
         })
       );
     });
@@ -634,7 +634,7 @@ describe('PrismaCaseDocumentRepository', () => {
 
       // ACL deleted first
       expect(mockPrisma.caseDocumentACL.deleteMany).toHaveBeenCalledWith({
-        where: { document_id: DOC_ID },
+        where: { documentId: DOC_ID },
       });
 
       // Then document deleted
@@ -660,9 +660,9 @@ describe('PrismaCaseDocumentRepository', () => {
   // toDomain mapping edge cases
   // ============================================
   describe('toDomain mapping', () => {
-    it('should map retention_until correctly', async () => {
+    it('should map retentionUntil correctly', async () => {
       const retentionDate = new Date('2027-01-01T00:00:00Z');
-      const record = createMockDbRecord({ retention_until: retentionDate });
+      const record = createMockDbRecord({ retentionUntil: retentionDate });
       mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
 
       const result = await repo.findById(DOC_ID);
@@ -671,9 +671,9 @@ describe('PrismaCaseDocumentRepository', () => {
       expect(json.retentionUntil).toEqual(retentionDate);
     });
 
-    it('should map deleted_at correctly', async () => {
+    it('should map deletedAt correctly', async () => {
       const deletedAt = new Date('2026-06-01T00:00:00Z');
-      const record = createMockDbRecord({ deleted_at: deletedAt });
+      const record = createMockDbRecord({ deletedAt: deletedAt });
       mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
 
       const result = await repo.findById(DOC_ID);
@@ -692,9 +692,9 @@ describe('PrismaCaseDocumentRepository', () => {
 
     it('should map version fields correctly', async () => {
       const record = createMockDbRecord({
-        version_major: 3,
-        version_minor: 2,
-        version_patch: 1,
+        versionMajor: 3,
+        versionMinor: 2,
+        versionPatch: 1,
       });
       mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
 
@@ -707,16 +707,16 @@ describe('PrismaCaseDocumentRepository', () => {
       expect(version.toString()).toBe('3.2.1');
     });
 
-    it('should handle ACL entry with expires_at as null', async () => {
+    it('should handle ACL entry with expiresAt as null', async () => {
       const record = createMockDbRecord({
         acl: [
           {
-            principal_id: USER_ID,
-            principal_type: 'USER',
-            access_level: 'ADMIN',
-            granted_by: USER_ID,
-            granted_at: new Date(),
-            expires_at: null,
+            principalId: USER_ID,
+            principalType: 'USER',
+            accessLevel: 'ADMIN',
+            grantedBy: USER_ID,
+            grantedAt: new Date(),
+            expiresAt: null,
           },
         ],
       });
@@ -728,9 +728,9 @@ describe('PrismaCaseDocumentRepository', () => {
       expect(ace.expiresAt).toBeUndefined();
     });
 
-    it('should map parent_version_id correctly', async () => {
+    it('should map parentVersionId correctly', async () => {
       const record = createMockDbRecord({
-        parent_version_id: DOC_CHILD_ID,
+        parentVersionId: DOC_CHILD_ID,
       });
       mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
 
@@ -749,7 +749,7 @@ describe('PrismaCaseDocumentRepository', () => {
       // The visited set prevents infinite loops
       const record = createMockDbRecord({
         id: DOC_ID,
-        parent_version_id: null,
+        parentVersionId: null,
         acl: [],
       });
 
@@ -772,8 +772,8 @@ describe('PrismaCaseDocumentRepository', () => {
       // root -> child -> grandchild
       const root = createMockDbRecord({
         id: DOC_ID,
-        version_major: 1,
-        parent_version_id: null,
+        versionMajor: 1,
+        parentVersionId: null,
         acl: [],
       });
 
@@ -784,16 +784,16 @@ describe('PrismaCaseDocumentRepository', () => {
         .mockResolvedValueOnce(
           createMockDbRecord({
             id: DOC_CHILD_ID,
-            version_major: 2,
-            parent_version_id: DOC_ID,
+            versionMajor: 2,
+            parentVersionId: DOC_ID,
             acl: [],
           })
         )
         .mockResolvedValueOnce(
           createMockDbRecord({
             id: DOC_GRANDCHILD_ID,
-            version_major: 3,
-            parent_version_id: DOC_CHILD_ID,
+            versionMajor: 3,
+            parentVersionId: DOC_CHILD_ID,
             acl: [],
           })
         );
@@ -815,7 +815,7 @@ describe('PrismaCaseDocumentRepository', () => {
     it('should skip null documents in version chain', async () => {
       const root = createMockDbRecord({
         id: DOC_ID,
-        parent_version_id: null,
+        parentVersionId: null,
         acl: [],
       });
 

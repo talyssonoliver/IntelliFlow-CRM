@@ -150,7 +150,7 @@ export interface SlackWebhookEvent {
 export interface UploadFileParams {
   channels: string[];
   filename: string;
-  content: string | Buffer;
+  content: string | Uint8Array;
   title?: string;
   initialComment?: string;
 }

@@ -10,7 +10,14 @@ import {
 import type { StripeConfig, StripePaymentIntent } from '../../types';
 
 vi.mock('../../http-client', () => ({ makeRequest: vi.fn() }));
-vi.mock('../../mappers', () => ({ mapToPaymentIntent: vi.fn() }));
+vi.mock('../../mappers', () => ({
+  mapToCustomer: vi.fn(),
+  mapToPaymentMethod: vi.fn(),
+  mapToPaymentIntent: vi.fn(),
+  mapToRefund: vi.fn(),
+  mapToSubscription: vi.fn(),
+  mapToInvoice: vi.fn(),
+}));
 
 import { makeRequest } from '../../http-client';
 import { mapToPaymentIntent } from '../../mappers';

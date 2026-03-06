@@ -156,6 +156,23 @@ export function mapToInvoice(data: Record<string, unknown>): StripeInvoice {
       }
     : undefined;
 
+  // Extract payment method details from the expanded charge object.
+  // Stripe returns `charge` as either a string ID or an expanded object
+  // containing `payment_method_details.card.{brand, last4}`.
+  let paymentMethodBrand: string | undefined;
+  let paymentMethodLast4: string | undefined;
+  const charge = data.charge;
+  if (typeof charge === 'object' && charge !== null) {
+    const pmDetails = (charge as Record<string, unknown>).payment_method_details as
+      | Record<string, unknown>
+      | undefined;
+    const card = pmDetails?.card as Record<string, unknown> | undefined;
+    if (card) {
+      paymentMethodBrand = card.brand ? String(card.brand) : undefined;
+      paymentMethodLast4 = card.last4 ? String(card.last4) : undefined;
+    }
+  }
+
   return {
     id: String(data.id ?? ''),
     customerId: String(data.customer ?? ''),
@@ -179,6 +196,8 @@ export function mapToInvoice(data: Record<string, unknown>): StripeInvoice {
     discount: data.discount != null ? Number(data.discount) : undefined,
     customerEmail: data.customer_email ? String(data.customer_email) : undefined,
     customerName: data.customer_name ? String(data.customer_name) : undefined,
+    paymentMethodBrand,
+    paymentMethodLast4,
     billingAddress,
     lineItems: lineItems.length > 0 ? lineItems : undefined,
   };

@@ -103,7 +103,7 @@ export function parseEmailAddress(raw: string): ParsedEmailAddress {
   const trimmed = raw.trim();
 
   // Pattern: "Name" <email@example.com> or Name <email@example.com>
-  const namedMatch = trimmed.match(/^"?([^"<]+)"?\s*<([^>]+)>$/);
+  const namedMatch = trimmed.match(/^"?([^"<]{1,500})"?\s{0,100}<([^>]{1,500})>$/);
   if (namedMatch) {
     return {
       address: namedMatch[2].trim().toLowerCase(),
@@ -271,7 +271,7 @@ export function isReplyMessage(subject: string, headers: EmailHeaders): boolean 
  * Spam and phishing analyzer
  */
 export class SpamAnalyzer {
-  private suspiciousPatterns = [
+  private readonly suspiciousPatterns = [
     /urgent.*action.*required/i,
     /verify.*account.*immediately/i,
     /your.*account.*has.*been.*suspended/i,
@@ -284,65 +284,33 @@ export class SpamAnalyzer {
     /lottery.*winner/i,
   ];
 
-  private suspiciousLinkPatterns = [/bit\.ly/i, /tinyurl/i, /goo\.gl/i, /t\.co/i, /ow\.ly/i];
+  private readonly suspiciousLinkPatterns = [
+    /bit\.ly/i,
+    /tinyurl/i,
+    /goo\.gl/i,
+    /t\.co/i,
+    /ow\.ly/i,
+  ];
 
   analyze(email: ParsedEmail): SpamAnalysis {
     const reasons: string[] = [];
     let score = 0;
     const suspiciousLinks: string[] = [];
 
-    // Check authentication results
-    if (email.headers.dkim === 'fail') {
-      score += 30;
-      reasons.push('DKIM signature failed');
-    }
-    if (email.headers.spf === 'fail') {
-      score += 30;
-      reasons.push('SPF check failed');
-    }
-    if (email.headers.dmarc === 'fail') {
-      score += 30;
-      reasons.push('DMARC check failed');
-    }
+    score += this.checkAuthResults(email, reasons);
 
-    // Check content
     const content = `${email.headers.subject} ${email.textBody || ''} ${email.htmlBody || ''}`;
+    score += this.checkSuspiciousContent(content, reasons);
+    score += this.checkSuspiciousLinks(email.htmlBody, suspiciousLinks);
 
-    for (const pattern of this.suspiciousPatterns) {
-      if (pattern.test(content)) {
-        score += 10;
-        reasons.push(`Suspicious pattern: ${pattern.source}`);
-      }
-    }
-
-    // Check for suspicious links in HTML
-    if (email.htmlBody) {
-      const linkMatches = email.htmlBody.matchAll(/href=["']([^"']+)["']/gi);
-      for (const match of linkMatches) {
-        const url = match[1];
-        for (const linkPattern of this.suspiciousLinkPatterns) {
-          if (linkPattern.test(url)) {
-            suspiciousLinks.push(url);
-            score += 5;
-          }
-        }
-      }
-    }
-
-    // Check for urgency language
     const urgentLanguage = /urgent|immediately|right away|asap|act now/i.test(content);
     if (urgentLanguage) {
       score += 5;
       reasons.push('Contains urgent language');
     }
 
-    // Check for mismatched domains
-    const fromDomain = email.headers.from.address.split('@')[1];
-    const mismatchedDomains = email.htmlBody
-      ? /href=["'][^"']*(?!.*fromDomain)[^"']*["']/i.test(email.htmlBody)
-      : false;
+    const mismatchedDomains = this.hasMismatchedDomains(email.htmlBody);
 
-    // Cap score at 100
     score = Math.min(score, 100);
 
     return {
@@ -357,6 +325,56 @@ export class SpamAnalyzer {
         mismatchedDomains,
       },
     };
+  }
+
+  private checkAuthResults(email: ParsedEmail, reasons: string[]): number {
+    let score = 0;
+    if (email.headers.dkim === 'fail') {
+      score += 30;
+      reasons.push('DKIM signature failed');
+    }
+    if (email.headers.spf === 'fail') {
+      score += 30;
+      reasons.push('SPF check failed');
+    }
+    if (email.headers.dmarc === 'fail') {
+      score += 30;
+      reasons.push('DMARC check failed');
+    }
+    return score;
+  }
+
+  private checkSuspiciousContent(content: string, reasons: string[]): number {
+    let score = 0;
+    for (const pattern of this.suspiciousPatterns) {
+      if (pattern.test(content)) {
+        score += 10;
+        reasons.push(`Suspicious pattern: ${pattern.source}`);
+      }
+    }
+    return score;
+  }
+
+  private hasMismatchedDomains(htmlBody: string | undefined): boolean {
+    if (!htmlBody) return false;
+    const hrefMatches = htmlBody.match(/href=["']([^"']{0,2000})["']/gi) ?? [];
+    return hrefMatches.some((h) => !h.includes('fromDomain'));
+  }
+
+  private checkSuspiciousLinks(htmlBody: string | undefined, suspiciousLinks: string[]): number {
+    if (!htmlBody) return 0;
+    let score = 0;
+    const linkMatches = htmlBody.matchAll(/href=["']([^"']+)["']/gi);
+    for (const match of linkMatches) {
+      const url = match[1];
+      for (const linkPattern of this.suspiciousLinkPatterns) {
+        if (linkPattern.test(url)) {
+          suspiciousLinks.push(url);
+          score += 5;
+        }
+      }
+    }
+    return score;
   }
 }
 
@@ -373,12 +391,45 @@ interface MimePart {
   contentId?: string;
 }
 
+function parseMimeSection(section: string, endMarkerSuffix: string): MimePart | null {
+  const trimmed = section.trim();
+  if (!trimmed || trimmed.startsWith(endMarkerSuffix)) return null;
+
+  const [headerSection, ...bodyParts] = trimmed.split(/\r?\n\r?\n/);
+  if (!headerSection) return null;
+
+  const headers = parseHeaders(headerSection);
+  const body = bodyParts.join('\n\n');
+
+  const contentType = headers['content-type'] || 'text/plain';
+  const contentDisposition = headers['content-disposition'] || '';
+
+  const isAttachment =
+    contentDisposition.includes('attachment') ||
+    (contentDisposition.includes('filename') && !contentDisposition.includes('inline'));
+
+  const filenameMatch = contentDisposition.match(/filename=["']?([^"';\s]+)["']?/i);
+  const filename = filenameMatch ? filenameMatch[1] : undefined;
+
+  const contentIdMatch = headers['content-id']?.match(/<([^>]{1,500})>/);
+  const contentId = contentIdMatch ? contentIdMatch[1] : undefined;
+
+  return {
+    headers,
+    body,
+    contentType,
+    contentTransferEncoding: headers['content-transfer-encoding'],
+    isAttachment,
+    filename,
+    contentId,
+  };
+}
+
 /**
  * Parse raw MIME content into parts
  */
 export function parseMimeParts(raw: string, boundary?: string): MimePart[] {
   if (!boundary) {
-    // Single part message
     const [headerSection, ...bodyParts] = raw.split(/\r?\n\r?\n/);
     const headers = parseHeaders(headerSection);
     const body = bodyParts.join('\n\n');
@@ -396,48 +447,18 @@ export function parseMimeParts(raw: string, boundary?: string): MimePart[] {
 
   const parts: MimePart[] = [];
   const boundaryMarker = `--${boundary}`;
-  const endMarker = `--${boundary}--`;
-
+  const endMarkerSuffix = `${boundary}--`;
   const sections = raw.split(new RegExp(`${boundaryMarker}(?!-)`));
 
   for (const section of sections) {
-    const trimmed = section.trim();
-    if (!trimmed || trimmed.startsWith(endMarker.slice(2))) continue;
+    const part = parseMimeSection(section, endMarkerSuffix);
+    if (!part) continue;
 
-    const [headerSection, ...bodyParts] = trimmed.split(/\r?\n\r?\n/);
-    if (!headerSection) continue;
+    parts.push(part);
 
-    const headers = parseHeaders(headerSection);
-    const body = bodyParts.join('\n\n');
-
-    const contentType = headers['content-type'] || 'text/plain';
-    const contentDisposition = headers['content-disposition'] || '';
-
-    const isAttachment =
-      contentDisposition.includes('attachment') ||
-      (contentDisposition.includes('filename') && !contentDisposition.includes('inline'));
-
-    const filenameMatch = contentDisposition.match(/filename=["']?([^"';\s]+)["']?/i);
-    const filename = filenameMatch ? filenameMatch[1] : undefined;
-
-    const contentIdMatch = headers['content-id']?.match(/<([^>]+)>/);
-    const contentId = contentIdMatch ? contentIdMatch[1] : undefined;
-
-    parts.push({
-      headers,
-      body,
-      contentType,
-      contentTransferEncoding: headers['content-transfer-encoding'],
-      isAttachment,
-      filename,
-      contentId,
-    });
-
-    // Handle nested multipart
-    const nestedBoundary = parseMimeBoundary(contentType);
-    if (nestedBoundary && typeof body === 'string') {
-      const nestedParts = parseMimeParts(body, nestedBoundary);
-      parts.push(...nestedParts);
+    const nestedBoundary = parseMimeBoundary(part.contentType);
+    if (nestedBoundary && typeof part.body === 'string') {
+      parts.push(...parseMimeParts(part.body, nestedBoundary));
     }
   }
 
@@ -485,10 +506,48 @@ export function parseHeaders(raw: string): Record<string, string> {
  * Main inbound email parser
  */
 export class InboundEmailParser {
-  private spamAnalyzer: SpamAnalyzer;
+  private readonly spamAnalyzer: SpamAnalyzer;
 
   constructor() {
     this.spamAnalyzer = new SpamAnalyzer();
+  }
+
+  private buildHeaders(rawHeaders: Record<string, string>, parseErrors: string[]): EmailHeaders {
+    let date: Date | undefined;
+    try {
+      date = rawHeaders['date'] ? new Date(rawHeaders['date']) : undefined;
+    } catch {
+      parseErrors.push('Invalid date header');
+    }
+
+    const from = parseEmailAddress(rawHeaders['from'] || '');
+    const to = parseEmailAddresses(rawHeaders['to'] || '');
+    const cc = parseEmailAddresses(rawHeaders['cc'] || '');
+    const bcc = parseEmailAddresses(rawHeaders['bcc'] || '');
+    const replyTo = rawHeaders['reply-to'] ? parseEmailAddress(rawHeaders['reply-to']) : undefined;
+    const references = rawHeaders['references']
+      ? rawHeaders['references'].split(/\s+/).filter(Boolean)
+      : undefined;
+    const authResults = rawHeaders['authentication-results'];
+
+    return {
+      messageId: rawHeaders['message-id']?.replace(/[<>]/g, ''),
+      inReplyTo: rawHeaders['in-reply-to']?.replace(/[<>]/g, ''),
+      references,
+      subject: rawHeaders['subject'] || '(no subject)',
+      date,
+      from,
+      to,
+      cc: cc.length > 0 ? cc : undefined,
+      bcc: bcc.length > 0 ? bcc : undefined,
+      replyTo,
+      listUnsubscribe: rawHeaders['list-unsubscribe'],
+      dkim: this.parseDkimResult(authResults),
+      spf: this.parseSpfResult(authResults),
+      dmarc: this.parseDmarcResult(authResults),
+      receivedSpf: rawHeaders['received-spf'],
+      xOriginalTo: rawHeaders['x-original-to'],
+    };
   }
 
   /**
@@ -501,101 +560,27 @@ export class InboundEmailParser {
     const parseErrors: string[] = [];
 
     try {
-      // Split headers from body
       const [headerSection, ...bodyParts] = rawString.split(/\r?\n\r?\n/);
       const rawHeaders = parseHeaders(headerSection);
       const rawBody = bodyParts.join('\n\n');
 
-      // Parse email addresses
-      const from = parseEmailAddress(rawHeaders['from'] || '');
-      const to = parseEmailAddresses(rawHeaders['to'] || '');
-      const cc = parseEmailAddresses(rawHeaders['cc'] || '');
-      const bcc = parseEmailAddresses(rawHeaders['bcc'] || '');
-      const replyTo = rawHeaders['reply-to']
-        ? parseEmailAddress(rawHeaders['reply-to'])
-        : undefined;
+      const headers = this.buildHeaders(rawHeaders, parseErrors);
 
-      // Parse date
-      let date: Date | undefined;
-      try {
-        date = rawHeaders['date'] ? new Date(rawHeaders['date']) : undefined;
-      } catch {
-        parseErrors.push('Invalid date header');
-      }
-
-      // Parse references
-      const references = rawHeaders['references']
-        ? rawHeaders['references'].split(/\s+/).filter(Boolean)
-        : undefined;
-
-      // Build headers object
-      const headers: EmailHeaders = {
-        messageId: rawHeaders['message-id']?.replace(/[<>]/g, ''),
-        inReplyTo: rawHeaders['in-reply-to']?.replace(/[<>]/g, ''),
-        references,
-        subject: rawHeaders['subject'] || '(no subject)',
-        date,
-        from,
-        to,
-        cc: cc.length > 0 ? cc : undefined,
-        bcc: bcc.length > 0 ? bcc : undefined,
-        replyTo,
-        listUnsubscribe: rawHeaders['list-unsubscribe'],
-        dkim: this.parseDkimResult(rawHeaders['authentication-results']),
-        spf: this.parseSpfResult(rawHeaders['authentication-results']),
-        dmarc: this.parseDmarcResult(rawHeaders['authentication-results']),
-        receivedSpf: rawHeaders['received-spf'],
-        xOriginalTo: rawHeaders['x-original-to'],
-      };
-
-      // Parse MIME parts
       const contentType = rawHeaders['content-type'] || 'text/plain';
       const boundary = parseMimeBoundary(contentType);
       const parts = parseMimeParts(rawBody, boundary || undefined);
+      const { textBody, htmlBody, attachments } = this.extractMimeBodies(parts);
 
-      // Extract text and HTML bodies
-      let textBody: string | undefined;
-      let htmlBody: string | undefined;
-      const attachments: ParsedAttachment[] = [];
-
-      for (const part of parts) {
-        if (part.isAttachment && part.filename) {
-          // Process attachment
-          let content: Buffer;
-          if (part.contentTransferEncoding === 'base64') {
-            content = decodeBase64(part.body as string);
-          } else if (part.contentTransferEncoding === 'quoted-printable') {
-            content = Buffer.from(decodeQuotedPrintable(part.body as string));
-          } else {
-            content = Buffer.isBuffer(part.body) ? part.body : Buffer.from(part.body);
-          }
-
-          attachments.push({
-            filename: part.filename,
-            contentType: part.contentType.split(';')[0].trim(),
-            size: content.length,
-            content,
-            contentId: part.contentId,
-            isInline: part.headers['content-disposition']?.includes('inline') || false,
-            checksum: createHash('sha256').update(content).digest('hex'),
-          });
-        } else if (part.contentType.startsWith('text/plain') && !textBody) {
-          textBody = this.decodeBody(part);
-        } else if (part.contentType.startsWith('text/html') && !htmlBody) {
-          htmlBody = this.decodeBody(part);
-        }
-      }
-
-      // Thread detection
       const threadInfo = extractThreadInfo(headers);
       const isReply = isReplyMessage(headers.subject, headers);
       const isForward = isForwardedMessage(headers.subject, textBody);
 
-      // Generate email ID
       const id =
         headers.messageId ||
         createHash('sha256')
-          .update(`${from.address}:${headers.subject}:${date?.toISOString() || Date.now()}`)
+          .update(
+            `${headers.from.address}:${headers.subject}:${headers.date?.toISOString() || Date.now()}`
+          )
           .digest('hex')
           .slice(0, 32);
 
@@ -613,14 +598,12 @@ export class InboundEmailParser {
         parseErrors: parseErrors.length > 0 ? parseErrors : undefined,
       };
 
-      // Spam analysis
       const spamAnalysis = this.spamAnalyzer.analyze(email);
       email.spamScore = spamAnalysis.score;
       email.phishingIndicators = spamAnalysis.indicators.suspiciousLinks;
 
       return email;
     } catch (error) {
-      // Return minimal parsed email on error
       return {
         id: createHash('sha256').update(rawString.slice(0, 1000)).digest('hex').slice(0, 32),
         headers: {
@@ -636,6 +619,49 @@ export class InboundEmailParser {
         parseErrors: [error instanceof Error ? error.message : 'Unknown parse error'],
       };
     }
+  }
+
+  private extractMimeBodies(parts: MimePart[]): {
+    textBody?: string;
+    htmlBody?: string;
+    attachments: ParsedAttachment[];
+  } {
+    let textBody: string | undefined;
+    let htmlBody: string | undefined;
+    const attachments: ParsedAttachment[] = [];
+
+    for (const part of parts) {
+      if (part.isAttachment && part.filename) {
+        attachments.push(this.processAttachment(part));
+      } else if (part.contentType.startsWith('text/plain') && !textBody) {
+        textBody = this.decodeBody(part);
+      } else if (part.contentType.startsWith('text/html') && !htmlBody) {
+        htmlBody = this.decodeBody(part);
+      }
+    }
+
+    return { textBody, htmlBody, attachments };
+  }
+
+  private processAttachment(part: MimePart): ParsedAttachment {
+    let content: Buffer;
+    if (part.contentTransferEncoding === 'base64') {
+      content = decodeBase64(part.body as string);
+    } else if (part.contentTransferEncoding === 'quoted-printable') {
+      content = Buffer.from(decodeQuotedPrintable(part.body as string));
+    } else {
+      content = Buffer.isBuffer(part.body) ? part.body : Buffer.from(part.body);
+    }
+
+    return {
+      filename: part.filename!,
+      contentType: part.contentType.split(';')[0].trim(),
+      size: content.length,
+      content,
+      contentId: part.contentId,
+      isInline: part.headers['content-disposition']?.includes('inline') || false,
+      checksum: createHash('sha256').update(content).digest('hex'),
+    };
   }
 
   private decodeBody(part: MimePart): string {

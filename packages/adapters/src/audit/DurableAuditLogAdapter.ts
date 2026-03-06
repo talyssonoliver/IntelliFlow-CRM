@@ -271,9 +271,10 @@ export class DurableAuditLogAdapter implements AuditLogPort {
     const hashMatch = computedHash === entry.integrityHash;
     const signatureValid = this.verifySignature(entry);
 
+    const invalidReason = !hashMatch ? 'HASH_MISMATCH' : 'SIGNATURE_INVALID';
     return {
       valid: hashMatch && signatureValid,
-      reason: !hashMatch ? 'HASH_MISMATCH' : !signatureValid ? 'SIGNATURE_INVALID' : undefined,
+      reason: hashMatch && signatureValid ? undefined : invalidReason,
       computedHash,
       storedHash: entry.integrityHash,
       signatureValid,

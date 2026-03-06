@@ -177,12 +177,8 @@ export class OutboundWebhookClient {
           lastStatusCode = response.status;
 
           // Check if we should retry based on status code
-          const retryableStatuses = [429, 500, 502, 503, 504];
-          if (retryableStatuses.includes(response.status) && attempts <= this.config.maxRetries) {
-            const backoffMs =
-              this.config.retryBackoffMs[attempts - 1] ||
-              this.config.retryBackoffMs[this.config.retryBackoffMs.length - 1];
-            await this.sleep(backoffMs);
+          if (this.isRetryableStatus(response.status) && attempts <= this.config.maxRetries) {
+            await this.sleep(this.getBackoffMs(attempts));
             continue;
           }
 
@@ -243,10 +239,7 @@ export class OutboundWebhookClient {
 
         // Retry on network errors
         if (attempts <= this.config.maxRetries) {
-          const backoffMs =
-            this.config.retryBackoffMs[attempts - 1] ||
-            this.config.retryBackoffMs[this.config.retryBackoffMs.length - 1];
-          await this.sleep(backoffMs);
+          await this.sleep(this.getBackoffMs(attempts));
           continue;
         }
       }
@@ -313,6 +306,17 @@ export class OutboundWebhookClient {
       successRate: logs.length > 0 ? (successCount / logs.length) * 100 : 0,
       averageDurationMs: logs.length > 0 ? totalDuration / logs.length : 0,
     };
+  }
+
+  private isRetryableStatus(status: number): boolean {
+    return [429, 500, 502, 503, 504].includes(status);
+  }
+
+  private getBackoffMs(attempts: number): number {
+    return (
+      this.config.retryBackoffMs[attempts - 1] ||
+      this.config.retryBackoffMs[this.config.retryBackoffMs.length - 1]
+    );
   }
 
   private generateRequestId(): string {

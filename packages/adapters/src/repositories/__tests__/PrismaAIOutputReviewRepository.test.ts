@@ -34,7 +34,7 @@ const mockPrisma = {
     count: vi.fn(),
   },
   $queryRaw: vi.fn(),
-} as unknown as PrismaClient;
+} as PrismaClient;
 
 describe('PrismaAIOutputReviewRepository', () => {
   let repository: PrismaAIOutputReviewRepository;

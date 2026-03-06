@@ -178,7 +178,7 @@ export class RetryHandler {
     const baseDelay = this.config.initialDelayMs * Math.pow(this.config.backoffMultiplier, attempt);
 
     // Add random jitter (0-25% of base delay)
-    const jitter = baseDelay * Math.random() * 0.25;
+    const jitter = baseDelay * Math.random() * 0.25; // NOSONAR — exponential backoff jitter to prevent thundering herd, not security-sensitive
 
     return Math.min(baseDelay + jitter, this.config.maxDelayMs);
   }

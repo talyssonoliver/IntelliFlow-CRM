@@ -2,7 +2,9 @@
 
 ## Purpose
 
-Implements repository interfaces (ports) defined in the domain/application layers. This is the outermost layer of the hexagonal architecture that connects to real infrastructure.
+Implements repository interfaces (ports) defined in the domain/application
+layers. This is the outermost layer of the hexagonal architecture that connects
+to real infrastructure.
 
 ## Repository Pattern
 
@@ -22,9 +24,12 @@ class PrismaLeadRepository implements LeadRepository {
 
 ## Container Wiring (CRITICAL)
 
-Every adapter/service MUST be registered in `container.ts`. Static checks (typecheck, mocked tests, lint, build) can all pass while a service is never actually instantiated at runtime.
+Every adapter/service MUST be registered in `container.ts`. Static checks
+(typecheck, mocked tests, lint, build) can all pass while a service is never
+actually instantiated at runtime.
 
 **When adding a new adapter:**
+
 1. Create the class implementing the port interface
 2. Register it in `container.ts`
 3. Wire it in `context.ts` if it needs request context
@@ -32,12 +37,15 @@ Every adapter/service MUST be registered in `container.ts`. Static checks (typec
 
 ## Testing
 
-- Prisma mock types don't support `include`/`select` relations — cast mock data with `as any`
-- Use `Record<string, any>` for mock repositories to avoid TS2348 "not callable" on vi.fn()
+- Prisma mock types don't support `include`/`select` relations — cast mock data
+  with `as any`
+- Use `Record<string, any>` for mock repositories to avoid TS2348 "not callable"
+  on vi.fn()
 - For test files using `await import(...)`, use `as any` cast on the result
 
 ## Architecture Rules
 
-- Adapters CAN depend on: domain, application, db (Prisma client), external libraries
+- Adapters CAN depend on: domain, application, db (Prisma client), external
+  libraries
 - Adapters CANNOT be imported by: domain, validators
 - All adapters must be tested (100% coverage target per Sprint_plan KPIs)

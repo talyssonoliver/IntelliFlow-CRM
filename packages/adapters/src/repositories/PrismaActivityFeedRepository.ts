@@ -154,24 +154,33 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     cursor: { timestamp: Date; id: string } | null,
     filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
-    switch (source) {
-      case 'LEAD_ACTIVITY':
-        return this.queryLeadActivities(tenantId, limit, cursor, filters);
-      case 'CONTACT_ACTIVITY':
-        return this.queryContactActivities(tenantId, limit, cursor, filters);
-      case 'OPPORTUNITY_EVENT':
-        return this.queryOpportunityEvents(tenantId, limit, cursor, filters);
-      case 'TICKET_ACTIVITY':
-        return this.queryTicketActivities(tenantId, limit, cursor, filters);
-      case 'EMAIL':
-        return this.queryEmailRecords(tenantId, limit, cursor, filters);
-      case 'CALL':
-        return this.queryCallRecords(tenantId, limit, cursor, filters);
-      case 'CHAT':
-        return this.queryChatMessages(tenantId, limit, cursor, filters);
-      default:
-        return [];
+    const items = await (async (): Promise<UnifiedActivityItem[]> => {
+      switch (source) {
+        case 'LEAD_ACTIVITY':
+          return this.queryLeadActivities(tenantId, limit, cursor, filters);
+        case 'CONTACT_ACTIVITY':
+          return this.queryContactActivities(tenantId, limit, cursor, filters);
+        case 'OPPORTUNITY_EVENT':
+          return this.queryOpportunityEvents(tenantId, limit, cursor, filters);
+        case 'TICKET_ACTIVITY':
+          return this.queryTicketActivities(tenantId, limit, cursor, filters);
+        case 'EMAIL':
+          return this.queryEmailRecords(tenantId, limit, cursor, filters);
+        case 'CALL':
+          return this.queryCallRecords(tenantId, limit, cursor, filters);
+        case 'CHAT':
+          return this.queryChatMessages(tenantId, limit, cursor, filters);
+        default:
+          return [];
+      }
+    })();
+
+    // Normalize source rows first, then apply type filter on unified type values.
+    if (!filters.types || filters.types.length === 0) {
+      return items;
     }
+    const allowedTypes = new Set(filters.types);
+    return items.filter((item) => allowedTypes.has(item.type));
   }
 
   private async queryLeadActivities(

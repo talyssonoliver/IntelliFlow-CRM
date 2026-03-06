@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import type {
   TicketRepository,
   TicketDTO,
@@ -14,14 +15,42 @@ import type {
 import type { TicketStatus, TicketPriority } from '@intelliflow/domain';
 import { TICKET_STATUSES, TICKET_PRIORITIES } from '@intelliflow/domain';
 
+/** Priority order for sorting: lower number = higher priority */
+const PRIORITY_ORDER: Record<TicketPriority, number> = {
+  CRITICAL: 0,
+  HIGH: 1,
+  MEDIUM: 2,
+  LOW: 3,
+};
+
+/** Compare two TicketDTO values for a single sort field */
+function compareFieldValues(
+  aVal: TicketDTO[keyof TicketDTO],
+  bVal: TicketDTO[keyof TicketDTO],
+  field: keyof TicketDTO,
+  direction: 'asc' | 'desc'
+): number {
+  if (aVal === null && bVal === null) return 0;
+  if (aVal === null) return direction === 'asc' ? 1 : -1;
+  if (bVal === null) return direction === 'asc' ? -1 : 1;
+
+  let comparison = 0;
+  if (field === 'priority') {
+    comparison = PRIORITY_ORDER[aVal as TicketPriority] - PRIORITY_ORDER[bVal as TicketPriority];
+  } else if (aVal instanceof Date && bVal instanceof Date) {
+    comparison = aVal.getTime() - bVal.getTime();
+  }
+  return direction === 'asc' ? comparison : -comparison;
+}
+
 /**
  * In-Memory Ticket Repository
  * Used for testing and development without database dependency
  */
 export class InMemoryTicketRepository implements TicketRepository {
-  private tickets: Map<string, TicketDTO> = new Map();
-  private activities: Map<string, TicketActivityDTO[]> = new Map();
-  private slaPolicies: Map<string, SLAPolicyDTO> = new Map();
+  private readonly tickets: Map<string, TicketDTO> = new Map();
+  private readonly activities: Map<string, TicketActivityDTO[]> = new Map();
+  private readonly slaPolicies: Map<string, SLAPolicyDTO> = new Map();
   private ticketCounter = 0;
 
   /**
@@ -48,30 +77,13 @@ export class InMemoryTicketRepository implements TicketRepository {
     if (options?.orderBy && options.orderBy.length > 0) {
       tickets.sort((a, b) => {
         for (const order of options.orderBy!) {
-          let comparison = 0;
-          const aVal = a[order.field];
-          const bVal = b[order.field];
-
-          if (aVal === null && bVal === null) continue;
-          if (aVal === null) return order.direction === 'asc' ? 1 : -1;
-          if (bVal === null) return order.direction === 'asc' ? -1 : 1;
-
-          if (order.field === 'priority') {
-            const priorityOrder: Record<TicketPriority, number> = {
-              CRITICAL: 0,
-              HIGH: 1,
-              MEDIUM: 2,
-              LOW: 3,
-            };
-            comparison =
-              priorityOrder[aVal as TicketPriority] - priorityOrder[bVal as TicketPriority];
-          } else if (aVal instanceof Date && bVal instanceof Date) {
-            comparison = aVal.getTime() - bVal.getTime();
-          }
-
-          if (comparison !== 0) {
-            return order.direction === 'asc' ? comparison : -comparison;
-          }
+          const result = compareFieldValues(
+            a[order.field],
+            b[order.field],
+            order.field,
+            order.direction
+          );
+          if (result !== 0) return result;
         }
         return 0;
       });
@@ -362,7 +374,7 @@ export class InMemoryTicketRepository implements TicketRepository {
   // ============================================
 
   private generateId(): string {
-    return `inmem-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+    return `inmem-${randomUUID()}`;
   }
 
   private hydrateTicket(ticket: TicketDTO, options?: TicketQueryOptions): TicketDTO {

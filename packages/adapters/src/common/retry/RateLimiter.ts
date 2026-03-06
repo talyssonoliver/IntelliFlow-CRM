@@ -95,7 +95,7 @@ export class RateLimiter {
  * (e.g., Slack has tier 1-4 rate limits)
  */
 export class TieredRateLimiter {
-  private limiters: Map<string, RateLimiter> = new Map();
+  private readonly limiters: Map<string, RateLimiter> = new Map();
 
   constructor(private readonly tiers: Record<string, RateLimiterConfig>) {
     for (const [tier, config] of Object.entries(tiers)) {

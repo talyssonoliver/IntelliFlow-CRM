@@ -138,9 +138,7 @@ describe('PrismaFeedbackSurveyRepository', () => {
     });
 
     it('converts BigInt count to Number', async () => {
-      mockPrisma.$queryRaw.mockResolvedValue([
-        { category: 'promoter', count: 999999999999n },
-      ]);
+      mockPrisma.$queryRaw.mockResolvedValue([{ category: 'promoter', count: 999999999999n }]);
 
       const result = await repository.getNPSDistribution(tenantId, from, to);
 
@@ -245,9 +243,7 @@ describe('PrismaFeedbackSurveyRepository', () => {
     });
 
     it('maps null sentiment to neutral', async () => {
-      mockPrisma.$queryRawUnsafe.mockResolvedValue([
-        { sentiment: null, count: 15n },
-      ]);
+      mockPrisma.$queryRawUnsafe.mockResolvedValue([{ sentiment: null, count: 15n }]);
 
       const result = await repository.getSentimentBreakdown(tenantId, from, to);
 

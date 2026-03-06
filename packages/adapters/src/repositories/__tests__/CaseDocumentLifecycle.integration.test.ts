@@ -74,7 +74,12 @@ describe('Case Document Lifecycle Integration', () => {
       expect(retrieved?.status).toBe(DocumentStatus.APPROVED);
 
       // 4. E-sign
-      document.sign('123e4567-e89b-12d3-a456-426614174001', '192.168.1.1', 'Mozilla/5.0', 'a'.repeat(64));
+      document.sign(
+        '123e4567-e89b-12d3-a456-426614174001',
+        '192.168.1.1',
+        'Mozilla/5.0',
+        'a'.repeat(64)
+      );
       await repository.save(document);
 
       retrieved = await repository.findById(document.id);

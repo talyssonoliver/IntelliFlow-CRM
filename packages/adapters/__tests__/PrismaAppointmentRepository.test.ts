@@ -53,7 +53,7 @@ const createMockPrismaClient = () => {
     },
     $transaction: vi.fn((callback: (tx: any) => Promise<any>) => callback(mockTx)),
     _mockTx: mockTx, // Expose for assertions
-  } as unknown as PrismaClient & { _mockTx: any };
+  } as PrismaClient & { _mockTx: any };
 };
 
 // Create mock database record
@@ -119,7 +119,7 @@ describe('PrismaAppointmentRepository', () => {
 
   beforeEach(() => {
     mockPrisma = createMockPrismaClient();
-    repository = new PrismaAppointmentRepository(mockPrisma as unknown as PrismaClient);
+    repository = new PrismaAppointmentRepository(mockPrisma as PrismaClient);
     vi.clearAllMocks();
   });
 

@@ -107,6 +107,9 @@ export {
   type SpamAnalysis,
 } from './messaging/email/inbound';
 
+// Outbound Email Service (PG-084)
+export { createOutboundEmailService, OutboundEmailService } from './messaging/email/outbound';
+
 // Webhook Service Adapter (IFC-144)
 export * from './messaging/WebhookServiceAdapter';
 

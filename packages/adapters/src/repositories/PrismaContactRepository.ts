@@ -1,5 +1,12 @@
 import { PrismaClient } from '@intelliflow/db';
-import { Contact, ContactId, Email, PhoneNumber, ContactStatus } from '@intelliflow/domain';
+import {
+  Contact,
+  ContactId,
+  Email,
+  PhoneNumber,
+  ContactStatus,
+  ContactType,
+} from '@intelliflow/domain';
 import { ContactRepository } from '@intelliflow/application';
 
 /**
@@ -51,6 +58,14 @@ export class PrismaContactRepository implements ContactRepository {
       createdAt: contact.createdAt,
       updatedAt: contact.updatedAt,
       lastContactedAt: contact.lastContactedAt ?? null, // IFC-192
+      streetAddress: contact.streetAddress ?? null,
+      city: contact.city ?? null,
+      zipCode: contact.zipCode ?? null,
+      company: contact.company ?? null,
+      linkedInUrl: contact.linkedInUrl ?? null,
+      contactType: contact.contactType ?? null,
+      tags: contact.tags ?? [],
+      contactNotes: contact.contactNotes ?? null,
     };
 
     await this.prisma.contact.upsert({
@@ -82,6 +97,14 @@ export class PrismaContactRepository implements ContactRepository {
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
       lastContactedAt: record.lastContactedAt ?? undefined, // IFC-192
+      streetAddress: record.streetAddress ?? undefined,
+      city: record.city ?? undefined,
+      zipCode: record.zipCode ?? undefined,
+      company: record.company ?? undefined,
+      linkedInUrl: record.linkedInUrl ?? undefined,
+      contactType: record.contactType as ContactType | undefined,
+      tags: record.tags ?? undefined,
+      contactNotes: record.contactNotes ?? undefined,
     });
   }
 
@@ -159,6 +182,14 @@ export class PrismaContactRepository implements ContactRepository {
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
       lastContactedAt: record.lastContactedAt ?? undefined, // IFC-192
+      streetAddress: record.streetAddress ?? undefined,
+      city: record.city ?? undefined,
+      zipCode: record.zipCode ?? undefined,
+      company: record.company ?? undefined,
+      linkedInUrl: record.linkedInUrl ?? undefined,
+      contactType: record.contactType as ContactType | undefined,
+      tags: record.tags ?? undefined,
+      contactNotes: record.contactNotes ?? undefined,
     });
   }
 
@@ -197,6 +228,14 @@ export class PrismaContactRepository implements ContactRepository {
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
       lastContactedAt: record.lastContactedAt ?? undefined, // IFC-192
+      streetAddress: record.streetAddress ?? undefined,
+      city: record.city ?? undefined,
+      zipCode: record.zipCode ?? undefined,
+      company: record.company ?? undefined,
+      linkedInUrl: record.linkedInUrl ?? undefined,
+      contactType: record.contactType as ContactType | undefined,
+      tags: record.tags ?? undefined,
+      contactNotes: record.contactNotes ?? undefined,
     });
   }
 

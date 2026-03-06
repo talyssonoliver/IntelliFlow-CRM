@@ -510,7 +510,8 @@ export class OutlookAdapter implements OutlookEmailServicePort {
 
       if (response.isFailure) return Result.fail(response.error);
 
-      // sendMail returns 202 with no body, so we return a placeholder result
+      // MS Graph sendMail returns 202 Accepted with no body. We return a synthetic result
+      // with a fixed sentinel ID since Graph does not echo the sent message ID on this endpoint.
       return Result.ok({
         id: 'sent',
         conversationId: params.conversationId ?? 'new',

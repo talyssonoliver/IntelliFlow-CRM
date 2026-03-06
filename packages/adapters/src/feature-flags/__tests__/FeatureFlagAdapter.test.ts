@@ -53,7 +53,7 @@ describe('FeatureFlagAdapter', () => {
           {
             key: 'rule_flag',
             enabled: true,
-            rules: [{ when: { plan: 'enterprise' }, then: { enabled: true } }],
+            rules: [{ when: { plan: 'enterprise' }, result: { enabled: true } }],
           },
         ],
       };

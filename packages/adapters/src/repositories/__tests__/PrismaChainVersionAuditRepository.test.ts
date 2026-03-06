@@ -23,7 +23,7 @@ const mockPrisma = {
     create: vi.fn(),
     findMany: vi.fn(),
   },
-} as unknown as PrismaClient;
+} as PrismaClient;
 
 /**
  * Factory: Create mock Prisma ChainVersionAudit row
@@ -54,9 +54,7 @@ describe('PrismaChainVersionAuditRepository', () => {
   // ======================================================================
   describe('create', () => {
     it('should create audit entry with null previous state', async () => {
-      vi.mocked(mockPrisma.chainVersionAudit.create).mockResolvedValue(
-        createMockAuditRow() as any
-      );
+      vi.mocked(mockPrisma.chainVersionAudit.create).mockResolvedValue(createMockAuditRow() as any);
 
       const result = await repository.create({
         versionId: VERSION_ID,

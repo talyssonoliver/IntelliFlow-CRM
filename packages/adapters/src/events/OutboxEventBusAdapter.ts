@@ -9,7 +9,7 @@
  * @phase Phase 2 GREEN - Step 2.3
  */
 
-import { PrismaClient, EventStatus, Prisma } from '@prisma/client';
+import { PrismaClient, EventStatus, Prisma } from '@intelliflow/db';
 import { withTransaction, type TransactionClient } from '@intelliflow/db';
 import { DomainEvent } from '@intelliflow/domain';
 import { EventBusPort } from '@intelliflow/application';

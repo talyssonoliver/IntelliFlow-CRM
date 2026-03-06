@@ -4,7 +4,14 @@ import { attachPaymentMethod, detachPaymentMethod, listPaymentMethods } from '..
 import type { StripeConfig, StripePaymentMethod } from '../../types';
 
 vi.mock('../../http-client', () => ({ makeRequest: vi.fn() }));
-vi.mock('../../mappers', () => ({ mapToPaymentMethod: vi.fn() }));
+vi.mock('../../mappers', () => ({
+  mapToCustomer: vi.fn(),
+  mapToPaymentMethod: vi.fn(),
+  mapToPaymentIntent: vi.fn(),
+  mapToRefund: vi.fn(),
+  mapToSubscription: vi.fn(),
+  mapToInvoice: vi.fn(),
+}));
 
 import { makeRequest } from '../../http-client';
 import { mapToPaymentMethod } from '../../mappers';

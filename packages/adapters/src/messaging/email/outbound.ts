@@ -11,7 +11,7 @@
  */
 
 import { z } from 'zod';
-import { createHash } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 
 // Email recipient schema
 export const EmailRecipientSchema = z.object({
@@ -112,8 +112,8 @@ const DEFAULT_RATE_LIMITS: RateLimitConfig = {
  * In production, use Redis-based rate limiting
  */
 export class EmailRateLimiter {
-  private counts: Map<string, { count: number; resetAt: Date }> = new Map();
-  private config: RateLimitConfig;
+  private readonly counts: Map<string, { count: number; resetAt: Date }> = new Map();
+  private readonly config: RateLimitConfig;
 
   constructor(config: RateLimitConfig = DEFAULT_RATE_LIMITS) {
     this.config = config;
@@ -272,15 +272,15 @@ export class MockEmailProvider implements EmailProvider {
  */
 export class SendGridProvider implements EmailProvider {
   name = 'sendgrid';
-  private apiKey: string;
-  private baseUrl = 'https://api.sendgrid.com/v3';
+  private readonly apiKey: string;
+  private readonly baseUrl = 'https://api.sendgrid.com/v3';
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
   }
 
   async send(email: OutboundEmail): Promise<EmailSendResult> {
-    const messageId = email.messageId || `sg-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const messageId = email.messageId || `sg-${Date.now()}-${randomUUID().replace(/-/g, '')}`;
 
     const payload = {
       personalizations: [
@@ -386,10 +386,10 @@ export class SendGridProvider implements EmailProvider {
  * Orchestrates email sending with rate limiting, templates, and provider failover
  */
 export class OutboundEmailService {
-  private providers: EmailProvider[];
-  private rateLimiter: EmailRateLimiter;
-  private templateRenderer: EmailTemplateRenderer;
-  private deliverabilityThreshold: number;
+  private readonly providers: EmailProvider[];
+  private readonly rateLimiter: EmailRateLimiter;
+  private readonly templateRenderer: EmailTemplateRenderer;
+  private readonly deliverabilityThreshold: number;
 
   constructor(options: {
     providers: EmailProvider[];

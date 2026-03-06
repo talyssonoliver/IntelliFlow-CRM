@@ -10,6 +10,21 @@ import {
   ChannelPreference,
   NotificationCategory,
 } from '@intelliflow/domain';
+import { z } from 'zod';
+
+// Zod schemas for validating Prisma JSON fields
+const channelPreferenceSchema = z.object({
+  enabled: z.boolean(),
+  frequency: z.enum(['realtime', 'hourly', 'daily_digest', 'weekly_digest']),
+  verifiedAt: z.coerce.date().optional(),
+});
+
+const channelPreferencesJsonSchema = z.record(z.string(), channelPreferenceSchema);
+
+const categoryPreferencesJsonSchema = z.record(
+  z.enum(['system', 'marketing', 'transactional', 'reminders', 'alerts', 'updates', 'social']),
+  z.boolean()
+);
 
 // Type for Prisma preference record
 type PreferenceRecord = Awaited<ReturnType<PrismaClient['notificationPreference']['findFirst']>>;
@@ -38,13 +53,15 @@ const DEFAULT_CATEGORY_PREFERENCES: Record<NotificationCategory, boolean> = {
  * Convert Prisma record to domain entity
  */
 function toDomainEntity(record: NonNullable<PreferenceRecord>): NotificationPreference {
-  // Parse JSON preferences or use defaults
-  const channelPrefs = record.channelPreferences
-    ? (record.channelPreferences as unknown as Record<string, ChannelPreference>)
+  // Parse and validate JSON preferences with Zod, falling back to defaults
+  const channelParsed = channelPreferencesJsonSchema.safeParse(record.channelPreferences);
+  const channelPrefs: Record<string, ChannelPreference> = channelParsed.success
+    ? channelParsed.data
     : DEFAULT_CHANNEL_PREFERENCES;
 
-  const categoryPrefs = record.categoryPreferences
-    ? (record.categoryPreferences as unknown as Record<NotificationCategory, boolean>)
+  const categoryParsed = categoryPreferencesJsonSchema.safeParse(record.categoryPreferences);
+  const categoryPrefs: Record<NotificationCategory, boolean> = categoryParsed.success
+    ? (categoryParsed.data as Record<NotificationCategory, boolean>)
     : DEFAULT_CATEGORY_PREFERENCES;
 
   return NotificationPreference.reconstitute(record.id, {

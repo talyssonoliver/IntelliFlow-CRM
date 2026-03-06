@@ -10,7 +10,7 @@ import { SAPAdapter, SAPConfig, SAPCustomer, SAPSalesOrder } from '../sap/client
 
 // Mock fetch globally
 const mockFetch = vi.fn();
-global.fetch = mockFetch as unknown as typeof fetch;
+global.fetch = mockFetch as typeof fetch;
 
 describe('SAPAdapter', () => {
   let adapter: SAPAdapter;
@@ -40,7 +40,7 @@ describe('SAPAdapter', () => {
         headers: new Map([
           ['x-csrf-token', 'csrf_token_123'],
           ['set-cookie', 'session=abc123'],
-        ]) as unknown as Headers,
+        ]) as any, // test: mock external SDK
         json: () => Promise.resolve({}),
       });
 
@@ -58,7 +58,7 @@ describe('SAPAdapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 401,
-        headers: new Map() as unknown as Headers,
+        headers: new Map() as any, // test: mock external SDK
         json: () => Promise.resolve({}),
       });
 
@@ -91,7 +91,7 @@ describe('SAPAdapter', () => {
         headers: new Map([
           ['x-csrf-token', 'csrf_token'],
           ['set-cookie', 'session=test'],
-        ]) as unknown as Headers,
+        ]) as any, // test: mock external SDK
         json: () => Promise.resolve({}),
       });
     });
@@ -149,7 +149,7 @@ describe('SAPAdapter', () => {
         headers: new Map([
           ['x-csrf-token', 'csrf_token'],
           ['set-cookie', 'session=test'],
-        ]) as unknown as Headers,
+        ]) as any, // test: mock external SDK
         json: () => Promise.resolve({}),
       });
     });
@@ -201,7 +201,7 @@ describe('SAPAdapter', () => {
         headers: new Map([
           ['x-csrf-token', 'csrf_token'],
           ['set-cookie', 'session=test'],
-        ]) as unknown as Headers,
+        ]) as any, // test: mock external SDK
         json: () => Promise.resolve({}),
       });
     });
@@ -244,7 +244,7 @@ describe('SAPAdapter', () => {
         headers: new Map([
           ['x-csrf-token', 'csrf_token'],
           ['set-cookie', 'session=test'],
-        ]) as unknown as Headers,
+        ]) as any, // test: mock external SDK
         json: () => Promise.resolve({}),
       });
     });
@@ -313,7 +313,7 @@ describe('SAPAdapter', () => {
         headers: new Map([
           ['x-csrf-token', 'csrf_token'],
           ['set-cookie', 'session=test'],
-        ]) as unknown as Headers,
+        ]) as any, // test: mock external SDK
         json: () => Promise.resolve({}),
       });
     });
@@ -389,7 +389,7 @@ describe('SAPAdapter', () => {
         headers: new Map([
           ['x-csrf-token', 'csrf_token'],
           ['set-cookie', 'session=test'],
-        ]) as unknown as Headers,
+        ]) as any, // test: mock external SDK
         json: () => Promise.resolve({}),
       });
     });
@@ -438,7 +438,7 @@ describe('SAPAdapter', () => {
         headers: new Map([
           ['x-csrf-token', 'csrf_token'],
           ['set-cookie', 'session=test'],
-        ]) as unknown as Headers,
+        ]) as any, // test: mock external SDK
         json: () => Promise.resolve({}),
       });
     });
@@ -481,7 +481,7 @@ describe('SAPAdapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
-        headers: new Map() as unknown as Headers,
+        headers: new Map() as any, // test: mock external SDK
       });
 
       const result = await adapter.checkConnection();
@@ -497,7 +497,7 @@ describe('SAPAdapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 500,
-        headers: new Map() as unknown as Headers,
+        headers: new Map() as any, // test: mock external SDK
       });
 
       const result = await adapter.checkConnection();
@@ -529,7 +529,7 @@ describe('SAPAdapter', () => {
         headers: new Map([
           ['x-csrf-token', 'csrf_token'],
           ['set-cookie', 'session=test'],
-        ]) as unknown as Headers,
+        ]) as any, // test: mock external SDK
         json: () => Promise.resolve({}),
       });
     });
@@ -538,7 +538,7 @@ describe('SAPAdapter', () => {
       mockFetch.mockResolvedValueOnce({
         ok: false,
         status: 429,
-        headers: new Map([['Retry-After', '30']]) as unknown as Headers,
+        headers: new Map([['Retry-After', '30']]) as any, // test: mock external SDK
         json: () => Promise.resolve({}),
       });
 

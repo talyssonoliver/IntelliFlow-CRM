@@ -14,6 +14,17 @@ import {
 import type { ChainVersionRecord, ChainVersionRepositoryPort } from '@intelliflow/application';
 import type { ChainType, ChainVersionStatus, VersionRolloutStrategy } from '@intelliflow/domain';
 
+/** Set the appropriate lifecycle timestamp on updateData based on the new status */
+function applyLifecycleTimestamp(
+  status: ChainVersionStatus,
+  updateData: Record<string, unknown>
+): void {
+  const now = new Date();
+  if (status === 'ACTIVE') updateData.activatedAt = now;
+  else if (status === 'DEPRECATED') updateData.deprecatedAt = now;
+  else if (status === 'ARCHIVED') updateData.archivedAt = now;
+}
+
 export class PrismaChainVersionRepository implements ChainVersionRepositoryPort {
   constructor(private readonly prisma: PrismaClient) {}
 
@@ -130,10 +141,7 @@ export class PrismaChainVersionRepository implements ChainVersionRepositoryPort 
     if (data.experimentId !== undefined) updateData.experimentId = data.experimentId;
     if (data.status !== undefined) {
       updateData.status = data.status;
-      // Set lifecycle timestamps
-      if (data.status === 'ACTIVE') updateData.activatedAt = new Date();
-      if (data.status === 'DEPRECATED') updateData.deprecatedAt = new Date();
-      if (data.status === 'ARCHIVED') updateData.archivedAt = new Date();
+      applyLifecycleTimestamp(data.status as ChainVersionStatus, updateData);
     }
 
     const row = await this.prisma.chainVersion.update({
@@ -156,7 +164,7 @@ export class PrismaChainVersionRepository implements ChainVersionRepositoryPort 
     return {
       id: row.id,
       chainType: row.chainType as ChainType,
-      status: row.status as unknown as ChainVersionStatus,
+      status: row.status as ChainVersionStatus,
       prompt: row.prompt,
       model: row.model,
       temperature: row.temperature,
@@ -164,7 +172,7 @@ export class PrismaChainVersionRepository implements ChainVersionRepositoryPort 
       additionalParams: (row.config as Record<string, unknown>) ?? null,
       description: (row as any).description ?? null,
       parentVersionId: (row as any).parentVersionId ?? null,
-      rolloutStrategy: row.rolloutStrategy as unknown as VersionRolloutStrategy,
+      rolloutStrategy: row.rolloutStrategy as VersionRolloutStrategy,
       rolloutPercent: row.rolloutPercent,
       experimentId: row.experimentId,
       createdBy: row.createdBy,

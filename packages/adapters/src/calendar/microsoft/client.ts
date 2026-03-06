@@ -997,12 +997,14 @@ export class MicrosoftCalendarAdapter implements CalendarServicePort {
   }
 
   private microsoftEventToExternal(event: MicrosoftCalendarEvent): ExternalCalendarEvent {
+    const startSuffix = event.start?.timeZone === 'UTC' ? 'Z' : '';
     const startTime = event.start?.dateTime
-      ? new Date(event.start.dateTime + (event.start.timeZone === 'UTC' ? 'Z' : ''))
+      ? new Date(event.start.dateTime + startSuffix)
       : new Date();
 
+    const endSuffix = event.end?.timeZone === 'UTC' ? 'Z' : '';
     const endTime = event.end?.dateTime
-      ? new Date(event.end.dateTime + (event.end.timeZone === 'UTC' ? 'Z' : ''))
+      ? new Date(event.end.dateTime + endSuffix)
       : new Date(startTime.getTime() + 60 * 60 * 1000);
 
     return {
@@ -1053,7 +1055,6 @@ export class MicrosoftCalendarAdapter implements CalendarServicePort {
   }
 
   private handleApiError<T>(status: number, error: any): Result<T, DomainError> {
-    const errorCode = error.error?.code;
     const errorMessage = error.error?.message ?? 'Unknown API error';
 
     switch (status) {

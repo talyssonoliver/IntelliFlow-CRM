@@ -174,7 +174,11 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
   // IFC-190: Sales Metrics
   // ============================================
 
-  async countClosedWonInRange(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number> {
+  async countClosedWonInRange(
+    tenantId: string,
+    dateRange: DateRangeQuery,
+    ownerId?: string
+  ): Promise<number> {
     return this.prisma.opportunity.count({
       where: {
         tenantId,
@@ -185,7 +189,11 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
     });
   }
 
-  async countClosedLostInRange(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number> {
+  async countClosedLostInRange(
+    tenantId: string,
+    dateRange: DateRangeQuery,
+    ownerId?: string
+  ): Promise<number> {
     return this.prisma.opportunity.count({
       where: {
         tenantId,
@@ -196,7 +204,11 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
     });
   }
 
-  async getPipelineValue(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number> {
+  async getPipelineValue(
+    tenantId: string,
+    dateRange: DateRangeQuery,
+    ownerId?: string
+  ): Promise<number> {
     const result = await this.prisma.opportunity.aggregate({
       where: {
         tenantId,
@@ -209,10 +221,12 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
     return result._sum.value ? Number(result._sum.value) : 0;
   }
 
-  async getAvgSalesCycleLength(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number | null> {
-    const ownerFilter = ownerId
-      ? Prisma.sql` AND "ownerId" = ${ownerId}`
-      : Prisma.empty;
+  async getAvgSalesCycleLength(
+    tenantId: string,
+    dateRange: DateRangeQuery,
+    ownerId?: string
+  ): Promise<number | null> {
+    const ownerFilter = ownerId ? Prisma.sql` AND "ownerId" = ${ownerId}` : Prisma.empty;
 
     const result = await this.prisma.$queryRaw<Array<{ avg_days: number | null }>>(
       Prisma.sql`SELECT AVG(EXTRACT(EPOCH FROM ("closedAt" - "createdAt")) / 86400) as avg_days
@@ -228,7 +242,11 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
     return avgDays != null ? Math.round(avgDays * 10) / 10 : null;
   }
 
-  async getRevenueInRange(tenantId: string, dateRange: DateRangeQuery, ownerId?: string): Promise<number> {
+  async getRevenueInRange(
+    tenantId: string,
+    dateRange: DateRangeQuery,
+    ownerId?: string
+  ): Promise<number> {
     const result = await this.prisma.opportunity.aggregate({
       where: {
         tenantId,
@@ -245,7 +263,10 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
   // IFC-190: Lead Metrics
   // ============================================
 
-  async getLeadsBySourceInRange(tenantId: string, dateRange: DateRangeQuery): Promise<LeadGroupByResult[]> {
+  async getLeadsBySourceInRange(
+    tenantId: string,
+    dateRange: DateRangeQuery
+  ): Promise<LeadGroupByResult[]> {
     const result = await this.prisma.lead.groupBy({
       by: ['source'],
       where: {
@@ -257,7 +278,10 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
     return result.map((r) => ({ source: r.source, _count: r._count }));
   }
 
-  async getLeadsByStatus(tenantId: string, dateRange: DateRangeQuery): Promise<Array<{ status: string; _count: number }>> {
+  async getLeadsByStatus(
+    tenantId: string,
+    dateRange: DateRangeQuery
+  ): Promise<Array<{ status: string; _count: number }>> {
     const result = await this.prisma.lead.groupBy({
       by: ['status'],
       where: {

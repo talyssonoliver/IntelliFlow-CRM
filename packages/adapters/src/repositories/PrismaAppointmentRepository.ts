@@ -149,65 +149,72 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
   async saveAll(appointments: Appointment[]): Promise<void> {
     await withTransaction(async (tx: TransactionClient) => {
       for (const appointment of appointments) {
-        const data = {
-          id: appointment.id.value,
-          title: appointment.title,
-          description: appointment.description ?? null,
-          startTime: appointment.startTime,
-          endTime: appointment.endTime,
-          appointmentType: appointment.appointmentType,
-          status: appointment.status,
-          location: appointment.location ?? null,
-          bufferMinutesBefore: appointment.buffer.beforeMinutes,
-          bufferMinutesAfter: appointment.buffer.afterMinutes,
-          recurrence: appointment.recurrence ? appointment.recurrence.toJSON() : null,
-          organizerId: appointment.organizerId,
-          tenantId: appointment.tenantId,
-          notes: appointment.notes ?? null,
-          externalCalendarId: appointment.externalCalendarId ?? null,
-          reminderMinutes: appointment.reminderMinutes ?? null,
-          cancelledAt: appointment.cancelledAt ?? null,
-          completedAt: appointment.completedAt ?? null,
-          cancellationReason: appointment.cancellationReason ?? null,
-        };
-
-        await tx.appointment.upsert({
-          where: { id: data.id },
-          create: data as Prisma.AppointmentUncheckedCreateInput,
-          update: data as Prisma.AppointmentUncheckedUpdateInput,
-        });
-
-        // Sync attendees
-        await tx.appointmentAttendee.deleteMany({
-          where: { appointmentId: data.id },
-        });
-
-        if (appointment.attendeeIds.length > 0) {
-          await tx.appointmentAttendee.createMany({
-            data: appointment.attendeeIds.map((userId) => ({
-              appointmentId: data.id,
-              userId,
-              tenantId: data.tenantId,
-            })),
-          });
-        }
-
-        // Sync linked cases
-        await tx.appointmentCase.deleteMany({
-          where: { appointmentId: data.id },
-        });
-
-        if (appointment.linkedCaseIds.length > 0) {
-          await tx.appointmentCase.createMany({
-            data: appointment.linkedCaseIds.map((caseId) => ({
-              appointmentId: data.id,
-              caseId: caseId.value,
-              tenantId: data.tenantId,
-            })),
-          });
-        }
+        await this.syncAppointmentInTx(tx, appointment);
       }
     });
+  }
+
+  private async syncAppointmentInTx(
+    tx: TransactionClient,
+    appointment: Appointment
+  ): Promise<void> {
+    const data = {
+      id: appointment.id.value,
+      title: appointment.title,
+      description: appointment.description ?? null,
+      startTime: appointment.startTime,
+      endTime: appointment.endTime,
+      appointmentType: appointment.appointmentType,
+      status: appointment.status,
+      location: appointment.location ?? null,
+      bufferMinutesBefore: appointment.buffer.beforeMinutes,
+      bufferMinutesAfter: appointment.buffer.afterMinutes,
+      recurrence: appointment.recurrence ? appointment.recurrence.toJSON() : null,
+      organizerId: appointment.organizerId,
+      tenantId: appointment.tenantId,
+      notes: appointment.notes ?? null,
+      externalCalendarId: appointment.externalCalendarId ?? null,
+      reminderMinutes: appointment.reminderMinutes ?? null,
+      cancelledAt: appointment.cancelledAt ?? null,
+      completedAt: appointment.completedAt ?? null,
+      cancellationReason: appointment.cancellationReason ?? null,
+    };
+
+    await tx.appointment.upsert({
+      where: { id: data.id },
+      create: data as Prisma.AppointmentUncheckedCreateInput,
+      update: data as Prisma.AppointmentUncheckedUpdateInput,
+    });
+
+    // Sync attendees
+    await tx.appointmentAttendee.deleteMany({
+      where: { appointmentId: data.id },
+    });
+
+    if (appointment.attendeeIds.length > 0) {
+      await tx.appointmentAttendee.createMany({
+        data: appointment.attendeeIds.map((userId) => ({
+          appointmentId: data.id,
+          userId,
+          tenantId: data.tenantId,
+        })),
+      });
+    }
+
+    // Sync linked cases
+    await tx.appointmentCase.deleteMany({
+      where: { appointmentId: data.id },
+    });
+
+    if (appointment.linkedCaseIds.length > 0) {
+      await tx.appointmentCase.createMany({
+        data: appointment.linkedCaseIds.map((caseId) => ({
+          appointmentId: data.id,
+          caseId: caseId.value,
+          tenantId: data.tenantId,
+        })),
+      });
+    }
   }
 
   async findById(id: AppointmentId): Promise<Appointment | null> {
@@ -383,7 +390,7 @@ export class PrismaAppointmentRepository implements AppointmentRepository {
     if (filter.isRecurring !== undefined) {
       where.recurrence = filter.isRecurring
         ? ({ not: Prisma.JsonNull } as Prisma.JsonNullableFilter<'Appointment'>)
-        : (Prisma.JsonNull as unknown as Prisma.JsonNullableFilter<'Appointment'>);
+        : ({ equals: Prisma.JsonNull } as Prisma.JsonNullableFilter<'Appointment'>);
     }
 
     const [records, total] = await Promise.all([

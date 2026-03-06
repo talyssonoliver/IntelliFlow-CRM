@@ -20,7 +20,7 @@ export async function uploadFile(
     if (typeof params.content === 'string') {
       formData.append('content', params.content);
     } else {
-      formData.append('file', new Blob([params.content]), params.filename);
+      formData.append('file', new Blob([new Uint8Array(params.content)]), params.filename);
     }
 
     if (params.title) formData.append('title', params.title);

@@ -19,7 +19,12 @@ vi.mock('../../http-client', () => ({
 
 // Mock the mappers module
 vi.mock('../../mappers', () => ({
+  mapToCustomer: vi.fn(),
+  mapToPaymentMethod: vi.fn(),
+  mapToPaymentIntent: vi.fn(),
+  mapToRefund: vi.fn(),
   mapToSubscription: vi.fn(),
+  mapToInvoice: vi.fn(),
 }));
 
 import { makeRequest } from '../../http-client';

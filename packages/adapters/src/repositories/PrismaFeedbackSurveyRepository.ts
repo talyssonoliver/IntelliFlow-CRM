@@ -6,7 +6,7 @@
  * Never uses include: { contact: true } — contactId has no FK.
  */
 
-import type { PrismaClient, FeedbackStatus } from '@prisma/client';
+import type { PrismaClient, FeedbackStatus } from '@intelliflow/db';
 import type {
   FeedbackSurveyRepositoryPort,
   FeedbackAnalyticsQuery,
@@ -27,7 +27,10 @@ const VALID_GRANULARITY = new Set(['day', 'week', 'month']);
 export class PrismaFeedbackSurveyRepository implements FeedbackSurveyRepositoryPort {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async getDashboardSummary(tenantId: string, filters: FeedbackAnalyticsQuery): Promise<FeedbackDashboardSummary> {
+  async getDashboardSummary(
+    tenantId: string,
+    filters: FeedbackAnalyticsQuery
+  ): Promise<FeedbackDashboardSummary> {
     const surveys = await this.prisma.feedbackSurvey.findMany({
       where: {
         tenantId,
@@ -128,7 +131,13 @@ export class PrismaFeedbackSurveyRepository implements FeedbackSurveyRepositoryP
 
     // Use Prisma.sql for safe interpolation of granularity
     const result = await this.prisma.$queryRawUnsafe<
-      Array<{ period: string; avg_nps: number | null; avg_csat: number | null; avg_ces: number | null; response_count: bigint }>
+      Array<{
+        period: string;
+        avg_nps: number | null;
+        avg_csat: number | null;
+        avg_ces: number | null;
+        response_count: bigint;
+      }>
     >(
       `SELECT
         date_trunc('${granularity}', "createdAt")::text AS period,
@@ -158,10 +167,17 @@ export class PrismaFeedbackSurveyRepository implements FeedbackSurveyRepositoryP
     }));
   }
 
-  async getSentimentBreakdown(tenantId: string, from: Date, to: Date, type?: SurveyType): Promise<SentimentBreakdown> {
+  async getSentimentBreakdown(
+    tenantId: string,
+    from: Date,
+    to: Date,
+    type?: SurveyType
+  ): Promise<SentimentBreakdown> {
     const typeFilter = type ? `AND type = '${type}'` : '';
 
-    const result = await this.prisma.$queryRawUnsafe<Array<{ sentiment: string | null; count: bigint }>>(
+    const result = await this.prisma.$queryRawUnsafe<
+      Array<{ sentiment: string | null; count: bigint }>
+    >(
       `SELECT sentiment, COUNT(*) AS count
       FROM "feedback_surveys"
       WHERE "tenantId" = $1

@@ -141,6 +141,8 @@ export interface StripeInvoice {
   discount?: number;
   customerEmail?: string;
   customerName?: string;
+  paymentMethodBrand?: string;
+  paymentMethodLast4?: string;
   billingAddress?: {
     line1?: string;
     line2?: string;

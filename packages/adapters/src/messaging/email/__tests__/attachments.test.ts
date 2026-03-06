@@ -180,7 +180,7 @@ describe('MockVirusScanner', () => {
     const scanner = new MockVirusScanner({ simulateInfected: true });
     const result = await scanner.scan(Buffer.from('clean content'));
     expect(result.clean).toBe(false);
-    expect(result.threatName).toBe('Simulated.Threat.A');
+    expect(result.threatName).toBe('Mock.Simulated.Threat');
   });
 });
 

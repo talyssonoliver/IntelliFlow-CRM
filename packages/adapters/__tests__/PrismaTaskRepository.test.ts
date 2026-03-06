@@ -12,28 +12,57 @@ import { PrismaTaskRepository } from '../src/repositories/PrismaTaskRepository';
 import { Task, TaskId } from '@intelliflow/domain';
 import type { PrismaClient } from '@intelliflow/db';
 
-// Mock Prisma Client
-const createMockPrismaClient = () => {
+type TaskPrismaDelegateDouble = {
+  upsert: ReturnType<typeof vi.fn>;
+  findUnique: ReturnType<typeof vi.fn>;
+  findMany: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
+  groupBy: ReturnType<typeof vi.fn>;
+};
+
+interface TaskPrismaClientDouble {
+  client: PrismaClient;
+  task: TaskPrismaDelegateDouble;
+}
+
+const createMockPrismaClient = (): TaskPrismaClientDouble => {
+  const task: TaskPrismaDelegateDouble = {
+    upsert: vi.fn(),
+    findUnique: vi.fn(),
+    findMany: vi.fn(),
+    delete: vi.fn(),
+    groupBy: vi.fn(),
+  };
+
+  const partialClient = {
+    task,
+  } satisfies Pick<PrismaClient, 'task'>;
+
   return {
-    task: {
-      upsert: vi.fn(),
-      findUnique: vi.fn(),
-      findMany: vi.fn(),
-      delete: vi.fn(),
-      groupBy: vi.fn(),
-    },
-  } as unknown as PrismaClient;
+    // Use a strict proxy so tests fail fast if repository code touches undeclared delegates.
+    client: new Proxy(partialClient, {
+      get(target, property, receiver) {
+        if (!(property in target)) {
+          throw new Error(
+            `Unexpected Prisma delegate access in Task repository tests: ${String(property)}`
+          );
+        }
+        return Reflect.get(target, property, receiver);
+      },
+    }) as PrismaClient,
+    task,
+  };
 };
 
 describe('PrismaTaskRepository', () => {
   let repository: PrismaTaskRepository;
-  let mockPrisma: PrismaClient;
+  let mockPrisma: TaskPrismaClientDouble;
   let testTask: Task;
   let testTaskId: TaskId;
 
   beforeEach(() => {
     mockPrisma = createMockPrismaClient();
-    repository = new PrismaTaskRepository(mockPrisma);
+    repository = new PrismaTaskRepository(mockPrisma.client);
 
     // Create a test task
     const taskResult = Task.create({
@@ -43,6 +72,7 @@ describe('PrismaTaskRepository', () => {
       priority: 'HIGH',
       leadId: 'lead-123',
       ownerId: 'owner-123',
+      tenantId: 'tenant-123',
     });
 
     testTask = taskResult.value;
@@ -54,8 +84,8 @@ describe('PrismaTaskRepository', () => {
 
   describe('save()', () => {
     it('should call prisma.task.upsert with correct data', async () => {
-      const upsertMock = vi.fn().mockResolvedValue({});
-      (mockPrisma.task.upsert as any) = upsertMock;
+      const upsertMock = mockPrisma.task.upsert;
+      upsertMock.mockResolvedValue({});
 
       await repository.save(testTask);
 
@@ -69,6 +99,7 @@ describe('PrismaTaskRepository', () => {
           status: 'PENDING',
           leadId: 'lead-123',
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
         }),
         update: expect.objectContaining({
           title: 'Follow up with client',
@@ -80,10 +111,11 @@ describe('PrismaTaskRepository', () => {
       const minimalTaskResult = Task.create({
         title: 'Simple Task',
         ownerId: 'owner-456',
+        tenantId: 'tenant-123',
       });
 
-      const upsertMock = vi.fn().mockResolvedValue({});
-      (mockPrisma.task.upsert as any) = upsertMock;
+      const upsertMock = mockPrisma.task.upsert;
+      upsertMock.mockResolvedValue({});
 
       await repository.save(minimalTaskResult.value);
 
@@ -102,8 +134,8 @@ describe('PrismaTaskRepository', () => {
     });
 
     it('should handle prisma errors', async () => {
-      const upsertMock = vi.fn().mockRejectedValue(new Error('Database error'));
-      (mockPrisma.task.upsert as any) = upsertMock;
+      const upsertMock = mockPrisma.task.upsert;
+      upsertMock.mockRejectedValue(new Error('Database error'));
 
       await expect(repository.save(testTask)).rejects.toThrow('Database error');
     });
@@ -122,13 +154,14 @@ describe('PrismaTaskRepository', () => {
         contactId: null,
         opportunityId: null,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
         createdAt: new Date(),
         updatedAt: new Date(),
         completedAt: null,
       };
 
-      const findUniqueMock = vi.fn().mockResolvedValue(mockRecord);
-      (mockPrisma.task.findUnique as any) = findUniqueMock;
+      const findUniqueMock = mockPrisma.task.findUnique;
+      findUniqueMock.mockResolvedValue(mockRecord);
 
       const result = await repository.findById(testTaskId);
 
@@ -144,8 +177,8 @@ describe('PrismaTaskRepository', () => {
     });
 
     it('should return null when not found', async () => {
-      const findUniqueMock = vi.fn().mockResolvedValue(null);
-      (mockPrisma.task.findUnique as any) = findUniqueMock;
+      const findUniqueMock = mockPrisma.task.findUnique;
+      findUniqueMock.mockResolvedValue(null);
 
       const result = await repository.findById(testTaskId);
 
@@ -164,13 +197,14 @@ describe('PrismaTaskRepository', () => {
         contactId: null,
         opportunityId: null,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
         createdAt: new Date(),
         updatedAt: new Date(),
         completedAt: null,
       };
 
-      const findUniqueMock = vi.fn().mockResolvedValue(mockRecord);
-      (mockPrisma.task.findUnique as any) = findUniqueMock;
+      const findUniqueMock = mockPrisma.task.findUnique;
+      findUniqueMock.mockResolvedValue(mockRecord);
 
       const result = await repository.findById(testTaskId);
 
@@ -197,6 +231,7 @@ describe('PrismaTaskRepository', () => {
           contactId: null,
           opportunityId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
           completedAt: null,
@@ -212,14 +247,15 @@ describe('PrismaTaskRepository', () => {
           contactId: null,
           opportunityId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
           completedAt: null,
         },
       ];
 
-      const findManyMock = vi.fn().mockResolvedValue(mockRecords);
-      (mockPrisma.task.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.task.findMany;
+      findManyMock.mockResolvedValue(mockRecords);
 
       const results = await repository.findByOwnerId('owner-123');
 
@@ -234,8 +270,8 @@ describe('PrismaTaskRepository', () => {
     });
 
     it('should return empty array when no tasks found', async () => {
-      const findManyMock = vi.fn().mockResolvedValue([]);
-      (mockPrisma.task.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.task.findMany;
+      findManyMock.mockResolvedValue([]);
 
       const results = await repository.findByOwnerId('owner-999');
 
@@ -257,14 +293,15 @@ describe('PrismaTaskRepository', () => {
           contactId: null,
           opportunityId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
           completedAt: null,
         },
       ];
 
-      const findManyMock = vi.fn().mockResolvedValue(mockRecords);
-      (mockPrisma.task.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.task.findMany;
+      findManyMock.mockResolvedValue(mockRecords);
 
       const results = await repository.findByLeadId('lead-123');
 
@@ -292,14 +329,15 @@ describe('PrismaTaskRepository', () => {
           contactId: 'contact-456',
           opportunityId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
           completedAt: null,
         },
       ];
 
-      const findManyMock = vi.fn().mockResolvedValue(mockRecords);
-      (mockPrisma.task.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.task.findMany;
+      findManyMock.mockResolvedValue(mockRecords);
 
       const results = await repository.findByContactId('contact-456');
 
@@ -327,14 +365,15 @@ describe('PrismaTaskRepository', () => {
           contactId: null,
           opportunityId: 'opportunity-789',
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
           completedAt: null,
         },
       ];
 
-      const findManyMock = vi.fn().mockResolvedValue(mockRecords);
-      (mockPrisma.task.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.task.findMany;
+      findManyMock.mockResolvedValue(mockRecords);
 
       const results = await repository.findByOpportunityId('opportunity-789');
 
@@ -362,14 +401,15 @@ describe('PrismaTaskRepository', () => {
           contactId: null,
           opportunityId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
           completedAt: null,
         },
       ];
 
-      const findManyMock = vi.fn().mockResolvedValue(mockRecords);
-      (mockPrisma.task.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.task.findMany;
+      findManyMock.mockResolvedValue(mockRecords);
 
       const results = await repository.findByStatus('IN_PROGRESS');
 
@@ -395,14 +435,15 @@ describe('PrismaTaskRepository', () => {
           contactId: null,
           opportunityId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
           completedAt: null,
         },
       ];
 
-      const findManyMock = vi.fn().mockResolvedValue(mockRecords);
-      (mockPrisma.task.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.task.findMany;
+      findManyMock.mockResolvedValue(mockRecords);
 
       const results = await repository.findByStatus('PENDING', 'owner-123');
 
@@ -432,14 +473,15 @@ describe('PrismaTaskRepository', () => {
           contactId: null,
           opportunityId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
           completedAt: null,
         },
       ];
 
-      const findManyMock = vi.fn().mockResolvedValue(mockRecords);
-      (mockPrisma.task.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.task.findMany;
+      findManyMock.mockResolvedValue(mockRecords);
 
       const results = await repository.findOverdue();
 
@@ -455,8 +497,8 @@ describe('PrismaTaskRepository', () => {
     });
 
     it('should filter overdue by owner', async () => {
-      const findManyMock = vi.fn().mockResolvedValue([]);
-      (mockPrisma.task.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.task.findMany;
+      findManyMock.mockResolvedValue([]);
 
       await repository.findOverdue('owner-123');
 
@@ -487,14 +529,15 @@ describe('PrismaTaskRepository', () => {
           contactId: null,
           opportunityId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
           completedAt: null,
         },
       ];
 
-      const findManyMock = vi.fn().mockResolvedValue(mockRecords);
-      (mockPrisma.task.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.task.findMany;
+      findManyMock.mockResolvedValue(mockRecords);
 
       const results = await repository.findDueToday();
 
@@ -510,8 +553,8 @@ describe('PrismaTaskRepository', () => {
     });
 
     it('should filter due today by owner', async () => {
-      const findManyMock = vi.fn().mockResolvedValue([]);
-      (mockPrisma.task.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.task.findMany;
+      findManyMock.mockResolvedValue([]);
 
       await repository.findDueToday('owner-123');
 
@@ -528,8 +571,8 @@ describe('PrismaTaskRepository', () => {
 
   describe('delete()', () => {
     it('should call prisma.task.delete with correct ID', async () => {
-      const deleteMock = vi.fn().mockResolvedValue({});
-      (mockPrisma.task.delete as any) = deleteMock;
+      const deleteMock = mockPrisma.task.delete;
+      deleteMock.mockResolvedValue({});
 
       await repository.delete(testTaskId);
 
@@ -539,8 +582,8 @@ describe('PrismaTaskRepository', () => {
     });
 
     it('should propagate prisma errors', async () => {
-      const deleteMock = vi.fn().mockRejectedValue(new Error('Record not found'));
-      (mockPrisma.task.delete as any) = deleteMock;
+      const deleteMock = mockPrisma.task.delete;
+      deleteMock.mockRejectedValue(new Error('Record not found'));
 
       await expect(repository.delete(testTaskId)).rejects.toThrow('Record not found');
     });
@@ -554,8 +597,8 @@ describe('PrismaTaskRepository', () => {
         { status: 'COMPLETED', _count: 10 },
       ];
 
-      const groupByMock = vi.fn().mockResolvedValue(mockResults);
-      (mockPrisma.task.groupBy as any) = groupByMock;
+      const groupByMock = mockPrisma.task.groupBy;
+      groupByMock.mockResolvedValue(mockResults);
 
       const counts = await repository.countByStatus();
 
@@ -578,8 +621,8 @@ describe('PrismaTaskRepository', () => {
         { status: 'COMPLETED', _count: 4 },
       ];
 
-      const groupByMock = vi.fn().mockResolvedValue(mockResults);
-      (mockPrisma.task.groupBy as any) = groupByMock;
+      const groupByMock = mockPrisma.task.groupBy;
+      groupByMock.mockResolvedValue(mockResults);
 
       const counts = await repository.countByStatus('owner-123');
 
@@ -596,8 +639,8 @@ describe('PrismaTaskRepository', () => {
     });
 
     it('should return empty object when no tasks', async () => {
-      const groupByMock = vi.fn().mockResolvedValue([]);
-      (mockPrisma.task.groupBy as any) = groupByMock;
+      const groupByMock = mockPrisma.task.groupBy;
+      groupByMock.mockResolvedValue([]);
 
       const counts = await repository.countByStatus();
 
@@ -618,13 +661,14 @@ describe('PrismaTaskRepository', () => {
         contactId: null,
         opportunityId: null,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
         createdAt: new Date(),
         updatedAt: new Date(),
         completedAt: null,
       };
 
-      const findUniqueMock = vi.fn().mockResolvedValue(mockRecord);
-      (mockPrisma.task.findUnique as any) = findUniqueMock;
+      const findUniqueMock = mockPrisma.task.findUnique;
+      findUniqueMock.mockResolvedValue(mockRecord);
 
       await expect(repository.findById(testTaskId)).rejects.toThrow(/Invalid TaskId/);
     });
@@ -643,16 +687,16 @@ describe('PrismaTaskRepository', () => {
         contactId: testTask.contactId,
         opportunityId: testTask.opportunityId,
         ownerId: testTask.ownerId,
+        tenantId: 'tenant-123',
         createdAt: testTask.createdAt,
         updatedAt: testTask.updatedAt,
         completedAt: testTask.completedAt,
       };
 
-      const upsertMock = vi.fn().mockResolvedValue(mockRecord);
-      const findUniqueMock = vi.fn().mockResolvedValue(mockRecord);
-
-      (mockPrisma.task.upsert as any) = upsertMock;
-      (mockPrisma.task.findUnique as any) = findUniqueMock;
+      const upsertMock = mockPrisma.task.upsert;
+      upsertMock.mockResolvedValue(mockRecord);
+      const findUniqueMock = mockPrisma.task.findUnique;
+      findUniqueMock.mockResolvedValue(mockRecord);
 
       await repository.save(testTask);
       const found = await repository.findById(testTask.id);
@@ -670,6 +714,7 @@ describe('PrismaTaskRepository', () => {
       const completedTask = Task.create({
         title: 'Completed Task',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
       });
       completedTask.value.complete('owner-123');
 
@@ -684,13 +729,14 @@ describe('PrismaTaskRepository', () => {
         contactId: null,
         opportunityId: null,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
         createdAt: new Date(),
         updatedAt: new Date(),
         completedAt: new Date(),
       };
 
-      const findUniqueMock = vi.fn().mockResolvedValue(mockRecord);
-      (mockPrisma.task.findUnique as any) = findUniqueMock;
+      const findUniqueMock = mockPrisma.task.findUnique;
+      findUniqueMock.mockResolvedValue(mockRecord);
 
       const result = await repository.findById(completedTask.value.id);
 

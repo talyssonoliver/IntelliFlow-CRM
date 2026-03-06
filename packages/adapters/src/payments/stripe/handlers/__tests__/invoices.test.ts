@@ -4,7 +4,14 @@ import { getInvoice, listInvoices, payInvoice } from '../invoices';
 import type { StripeConfig, StripeInvoice } from '../../types';
 
 vi.mock('../../http-client', () => ({ makeRequest: vi.fn() }));
-vi.mock('../../mappers', () => ({ mapToInvoice: vi.fn() }));
+vi.mock('../../mappers', () => ({
+  mapToCustomer: vi.fn(),
+  mapToPaymentMethod: vi.fn(),
+  mapToPaymentIntent: vi.fn(),
+  mapToRefund: vi.fn(),
+  mapToSubscription: vi.fn(),
+  mapToInvoice: vi.fn(),
+}));
 
 import { makeRequest } from '../../http-client';
 import { mapToInvoice } from '../../mappers';

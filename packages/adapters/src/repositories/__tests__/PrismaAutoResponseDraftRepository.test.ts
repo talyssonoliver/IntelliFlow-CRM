@@ -24,7 +24,7 @@ const mockPrisma = {
     delete: vi.fn(),
     count: vi.fn(),
   },
-} as unknown as PrismaClient;
+} as PrismaClient;
 
 describe('PrismaAutoResponseDraftRepository', () => {
   let repository: PrismaAutoResponseDraftRepository;

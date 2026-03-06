@@ -209,7 +209,7 @@ export function calculateAppointmentHash(appointment: {
     startTime: appointment.startTime.toISOString(),
     endTime: appointment.endTime.toISOString(),
     location: appointment.location || '',
-    attendees: [...appointment.attendeeIds].sort(),
+    attendees: [...appointment.attendeeIds].sort((a, b) => a.localeCompare(b)),
   });
   return createHash('sha256').update(content).digest('hex').substring(0, 16);
 }

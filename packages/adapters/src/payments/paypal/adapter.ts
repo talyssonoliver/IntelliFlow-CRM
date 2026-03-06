@@ -78,7 +78,7 @@ export interface PayPalServicePort {
  * PayPal Payment Adapter
  */
 export class PayPalAdapter implements PayPalServicePort {
-  private config: PayPalConfig;
+  private readonly config: PayPalConfig;
   private accessToken: PayPalAccessToken | null = null;
 
   private get apiBaseUrl(): string {

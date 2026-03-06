@@ -24,7 +24,7 @@ export {
   listSubscriptions,
 } from './subscriptions';
 
-export { getInvoice, listInvoices, payInvoice } from './invoices';
+export { getInvoice, listInvoices, payInvoice, retrieveUpcomingInvoice } from './invoices';
 
 export { constructWebhookEvent } from './webhooks';
 

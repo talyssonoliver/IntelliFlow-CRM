@@ -30,7 +30,7 @@ const mockPrisma = {
     update: vi.fn(),
     delete: vi.fn(),
   },
-} as unknown as PrismaClient;
+} as PrismaClient;
 
 /**
  * Factory: Create mock Prisma ChainVersion row
@@ -107,9 +107,7 @@ describe('PrismaChainVersionRepository', () => {
     });
 
     it('should auto-increment version when existing versions exist', async () => {
-      vi.mocked(mockPrisma.chainVersion.findMany).mockResolvedValue([
-        { version: '1.0.2' } as any,
-      ]);
+      vi.mocked(mockPrisma.chainVersion.findMany).mockResolvedValue([{ version: '1.0.2' } as any]);
       vi.mocked(mockPrisma.chainVersion.create).mockResolvedValue(
         createMockRow({ version: '1.0.3' }) as any
       );
@@ -474,7 +472,10 @@ describe('PrismaChainVersionRepository', () => {
 
       await repository.update(VERSION_ID_1, { description: 'New description' });
 
-      const callData = vi.mocked(mockPrisma.chainVersion.update).mock.calls[0][0].data as Record<string, unknown>;
+      const callData = vi.mocked(mockPrisma.chainVersion.update).mock.calls[0][0].data as Record<
+        string,
+        unknown
+      >;
       expect(callData).toHaveProperty('description', 'New description');
       expect(callData).not.toHaveProperty('prompt');
       expect(callData).not.toHaveProperty('model');

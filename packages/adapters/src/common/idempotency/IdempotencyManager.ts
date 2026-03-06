@@ -137,6 +137,9 @@ export class IdempotencyManager {
  * Used to detect if content actually changed
  */
 export function calculateContentHash(content: Record<string, unknown>): string {
-  const normalized = JSON.stringify(content, Object.keys(content).sort());
+  const normalized = JSON.stringify(
+    content,
+    Object.keys(content).sort((a, b) => a.localeCompare(b))
+  );
   return createHash('sha256').update(normalized).digest('hex').substring(0, 16);
 }

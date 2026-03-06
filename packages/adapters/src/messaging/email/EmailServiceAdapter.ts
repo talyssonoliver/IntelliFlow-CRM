@@ -326,7 +326,7 @@ export class EmailServiceAdapter implements EmailServicePort {
   }
 
   validateEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]{1,64}@[^\s@.]{1,253}(?:\.[^\s@.]{1,63})+$/;
     return emailRegex.test(email);
   }
 }

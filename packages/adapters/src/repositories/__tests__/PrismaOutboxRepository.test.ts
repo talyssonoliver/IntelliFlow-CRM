@@ -8,7 +8,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { PrismaClient, EventStatus } from '@prisma/client';
+import { PrismaClient, EventStatus } from '@intelliflow/db';
 import type { OutboxRepository, OutboxEvent } from '../PrismaOutboxRepository';
 
 // The implementation we'll create

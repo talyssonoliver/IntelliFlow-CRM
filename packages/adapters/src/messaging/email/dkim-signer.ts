@@ -316,7 +316,8 @@ export class DkimSigner {
 
     dkimParts.push(`h=${signedHeaderNames.join(':')}`);
     dkimParts.push(`bh=${bodyHash}`);
-    dkimParts.push(`b=`); // Placeholder for signature
+    dkimParts.push(`b=`); // Empty signature tag — RFC 6376 §3.5 two-pass: this header (with b= empty) is
+    // included in the signing input, then the computed signature replaces it below.
 
     const dkimHeaderValue = dkimParts.join('; ');
     const dkimHeaderForSigning = `dkim-signature:${dkimHeaderValue}`;
@@ -534,7 +535,7 @@ export function parseDkimSignature(header: string): {
   const value = header.replace(/^DKIM-Signature:\s*/i, '').replace(/\r?\n[\t ]+/g, ' ');
 
   // Parse tag=value pairs
-  const pairs = value.split(/\s*;\s*/);
+  const pairs = value.split(/[ \t]{0,100};[ \t]{0,100}/);
   for (const pair of pairs) {
     const [tag, ...valueParts] = pair.split('=');
     const tagValue = valueParts.join('=').trim();

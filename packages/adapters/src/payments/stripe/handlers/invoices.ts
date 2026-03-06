@@ -35,7 +35,7 @@ export async function listInvoices(
   customerId: string
 ): Promise<Result<StripeInvoice[], DomainError>> {
   try {
-    const params = new URLSearchParams({ customer: customerId });
+    const params = new URLSearchParams({ customer: customerId, 'expand[]': 'data.charge' });
     const response = await makeRequest(config, 'GET', `/invoices?${params}`);
     if (response.isFailure) return Result.fail(response.error);
 
@@ -44,6 +44,30 @@ export async function listInvoices(
       mapToInvoice(inv)
     );
     return Result.ok(invoices);
+  } catch (error) {
+    return Result.fail(
+      new StripeConnectionError(error instanceof Error ? error.message : 'Unknown error')
+    );
+  }
+}
+
+export async function retrieveUpcomingInvoice(
+  config: StripeConfig,
+  customerId: string
+): Promise<Result<StripeInvoice | null, DomainError>> {
+  try {
+    const params = new URLSearchParams({ customer: customerId });
+    const response = await makeRequest(config, 'GET', `/invoices/upcoming?${params}`);
+
+    if (response.isFailure) {
+      // Stripe returns 404 / invalid_request when no upcoming invoice exists
+      if (response.error.code === 'STRIPE_INVALID_REQUEST') {
+        return Result.ok(null);
+      }
+      return Result.fail(response.error);
+    }
+
+    return Result.ok(mapToInvoice(response.value));
   } catch (error) {
     return Result.fail(
       new StripeConnectionError(error instanceof Error ? error.message : 'Unknown error')

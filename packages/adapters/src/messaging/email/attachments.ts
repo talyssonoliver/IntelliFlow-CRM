@@ -168,30 +168,24 @@ export function detectMimeType(content: Buffer): string | undefined {
   return undefined;
 }
 
-/**
- * Check if content appears to be text
- */
+function classifyByte(byte: number): 'null' | 'text' | 'binary' | 'other' {
+  if (byte === 0) return 'null';
+  if ((byte >= 32 && byte <= 126) || byte === 9 || byte === 10 || byte === 13) return 'text';
+  if (byte < 32 || (byte >= 127 && byte <= 159)) return 'binary';
+  return 'other';
+}
+
 function isTextContent(content: Buffer, sampleSize = 1024): boolean {
   const sample = content.subarray(0, Math.min(sampleSize, content.length));
-  let textChars = 0;
   let binaryChars = 0;
 
   for (const byte of sample) {
-    if (byte === 0) {
-      return false; // Null byte indicates binary
-    } else if (
-      (byte >= 32 && byte <= 126) || // Printable ASCII
-      byte === 9 || // Tab
-      byte === 10 || // LF
-      byte === 13 // CR
-    ) {
-      textChars++;
-    } else if (byte < 32 || (byte >= 127 && byte <= 159)) {
-      binaryChars++;
-    }
+    const kind = classifyByte(byte);
+    if (kind === 'null') return false;
+    if (kind === 'binary') binaryChars++;
   }
 
-  return binaryChars / sample.length < 0.1; // Less than 10% binary chars
+  return binaryChars / sample.length < 0.1;
 }
 
 /**
@@ -229,7 +223,7 @@ export function generateAttachmentId(content: Buffer, emailId: string): string {
  * In-memory attachment storage for development
  */
 export class InMemoryAttachmentStorage implements AttachmentStorage {
-  private store = new Map<string, { content: Buffer; metadata: AttachmentMetadata }>();
+  private readonly store = new Map<string, { content: Buffer; metadata: AttachmentMetadata }>();
 
   async save(id: string, content: Buffer, metadata: Partial<AttachmentMetadata>): Promise<string> {
     const fullMetadata: AttachmentMetadata = {
@@ -278,7 +272,7 @@ export class InMemoryAttachmentStorage implements AttachmentStorage {
  * Mock virus scanner for development
  */
 export class MockVirusScanner implements VirusScanner {
-  private simulateInfected: boolean;
+  private readonly simulateInfected: boolean;
 
   constructor(options?: { simulateInfected?: boolean }) {
     this.simulateInfected = options?.simulateInfected || false;
@@ -307,9 +301,11 @@ export class MockVirusScanner implements VirusScanner {
     }
 
     if (this.simulateInfected) {
+      // Development-only simulated detection. Replace MockVirusScanner with a real AV
+      // integration (e.g. ClamAV via clamd, or a cloud scanning API) for production.
       return {
         clean: false,
-        threatName: 'Simulated.Threat.A',
+        threatName: 'Mock.Simulated.Threat',
         scanDuration: Date.now() - startTime,
       };
     }
@@ -329,7 +325,7 @@ export class MockVirusScanner implements VirusScanner {
  * Basic content extractor for text extraction
  */
 export class BasicContentExtractor implements ContentExtractor {
-  private supportedTypes = [
+  private readonly supportedTypes = [
     'text/plain',
     'text/html',
     'text/csv',
@@ -354,7 +350,7 @@ export class BasicContentExtractor implements ContentExtractor {
       return text
         .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
         .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-        .replace(/<[^>]+>/g, ' ')
+        .replace(/<[^>]{0,2000}>/g, ' ')
         .replace(/\s+/g, ' ')
         .trim();
     }
@@ -367,10 +363,10 @@ export class BasicContentExtractor implements ContentExtractor {
  * Main attachment handler
  */
 export class AttachmentHandler {
-  private rules: AttachmentValidationRules;
-  private storage: AttachmentStorage;
-  private virusScanner?: VirusScanner;
-  private contentExtractor?: ContentExtractor;
+  private readonly rules: AttachmentValidationRules;
+  private readonly storage: AttachmentStorage;
+  private readonly virusScanner?: VirusScanner;
+  private readonly contentExtractor?: ContentExtractor;
 
   constructor(
     options: {
@@ -386,9 +382,14 @@ export class AttachmentHandler {
     this.contentExtractor = options.contentExtractor;
   }
 
-  /**
-   * Validate an attachment before processing
-   */
+  private isMimeTypeAllowed(effectiveMimeType: string): boolean {
+    if (this.rules.allowedMimeTypes.length === 0) return true;
+    return this.rules.allowedMimeTypes.some(
+      (allowed) =>
+        effectiveMimeType === allowed || effectiveMimeType.startsWith(allowed.replace('*', ''))
+    );
+  }
+
   validate(
     content: Buffer,
     filename: string,
@@ -398,36 +399,26 @@ export class AttachmentHandler {
     const warnings: string[] = [];
     const extension = getExtension(filename);
 
-    // Size check
     if (content.length > this.rules.maxSizeBytes) {
       errors.push(
         `File size (${(content.length / 1024 / 1024).toFixed(2)} MB) exceeds maximum allowed (${
           this.rules.maxSizeBytes / 1024 / 1024
         } MB)`
       );
+      return { valid: false, errors, warnings, metadata: { extension } };
     }
 
-    // Extension check
     if (this.rules.blockedExtensions.includes(extension)) {
       errors.push(`File extension "${extension}" is not allowed`);
     }
 
-    // MIME type detection and validation
     const detectedMimeType = detectMimeType(content);
     const effectiveMimeType = declaredMimeType || detectedMimeType || 'application/octet-stream';
 
-    if (this.rules.allowedMimeTypes.length > 0) {
-      const isAllowed = this.rules.allowedMimeTypes.some(
-        (allowed) =>
-          effectiveMimeType === allowed || effectiveMimeType.startsWith(allowed.replace('*', ''))
-      );
-
-      if (!isAllowed) {
-        errors.push(`MIME type "${effectiveMimeType}" is not allowed`);
-      }
+    if (!this.isMimeTypeAllowed(effectiveMimeType)) {
+      errors.push(`MIME type "${effectiveMimeType}" is not allowed`);
     }
 
-    // Check for MIME type mismatch
     if (declaredMimeType && detectedMimeType && declaredMimeType !== detectedMimeType) {
       warnings.push(
         `Declared MIME type (${declaredMimeType}) differs from detected (${detectedMimeType})`
@@ -462,8 +453,6 @@ export class AttachmentHandler {
     metadata?: AttachmentMetadata;
     errors?: string[];
   }> {
-    const errors: string[] = [];
-
     // Validate unless skipped
     if (!options?.skipValidation) {
       const validation = this.validate(content, filename, options?.contentType);
@@ -473,43 +462,25 @@ export class AttachmentHandler {
     }
 
     // Virus scan
-    let scanStatus: 'pending' | 'clean' | 'infected' | 'error' = 'pending';
-    let scanResult: string | undefined;
+    const shouldScan = this.virusScanner && this.rules.requireVirusScan && !options?.skipVirusScan;
+    const scanInfo = shouldScan
+      ? await this.performVirusScan(content)
+      : { scanStatus: 'pending' as const, scanResult: undefined };
 
-    if (this.virusScanner && this.rules.requireVirusScan && !options?.skipVirusScan) {
-      try {
-        const scanResponse = await this.virusScanner.scan(content);
-        scanStatus = scanResponse.clean ? 'clean' : 'infected';
-        if (!scanResponse.clean) {
-          scanResult = scanResponse.threatName;
-          errors.push(`Virus detected: ${scanResponse.threatName}`);
-          return { success: false, errors };
-        }
-      } catch (error) {
-        scanStatus = 'error';
-        scanResult = error instanceof Error ? error.message : 'Scan failed';
-        console.warn('Virus scan failed:', scanResult);
-      }
+    if (scanInfo.scanStatus === 'infected') {
+      return { success: false, errors: [`Virus detected: ${scanInfo.scanResult}`] };
     }
+    const { scanStatus, scanResult } = scanInfo;
 
     // Generate ID and sanitize filename
     const id = generateAttachmentId(content, emailId);
     const sanitizedFilename = sanitizeFilename(filename);
 
-    // Extract text content if possible
-    let extractedText: string | undefined;
     const mimeType = options?.contentType || detectMimeType(content) || 'application/octet-stream';
-
-    if (this.contentExtractor && this.contentExtractor.canExtract(mimeType)) {
-      try {
-        extractedText = (await this.contentExtractor.extract(content, mimeType)) || undefined;
-      } catch (error) {
-        console.warn('Content extraction failed:', error);
-      }
-    }
+    const extractedText = await this.tryExtractContent(mimeType, content);
 
     // Store attachment
-    const storagePath = await this.storage.save(id, content, {
+    await this.storage.save(id, content, {
       filename: sanitizedFilename,
       originalFilename: filename,
       contentType: mimeType,
@@ -528,6 +499,33 @@ export class AttachmentHandler {
       success: true,
       metadata: stored.metadata,
     };
+  }
+
+  private async performVirusScan(content: Buffer): Promise<{
+    scanStatus: 'clean' | 'infected' | 'error';
+    scanResult: string | undefined;
+  }> {
+    try {
+      const scanResponse = await this.virusScanner!.scan(content);
+      return {
+        scanStatus: scanResponse.clean ? 'clean' : 'infected',
+        scanResult: scanResponse.clean ? undefined : scanResponse.threatName,
+      };
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Scan failed';
+      console.warn('Virus scan failed:', msg);
+      return { scanStatus: 'error', scanResult: msg };
+    }
+  }
+
+  private async tryExtractContent(mimeType: string, content: Buffer): Promise<string | undefined> {
+    if (!this.contentExtractor || !this.contentExtractor.canExtract(mimeType)) return undefined;
+    try {
+      return (await this.contentExtractor.extract(content, mimeType)) || undefined;
+    } catch (error) {
+      console.warn('Content extraction failed:', error);
+      return undefined;
+    }
   }
 
   /**

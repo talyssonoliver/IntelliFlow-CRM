@@ -143,7 +143,6 @@ export function detectScoreBias(scores: LeadScoringBiasCheck[]): {
   };
 }
 
-
 // ============================================
 // HELPER FUNCTIONS
 // ============================================

@@ -1067,7 +1067,7 @@ ${original.body.text ?? original.body.html ?? ''}
     const parseEmailAddress = (value: string): { name?: string; email: string } => {
       // Check if the email has angle brackets (e.g., "Name" <email@example.com>)
       if (value.includes('<') && value.includes('>')) {
-        const match = value.match(/^"?([^"<]*)"?\s*<([^>]+)>$/);
+        const match = value.match(/^"?([^"<]{0,500})"?\s{0,100}<([^>]{1,500})>$/);
         if (match) {
           return {
             name: match[1]?.trim() || undefined,

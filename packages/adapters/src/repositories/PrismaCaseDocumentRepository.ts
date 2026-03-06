@@ -26,60 +26,60 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
       where: { id: data.id },
       create: {
         id: data.id,
-        tenant_id: data.tenantId,
-        version_major: data.version.major,
-        version_minor: data.version.minor,
-        version_patch: data.version.patch,
+        tenantId: data.tenantId,
+        versionMajor: data.version.major,
+        versionMinor: data.version.minor,
+        versionPatch: data.version.patch,
         status: data.status as any,
         title: data.metadata.title,
         description: data.metadata.description || null,
-        document_type: data.metadata.documentType as any,
+        documentType: data.metadata.documentType as any,
         classification: data.metadata.classification as any,
         tags: data.metadata.tags,
-        related_case_id: data.metadata.relatedCaseId || null,
-        related_contact_id: data.metadata.relatedContactId || null,
-        storage_key: data.storageKey,
-        content_hash: data.contentHash,
-        mime_type: data.mimeType,
-        size_bytes: data.sizeBytes,
-        created_by: data.createdBy,
-        updated_by: data.updatedBy,
-        created_at: data.createdAt,
-        updated_at: data.updatedAt,
-        parent_version_id: data.parentVersionId || null,
-        is_latest_version: data.isLatestVersion,
-        retention_until: data.retentionUntil || null,
-        deleted_at: data.deletedAt || null,
-        signed_by: data.eSignature?.signedBy || null,
-        signed_at: data.eSignature?.signedAt || null,
-        signature_hash: data.eSignature?.signatureHash || null,
-        signature_ip_address: data.eSignature?.ipAddress || null,
-        signature_user_agent: data.eSignature?.userAgent || null,
+        relatedCaseId: data.metadata.relatedCaseId || null,
+        relatedContactId: data.metadata.relatedContactId || null,
+        storageKey: data.storageKey,
+        contentHash: data.contentHash,
+        mimeType: data.mimeType,
+        sizeBytes: data.sizeBytes,
+        createdBy: data.createdBy,
+        updatedBy: data.updatedBy,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+        parentVersionId: data.parentVersionId || null,
+        isLatestVersion: data.isLatestVersion,
+        retentionUntil: data.retentionUntil || null,
+        deletedAt: data.deletedAt || null,
+        signedBy: data.eSignature?.signedBy || null,
+        signedAt: data.eSignature?.signedAt || null,
+        signatureHash: data.eSignature?.signatureHash || null,
+        signatureIpAddress: data.eSignature?.ipAddress || null,
+        signatureUserAgent: data.eSignature?.userAgent || null,
       },
       update: {
-        version_major: data.version.major,
-        version_minor: data.version.minor,
-        version_patch: data.version.patch,
+        versionMajor: data.version.major,
+        versionMinor: data.version.minor,
+        versionPatch: data.version.patch,
         status: data.status as any,
         title: data.metadata.title,
         description: data.metadata.description || null,
-        document_type: data.metadata.documentType as any,
+        documentType: data.metadata.documentType as any,
         classification: data.metadata.classification as any,
         tags: data.metadata.tags,
-        related_case_id: data.metadata.relatedCaseId || null,
-        related_contact_id: data.metadata.relatedContactId || null,
-        storage_key: data.storageKey,
-        content_hash: data.contentHash,
-        updated_by: data.updatedBy,
-        updated_at: data.updatedAt,
-        is_latest_version: data.isLatestVersion,
-        retention_until: data.retentionUntil || null,
-        deleted_at: data.deletedAt || null,
-        signed_by: data.eSignature?.signedBy || null,
-        signed_at: data.eSignature?.signedAt || null,
-        signature_hash: data.eSignature?.signatureHash || null,
-        signature_ip_address: data.eSignature?.ipAddress || null,
-        signature_user_agent: data.eSignature?.userAgent || null,
+        relatedCaseId: data.metadata.relatedCaseId || null,
+        relatedContactId: data.metadata.relatedContactId || null,
+        storageKey: data.storageKey,
+        contentHash: data.contentHash,
+        updatedBy: data.updatedBy,
+        updatedAt: data.updatedAt,
+        isLatestVersion: data.isLatestVersion,
+        retentionUntil: data.retentionUntil || null,
+        deletedAt: data.deletedAt || null,
+        signedBy: data.eSignature?.signedBy || null,
+        signedAt: data.eSignature?.signedAt || null,
+        signatureHash: data.eSignature?.signatureHash || null,
+        signatureIpAddress: data.eSignature?.ipAddress || null,
+        signatureUserAgent: data.eSignature?.userAgent || null,
       },
     });
 
@@ -103,8 +103,8 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
     const record = await this.prisma.caseDocument.findFirst({
       where: {
         OR: [
-          { id: documentId, is_latest_version: true },
-          { parent_version_id: documentId, is_latest_version: true },
+          { id: documentId, isLatestVersion: true },
+          { parentVersionId: documentId, isLatestVersion: true },
         ],
       },
       include: { acl: true },
@@ -125,8 +125,8 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
     if (!current) return [];
 
     // Walk up the parent chain to find root
-    while (current && current.parent_version_id) {
-      rootId = current.parent_version_id;
+    while (current && current.parentVersionId) {
+      rootId = current.parentVersionId;
       const nextDoc = await this.prisma.caseDocument.findUnique({
         where: { id: rootId },
       });
@@ -143,12 +143,12 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
   async findByCaseId(caseId: string): Promise<CaseDocument[]> {
     const records = await this.prisma.caseDocument.findMany({
       where: {
-        related_case_id: caseId,
-        deleted_at: null,
-        is_latest_version: true,
+        relatedCaseId: caseId,
+        deletedAt: null,
+        isLatestVersion: true,
       },
       include: { acl: true },
-      orderBy: { created_at: 'desc' },
+      orderBy: { createdAt: 'desc' },
     });
 
     return records.map((r) => this.toDomain(r));
@@ -159,26 +159,26 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
 
     const records = await this.prisma.caseDocument.findMany({
       where: {
-        tenant_id: tenantId,
-        deleted_at: null,
-        is_latest_version: true,
+        tenantId: tenantId,
+        deletedAt: null,
+        isLatestVersion: true,
         OR: [
           // User is creator
-          { created_by: userId },
+          { createdBy: userId },
           // User has ACL access
           {
             acl: {
               some: {
-                principal_id: userId,
-                access_level: { not: 'NONE' },
-                OR: [{ expires_at: null }, { expires_at: { gt: now } }],
+                principalId: userId,
+                accessLevel: { not: 'NONE' },
+                OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
               },
             },
           },
         ],
       },
       include: { acl: true },
-      orderBy: { created_at: 'desc' },
+      orderBy: { createdAt: 'desc' },
     });
 
     return records.map((r) => this.toDomain(r));
@@ -187,7 +187,7 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
   async delete(id: string): Promise<void> {
     // Hard delete (for GDPR compliance after retention period)
     await this.prisma.caseDocumentACL.deleteMany({
-      where: { document_id: id },
+      where: { documentId: id },
     });
 
     await this.prisma.caseDocument.delete({
@@ -219,7 +219,7 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
 
       // Find children (documents with this as parent)
       const children = await this.prisma.caseDocument.findMany({
-        where: { parent_version_id: currentId },
+        where: { parentVersionId: currentId },
         select: { id: true },
       });
 
@@ -248,21 +248,21 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
   ): Promise<void> {
     // Delete existing ACL entries
     await this.prisma.caseDocumentACL.deleteMany({
-      where: { document_id: documentId },
+      where: { documentId: documentId },
     });
 
     // Insert new ACL entries
     if (acl.length > 0) {
       await this.prisma.caseDocumentACL.createMany({
         data: acl.map((ace) => ({
-          document_id: documentId,
-          tenant_id: tenantId,
-          principal_id: ace.principalId,
-          principal_type: ace.principalType as any,
-          access_level: ace.accessLevel as any,
-          granted_by: ace.grantedBy,
-          granted_at: ace.grantedAt,
-          expires_at: ace.expiresAt || null,
+          documentId: documentId,
+          tenantId: tenantId,
+          principalId: ace.principalId,
+          principalType: ace.principalType as any,
+          accessLevel: ace.accessLevel as any,
+          grantedBy: ace.grantedBy,
+          grantedAt: ace.grantedAt,
+          expiresAt: ace.expiresAt || null,
         })),
       });
     }
@@ -273,52 +273,52 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
    */
   private toDomain(record: any): CaseDocument {
     const acl: AccessControlEntry[] = (record.acl || []).map((ace: any) => ({
-      principalId: ace.principal_id,
-      principalType: ace.principal_type as 'USER' | 'ROLE' | 'TENANT',
-      accessLevel: ace.access_level as AccessLevel,
-      grantedBy: ace.granted_by,
-      grantedAt: ace.granted_at,
-      expiresAt: ace.expires_at || undefined,
+      principalId: ace.principalId,
+      principalType: ace.principalType as 'USER' | 'ROLE' | 'TENANT',
+      accessLevel: ace.accessLevel as AccessLevel,
+      grantedBy: ace.grantedBy,
+      grantedAt: ace.grantedAt,
+      expiresAt: ace.expiresAt || undefined,
     }));
 
     const data: CaseDocumentData = {
       id: record.id,
-      tenantId: record.tenant_id,
+      tenantId: record.tenantId,
       version: {
-        major: record.version_major,
-        minor: record.version_minor,
-        patch: record.version_patch,
+        major: record.versionMajor,
+        minor: record.versionMinor,
+        patch: record.versionPatch,
       },
       status: record.status as DocumentStatus,
       metadata: {
         title: record.title,
         description: record.description || undefined,
-        documentType: record.document_type as any,
+        documentType: record.documentType as any,
         classification: record.classification as DocumentClassification,
         tags: record.tags || [],
-        relatedCaseId: record.related_case_id || undefined,
-        relatedContactId: record.related_contact_id || undefined,
+        relatedCaseId: record.relatedCaseId || undefined,
+        relatedContactId: record.relatedContactId || undefined,
       },
-      storageKey: record.storage_key,
-      contentHash: record.content_hash,
-      mimeType: record.mime_type,
-      sizeBytes: record.size_bytes,
+      storageKey: record.storageKey,
+      contentHash: record.contentHash,
+      mimeType: record.mimeType,
+      sizeBytes: record.sizeBytes,
       acl,
-      createdBy: record.created_by,
-      createdAt: record.created_at,
-      updatedBy: record.updated_by,
-      updatedAt: record.updated_at,
-      parentVersionId: record.parent_version_id || undefined,
-      isLatestVersion: record.is_latest_version,
-      retentionUntil: record.retention_until || undefined,
-      deletedAt: record.deleted_at || undefined,
-      eSignature: record.signed_by
+      createdBy: record.createdBy,
+      createdAt: record.createdAt,
+      updatedBy: record.updatedBy,
+      updatedAt: record.updatedAt,
+      parentVersionId: record.parentVersionId || undefined,
+      isLatestVersion: record.isLatestVersion,
+      retentionUntil: record.retentionUntil || undefined,
+      deletedAt: record.deletedAt || undefined,
+      eSignature: record.signedBy
         ? {
-            signedBy: record.signed_by,
-            signedAt: record.signed_at,
-            signatureHash: record.signature_hash,
-            ipAddress: record.signature_ip_address,
-            userAgent: record.signature_user_agent,
+            signedBy: record.signedBy,
+            signedAt: record.signedAt,
+            signatureHash: record.signatureHash,
+            ipAddress: record.signatureIpAddress,
+            userAgent: record.signatureUserAgent,
           }
         : undefined,
     };

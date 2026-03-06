@@ -106,9 +106,7 @@ describe('PrismaAccountRepository hierarchy methods', () => {
 
   describe('findAncestors', () => {
     it('should return empty array when account has no parent', async () => {
-      prisma.account.findUnique.mockResolvedValue(
-        makePrismaRecord({ parentAccountId: null })
-      );
+      prisma.account.findUnique.mockResolvedValue(makePrismaRecord({ parentAccountId: null }));
       const id = AccountId.create(UUID_ROOT).value;
 
       const ancestors = await repo.findAncestors(id);
@@ -121,10 +119,10 @@ describe('PrismaAccountRepository hierarchy methods', () => {
       const grandparent = makePrismaRecord({ id: UUID_GRANDPARENT, parentAccountId: null });
 
       prisma.account.findUnique
-        .mockResolvedValueOnce(child)       // lookup child
-        .mockResolvedValueOnce(parent)       // lookup parent
-        .mockResolvedValueOnce(parent)       // lookup parent for its parentAccountId
-        .mockResolvedValueOnce(grandparent)  // lookup grandparent
+        .mockResolvedValueOnce(child) // lookup child
+        .mockResolvedValueOnce(parent) // lookup parent
+        .mockResolvedValueOnce(parent) // lookup parent for its parentAccountId
+        .mockResolvedValueOnce(grandparent) // lookup grandparent
         .mockResolvedValueOnce(grandparent); // grandparent has no parent
 
       const id = AccountId.create(UUID_CHILD).value;
@@ -153,9 +151,7 @@ describe('PrismaAccountRepository hierarchy methods', () => {
 
   describe('getHierarchyDepth', () => {
     it('should return 0 for root account', async () => {
-      prisma.account.findUnique.mockResolvedValue(
-        makePrismaRecord({ parentAccountId: null })
-      );
+      prisma.account.findUnique.mockResolvedValue(makePrismaRecord({ parentAccountId: null }));
       const id = AccountId.create(UUID_ROOT).value;
 
       const depth = await repo.getHierarchyDepth(id);

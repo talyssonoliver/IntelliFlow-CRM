@@ -40,7 +40,7 @@ describe('MicrosoftCalendarAdapter', () => {
     attendeeIds: ['attendee1@example.com', 'attendee2@example.com'],
     externalCalendarId: undefined,
     isCancelled: false,
-  } as unknown as Appointment;
+  } as any as Appointment; // test: mock external SDK
 
   beforeEach(() => {
     vi.clearAllMocks();

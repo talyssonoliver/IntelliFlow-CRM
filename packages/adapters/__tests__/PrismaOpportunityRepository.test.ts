@@ -34,17 +34,46 @@ vi.mock('@intelliflow/db', async (importOriginal) => {
 // Import after mock is set up
 import { PrismaOpportunityRepository } from '../src/repositories/PrismaOpportunityRepository';
 
-// Mock Prisma Client
-const createMockPrismaClient = () => {
+type OpportunityPrismaDelegateDouble = {
+  upsert: ReturnType<typeof vi.fn>;
+  findUnique: ReturnType<typeof vi.fn>;
+  findMany: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
+  groupBy: ReturnType<typeof vi.fn>;
+};
+
+interface OpportunityPrismaClientDouble {
+  client: PrismaClient;
+  opportunity: OpportunityPrismaDelegateDouble;
+}
+
+const createMockPrismaClient = (): OpportunityPrismaClientDouble => {
+  const opportunity: OpportunityPrismaDelegateDouble = {
+    upsert: vi.fn(),
+    findUnique: vi.fn(),
+    findMany: vi.fn(),
+    delete: vi.fn(),
+    groupBy: vi.fn(),
+  };
+
+  const partialClient = {
+    opportunity,
+  } satisfies Pick<PrismaClient, 'opportunity'>;
+
   return {
-    opportunity: {
-      upsert: vi.fn(),
-      findUnique: vi.fn(),
-      findMany: vi.fn(),
-      delete: vi.fn(),
-      groupBy: vi.fn(),
-    },
-  } as unknown as PrismaClient;
+    // Fail fast if repository touches delegates that are not part of this double.
+    client: new Proxy(partialClient, {
+      get(target, property, receiver) {
+        if (!(property in target)) {
+          throw new Error(
+            `Unexpected Prisma delegate access in Opportunity repository tests: ${String(property)}`
+          );
+        }
+        return Reflect.get(target, property, receiver);
+      },
+    }) as PrismaClient,
+    opportunity,
+  };
 };
 
 // Mock Decimal to behave like real Prisma Decimal
@@ -55,13 +84,13 @@ const mockDecimal = (value: number) => ({
 
 describe('PrismaOpportunityRepository', () => {
   let repository: PrismaOpportunityRepository;
-  let mockPrisma: PrismaClient;
+  let mockPrisma: OpportunityPrismaClientDouble;
   let testOpportunity: Opportunity;
   let testOpportunityId: OpportunityId;
 
   beforeEach(() => {
     mockPrisma = createMockPrismaClient();
-    repository = new PrismaOpportunityRepository(mockPrisma);
+    repository = new PrismaOpportunityRepository(mockPrisma.client);
 
     // Create a test opportunity
     const opportunityResult = Opportunity.create({
@@ -84,8 +113,8 @@ describe('PrismaOpportunityRepository', () => {
 
   describe('save()', () => {
     it('should call prisma.opportunity.upsert with correct data', async () => {
-      const upsertMock = vi.fn().mockResolvedValue({});
-      (mockPrisma.opportunity.upsert as any) = upsertMock;
+      const upsertMock = mockPrisma.opportunity.upsert;
+      upsertMock.mockResolvedValue({});
 
       await repository.save(testOpportunity);
 
@@ -100,6 +129,7 @@ describe('PrismaOpportunityRepository', () => {
           accountId: 'account-123',
           contactId: 'contact-456',
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
         }),
         update: expect.objectContaining({
           name: 'Enterprise Deal',
@@ -108,8 +138,8 @@ describe('PrismaOpportunityRepository', () => {
     });
 
     it('should convert value to Decimal', async () => {
-      const upsertMock = vi.fn().mockResolvedValue({});
-      (mockPrisma.opportunity.upsert as any) = upsertMock;
+      const upsertMock = mockPrisma.opportunity.upsert;
+      upsertMock.mockResolvedValue({});
 
       await repository.save(testOpportunity);
 
@@ -127,8 +157,8 @@ describe('PrismaOpportunityRepository', () => {
         tenantId: 'tenant-123',
       });
 
-      const upsertMock = vi.fn().mockResolvedValue({});
-      (mockPrisma.opportunity.upsert as any) = upsertMock;
+      const upsertMock = mockPrisma.opportunity.upsert;
+      upsertMock.mockResolvedValue({});
 
       await repository.save(minimalOpportunityResult.value);
 
@@ -145,8 +175,8 @@ describe('PrismaOpportunityRepository', () => {
     });
 
     it('should handle prisma errors', async () => {
-      const upsertMock = vi.fn().mockRejectedValue(new Error('Database error'));
-      (mockPrisma.opportunity.upsert as any) = upsertMock;
+      const upsertMock = mockPrisma.opportunity.upsert;
+      upsertMock.mockRejectedValue(new Error('Database error'));
 
       await expect(repository.save(testOpportunity)).rejects.toThrow('Database error');
     });
@@ -165,13 +195,14 @@ describe('PrismaOpportunityRepository', () => {
         accountId: 'account-123',
         contactId: 'contact-456',
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
         createdAt: new Date(),
         updatedAt: new Date(),
         closedAt: null,
       };
 
-      const findUniqueMock = vi.fn().mockResolvedValue(mockRecord);
-      (mockPrisma.opportunity.findUnique as any) = findUniqueMock;
+      const findUniqueMock = mockPrisma.opportunity.findUnique;
+      findUniqueMock.mockResolvedValue(mockRecord);
 
       const result = await repository.findById(testOpportunityId);
 
@@ -187,8 +218,8 @@ describe('PrismaOpportunityRepository', () => {
     });
 
     it('should return null when not found', async () => {
-      const findUniqueMock = vi.fn().mockResolvedValue(null);
-      (mockPrisma.opportunity.findUnique as any) = findUniqueMock;
+      const findUniqueMock = mockPrisma.opportunity.findUnique;
+      findUniqueMock.mockResolvedValue(null);
 
       const result = await repository.findById(testOpportunityId);
 
@@ -207,13 +238,14 @@ describe('PrismaOpportunityRepository', () => {
         accountId: 'account-123',
         contactId: null,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
         createdAt: new Date(),
         updatedAt: new Date(),
         closedAt: null,
       };
 
-      const findUniqueMock = vi.fn().mockResolvedValue(mockRecord);
-      (mockPrisma.opportunity.findUnique as any) = findUniqueMock;
+      const findUniqueMock = mockPrisma.opportunity.findUnique;
+      findUniqueMock.mockResolvedValue(mockRecord);
 
       const result = await repository.findById(testOpportunityId);
 
@@ -238,6 +270,7 @@ describe('PrismaOpportunityRepository', () => {
           accountId: 'account-123',
           contactId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
           closedAt: null,
@@ -253,14 +286,15 @@ describe('PrismaOpportunityRepository', () => {
           accountId: 'account-123',
           contactId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
           closedAt: null,
         },
       ];
 
-      const findManyMock = vi.fn().mockResolvedValue(mockRecords);
-      (mockPrisma.opportunity.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.opportunity.findMany;
+      findManyMock.mockResolvedValue(mockRecords);
 
       const results = await repository.findByAccountId('account-123');
 
@@ -275,8 +309,8 @@ describe('PrismaOpportunityRepository', () => {
     });
 
     it('should return empty array when no opportunities found', async () => {
-      const findManyMock = vi.fn().mockResolvedValue([]);
-      (mockPrisma.opportunity.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.opportunity.findMany;
+      findManyMock.mockResolvedValue([]);
 
       const results = await repository.findByAccountId('account-999');
 
@@ -298,14 +332,15 @@ describe('PrismaOpportunityRepository', () => {
           accountId: 'account-123',
           contactId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
           closedAt: null,
         },
       ];
 
-      const findManyMock = vi.fn().mockResolvedValue(mockRecords);
-      (mockPrisma.opportunity.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.opportunity.findMany;
+      findManyMock.mockResolvedValue(mockRecords);
 
       const results = await repository.findByOwnerId('owner-123');
 
@@ -332,14 +367,15 @@ describe('PrismaOpportunityRepository', () => {
           accountId: 'account-123',
           contactId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
           closedAt: null,
         },
       ];
 
-      const findManyMock = vi.fn().mockResolvedValue(mockRecords);
-      (mockPrisma.opportunity.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.opportunity.findMany;
+      findManyMock.mockResolvedValue(mockRecords);
 
       const results = await repository.findByStage('QUALIFICATION');
 
@@ -365,14 +401,15 @@ describe('PrismaOpportunityRepository', () => {
           accountId: 'account-123',
           contactId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
           closedAt: null,
         },
       ];
 
-      const findManyMock = vi.fn().mockResolvedValue(mockRecords);
-      (mockPrisma.opportunity.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.opportunity.findMany;
+      findManyMock.mockResolvedValue(mockRecords);
 
       const results = await repository.findByStage('PROPOSAL', 'owner-123');
 
@@ -399,14 +436,15 @@ describe('PrismaOpportunityRepository', () => {
           accountId: 'account-123',
           contactId: null,
           ownerId: 'owner-123',
+          tenantId: 'tenant-123',
           createdAt: new Date(),
           updatedAt: new Date(),
           closedAt: null,
         },
       ];
 
-      const findManyMock = vi.fn().mockResolvedValue(mockRecords);
-      (mockPrisma.opportunity.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.opportunity.findMany;
+      findManyMock.mockResolvedValue(mockRecords);
 
       const results = await repository.findClosingSoon(7);
 
@@ -424,8 +462,8 @@ describe('PrismaOpportunityRepository', () => {
     it('should filter by days and owner', async () => {
       const mockRecords = [];
 
-      const findManyMock = vi.fn().mockResolvedValue(mockRecords);
-      (mockPrisma.opportunity.findMany as any) = findManyMock;
+      const findManyMock = mockPrisma.opportunity.findMany;
+      findManyMock.mockResolvedValue(mockRecords);
 
       const results = await repository.findClosingSoon(30, 'owner-123');
 
@@ -444,8 +482,8 @@ describe('PrismaOpportunityRepository', () => {
 
   describe('delete()', () => {
     it('should call prisma.opportunity.delete with correct ID', async () => {
-      const deleteMock = vi.fn().mockResolvedValue({});
-      (mockPrisma.opportunity.delete as any) = deleteMock;
+      const deleteMock = mockPrisma.opportunity.delete;
+      deleteMock.mockResolvedValue({});
 
       await repository.delete(testOpportunityId);
 
@@ -455,8 +493,8 @@ describe('PrismaOpportunityRepository', () => {
     });
 
     it('should propagate prisma errors', async () => {
-      const deleteMock = vi.fn().mockRejectedValue(new Error('Record not found'));
-      (mockPrisma.opportunity.delete as any) = deleteMock;
+      const deleteMock = mockPrisma.opportunity.delete;
+      deleteMock.mockRejectedValue(new Error('Record not found'));
 
       await expect(repository.delete(testOpportunityId)).rejects.toThrow('Record not found');
     });
@@ -470,8 +508,8 @@ describe('PrismaOpportunityRepository', () => {
         { stage: 'PROPOSAL', _sum: { value: mockDecimal(150000) } },
       ];
 
-      const groupByMock = vi.fn().mockResolvedValue(mockResults);
-      (mockPrisma.opportunity.groupBy as any) = groupByMock;
+      const groupByMock = mockPrisma.opportunity.groupBy;
+      groupByMock.mockResolvedValue(mockResults);
 
       const sums = await repository.sumValueByStage();
 
@@ -491,8 +529,8 @@ describe('PrismaOpportunityRepository', () => {
     it('should filter by owner', async () => {
       const mockResults = [{ stage: 'PROSPECTING', _sum: { value: mockDecimal(50000) } }];
 
-      const groupByMock = vi.fn().mockResolvedValue(mockResults);
-      (mockPrisma.opportunity.groupBy as any) = groupByMock;
+      const groupByMock = mockPrisma.opportunity.groupBy;
+      groupByMock.mockResolvedValue(mockResults);
 
       const sums = await repository.sumValueByStage('owner-123');
 
@@ -506,8 +544,8 @@ describe('PrismaOpportunityRepository', () => {
     });
 
     it('should return empty object when no opportunities', async () => {
-      const groupByMock = vi.fn().mockResolvedValue([]);
-      (mockPrisma.opportunity.groupBy as any) = groupByMock;
+      const groupByMock = mockPrisma.opportunity.groupBy;
+      groupByMock.mockResolvedValue([]);
 
       const sums = await repository.sumValueByStage();
 
@@ -517,8 +555,8 @@ describe('PrismaOpportunityRepository', () => {
     it('should handle null sum values', async () => {
       const mockResults = [{ stage: 'PROSPECTING', _sum: { value: null } }];
 
-      const groupByMock = vi.fn().mockResolvedValue(mockResults);
-      (mockPrisma.opportunity.groupBy as any) = groupByMock;
+      const groupByMock = mockPrisma.opportunity.groupBy;
+      groupByMock.mockResolvedValue(mockResults);
 
       const sums = await repository.sumValueByStage();
 
@@ -534,8 +572,8 @@ describe('PrismaOpportunityRepository', () => {
         { stage: 'CLOSED_WON', _count: 2 },
       ];
 
-      const groupByMock = vi.fn().mockResolvedValue(mockResults);
-      (mockPrisma.opportunity.groupBy as any) = groupByMock;
+      const groupByMock = mockPrisma.opportunity.groupBy;
+      groupByMock.mockResolvedValue(mockResults);
 
       const counts = await repository.countByStage();
 
@@ -555,8 +593,8 @@ describe('PrismaOpportunityRepository', () => {
     it('should filter by owner', async () => {
       const mockResults = [{ stage: 'PROSPECTING', _count: 2 }];
 
-      const groupByMock = vi.fn().mockResolvedValue(mockResults);
-      (mockPrisma.opportunity.groupBy as any) = groupByMock;
+      const groupByMock = mockPrisma.opportunity.groupBy;
+      groupByMock.mockResolvedValue(mockResults);
 
       const counts = await repository.countByStage('owner-123');
 
@@ -570,8 +608,8 @@ describe('PrismaOpportunityRepository', () => {
     });
 
     it('should return empty object when no opportunities', async () => {
-      const groupByMock = vi.fn().mockResolvedValue([]);
-      (mockPrisma.opportunity.groupBy as any) = groupByMock;
+      const groupByMock = mockPrisma.opportunity.groupBy;
+      groupByMock.mockResolvedValue([]);
 
       const counts = await repository.countByStage();
 
@@ -592,13 +630,14 @@ describe('PrismaOpportunityRepository', () => {
         accountId: 'account-123',
         contactId: null,
         ownerId: 'owner-123',
+        tenantId: 'tenant-123',
         createdAt: new Date(),
         updatedAt: new Date(),
         closedAt: null,
       };
 
-      const findUniqueMock = vi.fn().mockResolvedValue(mockRecord);
-      (mockPrisma.opportunity.findUnique as any) = findUniqueMock;
+      const findUniqueMock = mockPrisma.opportunity.findUnique;
+      findUniqueMock.mockResolvedValue(mockRecord);
 
       await expect(repository.findById(testOpportunityId)).rejects.toThrow(/Invalid OpportunityId/);
     });
@@ -623,11 +662,10 @@ describe('PrismaOpportunityRepository', () => {
         closedAt: testOpportunity.closedAt,
       };
 
-      const upsertMock = vi.fn().mockResolvedValue(mockRecord);
-      const findUniqueMock = vi.fn().mockResolvedValue(mockRecord);
-
-      (mockPrisma.opportunity.upsert as any) = upsertMock;
-      (mockPrisma.opportunity.findUnique as any) = findUniqueMock;
+      const upsertMock = mockPrisma.opportunity.upsert;
+      upsertMock.mockResolvedValue(mockRecord);
+      const findUniqueMock = mockPrisma.opportunity.findUnique;
+      findUniqueMock.mockResolvedValue(mockRecord);
 
       await repository.save(testOpportunity);
       const found = await repository.findById(testOpportunity.id);

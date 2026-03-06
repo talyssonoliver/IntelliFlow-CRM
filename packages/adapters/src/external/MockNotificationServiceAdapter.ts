@@ -27,7 +27,8 @@ function nextId(): string {
 
 export class MockNotificationServiceAdapter implements NotificationServicePort {
   /** Sent emails for test inspection */
-  readonly sentEmails: Array<{ options: EmailNotificationOptions; result: NotificationResult }> = [];
+  readonly sentEmails: Array<{ options: EmailNotificationOptions; result: NotificationResult }> =
+    [];
   /** Sent SMS for test inspection */
   readonly sentSms: Array<{ options: SmsNotificationOptions; result: NotificationResult }> = [];
   /** Sent push notifications for test inspection */
@@ -50,9 +51,7 @@ export class MockNotificationServiceAdapter implements NotificationServicePort {
     return Result.ok(result);
   }
 
-  async sendSms(
-    options: SmsNotificationOptions
-  ): Promise<Result<NotificationResult, DomainError>> {
+  async sendSms(options: SmsNotificationOptions): Promise<Result<NotificationResult, DomainError>> {
     const result: NotificationResult = {
       id: nextId(),
       channel: 'sms',

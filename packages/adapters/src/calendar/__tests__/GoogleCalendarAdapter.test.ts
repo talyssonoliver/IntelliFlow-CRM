@@ -297,7 +297,7 @@ describe('GoogleCalendarAdapter', () => {
         const appointment = createMockAppointment();
         const result = await adapter.createEvent(
           mockTokens,
-          appointment as unknown as Parameters<typeof adapter.createEvent>[1],
+          appointment as any, // test: mock external SDK
           'idempotency-key-1'
         );
 
@@ -326,7 +326,7 @@ describe('GoogleCalendarAdapter', () => {
         const appointment = createMockAppointment();
         const result = await adapter.createEvent(
           mockTokens,
-          appointment as unknown as Parameters<typeof adapter.createEvent>[1],
+          appointment as any, // test: mock external SDK
           'idempotency-key-2'
         );
 
@@ -339,7 +339,7 @@ describe('GoogleCalendarAdapter', () => {
         const appointment = createMockAppointment();
         const result = await adapter.createEvent(
           mockTokens,
-          appointment as unknown as Parameters<typeof adapter.createEvent>[1],
+          appointment as any, // test: mock external SDK
           'idempotency-key-3'
         );
 
@@ -367,7 +367,7 @@ describe('GoogleCalendarAdapter', () => {
         const result = await adapter.updateEvent(
           mockTokens,
           'google-event-123',
-          appointment as unknown as Parameters<typeof adapter.updateEvent>[2]
+          appointment as any // test: mock external SDK
         );
 
         expect(result.isSuccess).toBe(true);
@@ -389,7 +389,7 @@ describe('GoogleCalendarAdapter', () => {
         await adapter.updateEvent(
           mockTokens,
           'google-event-123',
-          appointment as unknown as Parameters<typeof adapter.updateEvent>[2],
+          appointment as any, // test: mock external SDK
           '"abc123"'
         );
 
@@ -414,7 +414,7 @@ describe('GoogleCalendarAdapter', () => {
         const result = await adapter.updateEvent(
           mockTokens,
           'google-event-123',
-          appointment as unknown as Parameters<typeof adapter.updateEvent>[2],
+          appointment as any, // test: mock external SDK
           '"old-etag"'
         );
 
@@ -585,7 +585,7 @@ describe('GoogleCalendarAdapter', () => {
       it('should map appointment to external event format', () => {
         const appointment = createMockAppointment();
         const externalEvent = adapter.mapToExternalEvent(
-          appointment as unknown as Parameters<typeof adapter.mapToExternalEvent>[0]
+          appointment as any // test: mock external SDK
         );
 
         expect(externalEvent.title).toBe('Test Meeting');
