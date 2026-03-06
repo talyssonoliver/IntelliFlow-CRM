@@ -1,0 +1,15 @@
+{
+  "run_id": "sprint14-audit-20260301T170311-knecyv",
+  "sprint": 14,
+  "verdict": "FAIL",
+  "passed": false,
+  "generated_at": "2026-03-01T17:03:21.892Z",
+  "summary": {
+    "total": 48,
+    "audited": 48,
+    "passed": 17,
+    "failed": 28,
+    "needs_human": 3
+  },
+  "blocking_issues_count": 60
+}

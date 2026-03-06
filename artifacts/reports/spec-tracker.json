@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-02-28T01:12:44.415Z",
+  "generated_at": "2026-03-06T22:22:17.445Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 302,
-    "completed": 299,
-    "partially_done": 0,
+    "total_specs_analyzed": 320,
+    "completed": 316,
+    "partially_done": 1,
     "spec_only": 2,
     "uncertain": 1
   },
@@ -20,6 +20,12 @@
       "severity": "HIGH",
       "issue": "CSV says Completed but attestation verdict does not confirm completion. Real status: UNCERTAIN.",
       "recommendation": "Investigate attestation evidence. Re-run validation if needed."
+    },
+    {
+      "task_id": "PG-166",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec PG-166 when ready for implementation."
     }
   ],
   "tasks": [
@@ -309,6 +315,54 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "Completed",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "DOC-008"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "DOC-011",
+      "title": "Add compliance-check Section 11 requiring VPAT/conformance review when PG-*/IFC-* UI tasks add or modify routes",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/DOC-011-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "DOC-008"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "DOC-012",
+      "title": "Establish quarterly accessibility documentation review cadence with recurring sprint task template",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/DOC-012-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 1,
+      "dependencies": [
+        "DOC-008"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "DOC-013",
+      "title": "Amend ADR-038 with Documentation Maintenance section mandating accessibility doc updates when scope changes",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/DOC-013-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "DOC-008"
@@ -1177,7 +1231,7 @@
       "task_id": "IFC-019",
       "title": "Gate 1 Review - £500 Investment",
       "sprint": 6,
-      "spec_path": ".specify/sprints/sprint-8/specifications/IFC-019-spec.md",
+      "spec_path": ".specify/sprints/sprint-6/specifications/IFC-019-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
@@ -1347,6 +1401,22 @@
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-028"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-030",
+      "title": "Smart Lead Routing",
+      "sprint": 17,
+      "spec_path": ".specify/sprints/sprint-17/specifications/IFC-030-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-029"
       ],
       "real_status": "COMPLETED"
     },
@@ -1997,7 +2067,7 @@
       "task_id": "IFC-095",
       "title": "Churn Risk & Next Best Action",
       "sprint": 6,
-      "spec_path": ".specify/sprints/sprint-8/specifications/IFC-095-spec.md",
+      "spec_path": ".specify/sprints/sprint-6/specifications/IFC-095-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
@@ -2893,7 +2963,7 @@
       "task_id": "IFC-150",
       "title": "Domain events infrastructure: event contracts + versioning + outbox pattern + idempotent publishing",
       "sprint": 5,
-      "spec_path": ".specify/sprints/sprint-8/specifications/IFC-150-spec.md",
+      "spec_path": ".specify/sprints/sprint-5/specifications/IFC-150-spec.md",
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
@@ -3643,6 +3713,71 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-209",
+      "title": "Fix sitemap.ts defects - replace new Date() lastModified with actual file modification timestamps, add all 6 blog post slugs, add dynamic route entries for /careers/[id] and /lp/[slug] (content audit findings F-007 F-008 F-009)",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/IFC-209-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "DOC-002",
+        "DOC-009"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-210",
+      "title": "Fill SEO metadata gaps on public pages - add description OG and Twitter tags to /pricing, complete OG tags on /about and /features, add layout-level metadata for auth-flow pages (content audit findings F-010 F-011 F-012)",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/IFC-210-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "DOC-009"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-222",
+      "title": "Implement real Twilio SMS SDK calls (Resolves R-006)",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/IFC-222-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-170"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-223",
+      "title": "Wire actual Email Outbound Adapter (Resolves R-018)",
+      "sprint": 14,
+      "spec_path": ".specify/sprints/sprint-14/specifications/IFC-223-spec.md",
+      "has_spec": true,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Spec Complete",
+      "metric_status": "PLANNED",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-157"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
       "task_id": "PG-001",
       "title": "Home Page (Public)",
       "sprint": 11,
@@ -4366,14 +4501,30 @@
       "spec_path": ".specify/sprints/sprint-16/specifications/PG-043-spec.md",
       "has_spec": true,
       "has_plan": true,
-      "has_attestation": false,
-      "csv_status": "Plan Complete",
+      "has_attestation": true,
+      "csv_status": "Completed",
       "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-076"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-046",
+      "title": "Support Tickets",
+      "sprint": 16,
+      "spec_path": ".specify/sprints/sprint-16/specifications/PG-046-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-093"
+      ],
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-104",
@@ -4843,6 +4994,22 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "PG-156",
+      "title": "Customizable Daily Goals - settings UI + home.updateDailyGoal mutation + read from User.preferences instead of hardcoded targetValue=5000",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/PG-156-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-129"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "PG-157",
       "title": "Visible Pin to Home buttons on entity list items and detail page headers - not just hidden in 3-dot MoreActionsButton sheet",
       "sprint": 15,
@@ -4852,6 +5019,70 @@
       "has_attestation": true,
       "csv_status": "Completed",
       "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-129"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-158",
+      "title": "Drag and drop pinned items reorder - backend API exists (home.reorderPinnedItems) needs @dnd-kit frontend integration",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/PG-158-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-129"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-159",
+      "title": "Stale pin handling - deleted or inaccessible pinned entities should show Item unavailable with unpin option",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/PG-159-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-129"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-160",
+      "title": "View All AI Insights page - /insights route with getAllInsights endpoint pagination and filtering by insight type",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/PG-160-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-129"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-163",
+      "title": "Home page integration tests - test home.router endpoints against real database with seed data",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/PG-163-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-129"
@@ -4875,6 +5106,54 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "PG-166",
+      "title": "Lighthouse audit on authenticated home page - verify NFR targets TTI <1s Performance >=90 Accessibility >=90",
+      "sprint": 19,
+      "spec_path": ".specify/sprints/sprint-15/specifications/PG-166-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Backlog",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-129"
+      ],
+      "real_status": "PARTIALLY_DONE"
+    },
+    {
+      "task_id": "PG-169",
+      "title": "Developer Guides Page",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/PG-169-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-032"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-170",
+      "title": "Architecture Docs Page",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/PG-170-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-032"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
       "task_id": "PG-171",
       "title": "Integration Resources Page",
       "sprint": 15,
@@ -4888,6 +5167,22 @@
       "dependencies": [
         "PG-032",
         "PG-034"
+      ],
+      "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-179",
+      "title": "Press Release Detail Page - dynamic /press/[id] route for individual press releases linked from /press index page (content audit finding F-004)",
+      "sprint": 15,
+      "spec_path": ".specify/sprints/sprint-15/specifications/PG-179-spec.md",
+      "has_spec": true,
+      "has_plan": true,
+      "has_attestation": true,
+      "csv_status": "Completed",
+      "metric_status": "DONE",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-007"
       ],
       "real_status": "COMPLETED"
     },

@@ -1,0 +1,9 @@
+leadId,score,source,assigneeId,assigneeName,routingMethod,ruleId,executionTimeMs
+lead-seed-001,92,WEBSITE,agent-001,Alice Thompson,rule_match,rule-hot-enterprise,0
+lead-seed-002,67,REFERRAL,agent-003,Carol Chen,load_balance,,0
+lead-seed-003,35,COLD_CALL,agent-003,Carol Chen,load_balance,,0
+lead-seed-004,88,WEBSITE,agent-001,Alice Thompson,rule_match,rule-hot-enterprise,0
+lead-seed-005,15,ADVERTISEMENT,agent-003,Carol Chen,load_balance,,0
+lead-seed-006,78,PARTNER,agent-004,David Kim,rule_match,rule-high-value,0
+lead-seed-007,45,WEBSITE,agent-003,Carol Chen,load_balance,,0
+lead-seed-008,95,REFERRAL,agent-001,Alice Thompson,rule_match,rule-hot-enterprise,0

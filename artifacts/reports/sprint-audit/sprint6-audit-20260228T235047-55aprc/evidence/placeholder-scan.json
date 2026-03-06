@@ -1,0 +1,241 @@
+{
+  "generated_at": "2026-02-28T23:51:02.421Z",
+  "run_id": "sprint6-audit-20260228T235047-55aprc",
+  "total_placeholders": 26,
+  "findings": [
+    {
+      "taskId": "IFC-013",
+      "file": "apps\\api\\src\\modules\\lead\\lead.router.ts",
+      "line": 426,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-013",
+      "file": "apps\\api\\src\\modules\\lead\\lead.router.ts",
+      "line": 516,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-013",
+      "file": "apps\\api\\src\\modules\\lead\\lead.router.ts",
+      "line": 556,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-016",
+      "file": "apps\\web\\hooks\\use-subscription.test.ts",
+      "line": 188,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-018",
+      "file": "vitest.config.ts",
+      "line": 289,
+      "column": 17,
+      "pattern": "PLACEHOLDER",
+      "content": "// Stub/placeholder files",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-018",
+      "file": "vitest.config.ts",
+      "line": 293,
+      "column": 45,
+      "pattern": "PLACEHOLDER",
+      "content": "// Per architecture plan: These are placeholders, not production code",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-018",
+      "file": "vitest.config.ts",
+      "line": 307,
+      "column": 27,
+      "pattern": "PLACEHOLDER",
+      "content": "// Search package placeholder",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-023",
+      "file": "packages\\ui\\__tests__\\score-card.test.tsx",
+      "line": 154,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-139",
+      "file": "apps\\api\\src\\agent\\__tests__\\logger.test.ts",
+      "line": 488,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-139",
+      "file": "apps\\api\\src\\agent\\__tests__\\logger.test.ts",
+      "line": 513,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-139",
+      "file": "apps\\api\\src\\agent\\__tests__\\logger.test.ts",
+      "line": 539,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-144",
+      "file": "packages\\adapters\\src\\messaging\\email\\attachments.ts",
+      "line": 304,
+      "column": 27,
+      "pattern": "SIMULATED_DATA",
+      "content": "// Development-only simulated detection. Replace MockVirusScanner with a real AV",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-144",
+      "file": "packages\\adapters\\src\\messaging\\email\\attachments.ts",
+      "line": 308,
+      "column": 27,
+      "pattern": "SIMULATED_DATA",
+      "content": "threatName: 'Mock.Simulated.Threat',",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-144",
+      "file": "packages\\adapters\\src\\messaging\\email\\__tests__\\attachments.test.ts",
+      "line": 183,
+      "column": 37,
+      "pattern": "SIMULATED_DATA",
+      "content": "expect(result.threatName).toBe('Simulated.Threat.A');",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-144",
+      "file": "packages\\adapters\\src\\messaging\\email\\__tests__\\attachments.test.ts",
+      "line": 324,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-137",
+      "file": "apps\\web\\src\\components\\tickets\\TicketList.tsx",
+      "line": 344,
+      "column": 53,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "{ id: 'sep-1', icon: '', label: '', onClick: () => {}, separator: true },",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-137",
+      "file": "apps\\web\\src\\components\\tickets\\TicketList.tsx",
+      "line": 344,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-137",
+      "file": "apps\\web\\src\\components\\tickets\\TicketList.tsx",
+      "line": 706,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-137",
+      "file": "apps\\web\\src\\components\\tickets\\TicketList.tsx",
+      "line": 716,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-137",
+      "file": "apps\\web\\src\\components\\tickets\\TicketList.tsx",
+      "line": 724,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-137",
+      "file": "apps\\web\\src\\components\\tickets\\TicketList.tsx",
+      "line": 730,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-137",
+      "file": "apps\\web\\src\\components\\tickets\\TicketList.tsx",
+      "line": 735,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-206",
+      "file": "apps\\api\\src\\modules\\ticket\\ticket.router.ts",
+      "line": 112,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-206",
+      "file": "apps\\api\\src\\modules\\ticket\\ticket.router.ts",
+      "line": 224,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-207",
+      "file": "apps\\api\\src\\modules\\ticket\\ticket.router.ts",
+      "line": 112,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-207",
+      "file": "apps\\api\\src\\modules\\ticket\\ticket.router.ts",
+      "line": 224,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    }
+  ]
+}

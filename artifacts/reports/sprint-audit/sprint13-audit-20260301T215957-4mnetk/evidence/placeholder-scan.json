@@ -1,0 +1,70 @@
+{
+  "generated_at": "2026-03-01T22:00:07.881Z",
+  "run_id": "sprint13-audit-20260301T215957-4mnetk",
+  "total_placeholders": 7,
+  "findings": [
+    {
+      "taskId": "IFC-183",
+      "file": "apps\\api\\src\\modules\\notifications\\__tests__\\notifications.router.test.ts",
+      "line": 1074,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-183",
+      "file": "apps\\api\\src\\modules\\notifications\\__tests__\\notifications.router.test.ts",
+      "line": 1096,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-183",
+      "file": "apps\\api\\src\\modules\\notifications\\__tests__\\notifications.router.test.ts",
+      "line": 1114,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-183",
+      "file": "apps\\api\\src\\modules\\notifications\\__tests__\\notifications.router.test.ts",
+      "line": 1132,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-183",
+      "file": "apps\\api\\src\\modules\\notifications\\__tests__\\notifications.router.test.ts",
+      "line": 1150,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-183",
+      "file": "apps\\api\\src\\modules\\notifications\\__tests__\\notifications.router.test.ts",
+      "line": 1168,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-140",
+      "file": "apps\\web\\src\\app\\documents\\(list)\\page.tsx",
+      "line": 172,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    }
+  ]
+}

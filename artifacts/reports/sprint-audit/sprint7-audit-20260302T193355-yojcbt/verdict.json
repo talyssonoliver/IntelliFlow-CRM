@@ -1,0 +1,15 @@
+{
+  "run_id": "sprint7-audit-20260302T193355-yojcbt",
+  "sprint": 7,
+  "verdict": "PASS",
+  "passed": true,
+  "generated_at": "2026-03-02T19:34:16.575Z",
+  "summary": {
+    "total": 21,
+    "audited": 21,
+    "passed": 21,
+    "failed": 0,
+    "needs_human": 0
+  },
+  "blocking_issues_count": 0
+}

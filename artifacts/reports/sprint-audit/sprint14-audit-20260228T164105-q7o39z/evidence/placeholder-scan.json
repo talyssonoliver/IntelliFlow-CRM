@@ -1,0 +1,250 @@
+{
+  "generated_at": "2026-02-28T17:47:21.490Z",
+  "run_id": "sprint14-audit-20260228T164105-q7o39z",
+  "total_placeholders": 27,
+  "findings": [
+    {
+      "taskId": "IFC-063",
+      "file": "apps\\api\\src\\modules\\opportunity\\pipeline-config.router.ts",
+      "line": 77,
+      "column": 37,
+      "pattern": "PLACEHOLDER",
+      "content": "// Return default config with placeholder id",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-064",
+      "file": "apps\\web\\src\\components\\deals\\LossReasonModal.tsx",
+      "line": 63,
+      "column": 131,
+      "pattern": "PLACEHOLDER",
+      "content": "...3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none f...",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-066",
+      "file": "apps\\web\\src\\components\\deals\\LossReasonModal.tsx",
+      "line": 63,
+      "column": 131,
+      "pattern": "PLACEHOLDER",
+      "content": "...3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none f...",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-069",
+      "file": "apps\\web\\src\\components\\shared\\activity-feed\\ActivityFeed.tsx",
+      "line": 66,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-026",
+      "file": "apps\\web\\src\\components\\billing\\checkout-form.tsx",
+      "line": 74,
+      "column": 8,
+      "pattern": "PLACEHOLDER",
+      "content": "'::placeholder': {",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-026",
+      "file": "apps\\web\\src\\components\\billing\\checkout-form.tsx",
+      "line": 406,
+      "column": 14,
+      "pattern": "PLACEHOLDER",
+      "content": "'placeholder:text-muted-foreground',",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-028",
+      "file": "apps\\web\\src\\lib\\billing\\invoice-actions.ts",
+      "line": 209,
+      "column": 18,
+      "pattern": "PLACEHOLDER",
+      "content": "// Email Action (Placeholder)",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-029",
+      "file": "apps\\web\\src\\components\\billing\\payment-methods.tsx",
+      "line": 78,
+      "column": 10,
+      "pattern": "PLACEHOLDER",
+      "content": "'::placeholder': { color: 'hsl(var(--muted-foreground))' },",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-029",
+      "file": "apps\\web\\src\\app\\billing\\payment-methods\\__tests__\\page.test.tsx",
+      "line": 21,
+      "column": 85,
+      "pattern": "STUB",
+      "content": "PaymentMethods: () => <div data-testid=\"payment-methods-component\">PaymentMethods stub</div>,",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-031",
+      "file": "apps\\web\\src\\lib\\billing\\receipt-emailer.ts",
+      "line": 45,
+      "column": 23,
+      "pattern": "SIMULATED_DATA",
+      "content": "* the interface with simulated success for development.",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-168",
+      "file": "apps\\ai-worker\\src\\index.ts",
+      "line": 342,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-174",
+      "file": "scripts\\run-ollama-benchmark.ts",
+      "line": 15,
+      "column": 64,
+      "pattern": "SIMULATED_DATA",
+      "content": "*   - artifacts/benchmarks/accuracy-benchmarks.json (replaces simulated data)",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-128",
+      "file": "apps\\web\\src\\app\\settings\\ai\\hooks\\useChainVersions.ts",
+      "line": 407,
+      "column": 5,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "refetch: () => {},",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-128",
+      "file": "apps\\web\\src\\app\\settings\\ai\\hooks\\useChainVersions.ts",
+      "line": 407,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-131",
+      "file": "apps\\web\\src\\app\\deals\\forecast\\page.tsx",
+      "line": 613,
+      "column": 15,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "onClick: () => {},",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-131",
+      "file": "apps\\web\\src\\app\\deals\\forecast\\page.tsx",
+      "line": 619,
+      "column": 15,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "onClick: () => {},",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-131",
+      "file": "apps\\web\\src\\app\\deals\\forecast\\page.tsx",
+      "line": 625,
+      "column": 15,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "onClick: () => {},",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-131",
+      "file": "apps\\web\\src\\app\\deals\\forecast\\page.tsx",
+      "line": 613,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-131",
+      "file": "apps\\web\\src\\app\\deals\\forecast\\page.tsx",
+      "line": 619,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-131",
+      "file": "apps\\web\\src\\app\\deals\\forecast\\page.tsx",
+      "line": 625,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-154",
+      "file": "apps\\web\\src\\__tests__\\root-proxy.test.ts",
+      "line": 75,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "DOC-008",
+      "file": "vitest.config.ts",
+      "line": 289,
+      "column": 17,
+      "pattern": "PLACEHOLDER",
+      "content": "// Stub/placeholder files",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "DOC-008",
+      "file": "vitest.config.ts",
+      "line": 289,
+      "column": 12,
+      "pattern": "STUB",
+      "content": "// Stub/placeholder files",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "DOC-008",
+      "file": "vitest.config.ts",
+      "line": 293,
+      "column": 45,
+      "pattern": "PLACEHOLDER",
+      "content": "// Per architecture plan: These are placeholders, not production code",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "DOC-008",
+      "file": "vitest.config.ts",
+      "line": 307,
+      "column": 27,
+      "pattern": "PLACEHOLDER",
+      "content": "// Search package placeholder",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "DOC-008",
+      "file": "tests\\a11y\\vitest.config.ts",
+      "line": 52,
+      "column": 10,
+      "pattern": "STUB",
+      "content": "// Stub uninstalled optional dependencies",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "DOC-008",
+      "file": "tests\\a11y\\vitest.config.ts",
+      "line": 59,
+      "column": 71,
+      "pattern": "STUB",
+      "content": "replacement: path.resolve(webRoot, 'src/test/__mocks__/scalar-stub.ts'),",
+      "linkedTaskId": null
+    }
+  ]
+}

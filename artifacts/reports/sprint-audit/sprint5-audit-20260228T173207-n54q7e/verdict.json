@@ -1,0 +1,15 @@
+{
+  "run_id": "sprint5-audit-20260228T173207-n54q7e",
+  "sprint": 5,
+  "verdict": "FAIL",
+  "passed": false,
+  "generated_at": "2026-02-28T18:26:32.560Z",
+  "summary": {
+    "total": 16,
+    "audited": 16,
+    "passed": 3,
+    "failed": 13,
+    "needs_human": 0
+  },
+  "blocking_issues_count": 33
+}

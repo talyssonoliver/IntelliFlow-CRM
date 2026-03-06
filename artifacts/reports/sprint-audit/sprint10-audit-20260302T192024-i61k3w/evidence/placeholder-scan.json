@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-03-02T19:20:41.349Z",
+  "run_id": "sprint10-audit-20260302T192024-i61k3w",
+  "total_placeholders": 4,
+  "findings": [
+    {
+      "taskId": "IFC-076",
+      "file": "packages\\ui\\__tests__\\layout-builder.test.tsx",
+      "line": 168,
+      "column": 15,
+      "pattern": "PLACEHOLDER",
+      "content": "// Verify placeholder has correct height style",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-076",
+      "file": "packages\\ui\\__tests__\\layout-builder.test.tsx",
+      "line": 169,
+      "column": 11,
+      "pattern": "PLACEHOLDER",
+      "content": "const placeholder = container.querySelector('.border-dashed.border-ds-primary\\\\/60');",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-076",
+      "file": "packages\\ui\\__tests__\\form.test.tsx",
+      "line": 171,
+      "column": 8,
+      "pattern": "TODO",
+      "content": "// TODO: Flaky test due to timing issues with react-hook-form validation",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-076",
+      "file": "packages\\ui\\__tests__\\form.test.tsx",
+      "line": 195,
+      "column": 8,
+      "pattern": "TODO",
+      "content": "// TODO: Flaky test due to timing issues with react-hook-form validation",
+      "linkedTaskId": null
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "run_id": "sprint2-audit-20260228T202225-ydefbi",
+  "sprint": 2,
+  "verdict": "FAIL",
+  "passed": false,
+  "generated_at": "2026-02-28T20:22:31.431Z",
+  "summary": {
+    "total": 12,
+    "audited": 12,
+    "passed": 3,
+    "failed": 8,
+    "needs_human": 1
+  },
+  "blocking_issues_count": 17
+}

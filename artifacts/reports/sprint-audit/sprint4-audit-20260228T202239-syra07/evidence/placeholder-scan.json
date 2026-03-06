@@ -1,0 +1,61 @@
+{
+  "generated_at": "2026-02-28T20:22:44.990Z",
+  "run_id": "sprint4-audit-20260228T202239-syra07",
+  "total_placeholders": 6,
+  "findings": [
+    {
+      "taskId": "IFC-184",
+      "file": "apps\\api\\src\\modules\\contact\\__tests__\\contact.router.test.ts",
+      "line": 48,
+      "column": 3,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "clearDomainEvents: () => {},",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-184",
+      "file": "apps\\api\\src\\modules\\contact\\__tests__\\contact.router.test.ts",
+      "line": 48,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-184",
+      "file": "apps\\api\\src\\modules\\contact\\__tests__\\contact.router.test.ts",
+      "line": 53,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {\n    // Reset is handled by setup.ts\n  }",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-185",
+      "file": "apps\\api\\src\\modules\\account\\__tests__\\account.router.test.ts",
+      "line": 40,
+      "column": 3,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "clearDomainEvents: () => {},",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-185",
+      "file": "apps\\api\\src\\modules\\account\\__tests__\\account.router.test.ts",
+      "line": 40,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-185",
+      "file": "apps\\api\\src\\modules\\account\\__tests__\\account.router.test.ts",
+      "line": 48,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {\n    // Reset is handled by setup.ts\n  }",
+      "linkedTaskId": null
+    }
+  ]
+}

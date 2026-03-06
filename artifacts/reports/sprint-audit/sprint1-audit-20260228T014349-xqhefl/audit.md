@@ -1,0 +1,400 @@
+# Sprint 1 Completion Audit Report
+
+**Run ID:** `sprint1-audit-20260228T014349-xqhefl`
+**Generated:** 28/02/2026, 01:44:26
+**Duration:** 37.5 seconds
+**Strict Mode:** No
+
+## ❌ Overall Verdict: **FAIL**
+
+## Summary
+
+| Metric | Count |
+|--------|-------|
+| Total Tasks in Sprint | 13 |
+| Completed Tasks | 13 |
+| Tasks Audited | 13 |
+| ✅ Passed | 0 |
+| ❌ Failed | 13 |
+| ⚠️ Needs Human Review | 0 |
+
+## Evidence Summary
+
+| Category | Found | Issues |
+|----------|-------|--------|
+| Artifacts | 73 ✓ | 16 missing, 0 empty |
+| Validations | 0 passed | 0 failed |
+| KPIs | 0 met | 0 missed |
+| Placeholders (in task artifacts) | - | 2 found |
+| Placeholders (codebase total) | - | 1440 found |
+
+## ⛔ Blocking Issues
+
+These issues must be resolved before sprint can be considered complete:
+
+### 🔴 Critical
+- **ENV-017-AI**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/ENV-017-AI/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **ENV-018-AI**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/ENV-018-AI/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-001**: Missing or invalid artifacts: SPEC:.specify/sprints/sprint-1/specifications/IFC-001-spec.md, PLAN:.specify/sprints/sprint-1/planning/IFC-001-plan.md, EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-001/context_pack.md, EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-001/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-002**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-002/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-003**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-003/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-074**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-074/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-075**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-075/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **BRAND-002**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/BRAND-002/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **SALES-001**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/SALES-001/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **GOV-001**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/GOV-001/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-106**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-106/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-119**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-119/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-135**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-135/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+
+### 🟠 High
+- **ENV-017-AI**: 6 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **ENV-018-AI**: 8 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-001**: 3 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-002**: 3 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-003**: Found 2 placeholder(s) in task artifacts
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-003**: 5 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-074**: 6 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-075**: 4 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **BRAND-002**: 9 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **SALES-001**: 6 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **GOV-001**: 9 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-106**: 8 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-119**: 3 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-135**: 10 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+
+## Task Details
+
+### ❌ Failed Tasks
+
+#### ❌ ENV-017-AI
+
+**Description:** Automated Integration Testing
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/ENV-017-AI/context_ack.json
+- 6 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-1/attestations/ENV-017-AI/context_ack.json` (missing)
+
+---
+
+#### ❌ ENV-018-AI
+
+**Description:** Sprint Planning and Velocity Prediction
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/ENV-018-AI/context_ack.json
+- 8 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-1/attestations/ENV-018-AI/context_ack.json` (missing)
+
+---
+
+#### ❌ IFC-001
+
+**Description:** PHASE-001: Technical Architecture Spike - Modern Stack
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: SPEC:.specify/sprints/sprint-1/specifications/IFC-001-spec.md, PLAN:.specify/sprints/sprint-1/planning/IFC-001-plan.md, EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-001/context_pack.md, EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-001/context_ack.json
+- 3 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+
+**Missing/Invalid Artifacts:**
+- `SPEC:.specify/sprints/sprint-1/specifications/IFC-001-spec.md` (missing)
+- `PLAN:.specify/sprints/sprint-1/planning/IFC-001-plan.md` (missing)
+- `EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-001/context_pack.md` (missing)
+- `EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-001/context_ack.json` (missing)
+
+---
+
+#### ❌ IFC-002
+
+**Description:** PHASE-001: Domain Model Design (DDD)
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-002/context_ack.json
+- 3 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-002/context_ack.json` (missing)
+
+---
+
+#### ❌ IFC-003
+
+**Description:** PHASE-001: tRPC API Foundation
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-003/context_ack.json
+- Found 2 placeholder(s) in task artifacts
+- 5 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+- Remove TODO, FIXME, STUB, and empty function placeholders
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-003/context_ack.json` (missing)
+
+**Placeholders Found:**
+- `apps\api\src\trpc.ts:111` - EMPTY_FUNCTION: `await _rateLimitFn({ ctx: opts.ctx, next: async ()...`
+- `apps\api\src\trpc.ts:111` - EMPTY_FUNCTION: `() => {}...`
+
+---
+
+#### ❌ IFC-074
+
+**Description:** PHASE-040: Full Stack Observability
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-074/context_ack.json
+- 6 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-074/context_ack.json` (missing)
+
+---
+
+#### ❌ IFC-075
+
+**Description:** IaC with Terraform
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-075/context_ack.json
+- 4 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-075/context_ack.json` (missing)
+
+---
+
+#### ❌ BRAND-002
+
+**Description:** Design Tokens Integration Plan (Tailwind/shadcn theme mapping)
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/BRAND-002/context_ack.json
+- 9 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-1/attestations/BRAND-002/context_ack.json` (missing)
+
+---
+
+#### ❌ SALES-001
+
+**Description:** Commercial Narrative + Pitch Deck Outline + One-Pager
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/SALES-001/context_ack.json
+- 6 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-1/attestations/SALES-001/context_ack.json` (missing)
+
+---
+
+#### ❌ GOV-001
+
+**Description:** Architecture Governance Pack (ADR + ARP templates, decision workflow, flowcharts)
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/GOV-001/context_ack.json
+- 9 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-1/attestations/GOV-001/context_ack.json` (missing)
+
+---
+
+#### ❌ IFC-106
+
+**Description:** PHASE-039: Define Hexagonal module boundaries + create canonical packages/application + packages/adapters skeleton
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-106/context_ack.json
+- 8 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-106/context_ack.json` (missing)
+
+---
+
+#### ❌ IFC-119
+
+**Description:** Define recurring backlog refinement, sprint planning, review and retrospective ceremonies
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-119/context_ack.json
+- 3 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-119/context_ack.json` (missing)
+
+---
+
+#### ❌ IFC-135
+
+**Description:** Create ADR pack for multi-tenancy; workflow engine choice; agent tool-calling; data classification & retention; audit logging
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-135/context_ack.json
+- 10 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-1/attestations/IFC-135/context_ack.json` (missing)
+
+---
+
+## Artifact Hashes
+
+SHA256 hashes for all verified artifacts:
+
+```
+36a5709f677c045ba783dbe013dc40691f7d08e9bf3102fe6736058e8f8d8e3d  artifacts/misc/test-orchestration.json
+6423587d17e2fee78c91b517794eea69faaf4c43062c1656226f8a7fb1db2f26  artifacts/metrics/confidence-metrics.csv
+e9095156599b092e7fdb566a10d39391b2aec78455973e55374bec84b9141a27  artifacts/misc/velocity-prediction.json
+24de1b8bf3abfc55c05bb7b46fbfa188c8c9f3d1d25a438360045cd181e551d2  artifacts/misc/capacity-model.csv
+874dce2fb90f99e52b378add9206437019020e06849b59c71948b71699105830  artifacts/reports/risk-matrix.md
+1ac01974b54d1086e058531470fe25f1f5bc9729156a9370de823c8353863bc9  artifacts/misc/sprint-planning/README.md
+934d2d675dbf2cfd36ea394a9e0e9b9f729cac98721285fb3993afc5eeaf68ea  .specify/sprints/sprint-1/context/IFC-001/hydrated-context.md
+7182383292708080a46287d7fd3efc715b94182ba8056f973e7e0305a2b25ed2  artifacts/misc/architecture-spike/README.md
+4b5e2706e0103ed9de2b59ecdc7badbc083239fecf6b79101228b9c932b98871  artifacts/misc/architecture-spike/performance-test.ts
+bf19a6e77d21a0eda4b78232f878ffe5cbefc5545832e9f29fac2248a10b51db  artifacts/misc/architecture-spike/type-safety-validation.ts
+1d50a98b85859703af9a63146081b329b83e425b7fec3bb9d1dcfbeeaf261a32  artifacts/reports/ifc-000-completion-manifest.json
+cbb24ca6a62cb24abe04929e465f04a68256280313a89a0b33264481db205978  docs/planning/adr/ADR-001-modern-stack.md
+e85f2237fcab40a45d86b9d40e587edf280d0cd070fbc4bac159afbd290f61fb  artifacts/benchmarks/performance-benchmark.json
+33cdb7801eb479cd028b460206464339d6ffea7bfbfdcf8e9577c4a3fc6692ea  apps/project-tracker/docs/metrics/_global/flows/FLOW-001.md
+e386bc479303ec76016975fd626e64b3818d00899a370b187e64450f3b7cdc7b  apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-001-validation.md
+6c91fd6076aed8edaecae280dc4336e05bd4d90dee047a0a51fe6712b22b6a2d  packages/db/prisma/schema.prisma
+c3d80f60dfe3ae6d5a2f3ecea5c74c954ca78083e48ea75f33c7d4859027e938  docs/planning/DDD-context-map.puml
+26fc64ed47c916584d6133cf721e021f50a76cfdebbc14b98f256e102158658c  apps/api/src/trpc.ts
+c0a791b103b108785e5272d0da19ac6e2892199a7a812a1183cb1da0a54fcf15  apps/api/src/shared/e2e-type-safety-test.ts
+ef9fff72b855af088310fdc8a62f421e4315a7601294855328dbdee2a310bbce  apps/api/src/shared/subscription-demo.ts
+619d35c095814b6750a4a7324fcedab53b8e6d201fdd9ce5baf5466c610a1200  apps/api/README.md
+9566f434b6a36ff95a95e4eae2e7d75c605e4cd82efa6afa6d43f57d061571e3  artifacts/misc/sentry-project-config.json
+c7d87bcf960f98c0ade84ce66dad5ac8e053d83870fcf859707842556f34bbc1  artifacts/misc/correlation-test.csv
+b5e1dcf0c2390b274c792a79332db082e860cc3704a41ed6ffeaa6f62aefcf14  artifacts/misc/mttr-baseline.json
+9bd1810809320ab43dee3ecb8fe0ec11f6f0d642d9a3d312e172d61f118ad67a  packages/observability/package.json
+0b17921b67a2a6bbb1a37af61694b09aa4fbcafee4f5c5f0c488d95c3e4c721e  packages/observability/tsconfig.json
+d170560912a7e4c8d3731bd6265ea89120e6f837cafb47ec00745a8a06ef4a6b  packages/observability/src/index.ts
+cd6833860876ebebd8cd77fcf1f544b5c44c1c27cf2149883f5622ffd107e506  packages/observability/src/tracing.ts
+15cf4432a8251939de0eba6b53c9f84282231e381d9ab2fcdf33ff4eb81a863c  packages/observability/src/metrics.ts
+a0859bb52a22d1c8c2bc1d14d3b5803c344375884530a0b4ddd83f85af6a6c9f  packages/observability/src/logging.ts
+e6a6e78aa39fbad06fe1f06bf4106da004431856368269044ffa449e223fb770  packages/observability/src/tracer.ts
+12f8b36e8d65986faa06da3d7976aeefb9f811f40d81abd9921c795eaae1dc4b  infra/terraform/modules/supabase/main.tf
+33e51dd6d02e5dc2436412da11df03c4f6bfeb69455ddbcfc2cb3fa716573ced  artifacts/misc/drift-detection-config.yaml
+8ac9c973f517168eb9ee5a2df32cdb1c38c71de8c57805e29a08fed0d2006918  artifacts/logs/destroy-rebuild-test.log
+be5a42f31839fe33d23eeba28b8d08b5a1d04349453d8cda97344022ac66a6d6  artifacts/reports/IFC-075-implementation-summary.md
+e17d7b48a7da84682d5ed031ca392ad61262c4b4554f9aca8b9c53e2119068eb  docs/design/token-mapping.md
+0c87a6ee41c75148945ee9a5aeac5dd300e702aab1c8e2520bd6432f30f8e141  docs/design/theme-reference-spec.md
+4b4ef42f78e81a6d74a26bfda353e005e628dcbad1b1f275b24ebd27e0ee5102  docs/design/token-naming.md
+2820e21f60c72c657719fdd950702127fca49a420b47ba469fec1342a37cfde7  docs/sales/pitch-deck-outline.md
+e7a0936552bb5f781577d061c65fa8184d8eefa11a43b960ef14fb5337f41662  docs/sales/one-pager.md
+01c558fa9ba9b39e71055ecb65ca81f2b95f0a24569c81ff06fdae47b416d03f  artifacts/misc/sales/pitch-deck-source-link.txt
+0411c6eb66254005c910d255016301318f67d214c475644aad70e627fbefd17b  artifacts/reports/SALES-001-quick-reference.md
+8be768fdc42661d025660cf8c39c274e60c1fa48173d3e9422657d692e887233  artifacts/reports/SALES-001-validation-report.md
+965dc4f944d0596145a57bd9491bc480566bc71944ad5b10136cdb54a41a60f6  docs/architecture/adr/000-template.md
+ef7b3b7534fb0c12cc530011d336b47f915c86ce908d0a459447912330139ad5  docs/architecture/arp/000-template.md
+7ff0185d87183cf8bcf8fd83b7d9f307384b556002757c53f785a576d4bde3d7  docs/architecture/decision-workflow.md
+f1ed1757a14728904ae732524960022aec3de27d604e4a36284636da55a2f564  docs/architecture/diagrams/README.md
+b92985143ec86eb4b49e9803c7e52431aaec0dc508a894e7612b8dbd31daaa3d  docs/architecture/flowcharts/README.md
+11591f47f559317ef8d55d52e0ae94ac87c75973608980860d5abfa96e7d2e77  docs/architecture/hex-boundaries.md
+52ab72d6693e6e063fc3196d26a578677446a8c0d67cdc8b871ed3905b34e30c  docs/architecture/repo-layout.md
+c9cc7e6baa1d80fa2733622e71d48dfc4b657b65a8506dcbaf8ac4b7b2150f38  apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md
+61ff42e383b45db5732beaa18ce8dc3579bc1cb8326c85584b0dcaf0f3eede4c  artifacts/misc/ceremony-calendar.ics
+55160d83f0efe7cc3cc5b75ef450aa2d825cbc63f4860dc78ab73566b90d0e87  artifacts/reports/retro-action-items.md
+972e4f760f1524b8b4f8aa79ce8d138f1b811617910805ca42c9a871e777e0a1  artifacts/misc/templates/backlog-refinement.md
+d7c2623794b4247a605f77b547b86a2917b76e817a8b7e68cb678e7c72e95efd  artifacts/misc/templates/daily-standup.md
+62366ee010f5dfc4a1cf1c3b32a91217ccc5acbd9744896603e4cfe68cb19290  artifacts/misc/templates/sprint-planning.md
+5b7384af9331a3bba020eac28ca24beab3b1c100800ed83874a8916d89d7690e  artifacts/misc/templates/sprint-retrospective.md
+0c5f0d37b6c6053599547a94fe0ad6a3010d785b09f1100c806d1e2dec2a1541  artifacts/misc/templates/sprint-review.md
+0b15251ae07322c5716988cb07dcce5e967f38704dcbf07f38ddae4df1526ce9  docs/planning/adr/ADR-004-multi-tenancy.md
+9b3e7b5c26623bf2cfb45c115c7aa36d7dc09ca26d105c8356446c6cb3afe783  docs/planning/adr/ADR-005-workflow-engine.md
+eef733beb5d1cd95362276fddda6d18809af141375da3b463e831cf42dddf4dd  docs/planning/adr/ADR-006-agent-tools.md
+42f7274805f6e8a7e14486ea7e18847db1a86b72cc1a6a76296ec55440c22c8f  docs/planning/adr/ADR-007-data-governance.md
+a3bea933e137687a5a4dbebb69fb17ea9118a4c1ca7ab2e70a614222d7059a06  docs/planning/adr/ADR-008-audit-logging.md
+c40b20e55906db9bbc51d4ebefebd659598718dbf053e9a004caf109818d9722  artifacts/misc/adr-index.csv
+```
+
+---
+
+*Generated by sprint-completion-auditor at 2026-02-28T01:44:26.622Z*

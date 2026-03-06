@@ -1,0 +1,106 @@
+{
+  "generated_at": "2026-03-01T00:33:38.231Z",
+  "run_id": "sprint14-audit-20260301T003329-e1ht7z",
+  "total_placeholders": 11,
+  "findings": [
+    {
+      "taskId": "IFC-069",
+      "file": "apps\\web\\src\\components\\shared\\activity-feed\\ActivityFeed.tsx",
+      "line": 67,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-026",
+      "file": "apps\\web\\src\\components\\billing\\checkout-form.tsx",
+      "line": 406,
+      "column": 14,
+      "pattern": "PLACEHOLDER",
+      "content": "'placeholder:text-muted-foreground',",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-029",
+      "file": "apps\\web\\src\\app\\billing\\payment-methods\\__tests__\\page.test.tsx",
+      "line": 21,
+      "column": 85,
+      "pattern": "STUB",
+      "content": "PaymentMethods: () => <div data-testid=\"payment-methods-component\">PaymentMethods stub</div>,",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-031",
+      "file": "apps\\web\\src\\lib\\billing\\receipt-emailer.ts",
+      "line": 44,
+      "column": 76,
+      "pattern": "SIMULATED_DATA",
+      "content": "* In development mode, logs receipt details without sending and returns a synthetic message ID.",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-174",
+      "file": "scripts\\run-ollama-benchmark.ts",
+      "line": 15,
+      "column": 64,
+      "pattern": "SIMULATED_DATA",
+      "content": "*   - artifacts/benchmarks/accuracy-benchmarks.json (replaces simulated data)",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-128",
+      "file": "apps\\web\\src\\app\\settings\\ai\\hooks\\useChainVersions.ts",
+      "line": 407,
+      "column": 5,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "refetch: () => {}, // No-op: getZepBudget endpoint not yet implemented in chain-version.router.ts",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-128",
+      "file": "apps\\web\\src\\app\\settings\\ai\\hooks\\useChainVersions.ts",
+      "line": 407,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-154",
+      "file": "apps\\web\\src\\__tests__\\root-proxy.test.ts",
+      "line": 75,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "DOC-008",
+      "file": "vitest.config.ts",
+      "line": 289,
+      "column": 17,
+      "pattern": "PLACEHOLDER",
+      "content": "// Stub/placeholder files",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "DOC-008",
+      "file": "vitest.config.ts",
+      "line": 293,
+      "column": 45,
+      "pattern": "PLACEHOLDER",
+      "content": "// Per architecture plan: These are placeholders, not production code",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "DOC-008",
+      "file": "vitest.config.ts",
+      "line": 307,
+      "column": 27,
+      "pattern": "PLACEHOLDER",
+      "content": "// Search package placeholder",
+      "linkedTaskId": null
+    }
+  ]
+}

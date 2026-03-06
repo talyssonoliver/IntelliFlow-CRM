@@ -1,0 +1,402 @@
+# Sprint 4 Completion Audit Report
+
+**Run ID:** `sprint4-audit-20260228T012819-4ptmeg`
+**Generated:** 28/02/2026, 01:40:39
+**Duration:** 739.7 seconds
+**Strict Mode:** No
+
+## ❌ Overall Verdict: **FAIL**
+
+## Summary
+
+| Metric | Count |
+|--------|-------|
+| Total Tasks in Sprint | 10 |
+| Completed Tasks | 10 |
+| Tasks Audited | 10 |
+| ✅ Passed | 0 |
+| ❌ Failed | 10 |
+| ⚠️ Needs Human Review | 0 |
+
+## Evidence Summary
+
+| Category | Found | Issues |
+|----------|-------|--------|
+| Artifacts | 36 ✓ | 17 missing, 0 empty |
+| Validations | 1 passed | 8 failed |
+| KPIs | 0 met | 0 missed |
+| Placeholders (in task artifacts) | - | 11 found |
+| Placeholders (codebase total) | - | 1440 found |
+
+## ⛔ Blocking Issues
+
+These issues must be resolved before sprint can be considered complete:
+
+### 🔴 Critical
+- **IFC-009**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-009/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-108**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-108/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-108**: Validation(s) failed: pnpm test
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-110**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-110/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-110**: Validation(s) failed: pnpm test
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-131**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-131/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-131**: Validation(s) failed: pnpm test
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-137**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-137/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-137**: Validation(s) failed: pnpm test
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-177**: Missing or invalid artifacts: SPEC:.specify/sprints/sprint-4/specifications/IFC-177-spec.md, PLAN:.specify/sprints/sprint-4/planning/IFC-177-plan.md, EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-177/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-177**: Validation(s) failed: pnpm test
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-178**: Missing or invalid artifacts: SPEC:.specify/sprints/sprint-4/specifications/IFC-178-spec.md, PLAN:.specify/sprints/sprint-4/planning/IFC-178-plan.md, EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-178/attestation.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-184**: Missing or invalid artifacts: SPEC:.specify/sprints/sprint-4/specifications/IFC-184-spec.md, EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-184/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-184**: Validation(s) failed: pnpm test
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-185**: Missing or invalid artifacts: SPEC:.specify/sprints/sprint-4/specifications/IFC-185-spec.md, PLAN:.specify/sprints/sprint-4/planning/IFC-185-plan.md, EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-185/context_ack.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-185**: Validation(s) failed: pnpm test
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-188**: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-188/completion.json
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-188**: Validation(s) failed: pnpm test
+  - *Recommendation:* Create all required artifacts before marking task complete
+
+### 🟠 High
+- **IFC-009**: 5 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-108**: 9 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-110**: 4 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-131**: 4 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-137**: Found 5 placeholder(s) in task artifacts
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-137**: 8 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-177**: 8 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-178**: 5 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-184**: Found 3 placeholder(s) in task artifacts
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-184**: 10 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-185**: Found 3 placeholder(s) in task artifacts
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-185**: 10 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+- **IFC-188**: 10 DoD criteria unverified
+  - *Recommendation:* Create all required artifacts before marking task complete
+
+## Task Details
+
+### ❌ Failed Tasks
+
+#### ❌ IFC-009
+
+**Description:** PHASE-002: Team Capability Assessment - Modern Stack (Next.js 16.0.10 App Router, Turbopack FS caching, Cache Components, proxy replacing middleware)
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-009/context_ack.json
+- 5 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-009/context_ack.json` (missing)
+
+---
+
+#### ❌ IFC-108
+
+**Description:** Implement Domain Services & Business Logic
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-108/context_ack.json
+- Validation(s) failed: pnpm test
+- 9 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+- Fix failing validations before marking complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-108/context_ack.json` (missing)
+
+**Failed Validations:**
+- `pnpm test` (exit code: 124)
+  - Error: Command timed out after 60000ms
+
+---
+
+#### ❌ IFC-110
+
+**Description:** Write Unit & Integration Tests for Domain Entities
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-110/context_ack.json
+- Validation(s) failed: pnpm test
+- 4 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+- Fix failing validations before marking complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-110/context_ack.json` (missing)
+
+**Failed Validations:**
+- `pnpm test` (exit code: 124)
+  - Error: Command timed out after 60000ms
+
+---
+
+#### ❌ IFC-131
+
+**Description:** Architecture boundary enforcement: domain/infrastructure dependency rules + architecture tests in CI
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-131/context_ack.json
+- Validation(s) failed: pnpm test
+- 4 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+- Fix failing validations before marking complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-131/context_ack.json` (missing)
+
+**Failed Validations:**
+- `pnpm test` (exit code: 124)
+  - Error: Command timed out after 60000ms
+
+---
+
+#### ❌ IFC-137
+
+**Description:** Develop Appointment aggregate with conflict detection; buffers; recurrence; linkage to cases and calendars
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-137/context_ack.json
+- Found 5 placeholder(s) in task artifacts
+- Validation(s) failed: pnpm test
+- 8 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+- Remove TODO, FIXME, STUB, and empty function placeholders
+- Fix failing validations before marking complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-137/context_ack.json` (missing)
+
+**Placeholders Found:**
+- `apps\api\src\modules\legal\appointments.router.ts:440` - EMPTY_FUNCTION: `() => {}...`
+- `apps\api\src\modules\legal\appointments.router.ts:454` - EMPTY_FUNCTION: `() => {}...`
+- `apps\api\src\modules\legal\appointments.router.ts:733` - EMPTY_FUNCTION: `() => {}...`
+- `apps\api\src\modules\legal\appointments.router.ts:747` - EMPTY_FUNCTION: `() => {}...`
+- `apps\api\src\modules\legal\appointments.router.ts:886` - EMPTY_FUNCTION: `() => {}...`
+
+**Failed Validations:**
+- `pnpm test` (exit code: 124)
+  - Error: Command timed out after 60000ms
+
+---
+
+#### ❌ IFC-177
+
+**Description:** AI Output Review - Application Layer (use cases and ports)
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: SPEC:.specify/sprints/sprint-4/specifications/IFC-177-spec.md, PLAN:.specify/sprints/sprint-4/planning/IFC-177-plan.md, EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-177/context_ack.json
+- Validation(s) failed: pnpm test
+- 8 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+- Fix failing validations before marking complete
+
+**Missing/Invalid Artifacts:**
+- `SPEC:.specify/sprints/sprint-4/specifications/IFC-177-spec.md` (missing)
+- `PLAN:.specify/sprints/sprint-4/planning/IFC-177-plan.md` (missing)
+- `EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-177/context_ack.json` (missing)
+
+**Failed Validations:**
+- `pnpm test` (exit code: 124)
+  - Error: Command timed out after 60000ms
+
+---
+
+#### ❌ IFC-178
+
+**Description:** AI Output Review - Database Schema (Prisma models)
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: SPEC:.specify/sprints/sprint-4/specifications/IFC-178-spec.md, PLAN:.specify/sprints/sprint-4/planning/IFC-178-plan.md, EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-178/attestation.json
+- 5 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+
+**Missing/Invalid Artifacts:**
+- `SPEC:.specify/sprints/sprint-4/specifications/IFC-178-spec.md` (missing)
+- `PLAN:.specify/sprints/sprint-4/planning/IFC-178-plan.md` (missing)
+- `EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-178/attestation.json` (missing)
+
+---
+
+#### ❌ IFC-184
+
+**Description:** Contact tRPC Router - CRUD search relationship linking timeline integration
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: SPEC:.specify/sprints/sprint-4/specifications/IFC-184-spec.md, EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-184/context_ack.json
+- Found 3 placeholder(s) in task artifacts
+- Validation(s) failed: pnpm test
+- 10 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+- Remove TODO, FIXME, STUB, and empty function placeholders
+- Fix failing validations before marking complete
+
+**Missing/Invalid Artifacts:**
+- `SPEC:.specify/sprints/sprint-4/specifications/IFC-184-spec.md` (missing)
+- `EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-184/context_ack.json` (missing)
+
+**Placeholders Found:**
+- `apps\api\src\modules\contact\__tests__\contact.router.test.ts:48` - EMPTY_FUNCTION: `clearDomainEvents: () => {},...`
+- `apps\api\src\modules\contact\__tests__\contact.router.test.ts:48` - EMPTY_FUNCTION: `() => {}...`
+- `apps\api\src\modules\contact\__tests__\contact.router.test.ts:53` - EMPTY_FUNCTION: `() => {
+    // Reset is handled by setup.ts
+  }...`
+
+**Failed Validations:**
+- `pnpm test` (exit code: 124)
+  - Error: Command timed out after 60000ms
+
+---
+
+#### ❌ IFC-185
+
+**Description:** Account tRPC Router - CRUD hierarchy contacts opportunities activity feed
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: SPEC:.specify/sprints/sprint-4/specifications/IFC-185-spec.md, PLAN:.specify/sprints/sprint-4/planning/IFC-185-plan.md, EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-185/context_ack.json
+- Found 3 placeholder(s) in task artifacts
+- Validation(s) failed: pnpm test
+- 10 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+- Remove TODO, FIXME, STUB, and empty function placeholders
+- Fix failing validations before marking complete
+
+**Missing/Invalid Artifacts:**
+- `SPEC:.specify/sprints/sprint-4/specifications/IFC-185-spec.md` (missing)
+- `PLAN:.specify/sprints/sprint-4/planning/IFC-185-plan.md` (missing)
+- `EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-185/context_ack.json` (missing)
+
+**Placeholders Found:**
+- `apps\api\src\modules\account\__tests__\account.router.test.ts:40` - EMPTY_FUNCTION: `clearDomainEvents: () => {},...`
+- `apps\api\src\modules\account\__tests__\account.router.test.ts:40` - EMPTY_FUNCTION: `() => {}...`
+- `apps\api\src\modules\account\__tests__\account.router.test.ts:48` - EMPTY_FUNCTION: `() => {
+    // Reset is handled by setup.ts
+  }...`
+
+**Failed Validations:**
+- `pnpm test` (exit code: 124)
+  - Error: Command timed out after 60000ms
+
+---
+
+#### ❌ IFC-188
+
+**Description:** Ticket Domain Entity - Aggregate with SLA priority escalation categories customer linking
+**Status:** Completed
+
+**Issues:**
+- Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-188/completion.json
+- Validation(s) failed: pnpm test
+- 10 DoD criteria unverified
+
+**Recommendations:**
+- Create all required artifacts before marking task complete
+- Fix failing validations before marking complete
+
+**Missing/Invalid Artifacts:**
+- `EVIDENCE:.specify/sprints/sprint-4/attestations/IFC-188/completion.json` (missing)
+
+**Failed Validations:**
+- `pnpm test` (exit code: 124)
+  - Error: Command timed out after 60000ms
+
+---
+
+## Artifact Hashes
+
+SHA256 hashes for all verified artifacts:
+
+```
+1deac58495ea95a61b44dde0be9e98c3b622d15cf39284e3249be35fec7b12fd  artifacts/reports/team-skills-matrix.csv
+ef93699f2944e6e78a61e270d9cd3c2fddc6c599dfbe99b428faf07b3a7aef8f  docs/planning/training-plan.md
+5043106b5ae3b394a090373c71af7a282d4daa03bb9eabdc63698f183c8b530b  artifacts/misc/competency-test-results.csv
+11602fd704fde03f57a49f4e20e5874dc8d03150b490217c9b64d78d36489c43  artifacts/reports/confidence-survey.md
+869fc83b4b9957fba7643c30ff6b5fbc02630ecc1b192b3d95211dda57dc4949  apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md
+438a5729539842f4c1da092828199ea256759eb99e8cd39bed6e0bb4b0da0e47  apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md
+95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb  docs/planning/adr/ADR-019-core-crm-foundation.md
+7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219  docs/planning/prd-core-crm.md
+11591f47f559317ef8d55d52e0ae94ac87c75973608980860d5abfa96e7d2e77  docs/architecture/hex-boundaries.md
+365807a9d24d53ce5ecd1333bdd426cbfd1e68d26eb375b00d03cd2ae5cdefdd  docs/planning/adr/ADR-010-architecture-boundary-enforcement.md
+ab124125137e06a9a7502c4ee4e8997567fd517c77fb7e768f4c7d18325012f3  packages/domain/src/legal/appointments/Appointment.ts
+a44a4f83719d34a0a4ba7859196faf74901269d2b4c5a5531c9c92f89dec89c1  packages/application/src/usecases/scheduling/index.ts
+c635d895320dfafe51941bb658f6244cea2be3eb07b873ecf10661d03261da08  apps/api/src/modules/legal/appointments.router.ts
+4d8e7f1b9bff911cdee877ebff2272de09e41020734a6624962a28e144257472  docs/planning/adr/ADR-024-scheduling-calendar.md
+66c8ce235c78c3ffb4254e03f27561892dd6c42d087a8f0b8fc430541a820364  docs/planning/prd-scheduling-calendar.md
+9bb5c6b32fa8d3bc6f78ee2cbce979cc77dd0aeb22b7795b1ccfa20800d7cc0d  packages/domain/src/ai/review/AIOutputReviewRepository.ts
+b23f9a817b0185869958f87e34d978e9271c1c7e452c3363f6632280d4c9c6c7  packages/application/src/ports/repositories/AIOutputReviewRepositoryPort.ts
+a939b83c36ce2a9e46feb48ee7557de43213208fc0b5fcfd2b49605077bc63e1  packages/application/src/usecases/ai-review/CreateReviewUseCase.ts
+8f7fd64a3ba382b76518c0bf3192b143c08145d2be0904c8183988acceceea6c  packages/application/src/usecases/ai-review/ClaimReviewUseCase.ts
+0ed2e5cf14ce3f3f4d520549011f6f52d9a04dba0bdb1474f7b8cf69481da100  packages/application/src/usecases/ai-review/ApproveReviewUseCase.ts
+b9ccb90ea9dc08f7bee9f7dd86f530b989f5716b65540253ddabd8a442215420  packages/application/src/usecases/ai-review/RejectReviewUseCase.ts
+824b58cfae0328d7ba158d96bf038030a223f6a0927a438e65bbca30b4f7164f  packages/application/src/usecases/ai-review/ReleaseReviewUseCase.ts
+6da8f782a702446cb5d6d9d8f0d374d0ccfe11d76ac06923259666e643010f32  packages/application/src/usecases/ai-review/EscalateReviewUseCase.ts
+a93275cd4cabb56b963667d6f0780efc180edce2908b4a326ce422a1e55da544  packages/application/src/usecases/ai-review/index.ts
+6c91fd6076aed8edaecae280dc4336e05bd4d90dee047a0a51fe6712b22b6a2d  packages/db/prisma/schema.prisma
+e4fa17dc9b561ebcc04beaddffe3bff787278244618be21895ee7baae7993675  infra/supabase/migrations/20260204000000_ai_output_review_rls.sql
+bb83bba46462165587f49c62f91c468c8405e0fc70c37858c257570c3e121566  apps/api/src/modules/contact/contact.router.ts
+0d59a1807b0bb8f1e91863cd99ce523924dd4b5c6dda87b765c7268c9c1ffa5b  apps/api/src/modules/contact/__tests__/contact.router.test.ts
+d4478a17540696afe50399bbbab13af37305999e663339d884cc5de569702e86  apps/api/src/modules/account/account.router.ts
+2aabe79bc3366a432b5bca2fba932c7a2520d175c79bcd4d2249aeac53e8f00c  apps/api/src/modules/account/__tests__/account.router.test.ts
+0224ade7b8f217efdeaf3d75f36dece4a5de98c909b6663c31e7205d9d151657  packages/domain/src/crm/ticket/Ticket.ts
+aa28b17631a2773e0e1634e0b35aab69f8ccff763d743cfb8774c920a682f985  packages/domain/src/crm/ticket/TicketId.ts
+4ce2a5feacdc7f6add5c06fafd3c5ea18eafcc76b5a2052a570ae3881735535e  packages/domain/src/crm/ticket/TicketEvents.ts
+30ada99dc77c42d7af6bf418d4ebc1805bb20ae0c51a59c80f25707010192ef9  packages/domain/src/crm/ticket/TicketRepository.ts
+b26080c253bea0c1e91b3411f8e1ad56c43e963b69192b0405f432885a1ffb23  packages/domain/src/crm/ticket/index.ts
+a86d18074dfdbb32da4e6fbb930c543095f74960fd4a0edee85096c9b1f621cc  packages/validators/src/__tests__/ticket.test.ts
+```
+
+---
+
+*Generated by sprint-completion-auditor at 2026-02-28T01:40:39.233Z*

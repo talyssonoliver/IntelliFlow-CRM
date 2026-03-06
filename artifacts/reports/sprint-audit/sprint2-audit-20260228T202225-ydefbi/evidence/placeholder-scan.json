@@ -1,0 +1,133 @@
+{
+  "generated_at": "2026-02-28T20:22:31.431Z",
+  "run_id": "sprint2-audit-20260228T202225-ydefbi",
+  "total_placeholders": 14,
+  "findings": [
+    {
+      "taskId": "IFC-004",
+      "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+      "line": 251,
+      "column": 52,
+      "pattern": "TODO",
+      "content": "// are not yet supported by the API schema - TODO: Extend schema or store separately",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-004",
+      "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+      "line": 456,
+      "column": 206,
+      "pattern": "PLACEHOLDER",
+      "content": "...20 focus:border-[#137fec] placeholder-slate-400 transition-shadow ${",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-004",
+      "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+      "line": 482,
+      "column": 206,
+      "pattern": "PLACEHOLDER",
+      "content": "...20 focus:border-[#137fec] placeholder-slate-400 transition-shadow ${",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-004",
+      "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+      "line": 512,
+      "column": 214,
+      "pattern": "PLACEHOLDER",
+      "content": "... focus:border-[#137fec] placeholder-slate-400 transition-shadow ${",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-004",
+      "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+      "line": 543,
+      "column": 252,
+      "pattern": "PLACEHOLDER",
+      "content": "... focus:border-[#137fec] placeholder-slate-400 transition-shadow\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-004",
+      "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+      "line": 563,
+      "column": 244,
+      "pattern": "PLACEHOLDER",
+      "content": "...20 focus:border-[#137fec] placeholder-slate-400 transition-shadow\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-004",
+      "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+      "line": 622,
+      "column": 208,
+      "pattern": "PLACEHOLDER",
+      "content": "... focus:border-[#137fec] placeholder-slate-400 transition-shadow ${",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-004",
+      "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+      "line": 665,
+      "column": 244,
+      "pattern": "PLACEHOLDER",
+      "content": "...20 focus:border-[#137fec] placeholder-slate-400 transition-shadow\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-004",
+      "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+      "line": 690,
+      "column": 252,
+      "pattern": "PLACEHOLDER",
+      "content": "... focus:border-[#137fec] placeholder-slate-400 transition-shadow\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-004",
+      "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+      "line": 824,
+      "column": 244,
+      "pattern": "PLACEHOLDER",
+      "content": "...20 focus:border-[#137fec] placeholder-slate-400 transition-shadow\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-004",
+      "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+      "line": 842,
+      "column": 244,
+      "pattern": "PLACEHOLDER",
+      "content": "...20 focus:border-[#137fec] placeholder-slate-400 transition-shadow\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-004",
+      "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+      "line": 860,
+      "column": 244,
+      "pattern": "PLACEHOLDER",
+      "content": "...20 focus:border-[#137fec] placeholder-slate-400 transition-shadow\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-004",
+      "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+      "line": 911,
+      "column": 244,
+      "pattern": "PLACEHOLDER",
+      "content": "...20 focus:border-[#137fec] placeholder-slate-400 transition-shadow resize-none\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-005",
+      "file": "apps\\ai-worker\\src\\index.ts",
+      "line": 342,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    }
+  ]
+}

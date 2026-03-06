@@ -1,0 +1,97 @@
+{
+  "generated_at": "2026-02-28T20:23:33.357Z",
+  "run_id": "sprint11-audit-20260228T202327-hue5ho",
+  "total_placeholders": 10,
+  "findings": [
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 160,
+      "column": 46,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 203,
+      "column": 46,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 240,
+      "column": 46,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 276,
+      "column": 46,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 300,
+      "column": 44,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 330,
+      "column": 44,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-140",
+      "file": "apps\\api\\src\\workflow\\dsar-workflow.ts",
+      "line": 599,
+      "column": 26,
+      "pattern": "PLACEHOLDER",
+      "content": "// For now, return a placeholder URL",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-141",
+      "file": "apps\\web\\src\\components\\email\\EmailList.tsx",
+      "line": 124,
+      "column": 100,
+      "pattern": "PLACEHOLDER",
+      "content": "...bg-transparent py-2 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:rin...",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-141",
+      "file": "apps\\web\\src\\components\\email\\EmailCompose.tsx",
+      "line": 316,
+      "column": 52,
+      "pattern": "PLACEHOLDER",
+      "content": "className=\"w-full bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-141",
+      "file": "apps\\web\\src\\components\\email\\EmailCompose.tsx",
+      "line": 213,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {\n      // Silent fail — auto-save should not interrupt the user\n    }",
+      "linkedTaskId": null
+    }
+  ]
+}

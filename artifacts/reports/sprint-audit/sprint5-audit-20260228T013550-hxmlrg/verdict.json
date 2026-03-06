@@ -1,0 +1,15 @@
+{
+  "run_id": "sprint5-audit-20260228T013550-hxmlrg",
+  "sprint": 5,
+  "verdict": "FAIL",
+  "passed": false,
+  "generated_at": "2026-02-28T01:53:03.855Z",
+  "summary": {
+    "total": 16,
+    "audited": 16,
+    "passed": 0,
+    "failed": 16,
+    "needs_human": 0
+  },
+  "blocking_issues_count": 51
+}

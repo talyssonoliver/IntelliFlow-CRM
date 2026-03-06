@@ -1,0 +1,106 @@
+{
+  "generated_at": "2026-03-01T17:02:13.461Z",
+  "run_id": "sprint0-audit-20260301T170200-1fzffz",
+  "total_placeholders": 11,
+  "findings": [
+    {
+      "taskId": "ENV-001-AI",
+      "file": "vitest.config.ts",
+      "line": 297,
+      "column": 17,
+      "pattern": "PLACEHOLDER",
+      "content": "// Stub/placeholder files",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "ENV-001-AI",
+      "file": "vitest.config.ts",
+      "line": 301,
+      "column": 45,
+      "pattern": "PLACEHOLDER",
+      "content": "// Per architecture plan: These are placeholders, not production code",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "ENV-001-AI",
+      "file": "vitest.config.ts",
+      "line": 315,
+      "column": 27,
+      "pattern": "PLACEHOLDER",
+      "content": "// Search package placeholder",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "ENV-010-AI",
+      "file": "vitest.config.ts",
+      "line": 297,
+      "column": 17,
+      "pattern": "PLACEHOLDER",
+      "content": "// Stub/placeholder files",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "ENV-010-AI",
+      "file": "vitest.config.ts",
+      "line": 301,
+      "column": 45,
+      "pattern": "PLACEHOLDER",
+      "content": "// Per architecture plan: These are placeholders, not production code",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "ENV-010-AI",
+      "file": "vitest.config.ts",
+      "line": 315,
+      "column": 27,
+      "pattern": "PLACEHOLDER",
+      "content": "// Search package placeholder",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-044",
+      "file": "vitest.config.ts",
+      "line": 297,
+      "column": 17,
+      "pattern": "PLACEHOLDER",
+      "content": "// Stub/placeholder files",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-044",
+      "file": "vitest.config.ts",
+      "line": 301,
+      "column": 45,
+      "pattern": "PLACEHOLDER",
+      "content": "// Per architecture plan: These are placeholders, not production code",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-044",
+      "file": "vitest.config.ts",
+      "line": 315,
+      "column": 27,
+      "pattern": "PLACEHOLDER",
+      "content": "// Search package placeholder",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-160",
+      "file": "tools\\lint\\artifact-paths.ts",
+      "line": 509,
+      "column": 44,
+      "pattern": "PLACEHOLDER",
+      "content": ".replace(/\\*\\*/g, '§§') // Temporary placeholder",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-160",
+      "file": "tools\\lint\\artifact-paths.ts",
+      "line": 578,
+      "column": 29,
+      "pattern": "PLACEHOLDER",
+      "content": "* Apply automatic fixes (placeholder for future implementation)",
+      "linkedTaskId": null
+    }
+  ]
+}

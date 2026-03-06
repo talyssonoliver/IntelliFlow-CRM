@@ -1,0 +1,15 @@
+{
+  "run_id": "sprint3-audit-20260302T184126-spq9wf",
+  "sprint": 3,
+  "verdict": "PASS",
+  "passed": true,
+  "generated_at": "2026-03-02T18:41:38.376Z",
+  "summary": {
+    "total": 9,
+    "audited": 9,
+    "passed": 9,
+    "failed": 0,
+    "needs_human": 0
+  },
+  "blocking_issues_count": 0
+}

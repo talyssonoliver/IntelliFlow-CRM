@@ -1,0 +1,15 @@
+{
+  "run_id": "sprint13-audit-20260302T202537-jerp2e",
+  "sprint": 13,
+  "verdict": "PASS",
+  "passed": true,
+  "generated_at": "2026-03-02T20:25:48.895Z",
+  "summary": {
+    "total": 20,
+    "audited": 20,
+    "passed": 20,
+    "failed": 0,
+    "needs_human": 0
+  },
+  "blocking_issues_count": 0
+}

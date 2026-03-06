@@ -1,0 +1,421 @@
+{
+  "generated_at": "2026-02-28T02:32:01.238Z",
+  "run_id": "sprint7-audit-20260228T021139-8r5pky",
+  "total_placeholders": 46,
+  "findings": [
+    {
+      "taskId": "IFC-093",
+      "file": "apps\\web\\lib\\tickets\\sla-notifications.ts",
+      "line": 384,
+      "column": 16,
+      "pattern": "PLACEHOLDER",
+      "content": "// This is a placeholder - in a real app, this would use React state",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-093",
+      "file": "apps\\web\\lib\\tickets\\sla-notifications.ts",
+      "line": 389,
+      "column": 5,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "acknowledge: () => {},",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-093",
+      "file": "apps\\web\\lib\\tickets\\sla-notifications.ts",
+      "line": 305,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {\n        // Audio play failed, likely due to autoplay policy\n      }",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-093",
+      "file": "apps\\web\\lib\\tickets\\sla-notifications.ts",
+      "line": 389,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-114",
+      "file": "apps\\api\\src\\middleware\\rate-limit.ts",
+      "line": 187,
+      "column": 23,
+      "pattern": "PLACEHOLDER",
+      "content": "// RedisRateLimiter — placeholder for future distributed implementation",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-148",
+      "file": "packages\\application\\src\\services\\ConversationSearchService.ts",
+      "line": 395,
+      "column": 26,
+      "pattern": "STUB",
+      "content": "// For now, return a stub that the repository would implement",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-148",
+      "file": "apps\\api\\src\\modules\\agent\\__tests__\\conversation.router.test.ts",
+      "line": 796,
+      "column": 42,
+      "pattern": "MOCK_RETURN",
+      "content": "if (name === 'user-agent') return 'TestAgent/1.0';",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\PartyManager.tsx",
+      "line": 158,
+      "column": 15,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Name *\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\PartyManager.tsx",
+      "line": 180,
+      "column": 15,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Organization\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\PartyManager.tsx",
+      "line": 189,
+      "column": 17,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Email\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\PartyManager.tsx",
+      "line": 197,
+      "column": 17,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Phone\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\PartyManager.tsx",
+      "line": 205,
+      "column": 15,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Notes\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\DeadlineTracker.tsx",
+      "line": 150,
+      "column": 15,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Task title...\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\CaseList.tsx",
+      "line": 384,
+      "column": 19,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "onClick: () => {},",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\CaseList.tsx",
+      "line": 391,
+      "column": 53,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "{ id: 'sep-1', icon: '', label: '', onClick: () => {}, separator: true },",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\CaseList.tsx",
+      "line": 482,
+      "column": 19,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "onChange: () => {},",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\CaseList.tsx",
+      "line": 384,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\CaseList.tsx",
+      "line": 391,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\CaseList.tsx",
+      "line": 482,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\CaseDetail.tsx",
+      "line": 384,
+      "column": 101,
+      "pattern": "PLACEHOLDER",
+      "content": "...:ring-0 text-sm resize-none placeholder:text-muted-foreground outline-none\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\CaseDetail.tsx",
+      "line": 385,
+      "column": 23,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Write a note or log an activity...\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\CaseDetail.tsx",
+      "line": 669,
+      "column": 15,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Enter resolution summary...\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\components\\appointments\\AppointmentForm.tsx",
+      "line": 323,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 76,
+      "column": 11,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "}) ?? { mutateAsync: async () => {} };",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 79,
+      "column": 11,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "}) ?? { mutateAsync: async () => {} };",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 82,
+      "column": 11,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "}) ?? { mutateAsync: async () => {} };",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 85,
+      "column": 11,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "}) ?? { mutateAsync: async () => {} };",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 88,
+      "column": 11,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "}) ?? { mutateAsync: async () => {} };",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 91,
+      "column": 10,
+      "pattern": "EMPTY_FUNCTION",
+      "content": ") ?? { mutateAsync: async () => {} };",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 94,
+      "column": 7,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "mutateAsync: async () => {},",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 98,
+      "column": 11,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "}) ?? { mutateAsync: async () => {} };",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 101,
+      "column": 11,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "}) ?? { mutateAsync: async () => {} };",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 76,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 79,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 82,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 85,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 88,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 91,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 94,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 98,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 101,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-143",
+      "file": "apps\\web\\src\\components\\ai-intelligence\\__tests__\\ChurnDashboard.test.tsx",
+      "line": 123,
+      "column": 45,
+      "pattern": "PLACEHOLDER",
+      "content": "it('renders SearchFilterBar with search placeholder', () => {",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-144",
+      "file": "apps\\web\\src\\components\\ai-intelligence\\AISearchPage.tsx",
+      "line": 247,
+      "column": 17,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Search across leads, contacts, documents, conversations...\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-144",
+      "file": "apps\\web\\src\\components\\ai-intelligence\\__tests__\\AISearchPage.test.tsx",
+      "line": 110,
+      "column": 35,
+      "pattern": "PLACEHOLDER",
+      "content": "it('renders search input with placeholder', () => {",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-148",
+      "file": "apps\\web\\src\\components\\ai-intelligence\\__tests__\\LeadScoringDashboard.test.tsx",
+      "line": 122,
+      "column": 51,
+      "pattern": "PLACEHOLDER",
+      "content": "it('TC-5: renders SearchFilterBar with search placeholder', () => {",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-150",
+      "file": "apps\\web\\src\\components\\ai-intelligence\\ReviewHistory.tsx",
+      "line": 392,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "generated_at": "2026-03-01T00:32:46.172Z",
+  "run_id": "sprint11-audit-20260301T003239-bibyl2",
+  "total_placeholders": 7,
+  "findings": [
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 160,
+      "column": 46,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 203,
+      "column": 46,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 240,
+      "column": 46,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 276,
+      "column": 46,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 300,
+      "column": 44,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-005",
+      "file": "apps\\web\\src\\components\\shared\\contact-form.tsx",
+      "line": 330,
+      "column": 44,
+      "pattern": "PLACEHOLDER",
+      "content": "text-slate-900 dark:text-white placeholder-slate-400",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-141",
+      "file": "apps\\web\\src\\components\\email\\EmailCompose.tsx",
+      "line": 213,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {\n      // Silent fail — auto-save should not interrupt the user\n    }",
+      "linkedTaskId": null
+    }
+  ]
+}

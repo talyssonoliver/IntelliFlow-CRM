@@ -1,0 +1,430 @@
+{
+  "generated_at": "2026-02-28T02:25:03.757Z",
+  "run_id": "sprint14-audit-20260228T015604-57m859",
+  "total_placeholders": 47,
+  "findings": [
+    {
+      "taskId": "IFC-063",
+      "file": "apps\\api\\src\\modules\\opportunity\\pipeline-config.router.ts",
+      "line": 77,
+      "column": 37,
+      "pattern": "PLACEHOLDER",
+      "content": "// Return default config with placeholder id",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-064",
+      "file": "apps\\web\\src\\components\\deals\\LossReasonModal.tsx",
+      "line": 63,
+      "column": 131,
+      "pattern": "PLACEHOLDER",
+      "content": "...3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none f...",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-064",
+      "file": "apps\\web\\src\\components\\deals\\LossReasonModal.tsx",
+      "line": 64,
+      "column": 13,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Enter the reason for losing this deal (minimum 10 characters)...\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-066",
+      "file": "apps\\web\\src\\components\\deals\\LossReasonModal.tsx",
+      "line": 63,
+      "column": 131,
+      "pattern": "PLACEHOLDER",
+      "content": "...3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none f...",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-066",
+      "file": "apps\\web\\src\\components\\deals\\LossReasonModal.tsx",
+      "line": 64,
+      "column": 13,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Enter the reason for losing this deal (minimum 10 characters)...\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-069",
+      "file": "apps\\web\\src\\components\\shared\\activity-feed\\ActivityFeed.tsx",
+      "line": 66,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-026",
+      "file": "apps\\web\\src\\components\\billing\\checkout-form.tsx",
+      "line": 74,
+      "column": 8,
+      "pattern": "PLACEHOLDER",
+      "content": "'::placeholder': {",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-026",
+      "file": "apps\\web\\src\\components\\billing\\checkout-form.tsx",
+      "line": 394,
+      "column": 11,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"John Doe\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-026",
+      "file": "apps\\web\\src\\components\\billing\\checkout-form.tsx",
+      "line": 406,
+      "column": 14,
+      "pattern": "PLACEHOLDER",
+      "content": "'placeholder:text-muted-foreground',",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-028",
+      "file": "apps\\web\\src\\lib\\billing\\invoice-actions.ts",
+      "line": 209,
+      "column": 18,
+      "pattern": "PLACEHOLDER",
+      "content": "// Email Action (Placeholder)",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-029",
+      "file": "apps\\web\\src\\components\\billing\\payment-methods.tsx",
+      "line": 78,
+      "column": 10,
+      "pattern": "PLACEHOLDER",
+      "content": "'::placeholder': { color: 'hsl(var(--muted-foreground))' },",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-029",
+      "file": "apps\\web\\src\\components\\billing\\payment-methods.tsx",
+      "line": 367,
+      "column": 13,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"John Doe\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-029",
+      "file": "apps\\api\\src\\modules\\billing\\billing.router.ts",
+      "line": 687,
+      "column": 25,
+      "pattern": "PLACEHOLDER",
+      "content": "* For now, returns a placeholder response.",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-029",
+      "file": "apps\\api\\src\\modules\\billing\\billing.router.ts",
+      "line": 698,
+      "column": 10,
+      "pattern": "PLACEHOLDER",
+      "content": "// Placeholder - would need to extend StripeAdapter",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-029",
+      "file": "apps\\web\\src\\app\\billing\\payment-methods\\__tests__\\page.test.tsx",
+      "line": 21,
+      "column": 85,
+      "pattern": "STUB",
+      "content": "PaymentMethods: () => <div data-testid=\"payment-methods-component\">PaymentMethods stub</div>,",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-031",
+      "file": "apps\\web\\src\\lib\\billing\\receipt-emailer.ts",
+      "line": 45,
+      "column": 23,
+      "pattern": "SIMULATED_DATA",
+      "content": "* the interface with simulated success for development.",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-031",
+      "file": "apps\\web\\src\\lib\\billing\\receipt-emailer.ts",
+      "line": 63,
+      "column": 8,
+      "pattern": "SIMULATED_DATA",
+      "content": "// Simulated success for development",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-120",
+      "file": "apps\\web\\src\\components\\shared\\password-reset.tsx",
+      "line": 454,
+      "column": 11,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Enter new password\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-120",
+      "file": "apps\\web\\src\\components\\shared\\password-reset.tsx",
+      "line": 470,
+      "column": 11,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Confirm new password\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "TRACK-003",
+      "file": "apps\\project-tracker\\components\\tracking\\RiskRegister.tsx",
+      "line": 504,
+      "column": 15,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Describe the risk...\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "TRACK-003",
+      "file": "apps\\project-tracker\\components\\tracking\\RiskRegister.tsx",
+      "line": 579,
+      "column": 15,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Who is responsible?\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "TRACK-003",
+      "file": "apps\\project-tracker\\components\\tracking\\RiskRegister.tsx",
+      "line": 590,
+      "column": 15,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"How will this risk be mitigated?\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "TRACK-003",
+      "file": "apps\\project-tracker\\components\\tracking\\RiskRegister.tsx",
+      "line": 605,
+      "column": 19,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Who to escalate to...\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "TRACK-003",
+      "file": "apps\\project-tracker\\components\\tracking\\RiskRegister.tsx",
+      "line": 617,
+      "column": 19,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"File paths, links, or descriptions...\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "TRACK-003",
+      "file": "apps\\project-tracker\\components\\tracking\\RiskRegister.tsx",
+      "line": 627,
+      "column": 19,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Additional notes...\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-168",
+      "file": "apps\\ai-worker\\src\\index.ts",
+      "line": 342,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-174",
+      "file": "scripts\\run-ollama-benchmark.ts",
+      "line": 15,
+      "column": 64,
+      "pattern": "SIMULATED_DATA",
+      "content": "*   - artifacts/benchmarks/accuracy-benchmarks.json (replaces simulated data)",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-128",
+      "file": "apps\\web\\src\\app\\settings\\ai\\hooks\\useChainVersions.ts",
+      "line": 407,
+      "column": 5,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "refetch: () => {},",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-128",
+      "file": "apps\\web\\src\\app\\settings\\ai\\hooks\\useChainVersions.ts",
+      "line": 407,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-128",
+      "file": "apps\\web\\src\\app\\settings\\ai\\components\\VersionAuditLog.tsx",
+      "line": 97,
+      "column": 28,
+      "pattern": "PLACEHOLDER",
+      "content": "<SelectValue placeholder=\"All Actions\" />",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-128",
+      "file": "apps\\web\\src\\app\\settings\\ai\\components\\ChainVersionsTable.tsx",
+      "line": 136,
+      "column": 28,
+      "pattern": "PLACEHOLDER",
+      "content": "<SelectValue placeholder=\"All Types\" />",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-128",
+      "file": "apps\\web\\src\\app\\settings\\ai\\components\\ChainVersionsTable.tsx",
+      "line": 156,
+      "column": 28,
+      "pattern": "PLACEHOLDER",
+      "content": "<SelectValue placeholder=\"All Statuses\" />",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-128",
+      "file": "apps\\web\\src\\app\\settings\\ai\\components\\ChainVersionEditor.tsx",
+      "line": 189,
+      "column": 15,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"e.g., gpt-4, gpt-4-turbo, gpt-3.5-turbo\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-128",
+      "file": "apps\\web\\src\\app\\settings\\ai\\components\\ChainVersionEditor.tsx",
+      "line": 204,
+      "column": 15,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Enter the system prompt for this chain version...\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-128",
+      "file": "apps\\web\\src\\app\\settings\\ai\\components\\ChainVersionEditor.tsx",
+      "line": 250,
+      "column": 15,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder=\"Brief description of this version...\"",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-131",
+      "file": "apps\\web\\src\\app\\deals\\forecast\\page.tsx",
+      "line": 613,
+      "column": 15,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "onClick: () => {},",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-131",
+      "file": "apps\\web\\src\\app\\deals\\forecast\\page.tsx",
+      "line": 619,
+      "column": 15,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "onClick: () => {},",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-131",
+      "file": "apps\\web\\src\\app\\deals\\forecast\\page.tsx",
+      "line": 625,
+      "column": 15,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "onClick: () => {},",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-131",
+      "file": "apps\\web\\src\\app\\deals\\forecast\\page.tsx",
+      "line": 613,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-131",
+      "file": "apps\\web\\src\\app\\deals\\forecast\\page.tsx",
+      "line": 619,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-131",
+      "file": "apps\\web\\src\\app\\deals\\forecast\\page.tsx",
+      "line": 625,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-154",
+      "file": "apps\\web\\src\\__tests__\\root-proxy.test.ts",
+      "line": 75,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "DOC-008",
+      "file": "vitest.config.ts",
+      "line": 287,
+      "column": 17,
+      "pattern": "PLACEHOLDER",
+      "content": "// Stub/placeholder files",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "DOC-008",
+      "file": "vitest.config.ts",
+      "line": 287,
+      "column": 12,
+      "pattern": "STUB",
+      "content": "// Stub/placeholder files",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "DOC-008",
+      "file": "vitest.config.ts",
+      "line": 305,
+      "column": 27,
+      "pattern": "PLACEHOLDER",
+      "content": "// Search package placeholder",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "DOC-008",
+      "file": "tests\\a11y\\vitest.config.ts",
+      "line": 48,
+      "column": 10,
+      "pattern": "STUB",
+      "content": "// Stub uninstalled optional dependencies",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "DOC-008",
+      "file": "tests\\a11y\\vitest.config.ts",
+      "line": 55,
+      "column": 71,
+      "pattern": "STUB",
+      "content": "replacement: path.resolve(webRoot, 'src/test/__mocks__/scalar-stub.ts'),",
+      "linkedTaskId": null
+    }
+  ]
+}

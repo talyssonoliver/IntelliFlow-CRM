@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-03-02T19:21:28.825Z",
+  "run_id": "sprint13-audit-20260302T192118-esiyhz",
+  "total_placeholders": 1,
+  "findings": [
+    {
+      "taskId": "PG-140",
+      "file": "apps\\web\\src\\app\\documents\\(list)\\page.tsx",
+      "line": 172,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+Router,Procedure,Web Callers,API Internal Callers,Test Files,Classification,Notes
+account.account,getActivity,0,0,2,DEAD_FEATURE,Account activity query — no UI page uses it
+admin.queues,getByName,0,0,0,DEAD_FEATURE,Queue inspector — no UI or internal caller
+agent.agent,executeTool,0,0,1,DEAD_FEATURE,Agent tool execution — no UI caller
+agent.agent,getPendingAction,0,1,2,INTERNAL_ONLY,Used by approval-workflow.ts internally
+agent.agent,getPendingApprovals,0,1,2,INTERNAL_ONLY,Used by approval-workflow.ts internally
+agent.agent,getPendingCount,0,0,1,DEAD_FEATURE,Pending count query — no UI bell/badge uses it
+agent.agent,getTool,0,0,1,DEAD_FEATURE,Get single tool — no UI caller
+agent.agent,listTools,0,0,1,DEAD_FEATURE,List tools — no UI caller
+agent.conversation,addMessage,0,0,1,DEAD_FEATURE,Conversation message — no chat UI caller
+agent.conversation,approveToolCall,0,0,1,DEAD_FEATURE,Tool call approval — no UI caller
+agent.conversation,archiveOld,0,0,1,DEAD_FEATURE,Archive old conversations — no cron/UI caller
+agent.conversation,endConversation,0,0,1,DEAD_FEATURE,End conversation — no UI caller
+agent.conversation,getAnalytics,0,1,2,INTERNAL_ONLY,Used internally by conversation.router
+agent.conversation,getBySessionId,0,0,1,DEAD_FEATURE,Session lookup — no UI caller
+agent.conversation,getPendingApprovals,0,1,2,INTERNAL_ONLY,Used internally
+agent.conversation,recordToolCall,0,0,1,DEAD_FEATURE,Record tool call — no UI caller
+agent.conversation,updateToolCall,0,0,1,DEAD_FEATURE,Update tool call — no UI caller
+ai-monitoring.ai-monitoring,getHallucinationReport,0,0,1,DEAD_FEATURE,Hallucination report — no UI dashboard uses it
+analytics.analytics,exportConversionFunnel,0,0,1,DEAD_FEATURE,Export funnel data — no UI download button
+analytics.analytics,exportMetrics,0,0,1,DEAD_FEATURE,Export metrics — no UI download button
+analytics.analytics,exportReport,0,0,1,DEAD_FEATURE,Export report — no UI download button
+analytics.analytics,getConversionFunnel,0,0,1,DEAD_FEATURE,Conversion funnel — no analytics page uses it
+analytics.analytics,getLeadMetrics,0,0,1,DEAD_FEATURE,Lead metrics — no analytics page uses it
+analytics.analytics,getOverview,0,0,1,DEAD_FEATURE,Analytics overview — no dashboard uses it
+analytics.analytics,getSalesMetrics,0,0,1,DEAD_FEATURE,Sales metrics — no analytics page uses it
+analytics.analytics,getTimeSeriesData,0,0,1,DEAD_FEATURE,Time series — no chart uses it
+analytics.analytics,leadStats,0,0,4,DEAD_FEATURE,Lead stats variant — duplicates lead.stats?
+auth.auth,getSessions,0,0,1,DEAD_FEATURE,Session list — no security settings page uses it
+autoresponse.autoresponse,markFailed,0,0,4,DEAD_FEATURE,Mark failed — no workflow/UI triggers it
+autoresponse.autoresponse,markSent,0,0,4,DEAD_FEATURE,Mark sent — no workflow/UI triggers it
+autoresponse.autoresponse,resolveEscalation,0,0,4,DEAD_FEATURE,Resolve escalation — no UI caller
+autoresponse.autoresponse,submitForApproval,0,0,4,DEAD_FEATURE,Submit for approval — no UI caller
+billing.billing,ensureCustomer,0,0,0,DEAD_FEATURE,Ensure Stripe customer — no checkout flow calls it
+billing.billing,getUsageMetrics,0,0,0,DEAD_FEATURE,Usage metrics — no billing page uses it
+billing.billing,handleSubscriptionWebhook,0,0,0,WEBHOOK,Stripe webhook — may be called externally
+billing.billing,updateBillingInformation,0,0,1,DEAD_FEATURE,Update billing info — no settings page uses it
+chain-version.chain-version,getConfig,0,2,5,INTERNAL_ONLY,Used by chain-version router internally
+chain-version.chain-version,getHistory,0,2,5,INTERNAL_ONLY,Used by chain-version router internally
+contact.contact,getByEmail,0,0,2,DEAD_FEATURE,Contact by email — no UI search uses it
+contact.contact,getTimeline,0,0,2,DEAD_FEATURE,Contact timeline — no detail page uses it
+contact.contact,linkToAccount,0,0,3,DEAD_FEATURE,Link contact to account — no UI button
+contact.contact,linkToLead,0,0,3,DEAD_FEATURE,Link contact to lead — no UI button
+contact.contact,unlinkFromAccount,0,0,3,DEAD_FEATURE,Unlink from account — no UI button
+contact.contact,unlinkFromLead,0,0,3,DEAD_FEATURE,Unlink from lead — no UI button
+documents.email-inbound,processInbound,0,0,1,WEBHOOK,Email webhook — called by external mail service
+documents.upload,getUploadStatus,0,0,1,DEAD_FEATURE,Upload status — no upload UI polls this
+email.inbound,getAttachment,0,0,1,DEAD_FEATURE,Get attachment — no email UI downloads via this
+email.inbound,getEmail,0,0,2,DEAD_FEATURE,Get single email — no email detail page uses it
+email.inbound,processEmail,0,0,1,WEBHOOK,Process inbound email — may be webhook
+email.inbound,searchContacts,0,0,1,DEAD_FEATURE,Search contacts from email — no compose UI uses it
+experiment.experiment,assignVariant,0,0,1,DEAD_FEATURE,A/B variant assignment — no experiment runner calls it
+experiment.experiment,recordConversion,0,0,1,DEAD_FEATURE,Record conversion — no tracking code calls it
+experiment.experiment,recordScore,0,0,1,DEAD_FEATURE,Record score — no tracking code calls it
+feedback.feedback,checkRetraining,0,0,1,DEAD_FEATURE,Check retraining needed — no cron/UI calls it
+feedback.feedback,exportTrainingData,0,0,1,DEAD_FEATURE,Export training data — no UI download
+feedback.feedback,getAnalytics,0,1,2,INTERNAL_ONLY,Used by feedback router internally
+feedback.feedback,getForLead,0,0,1,DEAD_FEATURE,Get feedback for lead — no lead detail uses it
+feedback.feedback,submitCorrection,0,0,1,DEAD_FEATURE,Submit correction — no UI form calls it
+feedback.feedback,submitSimple,0,0,1,DEAD_FEATURE,Submit simple feedback — no UI form calls it
+integrations.integrations,getAllConnectorsHealth,0,0,1,DEAD_FEATURE,All connectors health — no integrations page uses it
+integrations.integrations,getConnectorHealth,0,0,1,DEAD_FEATURE,Single connector health — no UI uses it
+integrations.integrations,getConnectorsByType,0,0,1,DEAD_FEATURE,Connectors by type — no UI uses it
+integrations.integrations,getDashboardConfig,0,0,1,DEAD_FEATURE,Dashboard config — no UI uses it
+integrations.integrations,triggerSync,0,0,1,DEAD_FEATURE,Trigger sync — no UI button calls it
+intelligence.intelligence,getContactInsights,0,0,1,DEAD_FEATURE,Contact AI insights — no contact detail uses it
+intelligence.intelligence,getInsightsSummary,0,0,1,DEAD_FEATURE,Insights summary — no dashboard uses it
+intelligence.intelligence,getLeadInsights,0,0,1,DEAD_FEATURE,Lead AI insights — no lead detail uses it
+intelligence.intelligence,triggerPrediction,0,0,1,DEAD_FEATURE,Trigger prediction — no UI/cron calls it
+intelligence.intelligence,updateContactInsights,0,0,1,DEAD_FEATURE,Update contact insights — no caller
+intelligence.intelligence,updateLeadInsights,0,0,1,DEAD_FEATURE,Update lead insights — no caller
+lead.lead,bulkScore,0,0,2,DEAD_FEATURE,Bulk AI scoring — no bulk action UI calls it
+lead.lead,convertToDeal,0,0,2,DEAD_FEATURE,Convert lead to deal — no UI button calls it
+lead.lead,getHotLeads,0,0,1,DEAD_FEATURE,Hot leads query — no dashboard widget uses it
+lead.lead,getReadyForQualification,0,0,1,DEAD_FEATURE,Ready for qualification — no UI uses it
+legal.appointments,checkAvailability,0,1,4,INTERNAL_ONLY,Used by appointments router internally
+legal.appointments,checkConflicts,0,1,4,INTERNAL_ONLY,Used by appointments router internally
+legal.appointments,findNextSlot,0,0,3,DEAD_FEATURE,Find next slot — no scheduling UI uses it
+legal.documents,grantAccess,0,0,3,DEAD_FEATURE,Grant document access — no ACL UI calls it
+legal.documents,placeLegalHold,0,0,3,DEAD_FEATURE,Place legal hold — no UI button
+legal.documents,releaseLegalHold,0,0,3,DEAD_FEATURE,Release legal hold — no UI button
+legal.documents,revokeAccess,0,0,3,DEAD_FEATURE,Revoke access — no ACL UI calls it
+legal.documents,submitForReview,0,0,3,DEAD_FEATURE,Submit for review — no workflow UI calls it
+misc.health,alive,0,3,2,INFRA,Health check — called by monitoring/load balancer
+misc.health,dbStats,0,1,1,INFRA,DB stats — internal monitoring
+misc.health,ping,0,4,2,INFRA,Ping — called by monitoring/load balancer
+misc.timeline,computeDeadline,0,1,2,INTERNAL_ONLY,Used by timeline router internally
+misc.timeline,getNextBusinessDay,0,1,2,INTERNAL_ONLY,Used by timeline router internally
+misc.timeline,getPendingAgentActions,0,0,2,DEAD_FEATURE,Pending agent actions — no timeline UI uses it
+misc.timeline,getUpcomingDeadlines,0,0,2,DEAD_FEATURE,Upcoming deadlines — no timeline UI uses it
+misc.timeline,isBusinessDay,0,1,2,INTERNAL_ONLY,Used by timeline router internally
+misc.timeline,validateDeadlineRule,0,0,1,DEAD_FEATURE,Validate deadline rule — no settings UI uses it
+notifications.notifications,batchAction,0,0,1,DEAD_FEATURE,Batch notification actions — no UI multi-select
+notifications.notifications,getPreferences,0,0,1,DEAD_FEATURE,Notification prefs — no settings page uses it
+notifications.notifications,updatePreferences,0,0,1,DEAD_FEATURE,Update prefs — no settings page uses it
+opportunity.opportunity,getHistory,0,2,5,INTERNAL_ONLY,Used by opportunity router internally
+opportunity.opportunity,getPipeline,0,0,1,DEAD_FEATURE,Get pipeline view — no deals page uses it
+opportunity.opportunity,getProducts,0,0,1,DEAD_FEATURE,Get products — no deal detail uses it
+routing.routing,autoRouteLead,0,0,2,DEAD_FEATURE,IFC-030 auto routing — no UI/trigger calls it
+routing.routing,suggestLeadAssignee,0,0,2,DEAD_FEATURE,IFC-030 suggest assignee — no UI calls it
+security.audit,getByResource,0,0,1,DEAD_FEATURE,Audit by resource — no audit log UI uses it
+security.audit,getMyActivity,0,0,1,DEAD_FEATURE,My activity — no profile page uses it
+security.audit,getSecurityEvents,0,0,1,DEAD_FEATURE,Security events — no admin page uses it
+subscription.subscription,getPlans,0,0,0,DEAD_FEATURE,Get plans — no pricing/upgrade UI uses it
+subscription.subscription,toggleModule,0,0,0,DEAD_FEATURE,Toggle module — no settings page uses it
+ticket.ticket-routing,autoRoute,0,0,1,DEAD_FEATURE,Ticket auto-route — same pattern as IFC-030
+ticket.ticket-routing,suggestAssignee,0,0,1,DEAD_FEATURE,Ticket suggest assignee — same pattern as IFC-030
+zep.zep-budget,getAuditHistory,0,0,1,DEAD_FEATURE,Zep audit history — no AI settings page uses it

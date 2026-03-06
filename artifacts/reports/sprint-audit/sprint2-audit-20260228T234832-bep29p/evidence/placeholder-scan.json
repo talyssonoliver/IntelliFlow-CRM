@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-02-28T23:48:42.619Z",
+  "run_id": "sprint2-audit-20260228T234832-bep29p",
+  "total_placeholders": 1,
+  "findings": [
+    {
+      "taskId": "IFC-004",
+      "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+      "line": 251,
+      "column": 52,
+      "pattern": "TODO",
+      "content": "// are not yet supported by the API schema - TODO: Extend schema or store separately",
+      "linkedTaskId": null
+    }
+  ]
+}

@@ -2523,6 +2523,66 @@
       "notes": ""
     },
     {
+      "route": "/contacts/[id]/edit",
+      "file_path": "apps/web/src/app/contacts/[id]/edit/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": null,
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, deal forecasting, and customer insights to help your team close more deals faster.",
+          "source": "root-layout",
+          "length": 158
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": null,
+          "source": null
+        },
+        "og_url": {
+          "value": "https://intelliflow.ai",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {},
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": null,
+          "source": null
+        },
+        "twitter_description": {
+          "value": null,
+          "source": null
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "not-applicable",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/contacts/new",
       "file_path": "apps/web/src/app/contacts/(list)/new/page.tsx",
       "access_tier": "auth-gated",
@@ -3126,6 +3186,126 @@
       "notes": ""
     },
     {
+      "route": "/developers/apps/[id]/edit",
+      "file_path": "apps/web/src/app/(developer)/developers/apps/[id]/edit/page.tsx",
+      "access_tier": "developer",
+      "metadata": {
+        "title": {
+          "value": null,
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, deal forecasting, and customer insights to help your team close more deals faster.",
+          "source": "root-layout",
+          "length": 158
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": null,
+          "source": null
+        },
+        "og_url": {
+          "value": "https://intelliflow.ai",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {},
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": null,
+          "source": null
+        },
+        "twitter_description": {
+          "value": null,
+          "source": null
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "not-applicable",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/developers/apps/new",
+      "file_path": "apps/web/src/app/(developer)/developers/apps/new/page.tsx",
+      "access_tier": "developer",
+      "metadata": {
+        "title": {
+          "value": null,
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, deal forecasting, and customer insights to help your team close more deals faster.",
+          "source": "root-layout",
+          "length": 158
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": null,
+          "source": null
+        },
+        "og_url": {
+          "value": "https://intelliflow.ai",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {},
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": null,
+          "source": null
+        },
+        "twitter_description": {
+          "value": null,
+          "source": null
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "not-applicable",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/docs",
       "file_path": "apps/web/src/app/(developer)/docs/page.tsx",
       "access_tier": "developer",
@@ -3246,8 +3426,368 @@
       "notes": ""
     },
     {
+      "route": "/docs/architecture",
+      "file_path": "apps/web/src/app/(developer)/docs/architecture/page.tsx",
+      "access_tier": "developer",
+      "metadata": {
+        "title": {
+          "value": null,
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, deal forecasting, and customer insights to help your team close more deals faster.",
+          "source": "root-layout",
+          "length": 158
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": null,
+          "source": null
+        },
+        "og_url": {
+          "value": "https://intelliflow.ai",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {},
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": null,
+          "source": null
+        },
+        "twitter_description": {
+          "value": null,
+          "source": null
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "not-applicable",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/docs/auth",
+      "file_path": "apps/web/src/app/(developer)/docs/auth/page.tsx",
+      "access_tier": "developer",
+      "metadata": {
+        "title": {
+          "value": null,
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, deal forecasting, and customer insights to help your team close more deals faster.",
+          "source": "root-layout",
+          "length": 158
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": null,
+          "source": null
+        },
+        "og_url": {
+          "value": "https://intelliflow.ai",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {},
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": null,
+          "source": null
+        },
+        "twitter_description": {
+          "value": null,
+          "source": null
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "not-applicable",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/docs/changelog",
+      "file_path": "apps/web/src/app/(developer)/docs/changelog/page.tsx",
+      "access_tier": "developer",
+      "metadata": {
+        "title": {
+          "value": null,
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, deal forecasting, and customer insights to help your team close more deals faster.",
+          "source": "root-layout",
+          "length": 158
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": null,
+          "source": null
+        },
+        "og_url": {
+          "value": "https://intelliflow.ai",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {},
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": null,
+          "source": null
+        },
+        "twitter_description": {
+          "value": null,
+          "source": null
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "not-applicable",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/docs/cli",
+      "file_path": "apps/web/src/app/(developer)/docs/cli/page.tsx",
+      "access_tier": "developer",
+      "metadata": {
+        "title": {
+          "value": null,
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, deal forecasting, and customer insights to help your team close more deals faster.",
+          "source": "root-layout",
+          "length": 158
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": null,
+          "source": null
+        },
+        "og_url": {
+          "value": "https://intelliflow.ai",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {},
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": null,
+          "source": null
+        },
+        "twitter_description": {
+          "value": null,
+          "source": null
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "not-applicable",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/docs/guides",
+      "file_path": "apps/web/src/app/(developer)/docs/guides/page.tsx",
+      "access_tier": "developer",
+      "metadata": {
+        "title": {
+          "value": null,
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, deal forecasting, and customer insights to help your team close more deals faster.",
+          "source": "root-layout",
+          "length": 158
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": null,
+          "source": null
+        },
+        "og_url": {
+          "value": "https://intelliflow.ai",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {},
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": null,
+          "source": null
+        },
+        "twitter_description": {
+          "value": null,
+          "source": null
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "not-applicable",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/docs/integrations",
       "file_path": "apps/web/src/app/(developer)/docs/integrations/page.tsx",
+      "access_tier": "developer",
+      "metadata": {
+        "title": {
+          "value": null,
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, deal forecasting, and customer insights to help your team close more deals faster.",
+          "source": "root-layout",
+          "length": 158
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": null,
+          "source": null
+        },
+        "og_url": {
+          "value": "https://intelliflow.ai",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {},
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": null,
+          "source": null
+        },
+        "twitter_description": {
+          "value": null,
+          "source": null
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "not-applicable",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/docs/sdk",
+      "file_path": "apps/web/src/app/(developer)/docs/sdk/page.tsx",
       "access_tier": "developer",
       "metadata": {
         "title": {
@@ -4146,6 +4686,126 @@
       "notes": ""
     },
     {
+      "route": "/help-center",
+      "file_path": "apps/web/src/app/help-center/(list)/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": null,
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, deal forecasting, and customer insights to help your team close more deals faster.",
+          "source": "root-layout",
+          "length": 158
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": null,
+          "source": null
+        },
+        "og_url": {
+          "value": "https://intelliflow.ai",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {},
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": null,
+          "source": null
+        },
+        "twitter_description": {
+          "value": null,
+          "source": null
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "not-applicable",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/insights",
+      "file_path": "apps/web/src/app/insights/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": null,
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, deal forecasting, and customer insights to help your team close more deals faster.",
+          "source": "root-layout",
+          "length": 158
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": null,
+          "source": null
+        },
+        "og_url": {
+          "value": "https://intelliflow.ai",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {},
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": null,
+          "source": null
+        },
+        "twitter_description": {
+          "value": null,
+          "source": null
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "not-applicable",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/leads",
       "file_path": "apps/web/src/app/leads/(list)/page.tsx",
       "access_tier": "auth-gated",
@@ -4208,6 +4868,66 @@
     {
       "route": "/leads/[id]",
       "file_path": "apps/web/src/app/leads/[id]/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": null,
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, deal forecasting, and customer insights to help your team close more deals faster.",
+          "source": "root-layout",
+          "length": 158
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": null,
+          "source": null
+        },
+        "og_url": {
+          "value": "https://intelliflow.ai",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {},
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": null,
+          "source": null
+        },
+        "twitter_description": {
+          "value": null,
+          "source": null
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "not-applicable",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/leads/[id]/edit",
+      "file_path": "apps/web/src/app/leads/[id]/edit/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
@@ -4810,6 +5530,66 @@
           "source_file": "apps/web/src/app/(public)/press/page.tsx"
         }
       ],
+      "notes": ""
+    },
+    {
+      "route": "/press/[id]",
+      "file_path": "apps/web/src/app/(public)/press/[id]/page.tsx",
+      "access_tier": "public",
+      "metadata": {
+        "title": {
+          "value": "Press Release | IntelliFlow CRM",
+          "source": "page"
+        },
+        "description": {
+          "value": "IntelliFlow CRM press release detail page.",
+          "source": "page",
+          "length": 42
+        },
+        "og_title": {
+          "value": "Press Release | IntelliFlow CRM",
+          "source": "page"
+        },
+        "og_description": {
+          "value": "IntelliFlow CRM press release.",
+          "source": "page"
+        },
+        "og_url": {
+          "value": "https://intelliflow.ai/press/[id]",
+          "source": "page"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "page"
+        },
+        "og_image": {},
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "page"
+        },
+        "twitter_title": {
+          "value": "Press Release | IntelliFlow CRM",
+          "source": "page"
+        },
+        "twitter_description": {
+          "value": "IntelliFlow CRM press release.",
+          "source": "page"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": 88,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "not-applicable",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
       "notes": ""
     },
     {
@@ -5773,6 +6553,66 @@
       "notes": ""
     },
     {
+      "route": "/sso",
+      "file_path": "apps/web/src/app/(public)/sso/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": null,
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Transform your sales process with IntelliFlow CRM. AI-powered lead scoring, deal forecasting, and customer insights to help your team close more deals faster.",
+          "source": "root-layout",
+          "length": 158
+        },
+        "og_title": {
+          "value": "IntelliFlow CRM - AI-Powered Sales Intelligence",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": null,
+          "source": null
+        },
+        "og_url": {
+          "value": "https://intelliflow.ai",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "IntelliFlow CRM",
+          "source": "root-layout"
+        },
+        "og_image": {},
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": null,
+          "source": null
+        },
+        "twitter_description": {
+          "value": null,
+          "source": null
+        },
+        "robots_noindex": true
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "not-applicable",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": "SSO redirect page - auth flow entry point"
+    },
+    {
       "route": "/status",
       "file_path": "apps/web/src/app/(public)/status/page.tsx",
       "access_tier": "public",
@@ -6254,7 +7094,7 @@
     }
   ],
   "summary": {
-    "total_routes": 104,
+    "total_routes": 118,
     "public_routes": 25,
     "auth_gated_routes": 73,
     "developer_routes": 6,

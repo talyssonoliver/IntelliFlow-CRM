@@ -1,0 +1,25 @@
+{
+  "generated_at": "2026-03-02T19:18:19.120Z",
+  "run_id": "sprint6-audit-20260302T191744-x4104z",
+  "total_placeholders": 2,
+  "findings": [
+    {
+      "taskId": "IFC-144",
+      "file": "packages\\adapters\\src\\messaging\\email\\attachments.ts",
+      "line": 308,
+      "column": 27,
+      "pattern": "SIMULATED_DATA",
+      "content": "threatName: 'Mock.Simulated.Threat',",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-137",
+      "file": "apps\\web\\src\\components\\tickets\\TicketList.tsx",
+      "line": 344,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    }
+  ]
+}

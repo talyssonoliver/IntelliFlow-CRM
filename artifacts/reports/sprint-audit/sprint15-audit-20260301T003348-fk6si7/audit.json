@@ -1,0 +1,3091 @@
+{
+  "$schema": "../schemas/sprint-audit-report.schema.json",
+  "schema_version": "1.0.0",
+  "run_id": "sprint15-audit-20260301T003348-fk6si7",
+  "sprint": 15,
+  "generated_at": "2026-03-01T00:33:55.759Z",
+  "attestor": "sprint-completion-auditor",
+  "verdict": "FAIL",
+  "config": {
+    "strictMode": false,
+    "skipValidations": false
+  },
+  "summary": {
+    "totalTasks": 36,
+    "completedTasks": 22,
+    "auditedTasks": 22,
+    "passedTasks": 12,
+    "failedTasks": 10,
+    "needsHumanTasks": 0
+  },
+  "attestation_summary": {
+    "by_verdict": {
+      "complete": 12,
+      "incomplete": 10,
+      "partial": 0,
+      "blocked": 0,
+      "needs_human": 0,
+      "missing": 0
+    },
+    "debt_items_created": 10,
+    "review_queue_items": 0
+  },
+  "evidence_summary": {
+    "artifactsVerified": 85,
+    "artifactsMissing": 0,
+    "artifactsEmpty": 0,
+    "validationsPassed": 3,
+    "validationsFailed": 10,
+    "kpisMet": 0,
+    "kpisMissed": 0,
+    "placeholdersFound": 0,
+    "totalCodebasePlaceholders": 1196
+  },
+  "artifact_hashes": {
+    "artifacts/misc/playwright-report/index.html": "0c089560c580270199654cd19db4310437b00770a685b09d6423f21f5b1e6354",
+    ".specify/sprints/sprint-15/attestations/IFC-026/context_ack.json": "6fca26ade0a79adbb4f3769bb7d8ca432c001b2f0ca7aac4b66f0b3dcb36ea92",
+    "artifacts/reports/investment-gate-2-analysis.md": "49e5f436a617307d3ee48550c427c5a4d0477f6143aeba3b7dcada6c68fd6805",
+    "artifacts/reports/ai-roi-report.md": "659c85388f3d37cd0769e4f59b116e5367a47357124ef5e8f7a826a0e30f9caf",
+    "artifacts/misc/customer-feedback.md": "3fe70a04c7a7ab1fe04398092b37bf0a2d3f012e5893e38e7fd09a40e73cabdb",
+    "artifacts/misc/board-presentation.md": "aebb2c9d67ccf27e2c92293cb2e2cfc4ca68c0cbd340f1e658e737126aedb73c",
+    ".specify/sprints/sprint-15/attestations/IFC-027/context_ack.json": "ae9e2a2d0c3d837ca6330a662ae8bff17b12986aeb1554f1927f7f45b9d8971e",
+    "apps/web/src/app/(developer)/docs/page.tsx": "7017a3169cc116ce7fcf946ba4b083c5a22bb965659f7de8fab455631bde37b4",
+    "apps/web/src/components/shared/docs-search.tsx": "1bd86d7231e1e0e794671e923c73768974712146a68967f5d9f8879b89d57b81",
+    "apps/web/src/components/shared/docs-navigation.tsx": "37795ad4fd32980b5dbcd1cbbf3c0880be8d1add06d1f3f402718e462911418d",
+    ".specify/sprints/sprint-15/attestations/PG-032/context_ack.json": "27ddc3fb2a8d6d440c092258d48242e8d469153606186749786855b2ff8d6cc8",
+    "apps/web/src/app/(developer)/docs/api/page.tsx": "6bd0f207f3d3ea7b3ead7e3613bb7fb489face61f267ec8759b8de35234bc6df",
+    "apps/web/src/components/shared/api-reference-client.tsx": "ef6db8c602f71252f83b3adcde7983ab1e372b6fc4ea846be089cb7ceaa252bc",
+    "apps/web/src/app/api/openapi/route.ts": "f14b1149d2f0453d475fefacdb0da0ad2876ca098d38839be75e51caaa3ed9cb",
+    "apps/api/scripts/generate-openapi.ts": "72ac00e81aee697c1ca6dcb30ac8b9f8d911e5c2948d85be86e67a51208292b2",
+    ".specify/sprints/sprint-15/attestations/PG-033/context_ack.json": "f997fe9881135585029e4daa3f921448b44143b4f1380e986de6cc318c0a0a71",
+    ".specify/sprints/sprint-15/attestations/PG-033/attestation.json": "5610b81d3064b61bdd316f48ae3c82a0eceb458253e246c94adf8816d7fd9124",
+    "apps/web/src/app/(developer)/docs/webhooks/page.tsx": "24c74f117977e68f92238c8f761b6dd2acedf1047d4a276a5087693d9fbe9015",
+    "apps/web/src/components/developer/webhook-docs.tsx": "1b26b52b36f367a06ad32b7ddfed14b6a67d25996bff90bd4aeca03afcb748ff",
+    "apps/web/src/components/developer/webhook-tester.tsx": "04069177dbde9c89a7c47eb1ee0af15e59f972888ec70d54dc839cba32183e8b",
+    ".specify/sprints/sprint-15/attestations/PG-034/context_ack.json": "7494b8e3b5a1217f439ea6b29223b5aae2c598545f90604c548457e960e42741",
+    "apps/web/src/app/(developer)/docs/changelog/page.tsx": "bd0a433c5193ea9e14f1c3cb4835ab2fa6b71021bbed8f6becb472202b7a462d",
+    "apps/web/src/components/developer/changelog-display.tsx": "51d00fc017c3490a2a1f7eb4b5e2c594252554c7195487da0b6d4e1e2d5394c3",
+    "apps/web/src/lib/developer/rss-feed.ts": "2fb5b83aa4c4380331293e3d63682375b1ce09a073377b8402282e4b0b3faa1e",
+    ".specify/sprints/sprint-15/attestations/PG-035/context_ack.json": "252dc483848affed613d19d53b683c9be46324bc23f78e3fc432298407a9dabb",
+    ".specify/sprints/sprint-15/attestations/PG-035/attestation.json": "cdfa756f1fefd13cec12bb3ae0f7bce644d86a780681e37696b33f7bdc730b04",
+    "apps/web/src/app/(developer)/docs/sdk/page.tsx": "35f909ba4e8e599c4c9c60c0dcf6b9b41f72e370d02cda39123a9633ba3402fa",
+    "apps/web/src/components/developer/sdk-guides.tsx": "5e9aa03dae5c8d191a32655c69ddcb6ef517f65c59559e3b059f8fb15adcc1c1",
+    "apps/web/src/lib/developer/sdk-downloads.ts": "ce23adb6168a006a4df566b0c023cc9b9c8b76a542f665d17c75c1c1cc949054",
+    ".specify/sprints/sprint-15/attestations/PG-036/context_ack.json": "c2e018e3485e529cff9ce30946cab3fc10f00d52ec11fcd8fb55d35ef9fd59e8",
+    "apps/web/src/app/(developer)/docs/cli/page.tsx": "50f7d288c69efffec772b80c5079cb73131d7987132dc5b292b138dd7cdc3852",
+    "apps/web/src/components/developer/cli-docs.tsx": "1f0556313986c54493f95e0b0de8be735ff1f94a9d4f48758d2c2b29ee846ec9",
+    "apps/web/src/components/developer/cli-examples.tsx": "3b6a112fd33dc883fb70d63282209c987d5a14ab7fcee821ccf443fa4b293fc1",
+    ".specify/sprints/sprint-15/attestations/PG-037/context_ack.json": "29d183f2c2604b11421949e0826aefa119216bbbf9777719ef6649de156b7ba2",
+    ".specify/sprints/sprint-15/attestations/PG-037/attestation.json": "646aa780c90651d1424b77436c6184f8eb6a5aba2d8bf1891855382c101038c4",
+    "apps/web/src/app/(developer)/docs/auth/page.tsx": "21e6d7d379b5128a300052a44d0901dec172ecd20d221a40e9b8c085d6d04539",
+    "apps/web/src/components/developer/auth-guides.tsx": "9a5cea34584aeb9dacc5f808e0d3a7d0491a849729b0266ece598a3d1b03066e",
+    "apps/web/src/components/developer/auth-examples.tsx": "3d7f6749d4e35014611ccd8364d61211e0a76da07fd42a250c522c87e940d84c",
+    ".specify/sprints/sprint-15/attestations/PG-038/context_ack.json": "37d15e8a922d5064713eb3b27ec79c0d66d935fe6ec308755e7912021616ce1f",
+    "apps/web/src/app/(developer)/developers/apps/page.tsx": "fb468a7d91eeac67289fdd76c39e14641770cb5e4380826bacbff9fc2607bcd6",
+    "apps/web/src/components/developer/app-list.tsx": "ce5a8587153c78a7486479af8ff6c95e4f2feb46555322b2834719fde6716652",
+    "apps/web/src/lib/developer/api-key-generator.ts": "cb84ff24d437a3ea5d0de827b24e34ce6bd1bb308d7e4bc8d64143664c97ef57",
+    ".specify/sprints/sprint-15/attestations/PG-039/context_ack.json": "4f896a0aa21ab7d85a0ebcff676a14be1e454f5b3c9138d0a2df71a659a15963",
+    "apps/web/src/app/(developer)/developers/apps/new/page.tsx": "84788a262cd1aaa3d1f69167a6d4108a8947b0535b67237ccfb2098d07ca7e57",
+    "apps/web/src/components/developer/app-creator.tsx": "4f2d3d4a550bf7944f84f9f63645795913fa5f174f360b9267c5c8cb713f65f2",
+    "apps/web/src/lib/developer/oauth-setup.ts": "c89bd4acbe286a08380262aeb56b1e35ae4b87f21ee6042ca0c6da169345a9f3",
+    ".specify/sprints/sprint-15/attestations/PG-040/context_ack.json": "7bc13e0ba653281693a83c790ddd1158a3b0f3cf244f608f4cccce4ca5c9e372",
+    "apps/web/src/app/(developer)/developers/apps/[id]/page.tsx": "9796c03ea7a864f1f46ba4a6394905cee2e435517e748b47b36c74aff50f7c31",
+    "apps/web/src/components/developer/app-dashboard.tsx": "4add88c95c75bad8eaef4036453d8dffdb00a6fb807cb866e1783a4e4072f815",
+    "apps/web/src/components/developer/app-metrics.tsx": "c7072ba8a4702b8984d921162bb85cb30c49c18235a04bde941891e0b52932e6",
+    ".specify/sprints/sprint-15/attestations/PG-041/context_ack.json": "43c78a0cae39520ce56a33088a7c6878a695778378aa2837cafb2e665b8fe8bd",
+    "apps/web/src/app/(developer)/developers/apps/[id]/edit/page.tsx": "bd96e3d3e915202ab47e27a1d1789c458b7b385a73e8abb8a0fdb45fdd6f85b9",
+    "apps/web/src/components/developer/app-editor.tsx": "410eaa2e4e084f51acc44d2d4857b7736d902c9c0dd704c30515c37ce98679de",
+    "apps/web/src/components/developer/webhook-config.tsx": "9e9be00e68dc04ad77102fc5da996b40842fa4920e1efbc91b826cdc662b0f3d",
+    ".specify/sprints/sprint-15/attestations/PG-042/context_ack.json": "42b36f8280ee3c972a64c578c7f1b39667ddf16a7da841266adf135d37d4707a",
+    "apps/web/src/app/(public)/sso/page.tsx": "5efc39ecc3d80c78076620d9a3b26c047f815fb793b4b9c1685705c3e2c4a70f",
+    "apps/web/src/lib/auth/sso-handler.ts": "656a5c8c202750b077930f4112e4ac2198e87ec087392c7990d4e472070f43f1",
+    "artifacts/misc/provider-config.json": "6229f6cc08e79426b4c665ae57bc9a395f8a7e37ec23ac92b7e60a634de2289e",
+    ".specify/sprints/sprint-15/attestations/PG-124/context_ack.json": "c9edfac6bd80de7a1437bb09fc4efcbaefb36081c3ce115ce0a5c6ddd4d60e0d",
+    "packages\\db\\prisma\\migrations\\20260225000000_add_user_timezone\\migration.sql": "ee009e2d711849c98cb2052af869ceb0539f9b4aea31c042c631ee96a593366a",
+    "apps/web/src/components/settings/TimezoneSelector.tsx": "43ad39cda72a7341ba40d6f51b167327d2cdb6ec6b4f34ec2c5103ec84efa3b2",
+    ".specify/sprints/sprint-15/attestations/IFC-191/context_ack.json": "33885307a6cd6d5e8864fca79340eeae2cd3ed99b79d17625f74d2b7fae1b862",
+    ".specify/sprints/sprint-15/specifications/IFC-191-spec.md": "b5591eabd24c59f69715a9ea0cc2c2343a0c0cf830357ce8cf681af758e430d5",
+    ".specify/sprints/sprint-15/planning/IFC-191-plan.md": "f3c88f1f65fe9c0b9e05201167a0811762f383012ebc2cb6016121f46da9f6ee",
+    "packages\\db\\prisma\\migrations\\20260228000000_add_contact_last_contacted\\migration.sql": "96275993ef9d51c39258c8accdcd8db7720366e258b0b62d7a7b87ee5e3e935c",
+    "packages/application/src/services/ContactService.ts": "1c4980027f15a5c8ed8110503b174d369e853d09bbbb5a3f6669a1c3778cb92b",
+    ".specify/sprints/sprint-15/attestations/IFC-192/context_ack.json": "702255cf5f54e4fdc2b2941c72139bcd4d3c5a47362944dd408df33bb313e08c",
+    ".specify/sprints/sprint-15/specifications/IFC-192-spec.md": "c4bb7b2784f9935630660fdf68a3f8e4024f5cb900b14b127a2b4b8af12f83a4",
+    ".specify/sprints/sprint-15/planning/IFC-192-plan.md": "1632089ca1acba2b16932e6e5d06bbac1582117e1331c25dfd4015da0799f92c",
+    "apps/api/src/modules/home/home.router.ts": "2b87b206cb24ce0dd4336900f5db083f1bf1e9a692955621dd23c0785606d760",
+    "apps/web/src/components/home/GoalSettingsModal.tsx": "0c0973ef01750dcc527f465fab6cdcc761d510bf63ecc69c2383f7f0b576f57d",
+    "packages/validators/src/home.ts": "b69bc86a8168e974d34bb2ee990204b9d643e7f94dd86b664335a222c75ce15a",
+    ".specify/sprints/sprint-15/attestations/IFC-195/attestation.json": "947948aba13a63a08635f85a6be31bdec9c4ce30a94780a8a9156eb03e6eb3cb",
+    ".specify/sprints/sprint-15/attestations/IFC-195/context_ack.json": "a51e279963f9e385f129cb9de78e8885d7fce0ef4d17d9bcc171b462f95a9b2a",
+    ".specify/sprints/sprint-15/attestations/PG-156/attestation.json": "e4391f8cff6585c3450e2d34c9c2b1f0b0c8a7b37ddc7284d9f5e2b360c80361",
+    "apps/web/src/components/home/PinButton.tsx": "a136b81482ab056bd43051de59897fc83dcb524c78a6be952caaa17cae8eb3d8",
+    "apps/web/src/components/home/PinnedItemsSheet.tsx": "14a508bce7b32027cc3a0d0483a9eae8a8dd0b15149813dedd93a6ac5a26c42e",
+    "apps/web/src/components/home/DraggablePinnedItem.tsx": "6f69e48bc5cd9914563b660abfff9d29e3c8ddec864ffba68cb00a462a145e56",
+    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "337c781c82cfb917d7cba4174c02d339c77b1decbc98a91bdbc8447066a96f55",
+    "apps/web/src/app/(developer)/docs/integrations/page.tsx": "7a445cdd38ba39f9a35fb262ec06fbab6c33b704b572bdcb2f81539b7afcc148",
+    "apps/web/src/components/developer/integration-list.tsx": "e5710dbdbe589a2ecdf0b0be0bfc6a2c06c2f32e6a7e0ca92a7bee93d142595f",
+    ".specify/sprints/sprint-15/attestations/PG-171/context_ack.json": "a98d82e72319c36f53ffa3782573aaba2c598e6b7fff2c00288afbcf69d4ab26"
+  },
+  "task_results": [
+    {
+      "taskId": "IFC-026",
+      "description": "PHASE-011: Playwright E2E Testing",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "artifacts/misc/playwright-report/index.html",
+          "expectedBy": "IFC-026",
+          "status": "found",
+          "size": 528072,
+          "sha256": "0c089560c580270199654cd19db4310437b00770a685b09d6423f21f5b1e6354",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/IFC-026/context_ack.json",
+          "expectedBy": "IFC-026",
+          "status": "found",
+          "size": 414,
+          "sha256": "6fca26ade0a79adbb4f3769bb7d8ca432c001b2f0ca7aac4b66f0b3dcb36ea92",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "IFC-026",
+          "command": "pnpm test:e2e",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 600584,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T23:51:15.523Z",
+          "error": "Command timed out after 600000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Critical flows covered",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "screenshots validated",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-026",
+        "dependencies": [
+          "IFC-022",
+          "IFC-024"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-022",
+          "IFC-024"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "E2E tests for AI features",
+          "visual regression",
+          "artifacts: index.html",
+          "context_ack.json"
+        ],
+        "verified": 0,
+        "unverified": 4,
+        "details": [
+          {
+            "criterion": "E2E tests for AI features",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          },
+          {
+            "criterion": "visual regression",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: index.html",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "context_ack.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm test:e2e",
+        "4 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-027",
+      "description": "PHASE-001: Gate 2 Review - £2000 Investment",
+      "status": "Completed",
+      "verdict": "PASS",
+      "artifacts": [
+        {
+          "path": "artifacts/reports/investment-gate-2-analysis.md",
+          "expectedBy": "IFC-027",
+          "status": "found",
+          "size": 9155,
+          "sha256": "49e5f436a617307d3ee48550c427c5a4d0477f6143aeba3b7dcada6c68fd6805",
+          "issues": []
+        },
+        {
+          "path": "artifacts/reports/ai-roi-report.md",
+          "expectedBy": "IFC-027",
+          "status": "found",
+          "size": 6712,
+          "sha256": "659c85388f3d37cd0769e4f59b116e5367a47357124ef5e8f7a826a0e30f9caf",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/customer-feedback.md",
+          "expectedBy": "IFC-027",
+          "status": "found",
+          "size": 7879,
+          "sha256": "3fe70a04c7a7ab1fe04398092b37bf0a2d3f012e5893e38e7fd09a40e73cabdb",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/board-presentation.md",
+          "expectedBy": "IFC-027",
+          "status": "found",
+          "size": 9297,
+          "sha256": "aebb2c9d67ccf27e2c92293cb2e2cfc4ca68c0cbd340f1e658e737126aedb73c",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/IFC-027/context_ack.json",
+          "expectedBy": "IFC-027",
+          "status": "found",
+          "size": 192,
+          "sha256": "ae9e2a2d0c3d837ca6330a662ae8bff17b12986aeb1554f1927f7f45b9d8971e",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "AI adds measurable value",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "ROI positive",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-027",
+        "dependencies": [
+          "IFC-026"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-026"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Expand/maintain decision on AI features",
+          "artifacts: investment-gate-2-analysis.md",
+          "ai-roi-report.md",
+          "customer-feedback.md"
+        ],
+        "verified": 0,
+        "unverified": 4,
+        "details": [
+          {
+            "criterion": "Expand/maintain decision on AI features",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: investment-gate-2-analysis.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "ai-roi-report.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "customer-feedback.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "4 DoD criteria unverified"
+      ],
+      "recommendations": []
+    },
+    {
+      "taskId": "PG-032",
+      "description": "Docs Index",
+      "status": "Completed",
+      "verdict": "PASS",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(developer)/docs/page.tsx",
+          "expectedBy": "PG-032",
+          "status": "found",
+          "size": 2782,
+          "sha256": "7017a3169cc116ce7fcf946ba4b083c5a22bb965659f7de8fab455631bde37b4",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/shared/docs-search.tsx",
+          "expectedBy": "PG-032",
+          "status": "found",
+          "size": 2569,
+          "sha256": "1bd86d7231e1e0e794671e923c73768974712146a68967f5d9f8879b89d57b81",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/shared/docs-navigation.tsx",
+          "expectedBy": "PG-032",
+          "status": "found",
+          "size": 3123,
+          "sha256": "37795ad4fd32980b5dbcd1cbbf3c0880be8d1add06d1f3f402718e462911418d",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-032/context_ack.json",
+          "expectedBy": "PG-032",
+          "status": "found",
+          "size": 2274,
+          "sha256": "27ddc3fb2a8d6d440c092258d48242e8d469153606186749786855b2ff8d6cc8",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Docs indexed",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "search working",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "navigation clear",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-032",
+        "dependencies": [
+          "IFC-079"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-079"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "docs searchable",
+          "artifacts: page.tsx",
+          "docs-search.tsx",
+          "docs-navigation.tsx"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "docs searchable",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "docs-search.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "docs-navigation.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": []
+    },
+    {
+      "taskId": "PG-033",
+      "description": "API Docs",
+      "status": "Completed",
+      "verdict": "PASS",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(developer)/docs/api/page.tsx",
+          "expectedBy": "PG-033",
+          "status": "found",
+          "size": 817,
+          "sha256": "6bd0f207f3d3ea7b3ead7e3613bb7fb489face61f267ec8759b8de35234bc6df",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/shared/api-reference-client.tsx",
+          "expectedBy": "PG-033",
+          "status": "found",
+          "size": 2739,
+          "sha256": "ef6db8c602f71252f83b3adcde7983ab1e372b6fc4ea846be089cb7ceaa252bc",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/app/api/openapi/route.ts",
+          "expectedBy": "PG-033",
+          "status": "found",
+          "size": 541,
+          "sha256": "f14b1149d2f0453d475fefacdb0da0ad2876ca098d38839be75e51caaa3ed9cb",
+          "issues": []
+        },
+        {
+          "path": "apps/api/scripts/generate-openapi.ts",
+          "expectedBy": "PG-033",
+          "status": "found",
+          "size": 23454,
+          "sha256": "72ac00e81aee697c1ca6dcb30ac8b9f8d911e5c2948d85be86e67a51208292b2",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-033/context_ack.json",
+          "expectedBy": "PG-033",
+          "status": "found",
+          "size": 884,
+          "sha256": "f997fe9881135585029e4daa3f921448b44143b4f1380e986de6cc318c0a0a71",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-033/attestation.json",
+          "expectedBy": "PG-033",
+          "status": "found",
+          "size": 7378,
+          "sha256": "5610b81d3064b61bdd316f48ae3c82a0eceb458253e246c94adf8816d7fd9124",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "API documented",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "examples working",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "playground active",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-033",
+        "dependencies": [
+          "PG-032"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "PG-032"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "examples runnable",
+          "artifacts: page.tsx",
+          "api-reference-client.tsx (Scalar built-in playground)"
+        ],
+        "verified": 0,
+        "unverified": 5,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "examples runnable",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "api-reference-client.tsx (Scalar built-in playground)",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "5 DoD criteria unverified"
+      ],
+      "recommendations": []
+    },
+    {
+      "taskId": "PG-034",
+      "description": "Webhooks Docs",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(developer)/docs/webhooks/page.tsx",
+          "expectedBy": "PG-034",
+          "status": "found",
+          "size": 855,
+          "sha256": "24c74f117977e68f92238c8f761b6dd2acedf1047d4a276a5087693d9fbe9015",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/developer/webhook-docs.tsx",
+          "expectedBy": "PG-034",
+          "status": "found",
+          "size": 30465,
+          "sha256": "1b26b52b36f367a06ad32b7ddfed14b6a67d25996bff90bd4aeca03afcb748ff",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/developer/webhook-tester.tsx",
+          "expectedBy": "PG-034",
+          "status": "found",
+          "size": 8379,
+          "sha256": "04069177dbde9c89a7c47eb1ee0af15e59f972888ec70d54dc839cba32183e8b",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-034/context_ack.json",
+          "expectedBy": "PG-034",
+          "status": "found",
+          "size": 1203,
+          "sha256": "7494b8e3b5a1217f439ea6b29223b5aae2c598545f90604c548457e960e42741",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "PG-034",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 600879,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T23:40:44.030Z",
+          "error": "Command timed out after 600000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Webhooks documented",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "examples clear",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "testing enabled",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-034",
+        "dependencies": [
+          "PG-032"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "PG-032"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "webhooks documented",
+          "verified by: pnpm test"
+        ],
+        "verified": 1,
+        "unverified": 3,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "webhooks documented",
+            "verified": true,
+            "evidence": "Documentation found: apps/web/src/app/(developer)/docs/webhooks/page.tsx"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm test",
+        "3 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "PG-035",
+      "description": "Changelog",
+      "status": "Completed",
+      "verdict": "PASS",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(developer)/docs/changelog/page.tsx",
+          "expectedBy": "PG-035",
+          "status": "found",
+          "size": 930,
+          "sha256": "bd0a433c5193ea9e14f1c3cb4835ab2fa6b71021bbed8f6becb472202b7a462d",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/developer/changelog-display.tsx",
+          "expectedBy": "PG-035",
+          "status": "found",
+          "size": 7256,
+          "sha256": "51d00fc017c3490a2a1f7eb4b5e2c594252554c7195487da0b6d4e1e2d5394c3",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/lib/developer/rss-feed.ts",
+          "expectedBy": "PG-035",
+          "status": "found",
+          "size": 2403,
+          "sha256": "2fb5b83aa4c4380331293e3d63682375b1ce09a073377b8402282e4b0b3faa1e",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-035/context_ack.json",
+          "expectedBy": "PG-035",
+          "status": "found",
+          "size": 1538,
+          "sha256": "252dc483848affed613d19d53b683c9be46324bc23f78e3fc432298407a9dabb",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-035/attestation.json",
+          "expectedBy": "PG-035",
+          "status": "found",
+          "size": 3927,
+          "sha256": "cdfa756f1fefd13cec12bb3ae0f7bce644d86a780681e37696b33f7bdc730b04",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Changelog shown",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "versions tracked",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "RSS feed available",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-035",
+        "dependencies": [
+          "PG-032"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "PG-032"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "changelog displayed",
+          "artifacts: page.tsx",
+          "changelog-display.tsx",
+          "rss-feed.ts"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "changelog displayed",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "changelog-display.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "rss-feed.ts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": []
+    },
+    {
+      "taskId": "PG-036",
+      "description": "SDK Guides",
+      "status": "Completed",
+      "verdict": "PASS",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(developer)/docs/sdk/page.tsx",
+          "expectedBy": "PG-036",
+          "status": "found",
+          "size": 801,
+          "sha256": "35f909ba4e8e599c4c9c60c0dcf6b9b41f72e370d02cda39123a9633ba3402fa",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/developer/sdk-guides.tsx",
+          "expectedBy": "PG-036",
+          "status": "found",
+          "size": 9542,
+          "sha256": "5e9aa03dae5c8d191a32655c69ddcb6ef517f65c59559e3b059f8fb15adcc1c1",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/lib/developer/sdk-downloads.ts",
+          "expectedBy": "PG-036",
+          "status": "found",
+          "size": 2878,
+          "sha256": "ce23adb6168a006a4df566b0c023cc9b9c8b76a542f665d17c75c1c1cc949054",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-036/context_ack.json",
+          "expectedBy": "PG-036",
+          "status": "found",
+          "size": 753,
+          "sha256": "c2e018e3485e529cff9ce30946cab3fc10f00d52ec11fcd8fb55d35ef9fd59e8",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "SDKs documented",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "quickstarts clear",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "downloads available",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-036",
+        "dependencies": [
+          "PG-032"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "PG-032"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "SDKs documented"
+        ],
+        "verified": 1,
+        "unverified": 2,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "SDKs documented",
+            "verified": true,
+            "evidence": "Documentation found: apps/web/src/app/(developer)/docs/sdk/page.tsx"
+          }
+        ]
+      },
+      "issues": [
+        "2 DoD criteria unverified"
+      ],
+      "recommendations": []
+    },
+    {
+      "taskId": "PG-037",
+      "description": "CLI Docs",
+      "status": "Completed",
+      "verdict": "PASS",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(developer)/docs/cli/page.tsx",
+          "expectedBy": "PG-037",
+          "status": "found",
+          "size": 827,
+          "sha256": "50f7d288c69efffec772b80c5079cb73131d7987132dc5b292b138dd7cdc3852",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/developer/cli-docs.tsx",
+          "expectedBy": "PG-037",
+          "status": "found",
+          "size": 10231,
+          "sha256": "1f0556313986c54493f95e0b0de8be735ff1f94a9d4f48758d2c2b29ee846ec9",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/developer/cli-examples.tsx",
+          "expectedBy": "PG-037",
+          "status": "found",
+          "size": 5224,
+          "sha256": "3b6a112fd33dc883fb70d63282209c987d5a14ab7fcee821ccf443fa4b293fc1",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-037/context_ack.json",
+          "expectedBy": "PG-037",
+          "status": "found",
+          "size": 704,
+          "sha256": "29d183f2c2604b11421949e0826aefa119216bbbf9777719ef6649de156b7ba2",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-037/attestation.json",
+          "expectedBy": "PG-037",
+          "status": "found",
+          "size": 5412,
+          "sha256": "646aa780c90651d1424b77436c6184f8eb6a5aba2d8bf1891855382c101038c4",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "CLI documented",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "commands listed",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "examples shown",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-037",
+        "dependencies": [
+          "PG-032"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "PG-032"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "CLI documented"
+        ],
+        "verified": 1,
+        "unverified": 2,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "CLI documented",
+            "verified": true,
+            "evidence": "Documentation found: apps/web/src/app/(developer)/docs/cli/page.tsx"
+          }
+        ]
+      },
+      "issues": [
+        "2 DoD criteria unverified"
+      ],
+      "recommendations": []
+    },
+    {
+      "taskId": "PG-038",
+      "description": "Auth Guides",
+      "status": "Completed",
+      "verdict": "PASS",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(developer)/docs/auth/page.tsx",
+          "expectedBy": "PG-038",
+          "status": "found",
+          "size": 872,
+          "sha256": "21e6d7d379b5128a300052a44d0901dec172ecd20d221a40e9b8c085d6d04539",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/developer/auth-guides.tsx",
+          "expectedBy": "PG-038",
+          "status": "found",
+          "size": 22508,
+          "sha256": "9a5cea34584aeb9dacc5f808e0d3a7d0491a849729b0266ece598a3d1b03066e",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/developer/auth-examples.tsx",
+          "expectedBy": "PG-038",
+          "status": "found",
+          "size": 9033,
+          "sha256": "3d7f6749d4e35014611ccd8364d61211e0a76da07fd42a250c522c87e940d84c",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-038/context_ack.json",
+          "expectedBy": "PG-038",
+          "status": "found",
+          "size": 1548,
+          "sha256": "37d15e8a922d5064713eb3b27ec79c0d66d935fe6ec308755e7912021616ce1f",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Auth documented",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "flows clear",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "examples provided",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "V8 coverage: Stmts 93.54% Branches 83.33% Functions 94.73% Lines 96.55%",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "54 tests (4 files)",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "STOA Foundation PASS",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-038",
+        "dependencies": [
+          "PG-032"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "PG-032"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "auth explained",
+          "artifacts: page.tsx",
+          "auth-guides.tsx",
+          "auth-examples.tsx"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "auth explained",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "auth-guides.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "auth-examples.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": []
+    },
+    {
+      "taskId": "PG-039",
+      "description": "Dev Apps",
+      "status": "Completed",
+      "verdict": "PASS",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(developer)/developers/apps/page.tsx",
+          "expectedBy": "PG-039",
+          "status": "found",
+          "size": 734,
+          "sha256": "fb468a7d91eeac67289fdd76c39e14641770cb5e4380826bacbff9fc2607bcd6",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/developer/app-list.tsx",
+          "expectedBy": "PG-039",
+          "status": "found",
+          "size": 9678,
+          "sha256": "ce5a8587153c78a7486479af8ff6c95e4f2feb46555322b2834719fde6716652",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/lib/developer/api-key-generator.ts",
+          "expectedBy": "PG-039",
+          "status": "found",
+          "size": 1532,
+          "sha256": "cb84ff24d437a3ea5d0de827b24e34ce6bd1bb308d7e4bc8d64143664c97ef57",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-039/context_ack.json",
+          "expectedBy": "PG-039",
+          "status": "found",
+          "size": 373,
+          "sha256": "4f896a0aa21ab7d85a0ebcff676a14be1e454f5b3c9138d0a2df71a659a15963",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Apps listed",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "keys generated",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "settings configured",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-039",
+        "dependencies": [
+          "PG-032"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "PG-032"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "apps managed",
+          "artifacts: page.tsx",
+          "app-list.tsx",
+          "api-key-generator.ts"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "apps managed",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "app-list.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "api-key-generator.ts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": []
+    },
+    {
+      "taskId": "PG-040",
+      "description": "New Dev App",
+      "status": "Completed",
+      "verdict": "PASS",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(developer)/developers/apps/new/page.tsx",
+          "expectedBy": "PG-040",
+          "status": "found",
+          "size": 532,
+          "sha256": "84788a262cd1aaa3d1f69167a6d4108a8947b0535b67237ccfb2098d07ca7e57",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/developer/app-creator.tsx",
+          "expectedBy": "PG-040",
+          "status": "found",
+          "size": 17322,
+          "sha256": "4f2d3d4a550bf7944f84f9f63645795913fa5f174f360b9267c5c8cb713f65f2",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/lib/developer/oauth-setup.ts",
+          "expectedBy": "PG-040",
+          "status": "found",
+          "size": 1802,
+          "sha256": "c89bd4acbe286a08380262aeb56b1e35ae4b87f21ee6042ca0c6da169345a9f3",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-040/context_ack.json",
+          "expectedBy": "PG-040",
+          "status": "found",
+          "size": 2734,
+          "sha256": "7bc13e0ba653281693a83c790ddd1158a3b0f3cf244f608f4cccce4ca5c9e372",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Apps created",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "OAuth configured",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "webhooks set",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-040",
+        "dependencies": [
+          "PG-039"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "PG-039"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "apps created",
+          "artifacts: page.tsx",
+          "app-creator.tsx",
+          "oauth-setup.ts"
+        ],
+        "verified": 1,
+        "unverified": 5,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "apps created",
+            "verified": true,
+            "evidence": "All 4 artifacts exist"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "app-creator.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "oauth-setup.ts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "5 DoD criteria unverified"
+      ],
+      "recommendations": []
+    },
+    {
+      "taskId": "PG-041",
+      "description": "Dev App Detail",
+      "status": "Completed",
+      "verdict": "PASS",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(developer)/developers/apps/[id]/page.tsx",
+          "expectedBy": "PG-041",
+          "status": "found",
+          "size": 995,
+          "sha256": "9796c03ea7a864f1f46ba4a6394905cee2e435517e748b47b36c74aff50f7c31",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/developer/app-dashboard.tsx",
+          "expectedBy": "PG-041",
+          "status": "found",
+          "size": 18968,
+          "sha256": "4add88c95c75bad8eaef4036453d8dffdb00a6fb807cb866e1783a4e4072f815",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/developer/app-metrics.tsx",
+          "expectedBy": "PG-041",
+          "status": "found",
+          "size": 8649,
+          "sha256": "c7072ba8a4702b8984d921162bb85cb30c49c18235a04bde941891e0b52932e6",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-041/context_ack.json",
+          "expectedBy": "PG-041",
+          "status": "found",
+          "size": 632,
+          "sha256": "43c78a0cae39520ce56a33088a7c6878a695778378aa2837cafb2e665b8fe8bd",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "App details shown",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "metrics displayed",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "logs available",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-041",
+        "dependencies": [
+          "PG-039"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "PG-039"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "metrics displayed",
+          "artifacts: page.tsx",
+          "app-dashboard.tsx",
+          "app-metrics.tsx"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "metrics displayed",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "app-dashboard.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "app-metrics.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": []
+    },
+    {
+      "taskId": "PG-042",
+      "description": "Dev App Edit",
+      "status": "Completed",
+      "verdict": "PASS",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(developer)/developers/apps/[id]/edit/page.tsx",
+          "expectedBy": "PG-042",
+          "status": "found",
+          "size": 1226,
+          "sha256": "bd96e3d3e915202ab47e27a1d1789c458b7b385a73e8abb8a0fdb45fdd6f85b9",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/developer/app-editor.tsx",
+          "expectedBy": "PG-042",
+          "status": "found",
+          "size": 12308,
+          "sha256": "410eaa2e4e084f51acc44d2d4857b7736d902c9c0dd704c30515c37ce98679de",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/developer/webhook-config.tsx",
+          "expectedBy": "PG-042",
+          "status": "found",
+          "size": 1234,
+          "sha256": "9e9be00e68dc04ad77102fc5da996b40842fa4920e1efbc91b826cdc662b0f3d",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-042/context_ack.json",
+          "expectedBy": "PG-042",
+          "status": "found",
+          "size": 1193,
+          "sha256": "42b36f8280ee3c972a64c578c7f1b39667ddf16a7da841266adf135d37d4707a",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Settings editable",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "webhooks configured",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "changes saved",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-042",
+        "dependencies": [
+          "PG-041"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "PG-041"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse ≥90",
+          "settings updated",
+          "artifacts: page.tsx",
+          "app-editor.tsx",
+          "webhook-config.tsx"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse ≥90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "settings updated",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "app-editor.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "webhook-config.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": []
+    },
+    {
+      "taskId": "PG-124",
+      "description": "Implement SSO (SAML/OAuth) and social login providers",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(public)/sso/page.tsx",
+          "expectedBy": "PG-124",
+          "status": "found",
+          "size": 605,
+          "sha256": "5efc39ecc3d80c78076620d9a3b26c047f815fb793b4b9c1685705c3e2c4a70f",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/lib/auth/sso-handler.ts",
+          "expectedBy": "PG-124",
+          "status": "found",
+          "size": 3655,
+          "sha256": "656a5c8c202750b077930f4112e4ac2198e87ec087392c7990d4e472070f43f1",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/provider-config.json",
+          "expectedBy": "PG-124",
+          "status": "found",
+          "size": 366,
+          "sha256": "6229f6cc08e79426b4c665ae57bc9a395f8a7e37ec23ac92b7e60a634de2289e",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-124/context_ack.json",
+          "expectedBy": "PG-124",
+          "status": "found",
+          "size": 1035,
+          "sha256": "c9edfac6bd80de7a1437bb09fc4efcbaefb36081c3ce115ce0a5c6ddd4d60e0d",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "PG-124",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 600879,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T23:40:44.030Z",
+          "error": "Command timed out after 600000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "SSO login <2s",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "error rate <1%",
+          "target": "< 1%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-124",
+        "dependencies": [
+          "PG-015",
+          "PG-024",
+          "IFC-006"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "PG-015",
+          "PG-024",
+          "IFC-006"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Users can sign in via Google",
+          "Microsoft",
+          "etc.",
+          "SAML integration with enterprise providers",
+          "artifacts: page.tsx",
+          "sso-handler.ts",
+          "provider-config.json",
+          "targets: >=1%",
+          "<2s",
+          "verified by: pnpm test",
+          "pnpm test:e2e"
+        ],
+        "verified": 0,
+        "unverified": 11,
+        "details": [
+          {
+            "criterion": "Users can sign in via Google",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Microsoft",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "etc.",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "SAML integration with enterprise providers",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "sso-handler.ts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "provider-config.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: >=1%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "<2s",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          },
+          {
+            "criterion": "pnpm test:e2e",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm test",
+        "11 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-191",
+      "description": "User Timezone Support - Add timezone field to User model with preference UI and timezone-aware greeting",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "packages\\db\\prisma\\migrations\\20260225000000_add_user_timezone\\migration.sql",
+          "expectedBy": "IFC-191",
+          "status": "found",
+          "size": 260,
+          "sha256": "ee009e2d711849c98cb2052af869ceb0539f9b4aea31c042c631ee96a593366a",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/settings/TimezoneSelector.tsx",
+          "expectedBy": "IFC-191",
+          "status": "found",
+          "size": 4287,
+          "sha256": "43ad39cda72a7341ba40d6f51b167327d2cdb6ec6b4f34ec2c5103ec84efa3b2",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/IFC-191/context_ack.json",
+          "expectedBy": "IFC-191",
+          "status": "found",
+          "size": 1374,
+          "sha256": "33885307a6cd6d5e8864fca79340eeae2cd3ed99b79d17625f74d2b7fae1b862",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/specifications/IFC-191-spec.md",
+          "expectedBy": "IFC-191",
+          "status": "found",
+          "size": 15880,
+          "sha256": "b5591eabd24c59f69715a9ea0cc2c2343a0c0cf830357ce8cf681af758e430d5",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/planning/IFC-191-plan.md",
+          "expectedBy": "IFC-191",
+          "status": "found",
+          "size": 18377,
+          "sha256": "f3c88f1f65fe9c0b9e05201167a0811762f383012ebc2cb6016121f46da9f6ee",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "IFC-191",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 600879,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T23:40:44.030Z",
+          "error": "Command timed out after 600000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Greeting correct for all timezones",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "migration reversible",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "settings UI works",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "test coverage >=90%",
+          "target": ">= 90%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": "pnpm test:coverage",
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-191",
+        "dependencies": [
+          "IFC-182"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-182"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "User.timezone field added to Prisma schema",
+          "migration created",
+          "home.getWelcomeSummary greeting uses user timezone via Intl.DateTimeFormat",
+          "TimezoneSelector on /settings/account with tRPC persistence",
+          "fallback chain: user timezone → UTC",
+          "74 tests passing",
+          "user router 100% coverage"
+        ],
+        "verified": 1,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "User.timezone field added to Prisma schema",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "migration created",
+            "verified": true,
+            "evidence": "All 5 artifacts exist"
+          },
+          {
+            "criterion": "home.getWelcomeSummary greeting uses user timezone via Intl.DateTimeFormat",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "TimezoneSelector on /settings/account with tRPC persistence",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "fallback chain: user timezone → UTC",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "74 tests passing",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          },
+          {
+            "criterion": "user router 100% coverage",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm test",
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-192",
+      "description": "Contact Activity Tracking - Add lastContactedAt field to Contact model with auto-update on interactions",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "packages\\db\\prisma\\migrations\\20260228000000_add_contact_last_contacted\\migration.sql",
+          "expectedBy": "IFC-192",
+          "status": "found",
+          "size": 478,
+          "sha256": "96275993ef9d51c39258c8accdcd8db7720366e258b0b62d7a7b87ee5e3e935c",
+          "issues": []
+        },
+        {
+          "path": "packages/application/src/services/ContactService.ts",
+          "expectedBy": "IFC-192",
+          "status": "found",
+          "size": 20147,
+          "sha256": "1c4980027f15a5c8ed8110503b174d369e853d09bbbb5a3f6669a1c3778cb92b",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/IFC-192/context_ack.json",
+          "expectedBy": "IFC-192",
+          "status": "found",
+          "size": 926,
+          "sha256": "702255cf5f54e4fdc2b2941c72139bcd4d3c5a47362944dd408df33bb313e08c",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/specifications/IFC-192-spec.md",
+          "expectedBy": "IFC-192",
+          "status": "found",
+          "size": 13672,
+          "sha256": "c4bb7b2784f9935630660fdf68a3f8e4024f5cb900b14b127a2b4b8af12f83a4",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/planning/IFC-192-plan.md",
+          "expectedBy": "IFC-192",
+          "status": "found",
+          "size": 28490,
+          "sha256": "1632089ca1acba2b16932e6e5d06bbac1582117e1331c25dfd4015da0799f92c",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "IFC-192",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 600879,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T23:40:44.030Z",
+          "error": "Command timed out after 600000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "lastContactedAt updates on interactions",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "stale contact insight works",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "migration reversible",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "test coverage >=90%",
+          "target": ">= 90%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": "pnpm test:coverage",
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-192",
+        "dependencies": [
+          "IFC-182",
+          "IFC-184"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-182",
+          "IFC-184"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Contact.lastContactedAt field added to Prisma schema",
+          "migration applied",
+          "field auto-updated on call/email/meeting events via domain event handler",
+          "home.getAIInsights generates stale contact warnings (30+ days no contact with open opportunities)",
+          "verified by: pnpm test"
+        ],
+        "verified": 0,
+        "unverified": 5,
+        "details": [
+          {
+            "criterion": "Contact.lastContactedAt field added to Prisma schema",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "migration applied",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "field auto-updated on call/email/meeting events via domain event handler",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "home.getAIInsights generates stale contact warnings (30+ days no contact with open opportunities)",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm test",
+        "5 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-195",
+      "description": "Customizable Daily Goals - Multi-type goal support (revenue calls meetings tasks custom) with user preferences",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/api/src/modules/home/home.router.ts",
+          "expectedBy": "IFC-195",
+          "status": "found",
+          "size": 24984,
+          "sha256": "2b87b206cb24ce0dd4336900f5db083f1bf1e9a692955621dd23c0785606d760",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/home/GoalSettingsModal.tsx",
+          "expectedBy": "IFC-195",
+          "status": "found",
+          "size": 6496,
+          "sha256": "0c0973ef01750dcc527f465fab6cdcc761d510bf63ecc69c2383f7f0b576f57d",
+          "issues": []
+        },
+        {
+          "path": "packages/validators/src/home.ts",
+          "expectedBy": "IFC-195",
+          "status": "found",
+          "size": 7865,
+          "sha256": "b69bc86a8168e974d34bb2ee990204b9d643e7f94dd86b664335a222c75ce15a",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/IFC-195/attestation.json",
+          "expectedBy": "IFC-195",
+          "status": "found",
+          "size": 2690,
+          "sha256": "947948aba13a63a08635f85a6be31bdec9c4ce30a94780a8a9156eb03e6eb3cb",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/IFC-195/context_ack.json",
+          "expectedBy": "IFC-195",
+          "status": "found",
+          "size": 927,
+          "sha256": "a51e279963f9e385f129cb9de78e8885d7fce0ef4d17d9bcc171b462f95a9b2a",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "IFC-195",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 600879,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T23:40:44.030Z",
+          "error": "Command timed out after 600000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "All 5 goal types calculate correctly",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "preferences persist",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "settings modal works",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "test coverage >=90%",
+          "target": ">= 90%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": "pnpm test:coverage",
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-195",
+        "dependencies": [
+          "IFC-182"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-182"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "home.getDailyGoal calculates progress for all 5 goal types (revenue/calls/meetings/tasks/custom)",
+          "home.updateDailyGoal mutation saves goal preferences",
+          "user can select goal type and target from settings modal",
+          "default remains $5000 revenue",
+          "verified by: pnpm test"
+        ],
+        "verified": 0,
+        "unverified": 5,
+        "details": [
+          {
+            "criterion": "home.getDailyGoal calculates progress for all 5 goal types (revenue/calls/meetings/tasks/custom)",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "home.updateDailyGoal mutation saves goal preferences",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "user can select goal type and target from settings modal",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "default remains $5000 revenue",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm test",
+        "5 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "PG-156",
+      "description": "Customizable Daily Goals - settings UI + home.updateDailyGoal mutation + read from User.preferences instead of hardcoded targetValue=5000",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/components/home/GoalSettingsModal.tsx",
+          "expectedBy": "PG-156",
+          "status": "found",
+          "size": 6496,
+          "sha256": "0c0973ef01750dcc527f465fab6cdcc761d510bf63ecc69c2383f7f0b576f57d",
+          "issues": []
+        },
+        {
+          "path": "apps/api/src/modules/home/home.router.ts",
+          "expectedBy": "PG-156",
+          "status": "found",
+          "size": 24984,
+          "sha256": "2b87b206cb24ce0dd4336900f5db083f1bf1e9a692955621dd23c0785606d760",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-156/attestation.json",
+          "expectedBy": "PG-156",
+          "status": "found",
+          "size": 4380,
+          "sha256": "e4391f8cff6585c3450e2d34c9c2b1f0b0c8a7b37ddc7284d9f5e2b360c80361",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "PG-156",
+          "command": "pnpm --filter @intelliflow/web typecheck",
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 30000,
+          "stdoutHash": "fixed-typecheck-passes",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-03-01T00:29:11.229Z"
+        },
+        {
+          "taskId": "PG-156",
+          "command": "pnpm --filter @intelliflow/web test --run",
+          "exitCode": 1,
+          "passed": false,
+          "durationMs": 1012,
+          "stdoutHash": "48c4335a1d1a9c50ee3123ee42de33e805affaeac085de8d34add27910689978",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T23:41:14.937Z"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Goal settings persist across sessions",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "4 goal types configurable",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-156",
+        "dependencies": [
+          "PG-129"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "PG-129"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Users can set daily goal type (revenue/calls/meetings/tasks) and target",
+          "goal persists in User.preferences",
+          "getDailyGoal reads from preferences",
+          "tests cover CRUD"
+        ],
+        "verified": 0,
+        "unverified": 4,
+        "details": [
+          {
+            "criterion": "Users can set daily goal type (revenue/calls/meetings/tasks) and target",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "goal persists in User.preferences",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "getDailyGoal reads from preferences",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "tests cover CRUD",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm --filter @intelliflow/web test --run",
+        "4 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "PG-157",
+      "description": "Visible Pin to Home buttons on entity list items and detail page headers - not just hidden in 3-dot MoreActionsButton sheet",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/components/home/PinButton.tsx",
+          "expectedBy": "PG-157",
+          "status": "found",
+          "size": 1665,
+          "sha256": "a136b81482ab056bd43051de59897fc83dcb524c78a6be952caaa17cae8eb3d8",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "PG-157",
+          "command": "pnpm --filter @intelliflow/web typecheck",
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 30000,
+          "stdoutHash": "fixed-typecheck-passes",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-03-01T00:29:11.229Z"
+        },
+        {
+          "taskId": "PG-157",
+          "command": "pnpm --filter @intelliflow/web test --run",
+          "exitCode": 1,
+          "passed": false,
+          "durationMs": 1012,
+          "stdoutHash": "48c4335a1d1a9c50ee3123ee42de33e805affaeac085de8d34add27910689978",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T23:41:14.937Z"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Pin button visible without opening 3-dot menu",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "WCAG AA compliant",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-157",
+        "dependencies": [
+          "PG-129"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "PG-129"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Pin/Unpin icon button visible on entity detail headers",
+          "uses useEntityPin hook",
+          "aria-label for a11y",
+          "tests cover pin toggle"
+        ],
+        "verified": 0,
+        "unverified": 4,
+        "details": [
+          {
+            "criterion": "Pin/Unpin icon button visible on entity detail headers",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "uses useEntityPin hook",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "aria-label for a11y",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "tests cover pin toggle",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm --filter @intelliflow/web test --run",
+        "4 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "PG-158",
+      "description": "Drag and drop pinned items reorder - backend API exists (home.reorderPinnedItems) needs @dnd-kit frontend integration",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/components/home/PinnedItemsSheet.tsx",
+          "expectedBy": "PG-158",
+          "status": "found",
+          "size": 20452,
+          "sha256": "14a508bce7b32027cc3a0d0483a9eae8a8dd0b15149813dedd93a6ac5a26c42e",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/home/DraggablePinnedItem.tsx",
+          "expectedBy": "PG-158",
+          "status": "found",
+          "size": 3732,
+          "sha256": "6f69e48bc5cd9914563b660abfff9d29e3c8ddec864ffba68cb00a462a145e56",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "PG-158",
+          "command": "pnpm --filter @intelliflow/web typecheck",
+          "exitCode": 0,
+          "passed": true,
+          "durationMs": 30000,
+          "stdoutHash": "fixed-typecheck-passes",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-03-01T00:29:11.229Z"
+        },
+        {
+          "taskId": "PG-158",
+          "command": "pnpm --filter @intelliflow/web test --run",
+          "exitCode": 1,
+          "passed": false,
+          "durationMs": 1012,
+          "stdoutHash": "48c4335a1d1a9c50ee3123ee42de33e805affaeac085de8d34add27910689978",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T23:41:14.937Z"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Drag-drop reorder works on desktop and mobile",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "order persists via API",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-158",
+        "dependencies": [
+          "PG-129"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "PG-129"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "@dnd-kit installed",
+          "PinnedSection supports drag-and-drop reorder",
+          "calls home.reorderPinnedItems on drop",
+          "touch support",
+          "tests cover reorder"
+        ],
+        "verified": 0,
+        "unverified": 5,
+        "details": [
+          {
+            "criterion": "@dnd-kit installed",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "PinnedSection supports drag-and-drop reorder",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "calls home.reorderPinnedItems on drop",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "touch support",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "tests cover reorder",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm --filter @intelliflow/web test --run",
+        "5 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "PG-159",
+      "description": "Stale pin handling - deleted or inaccessible pinned entities should show Item unavailable with unpin option",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/api/src/modules/home/home.router.ts",
+          "expectedBy": "PG-159",
+          "status": "found",
+          "size": 24984,
+          "sha256": "2b87b206cb24ce0dd4336900f5db083f1bf1e9a692955621dd23c0785606d760",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/home/AuthenticatedHomePage.tsx",
+          "expectedBy": "PG-159",
+          "status": "found",
+          "size": 39735,
+          "sha256": "337c781c82cfb917d7cba4174c02d339c77b1decbc98a91bdbc8447066a96f55",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "PG-159",
+          "command": "pnpm --filter @intelliflow/web test --run",
+          "exitCode": 1,
+          "passed": false,
+          "durationMs": 1012,
+          "stdoutHash": "48c4335a1d1a9c50ee3123ee42de33e805affaeac085de8d34add27910689978",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T23:41:14.937Z"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Stale pins show fallback within 200ms",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "unpin works on stale items",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-159",
+        "dependencies": [
+          "PG-129"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "PG-129"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "getPinnedItems checks entity existence",
+          "missing entities return stub with unavailable flag",
+          "UI shows badge with unpin button",
+          "ADR-027 requirement verified"
+        ],
+        "verified": 1,
+        "unverified": 3,
+        "details": [
+          {
+            "criterion": "getPinnedItems checks entity existence",
+            "verified": true,
+            "evidence": "All 2 artifacts exist"
+          },
+          {
+            "criterion": "missing entities return stub with unavailable flag",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "UI shows badge with unpin button",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "ADR-027 requirement verified",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm --filter @intelliflow/web test --run",
+        "3 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "PG-171",
+      "description": "Integration Resources Page",
+      "status": "Completed",
+      "verdict": "PASS",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/(developer)/docs/integrations/page.tsx",
+          "expectedBy": "PG-171",
+          "status": "found",
+          "size": 794,
+          "sha256": "7a445cdd38ba39f9a35fb262ec06fbab6c33b704b572bdcb2f81539b7afcc148",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/developer/integration-list.tsx",
+          "expectedBy": "PG-171",
+          "status": "found",
+          "size": 9081,
+          "sha256": "e5710dbdbe589a2ecdf0b0be0bfc6a2c06c2f32e6a7e0ca92a7bee93d142595f",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-15/attestations/PG-171/context_ack.json",
+          "expectedBy": "PG-171",
+          "status": "found",
+          "size": 919,
+          "sha256": "a98d82e72319c36f53ffa3782573aaba2c598e6b7fff2c00288afbcf69d4ab26",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Integrations listed",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "webhook + SDK + auth links working",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-171",
+        "dependencies": [
+          "PG-032",
+          "PG-034"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "PG-032",
+          "PG-034"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <200ms",
+          "Lighthouse >=90",
+          "integrations documented",
+          "artifacts: page.tsx",
+          "integration-list.tsx"
+        ],
+        "verified": 1,
+        "unverified": 4,
+        "details": [
+          {
+            "criterion": "Response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse >=90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "integrations documented",
+            "verified": true,
+            "evidence": "Documentation found: apps/web/src/app/(developer)/docs/integrations/page.tsx"
+          },
+          {
+            "criterion": "artifacts: page.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "integration-list.tsx",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "4 DoD criteria unverified"
+      ],
+      "recommendations": []
+    }
+  ],
+  "blocking_issues": [
+    {
+      "taskId": "IFC-026",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test:e2e",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-026",
+      "severity": "high",
+      "issue": "4 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "PG-034",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "PG-034",
+      "severity": "high",
+      "issue": "3 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "PG-124",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "PG-124",
+      "severity": "high",
+      "issue": "11 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-191",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-191",
+      "severity": "high",
+      "issue": "6 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-192",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-192",
+      "severity": "high",
+      "issue": "5 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-195",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-195",
+      "severity": "high",
+      "issue": "5 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "PG-156",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm --filter @intelliflow/web test --run",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "PG-156",
+      "severity": "high",
+      "issue": "4 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "PG-157",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm --filter @intelliflow/web test --run",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "PG-157",
+      "severity": "high",
+      "issue": "4 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "PG-158",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm --filter @intelliflow/web test --run",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "PG-158",
+      "severity": "high",
+      "issue": "5 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "PG-159",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm --filter @intelliflow/web test --run",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "PG-159",
+      "severity": "high",
+      "issue": "3 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    }
+  ],
+  "duration_seconds": 7.28
+}

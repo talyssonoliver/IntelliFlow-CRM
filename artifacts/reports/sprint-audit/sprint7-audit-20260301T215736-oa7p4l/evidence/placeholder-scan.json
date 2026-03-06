@@ -1,0 +1,142 @@
+{
+  "generated_at": "2026-03-01T21:58:16.862Z",
+  "run_id": "sprint7-audit-20260301T215736-oa7p4l",
+  "total_placeholders": 15,
+  "findings": [
+    {
+      "taskId": "IFC-093",
+      "file": "apps\\web\\lib\\tickets\\sla-notifications.ts",
+      "line": 305,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {\n        // Audio play failed, likely due to autoplay policy\n      }",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-148",
+      "file": "apps\\api\\src\\modules\\agent\\__tests__\\conversation.router.test.ts",
+      "line": 796,
+      "column": 42,
+      "pattern": "MOCK_RETURN",
+      "content": "if (name === 'user-agent') return 'TestAgent/1.0';",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\CaseList.tsx",
+      "line": 392,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-138",
+      "file": "apps\\web\\src\\components\\cases\\CaseList.tsx",
+      "line": 483,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 101,
+      "column": 7,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "mutateAsync: async () => {},",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 77,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 81,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 85,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 89,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 93,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 97,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 101,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 106,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-139",
+      "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+      "line": 110,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-150",
+      "file": "apps\\web\\src\\components\\ai-intelligence\\ReviewHistory.tsx",
+      "line": 392,
+      "column": 1,
+      "pattern": "EMPTY_FUNCTION",
+      "content": "() => {}",
+      "linkedTaskId": null
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+
+============================================================
+Sprint 3 Completion Audit
+Run ID: sprint3-audit-20260228T015110-8lmmeo
+Strict Mode: false
+============================================================
+
+Total sprint tasks: 9
+Completed tasks to audit: 9
+
+Running placeholder scan (once for all tasks)...
+Scanning for placeholders in C:\Users\talys\projects\intelliFlow-CRM...
+Found 2818 files to scan
+Found 1440 placeholder(s)
+Placeholder scan complete: 1440 findings in 25.5s
+
+Auditing task: IFC-006
+Attestation written to: C:\Users\talys\projects\intelliFlow-CRM\.specify\sprints\sprint-3\attestations\IFC-006\attestation-20260228-015136.json
+  (also updated: attestation-latest.json)
+Auditing task: IFC-007
+Attestation written to: C:\Users\talys\projects\intelliFlow-CRM\.specify\sprints\sprint-3\attestations\IFC-007\attestation-20260228-015136.json
+  (also updated: attestation-latest.json)
+Auditing task: IFC-011
+Attestation written to: C:\Users\talys\projects\intelliFlow-CRM\.specify\sprints\sprint-3\attestations\IFC-011\attestation-20260228-015136.json
+  (also updated: attestation-latest.json)
+Auditing task: IFC-104
+Attestation written to: C:\Users\talys\projects\intelliFlow-CRM\.specify\sprints\sprint-3\attestations\IFC-104\attestation-20260228-015136.json
+  (also updated: attestation-latest.json)
+Auditing task: IFC-105
+Attestation written to: C:\Users\talys\projects\intelliFlow-CRM\.specify\sprints\sprint-3\attestations\IFC-105\attestation-20260228-015136.json
+  (also updated: attestation-latest.json)
+Auditing task: IFC-107
+Attestation written to: C:\Users\talys\projects\intelliFlow-CRM\.specify\sprints\sprint-3\attestations\IFC-107\attestation-20260228-015136.json
+  (also updated: attestation-latest.json)
+Auditing task: IFC-128
+Attestation written to: C:\Users\talys\projects\intelliFlow-CRM\.specify\sprints\sprint-3\attestations\IFC-128\attestation-20260228-015136.json
+  (also updated: attestation-latest.json)
+Auditing task: IFC-136
+Attestation written to: C:\Users\talys\projects\intelliFlow-CRM\.specify\sprints\sprint-3\attestations\IFC-136\attestation-20260228-015136.json
+  (also updated: attestation-latest.json)
+Debt ledger updated: C:\Users\talys\projects\intelliFlow-CRM\docs\debt-ledger.yaml
+  Created 1 action item(s) in debt-ledger.yaml
+Auditing task: IFC-176
+Attestation written to: C:\Users\talys\projects\intelliFlow-CRM\.specify\sprints\sprint-3\attestations\IFC-176\attestation-20260228-015138.json
+  (also updated: attestation-latest.json)
+
+============================================================
+Audit Complete - Verdict: FAIL
+Duration: 30.0s
+============================================================
+
+JSON report written to: C:\Users\talys\projects\intelliFlow-CRM\artifacts\reports\sprint-audit\sprint3-audit-20260228T015110-8lmmeo\audit.json
+Markdown report written to: C:\Users\talys\projects\intelliFlow-CRM\artifacts\reports\sprint-audit\sprint3-audit-20260228T015110-8lmmeo\audit.md
+Verdict JSON written to: C:\Users\talys\projects\intelliFlow-CRM\artifacts\reports\sprint-audit\sprint3-audit-20260228T015110-8lmmeo\verdict.json
+Artifact hashes written to: C:\Users\talys\projects\intelliFlow-CRM\artifacts\reports\sprint-audit\sprint3-audit-20260228T015110-8lmmeo\evidence\artifact-hashes.txt
+Placeholder scan written to: C:\Users\talys\projects\intelliFlow-CRM\artifacts\reports\sprint-audit\sprint3-audit-20260228T015110-8lmmeo\evidence\placeholder-scan.json
+
+All reports written to: C:\Users\talys\projects\intelliFlow-CRM\artifacts\reports\sprint-audit\sprint3-audit-20260228T015110-8lmmeo
+Latest report copied to: C:\Users\talys\projects\intelliFlow-CRM\artifacts\reports\sprint-audit\sprint-3-latest
+
+============================================================
+AUDIT SUMMARY
+============================================================
+Sprint: 3
+Verdict: FAIL
+Total Tasks: 9
+Audited: 9
+  ✅ Passed: 0
+  ❌ Failed: 9
+  ⚠️  Needs Human: 0
+Blocking Issues: 19
+============================================================
+
+BLOCKING ISSUES:
+  [CRITICAL] IFC-006: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-3/attestations/IFC-006/context_ack.json
+  [HIGH] IFC-006: 5 DoD criteria unverified
+  [CRITICAL] IFC-007: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-3/attestations/IFC-007/context_ack.json
+  [HIGH] IFC-007: 4 DoD criteria unverified
+  [CRITICAL] IFC-011: Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-3/attestations/IFC-011/context_ack.json
+  ... and 14 more
+
+Full report: C:\Users\talys\projects\intelliFlow-CRM\artifacts\reports\sprint-audit\sprint3-audit-20260228T015110-8lmmeo\audit.md

@@ -1,0 +1,2259 @@
+{
+  "$schema": "../schemas/sprint-audit-report.schema.json",
+  "schema_version": "1.0.0",
+  "run_id": "sprint2-audit-20260228T202225-ydefbi",
+  "sprint": 2,
+  "generated_at": "2026-02-28T20:22:31.431Z",
+  "attestor": "sprint-completion-auditor",
+  "verdict": "FAIL",
+  "config": {
+    "strictMode": false,
+    "skipValidations": false
+  },
+  "summary": {
+    "totalTasks": 12,
+    "completedTasks": 12,
+    "auditedTasks": 12,
+    "passedTasks": 3,
+    "failedTasks": 8,
+    "needsHumanTasks": 1
+  },
+  "attestation_summary": {
+    "by_verdict": {
+      "complete": 3,
+      "incomplete": 8,
+      "partial": 0,
+      "blocked": 0,
+      "needs_human": 1,
+      "missing": 0
+    },
+    "debt_items_created": 8,
+    "review_queue_items": 1
+  },
+  "evidence_summary": {
+    "artifactsVerified": 80,
+    "artifactsMissing": 0,
+    "artifactsEmpty": 0,
+    "validationsPassed": 0,
+    "validationsFailed": 8,
+    "kpisMet": 0,
+    "kpisMissed": 0,
+    "placeholdersFound": 14,
+    "totalCodebasePlaceholders": 1331
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/leads/(list)/new/page.tsx": "c39f3d570142f7bcec0643f53bcf49b97a6c1c07f23de1c88922be184f602b3e",
+    "artifacts/lighthouse/lighthouse-report.json": "6976abce867921be7e4fa15971c2fe771677bc16f840936e30854db24b2ccfc2",
+    "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md": "869fc83b4b9957fba7643c30ff6b5fbc02630ecc1b192b3d95211dda57dc4949",
+    "apps/project-tracker/docs/metrics/_global/flows/FLOW-003.md": "208cb9c7407375945868d6fcedc54f1da511d03fcaed4c2f6596b31f2a1fe5ed",
+    ".specify/sprints/sprint-2/attestations/IFC-004/context_ack.json": "d467f9734158e487593d0f58d70d8a6190f449f9dbb2d6876624bff843358a5c",
+    "apps/ai-worker/src/chains/scoring.chain.ts": "e441e6d64371542509a9ce9864d339d8a7880caad581c831c77e226c23c09dec",
+    "apps/ai-worker/src/chains/scoring.chain.test.ts": "2f476fd74344ce68864ffc248c4b6122a306851a9b66e8807b5860ec14943ef3",
+    "apps/ai-worker/src/config/ai.config.ts": "97e5016c56b55375b2d6db15db278ad4542936a90093aa3bff753632c06647d8",
+    "apps/ai-worker/src/prompts/index.ts": "651aed88f1acafe7ef434203c2995c72cb5fb302f65428b390d958996b7ee9df",
+    "apps/ai-worker/src/prompts/scoring-system.txt": "e94a0325749aa0c95f452f4f569ba7b9afecb9d05853f8ccf5e48ecaa8a4405a",
+    "apps/ai-worker/src/prompts/scoring-user.txt": "94ab9377da64b12aa5c4d14a6a5ce99122f72f513c4a3aa940b7a0c6cc2f3e51",
+    "apps/ai-worker/src/types/index.ts": "11a7313e2d9d657620c2dc6e5866a209cab52ef20ace9857853950b60e73e58b",
+    "apps/ai-worker/src/utils/cost-tracker.ts": "c8f65d46cd2fad0f98a5427330ccf60eaceca3d5a732c3acfbb0ae4947ca2354",
+    "apps/ai-worker/src/utils/cost-tracker.test.ts": "0452396223d5bed0a4f0b8c75dc95f175b2fff6bb95c48937f7f4554bd89f680",
+    "apps/ai-worker/src/utils/logger.ts": "c568861d83757e66558af81f14e657cc128085ad485f8d39c758990e001126a8",
+    "apps/ai-worker/src/utils/logger.test.ts": "abc003b776a5a10c5274217281a2c46a8d5df6b65c345c35c501f5e1a5f4d8a5",
+    "apps/ai-worker/src/utils/retry.ts": "374eec32d9feba0dd69e6370b0a0d9e5fb556113ebc37014d021e1dbc38a5932",
+    "apps/ai-worker/src/utils/retry.test.ts": "070c4ff838cb12eabfc8b2bcbf66dec18fcde86785ffe9ea55d85ce833ffcce1",
+    "apps/ai-worker/src/index.ts": "0036e2b7de450ffeeb7aa80459c7cff17c8cac681d02707bed57e3fbc3060e12",
+    "apps/ai-worker/src/examples/usage.ts": "c4d4204e9b6df6bea1c4505072d516ab12af439cb8d75b1d4d0fda7e7f908dc6",
+    "apps/api/src/shared/scoring-output-schema.zod.ts": "e597b75d37b699acf1cb358560788dc07ec770bf2554e18bbf496c85eb821b69",
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md": "438a5729539842f4c1da092828199ea256759eb99e8cd39bed6e0bb4b0da0e47",
+    ".specify/sprints/sprint-2/attestations/IFC-005/context_ack.json": "f1e81012edf0aa18e2bf9bddf540c104657754dfbfbd30bef9e531e6e5df7fe3",
+    "artifacts/reports/compliance-report.md": "eb37487db359a2f756e50309c09c45a1e5f3960299bb4b16e761527dcc436d43",
+    "docs/security/owasp-checklist.md": "b7708af7235b93b1e2c05bf2c9a64952ad3682ff84cbf909452417c8237f4e40",
+    "docs/planning/iso42001-gap-analysis.md": "c8626f355f25e074e2aeb8179f145039ed35b0035277c8300000cd50f5021e24",
+    "artifacts/reports/zap-scan-report.json": "0429c50689efdb764ba87fa56ccdd0c569204130bb252bb1f863aebea60e2a82",
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-003-validation.md": "a589684fe082e0f3f9440fd567b2d27676bdc4483dd3aaa30f0bd65633ca2ff0",
+    "artifacts/misc/architecture-spike/README.md": "7182383292708080a46287d7fd3efc715b94182ba8056f973e7e0305a2b25ed2",
+    "artifacts/misc/architecture-spike/performance-test.ts": "4b5e2706e0103ed9de2b59ecdc7badbc083239fecf6b79101228b9c932b98871",
+    "artifacts/misc/architecture-spike/type-safety-validation.ts": "bf19a6e77d21a0eda4b78232f878ffe5cbefc5545832e9f29fac2248a10b51db",
+    ".specify/sprints/sprint-2/attestations/IFC-008/context_ack.json": "f43dfd84889f51eb83716a0858979e0724f3a56889e26d35fd59c3b5a2bfb0a9",
+    "docs/security/zero-trust-design.md": "bbc0f7f929eac6474cb371ac92c26776186d0b30ae6f3640c2ebf0921f68fb62",
+    "docs/security/pentest-summary.md": "5907547d470cc68bea31ece18184fe454dcb350bb742550dc8436481caef682d",
+    ".specify/sprints/sprint-2/attestations/IFC-072/context_ack.json": "672dd567c8f35f9849da42fd25cddd0081f2e153dbdc8032b83e3dc01b45e32f",
+    "artifacts/reports/gdpr-compliance.md": "aafdf6e7aa1a0fab458f702dce89c05a6ff3a72719a53db3a87f5439f7a0300d",
+    "artifacts/reports/risk-matrix.md": "874dce2fb90f99e52b378add9206437019020e06849b59c71948b71699105830",
+    ".specify/sprints/sprint-2/attestations/IFC-073/context_ack.json": "354d8cf30704aaabb84e644a0b82fdcaeb0063c2dd39acfb6dc4275701be980b",
+    "artifacts/misc/ollama-setup.sh": "31da443cec72688b9f08cccda48743e26ab9afc9692be4c76651771b4f55aaa4",
+    "artifacts/misc/model-comparison.csv": "9dc1de057f0675dfaf02a4a76fa0f99d30e5629898f1d2e4c2a39d905a0ac3fe",
+    "artifacts/reports/cost-savings-report.json": "319936d003f7f48f6b4be974902e13caf126df3c9a4ac8f06b78fe6fd75fac44",
+    "artifacts/benchmarks/accuracy-benchmarks.json": "d0bc5be80585a1d53914526be46323cc45798a4c3fe9c1514103005a271d8c1c",
+    "scripts/setup-ollama.sh": "ad8c4b5a19e0d24881a6cc9a5e873b4470de2c23d0137f05b2b742e210f11f6f",
+    ".specify/sprints/sprint-2/attestations/IFC-085/context_ack.json": "a42132d5c55f95631e3655091c522c7534790b1221312440e18204b86c450772",
+    "docs/planning/adr/ADR-022-ai-features-quality.md": "483986ee8024d71697f507aa567e9980d91bda8192ac4a7453845b3e7fff2cba",
+    "docs/planning/prd-ai-output-quality.md": "85d8eaa5107ea51d87790fcac72bd683d145d893aa7d91408bbd359c861912e0",
+    "docs/sales/sales-motion-playbook.md": "8860ba19f040bf4cfaf8ef83aa2a451041b8403798cda98c3f455185eec85829",
+    "docs/sales/discovery-script.md": "6d8731f231d401cebb928aeb55a455e2986ab0bd5427723fb215e9532f060bc2",
+    "docs/sales/demo-script.md": "930b36cc8075fbbdca245e926cfc591a5514a36bb76f7ea9a8191ce922036b68",
+    "docs/sales/outreach-sequences.md": "e053f1e25f3b3d2b3c4dedb942972b2a2843844f78e0773f6bb1a9477ef20cd2",
+    ".specify/sprints/sprint-2/attestations/SALES-002/context_ack.json": "f8ee46a517ac0ee8aadc84fdc858f8f757b7a3239c6c7fcd36d60dba92079a26",
+    "packages/adapters/src/repositories/PrismaLeadRepository.ts": "e3bd545a1b9869ac07afed9890d3d828e6a6f9795ef94d32bf0f19307a78498b",
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md": "c9cc7e6baa1d80fa2733622e71d48dfc4b657b65a8506dcbaf8ac4b7b2150f38",
+    ".specify/sprints/sprint-2/attestations/IFC-101/context_ack.json": "625a868f151e1a494c4b306e6fb41c42e1a01de0d73434c4d478a53de0dd1888",
+    "docs/planning/adr/ADR-019-core-crm-foundation.md": "95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb",
+    "docs/planning/prd-core-crm.md": "7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219",
+    "packages/adapters/src/repositories/PrismaContactRepository.ts": "0885c2b5e3b634a2853802ef394ffdde7ac2b964a5eb41dedcee919c835e5fde",
+    ".specify/sprints/sprint-2/attestations/IFC-102/context_ack.json": "62680ee9320cf1b326648f183faee743664c8b08528204c42c526754a44eab81",
+    "packages/adapters/src/repositories/PrismaAccountRepository.ts": "5a5f99761d32beb8d4fed2a35d350825579fd6450c59c06691aba0dda80085ec",
+    ".specify/sprints/sprint-2/attestations/IFC-103/context_ack.json": "1b28fc97832d1835b590b4f42d4b04b7e70aee2ecbe7e9fc785cedb0837a5801",
+    "docs/tdd-guidelines.md": "4387ed3cf456f17a7510a44ad10ba933d15cbba90f2292e481779b4c1af41473",
+    "artifacts/misc/ci-coverage-config.yml": "178921ba3fde882335a197c3b341ab2b2b86b9d6f0a5b60f13ca1bb66c77d51f",
+    "docs/shared/review-checklist.md": "7f42ba091d6782d0fb518a02830b69aa6f8137225bd3933feb8a021ca7594920",
+    ".specify/sprints/sprint-2/attestations/IFC-109/context_ack.json": "d6797ae06a0df2add3ba1d54f155036fea93c11529647457ed3f86c8f464d93c",
+    "docs/planning/prd-template.md": "6ed535bc76b5d7d5a67b5155ca1af7001af3651e43365a75cfe4cd85dab5fcf0",
+    "docs/planning/user-journey-template.md": "a6e59e7b89167845edbda6bd0433792a1fa05aa1c565e61aa9b5e4edec58e4f3",
+    "docs/planning/definition-of-ready.md": "693ef1af752e11b316c260e7d7a6e368bfed308998e86d8d20b54501fdb75648",
+    "artifacts/reports/traceability-matrix.md": "d0800c5f01bc0bccbb9ce040994971a48524eb95ca4554e214f401be9d0d6def",
+    "artifacts/logs/backlog-updates-log.csv": "1454178069a26696adfe58c79bf47f32746e8b50582582b28358fffb91685f56",
+    ".specify/sprints/sprint-2/attestations/IFC-146/context_ack.json": "0bb5d32d7da74351b89563e40eb069b72a30e79e4a5afe92d90eada049bef19e"
+  },
+  "task_results": [
+    {
+      "taskId": "IFC-004",
+      "description": "PHASE-002: Next.js 16.0.10 Lead Capture UI",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/leads/(list)/new/page.tsx",
+          "expectedBy": "IFC-004",
+          "status": "found",
+          "size": 45618,
+          "sha256": "c39f3d570142f7bcec0643f53bcf49b97a6c1c07f23de1c88922be184f602b3e",
+          "issues": []
+        },
+        {
+          "path": "artifacts/lighthouse/lighthouse-report.json",
+          "expectedBy": "IFC-004",
+          "status": "found",
+          "size": 1972,
+          "sha256": "6976abce867921be7e4fa15971c2fe771677bc16f840936e30854db24b2ccfc2",
+          "issues": []
+        },
+        {
+          "path": "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md",
+          "expectedBy": "IFC-004",
+          "status": "found",
+          "size": 5021,
+          "sha256": "869fc83b4b9957fba7643c30ff6b5fbc02630ecc1b192b3d95211dda57dc4949",
+          "issues": []
+        },
+        {
+          "path": "apps/project-tracker/docs/metrics/_global/flows/FLOW-003.md",
+          "expectedBy": "IFC-004",
+          "status": "found",
+          "size": 4888,
+          "sha256": "208cb9c7407375945868d6fcedc54f1da511d03fcaed4c2f6596b31f2a1fe5ed",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-2/attestations/IFC-004/context_ack.json",
+          "expectedBy": "IFC-004",
+          "status": "found",
+          "size": 1405,
+          "sha256": "d467f9734158e487593d0f58d70d8a6190f449f9dbb2d6876624bff843358a5c",
+          "issues": []
+        }
+      ],
+      "placeholders": [
+        {
+          "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+          "line": 251,
+          "column": 52,
+          "pattern": "TODO",
+          "content": "// are not yet supported by the API schema - TODO: Extend schema or store separately",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+          "line": 456,
+          "column": 206,
+          "pattern": "PLACEHOLDER",
+          "content": "...20 focus:border-[#137fec] placeholder-slate-400 transition-shadow ${",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+          "line": 482,
+          "column": 206,
+          "pattern": "PLACEHOLDER",
+          "content": "...20 focus:border-[#137fec] placeholder-slate-400 transition-shadow ${",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+          "line": 512,
+          "column": 214,
+          "pattern": "PLACEHOLDER",
+          "content": "... focus:border-[#137fec] placeholder-slate-400 transition-shadow ${",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+          "line": 543,
+          "column": 252,
+          "pattern": "PLACEHOLDER",
+          "content": "... focus:border-[#137fec] placeholder-slate-400 transition-shadow\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+          "line": 563,
+          "column": 244,
+          "pattern": "PLACEHOLDER",
+          "content": "...20 focus:border-[#137fec] placeholder-slate-400 transition-shadow\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+          "line": 622,
+          "column": 208,
+          "pattern": "PLACEHOLDER",
+          "content": "... focus:border-[#137fec] placeholder-slate-400 transition-shadow ${",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+          "line": 665,
+          "column": 244,
+          "pattern": "PLACEHOLDER",
+          "content": "...20 focus:border-[#137fec] placeholder-slate-400 transition-shadow\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+          "line": 690,
+          "column": 252,
+          "pattern": "PLACEHOLDER",
+          "content": "... focus:border-[#137fec] placeholder-slate-400 transition-shadow\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+          "line": 824,
+          "column": 244,
+          "pattern": "PLACEHOLDER",
+          "content": "...20 focus:border-[#137fec] placeholder-slate-400 transition-shadow\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+          "line": 842,
+          "column": 244,
+          "pattern": "PLACEHOLDER",
+          "content": "...20 focus:border-[#137fec] placeholder-slate-400 transition-shadow\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+          "line": 860,
+          "column": 244,
+          "pattern": "PLACEHOLDER",
+          "content": "...20 focus:border-[#137fec] placeholder-slate-400 transition-shadow\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\leads\\(list)\\new\\page.tsx",
+          "line": 911,
+          "column": 244,
+          "pattern": "PLACEHOLDER",
+          "content": "...20 focus:border-[#137fec] placeholder-slate-400 transition-shadow resize-none\"",
+          "linkedTaskId": null
+        }
+      ],
+      "validations": [
+        {
+          "taskId": "IFC-004",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 602063,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T19:33:58.435Z",
+          "error": "Command timed out after 600000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Lighthouse score >90",
+          "target": "> 90",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "form submission <1s",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-004",
+        "dependencies": [
+          "IFC-003"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-003"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Lead form with tRPC integration",
+          "mobile responsive",
+          "Next.js 16.0.10 App Router uses Turbopack FS caching and Cache Components",
+          "proxy replaces middleware where required",
+          "targets: <1s",
+          "verified by: pnpm test",
+          "gates: lighthouse-gte-90"
+        ],
+        "verified": 0,
+        "unverified": 7,
+        "details": [
+          {
+            "criterion": "Lead form with tRPC integration",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "mobile responsive",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Next.js 16.0.10 App Router uses Turbopack FS caching and Cache Components",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "proxy replaces middleware where required",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: <1s",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          },
+          {
+            "criterion": "gates: lighthouse-gte-90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Found 13 placeholder(s) in task artifacts",
+        "Validation(s) failed: pnpm test",
+        "7 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Remove TODO, FIXME, STUB, and empty function placeholders",
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-005",
+      "description": "FLOW-002, FLOW-011: LangChain AI Scoring Prototype",
+      "status": "Completed",
+      "verdict": "NEEDS_HUMAN",
+      "artifacts": [
+        {
+          "path": "apps/ai-worker/src/chains/scoring.chain.ts",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 11626,
+          "sha256": "e441e6d64371542509a9ce9864d339d8a7880caad581c831c77e226c23c09dec",
+          "issues": []
+        },
+        {
+          "path": "apps/ai-worker/src/chains/scoring.chain.test.ts",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 6472,
+          "sha256": "2f476fd74344ce68864ffc248c4b6122a306851a9b66e8807b5860ec14943ef3",
+          "issues": []
+        },
+        {
+          "path": "apps/ai-worker/src/config/ai.config.ts",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 5309,
+          "sha256": "97e5016c56b55375b2d6db15db278ad4542936a90093aa3bff753632c06647d8",
+          "issues": []
+        },
+        {
+          "path": "apps/ai-worker/src/prompts/index.ts",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 5137,
+          "sha256": "651aed88f1acafe7ef434203c2995c72cb5fb302f65428b390d958996b7ee9df",
+          "issues": []
+        },
+        {
+          "path": "apps/ai-worker/src/prompts/scoring-system.txt",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 1658,
+          "sha256": "e94a0325749aa0c95f452f4f569ba7b9afecb9d05853f8ccf5e48ecaa8a4405a",
+          "issues": []
+        },
+        {
+          "path": "apps/ai-worker/src/prompts/scoring-user.txt",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 886,
+          "sha256": "94ab9377da64b12aa5c4d14a6a5ce99122f72f513c4a3aa940b7a0c6cc2f3e51",
+          "issues": []
+        },
+        {
+          "path": "apps/ai-worker/src/types/index.ts",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 1063,
+          "sha256": "11a7313e2d9d657620c2dc6e5866a209cab52ef20ace9857853950b60e73e58b",
+          "issues": []
+        },
+        {
+          "path": "apps/ai-worker/src/utils/cost-tracker.ts",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 6749,
+          "sha256": "c8f65d46cd2fad0f98a5427330ccf60eaceca3d5a732c3acfbb0ae4947ca2354",
+          "issues": []
+        },
+        {
+          "path": "apps/ai-worker/src/utils/cost-tracker.test.ts",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 11502,
+          "sha256": "0452396223d5bed0a4f0b8c75dc95f175b2fff6bb95c48937f7f4554bd89f680",
+          "issues": []
+        },
+        {
+          "path": "apps/ai-worker/src/utils/logger.ts",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 2421,
+          "sha256": "c568861d83757e66558af81f14e657cc128085ad485f8d39c758990e001126a8",
+          "issues": []
+        },
+        {
+          "path": "apps/ai-worker/src/utils/logger.test.ts",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 9381,
+          "sha256": "abc003b776a5a10c5274217281a2c46a8d5df6b65c345c35c501f5e1a5f4d8a5",
+          "issues": []
+        },
+        {
+          "path": "apps/ai-worker/src/utils/retry.ts",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 6951,
+          "sha256": "374eec32d9feba0dd69e6370b0a0d9e5fb556113ebc37014d021e1dbc38a5932",
+          "issues": []
+        },
+        {
+          "path": "apps/ai-worker/src/utils/retry.test.ts",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 12719,
+          "sha256": "070c4ff838cb12eabfc8b2bcbf66dec18fcde86785ffe9ea55d85ce833ffcce1",
+          "issues": []
+        },
+        {
+          "path": "apps/ai-worker/src/index.ts",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 10182,
+          "sha256": "0036e2b7de450ffeeb7aa80459c7cff17c8cac681d02707bed57e3fbc3060e12",
+          "issues": []
+        },
+        {
+          "path": "apps/ai-worker/src/examples/usage.ts",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 8879,
+          "sha256": "c4d4204e9b6df6bea1c4505072d516ab12af439cb8d75b1d4d0fda7e7f908dc6",
+          "issues": []
+        },
+        {
+          "path": "apps/api/src/shared/scoring-output-schema.zod.ts",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 2590,
+          "sha256": "e597b75d37b699acf1cb358560788dc07ec770bf2554e18bbf496c85eb821b69",
+          "issues": []
+        },
+        {
+          "path": "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 5021,
+          "sha256": "869fc83b4b9957fba7643c30ff6b5fbc02630ecc1b192b3d95211dda57dc4949",
+          "issues": []
+        },
+        {
+          "path": "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 6650,
+          "sha256": "438a5729539842f4c1da092828199ea256759eb99e8cd39bed6e0bb4b0da0e47",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-2/attestations/IFC-005/context_ack.json",
+          "expectedBy": "IFC-005",
+          "status": "found",
+          "size": 1332,
+          "sha256": "f1e81012edf0aa18e2bf9bddf540c104657754dfbfbd30bef9e531e6e5df7fe3",
+          "issues": []
+        }
+      ],
+      "placeholders": [
+        {
+          "file": "apps\\ai-worker\\src\\index.ts",
+          "line": 342,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {}",
+          "linkedTaskId": null
+        }
+      ],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Scoring <2s",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "structured output validated",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-005",
+        "dependencies": [
+          "IFC-004"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-004"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "AI scoring pipeline with structured output",
+          "confidence scores",
+          "targets: <2s",
+          "output: scoring.chain.ts",
+          "output-schema.zod.ts validated"
+        ],
+        "verified": 0,
+        "unverified": 5,
+        "details": [
+          {
+            "criterion": "AI scoring pipeline with structured output",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "confidence scores",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: <2s",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "output: scoring.chain.ts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "output-schema.zod.ts validated",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Found 1 placeholder(s) in task artifacts",
+        "5 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Remove TODO, FIXME, STUB, and empty function placeholders"
+      ]
+    },
+    {
+      "taskId": "IFC-008",
+      "description": "PHASE-003: Security Assessment - OWASP + ISO 42001 Prep",
+      "status": "Completed",
+      "verdict": "PASS",
+      "artifacts": [
+        {
+          "path": "artifacts/reports/compliance-report.md",
+          "expectedBy": "IFC-008",
+          "status": "found",
+          "size": 5663,
+          "sha256": "eb37487db359a2f756e50309c09c45a1e5f3960299bb4b16e761527dcc436d43",
+          "issues": []
+        },
+        {
+          "path": "docs/security/owasp-checklist.md",
+          "expectedBy": "IFC-008",
+          "status": "found",
+          "size": 29268,
+          "sha256": "b7708af7235b93b1e2c05bf2c9a64952ad3682ff84cbf909452417c8237f4e40",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/iso42001-gap-analysis.md",
+          "expectedBy": "IFC-008",
+          "status": "found",
+          "size": 22020,
+          "sha256": "c8626f355f25e074e2aeb8179f145039ed35b0035277c8300000cd50f5021e24",
+          "issues": []
+        },
+        {
+          "path": "artifacts/reports/zap-scan-report.json",
+          "expectedBy": "IFC-008",
+          "status": "found",
+          "size": 1519,
+          "sha256": "0429c50689efdb764ba87fa56ccdd0c569204130bb252bb1f863aebea60e2a82",
+          "issues": []
+        },
+        {
+          "path": "apps/project-tracker/docs/metrics/_global/flows/FLOW-003.md",
+          "expectedBy": "IFC-008",
+          "status": "found",
+          "size": 4888,
+          "sha256": "208cb9c7407375945868d6fcedc54f1da511d03fcaed4c2f6596b31f2a1fe5ed",
+          "issues": []
+        },
+        {
+          "path": "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-003-validation.md",
+          "expectedBy": "IFC-008",
+          "status": "found",
+          "size": 4023,
+          "sha256": "a589684fe082e0f3f9440fd567b2d27676bdc4483dd3aaa30f0bd65633ca2ff0",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/architecture-spike/README.md",
+          "expectedBy": "IFC-008",
+          "status": "found",
+          "size": 14039,
+          "sha256": "7182383292708080a46287d7fd3efc715b94182ba8056f973e7e0305a2b25ed2",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/architecture-spike/performance-test.ts",
+          "expectedBy": "IFC-008",
+          "status": "found",
+          "size": 19285,
+          "sha256": "4b5e2706e0103ed9de2b59ecdc7badbc083239fecf6b79101228b9c932b98871",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/architecture-spike/type-safety-validation.ts",
+          "expectedBy": "IFC-008",
+          "status": "found",
+          "size": 5645,
+          "sha256": "bf19a6e77d21a0eda4b78232f878ffe5cbefc5545832e9f29fac2248a10b51db",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-2/attestations/IFC-008/context_ack.json",
+          "expectedBy": "IFC-008",
+          "status": "found",
+          "size": 1521,
+          "sha256": "f43dfd84889f51eb83716a0858979e0724f3a56889e26d35fd59c3b5a2bfb0a9",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "0 critical vulnerabilities",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "AI compliance roadmap",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-008",
+        "dependencies": [
+          "IFC-001"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-001"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Security review with AI governance considerations",
+          "artifacts: compliance-report.md",
+          "owasp-checklist.md",
+          "iso42001-gap-analysis.md",
+          "gates: security-scan-pass",
+          "0 critical vulnerabilities",
+          "all controls verified"
+        ],
+        "verified": 1,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Security review with AI governance considerations",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: compliance-report.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "owasp-checklist.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "iso42001-gap-analysis.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "gates: security-scan-pass",
+            "verified": true,
+            "evidence": "All 0 validations passed"
+          },
+          {
+            "criterion": "0 critical vulnerabilities",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "all controls verified",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": []
+    },
+    {
+      "taskId": "IFC-072",
+      "description": "PHASE-040: Zero Trust Security Model",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "docs/security/zero-trust-design.md",
+          "expectedBy": "IFC-072",
+          "status": "found",
+          "size": 6174,
+          "sha256": "bbc0f7f929eac6474cb371ac92c26776186d0b30ae6f3640c2ebf0921f68fb62",
+          "issues": []
+        },
+        {
+          "path": "docs/security/pentest-summary.md",
+          "expectedBy": "IFC-072",
+          "status": "found",
+          "size": 3163,
+          "sha256": "5907547d470cc68bea31ece18184fe454dcb350bb742550dc8436481caef682d",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-2/attestations/IFC-072/context_ack.json",
+          "expectedBy": "IFC-072",
+          "status": "found",
+          "size": 1531,
+          "sha256": "672dd567c8f35f9849da42fd25cddd0081f2e153dbdc8032b83e3dc01b45e32f",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "IFC-072",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 602063,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T19:33:58.435Z",
+          "error": "Command timed out after 600000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "All endpoints secured",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "penetration tested",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-072",
+        "dependencies": [
+          "IFC-001",
+          "IFC-008"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-001",
+          "IFC-008"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Zero trust with RLS",
+          "API authentication",
+          "mTLS",
+          "artifacts: zero-trust-design.md",
+          "pentest-summary.md",
+          "context_ack.json",
+          "verified by: pnpm test"
+        ],
+        "verified": 0,
+        "unverified": 7,
+        "details": [
+          {
+            "criterion": "Zero trust with RLS",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "API authentication",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "mTLS",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: zero-trust-design.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "pentest-summary.md",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          },
+          {
+            "criterion": "context_ack.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm test",
+        "7 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-073",
+      "description": "PHASE-040: Privacy Impact Assessment",
+      "status": "Completed",
+      "verdict": "PASS",
+      "artifacts": [
+        {
+          "path": "artifacts/reports/gdpr-compliance.md",
+          "expectedBy": "IFC-073",
+          "status": "found",
+          "size": 11314,
+          "sha256": "aafdf6e7aa1a0fab458f702dce89c05a6ff3a72719a53db3a87f5439f7a0300d",
+          "issues": []
+        },
+        {
+          "path": "artifacts/reports/risk-matrix.md",
+          "expectedBy": "IFC-073",
+          "status": "found",
+          "size": 2327,
+          "sha256": "874dce2fb90f99e52b378add9206437019020e06849b59c71948b71699105830",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-2/attestations/IFC-073/context_ack.json",
+          "expectedBy": "IFC-073",
+          "status": "found",
+          "size": 1397,
+          "sha256": "354d8cf30704aaabb84e644a0b82fdcaeb0063c2dd39acfb6dc4275701be980b",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "All risks mitigated",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "controls documented",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-073",
+        "dependencies": [
+          "IFC-072"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-072"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "DPIA complete for AI processing and data storage",
+          "output: dpia.md",
+          "risk-matrix.md",
+          "all risks documented",
+          "verified and mitigated"
+        ],
+        "verified": 1,
+        "unverified": 4,
+        "details": [
+          {
+            "criterion": "DPIA complete for AI processing and data storage",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "output: dpia.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "risk-matrix.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "all risks documented",
+            "verified": true,
+            "evidence": "Documentation found: artifacts/reports/gdpr-compliance.md, artifacts/reports/risk-matrix.md"
+          },
+          {
+            "criterion": "verified and mitigated",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "4 DoD criteria unverified"
+      ],
+      "recommendations": []
+    },
+    {
+      "taskId": "IFC-085",
+      "description": "PHASE-040: Ollama Local Development",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "artifacts/misc/ollama-setup.sh",
+          "expectedBy": "IFC-085",
+          "status": "found",
+          "size": 4756,
+          "sha256": "31da443cec72688b9f08cccda48743e26ab9afc9692be4c76651771b4f55aaa4",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/model-comparison.csv",
+          "expectedBy": "IFC-085",
+          "status": "found",
+          "size": 935,
+          "sha256": "9dc1de057f0675dfaf02a4a76fa0f99d30e5629898f1d2e4c2a39d905a0ac3fe",
+          "issues": []
+        },
+        {
+          "path": "artifacts/reports/cost-savings-report.json",
+          "expectedBy": "IFC-085",
+          "status": "found",
+          "size": 4029,
+          "sha256": "319936d003f7f48f6b4be974902e13caf126df3c9a4ac8f06b78fe6fd75fac44",
+          "issues": []
+        },
+        {
+          "path": "artifacts/benchmarks/accuracy-benchmarks.json",
+          "expectedBy": "IFC-085",
+          "status": "found",
+          "size": 1881,
+          "sha256": "d0bc5be80585a1d53914526be46323cc45798a4c3fe9c1514103005a271d8c1c",
+          "issues": []
+        },
+        {
+          "path": "scripts/setup-ollama.sh",
+          "expectedBy": "IFC-085",
+          "status": "found",
+          "size": 3376,
+          "sha256": "ad8c4b5a19e0d24881a6cc9a5e873b4470de2c23d0137f05b2b742e210f11f6f",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-2/attestations/IFC-085/context_ack.json",
+          "expectedBy": "IFC-085",
+          "status": "found",
+          "size": 1425,
+          "sha256": "a42132d5c55f95631e3655091c522c7534790b1221312440e18204b86c450772",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/adr/ADR-022-ai-features-quality.md",
+          "expectedBy": "IFC-085",
+          "status": "found",
+          "size": 1736,
+          "sha256": "483986ee8024d71697f507aa567e9980d91bda8192ac4a7453845b3e7fff2cba",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/prd-ai-output-quality.md",
+          "expectedBy": "IFC-085",
+          "status": "found",
+          "size": 1665,
+          "sha256": "85d8eaa5107ea51d87790fcac72bd683d145d893aa7d91408bbd359c861912e0",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "IFC-085",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 602063,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T19:33:58.435Z",
+          "error": "Command timed out after 600000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Dev costs reduced 90%",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "same accuracy",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-085",
+        "dependencies": [
+          "IFC-005"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-005"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Local LLM for dev/test",
+          "cost savings",
+          "artifacts: ollama-setup.sh",
+          "model-comparison.csv",
+          "cost-savings-report.json",
+          "targets: >=90%",
+          "accuracy-benchmarks.json must contain real Ollama execution timestamps and non-mock model versions"
+        ],
+        "verified": 0,
+        "unverified": 7,
+        "details": [
+          {
+            "criterion": "Local LLM for dev/test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          },
+          {
+            "criterion": "cost savings",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: ollama-setup.sh",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "model-comparison.csv",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "cost-savings-report.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: >=90%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "accuracy-benchmarks.json must contain real Ollama execution timestamps and non-mock model versions",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm test",
+        "7 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "SALES-002",
+      "description": "Sales Motion Playbook (outreach sequences, discovery + demo scripts)",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "docs/sales/sales-motion-playbook.md",
+          "expectedBy": "SALES-002",
+          "status": "found",
+          "size": 18520,
+          "sha256": "8860ba19f040bf4cfaf8ef83aa2a451041b8403798cda98c3f455185eec85829",
+          "issues": []
+        },
+        {
+          "path": "docs/sales/discovery-script.md",
+          "expectedBy": "SALES-002",
+          "status": "found",
+          "size": 13582,
+          "sha256": "6d8731f231d401cebb928aeb55a455e2986ab0bd5427723fb215e9532f060bc2",
+          "issues": []
+        },
+        {
+          "path": "docs/sales/demo-script.md",
+          "expectedBy": "SALES-002",
+          "status": "found",
+          "size": 21195,
+          "sha256": "930b36cc8075fbbdca245e926cfc591a5514a36bb76f7ea9a8191ce922036b68",
+          "issues": []
+        },
+        {
+          "path": "docs/sales/outreach-sequences.md",
+          "expectedBy": "SALES-002",
+          "status": "found",
+          "size": 7205,
+          "sha256": "e053f1e25f3b3d2b3c4dedb942972b2a2843844f78e0773f6bb1a9477ef20cd2",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-2/attestations/SALES-002/context_ack.json",
+          "expectedBy": "SALES-002",
+          "status": "found",
+          "size": 1382,
+          "sha256": "f8ee46a517ac0ee8aadc84fdc858f8f757b7a3239c6c7fcd36d60dba92079a26",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "SALES-002",
+          "command": "pnpm lint",
+          "exitCode": 1,
+          "passed": false,
+          "durationMs": 30757,
+          "stdoutHash": "d7afd4bf40b8d9d9953df0fdd6a44a5114f87b8f57a704866c2a9a1ca6f68183",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T19:34:29.193Z"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "≥2 sequences ready",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "discovery+demo scripts usable end-to-end",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "first pilot run documented",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "SALES-002",
+        "dependencies": [
+          "SALES-001",
+          "GTM-002"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "SALES-001",
+          "GTM-002"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Defined sales motion: lead sources",
+          "qualification steps",
+          "discovery script",
+          "demo script",
+          "objection handling",
+          "follow-up cadence",
+          "includes at least 2 outreach sequences (email + LinkedIn) and a handoff policy to implementation/support",
+          "artifacts: sales-motion-playbook.md",
+          "discovery-script.md",
+          "demo-script.md",
+          "verified by: pnpm lint"
+        ],
+        "verified": 0,
+        "unverified": 11,
+        "details": [
+          {
+            "criterion": "Defined sales motion: lead sources",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "qualification steps",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "discovery script",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "demo script",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "objection handling",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "follow-up cadence",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "includes at least 2 outreach sequences (email + LinkedIn) and a handoff policy to implementation/support",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: sales-motion-playbook.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "discovery-script.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "demo-script.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm lint",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm lint",
+        "11 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-101",
+      "description": "PHASE-039: Lead Aggregate and Value Objects",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "packages/adapters/src/repositories/PrismaLeadRepository.ts",
+          "expectedBy": "IFC-101",
+          "status": "found",
+          "size": 14062,
+          "sha256": "e3bd545a1b9869ac07afed9890d3d828e6a6f9795ef94d32bf0f19307a78498b",
+          "issues": []
+        },
+        {
+          "path": "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md",
+          "expectedBy": "IFC-101",
+          "status": "found",
+          "size": 4842,
+          "sha256": "c9cc7e6baa1d80fa2733622e71d48dfc4b657b65a8506dcbaf8ac4b7b2150f38",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-2/attestations/IFC-101/context_ack.json",
+          "expectedBy": "IFC-101",
+          "status": "found",
+          "size": 1570,
+          "sha256": "625a868f151e1a494c4b306e6fb41c42e1a01de0d73434c4d478a53de0dd1888",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/adr/ADR-019-core-crm-foundation.md",
+          "expectedBy": "IFC-101",
+          "status": "found",
+          "size": 2100,
+          "sha256": "95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/prd-core-crm.md",
+          "expectedBy": "IFC-101",
+          "status": "found",
+          "size": 2451,
+          "sha256": "7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "IFC-101",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 602063,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T19:33:58.435Z",
+          "error": "Command timed out after 600000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Design approved",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "unit tests ≥90% coverage",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "repository API stable",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-101",
+        "dependencies": [
+          "IFC-002"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-002"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Lead aggregate",
+          "value objects",
+          "repository interfaces and domain services implemented",
+          "artifacts: PrismaLeadRepository.ts",
+          "context_ack.json",
+          "targets: >=90%",
+          "verified by: pnpm test",
+          "pnpm test:integration"
+        ],
+        "verified": 0,
+        "unverified": 8,
+        "details": [
+          {
+            "criterion": "Lead aggregate",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "value objects",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "repository interfaces and domain services implemented",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: PrismaLeadRepository.ts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "context_ack.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: >=90%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          },
+          {
+            "criterion": "pnpm test:integration",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm test",
+        "8 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-102",
+      "description": "PHASE-039: Contact Aggregate and Value Objects",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "packages/adapters/src/repositories/PrismaContactRepository.ts",
+          "expectedBy": "IFC-102",
+          "status": "found",
+          "size": 6659,
+          "sha256": "0885c2b5e3b634a2853802ef394ffdde7ac2b964a5eb41dedcee919c835e5fde",
+          "issues": []
+        },
+        {
+          "path": "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md",
+          "expectedBy": "IFC-102",
+          "status": "found",
+          "size": 4842,
+          "sha256": "c9cc7e6baa1d80fa2733622e71d48dfc4b657b65a8506dcbaf8ac4b7b2150f38",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-2/attestations/IFC-102/context_ack.json",
+          "expectedBy": "IFC-102",
+          "status": "found",
+          "size": 1591,
+          "sha256": "62680ee9320cf1b326648f183faee743664c8b08528204c42c526754a44eab81",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/adr/ADR-019-core-crm-foundation.md",
+          "expectedBy": "IFC-102",
+          "status": "found",
+          "size": 2100,
+          "sha256": "95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/prd-core-crm.md",
+          "expectedBy": "IFC-102",
+          "status": "found",
+          "size": 2451,
+          "sha256": "7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "IFC-102",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 602063,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T19:33:58.435Z",
+          "error": "Command timed out after 600000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Design approved",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "unit tests ≥90% coverage",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "repository API stable",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-102",
+        "dependencies": [
+          "IFC-002"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-002"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Contact aggregate implemented with value objects",
+          "repository",
+          "domain services",
+          "artifacts: PrismaContactRepository.ts",
+          "context_ack.json",
+          "targets: >=90%",
+          "verified by: pnpm test"
+        ],
+        "verified": 0,
+        "unverified": 7,
+        "details": [
+          {
+            "criterion": "Contact aggregate implemented with value objects",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "repository",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "domain services",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: PrismaContactRepository.ts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "context_ack.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: >=90%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm test",
+        "7 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-103",
+      "description": "PHASE-039: Account Aggregate and Value Objects",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "packages/adapters/src/repositories/PrismaAccountRepository.ts",
+          "expectedBy": "IFC-103",
+          "status": "found",
+          "size": 5995,
+          "sha256": "5a5f99761d32beb8d4fed2a35d350825579fd6450c59c06691aba0dda80085ec",
+          "issues": []
+        },
+        {
+          "path": "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-039-validation.md",
+          "expectedBy": "IFC-103",
+          "status": "found",
+          "size": 4842,
+          "sha256": "c9cc7e6baa1d80fa2733622e71d48dfc4b657b65a8506dcbaf8ac4b7b2150f38",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-2/attestations/IFC-103/context_ack.json",
+          "expectedBy": "IFC-103",
+          "status": "found",
+          "size": 1591,
+          "sha256": "1b28fc97832d1835b590b4f42d4b04b7e70aee2ecbe7e9fc785cedb0837a5801",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/adr/ADR-019-core-crm-foundation.md",
+          "expectedBy": "IFC-103",
+          "status": "found",
+          "size": 2100,
+          "sha256": "95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/prd-core-crm.md",
+          "expectedBy": "IFC-103",
+          "status": "found",
+          "size": 2451,
+          "sha256": "7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "IFC-103",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 602063,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T19:33:58.435Z",
+          "error": "Command timed out after 600000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Design approved",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "unit tests ≥90% coverage",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "repository API stable",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-103",
+        "dependencies": [
+          "IFC-002"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-002"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Account aggregate implemented with value objects",
+          "repository",
+          "domain services",
+          "artifacts: PrismaAccountRepository.ts",
+          "context_ack.json",
+          "targets: >=90%",
+          "verified by: pnpm test"
+        ],
+        "verified": 0,
+        "unverified": 7,
+        "details": [
+          {
+            "criterion": "Account aggregate implemented with value objects",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "repository",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "domain services",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: PrismaAccountRepository.ts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "context_ack.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: >=90%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm test",
+        "7 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-109",
+      "description": "Define TDD Process, Coverage & Review Checklist",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "docs/tdd-guidelines.md",
+          "expectedBy": "IFC-109",
+          "status": "found",
+          "size": 21532,
+          "sha256": "4387ed3cf456f17a7510a44ad10ba933d15cbba90f2292e481779b4c1af41473",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/ci-coverage-config.yml",
+          "expectedBy": "IFC-109",
+          "status": "found",
+          "size": 3402,
+          "sha256": "178921ba3fde882335a197c3b341ab2b2b86b9d6f0a5b60f13ca1bb66c77d51f",
+          "issues": []
+        },
+        {
+          "path": "docs/shared/review-checklist.md",
+          "expectedBy": "IFC-109",
+          "status": "found",
+          "size": 13317,
+          "sha256": "7f42ba091d6782d0fb518a02830b69aa6f8137225bd3933feb8a021ca7594920",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-2/attestations/IFC-109/context_ack.json",
+          "expectedBy": "IFC-109",
+          "status": "found",
+          "size": 1421,
+          "sha256": "d6797ae06a0df2add3ba1d54f155036fea93c11529647457ed3f86c8f464d93c",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/adr/ADR-019-core-crm-foundation.md",
+          "expectedBy": "IFC-109",
+          "status": "found",
+          "size": 2100,
+          "sha256": "95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/prd-core-crm.md",
+          "expectedBy": "IFC-109",
+          "status": "found",
+          "size": 2451,
+          "sha256": "7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "IFC-109",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 602063,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts/coverage/validation-logs",
+          "timestamp": "2026-02-28T19:33:58.435Z",
+          "error": "Command timed out after 600000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Coverage ≥90%",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "zero lint errors",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "code review time <24h",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-109",
+        "dependencies": [
+          "IFC-002"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-002"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "TDD guidelines documented",
+          "coverage threshold 90% enforced via CI",
+          "code review checklist established",
+          "gates: coverage-gte-90"
+        ],
+        "verified": 1,
+        "unverified": 3,
+        "details": [
+          {
+            "criterion": "TDD guidelines documented",
+            "verified": true,
+            "evidence": "Documentation found: docs/tdd-guidelines.md, docs/shared/review-checklist.md, docs/planning/adr/ADR-019-core-crm-foundation.md, docs/planning/prd-core-crm.md"
+          },
+          {
+            "criterion": "coverage threshold 90% enforced via CI",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "code review checklist established",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "gates: coverage-gte-90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Validation(s) failed: pnpm test",
+        "3 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-146",
+      "description": "Define PRD and user journey templates; create Definition of Ready criteria; develop traceability matrix linking capabilities to domain services; APIs; UIs; and tests",
+      "status": "Completed",
+      "verdict": "PASS",
+      "artifacts": [
+        {
+          "path": "docs/planning/prd-template.md",
+          "expectedBy": "IFC-146",
+          "status": "found",
+          "size": 11475,
+          "sha256": "6ed535bc76b5d7d5a67b5155ca1af7001af3651e43365a75cfe4cd85dab5fcf0",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/user-journey-template.md",
+          "expectedBy": "IFC-146",
+          "status": "found",
+          "size": 14521,
+          "sha256": "a6e59e7b89167845edbda6bd0433792a1fa05aa1c565e61aa9b5e4edec58e4f3",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/definition-of-ready.md",
+          "expectedBy": "IFC-146",
+          "status": "found",
+          "size": 12377,
+          "sha256": "693ef1af752e11b316c260e7d7a6e368bfed308998e86d8d20b54501fdb75648",
+          "issues": []
+        },
+        {
+          "path": "artifacts/reports/traceability-matrix.md",
+          "expectedBy": "IFC-146",
+          "status": "found",
+          "size": 3438,
+          "sha256": "d0800c5f01bc0bccbb9ce040994971a48524eb95ca4554e214f401be9d0d6def",
+          "issues": []
+        },
+        {
+          "path": "artifacts/logs/backlog-updates-log.csv",
+          "expectedBy": "IFC-146",
+          "status": "found",
+          "size": 3699,
+          "sha256": "1454178069a26696adfe58c79bf47f32746e8b50582582b28358fffb91685f56",
+          "issues": []
+        },
+        {
+          "path": ".specify/sprints/sprint-2/attestations/IFC-146/context_ack.json",
+          "expectedBy": "IFC-146",
+          "status": "found",
+          "size": 1530,
+          "sha256": "0bb5d32d7da74351b89563e40eb069b72a30e79e4a5afe92d90eada049bef19e",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "100% new stories include PRD and meet DoR",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "traceability coverage >=90%",
+          "target": ">= 90%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": "pnpm test:coverage",
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "backlog management efficiency improved",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-146",
+        "dependencies": [
+          "IFC-000",
+          "ENV-018-AI"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-000",
+          "ENV-018-AI"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "PRD templates available and used",
+          "user journey mapping methodology defined",
+          "DoR criteria documented and adopted",
+          "traceability matrix tool or document created and applied to backlog",
+          "backlog items updated",
+          "targets: >=100%",
+          ">=90%"
+        ],
+        "verified": 2,
+        "unverified": 5,
+        "details": [
+          {
+            "criterion": "PRD templates available and used",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "user journey mapping methodology defined",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "DoR criteria documented and adopted",
+            "verified": true,
+            "evidence": "Documentation found: docs/planning/prd-template.md, docs/planning/user-journey-template.md, docs/planning/definition-of-ready.md, artifacts/reports/traceability-matrix.md"
+          },
+          {
+            "criterion": "traceability matrix tool or document created and applied to backlog",
+            "verified": true,
+            "evidence": "All 6 artifacts exist"
+          },
+          {
+            "criterion": "backlog items updated",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: >=100%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": ">=90%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "5 DoD criteria unverified"
+      ],
+      "recommendations": []
+    }
+  ],
+  "blocking_issues": [
+    {
+      "taskId": "IFC-004",
+      "severity": "high",
+      "issue": "Found 13 placeholder(s) in task artifacts",
+      "recommendation": "Remove TODO, FIXME, STUB, and empty function placeholders"
+    },
+    {
+      "taskId": "IFC-004",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Remove TODO, FIXME, STUB, and empty function placeholders"
+    },
+    {
+      "taskId": "IFC-004",
+      "severity": "high",
+      "issue": "7 DoD criteria unverified",
+      "recommendation": "Remove TODO, FIXME, STUB, and empty function placeholders"
+    },
+    {
+      "taskId": "IFC-072",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-072",
+      "severity": "high",
+      "issue": "7 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-085",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-085",
+      "severity": "high",
+      "issue": "7 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "SALES-002",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm lint",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "SALES-002",
+      "severity": "high",
+      "issue": "11 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-101",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-101",
+      "severity": "high",
+      "issue": "8 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-102",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-102",
+      "severity": "high",
+      "issue": "7 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-103",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-103",
+      "severity": "high",
+      "issue": "7 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-109",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Fix failing validations before marking complete"
+    },
+    {
+      "taskId": "IFC-109",
+      "severity": "high",
+      "issue": "3 DoD criteria unverified",
+      "recommendation": "Fix failing validations before marking complete"
+    }
+  ],
+  "duration_seconds": 5.473
+}

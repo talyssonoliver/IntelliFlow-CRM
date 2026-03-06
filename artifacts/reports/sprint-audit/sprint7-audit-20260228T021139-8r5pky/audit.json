@@ -1,0 +1,4073 @@
+{
+  "$schema": "../schemas/sprint-audit-report.schema.json",
+  "schema_version": "1.0.0",
+  "run_id": "sprint7-audit-20260228T021139-8r5pky",
+  "sprint": 7,
+  "generated_at": "2026-02-28T02:32:01.238Z",
+  "attestor": "sprint-completion-auditor",
+  "verdict": "FAIL",
+  "config": {
+    "strictMode": false,
+    "skipValidations": false
+  },
+  "summary": {
+    "totalTasks": 21,
+    "completedTasks": 21,
+    "auditedTasks": 21,
+    "passedTasks": 0,
+    "failedTasks": 21,
+    "needsHumanTasks": 0
+  },
+  "attestation_summary": {
+    "by_verdict": {
+      "complete": 0,
+      "incomplete": 21,
+      "partial": 0,
+      "blocked": 0,
+      "needs_human": 0,
+      "missing": 0
+    },
+    "debt_items_created": 21,
+    "review_queue_items": 0
+  },
+  "evidence_summary": {
+    "artifactsVerified": 82,
+    "artifactsMissing": 21,
+    "artifactsEmpty": 0,
+    "validationsPassed": 0,
+    "validationsFailed": 13,
+    "kpisMet": 0,
+    "kpisMissed": 0,
+    "placeholdersFound": 46,
+    "totalCodebasePlaceholders": 1440
+  },
+  "artifact_hashes": {
+    "artifacts/metrics/complexity-metrics.json": "53951f4cc23b4f24a33f37fa5c52e0725389aa486786890f81c60878d04cb1b8",
+    "docs/shared/refactoring-backlog.md": "2a89d18bbb6088f215700b8989f8333b270632cd23cd4d63a42db430db81ccc6",
+    "artifacts/misc/team-velocity.csv": "7dfae2f1c37958d37519c80af9bb6999884f274347c505cddba857541ed05593",
+    "docs/docusaurus.config.js": "f310444fe9d185909567c8d7ca0475a8954e6da6d0103f112ce9367fdc155573",
+    "docs/sidebars.js": "cb34ea30beab7d7e2d4a4921c4457d8af5d96a3d24139d65180ffc1842291750",
+    ".github/workflows/ci.yml": "6f92e79e6f0487e181bffbceca390f8f9bb72952bf14b7d7b8d69f25241ae4e4",
+    "docs/search-index.json": "33efd284ecedd06fb4abb625fa0eab723ff3557a5de04360c1b3f942c505737a",
+    "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-041-validation.md": "b1c6a3bf42213703d7eb47e6d0b0b1b36a9b4a6c3a9c53e3cb258672eb4629b2",
+    "docs/glossary.md": "c473f4cb4a545971eed6750e7cc7b9f928351495e5e11b4c7f57dfc63cb2657d",
+    "docs/templates/chunking-strategy.md": "5ad6266b322729e4f5b519a250469e9d5bbb22d255d48159fd855309c03bad0a",
+    "artifacts/misc/knowledge-graph.json": "5bb1cb1086e0bdc9f26cfccab8c9f828054487a67e8ac60a9d17a7437fa5f1e0",
+    "docs/shared/context-map.puml": "e7e0149103bcd94ae62aba56d3531c9846d77edf9df08de292c68a1e11020dfa",
+    "apps/api/src/shared/forecast-algorithm.test.ts": "35e1e504ddeedc57a29e511c9ba36e487cc54e8de722b99e726d7a11201de0ac",
+    "artifacts/metrics/accuracy-backtest.csv": "a51367a1af46a7691f35fbc44b03ca489f34ecf12a2cd169730e8e123ceac830",
+    "docs/planning/adr/ADR-019-core-crm-foundation.md": "95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb",
+    "docs/planning/prd-core-crm.md": "7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219",
+    "apps/web/lib/tickets/sla-service.ts": "c65c5a791feaa92cf48bb66521790888f9b528247b42eeac6e8819fd4cd0f9fd",
+    "apps/web/lib/tickets/sla-notifications.ts": "f65baa2082427e3e6c42caf2cc1832c4dbe4bf2f2440c92d79c75e994a246bae",
+    "apps/web/lib/tickets/sla-notifications.test.ts": "d84310ed741dbdf63414d1c2855056a7d946b48bfc4c5ee0cf028ae193257eaa",
+    "apps/api/src/middleware/rate-limit.ts": "f609a91a114534af01e2352118dd02467c208f1e87e86c7fc072330a53c81c40",
+    "artifacts/misc/waf-config.json": "05aa5c8aa11744802012729f430f784502b3fa6059af3ca735fc449293f42d63",
+    "artifacts/misc/ddos-test-report.txt": "daf3357504df75d0d475ab74cc876a3b5eb497750d949c759e254c3f9784b790",
+    "packages/platform/src/resilience/circuit-breaker.ts": "94cfeee3ffb8a59b74cc4eb6a8b1d94121be5d69da98fe057a72bb3325665090",
+    "packages/platform/src/resilience/retry-policy.ts": "dc5d9c3747ab08afdd46d8a126a62f9ef3553903172511e938b895631b42bd5d",
+    "packages/platform/src/resilience/resilient-call.ts": "5a03877be694ede3ad8d9ff8f4aadb58a252082c1d7f9285d475ef229a9d8538",
+    "tests/circuit-breaker.spec.ts": "04287977b913eb8d5b8baddeefe22a3f3d1ba65d7c81ce94284f5bf0c073789b",
+    "docs/dev-guide.md": "efaeee4d10e0c83dce3b823e3b7cfdbe005a1e42a99a06cd982db2420295a33a",
+    "artifacts/misc/adr-index.csv": "c40b20e55906db9bbc51d4ebefebd659598718dbf053e9a004caf109818d9722",
+    "docs/security/signing.md": "83863fea82e48e085c2978886e4fb710a441c4d5def42c3561da1bfe9923b476",
+    ".github/workflows/signing.yml": "c341846fcec62fb436d0b9f0516a1371b0396d14ea16fe18fb6dbd5ca965dc4e",
+    "docs/planning/adr/ADR-021-governance-ops-release.md": "626cf1c9c9b1ade20c318491fa1502f28f98416897ad101c60030cd72f0d0c00",
+    "docs/planning/prd-release-governance.md": "cd511206b991a249c6b5f2cae07efa2bccb453a7f7970a74c1cec1206e9741ef",
+    "docs/security/image-scanning.md": "e35f4231d974f5c3a18719b0961a93cdeb4ed9b7a517f81a251deffd1a2f1913",
+    ".github/workflows/image-scan.yml": "e667baa6945d22d4a7cc79d4bca6370a72a3a589038d95eac56c2795654a5771",
+    "apps/api/src/modules/agent/conversation.router.ts": "63e1f092221161663d0d735b67c7ed38f7583fbad3ea9e353beddc369590c4ef",
+    "apps/api/src/modules/agent/__tests__/conversation.router.test.ts": "5aa1fd8e7b0f1819cabfccfcfc456f8d5507f3f6c4f6083f2fbf10e92ef66c10",
+    "packages/application/src/services/ConversationSearchService.ts": "1b0f7c02f84950a508f473c0ae37aa8592302faa0e2bcb04ac9d62e5b3c62025",
+    "infra/supabase/migrations/20260104000000_conversation_rls.sql": "8c0c3a263d5b99da296faa077c3d3584e44fb5a05f7e840249a5ffabae779806",
+    "artifacts/misc/data-retention-config.yaml": "7718975866720cc4a215d815cc9c5265be96c3fbecfcd1d54f35f1c946bfb868",
+    "apps/web/src/app/cases/(list)/page.tsx": "4923f51f9f25d322249d6772a17b0b508c7ac4b2d6fa7e30962c8fa27894cf74",
+    "apps/web/src/app/cases/[id]/page.tsx": "c093404a6740c53c13fc0e148537912fac2aa049ad21cdbf2a45354749d0900d",
+    "apps/web/src/components/cases/CaseList.tsx": "45f88d499220ea0a66bfe17360d698d68008f3d8a761284a51bbce979f033d00",
+    "apps/web/src/components/cases/CaseDetail.tsx": "cfce1464b344743fa86229b95c9e1bc9a47d699764efdc2642049a06b1c30f49",
+    "apps/web/src/components/cases/PartyManager.tsx": "ef2a5111647fade060eada065942ab5e0d78769b44b86dd60a8075ea73f529a2",
+    "apps/web/src/components/cases/DeadlineTracker.tsx": "33629eb27b064cad8b30be3e4c4047e3ccdb550b5987ad51777ae8d6d61e5182",
+    "apps/web/src/app/calendar/(list)/page.tsx": "89090921410874037f2b112471fd361c7a08ee8fe38c8a3050216751a9f66005",
+    "apps/web/src/app/calendar/[id]/page.tsx": "073bd96ba0c790ba847565473e7dd04324ff36172f24096b34a55644da541437",
+    "apps/web/src/components/appointments/AppointmentCalendar.tsx": "e4efc61efe9d5604a11ec8450d03d4f6c128757faf379841bace9f72a948927d",
+    "apps/web/src/components/appointments/AppointmentForm.tsx": "e57f895b365429e3a4f88ae8a50828172aa888712acd522bcedadb1fb4cb3dc1",
+    "apps/web/src/components/appointments/ConflictWarning.tsx": "ee8b5b8692b89962401a5a14a0671c5125be54eddaf25c1741df68b3929d7512",
+    "apps/web/src/components/appointments/RecurrenceEditor.tsx": "2005fcd4163e6ff7c70380c99979d47fc5d3a1346281e5e872919b8d62f86185",
+    "apps/web/src/app/agent-approvals/sentiment/page.tsx": "73895677f74322c11cf60957053c714343ad3119269621399190654304f690b6",
+    "apps/web/src/components/ai-intelligence/SentimentDashboard.tsx": "ca6f9ec87b9d54f55a3e495c7670a58c36007b608c15a925ff1681b02b6767b9",
+    "apps/web/src/components/ai-intelligence/SentimentTrend.tsx": "d44d76ddd98af4ea7f23c0b8ed08e8e050cd47d62b7b459fb62a6da0fbf0ec11",
+    "apps/web/src/components/ai-intelligence/__tests__/SentimentDashboard.test.tsx": "1f8620ff3c59724b8e169efbe9d3974d5e887f6f0a20494bf31713772040bf5a",
+    "apps/web/src/app/agent-approvals/churn-risk/page.tsx": "e9735eeccb0bd01f5edca8cd5a0a64c0bdde31cad34f74437760e80e111570b2",
+    "apps/web/src/components/ai-intelligence/ChurnDashboard.tsx": "79563a7dc4776697900c68ebe1cbbe110de5f7ed3c11a970062a5e4bdfb3faea",
+    "apps/web/src/components/ai-intelligence/HealthScoreGauge.tsx": "a860a85b882a6d5ae961c511f1904a320870dcdfcc77631d182d4ef4b74e3317",
+    "apps/web/src/components/ai-intelligence/RiskIndicators.tsx": "6f51a10a4bfedf50dc32cbd28540743fc0a68d5de50c6b8a8df742f963669702",
+    "apps/web/src/components/ai-intelligence/ChurnTrendChart.tsx": "797eb49646e30e790e718abc273515a4591e6a9a11c2739114347ece2e27cf16",
+    "apps/web/src/components/ai-intelligence/__tests__/ChurnDashboard.test.tsx": "edbc74efd4fdc98489f22d39c9a9835677e2b7f8cd85bd266ab934e1ec114bee",
+    "apps/web/src/app/agent-approvals/ai-search/page.tsx": "6a3b57304d966f0192316507c398d8eaeffad775b0dd39cd88dd98f5f40b869d",
+    "apps/web/src/components/ai-intelligence/AISearchPage.tsx": "e6e3fa57cd14318009fd509319e9f15882fa66058b02dbf682cb1400aeadde36",
+    "apps/web/src/components/ai-intelligence/CitationDisplay.tsx": "c65ca28ff6c4139d2b9d8a1746028b2d577f86cf171ce05af10df19dcb2cfa1c",
+    "apps/web/src/components/ai-intelligence/SourceHighlight.tsx": "56fa42cde60f21b8029d6fdb863f633b971d3ee47a2c42db83c298d3cad1d42d",
+    "apps/web/src/components/ai-intelligence/__tests__/AISearchPage.test.tsx": "b50d77e0397c1174c9b3f3bbddd8f35444a6fbea60a360fa83afbed4f9bd4721",
+    "apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts": "19d1cab03eb19a2ee74c383554a18ebf26eddfab0242a7c1930e00adb66858f8",
+    "apps/api/src/modules/ai-monitoring/__tests__/ai-monitoring.router.test.ts": "6dd6891801760d98282d90c57e636d450415251ea01c8f66522b31b034fca32c",
+    "apps/web/src/app/agent-approvals/lead-scoring/page.tsx": "23ceb6ac7f67bf5926847c2e3d1e3a4f2dc0e92b861a6f89eb61ecafb8c59f1a",
+    "apps/web/src/components/ai-intelligence/LeadScoringDashboard.tsx": "5132bd9057a4e7d9aec5c78fb273bf4ea126f28752181e5fe34806476902d8b8",
+    "apps/web/src/components/ai-intelligence/__tests__/LeadScoringDashboard.test.tsx": "62b80589246768f95baa814cf94e67b03f11bbff60d156aa5907f0fdc15cec53",
+    "apps/web/src/app/agent-approvals/experiments/page.tsx": "4d11ce9d4c299b553d4064e83ed2d1e2786b3fad93c62f68e215a6d84634fd38",
+    "apps/web/src/components/ai-intelligence/ExperimentsDashboard.tsx": "0418bdfdec59b4c5dccb1ba9c9139e9e73de10b93cb99eef59cd939b5cb9da14",
+    "apps/web/src/components/ai-intelligence/__tests__/ExperimentsDashboard.test.tsx": "f26e65991a10f86852508013407f5fca43af59ee87e0951f071b92af24930789",
+    "apps/web/src/app/agent-approvals/history/page.tsx": "989d0cd429b1dcb65adba406d8227d901458e7657868946db501ac083fe35109",
+    "apps/web/src/components/ai-intelligence/ReviewHistory.tsx": "7eafe5196b50aa472e68597e7e880b88ef879a839d694da483ed6ee768004c1d",
+    "apps/web/src/components/ai-intelligence/__tests__/ReviewHistory.test.tsx": "3dcac765c6c95ab108c2e7461fd7b310709314f391413c3000bfdf64ef08ff2b"
+  },
+  "task_results": [
+    {
+      "taskId": "IFC-054",
+      "description": "Technical Complexity Monitoring",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "artifacts/metrics/complexity-metrics.json",
+          "expectedBy": "IFC-054",
+          "status": "found",
+          "size": 4425,
+          "sha256": "53951f4cc23b4f24a33f37fa5c52e0725389aa486786890f81c60878d04cb1b8",
+          "issues": []
+        },
+        {
+          "path": "docs/shared/refactoring-backlog.md",
+          "expectedBy": "IFC-054",
+          "status": "found",
+          "size": 6740,
+          "sha256": "2a89d18bbb6088f215700b8989f8333b270632cd23cd4d63a42db430db81ccc6",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/team-velocity.csv",
+          "expectedBy": "IFC-054",
+          "status": "found",
+          "size": 744,
+          "sha256": "7dfae2f1c37958d37519c80af9bb6999884f274347c505cddba857541ed05593",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-054/context_ack.json",
+          "expectedBy": "IFC-054",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-054/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Tech debt <10%",
+          "target": "< 10%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "complexity manageable",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-054",
+        "dependencies": [],
+        "allCompleted": true,
+        "attestationsFound": [],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Weekly assessment of technical debt and complexity",
+          "artifacts: sonarqube-debt-report.html",
+          "complexity-metrics.json",
+          "refactoring-backlog.md",
+          "targets: >=10%"
+        ],
+        "verified": 0,
+        "unverified": 5,
+        "details": [
+          {
+            "criterion": "Weekly assessment of technical debt and complexity",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: sonarqube-debt-report.html",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "complexity-metrics.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "refactoring-backlog.md",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: >=10%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-054/context_ack.json",
+        "5 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-079",
+      "description": "PHASE-041: Docusaurus Setup",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "docs/docusaurus.config.js",
+          "expectedBy": "IFC-079",
+          "status": "found",
+          "size": 5007,
+          "sha256": "f310444fe9d185909567c8d7ca0475a8954e6da6d0103f112ce9367fdc155573",
+          "issues": []
+        },
+        {
+          "path": "docs/sidebars.js",
+          "expectedBy": "IFC-079",
+          "status": "found",
+          "size": 6299,
+          "sha256": "cb34ea30beab7d7e2d4a4921c4457d8af5d96a3d24139d65180ffc1842291750",
+          "issues": []
+        },
+        {
+          "path": ".github/workflows/ci.yml",
+          "expectedBy": "IFC-079",
+          "status": "found",
+          "size": 9614,
+          "sha256": "6f92e79e6f0487e181bffbceca390f8f9bb72952bf14b7d7b8d69f25241ae4e4",
+          "issues": []
+        },
+        {
+          "path": "docs/search-index.json",
+          "expectedBy": "IFC-079",
+          "status": "found",
+          "size": 7990,
+          "sha256": "33efd284ecedd06fb4abb625fa0eab723ff3557a5de04360c1b3f942c505737a",
+          "issues": []
+        },
+        {
+          "path": "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-041-validation.md",
+          "expectedBy": "IFC-079",
+          "status": "found",
+          "size": 2615,
+          "sha256": "b1c6a3bf42213703d7eb47e6d0b0b1b36a9b4a6c3a9c53e3cb258672eb4629b2",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-079/context_ack.json",
+          "expectedBy": "IFC-079",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-079/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Site deployed",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "search working",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-079",
+        "dependencies": [
+          "IFC-012"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-012"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Docusaurus site with LLM-friendly structure",
+          "output: docusaurus.config.js",
+          "sidebars.js",
+          "site deployed and functional"
+        ],
+        "verified": 0,
+        "unverified": 4,
+        "details": [
+          {
+            "criterion": "Docusaurus site with LLM-friendly structure",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "output: docusaurus.config.js",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "sidebars.js",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "site deployed and functional",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-079/context_ack.json",
+        "4 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-080",
+      "description": "PHASE-041: LLM-Friendly Documentation Templates",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "docs/glossary.md",
+          "expectedBy": "IFC-080",
+          "status": "found",
+          "size": 2655,
+          "sha256": "c473f4cb4a545971eed6750e7cc7b9f928351495e5e11b4c7f57dfc63cb2657d",
+          "issues": []
+        },
+        {
+          "path": "docs/templates/chunking-strategy.md",
+          "expectedBy": "IFC-080",
+          "status": "found",
+          "size": 1354,
+          "sha256": "5ad6266b322729e4f5b519a250469e9d5bbb22d255d48159fd855309c03bad0a",
+          "issues": []
+        },
+        {
+          "path": "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-041-validation.md",
+          "expectedBy": "IFC-080",
+          "status": "found",
+          "size": 2615,
+          "sha256": "b1c6a3bf42213703d7eb47e6d0b0b1b36a9b4a6c3a9c53e3cb258672eb4629b2",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-080/context_ack.json",
+          "expectedBy": "IFC-080",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-080/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "100% docs follow template",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "chunks optimized",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-080",
+        "dependencies": [
+          "IFC-079"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-079"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Templates with metadata",
+          "semantic structure",
+          "glossary",
+          "targets: >=100%"
+        ],
+        "verified": 0,
+        "unverified": 4,
+        "details": [
+          {
+            "criterion": "Templates with metadata",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "semantic structure",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "glossary",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: >=100%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-080/context_ack.json",
+        "4 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-082",
+      "description": "Domain Knowledge Base",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "artifacts/misc/knowledge-graph.json",
+          "expectedBy": "IFC-082",
+          "status": "found",
+          "size": 32618,
+          "sha256": "5bb1cb1086e0bdc9f26cfccab8c9f828054487a67e8ac60a9d17a7437fa5f1e0",
+          "issues": []
+        },
+        {
+          "path": "docs/shared/context-map.puml",
+          "expectedBy": "IFC-082",
+          "status": "found",
+          "size": 10485,
+          "sha256": "e7e0149103bcd94ae62aba56d3531c9846d77edf9df08de292c68a1e11020dfa",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-082/context_ack.json",
+          "expectedBy": "IFC-082",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-082/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Knowledge graph complete",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "searchable",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-082",
+        "dependencies": [
+          "IFC-080"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-080"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Bounded contexts",
+          "aggregates",
+          "workflows documented"
+        ],
+        "verified": 1,
+        "unverified": 2,
+        "details": [
+          {
+            "criterion": "Bounded contexts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "aggregates",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "workflows documented",
+            "verified": true,
+            "evidence": "Documentation found: docs/shared/context-map.puml"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-082/context_ack.json",
+        "2 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-092",
+      "description": "Deal Forecasting & Reporting",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/api/src/shared/forecast-algorithm.test.ts",
+          "expectedBy": "IFC-092",
+          "status": "found",
+          "size": 22617,
+          "sha256": "35e1e504ddeedc57a29e511c9ba36e487cc54e8de722b99e726d7a11201de0ac",
+          "issues": []
+        },
+        {
+          "path": "artifacts/metrics/accuracy-backtest.csv",
+          "expectedBy": "IFC-092",
+          "status": "found",
+          "size": 3527,
+          "sha256": "a51367a1af46a7691f35fbc44b03ca489f34ecf12a2cd169730e8e123ceac830",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-092/context_ack.json",
+          "expectedBy": "IFC-092",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-092/context_ack.json"
+          ]
+        },
+        {
+          "path": "docs/planning/adr/ADR-019-core-crm-foundation.md",
+          "expectedBy": "IFC-092",
+          "status": "found",
+          "size": 2100,
+          "sha256": "95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/prd-core-crm.md",
+          "expectedBy": "IFC-092",
+          "status": "found",
+          "size": 2451,
+          "sha256": "7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Forecast accuracy ≥85% (actual: 96.2%)",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-092",
+        "dependencies": [
+          "IFC-091"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-091"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Forecast accuracy ≥85%",
+          "artifacts: forecast-algorithm.test.ts",
+          "accuracy-backtest.csv",
+          "context_ack.json"
+        ],
+        "verified": 2,
+        "unverified": 2,
+        "details": [
+          {
+            "criterion": "Forecast accuracy ≥85%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: forecast-algorithm.test.ts",
+            "verified": true,
+            "evidence": "All 0 validations passed"
+          },
+          {
+            "criterion": "accuracy-backtest.csv",
+            "verified": true,
+            "evidence": "All 0 validations passed"
+          },
+          {
+            "criterion": "context_ack.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-092/context_ack.json",
+        "2 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-093",
+      "description": "Tickets Module - SLA Tracking",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/lib/tickets/sla-service.ts",
+          "expectedBy": "IFC-093",
+          "status": "found",
+          "size": 13794,
+          "sha256": "c65c5a791feaa92cf48bb66521790888f9b528247b42eeac6e8819fd4cd0f9fd",
+          "issues": []
+        },
+        {
+          "path": "apps/web/lib/tickets/sla-notifications.ts",
+          "expectedBy": "IFC-093",
+          "status": "found",
+          "size": 10926,
+          "sha256": "f65baa2082427e3e6c42caf2cc1832c4dbe4bf2f2440c92d79c75e994a246bae",
+          "issues": []
+        },
+        {
+          "path": "apps/web/lib/tickets/sla-notifications.test.ts",
+          "expectedBy": "IFC-093",
+          "status": "found",
+          "size": 18422,
+          "sha256": "d84310ed741dbdf63414d1c2855056a7d946b48bfc4c5ee0cf028ae193257eaa",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-093/context_ack.json",
+          "expectedBy": "IFC-093",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-093/context_ack.json"
+          ]
+        },
+        {
+          "path": "docs/planning/adr/ADR-019-core-crm-foundation.md",
+          "expectedBy": "IFC-093",
+          "status": "found",
+          "size": 2100,
+          "sha256": "95b48bd4fbff6a06f870be0ad248847d51b354705f6d89ea8d5ea1e2b27821fb",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/prd-core-crm.md",
+          "expectedBy": "IFC-093",
+          "status": "found",
+          "size": 2451,
+          "sha256": "7b7dff301febbb7adfd0a53ba0a9cbf36c70da93758d9c77acb62a31a118c219",
+          "issues": []
+        }
+      ],
+      "placeholders": [
+        {
+          "file": "apps\\web\\lib\\tickets\\sla-notifications.ts",
+          "line": 384,
+          "column": 16,
+          "pattern": "PLACEHOLDER",
+          "content": "// This is a placeholder - in a real app, this would use React state",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\lib\\tickets\\sla-notifications.ts",
+          "line": 389,
+          "column": 5,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "acknowledge: () => {},",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\lib\\tickets\\sla-notifications.ts",
+          "line": 305,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {\n        // Audio play failed, likely due to autoplay policy\n      }",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\lib\\tickets\\sla-notifications.ts",
+          "line": 389,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {}",
+          "linkedTaskId": null
+        }
+      ],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "Tickets visible",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "SLA breach alerts in <1m (actual: 30s)",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-093",
+        "dependencies": [
+          "IFC-002",
+          "IFC-004",
+          "IFC-188"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-002",
+          "IFC-004",
+          "IFC-188"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Tickets visible",
+          "SLA breach alerts in <1m",
+          "artifacts: sla-notification.test.ts",
+          "context_ack.json"
+        ],
+        "verified": 1,
+        "unverified": 3,
+        "details": [
+          {
+            "criterion": "Tickets visible",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "SLA breach alerts in <1m",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: sla-notification.test.ts",
+            "verified": true,
+            "evidence": "All 0 validations passed"
+          },
+          {
+            "criterion": "context_ack.json",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-093/context_ack.json",
+        "Found 4 placeholder(s) in task artifacts",
+        "3 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Remove TODO, FIXME, STUB, and empty function placeholders"
+      ]
+    },
+    {
+      "taskId": "IFC-114",
+      "description": "Implement API rate limiting and DDoS protection",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/api/src/middleware/rate-limit.ts",
+          "expectedBy": "IFC-114",
+          "status": "found",
+          "size": 8738,
+          "sha256": "f609a91a114534af01e2352118dd02467c208f1e87e86c7fc072330a53c81c40",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/waf-config.json",
+          "expectedBy": "IFC-114",
+          "status": "found",
+          "size": 7826,
+          "sha256": "05aa5c8aa11744802012729f430f784502b3fa6059af3ca735fc449293f42d63",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/ddos-test-report.txt",
+          "expectedBy": "IFC-114",
+          "status": "found",
+          "size": 9959,
+          "sha256": "daf3357504df75d0d475ab74cc876a3b5eb497750d949c759e254c3f9784b790",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-114/context_ack.json",
+          "expectedBy": "IFC-114",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-114/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [
+        {
+          "file": "apps\\api\\src\\middleware\\rate-limit.ts",
+          "line": 187,
+          "column": 23,
+          "pattern": "PLACEHOLDER",
+          "content": "// RedisRateLimiter — placeholder for future distributed implementation",
+          "linkedTaskId": null
+        }
+      ],
+      "validations": [
+        {
+          "taskId": "IFC-114",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 60547,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint7-audit-20260228T021139-8r5pky\\evidence\\validation-logs\\IFC-114_1772244706353.log",
+          "timestamp": "2026-02-28T02:11:46.353Z",
+          "error": "Command timed out after 60000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "No request saturates system",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "response stable under load (44 tests passed)",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-114",
+        "dependencies": [
+          "IFC-003",
+          "IFC-072"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-003",
+          "IFC-072"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Rate limiting middleware in API",
+          "WAF configured for DDoS",
+          "tests for request bursts"
+        ],
+        "verified": 0,
+        "unverified": 3,
+        "details": [
+          {
+            "criterion": "Rate limiting middleware in API",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "WAF configured for DDoS",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "tests for request bursts",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-114/context_ack.json",
+        "Found 1 placeholder(s) in task artifacts",
+        "Validation(s) failed: pnpm test",
+        "3 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Remove TODO, FIXME, STUB, and empty function placeholders",
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-122",
+      "description": "Implement circuit breaker and retry policies for external service calls",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "packages/platform/src/resilience/circuit-breaker.ts",
+          "expectedBy": "IFC-122",
+          "status": "found",
+          "size": 13004,
+          "sha256": "94cfeee3ffb8a59b74cc4eb6a8b1d94121be5d69da98fe057a72bb3325665090",
+          "issues": []
+        },
+        {
+          "path": "packages/platform/src/resilience/retry-policy.ts",
+          "expectedBy": "IFC-122",
+          "status": "found",
+          "size": 13141,
+          "sha256": "dc5d9c3747ab08afdd46d8a126a62f9ef3553903172511e938b895631b42bd5d",
+          "issues": []
+        },
+        {
+          "path": "packages/platform/src/resilience/resilient-call.ts",
+          "expectedBy": "IFC-122",
+          "status": "found",
+          "size": 1249,
+          "sha256": "5a03877be694ede3ad8d9ff8f4aadb58a252082c1d7f9285d475ef229a9d8538",
+          "issues": []
+        },
+        {
+          "path": "tests/circuit-breaker.spec.ts",
+          "expectedBy": "IFC-122",
+          "status": "found",
+          "size": 26914,
+          "sha256": "04287977b913eb8d5b8baddeefe22a3f3d1ba65d7c81ce94284f5bf0c073789b",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-122/context_ack.json",
+          "expectedBy": "IFC-122",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-122/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "IFC-122",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 60502,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint7-audit-20260228T021139-8r5pky\\evidence\\validation-logs\\IFC-122_1772244766963.log",
+          "timestamp": "2026-02-28T02:12:46.963Z",
+          "error": "Command timed out after 60000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Error rate reduced by 50%",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "no cascading failures (61 tests passed)",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-122",
+        "dependencies": [
+          "IFC-106",
+          "IFC-107"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-106",
+          "IFC-107"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Circuit breaker library integrated",
+          "retries with exponential backoff",
+          "fallback strategies defined",
+          "artifacts: circuit-breaker.ts",
+          "retry-policy.ts",
+          "circuit-breaker.spec.ts",
+          "targets: >=50%",
+          "verified by: pnpm test"
+        ],
+        "verified": 0,
+        "unverified": 8,
+        "details": [
+          {
+            "criterion": "Circuit breaker library integrated",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "retries with exponential backoff",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "fallback strategies defined",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "artifacts: circuit-breaker.ts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "retry-policy.ts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "circuit-breaker.spec.ts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: >=50%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-122/context_ack.json",
+        "Validation(s) failed: pnpm test",
+        "8 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-126",
+      "description": "Continuously maintain ADR registry and developer guide updates",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "docs/dev-guide.md",
+          "expectedBy": "IFC-126",
+          "status": "found",
+          "size": 14491,
+          "sha256": "efaeee4d10e0c83dce3b823e3b7cfdbe005a1e42a99a06cd982db2420295a33a",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/adr-index.csv",
+          "expectedBy": "IFC-126",
+          "status": "found",
+          "size": 1105,
+          "sha256": "c40b20e55906db9bbc51d4ebefebd659598718dbf053e9a004caf109818d9722",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-126/context_ack.json",
+          "expectedBy": "IFC-126",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-126/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "ADR coverage 100%",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "developer satisfaction >80%",
+          "target": "> 80%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-126",
+        "dependencies": [
+          "IFC-100",
+          "GOV-001"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "GOV-001"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "All significant design decisions captured via ADRs",
+          "developer guide updated per sprint",
+          "targets: >=100%",
+          ">=80%"
+        ],
+        "verified": 0,
+        "unverified": 4,
+        "details": [
+          {
+            "criterion": "All significant design decisions captured via ADRs",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "developer guide updated per sprint",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: >=100%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": ">=80%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-126/context_ack.json",
+        "4 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-133",
+      "description": "Supply chain security: artifact signing + provenance for build outputs (images + releases)",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "docs/security/signing.md",
+          "expectedBy": "IFC-133",
+          "status": "found",
+          "size": 14293,
+          "sha256": "83863fea82e48e085c2978886e4fb710a441c4d5def42c3561da1bfe9923b476",
+          "issues": []
+        },
+        {
+          "path": ".github/workflows/signing.yml",
+          "expectedBy": "IFC-133",
+          "status": "found",
+          "size": 21013,
+          "sha256": "c341846fcec62fb436d0b9f0516a1371b0396d14ea16fe18fb6dbd5ca965dc4e",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-133/context_ack.json",
+          "expectedBy": "IFC-133",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-133/context_ack.json"
+          ]
+        },
+        {
+          "path": "docs/planning/adr/ADR-021-governance-ops-release.md",
+          "expectedBy": "IFC-133",
+          "status": "found",
+          "size": 1558,
+          "sha256": "626cf1c9c9b1ade20c318491fa1502f28f98416897ad101c60030cd72f0d0c00",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/prd-release-governance.md",
+          "expectedBy": "IFC-133",
+          "status": "found",
+          "size": 1666,
+          "sha256": "cd511206b991a249c6b5f2cae07efa2bccb453a7f7970a74c1cec1206e9741ef",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "IFC-133",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 60506,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint7-audit-20260228T021139-8r5pky\\evidence\\validation-logs\\IFC-133_1772244827512.log",
+          "timestamp": "2026-02-28T02:13:47.512Z",
+          "error": "Command timed out after 60000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "100% prod-bound artifacts signed",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "verification enforced in deployment pipeline",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-133",
+        "dependencies": [
+          "IFC-132"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-132"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Artifacts signed",
+          "verification step added",
+          "provenance attached",
+          "docs updated",
+          "targets: >=100%",
+          "verified by: pnpm test"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Artifacts signed",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verification step added",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "provenance attached",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "docs updated",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "targets: >=100%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-133/context_ack.json",
+        "Validation(s) failed: pnpm test",
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-134",
+      "description": "Container/image scanning in CI and registry with fail-on-critical policy",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "docs/security/image-scanning.md",
+          "expectedBy": "IFC-134",
+          "status": "found",
+          "size": 8538,
+          "sha256": "e35f4231d974f5c3a18719b0961a93cdeb4ed9b7a517f81a251deffd1a2f1913",
+          "issues": []
+        },
+        {
+          "path": ".github/workflows/image-scan.yml",
+          "expectedBy": "IFC-134",
+          "status": "found",
+          "size": 19944,
+          "sha256": "e667baa6945d22d4a7cc79d4bca6370a72a3a589038d95eac56c2795654a5771",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-134/context_ack.json",
+          "expectedBy": "IFC-134",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-134/context_ack.json"
+          ]
+        },
+        {
+          "path": "docs/planning/adr/ADR-021-governance-ops-release.md",
+          "expectedBy": "IFC-134",
+          "status": "found",
+          "size": 1558,
+          "sha256": "626cf1c9c9b1ade20c318491fa1502f28f98416897ad101c60030cd72f0d0c00",
+          "issues": []
+        },
+        {
+          "path": "docs/planning/prd-release-governance.md",
+          "expectedBy": "IFC-134",
+          "status": "found",
+          "size": 1666,
+          "sha256": "cd511206b991a249c6b5f2cae07efa2bccb453a7f7970a74c1cec1206e9741ef",
+          "issues": []
+        }
+      ],
+      "placeholders": [],
+      "validations": [],
+      "kpis": [
+        {
+          "kpi": "0 critical vulns in prod images",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "scan coverage 100% for deployable images",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-134",
+        "dependencies": [
+          "ENV-003-AI",
+          "ENV-005-AI"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "ENV-003-AI",
+          "ENV-005-AI"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Image scan runs on every build",
+          "policy blocks critical vulns",
+          "exceptions process documented",
+          "targets: >=100%"
+        ],
+        "verified": 1,
+        "unverified": 3,
+        "details": [
+          {
+            "criterion": "Image scan runs on every build",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "policy blocks critical vulns",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "exceptions process documented",
+            "verified": true,
+            "evidence": "Documentation found: docs/security/image-scanning.md, docs/planning/adr/ADR-021-governance-ops-release.md, docs/planning/prd-release-governance.md"
+          },
+          {
+            "criterion": "targets: >=100%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-134/context_ack.json",
+        "3 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete"
+      ]
+    },
+    {
+      "taskId": "IFC-148",
+      "description": "Implement conversation record entity: store chat transcripts; tool calls; actions per case; enable search and retrieval; integrate audit logging and data retention policies",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/api/src/modules/agent/conversation.router.ts",
+          "expectedBy": "IFC-148",
+          "status": "found",
+          "size": 19903,
+          "sha256": "63e1f092221161663d0d735b67c7ed38f7583fbad3ea9e353beddc369590c4ef",
+          "issues": []
+        },
+        {
+          "path": "apps/api/src/modules/agent/__tests__/conversation.router.test.ts",
+          "expectedBy": "IFC-148",
+          "status": "found",
+          "size": 27740,
+          "sha256": "5aa1fd8e7b0f1819cabfccfcfc456f8d5507f3f6c4f6083f2fbf10e92ef66c10",
+          "issues": []
+        },
+        {
+          "path": "packages/application/src/services/ConversationSearchService.ts",
+          "expectedBy": "IFC-148",
+          "status": "found",
+          "size": 11043,
+          "sha256": "1b0f7c02f84950a508f473c0ae37aa8592302faa0e2bcb04ac9d62e5b3c62025",
+          "issues": []
+        },
+        {
+          "path": "infra/supabase/migrations/20260104000000_conversation_rls.sql",
+          "expectedBy": "IFC-148",
+          "status": "found",
+          "size": 9548,
+          "sha256": "8c0c3a263d5b99da296faa077c3d3584e44fb5a05f7e840249a5ffabae779806",
+          "issues": []
+        },
+        {
+          "path": "artifacts/misc/data-retention-config.yaml",
+          "expectedBy": "IFC-148",
+          "status": "found",
+          "size": 9912,
+          "sha256": "7718975866720cc4a215d815cc9c5265be96c3fbecfcd1d54f35f1c946bfb868",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-148/context_ack.json",
+          "expectedBy": "IFC-148",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-148/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [
+        {
+          "file": "packages\\application\\src\\services\\ConversationSearchService.ts",
+          "line": 395,
+          "column": 26,
+          "pattern": "STUB",
+          "content": "// For now, return a stub that the repository would implement",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\api\\src\\modules\\agent\\__tests__\\conversation.router.test.ts",
+          "line": 796,
+          "column": 42,
+          "pattern": "MOCK_RETURN",
+          "content": "if (name === 'user-agent') return 'TestAgent/1.0';",
+          "linkedTaskId": null
+        }
+      ],
+      "validations": [
+        {
+          "taskId": "IFC-148",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 60482,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint7-audit-20260228T021139-8r5pky\\evidence\\validation-logs\\IFC-148_1772244888074.log",
+          "timestamp": "2026-02-28T02:14:48.074Z",
+          "error": "Command timed out after 60000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "100% conversations recorded",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "retrieval latency <=50ms",
+          "target": "<= 50ms",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "access control passes",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "DSAR deletion executed",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-148",
+        "dependencies": [
+          "IFC-139",
+          "IFC-126"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-139"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Database schema created",
+          "conversation records stored with metadata (case ID",
+          "timestamps",
+          "user/agent ID",
+          "tool calls)",
+          "search API implemented",
+          "access control enforced",
+          "retention and DSAR compliance built-in",
+          "tests covering privacy controls",
+          "targets: >=100%"
+        ],
+        "verified": 0,
+        "unverified": 10,
+        "details": [
+          {
+            "criterion": "Database schema created",
+            "verified": false,
+            "evidence": "Missing artifacts: 1"
+          },
+          {
+            "criterion": "conversation records stored with metadata (case ID",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "timestamps",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "user/agent ID",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "tool calls)",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "search API implemented",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "access control enforced",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "retention and DSAR compliance built-in",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "tests covering privacy controls",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          },
+          {
+            "criterion": "targets: >=100%",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-148/context_ack.json",
+        "Found 2 placeholder(s) in task artifacts",
+        "Validation(s) failed: pnpm test",
+        "10 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Remove TODO, FIXME, STUB, and empty function placeholders",
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "PG-138",
+      "description": "Case List & Detail Pages - Party management deadline tracking document links timeline",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/cases/(list)/page.tsx",
+          "expectedBy": "PG-138",
+          "status": "found",
+          "size": 4309,
+          "sha256": "4923f51f9f25d322249d6772a17b0b508c7ac4b2d6fa7e30962c8fa27894cf74",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/app/cases/[id]/page.tsx",
+          "expectedBy": "PG-138",
+          "status": "found",
+          "size": 6222,
+          "sha256": "c093404a6740c53c13fc0e148537912fac2aa049ad21cdbf2a45354749d0900d",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/cases/CaseList.tsx",
+          "expectedBy": "PG-138",
+          "status": "found",
+          "size": 18840,
+          "sha256": "45f88d499220ea0a66bfe17360d698d68008f3d8a761284a51bbce979f033d00",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/cases/CaseDetail.tsx",
+          "expectedBy": "PG-138",
+          "status": "found",
+          "size": 30799,
+          "sha256": "cfce1464b344743fa86229b95c9e1bc9a47d699764efdc2642049a06b1c30f49",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/cases/PartyManager.tsx",
+          "expectedBy": "PG-138",
+          "status": "found",
+          "size": 7845,
+          "sha256": "ef2a5111647fade060eada065942ab5e0d78769b44b86dd60a8075ea73f529a2",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/cases/DeadlineTracker.tsx",
+          "expectedBy": "PG-138",
+          "status": "found",
+          "size": 6368,
+          "sha256": "33629eb27b064cad8b30be3e4c4047e3ccdb550b5987ad51777ae8d6d61e5182",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/PG-138/context_ack.json",
+          "expectedBy": "PG-138",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-138/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [
+        {
+          "file": "apps\\web\\src\\components\\cases\\PartyManager.tsx",
+          "line": 158,
+          "column": 15,
+          "pattern": "PLACEHOLDER",
+          "content": "placeholder=\"Name *\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\cases\\PartyManager.tsx",
+          "line": 180,
+          "column": 15,
+          "pattern": "PLACEHOLDER",
+          "content": "placeholder=\"Organization\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\cases\\PartyManager.tsx",
+          "line": 189,
+          "column": 17,
+          "pattern": "PLACEHOLDER",
+          "content": "placeholder=\"Email\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\cases\\PartyManager.tsx",
+          "line": 197,
+          "column": 17,
+          "pattern": "PLACEHOLDER",
+          "content": "placeholder=\"Phone\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\cases\\PartyManager.tsx",
+          "line": 205,
+          "column": 15,
+          "pattern": "PLACEHOLDER",
+          "content": "placeholder=\"Notes\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\cases\\DeadlineTracker.tsx",
+          "line": 150,
+          "column": 15,
+          "pattern": "PLACEHOLDER",
+          "content": "placeholder=\"Task title...\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\cases\\CaseList.tsx",
+          "line": 384,
+          "column": 19,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "onClick: () => {},",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\cases\\CaseList.tsx",
+          "line": 391,
+          "column": 53,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "{ id: 'sep-1', icon: '', label: '', onClick: () => {}, separator: true },",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\cases\\CaseList.tsx",
+          "line": 482,
+          "column": 19,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "onChange: () => {},",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\cases\\CaseList.tsx",
+          "line": 384,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {}",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\cases\\CaseList.tsx",
+          "line": 391,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {}",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\cases\\CaseList.tsx",
+          "line": 482,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {}",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\cases\\CaseDetail.tsx",
+          "line": 384,
+          "column": 101,
+          "pattern": "PLACEHOLDER",
+          "content": "...:ring-0 text-sm resize-none placeholder:text-muted-foreground outline-none\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\cases\\CaseDetail.tsx",
+          "line": 385,
+          "column": 23,
+          "pattern": "PLACEHOLDER",
+          "content": "placeholder=\"Write a note or log an activity...\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\cases\\CaseDetail.tsx",
+          "line": 669,
+          "column": 15,
+          "pattern": "PLACEHOLDER",
+          "content": "placeholder=\"Enter resolution summary...\"",
+          "linkedTaskId": null
+        }
+      ],
+      "validations": [
+        {
+          "taskId": "PG-138",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 60471,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint7-audit-20260228T021139-8r5pky\\evidence\\validation-logs\\PG-138_1772244948596.log",
+          "timestamp": "2026-02-28T02:15:48.595Z",
+          "error": "Command timed out after 60000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "List loads <500ms",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "parties editable",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "deadlines accurate",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "documents linked",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "Lighthouse >=90",
+          "target": ">= 90",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-138",
+        "dependencies": [
+          "IFC-136"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-136"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <500ms",
+          "Lighthouse >=90",
+          "CaseList",
+          "CaseCard",
+          "CaseDetail",
+          "PartyManager",
+          "DeadlineTracker",
+          "DocumentLinks",
+          "CaseTimeline components",
+          "verified by: pnpm test"
+        ],
+        "verified": 0,
+        "unverified": 10,
+        "details": [
+          {
+            "criterion": "Response <500ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse >=90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "CaseList",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "CaseCard",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "CaseDetail",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "PartyManager",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "DeadlineTracker",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "DocumentLinks",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "CaseTimeline components",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-138/context_ack.json",
+        "Found 15 placeholder(s) in task artifacts",
+        "Validation(s) failed: pnpm test",
+        "10 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Remove TODO, FIXME, STUB, and empty function placeholders",
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "PG-139",
+      "description": "Appointment Scheduling Page - Calendar view conflict detection case linking reminders",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/calendar/(list)/page.tsx",
+          "expectedBy": "PG-139",
+          "status": "found",
+          "size": 6011,
+          "sha256": "89090921410874037f2b112471fd361c7a08ee8fe38c8a3050216751a9f66005",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/app/calendar/[id]/page.tsx",
+          "expectedBy": "PG-139",
+          "status": "found",
+          "size": 9984,
+          "sha256": "073bd96ba0c790ba847565473e7dd04324ff36172f24096b34a55644da541437",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/appointments/AppointmentCalendar.tsx",
+          "expectedBy": "PG-139",
+          "status": "found",
+          "size": 19486,
+          "sha256": "e4efc61efe9d5604a11ec8450d03d4f6c128757faf379841bace9f72a948927d",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/appointments/AppointmentForm.tsx",
+          "expectedBy": "PG-139",
+          "status": "found",
+          "size": 12776,
+          "sha256": "e57f895b365429e3a4f88ae8a50828172aa888712acd522bcedadb1fb4cb3dc1",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/appointments/ConflictWarning.tsx",
+          "expectedBy": "PG-139",
+          "status": "found",
+          "size": 3473,
+          "sha256": "ee8b5b8692b89962401a5a14a0671c5125be54eddaf25c1741df68b3929d7512",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/appointments/RecurrenceEditor.tsx",
+          "expectedBy": "PG-139",
+          "status": "found",
+          "size": 11714,
+          "sha256": "2005fcd4163e6ff7c70380c99979d47fc5d3a1346281e5e872919b8d62f86185",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/PG-139/context_ack.json",
+          "expectedBy": "PG-139",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-139/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [
+        {
+          "file": "apps\\web\\src\\components\\appointments\\AppointmentForm.tsx",
+          "line": 323,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {}",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 76,
+          "column": 11,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "}) ?? { mutateAsync: async () => {} };",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 79,
+          "column": 11,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "}) ?? { mutateAsync: async () => {} };",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 82,
+          "column": 11,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "}) ?? { mutateAsync: async () => {} };",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 85,
+          "column": 11,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "}) ?? { mutateAsync: async () => {} };",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 88,
+          "column": 11,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "}) ?? { mutateAsync: async () => {} };",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 91,
+          "column": 10,
+          "pattern": "EMPTY_FUNCTION",
+          "content": ") ?? { mutateAsync: async () => {} };",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 94,
+          "column": 7,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "mutateAsync: async () => {},",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 98,
+          "column": 11,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "}) ?? { mutateAsync: async () => {} };",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 101,
+          "column": 11,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "}) ?? { mutateAsync: async () => {} };",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 76,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {}",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 79,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {}",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 82,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {}",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 85,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {}",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 88,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {}",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 91,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {}",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 94,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {}",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 98,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {}",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\app\\calendar\\[id]\\page.tsx",
+          "line": 101,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {}",
+          "linkedTaskId": null
+        }
+      ],
+      "validations": [
+        {
+          "taskId": "PG-139",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 60528,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint7-audit-20260228T021139-8r5pky\\evidence\\validation-logs\\PG-139_1772245009105.log",
+          "timestamp": "2026-02-28T02:16:49.105Z",
+          "error": "Command timed out after 60000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Calendar loads <500ms",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "conflicts highlighted",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "case links work",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "reminders configurable",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "Lighthouse >=90",
+          "target": ">= 90",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-139",
+        "dependencies": [
+          "IFC-137"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-137"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Response <500ms",
+          "Lighthouse >=90",
+          "AppointmentCalendar",
+          "AppointmentForm",
+          "ConflictWarning",
+          "CaseLinkSelector",
+          "ReminderConfig",
+          "RecurrenceEditor components",
+          "verified by: pnpm test"
+        ],
+        "verified": 0,
+        "unverified": 9,
+        "details": [
+          {
+            "criterion": "Response <500ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse >=90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "AppointmentCalendar",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "AppointmentForm",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "ConflictWarning",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "CaseLinkSelector",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "ReminderConfig",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "RecurrenceEditor components",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-139/context_ack.json",
+        "Found 19 placeholder(s) in task artifacts",
+        "Validation(s) failed: pnpm test",
+        "9 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Remove TODO, FIXME, STUB, and empty function placeholders",
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "PG-142",
+      "description": "Sentiment Analysis Dashboard at /agent-approvals/sentiment - Timeline badges trend visualization email sentiment preview",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/agent-approvals/sentiment/page.tsx",
+          "expectedBy": "PG-142",
+          "status": "found",
+          "size": 1347,
+          "sha256": "73895677f74322c11cf60957053c714343ad3119269621399190654304f690b6",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/SentimentDashboard.tsx",
+          "expectedBy": "PG-142",
+          "status": "found",
+          "size": 16136,
+          "sha256": "ca6f9ec87b9d54f55a3e495c7670a58c36007b608c15a925ff1681b02b6767b9",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/SentimentTrend.tsx",
+          "expectedBy": "PG-142",
+          "status": "found",
+          "size": 2513,
+          "sha256": "d44d76ddd98af4ea7f23c0b8ed08e8e050cd47d62b7b459fb62a6da0fbf0ec11",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/__tests__/SentimentDashboard.test.tsx",
+          "expectedBy": "PG-142",
+          "status": "found",
+          "size": 13428,
+          "sha256": "1f8620ff3c59724b8e169efbe9d3974d5e887f6f0a20494bf31713772040bf5a",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/PG-142/context_ack.json",
+          "expectedBy": "PG-142",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-142/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "PG-142",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 60532,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint7-audit-20260228T021139-8r5pky\\evidence\\validation-logs\\PG-142_1772245069674.log",
+          "timestamp": "2026-02-28T02:17:49.673Z",
+          "error": "Command timed out after 60000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Page loads <500ms",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "badges render correctly",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "trends accurate",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "emotion detection visible",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "Lighthouse >=90",
+          "target": ">= 90",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "test coverage >=90%",
+          "target": ">= 90%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": "pnpm test:coverage",
+          "evidence": "Measurement timeout"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-142",
+        "dependencies": [
+          "IFC-039",
+          "IFC-181"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-181"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Page renders at /agent-approvals/sentiment",
+          "SentimentDashboard with timeline badges trend charts emotion indicators urgency labels topic tags",
+          "reuses SearchFilterBar",
+          "Lighthouse >=90",
+          "verified by: pnpm test"
+        ],
+        "verified": 0,
+        "unverified": 5,
+        "details": [
+          {
+            "criterion": "Page renders at /agent-approvals/sentiment",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "SentimentDashboard with timeline badges trend charts emotion indicators urgency labels topic tags",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "reuses SearchFilterBar",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse >=90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-142/context_ack.json",
+        "Validation(s) failed: pnpm test",
+        "5 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "PG-143",
+      "description": "Churn Risk Dashboard at /agent-approvals/churn-risk - Health scores risk indicators intervention triggers trend charts",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/agent-approvals/churn-risk/page.tsx",
+          "expectedBy": "PG-143",
+          "status": "found",
+          "size": 1335,
+          "sha256": "e9735eeccb0bd01f5edca8cd5a0a64c0bdde31cad34f74437760e80e111570b2",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/ChurnDashboard.tsx",
+          "expectedBy": "PG-143",
+          "status": "found",
+          "size": 15294,
+          "sha256": "79563a7dc4776697900c68ebe1cbbe110de5f7ed3c11a970062a5e4bdfb3faea",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/HealthScoreGauge.tsx",
+          "expectedBy": "PG-143",
+          "status": "found",
+          "size": 2993,
+          "sha256": "a860a85b882a6d5ae961c511f1904a320870dcdfcc77631d182d4ef4b74e3317",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/RiskIndicators.tsx",
+          "expectedBy": "PG-143",
+          "status": "found",
+          "size": 2149,
+          "sha256": "6f51a10a4bfedf50dc32cbd28540743fc0a68d5de50c6b8a8df742f963669702",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/ChurnTrendChart.tsx",
+          "expectedBy": "PG-143",
+          "status": "found",
+          "size": 1965,
+          "sha256": "797eb49646e30e790e718abc273515a4591e6a9a11c2739114347ece2e27cf16",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/__tests__/ChurnDashboard.test.tsx",
+          "expectedBy": "PG-143",
+          "status": "found",
+          "size": 13213,
+          "sha256": "edbc74efd4fdc98489f22d39c9a9835677e2b7f8cd85bd266ab934e1ec114bee",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/PG-143/context_ack.json",
+          "expectedBy": "PG-143",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-143/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [
+        {
+          "file": "apps\\web\\src\\components\\ai-intelligence\\__tests__\\ChurnDashboard.test.tsx",
+          "line": 123,
+          "column": 45,
+          "pattern": "PLACEHOLDER",
+          "content": "it('renders SearchFilterBar with search placeholder', () => {",
+          "linkedTaskId": null
+        }
+      ],
+      "validations": [
+        {
+          "taskId": "PG-143",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 60987,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint7-audit-20260228T021139-8r5pky\\evidence\\validation-logs\\PG-143_1772245190270.log",
+          "timestamp": "2026-02-28T02:19:50.270Z",
+          "error": "Command timed out after 60000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Dashboard loads <500ms",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "health scores accurate",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "interventions actionable",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "trends visible",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "Lighthouse >=90",
+          "target": ">= 90",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "test coverage >=90%",
+          "target": ">= 90%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": "pnpm test:coverage",
+          "evidence": "Measurement timeout"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-143",
+        "dependencies": [
+          "IFC-095",
+          "IFC-181"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-181"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Page renders at /agent-approvals/churn-risk",
+          "ChurnDashboard with HealthScoreGauge RiskIndicators InterventionAlerts ChurnTrendChart AtRiskCustomerList",
+          "Lighthouse >=90",
+          "verified by: pnpm test"
+        ],
+        "verified": 0,
+        "unverified": 4,
+        "details": [
+          {
+            "criterion": "Page renders at /agent-approvals/churn-risk",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "ChurnDashboard with HealthScoreGauge RiskIndicators InterventionAlerts ChurnTrendChart AtRiskCustomerList",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse >=90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-143/context_ack.json",
+        "Found 1 placeholder(s) in task artifacts",
+        "Validation(s) failed: pnpm test",
+        "4 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Remove TODO, FIXME, STUB, and empty function placeholders",
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "PG-144",
+      "description": "AI Search (RAG) Page at /agent-approvals/ai-search - Universal search bar AI-powered results citations source highlighting",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/agent-approvals/ai-search/page.tsx",
+          "expectedBy": "PG-144",
+          "status": "found",
+          "size": 1354,
+          "sha256": "6a3b57304d966f0192316507c398d8eaeffad775b0dd39cd88dd98f5f40b869d",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/AISearchPage.tsx",
+          "expectedBy": "PG-144",
+          "status": "found",
+          "size": 19259,
+          "sha256": "e6e3fa57cd14318009fd509319e9f15882fa66058b02dbf682cb1400aeadde36",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/CitationDisplay.tsx",
+          "expectedBy": "PG-144",
+          "status": "found",
+          "size": 2422,
+          "sha256": "c65ca28ff6c4139d2b9d8a1746028b2d577f86cf171ce05af10df19dcb2cfa1c",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/SourceHighlight.tsx",
+          "expectedBy": "PG-144",
+          "status": "found",
+          "size": 1291,
+          "sha256": "56fa42cde60f21b8029d6fdb863f633b971d3ee47a2c42db83c298d3cad1d42d",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/__tests__/AISearchPage.test.tsx",
+          "expectedBy": "PG-144",
+          "status": "found",
+          "size": 17432,
+          "sha256": "b50d77e0397c1174c9b3f3bbddd8f35444a6fbea60a360fa83afbed4f9bd4721",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/PG-144/context_ack.json",
+          "expectedBy": "PG-144",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-144/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [
+        {
+          "file": "apps\\web\\src\\components\\ai-intelligence\\AISearchPage.tsx",
+          "line": 247,
+          "column": 17,
+          "pattern": "PLACEHOLDER",
+          "content": "placeholder=\"Search across leads, contacts, documents, conversations...\"",
+          "linkedTaskId": null
+        },
+        {
+          "file": "apps\\web\\src\\components\\ai-intelligence\\__tests__\\AISearchPage.test.tsx",
+          "line": 110,
+          "column": 35,
+          "pattern": "PLACEHOLDER",
+          "content": "it('renders search input with placeholder', () => {",
+          "linkedTaskId": null
+        }
+      ],
+      "validations": [
+        {
+          "taskId": "PG-144",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 61126,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint7-audit-20260228T021139-8r5pky\\evidence\\validation-logs\\PG-144_1772245311327.log",
+          "timestamp": "2026-02-28T02:21:51.327Z",
+          "error": "Command timed out after 60000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Search <1s",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "AI results accurate",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "citations linked",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "sources highlighted",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "Lighthouse >=90",
+          "target": ">= 90",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "test coverage >=90%",
+          "target": ">= 90%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": "pnpm test:coverage",
+          "evidence": "Measurement timeout"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-144",
+        "dependencies": [
+          "IFC-156",
+          "IFC-155",
+          "IFC-181"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-181"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Page renders at /agent-approvals/ai-search",
+          "GlobalSearchBar with AI-powered results CitationDisplay SourceHighlight SearchFilters RelevanceScore",
+          "response <1s",
+          "Lighthouse >=90",
+          "verified by: pnpm test"
+        ],
+        "verified": 0,
+        "unverified": 5,
+        "details": [
+          {
+            "criterion": "Page renders at /agent-approvals/ai-search",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "GlobalSearchBar with AI-powered results CitationDisplay SourceHighlight SearchFilters RelevanceScore",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "response <1s",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse >=90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-144/context_ack.json",
+        "Found 2 placeholder(s) in task artifacts",
+        "Validation(s) failed: pnpm test",
+        "5 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Remove TODO, FIXME, STUB, and empty function placeholders",
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "IFC-197",
+      "description": "AI Monitoring tRPC Router - Expose drift detection latency metrics hallucination checks ROI tracking and agent status via tRPC endpoints",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/api/src/modules/ai-monitoring/ai-monitoring.router.ts",
+          "expectedBy": "IFC-197",
+          "status": "found",
+          "size": 13253,
+          "sha256": "19d1cab03eb19a2ee74c383554a18ebf26eddfab0242a7c1930e00adb66858f8",
+          "issues": []
+        },
+        {
+          "path": "apps/api/src/modules/ai-monitoring/__tests__/ai-monitoring.router.test.ts",
+          "expectedBy": "IFC-197",
+          "status": "found",
+          "size": 21022,
+          "sha256": "6dd6891801760d98282d90c57e636d450415251ea01c8f66522b31b034fca32c",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-197/context_ack.json",
+          "expectedBy": "IFC-197",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-197/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "IFC-197",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 61862,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint7-audit-20260228T021139-8r5pky\\evidence\\validation-logs\\IFC-197_1772245432721.log",
+          "timestamp": "2026-02-28T02:23:52.721Z",
+          "error": "Command timed out after 60000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Endpoints respond <200ms",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "all monitoring data accessible via API",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "tenant isolation enforced",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "test coverage >=90%",
+          "target": ">= 90%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": "pnpm test:coverage",
+          "evidence": "Measurement timeout"
+        }
+      ],
+      "dependencies": {
+        "taskId": "IFC-197",
+        "dependencies": [
+          "IFC-117",
+          "IFC-125"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "tRPC router with endpoints: getDriftMetrics getLatencyMetrics getHallucinationReport getROIMetrics getMonitoringStatus getActiveAgents getAgentLogs",
+          "all endpoints tenant-isolated",
+          "response <200ms",
+          "verified by: pnpm test"
+        ],
+        "verified": 0,
+        "unverified": 4,
+        "details": [
+          {
+            "criterion": "tRPC router with endpoints: getDriftMetrics getLatencyMetrics getHallucinationReport getROIMetrics getMonitoringStatus getActiveAgents getAgentLogs",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "all endpoints tenant-isolated",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "response <200ms",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-197/context_ack.json",
+        "Validation(s) failed: pnpm test",
+        "4 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "PG-148",
+      "description": "Lead Scoring Dashboard at /agent-approvals/lead-scoring - Score distributions model accuracy top leads factor breakdown",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/agent-approvals/lead-scoring/page.tsx",
+          "expectedBy": "PG-148",
+          "status": "found",
+          "size": 1369,
+          "sha256": "23ceb6ac7f67bf5926847c2e3d1e3a4f2dc0e92b861a6f89eb61ecafb8c59f1a",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/LeadScoringDashboard.tsx",
+          "expectedBy": "PG-148",
+          "status": "found",
+          "size": 18472,
+          "sha256": "5132bd9057a4e7d9aec5c78fb273bf4ea126f28752181e5fe34806476902d8b8",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/__tests__/LeadScoringDashboard.test.tsx",
+          "expectedBy": "PG-148",
+          "status": "found",
+          "size": 14032,
+          "sha256": "62b80589246768f95baa814cf94e67b03f11bbff60d156aa5907f0fdc15cec53",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/PG-148/attestation.json",
+          "expectedBy": "PG-148",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-148/attestation.json"
+          ]
+        }
+      ],
+      "placeholders": [
+        {
+          "file": "apps\\web\\src\\components\\ai-intelligence\\__tests__\\LeadScoringDashboard.test.tsx",
+          "line": 122,
+          "column": 51,
+          "pattern": "PLACEHOLDER",
+          "content": "it('TC-5: renders SearchFilterBar with search placeholder', () => {",
+          "linkedTaskId": null
+        }
+      ],
+      "validations": [
+        {
+          "taskId": "PG-148",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 61865,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint7-audit-20260228T021139-8r5pky\\evidence\\validation-logs\\PG-148_1772245554678.log",
+          "timestamp": "2026-02-28T02:25:54.678Z",
+          "error": "Command timed out after 60000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Page loads <500ms",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "score data accurate",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "charts render correctly",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "reuses existing score components",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "Lighthouse >=90",
+          "target": ">= 90",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "test coverage >=90%",
+          "target": ">= 90%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": "pnpm test:coverage",
+          "evidence": "Measurement timeout"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-148",
+        "dependencies": [
+          "IFC-005",
+          "IFC-023",
+          "IFC-181"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-005",
+          "IFC-023",
+          "IFC-181"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Page renders at /agent-approvals/lead-scoring",
+          "score distribution chart",
+          "model accuracy metrics",
+          "top-scored leads list",
+          "factor breakdown per lead",
+          "reuses ConfidenceIndicator and ScoreCard components",
+          "Lighthouse >=90",
+          "verified by: pnpm test"
+        ],
+        "verified": 0,
+        "unverified": 8,
+        "details": [
+          {
+            "criterion": "Page renders at /agent-approvals/lead-scoring",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "score distribution chart",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "model accuracy metrics",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "top-scored leads list",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "factor breakdown per lead",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "reuses ConfidenceIndicator and ScoreCard components",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "Lighthouse >=90",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-148/attestation.json",
+        "Found 1 placeholder(s) in task artifacts",
+        "Validation(s) failed: pnpm test",
+        "8 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Remove TODO, FIXME, STUB, and empty function placeholders",
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "PG-149",
+      "description": "Experiments Dashboard at /agent-approvals/experiments - A/B test management experiment results statistical analysis variant comparison",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/agent-approvals/experiments/page.tsx",
+          "expectedBy": "PG-149",
+          "status": "found",
+          "size": 1315,
+          "sha256": "4d11ce9d4c299b553d4064e83ed2d1e2786b3fad93c62f68e215a6d84634fd38",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/ExperimentsDashboard.tsx",
+          "expectedBy": "PG-149",
+          "status": "found",
+          "size": 16831,
+          "sha256": "0418bdfdec59b4c5dccb1ba9c9139e9e73de10b93cb99eef59cd939b5cb9da14",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/__tests__/ExperimentsDashboard.test.tsx",
+          "expectedBy": "PG-149",
+          "status": "found",
+          "size": 20549,
+          "sha256": "f26e65991a10f86852508013407f5fca43af59ee87e0951f071b92af24930789",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/PG-149/context_ack.json",
+          "expectedBy": "PG-149",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-149/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [],
+      "validations": [
+        {
+          "taskId": "PG-149",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 62060,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint7-audit-20260228T021139-8r5pky\\evidence\\validation-logs\\PG-149_1772245676619.log",
+          "timestamp": "2026-02-28T02:27:56.619Z",
+          "error": "Command timed out after 60000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Page loads <500ms",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "experiments manageable",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "statistical results accurate",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "variant comparison visible",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "Lighthouse >=90",
+          "target": ">= 90",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "test coverage >=90%",
+          "target": ">= 90%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": "pnpm test:coverage",
+          "evidence": "Measurement timeout"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-149",
+        "dependencies": [
+          "IFC-025",
+          "IFC-181"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-181"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Page renders at /agent-approvals/experiments",
+          "experiment list with status filters",
+          "create/start/stop/complete actions",
+          "statistical significance display",
+          "variant comparison charts",
+          "confidence intervals",
+          "verified by: pnpm test"
+        ],
+        "verified": 0,
+        "unverified": 7,
+        "details": [
+          {
+            "criterion": "Page renders at /agent-approvals/experiments",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "experiment list with status filters",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "create/start/stop/complete actions",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "statistical significance display",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "variant comparison charts",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "confidence intervals",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-149/context_ack.json",
+        "Validation(s) failed: pnpm test",
+        "7 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Fix failing validations before marking complete"
+      ]
+    },
+    {
+      "taskId": "PG-150",
+      "description": "AI Review History at /agent-approvals/history - Filterable history of all AI output reviews with timeline and audit trail",
+      "status": "Completed",
+      "verdict": "FAIL",
+      "artifacts": [
+        {
+          "path": "apps/web/src/app/agent-approvals/history/page.tsx",
+          "expectedBy": "PG-150",
+          "status": "found",
+          "size": 1313,
+          "sha256": "989d0cd429b1dcb65adba406d8227d901458e7657868946db501ac083fe35109",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/ReviewHistory.tsx",
+          "expectedBy": "PG-150",
+          "status": "found",
+          "size": 19291,
+          "sha256": "7eafe5196b50aa472e68597e7e880b88ef879a839d694da483ed6ee768004c1d",
+          "issues": []
+        },
+        {
+          "path": "apps/web/src/components/ai-intelligence/__tests__/ReviewHistory.test.tsx",
+          "expectedBy": "PG-150",
+          "status": "found",
+          "size": 20663,
+          "sha256": "3dcac765c6c95ab108c2e7461fd7b310709314f391413c3000bfdf64ef08ff2b",
+          "issues": []
+        },
+        {
+          "path": "EVIDENCE:.specify/sprints/sprint-7/attestations/PG-150/context_ack.json",
+          "expectedBy": "PG-150",
+          "status": "missing",
+          "size": null,
+          "sha256": null,
+          "issues": [
+            "Artifact not found: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-150/context_ack.json"
+          ]
+        }
+      ],
+      "placeholders": [
+        {
+          "file": "apps\\web\\src\\components\\ai-intelligence\\ReviewHistory.tsx",
+          "line": 392,
+          "column": 1,
+          "pattern": "EMPTY_FUNCTION",
+          "content": "() => {}",
+          "linkedTaskId": null
+        }
+      ],
+      "validations": [
+        {
+          "taskId": "PG-150",
+          "command": "pnpm test",
+          "exitCode": 124,
+          "passed": false,
+          "durationMs": 62053,
+          "stdoutHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "logPath": "artifacts\\reports\\sprint-audit\\sprint7-audit-20260228T021139-8r5pky\\evidence\\validation-logs\\PG-150_1772245798998.log",
+          "timestamp": "2026-02-28T02:29:58.998Z",
+          "error": "Command timed out after 60000ms"
+        }
+      ],
+      "kpis": [
+        {
+          "kpi": "Page loads <500ms",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "filters work correctly",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "timeline renders",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "audit trail complete",
+          "target": "= 0",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "Lighthouse >=90",
+          "target": ">= 90",
+          "actual": null,
+          "met": false,
+          "measurementCommand": null,
+          "evidence": "Manual verification required"
+        },
+        {
+          "kpi": "test coverage >=90%",
+          "target": ">= 90%",
+          "actual": null,
+          "met": false,
+          "measurementCommand": "pnpm test:coverage",
+          "evidence": "Measurement timeout"
+        }
+      ],
+      "dependencies": {
+        "taskId": "PG-150",
+        "dependencies": [
+          "IFC-181",
+          "IFC-180"
+        ],
+        "allCompleted": true,
+        "attestationsFound": [
+          "IFC-181",
+          "IFC-180"
+        ],
+        "missing": []
+      },
+      "definitionOfDone": {
+        "criteria": [
+          "Page renders at /agent-approvals/history",
+          "full review history with date range status and output type filters",
+          "timeline visualization",
+          "audit trail per review",
+          "reuses ReviewCard component",
+          "verified by: pnpm test"
+        ],
+        "verified": 0,
+        "unverified": 6,
+        "details": [
+          {
+            "criterion": "Page renders at /agent-approvals/history",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "full review history with date range status and output type filters",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "timeline visualization",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "audit trail per review",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "reuses ReviewCard component",
+            "verified": false,
+            "evidence": "Requires manual verification"
+          },
+          {
+            "criterion": "verified by: pnpm test",
+            "verified": false,
+            "evidence": "Failed validations: 1"
+          }
+        ]
+      },
+      "issues": [
+        "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-150/context_ack.json",
+        "Found 1 placeholder(s) in task artifacts",
+        "Validation(s) failed: pnpm test",
+        "6 DoD criteria unverified"
+      ],
+      "recommendations": [
+        "Create all required artifacts before marking task complete",
+        "Remove TODO, FIXME, STUB, and empty function placeholders",
+        "Fix failing validations before marking complete"
+      ]
+    }
+  ],
+  "blocking_issues": [
+    {
+      "taskId": "IFC-054",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-054/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-054",
+      "severity": "high",
+      "issue": "5 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-079",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-079/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-079",
+      "severity": "high",
+      "issue": "4 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-080",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-080/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-080",
+      "severity": "high",
+      "issue": "4 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-082",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-082/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-082",
+      "severity": "high",
+      "issue": "2 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-092",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-092/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-092",
+      "severity": "high",
+      "issue": "2 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-093",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-093/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-093",
+      "severity": "high",
+      "issue": "Found 4 placeholder(s) in task artifacts",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-093",
+      "severity": "high",
+      "issue": "3 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-114",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-114/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-114",
+      "severity": "high",
+      "issue": "Found 1 placeholder(s) in task artifacts",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-114",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-114",
+      "severity": "high",
+      "issue": "3 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-122",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-122/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-122",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-122",
+      "severity": "high",
+      "issue": "8 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-126",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-126/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-126",
+      "severity": "high",
+      "issue": "4 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-133",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-133/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-133",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-133",
+      "severity": "high",
+      "issue": "6 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-134",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-134/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-134",
+      "severity": "high",
+      "issue": "3 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-148",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-12/attestations/IFC-148/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-148",
+      "severity": "high",
+      "issue": "Found 2 placeholder(s) in task artifacts",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-148",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-148",
+      "severity": "high",
+      "issue": "10 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-138",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-138/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-138",
+      "severity": "high",
+      "issue": "Found 15 placeholder(s) in task artifacts",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-138",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-138",
+      "severity": "high",
+      "issue": "10 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-139",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-139/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-139",
+      "severity": "high",
+      "issue": "Found 19 placeholder(s) in task artifacts",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-139",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-139",
+      "severity": "high",
+      "issue": "9 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-142",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-142/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-142",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-142",
+      "severity": "high",
+      "issue": "5 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-143",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-143/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-143",
+      "severity": "high",
+      "issue": "Found 1 placeholder(s) in task artifacts",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-143",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-143",
+      "severity": "high",
+      "issue": "4 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-144",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-144/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-144",
+      "severity": "high",
+      "issue": "Found 2 placeholder(s) in task artifacts",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-144",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-144",
+      "severity": "high",
+      "issue": "5 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-197",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/IFC-197/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-197",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "IFC-197",
+      "severity": "high",
+      "issue": "4 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-148",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-148/attestation.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-148",
+      "severity": "high",
+      "issue": "Found 1 placeholder(s) in task artifacts",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-148",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-148",
+      "severity": "high",
+      "issue": "8 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-149",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-149/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-149",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-149",
+      "severity": "high",
+      "issue": "7 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-150",
+      "severity": "critical",
+      "issue": "Missing or invalid artifacts: EVIDENCE:.specify/sprints/sprint-7/attestations/PG-150/context_ack.json",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-150",
+      "severity": "high",
+      "issue": "Found 1 placeholder(s) in task artifacts",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-150",
+      "severity": "critical",
+      "issue": "Validation(s) failed: pnpm test",
+      "recommendation": "Create all required artifacts before marking task complete"
+    },
+    {
+      "taskId": "PG-150",
+      "severity": "high",
+      "issue": "6 DoD criteria unverified",
+      "recommendation": "Create all required artifacts before marking task complete"
+    }
+  ],
+  "duration_seconds": 1221.751
+}

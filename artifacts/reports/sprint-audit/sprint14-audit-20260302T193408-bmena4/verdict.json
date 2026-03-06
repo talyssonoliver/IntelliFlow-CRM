@@ -1,0 +1,15 @@
+{
+  "run_id": "sprint14-audit-20260302T193408-bmena4",
+  "sprint": 14,
+  "verdict": "FAIL",
+  "passed": false,
+  "generated_at": "2026-03-02T19:34:35.329Z",
+  "summary": {
+    "total": 48,
+    "audited": 48,
+    "passed": 45,
+    "failed": 3,
+    "needs_human": 0
+  },
+  "blocking_issues_count": 6
+}

@@ -1,0 +1,15 @@
+{
+  "run_id": "sprint15-audit-20260302T202542-jambey",
+  "sprint": 15,
+  "verdict": "PASS",
+  "passed": true,
+  "generated_at": "2026-03-02T20:25:54.093Z",
+  "summary": {
+    "total": 36,
+    "audited": 29,
+    "passed": 29,
+    "failed": 0,
+    "needs_human": 0
+  },
+  "blocking_issues_count": 0
+}

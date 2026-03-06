@@ -1,0 +1,25 @@
+{
+  "generated_at": "2026-03-01T21:52:39.035Z",
+  "run_id": "sprint0-audit-20260301T215124-58x92j",
+  "total_placeholders": 2,
+  "findings": [
+    {
+      "taskId": "IFC-160",
+      "file": "tools\\lint\\artifact-paths.ts",
+      "line": 509,
+      "column": 44,
+      "pattern": "PLACEHOLDER",
+      "content": ".replace(/\\*\\*/g, '§§') // Temporary placeholder",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "IFC-160",
+      "file": "tools\\lint\\artifact-paths.ts",
+      "line": 578,
+      "column": 29,
+      "pattern": "PLACEHOLDER",
+      "content": "* Apply automatic fixes (placeholder for future implementation)",
+      "linkedTaskId": null
+    }
+  ]
+}

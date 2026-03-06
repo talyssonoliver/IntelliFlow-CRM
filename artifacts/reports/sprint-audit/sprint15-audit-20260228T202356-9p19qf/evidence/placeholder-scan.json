@@ -1,0 +1,25 @@
+{
+  "generated_at": "2026-02-28T20:24:02.521Z",
+  "run_id": "sprint15-audit-20260228T202356-9p19qf",
+  "total_placeholders": 2,
+  "findings": [
+    {
+      "taskId": "PG-034",
+      "file": "apps\\web\\src\\components\\developer\\webhook-docs.tsx",
+      "line": 49,
+      "column": 80,
+      "pattern": "PLACEHOLDER",
+      "content": "...ion. Note: Current implementation uses HMAC placeholder — production requires proper ECDSA verificat...",
+      "linkedTaskId": null
+    },
+    {
+      "taskId": "PG-034",
+      "file": "apps\\web\\src\\components\\developer\\webhook-docs.tsx",
+      "line": 598,
+      "column": 13,
+      "pattern": "PLACEHOLDER",
+      "content": "placeholder implementation. Production deployments should use proper ECDSA",
+      "linkedTaskId": null
+    }
+  ]
+}
