@@ -1,12 +1,9 @@
 'use client';
 
 import { useMemo } from 'react';
+import Link from 'next/link';
 import type { WidgetProps } from './index';
-import {
-  useActivitySubscription,
-  useRealtimeHealth,
-  type ActivityRecord,
-} from '../../../../hooks/use-subscription';
+import { useActivitySubscription, useRealtimeHealth } from '../../../../hooks/use-subscription';
 
 // Activity type icons and colors using design system
 const activityTypeConfig: Record<string, { icon: string; color: string }> = {
@@ -58,46 +55,6 @@ function ConnectionStatus({ status, latency }: { status: string; latency: number
   );
 }
 
-// Fallback sample activities for when there's no real data
-const sampleActivities: ActivityRecord[] = [
-  {
-    id: 'sample-1',
-    type: 'EMAIL',
-    title: 'Sent proposal to Acme Corp',
-    description: 'Q4 enterprise license proposal',
-    timestamp: new Date(Date.now() - 120000).toISOString(), // 2 mins ago
-    dateLabel: 'today',
-    opportunityId: null,
-    userId: 'user-1',
-    agentName: null,
-    agentStatus: null,
-  },
-  {
-    id: 'sample-2',
-    type: 'STAGE_CHANGE',
-    title: 'Deal moved to Negotiation',
-    description: 'Tech Solutions Bundle advanced',
-    timestamp: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-    dateLabel: 'today',
-    opportunityId: null,
-    userId: 'user-2',
-    agentName: null,
-    agentStatus: null,
-  },
-  {
-    id: 'sample-3',
-    type: 'AGENT_ACTION',
-    title: 'AI Follow-up scheduled',
-    description: 'Automated reminder for Project Alpha',
-    timestamp: new Date(Date.now() - 7200000).toISOString(), // 2 hours ago
-    dateLabel: 'today',
-    opportunityId: null,
-    userId: null,
-    agentName: 'Follow-up Agent',
-    agentStatus: 'completed',
-  },
-];
-
 export function RecentActivityWidget(_props: WidgetProps) {
   // Real-time subscription for activities (gracefully handles missing table)
   const {
@@ -118,61 +75,62 @@ export function RecentActivityWidget(_props: WidgetProps) {
   const displayStatus =
     realtimeActivities.length === 0 && status === 'error' ? 'disconnected' : status;
 
-  // Use realtime activities if available, otherwise show sample data
-  const displayActivities = useMemo(() => {
-    if (realtimeActivities.length > 0) {
-      return realtimeActivities.slice(0, 5);
-    }
-    // Show sample data when no real activities yet (connection may still be establishing)
-    return sampleActivities;
-  }, [realtimeActivities]);
-
-  const isUsingFallback = realtimeActivities.length === 0;
+  const displayActivities = useMemo(() => realtimeActivities.slice(0, 5), [realtimeActivities]);
 
   return (
     <div className="p-5 h-full flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold text-foreground">Recent Activity</h3>
-        <ConnectionStatus
-          status={isHealthy ? displayStatus : 'disconnected'}
-          latency={metrics.averageLatency || latency}
-        />
+        <div className="flex items-center gap-3">
+          <Link href="/activity" className="text-xs text-primary hover:underline">
+            View all
+          </Link>
+          <ConnectionStatus
+            status={isHealthy ? displayStatus : 'disconnected'}
+            latency={metrics.averageLatency || latency}
+          />
+        </div>
       </div>
 
       <div className="flex flex-col gap-4 flex-1">
-        {displayActivities.map((activity) => {
-          const typeConfig = activityTypeConfig[activity.type] || activityTypeConfig.SYSTEM;
+        {displayActivities.length > 0 &&
+          displayActivities.map((activity) => {
+            const typeConfig = activityTypeConfig[activity.type] || activityTypeConfig.SYSTEM;
 
-          return (
-            <div key={activity.id} className="flex items-start gap-3">
-              <div
-                className={`flex items-center justify-center w-8 h-8 rounded-full bg-muted ${typeConfig.color}`}
-              >
-                <span className="text-sm">{typeConfig.icon}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-foreground">
-                  <span className="font-semibold">{activity.title}</span>
-                  {activity.description && (
-                    <span className="text-muted-foreground"> - {activity.description}</span>
-                  )}
-                </p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <p className="text-xs text-muted-foreground">
-                    {activity.dateLabel || formatRelativeTime(activity.timestamp)}
+            return (
+              <div key={activity.id} className="flex items-start gap-3">
+                <div
+                  className={`flex items-center justify-center w-8 h-8 rounded-full bg-muted ${typeConfig.color}`}
+                >
+                  <span className="text-sm">{typeConfig.icon}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground">
+                    <span className="font-semibold">{activity.title}</span>
+                    {activity.description && (
+                      <span className="text-muted-foreground"> - {activity.description}</span>
+                    )}
                   </p>
-                  {activity.agentName && (
-                    <span className="text-xs text-chart-4">by {activity.agentName}</span>
-                  )}
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-xs text-muted-foreground">
+                      {activity.dateLabel || formatRelativeTime(activity.timestamp)}
+                    </p>
+                    {activity.agentName && (
+                      <span className="text-xs text-chart-4">by {activity.agentName}</span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        {displayActivities.length === 0 && (
+          <div className="flex flex-1 items-center justify-center rounded-md border border-dashed border-border p-4">
+            <p className="text-xs text-muted-foreground text-center">No recent activity yet.</p>
+          </div>
+        )}
       </div>
 
-      {/* Show hint when using fallback data */}
-      {isUsingFallback && status === 'connected' && (
+      {displayActivities.length === 0 && status === 'connected' && (
         <p className="text-xs text-muted-foreground mt-3 text-center">
           Waiting for new activities...
         </p>

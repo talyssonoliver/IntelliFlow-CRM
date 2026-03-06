@@ -15,3 +15,6 @@ export { tasksSidebarConfig } from './tasks';
 export { casesSidebarConfig } from './cases';
 export { appointmentsSidebarConfig } from './appointments';
 export { emailSidebarConfig } from './email';
+export { helpCenterSidebarConfig } from './help-center';
+export { insightsSidebarConfig } from './insights';
+export { supportTicketsSidebarConfig } from './support-tickets';

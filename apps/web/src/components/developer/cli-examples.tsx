@@ -103,14 +103,9 @@ pnpm run build`}
         <h3 id="example-db-migration" className="text-lg font-semibold text-foreground mb-3">
           Database Migration Workflow
         </h3>
-        <p className="text-muted-foreground mb-4">
-          Creating and applying Prisma schema changes.
-        </p>
+        <p className="text-muted-foreground mb-4">Creating and applying Prisma schema changes.</p>
         <div className="flex flex-col gap-3">
-          <CodeBlock
-            code="pnpm run db:migrate:create"
-            label="Step 1: Create Migration"
-          />
+          <CodeBlock code="pnpm run db:migrate:create" label="Step 1: Create Migration" />
           <CodeBlock
             code={`# Edit the migration SQL in packages/db/prisma/migrations/
 # Then apply it

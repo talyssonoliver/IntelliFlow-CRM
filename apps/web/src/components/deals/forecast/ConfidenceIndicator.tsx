@@ -78,8 +78,8 @@ export function ConfidenceIndicator({
       )}
       {showDescription && (
         <p className="text-xs text-muted-foreground" data-testid="confidence-description">
-          Based on activity frequency, manual probability updates, contact engagement, and close date
-          presence.
+          Based on activity frequency, manual probability updates, contact engagement, and close
+          date presence.
         </p>
       )}
     </div>

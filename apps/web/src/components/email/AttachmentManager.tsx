@@ -85,7 +85,7 @@ export function AttachmentManager({
           'flex items-center justify-center rounded-md border-2 border-dashed p-3 text-sm text-muted-foreground transition-colors',
           isDragOver
             ? 'border-primary bg-primary/5 ring-2 ring-primary/20 highlight'
-            : 'border-border',
+            : 'border-border'
         )}
       >
         <Paperclip className="mr-2 h-4 w-4" />
@@ -111,9 +111,7 @@ export function AttachmentManager({
       {oversizedFiles.length > 0 && (
         <div className="flex items-center gap-1 text-xs text-destructive">
           <AlertCircle className="h-3.5 w-3.5" />
-          <span>
-            {oversizedFiles.map((f) => f.name).join(', ')} exceeds 25MB limit
-          </span>
+          <span>{oversizedFiles.map((f) => f.name).join(', ')} exceeds 25MB limit</span>
         </div>
       )}
       {totalExceeded && (
@@ -149,9 +147,7 @@ export function AttachmentManager({
                 )}
                 <div className="flex-1 truncate">
                   <div className="truncate font-medium">{file.name}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {formatFileSize(file.size)}
-                  </div>
+                  <div className="text-xs text-muted-foreground">{formatFileSize(file.size)}</div>
                 </div>
                 <button
                   type="button"

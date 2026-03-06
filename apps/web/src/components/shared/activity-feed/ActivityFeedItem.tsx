@@ -145,6 +145,11 @@ function getEntityRoute(entityType: string, entityId: string): string | null {
   return route ? `/${route}/${entityId}` : null;
 }
 
+function appendActivityId(url: string, activityId: string): string {
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}activityId=${encodeURIComponent(activityId)}`;
+}
+
 function formatRelativeTime(date: Date | string): string {
   const diffMs = Date.now() - new Date(date).getTime();
   const diffMins = Math.floor(diffMs / 60000);
@@ -196,7 +201,7 @@ function buildDescription(
   entity: ActivityFeedItemProps['entity'],
   metadata: Record<string, unknown> | null | undefined,
   type: string,
-  source: string,
+  source: string
 ): string | null {
   const parts: string[] = [];
 
@@ -251,7 +256,7 @@ function buildDescription(
 function buildAutoTags(
   metadata: Record<string, unknown> | null | undefined,
   source: string,
-  type: string,
+  type: string
 ): Array<{ label: string; variant: 'green' | 'slate' | 'amber' | 'red' | 'blue' }> {
   const tags: Array<{ label: string; variant: 'green' | 'slate' | 'amber' | 'red' | 'blue' }> = [];
   if (!metadata) return tags;
@@ -305,7 +310,74 @@ const TAG_STYLES: Record<string, string> = {
   blue: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
 };
 
+// ---------------------------------------------------------------------------
+// ActivityFeedAvatar
+// ---------------------------------------------------------------------------
+
+interface ActivityFeedAvatarProps {
+  style: IconStyle;
+  actorInitials: string | null;
+}
+
+function ActivityFeedAvatar({ style, actorInitials }: ActivityFeedAvatarProps) {
+  const baseClass = `shrink-0 size-10 rounded-full ${style.bg} flex items-center justify-center ${style.color}`;
+
+  if (actorInitials && !style.initials) {
+    return <div className={`${baseClass} font-bold`}>{actorInitials}</div>;
+  }
+  if (style.initials) {
+    return <div className={`${baseClass} font-bold`}>{style.initials}</div>;
+  }
+  return (
+    <div className={baseClass}>
+      <span className="material-symbols-outlined">{style.icon}</span>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// EntityDescription
+// ---------------------------------------------------------------------------
+
+interface EntityDescriptionProps {
+  richDescription: string | null;
+  entity: ActivityFeedItemProps['entity'];
+  entityUrl: string | null;
+}
+
+function EntityDescription({ richDescription, entity, entityUrl }: EntityDescriptionProps) {
+  if (!richDescription && !entity) return null;
+
+  return (
+    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+      {richDescription}
+      {entity && entityUrl && (
+        <>
+          {richDescription ? ' ' : ''}
+          <Link
+            href={entityUrl}
+            className="font-semibold text-slate-800 dark:text-slate-200 hover:text-[#137fec]"
+          >
+            {entity.name}
+          </Link>
+        </>
+      )}
+      {entity && !entityUrl && (
+        <>
+          {richDescription ? ' — ' : ''}
+          <span className="font-semibold text-slate-800 dark:text-slate-200">{entity.name}</span>
+        </>
+      )}
+    </p>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// ActivityFeedItem
+// ---------------------------------------------------------------------------
+
 export function ActivityFeedItem({
+  id,
   source,
   type,
   title,
@@ -326,74 +398,44 @@ export function ActivityFeedItem({
   const tags = buildAutoTags(metadata, source, type);
 
   // Extract attachment from metadata (if provided)
-  const attachment = metadata?.attachment as
-    | { filename: string; url?: string }
-    | undefined;
+  const attachment = metadata?.attachment as { filename: string; url?: string } | undefined;
 
   // Extract action link from metadata
   const actionUrl = metadata?.actionUrl as string | undefined;
   const actionLabel = metadata?.actionLabel as string | undefined;
+  const basePrimaryUrl = actionUrl?.trim() ? actionUrl : entityUrl;
+  const primaryUrl = basePrimaryUrl ? appendActivityId(basePrimaryUrl, id) : null;
 
   return (
     <div className="p-5 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
       <div className="flex gap-3">
         {/* Avatar / Icon — size-10 matching mockup */}
-        {actorInitials && !style.initials ? (
-          <div
-            className={`shrink-0 size-10 rounded-full ${style.bg} flex items-center justify-center ${style.color} font-bold`}
-          >
-            {actorInitials}
-          </div>
-        ) : style.initials ? (
-          <div
-            className={`shrink-0 size-10 rounded-full ${style.bg} flex items-center justify-center ${style.color} font-bold`}
-          >
-            {style.initials}
-          </div>
-        ) : (
-          <div
-            className={`shrink-0 size-10 rounded-full ${style.bg} flex items-center justify-center ${style.color}`}
-          >
-            <span className="material-symbols-outlined">{style.icon}</span>
-          </div>
-        )}
+        <ActivityFeedAvatar style={style} actorInitials={actorInitials} />
 
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start">
-            <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-              {title}
-            </p>
+            {primaryUrl ? (
+              <Link
+                href={primaryUrl}
+                className="text-sm font-medium text-slate-900 dark:text-slate-100 hover:text-[#137fec] hover:underline"
+              >
+                {title}
+              </Link>
+            ) : (
+              <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{title}</p>
+            )}
             <span className="text-xs text-slate-400 whitespace-nowrap">
               {formatRelativeTime(timestamp)}
             </span>
           </div>
 
           {/* Description with inline entity link */}
-          {(richDescription || entity) && (
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-              {richDescription}
-              {entity && entityUrl && (
-                <>
-                  {richDescription ? ' ' : ''}
-                  <Link
-                    href={entityUrl}
-                    className="font-semibold text-slate-800 dark:text-slate-200 hover:text-[#137fec]"
-                  >
-                    {entity.name}
-                  </Link>
-                </>
-              )}
-              {entity && !entityUrl && (
-                <>
-                  {richDescription ? ' — ' : ''}
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">
-                    {entity.name}
-                  </span>
-                </>
-              )}
-            </p>
-          )}
+          <EntityDescription
+            richDescription={richDescription}
+            entity={entity}
+            entityUrl={entityUrl}
+          />
 
           {/* Attachment preview (matches mockup PDF card) */}
           {attachment && (
@@ -423,9 +465,9 @@ export function ActivityFeedItem({
           {/* Status tags / badges — auto-generated from metadata */}
           {tags.length > 0 && (
             <div className="mt-2 flex gap-2 flex-wrap">
-              {tags.map((tag, i) => (
+              {tags.map((tag) => (
                 <span
-                  key={i}
+                  key={tag.label}
                   className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
                     TAG_STYLES[tag.variant] || TAG_STYLES.slate
                   }`}

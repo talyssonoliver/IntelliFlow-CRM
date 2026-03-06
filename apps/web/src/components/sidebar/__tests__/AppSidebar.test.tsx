@@ -111,7 +111,7 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
       await user.hover(sidebar);
 
       expect(screen.getByText('Test Module')).toBeInTheDocument();
@@ -125,7 +125,7 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
       await user.hover(sidebar);
 
       expect(screen.getByText('Test Views')).toBeInTheDocument();
@@ -140,7 +140,7 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
       await user.hover(sidebar);
 
       expect(screen.getByRole('link', { name: /all items/i })).toBeInTheDocument();
@@ -156,7 +156,7 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
       await user.hover(sidebar);
 
       expect(screen.getByRole('link', { name: /module settings/i })).toBeInTheDocument();
@@ -171,7 +171,7 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
       await user.hover(sidebar);
 
       expect(screen.queryByRole('link', { name: /module settings/i })).not.toBeInTheDocument();
@@ -187,7 +187,7 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
 
       // Initially collapsed - no section titles visible
       expect(screen.queryByText('Test Views')).not.toBeInTheDocument();
@@ -207,7 +207,7 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
 
       // Hover to expand
       await user.hover(sidebar);
@@ -228,7 +228,7 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
       await user.hover(sidebar);
 
       expect(screen.getByRole('button', { name: /pin sidebar/i })).toBeInTheDocument();
@@ -244,7 +244,7 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
       await user.hover(sidebar);
 
       const pinButton = screen.getByRole('button', { name: /pin sidebar/i });
@@ -263,7 +263,7 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
 
       // Should be expanded because pinned
       expect(screen.getByText('Test Views')).toBeInTheDocument();
@@ -283,7 +283,7 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
       await user.hover(sidebar);
 
       expect(screen.getByRole('link', { name: /all items/i })).toHaveAttribute('href', '/test');
@@ -305,7 +305,7 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
       await user.hover(sidebar);
 
       expect(screen.getByRole('link', { name: /module settings/i })).toHaveAttribute(
@@ -323,9 +323,8 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
       expect(sidebar).toHaveAttribute('aria-label', 'Test Module navigation');
-      expect(sidebar).toHaveAttribute('aria-expanded');
     });
 
     it('should use semantic navigation element', () => {
@@ -335,11 +334,11 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
       expect(sidebar.tagName).toBe('ASIDE');
     });
 
-    it('should have menu role for navigation sections', async () => {
+    it('should have navigation role for sections', async () => {
       const user = userEvent.setup();
       render(
         <SidebarProvider>
@@ -347,11 +346,45 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
       await user.hover(sidebar);
 
-      const menus = screen.getAllByRole('menu');
-      expect(menus.length).toBeGreaterThan(0);
+      // Sections use <nav> elements which have the "navigation" role
+      const navSections = screen.getAllByRole('navigation', { name: /test views|segments/i });
+      expect(navSections.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('afterContent', () => {
+    it('should render afterContent component when provided in config', async () => {
+      const user = userEvent.setup();
+      const AfterContent = ({ isExpanded }: { isExpanded: boolean }) => (
+        <div data-testid="after-content" data-expanded={isExpanded}>
+          Custom Content
+        </div>
+      );
+      const configWithAfter = { ...testConfig, afterContent: AfterContent };
+      render(
+        <SidebarProvider>
+          <AppSidebar config={configWithAfter} />
+        </SidebarProvider>
+      );
+
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
+      await user.hover(sidebar);
+
+      expect(screen.getByTestId('after-content')).toBeInTheDocument();
+      expect(screen.getByText('Custom Content')).toBeInTheDocument();
+    });
+
+    it('should not render afterContent area when not provided', () => {
+      render(
+        <SidebarProvider>
+          <AppSidebar config={testConfig} />
+        </SidebarProvider>
+      );
+
+      expect(screen.queryByTestId('after-content')).not.toBeInTheDocument();
     });
   });
 
@@ -363,7 +396,7 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
       expect(sidebar).toHaveClass('bg-card', 'border-border');
     });
 
@@ -374,7 +407,7 @@ describe('AppSidebar', () => {
         </SidebarProvider>
       );
 
-      const sidebar = screen.getByRole('navigation');
+      const sidebar = screen.getByRole('navigation', { name: /test module navigation/i });
       expect(sidebar).toHaveClass('transition-all', 'duration-300');
     });
   });

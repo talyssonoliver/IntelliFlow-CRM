@@ -12,11 +12,7 @@ export type DocumentStatus =
   | 'ARCHIVED'
   | 'SUPERSEDED';
 
-export type DocumentClassification =
-  | 'PUBLIC'
-  | 'INTERNAL'
-  | 'CONFIDENTIAL'
-  | 'PRIVILEGED';
+export type DocumentClassification = 'PUBLIC' | 'INTERNAL' | 'CONFIDENTIAL' | 'PRIVILEGED';
 
 export type AccessLevel = 'NONE' | 'VIEW' | 'COMMENT' | 'EDIT' | 'ADMIN';
 

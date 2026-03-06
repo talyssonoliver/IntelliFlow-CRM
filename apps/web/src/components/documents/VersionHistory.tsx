@@ -20,7 +20,10 @@ function getChangeTypeStyle(changeType: string) {
   return CHANGE_TYPE_COLORS[changeType] ?? CHANGE_TYPE_COLORS.patch;
 }
 
-function computeSizeDelta(current: DocumentVersion, previous: DocumentVersion | undefined): string | null {
+function computeSizeDelta(
+  current: DocumentVersion,
+  previous: DocumentVersion | undefined
+): string | null {
   if (!previous) return null;
   const delta = current.sizeBytes - previous.sizeBytes;
   if (delta === 0) return '±0';
@@ -39,16 +42,16 @@ export function VersionHistory({
 
   // Sort versions by date (newest first)
   const sortedVersions = useMemo(
-    () => [...versions].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()),
+    () =>
+      [...versions].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      ),
     [versions]
   );
 
-  const handleRestore = useCallback(
-    (versionId: string) => {
-      setRestoreTarget(versionId);
-    },
-    []
-  );
+  const handleRestore = useCallback((versionId: string) => {
+    setRestoreTarget(versionId);
+  }, []);
 
   const confirmRestore = useCallback(() => {
     if (restoreTarget) {
@@ -69,7 +72,9 @@ export function VersionHistory({
     return (
       <div className="text-center py-12" data-testid="version-empty-state">
         <span className="material-symbols-outlined text-5xl text-slate-400">history</span>
-        <h3 className="mt-4 text-lg font-medium text-slate-900 dark:text-white">No version history</h3>
+        <h3 className="mt-4 text-lg font-medium text-slate-900 dark:text-white">
+          No version history
+        </h3>
         <p className="mt-2 text-sm text-slate-500">No version history available.</p>
       </div>
     );
@@ -87,10 +92,14 @@ export function VersionHistory({
           role="dialog"
           aria-modal="true"
           aria-label="Confirm restore"
-          onKeyDown={(e) => { if (e.key === 'Escape') cancelRestore(); }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') cancelRestore();
+          }}
         >
           <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Restore version?</h3>
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+              Restore version?
+            </h3>
             <p className="mt-2 text-sm text-slate-500">
               This will restore version{' '}
               {sortedVersions.find((v) => v.id === restoreTarget)?.versionNumber ?? restoreTarget}{' '}
@@ -100,9 +109,7 @@ export function VersionHistory({
               <Button variant="outline" onClick={cancelRestore}>
                 Cancel
               </Button>
-              <Button onClick={confirmRestore}>
-                Restore
-              </Button>
+              <Button onClick={confirmRestore}>Restore</Button>
             </div>
           </div>
         </div>
@@ -132,7 +139,7 @@ export function VersionHistory({
                 aria-hidden="true"
               />
 
-              <div
+              <div // NOSONAR
                 className={`rounded-lg p-4 cursor-pointer transition-colors ${
                   isCurrent
                     ? 'bg-primary/5 border border-primary/20'

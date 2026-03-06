@@ -16,11 +16,7 @@ export function SourceHighlight({ text, query, maxLength = 300 }: SourceHighligh
   const truncatedText = text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
 
   const parts = useMemo(() => {
-    const terms = query
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .map(escapeRegex);
+    const terms = query.trim().split(/\s+/).filter(Boolean).map(escapeRegex);
 
     if (terms.length === 0) return [{ text: truncatedText, highlight: false }];
 
@@ -42,7 +38,7 @@ export function SourceHighlight({ text, query, maxLength = 300 }: SourceHighligh
           </mark>
         ) : (
           <span key={i}>{part.text}</span>
-        ),
+        )
       )}
     </span>
   );

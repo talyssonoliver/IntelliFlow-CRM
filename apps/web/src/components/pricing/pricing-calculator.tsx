@@ -131,8 +131,8 @@ export function PricingCalculator({ tiers }: PricingCalculatorProps) {
               </button>
 
               <ul className="features text-sm space-y-2">
-                {tier.features.map((feature, index) => (
-                  <li key={index} className="flex items-start">
+                {tier.features.map((feature) => (
+                  <li key={feature} className="flex items-start">
                     <span className="mr-2">✓</span>
                     <span>{feature}</span>
                   </li>

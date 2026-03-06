@@ -10,14 +10,7 @@
  */
 
 import { useState, useCallback, lazy, Suspense } from 'react';
-import {
-  Card,
-  CardContent,
-  Badge,
-  Button,
-  Skeleton,
-  cn,
-} from '@intelliflow/ui';
+import { Card, CardContent, Badge, Button, Skeleton, cn } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar } from '@/components/shared';
 import { useExperimentsDashboard, useExperimentActions } from '@/lib/experiments/hooks';
 import {
@@ -28,18 +21,13 @@ import {
 } from '@/lib/experiments/experiment-utils';
 import type { ExperimentSummary } from '@/lib/experiments/types';
 
-const ExperimentResultsPanel = lazy(
-  () => import('./ExperimentResultsPanel')
-);
+const ExperimentResultsPanel = lazy(() => import('./ExperimentResultsPanel'));
 
 // ============================================
 // Breadcrumb config
 // ============================================
 
-const BREADCRUMBS = [
-  { label: 'AI & Agents', href: '/agent-approvals' },
-  { label: 'Experiments' },
-];
+const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'Experiments' }];
 
 // ============================================
 // Internal StatCard (defined within file, following LeadScoringDashboard pattern)
@@ -210,9 +198,7 @@ export function ExperimentsDashboard() {
             <p className="text-slate-700 dark:text-slate-200 font-medium mb-2">
               Failed to load experiments
             </p>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-              {error.message}
-            </p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">{error.message}</p>
             <Button onClick={() => refetch()} aria-label="Retry loading experiments">
               Retry
             </Button>

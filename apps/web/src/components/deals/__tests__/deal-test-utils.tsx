@@ -203,8 +203,16 @@ export function createMockDealForecastResponse(
       }),
     ],
     history: [
-      createMockHistoryPoint({ date: '2026-02-01', probability: 20, event: 'Stage → Qualification' }),
-      createMockHistoryPoint({ date: '2026-02-10', probability: 40, event: 'Stage → Needs Analysis' }),
+      createMockHistoryPoint({
+        date: '2026-02-01',
+        probability: 20,
+        event: 'Stage → Qualification',
+      }),
+      createMockHistoryPoint({
+        date: '2026-02-10',
+        probability: 40,
+        event: 'Stage → Needs Analysis',
+      }),
       createMockHistoryPoint({ date: '2026-02-15', probability: 60, event: 'Stage → Proposal' }),
     ],
     confidence: 0.75,

@@ -9,15 +9,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
-import {
-  Card,
-  CardContent,
-  Badge,
-  Button,
-  Skeleton,
-  Input,
-  cn,
-} from '@intelliflow/ui';
+import { Card, CardContent, Badge, Button, Skeleton, Input, cn } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { useAISearch } from '@/lib/ai-search/hooks';
 import { SourceHighlight } from './SourceHighlight';
@@ -30,16 +22,19 @@ import {
   getRelevanceBadgeClass,
   formatRelevanceScore,
 } from '@/lib/ai-search/search-utils';
-import type { SearchResultItem, SearchSource, SearchType, DateRange, SortOption } from '@/lib/ai-search/types';
+import type {
+  SearchResultItem,
+  SearchSource,
+  SearchType,
+  DateRange,
+  SortOption,
+} from '@/lib/ai-search/types';
 
 // ============================================
 // Breadcrumbs
 // ============================================
 
-const BREADCRUMBS = [
-  { label: 'AI & Agents', href: '/agent-approvals' },
-  { label: 'AI Search' },
-];
+const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'AI Search' }];
 
 // ============================================
 // Stats Card
@@ -173,7 +168,8 @@ export function AISearchPage() {
 
   // Sort results client-side
   const sortedResults = [...results].sort((a, b) => {
-    if (sortBy === 'newest') return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    if (sortBy === 'newest')
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     if (sortBy === 'source') return a.source.localeCompare(b.source);
     return b.relevanceScore - a.relevanceScore;
   });
@@ -188,7 +184,7 @@ export function AISearchPage() {
         setOffset(0);
       }
     },
-    [query],
+    [query]
   );
 
   const handleChipClick = useCallback((chip: string) => {
@@ -203,7 +199,7 @@ export function AISearchPage() {
 
   const handleSourceToggle = useCallback((source: SearchSource) => {
     setSources((prev) =>
-      prev.includes(source) ? prev.filter((s) => s !== source) : [...prev, source],
+      prev.includes(source) ? prev.filter((s) => s !== source) : [...prev, source]
     );
     setOffset(0);
   }, []);
@@ -236,7 +232,10 @@ export function AISearchPage() {
         <CardContent className="p-4">
           <div className="flex flex-col gap-4">
             <div className="relative">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true">
+              <span
+                className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                aria-hidden="true"
+              >
                 search
               </span>
               <Input
@@ -267,12 +266,15 @@ export function AISearchPage() {
                 {SEARCH_TYPE_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
-                    onClick={() => { setSearchType(opt.value); setOffset(0); }}
+                    onClick={() => {
+                      setSearchType(opt.value);
+                      setOffset(0);
+                    }}
                     className={cn(
                       'px-2 py-1 text-xs rounded-md transition-colors',
                       searchType === opt.value
                         ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80',
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     )}
                   >
                     {opt.label}
@@ -288,12 +290,15 @@ export function AISearchPage() {
                 {DATE_RANGE_OPTIONS.map((opt) => (
                   <button
                     key={opt.value}
-                    onClick={() => { setDateRange(opt.value); setOffset(0); }}
+                    onClick={() => {
+                      setDateRange(opt.value);
+                      setOffset(0);
+                    }}
                     className={cn(
                       'px-2 py-1 text-xs rounded-md transition-colors',
                       dateRange === opt.value
                         ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80',
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     )}
                   >
                     {opt.label}
@@ -314,7 +319,7 @@ export function AISearchPage() {
                       'px-2 py-1 text-xs rounded-md transition-colors',
                       sortBy === opt.value
                         ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80',
+                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     )}
                   >
                     {opt.label}
@@ -333,7 +338,7 @@ export function AISearchPage() {
                     'px-3 py-1 text-xs rounded-full transition-colors',
                     activeChip === chip.value
                       ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted text-muted-foreground hover:bg-muted/80',
+                      : 'bg-muted text-muted-foreground hover:bg-muted/80'
                   )}
                 >
                   {chip.label}
@@ -351,7 +356,7 @@ export function AISearchPage() {
                     'flex items-center gap-1 px-2 py-1 text-xs rounded-md border transition-colors',
                     sources.includes(opt.value)
                       ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border text-muted-foreground hover:border-primary/50',
+                      : 'border-border text-muted-foreground hover:border-primary/50'
                   )}
                 >
                   <span className="material-symbols-outlined text-sm" aria-hidden="true">
@@ -415,7 +420,9 @@ export function AISearchPage() {
       {!hasQuery && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-            <span className="material-symbols-outlined text-5xl text-muted-foreground mb-4">search</span>
+            <span className="material-symbols-outlined text-5xl text-muted-foreground mb-4">
+              search
+            </span>
             <p className="text-lg font-medium text-muted-foreground">
               Enter a search query to find information across your CRM
             </p>
@@ -446,8 +453,7 @@ export function AISearchPage() {
               {error.message || 'An unexpected error occurred'}
             </p>
             <Button onClick={() => refetch()} variant="outline">
-              <span className="material-symbols-outlined mr-2 text-sm">refresh</span>
-              Retry
+              <span className="material-symbols-outlined mr-2 text-sm">refresh</span> Retry
             </Button>
           </CardContent>
         </Card>
@@ -456,10 +462,10 @@ export function AISearchPage() {
       {hasQuery && !isLoading && !error && results.length === 0 && (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-            <span className="material-symbols-outlined text-5xl text-muted-foreground mb-4">search_off</span>
-            <p className="text-lg font-medium text-muted-foreground">
-              No results found
-            </p>
+            <span className="material-symbols-outlined text-5xl text-muted-foreground mb-4">
+              search_off
+            </span>
+            <p className="text-lg font-medium text-muted-foreground">No results found</p>
             <p className="text-sm text-muted-foreground mt-1">
               Try different keywords or broader filters.
             </p>
@@ -499,7 +505,10 @@ function SearchResultCard({ result, query }: { result: SearchResultItem; query: 
   const isLinked = href !== '#';
 
   const card = (
-    <Card className={cn('transition-shadow', isLinked && 'hover:shadow-md cursor-pointer')} role="listitem">
+    <Card
+      className={cn('transition-shadow', isLinked && 'hover:shadow-md cursor-pointer')}
+      role="listitem"
+    >
       <CardContent className="p-4">
         <div className="flex flex-col gap-2">
           {/* Title + Source Badge */}
@@ -513,7 +522,9 @@ function SearchResultCard({ result, query }: { result: SearchResultItem; query: 
               </Badge>
               <h3 className="font-medium text-foreground truncate">{result.title}</h3>
             </div>
-            <Badge className={cn('text-xs shrink-0', getRelevanceBadgeClass(result.relevanceScore))}>
+            <Badge
+              className={cn('text-xs shrink-0', getRelevanceBadgeClass(result.relevanceScore))}
+            >
               {formatRelevanceScore(result.relevanceScore)}
             </Badge>
           </div>
@@ -539,7 +550,11 @@ function SearchResultCard({ result, query }: { result: SearchResultItem; query: 
 
   if (isLinked) {
     return (
-      <Link href={href} className="block focus:outline-none focus:ring-2 focus:ring-primary rounded-lg" tabIndex={0}>
+      <Link
+        href={href}
+        className="block focus:outline-none focus:ring-2 focus:ring-primary rounded-lg"
+        tabIndex={0}
+      >
         {card}
       </Link>
     );
@@ -547,4 +562,3 @@ function SearchResultCard({ result, query }: { result: SearchResultItem; query: 
 
   return card;
 }
-

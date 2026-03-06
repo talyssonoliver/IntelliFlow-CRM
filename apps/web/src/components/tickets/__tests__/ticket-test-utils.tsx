@@ -202,20 +202,26 @@ export function createMockFilterOptions(
 ): TicketFilterOptions {
   return {
     statuses: [
-      'OPEN',
-      'IN_PROGRESS',
-      'WAITING_ON_CUSTOMER',
-      'WAITING_ON_THIRD_PARTY',
-      'RESOLVED',
-      'CLOSED',
+      { value: 'OPEN', label: 'OPEN', count: 5 },
+      { value: 'IN_PROGRESS', label: 'IN_PROGRESS', count: 3 },
+      { value: 'WAITING_ON_CUSTOMER', label: 'WAITING_ON_CUSTOMER', count: 2 },
+      { value: 'WAITING_ON_THIRD_PARTY', label: 'WAITING_ON_THIRD_PARTY', count: 1 },
+      { value: 'RESOLVED', label: 'RESOLVED', count: 8 },
+      { value: 'CLOSED', label: 'CLOSED', count: 4 },
     ],
-    priorities: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'],
-    slaStatuses: ['ON_TRACK', 'AT_RISK', 'BREACHED', 'MET', 'PAUSED'],
-    assignees: [
-      { id: 'user-1', name: 'Sarah Jenkins' },
-      { id: 'user-2', name: 'Mike Ross' },
+    priorities: [
+      { value: 'LOW', label: 'LOW', count: 5 },
+      { value: 'MEDIUM', label: 'MEDIUM', count: 10 },
+      { value: 'HIGH', label: 'HIGH', count: 3 },
+      { value: 'CRITICAL', label: 'CRITICAL', count: 1 },
     ],
-    categories: ['BILLING', 'TECHNICAL', 'SALES', 'GENERAL'],
+    slaStatuses: [
+      { value: 'ON_TRACK', label: 'ON_TRACK', count: 8 },
+      { value: 'AT_RISK', label: 'AT_RISK', count: 4 },
+      { value: 'BREACHED', label: 'BREACHED', count: 2 },
+      { value: 'MET', label: 'MET', count: 3 },
+      { value: 'PAUSED', label: 'PAUSED', count: 1 },
+    ],
     ...overrides,
   };
 }

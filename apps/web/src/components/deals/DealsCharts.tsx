@@ -36,9 +36,7 @@ export default function DealsCharts({ pieChartData, barChartData }: DealsChartsP
   return (
     <div className="grid gap-4 grid-cols-1 lg:grid-cols-2 mt-4">
       <Card className="p-4 sm:p-6 bg-card border-border">
-        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-4">
-          Deals by Stage
-        </h3>
+        <h3 className="text-base sm:text-lg font-semibold text-foreground mb-4">Deals by Stage</h3>
         <ResponsiveContainer width="100%" height={250}>
           <PieChart>
             <Pie

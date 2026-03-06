@@ -28,6 +28,12 @@ export function ConflictWarning({ conflicts, onViewConflict, onOverride }: Confl
       <ul className="space-y-2" aria-label="Conflict list">
         {conflicts.map((conflict) => {
           const severity = getConflictSeverityColor(conflict.conflictType);
+          const partialOrBufferIcon = conflict.conflictType === 'PARTIAL' ? 'schedule' : 'timer';
+          const conflictIcon = conflict.conflictType === 'EXACT' ? 'block' : partialOrBufferIcon;
+          const partialOrBufferLabel =
+            conflict.conflictType === 'PARTIAL' ? 'Partial overlap' : 'Buffer overlap';
+          const conflictLabel =
+            conflict.conflictType === 'EXACT' ? 'Exact overlap' : partialOrBufferLabel;
           return (
             <li
               key={conflict.id}
@@ -37,19 +43,9 @@ export function ConflictWarning({ conflicts, onViewConflict, onOverride }: Confl
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className={`material-symbols-outlined text-base ${severity.color}`}>
-                      {conflict.conflictType === 'EXACT'
-                        ? 'block'
-                        : conflict.conflictType === 'PARTIAL'
-                          ? 'schedule'
-                          : 'timer'}
+                      {conflictIcon}
                     </span>
-                    <span className={`text-sm font-medium ${severity.color}`}>
-                      {conflict.conflictType === 'EXACT'
-                        ? 'Exact overlap'
-                        : conflict.conflictType === 'PARTIAL'
-                          ? 'Partial overlap'
-                          : 'Buffer overlap'}
-                    </span>
+                    <span className={`text-sm font-medium ${severity.color}`}>{conflictLabel}</span>
                   </div>
                   <p className="text-sm font-medium text-gray-900 mt-1 truncate">
                     {conflict.title}

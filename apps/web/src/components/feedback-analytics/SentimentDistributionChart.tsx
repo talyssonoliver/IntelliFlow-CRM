@@ -6,14 +6,7 @@
  * Pie chart showing positive/neutral/negative sentiment breakdown.
  */
 
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  Legend,
-} from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import type { SentimentDistributionChartProps } from '@/lib/feedback-survey/types';
 
 const COLORS = {
@@ -50,13 +43,12 @@ export default function SentimentDistributionChart({ sentiment }: SentimentDistr
             outerRadius={100}
             paddingAngle={2}
             dataKey="value"
-            label={({ name, percent }: { name?: string; percent?: number }) => `${name ?? ''} ${((percent ?? 0) * 100).toFixed(0)}%`}
+            label={({ name, percent }: { name?: string; percent?: number }) =>
+              `${name ?? ''} ${((percent ?? 0) * 100).toFixed(0)}%`
+            }
           >
             {data.map((entry) => (
-              <Cell
-                key={entry.name}
-                fill={COLORS[entry.name as keyof typeof COLORS]}
-              />
+              <Cell key={entry.name} fill={COLORS[entry.name as keyof typeof COLORS]} />
             ))}
           </Pie>
           <Tooltip />

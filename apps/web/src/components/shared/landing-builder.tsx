@@ -232,9 +232,9 @@ export function LandingFeatures({ section }: { section: FeaturesSection }) {
         </div>
 
         <div className={`grid grid-cols-1 ${gridCols} gap-6`}>
-          {section.features.map((feature, index) => (
+          {section.features.map((feature) => (
             <Card
-              key={index}
+              key={feature.title}
               className="p-6 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 hover:border-[#137fec] hover:shadow-md transition-all"
             >
               <div className="w-12 h-12 rounded-lg bg-[#137fec]/10 flex items-center justify-center mb-4">
@@ -270,9 +270,9 @@ export function LandingTestimonials({ section }: { section: TestimonialsSection 
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {section.testimonials.map((testimonial, index) => (
+          {section.testimonials.map((testimonial) => (
             <Card
-              key={index}
+              key={testimonial.author}
               className="p-6 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
             >
               <blockquote className="text-slate-600 dark:text-slate-400 mb-4">
@@ -318,8 +318,8 @@ export function LandingStats({ section }: { section: StatsSection }) {
           <h2 className={`text-2xl font-bold text-center mb-8 ${textClass}`}>{section.title}</h2>
         )}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {section.stats.map((stat, index) => (
-            <div key={index} className="text-center">
+          {section.stats.map((stat) => (
+            <div key={stat.label} className="text-center">
               <p
                 className={`text-4xl font-bold mb-2 ${section.background === 'brand' ? 'text-white' : 'text-[#137fec]'}`}
               >
@@ -354,9 +354,9 @@ export function LandingPricing({ section }: { section: PricingSection }) {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mx-auto">
-          {section.tiers.map((tier, index) => (
+          {section.tiers.map((tier) => (
             <Card
-              key={index}
+              key={tier.name}
               className={`p-6 ${
                 tier.highlighted
                   ? 'border-2 border-[#137fec] shadow-lg scale-105'
@@ -423,9 +423,9 @@ export function LandingFaq({ section }: { section: FaqSection }) {
         </div>
 
         <div className="space-y-4">
-          {section.items.map((item, index) => (
+          {section.items.map((item) => (
             <details
-              key={index}
+              key={item.question}
               className="group bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700"
             >
               <summary className="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors rounded-lg">
@@ -494,9 +494,9 @@ export function LandingLogoCloud({ section }: { section: LogoCloudSection }) {
           </p>
         )}
         <div className="flex flex-wrap items-center justify-center gap-8 lg:gap-12">
-          {section.logos.map((logo, index) => (
+          {section.logos.map((logo) => (
             <div
-              key={index}
+              key={logo.name}
               className="h-8 px-4 py-2 bg-slate-200 dark:bg-slate-800 rounded flex items-center justify-center text-slate-500 dark:text-slate-400 text-sm font-medium"
             >
               {logo.name}
@@ -523,21 +523,33 @@ export function LandingBuilder({ config }: { config: LandingPageConfig }) {
       {config.sections.map((section, index) => {
         switch (section.type) {
           case 'hero':
-            return <LandingHero key={index} section={section} pageSlug={config.slug} />;
+            return (
+              <LandingHero
+                key={`${section.type}-${index}`}
+                section={section}
+                pageSlug={config.slug}
+              />
+            );
           case 'features':
-            return <LandingFeatures key={index} section={section} />;
+            return <LandingFeatures key={`${section.type}-${index}`} section={section} />;
           case 'testimonials':
-            return <LandingTestimonials key={index} section={section} />;
+            return <LandingTestimonials key={`${section.type}-${index}`} section={section} />;
           case 'stats':
-            return <LandingStats key={index} section={section} />;
+            return <LandingStats key={`${section.type}-${index}`} section={section} />;
           case 'pricing':
-            return <LandingPricing key={index} section={section} />;
+            return <LandingPricing key={`${section.type}-${index}`} section={section} />;
           case 'faq':
-            return <LandingFaq key={index} section={section} />;
+            return <LandingFaq key={`${section.type}-${index}`} section={section} />;
           case 'cta':
-            return <LandingCta key={index} section={section} pageSlug={config.slug} />;
+            return (
+              <LandingCta
+                key={`${section.type}-${index}`}
+                section={section}
+                pageSlug={config.slug}
+              />
+            );
           case 'logo-cloud':
-            return <LandingLogoCloud key={index} section={section} />;
+            return <LandingLogoCloud key={`${section.type}-${index}`} section={section} />;
           default:
             return null;
         }
@@ -545,4 +557,3 @@ export function LandingBuilder({ config }: { config: LandingPageConfig }) {
     </>
   );
 }
-

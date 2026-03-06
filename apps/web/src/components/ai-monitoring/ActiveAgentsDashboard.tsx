@@ -10,13 +10,7 @@
 
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
-import {
-  Card,
-  CardContent,
-  Button,
-  Skeleton,
-  cn,
-} from '@intelliflow/ui';
+import { Card, CardContent, Button, Skeleton, cn } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
 import { useActiveAgentsDashboard } from '@/lib/active-agents/hooks';
 import {
@@ -84,29 +78,12 @@ interface StatCardProps {
   ariaLabel?: string;
 }
 
-function StatCard({
-  label,
-  value,
-  icon,
-  colorClass,
-  isLoading,
-  testId,
-  ariaLabel,
-}: StatCardProps) {
+function StatCard({ label, value, icon, colorClass, isLoading, testId, ariaLabel }: StatCardProps) {
   return (
     <Card>
-      <CardContent
-        className="p-4"
-        data-testid={testId}
-        aria-label={ariaLabel}
-      >
+      <CardContent className="p-4" data-testid={testId} aria-label={ariaLabel}>
         <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              'h-10 w-10 rounded-lg flex items-center justify-center',
-              colorClass,
-            )}
-          >
+          <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', colorClass)}>
             <span className="material-symbols-outlined text-lg">{icon}</span>
           </div>
           <div>
@@ -151,22 +128,15 @@ function AgentCard({ agent }: AgentCardProps) {
                 aria-label={`Status: ${agent.status}`}
                 className={cn(
                   'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium',
-                  getStatusBadgeClass(agent.status),
+                  getStatusBadgeClass(agent.status)
                 )}
               >
-                <span
-                  className={cn(
-                    'h-1.5 w-1.5 rounded-full',
-                    getStatusDotClass(agent.status),
-                  )}
-                />
+                <span className={cn('h-1.5 w-1.5 rounded-full', getStatusDotClass(agent.status))} />
                 {agent.status}
               </span>
             </div>
             <p className="text-sm text-muted-foreground">{agent.model}</p>
-            <p className="mt-1 text-sm truncate">
-              {agent.currentTask ?? 'No active task'}
-            </p>
+            <p className="mt-1 text-sm truncate">{agent.currentTask ?? 'No active task'}</p>
           </div>
         </div>
         <div className="flex flex-col items-end gap-2 shrink-0">
@@ -200,7 +170,11 @@ function DashboardSkeleton() {
       <Skeleton className="h-10 w-full rounded-lg animate-pulse" data-testid="skeleton" />
       <div className="space-y-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-24 w-full rounded-lg animate-pulse" data-testid="skeleton" />
+          <Skeleton
+            key={i}
+            className="h-24 w-full rounded-lg animate-pulse"
+            data-testid="skeleton"
+          />
         ))}
       </div>
     </div>
@@ -212,8 +186,7 @@ function DashboardSkeleton() {
 // ---------------------------------------------------------------------------
 
 export function ActiveAgentsDashboard() {
-  const { agents, healthStatus, isLoading, error, refetch } =
-    useActiveAgentsDashboard();
+  const { agents, healthStatus, isLoading, error, refetch } = useActiveAgentsDashboard();
 
   const [activeChip, setActiveChip] = useState('all');
 
@@ -229,7 +202,7 @@ export function ActiveAgentsDashboard() {
       setActiveChip(chipId);
       filterState.set('type', chipId === 'all' ? '' : chipId);
     },
-    [filterState],
+    [filterState]
   );
 
   // Error state
@@ -243,12 +216,8 @@ export function ActiveAgentsDashboard() {
         />
         <Card>
           <CardContent className="flex flex-col items-center justify-center p-8 text-center">
-            <span className="material-symbols-outlined text-4xl text-red-500 mb-2">
-              error
-            </span>
-            <p className="text-sm text-muted-foreground mb-4">
-              Failed to load agent data
-            </p>
+            <span className="material-symbols-outlined text-4xl text-red-500 mb-2">error</span>
+            <p className="text-sm text-muted-foreground mb-4">Failed to load agent data</p>
             <Button onClick={refetch} variant="outline" aria-label="Try again">
               Try again
             </Button>
@@ -269,11 +238,10 @@ export function ActiveAgentsDashboard() {
 
   const filteredAgents = filterAgents(agents, filters);
 
-  const healthLabel = healthStatus
-    ? healthStatus.healthy
-      ? 'Healthy'
-      : `${healthStatus.issues.length} Issues`
-    : '—';
+  const healthLabelWhenPresent = healthStatus?.healthy
+    ? 'Healthy'
+    : `${healthStatus?.issues.length ?? 0} Issues`;
+  const healthLabel = healthStatus ? healthLabelWhenPresent : '—';
 
   return (
     <div className="flex flex-col gap-6">
@@ -373,9 +341,7 @@ export function ActiveAgentsDashboard() {
                 <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2">
                   smart_toy
                 </span>
-                <p className="text-sm text-muted-foreground">
-                  No active agents
-                </p>
+                <p className="text-sm text-muted-foreground">No active agents</p>
               </CardContent>
             </Card>
           ) : (

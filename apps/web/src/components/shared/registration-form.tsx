@@ -65,56 +65,37 @@ interface PasswordStrengthResult {
   feedback: string[];
 }
 
+type PasswordCheck = { test: (p: string) => boolean; label: string };
+
+const PASSWORD_CHECKS: PasswordCheck[] = [
+  { test: (p) => p.length >= 8, label: 'At least 8 characters' },
+  { test: (p) => p.length >= 12, label: '' }, // bonus point, no feedback label
+  { test: (p) => /[a-z]/.test(p), label: 'Lowercase letter' },
+  { test: (p) => /[A-Z]/.test(p), label: 'Uppercase letter' },
+  { test: (p) => /\d/.test(p), label: 'Number' },
+  { test: (p) => /[^a-zA-Z0-9]/.test(p), label: 'Special character' },
+];
+
+function scoreToStrength(score: number): PasswordStrength {
+  if (score <= 2) return 'weak';
+  if (score <= 3) return 'fair';
+  if (score <= 5) return 'good';
+  return 'strong';
+}
+
 function calculatePasswordStrength(password: string): PasswordStrengthResult {
   const feedback: string[] = [];
   let score = 0;
 
-  if (password.length >= 8) {
-    score += 1;
-  } else {
-    feedback.push('At least 8 characters');
+  for (const check of PASSWORD_CHECKS) {
+    if (check.test(password)) {
+      score += 1;
+    } else if (check.label) {
+      feedback.push(check.label);
+    }
   }
 
-  if (password.length >= 12) {
-    score += 1;
-  }
-
-  if (/[a-z]/.test(password)) {
-    score += 1;
-  } else {
-    feedback.push('Lowercase letter');
-  }
-
-  if (/[A-Z]/.test(password)) {
-    score += 1;
-  } else {
-    feedback.push('Uppercase letter');
-  }
-
-  if (/\d/.test(password)) {
-    score += 1;
-  } else {
-    feedback.push('Number');
-  }
-
-  if (/[^a-zA-Z0-9]/.test(password)) {
-    score += 1;
-  } else {
-    feedback.push('Special character');
-  }
-
-  let strength: PasswordStrength;
-  if (score <= 2) {
-    strength = 'weak';
-  } else if (score <= 3) {
-    strength = 'fair';
-  } else if (score <= 5) {
-    strength = 'good';
-  } else {
-    strength = 'strong';
-  }
-
-  return { strength, score, feedback };
+  return { strength: scoreToStrength(score), score, feedback };
 }
 
 // ============================================
@@ -276,7 +257,7 @@ export function RegistrationForm({
           if (!value || typeof value !== 'string') {
             return 'Email is required';
           }
-          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+          if (!/^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(value)) {
             return 'Please enter a valid email address';
           }
           break;

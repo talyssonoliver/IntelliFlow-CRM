@@ -121,13 +121,14 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
     { enabled: clientDropdownOpen && debouncedClientSearch.length >= 2 }
   );
 
-  const clientResults: Array<{ id: string; name: string; email?: string; company?: string }> =
-    (contactQuery.data?.contacts ?? []).map((c) => ({
-      id: c.id,
-      name: [c.firstName, c.lastName].filter(Boolean).join(' '),
-      email: c.email ?? undefined,
-      company: (c as { account?: { name?: string } }).account?.name ?? undefined,
-    }));
+  const clientResults: Array<{ id: string; name: string; email?: string; company?: string }> = (
+    contactQuery.data?.contacts ?? []
+  ).map((c) => ({
+    id: c.id,
+    name: [c.firstName, c.lastName].filter(Boolean).join(' '),
+    email: c.email ?? undefined,
+    company: (c as { account?: { name?: string } }).account?.name ?? undefined,
+  }));
 
   function handleClientSelect(id: string, name: string) {
     setFormData((prev) => ({ ...prev, clientId: id, clientName: name, clientSearch: '' }));
@@ -174,7 +175,11 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
 
     if (formData.description.trim()) submitData.description = formData.description.trim();
     if (formData.category) submitData.category = formData.category;
-    if (formData.assigneeId && formData.assigneeId !== 'unassigned' && formData.assigneeId !== 'me') {
+    if (
+      formData.assigneeId &&
+      formData.assigneeId !== 'unassigned' &&
+      formData.assigneeId !== 'me'
+    ) {
       submitData.assignedTo = formData.assigneeId;
     }
     // When 'me' is selected, omit assignedTo — backend defaults to current user
@@ -365,7 +370,10 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
               >
                 {contactQuery.isLoading && (
                   <div className="flex items-center gap-2 px-3 py-3 text-sm text-muted-foreground">
-                    <span className="material-symbols-outlined text-[16px] animate-spin" aria-hidden="true">
+                    <span
+                      className="material-symbols-outlined text-[16px] animate-spin"
+                      aria-hidden="true"
+                    >
                       progress_activity
                     </span>
                     Searching...
@@ -386,11 +394,16 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
                       role="option"
                       aria-selected={false}
                     >
-                      <span className="material-symbols-outlined text-muted-foreground text-xl shrink-0" aria-hidden="true">
+                      <span
+                        className="material-symbols-outlined text-muted-foreground text-xl shrink-0"
+                        aria-hidden="true"
+                      >
                         person
                       </span>
                       <div className="min-w-0 flex-1">
-                        <div className="text-sm font-medium text-foreground truncate">{client.name}</div>
+                        <div className="text-sm font-medium text-foreground truncate">
+                          {client.name}
+                        </div>
                         {(client.email || client.company) && (
                           <div className="text-xs text-muted-foreground truncate">
                             {[client.email, client.company].filter(Boolean).join(' · ')}
@@ -451,7 +464,8 @@ export function CaseForm({ initialData, onSubmit, onCancel, isSubmitting, mode }
               )}
               {teamMembers.map((member) => (
                 <option key={member.id} value={member.id}>
-                  {member.name}{member.title ? ` — ${member.title}` : ''}
+                  {member.name}
+                  {member.title ? ` — ${member.title}` : ''}
                 </option>
               ))}
             </select>

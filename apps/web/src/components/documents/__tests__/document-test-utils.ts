@@ -51,7 +51,9 @@ export function createVersionFactory(overrides: Partial<DocumentVersion> = {}): 
   };
 }
 
-export function createACLEntryFactory(overrides: Partial<AccessControlEntry> = {}): AccessControlEntry {
+export function createACLEntryFactory(
+  overrides: Partial<AccessControlEntry> = {}
+): AccessControlEntry {
   aclCounter++;
   return {
     principalId: `user-${aclCounter}`,
@@ -75,7 +77,10 @@ export function resetFactories() {
 // tRPC Mock Helpers
 // =============================================================================
 
-export function createMockQueryResult<T>(data: T, options: { isLoading?: boolean; error?: Error | null } = {}) {
+export function createMockQueryResult<T>(
+  data: T,
+  options: { isLoading?: boolean; error?: Error | null } = {}
+) {
   return {
     data,
     isLoading: options.isLoading ?? false,

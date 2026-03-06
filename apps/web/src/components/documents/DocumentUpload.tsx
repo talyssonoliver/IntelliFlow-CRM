@@ -1,11 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import {
-  Button,
-  Card,
-  toast,
-} from '@intelliflow/ui';
+import { Button, Card, toast } from '@intelliflow/ui';
 import {
   formatFileSize,
   sanitizeFileName,
@@ -14,6 +10,7 @@ import {
   MAX_FILE_SIZE_MB,
 } from './document-utils';
 import type { DocumentUploadProps, DocumentClassification } from './types';
+import { trpc } from '@/lib/trpc';
 
 // =============================================================================
 // DocumentUpload Component
@@ -37,6 +34,9 @@ export function DocumentUpload({
 }: DocumentUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  // tRPC mutation: creates the document record server-side (server generates storageKey per AC-011)
+  const createDocumentMutation = trpc.documents.create.useMutation();
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -136,7 +136,11 @@ export function DocumentUpload({
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (!selectedFile || !title.trim()) {
-        toast({ title: 'Missing required fields', description: 'Please select a file and enter a title.', variant: 'destructive' });
+        toast({
+          title: 'Missing required fields',
+          description: 'Please select a file and enter a title.',
+          variant: 'destructive',
+        });
         return;
       }
 
@@ -150,14 +154,40 @@ export function DocumentUpload({
         }, 200);
 
         // Server generates storageKey — not client (SR-02)
-        const _tagArray = tags
+        const tagArray = tags
           .split(',')
           .map((t) => t.trim())
           .filter(Boolean);
 
-        // TODO: Wire to trpc.upload.upload.useMutation() when upload router types are available
-        // For now, call documents.create with file metadata (server generates storageKey)
-        const result = { id: crypto.randomUUID() }; // will be replaced by actual tRPC call
+        // Derive a documentType from the file MIME type for the required API field.
+        // The full document type selector UI is tracked in IFC-152.
+        const mimeType = selectedFile.type || 'application/octet-stream';
+        const documentType = mimeType.startsWith('image/')
+          ? 'EVIDENCE'
+          : mimeType.includes('pdf') ||
+              mimeType.includes('msword') ||
+              mimeType.includes('officedocument')
+            ? 'CONTRACT'
+            : 'OTHER';
+
+        const contentHash = fileHash ?? '';
+        if (!contentHash) {
+          throw new Error('File hash not computed yet. Please wait a moment and try again.');
+        }
+
+        // Call documents.create — server generates storageKey (AC-011)
+        const result = await createDocumentMutation.mutateAsync({
+          title: title.trim(),
+          description: description.trim() || undefined,
+          documentType: documentType as 'CONTRACT' | 'EVIDENCE' | 'OTHER',
+          classification: classification,
+          tags: tagArray,
+          relatedCaseId: _relatedCaseId,
+          relatedContactId: _relatedContactId,
+          contentHash,
+          mimeType,
+          sizeBytes: selectedFile.size,
+        });
 
         clearInterval(progressInterval);
         setUploadProgress(100);
@@ -174,7 +204,18 @@ export function DocumentUpload({
         setIsUploading(false);
       }
     },
-    [selectedFile, title, tags, onUploadComplete]
+    [
+      selectedFile,
+      title,
+      description,
+      classification,
+      tags,
+      fileHash,
+      _relatedCaseId,
+      _relatedContactId,
+      createDocumentMutation,
+      onUploadComplete,
+    ]
   );
 
   // ─── Cancel ───────────────────────────────────────────────────────────────
@@ -225,7 +266,9 @@ export function DocumentUpload({
 
         {selectedFile ? (
           <div className="space-y-2">
-            <span className="material-symbols-outlined text-4xl text-emerald-500">check_circle</span>
+            <span className="material-symbols-outlined text-4xl text-emerald-500">
+              check_circle
+            </span>
             <p className="font-medium text-slate-900 dark:text-white">{selectedFile.name}</p>
             <p className="text-sm text-slate-500">{formatFileSize(selectedFile.size)}</p>
             {fileHash && (
@@ -250,7 +293,8 @@ export function DocumentUpload({
           <div className="space-y-2">
             <span className="material-symbols-outlined text-4xl text-slate-400">cloud_upload</span>
             <p className="text-slate-700 dark:text-slate-300">
-              Drag and drop a file here, or <span className="text-primary font-medium">click to browse</span>
+              Drag and drop a file here, or{' '}
+              <span className="text-primary font-medium">click to browse</span>
             </p>
             <p className="text-sm text-slate-500">
               Accepted: {ACCEPTED_EXTENSIONS.join(', ')} (max {maxFileSizeMB}MB)
@@ -261,7 +305,13 @@ export function DocumentUpload({
 
       {/* Upload Progress */}
       {isUploading && (
-        <div className="space-y-2" role="progressbar" aria-valuenow={uploadProgress} aria-valuemin={0} aria-valuemax={100}>
+        <div
+          className="space-y-2"
+          role="progressbar"
+          aria-valuenow={uploadProgress}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
           <div className="flex justify-between text-sm text-slate-600 dark:text-slate-400">
             <span>Uploading...</span>
             <span>{uploadProgress}%</span>
@@ -278,7 +328,10 @@ export function DocumentUpload({
       {/* Metadata Form */}
       <Card className="p-6 space-y-4">
         <div>
-          <label htmlFor="doc-title" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label
+            htmlFor="doc-title"
+            className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+          >
             Title <span className="text-red-500">*</span>
           </label>
           <input
@@ -294,7 +347,10 @@ export function DocumentUpload({
         </div>
 
         <div>
-          <label htmlFor="doc-classification" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label
+            htmlFor="doc-classification"
+            className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+          >
             Classification
           </label>
           <select
@@ -312,7 +368,10 @@ export function DocumentUpload({
         </div>
 
         <div>
-          <label htmlFor="doc-tags" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label
+            htmlFor="doc-tags"
+            className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+          >
             Tags
           </label>
           <input
@@ -326,7 +385,10 @@ export function DocumentUpload({
         </div>
 
         <div>
-          <label htmlFor="doc-description" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <label
+            htmlFor="doc-description"
+            className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+          >
             Description
           </label>
           <textarea

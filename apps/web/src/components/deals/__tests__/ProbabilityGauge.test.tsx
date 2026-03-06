@@ -73,9 +73,7 @@ describe('ProbabilityGauge', () => {
   });
 
   it('renders in small/medium/large sizes', () => {
-    const { rerender, container } = render(
-      <ProbabilityGauge value={50} label="Test" size="sm" />
-    );
+    const { rerender, container } = render(<ProbabilityGauge value={50} label="Test" size="sm" />);
     let svg = container.querySelector('svg');
     expect(svg?.getAttribute('width')).toBe('48');
 

@@ -197,7 +197,8 @@ vi.mock('@/lib/billing/plan-changes', () => ({
     description: direction === 'upgrade' ? 'Upgrade your plan' : 'Downgrade your plan',
   }),
   formatPriceDifference: (diff: number, _currency: string) => ({
-    formatted: diff > 0 ? `+£${(diff / 100).toFixed(0)}/mo` : `-£${(Math.abs(diff) / 100).toFixed(0)}/mo`,
+    formatted:
+      diff > 0 ? `+£${(diff / 100).toFixed(0)}/mo` : `-£${(Math.abs(diff) / 100).toFixed(0)}/mo`,
     isIncrease: diff > 0,
     isDecrease: diff < 0,
   }),
@@ -672,8 +673,11 @@ describe('SubscriptionManager', () => {
       render(<SubscriptionManager subscription={mockActiveSubscription} />);
 
       // Look for opacity-50 in plan cards (disabled styling)
-      const starterCard = screen.getByText('Starter').closest('[class*="Card"]')?.parentElement;
-      expect(starterCard?.innerHTML).toContain('opacity-50');
+      // The Card component renders as a div with Tailwind classes (no "Card" in class names)
+      const starterText = screen.getByText('Starter');
+      // Walk up until we find the container with opacity-50 (the PlanCard wrapper)
+      const disabledContainer = starterText.closest('[class*="opacity-50"]');
+      expect(disabledContainer).not.toBeNull();
 
       mockCanChangeAllowed.value = true;
     });
@@ -739,12 +743,7 @@ describe('SubscriptionManager', () => {
         cancelAtPeriodEnd: true,
       };
 
-      render(
-        <SubscriptionManager
-          subscription={cancelledSub}
-          onPlanChange={mockOnPlanChange}
-        />
-      );
+      render(<SubscriptionManager subscription={cancelledSub} onPlanChange={mockOnPlanChange} />);
 
       await user.click(screen.getByRole('button', { name: /reactivate subscription/i }));
 

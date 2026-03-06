@@ -148,7 +148,7 @@ describe('OAuthCallback', () => {
       await waitFor(() => {
         expect(mockStoreSessionTokens).toHaveBeenCalledWith(
           'access_token_123',
-          'refresh_token_123',
+          'refresh_token_123'
         );
       });
     });
@@ -186,7 +186,7 @@ describe('OAuthCallback', () => {
       await waitFor(() => {
         expect(onSuccess).toHaveBeenCalledWith(
           { id: 'user_1', email: 'user@example.com' },
-          { accessToken: 'access_token_123' },
+          { accessToken: 'access_token_123' }
         );
       });
     });
@@ -198,7 +198,7 @@ describe('OAuthCallback', () => {
         () => {
           expect(mockPush).toHaveBeenCalledWith('/dashboard');
         },
-        { timeout: 3000 },
+        { timeout: 3000 }
       );
     });
 
@@ -209,7 +209,7 @@ describe('OAuthCallback', () => {
         () => {
           expect(mockPush).toHaveBeenCalledWith('/onboarding');
         },
-        { timeout: 3000 },
+        { timeout: 3000 }
       );
     });
   });

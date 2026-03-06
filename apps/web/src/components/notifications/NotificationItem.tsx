@@ -1,5 +1,5 @@
-import React from 'react';
-import Link from 'next/link';
+import React, { useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@intelliflow/ui';
 
 import { getTypeConfig, getPriorityConfig, formatRelativeTime } from './notification-utils';
@@ -26,22 +26,55 @@ export const NotificationItem = React.memo(function NotificationItem({
   onMarkAsRead,
   onDismiss,
 }: NotificationItemProps) {
+  const router = useRouter();
   const typeConfig = getTypeConfig(notification.type);
   const priorityConfig = getPriorityConfig(notification.priority);
 
   const isAiType = notification.type.startsWith('ai_');
   const isUnread = !notification.isRead;
   const actionLink = notification.actionUrl;
+  const unreadOrReadClass = isUnread
+    ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
+    : 'bg-slate-50/50 dark:bg-slate-800/50 border-transparent hover:bg-white dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-700';
+  const containerClass = isAiType
+    ? 'bg-indigo-50/40 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-800/30 hover:border-indigo-200 dark:hover:border-indigo-700/50'
+    : unreadOrReadClass;
+
+  const activateItem = useCallback(() => {
+    if (isUnread) {
+      onMarkAsRead(notification.id);
+    }
+    if (actionLink) {
+      router.push(actionLink);
+    }
+  }, [isUnread, actionLink, notification.id, onMarkAsRead, router]);
+
+  const handleItemClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Don't navigate if clicking on action buttons
+      if ((e.target as HTMLElement).closest('button')) return;
+      activateItem();
+    },
+    [activateItem]
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        activateItem();
+      }
+    },
+    [activateItem]
+  );
 
   return (
     <div
-      className={`group relative flex w-full items-start gap-4 rounded-xl p-4 shadow-sm border transition-all hover:shadow-md ${
-        isAiType
-          ? 'bg-indigo-50/40 dark:bg-indigo-900/10 border-indigo-100 dark:border-indigo-800/30 hover:border-indigo-200 dark:hover:border-indigo-700/50'
-          : isUnread
-            ? 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-            : 'bg-slate-50/50 dark:bg-slate-800/50 border-transparent hover:bg-white dark:hover:bg-slate-800 hover:border-slate-200 dark:hover:border-slate-700'
-      }`}
+      onClick={handleItemClick}
+      onKeyDown={handleKeyDown}
+      role={actionLink ? 'link' : undefined}
+      tabIndex={actionLink ? 0 : undefined}
+      className={`group relative flex w-full items-start gap-4 rounded-xl p-4 shadow-sm border transition-all hover:shadow-md ${actionLink ? 'cursor-pointer' : ''} ${containerClass}`}
     >
       {/* Priority Indicator */}
       {priorityConfig && (
@@ -91,13 +124,10 @@ export const NotificationItem = React.memo(function NotificationItem({
             {typeConfig.group}
           </span>
           {actionLink && (
-            <Link
-              href={actionLink}
-              className="text-xs text-primary hover:underline flex items-center gap-1"
-            >
+            <span className="text-xs text-primary flex items-center gap-1">
               View details
               <span className="material-symbols-outlined text-sm">arrow_forward</span>
-            </Link>
+            </span>
           )}
         </div>
       </div>

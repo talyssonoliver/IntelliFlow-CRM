@@ -1,12 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import {
-  Send,
-  Save,
-  X,
-  Paperclip,
-} from 'lucide-react';
+import { Send, Save, X, Paperclip } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { useDebounce } from '@/hooks/useDebounce';
 import { cn } from '@/lib/utils';
@@ -115,7 +110,7 @@ export function EmailCompose({
       newErrors.push('At least one recipient is required');
     }
     const body = getBodyHtml();
-    if (!body || body === '<br>' || body.replace(/<[^>]*>/g, '').trim() === '') {
+    if (!body || body === '<br>' || body.replace(/<[^<>]*>/g, '').trim() === '') {
       newErrors.push('Message body is required');
     }
     setErrors(newErrors);
@@ -140,8 +135,15 @@ export function EmailCompose({
       setStatusMessage('Failed to send email. Please try again.');
     }
   }, [
-    validate, sendMutation, toRecipients, ccRecipients, bccRecipients, subject,
-    getBodyHtml, originalEmail, onSent,
+    validate,
+    sendMutation,
+    toRecipients,
+    ccRecipients,
+    bccRecipients,
+    subject,
+    getBodyHtml,
+    originalEmail,
+    onSent,
   ]);
 
   const handleSaveDraft = useCallback(async () => {
@@ -179,9 +181,18 @@ export function EmailCompose({
   const handleBodyKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey) {
-        if (e.key === 'b') { e.preventDefault(); handleFormat('bold'); }
-        if (e.key === 'i') { e.preventDefault(); handleFormat('italic'); }
-        if (e.key === 'u') { e.preventDefault(); handleFormat('underline'); }
+        if (e.key === 'b') {
+          e.preventDefault();
+          handleFormat('bold');
+        }
+        if (e.key === 'i') {
+          e.preventDefault();
+          handleFormat('italic');
+        }
+        if (e.key === 'u') {
+          e.preventDefault();
+          handleFormat('underline');
+        }
       }
     },
     [handleFormat]
@@ -199,20 +210,23 @@ export function EmailCompose({
     const hasContent =
       toRecipients.length > 0 ||
       subject.trim().length > 0 ||
-      debouncedBody.replace(/<[^>]*>/g, '').trim().length > 0;
+      debouncedBody.replace(/<[^<>]*>/g, '').trim().length > 0;
     if (!hasContent) return;
 
-    draftMutation.mutateAsync({
-      id: draftId,
-      to: toRecipients.map((r) => r.email),
-      subject,
-      htmlBody: debouncedBody,
-    }).then((result) => {
-      if (result?.id) setDraftId(result.id);
-      setStatusMessage('Draft saved automatically');
-    }).catch(() => {
-      // Silent fail — auto-save should not interrupt the user
-    });
+    draftMutation
+      .mutateAsync({
+        id: draftId,
+        to: toRecipients.map((r) => r.email),
+        subject,
+        htmlBody: debouncedBody,
+      })
+      .then((result) => {
+        if (result?.id) setDraftId(result.id);
+        setStatusMessage('Draft saved automatically');
+      })
+      .catch(() => {
+        // Silent fail — auto-save should not interrupt the user
+      });
   }, [debouncedBody]);
 
   // Discard: save draft if content present, then call onDiscard
@@ -221,7 +235,7 @@ export function EmailCompose({
     const hasContent =
       toRecipients.length > 0 ||
       subject.trim().length > 0 ||
-      body.replace(/<[^>]*>/g, '').trim().length > 0;
+      body.replace(/<[^<>]*>/g, '').trim().length > 0;
 
     if (hasContent) {
       try {
@@ -242,7 +256,10 @@ export function EmailCompose({
     <form
       aria-label="Compose email"
       className={cn('flex flex-col bg-card', className)}
-      onSubmit={(e) => { e.preventDefault(); handleSend(); }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        handleSend();
+      }}
     >
       {/* Recipients */}
       <div className="space-y-1 border-b border-border px-4 py-2">
@@ -280,7 +297,9 @@ export function EmailCompose({
 
         {showCc && (
           <div className="flex items-center gap-2">
-            <label htmlFor="cc-picker" className="w-8 text-xs text-muted-foreground">CC</label>
+            <label htmlFor="cc-picker" className="w-8 text-xs text-muted-foreground">
+              CC
+            </label>
             <RecipientPicker
               label="CC"
               value={ccRecipients}
@@ -292,7 +311,9 @@ export function EmailCompose({
 
         {showBcc && (
           <div className="flex items-center gap-2">
-            <label htmlFor="bcc-picker" className="w-8 text-xs text-muted-foreground">BCC</label>
+            <label htmlFor="bcc-picker" className="w-8 text-xs text-muted-foreground">
+              BCC
+            </label>
             <RecipientPicker
               label="BCC"
               value={bccRecipients}
@@ -305,7 +326,9 @@ export function EmailCompose({
 
       {/* Subject */}
       <div className="border-b border-border px-4 py-2">
-        <label htmlFor="compose-subject" className="sr-only">Subject</label>
+        <label htmlFor="compose-subject" className="sr-only">
+          Subject
+        </label>
         <input
           id="compose-subject"
           type="text"
@@ -322,7 +345,9 @@ export function EmailCompose({
 
       {/* Body */}
       <div className="flex-1 px-4 py-2">
-        <label className="sr-only" htmlFor="compose-body">Message body</label>
+        <label className="sr-only" htmlFor="compose-body">
+          Message body
+        </label>
         <div
           ref={bodyRef}
           id="compose-body"
@@ -339,20 +364,22 @@ export function EmailCompose({
       </div>
 
       {/* Attachments */}
-      {attachments.length > 0 && (
+      {attachments.length > 0 ? (
         <div className="border-t border-border px-4 py-2">
           <AttachmentManager files={attachments} onFilesChange={setAttachments} />
         </div>
-      )}
+      ) : null}
 
       {/* Error messages */}
-      {errors.length > 0 && (
+      {errors.length > 0 ? (
         <div className="px-4 py-1">
           {errors.map((err) => (
-            <p key={err} className="text-xs text-destructive">{err}</p>
+            <p key={err} className="text-xs text-destructive">
+              {err}
+            </p>
           ))}
         </div>
-      )}
+      ) : null}
 
       {/* Actions */}
       <div className="flex items-center justify-between border-t border-border px-4 py-2">
@@ -402,10 +429,7 @@ export function EmailCompose({
             <Paperclip className="h-4 w-4" />
           </button>
 
-          <TemplateSelector
-            onSelect={handleTemplateSelect}
-            currentBody={getBodyHtml()}
-          />
+          <TemplateSelector onSelect={handleTemplateSelect} currentBody={getBodyHtml()} />
 
           <button
             type="button"

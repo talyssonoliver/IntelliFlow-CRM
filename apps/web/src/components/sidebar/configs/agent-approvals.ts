@@ -50,6 +50,12 @@ export const agentApprovalsSidebarConfig: SidebarConfig = {
       title: 'Intelligence',
       items: [
         {
+          id: 'all-insights',
+          label: 'All Insights',
+          icon: FEATURE_ICONS.insight,
+          href: '/insights',
+        },
+        {
           id: 'lead-scoring',
           label: 'Lead Scoring',
           icon: 'leaderboard',

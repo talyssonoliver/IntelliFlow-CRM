@@ -211,7 +211,9 @@ describe('RelatedTasksCard', () => {
   });
 
   it('renders View All link when viewAllHref is provided', () => {
-    render(<RelatedTasksCard {...defaultProps} maxItems={2} viewAllHref="/tasks?entity=lead-123" />);
+    render(
+      <RelatedTasksCard {...defaultProps} maxItems={2} viewAllHref="/tasks?entity=lead-123" />
+    );
     const link = screen.getByText('View All');
     expect(link.closest('a')).toHaveAttribute('href', '/tasks?entity=lead-123');
   });

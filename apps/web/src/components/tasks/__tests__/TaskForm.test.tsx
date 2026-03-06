@@ -32,6 +32,21 @@ vi.mock('@intelliflow/domain', () => ({
   TASK_PRIORITIES: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'] as const,
 }));
 
+vi.mock('@/hooks/useCalendarVisibility', () => {
+  const mockValue = {
+    calendars: [],
+    toggle: vi.fn(),
+    isVisible: () => true,
+    addCalendar: vi.fn(),
+    removeCalendar: vi.fn(),
+    dbCalendars: [],
+  };
+  return {
+    useCalendarVisibility: () => mockValue,
+    useCalendarVisibilityOptional: () => mockValue,
+  };
+});
+
 // Mock EntitySearchField
 vi.mock('../EntitySearchField', () => ({
   EntitySearchField: ({ entityType, value, valueName }: any) => (

@@ -39,14 +39,16 @@ vi.mock('@/app/settings/routing/hooks/useRouting', () => ({
   }),
   useRouting: () => ({
     assignLead: mockAssignLead,
-    agentWorkload: [
-      { userId: 'u1', user: { name: 'Agent A' } },
-    ],
+    agentWorkload: [{ userId: 'u1', user: { name: 'Agent A' } }],
   }),
 }));
 
 vi.mock('@intelliflow/ui', () => ({
-  Button: ({ children, onClick, ...props }: any) => <button onClick={onClick} {...props}>{children}</button>,
+  Button: ({ children, onClick, ...props }: any) => (
+    <button onClick={onClick} {...props}>
+      {children}
+    </button>
+  ),
   Card: ({ children, ...props }: any) => <div {...props}>{children}</div>,
   CardContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
   CardHeader: ({ children, ...props }: any) => <div {...props}>{children}</div>,

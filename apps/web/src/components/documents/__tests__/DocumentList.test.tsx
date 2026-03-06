@@ -1,11 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { DocumentList, DocumentStatusBadge } from '../DocumentList';
-import {
-  createDocumentFactory,
-  resetFactories,
-  mockRouter,
-} from './document-test-utils';
+import { createDocumentFactory, resetFactories, mockRouter } from './document-test-utils';
 import type { DocumentStatus } from '../types';
 
 // =============================================================================
@@ -34,9 +30,7 @@ vi.mock('@intelliflow/ui', () => ({
           <tr key={i} onClick={() => onRowClick?.(row)} data-testid={`row-${row.id}`}>
             {columns.map((col: any, j: number) => (
               <td key={j}>
-                {typeof col.cell === 'function'
-                  ? col.cell({ row: { original: row } })
-                  : null}
+                {typeof col.cell === 'function' ? col.cell({ row: { original: row } }) : null}
               </td>
             ))}
           </tr>
@@ -49,8 +43,12 @@ vi.mock('@intelliflow/ui', () => ({
       <div data-testid="confirmation-dialog" role="dialog">
         <h2>{title}</h2>
         <p>{description}</p>
-        <button onClick={onConfirm} data-testid="confirm-button">Confirm</button>
-        <button onClick={() => onOpenChange?.(false)} data-testid="cancel-button">Cancel</button>
+        <button onClick={onConfirm} data-testid="confirm-button">
+          Confirm
+        </button>
+        <button onClick={() => onOpenChange?.(false)} data-testid="cancel-button">
+          Cancel
+        </button>
       </div>
     ) : null,
   Button: ({ children, onClick, disabled, ...props }: any) => (
@@ -115,7 +113,10 @@ describe('DocumentList', () => {
 
   it('renders document table with documents', () => {
     const docs = [
-      createDocumentFactory({ id: 'doc-a', metadata: { title: 'Alpha', documentType: 'CONTRACT' } }),
+      createDocumentFactory({
+        id: 'doc-a',
+        metadata: { title: 'Alpha', documentType: 'CONTRACT' },
+      }),
       createDocumentFactory({ id: 'doc-b', metadata: { title: 'Beta', documentType: 'MOTION' } }),
     ];
     render(<DocumentList {...defaultProps} initialDocuments={docs} />);
@@ -133,7 +134,9 @@ describe('DocumentList', () => {
 
   it('renders document descriptions when present', () => {
     const docs = [
-      createDocumentFactory({ metadata: { title: 'Doc', description: 'A detailed desc', documentType: 'CONTRACT' } }),
+      createDocumentFactory({
+        metadata: { title: 'Doc', description: 'A detailed desc', documentType: 'CONTRACT' },
+      }),
     ];
     render(<DocumentList {...defaultProps} initialDocuments={docs} />);
     expect(screen.getByText('A detailed desc')).toBeInTheDocument();
@@ -256,8 +259,14 @@ describe('DocumentList', () => {
 
   it('toggles sort direction on column click', () => {
     const docs = [
-      createDocumentFactory({ metadata: { title: 'Alpha', documentType: 'C' }, createdAt: '2026-01-01T00:00:00Z' }),
-      createDocumentFactory({ metadata: { title: 'Zeta', documentType: 'C' }, createdAt: '2026-01-02T00:00:00Z' }),
+      createDocumentFactory({
+        metadata: { title: 'Alpha', documentType: 'C' },
+        createdAt: '2026-01-01T00:00:00Z',
+      }),
+      createDocumentFactory({
+        metadata: { title: 'Zeta', documentType: 'C' },
+        createdAt: '2026-01-02T00:00:00Z',
+      }),
     ];
     render(<DocumentList {...defaultProps} initialDocuments={docs} />);
     // Click the Name sort header
@@ -286,7 +295,10 @@ describe('DocumentList', () => {
 
   it('shows pagination when more than PAGE_SIZE documents', () => {
     const docs = Array.from({ length: 25 }, (_, i) =>
-      createDocumentFactory({ id: `doc-p-${i}`, metadata: { title: `Doc ${i}`, documentType: 'C' } })
+      createDocumentFactory({
+        id: `doc-p-${i}`,
+        metadata: { title: `Doc ${i}`, documentType: 'C' },
+      })
     );
     render(<DocumentList {...defaultProps} initialDocuments={docs} />);
     expect(screen.getByTestId('pagination')).toBeInTheDocument();
@@ -295,7 +307,10 @@ describe('DocumentList', () => {
 
   it('navigates to next page', () => {
     const docs = Array.from({ length: 25 }, (_, i) =>
-      createDocumentFactory({ id: `doc-n-${i}`, metadata: { title: `Doc ${i}`, documentType: 'C' } })
+      createDocumentFactory({
+        id: `doc-n-${i}`,
+        metadata: { title: `Doc ${i}`, documentType: 'C' },
+      })
     );
     render(<DocumentList {...defaultProps} initialDocuments={docs} />);
     fireEvent.click(screen.getByLabelText('Next page'));
@@ -304,7 +319,10 @@ describe('DocumentList', () => {
 
   it('navigates to previous page', () => {
     const docs = Array.from({ length: 25 }, (_, i) =>
-      createDocumentFactory({ id: `doc-prev-${i}`, metadata: { title: `Doc ${i}`, documentType: 'C' } })
+      createDocumentFactory({
+        id: `doc-prev-${i}`,
+        metadata: { title: `Doc ${i}`, documentType: 'C' },
+      })
     );
     render(<DocumentList {...defaultProps} initialDocuments={docs} />);
     fireEvent.click(screen.getByLabelText('Next page'));
@@ -314,7 +332,10 @@ describe('DocumentList', () => {
 
   it('disables previous button on first page', () => {
     const docs = Array.from({ length: 25 }, (_, i) =>
-      createDocumentFactory({ id: `doc-dis-${i}`, metadata: { title: `Doc ${i}`, documentType: 'C' } })
+      createDocumentFactory({
+        id: `doc-dis-${i}`,
+        metadata: { title: `Doc ${i}`, documentType: 'C' },
+      })
     );
     render(<DocumentList {...defaultProps} initialDocuments={docs} />);
     expect(screen.getByLabelText('Previous page')).toBeDisabled();
@@ -322,7 +343,10 @@ describe('DocumentList', () => {
 
   it('disables next button on last page', () => {
     const docs = Array.from({ length: 25 }, (_, i) =>
-      createDocumentFactory({ id: `doc-last-${i}`, metadata: { title: `Doc ${i}`, documentType: 'C' } })
+      createDocumentFactory({
+        id: `doc-last-${i}`,
+        metadata: { title: `Doc ${i}`, documentType: 'C' },
+      })
     );
     render(<DocumentList {...defaultProps} initialDocuments={docs} />);
     fireEvent.click(screen.getByLabelText('Next page'));
@@ -376,8 +400,14 @@ describe('DocumentList', () => {
 
   it('filters by classification', () => {
     const docs = [
-      createDocumentFactory({ classification: 'PUBLIC', metadata: { title: 'Public Doc', documentType: 'C' } }),
-      createDocumentFactory({ classification: 'PRIVILEGED', metadata: { title: 'Privileged Doc', documentType: 'C' } }),
+      createDocumentFactory({
+        classification: 'PUBLIC',
+        metadata: { title: 'Public Doc', documentType: 'C' },
+      }),
+      createDocumentFactory({
+        classification: 'PRIVILEGED',
+        metadata: { title: 'Privileged Doc', documentType: 'C' },
+      }),
     ];
     render(
       <DocumentList
@@ -392,8 +422,14 @@ describe('DocumentList', () => {
 
   it('filters by file type', () => {
     const docs = [
-      createDocumentFactory({ mimeType: 'application/pdf', metadata: { title: 'PDF Doc', documentType: 'C' } }),
-      createDocumentFactory({ mimeType: 'image/png', metadata: { title: 'Image Doc', documentType: 'C' } }),
+      createDocumentFactory({
+        mimeType: 'application/pdf',
+        metadata: { title: 'PDF Doc', documentType: 'C' },
+      }),
+      createDocumentFactory({
+        mimeType: 'image/png',
+        metadata: { title: 'Image Doc', documentType: 'C' },
+      }),
     ];
     render(
       <DocumentList
@@ -408,15 +444,15 @@ describe('DocumentList', () => {
 
   it('filters by query in description', () => {
     const docs = [
-      createDocumentFactory({ metadata: { title: 'Doc A', description: 'Contains keyword alpha', documentType: 'C' } }),
-      createDocumentFactory({ metadata: { title: 'Doc B', description: 'Other content', documentType: 'C' } }),
+      createDocumentFactory({
+        metadata: { title: 'Doc A', description: 'Contains keyword alpha', documentType: 'C' },
+      }),
+      createDocumentFactory({
+        metadata: { title: 'Doc B', description: 'Other content', documentType: 'C' },
+      }),
     ];
     render(
-      <DocumentList
-        {...defaultProps}
-        initialDocuments={docs}
-        initialFilters={{ query: 'alpha' }}
-      />
+      <DocumentList {...defaultProps} initialDocuments={docs} initialFilters={{ query: 'alpha' }} />
     );
     expect(screen.getByText('Doc A')).toBeInTheDocument();
     expect(screen.queryByText('Doc B')).not.toBeInTheDocument();

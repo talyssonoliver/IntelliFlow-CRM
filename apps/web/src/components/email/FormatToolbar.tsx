@@ -1,15 +1,7 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import {
-  Bold,
-  Italic,
-  Underline,
-  List,
-  ListOrdered,
-  Link,
-  RemoveFormatting,
-} from 'lucide-react';
+import { Bold, Italic, Underline, List, ListOrdered, Link, RemoveFormatting } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface FormatToolbarProps {
@@ -61,7 +53,9 @@ export function FormatToolbar({ onFormat, activeFormats = [], className }: Forma
         return (
           <button
             key={btn.command}
-            ref={(el) => { buttonRefs.current[i] = el; }}
+            ref={(el) => {
+              buttonRefs.current[i] = el;
+            }}
             type="button"
             tabIndex={i === focusIndex ? 0 : -1}
             aria-label={btn.label}

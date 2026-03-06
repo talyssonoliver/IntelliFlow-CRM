@@ -70,8 +70,8 @@ export function TrustIndicators({
   if (variant === 'stacked') {
     return (
       <div className={cn('flex flex-col gap-2 text-xs text-slate-400', className)}>
-        {items.map((item, index) => (
-          <div key={index} className="flex items-center gap-2">
+        {items.map((item) => (
+          <div key={item.label} className="flex items-center gap-2">
             <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
               {item.icon}
             </span>
@@ -85,7 +85,7 @@ export function TrustIndicators({
   return (
     <div className={cn('flex items-center justify-center gap-4 text-xs text-slate-400', className)}>
       {items.map((item, index) => (
-        <React.Fragment key={index}>
+        <React.Fragment key={item.label}>
           <div className="flex items-center gap-1">
             <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
               {item.icon}
@@ -101,4 +101,3 @@ export function TrustIndicators({
     </div>
   );
 }
-

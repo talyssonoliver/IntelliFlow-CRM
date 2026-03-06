@@ -3,10 +3,11 @@
 interface ShareButtonsProps {
   title: string;
   slug: string;
+  url?: string;
 }
 
-export function ShareButtons({ title, slug }: ShareButtonsProps) {
-  const postUrl = `https://intelliflow.com/blog/${slug}`;
+export function ShareButtons({ title, slug, url }: ShareButtonsProps) {
+  const postUrl = url ? `https://intelliflow.com${url}` : `https://intelliflow.com/blog/${slug}`;
 
   const handleCopyLink = async () => {
     try {

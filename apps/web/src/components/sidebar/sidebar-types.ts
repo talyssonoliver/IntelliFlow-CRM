@@ -4,6 +4,8 @@
  * Type definitions for the collapsible AppSidebar component.
  */
 
+import type * as React from 'react';
+
 export interface SidebarItem {
   id: string;
   label: string;
@@ -36,6 +38,8 @@ export interface SidebarConfig {
   settingsHref?: string;
   /** Whether to show the settings link */
   showSettings?: boolean;
+  /** Optional custom content rendered below navigation sections */
+  afterContent?: React.ComponentType<{ isExpanded: boolean }>;
 }
 
 export interface SidebarContextValue {

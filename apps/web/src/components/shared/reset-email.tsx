@@ -52,7 +52,7 @@ export interface EmailInputProps {
 // Email Validation
 // ============================================
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@.]+\.[^\s@.]+$/;
 
 export function validateEmail(email: string): { valid: boolean; error?: string } {
   const trimmed = email.trim();
@@ -257,7 +257,7 @@ export function ResetEmailSent({
   }, [resendCooldown]);
 
   // Mask email for display
-  const maskedEmail = email.replace(/(.{2})(.*)(@.*)/, '$1***$3');
+  const maskedEmail = email.replace(/(.{2})([^@]{0,254})(@[^@]{0,254})/, '$1***$3');
 
   return (
     <div className={cn('space-y-6', className)}>
@@ -318,14 +318,14 @@ export function ResetEmailSent({
             <>
               <span className="material-symbols-outlined text-lg" aria-hidden="true">
                 schedule
-              </span>
+              </span>{' '}
               Resend in {cooldown}s
             </>
           ) : (
             <>
               <span className="material-symbols-outlined text-lg" aria-hidden="true">
                 refresh
-              </span>
+              </span>{' '}
               Resend email
             </>
           )}
@@ -497,4 +497,3 @@ IntelliFlow
     },
   };
 }
-

@@ -48,14 +48,58 @@ interface BillingPortalProps {
 }
 
 // ============================================
+// Shared Patterns (Design System)
+// ============================================
+
+/** Standard empty state following design system: 24px icon, sm text, centered. */
+function EmptyState({ icon, message }: { icon: string; message: string }) {
+  return (
+    <div className="text-center py-6">
+      <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
+        <span
+          className="material-symbols-outlined text-slate-400 dark:text-slate-500"
+          aria-hidden="true"
+        >
+          {icon}
+        </span>
+      </div>
+      <p className="text-sm text-slate-500 dark:text-slate-400">{message}</p>
+    </div>
+  );
+}
+
+/** Standard error state following design system alert pattern. */
+function ErrorState({ message }: { message: string }) {
+  return (
+    <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+      <span className="material-symbols-outlined text-red-600 dark:text-red-400" aria-hidden="true">
+        error
+      </span>
+      <p className="text-sm text-red-700 dark:text-red-400">{message}</p>
+    </div>
+  );
+}
+
+/** Standard loading skeleton for card sections. */
+function CardSkeleton({ rows = 2 }: { rows?: number }) {
+  return (
+    <Card className="border border-slate-200 dark:border-slate-800">
+      <CardHeader className="pb-4">
+        <Skeleton className="h-5 w-40" />
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {Array.from({ length: rows }, (_, i) => (
+          <Skeleton key={i} className="h-10 w-full" />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+// ============================================
 // Sub-Components
 // ============================================
 
-/**
- * Subscription Overview Card
- *
- * Redesigned with flex layout, status badge, and footer buttons.
- */
 function SubscriptionOverviewCard() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const {
@@ -64,38 +108,17 @@ function SubscriptionOverviewCard() {
     error,
   } = trpc.billing.getSubscription.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 
-  if (isLoading || authLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-48" />
-          <Skeleton className="h-4 w-64 mt-2" />
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-6">
-            <Skeleton className="h-16 w-full sm:w-1/2" />
-            <Skeleton className="h-16 w-full sm:w-1/2" />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  if (isLoading || authLoading) return <CardSkeleton rows={2} />;
 
   if (error) {
     return (
-      <Card>
-        <CardContent className="py-12">
-          <div className="text-center">
-            <span
-              className="material-symbols-outlined text-4xl text-destructive mb-2 block"
-              aria-hidden="true"
-            >
-              error
-            </span>
-            <p className="text-muted-foreground">Failed to load subscription details</p>
-          </div>
+      <Card className="border border-slate-200 dark:border-slate-800">
+        <CardContent className="p-6">
+          <ErrorState message="Failed to load subscription details" />
         </CardContent>
       </Card>
     );
@@ -103,22 +126,24 @@ function SubscriptionOverviewCard() {
 
   if (!subscription) {
     return (
-      <Card>
-        <CardContent className="py-12">
-          <div className="text-center">
-            <span
-              className="material-symbols-outlined text-5xl text-slate-400 dark:text-slate-500 mb-4 block"
-              aria-hidden="true"
-            >
-              credit_card_off
+      <Card className="border border-slate-200 dark:border-slate-800">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <span className="material-symbols-outlined text-primary" aria-hidden="true">
+              auto_awesome
             </span>
-            <h3 className="text-lg font-semibold text-foreground mb-2">No Active Subscription</h3>
-            <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+            Subscription Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <EmptyState icon="credit_card_off" message="No active subscription" />
+          <div className="text-center mt-2">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 max-w-sm mx-auto">
               Choose a plan to get started with IntelliFlow CRM and unlock powerful features.
             </p>
             <Button asChild>
               <Link href="/billing/plans">
-                <span className="material-symbols-outlined text-lg mr-2" aria-hidden="true">
+                <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   rocket_launch
                 </span>
                 View Plans
@@ -135,10 +160,10 @@ function SubscriptionOverviewCard() {
   const planName = plan?.name ?? 'Current Plan';
 
   return (
-    <Card>
+    <Card className="border border-slate-200 dark:border-slate-800">
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <span className="material-symbols-outlined text-primary" aria-hidden="true">
               auto_awesome
             </span>
@@ -147,9 +172,13 @@ function SubscriptionOverviewCard() {
           <Badge
             variant={status.variant === 'success' ? 'default' : 'secondary'}
             className={cn(
-              status.variant === 'success' && 'bg-success text-white',
-              status.variant === 'warning' && 'bg-warning text-white',
-              status.variant === 'error' && 'bg-destructive text-white'
+              'text-xs',
+              status.variant === 'success' &&
+                'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+              status.variant === 'warning' &&
+                'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+              status.variant === 'error' &&
+                'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
             )}
             aria-label={`Subscription status: ${status.label}`}
           >
@@ -160,40 +189,36 @@ function SubscriptionOverviewCard() {
       <CardContent>
         <div className="flex flex-col sm:flex-row gap-6">
           <div className="flex-1">
-            <p className="text-lg font-semibold text-foreground">{planName}</p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-lg font-semibold text-slate-900 dark:text-white">{planName}</p>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
               {plan?.description ?? 'Your current subscription plan'}
             </p>
           </div>
           <div className="flex-1 sm:text-right">
-            <p className="text-sm text-muted-foreground">Next Billing Date</p>
-            <p className="text-lg font-semibold text-foreground">
+            <p className="text-sm text-slate-500 dark:text-slate-400">Next Billing Date</p>
+            <p className="text-lg font-semibold text-slate-900 dark:text-white">
               {formatBillingDate(subscription.currentPeriodEnd)}
             </p>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
               Amount due: {plan ? formatCurrency(plan.priceMonthly, plan.currency) : '--'}
             </p>
           </div>
         </div>
 
         {subscription.cancelAtPeriodEnd && (
-          <div className="mt-6 p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
-            <div className="flex items-start gap-3">
-              <span
-                className="material-symbols-outlined text-amber-600 dark:text-amber-400"
-                aria-hidden="true"
-              >
-                warning
-              </span>
-              <div>
-                <p className="font-medium text-amber-800 dark:text-amber-200">
-                  Subscription Ending
-                </p>
-                <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                  Your subscription will end on {formatBillingDate(subscription.currentPeriodEnd)}.
-                  You can reactivate anytime before this date.
-                </p>
-              </div>
+          <div className="mt-6 flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <span
+              className="material-symbols-outlined text-amber-600 dark:text-amber-400"
+              aria-hidden="true"
+            >
+              warning
+            </span>
+            <div>
+              <p className="font-medium text-amber-800 dark:text-amber-300">Subscription Ending</p>
+              <p className="text-sm text-amber-700 dark:text-amber-400 mt-1">
+                Your subscription will end on {formatBillingDate(subscription.currentPeriodEnd)}.
+                You can reactivate anytime before this date.
+              </p>
             </div>
           </div>
         )}
@@ -202,7 +227,11 @@ function SubscriptionOverviewCard() {
         <Button asChild>
           <Link href="/billing/plans">Upgrade Plan</Link>
         </Button>
-        <Button variant="outline" className="text-destructive hover:text-destructive" asChild>
+        <Button
+          variant="outline"
+          className="text-red-600 hover:text-red-700 border-red-200 hover:border-red-300 dark:text-red-400 dark:border-red-800"
+          asChild
+        >
           <Link href="/billing/cancel">Cancel Subscription</Link>
         </Button>
       </CardFooter>
@@ -210,11 +239,6 @@ function SubscriptionOverviewCard() {
   );
 }
 
-/**
- * Payment Method Section
- *
- * Redesigned with vertical card layout and brand logo boxes.
- */
 function PaymentMethodSection() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const {
@@ -223,43 +247,26 @@ function PaymentMethodSection() {
     error,
   } = trpc.billing.getPaymentMethods.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 
-  if (isLoading || authLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-40" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-24 w-full" />
-        </CardContent>
-      </Card>
-    );
-  }
+  if (isLoading || authLoading) return <CardSkeleton rows={2} />;
 
   if (error) {
     return (
-      <Card>
-        <CardContent className="py-8">
-          <div className="text-center">
-            <span
-              className="material-symbols-outlined text-4xl text-destructive mb-2 block"
-              aria-hidden="true"
-            >
-              error
-            </span>
-            <p className="text-muted-foreground">Failed to load payment methods</p>
-          </div>
+      <Card className="border border-slate-200 dark:border-slate-800">
+        <CardContent className="p-6">
+          <ErrorState message="Failed to load payment methods" />
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <Card>
+    <Card className="border border-slate-200 dark:border-slate-800">
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg flex items-center gap-2">
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
           <span className="material-symbols-outlined" aria-hidden="true">
             credit_card
           </span>
@@ -268,15 +275,7 @@ function PaymentMethodSection() {
       </CardHeader>
       <CardContent className="space-y-3">
         {!paymentMethods || paymentMethods.length === 0 ? (
-          <div className="text-center py-6">
-            <span
-              className="material-symbols-outlined text-4xl text-slate-400 dark:text-slate-500 mb-2 block"
-              aria-hidden="true"
-            >
-              credit_card_off
-            </span>
-            <p className="text-muted-foreground">No payment method on file</p>
-          </div>
+          <EmptyState icon="credit_card_off" message="No payment method on file" />
         ) : (
           paymentMethods.map((pm) => (
             <div
@@ -295,10 +294,10 @@ function PaymentMethodSection() {
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-foreground">
+                  <p className="font-medium text-slate-900 dark:text-white">
                     •••• •••• •••• {pm.card?.last4 ?? '----'}
                   </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
                     Expires {pm.card?.expMonth}/{pm.card?.expYear}
                   </p>
                 </div>
@@ -316,26 +315,21 @@ function PaymentMethodSection() {
             </div>
           ))
         )}
-
-        <button
-          className="w-full border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-4 text-sm text-slate-500 dark:text-slate-400 hover:border-primary hover:text-primary transition-colors"
-          onClick={() => {
-            // Navigate to add payment method
-            window.location.href = '/billing/payment-methods';
-          }}
-        >
-          + Add New Payment Method
-        </button>
       </CardContent>
+      <CardFooter className="pt-0 justify-center">
+        <Button asChild>
+          <Link href="/billing/payment-methods">
+            <span className="material-symbols-outlined text-lg mr-2" aria-hidden="true">
+              add
+            </span>
+            Add Payment Method
+          </Link>
+        </Button>
+      </CardFooter>
     </Card>
   );
 }
 
-/**
- * Billing Information Card
- *
- * Displays organization name, email, and address from Stripe customer.
- */
 function BillingInformationCard() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const {
@@ -344,42 +338,17 @@ function BillingInformationCard() {
     error,
   } = trpc.billing.getBillingInformation.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 
-  if (isLoading || authLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-40" />
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="flex items-center gap-3">
-              <Skeleton className="h-5 w-5" />
-              <div>
-                <Skeleton className="h-3 w-20 mb-1" />
-                <Skeleton className="h-4 w-32" />
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    );
-  }
+  if (isLoading || authLoading) return <CardSkeleton rows={2} />;
 
   if (error) {
     return (
-      <Card>
-        <CardContent className="py-8">
-          <div className="text-center">
-            <span
-              className="material-symbols-outlined text-4xl text-destructive mb-2 block"
-              aria-hidden="true"
-            >
-              error
-            </span>
-            <p className="text-muted-foreground">Failed to load billing information</p>
-          </div>
+      <Card className="border border-slate-200 dark:border-slate-800">
+        <CardContent className="p-6">
+          <ErrorState message="Failed to load billing information" />
         </CardContent>
       </Card>
     );
@@ -387,19 +356,17 @@ function BillingInformationCard() {
 
   if (!billingInfo) {
     return (
-      <Card>
+      <Card className="border border-slate-200 dark:border-slate-800">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg flex items-center gap-2">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <span className="material-symbols-outlined" aria-hidden="true">
-              receipt
+              account_balance
             </span>
             Billing Information
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-4">
-            <p className="text-muted-foreground">No billing information on file</p>
-          </div>
+          <EmptyState icon="info" message="No billing information on file" />
         </CardContent>
       </Card>
     );
@@ -419,98 +386,95 @@ function BillingInformationCard() {
     : null;
 
   return (
-    <Card>
+    <Card className="border border-slate-200 dark:border-slate-800">
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg flex items-center gap-2">
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
           <span className="material-symbols-outlined" aria-hidden="true">
-            receipt
+            account_balance
           </span>
           Billing Information
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-start gap-3">
-          <span className="material-symbols-outlined text-muted-foreground" aria-hidden="true">
+          <span
+            className="material-symbols-outlined text-slate-400 dark:text-slate-500"
+            aria-hidden="true"
+          >
             business
           </span>
           <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Organization</p>
-            <p className="text-sm font-medium text-foreground">
+            <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Organization
+            </p>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">
               {billingInfo.organization ?? '--'}
             </p>
           </div>
         </div>
         <div className="flex items-start gap-3">
-          <span className="material-symbols-outlined text-muted-foreground" aria-hidden="true">
+          <span
+            className="material-symbols-outlined text-slate-400 dark:text-slate-500"
+            aria-hidden="true"
+          >
             mail
           </span>
           <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Email</p>
-            <p className="text-sm font-medium text-foreground">{billingInfo.email}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Email
+            </p>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">
+              {billingInfo.email}
+            </p>
           </div>
         </div>
         <div className="flex items-start gap-3">
-          <span className="material-symbols-outlined text-muted-foreground" aria-hidden="true">
+          <span
+            className="material-symbols-outlined text-slate-400 dark:text-slate-500"
+            aria-hidden="true"
+          >
             location_on
           </span>
           <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Address</p>
-            <p className="text-sm font-medium text-foreground">{formattedAddress ?? '--'}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              Address
+            </p>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">
+              {formattedAddress ?? '--'}
+            </p>
           </div>
         </div>
       </CardContent>
       <CardFooter className="pt-0">
-        <Button variant="outline" size="sm" asChild>
-          <Link href="/billing/settings">Update Info</Link>
-        </Button>
+        <Link
+          href="/billing/settings"
+          className="inline-flex items-center gap-2 px-4 py-2 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm rounded-lg hover:bg-slate-50 hover:border-slate-400 dark:hover:bg-slate-700 dark:hover:border-slate-500 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        >
+          <span className="material-symbols-outlined text-lg" aria-hidden="true">
+            edit
+          </span>
+          Update Info
+        </Link>
       </CardFooter>
     </Card>
   );
 }
 
-/**
- * Billing History Table
- *
- * Renamed from Invoice History, with updated columns and a11y.
- */
 function BillingHistoryTable() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [page, setPage] = React.useState(1);
   const { data, isLoading, error } = trpc.billing.listInvoices.useQuery(
     { page, limit: 5 },
-    { enabled: isAuthenticated && !authLoading }
+    { enabled: isAuthenticated && !authLoading, staleTime: 5 * 60 * 1000, retry: 1 }
   );
 
-  if (isLoading || authLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-32" />
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-12 w-full" />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  if (isLoading || authLoading) return <CardSkeleton rows={3} />;
 
   if (error) {
     return (
-      <Card>
-        <CardContent className="py-8">
-          <div className="text-center">
-            <span
-              className="material-symbols-outlined text-4xl text-destructive mb-2 block"
-              aria-hidden="true"
-            >
-              error
-            </span>
-            <p className="text-muted-foreground">Failed to load billing history</p>
-          </div>
+      <Card className="border border-slate-200 dark:border-slate-800">
+        <CardContent className="p-6">
+          <ErrorState message="Failed to load billing history" />
         </CardContent>
       </Card>
     );
@@ -519,10 +483,10 @@ function BillingHistoryTable() {
   const invoices = data?.invoices ?? [];
 
   return (
-    <Card>
+    <Card className="border border-slate-200 dark:border-slate-800">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
             <span className="material-symbols-outlined" aria-hidden="true">
               history
             </span>
@@ -530,7 +494,7 @@ function BillingHistoryTable() {
           </CardTitle>
           <Link
             href="/billing/invoices"
-            className="text-sm text-primary hover:underline flex items-center gap-1"
+            className="text-sm font-medium text-primary hover:text-primary-hover flex items-center gap-1"
           >
             View All
             <span className="material-symbols-outlined text-sm" aria-hidden="true">
@@ -541,15 +505,7 @@ function BillingHistoryTable() {
       </CardHeader>
       <CardContent>
         {invoices.length === 0 ? (
-          <div className="text-center py-8">
-            <span
-              className="material-symbols-outlined text-4xl text-slate-400 dark:text-slate-500 mb-2 block"
-              aria-hidden="true"
-            >
-              receipt_long
-            </span>
-            <p className="text-muted-foreground">No invoices yet</p>
-          </div>
+          <EmptyState icon="receipt_long" message="No invoices yet" />
         ) : (
           <div className="overflow-x-auto">
             <Table>
@@ -577,12 +533,13 @@ function BillingHistoryTable() {
                         <Badge
                           variant="outline"
                           className={cn(
+                            'text-xs',
                             status.variant === 'success' &&
-                              'border-success text-success bg-success/10',
+                              'border-green-200 text-green-800 bg-green-100 dark:border-green-800 dark:text-green-400 dark:bg-green-900/30',
                             status.variant === 'warning' &&
-                              'border-warning text-warning bg-warning/10',
+                              'border-amber-200 text-amber-800 bg-amber-100 dark:border-amber-800 dark:text-amber-400 dark:bg-amber-900/30',
                             status.variant === 'error' &&
-                              'border-destructive text-destructive bg-destructive/10'
+                              'border-red-200 text-red-800 bg-red-100 dark:border-red-800 dark:text-red-400 dark:bg-red-900/30'
                           )}
                           aria-label={`Invoice status: ${status.label}`}
                         >
@@ -616,7 +573,7 @@ function BillingHistoryTable() {
           </div>
         )}
 
-        {data && data.hasMore && (
+        {data?.hasMore && (
           <div className="mt-4 text-center">
             <Button variant="outline" size="sm" onClick={() => setPage((p) => p + 1)}>
               Load More
@@ -635,15 +592,19 @@ function BillingHistoryTable() {
 export function BillingPortal({ className }: BillingPortalProps) {
   return (
     <div className={cn('grid grid-cols-1 lg:grid-cols-3 gap-6', className)}>
-      {/* Left Column - Subscription + Billing History */}
-      <div className="space-y-6 lg:col-span-2">
+      {/* Row 1: Subscription + Payment Methods */}
+      <div className="lg:col-span-2 [&>*]:h-full">
         <SubscriptionOverviewCard />
-        <BillingHistoryTable />
+      </div>
+      <div className="[&>*]:h-full">
+        <PaymentMethodSection />
       </div>
 
-      {/* Right Column - Payment Methods + Billing Information */}
-      <div className="space-y-6">
-        <PaymentMethodSection />
+      {/* Row 2: Billing History + Billing Information */}
+      <div className="lg:col-span-2 [&>*]:h-full">
+        <BillingHistoryTable />
+      </div>
+      <div className="[&>*]:h-full">
         <BillingInformationCard />
       </div>
     </div>

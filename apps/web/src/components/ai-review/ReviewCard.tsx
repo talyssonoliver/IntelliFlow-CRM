@@ -213,7 +213,7 @@ export function ReviewCard({
               >
                 <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                   lock
-                </span>
+                </span>{' '}
                 Claim
               </Button>
               <Button size="sm" variant="outline" asChild>
@@ -223,7 +223,7 @@ export function ReviewCard({
                 >
                   <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
                     visibility
-                  </span>
+                  </span>{' '}
                   Preview
                 </Link>
               </Button>
@@ -285,7 +285,7 @@ export function ReviewCard({
             <Badge variant="outline" className="text-muted-foreground">
               <span className="material-symbols-outlined text-xs mr-1" aria-hidden="true">
                 lock
-              </span>
+              </span>{' '}
               Claimed by another reviewer
             </Badge>
           )}

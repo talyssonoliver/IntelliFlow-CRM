@@ -3,7 +3,10 @@
 import { Badge, Separator } from '@intelliflow/ui';
 import type { ChangelogEntry, ChangelogEntryType } from '@/lib/developer/rss-feed';
 
-const BADGE_VARIANT_MAP: Record<ChangelogEntryType, 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning'> = {
+const BADGE_VARIANT_MAP: Record<
+  ChangelogEntryType,
+  'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning'
+> = {
   feature: 'success',
   breaking: 'destructive',
   fix: 'secondary',
@@ -18,8 +21,16 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     date: '2026-02-24',
     title: 'Developer Portal & AI Intelligence',
     changes: [
-      { type: 'feature', description: 'Developer portal with API docs, webhook testing, and changelog' },
-      { type: 'breaking', description: 'Removed legacy /api/v1/* REST endpoints — use tRPC procedures', migrationDeadline: '2026-08-24', docsHref: '/docs/api' },
+      {
+        type: 'feature',
+        description: 'Developer portal with API docs, webhook testing, and changelog',
+      },
+      {
+        type: 'breaking',
+        description: 'Removed legacy /api/v1/* REST endpoints — use tRPC procedures',
+        migrationDeadline: '2026-08-24',
+        docsHref: '/docs/api',
+      },
       { type: 'security', description: 'Added HMAC-SHA256 webhook signature verification' },
     ],
   },
@@ -28,8 +39,14 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     date: '2026-02-10',
     title: 'Notification System & Email Integration',
     changes: [
-      { type: 'feature', description: 'Real-time notification system with push, email, and in-app channels' },
-      { type: 'feature', description: 'Email compose with rich text editor, templates, and scheduling' },
+      {
+        type: 'feature',
+        description: 'Real-time notification system with push, email, and in-app channels',
+      },
+      {
+        type: 'feature',
+        description: 'Email compose with rich text editor, templates, and scheduling',
+      },
       { type: 'fix', description: 'Fixed notification badge count not updating on dismiss' },
     ],
   },
@@ -38,9 +55,15 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     date: '2026-01-27',
     title: 'Pipeline & Deal Management',
     changes: [
-      { type: 'feature', description: 'Kanban board for deal pipeline with drag-and-drop stage progression' },
+      {
+        type: 'feature',
+        description: 'Kanban board for deal pipeline with drag-and-drop stage progression',
+      },
       { type: 'feature', description: 'Deal forecasting with weighted probability calculations' },
-      { type: 'performance', description: 'Reduced pipeline page load time by 35% with virtualized lists' },
+      {
+        type: 'performance',
+        description: 'Reduced pipeline page load time by 35% with virtualized lists',
+      },
     ],
   },
   {
@@ -48,9 +71,16 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     date: '2026-01-13',
     title: 'Contact Management Enhancements',
     changes: [
-      { type: 'feature', description: 'Activity timeline for contacts with automatic event tracking' },
+      {
+        type: 'feature',
+        description: 'Activity timeline for contacts with automatic event tracking',
+      },
       { type: 'feature', description: 'Contact hierarchy and organization chart visualization' },
-      { type: 'deprecation', description: 'ContactCard v1 props deprecated — migrate to v2 interface', migrationDeadline: '2026-07-13' },
+      {
+        type: 'deprecation',
+        description: 'ContactCard v1 props deprecated — migrate to v2 interface',
+        migrationDeadline: '2026-07-13',
+      },
     ],
   },
   {
@@ -58,7 +88,10 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     date: '2025-12-30',
     title: 'AI-Powered Search & Analytics',
     changes: [
-      { type: 'feature', description: 'AI search with natural language queries across all CRM entities' },
+      {
+        type: 'feature',
+        description: 'AI search with natural language queries across all CRM entities',
+      },
       { type: 'feature', description: 'Analytics dashboard with customizable KPI widgets' },
       { type: 'fix', description: 'Fixed search indexing delay for newly created records' },
     ],
@@ -136,15 +169,22 @@ export function ChangelogDisplay({ entries = CHANGELOG_ENTRIES }: { entries?: Ch
       </div>
 
       {latestHasBreaking && (
-        <div className="border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20 p-4 rounded-r-lg" role="alert">
+        <div
+          className="border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20 p-4 rounded-r-lg"
+          role="alert"
+        >
           <div className="flex items-center gap-2 mb-1">
-            <span className="material-symbols-outlined text-yellow-600 text-base" aria-hidden="true">
+            <span
+              className="material-symbols-outlined text-yellow-600 text-base"
+              aria-hidden="true"
+            >
               warning
             </span>
             <span className="font-medium text-sm">Breaking Changes in Latest Release</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            Version {entries[0].version} includes breaking changes. Review the migration guide before upgrading.
+            Version {entries[0].version} includes breaking changes. Review the migration guide
+            before upgrading.
           </p>
         </div>
       )}

@@ -106,7 +106,7 @@ function parseMarkdown(markdown: string): string {
 
   // Links
   html = html.replace(
-    /\[([^\]]+)\]\(([^)]+)\)/g,
+    /\[([^\][\r\n]+)\]\(([^)\r\n]+)\)/g,
     '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
   );
 
@@ -116,8 +116,8 @@ function parseMarkdown(markdown: string): string {
 
   // Unordered lists
   html = html.replace(/^[\*\-] (.*)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*<\/li>)(?=\s*<li>)/gs, '<ul>$1');
-  html = html.replace(/(<li>.*<\/li>)(?!\s*<li>)/gs, '$1</ul>');
+  html = html.replace(/(<li>[^]*?<\/li>)(?=\s*<li>)/g, '<ul>$1');
+  html = html.replace(/(<li>[^]*?<\/li>)(?!\s*<li>)/g, '$1</ul>');
 
   // Ordered lists
   html = html.replace(/^\d+\. (.*)$/gm, '<li>$1</li>');

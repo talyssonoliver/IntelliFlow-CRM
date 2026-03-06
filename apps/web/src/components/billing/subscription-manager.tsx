@@ -172,8 +172,8 @@ function CurrentPlanCard({
               onClick={onReactivate}
               className="mt-3 border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-400 dark:hover:bg-green-900/20"
             >
-              <span className="material-symbols-outlined mr-2 text-lg">refresh</span>
-              Reactivate Subscription
+              <span className="material-symbols-outlined mr-2 text-lg">refresh</span> Reactivate
+              Subscription
             </Button>
           </div>
         )}
@@ -185,8 +185,8 @@ function CurrentPlanCard({
             onClick={onCancelClick}
             className="text-slate-600 hover:text-red-600 dark:text-slate-400 dark:hover:text-red-400"
           >
-            <span className="material-symbols-outlined mr-2 text-lg">cancel</span>
-            Cancel Subscription
+            <span className="material-symbols-outlined mr-2 text-lg">cancel</span> Cancel
+            Subscription
           </Button>
         )}
       </CardContent>
@@ -218,15 +218,21 @@ function PlanCard({
   const directionDisplay = getPlanChangeDirectionDisplay(changeDirection);
   const annualSavings = getAnnualSavingsPercent(plan);
 
+  const currentOrDefaultBorderClass = isCurrent
+    ? 'border-2 border-slate-300 dark:border-slate-600'
+    : 'border hover:border-slate-300 dark:hover:border-slate-600';
+  const cardBorderClass = isSelected
+    ? 'border-2 border-[#137fec] ring-2 ring-[#137fec]/20'
+    : currentOrDefaultBorderClass;
+  const downgradeOrNeutralColorClass =
+    changeDirection === 'downgrade' ? 'bg-amber-500 hover:bg-amber-600' : '';
+  const buttonColorClass =
+    changeDirection === 'upgrade'
+      ? 'bg-[#137fec] hover:bg-[#0e6ac7]'
+      : downgradeOrNeutralColorClass;
   return (
     <Card
-      className={`relative cursor-pointer transition-all ${
-        isSelected
-          ? 'border-2 border-[#137fec] ring-2 ring-[#137fec]/20'
-          : isCurrent
-            ? 'border-2 border-slate-300 dark:border-slate-600'
-            : 'border hover:border-slate-300 dark:hover:border-slate-600'
-      } ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
+      className={`relative cursor-pointer transition-all ${cardBorderClass} ${disabled ? 'cursor-not-allowed opacity-50' : ''}`}
       onClick={disabled ? undefined : onSelect}
     >
       {plan.popular && (
@@ -291,16 +297,7 @@ function PlanCard({
 
         {!isCurrent && (
           <div className="pt-2">
-            <Button
-              className={`w-full ${
-                changeDirection === 'upgrade'
-                  ? 'bg-[#137fec] hover:bg-[#0e6ac7]'
-                  : changeDirection === 'downgrade'
-                    ? 'bg-amber-500 hover:bg-amber-600'
-                    : ''
-              }`}
-              disabled={disabled}
-            >
+            <Button className={`w-full ${buttonColorClass}`} disabled={disabled}>
               <span className="material-symbols-outlined mr-2 text-lg">
                 {directionDisplay.icon}
               </span>
@@ -841,4 +838,3 @@ export function SubscriptionManager({
     </div>
   );
 }
-

@@ -9,12 +9,20 @@ import type { DocumentFilters } from '../types';
 
 vi.mock('@intelliflow/ui', () => ({
   Button: ({ children, onClick, disabled, variant, className, ...props }: any) => (
-    <button onClick={onClick} disabled={disabled} data-variant={variant} className={className} {...props}>
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      data-variant={variant}
+      className={className}
+      {...props}
+    >
       {children}
     </button>
   ),
   Badge: ({ children, variant, className, ...props }: any) => (
-    <span data-variant={variant} className={className} {...props}>{children}</span>
+    <span data-variant={variant} className={className} {...props}>
+      {children}
+    </span>
   ),
 }));
 
@@ -121,11 +129,7 @@ describe('DocumentSearch', () => {
   it('clears search on clear button click', () => {
     const onSearch = vi.fn();
     render(
-      <DocumentSearch
-        {...defaultProps}
-        onSearch={onSearch}
-        activeFilters={{ query: 'existing' }}
-      />
+      <DocumentSearch {...defaultProps} onSearch={onSearch} activeFilters={{ query: 'existing' }} />
     );
 
     // Type something to show clear button
@@ -165,9 +169,7 @@ describe('DocumentSearch', () => {
     fireEvent.click(screen.getByRole('button', { name: /status/i }));
     fireEvent.click(screen.getByText('Draft'));
 
-    expect(onFilterChange).toHaveBeenCalledWith(
-      expect.objectContaining({ status: ['DRAFT'] })
-    );
+    expect(onFilterChange).toHaveBeenCalledWith(expect.objectContaining({ status: ['DRAFT'] }));
   });
 
   it('deselects status filter when clicked again', () => {
@@ -186,9 +188,7 @@ describe('DocumentSearch', () => {
     const draftCheckbox = within(listbox).getByText('Draft');
     fireEvent.click(draftCheckbox);
 
-    expect(onFilterChange).toHaveBeenCalledWith(
-      expect.objectContaining({ status: undefined })
-    );
+    expect(onFilterChange).toHaveBeenCalledWith(expect.objectContaining({ status: undefined }));
   });
 
   // ─── Classification Filter ────────────────────────────────────────────────
@@ -263,9 +263,7 @@ describe('DocumentSearch', () => {
     // First checkbox corresponds to DRAFT; click it directly
     fireEvent.click(checkboxes[0]);
 
-    expect(onFilterChange).toHaveBeenCalledWith(
-      expect.objectContaining({ status: ['DRAFT'] })
-    );
+    expect(onFilterChange).toHaveBeenCalledWith(expect.objectContaining({ status: ['DRAFT'] }));
   });
 
   // ─── File Type Filter ─────────────────────────────────────────────────────
@@ -283,9 +281,7 @@ describe('DocumentSearch', () => {
     fireEvent.click(screen.getByRole('button', { name: /file type/i }));
     fireEvent.click(screen.getByText('PDF'));
 
-    expect(onFilterChange).toHaveBeenCalledWith(
-      expect.objectContaining({ fileType: ['pdf'] })
-    );
+    expect(onFilterChange).toHaveBeenCalledWith(expect.objectContaining({ fileType: ['pdf'] }));
   });
 
   it('deselects file type filter when toggled off via label click', () => {
@@ -303,9 +299,7 @@ describe('DocumentSearch', () => {
     // Click the label text for the already-selected PDF option to deselect it
     fireEvent.click(within(listbox).getByText('PDF'));
 
-    expect(onFilterChange).toHaveBeenCalledWith(
-      expect.objectContaining({ fileType: undefined })
-    );
+    expect(onFilterChange).toHaveBeenCalledWith(expect.objectContaining({ fileType: undefined }));
   });
 
   it('selects multiple file types and shows count badge on button', () => {
@@ -336,22 +330,14 @@ describe('DocumentSearch', () => {
   // ─── Filter Chips ─────────────────────────────────────────────────────────
 
   it('renders chip for each active status filter', () => {
-    render(
-      <DocumentSearch
-        {...defaultProps}
-        activeFilters={{ status: ['DRAFT', 'APPROVED'] }}
-      />
-    );
+    render(<DocumentSearch {...defaultProps} activeFilters={{ status: ['DRAFT', 'APPROVED'] }} />);
     expect(screen.getByText('Draft')).toBeInTheDocument();
     expect(screen.getByText('Approved')).toBeInTheDocument();
   });
 
   it('renders chip for each active classification filter', () => {
     render(
-      <DocumentSearch
-        {...defaultProps}
-        activeFilters={{ classification: ['CONFIDENTIAL'] }}
-      />
+      <DocumentSearch {...defaultProps} activeFilters={{ classification: ['CONFIDENTIAL'] }} />
     );
     expect(screen.getByText('Confidential')).toBeInTheDocument();
   });
@@ -393,12 +379,7 @@ describe('DocumentSearch', () => {
   });
 
   it('renders chip for each active file type filter', () => {
-    render(
-      <DocumentSearch
-        {...defaultProps}
-        activeFilters={{ fileType: ['pdf', 'word'] }}
-      />
-    );
+    render(<DocumentSearch {...defaultProps} activeFilters={{ fileType: ['pdf', 'word'] }} />);
     expect(screen.getByText('PDF')).toBeInTheDocument();
     expect(screen.getByText('Word')).toBeInTheDocument();
   });
@@ -416,9 +397,7 @@ describe('DocumentSearch', () => {
     const removeBtn = screen.getByLabelText(/remove.*pdf.*filter/i);
     fireEvent.click(removeBtn);
 
-    expect(onFilterChange).toHaveBeenCalledWith(
-      expect.objectContaining({ fileType: ['word'] })
-    );
+    expect(onFilterChange).toHaveBeenCalledWith(expect.objectContaining({ fileType: ['word'] }));
   });
 
   it('removing the last file type filter sets fileType to undefined', () => {
@@ -434,9 +413,7 @@ describe('DocumentSearch', () => {
     const removeBtn = screen.getByLabelText(/remove.*pdf.*filter/i);
     fireEvent.click(removeBtn);
 
-    expect(onFilterChange).toHaveBeenCalledWith(
-      expect.objectContaining({ fileType: undefined })
-    );
+    expect(onFilterChange).toHaveBeenCalledWith(expect.objectContaining({ fileType: undefined }));
   });
 
   it('clicking chip X removes that filter', () => {
@@ -453,18 +430,11 @@ describe('DocumentSearch', () => {
     const removeButtons = screen.getAllByLabelText(/remove.*draft.*filter/i);
     fireEvent.click(removeButtons[0]);
 
-    expect(onFilterChange).toHaveBeenCalledWith(
-      expect.objectContaining({ status: ['APPROVED'] })
-    );
+    expect(onFilterChange).toHaveBeenCalledWith(expect.objectContaining({ status: ['APPROVED'] }));
   });
 
   it('shows "Clear all" button when filters active', () => {
-    render(
-      <DocumentSearch
-        {...defaultProps}
-        activeFilters={{ status: ['DRAFT'] }}
-      />
-    );
+    render(<DocumentSearch {...defaultProps} activeFilters={{ status: ['DRAFT'] }} />);
     expect(screen.getByTestId('clear-all-filters')).toBeInTheDocument();
   });
 
@@ -492,22 +462,12 @@ describe('DocumentSearch', () => {
   });
 
   it('shows "Clear all" when fileType filter is active', () => {
-    render(
-      <DocumentSearch
-        {...defaultProps}
-        activeFilters={{ fileType: ['pdf'] }}
-      />
-    );
+    render(<DocumentSearch {...defaultProps} activeFilters={{ fileType: ['pdf'] }} />);
     expect(screen.getByTestId('clear-all-filters')).toBeInTheDocument();
   });
 
   it('shows "Clear all" when classification filter is active', () => {
-    render(
-      <DocumentSearch
-        {...defaultProps}
-        activeFilters={{ classification: ['PUBLIC'] }}
-      />
-    );
+    render(<DocumentSearch {...defaultProps} activeFilters={{ classification: ['PUBLIC'] }} />);
     expect(screen.getByTestId('clear-all-filters')).toBeInTheDocument();
   });
 
@@ -522,12 +482,7 @@ describe('DocumentSearch', () => {
   });
 
   it('"Clear all" resets local search input value to empty', () => {
-    render(
-      <DocumentSearch
-        {...defaultProps}
-        activeFilters={{ status: ['DRAFT'] }}
-      />
-    );
+    render(<DocumentSearch {...defaultProps} activeFilters={{ status: ['DRAFT'] }} />);
 
     // Type into search input first
     const input = screen.getByRole('searchbox');
@@ -588,12 +543,7 @@ describe('DocumentSearch', () => {
   });
 
   it('shows count badge on filter button when filters active', () => {
-    render(
-      <DocumentSearch
-        {...defaultProps}
-        activeFilters={{ status: ['DRAFT', 'APPROVED'] }}
-      />
-    );
+    render(<DocumentSearch {...defaultProps} activeFilters={{ status: ['DRAFT', 'APPROVED'] }} />);
     // The status button should show count "2"
     const statusBtn = screen.getByRole('button', { name: /status/i });
     expect(statusBtn.textContent).toContain('2');
@@ -612,12 +562,7 @@ describe('DocumentSearch', () => {
   });
 
   it('filter chips have aria-label', () => {
-    render(
-      <DocumentSearch
-        {...defaultProps}
-        activeFilters={{ status: ['DRAFT'] }}
-      />
-    );
+    render(<DocumentSearch {...defaultProps} activeFilters={{ status: ['DRAFT'] }} />);
     expect(screen.getAllByLabelText(/remove.*draft.*filter/i).length).toBeGreaterThanOrEqual(1);
   });
 });

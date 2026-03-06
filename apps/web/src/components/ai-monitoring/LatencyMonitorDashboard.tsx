@@ -14,15 +14,7 @@
  */
 
 import { useState, Suspense, lazy } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Skeleton,
-  cn,
-} from '@intelliflow/ui';
+import { Card, CardContent, CardHeader, CardTitle, Button, Skeleton, cn } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { useLatencyDashboard } from '@/lib/ai-monitoring/hooks';
 import type { LatencyFilters, LatencyPhase, LatencyPercentiles } from '@/lib/ai-monitoring/types';
@@ -111,7 +103,7 @@ export function LatencyMonitorDashboard() {
     });
   };
 
-  const modelNames = Object.keys(byModel).sort();
+  const modelNames = Object.keys(byModel).sort((a, b) => a.localeCompare(b));
 
   // Error state
   if (error && !isLoading) {
@@ -120,14 +112,22 @@ export function LatencyMonitorDashboard() {
         <PageHeader title="Latency Monitor" breadcrumbs={BREADCRUMBS} />
         <Card className="mt-6">
           <CardContent className="p-6 text-center">
-            <span className="material-symbols-outlined text-4xl text-destructive mb-2" aria-hidden="true">
+            <span
+              className="material-symbols-outlined text-4xl text-destructive mb-2"
+              aria-hidden="true"
+            >
               cloud_off
             </span>
             <p className="text-lg font-medium text-destructive" data-testid="error-message">
               AI monitoring service unavailable
             </p>
             <p className="text-sm text-muted-foreground mt-1">Please try again later.</p>
-            <Button variant="outline" className="mt-4" onClick={() => refetch()} data-testid="retry-button">
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => refetch()}
+              data-testid="retry-button"
+            >
               Retry
             </Button>
           </CardContent>
@@ -143,7 +143,10 @@ export function LatencyMonitorDashboard() {
         <PageHeader title="Latency Monitor" breadcrumbs={BREADCRUMBS} />
         <Card className="mt-6">
           <CardContent className="p-6 text-center" data-testid="empty-state">
-            <span className="material-symbols-outlined text-4xl text-muted-foreground mb-2" aria-hidden="true">
+            <span
+              className="material-symbols-outlined text-4xl text-muted-foreground mb-2"
+              aria-hidden="true"
+            >
               speed
             </span>
             <p className="text-lg font-medium text-muted-foreground">No latency data yet</p>
@@ -204,7 +207,11 @@ export function LatencyMonitorDashboard() {
           label="SLO Status"
           value={getSLOStatusLabel(sloCompliance.overallCompliant)}
           icon={sloCompliance.overallCompliant ? 'verified' : 'cancel'}
-          colorClass={sloCompliance.overallCompliant ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}
+          colorClass={
+            sloCompliance.overallCompliant
+              ? 'bg-green-100 dark:bg-green-900/30'
+              : 'bg-red-100 dark:bg-red-900/30'
+          }
           isLoading={isLoading}
         />
       </div>
@@ -220,7 +227,7 @@ export function LatencyMonitorDashboard() {
                 'px-3 py-1 rounded-full text-xs font-medium transition-colors',
                 timeRange === range
                   ? 'bg-primary text-primary-foreground ring-2 ring-offset-1 ring-primary/40'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80',
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
               )}
               aria-pressed={timeRange === range}
               data-testid={`filter-${range}`}
@@ -256,15 +263,22 @@ export function LatencyMonitorDashboard() {
           <CardContent className="pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className={cn('text-2xl font-bold', getP95ComplianceColor(sloCompliance.p95Actual, sloCompliance.p95Target))}>
+                <p
+                  className={cn(
+                    'text-2xl font-bold',
+                    getP95ComplianceColor(sloCompliance.p95Actual, sloCompliance.p95Target)
+                  )}
+                >
                   {formatLatencyMs(sloCompliance.p95Actual)}
                 </p>
-                <p className="text-xs text-muted-foreground">Target: {formatLatencyMs(sloCompliance.p95Target)}</p>
+                <p className="text-xs text-muted-foreground">
+                  Target: {formatLatencyMs(sloCompliance.p95Target)}
+                </p>
               </div>
               <span
                 className={cn(
                   'inline-flex items-center px-2 py-1 rounded text-xs font-bold',
-                  getSLOBadgeClass(sloCompliance.p95Compliant),
+                  getSLOBadgeClass(sloCompliance.p95Compliant)
                 )}
                 aria-label={`P95 SLO: ${getSLOStatusLabel(sloCompliance.p95Compliant)}`}
               >
@@ -280,15 +294,22 @@ export function LatencyMonitorDashboard() {
           <CardContent className="pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className={cn('text-2xl font-bold', getP95ComplianceColor(sloCompliance.p99Actual, sloCompliance.p99Target))}>
+                <p
+                  className={cn(
+                    'text-2xl font-bold',
+                    getP95ComplianceColor(sloCompliance.p99Actual, sloCompliance.p99Target)
+                  )}
+                >
                   {formatLatencyMs(sloCompliance.p99Actual)}
                 </p>
-                <p className="text-xs text-muted-foreground">Target: {formatLatencyMs(sloCompliance.p99Target)}</p>
+                <p className="text-xs text-muted-foreground">
+                  Target: {formatLatencyMs(sloCompliance.p99Target)}
+                </p>
               </div>
               <span
                 className={cn(
                   'inline-flex items-center px-2 py-1 rounded text-xs font-bold',
-                  getSLOBadgeClass(sloCompliance.p99Compliant),
+                  getSLOBadgeClass(sloCompliance.p99Compliant)
                 )}
                 aria-label={`P99 SLO: ${getSLOStatusLabel(sloCompliance.p99Compliant)}`}
               >
@@ -376,7 +397,10 @@ export function LatencyMonitorDashboard() {
           </CardHeader>
           <CardContent className="pb-4">
             {Object.keys(byPhase).length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4" data-testid="no-phase-data">
+              <p
+                className="text-sm text-muted-foreground text-center py-4"
+                data-testid="no-phase-data"
+              >
                 No phase data available
               </p>
             ) : (
@@ -397,7 +421,7 @@ export function LatencyMonitorDashboard() {
                         <span>P99: {formatLatencyMs(perf.p99)}</span>
                       </div>
                     </div>
-                  ),
+                  )
                 )}
               </div>
             )}

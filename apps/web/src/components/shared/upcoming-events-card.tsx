@@ -111,7 +111,7 @@ export function UpcomingEventsCard({
 
   const events: AppointmentEvent[] = useMemo(() => {
     if (!data) return [];
-    const items = data.appointments ?? [];
+    const items = (data.appointments ?? []) as AppointmentEvent[];
     return items.slice(0, maxItems);
   }, [data, maxItems]);
 

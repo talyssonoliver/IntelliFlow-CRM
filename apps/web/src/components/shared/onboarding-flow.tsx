@@ -194,7 +194,7 @@ function StepItem({
         <p className="text-sm text-slate-300 mb-3">{step.description}</p>
 
         {/* Action Button */}
-        {step.action && !isCompleted && (
+        {step.action && !isCompleted ? (
           <>
             {step.action.href ? (
               <Link
@@ -229,7 +229,7 @@ function StepItem({
               </button>
             )}
           </>
-        )}
+        ) : null}
       </div>
     </div>
   );
@@ -371,4 +371,3 @@ export function OnboardingFlow({
     </div>
   );
 }
-

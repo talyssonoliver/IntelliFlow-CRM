@@ -141,7 +141,9 @@ describe('EntitySearchField', () => {
     fireEvent.change(input, { target: { value: 'john' } });
 
     // Advance past debounce timer to update debouncedSearch
-    act(() => { vi.advanceTimersByTime(350); });
+    act(() => {
+      vi.advanceTimersByTime(350);
+    });
 
     // After debounce, dropdown should show with results
     const options = screen.getAllByRole('option');
@@ -163,7 +165,9 @@ describe('EntitySearchField', () => {
     const input = screen.getByRole('combobox');
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'xyz' } });
-    act(() => { vi.advanceTimersByTime(350); });
+    act(() => {
+      vi.advanceTimersByTime(350);
+    });
 
     expect(screen.getByText('No results found')).toBeInTheDocument();
   });
@@ -175,7 +179,9 @@ describe('EntitySearchField', () => {
     const input = screen.getByRole('combobox');
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'test' } });
-    act(() => { vi.advanceTimersByTime(350); });
+    act(() => {
+      vi.advanceTimersByTime(350);
+    });
 
     expect(screen.getByText('Searching...')).toBeInTheDocument();
   });
@@ -187,7 +193,9 @@ describe('EntitySearchField', () => {
     const input = screen.getByRole('combobox');
     fireEvent.change(input, { target: { value: 'test' } });
     fireEvent.focus(input);
-    act(() => { vi.advanceTimersByTime(350); });
+    act(() => {
+      vi.advanceTimersByTime(350);
+    });
 
     expect(screen.getByRole('listbox')).toBeInTheDocument();
   });
@@ -204,7 +212,9 @@ describe('EntitySearchField', () => {
     const input = screen.getByLabelText('Search contacts');
     fireEvent.focus(input);
     fireEvent.change(input, { target: { value: 'alice' } });
-    act(() => { vi.advanceTimersByTime(350); });
+    act(() => {
+      vi.advanceTimersByTime(350);
+    });
 
     expect(screen.getByRole('option')).toHaveTextContent('Alice Wonder');
   });

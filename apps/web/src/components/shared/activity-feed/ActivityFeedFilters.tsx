@@ -28,6 +28,8 @@ export interface ActivityFeedFiltersProps {
   values?: Partial<ActivityFeedFilterValues>;
   /** Called when any filter changes */
   onChange: (filters: ActivityFeedFilterValues) => void;
+  /** Show search input. Defaults to true. */
+  showSearch?: boolean;
   /** Show source filter chips. Defaults to false. */
   showSources?: boolean;
   /** Show date range inputs. Defaults to false. */
@@ -77,14 +79,12 @@ const DEFAULT_VALUES: ActivityFeedFilterValues = {
 export function ActivityFeedFilters({
   values,
   onChange,
+  showSearch = true,
   showSources = false,
   showDateRange = false,
   className = '',
 }: ActivityFeedFiltersProps) {
-  const current = useMemo(
-    () => ({ ...DEFAULT_VALUES, ...values }),
-    [values],
-  );
+  const current = useMemo(() => ({ ...DEFAULT_VALUES, ...values }), [values]);
 
   const [searchInput, setSearchInput] = useState(current.search);
 
@@ -94,7 +94,7 @@ export function ActivityFeedFilters({
       setSearchInput(value);
       onChange({ ...current, search: value });
     },
-    [current, onChange],
+    [current, onChange]
   );
 
   const toggleType = useCallback(
@@ -104,7 +104,7 @@ export function ActivityFeedFilters({
         : [...current.types, type];
       onChange({ ...current, types: next });
     },
-    [current, onChange],
+    [current, onChange]
   );
 
   const toggleSource = useCallback(
@@ -114,7 +114,7 @@ export function ActivityFeedFilters({
         : [...current.sources, source];
       onChange({ ...current, sources: next });
     },
-    [current, onChange],
+    [current, onChange]
   );
 
   const handleAfterChange = useCallback(
@@ -122,7 +122,7 @@ export function ActivityFeedFilters({
       const value = e.target.value ? new Date(e.target.value) : undefined;
       onChange({ ...current, after: value });
     },
-    [current, onChange],
+    [current, onChange]
   );
 
   const handleBeforeChange = useCallback(
@@ -130,7 +130,7 @@ export function ActivityFeedFilters({
       const value = e.target.value ? new Date(e.target.value) : undefined;
       onChange({ ...current, before: value });
     },
-    [current, onChange],
+    [current, onChange]
   );
 
   const hasActiveFilters =
@@ -148,19 +148,21 @@ export function ActivityFeedFilters({
   return (
     <div className={`space-y-3 ${className}`} data-testid="activity-feed-filters">
       {/* Search */}
-      <div className="relative">
-        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
-          search
-        </span>
-        <input
-          type="text"
-          placeholder="Search activity..."
-          value={searchInput}
-          onChange={handleSearchChange}
-          className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec]/30 focus:border-[#137fec]"
-          aria-label="Search activity feed"
-        />
-      </div>
+      {showSearch && (
+        <div className="relative">
+          <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">
+            search
+          </span>
+          <input
+            type="text"
+            placeholder="Search activity..."
+            value={searchInput}
+            onChange={handleSearchChange}
+            className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec]/30 focus:border-[#137fec]"
+            aria-label="Search activity feed"
+          />
+        </div>
+      )}
 
       {/* Type filter chips */}
       <div className="flex flex-wrap gap-1.5" role="group" aria-label="Filter by activity type">
@@ -211,7 +213,9 @@ export function ActivityFeedFilters({
       {/* Date range (optional) */}
       {showDateRange && (
         <div className="flex gap-2 items-center">
-          <label htmlFor="activity-filter-after" className="text-xs text-slate-500">From:</label>
+          <label htmlFor="activity-filter-after" className="text-xs text-slate-500">
+            From:
+          </label>
           <input
             id="activity-filter-after"
             type="date"
@@ -219,7 +223,9 @@ export function ActivityFeedFilters({
             className="text-xs px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
             aria-label="Activity after date"
           />
-          <label htmlFor="activity-filter-before" className="text-xs text-slate-500">To:</label>
+          <label htmlFor="activity-filter-before" className="text-xs text-slate-500">
+            To:
+          </label>
           <input
             id="activity-filter-before"
             type="date"
@@ -232,10 +238,7 @@ export function ActivityFeedFilters({
 
       {/* Clear button */}
       {hasActiveFilters && (
-        <button
-          onClick={clearFilters}
-          className="text-xs text-[#137fec] hover:underline"
-        >
+        <button onClick={clearFilters} className="text-xs text-[#137fec] hover:underline">
           Clear all filters
         </button>
       )}

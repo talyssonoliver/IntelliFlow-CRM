@@ -240,9 +240,7 @@ describe('EmailPage', () => {
 
     vi.advanceTimersByTime(900);
 
-    expect(mutate).toHaveBeenCalledWith(
-      expect.objectContaining({ emailId: 'email-1' })
-    );
+    expect(mutate).toHaveBeenCalledWith(expect.objectContaining({ emailId: 'email-1' }));
     vi.useRealTimers();
   });
 

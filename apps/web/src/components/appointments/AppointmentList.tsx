@@ -47,6 +47,50 @@ const STAT_CARDS = [
   { key: 'overdue', label: 'Overdue', icon: 'warning', color: 'text-destructive', bg: 'bg-red-50' },
 ] as const;
 
+function SortableHeader({
+  label,
+  sortKey,
+  currentSortBy,
+  currentSortOrder,
+  onSort,
+}: {
+  label: string;
+  sortKey: AppointmentFilters['sortBy'];
+  currentSortBy: AppointmentFilters['sortBy'];
+  currentSortOrder: AppointmentFilters['sortOrder'];
+  onSort: (
+    sortBy: AppointmentFilters['sortBy'],
+    sortOrder: AppointmentFilters['sortOrder']
+  ) => void;
+}) {
+  const isActive = currentSortBy === sortKey;
+  const nextOrder = isActive && currentSortOrder === 'asc' ? 'desc' : 'asc';
+  const icon = isActive
+    ? currentSortOrder === 'asc'
+      ? 'arrow_upward'
+      : 'arrow_downward'
+    : 'swap_vert';
+
+  return (
+    <th className="text-left px-4 py-3 font-medium text-gray-600">
+      <button
+        type="button"
+        onClick={() => onSort(sortKey, nextOrder)}
+        className="flex items-center gap-1 hover:text-gray-900 transition-colors"
+        aria-label={`Sort by ${label}`}
+      >
+        {label}
+        <span
+          className={`material-symbols-outlined text-sm ${isActive ? 'text-primary' : 'text-gray-400'}`}
+          aria-hidden="true"
+        >
+          {icon}
+        </span>
+      </button>
+    </th>
+  );
+}
+
 export function AppointmentList({
   appointments,
   total,
@@ -150,6 +194,66 @@ export function AppointmentList({
             </option>
           ))}
         </select>
+
+        <select
+          value={`${filters.sortBy}:${filters.sortOrder}`}
+          onChange={(e) => {
+            const [sortBy, sortOrder] = e.target.value.split(':') as [
+              AppointmentFilters['sortBy'],
+              AppointmentFilters['sortOrder'],
+            ];
+            onFilterChange({ sortBy, sortOrder });
+          }}
+          className="rounded-md border border-gray-300 px-3 py-2 text-sm"
+          aria-label="Sort by"
+        >
+          <option value="startTime:asc">Time (Earliest)</option>
+          <option value="startTime:desc">Time (Latest)</option>
+          <option value="createdAt:desc">Newest First</option>
+          <option value="createdAt:asc">Oldest First</option>
+          <option value="updatedAt:desc">Recently Updated</option>
+        </select>
+      </div>
+
+      {/* Date Range Filters */}
+      <div className="flex flex-wrap gap-3 items-center">
+        <label className="flex items-center gap-2 text-sm text-gray-600">
+          From
+          <input
+            type="date"
+            value={filters.startTimeFrom ? toDateInputValue(filters.startTimeFrom) : ''}
+            onChange={(e) =>
+              onFilterChange({
+                startTimeFrom: e.target.value ? new Date(e.target.value + 'T00:00:00') : undefined,
+              })
+            }
+            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+            aria-label="Date from"
+          />
+        </label>
+        <label className="flex items-center gap-2 text-sm text-gray-600">
+          To
+          <input
+            type="date"
+            value={filters.startTimeTo ? toDateInputValue(filters.startTimeTo) : ''}
+            onChange={(e) =>
+              onFilterChange({
+                startTimeTo: e.target.value ? new Date(e.target.value + 'T23:59:59') : undefined,
+              })
+            }
+            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+            aria-label="Date to"
+          />
+        </label>
+        {(filters.startTimeFrom || filters.startTimeTo) && (
+          <button
+            type="button"
+            onClick={() => onFilterChange({ startTimeFrom: undefined, startTimeTo: undefined })}
+            className="text-sm text-primary hover:underline"
+          >
+            Clear dates
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -163,12 +267,30 @@ export function AppointmentList({
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b">
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Title</th>
+                <SortableHeader
+                  label="Title"
+                  sortKey="createdAt"
+                  currentSortBy={filters.sortBy}
+                  currentSortOrder={filters.sortOrder}
+                  onSort={(sortBy, sortOrder) => onFilterChange({ sortBy, sortOrder })}
+                />
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Type</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Time</th>
+                <SortableHeader
+                  label="Time"
+                  sortKey="startTime"
+                  currentSortBy={filters.sortBy}
+                  currentSortOrder={filters.sortOrder}
+                  onSort={(sortBy, sortOrder) => onFilterChange({ sortBy, sortOrder })}
+                />
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Duration</th>
                 <th className="text-left px-4 py-3 font-medium text-gray-600">Attendees</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Status</th>
+                <SortableHeader
+                  label="Status"
+                  sortKey="updatedAt"
+                  currentSortBy={filters.sortBy}
+                  currentSortOrder={filters.sortOrder}
+                  onSort={(sortBy, sortOrder) => onFilterChange({ sortBy, sortOrder })}
+                />
               </tr>
             </thead>
             <tbody>
@@ -270,4 +392,12 @@ export function AppointmentList({
       )}
     </div>
   );
+}
+
+function toDateInputValue(date: Date): string {
+  const d = new Date(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }

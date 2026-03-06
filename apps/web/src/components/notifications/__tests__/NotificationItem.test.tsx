@@ -12,9 +12,13 @@ vi.mock('@intelliflow/ui', async () => {
   return {
     ...actual,
     Tooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-    TooltipTrigger: ({ children, asChild: _asChild }: { children: React.ReactNode; asChild?: boolean }) => (
-      <>{children}</>
-    ),
+    TooltipTrigger: ({
+      children,
+      asChild: _asChild,
+    }: {
+      children: React.ReactNode;
+      asChild?: boolean;
+    }) => <>{children}</>,
     TooltipContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     TooltipProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   };
@@ -290,8 +294,6 @@ describe('NotificationItem', () => {
   it('is a memoized component', () => {
     expect(NotificationItem).toHaveProperty('$$typeof');
     // React.memo wraps with Symbol(react.memo)
-    expect(String((NotificationItem as unknown as { $$typeof: symbol }).$$typeof)).toContain(
-      'memo'
-    );
+    expect(String((NotificationItem as { $$typeof: symbol }).$$typeof)).toContain('memo');
   });
 });

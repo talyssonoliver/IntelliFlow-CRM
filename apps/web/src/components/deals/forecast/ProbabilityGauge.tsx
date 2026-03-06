@@ -83,7 +83,7 @@ export function ProbabilityGauge({
           data-testid="gauge-arc"
         />
         {/* Target line */}
-        {target !== undefined && (
+        {target !== undefined ? (
           <line
             x1={dimension / 2}
             y1={strokeWidth / 2}
@@ -95,7 +95,7 @@ export function ProbabilityGauge({
             transform={`rotate(${(target / 100) * 360 - 90} ${dimension / 2} ${dimension / 2})`}
             data-testid="target-line"
           />
-        )}
+        ) : null}
         {/* Center text */}
         <text
           x="50%"

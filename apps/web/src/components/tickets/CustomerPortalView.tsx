@@ -196,27 +196,27 @@ export function CustomerPortalView({
         <Card className="p-5">
           <h2 className="text-sm font-bold text-foreground mb-3">Attachments</h2>
           <div className="space-y-2">
-            {ticket.attachments.map((file) => (
-              <div key={file.id} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
-                <span className="material-symbols-outlined text-muted-foreground">
-                  {file.type === 'pdf'
-                    ? 'picture_as_pdf'
-                    : file.type === 'image'
-                      ? 'image'
-                      : 'description'}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
-                  <p className="text-xs text-muted-foreground">{file.size}</p>
+            {ticket.attachments.map((file) => {
+              const imageOrDefaultIcon = file.type === 'image' ? 'image' : 'description';
+              const fileIcon = file.type === 'pdf' ? 'picture_as_pdf' : imageOrDefaultIcon;
+              return (
+                <div key={file.id} className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                  <span className="material-symbols-outlined text-muted-foreground">
+                    {fileIcon}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
+                    <p className="text-xs text-muted-foreground">{file.size}</p>
+                  </div>
+                  <button
+                    className="p-1 text-muted-foreground hover:text-primary transition-colors"
+                    aria-label={`Download ${file.name}`}
+                  >
+                    <span className="material-symbols-outlined text-[18px]">download</span>
+                  </button>
                 </div>
-                <button
-                  className="p-1 text-muted-foreground hover:text-primary transition-colors"
-                  aria-label={`Download ${file.name}`}
-                >
-                  <span className="material-symbols-outlined text-[18px]">download</span>
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </Card>
       )}

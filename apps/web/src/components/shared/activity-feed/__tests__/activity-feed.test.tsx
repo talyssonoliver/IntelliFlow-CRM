@@ -34,20 +34,49 @@ vi.mock('@tanstack/react-virtual', () => ({
 }));
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: { children: React.ReactNode; href: string; [key: string]: unknown }) => (
-    <a href={href} {...props}>{children}</a>
+  default: ({
+    children,
+    href,
+    ...props
+  }: {
+    children: React.ReactNode;
+    href: string;
+    [key: string]: unknown;
+  }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
 vi.mock('@intelliflow/domain', () => ({
   ACTIVITY_FEED_TYPES: [
-    'EMAIL', 'CALL', 'MEETING', 'NOTE', 'TASK', 'CHAT', 'DOCUMENT',
-    'DEAL', 'TICKET', 'STAGE_CHANGE', 'STATUS_CHANGE', 'SCORE_UPDATE',
-    'QUALIFICATION', 'AGENT_ACTION', 'SLA_ALERT', 'ASSIGNMENT', 'SYSTEM',
+    'EMAIL',
+    'CALL',
+    'MEETING',
+    'NOTE',
+    'TASK',
+    'CHAT',
+    'DOCUMENT',
+    'DEAL',
+    'TICKET',
+    'STAGE_CHANGE',
+    'STATUS_CHANGE',
+    'SCORE_UPDATE',
+    'QUALIFICATION',
+    'AGENT_ACTION',
+    'SLA_ALERT',
+    'ASSIGNMENT',
+    'SYSTEM',
   ],
   ACTIVITY_FEED_SOURCES: [
-    'LEAD_ACTIVITY', 'CONTACT_ACTIVITY', 'OPPORTUNITY_EVENT',
-    'TICKET_ACTIVITY', 'EMAIL', 'CALL', 'CHAT',
+    'LEAD_ACTIVITY',
+    'CONTACT_ACTIVITY',
+    'OPPORTUNITY_EVENT',
+    'TICKET_ACTIVITY',
+    'EMAIL',
+    'CALL',
+    'CHAT',
   ],
 }));
 
@@ -256,13 +285,7 @@ describe('ActivityFeed', () => {
 
   it('should render in external data mode when items are provided', async () => {
     const { ActivityFeed } = await import('../ActivityFeed');
-    render(
-      <ActivityFeed
-        items={mockItems}
-        isLoading={false}
-        hasNextPage={false}
-      />
-    );
+    render(<ActivityFeed items={mockItems} isLoading={false} hasNextPage={false} />);
 
     expect(screen.getByText("You're all caught up")).toBeDefined();
   });
@@ -376,6 +399,46 @@ describe('ActivityFeedItem', () => {
 
     const link = screen.getByText('Big Deal');
     expect(link.closest('a')?.getAttribute('href')).toBe('/deals/opp-1');
+  });
+
+  it('should render title as link to entity route when entity is known', async () => {
+    const { ActivityFeedItem } = await import('../ActivityFeedItem');
+    render(
+      <ActivityFeedItem
+        id="item-1"
+        source="LEAD_ACTIVITY"
+        type="SYSTEM"
+        title="Web Form Submission"
+        description="Lead source: Request a Demo."
+        timestamp={new Date()}
+        actor={null}
+        entity={{ id: 'lead-abc', type: 'lead', name: 'Marcus Reed' }}
+        metadata={null}
+      />
+    );
+
+    const titleLink = screen.getByRole('link', { name: 'Web Form Submission' });
+    expect(titleLink.getAttribute('href')).toBe('/leads/lead-abc?activityId=item-1');
+  });
+
+  it('should render title as link to actionUrl when entity route is unavailable', async () => {
+    const { ActivityFeedItem } = await import('../ActivityFeedItem');
+    render(
+      <ActivityFeedItem
+        id="item-1"
+        source="SYSTEM"
+        type="SCORE_UPDATE"
+        title="Scoring run completed"
+        description="Model v2.1"
+        timestamp={new Date()}
+        actor={null}
+        entity={null}
+        metadata={{ actionUrl: '/reports/scoring', actionLabel: 'View Report' }}
+      />
+    );
+
+    const titleLink = screen.getByRole('link', { name: 'Scoring run completed' });
+    expect(titleLink.getAttribute('href')).toBe('/reports/scoring?activityId=item-1');
   });
 
   it('should render stage change tags from metadata', async () => {
@@ -572,9 +635,7 @@ describe('ActivityFeedFilters', () => {
     const input = screen.getByPlaceholderText('Search activity...');
     fireEvent.change(input, { target: { value: 'test query' } });
 
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ search: 'test query' }),
-    );
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ search: 'test query' }));
   });
 
   it('should toggle type filter on click', async () => {
@@ -584,9 +645,7 @@ describe('ActivityFeedFilters', () => {
 
     fireEvent.click(screen.getByText('Email'));
 
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ types: ['EMAIL'] }),
-    );
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ types: ['EMAIL'] }));
   });
 
   it('should remove type filter when clicked again', async () => {
@@ -601,9 +660,7 @@ describe('ActivityFeedFilters', () => {
 
     fireEvent.click(screen.getByText('Email'));
 
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ types: [] }),
-    );
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ types: [] }));
   });
 
   it('should not show source chips by default', async () => {
@@ -629,9 +686,7 @@ describe('ActivityFeedFilters', () => {
 
     fireEvent.click(screen.getByText('Leads'));
 
-    expect(onChange).toHaveBeenCalledWith(
-      expect.objectContaining({ sources: ['LEAD_ACTIVITY'] }),
-    );
+    expect(onChange).toHaveBeenCalledWith(expect.objectContaining({ sources: ['LEAD_ACTIVITY'] }));
   });
 
   it('should not show date range by default', async () => {
@@ -652,10 +707,7 @@ describe('ActivityFeedFilters', () => {
   it('should show "Clear all filters" when filters are active', async () => {
     const { ActivityFeedFilters } = await import('../ActivityFeedFilters');
     render(
-      <ActivityFeedFilters
-        values={{ search: 'test', types: [], sources: [] }}
-        onChange={vi.fn()}
-      />
+      <ActivityFeedFilters values={{ search: 'test', types: [], sources: [] }} onChange={vi.fn()} />
     );
 
     expect(screen.getByText('Clear all filters')).toBeDefined();

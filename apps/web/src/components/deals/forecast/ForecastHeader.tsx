@@ -34,10 +34,7 @@ export function ForecastHeader({
 }: ForecastHeaderProps) {
   const breadcrumbs =
     mode === 'portfolio'
-      ? [
-          { label: 'Deals', href: '/deals' },
-          { label: 'Forecast' },
-        ]
+      ? [{ label: 'Deals', href: '/deals' }, { label: 'Forecast' }]
       : [
           { label: 'Deals', href: '/deals' },
           { label: dealName ?? 'Deal', href: dealId ? `/deals/${dealId}` : '/deals' },
@@ -50,7 +47,12 @@ export function ForecastHeader({
     mode === 'portfolio'
       ? [{ label: quarter, variant: 'info' as const }]
       : dealStage
-        ? [{ label: PIPELINE_STAGE_CONFIG[dealStage]?.label ?? dealStage, variant: 'status' as const }]
+        ? [
+            {
+              label: PIPELINE_STAGE_CONFIG[dealStage]?.label ?? dealStage,
+              variant: 'status' as const,
+            },
+          ]
         : [];
 
   const actions = onExport ? [{ label: 'Export', onClick: onExport }] : [];

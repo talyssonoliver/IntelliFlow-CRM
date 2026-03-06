@@ -9,6 +9,23 @@ import { DocumentUpload } from '../DocumentUpload';
 
 const mockToast = vi.fn();
 
+// Mock tRPC — the component calls trpc.documents.create.useMutation()
+const mockMutateAsync = vi.fn().mockResolvedValue({ id: 'doc-123' });
+
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    documents: {
+      create: {
+        useMutation: () => ({
+          mutateAsync: mockMutateAsync,
+          isLoading: false,
+          error: null,
+        }),
+      },
+    },
+  },
+}));
+
 vi.mock('@intelliflow/ui', () => ({
   Button: ({ children, onClick, disabled, type, variant, ...props }: any) => (
     <button onClick={onClick} disabled={disabled} type={type} data-variant={variant} {...props}>
@@ -16,7 +33,11 @@ vi.mock('@intelliflow/ui', () => ({
     </button>
   ),
   Card: ({ children, className }: any) => <div className={className}>{children}</div>,
-  Badge: ({ children, variant, ...props }: any) => <span data-variant={variant} {...props}>{children}</span>,
+  Badge: ({ children, variant, ...props }: any) => (
+    <span data-variant={variant} {...props}>
+      {children}
+    </span>
+  ),
   toast: (...args: any[]) => mockToast(...args),
 }));
 
@@ -46,6 +67,7 @@ describe('DocumentUpload', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockDigest.mockResolvedValue(new ArrayBuffer(32));
+    mockMutateAsync.mockResolvedValue({ id: 'doc-123' });
   });
 
   // ─── Rendering ────────────────────────────────────────────────────────────
@@ -120,9 +142,7 @@ describe('DocumentUpload', () => {
     fireEvent.change(input, { target: { files: [file] } });
 
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith(
-        expect.objectContaining({ variant: 'destructive' })
-      );
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'destructive' }));
     });
   });
 
@@ -135,9 +155,7 @@ describe('DocumentUpload', () => {
     fireEvent.change(input, { target: { files: [file] } });
 
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith(
-        expect.objectContaining({ variant: 'destructive' })
-      );
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'destructive' }));
     });
   });
 
@@ -380,9 +398,7 @@ describe('DocumentUpload', () => {
     fireEvent.drop(dropzone, { dataTransfer: { files: [file] } });
 
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith(
-        expect.objectContaining({ variant: 'destructive' })
-      );
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'destructive' }));
     });
     expect(screen.queryByText('bad.exe')).not.toBeInTheDocument();
   });
@@ -396,9 +412,7 @@ describe('DocumentUpload', () => {
     fireEvent.drop(dropzone, { dataTransfer: { files: [file] } });
 
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith(
-        expect.objectContaining({ variant: 'destructive' })
-      );
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'destructive' }));
     });
   });
 
@@ -508,9 +522,7 @@ describe('DocumentUpload', () => {
     });
 
     await waitFor(() => {
-      expect(mockToast).toHaveBeenCalledWith(
-        expect.objectContaining({ variant: 'destructive' })
-      );
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'destructive' }));
     });
   });
 

@@ -9,7 +9,7 @@
 
 import { useMemo } from 'react';
 import type { ColumnDef } from '@tanstack/react-table';
-import { DataTable, TableRowActions, type BulkAction, Skeleton, cn } from '@intelliflow/ui';
+import { DataTable, TableRowActions, type BulkAction, Skeleton, cn, toast } from '@intelliflow/ui';
 import { CASE_STATUSES, CASE_PRIORITIES } from '@intelliflow/domain';
 import { SearchFilterBar } from '@/components/shared';
 import {
@@ -241,8 +241,7 @@ export function CaseList({
           const c = row.original;
           const isClosed = c.status === 'CLOSED' || c.status === 'CANCELLED';
           const subtitle =
-            c.lastActivityText ||
-            (c.updatedAt ? `Updated ${timeAgo(c.updatedAt)}` : '');
+            c.lastActivityText || (c.updatedAt ? `Updated ${timeAgo(c.updatedAt)}` : '');
           return (
             <div className={cn('flex flex-col', isClosed && 'opacity-70')}>
               <span className="text-sm font-semibold text-foreground">{c.title}</span>
@@ -381,14 +380,18 @@ export function CaseList({
                 {
                   icon: 'content_copy',
                   label: 'Duplicate',
-                  onClick: () => {},
+                  onClick: () =>
+                    toast({
+                      title: 'Coming soon',
+                      description: 'Duplicate case is under development',
+                    }),
                 },
                 {
                   icon: 'history',
                   label: 'View History',
                   onClick: () => onRowClick(c),
                 },
-                { id: 'sep-1', icon: '', label: '', onClick: () => {}, separator: true },
+                { id: 'sep-1', icon: '', label: '', onClick: () => undefined, separator: true }, // Separator: onClick is intentionally a no-op
                 {
                   icon: 'delete',
                   label: 'Delete',
@@ -479,7 +482,7 @@ export function CaseList({
                   icon: 'person',
                   options: assigneeOptions,
                   value: '',
-                  onChange: () => {},
+                  onChange: () => {}, // Defensive fallback: assignee filter wired via onAssign prop
                   hideOnMobile: true,
                 },
               ]

@@ -9,9 +9,7 @@ vi.mock('@intelliflow/ui', async (importOriginal) => {
   return {
     ...actual,
     Select: ({ children, value, onValueChange }: any) => (
-      <SelectContext.Provider value={{ value, onValueChange }}>
-        {children}
-      </SelectContext.Provider>
+      <SelectContext.Provider value={{ value, onValueChange }}>{children}</SelectContext.Provider>
     ),
     SelectTrigger: ({ children, ...props }: any) => (
       <div role="combobox" aria-controls="select-listbox" aria-expanded={false} {...props}>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { Card } from '@intelliflow/ui';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
@@ -31,6 +31,7 @@ export interface ContactFormProps {
   onSubmit: (data: ContactFormData) => Promise<void>;
   onCancel: () => void;
   isSubmitting?: boolean;
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
@@ -96,14 +97,19 @@ export function ContactForm({
   onSubmit,
   onCancel,
   isSubmitting = false,
+  onDirtyChange,
 }: ContactFormProps) {
   const [currentStep, setCurrentStep] = useState<StepId>('personal');
-  const [formData, setFormData] = useState<ContactFormData>({
-    ...initialFormData,
-    ...contact,
-  });
+  const initialData = useMemo(() => ({ ...initialFormData, ...contact }), []);
+  const [formData, setFormData] = useState<ContactFormData>(initialData);
   const [errors, setErrors] = useState<Partial<Record<keyof ContactFormData, string>>>({});
   const errorSummaryRef = useRef<HTMLDivElement>(null);
+
+  // Report dirty state to parent
+  const initialSnapshot = useMemo(() => JSON.stringify(initialData), [initialData]);
+  React.useEffect(() => {
+    onDirtyChange?.(JSON.stringify(formData) !== initialSnapshot);
+  }, [formData, initialSnapshot, onDirtyChange]);
 
   const currentStepIndex = steps.findIndex((s) => s.id === currentStep);
 
@@ -120,7 +126,7 @@ export function ContactForm({
       if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
       if (!formData.email.trim()) {
         newErrors.email = 'Email is required';
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      } else if (!/^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(formData.email)) {
         newErrors.email = 'Please enter a valid email address';
       }
       if (formData.phone && !/^\+?[\d\s()-]+$/.test(formData.phone)) {
@@ -175,6 +181,9 @@ export function ContactForm({
   };
 
   const hasErrors = Object.keys(errors).length > 0;
+  const submitButtonIdleLabel = mode === 'create' ? 'Create Contact' : 'Save Changes';
+  const submitButtonSubmittingLabel = mode === 'create' ? 'Creating...' : 'Saving...';
+  const submitButtonLabel = isSubmitting ? submitButtonSubmittingLabel : submitButtonIdleLabel;
 
   return (
     <Card className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
@@ -198,6 +207,12 @@ export function ContactForm({
           {steps.map((step) => {
             const status = getStepStatus(step);
             const isClickable = status === 'completed' || status === 'current';
+            const stepCircleClass =
+              status === 'current'
+                ? 'bg-primary text-white'
+                : status === 'completed'
+                  ? 'bg-primary text-white hover:bg-blue-600'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-2 border-slate-200 dark:border-slate-700';
             return (
               <button
                 key={step.id}
@@ -208,13 +223,7 @@ export function ContactForm({
                 className={`flex flex-col items-center gap-2 ${isClickable ? 'cursor-pointer' : 'cursor-not-allowed'}`}
               >
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all ${
-                    status === 'current'
-                      ? 'bg-primary text-white'
-                      : status === 'completed'
-                        ? 'bg-primary text-white hover:bg-blue-600'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-2 border-slate-200 dark:border-slate-700'
-                  }`}
+                  className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all ${stepCircleClass}`}
                 >
                   {status === 'completed' ? (
                     <span className="material-symbols-outlined text-lg" aria-hidden="true">
@@ -385,9 +394,9 @@ export function ContactForm({
                   </legend>
                   <div role="radiogroup" aria-label="Contact status" className="space-y-2">
                     {statusOptions.map((opt) => (
+                      // eslint-disable-next-line jsx-a11y/label-has-associated-control -- label wraps radio input
                       <label
                         key={opt.value}
-                        aria-label={opt.label}
                         className="flex items-start gap-3 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"
                       >
                         <input
@@ -464,11 +473,7 @@ export function ContactForm({
                 aria-busy={isSubmitting}
                 className="flex items-center gap-2 bg-primary hover:bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting
-                  ? 'Creating...'
-                  : mode === 'create'
-                    ? 'Create Contact'
-                    : 'Save Changes'}
+                {submitButtonLabel}
                 {!isSubmitting && (
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     check

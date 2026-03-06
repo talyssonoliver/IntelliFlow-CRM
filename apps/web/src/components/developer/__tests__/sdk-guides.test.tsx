@@ -41,7 +41,10 @@ describe('SdkGuides', () => {
     render(<SdkGuides />);
 
     await user.click(screen.getByRole('tab', { name: 'Installation' }));
-    expect(screen.getByRole('tab', { name: 'Installation' })).toHaveAttribute('data-state', 'active');
+    expect(screen.getByRole('tab', { name: 'Installation' })).toHaveAttribute(
+      'data-state',
+      'active'
+    );
 
     await user.click(screen.getByRole('tab', { name: 'Quickstart' }));
     expect(screen.getByRole('tab', { name: 'Quickstart' })).toHaveAttribute('data-state', 'active');

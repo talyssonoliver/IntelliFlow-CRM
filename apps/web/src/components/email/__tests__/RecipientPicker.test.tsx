@@ -25,8 +25,18 @@ describe('RecipientPicker', () => {
     mocks.contactList.mockReturnValue({
       data: {
         contacts: [
-          createMockContact({ id: 'c1', firstName: 'Alice', lastName: 'Johnson', email: 'alice@test.com' }),
-          createMockContact({ id: 'c2', firstName: 'Bob', lastName: 'Smith', email: 'bob@test.com' }),
+          createMockContact({
+            id: 'c1',
+            firstName: 'Alice',
+            lastName: 'Johnson',
+            email: 'alice@test.com',
+          }),
+          createMockContact({
+            id: 'c2',
+            firstName: 'Bob',
+            lastName: 'Smith',
+            email: 'bob@test.com',
+          }),
         ],
         total: 2,
         page: 1,
@@ -104,10 +114,7 @@ describe('RecipientPicker', () => {
   it('removes last chip on Backspace when input empty', async () => {
     const user = userEvent.setup();
     render(
-      <RecipientPicker
-        {...defaultProps}
-        value={[{ name: 'Alice', email: 'alice@test.com' }]}
-      />
+      <RecipientPicker {...defaultProps} value={[{ name: 'Alice', email: 'alice@test.com' }]} />
     );
     const input = screen.getByPlaceholderText(/add recipient/i);
     input.focus();

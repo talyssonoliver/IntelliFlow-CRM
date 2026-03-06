@@ -1,8 +1,8 @@
 /**
  * GoalSettingsModal Tests
  *
- * Tests for the goal settings modal dialog:
- * - Modal rendering and accessibility
+ * Tests for the goal settings side panel (Sheet):
+ * - Panel rendering and accessibility
  * - Goal type selection via RadioGroup
  * - Target value input
  * - Custom unit field visibility
@@ -54,23 +54,41 @@ vi.mock('@/lib/trpc', () => ({
   },
 }));
 
-// Mock @intelliflow/ui to provide the components
+// Mock @intelliflow/ui — Sheet-based components matching PinnedItemsSheet pattern
 vi.mock('@intelliflow/ui', async () => {
   const React = await import('react');
   return {
-    Dialog: ({ children, open }: any) =>
-      open ? React.createElement('div', { role: 'dialog', 'data-testid': 'goal-dialog' }, children) : null,
-    DialogContent: ({ children, onKeyDown }: any) => React.createElement('div', { onKeyDown }, children),
-    DialogHeader: ({ children }: any) => React.createElement('div', null, children),
-    DialogTitle: ({ children }: any) => React.createElement('h2', null, children),
-    DialogFooter: ({ children }: any) => React.createElement('div', null, children),
-    RadioGroup: ({ children, onValueChange: _onValueChange, defaultValue: _defaultValue, value: _value }: any) =>
-      React.createElement('div', { role: 'radiogroup', 'data-testid': 'goal-type-selector' }, children),
+    Sheet: ({ children, open }: any) =>
+      open
+        ? React.createElement('div', { role: 'dialog', 'data-testid': 'goal-sheet' }, children)
+        : null,
+    SheetContent: ({ children, className: _className }: any) =>
+      React.createElement('div', null, children),
+    SheetTitle: ({ children, className: _className }: any) =>
+      React.createElement('h2', null, children),
+    SheetDescription: ({ children, className: _className }: any) =>
+      React.createElement('p', null, children),
+    RadioGroup: ({
+      children,
+      onValueChange: _onValueChange,
+      defaultValue: _defaultValue,
+      value: _value,
+    }: any) =>
+      React.createElement(
+        'div',
+        { role: 'radiogroup', 'data-testid': 'goal-type-selector' },
+        children
+      ),
     RadioGroupItem: ({ value, id }: any) =>
-      React.createElement('input', { type: 'radio', value, id, name: 'goal-type', 'data-testid': `radio-${value}` }),
-    Input: (props: any) => React.createElement('input', { ...props, 'data-testid': props['data-testid'] || 'input' }),
-    Button: ({ children, onClick, disabled, variant }: any) =>
-      React.createElement('button', { onClick, disabled, 'data-testid': `btn-${variant || 'default'}` }, children),
+      React.createElement('input', {
+        type: 'radio',
+        value,
+        id,
+        name: 'goal-type',
+        'data-testid': `radio-${value}`,
+      }),
+    Input: (props: any) =>
+      React.createElement('input', { ...props, 'data-testid': props['data-testid'] || 'input' }),
     Label: ({ children, htmlFor }: any) => React.createElement('label', { htmlFor }, children),
     toast: vi.fn(),
   };
@@ -104,7 +122,7 @@ describe('GoalSettingsModal', () => {
     expect(screen.getByRole('dialog')).toBeInTheDocument();
   });
 
-  it('has DialogTitle for accessibility', () => {
+  it('has SheetTitle for accessibility', () => {
     render(<GoalSettingsModal {...defaultProps} />);
     expect(screen.getByText(/goal settings/i)).toBeInTheDocument();
   });
@@ -150,7 +168,7 @@ describe('GoalSettingsModal', () => {
 
   it('save button calls updateDailyGoal mutation with correct input', () => {
     render(<GoalSettingsModal {...defaultProps} />);
-    fireEvent.click(screen.getByText(/save/i));
+    fireEvent.click(screen.getByText(/save changes/i));
     expect(mockUpdateMutate).toHaveBeenCalledWith(
       expect.objectContaining({
         type: 'revenue',
@@ -162,9 +180,8 @@ describe('GoalSettingsModal', () => {
   it('save button disabled when targetValue is empty or 0', () => {
     render(<GoalSettingsModal {...defaultProps} currentGoal={undefined} />);
     // When no current goal, targetValue defaults to empty/0
-    const saveBtn = screen.getByText(/save/i);
-    // The button should be disabled (or functionally inert)
-    expect(saveBtn).toBeInTheDocument();
+    const saveBtn = screen.getByText(/save changes/i);
+    expect(saveBtn).toBeDisabled();
   });
 
   it('pre-populates from current goal data', () => {
@@ -173,11 +190,11 @@ describe('GoalSettingsModal', () => {
     expect(input).toHaveValue(5000);
   });
 
-  it('Escape key closes the modal via onOpenChange', () => {
+  it('Sheet onOpenChange closes the panel (Escape handled by Sheet)', () => {
     const onOpenChange = vi.fn();
     render(<GoalSettingsModal {...defaultProps} onOpenChange={onOpenChange} />);
-    // Fire keyDown on a child element so it bubbles up to DialogContent's onKeyDown handler
-    fireEvent.keyDown(screen.getByText(/goal settings/i), { key: 'Escape' });
+    // Sheet handles Escape natively via onOpenChange prop — verify cancel still works
+    fireEvent.click(screen.getByText(/cancel/i));
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
@@ -206,10 +223,8 @@ describe('GoalSettingsModal', () => {
     );
     const customInput = screen.getByTestId('custom-unit-input');
     fireEvent.change(customInput, { target: { value: 'demos' } });
-    fireEvent.click(screen.getByText(/save/i));
-    expect(mockUpdateMutate).toHaveBeenCalledWith(
-      expect.objectContaining({ customUnit: 'demos' })
-    );
+    fireEvent.click(screen.getByText(/save changes/i));
+    expect(mockUpdateMutate).toHaveBeenCalledWith(expect.objectContaining({ customUnit: 'demos' }));
   });
 
   it('shows unit label for count-based types (calls/meetings/tasks)', () => {

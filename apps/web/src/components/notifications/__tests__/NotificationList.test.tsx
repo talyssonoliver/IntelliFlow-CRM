@@ -102,7 +102,7 @@ describe('NotificationList', () => {
       rootMargin = '';
       thresholds = [] as number[];
       takeRecords = vi.fn(() => [] as IntersectionObserverEntry[]);
-    } as unknown as typeof IntersectionObserver;
+    } as any as typeof IntersectionObserver; // test-only mock
   });
 
   it('shows skeleton placeholders when loading', () => {
@@ -246,9 +246,7 @@ describe('NotificationList', () => {
       priorityFilter: 'high',
       activeTab: 'unread' as const,
     };
-    render(
-      <NotificationList filters={filters} onMarkAsRead={vi.fn()} onDismiss={vi.fn()} />
-    );
+    render(<NotificationList filters={filters} onMarkAsRead={vi.fn()} onDismiss={vi.fn()} />);
     expect(useNotificationFeed).toHaveBeenCalledWith(filters);
   });
 });

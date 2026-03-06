@@ -44,7 +44,7 @@ function getInitial(name?: string, email?: string): string {
 
 function getPreview(email: EmailItemData): string {
   if (email.textBody) return email.textBody.slice(0, 80);
-  if (email.htmlBody) return email.htmlBody.replace(/<[^>]*>/g, '').slice(0, 80);
+  if (email.htmlBody) return email.htmlBody.replace(/<[^<>]*>/g, '').slice(0, 80);
   return '';
 }
 
@@ -92,15 +92,13 @@ export function EmailListItem({ email, isSelected, onSelect }: EmailListItemProp
           {email.subject}
         </div>
         <div className="flex items-center gap-1">
-          <span className="truncate text-xs text-muted-foreground">
-            {getPreview(email)}
-          </span>
-          {email.attachments.length > 0 && (
+          <span className="truncate text-xs text-muted-foreground">{getPreview(email)}</span>
+          {email.attachments.length > 0 ? (
             <Paperclip
               data-testid="attachment-icon"
               className="h-3 w-3 shrink-0 text-muted-foreground"
             />
-          )}
+          ) : null}
         </div>
       </div>
     </div>

@@ -243,25 +243,13 @@ describe('ACLManager', () => {
   // ─── Empty State ──────────────────────────────────────────────────────────
 
   it('renders empty state when ACL is empty and user is not admin', () => {
-    render(
-      <ACLManager
-        {...defaultProps}
-        currentACL={[]}
-        currentUserAccessLevel="VIEW"
-      />
-    );
+    render(<ACLManager {...defaultProps} currentACL={[]} currentUserAccessLevel="VIEW" />);
     expect(screen.getByTestId('acl-empty-state')).toBeInTheDocument();
     expect(screen.getByText(/no access entries/i)).toBeInTheDocument();
   });
 
   it('shows empty table message for admin with empty ACL', () => {
-    render(
-      <ACLManager
-        {...defaultProps}
-        currentACL={[]}
-        currentUserAccessLevel="ADMIN"
-      />
-    );
+    render(<ACLManager {...defaultProps} currentACL={[]} currentUserAccessLevel="ADMIN" />);
     expect(screen.getByText(/no access entries.*grant access/i)).toBeInTheDocument();
   });
 

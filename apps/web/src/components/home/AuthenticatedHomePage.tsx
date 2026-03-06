@@ -1,10 +1,30 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
-import { ActivityFeed } from '@/components/shared/activity-feed';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
+import { DraggablePinnedItem } from './DraggablePinnedItem';
+import {
+  ActivityFeed,
+  ActivityFeedTypeFilter,
+  type ActivityFeedTypeFilterValue,
+} from '@/components/shared/activity-feed';
 import type { ActivityFeedType } from '@intelliflow/domain';
 import type { PinnableEntityType } from '@intelliflow/validators';
 import { toast } from '@intelliflow/ui';
@@ -15,50 +35,15 @@ import {
   EditPinnedNavigationSheet,
   ALL_PINNED_NAV_GROUPS,
   loadPinnedGroups,
-  getPinnedIcon,
 } from './PinnedItemsSheet';
 import { GoalSettingsModal } from './GoalSettingsModal';
-
-// Activity feed type filter options — values match ActivityFeedType (IFC-069 unified feed, all 17 types)
-const FEED_FILTER_OPTIONS = [
-  { value: 'all', label: 'All Activity', icon: 'list' },
-  { value: 'CALL', label: 'Calls', icon: 'call_received' },
-  { value: 'EMAIL', label: 'Emails', icon: 'mail' },
-  { value: 'MEETING', label: 'Meetings', icon: 'event' },
-  { value: 'TASK', label: 'Tasks', icon: 'task_alt' },
-  { value: 'DEAL', label: 'Deals', icon: 'handshake' },
-  { value: 'NOTE', label: 'Notes', icon: 'sticky_note_2' },
-  { value: 'TICKET', label: 'Tickets', icon: 'confirmation_number' },
-  { value: 'CHAT', label: 'Chat', icon: 'chat' },
-  { value: 'DOCUMENT', label: 'Documents', icon: 'description' },
-  { value: 'STAGE_CHANGE', label: 'Stage Changes', icon: 'swap_horiz' },
-  { value: 'STATUS_CHANGE', label: 'Status Changes', icon: 'published_with_changes' },
-  { value: 'SCORE_UPDATE', label: 'Score Updates', icon: 'trending_up' },
-  { value: 'QUALIFICATION', label: 'Qualifications', icon: 'verified' },
-  { value: 'AGENT_ACTION', label: 'AI Actions', icon: 'smart_toy' },
-  { value: 'SLA_ALERT', label: 'SLA Alerts', icon: 'warning' },
-  { value: 'ASSIGNMENT', label: 'Assignments', icon: 'person_add' },
-  { value: 'SYSTEM', label: 'System', icon: 'settings' },
-] as const;
+import { InsightCard, type SerializedAIInsight } from '@/components/insights/InsightCard';
 
 // =============================================================================
 // Types (inferred from tRPC to handle date serialization)
 // =============================================================================
 
-// tRPC serializes Date as string over JSON, so we use serialized versions
-type SerializedAIInsight = {
-  id: string;
-  type: 'warning' | 'opportunity' | 'reminder' | 'achievement';
-  title: string;
-  description: string;
-  suggestedAction?: string | null;
-  entityType?: string | null;
-  entityId?: string | null;
-  actionUrl?: string | null;
-  priority: 'low' | 'medium' | 'high';
-  createdAt: string;
-};
-
+// SerializedAIInsight imported from @/components/insights/InsightCard
 
 type SerializedDailyGoal = {
   id: string;
@@ -72,7 +57,7 @@ type SerializedDailyGoal = {
   remainingFormatted: string;
 };
 
-type SerializedPinnedItem = {
+export type SerializedPinnedItem = {
   id: string;
   entityType:
     | 'lead'
@@ -90,14 +75,10 @@ type SerializedPinnedItem = {
   url: string;
   pinnedAt: string;
   position: number;
+  isAvailable?: boolean;
 };
 
-interface InsightIconStyle {
-  icon: string;
-  iconBg: string;
-  iconColor: string;
-}
-
+// InsightIconStyle and getInsightIcon imported from @/components/insights/insights-utils
 
 // =============================================================================
 // Helper Functions
@@ -107,43 +88,9 @@ function getGreetingIcon(hour: number): string {
   return hour < 18 ? 'wb_sunny' : 'nights_stay';
 }
 
-function getInsightIcon(type: string): InsightIconStyle {
-  const iconMap: Record<string, InsightIconStyle> = {
-    warning: {
-      icon: 'warning',
-      iconBg: 'bg-amber-100 dark:bg-amber-900/30',
-      iconColor: 'text-amber-600 dark:text-amber-400',
-    },
-    opportunity: {
-      icon: 'trending_up',
-      iconBg: 'bg-emerald-100 dark:bg-emerald-900/30',
-      iconColor: 'text-emerald-600 dark:text-emerald-400',
-    },
-    reminder: {
-      icon: 'schedule',
-      iconBg: 'bg-blue-100 dark:bg-blue-900/30',
-      iconColor: 'text-blue-600 dark:text-blue-400',
-    },
-    achievement: {
-      icon: 'emoji_events',
-      iconBg: 'bg-purple-100 dark:bg-purple-900/30',
-      iconColor: 'text-purple-600 dark:text-purple-400',
-    },
-  };
-  return (
-    iconMap[type] || {
-      icon: 'info',
-      iconBg: 'bg-slate-100 dark:bg-slate-800',
-      iconColor: 'text-slate-600 dark:text-slate-400',
-    }
-  );
-}
-
-
 function pluralize(count: number, singular: string): string {
   return count === 1 ? singular : `${singular}s`;
 }
-
 
 type StatsPeriod = 'today' | 'yesterday' | 'this_week' | 'this_month' | 'all_time';
 
@@ -230,7 +177,6 @@ function InsightsSkeleton() {
   );
 }
 
-
 function GoalSkeleton() {
   return (
     <div className="animate-pulse">
@@ -260,37 +206,7 @@ function PinnedSkeleton() {
 // Section Components
 // =============================================================================
 
-interface InsightCardProps {
-  insight: SerializedAIInsight;
-}
-
-function InsightCard({ insight }: Readonly<InsightCardProps>) {
-  const iconStyle = getInsightIcon(insight.type);
-  return (
-    <Link
-      href={insight.actionUrl || '#'}
-      className="flex gap-4 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer border border-transparent hover:border-slate-100 dark:hover:border-slate-700"
-    >
-      <div className={`shrink-0 ${iconStyle.iconBg} ${iconStyle.iconColor} rounded-lg p-2 h-fit`}>
-        <span className="material-symbols-outlined">{iconStyle.icon}</span>
-      </div>
-      <div>
-        <h4 className="font-semibold text-slate-800 dark:text-slate-200 text-sm">
-          {insight.title}
-        </h4>
-        <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-          {insight.description}
-          {insight.suggestedAction && (
-            <span className="font-medium text-[#137fec]">
-              {' '}
-              Suggested Action: {insight.suggestedAction}
-            </span>
-          )}
-        </p>
-      </div>
-    </Link>
-  );
-}
+// InsightCard imported from @/components/insights/InsightCard
 
 interface InsightsSectionProps {
   isLoading: boolean;
@@ -317,7 +233,6 @@ function InsightsSection({ isLoading, insights }: Readonly<InsightsSectionProps>
   );
 }
 
-
 interface GoalSectionProps {
   isLoading: boolean;
   goal: SerializedDailyGoal | undefined;
@@ -334,7 +249,13 @@ function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
   return (
     <>
       <div className="relative w-32 h-32 mx-auto mb-4">
-        <svg className="size-full -rotate-90" viewBox="0 0 36 36">
+        <svg
+          className="size-full -rotate-90"
+          viewBox="0 0 36 36"
+          role="img"
+          aria-labelledby="goal-progress-title"
+        >
+          <title id="goal-progress-title">{`${progress}% of ${goal?.label || 'goal'} target reached`}</title>
           <path
             className="text-slate-100 dark:text-slate-800"
             d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -353,7 +274,9 @@ function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
         </svg>
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
           <span className="text-2xl font-bold text-slate-900 dark:text-white">{progress}%</span>
-          <p className="text-[10px] text-slate-500 uppercase font-semibold">{goal?.label || 'Goal Reached'}</p>
+          <p className="text-[10px] text-slate-500 uppercase font-semibold">
+            {goal?.label || 'Goal Reached'}
+          </p>
         </div>
       </div>
       <p className="text-sm text-center text-slate-600 dark:text-slate-400">
@@ -364,36 +287,43 @@ function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
   );
 }
 
-function PinnedItemCard({ item }: Readonly<{ item: SerializedPinnedItem }>) {
-  const customIcon = item.icon;
-  const iconStyle = customIcon
-    ? { icon: customIcon, iconBg: 'bg-slate-100 dark:bg-slate-800', iconColor: 'text-slate-600' }
-    : getPinnedIcon(item.entityType);
-
-  return (
-    <Link
-      href={item.url}
-      className="flex items-center gap-3 p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors group"
-    >
-      <div
-        className={`size-8 rounded ${iconStyle.iconBg} ${iconStyle.iconColor} flex items-center justify-center`}
-      >
-        <span className="material-symbols-outlined text-lg">{iconStyle.icon}</span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate group-hover:text-[#137fec]">
-          {item.title}
-        </p>
-        {item.subtitle && <p className="text-xs text-slate-400">{item.subtitle}</p>}
-      </div>
-    </Link>
-  );
-}
-
 function PinnedSection({
   isLoading,
   items,
-}: Readonly<{ isLoading: boolean; items: SerializedPinnedItem[] | undefined }>) {
+  onReorder,
+  onUnpin,
+}: Readonly<{
+  isLoading: boolean;
+  items: SerializedPinnedItem[] | undefined;
+  onReorder: (reorderedItems: SerializedPinnedItem[]) => void;
+  onUnpin?: (entityType: string, entityId: string) => void;
+}>) {
+  const [orderedItems, setOrderedItems] = useState<SerializedPinnedItem[]>(items ?? []);
+
+  useEffect(() => {
+    setOrderedItems(items ?? []);
+  }, [items]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
+  const sortableIds = orderedItems.map((item) => `${item.entityType}-${item.entityId}`);
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = sortableIds.indexOf(String(active.id));
+    const newIndex = sortableIds.indexOf(String(over.id));
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const newItems = arrayMove(orderedItems, oldIndex, newIndex);
+    setOrderedItems(newItems);
+    onReorder(newItems);
+  }
+
   if (isLoading) {
     return <PinnedSkeleton />;
   }
@@ -405,11 +335,17 @@ function PinnedSection({
   }
 
   return (
-    <>
-      {items.map((item) => (
-        <PinnedItemCard key={item.id} item={item} />
-      ))}
-    </>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <SortableContext items={sortableIds} strategy={verticalListSortingStrategy}>
+        {orderedItems.map((item) => (
+          <DraggablePinnedItem
+            key={`${item.entityType}-${item.entityId}`}
+            item={item}
+            onUnpin={onUnpin}
+          />
+        ))}
+      </SortableContext>
+    </DndContext>
   );
 }
 
@@ -423,8 +359,7 @@ export function AuthenticatedHomePage() {
   const greetingIcon = getGreetingIcon(hour);
 
   // Local state
-  const [feedFilter, setFeedFilter] = useState<string>('all');
-  const [showFeedFilterMenu, setShowFeedFilterMenu] = useState(false);
+  const [feedFilter, setFeedFilter] = useState<ActivityFeedTypeFilterValue>('all');
   const [isQuickActionsSheetOpen, setIsQuickActionsSheetOpen] = useState(false);
   const [enabledActionIds, setEnabledActionIds] = useState<Set<string>>(() => loadEnabledActions());
   const [isPinnedNavSheetOpen, setIsPinnedNavSheetOpen] = useState(false);
@@ -464,12 +399,25 @@ export function AuthenticatedHomePage() {
     },
   });
 
-  // Callbacks
-  const handleFeedFilterChange = useCallback((filter: string) => {
-    setFeedFilter(filter);
-    setShowFeedFilterMenu(false);
-  }, []);
+  const reorderMutation = trpc.home.reorderPinnedItems.useMutation({
+    onSuccess: () => refetchPinned(),
+    onError: () => refetchPinned(),
+  });
 
+  const handleReorder = useCallback(
+    (items: SerializedPinnedItem[]) => {
+      reorderMutation.mutate({
+        items: items.map((item, i) => ({
+          entityType: item.entityType,
+          entityId: item.entityId,
+          position: i,
+        })),
+      });
+    },
+    [reorderMutation]
+  );
+
+  // Callbacks
   const handleUnpin = useCallback(
     (entityType: string, entityId: string) => {
       unpinMutation.mutate({ entityType: entityType as PinnableEntityType, entityId });
@@ -513,11 +461,15 @@ export function AuthenticatedHomePage() {
           {/* Welcome Banner */}
           <div className="bg-gradient-to-r from-[#137fec] to-indigo-600 rounded-xl p-8 text-white shadow-lg relative overflow-hidden mb-6">
             <div className="absolute top-0 right-0 p-8 opacity-10">
-              <span className="material-symbols-outlined text-9xl">waving_hand</span>
+              <span className="material-symbols-outlined text-9xl" aria-hidden="true">
+                waving_hand
+              </span>
             </div>
             <div className="relative z-10 max-w-2xl">
               <div className="flex items-center gap-2 mb-2 text-blue-100">
-                <span className="material-symbols-outlined text-sm">{greetingIcon}</span>
+                <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                  {greetingIcon}
+                </span>
                 <span className="text-sm font-medium uppercase tracking-wide">{greeting}</span>
               </div>
               <h1 className="text-3xl md:text-4xl font-bold mb-4">Welcome back, {firstName}!</h1>
@@ -531,15 +483,19 @@ export function AuthenticatedHomePage() {
                   href="/calendar"
                   className="bg-white text-[#137fec] hover:bg-blue-50 px-4 py-2 rounded-lg font-semibold text-sm transition-colors shadow-sm flex items-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-lg">calendar_today</span> View
-                  Schedule
+                  <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                    calendar_today
+                  </span>{' '}
+                  View Schedule
                 </Link>
                 <Link
                   href="/dashboard"
                   className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors backdrop-blur-sm flex items-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-lg">dashboard</span> Go to
-                  Dashboard
+                  <span className="material-symbols-outlined text-lg" aria-hidden="true">
+                    dashboard
+                  </span>{' '}
+                  Go to Dashboard
                 </Link>
               </div>
             </div>
@@ -551,15 +507,18 @@ export function AuthenticatedHomePage() {
             <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-white dark:bg-[#1e2936] rounded-xl border border-[#e2e8f0] dark:border-[#334155] shadow-sm">
               <div className="p-4 border-b border-[#e2e8f0] dark:border-[#334155] flex justify-between items-center bg-indigo-50/50 dark:bg-indigo-900/10 rounded-t-xl">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined text-indigo-600 dark:text-indigo-400">
+                  <span
+                    className="material-symbols-outlined text-indigo-600 dark:text-indigo-400"
+                    aria-hidden="true"
+                  >
                     auto_awesome
                   </span>
-                  <h3 className="font-bold text-slate-800 dark:text-slate-100">
+                  <h2 className="font-bold text-slate-800 dark:text-slate-100">
                     AI Daily Insights
-                  </h3>
+                  </h2>
                 </div>
                 <Link
-                  href="/agent-approvals"
+                  href="/insights"
                   className="text-xs font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 hover:underline"
                 >
                   View All
@@ -573,24 +532,29 @@ export function AuthenticatedHomePage() {
             {/* Quick Actions - colSpan: 1 */}
             <div className="col-span-1 bg-white dark:bg-[#1e2936] rounded-xl border border-[#e2e8f0] dark:border-[#334155] shadow-sm p-5">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-slate-900 dark:text-white">Quick Actions</h3>
+                <h2 className="font-bold text-slate-900 dark:text-white">Quick Actions</h2>
                 <button
                   onClick={() => setIsQuickActionsSheetOpen(true)}
                   className="text-slate-400 hover:text-[#137fec] transition-colors"
-                  title="Edit quick actions"
+                  aria-label="Edit quick actions"
                 >
-                  <span className="material-symbols-outlined text-sm">settings</span>
+                  <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                    settings
+                  </span>
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {visibleQuickActions.map((action) => {
-                  const cardClassName = "flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors gap-2 group";
+                  const cardClassName =
+                    'flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors gap-2 group';
                   const inner = (
                     <>
                       <div
                         className={`p-2 ${action.iconBg} ${action.iconColor} rounded-full group-hover:scale-110 transition-transform`}
                       >
-                        <span className="material-symbols-outlined">{action.icon}</span>
+                        <span className="material-symbols-outlined" aria-hidden="true">
+                          {action.icon}
+                        </span>
                       </div>
                       <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
                         {action.label}
@@ -604,7 +568,11 @@ export function AuthenticatedHomePage() {
                         key={action.id}
                         type="button"
                         className={cardClassName}
-                        onClick={() => toast({ description: `${action.label} is coming soon! This feature is under development.` })}
+                        onClick={() =>
+                          toast({
+                            description: `${action.label} is coming soon! This feature is under development.`,
+                          })
+                        }
                       >
                         {inner}
                       </button>
@@ -612,11 +580,7 @@ export function AuthenticatedHomePage() {
                   }
 
                   return (
-                    <Link
-                      key={action.id}
-                      href={action.href}
-                      className={cardClassName}
-                    >
+                    <Link key={action.id} href={action.href} className={cardClassName}>
                       {inner}
                     </Link>
                   );
@@ -632,75 +596,16 @@ export function AuthenticatedHomePage() {
             {/* Your Feed - colSpan: 3, rowSpan: 2 */}
             <div className="col-span-1 md:col-span-2 lg:col-span-3 row-span-2 bg-white dark:bg-[#1e2936] rounded-xl border border-[#e2e8f0] dark:border-[#334155] shadow-sm">
               <div className="p-5 border-b border-[#e2e8f0] dark:border-[#334155] flex justify-between items-center">
-                <h3 className="font-bold text-slate-900 dark:text-white">Your Feed</h3>
-                <div className="relative">
-                  <button
-                    onClick={() => setShowFeedFilterMenu(!showFeedFilterMenu)}
-                    className={`p-1 transition-colors rounded flex items-center gap-1 ${
-                      feedFilter !== 'all'
-                        ? 'text-[#137fec]'
-                        : 'text-slate-400 hover:text-[#137fec]'
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[20px]">filter_list</span>
-                    {feedFilter !== 'all' && (
-                      <span className="text-xs font-medium">
-                        {FEED_FILTER_OPTIONS.find((o) => o.value === feedFilter)?.label}
-                      </span>
-                    )}
-                  </button>
-                  {showFeedFilterMenu && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        role="button"
-                        tabIndex={0}
-                        aria-label="Close filter menu"
-                        onClick={() => setShowFeedFilterMenu(false)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            setShowFeedFilterMenu(false);
-                          }
-                        }}
-                      />
-                      <div className="absolute right-0 top-full mt-1 z-20 bg-white dark:bg-[#1e2936] border border-[#e2e8f0] dark:border-[#334155] rounded-lg shadow-lg py-1 min-w-[180px] max-h-[320px] overflow-y-auto">
-                        {FEED_FILTER_OPTIONS.map((option) => (
-                          <button
-                            key={option.value}
-                            onClick={() => handleFeedFilterChange(option.value)}
-                            className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors ${
-                              feedFilter === option.value
-                                ? 'text-[#137fec] font-medium'
-                                : 'text-slate-700 dark:text-slate-300'
-                            }`}
-                          >
-                            <span className="material-symbols-outlined text-lg">{option.icon}</span>
-                            {option.label}
-                            {feedFilter === option.value && (
-                              <span className="material-symbols-outlined text-sm ml-auto">
-                                check
-                              </span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                </div>
+                <h2 className="font-bold text-slate-900 dark:text-white">Your Feed</h2>
+                <ActivityFeedTypeFilter value={feedFilter} onChange={setFeedFilter} />
               </div>
-              <ActivityFeed
-                types={feedTypes}
-                limit={20}
-                enabled={queryEnabled}
-                height={480}
-              />
+              <ActivityFeed types={feedTypes} limit={20} enabled={queryEnabled} height={480} />
             </div>
 
             {/* Today's Focus - colSpan: 1 */}
             <div className="col-span-1 bg-white dark:bg-[#1e2936] rounded-xl border border-[#e2e8f0] dark:border-[#334155] shadow-sm p-5">
               <div className="flex justify-between items-center mb-4">
-                <h3 className="font-bold text-slate-900 dark:text-white">Today&apos;s Focus</h3>
+                <h2 className="font-bold text-slate-900 dark:text-white">Today&apos;s Focus</h2>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-medium bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-600 dark:text-slate-400">
                     {goalData?.goal.label || 'Sales'}
@@ -708,10 +613,12 @@ export function AuthenticatedHomePage() {
                   <button
                     onClick={() => setIsGoalSettingsOpen(true)}
                     className="text-slate-400 hover:text-[#137fec] transition-colors"
-                    title="Goal settings"
+                    aria-label="Goal settings"
                     data-testid="goal-settings-button"
                   >
-                    <span className="material-symbols-outlined text-sm">settings</span>
+                    <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                      settings
+                    </span>
                   </button>
                 </div>
               </div>
@@ -721,17 +628,24 @@ export function AuthenticatedHomePage() {
             {/* Pinned - colSpan: 1 */}
             <div className="col-span-1 bg-white dark:bg-[#1e2936] rounded-xl border border-[#e2e8f0] dark:border-[#334155] shadow-sm p-5">
               <div className="flex justify-between items-center mb-3">
-                <h3 className="font-bold text-slate-900 dark:text-white">Pinned</h3>
+                <h2 className="font-bold text-slate-900 dark:text-white">Pinned</h2>
                 <button
                   onClick={() => setIsPinnedNavSheetOpen(true)}
                   className="text-slate-400 hover:text-[#137fec] transition-colors"
-                  title="Edit pinned navigation"
+                  aria-label="Edit pinned navigation"
                 >
-                  <span className="material-symbols-outlined text-sm">edit</span>
+                  <span className="material-symbols-outlined text-sm" aria-hidden="true">
+                    edit
+                  </span>
                 </button>
               </div>
               <div className="space-y-3">
-                <PinnedSection isLoading={pinnedLoading} items={filteredPinnedItems} />
+                <PinnedSection
+                  isLoading={pinnedLoading}
+                  items={filteredPinnedItems}
+                  onReorder={handleReorder}
+                  onUnpin={handleUnpin}
+                />
               </div>
             </div>
           </div>
@@ -745,7 +659,9 @@ export function AuthenticatedHomePage() {
             <div className="col-span-2 md:col-span-4 lg:col-span-1">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-8 h-8 rounded bg-[#137fec] flex items-center justify-center flex-shrink-0">
-                  <span className="material-symbols-outlined text-white text-xl">grid_view</span>
+                  <span className="material-symbols-outlined text-white text-xl" aria-hidden="true">
+                    grid_view
+                  </span>
                 </div>
                 <span className="text-lg font-bold text-slate-900 dark:text-white">
                   IntelliFlow CRM

@@ -3,7 +3,20 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Card, Skeleton, Badge } from '@intelliflow/ui';
+import {
+  Card,
+  Skeleton,
+  Badge,
+  toast,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/pricing/calculator';
 import { getAccountTier, TIER_CONFIG, type AccountTier } from './AccountCard';
@@ -15,6 +28,7 @@ import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
 import { PinButton } from '@/components/home/PinButton';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
+import { ActivityFeed } from '@/components/shared/activity-feed';
 
 interface AccountDetailProps {
   accountId: string;
@@ -76,6 +90,7 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const isValidId = UUID_RE.test(accountId);
 
   const {
@@ -84,15 +99,26 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
     error,
   } = api.account.getById.useQuery({ id: accountId }, { enabled: isValidId && isAuthenticated });
 
-  const activityQuery = api.account.getActivity.useQuery(
-    { accountId, limit: 20 },
-    { enabled: activeTab === 'activity' && isAuthenticated }
-  );
-
   const oppsQuery = api.account.getOpportunities.useQuery(
     { accountId, limit: 100 },
     { enabled: activeTab === 'pipeline' && isAuthenticated }
   );
+
+  const utils = api.useUtils();
+  const deleteMutation = api.account.delete.useMutation({
+    onSuccess: () => {
+      utils.account.list.invalidate();
+      utils.account.stats.invalidate();
+      toast({
+        title: 'Account Deleted',
+        description: 'The account has been permanently deleted.',
+      });
+      router.push('/accounts');
+    },
+    onError: (error: { message: string }) => {
+      toast({ title: 'Delete failed', description: error.message, variant: 'destructive' });
+    },
+  });
 
   // Derived data
   const tier = useMemo(
@@ -232,11 +258,62 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
           url: `/accounts/${accountId}`,
         }}
         extraActions={[
-          { label: 'Merge Account', icon: 'merge', onClick: () => {} },
-          { label: 'Archive', icon: 'archive', onClick: () => {} },
-          { label: 'Delete', icon: 'delete', onClick: () => {}, destructive: true },
+          {
+            label: 'Merge Account',
+            icon: 'merge',
+            onClick: () =>
+              toast({
+                title: 'Merge not available',
+                description:
+                  'Account merging with field reconciliation is tracked under IFC-044. Not yet implemented.',
+              }),
+          },
+          {
+            label: 'Archive',
+            icon: 'archive',
+            onClick: () =>
+              toast({
+                title: 'Archive not available',
+                description:
+                  'Account archival is tracked under IFC-044. Not yet implemented on the backend.',
+              }),
+          },
+          {
+            label: 'Delete',
+            icon: 'delete',
+            onClick: () => {
+              setActionSheetOpen(false);
+              setDeleteConfirmOpen(true);
+            },
+            destructive: true,
+          },
         ]}
       />
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete account?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the account &ldquo;{account.name}&rdquo; along with all
+              associated data. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-red-600 hover:bg-red-700 text-white"
+              onClick={() => {
+                setDeleteConfirmOpen(false);
+                deleteMutation.mutate({ id: accountId });
+              }}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* ═══ Main 3-column grid ═══ */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -487,48 +564,21 @@ export function AccountDetail({ accountId, isAuthenticated }: AccountDetailProps
 
           {/* Activity Tab */}
           {activeTab === 'activity' && (
-            <Card className="p-6">
-              {activityQuery.isLoading && (
-                <div className="space-y-3">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-16 w-full" />
-                  ))}
-                </div>
-              )}
-              {activityQuery.error && (
-                <div className="text-center py-8 text-destructive">
-                  <p className="text-sm">Failed to load activity</p>
-                </div>
-              )}
-              {activityQuery.data?.activities && activityQuery.data.activities.length === 0 && (
-                <div className="text-center py-12">
-                  <span className="material-symbols-outlined text-4xl text-slate-300 dark:text-slate-600 mb-3">
-                    history
-                  </span>
-                  <p className="text-slate-500 dark:text-slate-400">No activity recorded yet</p>
-                </div>
-              )}
-              {activityQuery.data?.activities && activityQuery.data.activities.length > 0 && (
-                <div className="space-y-4">
-                  {activityQuery.data.activities.map((activity) => (
-                    <div key={activity.id} className="flex gap-3 items-start">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 shrink-0 mt-0.5">
-                        <span className="material-symbols-outlined !text-[18px]">
-                          {activity.entityType === 'CONTACT' ? 'person' : 'trending_up'}
-                        </span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-slate-900 dark:text-white">
-                          {activity.description}
-                        </p>
-                        <p className="text-xs text-slate-500 mt-0.5">
-                          {new Date(activity.createdAt).toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <Card className="p-0 overflow-hidden">
+              <div className="p-4 sm:p-5 border-b border-slate-200 dark:border-slate-800">
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
+                  Unified Activity
+                </h3>
+              </div>
+              <div className="p-4 sm:p-5">
+                <ActivityFeed
+                  entityType="ACCOUNT"
+                  entityId={accountId}
+                  limit={20}
+                  height={500}
+                  emptyMessage="No activity recorded yet"
+                />
+              </div>
             </Card>
           )}
 

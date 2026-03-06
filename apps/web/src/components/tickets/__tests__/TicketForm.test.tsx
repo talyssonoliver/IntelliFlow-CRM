@@ -224,9 +224,7 @@ describe('TicketForm', () => {
   });
 
   it('shows Save Changes button in edit mode', () => {
-    render(
-      <TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="edit" />
-    );
+    render(<TicketForm onSubmit={onSubmit} onCancel={onCancel} isSubmitting={false} mode="edit" />);
 
     expect(screen.getByRole('button', { name: /save changes/i })).toBeInTheDocument();
   });

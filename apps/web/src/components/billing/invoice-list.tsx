@@ -116,7 +116,9 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-        <span className="material-symbols-outlined text-3xl text-slate-400" aria-hidden="true">receipt_long</span>
+        <span className="material-symbols-outlined text-3xl text-slate-400" aria-hidden="true">
+          receipt_long
+        </span>
       </div>
       <h3 className="mb-2 text-lg font-semibold text-slate-900 dark:text-white">No invoices yet</h3>
       <p className="max-w-sm text-sm text-slate-500 dark:text-slate-400">
@@ -135,12 +137,11 @@ function InvoiceActions({ invoice }: { invoice: SerializedInvoice }) {
 
   const handleDownload = async () => {
     if (!pdfInfo.pdfUrl) return;
-
     const filename = generateInvoiceFilename(invoice.id, new Date(invoice.created));
     try {
       await downloadInvoicePdf(pdfInfo.pdfUrl, filename);
     } catch {
-      // Fallback handled in downloadInvoicePdf
+      openInvoicePdf(pdfInfo.pdfUrl);
     }
   };
 
@@ -152,7 +153,11 @@ function InvoiceActions({ invoice }: { invoice: SerializedInvoice }) {
   };
 
   if (!pdfInfo.canView) {
-    return <span className="text-xs text-slate-400 dark:text-slate-500" aria-label="PDF not available">Not available</span>;
+    return (
+      <span className="text-xs text-slate-400 dark:text-slate-500" aria-label="PDF not available">
+        Not available
+      </span>
+    );
   }
 
   return (
@@ -166,7 +171,9 @@ function InvoiceActions({ invoice }: { invoice: SerializedInvoice }) {
           title="Download PDF"
           aria-label={`Download invoice ${invoice.id}`}
         >
-          <span className="material-symbols-outlined text-lg" aria-hidden="true">download</span>
+          <span className="material-symbols-outlined text-lg" aria-hidden="true">
+            download
+          </span>
         </Button>
       )}
       <Button
@@ -177,7 +184,9 @@ function InvoiceActions({ invoice }: { invoice: SerializedInvoice }) {
         title="View invoice"
         aria-label={`View invoice ${invoice.id}`}
       >
-        <span className="material-symbols-outlined text-lg" aria-hidden="true">open_in_new</span>
+        <span className="material-symbols-outlined text-lg" aria-hidden="true">
+          open_in_new
+        </span>
       </Button>
     </div>
   );
@@ -199,7 +208,10 @@ function InvoiceRow({ invoice }: { invoice: SerializedInvoice }) {
         {formatBillingDate(invoice.created)}
       </TableCell>
       <TableCell className="text-slate-600 dark:text-slate-400">
-        <Link href={`/billing/invoices/${invoice.id}`} className="font-mono text-xs text-primary hover:underline">
+        <Link
+          href={`/billing/invoices/${invoice.id}`}
+          className="font-mono text-xs text-primary hover:underline"
+        >
           {displayId}
         </Link>
       </TableCell>
@@ -242,7 +254,9 @@ export function InvoiceList({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-xl text-primary" aria-hidden="true">receipt_long</span>
+            <span className="material-symbols-outlined text-xl text-primary" aria-hidden="true">
+              receipt_long
+            </span>
             Invoices
           </CardTitle>
           <CardDescription>Loading your invoice history...</CardDescription>
@@ -259,7 +273,9 @@ export function InvoiceList({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-xl text-primary" aria-hidden="true">receipt_long</span>
+            <span className="material-symbols-outlined text-xl text-primary" aria-hidden="true">
+              receipt_long
+            </span>
             Invoices
           </CardTitle>
         </CardHeader>
@@ -276,7 +292,9 @@ export function InvoiceList({
         <div className="flex items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-xl text-primary" aria-hidden="true">receipt_long</span>
+              <span className="material-symbols-outlined text-xl text-primary" aria-hidden="true">
+                receipt_long
+              </span>
               Invoices
             </CardTitle>
             <CardDescription>
@@ -316,14 +334,19 @@ export function InvoiceList({
             >
               {isLoadingMore ? (
                 <>
-                  <span className="material-symbols-outlined animate-spin mr-2 text-lg" aria-hidden="true">
+                  <span
+                    className="material-symbols-outlined animate-spin mr-2 text-lg"
+                    aria-hidden="true"
+                  >
                     progress_activity
                   </span>
                   Loading...
                 </>
               ) : (
                 <>
-                  <span className="material-symbols-outlined mr-2 text-lg" aria-hidden="true">expand_more</span>
+                  <span className="material-symbols-outlined mr-2 text-lg" aria-hidden="true">
+                    expand_more
+                  </span>
                   Load More
                 </>
               )}

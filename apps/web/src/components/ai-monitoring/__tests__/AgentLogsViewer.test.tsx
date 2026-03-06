@@ -21,7 +21,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/lib/active-agents/agent-utils', () => ({
-  getAgentTypeIcon: vi.fn((type: string) => type === 'qualification' ? 'verified' : 'smart_toy'),
+  getAgentTypeIcon: vi.fn((type: string) => (type === 'qualification' ? 'verified' : 'smart_toy')),
   getAgentTypeLabel: vi.fn((type: string) => {
     const labels: Record<string, string> = {
       qualification: 'Qualification',
@@ -31,13 +31,9 @@ vi.mock('@/lib/active-agents/agent-utils', () => ({
   }),
 }));
 
-const { useAgentLogs } = vi.mocked(
-  await import('@/lib/ai-monitoring/hooks') as any,
-);
+const { useAgentLogs } = vi.mocked((await import('@/lib/ai-monitoring/hooks')) as any);
 
-const { useSearchParams } = vi.mocked(
-  await import('next/navigation') as any,
-);
+const { useSearchParams } = vi.mocked((await import('next/navigation')) as any);
 
 import { AgentLogsViewer } from '../AgentLogsViewer';
 
@@ -52,8 +48,16 @@ const mockLogs = [
     agentType: 'qualification',
     messages: [
       { role: 'USER', content: 'Qualify lead for Acme Corp', timestamp: '2026-02-17T10:00:00Z' },
-      { role: 'ASSISTANT', content: 'Analyzing lead data for Acme Corp...', timestamp: '2026-02-17T10:00:01Z' },
-      { role: 'SYSTEM', content: 'You are a lead qualification agent. Follow the scoring rubric.', timestamp: '2026-02-17T09:59:59Z' },
+      {
+        role: 'ASSISTANT',
+        content: 'Analyzing lead data for Acme Corp...',
+        timestamp: '2026-02-17T10:00:01Z',
+      },
+      {
+        role: 'SYSTEM',
+        content: 'You are a lead qualification agent. Follow the scoring rubric.',
+        timestamp: '2026-02-17T09:59:59Z',
+      },
     ],
     toolCalls: [
       {
@@ -78,7 +82,11 @@ const mockLogs = [
     agentId: 'b2c3d4e5-f6a7-8901-bcde-f12345678901',
     agentType: 'email_followup',
     messages: [
-      { role: 'ASSISTANT', content: 'Drafting follow-up email...', timestamp: '2026-02-17T09:00:00Z' },
+      {
+        role: 'ASSISTANT',
+        content: 'Drafting follow-up email...',
+        timestamp: '2026-02-17T09:00:00Z',
+      },
     ],
     toolCalls: [],
     createdAt: '2026-02-17T09:00:00Z',
@@ -224,7 +232,9 @@ describe('Category 2: Data Display', () => {
   });
 
   it('displays agentId filter chip when URL param present (AC-008)', () => {
-    useSearchParams.mockReturnValue(new URLSearchParams('agentId=a1b2c3d4-e5f6-7890-abcd-ef1234567890'));
+    useSearchParams.mockReturnValue(
+      new URLSearchParams('agentId=a1b2c3d4-e5f6-7890-abcd-ef1234567890')
+    );
     render(<AgentLogsViewer agentId="a1b2c3d4-e5f6-7890-abcd-ef1234567890" />);
     // agentId appears in chip and in card agent info — verify at least one match
     const matches = screen.getAllByText(/a1b2c3d4/);
@@ -365,10 +375,14 @@ describe('Category 4: Edge Cases', () => {
   it('very long message content truncates with "Show more" toggle (AC-003)', () => {
     const longMessage = 'A'.repeat(600);
     setupMock({
-      logs: [{
-        ...mockLogs[0],
-        messages: [{ role: 'ASSISTANT', content: longMessage, timestamp: '2026-02-17T10:00:00Z' }],
-      }],
+      logs: [
+        {
+          ...mockLogs[0],
+          messages: [
+            { role: 'ASSISTANT', content: longMessage, timestamp: '2026-02-17T10:00:00Z' },
+          ],
+        },
+      ],
       total: 1,
     });
     render(<AgentLogsViewer />);
@@ -406,7 +420,9 @@ describe('Category 4: Edge Cases', () => {
     fireEvent.click(screen.getAllByTestId('expand-transcript')[0]);
     const transcript = screen.getByTestId('transcript-content');
     // Find and click the collapsed system message bubble
-    const systemBubble = within(transcript).getByText(/system message/i).closest('[data-testid="message-bubble"]');
+    const systemBubble = within(transcript)
+      .getByText(/system message/i)
+      .closest('[data-testid="message-bubble"]');
     expect(systemBubble).toBeTruthy();
     fireEvent.click(systemBubble!);
     // After clicking, the full system text should be visible
@@ -438,10 +454,12 @@ describe('Category 4: Edge Cases', () => {
   it('formatRelativeTime shows "Xd ago" for dates older than 24 hours', () => {
     const twoDaysAgo = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
     setupMock({
-      logs: [{
-        ...mockLogs[0],
-        createdAt: twoDaysAgo,
-      }],
+      logs: [
+        {
+          ...mockLogs[0],
+          createdAt: twoDaysAgo,
+        },
+      ],
       total: 1,
     });
     render(<AgentLogsViewer />);
@@ -451,11 +469,15 @@ describe('Category 4: Edge Cases', () => {
   it('"Show more" then "Show less" toggles long message content', () => {
     const longMessage = 'B'.repeat(600);
     setupMock({
-      logs: [{
-        ...mockLogs[0],
-        messages: [{ role: 'ASSISTANT', content: longMessage, timestamp: '2026-02-17T10:00:00Z' }],
-        toolCalls: [],
-      }],
+      logs: [
+        {
+          ...mockLogs[0],
+          messages: [
+            { role: 'ASSISTANT', content: longMessage, timestamp: '2026-02-17T10:00:00Z' },
+          ],
+          toolCalls: [],
+        },
+      ],
       total: 1,
     });
     render(<AgentLogsViewer />);

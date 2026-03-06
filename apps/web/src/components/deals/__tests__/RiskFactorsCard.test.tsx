@@ -50,18 +50,14 @@ describe('RiskFactorsCard', () => {
   });
 
   it('shows factor description text', () => {
-    const factors = [
-      createMockRiskFactor({ description: 'Current 40% vs 60% default' }),
-    ];
+    const factors = [createMockRiskFactor({ description: 'Current 40% vs 60% default' })];
     render(<RiskFactorsCard factors={factors} />);
 
     expect(screen.getByText('Current 40% vs 60% default')).toBeInTheDocument();
   });
 
   it('shows impact text', () => {
-    const factors = [
-      createMockRiskFactor({ impact: '20 points below expected' }),
-    ];
+    const factors = [createMockRiskFactor({ impact: '20 points below expected' })];
     render(<RiskFactorsCard factors={factors} />);
 
     expect(screen.getByText('20 points below expected')).toBeInTheDocument();

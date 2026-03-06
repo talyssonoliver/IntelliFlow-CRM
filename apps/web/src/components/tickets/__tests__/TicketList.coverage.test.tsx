@@ -37,16 +37,10 @@ vi.mock('@intelliflow/ui', async () => {
             </thead>
             <tbody>
               {data.map((item: any, rowIdx: number) => (
-                <tr
-                  key={item.id}
-                  data-testid={`row-${item.id}`}
-                  onClick={() => onRowClick?.(item)}
-                >
+                <tr key={item.id} data-testid={`row-${item.id}`} onClick={() => onRowClick?.(item)}>
                   {columns.map((col: any, colIdx: number) => (
                     <td key={colIdx} data-testid={`cell-${rowIdx}-${colIdx}`}>
-                      {col.cell
-                        ? col.cell({ row: { original: item } })
-                        : item[col.accessorKey]}
+                      {col.cell ? col.cell({ row: { original: item } }) : item[col.accessorKey]}
                     </td>
                   ))}
                 </tr>
@@ -79,7 +73,11 @@ vi.mock('@intelliflow/ui', async () => {
         {dropdownActions
           ?.filter((a: any) => !a.separator)
           .map((a: any, i: number) => (
-            <button key={i} data-testid={`dropdown-${a.label.toLowerCase().replace(/\s+/g, '-')}`} onClick={a.onClick}>
+            <button
+              key={i}
+              data-testid={`dropdown-${a.label.toLowerCase().replace(/\s+/g, '-')}`}
+              onClick={a.onClick}
+            >
               {a.label}
             </button>
           ))}
@@ -99,7 +97,11 @@ vi.mock('@intelliflow/ui', async () => {
         <div data-testid="status-select-dialog">
           <p>{title}</p>
           {options?.map((opt: any) => (
-            <button key={opt.value} data-testid={`opt-${opt.value}`} onClick={() => onConfirm(opt.value)}>
+            <button
+              key={opt.value}
+              data-testid={`opt-${opt.value}`}
+              onClick={() => onConfirm(opt.value)}
+            >
               {opt.label}
             </button>
           ))}
@@ -119,25 +121,42 @@ vi.mock('@/components/shared', () => ({
         onChange={(e) => onSearchChange(e.target.value)}
       />
       {filters?.map((f: any) => (
-        <select key={f.id} data-testid={`filter-${f.id}`} value={f.value} onChange={(e) => f.onChange(e.target.value)}>
+        <select
+          key={f.id}
+          data-testid={`filter-${f.id}`}
+          value={f.value}
+          onChange={(e) => f.onChange(e.target.value)}
+        >
           {f.options?.map((opt: any) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
           ))}
         </select>
       ))}
       {filterChips && (
         <div data-testid="filter-chips">
           {filterChips.options?.map((chip: any) => (
-            <button key={chip.value} data-testid={`chip-${chip.value}`} onClick={() => filterChips.onChange(chip.value)}>
+            <button
+              key={chip.value}
+              data-testid={`chip-${chip.value}`}
+              onClick={() => filterChips.onChange(chip.value)}
+            >
               {chip.label}
             </button>
           ))}
         </div>
       )}
       {sort && (
-        <select data-testid="sort" value={sort.value} onChange={(e) => sort.onChange(e.target.value)}>
+        <select
+          data-testid="sort"
+          value={sort.value}
+          onChange={(e) => sort.onChange(e.target.value)}
+        >
           {sort.options?.map((opt: any) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
           ))}
         </select>
       )}
@@ -147,7 +166,12 @@ vi.mock('@/components/shared', () => ({
 
 vi.mock('../SLAIndicator', () => ({
   SLAIndicator: ({ slaStatus, slaTimeRemaining, ticketStatus, size, showTimer }: any) => (
-    <div data-testid="sla-indicator" data-sla-status={slaStatus} data-size={size} data-show-timer={showTimer}>
+    <div
+      data-testid="sla-indicator"
+      data-sla-status={slaStatus}
+      data-size={size}
+      data-show-timer={showTimer}
+    >
       {slaStatus} {slaTimeRemaining}m {ticketStatus}
     </div>
   ),
@@ -455,10 +479,7 @@ describe('TicketList Coverage', () => {
       fireEvent.click(screen.getByTestId('confirm-resolve'));
 
       await vi.waitFor(() => {
-        expect(defaultProps.onBulkAction).toHaveBeenCalledWith(
-          'resolve',
-          expect.any(Array)
-        );
+        expect(defaultProps.onBulkAction).toHaveBeenCalledWith('resolve', expect.any(Array));
       });
     });
 
@@ -469,10 +490,7 @@ describe('TicketList Coverage', () => {
       fireEvent.click(screen.getByTestId('confirm-escalate'));
 
       await vi.waitFor(() => {
-        expect(defaultProps.onBulkAction).toHaveBeenCalledWith(
-          'escalate',
-          expect.any(Array)
-        );
+        expect(defaultProps.onBulkAction).toHaveBeenCalledWith('escalate', expect.any(Array));
       });
     });
 
@@ -483,10 +501,7 @@ describe('TicketList Coverage', () => {
       fireEvent.click(screen.getByTestId('confirm-close'));
 
       await vi.waitFor(() => {
-        expect(defaultProps.onBulkAction).toHaveBeenCalledWith(
-          'close',
-          expect.any(Array)
-        );
+        expect(defaultProps.onBulkAction).toHaveBeenCalledWith('close', expect.any(Array));
       });
     });
 
@@ -499,11 +514,9 @@ describe('TicketList Coverage', () => {
       fireEvent.click(option);
 
       await vi.waitFor(() => {
-        expect(defaultProps.onBulkAction).toHaveBeenCalledWith(
-          'assign',
-          expect.any(Array),
-          { assigneeId: 'sarah-jenkins' }
-        );
+        expect(defaultProps.onBulkAction).toHaveBeenCalledWith('assign', expect.any(Array), {
+          assigneeId: 'sarah-jenkins',
+        });
       });
     });
 
@@ -516,11 +529,9 @@ describe('TicketList Coverage', () => {
       fireEvent.click(option);
 
       await vi.waitFor(() => {
-        expect(defaultProps.onBulkAction).toHaveBeenCalledWith(
-          'updateStatus',
-          expect.any(Array),
-          { status: 'OPEN' }
-        );
+        expect(defaultProps.onBulkAction).toHaveBeenCalledWith('updateStatus', expect.any(Array), {
+          status: 'OPEN',
+        });
       });
     });
   });

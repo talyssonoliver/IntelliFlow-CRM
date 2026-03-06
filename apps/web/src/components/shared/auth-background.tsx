@@ -85,4 +85,3 @@ export function AuthBackground({ children, className }: AuthBackgroundProps) {
     </main>
   );
 }
-

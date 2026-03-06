@@ -1,4 +1,5 @@
 import type { SidebarConfig } from '../sidebar-types';
+import { CalendarTogglesSection } from '../CalendarTogglesSection';
 
 export const appointmentsSidebarConfig: SidebarConfig = {
   moduleId: 'calendar',
@@ -6,12 +7,13 @@ export const appointmentsSidebarConfig: SidebarConfig = {
   moduleIcon: 'calendar_month',
   settingsHref: '/settings/appointments',
   showSettings: false,
+  afterContent: CalendarTogglesSection,
   sections: [
     {
       id: 'views',
-      title: 'Appointment Views',
+      title: 'Calendar Views',
       items: [
-        { id: 'all', label: 'All Appointments', icon: 'calendar_month', href: '/calendar' },
+        { id: 'all', label: 'All Events', icon: 'calendar_month', href: '/calendar' },
         { id: 'upcoming', label: 'Upcoming', icon: 'schedule', href: '/calendar?view=upcoming' },
         { id: 'today', label: 'Today', icon: 'today', href: '/calendar?view=today' },
         {

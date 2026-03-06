@@ -159,7 +159,9 @@ describe('getMimeTypeIcon', () => {
   });
 
   it('returns "table_chart" for spreadsheets', () => {
-    expect(getMimeTypeIcon('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')).toBe('table_chart');
+    expect(
+      getMimeTypeIcon('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    ).toBe('table_chart');
   });
 
   it('returns "slideshow" for presentations', () => {
@@ -167,7 +169,9 @@ describe('getMimeTypeIcon', () => {
   });
 
   it('returns "article" for word documents', () => {
-    expect(getMimeTypeIcon('application/vnd.openxmlformats-officedocument.wordprocessingml.document')).toBe('article');
+    expect(
+      getMimeTypeIcon('application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    ).toBe('article');
   });
 
   it('returns "text_snippet" for text files', () => {
@@ -198,7 +202,9 @@ describe('isPreviewableType', () => {
   });
 
   it('returns false for DOCX', () => {
-    expect(isPreviewableType('application/vnd.openxmlformats-officedocument.wordprocessingml.document')).toBe(false);
+    expect(
+      isPreviewableType('application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+    ).toBe(false);
   });
 
   it('returns false for unknown types', () => {

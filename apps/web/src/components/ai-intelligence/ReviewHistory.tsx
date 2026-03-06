@@ -14,14 +14,7 @@
  */
 
 import { useState, useCallback, useId, useMemo } from 'react';
-import {
-  Card,
-  CardContent,
-  Badge,
-  Button,
-  Skeleton,
-  cn,
-} from '@intelliflow/ui';
+import { Card, CardContent, Badge, Button, Skeleton, cn } from '@intelliflow/ui';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useReviewHistory } from '@/lib/ai-review/hooks';
 import { ReviewCard } from '@/components/ai-review/ReviewCard';
@@ -79,7 +72,9 @@ function groupByDateBucket(reviews: ReviewResponse[]): DateGroup[] {
 
   for (const review of reviews) {
     const date = new Date(review.updatedAt);
-    const diffMs = startOfToday.getTime() - new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    const diffMs =
+      startOfToday.getTime() -
+      new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
     const diffDays = Math.floor(diffMs / 86400000);
 
     let label: string;
@@ -94,9 +89,10 @@ function groupByDateBucket(reviews: ReviewResponse[]): DateGroup[] {
   }
 
   // Return in defined order
-  return BUCKET_ORDER
-    .filter((label) => buckets.has(label))
-    .map((label) => ({ label, reviews: buckets.get(label)! }));
+  return BUCKET_ORDER.filter((label) => buckets.has(label)).map((label) => ({
+    label,
+    reviews: buckets.get(label)!,
+  }));
 }
 
 function formatTimeDiff(start: Date | string, end: Date | string): string {
@@ -224,7 +220,10 @@ function AuditTrailSummary({ review }: { review: ReviewResponse }) {
         Audit Trail Details
       </button>
       {isOpen && (
-        <dl id={trailId} className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs bg-muted/30 rounded-md p-3">
+        <dl
+          id={trailId}
+          className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs bg-muted/30 rounded-md p-3"
+        >
           {review.reviewerId && (
             <>
               <dt className="text-muted-foreground font-medium">Reviewer</dt>
@@ -259,9 +258,7 @@ function AuditTrailSummary({ review }: { review: ReviewResponse }) {
             </>
           )}
           <dt className="text-muted-foreground font-medium">Time to Decision</dt>
-          <dd className="text-foreground">
-            {formatTimeDiff(review.createdAt, review.updatedAt)}
-          </dd>
+          <dd className="text-foreground">{formatTimeDiff(review.createdAt, review.updatedAt)}</dd>
         </dl>
       )}
     </div>
@@ -274,15 +271,8 @@ function AuditTrailSummary({ review }: { review: ReviewResponse }) {
 
 export function ReviewHistory() {
   const { user } = useRequireAuth();
-  const {
-    reviews,
-    total,
-    hasMore,
-    stats,
-    isLoading,
-    isStatsLoading,
-    setFilters,
-  } = useReviewHistory();
+  const { reviews, total, hasMore, stats, isLoading, isStatsLoading, setFilters } =
+    useReviewHistory();
 
   // Local date range state (client-side filtering)
   const [afterDate, setAfterDate] = useState('');
@@ -462,7 +452,10 @@ export function ReviewHistory() {
       {/* Filters */}
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex-1 min-w-[140px]">
-          <label htmlFor="history-status-filter" className="text-xs font-medium text-muted-foreground mb-1 block">
+          <label
+            htmlFor="history-status-filter"
+            className="text-xs font-medium text-muted-foreground mb-1 block"
+          >
             Status
           </label>
           <select
@@ -480,7 +473,10 @@ export function ReviewHistory() {
           </select>
         </div>
         <div className="flex-1 min-w-[140px]">
-          <label htmlFor="history-type-filter" className="text-xs font-medium text-muted-foreground mb-1 block">
+          <label
+            htmlFor="history-type-filter"
+            className="text-xs font-medium text-muted-foreground mb-1 block"
+          >
             Output Type
           </label>
           <select
@@ -498,7 +494,10 @@ export function ReviewHistory() {
           </select>
         </div>
         <div className="flex-1 min-w-[140px]">
-          <label htmlFor="history-sort" className="text-xs font-medium text-muted-foreground mb-1 block">
+          <label
+            htmlFor="history-sort"
+            className="text-xs font-medium text-muted-foreground mb-1 block"
+          >
             Sort By
           </label>
           <select
@@ -520,7 +519,10 @@ export function ReviewHistory() {
       {/* Date Range */}
       <div className="flex flex-wrap items-end gap-3">
         <div>
-          <label htmlFor="history-from-date" className="text-xs font-medium text-muted-foreground mb-1 block">
+          <label
+            htmlFor="history-from-date"
+            className="text-xs font-medium text-muted-foreground mb-1 block"
+          >
             From
           </label>
           <input
@@ -533,7 +535,10 @@ export function ReviewHistory() {
           />
         </div>
         <div>
-          <label htmlFor="history-to-date" className="text-xs font-medium text-muted-foreground mb-1 block">
+          <label
+            htmlFor="history-to-date"
+            className="text-xs font-medium text-muted-foreground mb-1 block"
+          >
             To
           </label>
           <input
@@ -545,7 +550,12 @@ export function ReviewHistory() {
             className="h-9 rounded-md border border-input bg-background px-3 text-sm"
           />
         </div>
-        <Button variant="ghost" size="sm" onClick={handleClearFilters} aria-label="Clear all filters">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleClearFilters}
+          aria-label="Clear all filters"
+        >
           <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
             filter_list_off
           </span>
@@ -562,7 +572,10 @@ export function ReviewHistory() {
       {filteredReviews.length === 0 && !isLoading ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <span className="material-symbols-outlined text-4xl text-muted-foreground mb-3 block" aria-hidden="true">
+            <span
+              className="material-symbols-outlined text-4xl text-muted-foreground mb-3 block"
+              aria-hidden="true"
+            >
               history_toggle_off
             </span>
             <p className="text-lg font-medium text-foreground mb-1">No completed reviews found</p>

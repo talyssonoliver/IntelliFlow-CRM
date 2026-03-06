@@ -668,9 +668,30 @@ describe('InvoiceDetail', () => {
       const invoice: InvoiceDetailData = {
         ...baseInvoice,
         lineItems: [
-          { id: 'li_1', description: 'Professional Plan', quantity: 1, unitAmount: 5000, amount: 5000, currency: 'gbp' },
-          { id: 'li_2', description: 'API Add-on', quantity: 2, unitAmount: 1000, amount: 2000, currency: 'gbp' },
-          { id: 'li_3', description: 'Support Upgrade', quantity: 1, unitAmount: 900, amount: 900, currency: 'gbp' },
+          {
+            id: 'li_1',
+            description: 'Professional Plan',
+            quantity: 1,
+            unitAmount: 5000,
+            amount: 5000,
+            currency: 'gbp',
+          },
+          {
+            id: 'li_2',
+            description: 'API Add-on',
+            quantity: 2,
+            unitAmount: 1000,
+            amount: 2000,
+            currency: 'gbp',
+          },
+          {
+            id: 'li_3',
+            description: 'Support Upgrade',
+            quantity: 1,
+            unitAmount: 900,
+            amount: 900,
+            currency: 'gbp',
+          },
         ],
       };
 

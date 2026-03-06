@@ -137,12 +137,7 @@ describe('SocialLoginGrid', () => {
   });
 
   it('renders only Google and Microsoft when optional handlers omitted', () => {
-    render(
-      <SocialLoginGrid
-        onGoogleLogin={mockGoogle}
-        onMicrosoftLogin={mockMicrosoft}
-      />
-    );
+    render(<SocialLoginGrid onGoogleLogin={mockGoogle} onMicrosoftLogin={mockMicrosoft} />);
 
     expect(screen.getByText('Google')).toBeInTheDocument();
     expect(screen.getByText('Microsoft')).toBeInTheDocument();

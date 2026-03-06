@@ -140,7 +140,10 @@ export type { QuickActionDef };
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <label aria-label="Toggle" className="relative inline-flex items-center cursor-pointer">
+    <label
+      aria-label={`Toggle ${checked ? 'off' : 'on'}`}
+      className="relative inline-flex items-center cursor-pointer"
+    >
       <input
         type="checkbox"
         className="sr-only peer"

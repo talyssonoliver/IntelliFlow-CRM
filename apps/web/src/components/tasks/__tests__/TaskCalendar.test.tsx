@@ -1,12 +1,55 @@
 /**
  * TaskCalendar Component Tests (PG-136)
  *
- * Tests for month-view calendar with task chips and navigation.
+ * Tests for month-view calendar shell with Schedule-X inner component.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { TaskCalendar, type CalendarTask } from '../TaskCalendar';
+
+// Mock next/dynamic to render the inner component synchronously in tests
+vi.mock('next/dynamic', () => ({
+  __esModule: true,
+  default: (loader: () => Promise<{ default: React.ComponentType }>) => {
+    const MockInner = (props: Record<string, unknown>) => {
+      const tasks = props.tasks as CalendarTask[] | undefined;
+      return (
+        <div data-testid="schedule-x-task-inner">
+          {tasks?.map((task) => (
+            <button
+              key={task.id}
+              type="button"
+              data-testid="calendar-task-chip"
+              onClick={(e) => {
+                e.stopPropagation();
+                (props.onTaskClick as (id: string) => void)?.(task.id);
+              }}
+            >
+              {task.title}
+            </button>
+          ))}
+          <div
+            data-testid="mock-cell"
+            role="gridcell"
+            aria-label="test cell"
+            tabIndex={0}
+            onClick={() => (props.onCreateWithDate as (d: Date) => void)?.(new Date('2026-02-15'))}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                (props.onCreateWithDate as (d: Date) => void)?.(new Date('2026-02-15'));
+              }
+            }}
+          />
+        </div>
+      );
+    };
+    MockInner.displayName = 'MockTaskCalendarInner';
+    void loader;
+    return MockInner;
+  },
+}));
 
 describe('TaskCalendar', () => {
   const mockTasks: CalendarTask[] = [
@@ -34,7 +77,7 @@ describe('TaskCalendar', () => {
     expect(screen.getByRole('grid')).toBeInTheDocument();
   });
 
-  it('renders day name headers', () => {
+  it('renders calendar header with month label', () => {
     render(
       <TaskCalendar
         tasks={mockTasks}
@@ -43,13 +86,9 @@ describe('TaskCalendar', () => {
       />
     );
 
-    expect(screen.getByText('Mon')).toBeInTheDocument();
-    expect(screen.getByText('Tue')).toBeInTheDocument();
-    expect(screen.getByText('Wed')).toBeInTheDocument();
-    expect(screen.getByText('Thu')).toBeInTheDocument();
-    expect(screen.getByText('Fri')).toBeInTheDocument();
-    expect(screen.getByText('Sat')).toBeInTheDocument();
-    expect(screen.getByText('Sun')).toBeInTheDocument();
+    // Day name headers are rendered by Schedule-X inner component (mocked in tests)
+    // Shell renders the month label and navigation
+    expect(screen.getByRole('heading', { level: 2 })).toBeInTheDocument();
   });
 
   it('renders task chips', () => {
@@ -80,13 +119,13 @@ describe('TaskCalendar', () => {
     expect(onTaskClick).toHaveBeenCalled();
   });
 
-  it('calls onCreateWithDate when empty day is clicked', () => {
+  it('calls onCreateWithDate when empty cell is clicked', () => {
     render(
       <TaskCalendar tasks={[]} onTaskClick={onTaskClick} onCreateWithDate={onCreateWithDate} />
     );
 
-    const cells = screen.getAllByRole('gridcell');
-    fireEvent.click(cells[0]);
+    const cell = screen.getByTestId('mock-cell');
+    fireEvent.click(cell);
 
     expect(onCreateWithDate).toHaveBeenCalledWith(expect.any(Date));
   });
@@ -103,7 +142,6 @@ describe('TaskCalendar', () => {
     const prevBtn = screen.getByRole('button', { name: 'Previous month' });
     fireEvent.click(prevBtn);
 
-    // Should show a different month header now
     expect(prevBtn).toBeInTheDocument();
   });
 
@@ -134,38 +172,7 @@ describe('TaskCalendar', () => {
     expect(screen.getByText('Today')).toBeInTheDocument();
   });
 
-  it('shows overflow indicator when > 3 tasks on same day', () => {
-    const manyTasks: CalendarTask[] = [
-      { id: '1', title: 'Task A', dueDate: '2026-02-15T00:00:00.000Z', priority: 'HIGH' },
-      { id: '2', title: 'Task B', dueDate: '2026-02-15T00:00:00.000Z', priority: 'MEDIUM' },
-      { id: '3', title: 'Task C', dueDate: '2026-02-15T00:00:00.000Z', priority: 'LOW' },
-      { id: '4', title: 'Task D', dueDate: '2026-02-15T00:00:00.000Z', priority: 'URGENT' },
-    ];
-
-    render(
-      <TaskCalendar
-        tasks={manyTasks}
-        onTaskClick={onTaskClick}
-        onCreateWithDate={onCreateWithDate}
-      />
-    );
-
-    expect(screen.getByTestId('overflow-indicator')).toBeInTheDocument();
-    expect(screen.getByText('+1 more')).toBeInTheDocument();
-  });
-
-  it('supports keyboard navigation on cells', () => {
-    render(
-      <TaskCalendar tasks={[]} onTaskClick={onTaskClick} onCreateWithDate={onCreateWithDate} />
-    );
-
-    const cells = screen.getAllByRole('gridcell');
-    fireEvent.keyDown(cells[0], { key: 'Enter' });
-
-    expect(onCreateWithDate).toHaveBeenCalled();
-  });
-
-  it('renders accessible aria-labels on cells', () => {
+  it('renders inner component', () => {
     render(
       <TaskCalendar
         tasks={mockTasks}
@@ -174,10 +181,17 @@ describe('TaskCalendar', () => {
       />
     );
 
-    const cells = screen.getAllByRole('gridcell');
-    // All cells should have aria-labels
-    cells.forEach((cell) => {
-      expect(cell).toHaveAttribute('aria-label');
-    });
+    expect(screen.getByTestId('schedule-x-task-inner')).toBeInTheDocument();
+  });
+
+  it('supports keyboard navigation on mock cells', () => {
+    render(
+      <TaskCalendar tasks={[]} onTaskClick={onTaskClick} onCreateWithDate={onCreateWithDate} />
+    );
+
+    const cell = screen.getByTestId('mock-cell');
+    fireEvent.keyDown(cell, { key: 'Enter' });
+
+    expect(onCreateWithDate).toHaveBeenCalled();
   });
 });

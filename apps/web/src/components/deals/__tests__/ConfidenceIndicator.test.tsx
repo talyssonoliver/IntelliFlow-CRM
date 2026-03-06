@@ -52,12 +52,7 @@ describe('ConfidenceIndicator', () => {
   });
 
   it('shows last updated timestamp when provided', () => {
-    render(
-      <ConfidenceIndicator
-        confidence={0.75}
-        lastUpdatedAt="2026-02-22T14:30:00Z"
-      />
-    );
+    render(<ConfidenceIndicator confidence={0.75} lastUpdatedAt="2026-02-22T14:30:00Z" />);
 
     const timestamp = screen.getByTestId('last-updated');
     expect(timestamp).toHaveTextContent('Updated 30m ago');
@@ -72,9 +67,7 @@ describe('ConfidenceIndicator', () => {
   });
 
   it('renders small and medium sizes', () => {
-    const { rerender } = render(
-      <ConfidenceIndicator confidence={0.75} size="sm" />
-    );
+    const { rerender } = render(<ConfidenceIndicator confidence={0.75} size="sm" />);
     let indicator = screen.getByTestId('confidence-indicator');
     expect(indicator.className).toContain('gap-0.5');
 

@@ -47,7 +47,15 @@ const mockGetPaymentMethods = vi.fn<() => MockQueryReturn<typeof mockPaymentMeth
   isLoading: false,
   error: null,
 }));
-const mockListInvoices = vi.fn<() => MockQueryReturn<{ invoices: typeof mockInvoices; total: number; page: number; limit: number; hasMore: boolean }>>(() => ({
+const mockListInvoices = vi.fn<
+  () => MockQueryReturn<{
+    invoices: typeof mockInvoices;
+    total: number;
+    page: number;
+    limit: number;
+    hasMore: boolean;
+  }>
+>(() => ({
   data: { invoices: mockInvoices, total: 1, page: 1, limit: 5, hasMore: false },
   isLoading: false,
   error: null,

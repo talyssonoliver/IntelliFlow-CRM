@@ -23,10 +23,7 @@ import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/s
 import { useLeadScoringDashboard } from '@/lib/lead-scoring/hooks';
 import type { LeadScoringFilters } from '@/lib/lead-scoring/hooks';
 import type { ScoredLead } from '@/lib/lead-scoring/types';
-import {
-  formatModelVersion,
-  formatScoredAt,
-} from '@/lib/lead-scoring/lead-scoring-utils';
+import { formatModelVersion, formatScoredAt } from '@/lib/lead-scoring/lead-scoring-utils';
 
 const LeadScoringTrendChart = lazy(() => import('./LeadScoringTrendChart'));
 
@@ -34,10 +31,7 @@ const LeadScoringTrendChart = lazy(() => import('./LeadScoringTrendChart'));
 // Breadcrumb config
 // ============================================
 
-const BREADCRUMBS = [
-  { label: 'AI & Agents', href: '/agent-approvals' },
-  { label: 'Lead Scoring' },
-];
+const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'Lead Scoring' }];
 
 // ============================================
 // Tier styling helpers
@@ -165,9 +159,7 @@ function LeadCard({ lead }: { lead: ScoredLead }) {
             >
               {lead.leadName}
             </a>
-            {lead.company && (
-              <span className="text-xs text-slate-400">— {lead.company}</span>
-            )}
+            {lead.company && <span className="text-xs text-slate-400">— {lead.company}</span>}
             <span
               className={cn(
                 'px-2 py-0.5 text-[10px] font-bold rounded uppercase',
@@ -181,9 +173,7 @@ function LeadCard({ lead }: { lead: ScoredLead }) {
                 Needs Review
               </span>
             )}
-            <span className="text-xs text-slate-400">
-              {formatScoredAt(lead.scoredAt)}
-            </span>
+            <span className="text-xs text-slate-400">{formatScoredAt(lead.scoredAt)}</span>
           </div>
 
           {/* Factor breakdown — horizontal progress bars like sentiment mockup */}
@@ -198,7 +188,9 @@ function LeadCard({ lead }: { lead: ScoredLead }) {
                     <div className="w-20 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                       <div
                         className={cn('h-full rounded-full', getFactorBarColor(factor.impact))}
-                        style={{ width: `${Math.min(100, Math.max(5, Math.abs(factor.impact) * 5))}%` }}
+                        style={{
+                          width: `${Math.min(100, Math.max(5, Math.abs(factor.impact) * 5))}%`,
+                        }}
                       />
                     </div>
                   </div>
@@ -261,9 +253,7 @@ function ScoreDistributionChart({
         const height = Math.max(8, (tier.count / maxCount) * 100);
         return (
           <div key={tier.key} className="flex flex-col items-center gap-2 w-16">
-            <span className="text-lg font-bold text-slate-900 dark:text-white">
-              {tier.count}
-            </span>
+            <span className="text-lg font-bold text-slate-900 dark:text-white">{tier.count}</span>
             <div className="w-full h-20 flex items-end">
               <div
                 className={cn('w-full rounded-t-lg transition-all', tier.color)}
@@ -301,12 +291,9 @@ export function LeadScoringDashboard() {
   const { stats, scoredLeads, trends, distribution, isLoading, error, refetch } =
     useLeadScoringDashboard(filters);
 
-  const handleChipChange = useCallback(
-    (chipId: string) => {
-      setActiveChip(chipId);
-    },
-    []
-  );
+  const handleChipChange = useCallback((chipId: string) => {
+    setActiveChip(chipId);
+  }, []);
 
   const handleLoadMore = useCallback(() => {
     setPage((p) => p + 1);
@@ -326,9 +313,7 @@ export function LeadScoringDashboard() {
   // Client-side search
   if (filterState.values.search) {
     const searchLower = filterState.values.search.toLowerCase();
-    filteredLeads = filteredLeads.filter((l) =>
-      l.leadName.toLowerCase().includes(searchLower)
-    );
+    filteredLeads = filteredLeads.filter((l) => l.leadName.toLowerCase().includes(searchLower));
   }
 
   // Client-side sorting
@@ -427,8 +412,12 @@ export function LeadScoringDashboard() {
           <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">Scoring Trend</h3>
-                <p className="text-xs text-slate-500">Score averages and tier distribution over time</p>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  Scoring Trend
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Score averages and tier distribution over time
+                </p>
               </div>
               <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
                 {DATE_RANGES.map((dr) => (
@@ -456,7 +445,9 @@ export function LeadScoringDashboard() {
         {/* Right column: Confidence + Distribution */}
         <div className="flex flex-col gap-4">
           <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">Average Confidence</h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">
+              Average Confidence
+            </h3>
             <ConfidenceIndicator
               confidence={stats?.avgConfidence ?? 0}
               size="lg"
@@ -465,7 +456,9 @@ export function LeadScoringDashboard() {
             />
           </div>
           <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm flex-1">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">Score Distribution</h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">
+              Score Distribution
+            </h3>
             <ScoreDistributionChart distribution={distribution} total={stats?.total ?? 1} />
           </div>
         </div>

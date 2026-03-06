@@ -113,7 +113,10 @@ export function DocumentSearch({
       const updated = current.includes(classification)
         ? current.filter((c) => c !== classification)
         : [...current, classification];
-      onFilterChange({ ...activeFilters, classification: updated.length > 0 ? updated : undefined });
+      onFilterChange({
+        ...activeFilters,
+        classification: updated.length > 0 ? updated : undefined,
+      });
     },
     [activeFilters, onFilterChange]
   );
@@ -141,7 +144,7 @@ export function DocumentSearch({
     (activeFilters.status?.length ?? 0) > 0 ||
     (activeFilters.classification?.length ?? 0) > 0 ||
     (activeFilters.fileType?.length ?? 0) > 0 ||
-    (activeFilters.dateRange !== undefined);
+    activeFilters.dateRange !== undefined;
 
   // ─── Dropdown Renderer ────────────────────────────────────────────────────
 
@@ -235,9 +238,23 @@ export function DocumentSearch({
           )}
         </div>
 
-        {renderDropdown('status', 'Status', STATUS_OPTIONS, activeFilters.status, (v) => toggleStatusFilter(v as DocumentStatus))}
-        {renderDropdown('classification', 'Classification', CLASSIFICATION_OPTIONS, activeFilters.classification, (v) => toggleClassificationFilter(v as DocumentClassification))}
-        {renderDropdown('fileType', 'File Type', FILE_TYPE_OPTIONS, activeFilters.fileType, toggleFileTypeFilter)}
+        {renderDropdown('status', 'Status', STATUS_OPTIONS, activeFilters.status, (v) =>
+          toggleStatusFilter(v as DocumentStatus)
+        )}
+        {renderDropdown(
+          'classification',
+          'Classification',
+          CLASSIFICATION_OPTIONS,
+          activeFilters.classification,
+          (v) => toggleClassificationFilter(v as DocumentClassification)
+        )}
+        {renderDropdown(
+          'fileType',
+          'File Type',
+          FILE_TYPE_OPTIONS,
+          activeFilters.fileType,
+          toggleFileTypeFilter
+        )}
       </div>
 
       {/* Active Filter Chips + Result Count */}
@@ -245,11 +262,7 @@ export function DocumentSearch({
         {activeFilters.status?.map((status) => {
           const opt = STATUS_OPTIONS.find((o) => o.value === status);
           return (
-            <Badge
-              key={`status-${status}`}
-              variant="secondary"
-              className="flex items-center gap-1"
-            >
+            <Badge key={`status-${status}`} variant="secondary" className="flex items-center gap-1">
               {opt?.label ?? status}
               <button
                 onClick={() => toggleStatusFilter(status)}
@@ -265,11 +278,7 @@ export function DocumentSearch({
         {activeFilters.classification?.map((cls) => {
           const opt = CLASSIFICATION_OPTIONS.find((o) => o.value === cls);
           return (
-            <Badge
-              key={`cls-${cls}`}
-              variant="secondary"
-              className="flex items-center gap-1"
-            >
+            <Badge key={`cls-${cls}`} variant="secondary" className="flex items-center gap-1">
               {opt?.label ?? cls}
               <button
                 onClick={() => toggleClassificationFilter(cls)}
@@ -285,11 +294,7 @@ export function DocumentSearch({
         {activeFilters.fileType?.map((ft) => {
           const opt = FILE_TYPE_OPTIONS.find((o) => o.value === ft);
           return (
-            <Badge
-              key={`ft-${ft}`}
-              variant="secondary"
-              className="flex items-center gap-1"
-            >
+            <Badge key={`ft-${ft}`} variant="secondary" className="flex items-center gap-1">
               {opt?.label ?? ft}
               <button
                 onClick={() => toggleFileTypeFilter(ft)}
@@ -314,7 +319,9 @@ export function DocumentSearch({
 
         {resultCount !== undefined && (
           <span className="ml-auto text-sm text-slate-500" data-testid="result-count">
-            {resultCount === 0 ? 'No results' : `${resultCount} result${resultCount === 1 ? '' : 's'}`}
+            {resultCount === 0
+              ? 'No results'
+              : `${resultCount} result${resultCount === 1 ? '' : 's'}`}
           </span>
         )}
       </div>

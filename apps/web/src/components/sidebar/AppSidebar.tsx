@@ -54,7 +54,8 @@ export function AppSidebar({
       .map((section) => ({
         ...section,
         items: section.items.filter(
-          (item) => !item.roles || item.roles.length === 0 || (user?.role && item.roles.includes(user.role))
+          (item) =>
+            !item.roles || item.roles.length === 0 || (user?.role && item.roles.includes(user.role))
         ),
       }))
       .filter((section) => section.items.length > 0);
@@ -126,12 +127,12 @@ export function AppSidebar({
             {config.moduleIcon}
           </span>
         </div>
-        {isExpanded && (
+        {isExpanded ? (
           <div className="flex-1 min-w-0">
             <h2 className="text-sm font-bold text-foreground truncate">{config.moduleTitle}</h2>
           </div>
-        )}
-        {isExpanded && (
+        ) : null}
+        {isExpanded ? (
           <button
             onClick={togglePinned}
             className={cn(
@@ -143,11 +144,9 @@ export function AppSidebar({
             aria-label={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
             title={isPinned ? 'Unpin sidebar' : 'Pin sidebar'}
           >
-            <span className="material-symbols-outlined text-lg">
-              {isPinned ? 'push_pin' : 'push_pin'}
-            </span>
+            <span className="material-symbols-outlined text-lg">{'push_pin'}</span>
           </button>
-        )}
+        ) : null}
       </div>
 
       {/* Navigation Sections */}
@@ -173,6 +172,17 @@ export function AppSidebar({
             </React.Fragment>
           ))}
         </div>
+        {config.afterContent && (
+          <>
+            <div
+              className={cn(
+                'my-3',
+                isExpanded ? 'mx-3 border-t border-border' : 'mx-2 border-t border-border'
+              )}
+            />
+            <config.afterContent isExpanded={isExpanded} />
+          </>
+        )}
       </div>
 
       {/* Announcement Section - Marketing updates or app announcements */}
@@ -480,7 +490,8 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
       .map((section) => ({
         ...section,
         items: section.items.filter(
-          (item) => !item.roles || item.roles.length === 0 || (user?.role && item.roles.includes(user.role))
+          (item) =>
+            !item.roles || item.roles.length === 0 || (user?.role && item.roles.includes(user.role))
         ),
       }))
       .filter((section) => section.items.length > 0);
@@ -658,6 +669,12 @@ export function MobileSidebar({ config, announcement, onDismissAnnouncement }: M
               </React.Fragment>
             ))}
           </div>
+          {config.afterContent && (
+            <>
+              <div className="my-3 mx-3 border-t border-border" />
+              <config.afterContent isExpanded={true} />
+            </>
+          )}
         </div>
 
         {/* Announcement */}

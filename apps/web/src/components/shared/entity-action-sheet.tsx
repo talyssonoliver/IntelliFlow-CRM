@@ -63,9 +63,7 @@ export function EntityActionSheet({
             disabled={isLoading}
             className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
           >
-            <span className="material-symbols-outlined text-[20px]">
-              {isPinned ? 'push_pin' : 'push_pin'}
-            </span>
+            <span className="material-symbols-outlined text-[20px]">{'push_pin'}</span>{' '}
             {isPinned ? 'Unpin from Home' : 'Pin to Home'}
           </button>
 

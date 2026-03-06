@@ -288,6 +288,8 @@ export function TestRunnerModal({ isOpen, onClose, onComplete }: Readonly<TestRu
 
   const progressPercent =
     progress.testsRun > 0 ? Math.round((progress.testsPassed / progress.testsRun) * 100) : 0;
+  const notRunningTitle = isComplete ? 'Test Results' : 'Run Tests';
+  const modalTitle = isRunning ? 'Running Tests...' : notRunningTitle;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -302,9 +304,7 @@ export function TestRunnerModal({ isOpen, onClose, onComplete }: Readonly<TestRu
       <Card className="relative z-10 w-full max-w-2xl p-6 m-4 max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-foreground">
-            {isRunning ? 'Running Tests...' : isComplete ? 'Test Results' : 'Run Tests'}
-          </h2>
+          <h2 className="text-xl font-semibold text-foreground">{modalTitle}</h2>
           <button
             type="button"
             onClick={handleClose}
@@ -430,26 +430,22 @@ export function TestRunnerModal({ isOpen, onClose, onComplete }: Readonly<TestRu
               {logs.length === 0 ? (
                 <p className="text-muted-foreground">Waiting for test output...</p>
               ) : (
-                logs.map((log, i) => (
-                  <div
-                    key={i}
-                    className={`${
-                      log.type === 'pass'
-                        ? 'text-emerald-500'
-                        : log.type === 'fail'
-                          ? 'text-red-500'
-                          : log.type === 'skip'
-                            ? 'text-amber-500'
-                            : 'text-muted-foreground'
-                    }`}
-                  >
-                    {log.type === 'pass' && '  '}
-                    {log.type === 'fail' && '  '}
-                    {log.type === 'skip' && '  '}
-                    {log.type === 'info' && '  '}
-                    {log.text}
-                  </div>
-                ))
+                logs.map((log, i) => {
+                  const logColorClass = (() => {
+                    if (log.type === 'pass') return 'text-emerald-500';
+                    if (log.type === 'fail') return 'text-red-500';
+                    return log.type === 'skip' ? 'text-amber-500' : 'text-muted-foreground';
+                  })();
+                  return (
+                    <div key={i} className={logColorClass}>
+                      {log.type === 'pass' && '  '}
+                      {log.type === 'fail' && '  '}
+                      {log.type === 'skip' && '  '}
+                      {log.type === 'info' && '  '}
+                      {log.text}
+                    </div>
+                  );
+                })
               )}
               <div ref={logsEndRef} />
             </div>

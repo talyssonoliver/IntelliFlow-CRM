@@ -66,9 +66,7 @@ export function TemplateSelector({ onSelect, currentBody = '', className }: Temp
     (e: React.KeyboardEvent) => {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
-        setHighlightIndex((prev) =>
-          prev < filteredTemplates.length - 1 ? prev + 1 : prev
-        );
+        setHighlightIndex((prev) => (prev < filteredTemplates.length - 1 ? prev + 1 : prev));
       } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         setHighlightIndex((prev) => (prev > 0 ? prev - 1 : 0));
@@ -156,7 +154,7 @@ export function TemplateSelector({ onSelect, currentBody = '', className }: Temp
                     </span>
                   </div>
                   <div className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
-                    {template.body.replace(/<[^>]*>/g, '').slice(0, 60)}...
+                    {template.body.replace(/<[^<>]*>/g, '').slice(0, 60)}...
                   </div>
                   {/* Merge variables */}
                   {template.variables.length > 0 && (

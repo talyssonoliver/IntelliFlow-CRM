@@ -8,13 +8,20 @@ const { EmailList } = await import('../EmailList');
 
 describe('EmailList', () => {
   const emails = [
-    createMockEmail({ id: 'e1', subject: 'First', from: { address: 'a@b.com', name: 'Alice' }, isRead: true }),
+    createMockEmail({
+      id: 'e1',
+      subject: 'First',
+      from: { address: 'a@b.com', name: 'Alice' },
+      isRead: true,
+    }),
     createMockEmail({
       id: 'e2',
       subject: 'Second',
       from: { address: 'c@d.com', name: 'Bob' },
       isRead: false,
-      attachments: [{ filename: 'file.pdf', contentType: 'application/pdf', size: 1024, checksum: 'abc' }],
+      attachments: [
+        { filename: 'file.pdf', contentType: 'application/pdf', size: 1024, checksum: 'abc' },
+      ],
     }),
   ];
 
@@ -78,7 +85,9 @@ describe('EmailList', () => {
     render(<EmailList {...defaultProps} />);
     const unreadChip = screen.getByRole('checkbox', { name: /unread/i });
     await user.click(unreadChip);
-    expect(defaultProps.onFilterChange).toHaveBeenCalledWith(expect.objectContaining({ unread: true }));
+    expect(defaultProps.onFilterChange).toHaveBeenCalledWith(
+      expect.objectContaining({ unread: true })
+    );
   });
 
   it('calls onEmailSelect when email is clicked', async () => {

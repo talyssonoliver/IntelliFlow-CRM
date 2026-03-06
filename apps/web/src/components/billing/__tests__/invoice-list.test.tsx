@@ -592,21 +592,25 @@ describe('InvoiceList', () => {
       // Mock createElement AFTER render so it doesn't break React's DOM creation
       const mockClick = vi.fn();
       const originalCreateElement = document.createElement.bind(document);
-      const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tag: string) => {
-        if (tag === 'a') {
-          const mockLink = originalCreateElement('a');
-          mockLink.click = mockClick;
-          return mockLink;
-        }
-        return originalCreateElement(tag);
-      });
+      const createElementSpy = vi
+        .spyOn(document, 'createElement')
+        .mockImplementation((tag: string) => {
+          if (tag === 'a') {
+            const mockLink = originalCreateElement('a');
+            mockLink.click = mockClick;
+            return mockLink;
+          }
+          return originalCreateElement(tag);
+        });
 
       const downloadButton = screen.getByLabelText('Download invoice in_dl_test');
       fireEvent.click(downloadButton);
 
       // Wait for async download to complete
       await vi.waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('https://stripe.com/test-invoice.pdf');
+        expect(global.fetch).toHaveBeenCalledWith(
+          expect.stringContaining('/api/billing/pdf-proxy?url=')
+        );
       });
 
       await vi.waitFor(() => {

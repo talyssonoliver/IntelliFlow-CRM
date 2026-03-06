@@ -245,7 +245,7 @@ export function TaskDetail({
               <span className="inline-flex items-center gap-1">
                 <span className="material-symbols-outlined text-base" aria-hidden="true">
                   check_circle
-                </span>
+                </span>{' '}
                 Complete
               </span>
             </button>
@@ -260,7 +260,7 @@ export function TaskDetail({
             <span className="inline-flex items-center gap-1">
               <span className="material-symbols-outlined text-base" aria-hidden="true">
                 archive
-              </span>
+              </span>{' '}
               Archive
             </span>
           </button>

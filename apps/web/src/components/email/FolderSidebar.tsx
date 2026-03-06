@@ -1,15 +1,7 @@
 'use client';
 
 import { useCallback, useRef } from 'react';
-import {
-  Inbox,
-  Send,
-  FileText,
-  Archive,
-  AlertTriangle,
-  Trash2,
-  PenSquare,
-} from 'lucide-react';
+import { Inbox, Send, FileText, Archive, AlertTriangle, Trash2, PenSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const FOLDERS = [
@@ -44,17 +36,14 @@ export function FolderSidebar({
 }: FolderSidebarProps) {
   const folderRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent, index: number) => {
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        const direction = e.key === 'ArrowDown' ? 1 : -1;
-        const next = Math.max(0, Math.min(FOLDERS.length - 1, index + direction));
-        folderRefs.current[next]?.focus();
-      }
-    },
-    []
-  );
+  const handleKeyDown = useCallback((e: React.KeyboardEvent, index: number) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const direction = e.key === 'ArrowDown' ? 1 : -1;
+      const next = Math.max(0, Math.min(FOLDERS.length - 1, index + direction));
+      folderRefs.current[next]?.focus();
+    }
+  }, []);
 
   return (
     <nav
@@ -88,7 +77,9 @@ export function FolderSidebar({
           return (
             <button
               key={folder.id}
-              ref={(el) => { folderRefs.current[i] = el; }}
+              ref={(el) => {
+                folderRefs.current[i] = el;
+              }}
               type="button"
               aria-current={isActive ? 'page' : undefined}
               aria-label={folder.label}
@@ -125,10 +116,7 @@ export function FolderSidebar({
               type="button"
               className="flex w-full items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              <span
-                className="h-2.5 w-2.5 rounded-full"
-                style={{ backgroundColor: label.color }}
-              />
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: label.color }} />
               <span>{label.name}</span>
             </button>
           ))}

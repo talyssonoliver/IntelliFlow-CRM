@@ -41,6 +41,9 @@ export {
   casesSidebarConfig,
   appointmentsSidebarConfig,
   emailSidebarConfig,
+  helpCenterSidebarConfig,
+  insightsSidebarConfig,
+  supportTicketsSidebarConfig,
 } from './configs';
 
 // Icon reference and module colors

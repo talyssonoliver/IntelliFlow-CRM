@@ -12,8 +12,16 @@ interface NotificationListProps {
 }
 
 export function NotificationList({ filters, onMarkAsRead, onDismiss }: NotificationListProps) {
-  const { items, isLoading, isError, error, isFetchingNextPage, hasNextPage, fetchNextPage, refetch } =
-    useNotificationFeed(filters);
+  const {
+    items,
+    isLoading,
+    isError,
+    error,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    refetch,
+  } = useNotificationFeed(filters);
 
   // IntersectionObserver for infinite scroll
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -55,7 +63,10 @@ export function NotificationList({ filters, onMarkAsRead, onDismiss }: Notificat
   // Error state
   if (isError) {
     return (
-      <div id="notification-list" className="flex items-center gap-3 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+      <div
+        id="notification-list"
+        className="flex items-center gap-3 p-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800"
+      >
         <span className="material-symbols-outlined text-red-500">error</span>
         <div>
           <p className="font-medium text-red-700 dark:text-red-400">Failed to load notifications</p>
@@ -74,7 +85,10 @@ export function NotificationList({ filters, onMarkAsRead, onDismiss }: Notificat
   // Empty state
   if (items.length === 0) {
     return (
-      <div id="notification-list" className="flex flex-col items-center justify-center py-16 text-center">
+      <div
+        id="notification-list"
+        className="flex flex-col items-center justify-center py-16 text-center"
+      >
         <span
           className="material-symbols-outlined text-slate-300 dark:text-slate-600 mb-4"
           style={{ fontSize: '64px' }}

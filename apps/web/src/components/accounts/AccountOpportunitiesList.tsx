@@ -36,11 +36,11 @@ export function AccountOpportunitiesList({ accountId }: AccountOpportunitiesList
       <div className="space-y-3">
         <div className="grid grid-cols-3 gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 w-full" />
+            <Skeleton key={i} className="h-20 w-full" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
           ))}
         </div>
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full" />
+          <Skeleton key={i} className="h-12 w-full" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
         ))}
       </div>
     );

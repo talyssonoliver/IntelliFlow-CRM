@@ -43,7 +43,7 @@ export function RevenueWidget({ config }: WidgetProps) {
       <div className="flex-1 flex items-end justify-between gap-1 w-full px-2">
         {[40, 65, 50, 75, 60, 85, 95].map((height, i) => (
           <div
-            key={i}
+            key={height}
             className={`w-full rounded-t-sm transition-all ${
               i === 6
                 ? 'bg-ds-primary'

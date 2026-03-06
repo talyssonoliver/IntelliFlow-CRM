@@ -34,19 +34,11 @@ export function ApplyButton({
 }: ApplyButtonProps) {
   const handleClick = () => {
     // Track analytics event (in production, integrate with analytics service)
-    if (
-      typeof window !== 'undefined' &&
-      (
-        window as Window & {
-          gtag?: (cmd: string, event: string, data: Record<string, string>) => void;
-        }
-      ).gtag
-    ) {
-      (
-        window as Window & {
-          gtag?: (cmd: string, event: string, data: Record<string, string>) => void;
-        }
-      ).gtag?.('event', 'apply_click', {
+    if (typeof window !== 'undefined') {
+      const win = window as Window & {
+        gtag?: (cmd: string, event: string, data: Record<string, string>) => void;
+      };
+      win.gtag?.('event', 'apply_click', {
         job_id: jobId,
         job_title: jobTitle,
       });
@@ -239,7 +231,9 @@ export function ShareJobButton({ jobId, jobTitle, className }: ShareJobButtonPro
             tabIndex={0}
             aria-label="Close share menu"
             onClick={() => setShowDropdown(false)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setShowDropdown(false); }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') setShowDropdown(false);
+            }}
           />
           <div
             role="menu"
@@ -267,4 +261,3 @@ export function ShareJobButton({ jobId, jobTitle, className }: ShareJobButtonPro
     </div>
   );
 }
-

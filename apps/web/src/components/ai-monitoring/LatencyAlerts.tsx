@@ -35,7 +35,10 @@ export function LatencyAlerts({ alerts }: LatencyAlertsProps) {
       </CardHeader>
       <CardContent className="pb-4">
         {alerts.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4" data-testid="no-latency-alerts">
+          <p
+            className="text-sm text-muted-foreground text-center py-4"
+            data-testid="no-latency-alerts"
+          >
             No latency alerts
           </p>
         ) : (
@@ -47,7 +50,7 @@ export function LatencyAlerts({ alerts }: LatencyAlertsProps) {
                   'p-3 rounded-lg border',
                   alert.severity === 'critical'
                     ? 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
-                    : 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20',
+                    : 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20'
                 )}
                 data-testid="latency-alert"
               >
@@ -59,7 +62,7 @@ export function LatencyAlerts({ alerts }: LatencyAlertsProps) {
                     <span
                       className={cn(
                         'inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium',
-                        getLatencyAlertBadgeClass(alert.severity),
+                        getLatencyAlertBadgeClass(alert.severity)
                       )}
                       aria-label={`Alert severity: ${alert.severity}`}
                     >
@@ -72,9 +75,12 @@ export function LatencyAlerts({ alerts }: LatencyAlertsProps) {
                     <span data-testid="alert-operation">{alert.operationType}</span>
                   </div>
                 </div>
-                <p className="text-sm" data-testid="alert-message">{alert.message}</p>
+                <p className="text-sm" data-testid="alert-message">
+                  {alert.message}
+                </p>
                 <p className="text-xs text-muted-foreground mt-1" data-testid="alert-p95-detail">
-                  P95: {formatLatencyMs(alert.currentP95)} / target {formatLatencyMs(alert.targetP95)}
+                  P95: {formatLatencyMs(alert.currentP95)} / target{' '}
+                  {formatLatencyMs(alert.targetP95)}
                 </p>
               </div>
             ))}

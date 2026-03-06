@@ -26,9 +26,7 @@ vi.mock('next/navigation', () => ({
   usePathname: vi.fn(() => '/agent-approvals/agents'),
 }));
 
-const { useActiveAgentsDashboard } = vi.mocked(
-  await import('@/lib/active-agents/hooks') as any,
-);
+const { useActiveAgentsDashboard } = vi.mocked((await import('@/lib/active-agents/hooks')) as any);
 
 import { ActiveAgentsDashboard } from '../ActiveAgentsDashboard';
 
@@ -125,9 +123,7 @@ describe('Category 1: Rendering', () => {
 
   it('renders page description', () => {
     render(<ActiveAgentsDashboard />);
-    expect(
-      screen.getByText(/monitor.*agent.*status/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/monitor.*agent.*status/i)).toBeInTheDocument();
   });
 
   it('renders 5 stat cards with correct labels', () => {
@@ -155,9 +151,7 @@ describe('Category 1: Rendering', () => {
 
   it('renders search input and status filter', () => {
     render(<ActiveAgentsDashboard />);
-    expect(
-      screen.getByPlaceholderText(/search/i),
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
   });
 
   it('shows loading skeletons when isLoading=true', () => {
@@ -238,9 +232,7 @@ describe('Category 2: Data Display', () => {
   it('displays current task for active agents', () => {
     render(<ActiveAgentsDashboard />);
     expect(screen.getByText('Qualifying lead: Acme Corp')).toBeInTheDocument();
-    expect(
-      screen.getByText('Generating NBA for Contact #42'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('Generating NBA for Contact #42')).toBeInTheDocument();
   });
 
   it('shows "No active task" for idle agents', () => {
@@ -270,7 +262,7 @@ describe('Category 2: Data Display', () => {
     logLinks.forEach((link) => {
       expect(link.closest('a')).toHaveAttribute(
         'href',
-        expect.stringMatching(/\/agent-approvals\/logs\?agentId=a-\d/),
+        expect.stringMatching(/\/agent-approvals\/logs\?agentId=a-\d/)
       );
     });
   });
@@ -343,7 +335,10 @@ describe('Category 3: Interactions', () => {
   it('View Logs link has correct href', () => {
     render(<ActiveAgentsDashboard />);
     const logLinks = screen.getAllByText('View Logs');
-    expect(logLinks[0].closest('a')).toHaveAttribute('href', expect.stringContaining('/agent-approvals/logs'));
+    expect(logLinks[0].closest('a')).toHaveAttribute(
+      'href',
+      expect.stringContaining('/agent-approvals/logs')
+    );
   });
 
   it('filter chip "All" resets type filter', () => {

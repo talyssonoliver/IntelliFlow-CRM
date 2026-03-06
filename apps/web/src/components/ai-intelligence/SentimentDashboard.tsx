@@ -177,7 +177,7 @@ function AnalysisCard({ analysis }: { analysis: SentimentAnalysis }) {
           </div>
 
           {/* Emotions */}
-          {topEmotions.length > 0 && (
+          {topEmotions.length > 0 ? (
             <div className="flex flex-wrap gap-1.5" data-testid="emotion-badges">
               {topEmotions.map((e) => (
                 <span
@@ -194,10 +194,10 @@ function AnalysisCard({ analysis }: { analysis: SentimentAnalysis }) {
                 </span>
               ))}
             </div>
-          )}
+          ) : null}
 
           {/* Key phrases */}
-          {analysis.keyPhrases.length > 0 && (
+          {analysis.keyPhrases.length > 0 ? (
             <div className="flex flex-wrap gap-1.5" data-testid="key-phrases">
               {analysis.keyPhrases.map((kp) => (
                 <span
@@ -216,12 +216,12 @@ function AnalysisCard({ analysis }: { analysis: SentimentAnalysis }) {
                 </span>
               ))}
             </div>
-          )}
+          ) : null}
 
           {/* Confidence */}
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>Confidence: {Math.round(analysis.confidence * 100)}%</span>
-            {analysis.confidence < 0.3 && (
+            {analysis.confidence < 0.3 ? (
               <span
                 className="text-amber-600 dark:text-amber-400 flex items-center gap-0.5"
                 data-testid="low-confidence-warning"
@@ -231,7 +231,7 @@ function AnalysisCard({ analysis }: { analysis: SentimentAnalysis }) {
                 </span>
                 Low confidence
               </span>
-            )}
+            ) : null}
           </div>
         </div>
       </CardContent>
@@ -497,13 +497,13 @@ export function SentimentDashboard() {
           {filteredAnalyses.map((analysis) => (
             <AnalysisCard key={analysis.id} analysis={analysis} />
           ))}
-          {recentAnalyses.length >= 20 && (
+          {recentAnalyses.length >= 20 ? (
             <div className="flex justify-center">
               <Button variant="outline" onClick={handleLoadMore} data-testid="load-more-button">
                 Load more
               </Button>
             </div>
-          )}
+          ) : null}
         </div>
       )}
     </div>

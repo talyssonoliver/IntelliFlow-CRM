@@ -13,7 +13,18 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Card } from '@intelliflow/ui';
+import {
+  Card,
+  toast,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@intelliflow/ui';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
 import { PinButton } from '@/components/home/PinButton';
@@ -52,6 +63,10 @@ interface TicketDetailProps {
   onAddResponse: (content: string, isInternal: boolean) => Promise<void>;
   onResolve: (resolution: ResolutionInput) => Promise<void>;
   onClose: () => Promise<void>;
+  /** Called after confirmed deletion — parent should redirect away */
+  onDelete?: () => Promise<void>;
+  /** Called after confirmed archive */
+  onArchive?: () => Promise<void>;
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────
@@ -79,10 +94,14 @@ export function TicketDetail({
   onAddResponse,
   onResolve,
   onClose,
+  onDelete,
+  onArchive,
 }: TicketDetailProps) {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
   const [actionSheetOpen, setActionSheetOpen] = useState(false);
   const [assignSidebarOpen, setAssignSidebarOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [replyMode, setReplyMode] = useState<'public' | 'internal'>('public');
   const [replyContent, setReplyContent] = useState('');
   const [activityNote, setActivityNote] = useState('');
@@ -99,26 +118,19 @@ export function TicketDetail({
   const priorityConfig = getPriorityConfig(ticket.priority);
   const hasFirstResponse = ticket.firstResponseAt !== null;
   const firstResponseValue = ticket.sla.firstResponse.actual;
-  const firstResponseMetricClass = hasFirstResponse
-    ? ticket.sla.firstResponse.met
-      ? 'text-green-600'
-      : 'text-red-600'
-    : 'text-amber-600';
+  const firstResponseMet = ticket.sla.firstResponse.met;
+  const metOrMissedMetricClass = firstResponseMet ? 'text-green-600' : 'text-red-600';
+  const firstResponseMetricClass = hasFirstResponse ? metOrMissedMetricClass : 'text-amber-600';
+  const metOrMissedSummaryClass = firstResponseMet
+    ? 'text-green-600 font-medium'
+    : 'text-red-600 font-medium';
   const firstResponseSummaryClass = hasFirstResponse
-    ? ticket.sla.firstResponse.met
-      ? 'text-green-600 font-medium'
-      : 'text-red-600 font-medium'
+    ? metOrMissedSummaryClass
     : 'text-amber-600 font-medium';
-  const firstResponseSummaryText = hasFirstResponse
-    ? ticket.sla.firstResponse.met
-      ? `Met (${firstResponseValue ?? 0}m)`
-      : 'Missed'
-    : 'Pending';
-  const firstResponseBarClass = hasFirstResponse
-    ? ticket.sla.firstResponse.met
-      ? 'bg-green-500'
-      : 'bg-red-500'
-    : 'bg-amber-500';
+  const metOrMissedSummaryText = firstResponseMet ? `Met (${firstResponseValue ?? 0}m)` : 'Missed';
+  const firstResponseSummaryText = hasFirstResponse ? metOrMissedSummaryText : 'Pending';
+  const metOrMissedBarClass = firstResponseMet ? 'bg-green-500' : 'bg-red-500';
+  const firstResponseBarClass = hasFirstResponse ? metOrMissedBarClass : 'bg-amber-500';
   const canOpenAssignSidebar =
     Boolean(currentUserId) || assigneeOptions.length > 0 || isAssigneeOptionsLoading;
 
@@ -147,7 +159,7 @@ export function TicketDetail({
     if (isLoading || ticket.priority === 'CRITICAL') {
       return;
     }
-    void _onPriorityChange('CRITICAL');
+    void _onPriorityChange('CRITICAL'); // NOSONAR typescript:S3735 — intentional fire-and-forget
   };
 
   const activityCount = ticket.activities.length;
@@ -165,8 +177,7 @@ export function TicketDetail({
                 href="/tickets"
                 className="hover:text-[#137fec] transition-colors flex items-center gap-1"
               >
-                <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-                Tickets
+                <span className="material-symbols-outlined text-[16px]">arrow_back</span> Tickets
               </Link>
               <span className="material-symbols-outlined text-[14px]">chevron_right</span>
               <span className="text-slate-900 dark:text-slate-200 font-medium">
@@ -225,12 +236,61 @@ export function TicketDetail({
             url: `/tickets/${ticket.id}`,
           }}
           extraActions={[
-            { label: 'Merge Ticket', icon: 'merge', onClick: () => {} },
-            { label: 'Mark as Spam', icon: 'report', onClick: () => {} },
+            {
+              label: 'Merge Ticket',
+              icon: 'merge',
+              onClick: () =>
+                toast({
+                  title: 'Merge not available',
+                  description:
+                    'Ticket merging with field reconciliation is tracked under IFC-137. Not yet implemented.',
+                }),
+            },
+            {
+              label: 'Mark as Spam',
+              icon: 'report',
+              onClick: () => {
+                setActionSheetOpen(false);
+                void _onStatusChange('SPAM'); // NOSONAR typescript:S3735 — intentional fire-and-forget
+              },
+            },
             ...(ticket.status === 'RESOLVED' || ticket.status === 'CLOSED'
-              ? [{ label: 'Archive', icon: 'archive', onClick: () => {} }]
+              ? [
+                  {
+                    label: 'Archive',
+                    icon: 'archive',
+                    onClick: () => {
+                      setActionSheetOpen(false);
+                      if (onArchive) {
+                        setArchiveConfirmOpen(true);
+                      } else {
+                        toast({
+                          title: 'Archive unavailable',
+                          description: 'Archive action is not wired for this view.',
+                        });
+                      }
+                    },
+                  },
+                ]
               : ticket.status !== 'ARCHIVED'
-                ? [{ label: 'Delete', icon: 'delete', onClick: () => {}, destructive: true }]
+                ? [
+                    {
+                      label: 'Delete',
+                      icon: 'delete',
+                      onClick: () => {
+                        setActionSheetOpen(false);
+                        if (onDelete) {
+                          setDeleteConfirmOpen(true);
+                        } else {
+                          toast({
+                            title: 'Delete unavailable',
+                            description: 'Delete action is not wired for this view.',
+                          });
+                        }
+                      },
+                      destructive: true,
+                    },
+                  ]
                 : []),
           ]}
         />
@@ -245,6 +305,55 @@ export function TicketDetail({
           isLoadingOptions={isAssigneeOptionsLoading}
           onAssign={onAssign}
         />
+
+        {/* Delete confirmation dialog */}
+        <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete ticket?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete ticket #{ticket.ticketNumber} &ldquo;{ticket.subject}
+                &rdquo;. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-red-600 hover:bg-red-700 text-white"
+                onClick={() => {
+                  setDeleteConfirmOpen(false);
+                  void onDelete?.(); // NOSONAR typescript:S3735 — intentional fire-and-forget
+                }}
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        {/* Archive confirmation dialog */}
+        <AlertDialog open={archiveConfirmOpen} onOpenChange={setArchiveConfirmOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Archive ticket?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Ticket #{ticket.ticketNumber} will be archived and removed from active views. You
+                can find it later in the archived tickets list.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  setArchiveConfirmOpen(false);
+                  void onArchive?.(); // NOSONAR typescript:S3735 — intentional fire-and-forget
+                }}
+              >
+                Archive
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* SLA Alert Banner */}
         {ticket.sla.resolution.status === 'BREACHED' && (
@@ -382,12 +491,10 @@ export function TicketDetail({
                 </div>
                 <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                   <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#137fec]/10 text-[#137fec] text-xs font-semibold hover:bg-[#137fec]/20 transition-colors">
-                    <span className="material-symbols-outlined text-[16px]">mail</span>
-                    Email
+                    <span className="material-symbols-outlined text-[16px]">mail</span> Email
                   </button>
                   <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#137fec]/10 text-[#137fec] text-xs font-semibold hover:bg-[#137fec]/20 transition-colors">
-                    <span className="material-symbols-outlined text-[16px]">call</span>
-                    Call
+                    <span className="material-symbols-outlined text-[16px]">call</span> Call
                   </button>
                   <Link
                     href={`/contacts/${ticket.customer.id}`}
@@ -584,7 +691,9 @@ export function TicketDetail({
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
                         }`}
                       >
-                        <span className="material-symbols-outlined text-sm align-middle mr-1">timeline</span>
+                        <span className="material-symbols-outlined text-sm align-middle mr-1">
+                          timeline
+                        </span>{' '}
                         Timeline
                       </button>
                       <button
@@ -595,7 +704,9 @@ export function TicketDetail({
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'
                         }`}
                       >
-                        <span className="material-symbols-outlined text-sm align-middle mr-1">dynamic_feed</span>
+                        <span className="material-symbols-outlined text-sm align-middle mr-1">
+                          dynamic_feed
+                        </span>{' '}
                         All Sources
                       </button>
                     </div>
@@ -608,105 +719,105 @@ export function TicketDetail({
                         emptyMessage="No activity found across all sources"
                       />
                     ) : (
-                    <>
-                    <div className="flex gap-3">
-                      <div className="pt-1">
-                        <div className="w-8 h-8 rounded-full bg-[#137fec] flex items-center justify-center text-white text-xs font-bold">
-                          {ticket.assigneeInfo?.name.charAt(0) || 'U'}
-                        </div>
-                      </div>
-                      <div className="flex-1">
-                        <textarea
-                          value={activityNote}
-                          onChange={(e) => setActivityNote(e.target.value)}
-                          className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] min-h-[80px] p-3 placeholder:text-slate-400"
-                          placeholder="Add a note, log activity..."
-                        />
-                        <div className="flex justify-between items-center mt-2">
-                          <div className="flex gap-2">
-                            <button className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                              <span className="material-symbols-outlined text-[20px]">
-                                attach_file
-                              </span>
-                            </button>
-                            <button className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
-                              <span className="material-symbols-outlined text-[20px]">
-                                alternate_email
-                              </span>
-                            </button>
+                      <>
+                        <div className="flex gap-3">
+                          <div className="pt-1">
+                            <div className="w-8 h-8 rounded-full bg-[#137fec] flex items-center justify-center text-white text-xs font-bold">
+                              {ticket.assigneeInfo?.name.charAt(0) || 'U'}
+                            </div>
                           </div>
-                          <button
-                            onClick={handleAddNote}
-                            disabled={isLoading || !activityNote.trim()}
-                            className="px-4 py-1.5 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
-                          >
-                            Add Note
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="relative pl-4 border-l-2 border-slate-200 dark:border-slate-700 ml-4 space-y-6">
-                      {ticket.activities.map((activity) => (
-                        <ActivityItem key={activity.id} activity={activity} />
-                      ))}
-                    </div>
-
-                    <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
-                      <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
-                        <div className="flex border-b border-slate-100 dark:border-slate-700">
-                          <button
-                            onClick={() => setReplyMode('public')}
-                            className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
-                              replyMode === 'public'
-                                ? 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200'
-                                : 'text-slate-400 hover:bg-slate-50'
-                            }`}
-                          >
-                            Public Reply
-                          </button>
-                          <button
-                            onClick={() => setReplyMode('internal')}
-                            className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
-                              replyMode === 'internal'
-                                ? 'bg-yellow-50 dark:bg-yellow-900/10 text-yellow-700'
-                                : 'text-slate-400 hover:bg-yellow-50'
-                            }`}
-                          >
-                            Internal Note
-                          </button>
-                        </div>
-                        <textarea
-                          value={replyContent}
-                          onChange={(e) => setReplyContent(e.target.value)}
-                          className="w-full p-4 text-sm bg-transparent border-none focus:ring-0 min-h-[120px] resize-y placeholder:text-slate-400"
-                          placeholder="Type your reply..."
-                        />
-                        <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
-                          <div className="flex gap-1">
-                            <button className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 transition-colors">
-                              <span className="material-symbols-outlined text-[18px]">
-                                format_bold
-                              </span>
-                            </button>
-                            <button className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 transition-colors">
-                              <span className="material-symbols-outlined text-[18px]">
-                                attach_file
-                              </span>
-                            </button>
+                          <div className="flex-1">
+                            <textarea
+                              value={activityNote}
+                              onChange={(e) => setActivityNote(e.target.value)}
+                              className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] min-h-[80px] p-3 placeholder:text-slate-400"
+                              placeholder="Add a note, log activity..."
+                            />
+                            <div className="flex justify-between items-center mt-2">
+                              <div className="flex gap-2">
+                                <button className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
+                                  <span className="material-symbols-outlined text-[20px]">
+                                    attach_file
+                                  </span>
+                                </button>
+                                <button className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors">
+                                  <span className="material-symbols-outlined text-[20px]">
+                                    alternate_email
+                                  </span>
+                                </button>
+                              </div>
+                              <button
+                                onClick={handleAddNote}
+                                disabled={isLoading || !activityNote.trim()}
+                                className="px-4 py-1.5 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+                              >
+                                Add Note
+                              </button>
+                            </div>
                           </div>
-                          <button
-                            onClick={handleSendReply}
-                            disabled={isLoading || !replyContent.trim()}
-                            className="px-4 py-1.5 bg-[#137fec] text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
-                          >
-                            Send Reply
-                            <span className="material-symbols-outlined text-[16px]">send</span>
-                          </button>
                         </div>
-                      </div>
-                    </div>
-                    </>
+
+                        <div className="relative pl-4 border-l-2 border-slate-200 dark:border-slate-700 ml-4 space-y-6">
+                          {ticket.activities.map((activity) => (
+                            <ActivityItem key={activity.id} activity={activity} />
+                          ))}
+                        </div>
+
+                        <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
+                          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
+                            <div className="flex border-b border-slate-100 dark:border-slate-700">
+                              <button
+                                onClick={() => setReplyMode('public')}
+                                className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+                                  replyMode === 'public'
+                                    ? 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200'
+                                    : 'text-slate-400 hover:bg-slate-50'
+                                }`}
+                              >
+                                Public Reply
+                              </button>
+                              <button
+                                onClick={() => setReplyMode('internal')}
+                                className={`flex-1 py-2.5 text-xs font-medium transition-colors ${
+                                  replyMode === 'internal'
+                                    ? 'bg-yellow-50 dark:bg-yellow-900/10 text-yellow-700'
+                                    : 'text-slate-400 hover:bg-yellow-50'
+                                }`}
+                              >
+                                Internal Note
+                              </button>
+                            </div>
+                            <textarea
+                              value={replyContent}
+                              onChange={(e) => setReplyContent(e.target.value)}
+                              className="w-full p-4 text-sm bg-transparent border-none focus:ring-0 min-h-[120px] resize-y placeholder:text-slate-400"
+                              placeholder="Type your reply..."
+                            />
+                            <div className="flex items-center justify-between px-3 py-2 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-700">
+                              <div className="flex gap-1">
+                                <button className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 transition-colors">
+                                  <span className="material-symbols-outlined text-[18px]">
+                                    format_bold
+                                  </span>
+                                </button>
+                                <button className="p-1.5 hover:bg-slate-200 dark:hover:bg-slate-700 rounded text-slate-500 transition-colors">
+                                  <span className="material-symbols-outlined text-[18px]">
+                                    attach_file
+                                  </span>
+                                </button>
+                              </div>
+                              <button
+                                onClick={handleSendReply}
+                                disabled={isLoading || !replyContent.trim()}
+                                className="px-4 py-1.5 bg-[#137fec] text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+                              >
+                                Send Reply
+                                <span className="material-symbols-outlined text-[16px]">send</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </>
                     )}
                   </div>
                 )}
@@ -730,7 +841,10 @@ export function TicketDetail({
 
                     <div className="space-y-4">
                       <div>
-                        <label htmlFor="resolution-type-select" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        <label
+                          htmlFor="resolution-type-select"
+                          className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                        >
                           Resolution Type
                         </label>
                         <select
@@ -748,7 +862,10 @@ export function TicketDetail({
                         </select>
                       </div>
                       <div>
-                        <label htmlFor="root-cause-textarea" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        <label
+                          htmlFor="root-cause-textarea"
+                          className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                        >
                           Root Cause
                         </label>
                         <textarea
@@ -760,7 +877,10 @@ export function TicketDetail({
                         />
                       </div>
                       <div>
-                        <label htmlFor="resolution-summary-textarea" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        <label
+                          htmlFor="resolution-summary-textarea"
+                          className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+                        >
                           Resolution Summary
                         </label>
                         <textarea
@@ -793,7 +913,7 @@ export function TicketDetail({
                         disabled={isLoading || !resolutionType || !resolutionSummary.trim()}
                         className="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-50"
                       >
-                        <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                        <span className="material-symbols-outlined text-[18px]">check_circle</span>{' '}
                         Mark as Resolved
                       </button>
                     </div>
@@ -1099,7 +1219,11 @@ export function TicketDetail({
               </div>
               <div className="space-y-3">
                 {ticket.nextSteps.map((step) => (
-                  <label key={step.id} aria-label={step.title} className="flex items-start gap-3 group cursor-pointer">
+                  <label
+                    key={step.id}
+                    aria-label={step.title}
+                    className="flex items-start gap-3 group cursor-pointer"
+                  >
                     <input
                       type="checkbox"
                       defaultChecked={step.completed}

@@ -22,7 +22,9 @@ vi.mock('@/components/shared/entity-action-sheet', () => ({
 
 vi.mock('@/components/shared/more-actions-button', () => ({
   MoreActionsButton: ({ onClick }: any) => (
-    <button data-testid="more-actions" onClick={onClick}>More Actions</button>
+    <button data-testid="more-actions" onClick={onClick}>
+      More Actions
+    </button>
   ),
 }));
 
@@ -31,8 +33,7 @@ vi.mock('@/components/shared/app-avatar', () => ({
 }));
 
 vi.mock('../TicketAssignSidebar', () => ({
-  TicketAssignSidebar: ({ open }: any) =>
-    open ? <div data-testid="assign-sidebar" /> : null,
+  TicketAssignSidebar: ({ open }: any) => (open ? <div data-testid="assign-sidebar" /> : null),
 }));
 
 vi.mock('../SLAIndicator', () => ({
@@ -50,6 +51,19 @@ vi.mock('../EscalationAlert', () => ({
 
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className }: any) => <div className={className}>{children}</div>,
+  toast: vi.fn(),
+  AlertDialog: ({ children, open }: any) => (open ? <div>{children}</div> : null),
+  AlertDialogContent: ({ children }: any) => <div>{children}</div>,
+  AlertDialogHeader: ({ children }: any) => <div>{children}</div>,
+  AlertDialogTitle: ({ children }: any) => <h2>{children}</h2>,
+  AlertDialogDescription: ({ children }: any) => <p>{children}</p>,
+  AlertDialogFooter: ({ children }: any) => <div>{children}</div>,
+  AlertDialogCancel: ({ children }: any) => <button>{children}</button>,
+  AlertDialogAction: ({ children, onClick, className }: any) => (
+    <button onClick={onClick} className={className}>
+      {children}
+    </button>
+  ),
 }));
 
 vi.mock('@/components/home/PinButton', () => ({
@@ -59,7 +73,9 @@ vi.mock('@/components/home/PinButton', () => ({
 // Mock ActivityFeed for unified view
 vi.mock('@/components/shared/activity-feed', () => ({
   ActivityFeed: ({ entityType, entityId }: any) => (
-    <div data-testid="activity-feed">ActivityFeed: {entityType} {entityId}</div>
+    <div data-testid="activity-feed">
+      ActivityFeed: {entityType} {entityId}
+    </div>
   ),
 }));
 
@@ -191,7 +207,9 @@ describe('TicketDetail Coverage', () => {
       render(<TicketDetail ticket={mockTicket} isLoading={false} {...handlers} />);
 
       const activityTabs = screen.getAllByText(/Activity/i);
-      const tabButton = activityTabs.find((el) => el.closest('[role="tab"]') || el.tagName === 'BUTTON');
+      const tabButton = activityTabs.find(
+        (el) => el.closest('[role="tab"]') || el.tagName === 'BUTTON'
+      );
       fireEvent.click(tabButton || activityTabs[0]);
 
       // Should show the timeline/unified toggle
@@ -392,7 +410,10 @@ describe('TicketDetail Coverage', () => {
 
       expect(screen.getByText('Notify customer of resolution')).toBeInTheDocument();
       // Toggle the checkbox to cover the onChange handler
-      const checkbox = screen.getByText('Notify customer of resolution').closest('label')?.querySelector('input[type="checkbox"]');
+      const checkbox = screen
+        .getByText('Notify customer of resolution')
+        .closest('label')
+        ?.querySelector('input[type="checkbox"]');
       if (checkbox) {
         fireEvent.click(checkbox);
       }
@@ -458,7 +479,9 @@ describe('TicketDetail Coverage', () => {
     it('shows predicted resolution time', () => {
       render(<TicketDetail ticket={mockTicket} isLoading={false} {...handlers} />);
 
-      const aiTab = screen.getAllByText('AI Insights').find((el) => el.closest('[role="tab"]') || el.closest('button'));
+      const aiTab = screen
+        .getAllByText('AI Insights')
+        .find((el) => el.closest('[role="tab"]') || el.closest('button'));
       fireEvent.click(aiTab || screen.getAllByText('AI Insights')[0]);
 
       expect(screen.getByText(/4 hours/)).toBeInTheDocument();
@@ -467,7 +490,9 @@ describe('TicketDetail Coverage', () => {
     it('shows suggested solutions', () => {
       render(<TicketDetail ticket={mockTicket} isLoading={false} {...handlers} />);
 
-      const aiTab = screen.getAllByText('AI Insights').find((el) => el.closest('[role="tab"]') || el.closest('button'));
+      const aiTab = screen
+        .getAllByText('AI Insights')
+        .find((el) => el.closest('[role="tab"]') || el.closest('button'));
       fireEvent.click(aiTab || screen.getAllByText('AI Insights')[0]);
 
       expect(screen.getByText('Suggested Solutions')).toBeInTheDocument();
@@ -478,7 +503,9 @@ describe('TicketDetail Coverage', () => {
     it('shows similar resolved tickets', () => {
       render(<TicketDetail ticket={mockTicket} isLoading={false} {...handlers} />);
 
-      const aiTab = screen.getAllByText('AI Insights').find((el) => el.closest('[role="tab"]') || el.closest('button'));
+      const aiTab = screen
+        .getAllByText('AI Insights')
+        .find((el) => el.closest('[role="tab"]') || el.closest('button'));
       fireEvent.click(aiTab || screen.getAllByText('AI Insights')[0]);
 
       // Only RESOLVED tickets shown in AI Insights similar section
@@ -488,7 +515,9 @@ describe('TicketDetail Coverage', () => {
     it('shows sentiment analysis', () => {
       render(<TicketDetail ticket={mockTicket} isLoading={false} {...handlers} />);
 
-      const aiTab = screen.getAllByText('AI Insights').find((el) => el.closest('[role="tab"]') || el.closest('button'));
+      const aiTab = screen
+        .getAllByText('AI Insights')
+        .find((el) => el.closest('[role="tab"]') || el.closest('button'));
       fireEvent.click(aiTab || screen.getAllByText('AI Insights')[0]);
 
       expect(screen.getByText(/negative Sentiment/i)).toBeInTheDocument();
@@ -502,7 +531,9 @@ describe('TicketDetail Coverage', () => {
 
       render(<TicketDetail ticket={mediumRisk} isLoading={false} {...handlers} />);
 
-      const aiTab = screen.getAllByText('AI Insights').find((el) => el.closest('[role="tab"]') || el.closest('button'));
+      const aiTab = screen
+        .getAllByText('AI Insights')
+        .find((el) => el.closest('[role="tab"]') || el.closest('button'));
       fireEvent.click(aiTab || screen.getAllByText('AI Insights')[0]);
 
       expect(screen.getByText(/medium/i)).toBeInTheDocument();
@@ -516,7 +547,9 @@ describe('TicketDetail Coverage', () => {
 
       render(<TicketDetail ticket={lowRisk} isLoading={false} {...handlers} />);
 
-      const aiTab = screen.getAllByText('AI Insights').find((el) => el.closest('[role="tab"]') || el.closest('button'));
+      const aiTab = screen
+        .getAllByText('AI Insights')
+        .find((el) => el.closest('[role="tab"]') || el.closest('button'));
       fireEvent.click(aiTab || screen.getAllByText('AI Insights')[0]);
 
       expect(screen.getByText(/low/i)).toBeInTheDocument();

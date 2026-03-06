@@ -39,12 +39,16 @@ export interface TicketStats {
   slaBreakdown?: Record<SLAStatus, number>;
 }
 
+export interface TicketFilterOption {
+  value: string;
+  label: string;
+  count: number;
+}
+
 export interface TicketFilterOptions {
-  statuses: string[];
-  priorities: string[];
-  slaStatuses: string[];
-  assignees: { id: string; name: string }[];
-  categories: string[];
+  statuses: TicketFilterOption[];
+  priorities: TicketFilterOption[];
+  slaStatuses: TicketFilterOption[];
 }
 
 export type BulkActionType = 'assign' | 'updateStatus' | 'resolve' | 'escalate' | 'close';

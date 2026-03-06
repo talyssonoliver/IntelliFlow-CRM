@@ -15,10 +15,7 @@ export type {
   NotificationListResponse,
 } from '@intelliflow/validators';
 
-export {
-  NOTIFICATION_TYPES,
-  NOTIFICATION_PRIORITIES,
-} from '@intelliflow/validators';
+export { NOTIFICATION_TYPES, NOTIFICATION_PRIORITIES } from '@intelliflow/validators';
 
 /** Filter state managed by the page orchestrator */
 export interface NotificationFiltersState {

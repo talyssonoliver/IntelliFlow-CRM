@@ -75,27 +75,27 @@ describe('AgentWorkload', () => {
     expect(screen.getByText('Busy')).toBeInTheDocument();
   });
 
-  it('renders capacity gauges with role="status"', () => {
+  it('renders capacity gauges with role="progressbar"', () => {
     render(<AgentWorkload />);
 
-    const statusElements = screen.getAllByRole('status');
-    expect(statusElements.length).toBe(2);
+    const gaugeElements = screen.getAllByRole('progressbar');
+    expect(gaugeElements.length).toBe(2);
   });
 
   it('capacity gauge has aria-valuenow', () => {
     render(<AgentWorkload />);
 
-    const statusElements = screen.getAllByRole('status');
-    expect(statusElements[0]).toHaveAttribute('aria-valuenow', '30'); // 3/10 = 30%
-    expect(statusElements[1]).toHaveAttribute('aria-valuenow', '80'); // 8/10 = 80%
+    const gaugeElements = screen.getAllByRole('progressbar');
+    expect(gaugeElements[0]).toHaveAttribute('aria-valuenow', '30'); // 3/10 = 30%
+    expect(gaugeElements[1]).toHaveAttribute('aria-valuenow', '80'); // 8/10 = 80%
   });
 
   it('capacity gauge has aria-valuemin and aria-valuemax', () => {
     render(<AgentWorkload />);
 
-    const statusElements = screen.getAllByRole('status');
-    expect(statusElements[0]).toHaveAttribute('aria-valuemin', '0');
-    expect(statusElements[0]).toHaveAttribute('aria-valuemax', '100');
+    const gaugeElements = screen.getAllByRole('progressbar');
+    expect(gaugeElements[0]).toHaveAttribute('aria-valuemin', '0');
+    expect(gaugeElements[0]).toHaveAttribute('aria-valuemax', '100');
   });
 
   it('renders skill badges with proficiency', () => {

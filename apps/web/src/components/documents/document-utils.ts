@@ -52,12 +52,36 @@ export function getStatusConfig(status: DocumentStatus): {
   icon: string;
 } {
   const configs: Record<DocumentStatus, { label: string; color: string; icon: string }> = {
-    DRAFT: { label: 'Draft', color: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300', icon: 'edit_note' },
-    UNDER_REVIEW: { label: 'In Review', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', icon: 'rate_review' },
-    APPROVED: { label: 'Approved', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', icon: 'check_circle' },
-    SIGNED: { label: 'Signed', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', icon: 'verified' },
-    ARCHIVED: { label: 'Archived', color: 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400', icon: 'inventory_2' },
-    SUPERSEDED: { label: 'Superseded', color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', icon: 'update_disabled' },
+    DRAFT: {
+      label: 'Draft',
+      color: 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300',
+      icon: 'edit_note',
+    },
+    UNDER_REVIEW: {
+      label: 'In Review',
+      color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+      icon: 'rate_review',
+    },
+    APPROVED: {
+      label: 'Approved',
+      color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      icon: 'check_circle',
+    },
+    SIGNED: {
+      label: 'Signed',
+      color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+      icon: 'verified',
+    },
+    ARCHIVED: {
+      label: 'Archived',
+      color: 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400',
+      icon: 'inventory_2',
+    },
+    SUPERSEDED: {
+      label: 'Superseded',
+      color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      icon: 'update_disabled',
+    },
   };
   return configs[status] ?? { label: status, color: 'bg-slate-100 text-slate-700', icon: 'help' };
 }
@@ -114,12 +138,10 @@ export function canUserModifyACL(userAccessLevel: AccessLevel): boolean {
  * Removes directory separators, parent directory references, and null bytes.
  */
 export function sanitizeFileName(name: string): string {
-  return name
-    .replace(/\.\./g, '')
-    .replace(/[/\\]/g, '')
-    .replace(/\0/g, '')
-    .replace(/^\.+/, '')
-    .trim() || 'unnamed';
+  return (
+    name.replace(/\.\./g, '').replace(/[/\\]/g, '').replace(/\0/g, '').replace(/^\.+/, '').trim() ||
+    'unnamed'
+  );
 }
 
 // Accepted file types for document upload

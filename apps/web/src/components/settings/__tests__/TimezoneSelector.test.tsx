@@ -82,7 +82,7 @@ describe('TimezoneSelector', () => {
     // Mock browser timezone detection
     const mockResolvedOptions = vi.fn().mockReturnValue({ timeZone: 'Europe/London' });
     vi.spyOn(Intl, 'DateTimeFormat').mockImplementation(
-      () => ({ resolvedOptions: mockResolvedOptions } as any)
+      () => ({ resolvedOptions: mockResolvedOptions }) as any
     );
 
     render(<TimezoneSelector value="UTC" onChange={onChange} />);
@@ -143,7 +143,7 @@ describe('TimezoneSelector', () => {
     const onChange = vi.fn();
     const mockResolvedOptions = vi.fn().mockReturnValue({});
     vi.spyOn(Intl, 'DateTimeFormat').mockImplementation(
-      () => ({ resolvedOptions: mockResolvedOptions } as any)
+      () => ({ resolvedOptions: mockResolvedOptions }) as any
     );
 
     render(<TimezoneSelector value="UTC" onChange={onChange} />);

@@ -38,7 +38,21 @@ vi.mock('@/lib/api', () => ({
       getById: { useQuery: (...args: unknown[]) => getByIdMock(...args) },
       getActivity: { useQuery: (...args: unknown[]) => activityMock(...args) },
       getOpportunities: { useQuery: (...args: unknown[]) => oppsMock(...args) },
+      delete: {
+        useMutation: (_opts?: unknown) => ({
+          mutate: vi.fn(),
+          isPending: false,
+        }),
+      },
+      list: { invalidate: vi.fn() },
+      stats: { invalidate: vi.fn() },
     },
+    useUtils: () => ({
+      account: {
+        list: { invalidate: vi.fn() },
+        stats: { invalidate: vi.fn() },
+      },
+    }),
   },
 }));
 
@@ -92,6 +106,10 @@ vi.mock('@/components/home/PinButton', () => ({
   PinButton: () => <button data-testid="pin-button">Pin</button>,
 }));
 
+vi.mock('@/components/shared/activity-feed', () => ({
+  ActivityFeed: () => <div data-testid="activity-feed">Activity Feed</div>,
+}));
+
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
     <div className={className}>{children}</div>
@@ -113,6 +131,28 @@ vi.mock('@intelliflow/ui', () => ({
     <div className={`animate-pulse ${className ?? ''}`} />
   ),
   Badge: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
+  toast: vi.fn(),
+  AlertDialog: ({ children, open }: { children: React.ReactNode; open?: boolean }) =>
+    open ? <div>{children}</div> : null,
+  AlertDialogContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  AlertDialogHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  AlertDialogFooter: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  AlertDialogTitle: ({ children }: { children: React.ReactNode }) => <h2>{children}</h2>,
+  AlertDialogDescription: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
+  AlertDialogAction: ({
+    children,
+    onClick,
+    ...props
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+    [key: string]: unknown;
+  }) => (
+    <button onClick={onClick} {...props}>
+      {children}
+    </button>
+  ),
+  AlertDialogCancel: ({ children }: { children: React.ReactNode }) => <button>{children}</button>,
 }));
 
 const mockAccount = {

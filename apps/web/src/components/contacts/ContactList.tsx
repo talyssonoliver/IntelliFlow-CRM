@@ -240,7 +240,7 @@ export function ContactList({
                       },
                     ]
                   : []),
-                { id: 'sep-1', icon: '', label: '', onClick: () => {}, separator: true },
+                { id: 'sep-1', icon: '', label: '', onClick: () => undefined, separator: true }, // Separator: onClick is intentionally a no-op
                 { icon: 'delete', label: 'Delete', variant: 'danger', onClick: () => onDelete(c) },
               ]}
             />
@@ -323,11 +323,11 @@ export function ContactList({
         hidePagination
         aria-label="Contact list"
       />
-      {total > 0 && (
+      {total > 0 ? (
         <div role="status" aria-live="polite" className="mt-2 text-sm text-slate-500">
           Showing {contacts.length} of {total}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

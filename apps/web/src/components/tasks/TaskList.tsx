@@ -2,12 +2,7 @@
 
 import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import {
-  DataTable,
-  TableRowActions,
-  type BulkAction,
-  Skeleton,
-} from '@intelliflow/ui';
+import { DataTable, TableRowActions, type BulkAction, Skeleton } from '@intelliflow/ui';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
 
 export interface TaskListItem {
@@ -19,7 +14,7 @@ export interface TaskListItem {
   readonly status: TaskStatus;
   readonly ownerId: string;
   readonly owner: { id: string; email: string; name: string | null };
-  readonly lead: { id: string; firstName: string; lastName: string } | null;
+  readonly lead: { id: string; firstName: string | null; lastName: string | null } | null;
   readonly contact: { id: string; firstName: string; lastName: string } | null;
   readonly opportunity: { id: string; name: string; stage: string } | null;
 }
@@ -80,7 +75,7 @@ function getEntityInfo(task: TaskListItem): { type: string; name: string; href: 
   if (task.lead)
     return {
       type: 'lead',
-      name: `${task.lead.firstName} ${task.lead.lastName}`,
+      name: `${task.lead.firstName ?? ''} ${task.lead.lastName ?? ''}`.trim() || 'Unknown Lead',
       href: `/leads/${task.lead.id}`,
     };
   if (task.contact)
@@ -154,12 +149,10 @@ function createColumns(handlers: {
       size: 120,
       cell: ({ row }) => {
         const status = getDueDateStatus(row.original.dueDate);
+        const todayOrDefaultClass =
+          status === 'today' ? 'text-amber-600 dark:text-amber-400' : 'text-muted-foreground';
         const colorClass =
-          status === 'overdue'
-            ? 'text-red-600 dark:text-red-400'
-            : status === 'today'
-              ? 'text-amber-600 dark:text-amber-400'
-              : 'text-muted-foreground';
+          status === 'overdue' ? 'text-red-600 dark:text-red-400' : todayOrDefaultClass;
         return (
           <span className={`text-sm ${colorClass}`} data-testid={`due-${status}`}>
             {formatDueDate(row.original.dueDate)}

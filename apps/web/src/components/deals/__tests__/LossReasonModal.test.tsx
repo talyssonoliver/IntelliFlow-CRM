@@ -13,7 +13,15 @@ import { LossReasonModal } from '../LossReasonModal';
 let capturedOnOpenChange: ((open: boolean) => void) | undefined;
 vi.mock('@intelliflow/ui', () => ({
   cn: (...args: (string | undefined | boolean)[]) => args.filter(Boolean).join(' '),
-  Dialog: ({ children, open, onOpenChange }: { children: React.ReactNode; open: boolean; onOpenChange?: (open: boolean) => void }) => {
+  Dialog: ({
+    children,
+    open,
+    onOpenChange,
+  }: {
+    children: React.ReactNode;
+    open: boolean;
+    onOpenChange?: (open: boolean) => void;
+  }) => {
     capturedOnOpenChange = onOpenChange;
     return open ? <div data-testid="dialog">{children}</div> : null;
   },
@@ -157,6 +165,8 @@ describe('LossReasonModal', () => {
     expect(submitBtn).not.toBeDisabled();
     await user.click(submitBtn);
 
-    expect(mockOnConfirm).toHaveBeenCalledWith('Budget constraints prevented the deal from closing');
+    expect(mockOnConfirm).toHaveBeenCalledWith(
+      'Budget constraints prevented the deal from closing'
+    );
   });
 });

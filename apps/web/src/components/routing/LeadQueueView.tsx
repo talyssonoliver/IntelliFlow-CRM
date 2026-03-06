@@ -95,7 +95,10 @@ export function LeadQueueView() {
             onChange={(e) => setScoreMin(e.target.value ? Number(e.target.value) : undefined)}
             aria-label="Minimum score filter"
           />
-          <Select value={source || 'all'} onValueChange={(v) => setSource(v === 'all' ? undefined : v)}>
+          <Select
+            value={source || 'all'}
+            onValueChange={(v) => setSource(v === 'all' ? undefined : v)}
+          >
             <SelectTrigger className="w-[140px]" aria-label="Source filter">
               <SelectValue placeholder="All sources" />
             </SelectTrigger>
@@ -162,7 +165,9 @@ export function LeadQueueView() {
                         aria-label={`Select ${lead.firstName} ${lead.lastName}`}
                       />
                     </td>
-                    <td className="py-2 font-medium">{lead.firstName} {lead.lastName}</td>
+                    <td className="py-2 font-medium">
+                      {lead.firstName} {lead.lastName}
+                    </td>
                     <td className="py-2">
                       <span className="inline-flex items-center rounded-full bg-primary/10 text-primary px-2 py-0.5 text-xs font-medium">
                         {lead.score ?? 0}

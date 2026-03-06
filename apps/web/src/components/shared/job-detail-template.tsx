@@ -4,26 +4,9 @@ import * as React from 'react';
 import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { ApplyButton, SaveJobButton, ShareJobButton } from './apply-button';
+import type { JobListing } from '@/data/job-listings';
 
-export interface JobListing {
-  id: string;
-  title: string;
-  department: string;
-  location: string;
-  type: string; // Full-time, Part-time, Contract
-  description: string;
-  responsibilities: string[];
-  requirements: string[];
-  niceToHave?: string[];
-  benefits?: string[];
-  salary?: {
-    min: number;
-    max: number;
-    currency: string;
-  };
-  postedAt: string;
-  closingDate?: string;
-}
+export type { JobListing };
 
 interface JobDetailTemplateProps {
   job: JobListing;
@@ -382,4 +365,3 @@ export function JobDetailTemplate({ job, relatedJobs = [] }: JobDetailTemplatePr
     </>
   );
 }
-

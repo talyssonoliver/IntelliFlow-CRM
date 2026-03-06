@@ -24,11 +24,14 @@ export function useNotificationSubscription({
     onData?.();
   }, [onData]);
 
-  trpc.notifications.onNew.useSubscription({}, {
-    enabled: enabled && isAuthenticated,
-    onData: handleData,
-    onError: (err) => {
-      console.error('[useNotificationSubscription] WebSocket error:', err);
-    },
-  });
+  trpc.notifications.onNew.useSubscription(
+    {},
+    {
+      enabled: enabled && isAuthenticated,
+      onData: handleData,
+      onError: (err) => {
+        console.error('[useNotificationSubscription] WebSocket error:', err);
+      },
+    }
+  );
 }

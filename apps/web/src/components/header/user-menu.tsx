@@ -123,7 +123,7 @@ export function UserMenu({ user: propUser, className }: UserMenuProps) {
             >
               <span className="material-symbols-outlined text-lg text-muted-foreground">
                 person
-              </span>
+              </span>{' '}
               Profile
             </Link>
 

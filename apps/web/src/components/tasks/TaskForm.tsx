@@ -5,6 +5,7 @@ import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
 import { TASK_STATUSES, TASK_PRIORITIES } from '@intelliflow/domain';
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from '@intelliflow/ui';
 import { EntitySearchField } from './EntitySearchField';
+import { useCalendarVisibilityOptional } from '@/hooks/useCalendarVisibility';
 
 export interface TaskFormData {
   readonly title: string;
@@ -15,6 +16,7 @@ export interface TaskFormData {
   readonly entityType: 'none' | 'lead' | 'contact' | 'opportunity';
   readonly entityId: string;
   readonly entityName: string;
+  readonly calendarId: string;
 }
 
 export interface TaskFormProps {
@@ -34,11 +36,13 @@ const DEFAULT_FORM: TaskFormData = {
   entityType: 'none',
   entityId: '',
   entityName: '',
+  calendarId: '',
 };
 
 export function TaskForm({ open, onClose, onSubmit, initialData, mode }: TaskFormProps) {
   const [form, setForm] = useState<TaskFormData>(DEFAULT_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const { dbCalendars } = useCalendarVisibilityOptional();
 
   useEffect(() => {
     if (open) {
@@ -158,6 +162,29 @@ export function TaskForm({ open, onClose, onSubmit, initialData, mode }: TaskFor
               onChange={(e) => setForm((f) => ({ ...f, dueDate: e.target.value }))}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             />
+          </div>
+
+          {/* Calendar */}
+          <div>
+            <label
+              htmlFor="task-calendar"
+              className="block text-sm font-medium text-foreground mb-1"
+            >
+              Calendar
+            </label>
+            <select
+              id="task-calendar"
+              value={form.calendarId}
+              onChange={(e) => setForm((f) => ({ ...f, calendarId: e.target.value }))}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">Tasks (Default)</option>
+              {dbCalendars.map((cal) => (
+                <option key={cal.id} value={cal.id}>
+                  {cal.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Priority */}

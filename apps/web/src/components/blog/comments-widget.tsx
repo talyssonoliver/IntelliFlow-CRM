@@ -54,6 +54,33 @@ const sampleComments: Comment[] = [
   },
 ];
 
+/** Toggle like on a comment or its reply */
+function toggleLikeOnComment(
+  comment: Comment,
+  targetId: string,
+  isReply?: boolean,
+  parentId?: string
+): Comment {
+  if (isReply && parentId && comment.id === parentId) {
+    return {
+      ...comment,
+      replies: comment.replies?.map((r) =>
+        r.id === targetId
+          ? { ...r, likes: r.isLiked ? r.likes - 1 : r.likes + 1, isLiked: !r.isLiked }
+          : r
+      ),
+    };
+  }
+  if (comment.id === targetId) {
+    return {
+      ...comment,
+      likes: comment.isLiked ? comment.likes - 1 : comment.likes + 1,
+      isLiked: !comment.isLiked,
+    };
+  }
+  return comment;
+}
+
 export function CommentsWidget({ postSlug: _postSlug, className }: CommentsWidgetProps) {
   const [comments, setComments] = React.useState<Comment[]>(sampleComments);
   const [newComment, setNewComment] = React.useState('');
@@ -114,24 +141,7 @@ export function CommentsWidget({ postSlug: _postSlug, className }: CommentsWidge
   };
 
   const handleLike = (commentId: string, isReply?: boolean, parentId?: string) => {
-    setComments((prev) =>
-      prev.map((c) => {
-        if (isReply && parentId && c.id === parentId) {
-          return {
-            ...c,
-            replies: c.replies?.map((r) =>
-              r.id === commentId
-                ? { ...r, likes: r.isLiked ? r.likes - 1 : r.likes + 1, isLiked: !r.isLiked }
-                : r
-            ),
-          };
-        }
-        if (c.id === commentId) {
-          return { ...c, likes: c.isLiked ? c.likes - 1 : c.likes + 1, isLiked: !c.isLiked };
-        }
-        return c;
-      })
-    );
+    setComments((prev) => prev.map((c) => toggleLikeOnComment(c, commentId, isReply, parentId)));
   };
 
   return (
@@ -372,4 +382,3 @@ function CommentCard({
     </article>
   );
 }
-

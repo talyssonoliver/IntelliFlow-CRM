@@ -34,7 +34,7 @@ export function AccountContactsList({ accountId }: AccountContactsListProps) {
     return (
       <div className="space-y-3">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 w-full" />
+          <Skeleton key={i} className="h-12 w-full" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
         ))}
       </div>
     );

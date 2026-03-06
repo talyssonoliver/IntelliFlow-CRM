@@ -75,8 +75,12 @@ export function ACLManager({
     return (
       <div className="text-center py-12" data-testid="acl-empty-state">
         <span className="material-symbols-outlined text-5xl text-slate-400">lock</span>
-        <h3 className="mt-4 text-lg font-medium text-slate-900 dark:text-white">No access entries</h3>
-        <p className="mt-2 text-sm text-slate-500">No users have been granted access to this document.</p>
+        <h3 className="mt-4 text-lg font-medium text-slate-900 dark:text-white">
+          No access entries
+        </h3>
+        <p className="mt-2 text-sm text-slate-500">
+          No users have been granted access to this document.
+        </p>
       </div>
     );
   }
@@ -125,7 +129,10 @@ export function ACLManager({
           data-testid="grant-access-form"
         >
           <div>
-            <label htmlFor="grant-user-id" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label
+              htmlFor="grant-user-id"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+            >
               User ID or Email
             </label>
             <input
@@ -139,7 +146,10 @@ export function ACLManager({
             />
           </div>
           <div>
-            <label htmlFor="grant-access-level" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label
+              htmlFor="grant-access-level"
+              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+            >
               Access Level
             </label>
             <select
@@ -171,12 +181,22 @@ export function ACLManager({
         <table className="w-full" role="table" aria-label="Access control list">
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-800/50">
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">User</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Access Level</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Granted</th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Granted By</th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                User
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Access Level
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Granted
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                Granted By
+              </th>
               {isAdmin && (
-                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  Actions
+                </th>
               )}
             </tr>
           </thead>
@@ -212,7 +232,9 @@ export function ACLManager({
                       aria-label={`Revoke access for ${entry.userName}`}
                       data-testid={`revoke-${entry.principalId}`}
                     >
-                      <span className="material-symbols-outlined text-[18px] text-red-500">person_remove</span>
+                      <span className="material-symbols-outlined text-[18px] text-red-500">
+                        person_remove
+                      </span>
                     </Button>
                   </td>
                 )}
@@ -220,7 +242,10 @@ export function ACLManager({
             ))}
             {currentACL.length === 0 && (
               <tr>
-                <td colSpan={isAdmin ? 5 : 4} className="px-4 py-8 text-center text-sm text-slate-500">
+                <td
+                  colSpan={isAdmin ? 5 : 4}
+                  className="px-4 py-8 text-center text-sm text-slate-500"
+                >
                   No access entries. Use "Grant Access" to add users.
                 </td>
               </tr>
@@ -237,7 +262,9 @@ export function ACLManager({
           role="dialog"
           aria-modal="true"
           aria-label="Confirm revoke access"
-          onKeyDown={(e) => { if (e.key === 'Escape') cancelRevoke(); }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') cancelRevoke();
+          }}
         >
           <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Revoke access?</h3>

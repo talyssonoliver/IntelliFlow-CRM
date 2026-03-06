@@ -29,9 +29,7 @@ export default function NpsGauge({ score, distribution }: NpsGaugeProps) {
   return (
     <div className="flex flex-col items-center gap-4 rounded-lg border bg-card p-6">
       <h3 className="text-sm font-medium text-muted-foreground">Net Promoter Score</h3>
-      <div className={`text-5xl font-bold ${colorClass}`}>
-        {score > 0 ? `+${score}` : score}
-      </div>
+      <div className={`text-5xl font-bold ${colorClass}`}>{score > 0 ? `+${score}` : score}</div>
       <div className="text-sm text-muted-foreground">{label}</div>
       <div className="flex w-full gap-4 text-xs">
         <div className="flex flex-col items-center">

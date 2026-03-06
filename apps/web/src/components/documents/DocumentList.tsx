@@ -2,12 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import {
-  DataTable,
-  ConfirmationDialog,
-  Button,
-  toast,
-} from '@intelliflow/ui';
+import { DataTable, ConfirmationDialog, Button, toast } from '@intelliflow/ui';
 import { formatFileSize, formatDate, getStatusConfig, getMimeTypeIcon } from './document-utils';
 import type {
   DocumentListProps,
@@ -53,7 +48,9 @@ export function DocumentList({
   const [sortField, setSortField] = useState<string>('createdAt');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(0);
-  const [confirmAction, setConfirmAction] = useState<{ action: BulkAction; ids: string[] } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ action: BulkAction; ids: string[] } | null>(
+    null
+  );
   const [documents] = useState<DocumentRecord[]>(initialDocuments ?? []);
   const [isLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -150,7 +147,9 @@ export function DocumentList({
   const executeBulkAction = useCallback(() => {
     if (!confirmAction) return;
     onBulkAction?.(confirmAction.action, confirmAction.ids);
-    toast({ title: `${confirmAction.action} completed for ${confirmAction.ids.length} document(s)` });
+    toast({
+      title: `${confirmAction.action} completed for ${confirmAction.ids.length} document(s)`,
+    });
     setSelectedIds(new Set());
     setConfirmAction(null);
   }, [confirmAction, onBulkAction]);
@@ -178,7 +177,9 @@ export function DocumentList({
         header: () => (
           <input
             type="checkbox"
-            checked={selectedIds.size === paginatedDocuments.length && paginatedDocuments.length > 0}
+            checked={
+              selectedIds.size === paginatedDocuments.length && paginatedDocuments.length > 0
+            }
             onChange={toggleSelectAll}
             aria-label="Select all documents"
           />
@@ -199,10 +200,7 @@ export function DocumentList({
       {
         accessorKey: 'metadata.title',
         header: () => (
-          <button
-            onClick={() => handleSort('name')}
-            className="flex items-center gap-1"
-          >
+          <button onClick={() => handleSort('name')} className="flex items-center gap-1">
             Name
             {sortField === 'name' && <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>}
           </button>
@@ -213,7 +211,9 @@ export function DocumentList({
           return (
             <div className="flex items-center gap-3">
               <div className="p-2 rounded bg-slate-100 dark:bg-slate-700">
-                <span className="material-symbols-outlined text-[20px] text-primary">{iconName}</span>
+                <span className="material-symbols-outlined text-[20px] text-primary">
+                  {iconName}
+                </span>
               </div>
               <div>
                 <p className="font-medium text-slate-900 dark:text-white">{doc.metadata.title}</p>
@@ -230,10 +230,7 @@ export function DocumentList({
       {
         accessorKey: 'status',
         header: () => (
-          <button
-            onClick={() => handleSort('status')}
-            className="flex items-center gap-1"
-          >
+          <button onClick={() => handleSort('status')} className="flex items-center gap-1">
             Status
             {sortField === 'status' && <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>}
           </button>
@@ -243,10 +240,7 @@ export function DocumentList({
       {
         accessorKey: 'sizeBytes',
         header: () => (
-          <button
-            onClick={() => handleSort('size')}
-            className="flex items-center gap-1"
-          >
+          <button onClick={() => handleSort('size')} className="flex items-center gap-1">
             Size
             {sortField === 'size' && <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>}
           </button>
@@ -256,10 +250,7 @@ export function DocumentList({
       {
         accessorKey: 'createdAt',
         header: () => (
-          <button
-            onClick={() => handleSort('date')}
-            className="flex items-center gap-1"
-          >
+          <button onClick={() => handleSort('date')} className="flex items-center gap-1">
             Date
             {sortField === 'date' && <span>{sortDirection === 'asc' ? '↑' : '↓'}</span>}
           </button>
@@ -267,7 +258,15 @@ export function DocumentList({
         cell: ({ row }) => formatDate(row.original.createdAt),
       },
     ],
-    [selectedIds, paginatedDocuments, toggleSelectAll, toggleSelection, handleSort, sortField, sortDirection]
+    [
+      selectedIds,
+      paginatedDocuments,
+      toggleSelectAll,
+      toggleSelection,
+      handleSort,
+      sortField,
+      sortDirection,
+    ]
   );
 
   // ─── Render ───────────────────────────────────────────────────────────────
@@ -307,7 +306,10 @@ export function DocumentList({
     <div className="space-y-4">
       {/* Bulk Action Toolbar */}
       {selectedIds.size > 0 && (
-        <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg" data-testid="bulk-toolbar">
+        <div
+          className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg"
+          data-testid="bulk-toolbar"
+        >
           <span className="text-sm font-medium">{selectedIds.size} selected</span>
           <Button
             variant="outline"

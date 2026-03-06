@@ -215,10 +215,7 @@ export function ActivityTimeline({
 
       {/* Timeline */}
       {filtered.length > 0 ? (
-        <ol
-          aria-label="Activity timeline, newest first"
-          className="relative space-y-4 pl-4"
-        >
+        <ol aria-label="Activity timeline, newest first" className="relative space-y-4 pl-4">
           {filtered.map((activity) => {
             const isExpanded = expandedIds.has(activity.id);
             const detailPanelId = `detail-${activity.id}`;

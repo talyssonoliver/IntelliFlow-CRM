@@ -135,7 +135,9 @@ describe('TaskCreateSheet', () => {
   it('validates description max length', () => {
     render(<TaskCreateSheet {...defaultProps} />);
     fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'Valid Title' } });
-    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'a'.repeat(2001) } });
+    fireEvent.change(screen.getByLabelText(/description/i), {
+      target: { value: 'a'.repeat(2001) },
+    });
     fireEvent.click(screen.getByText('Create Task'));
     expect(screen.getByText('Description must be 2000 characters or less')).toBeInTheDocument();
     expect(mockMutate).not.toHaveBeenCalled();

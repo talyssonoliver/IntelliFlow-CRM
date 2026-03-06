@@ -1,6 +1,5 @@
+// @vitest-environment happy-dom
 /**
- * @vitest-environment happy-dom
- *
  * MFA Verification Component - Supplementary Tests
  *
  * IMPLEMENTS: PG-022 (MFA Verify)
@@ -13,37 +12,33 @@
  * - URL parameter extraction (challenge ID, redirect URL)
  * - Edge cases for backup vs TOTP code validation
  * - State transitions (isExpired, isInvalidChallenge)
+ *
+ * Memory optimization: Uses same mock pattern as mfa-verification.test.tsx
+ * (stable mock objects defined before vi.mock, no vi.hoisted) to avoid
+ * early module-graph evaluation that causes OOM in the forks pool.
+ * Uses happy-dom (not jsdom) to reduce per-worker heap usage by ~50%.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
-import React from 'react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// ============================================================
-// Hoisted mocks
-// ============================================================
-
-const mocks = vi.hoisted(() => ({
-  mockMutateAsync: vi.fn(),
-  mockRouterPush: vi.fn(),
-  mockSearchParams: new URLSearchParams(),
-}));
-
-// ============================================================
-// vi.mock declarations
-// ============================================================
-
+// CRITICAL: All vi.mock calls are hoisted before any imports.
+// Mock @intelliflow/ui to avoid loading the entire UI library.
 vi.mock('@intelliflow/ui', () => ({
   cn: (...args: (string | undefined | boolean)[]) => args.filter(Boolean).join(' '),
 }));
 
+// Stable mock references — defined before vi.mock so factories can close over them
+const mockMutateAsync = vi.fn();
+const mockResendMutateAsync = vi.fn();
+const mockRouterPush = vi.fn();
+
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: mocks.mockRouterPush,
+    push: mockRouterPush,
     replace: vi.fn(),
     back: vi.fn(),
   }),
-  useSearchParams: () => mocks.mockSearchParams,
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock('@/lib/trpc', () => ({
@@ -51,7 +46,13 @@ vi.mock('@/lib/trpc', () => ({
     auth: {
       verifyMfa: {
         useMutation: () => ({
-          mutateAsync: mocks.mockMutateAsync,
+          mutateAsync: mockMutateAsync,
+          isPending: false,
+        }),
+      },
+      resendMfaCode: {
+        useMutation: () => ({
+          mutateAsync: mockResendMutateAsync,
           isPending: false,
         }),
       },
@@ -77,7 +78,17 @@ vi.mock('@/components/auth/mfa-challenge', () => ({
     defaultMethod,
     maskedPhone,
     maskedEmail,
-  }: any) => (
+  }: {
+    onVerify: (code: string, method: string) => Promise<boolean>;
+    onResend?: (method: 'sms' | 'email') => Promise<boolean>;
+    onCancel?: () => void;
+    error?: string | null;
+    isLoading?: boolean;
+    availableMethods?: string[];
+    defaultMethod?: string;
+    maskedPhone?: string;
+    maskedEmail?: string;
+  }) => (
     <div data-testid="mfa-challenge-mock">
       {error && <div data-testid="mfa-error">{error}</div>}
       {isLoading && <div data-testid="mfa-loading">Loading...</div>}
@@ -109,10 +120,8 @@ vi.mock('@/components/auth/mfa-challenge', () => ({
   ),
 }));
 
-// ============================================================
-// Import after mocks
-// ============================================================
-
+// NOW import after all mocks are declared
+import { render, screen, fireEvent, waitFor, act, cleanup } from '@testing-library/react';
 import { MfaVerification } from '../mfa-verification';
 
 // ============================================================
@@ -121,9 +130,15 @@ import { MfaVerification } from '../mfa-verification';
 
 describe('MfaVerification (supplementary)', () => {
   beforeEach(() => {
-    mocks.mockMutateAsync.mockReset();
-    mocks.mockRouterPush.mockReset();
-    mocks.mockSearchParams = new URLSearchParams();
+    vi.clearAllMocks();
+    mockMutateAsync.mockReset();
+    mockResendMutateAsync.mockReset();
+    mockResendMutateAsync.mockResolvedValue({ success: true });
+    mockRouterPush.mockReset();
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   describe('Rendering with valid challenge', () => {
@@ -209,7 +224,7 @@ describe('MfaVerification (supplementary)', () => {
   describe('Code verification', () => {
     it('calls mutation and onSuccess on valid TOTP', async () => {
       const onSuccess = vi.fn();
-      mocks.mockMutateAsync.mockResolvedValue({ success: true });
+      mockMutateAsync.mockResolvedValue({ success: true });
 
       render(<MfaVerification challengeId="valid-challenge-123" onSuccess={onSuccess} />);
 
@@ -218,7 +233,7 @@ describe('MfaVerification (supplementary)', () => {
       });
 
       await waitFor(() => {
-        expect(mocks.mockMutateAsync).toHaveBeenCalledWith({
+        expect(mockMutateAsync).toHaveBeenCalledWith({
           code: '123456',
           method: 'totp',
           challengeId: 'valid-challenge-123',
@@ -254,7 +269,7 @@ describe('MfaVerification (supplementary)', () => {
     });
 
     it('calls mutation with backup code unsanitized', async () => {
-      mocks.mockMutateAsync.mockResolvedValue({ success: true });
+      mockMutateAsync.mockResolvedValue({ success: true });
 
       render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
@@ -263,7 +278,7 @@ describe('MfaVerification (supplementary)', () => {
       });
 
       await waitFor(() => {
-        expect(mocks.mockMutateAsync).toHaveBeenCalledWith({
+        expect(mockMutateAsync).toHaveBeenCalledWith({
           code: 'A1B2C3D4E5', // Backup code should NOT be sanitized
           method: 'backup',
           challengeId: 'valid-challenge-123',
@@ -272,7 +287,7 @@ describe('MfaVerification (supplementary)', () => {
     });
 
     it('shows "Verification failed" when result.success is false', async () => {
-      mocks.mockMutateAsync.mockResolvedValue({ success: false });
+      mockMutateAsync.mockResolvedValue({ success: false });
 
       render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
@@ -290,7 +305,7 @@ describe('MfaVerification (supplementary)', () => {
 
   describe('Error handling from mutation', () => {
     it('shows expired error for expired token message', async () => {
-      mocks.mockMutateAsync.mockRejectedValue(new Error('Token has expired'));
+      mockMutateAsync.mockRejectedValue(new Error('Token has expired'));
 
       render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
@@ -298,13 +313,16 @@ describe('MfaVerification (supplementary)', () => {
         fireEvent.click(screen.getByTestId('verify-totp'));
       });
 
+      // When error contains 'expired', the component sets isExpired=true which
+      // renders the "Verification Expired" state (bypasses MfaChallenge mock).
+      // So we check the expired state heading rather than mfa-error data-testid.
       await waitFor(() => {
-        expect(screen.getByTestId('mfa-error').textContent).toContain('expired');
+        expect(screen.getByText(/Verification Expired/i)).toBeInTheDocument();
       });
     });
 
     it('shows invalid error for incorrect code message', async () => {
-      mocks.mockMutateAsync.mockRejectedValue(new Error('Code is invalid'));
+      mockMutateAsync.mockRejectedValue(new Error('Code is invalid'));
 
       render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
@@ -318,7 +336,7 @@ describe('MfaVerification (supplementary)', () => {
     });
 
     it('shows too many attempts error', async () => {
-      mocks.mockMutateAsync.mockRejectedValue(new Error('Too many attempts'));
+      mockMutateAsync.mockRejectedValue(new Error('Too many attempts'));
 
       render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
@@ -332,7 +350,7 @@ describe('MfaVerification (supplementary)', () => {
     });
 
     it('shows generic error for unknown errors', async () => {
-      mocks.mockMutateAsync.mockRejectedValue(new Error('Network failure'));
+      mockMutateAsync.mockRejectedValue(new Error('Network failure'));
 
       render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
 
@@ -348,7 +366,7 @@ describe('MfaVerification (supplementary)', () => {
 
   describe('Redirect after success', () => {
     it('redirects to redirectUrl after successful verification', async () => {
-      mocks.mockMutateAsync.mockResolvedValue({ success: true });
+      mockMutateAsync.mockResolvedValue({ success: true });
 
       render(
         <MfaVerification
@@ -363,7 +381,7 @@ describe('MfaVerification (supplementary)', () => {
       });
 
       await waitFor(() => {
-        expect(mocks.mockRouterPush).toHaveBeenCalledWith('/dashboard');
+        expect(mockRouterPush).toHaveBeenCalledWith('/dashboard');
       });
     });
   });

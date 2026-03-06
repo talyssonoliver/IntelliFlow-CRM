@@ -7,7 +7,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle, Badge, cn } from '@intelliflow/ui';
 import type { DriftHistoryItem } from '@/lib/ai-monitoring/types';
-import { getSeverityBadgeClass, formatDriftScore, formatRelativeTime } from '@/lib/ai-monitoring/drift-utils';
+import {
+  getSeverityBadgeClass,
+  formatDriftScore,
+  formatRelativeTime,
+} from '@/lib/ai-monitoring/drift-utils';
 
 interface DriftAlertsProps {
   alerts: DriftHistoryItem[];
@@ -33,7 +37,10 @@ export function DriftAlerts({ alerts }: DriftAlertsProps) {
       </CardHeader>
       <CardContent className="pb-4">
         {urgentAlerts.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4" data-testid="no-drift-alerts">
+          <p
+            className="text-sm text-muted-foreground text-center py-4"
+            data-testid="no-drift-alerts"
+          >
             No urgent drift alerts
           </p>
         ) : (
@@ -62,16 +69,22 @@ export function DriftAlerts({ alerts }: DriftAlertsProps) {
                       {alert.severity.toUpperCase()}
                     </span>
                   </div>
-                  <span className="text-xs text-muted-foreground">{formatRelativeTime(alert.timestamp)}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {formatRelativeTime(alert.timestamp)}
+                  </span>
                 </div>
                 <p className="text-xs text-muted-foreground mb-2">
-                  Drift Score: <span className="font-mono">{formatDriftScore(alert.driftScore)}</span>
+                  Drift Score:{' '}
+                  <span className="font-mono">{formatDriftScore(alert.driftScore)}</span>
                 </p>
                 {alert.recommendations.length > 0 && (
                   <ul className="text-xs space-y-1" data-testid="alert-recommendations">
                     {alert.recommendations.map((rec, ridx) => (
                       <li key={ridx} className="flex items-start gap-1.5">
-                        <span className="material-symbols-outlined text-xs mt-0.5" aria-hidden="true">
+                        <span
+                          className="material-symbols-outlined text-xs mt-0.5"
+                          aria-hidden="true"
+                        >
                           arrow_right
                         </span>
                         {rec}

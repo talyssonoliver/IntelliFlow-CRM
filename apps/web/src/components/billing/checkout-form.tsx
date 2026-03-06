@@ -21,7 +21,10 @@ import {
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js';
-import type { StripeCardNumberElement, StripeCardNumberElementChangeEvent } from '@stripe/stripe-js';
+import type {
+  StripeCardNumberElement,
+  StripeCardNumberElementChangeEvent,
+} from '@stripe/stripe-js';
 import { cn } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { getPaymentErrorMessage } from '@/lib/billing/payment-processor';
@@ -127,25 +130,19 @@ export function CheckoutForm({
     }));
   }, []);
 
-  const handleCardExpiryChange = useCallback(
-    (event: { error?: { message: string } }) => {
-      setElementErrors((prev) => ({
-        ...prev,
-        cardExpiry: event.error?.message,
-      }));
-    },
-    []
-  );
+  const handleCardExpiryChange = useCallback((event: { error?: { message: string } }) => {
+    setElementErrors((prev) => ({
+      ...prev,
+      cardExpiry: event.error?.message,
+    }));
+  }, []);
 
-  const handleCardCvcChange = useCallback(
-    (event: { error?: { message: string } }) => {
-      setElementErrors((prev) => ({
-        ...prev,
-        cardCvc: event.error?.message,
-      }));
-    },
-    []
-  );
+  const handleCardCvcChange = useCallback((event: { error?: { message: string } }) => {
+    setElementErrors((prev) => ({
+      ...prev,
+      cardCvc: event.error?.message,
+    }));
+  }, []);
 
   const handleNameBlur = useCallback(() => {
     setNameTouched(true);
@@ -222,9 +219,7 @@ export function CheckoutForm({
     } catch (error) {
       const errorMessage =
         error instanceof Error
-          ? getPaymentErrorMessage(
-              (error as { code?: string }).code || 'PROCESSING_ERROR'
-            )
+          ? getPaymentErrorMessage((error as { code?: string }).code || 'PROCESSING_ERROR')
           : 'An unexpected error occurred';
       setFormError(errorMessage);
       onError?.(errorMessage);
@@ -278,26 +273,22 @@ export function CheckoutForm({
 
       {/* Card Number — Stripe Element */}
       <div className="space-y-2">
-        <label
-          htmlFor={`${formId}-card-number`}
-          className="text-sm font-medium leading-none"
-        >
+        <label htmlFor={`${formId}-card-number`} className="text-sm font-medium leading-none">
           Card Number
         </label>
         <div className="relative">
           <div
             id={`${formId}-card-number`}
-            className={cn(
-              elementClasses,
-              elementErrors.cardNumber && 'border-destructive'
-            )}
+            className={cn(elementClasses, elementErrors.cardNumber && 'border-destructive')}
             aria-invalid={!!elementErrors.cardNumber}
             aria-describedby={elementErrors.cardNumber ? `${formId}-card-number-error` : undefined}
           >
             <CardNumberElement
               options={{ style: ELEMENT_STYLE, disabled: isSubmitting }}
               onChange={handleCardNumberChange}
-              onReady={(el) => { cardNumberRef.current = el; }}
+              onReady={(el) => {
+                cardNumberRef.current = el;
+              }}
             />
           </div>
           <div
@@ -321,18 +312,12 @@ export function CheckoutForm({
       <div className="grid grid-cols-2 gap-4">
         {/* Expiry */}
         <div className="space-y-2">
-          <label
-            htmlFor={`${formId}-expiry`}
-            className="text-sm font-medium leading-none"
-          >
+          <label htmlFor={`${formId}-expiry`} className="text-sm font-medium leading-none">
             Expiry Date
           </label>
           <div
             id={`${formId}-expiry`}
-            className={cn(
-              elementClasses,
-              elementErrors.cardExpiry && 'border-destructive'
-            )}
+            className={cn(elementClasses, elementErrors.cardExpiry && 'border-destructive')}
             aria-invalid={!!elementErrors.cardExpiry}
             aria-describedby={elementErrors.cardExpiry ? `${formId}-expiry-error` : undefined}
           >
@@ -350,18 +335,12 @@ export function CheckoutForm({
 
         {/* CVC */}
         <div className="space-y-2">
-          <label
-            htmlFor={`${formId}-cvc`}
-            className="text-sm font-medium leading-none"
-          >
+          <label htmlFor={`${formId}-cvc`} className="text-sm font-medium leading-none">
             CVC
           </label>
           <div
             id={`${formId}-cvc`}
-            className={cn(
-              elementClasses,
-              elementErrors.cardCvc && 'border-destructive'
-            )}
+            className={cn(elementClasses, elementErrors.cardCvc && 'border-destructive')}
             aria-invalid={!!elementErrors.cardCvc}
             aria-describedby={elementErrors.cardCvc ? `${formId}-cvc-error` : undefined}
           >
@@ -380,10 +359,7 @@ export function CheckoutForm({
 
       {/* Cardholder Name — Standard React input (not PCI scope) */}
       <div className="space-y-2">
-        <label
-          htmlFor={`${formId}-name`}
-          className="text-sm font-medium leading-none"
-        >
+        <label htmlFor={`${formId}-name`} className="text-sm font-medium leading-none">
           Cardholder Name
         </label>
         <input

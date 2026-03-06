@@ -185,7 +185,9 @@ describe('DriftDashboard', () => {
       render(<DriftDashboard />);
       expect(screen.getByTestId('empty-state')).toBeInTheDocument();
       expect(
-        screen.getByText('No drift metrics tracked yet. Start using AI features to populate monitoring data.')
+        screen.getByText(
+          'No drift metrics tracked yet. Start using AI features to populate monitoring data.'
+        )
       ).toBeInTheDocument();
     });
 
@@ -193,7 +195,9 @@ describe('DriftDashboard', () => {
       setMockHook({ isLoading: true });
       const { container } = render(<DriftDashboard />);
       // Skeletons rendered for stat cards
-      const skeletons = container.querySelectorAll('[class*="animate-pulse"], [data-slot="skeleton"]');
+      const skeletons = container.querySelectorAll(
+        '[class*="animate-pulse"], [data-slot="skeleton"]'
+      );
       expect(skeletons.length).toBeGreaterThan(0);
     });
   });
@@ -327,7 +331,9 @@ describe('DriftDashboard', () => {
     it('service unavailable error shows error banner with retry', () => {
       setMockHook({ error: new Error('Service unavailable'), isLoading: false });
       render(<DriftDashboard />);
-      expect(screen.getByTestId('error-message')).toHaveTextContent('AI monitoring service unavailable');
+      expect(screen.getByTestId('error-message')).toHaveTextContent(
+        'AI monitoring service unavailable'
+      );
       expect(screen.getByTestId('retry-button')).toBeInTheDocument();
     });
 

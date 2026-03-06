@@ -76,7 +76,7 @@ export function TicketForm({
 
     if (!formData.contactEmail.trim()) {
       newErrors.contactEmail = 'Contact email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.contactEmail)) {
+    } else if (!/^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(formData.contactEmail)) {
       newErrors.contactEmail = 'Invalid email format';
     }
 

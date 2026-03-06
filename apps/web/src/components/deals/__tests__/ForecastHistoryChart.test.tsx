@@ -15,7 +15,9 @@ vi.mock('recharts', () => ({
     <div data-testid="responsive-container">{children}</div>
   ),
   LineChart: ({ children, data }: { children: React.ReactNode; data: unknown[] }) => (
-    <div data-testid="line-chart" data-count={data.length}>{children}</div>
+    <div data-testid="line-chart" data-count={data.length}>
+      {children}
+    </div>
   ),
   Line: ({ type, dataKey }: { type: string; dataKey: string }) => (
     <div data-testid="line" data-type={type} data-key={dataKey} />
@@ -27,7 +29,11 @@ vi.mock('recharts', () => ({
     <div data-testid="y-axis" data-label={label?.value} />
   ),
   CartesianGrid: () => <div data-testid="cartesian-grid" />,
-  Tooltip: ({ content }: { content?: React.FC<{ active?: boolean; payload?: Array<{ payload: unknown }> }> }) => {
+  Tooltip: ({
+    content,
+  }: {
+    content?: React.FC<{ active?: boolean; payload?: Array<{ payload: unknown }> }>;
+  }) => {
     // Render the custom tooltip content if provided
     const Content = content;
     return (
@@ -35,13 +41,21 @@ vi.mock('recharts', () => ({
         {Content && (
           <>
             <div data-testid="tooltip-active">
-              <Content active={true} payload={[{ payload: { date: '2026-01-15', probability: 55, event: 'Stage change' } }]} />
+              <Content
+                active={true}
+                payload={[
+                  { payload: { date: '2026-01-15', probability: 55, event: 'Stage change' } },
+                ]}
+              />
             </div>
             <div data-testid="tooltip-inactive">
               <Content active={false} payload={[]} />
             </div>
             <div data-testid="tooltip-projected">
-              <Content active={true} payload={[{ payload: { date: '2026-02-01', probability: 65, isProjected: true } }]} />
+              <Content
+                active={true}
+                payload={[{ payload: { date: '2026-02-01', probability: 65, isProjected: true } }]}
+              />
             </div>
           </>
         )}

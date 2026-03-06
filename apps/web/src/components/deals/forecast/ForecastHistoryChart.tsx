@@ -54,7 +54,9 @@ export default function ForecastHistoryChart({ data, mode }: ForecastHistoryChar
               );
             }}
           />
-          {mode === 'deal' && <ReferenceLine y={50} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />}
+          {mode === 'deal' && (
+            <ReferenceLine y={50} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
+          )}
           <Line
             type={mode === 'deal' ? 'stepAfter' : 'monotone'}
             dataKey="probability"

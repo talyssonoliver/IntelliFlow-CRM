@@ -74,11 +74,12 @@ export function AssignmentDashboard() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const todayAssignments = (assignments as AssignmentItem[] | undefined)?.filter(
-    (a) => new Date(a.createdAt) >= today
-  ) ?? [];
+  const todayAssignments =
+    (assignments as AssignmentItem[] | undefined)?.filter((a) => new Date(a.createdAt) >= today) ??
+    [];
 
-  const activeRules = (rules as RoutingRuleItem[] | undefined)?.filter((r) => r.isActive)?.length ?? 0;
+  const activeRules =
+    (rules as RoutingRuleItem[] | undefined)?.filter((r) => r.isActive)?.length ?? 0;
   const loading = assignmentsLoading || rulesLoading;
 
   return (
@@ -94,24 +95,9 @@ export function AssignmentDashboard() {
           value={todayAssignments.length}
           loading={loading}
         />
-        <StatsCard
-          icon="timer"
-          label="Avg Assignment Time"
-          value="< 1s"
-          loading={loading}
-        />
-        <StatsCard
-          icon="rule"
-          label="Active Rules"
-          value={activeRules}
-          loading={loading}
-        />
-        <StatsCard
-          icon="person_off"
-          label="Unassigned Leads"
-          value="—"
-          loading={loading}
-        />
+        <StatsCard icon="timer" label="Avg Assignment Time" value="< 1s" loading={loading} />
+        <StatsCard icon="rule" label="Active Rules" value={activeRules} loading={loading} />
+        <StatsCard icon="person_off" label="Unassigned Leads" value="—" loading={loading} />
       </div>
 
       <Card>

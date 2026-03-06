@@ -61,9 +61,7 @@ const mockPaymentMethods = vi.hoisted(() => [
       last4: '3782',
       expMonth: new Date().getMonth() + 2 > 12 ? 1 : new Date().getMonth() + 2,
       expYear:
-        new Date().getMonth() + 2 > 12
-          ? new Date().getFullYear() + 1
-          : new Date().getFullYear(),
+        new Date().getMonth() + 2 > 12 ? new Date().getFullYear() + 1 : new Date().getFullYear(),
     },
     isDefault: false,
   },
@@ -185,7 +183,9 @@ vi.mock('@/lib/billing/payment-processor', () => ({
 
 // Mock Stripe Elements for AddCardDialog
 vi.mock('@stripe/react-stripe-js', () => ({
-  Elements: ({ children }: { children: React.ReactNode }) => <div data-testid="stripe-elements">{children}</div>,
+  Elements: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="stripe-elements">{children}</div>
+  ),
   CardNumberElement: () => <div data-testid="card-number-element" />,
   CardExpiryElement: () => <div data-testid="card-expiry-element" />,
   CardCvcElement: () => <div data-testid="card-cvc-element" />,

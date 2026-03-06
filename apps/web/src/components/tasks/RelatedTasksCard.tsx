@@ -64,7 +64,10 @@ export function RelatedTasksCard({
   const utils = api.useUtils();
   const completeMutation = api.task.complete.useMutation({
     onSuccess: () => {
-      utils.task.getByEntity.invalidate({ entityType: queryEntityType as 'lead' | 'contact' | 'opportunity', entityId });
+      utils.task.getByEntity.invalidate({
+        entityType: queryEntityType as 'lead' | 'contact' | 'opportunity',
+        entityId,
+      });
       utils.task.list.invalidate();
       toast({ title: 'Task completed' });
     },
@@ -136,7 +139,7 @@ export function RelatedTasksCard({
         {isLoading && (
           <div className="space-y-3">
             {Array.from({ length: Math.min(maxItems, 3) }).map((_, i) => (
-              <Skeleton key={i} className={compact ? 'h-8 w-full' : 'h-10 w-full'} />
+              <Skeleton key={i} className={compact ? 'h-8 w-full' : 'h-10 w-full'} /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
             ))}
           </div>
         )}
@@ -207,7 +210,10 @@ export function RelatedTasksCard({
         defaultEntityType={entityType}
         defaultEntityId={entityId}
         onSuccess={() => {
-          utils.task.getByEntity.invalidate({ entityType: queryEntityType as 'lead' | 'contact' | 'opportunity', entityId });
+          utils.task.getByEntity.invalidate({
+            entityType: queryEntityType as 'lead' | 'contact' | 'opportunity',
+            entityId,
+          });
         }}
       />
     </>

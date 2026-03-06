@@ -45,9 +45,12 @@ vi.mock('@/lib/trpc', () => ({
       getDailyGoal: { useQuery: mockGoalQuery },
       getPinnedItems: { useQuery: mockPinnedQuery },
       unpinItem: { useMutation: mockUnpinMutation },
+      updateDailyGoal: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
+      reorderPinnedItems: { useMutation: vi.fn(() => ({ mutate: vi.fn(), isLoading: false })) },
     },
     useUtils: vi.fn(() => ({
       activityFeed: { getUnifiedFeed: { invalidate: vi.fn() } },
+      home: { getDailyGoal: { invalidate: vi.fn() } },
     })),
   },
 }));
@@ -58,6 +61,27 @@ vi.mock('@/hooks/useActivityFeed', () => ({
 
 vi.mock('@/components/shared/activity-feed', () => ({
   ActivityFeed: () => <div data-testid="activity-feed-mock" />,
+  ActivityFeedTypeFilter: () => <button aria-label="Filter activity feed">filter_list</button>,
+}));
+
+vi.mock('@dnd-kit/core', () => ({
+  DndContext: ({ children }: any) => <div>{children}</div>,
+  closestCenter: vi.fn(),
+  PointerSensor: vi.fn(),
+  KeyboardSensor: vi.fn(),
+  useSensor: vi.fn(),
+  useSensors: vi.fn(() => []),
+}));
+
+vi.mock('@dnd-kit/sortable', () => ({
+  SortableContext: ({ children }: any) => <div>{children}</div>,
+  verticalListSortingStrategy: {},
+  arrayMove: vi.fn((_arr: unknown[], _from: number, _to: number) => []),
+  sortableKeyboardCoordinates: vi.fn(),
+}));
+
+vi.mock('../DraggablePinnedItem', () => ({
+  DraggablePinnedItem: ({ item }: any) => <div>{item.title}</div>,
 }));
 
 vi.mock('@/lib/auth/AuthContext', () => ({

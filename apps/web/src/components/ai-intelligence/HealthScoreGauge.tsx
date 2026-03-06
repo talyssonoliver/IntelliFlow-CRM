@@ -68,7 +68,7 @@ export function HealthScoreGauge({ score, label = 'Health Score' }: HealthScoreG
               className="text-muted/20"
             />
             {/* Score arc */}
-            {clampedScore > 0 && (
+            {clampedScore > 0 ? (
               <path
                 d={arcPath}
                 fill="none"
@@ -76,7 +76,7 @@ export function HealthScoreGauge({ score, label = 'Health Score' }: HealthScoreG
                 strokeWidth="12"
                 strokeLinecap="round"
               />
-            )}
+            ) : null}
           </svg>
           {/* Center score text */}
           <div className="absolute inset-0 flex flex-col items-center justify-end pb-0">

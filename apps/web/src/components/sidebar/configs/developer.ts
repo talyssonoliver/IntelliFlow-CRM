@@ -24,6 +24,12 @@ export const developerSidebarConfig: SidebarConfig = {
           href: '/docs/api',
         },
         {
+          id: 'architecture',
+          label: 'Architecture',
+          icon: 'architecture',
+          href: '/docs/architecture',
+        },
+        {
           id: 'integrations',
           label: 'Integrations',
           icon: 'integration_instructions',
@@ -40,6 +46,12 @@ export const developerSidebarConfig: SidebarConfig = {
           label: 'SDK Guides',
           icon: 'terminal',
           href: '/docs/sdk',
+        },
+        {
+          id: 'guides',
+          label: 'Developer Guides',
+          icon: 'menu_book',
+          href: '/docs/guides',
         },
         {
           id: 'cli',

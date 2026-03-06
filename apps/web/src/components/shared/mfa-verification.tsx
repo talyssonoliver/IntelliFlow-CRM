@@ -79,6 +79,17 @@ interface ChallengeData {
 }
 
 // ============================================
+// Constants
+// ============================================
+
+/**
+ * Stable default for availableMethods. Defined at module level so React's
+ * referential equality check sees the same array reference on every render,
+ * eliminating spurious useEffect re-runs caused by inline array literals.
+ */
+const DEFAULT_AVAILABLE_METHODS: MfaMethod[] = ['totp', 'sms', 'email', 'backup'];
+
+// ============================================
 // Component
 // ============================================
 
@@ -86,7 +97,7 @@ export function MfaVerification({
   challengeId: propChallengeId,
   email,
   method: propMethod = 'totp',
-  availableMethods = ['totp', 'sms', 'email', 'backup'],
+  availableMethods = DEFAULT_AVAILABLE_METHODS,
   onSuccess,
   onCancel,
   redirectUrl,
@@ -109,6 +120,7 @@ export function MfaVerification({
 
   // tRPC mutations
   const verifyMfaMutation = trpc.auth.verifyMfa.useMutation();
+  const resendMfaCodeMutation = trpc.auth.resendMfaCode.useMutation();
 
   // Check if we have a valid challenge
   useEffect(() => {
@@ -138,7 +150,7 @@ export function MfaVerification({
         setIsInvalidChallenge(true);
       }
     }
-  }, [challengeId, propMethod, email, availableMethods, maskedPhone, maskedEmail]);
+  }, [availableMethods, challengeId, email, maskedEmail, maskedPhone, propMethod]);
 
   // Check expiration
   useEffect(() => {
@@ -217,17 +229,27 @@ export function MfaVerification({
 
   /**
    * Handle resend code request
+   *
+   * Calls auth.resendMfaCode tRPC mutation to trigger a real code delivery.
+   * Returns true on success so MfaChallenge can start the cooldown timer.
    */
-  const handleResend = useCallback(async (_method: 'sms' | 'email'): Promise<boolean> => {
-    try {
-      // TODO: Call auth.resendMfaCode with _method when implemented
-      // For now, simulate success
-      return true;
-    } catch {
-      setError('Failed to resend code. Please try again.');
-      return false;
-    }
-  }, []);
+  const handleResend = useCallback(
+    async (method: 'sms' | 'email'): Promise<boolean> => {
+      try {
+        const result = await resendMfaCodeMutation.mutateAsync({
+          method,
+          challengeId: challengeId,
+        });
+        return result.success;
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Failed to resend code. Please try again.';
+        setError(message);
+        return false;
+      }
+    },
+    [challengeId, resendMfaCodeMutation]
+  );
 
   // Render expired state
   if (isExpired) {

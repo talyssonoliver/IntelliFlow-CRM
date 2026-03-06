@@ -47,23 +47,52 @@ export type ActivityFeedProps = ActivityFeedInternalProps | ActivityFeedExternal
 /** Estimated height of each feed item in pixels (for virtualizer) — increased for mockup layout */
 const ESTIMATED_ITEM_SIZE = 120;
 
+interface ResolvedFeedData {
+  items: ActivityFeedItemProps[];
+  isLoading: boolean;
+  isError: boolean;
+  error: { message: string } | null;
+  isFetchingNextPage: boolean;
+  hasNextPage: boolean;
+  fetchNextPage: () => void;
+}
+
+function resolveDataSource(
+  props: ActivityFeedProps,
+  internal: ReturnType<typeof useActivityFeedConditional>
+): ResolvedFeedData {
+  const isExternal = 'items' in props && props.items !== undefined;
+  if (!isExternal) {
+    return {
+      items: internal.items,
+      isLoading: internal.isLoading,
+      isError: internal.isError,
+      error: internal.error,
+      isFetchingNextPage: internal.isFetchingNextPage,
+      hasNextPage: internal.hasNextPage,
+      fetchNextPage: internal.fetchNextPage,
+    };
+  }
+  const ext = props as ActivityFeedExternalProps;
+  return {
+    items: ext.items,
+    isLoading: ext.isLoading ?? false,
+    isError: ext.isError ?? false,
+    error: ext.error ?? null,
+    isFetchingNextPage: ext.isFetchingNextPage ?? false,
+    hasNextPage: ext.hasNextPage ?? false,
+    fetchNextPage: ext.fetchNextPage ?? (() => {}),
+  };
+}
+
 export function ActivityFeed(props: ActivityFeedProps) {
-  const {
-    height = 400,
-    className = '',
-    emptyMessage = 'No recent activity',
-  } = props;
+  const { height = 400, className = '', emptyMessage = 'No recent activity' } = props;
 
   // Resolve data source: internal hook or external props
   const internal = useActivityFeedConditional(props);
 
-  const items = 'items' in props && props.items !== undefined ? props.items : internal.items;
-  const isLoading = 'items' in props && props.items !== undefined ? (props.isLoading ?? false) : internal.isLoading;
-  const isError = 'items' in props && props.items !== undefined ? (props.isError ?? false) : internal.isError;
-  const error = 'items' in props && props.items !== undefined ? (props.error ?? null) : internal.error;
-  const isFetchingNextPage = 'items' in props && props.items !== undefined ? (props.isFetchingNextPage ?? false) : internal.isFetchingNextPage;
-  const hasNextPage = 'items' in props && props.items !== undefined ? (props.hasNextPage ?? false) : internal.hasNextPage;
-  const fetchNextPage = 'items' in props && props.items !== undefined ? (props.fetchNextPage ?? (() => {})) : internal.fetchNextPage;
+  const { items, isLoading, isError, error, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    resolveDataSource(props, internal);
 
   const parentRef = useRef<HTMLDivElement>(null);
 
@@ -117,9 +146,7 @@ export function ActivityFeed(props: ActivityFeedProps) {
     return (
       <div className={`p-8 text-center ${className}`}>
         <span className="material-symbols-outlined text-4xl mb-2 text-slate-400">error</span>
-        <p className="text-sm text-red-500">
-          {error?.message || 'Failed to load activity feed'}
-        </p>
+        <p className="text-sm text-red-500">{error?.message || 'Failed to load activity feed'}</p>
       </div>
     );
   }
@@ -140,7 +167,7 @@ export function ActivityFeed(props: ActivityFeedProps) {
       : { height, overflow: 'auto' as const };
 
   return (
-    <div className={className}>
+    <div className={className} role="feed" aria-busy={isLoading}>
       <div ref={parentRef} style={containerStyle}>
         <div
           style={{
@@ -189,19 +216,23 @@ export function ActivityFeed(props: ActivityFeedProps) {
 
       {/* "Load More Updates" footer — matching mockup */}
       <div className="p-4 border-t border-[#e2e8f0] dark:border-[#334155] text-center">
-        {isFetchingNextPage ? (
+        {isFetchingNextPage && (
           <span className="flex items-center gap-2 justify-center text-sm text-slate-500">
-            <span className="material-symbols-outlined animate-spin text-sm">progress_activity</span>
+            <span className="material-symbols-outlined animate-spin text-sm">
+              progress_activity
+            </span>
             Loading...
           </span>
-        ) : hasNextPage ? (
+        )}
+        {!isFetchingNextPage && hasNextPage && (
           <button
             onClick={() => fetchNextPage()}
             className="text-sm font-medium text-slate-500 hover:text-[#137fec] transition-colors"
           >
             Load More Updates
           </button>
-        ) : (
+        )}
+        {!isFetchingNextPage && !hasNextPage && (
           <span className="text-sm text-slate-400">You&apos;re all caught up</span>
         )}
       </div>

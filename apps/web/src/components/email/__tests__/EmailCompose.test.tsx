@@ -238,7 +238,8 @@ describe('EmailCompose', () => {
 
   it('threads draftId through subsequent saves after initial draft creation', async () => {
     const user = userEvent.setup();
-    const mutateAsync = vi.fn()
+    const mutateAsync = vi
+      .fn()
       .mockResolvedValueOnce({ id: 'draft-first', status: 'DRAFT' })
       .mockResolvedValueOnce({ id: 'draft-first', status: 'DRAFT' });
     mocks.saveDraft.mockReturnValue({
@@ -259,9 +260,7 @@ describe('EmailCompose', () => {
     await user.click(screen.getByRole('button', { name: /save draft/i }));
     await waitFor(() => {
       expect(mutateAsync).toHaveBeenCalledTimes(2);
-      expect(mutateAsync).toHaveBeenLastCalledWith(
-        expect.objectContaining({ id: 'draft-first' })
-      );
+      expect(mutateAsync).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'draft-first' }));
     });
   });
 });

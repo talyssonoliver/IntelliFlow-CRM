@@ -56,7 +56,10 @@ export function RiskFactorsCard({
     <Card className="p-4" data-testid="risk-factors-card">
       <h3 className="text-sm font-semibold mb-3">Risk Factors</h3>
       {sorted.length === 0 ? (
-        <div className="flex items-center gap-2 text-sm text-muted-foreground" data-testid="empty-state">
+        <div
+          className="flex items-center gap-2 text-sm text-muted-foreground"
+          data-testid="empty-state"
+        >
           <span className="text-green-500">✓</span>
           <span>{emptyMessage}</span>
         </div>

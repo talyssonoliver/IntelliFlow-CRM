@@ -39,6 +39,7 @@ export interface CalendarAppointment {
   hasConflict: boolean;
   linkedCaseCount: number;
   isRecurring: boolean;
+  calendarId?: string | null;
 }
 
 export interface AppointmentListItem extends CalendarAppointment {
@@ -132,6 +133,14 @@ export interface ConflictInfo {
   canOverride: boolean;
 }
 
+export interface CalendarTask {
+  id: string;
+  title: string;
+  dueDate: Date | string;
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  calendarId?: string | null;
+}
+
 export interface AppointmentFormInput {
   title: string;
   description?: string;
@@ -146,4 +155,5 @@ export interface AppointmentFormInput {
   recurrence?: RecurrencePattern | null;
   reminderMinutes?: number;
   forceOverrideConflicts: boolean;
+  calendarId?: string | null;
 }

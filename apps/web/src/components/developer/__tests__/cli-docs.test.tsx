@@ -58,16 +58,10 @@ describe('CliDocs', () => {
     );
 
     await user.click(screen.getByRole('tab', { name: 'Database' }));
-    expect(screen.getByRole('tab', { name: 'Database' })).toHaveAttribute(
-      'data-state',
-      'active'
-    );
+    expect(screen.getByRole('tab', { name: 'Database' })).toHaveAttribute('data-state', 'active');
 
     await user.click(screen.getByRole('tab', { name: 'Examples' }));
-    expect(screen.getByRole('tab', { name: 'Examples' })).toHaveAttribute(
-      'data-state',
-      'active'
-    );
+    expect(screen.getByRole('tab', { name: 'Examples' })).toHaveAttribute('data-state', 'active');
   });
 
   it('Overview tab shows prerequisites section (AC-003)', () => {

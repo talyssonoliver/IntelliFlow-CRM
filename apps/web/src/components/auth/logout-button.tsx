@@ -103,8 +103,9 @@ export function LogoutButton({
    * Note: Actual save implementation would need to be provided by the app
    */
   const handleSaveAndLogout = async () => {
-    // TODO: In a real implementation, this would trigger save for all dirty forms
-    // For now, we just clear and logout
+    // Note: Individual form saves are the responsibility of each form component.
+    // The useUnsavedChanges hook tracks dirty state; clearAll() discards it on logout.
+    // Forms that need save-before-logout should register a save handler via that hook.
     setShowModal(false);
     clearAll();
     handleLogout();

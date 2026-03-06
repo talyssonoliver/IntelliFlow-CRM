@@ -219,7 +219,7 @@ export function ResetSuccess({ onContinue, className }: ResetSuccessProps) {
           'focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-slate-900'
         )}
       >
-        Continue to Sign In
+        Continue to Sign In{' '}
         <span className="material-symbols-outlined text-lg" aria-hidden="true">
           arrow_forward
         </span>
@@ -405,7 +405,7 @@ export function PasswordResetForm({
   );
 
   // Masked email display
-  const maskedEmail = email ? email.replace(/(.{2})(.*)(@.*)/, '$1***$3') : null;
+  const maskedEmail = email ? email.replace(/(.{2})([^@]{0,254})(@[^@]{0,254})/, '$1***$3') : null;
 
   return (
     <form
@@ -485,7 +485,7 @@ export function PasswordResetForm({
       >
         {isSubmitting ? (
           <>
-            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />{' '}
             Resetting password...
           </>
         ) : (
@@ -502,10 +502,9 @@ export function PasswordResetForm({
       <p className="text-xs text-slate-500 text-center">
         <span className="material-symbols-outlined text-sm align-middle mr-1" aria-hidden="true">
           shield
-        </span>
+        </span>{' '}
         Your password is encrypted and stored securely.
       </p>
     </form>
   );
 }
-

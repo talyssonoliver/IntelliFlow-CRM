@@ -2,13 +2,7 @@
 
 import { useState } from 'react';
 import { Input, Button, Badge, Textarea } from '@intelliflow/ui';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from '@intelliflow/ui';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@intelliflow/ui';
 
 const EMAIL_WEBHOOK_EVENTS = [
   'email.delivered',
@@ -260,17 +254,11 @@ export function WebhookTester() {
           ) : result ? (
             <div className="border rounded-lg p-4">
               <div className="flex items-center gap-4 mb-4">
-                <Badge variant={getStatusVariant(result.status)}>
-                  {result.status}
-                </Badge>
-                <span className="text-sm text-muted-foreground">
-                  {result.latencyMs}ms
-                </span>
+                <Badge variant={getStatusVariant(result.status)}>{result.status}</Badge>
+                <span className="text-sm text-muted-foreground">{result.latencyMs}ms</span>
               </div>
               <div>
-                <div className="text-xs text-muted-foreground mb-1 font-medium">
-                  Response Body
-                </div>
+                <div className="text-xs text-muted-foreground mb-1 font-medium">Response Body</div>
                 <pre className="font-mono bg-muted rounded-lg p-4 text-sm overflow-x-auto">
                   <code>{formatBody(result.body)}</code>
                 </pre>

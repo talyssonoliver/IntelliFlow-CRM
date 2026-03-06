@@ -1,14 +1,7 @@
 'use client';
 
 import { useId } from 'react';
-import {
-  ChevronDown,
-  ChevronUp,
-  Reply,
-  ReplyAll,
-  Forward,
-  Paperclip,
-} from 'lucide-react';
+import { ChevronDown, ChevronUp, Reply, ReplyAll, Forward, Paperclip } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface EmailMessageData {
@@ -85,10 +78,7 @@ export function EmailMessage({
         </div>
 
         {/* Timestamp */}
-        <time
-          dateTime={message.receivedAt}
-          className="shrink-0 text-xs text-muted-foreground"
-        >
+        <time dateTime={message.receivedAt} className="shrink-0 text-xs text-muted-foreground">
           {new Date(message.receivedAt).toLocaleString()}
         </time>
 

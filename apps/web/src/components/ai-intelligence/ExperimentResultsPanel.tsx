@@ -20,9 +20,7 @@ interface ExperimentResultsPanelProps {
   experimentId: string;
 }
 
-export default function ExperimentResultsPanel({
-  experimentId,
-}: ExperimentResultsPanelProps) {
+export default function ExperimentResultsPanel({ experimentId }: ExperimentResultsPanelProps) {
   const { data: result, isLoading, error } = useExperimentResults(experimentId);
 
   if (isLoading) {
@@ -90,9 +88,7 @@ export default function ExperimentResultsPanel({
                   ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300'
                   : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
               )}
-              aria-label={
-                result.isSignificant ? 'Statistically significant' : 'Not significant'
-              }
+              aria-label={result.isSignificant ? 'Statistically significant' : 'Not significant'}
             >
               {result.isSignificant ? 'Significant' : 'Not Significant'}
             </Badge>
@@ -143,9 +139,7 @@ export default function ExperimentResultsPanel({
         </div>
 
         {/* Significance Description */}
-        <p className="text-sm text-slate-600 dark:text-slate-300">
-          {significanceDesc}
-        </p>
+        <p className="text-sm text-slate-600 dark:text-slate-300">{significanceDesc}</p>
 
         {/* Recommendation */}
         {result.recommendation && (
@@ -153,9 +147,7 @@ export default function ExperimentResultsPanel({
             <p className="text-xs font-medium text-blue-700 dark:text-blue-300 mb-1">
               Recommendation
             </p>
-            <p className="text-sm text-blue-800 dark:text-blue-200">
-              {result.recommendation}
-            </p>
+            <p className="text-sm text-blue-800 dark:text-blue-200">{result.recommendation}</p>
           </div>
         )}
       </CardContent>

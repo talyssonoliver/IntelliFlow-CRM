@@ -44,6 +44,11 @@ vi.mock('../TicketAssignSidebar', () => ({
     ) : null,
 }));
 
+// Mock PinButton to avoid tRPC context requirement
+vi.mock('@/components/home/PinButton', () => ({
+  PinButton: () => <button data-testid="pin-button" aria-label="Pin" />,
+}));
+
 // Mock SLAIndicator
 vi.mock('../SLAIndicator', () => ({
   SLAIndicator: ({ slaStatus }: any) => <div data-testid="sla-indicator">{slaStatus}</div>,
@@ -63,9 +68,22 @@ vi.mock('../EscalationAlert', () => ({
   },
 }));
 
-// Mock Card from @intelliflow/ui
+// Mock @intelliflow/ui components
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className }: any) => <div className={className}>{children}</div>,
+  toast: vi.fn(),
+  AlertDialog: ({ children, open }: any) => (open ? <div>{children}</div> : null),
+  AlertDialogContent: ({ children }: any) => <div>{children}</div>,
+  AlertDialogHeader: ({ children }: any) => <div>{children}</div>,
+  AlertDialogTitle: ({ children }: any) => <h2>{children}</h2>,
+  AlertDialogDescription: ({ children }: any) => <p>{children}</p>,
+  AlertDialogFooter: ({ children }: any) => <div>{children}</div>,
+  AlertDialogCancel: ({ children }: any) => <button>{children}</button>,
+  AlertDialogAction: ({ children, onClick, className }: any) => (
+    <button onClick={onClick} className={className}>
+      {children}
+    </button>
+  ),
 }));
 
 describe('TicketDetail', () => {

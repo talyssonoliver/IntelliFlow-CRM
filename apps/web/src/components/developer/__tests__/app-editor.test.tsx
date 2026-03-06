@@ -118,7 +118,9 @@ describe('AppEditor', () => {
   // AE-007: Pre-populates webhookUrl from existing app (AC-002)
   it('AE-007: pre-populates webhookUrl from existing app', () => {
     render(<AppEditor appId="app-001" />);
-    const webhookInput = screen.getByPlaceholderText('https://example.com/webhooks') as HTMLInputElement;
+    const webhookInput = screen.getByPlaceholderText(
+      'https://example.com/webhooks'
+    ) as HTMLInputElement;
     expect(webhookInput.value).toBe('https://dashboard.intelliflow.dev/webhooks');
   });
 
@@ -273,7 +275,9 @@ describe('AppEditor', () => {
     await user.click(saveBtn);
     // Production requires HTTPS
     await waitFor(() => {
-      expect(screen.getByTestId('webhook-config').querySelector('[role="alert"]')).toBeInTheDocument();
+      expect(
+        screen.getByTestId('webhook-config').querySelector('[role="alert"]')
+      ).toBeInTheDocument();
     });
   });
 
@@ -364,7 +368,9 @@ describe('AppEditor', () => {
   it('AE-033: WebhookConfig receives current webhookUrl', () => {
     render(<AppEditor appId="app-001" />);
     expect(screen.getByTestId('webhook-config')).toBeInTheDocument();
-    const webhookInput = screen.getByPlaceholderText('https://example.com/webhooks') as HTMLInputElement;
+    const webhookInput = screen.getByPlaceholderText(
+      'https://example.com/webhooks'
+    ) as HTMLInputElement;
     expect(webhookInput.value).toBe('https://dashboard.intelliflow.dev/webhooks');
   });
 
@@ -377,7 +383,9 @@ describe('AppEditor', () => {
   // AE-035: WebhookConfig onChange updates form state
   it('AE-035: WebhookConfig onChange updates form state', () => {
     render(<AppEditor appId="app-001" />);
-    const webhookInput = screen.getByPlaceholderText('https://example.com/webhooks') as HTMLInputElement;
+    const webhookInput = screen.getByPlaceholderText(
+      'https://example.com/webhooks'
+    ) as HTMLInputElement;
     fireEvent.change(webhookInput, { target: { value: 'https://new.example.com/hook' } });
     expect(webhookInput.value).toBe('https://new.example.com/hook');
   });

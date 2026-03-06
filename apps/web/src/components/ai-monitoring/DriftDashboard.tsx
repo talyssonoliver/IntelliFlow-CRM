@@ -6,15 +6,7 @@
  */
 
 import { useState, Suspense, lazy } from 'react';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  Button,
-  Skeleton,
-  cn,
-} from '@intelliflow/ui';
+import { Card, CardContent, CardHeader, CardTitle, Button, Skeleton, cn } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { useDriftDashboard } from '@/lib/ai-monitoring/hooks';
 import type { DriftFilters } from '@/lib/ai-monitoring/types';
@@ -31,7 +23,10 @@ import { CostTracker } from './CostTracker';
 
 const ModelPerformanceChart = lazy(() => import('./ModelPerformanceChart'));
 
-const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'Drift Detection' }];
+const BREADCRUMBS = [
+  { label: 'AI & Agents', href: '/agent-approvals' },
+  { label: 'Drift Detection' },
+];
 
 const SEVERITY_FILTERS = ['ALL', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const;
 const SEVERITY_CHIP_COLORS: Record<string, string> = {
@@ -104,14 +99,22 @@ export function DriftDashboard() {
         <PageHeader title="Drift Detection" breadcrumbs={BREADCRUMBS} />
         <Card className="mt-6">
           <CardContent className="p-6 text-center">
-            <span className="material-symbols-outlined text-4xl text-destructive mb-2" aria-hidden="true">
+            <span
+              className="material-symbols-outlined text-4xl text-destructive mb-2"
+              aria-hidden="true"
+            >
               cloud_off
             </span>
             <p className="text-lg font-medium text-destructive" data-testid="error-message">
               AI monitoring service unavailable
             </p>
             <p className="text-sm text-muted-foreground mt-1">Please try again later.</p>
-            <Button variant="outline" className="mt-4" onClick={() => refetch()} data-testid="retry-button">
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => refetch()}
+              data-testid="retry-button"
+            >
               Retry
             </Button>
           </CardContent>
@@ -152,7 +155,11 @@ export function DriftDashboard() {
           label="Drift Detected"
           value={status.driftDetected ? 'YES' : 'NO'}
           icon="trending_down"
-          colorClass={status.driftDetected ? 'bg-red-100 dark:bg-red-900/30' : 'bg-green-100 dark:bg-green-900/30'}
+          colorClass={
+            status.driftDetected
+              ? 'bg-red-100 dark:bg-red-900/30'
+              : 'bg-green-100 dark:bg-green-900/30'
+          }
           isLoading={isLoading}
         />
         <StatCard
@@ -237,13 +244,16 @@ export function DriftDashboard() {
           </CardHeader>
           <CardContent className="pb-4">
             {!isLoading && history.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-8" data-testid="empty-state">
+              <p
+                className="text-sm text-muted-foreground text-center py-8"
+                data-testid="empty-state"
+              >
                 No drift metrics tracked yet. Start using AI features to populate monitoring data.
               </p>
             ) : isLoading ? (
               <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-20 w-full rounded-lg" />
+                  <Skeleton key={i} className="h-20 w-full rounded-lg" /> // NOSONAR typescript:S6479 — static skeleton placeholder, no data identity
                 ))}
               </div>
             ) : (
@@ -276,7 +286,10 @@ export function DriftDashboard() {
                       </div>
                       <div className="flex items-center gap-4 mt-1">
                         <span className="text-xs text-muted-foreground">
-                          Score: <span className="font-mono" data-testid="drift-score">{formatDriftScore(item.driftScore)}</span>
+                          Score:{' '}
+                          <span className="font-mono" data-testid="drift-score">
+                            {formatDriftScore(item.driftScore)}
+                          </span>
                         </span>
                         <span className="text-xs text-muted-foreground">
                           p-value: <span className="font-mono">{formatPValue(item.pValue)}</span>

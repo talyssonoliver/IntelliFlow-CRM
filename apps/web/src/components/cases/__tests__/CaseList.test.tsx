@@ -151,26 +151,46 @@ describe('CaseList', () => {
   });
 
   it('pagination: Previous button calls onPageChange', () => {
-    render(<CaseList {...defaultProps} total={50} pagination={{ page: 2, limit: 20, onPageChange: vi.fn() }} />);
+    render(
+      <CaseList
+        {...defaultProps}
+        total={50}
+        pagination={{ page: 2, limit: 20, onPageChange: vi.fn() }}
+      />
+    );
     fireEvent.click(screen.getByText('Previous'));
     expect(screen.getByText(/Page 2 of 3/)).toBeInTheDocument();
   });
 
   it('pagination: Next button calls onPageChange', () => {
     const onPageChange = vi.fn();
-    render(<CaseList {...defaultProps} total={50} pagination={{ page: 1, limit: 20, onPageChange }} />);
+    render(
+      <CaseList {...defaultProps} total={50} pagination={{ page: 1, limit: 20, onPageChange }} />
+    );
     fireEvent.click(screen.getByText('Next'));
     expect(onPageChange).toHaveBeenCalledWith(2);
   });
 
   it('pagination: Previous disabled on first page', () => {
-    render(<CaseList {...defaultProps} total={50} pagination={{ page: 1, limit: 20, onPageChange: vi.fn() }} />);
+    render(
+      <CaseList
+        {...defaultProps}
+        total={50}
+        pagination={{ page: 1, limit: 20, onPageChange: vi.fn() }}
+      />
+    );
     const prevBtn = screen.getByText('Previous') as HTMLButtonElement;
     expect(prevBtn.disabled).toBe(true);
   });
 
   it('pagination: Next disabled on last page', () => {
-    render(<CaseList {...defaultProps} total={50} pagination={{ page: 3, limit: 20, onPageChange: vi.fn() }} />);
+    render(
+      <CaseList
+        {...defaultProps}
+        total={50}
+        pagination={{ page: 3, limit: 20, onPageChange: vi.fn() }}
+      />
+    );
     const nextBtn = screen.getByText('Next') as HTMLButtonElement;
     expect(nextBtn.disabled).toBe(true);
   });
@@ -243,7 +263,10 @@ describe('CaseList', () => {
   it('renders with assignee filter when assignees provided', () => {
     const filterOpts = {
       ...mockFilterOptions,
-      assignees: [{ id: 'u1', name: 'Jane Doe' }, { id: 'u2', name: 'Bob' }],
+      assignees: [
+        { id: 'u1', name: 'Jane Doe' },
+        { id: 'u2', name: 'Bob' },
+      ],
     };
     render(<CaseList {...defaultProps} filterOptions={filterOpts} />);
     // Assignee filter renders
@@ -296,7 +319,7 @@ describe('CaseList', () => {
   it('row action View button calls onRowClick', () => {
     const onRowClick = vi.fn();
     render(<CaseList {...defaultProps} onRowClick={onRowClick} />);
-    const viewBtn = screen.getByTitle('View');
+    const viewBtn = screen.getByRole('button', { name: 'View' });
     fireEvent.click(viewBtn);
     expect(onRowClick).toHaveBeenCalledWith(mockCase);
   });
@@ -304,7 +327,7 @@ describe('CaseList', () => {
   it('row action Edit button calls onEdit', () => {
     const onEdit = vi.fn();
     render(<CaseList {...defaultProps} onEdit={onEdit} />);
-    const editBtn = screen.getByTitle('Edit');
+    const editBtn = screen.getByRole('button', { name: 'Edit' });
     fireEvent.click(editBtn);
     expect(onEdit).toHaveBeenCalledWith(mockCase);
   });
@@ -314,7 +337,7 @@ describe('CaseList', () => {
     const onDelete = vi.fn();
     render(<CaseList {...defaultProps} onAssign={onAssign} onDelete={onDelete} />);
     // The dropdown trigger renders
-    const moreBtn = screen.getByTitle('More actions');
+    const moreBtn = screen.getByRole('button', { name: 'More actions' });
     expect(moreBtn).toBeInTheDocument();
   });
 
@@ -343,7 +366,10 @@ describe('CaseList', () => {
   });
 
   it('renders case with minimal assignee (no email/avatar)', () => {
-    const minAssignee = { ...mockCase, assignee: { id: 'u-min', name: 'Al', email: '', avatarUrl: null } };
+    const minAssignee = {
+      ...mockCase,
+      assignee: { id: 'u-min', name: 'Al', email: '', avatarUrl: null },
+    };
     render(<CaseList {...defaultProps} cases={[minAssignee]} />);
     expect(screen.getByText('Test Case Alpha')).toBeInTheDocument();
     expect(screen.getByText('A')).toBeInTheDocument(); // initials
@@ -356,7 +382,7 @@ describe('CaseList', () => {
   });
 
   it('renders case with no deadline', () => {
-    const noDeadline = { ...mockCase, deadline: null as unknown as string };
+    const noDeadline = { ...mockCase, deadline: null as any }; // test-only mock
     render(<CaseList {...defaultProps} cases={[noDeadline]} />);
     expect(screen.getByText('No deadline')).toBeInTheDocument();
   });

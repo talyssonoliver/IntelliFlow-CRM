@@ -121,24 +121,24 @@ function TreeNode({
           {isCurrent && <span className="text-xs text-primary ml-1">(current)</span>}
         </button>
 
-        {node.industry && (
+        {node.industry ? (
           <Badge variant="outline" className="text-[10px] shrink-0">
             {node.industry}
           </Badge>
-        )}
+        ) : null}
 
-        {node.revenue != null && (
+        {node.revenue != null ? (
           <span className="text-xs text-muted-foreground shrink-0 ml-auto">
             {formatCurrency(node.revenue)}
           </span>
-        )}
+        ) : null}
 
         <span className="text-[10px] text-muted-foreground shrink-0">
           {node._count.contacts}C &middot; {node._count.opportunities}O
         </span>
       </div>
 
-      {hasChildren && isExpanded && (
+      {hasChildren && isExpanded ? (
         <ul role="group" className="mt-0.5">
           {node.children.map((child) => (
             <TreeNode
@@ -155,7 +155,7 @@ function TreeNode({
             />
           ))}
         </ul>
-      )}
+      ) : null}
     </li>
   );
 }
@@ -233,6 +233,50 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
     return flattenVisibleNodes(data.current, expandedNodes);
   }, [data?.current, expandedNodes]);
 
+  const focusNode = useCallback((id: string) => {
+    setFocusedNodeId(id);
+    nodeRefs.current.get(id)?.focus();
+  }, []);
+
+  const handleArrowDown = useCallback(
+    (idx: number) => {
+      if (idx < visibleNodes.length - 1) focusNode(visibleNodes[idx + 1]);
+    },
+    [visibleNodes, focusNode]
+  );
+
+  const handleArrowUp = useCallback(
+    (idx: number) => {
+      if (idx > 0) focusNode(visibleNodes[idx - 1]);
+    },
+    [visibleNodes, focusNode]
+  );
+
+  const handleArrowRight = useCallback(
+    (nodeId: string, currentRoot: HierarchyNode) => {
+      const node = findNode(currentRoot, nodeId);
+      if (!node || node.children.length === 0) return;
+      if (!expandedNodes.has(nodeId)) {
+        onToggle(nodeId);
+      } else {
+        focusNode(node.children[0].id);
+      }
+    },
+    [expandedNodes, onToggle, focusNode]
+  );
+
+  const handleArrowLeft = useCallback(
+    (nodeId: string, currentRoot: HierarchyNode) => {
+      if (expandedNodes.has(nodeId)) {
+        onToggle(nodeId);
+      } else {
+        const parentId = findParentId(currentRoot, nodeId);
+        if (parentId) focusNode(parentId);
+      }
+    },
+    [expandedNodes, onToggle, focusNode]
+  );
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLUListElement>) => {
       if (!focusedNodeId || !data?.current) return;
@@ -240,77 +284,47 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
       if (idx === -1) return;
 
       switch (e.key) {
-        case 'ArrowDown': {
+        case 'ArrowDown':
           e.preventDefault();
-          if (idx < visibleNodes.length - 1) {
-            const nextId = visibleNodes[idx + 1];
-            setFocusedNodeId(nextId);
-            nodeRefs.current.get(nextId)?.focus();
-          }
+          handleArrowDown(idx);
           break;
-        }
-        case 'ArrowUp': {
+        case 'ArrowUp':
           e.preventDefault();
-          if (idx > 0) {
-            const prevId = visibleNodes[idx - 1];
-            setFocusedNodeId(prevId);
-            nodeRefs.current.get(prevId)?.focus();
-          }
+          handleArrowUp(idx);
           break;
-        }
-        case 'ArrowRight': {
+        case 'ArrowRight':
           e.preventDefault();
-          const node = findNode(data.current, focusedNodeId);
-          if (node && node.children.length > 0) {
-            if (!expandedNodes.has(focusedNodeId)) {
-              onToggle(focusedNodeId);
-            } else {
-              const firstChild = node.children[0].id;
-              setFocusedNodeId(firstChild);
-              nodeRefs.current.get(firstChild)?.focus();
-            }
-          }
+          handleArrowRight(focusedNodeId, data.current);
           break;
-        }
-        case 'ArrowLeft': {
+        case 'ArrowLeft':
           e.preventDefault();
-          if (expandedNodes.has(focusedNodeId)) {
-            onToggle(focusedNodeId);
-          } else {
-            const parentId = findParentId(data.current, focusedNodeId);
-            if (parentId) {
-              setFocusedNodeId(parentId);
-              nodeRefs.current.get(parentId)?.focus();
-            }
-          }
+          handleArrowLeft(focusedNodeId, data.current);
           break;
-        }
-        case 'Enter': {
+        case 'Enter':
           e.preventDefault();
           onNavigate(focusedNodeId);
           break;
-        }
-        case 'Home': {
+        case 'Home':
           e.preventDefault();
-          if (visibleNodes.length > 0) {
-            const firstId = visibleNodes[0];
-            setFocusedNodeId(firstId);
-            nodeRefs.current.get(firstId)?.focus();
-          }
+          if (visibleNodes.length > 0) focusNode(visibleNodes[0]);
           break;
-        }
-        case 'End': {
+        case 'End':
           e.preventDefault();
-          if (visibleNodes.length > 0) {
-            const lastId = visibleNodes[visibleNodes.length - 1];
-            setFocusedNodeId(lastId);
-            nodeRefs.current.get(lastId)?.focus();
-          }
+          if (visibleNodes.length > 0) focusNode(visibleNodes[visibleNodes.length - 1]);
           break;
-        }
       }
     },
-    [focusedNodeId, visibleNodes, expandedNodes, data?.current, onToggle, onNavigate]
+    [
+      focusedNodeId,
+      visibleNodes,
+      data?.current,
+      onNavigate,
+      focusNode,
+      handleArrowDown,
+      handleArrowUp,
+      handleArrowRight,
+      handleArrowLeft,
+    ]
   );
 
   if (isLoading) {
@@ -338,11 +352,16 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
 
   return (
     <div className="space-y-4">
-      {data.ancestors.length > 0 && (
+      {data.ancestors.length > 0 ? (
         <div className="flex items-center gap-1 text-sm text-muted-foreground flex-wrap">
           {data.ancestors.map((ancestor, i) => (
             <span key={ancestor.id} className="flex items-center gap-1">
-              {i > 0 && <span className="material-symbols-outlined text-xs">chevron_right</span>}
+              {i > 0 ? (
+                <>
+                  {' '}
+                  <span className="material-symbols-outlined text-xs">chevron_right</span>
+                </>
+              ) : null}
               <button
                 className="hover:text-primary hover:underline"
                 onClick={() => router.push(`/accounts/${ancestor.id}`)}
@@ -354,7 +373,7 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
           <span className="material-symbols-outlined text-xs">chevron_right</span>
           <span className="font-medium text-foreground">{data.current.name}</span>
         </div>
-      )}
+      ) : null}
 
       {hasHierarchy ? (
         <Card className="p-4">
@@ -386,7 +405,7 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
           <span className="material-symbols-outlined text-base mr-1">link</span>
           Set Parent Account
         </Button>
-        {data.ancestors.length > 0 && (
+        {data.ancestors.length > 0 ? (
           <Button
             variant="ghost"
             size="sm"
@@ -396,10 +415,10 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
             <span className="material-symbols-outlined text-base mr-1">link_off</span>
             Remove Parent
           </Button>
-        )}
+        ) : null}
       </div>
 
-      {showPicker && (
+      {showPicker ? (
         <Card className="p-4 border-2 border-primary/20">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-sm font-medium">Select Parent Account</h4>
@@ -415,8 +434,8 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
             onChange={(e) => setPickerSearch(e.target.value)}
             autoFocus
           />
-          {pickerQuery.isLoading && <Skeleton className="h-8 w-full" />}
-          {pickerQuery.data?.accounts && (
+          {pickerQuery.isLoading ? <Skeleton className="h-8 w-full" /> : null}
+          {pickerQuery.data?.accounts ? (
             <div className="max-h-48 overflow-y-auto divide-y">
               {pickerQuery.data.accounts
                 .filter((a) => a.id !== accountId)
@@ -437,9 +456,9 @@ export function AccountHierarchy({ accountId }: AccountHierarchyProps) {
                   </button>
                 ))}
             </div>
-          )}
+          ) : null}
         </Card>
-      )}
+      ) : null}
     </div>
   );
 }

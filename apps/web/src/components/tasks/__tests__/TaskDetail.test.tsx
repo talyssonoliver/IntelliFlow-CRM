@@ -13,12 +13,20 @@ vi.mock('@intelliflow/ui', () => ({
   Skeleton: ({ className }: any) => <div className={className} data-testid="skeleton" />,
   ConfirmationDialog: ({ open, onOpenChange, onConfirm, title, confirmLabel }: any) =>
     open ? (
-      <div data-testid={`confirm-dialog-${title?.toLowerCase().includes('archive') ? 'archive' : 'delete'}`}>
+      <div
+        data-testid={`confirm-dialog-${title?.toLowerCase().includes('archive') ? 'archive' : 'delete'}`}
+      >
         <span>{title}</span>
-        <button onClick={onConfirm} data-testid={`confirm-btn-${title?.toLowerCase().includes('archive') ? 'archive' : 'delete'}`}>
+        <button
+          onClick={onConfirm}
+          data-testid={`confirm-btn-${title?.toLowerCase().includes('archive') ? 'archive' : 'delete'}`}
+        >
           {confirmLabel || 'Confirm'}
         </button>
-        <button onClick={() => onOpenChange(false)} data-testid={`cancel-btn-${title?.toLowerCase().includes('archive') ? 'archive' : 'delete'}`}>
+        <button
+          onClick={() => onOpenChange(false)}
+          data-testid={`cancel-btn-${title?.toLowerCase().includes('archive') ? 'archive' : 'delete'}`}
+        >
           Dismiss
         </button>
       </div>

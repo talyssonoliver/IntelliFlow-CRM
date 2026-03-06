@@ -502,4 +502,3 @@ export function InlineMfaChallenge({
     </div>
   );
 }
-

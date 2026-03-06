@@ -88,7 +88,8 @@ export function OAuthCallback({
       const hasError = searchParams.get('error');
       if (!hasCode && !hasError) {
         setStatus('error');
-        const errorMsg = 'No authentication data found. Please start the sign-in process from the login page.';
+        const errorMsg =
+          'No authentication data found. Please start the sign-in process from the login page.';
         setErrorMessage(errorMsg);
         onError?.(errorMsg);
         return;
@@ -143,7 +144,7 @@ export function OAuthCallback({
       if (!data.session) {
         throw new Error(
           'Authentication session could not be established. ' +
-          'Please try signing in again from the login page.'
+            'Please try signing in again from the login page.'
         );
       }
 
@@ -181,11 +182,12 @@ export function OAuthCallback({
       }, 300);
     } catch (err) {
       setStatus('error');
-      const errorMsg = err instanceof Error
-        ? (err.message === 'TIMEOUT'
-          ? 'Authentication is taking too long. Please try again.'
-          : err.message)
-        : 'An unexpected error occurred';
+      const errorMsg =
+        err instanceof Error
+          ? err.message === 'TIMEOUT'
+            ? 'Authentication is taking too long. Please try again.'
+            : err.message
+          : 'An unexpected error occurred';
       setErrorMessage(errorMsg);
       onError?.(errorMsg);
     }
@@ -393,4 +395,3 @@ export function OAuthCallback({
     </main>
   );
 }
-

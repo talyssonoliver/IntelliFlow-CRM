@@ -80,19 +80,26 @@ vi.mock('@/app/settings/routing/hooks/useRouting', () => ({
 vi.mock('@intelliflow/ui', async () => {
   const React = await import('react');
   return {
-    Button: ({ children, onClick, ...props }: any) => <button onClick={onClick} {...props}>{children}</button>,
+    Button: ({ children, onClick, ...props }: any) => (
+      <button onClick={onClick} {...props}>
+        {children}
+      </button>
+    ),
     Card: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     CardContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     CardHeader: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     CardTitle: ({ children }: any) => <h3>{children}</h3>,
     Input: (props: any) => <input {...props} />,
     Label: ({ children, ...props }: any) => <label {...props}>{children}</label>,
-    Select: ({ children, value, onValueChange: _onValueChange }: any) => <div data-value={value}>{children}</div>,
+    Select: ({ children, value, onValueChange: _onValueChange }: any) => (
+      <div data-value={value}>{children}</div>
+    ),
     SelectContent: ({ children }: any) => <div>{children}</div>,
     SelectItem: ({ children, value }: any) => <option value={value}>{children}</option>,
     SelectTrigger: ({ children, ...props }: any) => <div {...props}>{children}</div>,
     SelectValue: () => <span />,
-    Sheet: ({ children, open }: any) => open ? <div data-testid="sheet">{children}</div> : <>{children}</>,
+    Sheet: ({ children, open }: any) =>
+      open ? <div data-testid="sheet">{children}</div> : <>{children}</>,
     SheetContent: ({ children }: any) => <div>{children}</div>,
     SheetHeader: ({ children }: any) => <div>{children}</div>,
     SheetTitle: ({ children }: any) => <h4>{children}</h4>,
@@ -113,9 +120,30 @@ vi.mock('@intelliflow/ui', async () => {
 });
 
 vi.mock('@intelliflow/domain', () => ({
-  ROUTING_CONDITION_FIELDS: ['leadScore', 'leadSource', 'leadStatus', 'estimatedValue', 'location', 'tags'],
-  ROUTING_CONDITION_OPERATORS: ['equals', 'not_equals', 'greater_than', 'less_than', 'in', 'not_in', 'contains'],
-  ROUTING_ACTION_TYPES: ['assign_to_user', 'assign_to_team', 'assign_by_skill', 'notify', 'escalate'],
+  ROUTING_CONDITION_FIELDS: [
+    'leadScore',
+    'leadSource',
+    'leadStatus',
+    'estimatedValue',
+    'location',
+    'tags',
+  ],
+  ROUTING_CONDITION_OPERATORS: [
+    'equals',
+    'not_equals',
+    'greater_than',
+    'less_than',
+    'in',
+    'not_in',
+    'contains',
+  ],
+  ROUTING_ACTION_TYPES: [
+    'assign_to_user',
+    'assign_to_team',
+    'assign_by_skill',
+    'notify',
+    'escalate',
+  ],
 }));
 
 vi.mock('@intelliflow/validators', () => ({

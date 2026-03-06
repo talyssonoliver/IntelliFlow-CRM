@@ -201,7 +201,10 @@ export function AppCreator() {
             role="alert"
           >
             <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-1">
-              <span className="material-symbols-outlined text-sm align-middle mr-1" aria-hidden="true">
+              <span
+                className="material-symbols-outlined text-sm align-middle mr-1"
+                aria-hidden="true"
+              >
                 warning
               </span>
               Save your credentials
@@ -249,10 +252,14 @@ export function AppCreator() {
                       <code className="flex-1 text-sm bg-muted px-3 py-2 rounded font-mono break-all">
                         {createdApp.credentials.clientSecret}
                       </code>
-                      <CopyButton text={createdApp.credentials.clientSecret} label="client secret" />
+                      <CopyButton
+                        text={createdApp.credentials.clientSecret}
+                        label="client secret"
+                      />
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Masked value for your records: <code>{createdApp.credentials.maskedSecret}</code>
+                      Masked value for your records:{' '}
+                      <code>{createdApp.credentials.maskedSecret}</code>
                     </p>
                     <Button
                       variant="outline"
@@ -319,7 +326,12 @@ export function AppCreator() {
 
       <h1 className="text-2xl font-bold text-foreground mb-6">Create New App</h1>
 
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6" aria-label="Create new developer app">
+      <form
+        onSubmit={handleSubmit}
+        noValidate
+        className="flex flex-col gap-6"
+        aria-label="Create new developer app"
+      >
         <Card>
           <CardHeader>
             <h2 className="text-lg font-semibold text-foreground">App Details</h2>
@@ -357,7 +369,11 @@ export function AppCreator() {
                 maxLength={500}
               />
               {errors.description && (
-                <p id="app-description-error" className="text-sm text-destructive mt-1" role="alert">
+                <p
+                  id="app-description-error"
+                  className="text-sm text-destructive mt-1"
+                  role="alert"
+                >
                   {errors.description}
                 </p>
               )}
@@ -426,7 +442,9 @@ export function AppCreator() {
         <Card>
           <CardHeader>
             <h2 className="text-lg font-semibold text-foreground">Webhooks</h2>
-            <p className="text-sm text-muted-foreground">Optional webhook endpoint for event notifications</p>
+            <p className="text-sm text-muted-foreground">
+              Optional webhook endpoint for event notifications
+            </p>
           </CardHeader>
           <CardContent>
             <div>

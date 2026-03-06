@@ -29,9 +29,13 @@ vi.mock('@intelliflow/ui', () => ({
   SheetContent: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="sheet-content">{children}</div>
   ),
-  SheetTitle: ({ children, className: _className }: { children: React.ReactNode; className?: string }) => (
-    <h2 data-testid="sheet-title">{children}</h2>
-  ),
+  SheetTitle: ({
+    children,
+    className: _className,
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => <h2 data-testid="sheet-title">{children}</h2>,
   SheetDescription: ({ children }: { children: React.ReactNode }) => (
     <p data-testid="sheet-description">{children}</p>
   ),

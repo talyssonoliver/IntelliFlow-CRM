@@ -52,21 +52,18 @@ export function EmailList({
 }: EmailListProps) {
   const listRef = useRef<HTMLDivElement>(null);
 
-  const handleListKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        const items = listRef.current?.querySelectorAll('[role="option"]');
-        if (!items?.length) return;
+  const handleListKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const items = listRef.current?.querySelectorAll('[role="option"]');
+      if (!items?.length) return;
 
-        const current = Array.from(items).indexOf(document.activeElement as Element);
-        const direction = e.key === 'ArrowDown' ? 1 : -1;
-        const next = Math.max(0, Math.min(items.length - 1, current + direction));
-        (items[next] as HTMLElement).focus();
-      }
-    },
-    []
-  );
+      const current = Array.from(items).indexOf(document.activeElement as Element);
+      const direction = e.key === 'ArrowDown' ? 1 : -1;
+      const next = Math.max(0, Math.min(items.length - 1, current + direction));
+      (items[next] as HTMLElement).focus();
+    }
+  }, []);
 
   // Loading state
   if (isLoading) {
@@ -94,7 +91,12 @@ export function EmailList({
   // Error state
   if (isError) {
     return (
-      <div className={cn('flex w-80 flex-col items-center justify-center gap-3 border-r border-border p-4', className)}>
+      <div
+        className={cn(
+          'flex w-80 flex-col items-center justify-center gap-3 border-r border-border p-4',
+          className
+        )}
+      >
         <AlertCircle className="h-8 w-8 text-destructive" />
         <p className="text-sm text-muted-foreground">Failed to load emails</p>
         <button
@@ -103,8 +105,7 @@ export function EmailList({
           className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
           onClick={onRetry}
         >
-          <RotateCcw className="h-3.5 w-3.5" />
-          Retry
+          <RotateCcw className="h-3.5 w-3.5" /> Retry
         </button>
       </div>
     );
@@ -130,18 +131,14 @@ export function EmailList({
           <label
             className={cn(
               'inline-flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs transition-colors',
-              filters.unread
-                ? 'border-primary bg-primary/10 text-primary'
-                : 'border-border'
+              filters.unread ? 'border-primary bg-primary/10 text-primary' : 'border-border'
             )}
           >
             <input
               type="checkbox"
               aria-label="Unread"
               checked={filters.unread}
-              onChange={() =>
-                onFilterChange({ ...filters, unread: !filters.unread })
-              }
+              onChange={() => onFilterChange({ ...filters, unread: !filters.unread })}
               className="sr-only"
             />
             Unread
@@ -149,9 +146,7 @@ export function EmailList({
           <label
             className={cn(
               'inline-flex cursor-pointer items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs transition-colors',
-              filters.hasAttachments
-                ? 'border-primary bg-primary/10 text-primary'
-                : 'border-border'
+              filters.hasAttachments ? 'border-primary bg-primary/10 text-primary' : 'border-border'
             )}
           >
             <input

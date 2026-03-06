@@ -4,7 +4,9 @@ import { transformPipelineData } from '../RevenueChart';
 // Mock @intelliflow/ui Card
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <div data-testid="card" className={className}>{children}</div>
+    <div data-testid="card" className={className}>
+      {children}
+    </div>
   ),
 }));
 

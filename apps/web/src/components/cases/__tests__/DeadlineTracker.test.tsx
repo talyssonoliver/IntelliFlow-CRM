@@ -155,9 +155,7 @@ describe('DeadlineTracker', () => {
   });
 
   it('completed tasks do not show remove button', () => {
-    const completedOnly: CaseTaskItem[] = [
-      { ...mockTasks[0], status: 'COMPLETED' },
-    ];
+    const completedOnly: CaseTaskItem[] = [{ ...mockTasks[0], status: 'COMPLETED' }];
     render(<DeadlineTracker {...defaultProps} tasks={completedOnly} />);
     expect(screen.queryByLabelText(/Remove task:/)).not.toBeInTheDocument();
   });
@@ -171,9 +169,7 @@ describe('DeadlineTracker', () => {
   });
 
   it('renders IN_PROGRESS task status label', () => {
-    const inProgressTask: CaseTaskItem[] = [
-      { ...mockTasks[1], status: 'IN_PROGRESS' },
-    ];
+    const inProgressTask: CaseTaskItem[] = [{ ...mockTasks[1], status: 'IN_PROGRESS' }];
     render(<DeadlineTracker {...defaultProps} tasks={inProgressTask} />);
     expect(screen.getByText('In Progress')).toBeInTheDocument();
   });
@@ -192,7 +188,13 @@ describe('DeadlineTracker', () => {
 
   it('sorts tasks with no dueDate after tasks with dueDate', () => {
     const tasksWithMixedDates: CaseTaskItem[] = [
-      { ...mockTasks[0], id: 'no-date', status: 'PENDING', dueDate: null as unknown as string, completedAt: null },
+      {
+        ...mockTasks[0],
+        id: 'no-date',
+        status: 'PENDING',
+        dueDate: null as any,
+        completedAt: null,
+      }, // test-only mock
       { ...mockTasks[1], id: 'has-date', status: 'PENDING', dueDate: '2026-02-20T00:00:00Z' },
     ];
     render(<DeadlineTracker {...defaultProps} tasks={tasksWithMixedDates} />);
@@ -213,7 +215,7 @@ describe('DeadlineTracker', () => {
   it('handles tasks where only second has no dueDate', () => {
     const tasksWithMixed: CaseTaskItem[] = [
       { ...mockTasks[1], id: 'a', dueDate: '2026-03-01T00:00:00Z' },
-      { ...mockTasks[1], id: 'b', dueDate: null as unknown as string },
+      { ...mockTasks[1], id: 'b', dueDate: null as any }, // test-only mock
     ];
     render(<DeadlineTracker {...defaultProps} tasks={tasksWithMixed} />);
     const items = screen.getAllByRole('listitem');

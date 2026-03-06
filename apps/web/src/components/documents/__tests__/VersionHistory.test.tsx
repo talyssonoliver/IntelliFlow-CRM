@@ -124,9 +124,7 @@ describe('VersionHistory', () => {
 
   it('shows restore button for non-current versions', () => {
     const onRestoreVersion = vi.fn();
-    render(
-      <VersionHistory {...defaultProps} onRestoreVersion={onRestoreVersion} />
-    );
+    render(<VersionHistory {...defaultProps} onRestoreVersion={onRestoreVersion} />);
 
     expect(screen.getByLabelText('Restore version 1.0.0')).toBeInTheDocument();
     expect(screen.getByLabelText('Restore version 1.1.0')).toBeInTheDocument();
@@ -134,18 +132,14 @@ describe('VersionHistory', () => {
 
   it('hides restore button for current version', () => {
     const onRestoreVersion = vi.fn();
-    render(
-      <VersionHistory {...defaultProps} onRestoreVersion={onRestoreVersion} />
-    );
+    render(<VersionHistory {...defaultProps} onRestoreVersion={onRestoreVersion} />);
 
     expect(screen.queryByLabelText('Restore version 1.1.1')).not.toBeInTheDocument();
   });
 
   it('shows confirmation dialog when restore clicked', () => {
     const onRestoreVersion = vi.fn();
-    render(
-      <VersionHistory {...defaultProps} onRestoreVersion={onRestoreVersion} />
-    );
+    render(<VersionHistory {...defaultProps} onRestoreVersion={onRestoreVersion} />);
 
     fireEvent.click(screen.getByLabelText('Restore version 1.0.0'));
     expect(screen.getByText('Restore version?')).toBeInTheDocument();
@@ -154,9 +148,7 @@ describe('VersionHistory', () => {
 
   it('calls onRestoreVersion after confirmation', () => {
     const onRestoreVersion = vi.fn();
-    render(
-      <VersionHistory {...defaultProps} onRestoreVersion={onRestoreVersion} />
-    );
+    render(<VersionHistory {...defaultProps} onRestoreVersion={onRestoreVersion} />);
 
     fireEvent.click(screen.getByLabelText('Restore version 1.0.0'));
     fireEvent.click(screen.getByRole('button', { name: /^restore$/i }));
@@ -165,9 +157,7 @@ describe('VersionHistory', () => {
 
   it('does not call onRestoreVersion on cancel', () => {
     const onRestoreVersion = vi.fn();
-    render(
-      <VersionHistory {...defaultProps} onRestoreVersion={onRestoreVersion} />
-    );
+    render(<VersionHistory {...defaultProps} onRestoreVersion={onRestoreVersion} />);
 
     fireEvent.click(screen.getByLabelText('Restore version 1.0.0'));
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
@@ -184,13 +174,7 @@ describe('VersionHistory', () => {
 
   it('handles single version (no delta)', () => {
     const singleVersion = [createVersions()[0]];
-    render(
-      <VersionHistory
-        {...defaultProps}
-        versions={singleVersion}
-        currentVersionId="ver-1"
-      />
-    );
+    render(<VersionHistory {...defaultProps} versions={singleVersion} currentVersionId="ver-1" />);
     expect(screen.getByTestId('version-item-ver-1')).toBeInTheDocument();
   });
 
@@ -206,11 +190,7 @@ describe('VersionHistory', () => {
       }),
     ];
     render(
-      <VersionHistory
-        documentId="doc-1"
-        versions={versions}
-        currentVersionId="ver-no-changelog"
-      />
+      <VersionHistory documentId="doc-1" versions={versions} currentVersionId="ver-no-changelog" />
     );
     expect(screen.getByText('v2.0.0')).toBeInTheDocument();
   });
@@ -230,9 +210,7 @@ describe('VersionHistory', () => {
 
   it('restore buttons have aria-label with version number', () => {
     const onRestoreVersion = vi.fn();
-    render(
-      <VersionHistory {...defaultProps} onRestoreVersion={onRestoreVersion} />
-    );
+    render(<VersionHistory {...defaultProps} onRestoreVersion={onRestoreVersion} />);
     expect(screen.getByLabelText('Restore version 1.0.0')).toBeInTheDocument();
     expect(screen.getByLabelText('Restore version 1.1.0')).toBeInTheDocument();
   });

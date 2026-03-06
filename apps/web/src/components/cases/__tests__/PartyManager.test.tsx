@@ -101,9 +101,7 @@ describe('PartyManager', () => {
     // Submit
     fireEvent.click(screen.getByText('Update Party'));
     expect(onUpdate).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        expect.objectContaining({ name: 'John Smith Jr.', id: 'p1' }),
-      ])
+      expect.arrayContaining([expect.objectContaining({ name: 'John Smith Jr.', id: 'p1' })])
     );
   });
 
@@ -150,17 +148,13 @@ describe('PartyManager', () => {
   });
 
   it('renders WITNESS role badge color', () => {
-    const witnessParties: PartyData[] = [
-      { id: 'pw', name: 'Witness 1', role: 'WITNESS' },
-    ];
+    const witnessParties: PartyData[] = [{ id: 'pw', name: 'Witness 1', role: 'WITNESS' }];
     render(<PartyManager {...defaultProps} parties={witnessParties} />);
     expect(screen.getByText('Witness')).toBeInTheDocument();
   });
 
   it('renders JUDGE role badge color', () => {
-    const judgeParties: PartyData[] = [
-      { id: 'pj', name: 'Hon. Justice Smith', role: 'JUDGE' },
-    ];
+    const judgeParties: PartyData[] = [{ id: 'pj', name: 'Hon. Justice Smith', role: 'JUDGE' }];
     render(<PartyManager {...defaultProps} parties={judgeParties} />);
     expect(screen.getByText('Judge')).toBeInTheDocument();
   });

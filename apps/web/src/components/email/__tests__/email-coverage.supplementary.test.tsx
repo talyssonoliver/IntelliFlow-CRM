@@ -36,7 +36,12 @@ describe('EmailListItem formatRelativeTime branches', () => {
     subject: 'Test Subject',
     from: { address: 'sender@test.com', name: 'Sender' },
     isRead: true,
-    attachments: [] as Array<{ filename: string; contentType: string; size: number; checksum: string }>,
+    attachments: [] as Array<{
+      filename: string;
+      contentType: string;
+      size: number;
+      checksum: string;
+    }>,
   };
 
   it('shows "just now" for email received <1 minute ago', () => {
@@ -101,7 +106,12 @@ describe('EmailListItem getInitial and getPreview', () => {
     subject: 'Test',
     receivedAt: new Date().toISOString(),
     isRead: true,
-    attachments: [] as Array<{ filename: string; contentType: string; size: number; checksum: string }>,
+    attachments: [] as Array<{
+      filename: string;
+      contentType: string;
+      size: number;
+      checksum: string;
+    }>,
   };
 
   it('uses first char of email address when sender name is absent', () => {
@@ -129,7 +139,11 @@ describe('EmailListItem getInitial and getPreview', () => {
   it('renders preview from htmlBody when textBody is absent', () => {
     render(
       <EmailListItem
-        email={{ ...base, from: { address: 'a@b.com', name: 'Test' }, htmlBody: '<b>Bold preview text</b>' }}
+        email={{
+          ...base,
+          from: { address: 'a@b.com', name: 'Test' },
+          htmlBody: '<b>Bold preview text</b>',
+        }}
         isSelected={false}
         onSelect={vi.fn()}
       />
@@ -287,7 +301,9 @@ describe('EmailCompose handler coverage', () => {
     });
 
     await waitFor(() => {
-      expect(document.querySelector('[aria-live]')?.textContent).toContain('Email sent successfully');
+      expect(document.querySelector('[aria-live]')?.textContent).toContain(
+        'Email sent successfully'
+      );
     });
 
     expect(onSent).toHaveBeenCalled();
@@ -552,13 +568,15 @@ describe('EmailCompose handler coverage', () => {
     // Trigger the onchange handler with mock files
     if (fileInput?.onchange) {
       const mockFile = new File(['content'], 'document.pdf', { type: 'application/pdf' });
-      const mockTarget = { files: [mockFile] } as unknown as HTMLInputElement;
-      const changeEvent = { target: mockTarget } as unknown as Event;
+      const mockTarget = { files: [mockFile] } as any as HTMLInputElement; // test-only mock
+      const changeEvent = { target: mockTarget } as any as Event; // test-only mock
       (fileInput.onchange as (e: Event) => void)(changeEvent);
 
       // AttachmentManager appears when attachments.length > 0
       await waitFor(() => {
-        expect(document.querySelector('[data-testid="attachment-manager"]') || document.body).toBeTruthy();
+        expect(
+          document.querySelector('[data-testid="attachment-manager"]') || document.body
+        ).toBeTruthy();
       });
     }
   });
@@ -569,9 +587,7 @@ describe('EmailCompose handler coverage', () => {
       to: [{ address: 'to@test.com', name: 'To Person' }],
     });
 
-    render(
-      <EmailCompose mode="forward" originalEmail={original} onDiscard={onDiscard} />
-    );
+    render(<EmailCompose mode="forward" originalEmail={original} onDiscard={onDiscard} />);
 
     // In forward mode, no recipients are pre-populated
     const form = screen.getByRole('form', { name: /compose email/i });

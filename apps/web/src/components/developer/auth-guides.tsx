@@ -49,7 +49,10 @@ function SecurityWarning({ children }: { children: React.ReactNode }) {
   return (
     <div className="border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20 p-4 rounded-r-lg">
       <div className="flex items-start gap-2">
-        <span className="material-symbols-outlined text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5" aria-hidden="true">
+        <span
+          className="material-symbols-outlined text-yellow-600 dark:text-yellow-400 shrink-0 mt-0.5"
+          aria-hidden="true"
+        >
           warning
         </span>
         <div className="text-sm text-yellow-800 dark:text-yellow-200">{children}</div>
@@ -129,7 +132,8 @@ function OverviewTab() {
                   <StatusBadge status="coming-soon" />
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Programmatic access with <code className="text-xs bg-muted px-1 py-0.5 rounded">ifc_live_*</code> and{' '}
+                  Programmatic access with{' '}
+                  <code className="text-xs bg-muted px-1 py-0.5 rounded">ifc_live_*</code> and{' '}
                   <code className="text-xs bg-muted px-1 py-0.5 rounded">ifc_test_*</code> prefixes.
                 </p>
               </div>
@@ -193,8 +197,8 @@ function OAuthTab() {
         </p>
         <ol className="list-decimal list-inside space-y-2 text-muted-foreground mb-4">
           <li>
-            Generate a <code className="text-xs bg-muted px-1 py-0.5 rounded">code_verifier</code> and{' '}
-            <code className="text-xs bg-muted px-1 py-0.5 rounded">code_challenge</code>
+            Generate a <code className="text-xs bg-muted px-1 py-0.5 rounded">code_verifier</code>{' '}
+            and <code className="text-xs bg-muted px-1 py-0.5 rounded">code_challenge</code>
           </li>
           <li>Redirect user to the provider&apos;s authorization endpoint with the challenge</li>
           <li>Provider authenticates user and redirects back with an authorization code</li>
@@ -220,8 +224,8 @@ window.location.href = authUrl.toString();`}
         <div className="mt-4">
           <SecurityWarning>
             <strong>State Parameter Warning:</strong> The PKCE state parameter is not validated
-            server-side. Your client application must validate the state parameter locally to prevent
-            CSRF attacks. Always compare the returned state with the value you stored before
+            server-side. Your client application must validate the state parameter locally to
+            prevent CSRF attacks. Always compare the returned state with the value you stored before
             initiating the OAuth flow.
           </SecurityWarning>
         </div>
@@ -282,7 +286,8 @@ Content-Type: application/json
           Token Format
         </h2>
         <p className="text-muted-foreground mb-3">
-          Include the access token in the <code className="text-xs bg-muted px-1 py-0.5 rounded">Authorization</code> header:
+          Include the access token in the{' '}
+          <code className="text-xs bg-muted px-1 py-0.5 rounded">Authorization</code> header:
         </p>
         <CodeBlock
           code={`Authorization: Bearer YOUR_ACCESS_TOKEN_HERE`}
@@ -424,8 +429,9 @@ Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
             <StatusBadge status="coming-soon" />
           </div>
           <p className="text-sm text-muted-foreground">
-            SMS and Email OTP methods are defined in the system but require a delivery provider to be
-            connected. When available: SMS OTP expires in 5 minutes, Email OTP expires in 10 minutes.
+            SMS and Email OTP methods are defined in the system but require a delivery provider to
+            be connected. When available: SMS OTP expires in 5 minutes, Email OTP expires in 10
+            minutes.
           </p>
         </div>
       </section>
@@ -486,10 +492,10 @@ function SessionsKeysTab() {
           </SecurityWarning>
           <SecurityWarning>
             <strong>Dual-Layer Sessions:</strong> Calling{' '}
-            <code className="text-xs bg-muted px-1 py-0.5 rounded">revokeSession</code> removes
-            the application-level session but does <strong>not</strong> invalidate the Supabase JWT.
-            The JWT remains valid until its natural expiry. For immediate invalidation, both layers
-            must be addressed.
+            <code className="text-xs bg-muted px-1 py-0.5 rounded">revokeSession</code> removes the
+            application-level session but does <strong>not</strong> invalidate the Supabase JWT. The
+            JWT remains valid until its natural expiry. For immediate invalidation, both layers must
+            be addressed.
           </SecurityWarning>
         </div>
       </section>
@@ -502,7 +508,8 @@ function SessionsKeysTab() {
           <StatusBadge status="coming-soon" />
         </div>
         <p className="text-muted-foreground mb-3">
-          API keys provide programmatic access to IntelliFlow CRM. Keys use environment-specific prefixes:
+          API keys provide programmatic access to IntelliFlow CRM. Keys use environment-specific
+          prefixes:
         </p>
         <ul className="list-disc list-inside space-y-1 text-muted-foreground mb-3">
           <li>
@@ -516,13 +523,16 @@ function SessionsKeysTab() {
         <h3 className="text-base font-medium text-foreground mb-2">Scopes</h3>
         <ul className="list-disc list-inside space-y-1 text-muted-foreground">
           <li>
-            <code className="text-xs bg-muted px-1 py-0.5 rounded">read</code> — Read-only access to CRM data
+            <code className="text-xs bg-muted px-1 py-0.5 rounded">read</code> — Read-only access to
+            CRM data
           </li>
           <li>
-            <code className="text-xs bg-muted px-1 py-0.5 rounded">write</code> — Create and update records
+            <code className="text-xs bg-muted px-1 py-0.5 rounded">write</code> — Create and update
+            records
           </li>
           <li>
-            <code className="text-xs bg-muted px-1 py-0.5 rounded">admin</code> — Full access including team and settings
+            <code className="text-xs bg-muted px-1 py-0.5 rounded">admin</code> — Full access
+            including team and settings
           </li>
         </ul>
       </section>

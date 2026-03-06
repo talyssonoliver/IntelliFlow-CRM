@@ -32,7 +32,11 @@ function formatDate(dateStr: string | null): string {
   });
 }
 
-export const DealCard = React.memo(function DealCard({ deal, onNavigate, isPending }: DealCardProps) {
+export const DealCard = React.memo(function DealCard({
+  deal,
+  onNavigate,
+  isPending,
+}: DealCardProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: deal.id,
     data: { type: 'deal', deal },

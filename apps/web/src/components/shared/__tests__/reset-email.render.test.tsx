@@ -222,9 +222,7 @@ describe('EmailInput', () => {
   const user = userEvent.setup();
 
   it('renders with ARIA attributes when error is present', () => {
-    render(
-      <EmailInput value="" onChange={vi.fn()} error="Invalid email" />
-    );
+    render(<EmailInput value="" onChange={vi.fn()} error="Invalid email" />);
     const input = screen.getByLabelText('Email address');
     expect(input.getAttribute('aria-invalid')).toBe('true');
     expect(input.getAttribute('aria-describedby')).toBe('reset-email-error');
@@ -238,9 +236,7 @@ describe('EmailInput', () => {
   });
 
   it('shows error message when error prop provided', () => {
-    render(
-      <EmailInput value="" onChange={vi.fn()} error="Please enter a valid email address" />
-    );
+    render(<EmailInput value="" onChange={vi.fn()} error="Please enter a valid email address" />);
     expect(screen.getByText('Please enter a valid email address')).toBeTruthy();
   });
 

@@ -243,14 +243,14 @@ export function EmailVerification({
                       aria-hidden="true"
                     >
                       sync
-                    </span>
+                    </span>{' '}
                     Sending...
                   </>
                 ) : (
                   <>
                     <span className="material-symbols-outlined text-xl" aria-hidden="true">
                       mail
-                    </span>
+                    </span>{' '}
                     Resend Verification Email
                   </>
                 )}
@@ -325,12 +325,19 @@ export function EmailVerification({
 
       {/* Title */}
       <h1 className="text-2xl font-bold text-white mb-2">
-        {status === 'loading' && 'Verifying Email'}
-        {status === 'success' && 'Email Verified!'}
-        {status === 'expired' && 'Link Expired'}
-        {status === 'invalid' && 'Invalid Link'}
-        {status === 'already_verified' && 'Already Verified'}
-        {status === 'error' && 'Verification Failed'}
+        {status === 'loading'
+          ? 'Verifying Email'
+          : status === 'success'
+            ? 'Email Verified!'
+            : status === 'expired'
+              ? 'Link Expired'
+              : status === 'invalid'
+                ? 'Invalid Link'
+                : status === 'already_verified'
+                  ? 'Already Verified'
+                  : status === 'error'
+                    ? 'Verification Failed'
+                    : null}
       </h1>
 
       {/* Message */}
@@ -382,4 +389,3 @@ export function EmailVerification({
     </div>
   );
 }
-

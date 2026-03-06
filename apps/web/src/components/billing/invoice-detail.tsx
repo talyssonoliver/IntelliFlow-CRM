@@ -172,7 +172,10 @@ function ActionButton({
       className="gap-2"
       aria-label={label}
     >
-      <span className={`material-symbols-outlined text-lg ${loading ? 'animate-spin' : ''}`} aria-hidden="true">
+      <span
+        className={`material-symbols-outlined text-lg ${loading ? 'animate-spin' : ''}`}
+        aria-hidden="true"
+      >
         {loading ? 'progress_activity' : icon}
       </span>
       {label}
@@ -202,6 +205,8 @@ function InvoiceDetailSkeleton() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="space-y-2">
+                {' '}
+                {/* NOSONAR typescript:S6479 — static skeleton placeholder, no data identity */}
                 <Skeleton className="h-4 w-20" />
                 <Skeleton className="h-6 w-28" />
               </div>
@@ -219,6 +224,8 @@ function InvoiceDetailSkeleton() {
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex justify-between py-3">
+                {' '}
+                {/* NOSONAR typescript:S6479 — static skeleton placeholder, no data identity */}
                 <Skeleton className="h-4 w-48" />
                 <Skeleton className="h-4 w-24" />
               </div>
@@ -377,8 +384,7 @@ function TotalsSection({ invoice }: { invoice: InvoiceDetailData }) {
 
   // Total = totalAmount if provided, else compute from subtotal + tax - discount, else amountDue
   const computedTotal =
-    totalAmount ??
-    (subtotal != null ? subtotal + (tax ?? 0) - (discount ?? 0) : amountDue);
+    totalAmount ?? (subtotal != null ? subtotal + (tax ?? 0) - (discount ?? 0) : amountDue);
 
   return (
     <div className="space-y-2 border-t border-slate-200 dark:border-slate-800 pt-4">
@@ -407,7 +413,10 @@ function TotalsSection({ invoice }: { invoice: InvoiceDetailData }) {
         </div>
       )}
 
-      <div className="flex justify-between text-base font-semibold pt-2 border-t border-slate-200 dark:border-slate-700" data-testid="totals-total">
+      <div
+        className="flex justify-between text-base font-semibold pt-2 border-t border-slate-200 dark:border-slate-700"
+        data-testid="totals-total"
+      >
         <span className="text-slate-900 dark:text-white">Total</span>
         <span className="text-slate-900 dark:text-white">
           {formatCurrency(computedTotal, currency)}
@@ -519,8 +528,9 @@ export function InvoiceDetail({ invoice, isLoading, error, onPayNow }: InvoiceDe
   }
 
   // Format invoice ID for display — prefer invoiceNumber from Stripe
-  const displayId = invoice.invoiceNumber
-    ?? (invoice.id.includes('_') ? invoice.id.split('_').pop() : invoice.id.slice(0, 12));
+  const displayId =
+    invoice.invoiceNumber ??
+    (invoice.id.includes('_') ? invoice.id.split('_').pop() : invoice.id.slice(0, 12));
 
   const canView = hasViewableUrl(invoice as InvoiceData);
 
@@ -713,7 +723,10 @@ export function InvoiceDetail({ invoice, isLoading, error, onPayNow }: InvoiceDe
           <LineItemsTable items={invoice.lineItems || []} currency={invoice.currency} />
           {invoice.taxBreakdown && (
             <div className="mt-4 max-w-sm ml-auto">
-              <TaxBreakdownSection taxBreakdown={invoice.taxBreakdown} currency={invoice.currency} />
+              <TaxBreakdownSection
+                taxBreakdown={invoice.taxBreakdown}
+                currency={invoice.currency}
+              />
             </div>
           )}
           <div className="mt-6 max-w-sm ml-auto">
@@ -724,4 +737,3 @@ export function InvoiceDetail({ invoice, isLoading, error, onPayNow }: InvoiceDe
     </div>
   );
 }
-

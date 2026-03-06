@@ -8,7 +8,7 @@ const healthMock = vi.fn();
 
 // Mock path should match what the component imports (relative to component location)
 // The component is at widgets/, hooks are at apps/web/hooks/
-vi.mock('../../../../hooks/use-subscription', () => ({
+vi.mock('../../../../../hooks/use-subscription', () => ({
   useActivitySubscription: (...args: unknown[]) => activityMock(...args),
   useRealtimeHealth: () => healthMock(),
 }));
@@ -42,16 +42,19 @@ describe('RecentActivityWidget', () => {
     render(<RecentActivityWidget />);
 
     expect(screen.getByText('Recent Activity')).toBeInTheDocument();
-    // Component shows sample data when hook mock fails to apply
-    // Sample activities include "Sent proposal to Acme Corp"
     expect(screen.getByText(/Sent proposal/i)).toBeInTheDocument();
   });
 
-  it('shows sample activities as fallback', () => {
+  it('shows empty state when no realtime activities are available', () => {
+    activityMock.mockReturnValue({
+      activities: [],
+      status: 'connected',
+      metrics: { averageLatency: 8, messagesReceived: 0 },
+    });
+
     render(<RecentActivityWidget />);
 
-    // When no realtime activities, component shows sample data
-    expect(screen.getByText(/Acme Corp/i)).toBeInTheDocument();
-    expect(screen.getByText(/Deal moved to Negotiation/i)).toBeInTheDocument();
+    expect(screen.getByText('No recent activity yet.')).toBeInTheDocument();
+    expect(screen.getByText('Waiting for new activities...')).toBeInTheDocument();
   });
 });

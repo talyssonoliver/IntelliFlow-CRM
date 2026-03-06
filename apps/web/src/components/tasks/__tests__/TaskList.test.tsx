@@ -305,10 +305,7 @@ describe('TaskList', () => {
   });
 
   it('calls onBulkComplete when bulk Mark Complete is clicked', () => {
-    const tasks = [
-      createMockTask({ id: 't-1' }),
-      createMockTask({ id: 't-2' }),
-    ];
+    const tasks = [createMockTask({ id: 't-1' }), createMockTask({ id: 't-2' })];
     render(<TaskList {...defaultProps} tasks={tasks} />);
     fireEvent.click(screen.getByTestId('bulk-mark-complete'));
     expect(defaultProps.onBulkComplete).toHaveBeenCalledWith(['t-1', 't-2']);

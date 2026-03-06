@@ -98,7 +98,7 @@ export function PublicHomePage() {
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur">
                 <span className="material-symbols-outlined text-base" aria-hidden="true">
                   auto_awesome
-                </span>
+                </span>{' '}
                 AI-first CRM with evidence-first delivery
               </div>
 
@@ -196,7 +196,7 @@ export function PublicHomePage() {
                         aria-hidden="true"
                       >
                         shield_person
-                      </span>
+                      </span>{' '}
                       Live governance health
                     </div>
                     <div className="flex items-center justify-between text-sm text-slate-300">

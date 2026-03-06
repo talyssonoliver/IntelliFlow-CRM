@@ -25,7 +25,8 @@ export function DocumentViewer({
 
   // ─── Set loading false for non-previewable types ─────────────────────────────
 
-  const isPreviewable = mimeType === 'application/pdf' ||
+  const isPreviewable =
+    mimeType === 'application/pdf' ||
     mimeType.startsWith('image/') ||
     mimeType === 'text/plain' ||
     mimeType === 'text/html';
@@ -184,7 +185,10 @@ export function DocumentViewer({
     // Unsupported types → download fallback
     const iconName = getMimeTypeIcon(mimeType);
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center" data-testid="download-fallback">
+      <div
+        className="flex flex-col items-center justify-center py-16 text-center"
+        data-testid="download-fallback"
+      >
         <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-700">
           <span className="material-symbols-outlined text-5xl text-primary">{iconName}</span>
         </div>
@@ -220,20 +224,11 @@ export function DocumentViewer({
         </span>
         <div className="flex items-center gap-2">
           {mimeType === 'application/pdf' && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handlePrint}
-              aria-label="Print document"
-            >
+            <Button variant="ghost" size="sm" onClick={handlePrint} aria-label="Print document">
               <span className="material-symbols-outlined text-[18px]">print</span>
             </Button>
           )}
-          <a
-            href={storageUrl}
-            download={fileName}
-            aria-label={`Download ${fileName}`}
-          >
+          <a href={storageUrl} download={fileName} aria-label={`Download ${fileName}`}>
             <Button variant="ghost" size="sm" asChild>
               <span>
                 <span className="material-symbols-outlined text-[18px]">download</span>
@@ -251,13 +246,7 @@ export function DocumentViewer({
             </span>
           </Button>
           {onClose && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              aria-label="Close viewer"
-              autoFocus
-            >
+            <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close viewer" autoFocus>
               <span className="material-symbols-outlined text-[18px]">close</span>
             </Button>
           )}
@@ -275,9 +264,7 @@ export function DocumentViewer({
       )}
 
       {/* Content */}
-      <div className="flex-1 overflow-auto">
-        {renderContent()}
-      </div>
+      <div className="flex-1 overflow-auto">{renderContent()}</div>
     </div>
   );
 }

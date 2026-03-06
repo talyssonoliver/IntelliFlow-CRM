@@ -39,7 +39,7 @@ describe('ActivityTimeline', () => {
       thresholds = [] as number[];
       takeRecords = () => [] as IntersectionObserverEntry[];
       constructor(_cb: IntersectionObserverCallback, _opts?: IntersectionObserverInit) {}
-    } as unknown as typeof IntersectionObserver;
+    } as any as typeof IntersectionObserver; // test-only mock
   });
 
   describe('Rendering', () => {
@@ -355,7 +355,7 @@ describe('ActivityTimeline', () => {
         thresholds = [] as number[];
         takeRecords = () => [] as IntersectionObserverEntry[];
         constructor(_cb: IntersectionObserverCallback, _opts?: IntersectionObserverInit) {}
-      } as unknown as typeof IntersectionObserver;
+      } as any as typeof IntersectionObserver; // test-only mock
 
       const activities = createMockActivityList(5);
       render(

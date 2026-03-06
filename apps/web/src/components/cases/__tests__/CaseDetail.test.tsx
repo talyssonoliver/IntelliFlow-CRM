@@ -179,7 +179,7 @@ describe('CaseDetail', () => {
   });
 
   it('shows not-found state when caseData is null', () => {
-    render(<CaseDetail {...defaultProps} caseData={null as unknown as CaseDetailData} />);
+    render(<CaseDetail {...defaultProps} caseData={null as any} />); // test-only: testing null guard
     expect(screen.getByText('Case not found')).toBeInTheDocument();
   });
 
@@ -196,7 +196,9 @@ describe('CaseDetail', () => {
     // DocumentLinks renders for the case — may render empty or loading
     const noDocsElements = screen.queryAllByText(/No documents attached/);
     // If DocumentLinks is rendered, it will be present or a loading skeleton
-    expect(noDocsElements.length + document.querySelectorAll('[class*="animate-pulse"]').length).toBeGreaterThanOrEqual(0);
+    expect(
+      noDocsElements.length + document.querySelectorAll('[class*="animate-pulse"]').length
+    ).toBeGreaterThanOrEqual(0);
   });
 
   it('switching to Records tab renders PartyManager', () => {
@@ -242,9 +244,9 @@ describe('CaseDetail', () => {
   it('close dialog: submit button disabled when resolution is empty', () => {
     render(<CaseDetail {...defaultProps} />);
     fireEvent.click(screen.getByText('New Entry'));
-    const closeBtn = screen.getAllByText('Close Case').find(
-      (el) => el.tagName === 'BUTTON' && el.closest('.fixed')
-    ) as HTMLButtonElement;
+    const closeBtn = screen
+      .getAllByText('Close Case')
+      .find((el) => el.tagName === 'BUTTON' && el.closest('.fixed')) as HTMLButtonElement;
     expect(closeBtn.disabled).toBe(true);
   });
 
@@ -331,7 +333,7 @@ describe('CaseDetail', () => {
   });
 
   it('renders empty timeline fallback without description', () => {
-    const caseNoTimeline = { ...mockCase, timeline: [], description: null as unknown as string };
+    const caseNoTimeline = { ...mockCase, timeline: [], description: null as any }; // test-only: testing null guard
     render(<CaseDetail {...defaultProps} caseData={caseNoTimeline} />);
     expect(screen.getByText(/No timeline entries yet/)).toBeInTheDocument();
   });
@@ -363,9 +365,7 @@ describe('CaseDetail', () => {
   it('renders avatar with URL as img tag', () => {
     const caseWithAvatarTeam = {
       ...mockCase,
-      assignedTeam: [
-        { id: 'u1', name: 'Alice', avatarUrl: 'https://example.com/alice.jpg' },
-      ],
+      assignedTeam: [{ id: 'u1', name: 'Alice', avatarUrl: 'https://example.com/alice.jpg' }],
     };
     render(<CaseDetail {...defaultProps} caseData={caseWithAvatarTeam} />);
     const img = document.querySelector('img[src="https://example.com/alice.jpg"]');
@@ -388,7 +388,7 @@ describe('CaseDetail', () => {
   it('parses parties from JSON string', () => {
     const caseWithStringParties = {
       ...mockCase,
-      parties: JSON.stringify([{ name: 'Parsed Party', role: 'WITNESS' }]) as unknown as typeof mockCase.parties,
+      parties: JSON.stringify([{ name: 'Parsed Party', role: 'WITNESS' }]) as any, // test-only: testing JSON string parsing
     };
     render(<CaseDetail {...defaultProps} caseData={caseWithStringParties} />);
     // Records tab should show the parsed party
@@ -400,7 +400,7 @@ describe('CaseDetail', () => {
   it('handles invalid JSON parties string gracefully', () => {
     const caseWithBadParties = {
       ...mockCase,
-      parties: 'not-valid-json' as unknown as typeof mockCase.parties,
+      parties: 'not-valid-json' as any, // test-only: testing invalid JSON handling
     };
     render(<CaseDetail {...defaultProps} caseData={caseWithBadParties} />);
     fireEvent.click(screen.getByText('Records'));
@@ -421,7 +421,14 @@ describe('CaseDetail', () => {
     const caseWithApt = {
       ...mockCase,
       appointments: [
-        { id: 'apt-1', title: 'Court Hearing', startTime: '2026-03-10T09:00:00Z', endTime: '2026-03-10T10:00:00Z', status: 'SCHEDULED', location: 'Room 301' },
+        {
+          id: 'apt-1',
+          title: 'Court Hearing',
+          startTime: '2026-03-10T09:00:00Z',
+          endTime: '2026-03-10T10:00:00Z',
+          status: 'SCHEDULED',
+          location: 'Room 301',
+        },
       ],
     };
     render(<CaseDetail {...defaultProps} caseData={caseWithApt} />);
@@ -433,8 +440,22 @@ describe('CaseDetail', () => {
     const multiTimeline = {
       ...mockCase,
       timeline: [
-        { id: 'tl-a', type: 'meeting' as const, title: 'Client Meeting', description: 'Discussed terms', timestamp: '2026-02-01T10:00:00Z', user: { name: 'AA' } },
-        { id: 'tl-b', type: 'event' as const, title: 'Court Date Set', description: 'March hearing', timestamp: '2026-02-02T10:00:00Z', user: { name: 'BB' } },
+        {
+          id: 'tl-a',
+          type: 'meeting' as const,
+          title: 'Client Meeting',
+          description: 'Discussed terms',
+          timestamp: '2026-02-01T10:00:00Z',
+          user: { name: 'AA' },
+        },
+        {
+          id: 'tl-b',
+          type: 'event' as const,
+          title: 'Court Date Set',
+          description: 'March hearing',
+          timestamp: '2026-02-02T10:00:00Z',
+          user: { name: 'BB' },
+        },
       ],
     };
     render(<CaseDetail {...defaultProps} caseData={multiTimeline} />);
@@ -452,10 +473,10 @@ describe('CaseDetail', () => {
   it('uses fallback values for optional fields', () => {
     const minimalCase = {
       ...mockCase,
-      resolutionProgress: undefined as unknown as number,
-      budgetConsumed: undefined as unknown as number,
-      slaDays: undefined as unknown as number,
-      openItems: undefined as unknown as number,
+      resolutionProgress: undefined as any, // test-only: testing undefined fallback
+      budgetConsumed: undefined as any, // test-only: testing undefined fallback
+      slaDays: undefined as any, // test-only: testing undefined fallback
+      openItems: undefined as any, // test-only: testing undefined fallback
     };
     render(<CaseDetail {...defaultProps} caseData={minimalCase} />);
     // Falls back to taskProgress (50) for resolution, 0 for others

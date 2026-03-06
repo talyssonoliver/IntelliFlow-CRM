@@ -358,7 +358,7 @@ export function TicketList({
   );
 
   // =============================================================================
-  // Single Action Handlers (placeholder implementations)
+  // Single Action Handlers
   // =============================================================================
 
   const handleSingleResolve = useCallback((ticket: TicketListItem) => {
@@ -703,7 +703,7 @@ export function TicketList({
       {/* Search and Filters */}
       <SearchFilterBar
         searchValue={searchValue}
-        onSearchChange={onSearchChange ?? (() => {})}
+        onSearchChange={onSearchChange ?? (() => {})} // Defensive fallback: prop is optional
         searchPlaceholder="Search by subject, ID, contact, or assignee..."
         searchAriaLabel="Search tickets"
         filters={[
@@ -713,7 +713,7 @@ export function TicketList({
             icon: 'label',
             options: ticketStatusOptions(),
             value: statusFilter,
-            onChange: onStatusChange ?? (() => {}),
+            onChange: onStatusChange ?? (() => {}), // Defensive fallback: prop is optional
           },
           {
             id: 'priority',
@@ -721,18 +721,18 @@ export function TicketList({
             icon: 'flag',
             options: ticketPriorityOptions(),
             value: priorityFilter,
-            onChange: onPriorityChange ?? (() => {}),
+            onChange: onPriorityChange ?? (() => {}), // Defensive fallback: prop is optional
           },
         ]}
         filterChips={{
           options: slaStatusChips(),
           value: slaFilter,
-          onChange: onSLAChange ?? (() => {}),
+          onChange: onSLAChange ?? (() => {}), // Defensive fallback: prop is optional
         }}
         sort={{
           options: SORT_OPTIONS,
           value: sortValue,
-          onChange: onSortChange ?? (() => {}),
+          onChange: onSortChange ?? (() => {}), // Defensive fallback: prop is optional
         }}
       />
 

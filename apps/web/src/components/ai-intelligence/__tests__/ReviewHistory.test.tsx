@@ -253,7 +253,9 @@ describe('ReviewHistory', () => {
         total: 0,
       });
       render(<ReviewHistory />);
-      const skeletons = document.querySelectorAll('[class*="animate-pulse"], [data-testid="skeleton"]');
+      const skeletons = document.querySelectorAll(
+        '[class*="animate-pulse"], [data-testid="skeleton"]'
+      );
       expect(skeletons.length).toBeGreaterThan(0);
     });
 
@@ -566,12 +568,12 @@ describe('ReviewHistory', () => {
       expect(liveRegion).toHaveAttribute('aria-live', 'polite');
     });
 
-    it('timeline sections have role="region" with aria-labelledby', () => {
+    it('timeline sections have implicit region role with aria-labelledby', () => {
       render(<ReviewHistory />);
-      const regions = document.querySelectorAll('section[role="region"]');
-      expect(regions.length).toBeGreaterThan(0);
-      regions.forEach((region) => {
-        expect(region).toHaveAttribute('aria-labelledby');
+      const sections = document.querySelectorAll('section[aria-labelledby]');
+      expect(sections.length).toBeGreaterThan(0);
+      sections.forEach((section) => {
+        expect(section).toHaveAttribute('aria-labelledby');
       });
     });
 

@@ -10,12 +10,7 @@ import { Textarea } from '@intelliflow/ui';
 import { Label } from '@intelliflow/ui';
 import { Separator } from '@intelliflow/ui';
 import { Badge } from '@intelliflow/ui';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-} from '@intelliflow/ui';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@intelliflow/ui';
 import type { ApiKeyScope } from '@/lib/developer/api-key-generator';
 import { findAppById } from '@/lib/developer/demo-data';
 import { isValidWebhookUrl } from '@/lib/developer/oauth-setup';
@@ -70,7 +65,9 @@ export function AppEditor({ appId }: AppEditorProps) {
     scopes: app?.scopes ?? ['read'],
     webhookUrl: app?.webhookUrl ?? '',
   }));
-  const [errors, setErrors] = useState<Partial<Record<keyof AppEditFormData | 'webhook', string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof AppEditFormData | 'webhook', string>>>(
+    {}
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scopeChanged, setScopeChanged] = useState(false);
 
@@ -162,12 +159,21 @@ export function AppEditor({ appId }: AppEditorProps) {
   return (
     <div data-testid="app-editor">
       {/* Breadcrumb */}
-      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-        <Link href="/developers/apps" className="hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring rounded">
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-2 text-sm text-muted-foreground mb-6"
+      >
+        <Link
+          href="/developers/apps"
+          className="hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring rounded"
+        >
           Developer Apps
         </Link>
         <span aria-hidden="true">/</span>
-        <Link href={`/developers/apps/${appId}`} className="hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring rounded">
+        <Link
+          href={`/developers/apps/${appId}`}
+          className="hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring rounded"
+        >
           {app.name}
         </Link>
         <span aria-hidden="true">/</span>
@@ -178,7 +184,10 @@ export function AppEditor({ appId }: AppEditorProps) {
 
       {/* Inactive app warning */}
       {app.status === 'inactive' && (
-        <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6" role="alert">
+        <div
+          className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4 mb-6"
+          role="alert"
+        >
           <p className="text-sm text-yellow-800 dark:text-yellow-200">
             This app is inactive. Changes will take effect if the app is reactivated.
           </p>
@@ -338,11 +347,7 @@ export function AppEditor({ appId }: AppEditorProps) {
 
       {/* Action buttons */}
       <div className="flex items-center gap-4">
-        <Button
-          onClick={handleSave}
-          disabled={isSubmitting}
-          className="focus-visible:ring-2"
-        >
+        <Button onClick={handleSave} disabled={isSubmitting} className="focus-visible:ring-2">
           {isSubmitting ? 'Saving...' : 'Save Changes'}
         </Button>
         <Link

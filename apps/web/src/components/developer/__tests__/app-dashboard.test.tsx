@@ -210,7 +210,10 @@ describe('AppDashboard', () => {
     render(<AppDashboard appId="unknown-xyz" />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('App Not Found');
     expect(screen.getByText('Back to Developer Apps')).toBeInTheDocument();
-    expect(screen.getByText('Back to Developer Apps').closest('a')).toHaveAttribute('href', '/developers/apps');
+    expect(screen.getByText('Back to Developer Apps').closest('a')).toHaveAttribute(
+      'href',
+      '/developers/apps'
+    );
   });
 
   // D-025: Webhook URL rendered as text node, not <a href> element
@@ -227,7 +230,9 @@ describe('AppDashboard', () => {
   it('copy clientId button does not throw on click', async () => {
     const user = userEvent.setup();
     render(<AppDashboard appId="app-001" />);
-    const copyBtn = screen.getByRole('button', { name: /Copy client ID for IntelliFlow Dashboard/i });
+    const copyBtn = screen.getByRole('button', {
+      name: /Copy client ID for IntelliFlow Dashboard/i,
+    });
     await user.click(copyBtn);
     // After clicking copy, the icon should change to check mark (feedback)
     expect(copyBtn).toBeInTheDocument();
@@ -240,10 +245,14 @@ describe('AppDashboard', () => {
     const revealBtn = screen.getByRole('button', { name: /Reveal API key Dashboard API Key/i });
     await user.click(revealBtn);
     // After clicking reveal, the button should switch to "Hide"
-    expect(screen.getByRole('button', { name: /Hide API key Dashboard API Key/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Hide API key Dashboard API Key/i })
+    ).toBeInTheDocument();
     // Click again to hide
     await user.click(screen.getByRole('button', { name: /Hide API key Dashboard API Key/i }));
-    expect(screen.getByRole('button', { name: /Reveal API key Dashboard API Key/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Reveal API key Dashboard API Key/i })
+    ).toBeInTheDocument();
   });
 
   // D-028: Copy API key button does not throw on click

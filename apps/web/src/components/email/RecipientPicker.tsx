@@ -25,7 +25,7 @@ interface RecipientPickerProps {
   className?: string;
 }
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@.]+\.[^\s@.]+$/;
 
 export function RecipientPicker({ label, value, onChange, className }: RecipientPickerProps) {
   const [inputValue, setInputValue] = useState('');
@@ -45,9 +45,7 @@ export function RecipientPicker({ label, value, onChange, className }: Recipient
 
   const contacts: ContactSuggestion[] = (contactsData?.contacts ?? []) as ContactSuggestion[];
 
-  const suggestions = contacts.filter(
-    (c) => !value.some((r) => r.email === c.email)
-  );
+  const suggestions = contacts.filter((c) => !value.some((r) => r.email === c.email));
 
   const addRecipient = useCallback(
     (recipient: Recipient) => {
@@ -68,54 +66,60 @@ export function RecipientPicker({ label, value, onChange, className }: Recipient
     [value, onChange]
   );
 
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setInputValue(e.target.value);
-      setIsOpen(e.target.value.length > 0);
-      setHighlightIndex(-1);
-      setError(null);
-    },
-    []
-  );
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    setIsOpen(e.target.value.length > 0);
+    setHighlightIndex(-1);
+    setError(null);
+  }, []);
+
+  const handleEnterKey = useCallback(() => {
+    if (highlightIndex >= 0 && highlightIndex < suggestions.length) {
+      const contact = suggestions[highlightIndex];
+      addRecipient({
+        name: `${contact.firstName} ${contact.lastName}`.trim(),
+        email: contact.email,
+      });
+      return;
+    }
+    const trimmed = inputValue.trim();
+    if (!trimmed) return;
+    if (EMAIL_REGEX.test(trimmed)) {
+      addRecipient({ name: trimmed, email: trimmed });
+    } else {
+      setError('Invalid email address');
+    }
+  }, [highlightIndex, suggestions, inputValue, addRecipient]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        if (highlightIndex >= 0 && highlightIndex < suggestions.length) {
-          const contact = suggestions[highlightIndex];
-          addRecipient({
-            name: `${contact.firstName} ${contact.lastName}`.trim(),
-            email: contact.email,
-          });
-        } else if (inputValue.trim()) {
-          if (EMAIL_REGEX.test(inputValue.trim())) {
-            addRecipient({ name: inputValue.trim(), email: inputValue.trim() });
-          } else {
-            setError('Invalid email address');
-          }
-        }
-      } else if (e.key === 'Backspace' && !inputValue && value.length > 0) {
-        onChange(value.slice(0, -1));
-      } else if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        if (!isOpen && inputValue) setIsOpen(true);
-        setHighlightIndex((prev) =>
-          prev < suggestions.length - 1 ? prev + 1 : prev
-        );
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setHighlightIndex((prev) => (prev > 0 ? prev - 1 : 0));
-      } else if (e.key === 'Escape') {
-        setIsOpen(false);
-        setHighlightIndex(-1);
+      switch (e.key) {
+        case 'Enter':
+          e.preventDefault();
+          handleEnterKey();
+          break;
+        case 'Backspace':
+          if (!inputValue && value.length > 0) onChange(value.slice(0, -1));
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          if (!isOpen && inputValue) setIsOpen(true);
+          setHighlightIndex((prev) => (prev < suggestions.length - 1 ? prev + 1 : prev));
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          setHighlightIndex((prev) => (prev > 0 ? prev - 1 : 0));
+          break;
+        case 'Escape':
+          setIsOpen(false);
+          setHighlightIndex(-1);
+          break;
       }
     },
-    [highlightIndex, suggestions, inputValue, value, onChange, addRecipient, isOpen]
+    [handleEnterKey, inputValue, value, onChange, isOpen, suggestions.length]
   );
 
-  const highlightedId =
-    highlightIndex >= 0 ? `${listboxId}-option-${highlightIndex}` : undefined;
+  const highlightedId = highlightIndex >= 0 ? `${listboxId}-option-${highlightIndex}` : undefined;
 
   return (
     <div className={cn('relative', className)}>
@@ -166,11 +170,9 @@ export function RecipientPicker({ label, value, onChange, className }: Recipient
         />
       </div>
 
-      {error && (
-        <p className="mt-1 text-xs text-destructive">{error}</p>
-      )}
+      {error ? <p className="mt-1 text-xs text-destructive">{error}</p> : null}
 
-      {isOpen && suggestions.length > 0 && (
+      {isOpen && suggestions.length > 0 ? (
         <ul
           id={listboxId}
           role="listbox"
@@ -208,7 +210,7 @@ export function RecipientPicker({ label, value, onChange, className }: Recipient
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
     </div>
   );
 }

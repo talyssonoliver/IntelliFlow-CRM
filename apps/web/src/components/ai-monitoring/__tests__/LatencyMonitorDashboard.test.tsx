@@ -154,8 +154,20 @@ const mockDashboardData = {
     },
   ],
   trend: [
-    { timestamp: new Date(now - 60 * 60000).toISOString(), p50: 100, p95: 300, p99: 700, count: 50 },
-    { timestamp: new Date(now - 30 * 60000).toISOString(), p50: 110, p95: 320, p99: 750, count: 55 },
+    {
+      timestamp: new Date(now - 60 * 60000).toISOString(),
+      p50: 100,
+      p95: 300,
+      p99: 700,
+      count: 50,
+    },
+    {
+      timestamp: new Date(now - 30 * 60000).toISOString(),
+      p50: 110,
+      p95: 320,
+      p99: 750,
+      count: 55,
+    },
   ],
   isLoading: false,
   error: null,
@@ -220,7 +232,9 @@ describe('LatencyMonitorDashboard', () => {
     it('renders loading skeletons when isLoading=true', () => {
       setMockHook({ isLoading: true, sampleCount: 1 });
       const { container } = render(<LatencyMonitorDashboard />);
-      const skeletons = container.querySelectorAll('[class*="animate-pulse"], [data-slot="skeleton"]');
+      const skeletons = container.querySelectorAll(
+        '[class*="animate-pulse"], [data-slot="skeleton"]'
+      );
       expect(skeletons.length).toBeGreaterThan(0);
     });
 
@@ -299,7 +313,7 @@ describe('LatencyMonitorDashboard', () => {
       const chip6h = screen.getByTestId('filter-6h');
       await user.click(chip6h);
       expect(mockUseLatencyDashboard).toHaveBeenCalledWith(
-        expect.objectContaining({ timeRange: '6h' }),
+        expect.objectContaining({ timeRange: '6h' })
       );
     });
 
@@ -318,7 +332,7 @@ describe('LatencyMonitorDashboard', () => {
       const modelSelect = screen.getByTestId('model-select');
       await user.selectOptions(modelSelect, 'gpt-4');
       expect(mockUseLatencyDashboard).toHaveBeenCalledWith(
-        expect.objectContaining({ model: 'gpt-4' }),
+        expect.objectContaining({ model: 'gpt-4' })
       );
     });
 
@@ -351,7 +365,9 @@ describe('LatencyMonitorDashboard', () => {
     it('error state shows error message and retry button', () => {
       setMockHook({ error: new Error('Service unavailable'), isLoading: false });
       render(<LatencyMonitorDashboard />);
-      expect(screen.getByTestId('error-message')).toHaveTextContent('AI monitoring service unavailable');
+      expect(screen.getByTestId('error-message')).toHaveTextContent(
+        'AI monitoring service unavailable'
+      );
       expect(screen.getByTestId('retry-button')).toBeInTheDocument();
     });
 

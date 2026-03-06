@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { trpc } from '@/lib/trpc';
 import { useDebounce } from '@/hooks/useDebounce';
 import { cn } from '@/lib/utils';
-import { Sheet, SheetContent } from '@intelliflow/ui';
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@intelliflow/ui';
 import { FolderSidebar } from './FolderSidebar';
 import { EmailList } from './EmailList';
 import { EmailThread } from './EmailThread';
@@ -37,16 +37,16 @@ interface EmailRecord {
 
 export function EmailPage({ initialEmailId, className }: EmailPageProps) {
   const [selectedFolder, setSelectedFolder] = useState('inbox');
-  const [selectedEmailId, setSelectedEmailId] = useState<string | null>(
-    initialEmailId ?? null
-  );
+  const [selectedEmailId, setSelectedEmailId] = useState<string | null>(initialEmailId ?? null);
   const [composeMode, setComposeMode] = useState<ComposeMode>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<EmailFilters>({
     unread: false,
     hasAttachments: false,
   });
-  const [composeOriginalEmail, setComposeOriginalEmail] = useState<EmailRecord | undefined>(undefined);
+  const [composeOriginalEmail, setComposeOriginalEmail] = useState<EmailRecord | undefined>(
+    undefined
+  );
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
@@ -57,9 +57,7 @@ export function EmailPage({ initialEmailId, className }: EmailPageProps) {
   });
 
   // Fetch thread for selected email
-  const selectedEmail = emailsQuery.data?.emails?.find(
-    (e) => e.id === selectedEmailId
-  );
+  const selectedEmail = emailsQuery.data?.emails?.find((e) => e.id === selectedEmailId);
   const threadId = selectedEmail?.threadId || selectedEmailId;
 
   const threadQuery = trpc.email.getThread.useQuery(
@@ -68,13 +66,18 @@ export function EmailPage({ initialEmailId, className }: EmailPageProps) {
   );
 
   // Fetch unread counts per folder (refreshed every 30s)
-  const unreadQuery = trpc.email.getUnreadCounts.useQuery({}, {
-    refetchInterval: 30_000,
-  });
+  const unreadQuery = trpc.email.getUnreadCounts.useQuery(
+    {},
+    {
+      refetchInterval: 30_000,
+    }
+  );
 
   // Mark email as read after 800ms (common email client convention)
   const markAsReadMutation = trpc.email.markAsRead.useMutation({
-    onSuccess: () => { unreadQuery.refetch(); },
+    onSuccess: () => {
+      unreadQuery.refetch();
+    },
   });
 
   useEffect(() => {
@@ -93,11 +96,7 @@ export function EmailPage({ initialEmailId, className }: EmailPageProps) {
     const handler = (e: KeyboardEvent) => {
       // Don't trigger if typing in an input or contenteditable
       const target = e.target as HTMLElement;
-      if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable
-      ) {
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
         return;
       }
       if (e.key === 'c' && !e.ctrlKey && !e.metaKey) {
@@ -146,12 +145,7 @@ export function EmailPage({ initialEmailId, className }: EmailPageProps) {
   }, []);
 
   return (
-    <div
-      className={cn(
-        'flex h-[calc(100vh-4rem)] md:flex dark:bg-background',
-        className
-      )}
-    >
+    <div className={cn('flex h-[calc(100vh-4rem)] md:flex dark:bg-background', className)}>
       {/* Left: Folder sidebar */}
       <FolderSidebar
         activeFolder={selectedFolder}
@@ -199,12 +193,21 @@ export function EmailPage({ initialEmailId, className }: EmailPageProps) {
       />
 
       {/* Compose: Sheet panel from bottom — keeps thread fully visible */}
-      <Sheet open={!!composeMode} onOpenChange={(open) => { if (!open) handleDiscardCompose(); }}>
+      <Sheet
+        open={!!composeMode}
+        onOpenChange={(open) => {
+          if (!open) handleDiscardCompose();
+        }}
+      >
         <SheetContent
           side="bottom"
           className="h-[55vh] flex flex-col p-0 gap-0"
           aria-label="Compose email"
         >
+          <SheetTitle className="sr-only">Compose email</SheetTitle>
+          <SheetDescription className="sr-only">
+            Compose a new email or respond to an existing message.
+          </SheetDescription>
           {composeMode && (
             <EmailCompose
               mode={composeMode}

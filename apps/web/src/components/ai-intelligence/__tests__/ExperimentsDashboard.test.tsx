@@ -58,7 +58,7 @@ vi.mock('../ExperimentResultsPanel', () => ({
   ),
 }));
 
-const { useExperimentsDashboard } = vi.mocked(await import('@/lib/experiments/hooks') as any);
+const { useExperimentsDashboard } = vi.mocked((await import('@/lib/experiments/hooks')) as any);
 
 // ============================================
 // Mock Data
@@ -303,17 +303,13 @@ describe('Data Display', () => {
   it('progress bar reflects progressPercent value', () => {
     render(<ExperimentsDashboard />);
     const progressBars = screen.getAllByRole('progressbar');
-    const runningBar = progressBars.find(
-      (pb) => pb.getAttribute('aria-valuenow') === '46'
-    );
+    const runningBar = progressBars.find((pb) => pb.getAttribute('aria-valuenow') === '46');
     expect(runningBar).toBeInTheDocument();
   });
 
   it('completed experiment shows significance badge (green for significant)', () => {
     render(<ExperimentsDashboard />);
-    const significantBadge = screen.getByLabelText(
-      'Result is statistically significant'
-    );
+    const significantBadge = screen.getByLabelText('Result is statistically significant');
     expect(significantBadge).toBeInTheDocument();
     expect(significantBadge.textContent).toContain('Significant');
   });
@@ -383,28 +379,20 @@ describe('Interactions', () => {
 
   it('search input filters by experiment name', () => {
     render(<ExperimentsDashboard />);
-    const searchInput = screen.getByPlaceholderText(
-      'Search by name or hypothesis...'
-    );
+    const searchInput = screen.getByPlaceholderText('Search by name or hypothesis...');
     fireEvent.change(searchInput, { target: { value: 'GPT vs Claude' } });
-    expect(
-      screen.getByText('Model Comparison: GPT vs Claude')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Model Comparison: GPT vs Claude')).toBeInTheDocument();
     expect(screen.queryByText('AI vs Manual Scoring')).not.toBeInTheDocument();
   });
 
   it('search input filters by hypothesis text', () => {
     render(<ExperimentsDashboard />);
-    const searchInput = screen.getByPlaceholderText(
-      'Search by name or hypothesis...'
-    );
+    const searchInput = screen.getByPlaceholderText('Search by name or hypothesis...');
     fireEvent.change(searchInput, {
       target: { value: 'outperform manual scoring' },
     });
     expect(screen.getByText('AI vs Manual Scoring')).toBeInTheDocument();
-    expect(
-      screen.queryByText('Model Comparison: GPT vs Claude')
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Model Comparison: GPT vs Claude')).not.toBeInTheDocument();
   });
 
   it('sort dropdown changes experiment order', () => {
@@ -422,9 +410,7 @@ describe('Interactions', () => {
 
   it('Start button calls startMutation for DRAFT experiments', () => {
     render(<ExperimentsDashboard />);
-    const startBtn = screen.getByLabelText(
-      'Start experiment: Threshold Test: 80 vs 90'
-    );
+    const startBtn = screen.getByLabelText('Start experiment: Threshold Test: 80 vs 90');
     fireEvent.click(startBtn);
     expect(mockStartMutate).toHaveBeenCalledWith({
       experimentId: 'exp-3',
@@ -433,9 +419,7 @@ describe('Interactions', () => {
 
   it('Pause button calls pauseMutation for RUNNING experiments', () => {
     render(<ExperimentsDashboard />);
-    const pauseBtn = screen.getByLabelText(
-      'Pause experiment: AI vs Manual Scoring'
-    );
+    const pauseBtn = screen.getByLabelText('Pause experiment: AI vs Manual Scoring');
     fireEvent.click(pauseBtn);
     expect(mockPauseMutate).toHaveBeenCalledWith({
       experimentId: 'exp-1',
@@ -444,9 +428,7 @@ describe('Interactions', () => {
 
   it('Complete button calls completeMutation for RUNNING experiments', () => {
     render(<ExperimentsDashboard />);
-    const completeBtn = screen.getByLabelText(
-      'Complete experiment: AI vs Manual Scoring'
-    );
+    const completeBtn = screen.getByLabelText('Complete experiment: AI vs Manual Scoring');
     fireEvent.click(completeBtn);
     expect(mockCompleteMutate).toHaveBeenCalledWith({
       experimentId: 'exp-1',
@@ -455,9 +437,7 @@ describe('Interactions', () => {
 
   it('Complete button calls completeMutation for PAUSED experiments', () => {
     render(<ExperimentsDashboard />);
-    const completeBtn = screen.getByLabelText(
-      'Complete experiment: Paused Experiment'
-    );
+    const completeBtn = screen.getByLabelText('Complete experiment: Paused Experiment');
     fireEvent.click(completeBtn);
     expect(mockCompleteMutate).toHaveBeenCalledWith({
       experimentId: 'exp-4',
@@ -466,9 +446,7 @@ describe('Interactions', () => {
 
   it('Archive button calls archiveMutation for COMPLETED experiments', () => {
     render(<ExperimentsDashboard />);
-    const archiveBtn = screen.getByLabelText(
-      'Archive experiment: Model Comparison: GPT vs Claude'
-    );
+    const archiveBtn = screen.getByLabelText('Archive experiment: Model Comparison: GPT vs Claude');
     fireEvent.click(archiveBtn);
     expect(mockArchiveMutate).toHaveBeenCalledWith({
       experimentId: 'exp-2',
@@ -511,18 +489,14 @@ describe('Edge Cases', () => {
   it('handles zero sample size (progress bar at 0%)', () => {
     render(<ExperimentsDashboard />);
     const progressBars = screen.getAllByRole('progressbar');
-    const zeroBar = progressBars.find(
-      (pb) => pb.getAttribute('aria-valuenow') === '0'
-    );
+    const zeroBar = progressBars.find((pb) => pb.getAttribute('aria-valuenow') === '0');
     expect(zeroBar).toBeInTheDocument();
   });
 
   it('handles missing statistical results (shows "N/A")', () => {
     // Completed but not significant and no winner — shows "Not Significant" badge
     render(<ExperimentsDashboard />);
-    const notSigBadge = screen.getByLabelText(
-      'Result is not statistically significant'
-    );
+    const notSigBadge = screen.getByLabelText('Result is not statistically significant');
     expect(notSigBadge).toBeInTheDocument();
     expect(notSigBadge.textContent).toContain('Not Significant');
   });
@@ -557,15 +531,11 @@ describe('Accessibility', () => {
   it('action buttons have aria-label attributes', () => {
     render(<ExperimentsDashboard />);
     // Start button for DRAFT experiment
-    const startBtn = screen.getByLabelText(
-      'Start experiment: Threshold Test: 80 vs 90'
-    );
+    const startBtn = screen.getByLabelText('Start experiment: Threshold Test: 80 vs 90');
     expect(startBtn).toBeInTheDocument();
 
     // Pause button for RUNNING experiment
-    const pauseBtn = screen.getByLabelText(
-      'Pause experiment: AI vs Manual Scoring'
-    );
+    const pauseBtn = screen.getByLabelText('Pause experiment: AI vs Manual Scoring');
     expect(pauseBtn).toBeInTheDocument();
   });
 

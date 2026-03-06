@@ -13,7 +13,9 @@ import { SsoEntryForm } from '../SsoEntryForm';
 // Mock next/link
 vi.mock('next/link', () => ({
   default: ({ children, href, ...props }: { children: React.ReactNode; href: string }) => (
-    <a href={href} {...props}>{children}</a>
+    <a href={href} {...props}>
+      {children}
+    </a>
   ),
 }));
 
@@ -117,9 +119,7 @@ describe('SsoEntryForm', () => {
       expect(mockResolveSsoFetch).toHaveBeenCalledWith({ email: 'user@example-corp.com' });
     });
     await waitFor(() => {
-      expect(mockOnResolve).toHaveBeenCalledWith(
-        expect.objectContaining({ found: true })
-      );
+      expect(mockOnResolve).toHaveBeenCalledWith(expect.objectContaining({ found: true }));
     });
   });
 

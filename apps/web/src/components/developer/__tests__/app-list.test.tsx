@@ -37,15 +37,9 @@ describe('AppList', () => {
 
   it('renders app descriptions', () => {
     render(<AppList />);
-    expect(
-      screen.getByText(/Main production dashboard application/)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Testing environment for integration development/)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/Deprecated integration bridge/)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Main production dashboard application/)).toBeInTheDocument();
+    expect(screen.getByText(/Testing environment for integration development/)).toBeInTheDocument();
+    expect(screen.getByText(/Deprecated integration bridge/)).toBeInTheDocument();
   });
 
   it('active app shows default badge', () => {

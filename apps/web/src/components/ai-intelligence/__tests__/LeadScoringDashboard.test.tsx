@@ -138,10 +138,18 @@ describe('LeadScoringDashboard', () => {
     });
 
     it('TC-8: renders loading skeletons when isLoading=true', () => {
-      setMockHook({ isLoading: true, stats: null, scoredLeads: [], trends: [], distribution: null });
+      setMockHook({
+        isLoading: true,
+        stats: null,
+        scoredLeads: [],
+        trends: [],
+        distribution: null,
+      });
       render(<LeadScoringDashboard />);
       // Stat cards should show skeletons — check for skeleton elements
-      const skeletons = document.querySelectorAll('[class*="animate-pulse"], [data-slot="skeleton"]');
+      const skeletons = document.querySelectorAll(
+        '[class*="animate-pulse"], [data-slot="skeleton"]'
+      );
       expect(skeletons.length).toBeGreaterThan(0);
     });
 
@@ -163,9 +171,15 @@ describe('LeadScoringDashboard', () => {
     it('TC-10: stat cards show correct hot/warm/cold counts', () => {
       render(<LeadScoringDashboard />);
       // Stat values may appear in multiple contexts; verify at least one instance
-      expect(screen.getAllByText(String(mockLeadScoringStats.hot)).length).toBeGreaterThanOrEqual(1);
-      expect(screen.getAllByText(String(mockLeadScoringStats.warm)).length).toBeGreaterThanOrEqual(1);
-      expect(screen.getAllByText(String(mockLeadScoringStats.cold)).length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText(String(mockLeadScoringStats.hot)).length).toBeGreaterThanOrEqual(
+        1
+      );
+      expect(screen.getAllByText(String(mockLeadScoringStats.warm)).length).toBeGreaterThanOrEqual(
+        1
+      );
+      expect(screen.getAllByText(String(mockLeadScoringStats.cold)).length).toBeGreaterThanOrEqual(
+        1
+      );
     });
 
     it('TC-11: hot tier lead shows green/success styling', () => {
@@ -216,9 +230,9 @@ describe('LeadScoringDashboard', () => {
   describe('Interactions', () => {
     it('TC-17: clicking "Hot" filter chip filters to hot leads only', () => {
       render(<LeadScoringDashboard />);
-      const hotChip = screen.getAllByText('Hot').find(
-        (el) => el.closest('[role="button"]') || el.closest('button')
-      );
+      const hotChip = screen
+        .getAllByText('Hot')
+        .find((el) => el.closest('[role="button"]') || el.closest('button'));
       if (hotChip) fireEvent.click(hotChip);
       // After filter, only hot leads should show (John Doe, Alice Brown)
       const cards = screen.getAllByTestId('lead-card');

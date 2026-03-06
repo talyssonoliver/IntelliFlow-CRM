@@ -233,7 +233,7 @@ function EmptyState({ onAddCard }: { onAddCard: () => void }) {
       <Button onClick={onAddCard}>
         <span className="material-symbols-outlined text-lg mr-2" aria-hidden="true">
           add
-        </span>
+        </span>{' '}
         Add Payment Method
       </Button>
     </div>
@@ -359,7 +359,9 @@ function AddCardForm({ onSuccess, onClose, isAdding, setIsAdding }: AddCardFormP
 
         {/* Cardholder Name — regular Input (not PCI scope) */}
         <div className="space-y-1.5">
-          <label htmlFor="billing-cardholder-name" className="text-sm font-medium">Cardholder Name</label>
+          <label htmlFor="billing-cardholder-name" className="text-sm font-medium">
+            Cardholder Name
+          </label>
           <Input
             id="billing-cardholder-name"
             type="text"
@@ -412,7 +414,13 @@ interface AddCardDialogProps {
   setIsAdding: (v: boolean) => void;
 }
 
-function AddCardDialog({ isOpen, onClose, onAddSuccess, isAdding, setIsAdding }: AddCardDialogProps) {
+function AddCardDialog({
+  isOpen,
+  onClose,
+  onAddSuccess,
+  isAdding,
+  setIsAdding,
+}: AddCardDialogProps) {
   const handleClose = () => {
     if (!isAdding) {
       onClose();
@@ -643,7 +651,9 @@ export function PaymentMethods({ className }: PaymentMethodsProps) {
 
   // Get remove check result (subscription-aware)
   const removeCheck =
-    removeCard && paymentMethods ? canRemoveCard(removeCard.id, paymentMethods) : { canRemove: true };
+    removeCard && paymentMethods
+      ? canRemoveCard(removeCard.id, paymentMethods)
+      : { canRemove: true };
 
   return (
     <div className={cn('space-y-6', className)}>
@@ -678,7 +688,7 @@ export function PaymentMethods({ className }: PaymentMethodsProps) {
               <Button onClick={() => setIsAddDialogOpen(true)}>
                 <span className="material-symbols-outlined text-lg mr-2" aria-hidden="true">
                   add
-                </span>
+                </span>{' '}
                 Add Card
               </Button>
             )}
@@ -760,4 +770,3 @@ export function PaymentMethods({ className }: PaymentMethodsProps) {
     </div>
   );
 }
-

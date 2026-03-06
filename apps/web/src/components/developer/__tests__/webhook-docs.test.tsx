@@ -96,13 +96,13 @@ describe('WebhookDocs', () => {
     expect(screen.getByText('x-sendgrid-signature')).toBeInTheDocument();
   });
 
-  it('Security tab has SendGrid note about HMAC placeholder', async () => {
+  it('Security tab has SendGrid note about HMAC-SHA256 and ECDSA', async () => {
     const user = userEvent.setup();
     render(<WebhookDocs />);
     await user.click(screen.getByRole('tab', { name: 'Security' }));
 
     // SendGrid note appears in both table description and callout; use getAllByText
-    expect(screen.getAllByText(/HMAC.*placeholder/i).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/HMAC-SHA256/i).length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText(/ECDSA/i).length).toBeGreaterThanOrEqual(1);
   });
 
@@ -182,9 +182,7 @@ describe('WebhookDocs', () => {
     const triggers = screen.getAllByRole('button', { name: /^email\./i });
     expect(triggers.length).toBe(10);
     for (const event of expectedEvents) {
-      expect(
-        triggers.some((t) => t.textContent?.includes(event))
-      ).toBe(true);
+      expect(triggers.some((t) => t.textContent?.includes(event))).toBe(true);
     }
   });
 

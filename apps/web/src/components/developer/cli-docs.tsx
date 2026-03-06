@@ -103,7 +103,10 @@ function OverviewTab() {
             <Card key={group.id} className="p-4 h-full">
               <div className="flex items-start gap-3">
                 <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
-                  <span className="material-symbols-outlined text-xl text-primary" aria-hidden="true">
+                  <span
+                    className="material-symbols-outlined text-xl text-primary"
+                    aria-hidden="true"
+                  >
                     {group.icon}
                   </span>
                 </div>
@@ -167,8 +170,15 @@ pnpm run db:seed`}
           Typecheck Gotcha
         </p>
         <p className="text-sm text-blue-700 dark:text-blue-300">
-          Always use <code className="bg-blue-100 dark:bg-blue-900/40 px-1 py-0.5 rounded">pnpm run typecheck</code> (Turborepo-scoped) instead of{' '}
-          <code className="bg-blue-100 dark:bg-blue-900/40 px-1 py-0.5 rounded">npx tsc --noEmit</code> which produces ~22K errors from wide scope.
+          Always use{' '}
+          <code className="bg-blue-100 dark:bg-blue-900/40 px-1 py-0.5 rounded">
+            pnpm run typecheck
+          </code>{' '}
+          (Turborepo-scoped) instead of{' '}
+          <code className="bg-blue-100 dark:bg-blue-900/40 px-1 py-0.5 rounded">
+            npx tsc --noEmit
+          </code>{' '}
+          which produces ~22K errors from wide scope.
         </p>
       </div>
     </div>
@@ -231,9 +241,11 @@ function DatabaseTab() {
           Destructive Command Warning
         </p>
         <p className="text-sm text-yellow-700 dark:text-yellow-300">
-          <code className="bg-yellow-100 dark:bg-yellow-900/40 px-1 py-0.5 rounded">pnpm run db:reset</code> will{' '}
-          <strong>drop and recreate</strong> the entire database. Use with caution — all data will be lost.
-          Only use in local development environments.
+          <code className="bg-yellow-100 dark:bg-yellow-900/40 px-1 py-0.5 rounded">
+            pnpm run db:reset
+          </code>{' '}
+          will <strong>drop and recreate</strong> the entire database. Use with caution — all data
+          will be lost. Only use in local development environments.
         </p>
       </div>
 

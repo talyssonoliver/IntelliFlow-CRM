@@ -69,14 +69,18 @@ export const StageColumn = React.memo(function StageColumn({
           <div className="space-y-1.5" role="list" aria-label={`Deals in ${config.label}`}>
             {deals.map((deal) => (
               <div key={deal.id} role="listitem">
-                <DealCard deal={deal} onNavigate={() => onDealNavigate(deal.id)} isPending={deal.id === pendingDealId} />
+                <DealCard
+                  deal={deal}
+                  onNavigate={() => onDealNavigate(deal.id)}
+                  isPending={deal.id === pendingDealId}
+                />
               </div>
             ))}
-            {deals.length === 0 && (
+            {deals.length === 0 ? (
               <div className="flex items-center justify-center h-[100px] border-2 border-dashed border-border rounded-lg">
                 <p className="text-sm text-muted-foreground">Drop deals here</p>
               </div>
-            )}
+            ) : null}
           </div>
         </SortableContext>
       </div>

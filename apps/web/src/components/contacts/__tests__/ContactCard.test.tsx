@@ -236,7 +236,7 @@ describe('ContactCard', () => {
       const contact = createMockContact();
       render(<ContactCard contact={contact} onClick={handlers.onClick} />);
 
-      const card = screen.getByRole('article');
+      const card = screen.getByRole('button', { name: /Contact card for John Doe/i });
       fireEvent.click(card);
 
       expect(handlers.onClick).toHaveBeenCalledTimes(1);
@@ -247,7 +247,7 @@ describe('ContactCard', () => {
       const contact = createMockContact();
       render(<ContactCard contact={contact} onClick={handlers.onClick} />);
 
-      const card = screen.getByRole('article');
+      const card = screen.getByRole('button', { name: /Contact card for John Doe/i });
       expect(card).toHaveClass('cursor-pointer');
     });
 

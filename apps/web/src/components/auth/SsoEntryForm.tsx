@@ -47,7 +47,7 @@ export function SsoEntryForm({ onResolve, isLoading = false }: Readonly<SsoEntry
   const isDisabled = isLoading || isResolving;
 
   const validateEmail = (value: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@[^\s@.]+\.[^\s@.]+$/;
     return emailRegex.test(value);
   };
 
@@ -71,7 +71,11 @@ export function SsoEntryForm({ onResolve, isLoading = false }: Readonly<SsoEntry
       const result = await utils.auth.resolveSso.fetch({ email: trimmed });
       let resolution: SsoResolution;
       if (result.found && 'config' in result) {
-        const cfg = result.config as { provider_id: string; provider_name: string; provider_type: string };
+        const cfg = result.config as {
+          provider_id: string;
+          provider_name: string;
+          provider_type: string;
+        };
         resolution = {
           found: true,
           config: {
@@ -85,7 +89,9 @@ export function SsoEntryForm({ onResolve, isLoading = false }: Readonly<SsoEntry
       } else {
         const suggestion = 'suggestion' in result ? (result.suggestion as string) : undefined;
         resolution = { found: false, suggestion };
-        setError(suggestion || 'Your organization has not configured SSO. Please use standard login.');
+        setError(
+          suggestion || 'Your organization has not configured SSO. Please use standard login.'
+        );
       }
       onResolve(resolution);
     } catch {

@@ -523,8 +523,8 @@ describe('ContactForm', () => {
       await user.click(screen.getByText('Next Step'));
 
       await waitFor(() => {
-        expect(screen.getByText('Creating...')).toBeInTheDocument();
-        const submitButton = screen.getByText('Creating...').closest('button');
+        expect(screen.getByText('Saving...')).toBeInTheDocument();
+        const submitButton = screen.getByText('Saving...').closest('button');
         expect(submitButton).toBeDisabled();
       });
     });
@@ -537,6 +537,84 @@ describe('ContactForm', () => {
 
       await user.click(screen.getByText('Cancel'));
       expect(handlers.onCancel).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Dirty State (onDirtyChange)', () => {
+    it('reports not dirty when form matches initial contact data', () => {
+      const contact = createMockFormData();
+      const onDirtyChange = vi.fn();
+
+      render(
+        <ContactForm
+          mode="edit"
+          contact={contact}
+          onSubmit={handlers.onSubmit}
+          onCancel={handlers.onCancel}
+          onDirtyChange={onDirtyChange}
+        />
+      );
+
+      // Should have been called with false (form matches initial snapshot)
+      expect(onDirtyChange).toHaveBeenLastCalledWith(false);
+    });
+
+    it('reports dirty after a field is modified', async () => {
+      const user = userEvent.setup();
+      const contact = createMockFormData();
+      const onDirtyChange = vi.fn();
+
+      render(
+        <ContactForm
+          mode="edit"
+          contact={contact}
+          onSubmit={handlers.onSubmit}
+          onCancel={handlers.onCancel}
+          onDirtyChange={onDirtyChange}
+        />
+      );
+
+      // Modify a field
+      const firstNameInput = screen.getByLabelText(/First Name/i);
+      await user.clear(firstNameInput);
+      await user.type(firstNameInput, 'Modified');
+
+      await waitFor(() => {
+        expect(onDirtyChange).toHaveBeenLastCalledWith(true);
+      });
+    });
+
+    it('reports not dirty when field is reverted to original value', async () => {
+      const user = userEvent.setup();
+      const contact = createMockFormData();
+      const onDirtyChange = vi.fn();
+
+      render(
+        <ContactForm
+          mode="edit"
+          contact={contact}
+          onSubmit={handlers.onSubmit}
+          onCancel={handlers.onCancel}
+          onDirtyChange={onDirtyChange}
+        />
+      );
+
+      // Modify and revert
+      const firstNameInput = screen.getByLabelText(/First Name/i);
+      await user.clear(firstNameInput);
+      await user.type(firstNameInput, 'Modified');
+
+      await waitFor(() => {
+        expect(onDirtyChange).toHaveBeenLastCalledWith(true);
+      });
+
+      // Revert to original
+      await user.clear(firstNameInput);
+      await user.type(firstNameInput, 'Jane');
+
+      await waitFor(() => {
+        expect(onDirtyChange).toHaveBeenLastCalledWith(false);
+      });
     });
   });
 

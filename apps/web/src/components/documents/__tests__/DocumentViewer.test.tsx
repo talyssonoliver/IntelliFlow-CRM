@@ -97,25 +97,13 @@ describe('DocumentViewer', () => {
   });
 
   it('renders img for JPEG files', () => {
-    render(
-      <DocumentViewer
-        {...defaultProps}
-        mimeType="image/jpeg"
-        fileName="photo.jpg"
-      />
-    );
+    render(<DocumentViewer {...defaultProps} mimeType="image/jpeg" fileName="photo.jpg" />);
     const img = screen.getByTestId('image-viewer');
     expect(img).toBeInTheDocument();
   });
 
   it('image has alt text with filename', () => {
-    render(
-      <DocumentViewer
-        {...defaultProps}
-        mimeType="image/png"
-        fileName="screenshot.png"
-      />
-    );
+    render(<DocumentViewer {...defaultProps} mimeType="image/png" fileName="screenshot.png" />);
     expect(screen.getByAltText('screenshot.png')).toBeInTheDocument();
   });
 
@@ -139,13 +127,7 @@ describe('DocumentViewer', () => {
   // ─── HTML Rendering ──────────────────────────────────────────────────────
 
   it('renders iframe for text/html with strict sandbox', () => {
-    render(
-      <DocumentViewer
-        {...defaultProps}
-        mimeType="text/html"
-        fileName="page.html"
-      />
-    );
+    render(<DocumentViewer {...defaultProps} mimeType="text/html" fileName="page.html" />);
     const iframe = screen.getByTestId('html-viewer');
     expect(iframe).toBeInTheDocument();
     expect(iframe).toHaveAttribute('sandbox', '');
@@ -193,11 +175,7 @@ describe('DocumentViewer', () => {
 
   it('download fallback has download link', () => {
     render(
-      <DocumentViewer
-        {...defaultProps}
-        mimeType="application/octet-stream"
-        fileName="data.bin"
-      />
+      <DocumentViewer {...defaultProps} mimeType="application/octet-stream" fileName="data.bin" />
     );
     const fallback = screen.getByTestId('download-fallback');
     const link = within(fallback).getByRole('link');
@@ -223,9 +201,7 @@ describe('DocumentViewer', () => {
   });
 
   it('does not render print button for non-PDF', () => {
-    render(
-      <DocumentViewer {...defaultProps} mimeType="image/png" fileName="photo.png" />
-    );
+    render(<DocumentViewer {...defaultProps} mimeType="image/png" fileName="photo.png" />);
     expect(screen.queryByLabelText(/print/i)).not.toBeInTheDocument();
   });
 
@@ -328,13 +304,7 @@ describe('DocumentViewer', () => {
   // ─── Error State Rendering (line 90 branch) ──────────────────────────────
 
   it('error state shows "Failed to load document" message', async () => {
-    render(
-      <DocumentViewer
-        {...defaultProps}
-        mimeType="image/png"
-        fileName="broken.png"
-      />
-    );
+    render(<DocumentViewer {...defaultProps} mimeType="image/png" fileName="broken.png" />);
     const img = screen.getByTestId('image-viewer');
     fireEvent.error(img);
 
@@ -344,19 +314,11 @@ describe('DocumentViewer', () => {
   });
 
   it('error state shows descriptive subtitle text', async () => {
-    render(
-      <DocumentViewer
-        {...defaultProps}
-        mimeType="image/png"
-        fileName="broken.png"
-      />
-    );
+    render(<DocumentViewer {...defaultProps} mimeType="image/png" fileName="broken.png" />);
     fireEvent.error(screen.getByTestId('image-viewer'));
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/could not be displayed/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/could not be displayed/i)).toBeInTheDocument();
     });
   });
 
@@ -415,13 +377,7 @@ describe('DocumentViewer', () => {
   // ─── HTML Viewer Load / Error handlers ───────────────────────────────────
 
   it('handleIframeLoad clears loading state when HTML iframe fires onLoad', async () => {
-    render(
-      <DocumentViewer
-        {...defaultProps}
-        mimeType="text/html"
-        fileName="page.html"
-      />
-    );
+    render(<DocumentViewer {...defaultProps} mimeType="text/html" fileName="page.html" />);
     expect(screen.getByText(/loading document/i)).toBeInTheDocument();
 
     const iframe = screen.getByTestId('html-viewer');
@@ -605,11 +561,7 @@ describe('DocumentViewer', () => {
 
   it('does not show loading overlay for non-previewable file types', () => {
     render(
-      <DocumentViewer
-        {...defaultProps}
-        mimeType="application/octet-stream"
-        fileName="binary.bin"
-      />
+      <DocumentViewer {...defaultProps} mimeType="application/octet-stream" fileName="binary.bin" />
     );
     expect(screen.queryByText(/loading document/i)).not.toBeInTheDocument();
   });
@@ -628,13 +580,7 @@ describe('DocumentViewer', () => {
   // ─── HTML viewer additional attributes ───────────────────────────────────
 
   it('HTML iframe has title attribute matching fileName', () => {
-    render(
-      <DocumentViewer
-        {...defaultProps}
-        mimeType="text/html"
-        fileName="page.html"
-      />
-    );
+    render(<DocumentViewer {...defaultProps} mimeType="text/html" fileName="page.html" />);
     const iframe = screen.getByTestId('html-viewer');
     expect(iframe).toHaveAttribute('title', 'page.html');
   });

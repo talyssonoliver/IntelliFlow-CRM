@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   APPOINTMENT_TYPE_OPTIONS,
   BUFFER_PRESETS,
@@ -17,9 +18,12 @@ import type {
   RecurrencePattern,
   AppointmentType,
 } from './types';
+import { useCalendarVisibility } from '@/hooks/useCalendarVisibility';
 
 export interface AppointmentFormProps {
   appointment?: AppointmentDetailData;
+  defaultStartTime?: Date;
+  defaultEndTime?: Date;
   onSubmit: (data: AppointmentFormInput) => Promise<void>;
   onCancel: () => void;
   isSubmitting: boolean;
@@ -29,6 +33,8 @@ export interface AppointmentFormProps {
 
 export function AppointmentForm({
   appointment,
+  defaultStartTime,
+  defaultEndTime,
   onSubmit,
   onCancel,
   isSubmitting,
@@ -36,7 +42,9 @@ export function AppointmentForm({
   onConflictCheck,
 }: AppointmentFormProps) {
   const isEdit = !!appointment;
+  const router = useRouter();
   const conflictCheckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { dbCalendars } = useCalendarVisibility();
 
   const [title, setTitle] = useState(appointment?.title || '');
   const [description, setDescription] = useState(appointment?.description || '');
@@ -44,10 +52,18 @@ export function AppointmentForm({
     appointment?.appointmentType || 'MEETING'
   );
   const [startTime, setStartTime] = useState(
-    appointment?.startTime ? toLocalDateTimeString(appointment.startTime) : ''
+    appointment?.startTime
+      ? toLocalDateTimeString(appointment.startTime)
+      : defaultStartTime
+        ? toLocalDateTimeString(defaultStartTime)
+        : ''
   );
   const [endTime, setEndTime] = useState(
-    appointment?.endTime ? toLocalDateTimeString(appointment.endTime) : ''
+    appointment?.endTime
+      ? toLocalDateTimeString(appointment.endTime)
+      : defaultEndTime
+        ? toLocalDateTimeString(defaultEndTime)
+        : ''
   );
   const [location, setLocation] = useState(appointment?.location || '');
   const [attendeeIds] = useState<string[]>(appointment?.attendees?.map((a) => a.userId) || []);
@@ -63,6 +79,7 @@ export function AppointmentForm({
   );
   const [reminderMinutes, setReminderMinutes] = useState(appointment?.reminderMinutes ?? 60);
   const [forceOverrideConflicts, setForceOverrideConflicts] = useState(false);
+  const [calendarId, setCalendarId] = useState(appointment?.calendarId || '');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -119,6 +136,7 @@ export function AppointmentForm({
       recurrence,
       reminderMinutes,
       forceOverrideConflicts,
+      calendarId: calendarId || null,
     });
   };
 
@@ -247,6 +265,27 @@ export function AppointmentForm({
         />
       </div>
 
+      {/* Calendar */}
+      <div>
+        <label htmlFor="appt-calendar" className="block text-sm font-medium text-gray-700 mb-1">
+          Calendar
+        </label>
+        <select
+          id="appt-calendar"
+          value={calendarId}
+          onChange={(e) => setCalendarId(e.target.value)}
+          disabled={isSubmitting}
+          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
+        >
+          <option value="">Personal (Default)</option>
+          {dbCalendars.map((cal) => (
+            <option key={cal.id} value={cal.id}>
+              {cal.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {/* Buffer Time */}
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -320,7 +359,7 @@ export function AppointmentForm({
       {conflicts?.hasConflicts && (
         <ConflictWarning
           conflicts={conflicts.conflicts}
-          onViewConflict={() => {}}
+          onViewConflict={(appointmentId) => router.push(`/calendar/${appointmentId}`)}
           onOverride={() => setForceOverrideConflicts(!forceOverrideConflicts)}
         />
       )}

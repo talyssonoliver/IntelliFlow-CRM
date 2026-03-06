@@ -73,7 +73,7 @@ export function ErrorRateGauge({ driftResult, isLoading }: ErrorRateGaugeProps) 
                   strokeLinecap="round"
                   className="text-muted/20"
                 />
-                {clampedScore > 0 && (
+                {clampedScore > 0 ? (
                   <path
                     d={arcPath}
                     fill="none"
@@ -81,7 +81,7 @@ export function ErrorRateGauge({ driftResult, isLoading }: ErrorRateGaugeProps) 
                     strokeWidth="12"
                     strokeLinecap="round"
                   />
-                )}
+                ) : null}
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-end pb-0">
                 <span

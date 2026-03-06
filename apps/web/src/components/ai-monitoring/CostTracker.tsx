@@ -57,7 +57,9 @@ export function CostTracker({ roi, isLoading }: CostTrackerProps) {
                 <span
                   className={cn(
                     'text-xl font-bold',
-                    roi.roi >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                    roi.roi >= 0
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
                   )}
                   data-testid="roi-value"
                 >
@@ -67,7 +69,9 @@ export function CostTracker({ roi, isLoading }: CostTrackerProps) {
                 <span
                   className={cn(
                     'material-symbols-outlined text-lg',
-                    roi.roi >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                    roi.roi >= 0
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
                   )}
                   aria-hidden="true"
                   data-testid="trend-icon"
@@ -95,7 +99,9 @@ export function CostTracker({ roi, isLoading }: CostTrackerProps) {
               <p
                 className={cn(
                   'text-sm font-medium',
-                  roi.netValue >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                  roi.netValue >= 0
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-red-600 dark:text-red-400'
                 )}
                 data-testid="net-value"
               >

@@ -1,5 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+
+vi.mock('@/hooks/useCalendarVisibility', () => ({
+  useCalendarVisibility: () => ({
+    calendars: [],
+    toggle: vi.fn(),
+    isVisible: () => true,
+    addCalendar: vi.fn(),
+    removeCalendar: vi.fn(),
+    dbCalendars: [],
+  }),
+}));
+
 import { AppointmentForm } from '../AppointmentForm';
 import { mockAppointmentDetail } from '@/test/fixtures/appointment-data';
 

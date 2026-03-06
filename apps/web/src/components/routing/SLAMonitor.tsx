@@ -68,8 +68,7 @@ export function SLAMonitor() {
       <Card>
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
-            <span className="material-symbols-outlined text-[20px]">policy</span>
-            SLA Policies
+            <span className="material-symbols-outlined text-[20px]">policy</span> SLA Policies
           </CardTitle>
         </CardHeader>
         <CardContent>

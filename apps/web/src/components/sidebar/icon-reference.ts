@@ -25,6 +25,7 @@ export const MODULE_ICONS = {
   governance: 'policy',
   profile: 'account_circle',
   accounts: 'domain',
+  helpCenter: 'help_center',
 } as const;
 
 // =============================================================================
@@ -258,6 +259,12 @@ export const MODULE_COLORS = {
   calendar: {
     iconBg: 'bg-slate-100 dark:bg-slate-800',
     text: 'text-purple-600 dark:text-purple-400',
+  },
+
+  // Help Center - Cyan theme
+  helpCenter: {
+    iconBg: 'bg-slate-100 dark:bg-slate-800',
+    text: 'text-cyan-600 dark:text-cyan-400',
   },
 
   // Dashboard - Primary/Default theme

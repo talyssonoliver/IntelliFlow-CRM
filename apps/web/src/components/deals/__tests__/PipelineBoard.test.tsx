@@ -289,7 +289,14 @@ describe('PipelineBoard', () => {
   // ─── IFC-064: DnD lifecycle + pendingDealId tests ──────────────────────────
 
   it('handleDragStart sets activeDeal — DragOverlay renders deal name (IFC-064 AC-003)', async () => {
-    const deals = [createMockDeal({ id: 'deal-1', name: 'Big Deal', stage: 'PROSPECTING' as OpportunityStage, value: 50000 })];
+    const deals = [
+      createMockDeal({
+        id: 'deal-1',
+        name: 'Big Deal',
+        stage: 'PROSPECTING' as OpportunityStage,
+        value: 50000,
+      }),
+    ];
     render(
       <PipelineBoard
         deals={deals}
@@ -309,7 +316,9 @@ describe('PipelineBoard', () => {
   });
 
   it('handleDragCancel clears activeDeal — DragOverlay empty (IFC-064 AC-003)', async () => {
-    const deals = [createMockDeal({ id: 'deal-1', name: 'Big Deal', stage: 'PROSPECTING' as OpportunityStage })];
+    const deals = [
+      createMockDeal({ id: 'deal-1', name: 'Big Deal', stage: 'PROSPECTING' as OpportunityStage }),
+    ];
     render(
       <PipelineBoard
         deals={deals}
@@ -334,7 +343,13 @@ describe('PipelineBoard', () => {
   });
 
   it('passes pendingDealId through to StageColumn children (IFC-064 AC-007)', () => {
-    const deals = [createMockDeal({ id: 'deal-1', name: 'Pending Deal', stage: 'QUALIFICATION' as OpportunityStage })];
+    const deals = [
+      createMockDeal({
+        id: 'deal-1',
+        name: 'Pending Deal',
+        stage: 'QUALIFICATION' as OpportunityStage,
+      }),
+    ];
     const { container } = render(
       <PipelineBoard
         deals={deals}
@@ -351,7 +366,9 @@ describe('PipelineBoard', () => {
   });
 
   it('accessibility announcements: onDragOver returns stage description (IFC-064)', () => {
-    const deals = [createMockDeal({ id: 'deal-1', name: 'Big Deal', stage: 'PROSPECTING' as OpportunityStage })];
+    const deals = [
+      createMockDeal({ id: 'deal-1', name: 'Big Deal', stage: 'PROSPECTING' as OpportunityStage }),
+    ];
     render(
       <PipelineBoard
         deals={deals}

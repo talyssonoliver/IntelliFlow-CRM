@@ -53,8 +53,8 @@ export const LossReasonModal = React.memo(function LossReasonModal({
         <DialogHeader>
           <DialogTitle>Mark Deal as Lost</DialogTitle>
           <DialogDescription>
-            Please provide a reason for marking &ldquo;{dealName}&rdquo; as lost. This helps
-            improve future sales strategies.
+            Please provide a reason for marking &ldquo;{dealName}&rdquo; as lost. This helps improve
+            future sales strategies.
           </DialogDescription>
         </DialogHeader>
 

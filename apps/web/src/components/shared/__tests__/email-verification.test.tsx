@@ -130,9 +130,7 @@ describe('EmailVerification', () => {
       render(<EmailVerification {...defaultProps} />);
 
       await waitFor(() => {
-        expect(
-          screen.getByRole('link', { name: /continue|dashboard|login/i })
-        ).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /continue|dashboard|login/i })).toBeInTheDocument();
       });
     });
 

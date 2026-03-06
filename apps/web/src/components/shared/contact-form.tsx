@@ -86,12 +86,7 @@ export function ContactForm() {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-6"
-      aria-label="Contact form"
-      noValidate
-    >
+    <form onSubmit={handleSubmit} className="space-y-6" aria-label="Contact form" noValidate>
       {/* Success Message */}
       {formState.isSuccess && (
         <div

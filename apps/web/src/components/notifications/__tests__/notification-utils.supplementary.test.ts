@@ -167,9 +167,7 @@ describe('notification-utils', () => {
 
   describe('NOTIFICATION_PRIORITIES constant', () => {
     it('only contains high, normal, low', () => {
-      expect(NOTIFICATION_PRIORITIES).toEqual(
-        expect.arrayContaining(['high', 'normal', 'low'])
-      );
+      expect(NOTIFICATION_PRIORITIES).toEqual(expect.arrayContaining(['high', 'normal', 'low']));
       expect(NOTIFICATION_PRIORITIES).toHaveLength(3);
     });
 

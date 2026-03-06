@@ -46,7 +46,7 @@ const SIGNATURE_VERIFIERS = [
     name: 'SendGrid',
     header: 'x-sendgrid-signature',
     description:
-      'SendGrid signature verification. Note: Current implementation uses HMAC placeholder — production requires proper ECDSA verification.',
+      'SendGrid signature verification. Note: Current implementation uses HMAC-SHA256 — production deployments requiring SendGrid Signed Event Webhooks should add ECDSA verification.',
   },
 ] as const;
 
@@ -239,10 +239,26 @@ const SAMPLE_PAYLOADS_FULL: Record<string, object> = {
 };
 
 const IDEMPOTENCY_CONFIG = [
-  { parameter: 'Key TTL', value: '24 hours', description: 'How long idempotency keys are retained before expiry' },
-  { parameter: 'Lock Timeout', value: '30 seconds', description: 'Max time a processing lock is held before release' },
-  { parameter: 'Max Retries', value: '3', description: 'Maximum retry attempts for failed idempotent operations' },
-  { parameter: 'Cleanup Interval', value: '1 hour', description: 'How often expired entries are purged from the store' },
+  {
+    parameter: 'Key TTL',
+    value: '24 hours',
+    description: 'How long idempotency keys are retained before expiry',
+  },
+  {
+    parameter: 'Lock Timeout',
+    value: '30 seconds',
+    description: 'Max time a processing lock is held before release',
+  },
+  {
+    parameter: 'Max Retries',
+    value: '3',
+    description: 'Maximum retry attempts for failed idempotent operations',
+  },
+  {
+    parameter: 'Cleanup Interval',
+    value: '1 hour',
+    description: 'How often expired entries are purged from the store',
+  },
 ] as const;
 
 const IDEMPOTENCY_OUTCOMES = [
@@ -258,7 +274,8 @@ const IDEMPOTENCY_OUTCOMES = [
   },
   {
     outcome: 'WAIT',
-    description: 'Concurrent request — another instance is processing the same event. Returns 409 Conflict.',
+    description:
+      'Concurrent request — another instance is processing the same event. Returns 409 Conflict.',
     color: 'yellow',
   },
 ] as const;
@@ -274,9 +291,7 @@ function CodeBlock({ code, label }: { code: string; label?: string }) {
 
   return (
     <div className="relative group">
-      {label && (
-        <div className="text-xs text-muted-foreground mb-1 font-medium">{label}</div>
-      )}
+      {label && <div className="text-xs text-muted-foreground mb-1 font-medium">{label}</div>}
       <pre className="font-mono bg-muted rounded-lg p-4 text-sm overflow-x-auto">
         <code>{code}</code>
       </pre>
@@ -366,8 +381,12 @@ function OverviewTab() {
             <div>
               <div className="font-medium">Register a Webhook Source</div>
               <div className="text-sm text-muted-foreground">
-                Call <code className="font-mono text-xs bg-muted px-1 rounded">webhooks.registerSource</code> with
-                your provider name, shared secret, signature header, and verifier type (hmac-sha256, stripe, github, or custom).
+                Call{' '}
+                <code className="font-mono text-xs bg-muted px-1 rounded">
+                  webhooks.registerSource
+                </code>{' '}
+                with your provider name, shared secret, signature header, and verifier type
+                (hmac-sha256, stripe, github, or custom).
               </div>
             </div>
           </div>
@@ -378,8 +397,12 @@ function OverviewTab() {
             <div>
               <div className="font-medium">Configure Signature Verification</div>
               <div className="text-sm text-muted-foreground">
-                Point your provider to the <code className="font-mono text-xs bg-muted px-1 rounded">webhooks.handleWebhook</code> endpoint.
-                Incoming requests are verified using timing-safe comparison against the registered signature header.
+                Point your provider to the{' '}
+                <code className="font-mono text-xs bg-muted px-1 rounded">
+                  webhooks.handleWebhook
+                </code>{' '}
+                endpoint. Incoming requests are verified using timing-safe comparison against the
+                registered signature header.
               </div>
             </div>
           </div>
@@ -390,9 +413,11 @@ function OverviewTab() {
             <div>
               <div className="font-medium">Set Up Event Handlers</div>
               <div className="text-sm text-muted-foreground">
-                Subscribe to the event types you need (e.g. <code className="font-mono text-xs bg-muted px-1 rounded">email.delivered</code>,{' '}
+                Subscribe to the event types you need (e.g.{' '}
+                <code className="font-mono text-xs bg-muted px-1 rounded">email.delivered</code>,{' '}
                 <code className="font-mono text-xs bg-muted px-1 rounded">email.bounced</code>). Use{' '}
-                <code className="font-mono text-xs bg-muted px-1 rounded">allowedEvents</code> during registration to filter events at the source level.
+                <code className="font-mono text-xs bg-muted px-1 rounded">allowedEvents</code>{' '}
+                during registration to filter events at the source level.
               </div>
             </div>
           </div>
@@ -403,9 +428,17 @@ function OverviewTab() {
             <div>
               <div className="font-medium">Monitor Delivery Health</div>
               <div className="text-sm text-muted-foreground">
-                Use <code className="font-mono text-xs bg-muted px-1 rounded">webhooks.getMetrics</code> for success rates and latency,{' '}
-                <code className="font-mono text-xs bg-muted px-1 rounded">webhooks.getDeadLetterEntries</code> to inspect failures, and{' '}
-                <code className="font-mono text-xs bg-muted px-1 rounded">webhooks.reprocessDeadLetter</code> to retry individual events.
+                Use{' '}
+                <code className="font-mono text-xs bg-muted px-1 rounded">webhooks.getMetrics</code>{' '}
+                for success rates and latency,{' '}
+                <code className="font-mono text-xs bg-muted px-1 rounded">
+                  webhooks.getDeadLetterEntries
+                </code>{' '}
+                to inspect failures, and{' '}
+                <code className="font-mono text-xs bg-muted px-1 rounded">
+                  webhooks.reprocessDeadLetter
+                </code>{' '}
+                to retry individual events.
               </div>
             </div>
           </div>
@@ -417,7 +450,8 @@ function OverviewTab() {
           API Endpoints
         </h2>
         <p className="text-muted-foreground mb-3">
-          All webhook management is exposed via 9 tRPC procedures on the <code className="font-mono text-xs bg-muted px-1 rounded">webhooks</code> router.
+          All webhook management is exposed via 9 tRPC procedures on the{' '}
+          <code className="font-mono text-xs bg-muted px-1 rounded">webhooks</code> router.
         </p>
         <div className="border rounded-lg overflow-hidden">
           <table className="w-full text-sm">
@@ -507,9 +541,7 @@ function EventCatalogTab() {
         <Accordion type="single" collapsible defaultValue="email.delivered">
           {EMAIL_WEBHOOK_EVENTS.map((event) => (
             <AccordionItem key={event.type} value={event.type}>
-              <AccordionTrigger className="font-mono text-sm">
-                {event.type}
-              </AccordionTrigger>
+              <AccordionTrigger className="font-mono text-sm">{event.type}</AccordionTrigger>
               <AccordionContent>
                 <CodeBlock
                   label={event.type}
@@ -532,9 +564,9 @@ function SecurityTab() {
           Signature Verification
         </h2>
         <p className="text-muted-foreground mb-4">
-          IntelliFlow CRM supports 4 signature verification methods. Each provider sends a
-          signature in a specific HTTP header that must be verified using timing-safe comparison
-          to prevent timing attacks.
+          IntelliFlow CRM supports 4 signature verification methods. Each provider sends a signature
+          in a specific HTTP header that must be verified using timing-safe comparison to prevent
+          timing attacks.
         </p>
         <div className="border rounded-lg overflow-hidden">
           <table className="w-full text-sm">
@@ -563,8 +595,8 @@ function SecurityTab() {
           HMAC-SHA256 Verification Example
         </h2>
         <p className="text-muted-foreground mb-3">
-          Use <code className="font-mono text-sm bg-muted px-1 rounded">timingSafeEqual</code>{' '}
-          from Node.js crypto module to compare signatures. This prevents timing-based side-channel
+          Use <code className="font-mono text-sm bg-muted px-1 rounded">timingSafeEqual</code> from
+          Node.js crypto module to compare signatures. This prevents timing-based side-channel
           attacks that could leak information about the expected signature.
         </p>
         <CodeBlock
@@ -594,9 +626,9 @@ function verifyHmacSignature(
         </h2>
         <div className="border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20 p-4 rounded-r-lg">
           <p className="text-sm text-muted-foreground">
-            <strong>Important:</strong> The current SendGrid signature verifier uses an HMAC
-            placeholder implementation. Production deployments should use proper ECDSA
-            verification as specified by SendGrid&apos;s Signed Event Webhook documentation.
+            <strong>Important:</strong> The current SendGrid signature verifier uses HMAC-SHA256.
+            Production deployments requiring SendGrid&apos;s Signed Event Webhooks should upgrade to
+            ECDSA verification as specified in SendGrid&apos;s Signed Event Webhook documentation.
           </p>
         </div>
       </section>
