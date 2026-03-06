@@ -1,5 +1,5 @@
 schema_version: '1.0.0'
-last_updated: '2025-12-18'
+last_updated: '2026-03-05'
 maintainer: 'Tech Lead'
 
 # Canonical tool matrix for system audits.
@@ -175,6 +175,26 @@ tools:
     command: 'pnpm exec depcruise --config .dependency-cruiser.cjs packages apps --output-type err'
     thresholds: {}
     expected_outputs: ['log']
+
+  - id: a11y-route-reconcile
+    tier: 1
+    enabled: true
+    required: true
+    owner: 'QA Lead'
+    scope: 'workspace'
+    command: 'npx tsx tools/scripts/a11y-route-reconcile.ts'
+    thresholds: {}
+    expected_outputs: ['log', 'json']
+
+  - id: docs-integrity-audit
+    tier: 1
+    enabled: false
+    required: true
+    owner: 'Tech Writer'
+    scope: 'workspace'
+    command: 'npx tsx tools/scripts/docs-integrity-audit.ts'
+    thresholds: {}
+    expected_outputs: ['log', 'json']
 
   # ---------------------------------------------------------------------------
   # Tier 2 warnings

@@ -11,9 +11,11 @@ implementation cycles. Your job is to catch ALL of these BEFORE the plan is
 finalized.
 
 **Known failure modes** (from post-mortems):
+
 - PG-032: 12 gaps (files summary, test files, AC traceability, etc.)
 - PG-137: 9 gaps (hook coverage, design mockup, dep chain, etc.)
-- PG-149: 3 gaps (phantom shared component, test count arithmetic, missing hook reference)
+- PG-149: 3 gaps (phantom shared component, test count arithmetic, missing hook
+  reference)
 
 ## Mandatory Inputs
 
@@ -169,8 +171,8 @@ Before reviewing, you MUST read:
     preflight checks or plan steps as "shared", verify it ACTUALLY EXISTS in
     `apps/web/src/components/shared/` (or the shared barrel export). If a
     component is defined locally/internally in other dashboards (e.g.,
-    `StatCard` inside `LeadScoringDashboard.tsx`), it is NOT shared — mark it
-    as "internal, following [Pattern] pattern" and remove from shared preflight.
+    `StatCard` inside `LeadScoringDashboard.tsx`), it is NOT shared — mark it as
+    "internal, following [Pattern] pattern" and remove from shared preflight.
     Claiming a non-existent shared component → **ERROR**
 
 ### Q. Risk Mitigation in Code (caught in PG-137)
@@ -220,8 +222,8 @@ Before reviewing, you MUST read:
 73. Extract every named component, hook, or utility the spec says to use
 74. For EACH, verify the plan explicitly references it in the relevant
     implementation step
-75. If spec says "use `useMultiFilterState` from shared" but plan never
-    mentions it → **WARN**
+75. If spec says "use `useMultiFilterState` from shared" but plan never mentions
+    it → **WARN**
 76. Cross-reference against what actually exists on disk — if the spec
     references something that doesn't exist, flag as **INFO** (spec may need
     update)
@@ -233,8 +235,8 @@ Before reviewing, you MUST read:
     (defined within another component file)
 78. If internal: plan MUST note "internal, following [ExistingComponent]
     pattern" and the implementation step must define it within the file
-79. If shared: plan preflight MUST include it and the component must exist
-    at the shared path
+79. If shared: plan preflight MUST include it and the component must exist at
+    the shared path
 80. Ambiguous shared/internal status → **WARN** — plan must be explicit
 
 ### Y. UI Reachability (UI tasks only — caught in PG-030)
@@ -247,34 +249,41 @@ Before reviewing, you MUST read:
 83. If the page is new and no navigation step exists in the plan → **ERROR**
 84. If the page is an enhancement to an existing reachable page → check the
     existing sidebar/nav entry is correct (no action needed if already wired)
-85. A page reachable only by direct URL with no sidebar/breadcrumb/parent-link
-    → **ERROR** — plan must include a navigation wiring step
+85. A page reachable only by direct URL with no sidebar/breadcrumb/parent-link →
+    **ERROR** — plan must include a navigation wiring step
 
 ### Z. Internal Contradiction Detection (caught in TRACK-001)
 
-86. For each implementation step, compare the "what to do" instruction against any
-    `**Note:**` blocks, caveats, or "intentional asymmetry" remarks within the SAME step
-87. If a step says "add fields X, Y, Z" but a note says "Y and Z are intentionally
-    omitted" → **ERROR** — remove the contradictory instruction or remove the note
+86. For each implementation step, compare the "what to do" instruction against
+    any `**Note:**` blocks, caveats, or "intentional asymmetry" remarks within
+    the SAME step
+87. If a step says "add fields X, Y, Z" but a note says "Y and Z are
+    intentionally omitted" → **ERROR** — remove the contradictory instruction or
+    remove the note
 88. The implementer should never have to guess which instruction to follow
-89. Common anti-pattern: "Add these 3 fields" + "These 2 are reserved for future" =
-    implementer skips them but checks the box anyway
-90. Rule: If something is deferred to future, it MUST NOT appear in the current step's
-    implementation instructions — move it to a "Future Work" section instead
+89. Common anti-pattern: "Add these 3 fields" + "These 2 are reserved for
+    future" = implementer skips them but checks the box anyway
+90. Rule: If something is deferred to future, it MUST NOT appear in the current
+    step's implementation instructions — move it to a "Future Work" section
+    instead
 
 ### AA. Type Contract Consistency Across Boundaries (caught in TRACK-001)
 
-91. When a plan step modifies a **backend** interface (API response shape, HistoryEntry,
-    StatusSnapshot, etc.), scan ALL plan steps for **frontend** files that consume that
-    interface
-92. If a new field is added to a backend response, the frontend type that parses it MUST
-    also be updated — either in the same step or a later step with explicit cross-reference
+91. When a plan step modifies a **backend** interface (API response shape,
+    HistoryEntry, StatusSnapshot, etc.), scan ALL plan steps for **frontend**
+    files that consume that interface
+92. If a new field is added to a backend response, the frontend type that parses
+    it MUST also be updated — either in the same step or a later step with
+    explicit cross-reference
 93. Check both directions: backend → frontend AND shared types → consumers
 94. Common anti-pattern: Route adds `planned` to JSON response, but component's
-    TypeScript interface omits it — backend sends data that frontend silently drops
-95. If a backend interface change has no corresponding frontend type update → **ERROR**
-96. If the field is intentionally not displayed in the UI, the frontend type SHOULD still
-    include it (with a `// not displayed` comment) to maintain type contract parity
+    TypeScript interface omits it — backend sends data that frontend silently
+    drops
+95. If a backend interface change has no corresponding frontend type update →
+    **ERROR**
+96. If the field is intentionally not displayed in the UI, the frontend type
+    SHOULD still include it (with a `// not displayed` comment) to maintain type
+    contract parity
 
 ### BB. PRD/ADR Existence & Referencing (CRITICAL — systemic gap found in workflow audit)
 
@@ -282,43 +291,52 @@ Before reviewing, you MUST read:
 98. For EACH PRD path listed (not `N/A`):
     - Verify the file EXISTS on disk at the declared path
     - If PRD does not exist → **ERROR** — spec-session should have created it
-    - Verify the plan includes the PRD path in "Files to Modify" (to update its status)
+    - Verify the plan includes the PRD path in "Files to Modify" (to update its
+      status)
 99. For EACH ADR path listed (not `N/A`):
     - Verify the file EXISTS on disk at the declared path
     - If ADR does not exist → **ERROR** — spec-session should have created it
-    - If ADR status is "Proposed", verify plan includes a step to update it to "Accepted"
-100. If the spec has NO `## Related Documents` section at all → **ERROR** — spec is
-     missing mandatory section (spec-session Phase 0.97)
-101. If task is user-facing (PG-* or IFC-* with UI) and PRD is listed as `N/A` without
-     justification → **WARN** — user-facing tasks should have a PRD
-102. If task introduces new technology/pattern and ADR is listed as `N/A` → **WARN** —
-     architectural decisions should be documented
-103. Plan's "Files to Create" or "Files to Modify" must include any PRD/ADR paths that
-     were created or updated during spec-session. Missing from plan file lists → **WARN**
+    - If ADR status is "Proposed", verify plan includes a step to update it to
+      "Accepted"
+100.  If the spec has NO `## Related Documents` section at all → **ERROR** —
+      spec is missing mandatory section (spec-session Phase 0.97)
+101.  If task is user-facing (PG-_ or IFC-_ with UI) and PRD is listed as `N/A`
+      without justification → **WARN** — user-facing tasks should have a PRD
+102.  If task introduces new technology/pattern and ADR is listed as `N/A` →
+      **WARN** — architectural decisions should be documented
+103.  Plan's "Files to Create" or "Files to Modify" must include any PRD/ADR
+      paths that were created or updated during spec-session. Missing from plan
+      file lists → **WARN**
 
 ### CC. Page Documentation Co-Change Enforcement (CRITICAL — prevents doc drift)
 
 104. Scan ALL plan steps for any `page.tsx` in "Files to Create:" sections
 105. If ANY `page.tsx` is being created:
-     - Verify `docs/design/PAGE_MAP_AND_FLOWS.md` appears in "Files to Modify:" → if missing → **ERROR**
-       ("New page(s) created without PAGE_MAP_AND_FLOWS.md update — doc will drift from filesystem.
-       Add a plan step to update the Summary Statistics table and add route entries for each new page.")
-     - Verify `apps/web/src/app/__tests__/sitemap-reconciliation.test.ts` appears in "Files to Modify:"
-       → if missing → **WARN** ("TC-25 regression guard count may need updating for new pages")
-106. If plan creates pages under NEW route prefixes not in the existing PAGE_MAP:
-     - Verify plan includes a step to add a NEW SECTION to PAGE_MAP → if missing → **ERROR**
-       ("New module routes require a new section in PAGE_MAP_AND_FLOWS.md")
-107. If plan creates pages, verify plan includes updating `docs/design/sitemap.md` total count
-     → if missing → **WARN** ("sitemap.md total page count will go stale")
-108. Cross-check: if plan modifies PAGE_MAP but does NOT create any `page.tsx`, verify the
-     plan is a documentation-only task (DOC-*) → if NOT → **INFO** ("PAGE_MAP modified without
-     new pages — confirm this is intentional")
+     - Verify `docs/design/PAGE_MAP_AND_FLOWS.md` appears in "Files to Modify:"
+       → if missing → **ERROR** ("New page(s) created without
+       PAGE_MAP_AND_FLOWS.md update — doc will drift from filesystem. Add a plan
+       step to update the Summary Statistics table and add route entries for
+       each new page.")
+     - Verify `apps/web/src/app/__tests__/sitemap-reconciliation.test.ts`
+       appears in "Files to Modify:" → if missing → **WARN** ("TC-25 regression
+       guard count may need updating for new pages")
+106. If plan creates pages under NEW route prefixes not in the existing
+     PAGE_MAP:
+     - Verify plan includes a step to add a NEW SECTION to PAGE_MAP → if missing
+       → **ERROR** ("New module routes require a new section in
+       PAGE_MAP_AND_FLOWS.md")
+107. If plan creates pages, verify plan includes updating
+     `docs/design/sitemap.md` total count → if missing → **WARN** ("sitemap.md
+     total page count will go stale")
+108. Cross-check: if plan modifies PAGE_MAP but does NOT create any `page.tsx`,
+     verify the plan is a documentation-only task (DOC-\*) → if NOT → **INFO**
+     ("PAGE_MAP modified without new pages — confirm this is intentional")
 
 ### DD. Exhaustive vs Sampling Language (caught in DOC-005)
 
-109. For each plan step that reads or processes a set of items, check if the step
-     uses sampling language: "sample", "random subset", "20-30 of", "pick N",
-     "representative set", "subset of"
+109. For each plan step that reads or processes a set of items, check if the
+     step uses sampling language: "sample", "random subset", "20-30 of", "pick
+     N", "representative set", "subset of"
 110. Cross-reference the matching spec AC — does it say "all", "every", "each",
      or specify an exact count?
 111. If spec requires exhaustive coverage but plan uses sampling → **ERROR**
@@ -327,52 +345,60 @@ Before reviewing, you MUST read:
 
 ### EE. Duplicate Detection Across Monorepo (CRITICAL — caught in Knip cleanup sprint)
 
-113. For EACH file in "Files to Create", search the monorepo for files with the same
-     basename: `Glob **/<filename>` (e.g., if plan creates `retry-policy.ts`, search
-     for `**/retry-policy.ts`)
-114. If a match exists in a shared package (`packages/*`), verify the plan file isn't
-     duplicating existing functionality. Read both files — if >80% similar → **ERROR**
-     ("Duplicate of `<existing-path>` — import from the existing package instead of
-     creating a local copy")
-115. Types/interfaces that already exist in `@intelliflow/domain` or `@intelliflow/validators`
-     MUST be imported, not redefined locally → **ERROR** if redefined
-116. If creating a barrel `index.ts` that only re-exports from another barrel, verify the
-     source barrel isn't already importable directly → if it is → **WARN** ("unnecessary
-     indirection — consumers can import from source directly")
+113. For EACH file in "Files to Create", search the monorepo for files with the
+     same basename: `Glob **/<filename>` (e.g., if plan creates
+     `retry-policy.ts`, search for `**/retry-policy.ts`)
+114. If a match exists in a shared package (`packages/*`), verify the plan file
+     isn't duplicating existing functionality. Read both files — if >80% similar
+     → **ERROR** ("Duplicate of `<existing-path>` — import from the existing
+     package instead of creating a local copy")
+115. Types/interfaces that already exist in `@intelliflow/domain` or
+     `@intelliflow/validators` MUST be imported, not redefined locally →
+     **ERROR** if redefined
+116. If creating a barrel `index.ts` that only re-exports from another barrel,
+     verify the source barrel isn't already importable directly → if it is →
+     **WARN** ("unnecessary indirection — consumers can import from source
+     directly")
 
 ### FF. Cross-Step Import Chain Verification (CRITICAL — caught in Knip cleanup sprint)
 
-117. For each "supporting" file in the plan (fixtures, utils, barrels, re-export files),
-     identify which LATER step/file is expected to import from it
-118. The plan MUST explicitly state the consumer in the step description or validation
-     checkbox. E.g., Step 3.1 creates `case-data.ts` → Step 3.2 MUST say "import
-     fixtures from `case-data.ts`" in its description
-119. If a file is created but NO later step references importing from it → **ERROR**
-     ("File `<path>` has no planned consumer — either wire it in a later step or remove
-     it from the plan")
+117. For each "supporting" file in the plan (fixtures, utils, barrels, re-export
+     files), identify which LATER step/file is expected to import from it
+118. The plan MUST explicitly state the consumer in the step description or
+     validation checkbox. E.g., Step 3.1 creates `case-data.ts` → Step 3.2 MUST
+     say "import fixtures from `case-data.ts`" in its description
+119. If a file is created but NO later step references importing from it →
+     **ERROR** ("File `<path>` has no planned consumer — either wire it in a
+     later step or remove it from the plan")
 120. Specific sub-checks:
-     - **Barrel files** (`index.ts`): At least one step must import from the barrel path
-     - **Test fixtures**: The corresponding test step must explicitly import the fixture
-     - **Server actions** (`'use server'`): A client component step must import and call it
+     - **Barrel files** (`index.ts`): At least one step must import from the
+       barrel path
+     - **Test fixtures**: The corresponding test step must explicitly import the
+       fixture
+     - **Server actions** (`'use server'`): A client component step must import
+       and call it
      - **Handler factories**: A server/router step must mount the handler
-121. A fixture file that each test re-invents inline (instead of importing) means the
-     fixture is dead → plan should either remove the fixture OR explicitly state tests
-     import from it
+121. A fixture file that each test re-invents inline (instead of importing)
+     means the fixture is dead → plan should either remove the fixture OR
+     explicitly state tests import from it
 
 ### GG. Wiring Verification for Runtime Code (caught in Knip cleanup sprint)
 
 122. For each created file that exports functions/classes/handlers:
-     - If it's a **server action** (`'use server'`): plan MUST include a step where a
-       client component imports and calls the exported function. Empty stub handlers
-       (`onDelete: () => {}`) next to a feature they should use → **ERROR**
-     - If it's an **API handler/endpoint factory**: plan MUST include a step where the
-       handler is mounted on an HTTP server or router. Creating handlers with no server
-       to mount them on → **ERROR**
-     - If it's a **service class**: plan MUST include a container registration step
-       (already covered by Phase 2.5 container check, but verify it's in the plan)
-123. For barrels and re-export files: at least one consumer must be identified in the plan.
-     If the plan creates a barrel but all consumers import directly from source files
-     → **WARN** ("barrel will be dead code — remove it or update consumer imports")
+     - If it's a **server action** (`'use server'`): plan MUST include a step
+       where a client component imports and calls the exported function. Empty
+       stub handlers (`onDelete: () => {}`) next to a feature they should use →
+       **ERROR**
+     - If it's an **API handler/endpoint factory**: plan MUST include a step
+       where the handler is mounted on an HTTP server or router. Creating
+       handlers with no server to mount them on → **ERROR**
+     - If it's a **service class**: plan MUST include a container registration
+       step (already covered by Phase 2.5 container check, but verify it's in
+       the plan)
+123. For barrels and re-export files: at least one consumer must be identified
+     in the plan. If the plan creates a barrel but all consumers import directly
+     from source files → **WARN** ("barrel will be dead code — remove it or
+     update consumer imports")
 
 ## Output Format
 

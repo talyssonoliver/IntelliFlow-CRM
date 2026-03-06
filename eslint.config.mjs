@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import importPlugin from 'eslint-plugin-import';
 import securityPlugin from 'eslint-plugin-security';
+import sonarjsPlugin from 'eslint-plugin-sonarjs';
 import prettierConfig from 'eslint-config-prettier';
 
 export default [
@@ -61,6 +62,7 @@ export default [
       '@typescript-eslint': tseslint.plugin,
       import: importPlugin,
       security: securityPlugin,
+      sonarjs: sonarjsPlugin,
     },
     settings: {
       'import/resolver': {
@@ -228,13 +230,14 @@ export default [
     },
   },
 
-  // Config files
+  // Config files and CJS scripts
   {
     files: [
       '**/next.config.js',
       '**/*.config.js',
       '**/*.config.mjs',
       '**/*.config.cjs',
+      'scripts/*.js',
     ],
     rules: {
       '@typescript-eslint/no-var-requires': 'off',

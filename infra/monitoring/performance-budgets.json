@@ -72,10 +72,10 @@
         },
         {
           "name": "time-to-interactive",
-          "target": 3500,
+          "target": 1000,
           "unit": "ms",
-          "threshold": "warn",
-          "description": "Time to Interactive (TTI) should be under 3.5s"
+          "threshold": "error",
+          "description": "Time to Interactive (TTI) must be under 1s for authenticated home page — PG-166 DoD"
         },
         {
           "name": "total-blocking-time",

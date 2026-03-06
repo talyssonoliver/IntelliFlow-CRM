@@ -3,12 +3,6 @@
   "workspaces": {
     ".": {
       "entry": [
-        "apps/*/src/index.ts",
-        "apps/*/src/index.tsx",
-        "apps/*/app/**/*.tsx",
-        "apps/*/app/**/*.ts",
-        "packages/*/src/index.ts",
-        "packages/*/src/index.tsx",
         "tools/**/*.ts",
         "tools/**/*.js",
         "scripts/**/*.ts",
@@ -24,21 +18,11 @@
         "artifacts/benchmarks/generate-performance-report.ts",
         "artifacts/benchmarks/run-accuracy-benchmark.ts"
       ],
-      "project": ["**/*.ts", "**/*.tsx"]
+      "project": ["**/*.ts"]
     }
   },
   "ignore": [
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "**/*.spec.ts",
-    "**/*.spec.tsx",
     "**/.tsup/**",
-    "**/dist/**",
-    "**/.tsup/**",
-    "**/build/**",
-    "**/node_modules/**",
-    "**/.next/**",
-    "**/coverage/**",
     "**/migrations/**",
     "artifacts/misc/**/*.ts",
     "tools/integrations/**/*.ts",
@@ -60,8 +44,6 @@
     "tests/integration/setup.ts",
     "tests/e2e/utils/**",
     "tests/e2e/fixtures/**",
-    "artifacts/benchmarks/**/*.json",
-    "artifacts/benchmarks/**/*.html",
     "apps/project-tracker/lib/api.ts",
     "apps/project-tracker/lib/data-validator.ts",
     "apps/project-tracker/scripts/**",
@@ -147,8 +129,12 @@
     "packages/domain/src/platform/modules/ModuleRegistry.ts": ["exports"],
     "packages/domain/src/platform/modules/ModuleRoutes.ts": ["exports"],
     "packages/domain/src/legal/cases/case-document.ts": ["types"],
-    "packages/application/src/ports/repositories/AnalyticsRepositoryPort.ts": ["types"],
-    "packages/application/src/ports/external/NotificationServicePort.ts": ["types"],
+    "packages/application/src/ports/repositories/AnalyticsRepositoryPort.ts": [
+      "types"
+    ],
+    "packages/application/src/ports/external/NotificationServicePort.ts": [
+      "types"
+    ],
     "packages/application/src/ports/external/AuthServicePort.ts": ["types"],
     "packages/application/src/ports/external/CalendarServicePort.ts": ["types"],
     "packages/application/src/services/ContactService.ts": ["types"],
@@ -187,40 +173,32 @@
     "packages/ui/src/components/confirmation-dialog.tsx": ["exports"],
     "packages/ui/src/components/sheet.tsx": ["exports"],
     "packages/ui/src/components/dropdown-menu.tsx": ["exports"],
-    "packages/ui/src/components/experiment/ExperimentDashboard.tsx": ["exports"],
+    "packages/ui/src/components/experiment/ExperimentDashboard.tsx": [
+      "exports"
+    ],
     "apps/web/src/lib/pricing/calculator.ts": ["exports"]
   },
   "ignoreDependencies": [
     "@types/*",
     "eslint-*",
-    "prettier",
     "@opentelemetry/exporter-metrics-otlp-http",
     "@opentelemetry/exporter-trace-otlp-http",
+    "@opentelemetry/instrumentation",
+    "@opentelemetry/sdk-trace-node",
     "@prisma/client",
-    "husky",
-    "lint-staged",
-    "turbo",
-    "@changesets/cli",
-    "tsx",
-    "vitest",
-    "@vitest/*",
-    "@playwright/test",
-    "class-variance-authority",
-    "clsx",
-    "tailwind-merge",
-    "@radix-ui/*",
+    "@prisma/adapter-pg",
+    "@vitest/coverage-v8",
+    "@vitejs/plugin-react",
     "postcss",
-    "depcheck",
-    "dependency-cruiser",
-    "ts-node",
-    "papaparse",
+    "axe-core",
+    "vitest-axe",
+    "cspell",
+    "license-checker",
+    "madge",
+    "markdownlint-cli",
     "pino-pretty",
-    "zod-to-json-schema",
-    "js-yaml",
     "dotenv",
-    "zod",
-    "@intelliflow/*",
-    "docker-compose"
+    "@intelliflow/*"
   ],
   "ignoreExportsUsedInFile": true,
   "includeEntryExports": true

@@ -45,16 +45,18 @@ Execute these gates in order, logging output to
 
 ## Verdict Logic
 
-| Condition                                        | Verdict          |
-| ------------------------------------------------ | ---------------- |
-| AI tests pass, prompts valid, models configured  | PASS             |
-| Prompt warnings exist                            | FAIL             |
-| AI tests fail                                    | FAIL             |
-| Chain produces invalid output format             | FAIL             |
-| Safety guardrail missing for high-risk operation | FAIL             |
-| Model not available (dev environment)            | NEEDS_HUMAN      |
+| Condition                                        | Verdict     |
+| ------------------------------------------------ | ----------- |
+| AI tests pass, prompts valid, models configured  | PASS        |
+| Prompt warnings exist                            | FAIL        |
+| AI tests fail                                    | FAIL        |
+| Chain produces invalid output format             | FAIL        |
+| Safety guardrail missing for high-risk operation | FAIL        |
+| Model not available (dev environment)            | NEEDS_HUMAN |
 
-**CRITICAL**: There is NO WARN verdict. Prompt warnings indicate quality issues that affect AI output reliability. "Model not available" is NEEDS_HUMAN (requires human decision), not an automatic pass.
+**CRITICAL**: There is NO WARN verdict. Prompt warnings indicate quality issues
+that affect AI output reliability. "Model not available" is NEEDS_HUMAN
+(requires human decision), not an automatic pass.
 
 ## Trigger Conditions
 

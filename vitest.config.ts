@@ -40,21 +40,21 @@ export default defineConfig({
     // https://vitest.dev/guide/migration.html (v4 pool options)
     // ============================================================
 
-    // Node.js CLI arguments passed to workers (Vitest 4.x top-level config)
-    // --max-old-space-size: 4GB per worker for memory control
+    // Node.js CLI arguments passed to workers
     // --expose-gc: Allow explicit garbage collection for cleanup
     execArgv: ['--max-old-space-size=4096', '--expose-gc'],
 
-    // Limit workers to prevent memory exhaustion
-    // With 10000+ tests, fewer workers = less memory pressure at cleanup
+    // Limit workers to prevent memory exhaustion.
+    // All projects MUST use the same maxWorkers value — Vitest 4.x requires
+    // matching sequence.groupOrder when maxWorkers differ across projects.
     maxWorkers: 4,
     minWorkers: 1,
 
-    // Vitest 4.x: Pool options are now top-level (not nested under poolOptions)
-    // Using 'forks' pool for stability with large test suites
-    // Note: vmMemoryLimit only works with 'vmThreads' pool, not 'forks'
+    // Using 'forks' pool for stability. vmForks was tested but caused test regressions
+    // due to VM context incompatibilities with happy-dom and certain mock patterns.
     pool: 'forks',
-    isolate: true,
+    // Each sub-project runs with isolate:true (default) for proper mock isolation.
+    // Root project was split into per-package projects to bound V8 coverage memory.
 
     // Sequence configuration for predictable memory usage
     sequence: {
@@ -93,6 +93,15 @@ export default defineConfig({
       'packages/ui/vitest.config.ts',
       'packages/observability/vitest.config.ts',
       'tests/architecture/vitest.config.ts',
+      'tests/a11y/vitest.config.ts',
+      // Package-level configs — split from root project to:
+      // 1. Keep V8 coverage memory bounded (fewer files per worker)
+      // 2. Avoid vi.mock() conflicts when isolate:false would be needed
+      'packages/adapters/vitest.config.ts',
+      'packages/application/vitest.config.ts',
+      'packages/domain/vitest.config.ts',
+      'packages/validators/vitest.config.ts',
+      'packages/webhooks/vitest.config.ts',
       // Integration tests project - requires database/services
       {
         test: {
@@ -106,8 +115,6 @@ export default defineConfig({
           testTimeout: 60000, // Integration tests can be slower
           hookTimeout: 60000,
           pool: 'forks',
-          isolate: true,
-          // Memory management for integration tests (vmMemoryLimit only works with vmThreads)
           execArgv: ['--max-old-space-size=4096', '--expose-gc'],
           maxWorkers: 4,
           minWorkers: 1,
@@ -130,20 +137,15 @@ export default defineConfig({
           unstubGlobals: true,
           unstubEnvs: true,
 
-          // Use forks pool - recommended for large test suites to avoid worker termination issues
-          // See: https://vitest.dev/guide/common-errors.html
           pool: 'forks',
-          // Vitest 4.x: pool options are now top-level
-          isolate: true,
 
-          // Memory management (Vitest 4.x) - control heap size per worker
-          // Note: vmMemoryLimit only works with vmThreads pool, not forks
           execArgv: ['--max-old-space-size=4096', '--expose-gc'],
           maxWorkers: 4,
           minWorkers: 1,
 
-          // Force exit after tests complete to prevent hanging
-          forceExit: true,
+          // Force exit after tests complete to prevent hanging (disabled during coverage
+          // runs so Istanbul can finish writing coverage-final.json before exit)
+          forceExit: process.env['COVERAGE_RUN'] !== '1',
 
           // Disable caching to prevent stale state accumulation
           cache: false,
@@ -178,6 +180,8 @@ export default defineConfig({
             '**/artifacts/**',
             '**/.next/**',
             'tests/e2e/**',
+            'tests/a11y/**',
+            'tests/integration/**', // Has its own inline project above — avoid running 15 tests twice
             // Exclude apps/packages with their own vitest configs (they run as separate projects)
             'apps/api/**',
             'apps/web/**',
@@ -185,6 +189,11 @@ export default defineConfig({
             'apps/workers/**',
             'packages/ui/**',
             'packages/observability/**',
+            'packages/adapters/**',
+            'packages/application/**',
+            'packages/domain/**',
+            'packages/validators/**',
+            'packages/webhooks/**',
             'tests/architecture/**',
           ],
         },
@@ -193,11 +202,24 @@ export default defineConfig({
 
     // Global coverage settings for all projects
     coverage: {
-      provider: 'v8',
+      // Istanbul provider: V8 with pool:forks creates one tmp file per test file,
+      // and the V8 merge hangs before forceExit kills it for large projects (web, api).
+      // Istanbul uses maxWorkers tmp files (4) — merges fast.
+      provider: 'istanbul',
       reporter: ['text', 'json', 'json-summary', 'lcov', 'html'],
-      reportsDirectory: path.join(packageRoot, 'artifacts', 'coverage'),
+      // COVERAGE_RUN=1 is set by scripts/run-coverage.js which passes its own
+      // --coverage.reportsDirectory per project.  Normal TDD / watch-mode runs
+      // write to a *separate* directory so they never overwrite the merged
+      // SonarQube-ready data in artifacts/coverage/.
+      reportsDirectory: path.join(
+        packageRoot,
+        'artifacts',
+        process.env['COVERAGE_RUN'] === '1' ? 'coverage' : 'coverage-vitest'
+      ),
       // Don't clean directory to preserve partial results on worker crash
       clean: false,
+      // Write coverage even when some tests fail (e.g., one flaky test shouldn't suppress all coverage data)
+      reportOnFailure: true,
       include: [
         // Core product code only - excludes temporary tooling
         'apps/api/**/*.{ts,tsx}',
@@ -211,6 +233,7 @@ export default defineConfig({
         '**/dist/**',
         '**/build/**',
         '**/.turbo/**',
+        '**/.tsup/**', // tsup build declaration artifacts (233 files)
         '**/artifacts/**',
         '**/.next/**',
         'tests/**',
@@ -221,6 +244,9 @@ export default defineConfig({
         // Temporary tooling - not part of product
         'apps/project-tracker/**',
         'tools/**',
+        // Prisma generated client - auto-generated, not business logic (14MB / 121 files)
+        // These were causing OOM crashes in V8 coverage workers
+        'packages/db/generated/**',
         // Infrastructure code - not business logic
         'packages/db/prisma/seed.ts',
         'packages/db/src/client.ts',

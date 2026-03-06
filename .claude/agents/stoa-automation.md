@@ -68,7 +68,8 @@ Runtime artifacts MUST NOT exist in:
 | Multiple Sprint_plan.csv copies                             | FAIL    |
 | Registry inconsistent with CSV                              | FAIL    |
 
-**CRITICAL**: There is NO WARN verdict. Sync warnings indicate data inconsistency between CSV and JSON — this must be fixed, not silently accepted.
+**CRITICAL**: There is NO WARN verdict. Sync warnings indicate data
+inconsistency between CSV and JSON — this must be fixed, not silently accepted.
 
 ## Trigger Conditions
 

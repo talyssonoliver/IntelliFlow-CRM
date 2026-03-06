@@ -55,7 +55,9 @@ Execute these gates in order, logging output to
 | Tests fail                          | FAIL        |
 | Coverage enforcement not configured | NEEDS_HUMAN |
 
-**CRITICAL**: There is NO WARN verdict. Coverage either meets the 90% threshold or fails. The 85-90% "WARN" range was removed because it silently accepted under-tested code.
+**CRITICAL**: There is NO WARN verdict. Coverage either meets the 90% threshold
+or fails. The 85-90% "WARN" range was removed because it silently accepted
+under-tested code.
 
 ## Output
 

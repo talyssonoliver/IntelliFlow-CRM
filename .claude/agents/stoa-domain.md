@@ -60,7 +60,8 @@ Adapters CAN depend on: packages/application (ports), external libraries
 | Architecture boundary violation                            | FAIL    |
 | Business rule violation detected                           | FAIL    |
 
-**CRITICAL**: There is NO WARN verdict. Type warnings must be fixed — they indicate type safety gaps that can cause runtime errors.
+**CRITICAL**: There is NO WARN verdict. Type warnings must be fixed — they
+indicate type safety gaps that can cause runtime errors.
 
 ## Trigger Conditions
 

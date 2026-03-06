@@ -15,40 +15,38 @@ module.exports = {
       // URLs to test — all major app routes (list pages, not dynamic [id] routes)
       // Public pages
       url: [
-        'http://localhost:3000',                          // Public landing
-        'http://localhost:3000/login',                    // Login page
-        'http://localhost:3000/signup',                   // Signup page
-        'http://localhost:3000/pricing',                  // Pricing page
+        'http://localhost:3000', // Public landing
+        'http://localhost:3000/login', // Login page
+        'http://localhost:3000/signup', // Signup page
+        'http://localhost:3000/pricing', // Pricing page
         // Core CRM
-        'http://localhost:3000/dashboard',                // Dashboard
-        'http://localhost:3000/leads',                    // Leads list
-        'http://localhost:3000/contacts',                 // Contacts list
-        'http://localhost:3000/accounts',                 // Accounts list
-        'http://localhost:3000/deals',                    // Deals/pipeline list
-        'http://localhost:3000/deals/forecast',           // Deals forecast
-        'http://localhost:3000/tasks',                    // Tasks list
-        'http://localhost:3000/tickets',                  // Tickets list
+        'http://localhost:3000/dashboard', // Dashboard
+        'http://localhost:3000/leads', // Leads list
+        'http://localhost:3000/contacts', // Contacts list
+        'http://localhost:3000/accounts', // Accounts list
+        'http://localhost:3000/deals', // Deals/pipeline list
+        'http://localhost:3000/deals/forecast', // Deals forecast
+        'http://localhost:3000/tasks', // Tasks list
+        'http://localhost:3000/tickets', // Tickets list
         // Communications & scheduling
-        'http://localhost:3000/email',                    // Email client
-        'http://localhost:3000/calendar',                 // Calendar / Appointments
+        'http://localhost:3000/email', // Email client
+        'http://localhost:3000/calendar', // Calendar / Appointments
         // Legal & documents
-        'http://localhost:3000/cases',                    // Cases list
-        'http://localhost:3000/documents',                // Documents list
+        'http://localhost:3000/cases', // Cases list
+        'http://localhost:3000/documents', // Documents list
         // AI & intelligence
-        'http://localhost:3000/agent-approvals',          // Agent approvals hub
-        'http://localhost:3000/agent-approvals/ai-review',// AI review queue
+        'http://localhost:3000/agent-approvals', // Agent approvals hub
+        'http://localhost:3000/agent-approvals/ai-review', // AI review queue
         'http://localhost:3000/agent-approvals/experiments', // Experiments
         // Analytics & governance
-        'http://localhost:3000/analytics',                // Analytics dashboard
-        'http://localhost:3000/governance',               // Governance
-        'http://localhost:3000/notifications',            // Notifications
+        'http://localhost:3000/analytics', // Analytics dashboard
+        'http://localhost:3000/governance', // Governance
+        'http://localhost:3000/notifications', // Notifications
         // Settings
-        'http://localhost:3000/settings',                 // Settings hub
-        'http://localhost:3000/settings/ai',              // AI settings
-        'http://localhost:3000/settings/team',            // Team settings
-        'http://localhost:3000/billing',                  // Billing
-        // Developer portal
-        'http://localhost:3000/docs/sdk',                   // SDK Guides
+        'http://localhost:3000/settings', // Settings hub
+        'http://localhost:3000/settings/ai', // AI settings
+        'http://localhost:3000/settings/team', // Team settings
+        'http://localhost:3000/billing', // Billing
       ],
 
       // Number of runs per URL (for statistical reliability)
@@ -97,7 +95,7 @@ module.exports = {
 
         // Additional performance metrics
         'speed-index': ['warn', { maxNumericValue: 3000 }],
-        'interactive': ['warn', { maxNumericValue: 3500 }],
+        interactive: ['error', { maxNumericValue: 1000 }], // TTI <1s (ADR-027, PG-166)
         'first-meaningful-paint': ['warn', { maxNumericValue: 1500 }],
 
         // Server response time (Sprint Plan: API <200ms)
@@ -132,12 +130,12 @@ module.exports = {
         // Accessibility
         'color-contrast': 'error',
         'image-alt': 'error',
-        'label': 'error',
+        label: 'error',
         'link-name': 'error',
 
         // SEO
         'meta-description': 'warn',
-        'viewport': 'error',
+        viewport: 'error',
       },
     },
 

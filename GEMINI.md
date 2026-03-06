@@ -50,7 +50,8 @@ domain-driven design.
     - **Verify**: Check KPIs, Artifacts, and Definition of Done for every task.
 2.  **Artifacts**: You must produce the specific artifacts (files, reports)
     listed in the task definition.
-    - Locations: `artifacts/benchmarks`, `artifacts/coverage`,
+    - Locations: `artifacts/benchmarks`, `artifacts/coverage`
+      (merged/SonarQube), `artifacts/coverage-vitest` (TDD watch-mode),
       `artifacts/metrics`.
     - **Do not** invent new artifact locations.
 3.  **Strict Boundaries**:

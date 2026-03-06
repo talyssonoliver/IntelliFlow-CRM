@@ -9,6 +9,8 @@ node_modules/
 # testing
 /coverage
 coverage/
+artifacts/coverage-vitest/
+artifacts/coverage-parts/
 test-results/
 playwright-report/
 

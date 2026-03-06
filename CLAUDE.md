@@ -1,7 +1,8 @@
 # CLAUDE.md
 
-**IntelliFlow CRM** — AI-powered CRM system. Sprint 6 (MVP phase). IFC-010 Go/No-Go passed 2025-12-27.
-316 tasks across 34 sprints tracked in `Sprint_plan.csv`.
+**IntelliFlow CRM** — AI-powered CRM system. Sprint 6 (MVP phase). IFC-010
+Go/No-Go passed 2025-12-27. 316 tasks across 34 sprints tracked in
+`Sprint_plan.csv`.
 
 ## Task ID Conventions
 
@@ -25,7 +26,8 @@
 
 ## Sprint Plan
 
-**DO NOT read `Sprint_plan.csv` directly** — exceeds token limit. Use split files:
+**DO NOT read `Sprint_plan.csv` directly** — exceeds token limit. Use split
+files:
 
 ```
 apps/project-tracker/docs/metrics/_global/
@@ -37,8 +39,8 @@ apps/project-tracker/docs/metrics/_global/
 └── Sprint_plan_E.csv    # Rows 317-353 (Sprint 12+)
 ```
 
-Regenerate splits: `npx tsx tools/scripts/split-sprint-plan.ts`
-Full guide: `docs/claude-refs/sprint-plan-guide.md`
+Regenerate splits: `npx tsx tools/scripts/split-sprint-plan.ts` Full guide:
+`docs/claude-refs/sprint-plan-guide.md`
 
 ## Project Structure (Top Level)
 
@@ -60,6 +62,21 @@ docs/              # Docusaurus docs, ADRs, design diagrams
 artifacts/         # Build artifacts, reports, metrics, coverage
 ```
 
+## Coverage Architecture
+
+Coverage uses **Istanbul** provider (not V8) with two output directories:
+
+| Directory                    | Written by                           | Purpose                      |
+| ---------------------------- | ------------------------------------ | ---------------------------- |
+| `artifacts/coverage-vitest/` | TDD watch-mode / ad-hoc `--coverage` | Quick dev feedback           |
+| `artifacts/coverage/`        | `scripts/run-coverage.js` (merged)   | Canonical data for SonarQube |
+
+- **`pnpm test:coverage`** runs all 16 workspace projects sequentially, merges
+  into `artifacts/coverage/`
+- **`COVERAGE_RUN=1`** env var controls which dir Vitest targets + disables
+  `forceExit`
+- Background TDD processes **never** overwrite the merged SonarQube data
+
 ## Critical File Locations
 
 - **Sprint_plan.csv/json**: `apps/project-tracker/docs/metrics/_global/`
@@ -73,58 +90,69 @@ artifacts/         # Build artifacts, reports, metrics, coverage
 
 Each subdirectory has its own CLAUDE.md with area-specific rules and patterns:
 
-| Directory | Key Topics |
-|-----------|------------|
-| `apps/web/CLAUDE.md` | Next.js patterns, Lighthouse CI, build validation, coverage scoping |
-| `apps/api/CLAUDE.md` | tRPC modules, container.ts wiring (CRITICAL), DTS resolution |
-| `apps/ai-worker/CLAUDE.md` | LangChain/CrewAI, Ollama dev, AI targets |
-| `apps/project-tracker/CLAUDE.md` | Single source of truth, JSON schemas, sync methods |
-| `packages/domain/CLAUDE.md` | Zero infra deps, DRY enums, stale dist fix |
-| `packages/db/CLAUDE.md` | Prisma 5.22.0, NEVER --no-engine, tenantId rule |
-| `packages/adapters/CLAUDE.md` | Repository pattern, container wiring, mock casting |
+| Directory                        | Key Topics                                                          |
+| -------------------------------- | ------------------------------------------------------------------- |
+| `apps/web/CLAUDE.md`             | Next.js patterns, Lighthouse CI, build validation, coverage scoping |
+| `apps/api/CLAUDE.md`             | tRPC modules, container.ts wiring (CRITICAL), DTS resolution        |
+| `apps/ai-worker/CLAUDE.md`       | LangChain/CrewAI, Ollama dev, AI targets                            |
+| `apps/project-tracker/CLAUDE.md` | Single source of truth, JSON schemas, sync methods                  |
+| `packages/domain/CLAUDE.md`      | Zero infra deps, DRY enums, stale dist fix                          |
+| `packages/db/CLAUDE.md`          | Prisma 5.22.0, NEVER --no-engine, tenantId rule                     |
+| `packages/adapters/CLAUDE.md`    | Repository pattern, container wiring, mock casting                  |
 
 ## Reference Docs
 
 Detailed guides loaded on-demand:
 
-| Doc | Topics |
-|-----|--------|
-| `docs/claude-refs/sprint-plan-guide.md` | CSV columns, pre-req prefixes, dashboard views, task structure |
-| `docs/claude-refs/architecture.md` | DDD/hexagonal, events, AI patterns, design patterns, dep chains |
-| `docs/claude-refs/feature-workflow.md` | 9-step feature creation, testing strategy, git workflow |
-| `docs/claude-refs/dev-commands.md` | All bash commands (setup, dev, test, db, lint, AI) |
-| `docs/claude-refs/nonfunctional.md` | Performance targets, security, monitoring |
-| `docs/claude-refs/gotchas.md` | 14 common gotchas + testing-specific gotchas |
-| `docs/claude-refs/sprint-context.md` | Sprint phases (0-33), decision gates |
-| `docs/claude-refs/ai-workflow.md` | Claude Code workflows, Copilot, AI code gen |
+| Doc                                     | Topics                                                          |
+| --------------------------------------- | --------------------------------------------------------------- |
+| `docs/claude-refs/sprint-plan-guide.md` | CSV columns, pre-req prefixes, dashboard views, task structure  |
+| `docs/claude-refs/architecture.md`      | DDD/hexagonal, events, AI patterns, design patterns, dep chains |
+| `docs/claude-refs/feature-workflow.md`  | 9-step feature creation, testing strategy, git workflow         |
+| `docs/claude-refs/dev-commands.md`      | All bash commands (setup, dev, test, db, lint, AI)              |
+| `docs/claude-refs/nonfunctional.md`     | Performance targets, security, monitoring                       |
+| `docs/claude-refs/gotchas.md`           | 14 common gotchas + testing-specific gotchas                    |
+| `docs/claude-refs/sprint-context.md`    | Sprint phases (0-33), decision gates                            |
+| `docs/claude-refs/ai-workflow.md`       | Claude Code workflows, Copilot, AI code gen                     |
 
 ## Critical Rules
 
 ### Never Mock or Simulate Data
-All data displayed must come from real sources. If infrastructure unavailable, show "pending" status. Never populate fields with fake values.
+
+All data displayed must come from real sources. If infrastructure unavailable,
+show "pending" status. Never populate fields with fake values.
 
 ### Never Skip Build Validation
+
 ALL 4 validations are NON-NEGOTIABLE: TypeScript, Tests, Lint, **Build**.
 "Next.js compiles on demand" is NOT a valid reason to skip build.
 
 ### Sprint_plan.csv is Single Source of Truth
-Always edit CSV for task updates. Run sync after changes. Never edit derived JSON files directly.
+
+Always edit CSV for task updates. Run sync after changes. Never edit derived
+JSON files directly.
 
 ### Git Destructive Guard (PreToolUse Hook)
-A hook at `.claude/hooks/git-destructive-guard.mjs` blocks destructive git commands even in YOLO mode. **NEVER bypass or disable it.**
+
+A hook at `.claude/hooks/git-destructive-guard.mjs` blocks destructive git
+commands even in YOLO mode. **NEVER bypass or disable it.**
 
 Blocked commands:
+
 - `git push --force` (use `--force-with-lease`)
 - `git reset --hard`, `git clean -f`, `git branch -D`
 - `git checkout .`, `git checkout -- <any-path>` (discards local changes)
-- `git restore <path>`, `git restore --worktree`, `git restore --source` (discards changes)
+- `git restore <path>`, `git restore --worktree`, `git restore --source`
+  (discards changes)
 - `git stash` (all subcommands — can silently overwrite working tree)
 - `git reflog expire/delete`
 
 **If you need to discard changes to a file, tell the user to do it manually.**
-Safe alternatives: `git restore --staged` (unstage only), `git diff -- <file>` (view changes).
+Safe alternatives: `git restore --staged` (unstage only), `git diff -- <file>`
+(view changes).
 
 ### Performance Notes
+
 - Take your time to do this thoroughly
 - Quality is more important than speed
 - Do not skip validation steps

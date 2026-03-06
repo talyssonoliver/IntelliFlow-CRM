@@ -86,14 +86,23 @@
         "vitest.config.ts",
         "package.json"
       ],
-      "outputs": ["coverage/**", "test-results/**", "artifacts/coverage/**"],
+      "outputs": [
+        "coverage/**",
+        "test-results/**",
+        "artifacts/coverage/**",
+        "artifacts/coverage-vitest/**"
+      ],
       "env": ["TEST_DATABASE_URL", "TEST_REDIS_URL", "NODE_ENV"],
       "outputLogs": "new-only"
     },
     "test:unit": {
       "dependsOn": ["^build"],
       "inputs": ["src/**", "test/**", "vitest.config.ts"],
-      "outputs": ["coverage/**", "artifacts/coverage/unit/**"],
+      "outputs": [
+        "coverage/**",
+        "artifacts/coverage/unit/**",
+        "artifacts/coverage-vitest/**"
+      ],
       "env": ["NODE_ENV"],
       "outputLogs": "new-only"
     },
@@ -123,8 +132,13 @@
     "test:coverage": {
       "dependsOn": ["^build"],
       "inputs": ["src/**", "test/**", "tests/**", "vitest.config.ts"],
-      "outputs": ["coverage/**", "artifacts/coverage/**"],
-      "env": ["NODE_ENV"]
+      "outputs": [
+        "coverage/**",
+        "artifacts/coverage/**",
+        "artifacts/coverage-vitest/**",
+        "artifacts/coverage-parts/**"
+      ],
+      "env": ["NODE_ENV", "COVERAGE_RUN"]
     },
     "db:generate": {
       "inputs": ["prisma/schema.prisma", "packages/db/prisma/schema.prisma"],
